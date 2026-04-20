@@ -107,7 +107,6 @@
   <ModalContent
     title={`SharePoint - ${selectedSiteLabel}`}
     showDivider={false}
-    disabled={!siteId}
     size="XL"
     confirmText="Edit files"
     onConfirm={handleEdit}
@@ -121,6 +120,7 @@
           : "No selected files found for this site."}
       </Body>
     {:else}
+      <Body size="S">The following files are selected for this site:</Body>
       <div class="entries-list">
         <TreeView standalone={false} quiet width="auto" selectable={false}>
           {#each entryTree as node (node.path)}
@@ -139,9 +139,5 @@
     overflow: auto;
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
-  }
-
-  .entries-list :global(.spectrum-TreeView-itemLink) {
-    padding-inline-end: 8px;
   }
 </style>

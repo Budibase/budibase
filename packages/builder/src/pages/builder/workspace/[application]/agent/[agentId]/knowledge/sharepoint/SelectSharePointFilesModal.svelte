@@ -29,7 +29,6 @@
 
   let { agentId, siteId }: Props = $props()
 
-  let syncMode = $state<"all" | "selective">("all")
   let selectedEntryPaths = $state<string[]>([])
   let hasHydratedSelection = $state(false)
   let loadingEntries = $state(false)
@@ -88,7 +87,6 @@
 
   export async function show() {
     const hasInitialFilters = initialPatterns.length > 0
-    syncMode = hasInitialFilters ? "selective" : "all"
     selectedEntryPaths = []
     hasHydratedSelection = false
 
@@ -99,7 +97,7 @@
         initialPatterns,
         selectablePaths
       )
-    } else if (syncMode === "selective") {
+    } else {
       selectedEntryPaths = [...selectablePaths]
     }
 
@@ -114,19 +112,16 @@
     if (!agentId || !siteId) {
       return
     }
-    if (syncMode === "selective" && selectedEntryPaths.length === 0) {
+    if (selectedEntryPaths.length === 0) {
       notifications.error("Please select at least one folder/file to sync")
       return
     }
 
-    const filters =
-      syncMode === "all"
-        ? undefined
-        : buildPatternsFromSelection(
-            selectedEntryPaths,
-            selectablePaths,
-            selectionNodeByPath
-          )
+    const filters = buildPatternsFromSelection(
+      selectedEntryPaths,
+      selectablePaths,
+      selectionNodeByPath
+    )
 
     try {
       await agentsStore.applyAgentSharePointSiteFilters(agentId, siteId, {
@@ -167,7 +162,7 @@
   }
 
   $effect(() => {
-    if (hasHydratedSelection || syncMode !== "selective") {
+    if (hasHydratedSelection) {
       return
     }
 
@@ -185,122 +180,45 @@
 
 <Modal bind:this={modal}>
   <ModalContent
-    custom
+    title={`SharePoint - ${selectedSiteLabel}`}
     showCloseIcon={false}
     showDivider={false}
     showConfirmButton
+    size="XL"
     confirmText="Save"
     cancelText="Cancel"
     disabled={!sourceId}
     onConfirm={handleConfirm}
     onCancel={hide}
   >
-    <div class="content">
-      <div class="title">
-        <Body size="S">SharePoint - {selectedSiteLabel}</Body>
-      </div>
-
-      <div class="scope-controls card">
-        <div class="scope-header">
-          <Body size="S">Sync scope</Body>
-        </div>
-        <div class="scope-options">
-          <ActionButton
-            size="S"
-            selected={syncMode === "all"}
-            on:click={() => {
-              syncMode = "all"
-            }}
-          >
-            Sync all files
-          </ActionButton>
-          <ActionButton
-            size="S"
-            selected={syncMode === "selective"}
-            on:click={() => {
-              syncMode = "selective"
-              if (selectedEntryPaths.length === 0) {
-                selectedEntryPaths = [...selectablePaths]
-              }
-            }}
-          >
-            Selective sync
-          </ActionButton>
-        </div>
-      </div>
-
-      {#if syncMode === "selective"}
-        <div class="entries-header">
-          <Body size="M">Select folders/files to sync</Body>
-          <ActionButton quiet size="S" on:click={toggleAll}>
-            {selectAllLabel}
-          </ActionButton>
-          <span class="selected-count">{selectedCountLabel}</span>
-        </div>
-
-        {#if loadingEntries}
-          <Body size="S">Loading SharePoint files...</Body>
-        {:else if selectionTree.length === 0}
-          <Body size="S">No folders or files found for this site.</Body>
-        {:else}
-          <div class="entries-list">
-            <TreeView width="100%" standalone={false} selectable quiet>
-              {#each selectionTree as node (node.path)}
-                <SharePointEntryTreeItem
-                  {node}
-                  selectedPaths={selectedEntryPaths}
-                  onTogglePaths={toggleEntryPaths}
-                />
-              {/each}
-            </TreeView>
-          </div>
-        {/if}
-      {/if}
+    <div class="entries-header">
+      <ActionButton quiet size="S" on:click={toggleAll}>
+        {selectAllLabel}
+      </ActionButton>
+      <span class="selected-count">{selectedCountLabel}</span>
     </div>
+
+    {#if loadingEntries}
+      <Body size="S">Loading SharePoint files...</Body>
+    {:else if selectionTree.length === 0}
+      <Body size="S">No folders or files found for this site.</Body>
+    {:else}
+      <div class="entries-list">
+        <TreeView width="auto" standalone={false} selectable quiet>
+          {#each selectionTree as node (node.path)}
+            <SharePointEntryTreeItem
+              {node}
+              selectedPaths={selectedEntryPaths}
+              onTogglePaths={toggleEntryPaths}
+            />
+          {/each}
+        </TreeView>
+      </div>
+    {/if}
   </ModalContent>
 </Modal>
 
 <style>
-  .content {
-    padding: var(--spacing-l);
-    width: min(760px, 95vw);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .title {
-    padding-bottom: var(--spacing-xxs);
-  }
-
-  .card {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    background: var(--spectrum-global-color-gray-100);
-  }
-
-  .scope-controls {
-    margin-top: var(--spacing-xs);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    padding: var(--spacing-s);
-  }
-
-  .scope-header {
-    display: flex;
-    align-items: center;
-  }
-
-  .scope-options {
-    display: flex;
-    gap: var(--spacing-xs);
-  }
-
-  .scope-options :global(button) {
-    border-radius: 999px;
-  }
-
   .entries-header {
     margin-top: var(--spacing-xxs);
     display: flex;
@@ -319,17 +237,9 @@
 
   .entries-list {
     margin-top: var(--spacing-xxs);
-    max-height: 420px;
+
     overflow: auto;
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
-    padding: var(--spacing-xs);
-    background: var(--spectrum-global-color-gray-100);
-  }
-
-  .entries-list :global(.spectrum-TreeView-itemLink) {
-    min-height: 30px;
-    border-radius: 6px;
-    padding-inline-end: 8px;
   }
 </style>

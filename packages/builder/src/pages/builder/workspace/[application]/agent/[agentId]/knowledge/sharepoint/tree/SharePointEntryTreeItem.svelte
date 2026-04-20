@@ -79,37 +79,39 @@
   }
 </script>
 
-<TreeItem
-  title={node.name}
-  {selected}
-  checked={selected}
-  {indeterminate}
-  {disabled}
-  open={hasChildren}
-  {hasChildren}
-  on:select={handleSelect}
->
-  <svelte:fragment slot="post">
-    {#if node.type === "file" && getSharePointStatusText(node.status)}
-      <div class="status-container">
-        <StatusLight size="S" {...getSharePointStatusLightProps(node.status)}>
-          {getSharePointStatusText(node.status)}
-        </StatusLight>
-        {#if node.status === "failed" && node.errorMessage}
-          <span class="error-message" title={node.errorMessage}>
-            {node.errorMessage}
-          </span>
-        {/if}
-      </div>
-    {/if}
-  </svelte:fragment>
+<div class="sharepoint-entry-tree-item">
+  <TreeItem
+    title={node.name}
+    {selected}
+    checked={selected}
+    {indeterminate}
+    {disabled}
+    open={hasChildren}
+    {hasChildren}
+    on:select={handleSelect}
+  >
+    <svelte:fragment slot="post">
+      {#if node.type === "file" && getSharePointStatusText(node.status)}
+        <div class="status-container">
+          <StatusLight size="S" {...getSharePointStatusLightProps(node.status)}>
+            {getSharePointStatusText(node.status)}
+          </StatusLight>
+          {#if node.status === "failed" && node.errorMessage}
+            <span class="error-message" title={node.errorMessage}>
+              {node.errorMessage}
+            </span>
+          {/if}
+        </div>
+      {/if}
+    </svelte:fragment>
 
-  {#if hasChildren}
-    {#each node.children as child (child.path)}
-      <SharePointEntryTreeItem node={child} {selectedPaths} {onTogglePaths} />
-    {/each}
-  {/if}
-</TreeItem>
+    {#if hasChildren}
+      {#each node.children as child (child.path)}
+        <SharePointEntryTreeItem node={child} {selectedPaths} {onTogglePaths} />
+      {/each}
+    {/if}
+  </TreeItem>
+</div>
 
 <style>
   .status-container {
@@ -128,5 +130,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .sharepoint-entry-tree-item :global(.spectrum-TreeView-itemLink) {
+    padding-inline-end: 8px;
   }
 </style>
