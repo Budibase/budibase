@@ -2,10 +2,10 @@
   import { createEventDispatcher } from "svelte"
 
   import { Combobox, Select } from "@budibase/bbui"
-  import type { LLMProvider } from "@budibase/types"
+  import { type AIConfigType, type LLMProvider } from "@budibase/types"
 
   interface Props {
-    configType: "completions" | "embeddings"
+    configType: AIConfigType
     provider: string
     model: string
     providers?: LLMProvider[]

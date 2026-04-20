@@ -1,5 +1,48 @@
 import { ACCOUNT_PORTAL_PATHS, BUILDER_URLS } from "../constants/urls"
 
+const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
+
+export function applyBaseUrl(currentUrl: string, newBase: string): string {
+  if (!newBase) {
+    return currentUrl
+  }
+  const blocks: string[] = currentUrl.match(FIND_ANY_HBS_REGEX) ?? []
+  const portBlocks: string[] = []
+
+  // Substitute HBS blocks in port position with ':0' so new URL() can parse it
+  let parseable = currentUrl
+  for (const block of blocks) {
+    const portPattern = `:${block}`
+    if (parseable.includes(portPattern)) {
+      portBlocks.push(block)
+      parseable = parseable.replace(portPattern, ":0")
+    }
+  }
+
+  const placeholder = (i: number) => `__hbs${i}__`
+  const pathBlocks = blocks.filter(b => !portBlocks.includes(b))
+  parseable = pathBlocks.reduce(
+    (s, block, i) => s.replace(block, placeholder(i)),
+    parseable
+  )
+
+  const restore = (s: string) =>
+    pathBlocks.reduce((r, block, i) => r.replace(placeholder(i), block), s)
+
+  const base = newBase.replace(/\/$/, "")
+  try {
+    const parsed = new URL(parseable)
+    const path = parsed.pathname === "/" ? "" : parsed.pathname
+    return base + restore(path + parsed.search + parsed.hash)
+  } catch {
+    const restored = restore(parseable)
+    if (restored.startsWith("/")) {
+      return base + restored
+    }
+    return base
+  }
+}
+
 const normalizePath = (path?: string) => {
   if (!path) {
     return ""

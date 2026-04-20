@@ -589,6 +589,45 @@ describe("Screens store", () => {
     expect(bb.store.screens[1].routing.homeScreen).toBe(false)
   })
 
+  it("Does not unset home screen when updating route on another screen", async ({
+    bb,
+  }) => {
+    const existingScreens = Array(3)
+      .fill()
+      .map(() => {
+        const screenDoc = getScreenFixture()
+        const existingDocId = getScreenDocId()
+        screenDoc._json._id = existingDocId
+        return screenDoc
+      })
+
+    const storeScreens = existingScreens.map(screen => screen.json())
+    storeScreens[1].routing.homeScreen = true
+
+    await bb.screenStore.update(state => ({
+      ...state,
+      screens: storeScreens,
+    }))
+
+    vi.spyOn(bb.screenStore, "patch").mockImplementation(
+      async (patchFn, screenId) => {
+        const target = bb.store.screens.find(screen => screen._id === screenId)
+        patchFn(target)
+
+        await bb.screenStore.replace(screenId, target)
+      }
+    )
+
+    await bb.screenStore.updateSetting(
+      storeScreens[0],
+      "routing.route",
+      "/updated-route"
+    )
+
+    expect(bb.store.screens[0].routing.route).toBe("/updated-route")
+    expect(bb.store.screens[1].routing.homeScreen).toBe(true)
+  })
+
   it("Ensure only one homescreen per role when updating screen setting. Multiple screen roles", async ({
     bb,
   }) => {

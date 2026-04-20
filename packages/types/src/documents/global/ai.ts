@@ -2,7 +2,6 @@ import { Document, WebSearchConfig } from "../../"
 
 export enum AIConfigType {
   COMPLETIONS = "completions",
-  EMBEDDINGS = "embeddings",
 }
 
 export type ReasoningEffort = "low" | "medium" | "high"

@@ -40,6 +40,7 @@
 - When you're writing tests, you don't need to assert or do conditional checks
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
+- Avoid adding nested ternary statements.
 
 ## Test style - packages/server
 
@@ -51,6 +52,12 @@
 - Use `TestConfiguration` in `packages/server/src/tests/TestConfiguration.ts` for every API test case -
   this can be used to access the test API under `new TestConfiguration().api`, a list of functions and
   request/response types can be found in `packages/server/src/tests/utilities/api`.
+
+## Git
+
+Never auto-commit changes unless explicitly asked to do so. You may ask permission to commit.
+
+Never auto-push changes unless explicitly asked to do so. You may ask permission to push.
 
 ## Pull requests
 

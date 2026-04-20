@@ -17,6 +17,9 @@ const EXCLUDED_EVENTS: Event[] = [
   Event.VIEW_CALCULATION_UPDATED,
   Event.AUTOMATION_TRIGGER_UPDATED,
   Event.USER_GROUP_UPDATED,
+  Event.ACTION_AUTOMATION_STEP_EXECUTED,
+  Event.ACTION_CRUD_EXECUTED,
+  Event.ACTION_AI_AGENT_EXECUTED,
 ]
 
 export default class PosthogProcessor implements EventProcessor {

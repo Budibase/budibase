@@ -36,6 +36,8 @@ import {
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
   RecaptchaInnerConfig,
+  SCIMDisableAction,
+  SCIMInnerConfig,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
@@ -346,12 +348,26 @@ async function processTranslationsConfig(
   ctx.request.body.config = prepareTranslationsConfig(ctx, config)
 }
 
+async function processSCIMConfig(
+  newConfig: SCIMInnerConfig,
+  existingConfig: SCIMInnerConfig | undefined
+): Promise<SCIMDisableAction | undefined> {
+  const { disableAction } = newConfig
+  delete newConfig.disableAction
+
+  const isBeingDisabled = existingConfig?.enabled && !newConfig.enabled
+  if (isBeingDisabled && disableAction) {
+    return disableAction
+  }
+}
+
 export async function save(
   ctx: UserCtx<SaveConfigRequest, SaveConfigResponse>
 ) {
   const body = ctx.request.body
   const type = body.type
   const config = body.config
+  let scimDisableAction: SCIMDisableAction | undefined
 
   const existingConfig = await configs.getConfig(type)
   let eventFns = await getEventFns(ctx.request.body, existingConfig)
@@ -379,6 +395,12 @@ export async function save(
         break
       case ConfigType.TRANSLATIONS:
         await processTranslationsConfig(ctx, config)
+        break
+      case ConfigType.SCIM:
+        scimDisableAction = await processSCIMConfig(
+          config,
+          existingConfig?.config
+        )
         break
     }
   } catch (err: any) {
@@ -423,6 +445,19 @@ export async function save(
 
     for (const fn of eventFns) {
       await fn()
+    }
+
+    if (scimDisableAction) {
+      const tenantId = tenancy.getTenantId()
+      setImmediate(async () => {
+        try {
+          await tenancy.doInTenant(tenantId, () =>
+            pro.scimUsers.handleDisable(scimDisableAction!)
+          )
+        } catch (e) {
+          console.error("Error processing SCIM users on disable:", e)
+        }
+      })
     }
 
     ctx.body = {

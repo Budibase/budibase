@@ -173,6 +173,12 @@ export async function startup(
     )
   )
   queuePromises.push(rag.queue.init())
+  queuePromises.push(rag.knowledgeSourceSyncQueue.init())
+  queuePromises.push(
+    rag.knowledgeSourceSyncQueue.rehydrateScheduledJobs().catch(err => {
+      console.error("Failed to rehydrate knowledge source sync jobs", err)
+    })
+  )
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())

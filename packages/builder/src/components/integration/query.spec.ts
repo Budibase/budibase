@@ -1,120 +1,22 @@
 import { it, expect, describe } from "vitest"
-import { applyBaseUrl, isValidEndpointUrl } from "./query"
+import { applyBaseUrl } from "@budibase/shared-core"
+import {
+  isValidEndpointUrl,
+  constructFullPath,
+  convertPathVariables,
+  validateQuery,
+} from "./query"
 
+// Just a smoke test in the builder as the base functionality
+// is already covered
 describe("applyBaseUrl", () => {
-  describe("plain URLs", () => {
-    it("replaces the origin, keeping the path", () => {
-      expect(
-        applyBaseUrl(
-          "https://old.example.com/api/users",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/api/users")
-    })
-
-    it("replaces the origin, keeping the query string", () => {
-      expect(
-        applyBaseUrl(
-          "https://old.example.com/api/users?page=1",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/api/users?page=1")
-    })
-
-    it("replaces the origin, keeping path + query string + hash", () => {
-      expect(
-        applyBaseUrl(
-          "https://old.example.com/api/users?page=1#top",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/api/users?page=1#top")
-    })
-
-    it("drops the path when current URL is just an origin with no path", () => {
-      expect(
-        applyBaseUrl("https://old.example.com", "https://new.example.com")
-      ).toBe("https://new.example.com")
-    })
-
-    it("falls back to newBase when currentUrl is not a valid URL", () => {
-      expect(applyBaseUrl("not a url", "https://new.example.com")).toBe(
+  it("replaces the origin keeping the path", () => {
+    expect(
+      applyBaseUrl(
+        "https://old.example.com/api/users",
         "https://new.example.com"
       )
-    })
-
-    it("falls back to newBase when currentUrl is empty", () => {
-      expect(applyBaseUrl("", "https://new.example.com")).toBe(
-        "https://new.example.com"
-      )
-    })
-
-    it("preserves a relative path when currentUrl has no origin", () => {
-      expect(applyBaseUrl("/api/v1/users", "https://new.example.com")).toBe(
-        "https://new.example.com/api/v1/users"
-      )
-    })
-
-    it("strips a trailing slash from newBase to avoid double slashes", () => {
-      expect(
-        applyBaseUrl(
-          "https://old.example.com/api/users",
-          "https://new.example.com/"
-        )
-      ).toBe("https://new.example.com/api/users")
-    })
-
-    it("strips trailing slash from newBase when preserving a relative path", () => {
-      expect(applyBaseUrl("/api/v1/users", "https://new.example.com/")).toBe(
-        "https://new.example.com/api/v1/users"
-      )
-    })
-  })
-
-  describe("HBS template URLs", () => {
-    it("preserves HBS blocks in the path", () => {
-      expect(
-        applyBaseUrl(
-          "https://old.example.com/api/{{version}}/users",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/api/{{version}}/users")
-    })
-
-    it("preserves HBS blocks in the query string", () => {
-      expect(
-        applyBaseUrl(
-          "https://old.example.com/api/users?token={{auth.token}}",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/api/users?token={{auth.token}}")
-    })
-
-    it("preserves an HBS block in the port position", () => {
-      expect(
-        applyBaseUrl(
-          "http://{{host}}:{{port}}/api/users",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/api/users")
-    })
-
-    it("preserves HBS blocks in both port and path", () => {
-      expect(
-        applyBaseUrl(
-          "http://{{host}}:{{port}}/api/{{version}}/users",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/api/{{version}}/users")
-    })
-
-    it("preserves multiple HBS blocks in the path", () => {
-      expect(
-        applyBaseUrl(
-          "https://old.example.com/{{org}}/{{repo}}/issues",
-          "https://new.example.com"
-        )
-      ).toBe("https://new.example.com/{{org}}/{{repo}}/issues")
-    })
+    ).toBe("https://new.example.com/api/users")
   })
 })
 
@@ -187,5 +89,61 @@ describe("isValidEndpointUrl - HBS bindings", () => {
 
   it("rejects a malformed binding with no closing braces", () => {
     expect(isValidEndpointUrl("{{derp")).toBe(false)
+  })
+})
+
+describe("convertPathVariables", () => {
+  it("converts OpenAPI {var} to HBS {{var}}", () => {
+    expect(convertPathVariables("/api/{version}/users/{id}")).toBe(
+      "/api/{{version}}/users/{{id}}"
+    )
+  })
+
+  it("returns value unchanged when no path variables", () => {
+    expect(convertPathVariables("/api/v1/users")).toBe("/api/v1/users")
+  })
+})
+
+describe("constructFullPath", () => {
+  it("joins base URL and endpoint path", () => {
+    expect(constructFullPath("https://example.com", "/api/v1/users")).toBe(
+      "https://example.com/api/v1/users"
+    )
+  })
+
+  it("strips trailing slash from base", () => {
+    expect(constructFullPath("https://example.com/", "/api/v1/users")).toBe(
+      "https://example.com/api/v1/users"
+    )
+  })
+
+  it("returns base when path is empty", () => {
+    expect(constructFullPath("https://example.com", "")).toBe(
+      "https://example.com"
+    )
+  })
+
+  it("returns just the path when base is undefined", () => {
+    expect(constructFullPath(undefined, "api/v1/users")).toBe("api/v1/users")
+  })
+})
+
+describe("validateQuery", () => {
+  it("throws when url contains {{user}} binding", () => {
+    expect(() =>
+      validateQuery("https://example.com/{{user}}", undefined, {}, {})
+    ).toThrow("'user' is a protected binding")
+  })
+
+  it("throws when request body contains {{user.id}}", () => {
+    expect(() =>
+      validateQuery("https://example.com/api", "{{user.id}}", {}, {})
+    ).toThrow("'user' is a protected binding")
+  })
+
+  it("does not throw for safe bindings", () => {
+    expect(() =>
+      validateQuery("https://example.com/{{version}}/users", undefined, {}, {})
+    ).not.toThrow()
   })
 })

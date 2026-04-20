@@ -1,13 +1,21 @@
 import {
   Agent,
+  AgentFileUploadResponse,
+  DisconnectAgentKnowledgeSourcesResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  FetchAgentFilesResponse,
+  FetchAgentKnowledgeSourceOptionsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
+  SetAgentKnowledgeSourcesRequest,
+  SetAgentKnowledgeSourcesResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
+  SyncAgentKnowledgeSourcesRequest,
+  SyncAgentKnowledgeSourcesResponse,
   ToggleAgentDeploymentRequest,
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
@@ -17,7 +25,7 @@ import {
   FetchAgentEvalSuiteResponse,
   RunAgentEvalSuiteResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "../base"
+import { AttachedFile, Expectations, TestAPI } from "../base"
 
 export class AgentAPI extends TestAPI {
   fetch = async (expectations?: Expectations): Promise<{ agents: Agent[] }> => {
@@ -162,6 +170,100 @@ export class AgentAPI extends TestAPI {
     return await this._post<RunAgentEvalSuiteResponse>(
       `/api/agent/${agentId}/evals/run`,
       {
+        expectations,
+      }
+    )
+  }
+
+  fetchFiles = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentFilesResponse> => {
+    return await this._get<FetchAgentFilesResponse>(
+      `/api/agent/${agentId}/files`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  uploadFile = async (
+    agentId: string,
+    file: AttachedFile,
+    expectations?: Expectations
+  ): Promise<AgentFileUploadResponse> => {
+    return await this._post<AgentFileUploadResponse>(
+      `/api/agent/${agentId}/files`,
+      {
+        files: { file },
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 201,
+        },
+      }
+    )
+  }
+
+  removeFile = async (
+    agentId: string,
+    fileId: string,
+    expectations?: Expectations
+  ): Promise<{ deleted: true }> => {
+    return await this._delete<{ deleted: true }>(
+      `/api/agent/${agentId}/files/${fileId}`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  fetchKnowledgeSourceOptions = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
+    return await this._get<FetchAgentKnowledgeSourceOptionsResponse>(
+      `/api/agent/${agentId}/knowledge-sources/options`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  setKnowledgeSources = async (
+    agentId: string,
+    body: SetAgentKnowledgeSourcesRequest,
+    expectations?: Expectations
+  ): Promise<SetAgentKnowledgeSourcesResponse> => {
+    return await this._put<SetAgentKnowledgeSourcesResponse>(
+      `/api/agent/${agentId}/knowledge-sources`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  disconnectKnowledgeSources = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<DisconnectAgentKnowledgeSourcesResponse> => {
+    return await this._delete<DisconnectAgentKnowledgeSourcesResponse>(
+      `/api/agent/${agentId}/knowledge-sources`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  syncKnowledgeSources = async (
+    agentId: string,
+    body?: SyncAgentKnowledgeSourcesRequest,
+    expectations?: Expectations
+  ): Promise<SyncAgentKnowledgeSourcesResponse> => {
+    return await this._post<SyncAgentKnowledgeSourcesResponse>(
+      `/api/agent/${agentId}/knowledge-sources/sync`,
+      {
+        body,
         expectations,
       }
     )

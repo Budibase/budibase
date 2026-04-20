@@ -180,6 +180,11 @@ export async function get(id: string) {
   return (await db.groups.get(id)) as UserGroup
 }
 
+export async function getDefaultGroup() {
+  const groups = await db.groups.getAll()
+  return groups.find(group => group.isDefault)
+}
+
 export async function getBulk(
   ids: string[],
   opts: { enriched: true }
@@ -224,6 +229,45 @@ function isCreatorGroup(group: Pick<UserGroup, "roles">) {
   return Object.values(group.roles || {}).includes("CREATOR")
 }
 
+function stripEnrichedFields(group: UserGroup | EnrichedUserGroup): UserGroup {
+  const { users: _users, ...groupDoc } = group
+  return groupDoc
+}
+
+async function saveGroupWithDefaultUpdates(group: UserGroup) {
+  if (!group.isDefault) {
+    return db.groups.save(group)
+  }
+
+  const existingGroups = await db.groups.getAll()
+  const previousDefaultGroups = existingGroups
+    .filter(existing => existing._id !== group._id)
+    .filter(existing => existing.isDefault)
+
+  if (!previousDefaultGroups.length) {
+    return db.groups.save(group)
+  }
+
+  const response = await db.groups.bulkSave([
+    ...previousDefaultGroups.map(existing => ({
+      ...existing,
+      isDefault: false,
+    })),
+    group,
+  ])
+
+  const savedDefaultGroup = response.find(result => result.id === group._id)
+  if (savedDefaultGroup?.rev) {
+    return {
+      id: group._id!,
+      rev: savedDefaultGroup.rev,
+    }
+  }
+
+  const persisted = await db.groups.get(group._id!)
+  return { id: persisted._id!, rev: persisted._rev! }
+}
+
 export async function save(group: UserGroup | EnrichedUserGroup) {
   let eventPromises = []
   // Config does not exist yet
@@ -261,9 +305,9 @@ export async function save(group: UserGroup | EnrichedUserGroup) {
   }
 
   await Promise.all(eventPromises)
-  const { users: _users, ...groupToSave } = group
+  const groupToSave = stripEnrichedFields(group)
   const saveGroup = () => {
-    return db.groups.save(groupToSave)
+    return saveGroupWithDefaultUpdates(groupToSave)
   }
   if (isCreate) {
     return await quotas.addGroup(saveGroup)

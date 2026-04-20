@@ -3,7 +3,6 @@ import { AIAPI } from "./ai"
 import { AgentAPI } from "./ai/agent"
 import { KnowledgeBaseAPI } from "./ai/knowledgeBase"
 import { KnowledgeBaseFilesAPI } from "./ai/knowledgeBaseFiles"
-import { VectorDbAPI } from "./ai/vectorDb"
 import { AssetsAPI } from "./assets"
 import { AttachmentAPI } from "./attachment"
 import { AutomationAPI } from "./automation"
@@ -68,7 +67,6 @@ export default class API {
   routing: RoutingAPI
   workspaceFavourites: WorkspaceFavouriteAPI
   agent: AgentAPI
-  vectorDb: VectorDbAPI
   knowledgeBase: KnowledgeBaseAPI
   knowledgeBaseFiles: KnowledgeBaseFilesAPI
 
@@ -109,7 +107,6 @@ export default class API {
     this.routing = new RoutingAPI(config)
     this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
     this.agent = new AgentAPI(config)
-    this.vectorDb = new VectorDbAPI(config)
     this.knowledgeBase = new KnowledgeBaseAPI(config)
     this.knowledgeBaseFiles = new KnowledgeBaseFilesAPI(config)
     this.public = {

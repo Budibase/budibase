@@ -1,4 +1,5 @@
 import { auth, cache, context } from "@budibase/backend-core"
+import { applyBaseUrl } from "@budibase/shared-core"
 import {
   findHBSBlocks,
   iifeWrapper,
@@ -122,6 +123,23 @@ class QueryRunner {
       )
     }
 
+    // Base URL resolution for template datasources
+    // Swap the base URL before field enrichment. Enrich config.url first so
+    // static variable bindings (e.g. {{host}}) are resolved to their actual
+    // values before being passed to applyBaseUrl.
+    if (
+      (datasourceClone.restTemplateId || datasourceClone.restTemplate) &&
+      datasourceClone.config?.url
+    ) {
+      const resolvedConfigUrl = processStringSync(
+        datasourceClone.config.url,
+        enrichedContext,
+        { noEscaping: true, noHelpers: true }
+      )
+      if (resolvedConfigUrl) {
+        fieldsClone.path = applyBaseUrl(fieldsClone.path, resolvedConfigUrl)
+      }
+    }
     let query: Record<string, any>
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
@@ -139,7 +157,6 @@ class QueryRunner {
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
-
     // Add pagination values for REST queries
     if (this.pagination) {
       query.paginationValues = this.pagination

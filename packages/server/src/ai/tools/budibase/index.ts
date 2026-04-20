@@ -8,6 +8,7 @@ import {
 import createAutomationTools from "./automations"
 import TABLE_TOOLS from "./tables"
 import { createRowTools } from "./rows"
+import { createKnowledgeFilesTool } from "./knowledgeFiles"
 
 export interface BudibaseToolDefinition {
   name: string
@@ -49,3 +50,4 @@ export const getBudibaseTools = (
 }
 
 export default getBudibaseTools
+export { createKnowledgeFilesTool }

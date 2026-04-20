@@ -364,9 +364,12 @@ describe("scim", () => {
       })
 
       it("creating an external user that conflicts an internal one syncs the existing user", async () => {
-        const { body: internalUser } = await config.api.users.saveUser(
-          structures.users.user()
-        )
+        const workspaceId = "app_scim_sync_roles"
+        const explicitRoles = { [workspaceId]: "BASIC" }
+        const { body: internalUser } = await config.api.users.saveUser({
+          ...structures.users.user(),
+          roles: explicitRoles,
+        })
 
         const scimUserData = {
           externalId: structures.uuid(),
@@ -410,6 +413,14 @@ describe("scim", () => {
         }
 
         expect(res).toEqual(expectedScimUser)
+
+        expect(
+          (await config.api.users.getUser(internalUser._id!)).body
+        ).toEqual(
+          expect.objectContaining({
+            roles: explicitRoles,
+          })
+        )
       })
 
       it("a user cannot be SCIM synchronised with another SCIM user", async () => {
@@ -514,6 +525,46 @@ describe("scim", () => {
 
         const persistedUser = await config.api.scimUsersAPI.find(user.id)
         expect(persistedUser).toEqual(expectedScimUser)
+      })
+
+      it("preserves explicit roles when updating an existing SCIM user", async () => {
+        const workspaceId = "app_scim_patch_roles"
+        const explicitRoles = { [workspaceId]: "BASIC" }
+        const { body: internalUser } = await config.api.users.saveUser({
+          ...structures.users.user(),
+          roles: explicitRoles,
+        })
+
+        const syncedUser = await config.api.scimUsersAPI.post(
+          {
+            body: structures.scim.createUserRequest({
+              email: internalUser.email,
+            }),
+          },
+          { expect: 200 }
+        )
+
+        const newFamilyName = structures.generator.last()
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Replace",
+              path: "name.familyName",
+              value: newFamilyName,
+            },
+          ],
+        }
+
+        await patchScimUser({ id: syncedUser.id, body })
+
+        expect((await config.api.users.getUser(syncedUser.id)).body).toEqual(
+          expect.objectContaining({
+            _id: syncedUser.id,
+            lastName: newFamilyName,
+            roles: explicitRoles,
+          })
+        )
       })
 
       it.each([false, "false", "False"])(

@@ -25,7 +25,7 @@
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "build:oss": "node ./scripts/build.js",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null && tsc -p tsconfig.test.json --paths null",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },
@@ -56,7 +56,7 @@
     "koa-passport": "^6.0.0",
     "koa-pino-logger": "4.0.0",
     "@koa/router": "15.3.0",
-    "lodash": "4.17.23",
+    "lodash": "4.18.1",
     "node-fetch": "2.6.7",
     "object-sizeof": "2.6.1",
     "passport-google-oauth": "2.0.0",
@@ -72,7 +72,7 @@
     "sanitize-s3-objectkey": "0.0.1",
     "semver": "^7.5.4",
     "tar-fs": "2.1.4",
-    "undici": "^7.16.0",
+    "undici": "^6.24.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

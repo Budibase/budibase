@@ -76,7 +76,9 @@
         name="param"
         headings
         on:change={e => {
-          dispatch("change", { requestBody: keyValueArrayToRecord(e.detail) })
+          dispatch("change", {
+            requestBody: keyValueArrayToRecord(e.detail.fields),
+          })
         }}
       />
     {/key}

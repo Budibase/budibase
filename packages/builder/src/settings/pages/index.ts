@@ -25,6 +25,7 @@ import UsagePage from "@/settings/pages/usage.svelte"
 import Connections from "@/settings/pages/connections/Connections.svelte"
 import Connection from "@/settings/pages/connections/Connection.svelte"
 import CreateConnection from "./connections/CreateConnection.svelte"
+import KnowledgeConnections from "@/settings/pages/connections/KnowledgeConnections.svelte"
 
 // App pages
 import GeneralInfoPage from "@/settings/pages/general.svelte"
@@ -40,8 +41,6 @@ import Recaptcha from "@/settings/pages/recaptcha.svelte"
 // AI config
 import AIConfigsPage from "@/settings/pages/ai/completion-models/index.svelte"
 import AIConfigForm from "@/settings/pages/ai/completion-models/AIConfigForm.svelte"
-import KnowledgeBasesPage from "@/settings/pages/ai/knowledge-bases/index.svelte"
-import KnowledgeBaseForm from "@/settings/pages/ai/knowledge-bases/KnowledgeBaseForm.svelte"
 
 const componentMap = {
   profile: ProfilePage,
@@ -58,8 +57,6 @@ const componentMap = {
   audit_logs: AuditLogsPage,
   ai_configs: AIConfigsPage,
   ai_config: AIConfigForm,
-  knowledgeBases: KnowledgeBasesPage,
-  knowledgeBase: KnowledgeBaseForm,
   auth: AuthPage,
   org: OrgPage,
   branding: BrandingPage,
@@ -81,6 +78,7 @@ const componentMap = {
   connections: Connections,
   connection: Connection,
   create_connection: CreateConnection,
+  knowledge_connections: KnowledgeConnections,
 } satisfies Record<string, Component<any>>
 
 export const Pages = {

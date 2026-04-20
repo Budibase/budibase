@@ -48,11 +48,13 @@ type GroupUpdateFn = (groupId: string, userIds: string[]) => Promise<any>
 type FeatureFn = () => Promise<Boolean>
 type GroupGetFn = (ids: string[]) => Promise<UserGroup[]>
 type GroupBuildersFn = (user: User) => Promise<string[]>
+type GetDefaultGroupFn = () => Promise<UserGroup | undefined>
 type QuotaFns = { addUsers: QuotaUpdateFn; removeUsers: QuotaUpdateFn }
 type GroupFns = {
   addUsers: GroupUpdateFn
   getBulk: GroupGetFn
   getGroupBuilderAppIds: GroupBuildersFn
+  getDefaultGroup?: GetDefaultGroupFn
 }
 type CreateAdminUserOpts = {
   password?: string
@@ -270,6 +272,21 @@ export class UserDB {
       }
     }
 
+    const isNewUser = !dbUser
+    const isEmailChanging = !!dbUser && !!email && dbUser.email !== email
+    const shouldValidateUniqueUser =
+      !opts.isAccountHolder && !!email && (isNewUser || isEmailChanging)
+
+    // For new users, resolve effective group assignment before creator quota
+    // calculation so creator-by-group users are counted correctly.
+    let groupIdsToAssign = [...userGroups]
+    if (isNewUser && groupIdsToAssign.length === 0) {
+      const defaultGroup = await UserDB.groups.getDefaultGroup?.()
+      if (defaultGroup?._id) {
+        groupIdsToAssign = [defaultGroup._id]
+      }
+    }
+
     let change = 1
     let creatorsChange = 0
     if (opts.isAccountHolder || dbUser) {
@@ -283,12 +300,13 @@ export class UserDB {
         user,
       ])
       creatorsChange = isDbUserCreator !== isUserCreator ? 1 : 0
+    } else if (!opts.isAccountHolder) {
+      const userForCreatorCheck =
+        groupIdsToAssign.length > 0
+          ? { ...user, userGroups: groupIdsToAssign }
+          : user
+      creatorsChange = (await creatorsInList([userForCreatorCheck]))[0] ? 1 : 0
     }
-
-    const isNewUser = !dbUser
-    const isEmailChanging = !!dbUser && !!email && dbUser.email !== email
-    const shouldValidateUniqueUser =
-      !opts.isAccountHolder && !!email && (isNewUser || isEmailChanging)
 
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
       if (shouldValidateUniqueUser) {
@@ -308,13 +326,12 @@ export class UserDB {
       // make sure we set the _id field for a new user
       // Also if this is a new user, associate groups with them
       const groupPromises = []
-      if (!_id) {
-        if (userGroups.length > 0) {
-          for (let groupId of userGroups) {
-            groupPromises.push(
-              UserDB.groups.addUsers(groupId, [builtUser._id!])
-            )
-          }
+      if (isNewUser) {
+        if (groupIdsToAssign.length > 0) {
+          builtUser.userGroups = groupIdsToAssign
+        }
+        for (let groupId of groupIdsToAssign) {
+          groupPromises.push(UserDB.groups.addUsers(groupId, [builtUser._id!]))
         }
       }
 
@@ -364,6 +381,14 @@ export class UserDB {
     const emails = newUsersRequested.map((user: User) => user.email)
     const existingEmails = await searchExistingEmails(emails)
     const unsuccessful: { email: string; reason: string }[] = []
+    const hasExplicitGroups = !!groups?.length
+    let groupIdsToAssign = hasExplicitGroups ? [...groups] : []
+    if (!hasExplicitGroups) {
+      const defaultGroup = await UserDB.groups.getDefaultGroup?.()
+      if (defaultGroup?._id) {
+        groupIdsToAssign = [defaultGroup._id]
+      }
+    }
 
     for (const newUser of newUsersRequested) {
       const duplicateUser = newUsers.find(
@@ -374,7 +399,7 @@ export class UserDB {
         unsuccessful.push({ email: newUser.email, reason: `Unavailable` })
         continue
       }
-      newUser.userGroups = groups || []
+      newUser.userGroups = [...groupIdsToAssign]
       newUsers.push(newUser)
       if (await isCreatorAsync(newUser)) {
         newCreators.push(newUser)
@@ -423,10 +448,10 @@ export class UserDB {
         })
 
         // now update the groups
-        if (Array.isArray(saved) && groups) {
+        if (Array.isArray(saved) && groupIdsToAssign.length) {
           const groupPromises = []
           const createdUserIds = saved.map(user => user._id!)
-          for (let groupId of groups) {
+          for (let groupId of groupIdsToAssign) {
             groupPromises.push(UserDB.groups.addUsers(groupId, createdUserIds))
           }
           await Promise.all(groupPromises)

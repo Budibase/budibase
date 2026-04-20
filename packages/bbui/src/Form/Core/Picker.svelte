@@ -370,7 +370,7 @@
             on:mouseenter={e => onOptionMouseenter(e, option)}
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
-            title={optionTooltip ?? undefined}
+            title={optionTooltip ?? getOptionLabel(option, idx)}
           >
             {#if optionIcon}
               <span class="option-extra icon">

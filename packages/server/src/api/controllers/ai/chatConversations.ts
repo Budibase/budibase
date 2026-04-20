@@ -1,5 +1,6 @@
 import {
   context,
+  events,
   features,
   docIds,
   getErrorMessage,
@@ -150,15 +151,19 @@ const prepareAgentChatRun = async ({
       prepareModelMessages(chat.messages),
     ])
 
+  const trimmedRetrievedContext = retrievedContext.text.trim()
+  const ragSourcesMetadata =
+    trimmedRetrievedContext.length > 0 ? retrievedContext.sources : undefined
+
   return {
     chatLLM: llm.chat,
     latestQuestion,
     messagesWithContext: addRetrievedContextToMessages(
       modelMessages,
-      retrievedContext.text
+      trimmedRetrievedContext
     ),
     providerOptions: llm.providerOptions,
-    ragSourcesMetadata: retrievedContext.sources,
+    ragSourcesMetadata,
     sessionLogIndexer,
     system: promptAndTools.systemPrompt,
     toolDisplayNames: promptAndTools.toolDisplayNames,
@@ -297,6 +302,8 @@ export async function webhookChat({
     throw responseResult.reason
   }
 
+  events.action.aiAgentExecuted({ agentId })
+
   const assistantText = textResult.value
   const assistantMessage: ChatConversation["messages"][number] = {
     id: v4(),
@@ -420,6 +427,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
     const pendingToolCalls = new Set<string>()
+    let listedKnowledgeFiles = false
 
     const hasTools = Object.keys(tools).length > 0
     const result = streamText({
@@ -437,13 +445,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       async onStepFinish({ content, toolCalls, toolResults, response }) {
         sessionLogIndexer.addRequestId(response?.id)
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+        for (const toolResult of toolResults) {
+          if (
+            toolResult.toolName === "list_knowledge_files" &&
+            !toolResult.preliminary
+          ) {
+            listedKnowledgeFiles = true
+          }
+          await quotas.addAction(async () => {})
+        }
         for (const part of content) {
           if (part.type === "tool-error") {
             pendingToolCalls.delete(part.toolCallId)
           }
-        }
-        for (const _toolResult of toolResults) {
-          await quotas.addAction(async () => {})
         }
       },
       onFinish({ response }) {
@@ -465,8 +479,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
     ctx.respond = false
     const streamStartTime = Date.now()
-    const baseMetadata = {
-      ...(ragSourcesMetadata?.length ? { ragSources: ragSourcesMetadata } : {}),
+    const sharedMetadata = {
       ...(Object.keys(toolDisplayNames).length > 0 ? { toolDisplayNames } : {}),
     }
     result.pipeUIMessageStreamToResponse(ctx.res, {
@@ -474,7 +487,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       messageMetadata: ({ part }) => {
         if (part.type === "start") {
           return {
-            ...baseMetadata,
+            ...sharedMetadata,
             createdAt: streamStartTime,
           }
         }
@@ -485,7 +498,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
             pendingToolCalls.size > 0 || finishReason === "tool-calls"
 
           return {
-            ...baseMetadata,
+            ...sharedMetadata,
+            ...(ragSourcesMetadata?.length && !listedKnowledgeFiles
+              ? { ragSources: ragSourcesMetadata }
+              : {}),
             createdAt: streamStartTime,
             completedAt: Date.now(),
             ...(toolCallsIncomplete && {
@@ -497,6 +513,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
         await sessionLogIndexer.index()
+        events.action.aiAgentExecuted({ agentId })
 
         if (chat.transient || !chatAppId) {
           return

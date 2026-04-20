@@ -1,11 +1,8 @@
 import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
-import type {
-  Agent,
-  CreateAgentRequest,
-  UpdateAgentRequest,
-} from "@budibase/types"
+import type { Agent, Optional } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
+import * as knowledgeBaseSdk from "../knowledgeBase"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -223,7 +220,12 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
   return withAgentDefaults(agent)
 }
 
-export async function create(request: CreateAgentRequest): Promise<Agent> {
+export async function create(
+  request: Optional<
+    Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt" | "publishedAt">,
+    "aiconfig"
+  >
+): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
 
@@ -244,6 +246,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
     knowledgeBases: request.knowledgeBases || [],
+    knowledgeSources: request.knowledgeSources,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -286,7 +289,7 @@ export async function duplicate(
   })
 }
 
-export async function update(agent: UpdateAgentRequest): Promise<Agent> {
+export async function update(agent: Agent): Promise<Agent> {
   const { _id, _rev } = agent
   if (!_id || !_rev) {
     throw new HTTPError("_id and _rev are required", 400)
@@ -295,13 +298,16 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const existingRaw = await db.tryGet<Agent>(_id)
   const existing = existingRaw ? withAgentDefaults(existingRaw) : undefined
-  const normalizedName = helpers.normalizeForComparison(agent.name)
-  const normalizedExistingName = helpers.normalizeForComparison(
-    existing?.name || ""
-  )
+  if (!existing) {
+    throw new HTTPError("Agent not found", 404)
+  }
 
-  if (existing && normalizedName !== normalizedExistingName) {
-    await guardName(agent.name, _id)
+  const incomingName = agent.name ?? existing.name
+  const normalizedName = helpers.normalizeForComparison(incomingName)
+  const normalizedExistingName = helpers.normalizeForComparison(existing.name)
+
+  if (normalizedName !== normalizedExistingName) {
+    await guardName(incomingName, _id)
   }
 
   const now = new Date().toISOString()
@@ -345,6 +351,43 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
 export async function remove(agentId: string) {
   const db = context.getWorkspaceDB()
   const agent = await getOrThrow(agentId)
+
+  if (agent.knowledgeBases) {
+    for (const knowledgeBaseId of agent.knowledgeBases) {
+      const knowledgeBase = await knowledgeBaseSdk.find(knowledgeBaseId)
+      if (!knowledgeBase) {
+        continue
+      }
+
+      const files =
+        await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
+      for (const file of files) {
+        try {
+          await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+        } catch (error) {
+          console.log(
+            "Failed to remove knowledge base file for agent deletion",
+            {
+              agentId,
+              knowledgeBaseId,
+              fileId: file._id,
+              error,
+            }
+          )
+        }
+      }
+
+      try {
+        await knowledgeBaseSdk.remove(knowledgeBaseId)
+      } catch (error) {
+        console.log("Failed to remove knowledge base for agent deletion", {
+          agentId,
+          knowledgeBaseId,
+          error,
+        })
+      }
+    }
+  }
 
   await db.remove(agent)
 }

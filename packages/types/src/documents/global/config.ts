@@ -115,8 +115,11 @@ export interface OIDCWellKnownConfig {
   userinfo_endpoint: string
 }
 
+export type SCIMDisableAction = "remove" | "convert"
+
 export interface SCIMInnerConfig {
   enabled: boolean
+  disableAction?: SCIMDisableAction
 }
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}

@@ -1,0 +1,99 @@
+suite: automation-worker-service deployment
+templates:
+  - templates/automation-worker-service-deployment.yaml
+release:
+  name: budibase
+chart:
+  version: 3.0.0
+  appVersion: 3.0.0
+tests:
+  - it: should not render when disabled
+    set:
+      services.automationWorkers.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render when enabled
+    set:
+      services.automationWorkers.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+
+  - it: should render default image from globals
+    set:
+      services.automationWorkers.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "budibase/apps:3.0.0"
+
+  - it: should prepend dockerRegistry to default image
+    set:
+      services.automationWorkers.enabled: true
+      globals.dockerRegistry: "registry.example.com/"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/budibase/apps:3.0.0"
+
+  - it: should use custom image when set
+    set:
+      services.automationWorkers.enabled: true
+      services.automationWorkers.image: "my-registry.example.com/custom/apps:1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.example.com/custom/apps:1.2.3"
+
+  - it: should prefer custom image over dockerRegistry
+    set:
+      services.automationWorkers.enabled: true
+      globals.dockerRegistry: "registry.example.com/"
+      services.automationWorkers.image: "my-registry.example.com/custom/apps:1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.example.com/custom/apps:1.2.3"
+
+  - it: should not render securityContext by default
+    set:
+      services.automationWorkers.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+
+  - it: should render securityContext when set
+    set:
+      services.automationWorkers.enabled: true
+      services.automationWorkers.securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+
+  - it: should always set APP_FEATURES to automations
+    set:
+      services.automationWorkers.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: APP_FEATURES
+            value: "automations"
+
+  - it: should set correct container port
+    set:
+      services.automationWorkers.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 4002

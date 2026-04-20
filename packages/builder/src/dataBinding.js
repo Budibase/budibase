@@ -564,6 +564,7 @@ export const getUserBindings = () => {
   // add props that are not in the user metadata table schema
   // but will be there for logged-in user
   schema["globalId"] = { type: FieldType.STRING }
+  schema["fullName"] = { type: FieldType.STRING }
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
 

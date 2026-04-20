@@ -1,9 +1,5 @@
 import { sdk, helpers } from "@budibase/shared-core"
-import {
-  AIConfigType,
-  FeatureFlag,
-  GetGlobalSelfResponse,
-} from "@budibase/types"
+import { AIConfigType, GetGlobalSelfResponse } from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
 import { Target, type Route } from "@/types/routing"
@@ -12,8 +8,7 @@ import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
-import { featureFlag } from "@/helpers"
-import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
+import { aiConfigsStore } from "@/stores/portal"
 import { get } from "svelte/store"
 
 const getPathId = (path: string | undefined) => {
@@ -335,26 +330,9 @@ export const workspaceRoutes = (
           ],
         },
         {
-          path: "knowledge-bases",
-          title: "Knowledge bases",
-          access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
-          component: Pages.get("knowledgeBases"),
-          routes: [
-            {
-              path: ":knowledgeBaseId",
-              component: Pages.get("knowledgeBase"),
-              title: (path: string | undefined) => {
-                const id = getPathId(path)
-                if (!id) {
-                  return "New"
-                }
-                return (
-                  get(knowledgeBaseStore).list.find(k => k._id === id)?.name ??
-                  "Knowledge base"
-                )
-              },
-            },
-          ],
+          path: "knowledge",
+          title: "Knowledge",
+          component: Pages.get("knowledge_connections"),
         },
       ],
     },

@@ -219,7 +219,6 @@ export async function create(
       provider: config.provider,
       model: config.model,
       credentialFields: resolvedCredentialFields,
-      configType: config.configType,
       reasoningEffort: config.reasoningEffort,
     })
   } else {
@@ -365,7 +364,6 @@ export async function update(
         provider: updatedConfig.provider,
         name: updatedConfig.model,
         credentialFields: resolvedCredentialFields,
-        configType: updatedConfig.configType,
         reasoningEffort: updatedConfig.reasoningEffort,
       })
       await liteLLM.syncKeyModels()
@@ -441,7 +439,6 @@ export async function reconcileLiteLLMModels() {
           provider: existingConfig.provider,
           name: existingConfig.model,
           credentialFields: resolvedCredentialFields,
-          configType: existingConfig.configType,
           reasoningEffort: existingConfig.reasoningEffort,
         })
         modelAlreadyExisted = true
@@ -473,7 +470,6 @@ export async function reconcileLiteLLMModels() {
         provider: existingConfig.provider,
         model: existingConfig.model,
         credentialFields: resolvedCredentialFields,
-        configType: existingConfig.configType,
         reasoningEffort: existingConfig.reasoningEffort,
       })
       console.log("Created LiteLLM model", {
@@ -512,7 +508,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
     liteLLMProviders = providers.map(provider => {
       const modelsByType = Object.entries(modelCostMap).reduce<{
         completions: string[]
-        embeddings: string[]
       }>(
         (acc, [modelId, metadata]) => {
           const modelProvider = metadata?.litellm_provider
@@ -543,10 +538,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
             mode.trim().toLowerCase()
           )
 
-          if (normalizedModes.includes("embedding")) {
-            acc.embeddings.push(normalizedModelId)
-          }
-
           if (
             !normalizedModes.length ||
             normalizedModes.some(mode =>
@@ -558,14 +549,11 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
 
           return acc
         },
-        { completions: [], embeddings: [] }
+        { completions: [] }
       )
 
       const models = {
         completions: [...new Set(modelsByType.completions)].sort((a, b) =>
-          a.localeCompare(b)
-        ),
-        embeddings: [...new Set(modelsByType.embeddings)].sort((a, b) =>
           a.localeCompare(b)
         ),
       }
@@ -598,7 +586,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       externalProvider: "custom_openai",
       models: {
         completions: ["budibase/v1"],
-        embeddings: [],
       },
       credentialFields: [
         { key: "api_key", label: "api_key", field_type: "password" },

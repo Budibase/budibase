@@ -156,6 +156,8 @@ VOLUME /data
 ARG BUDIBASE_VERSION
 # Ensuring the version argument is sent
 RUN test -n "$BUDIBASE_VERSION"
+RUN jq --arg v "$BUDIBASE_VERSION" '.version = $v' /app/package.json > /tmp/pkg.json && mv /tmp/pkg.json /app/package.json
+RUN jq --arg v "$BUDIBASE_VERSION" '.version = $v' /worker/package.json > /tmp/pkg.json && mv /tmp/pkg.json /worker/package.json
 ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
 
 HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"

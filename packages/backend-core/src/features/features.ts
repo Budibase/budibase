@@ -236,6 +236,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_AGENTS]: true,
   [FeatureFlag.AI_RAG]: false,
+  [FeatureFlag.AI_RAG_SHAREPOINT]: false,
   [FeatureFlag.AI_AGENT_INSTRUCTIONS]: false,
   [FeatureFlag.AI_EVALS]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),

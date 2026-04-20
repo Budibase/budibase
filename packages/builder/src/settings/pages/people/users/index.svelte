@@ -57,6 +57,7 @@
     assignExistingUsersToWorkspace,
     buildWorkspaceInvitePayload,
     dedupeUsersByEmail,
+    getEffectiveGroupIds,
     type UserData,
   } from "./workspaceInviteUtils"
 
@@ -311,7 +312,8 @@
     if (isWorkspaceOnly) {
       const result = await assignExistingUsersToWorkspace(
         userData,
-        currentWorkspaceId
+        currentWorkspaceId,
+        $groups
       )
       usersForInvite = result.usersToInvite
       const shouldShowInviteModal = usersForInvite.length > 0
@@ -330,11 +332,13 @@
     }
 
     const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
+    const effectiveGroupIds = getEffectiveGroupIds(userData.groups, $groups)
     const payload = buildWorkspaceInvitePayload(
       usersForInvite,
-      userData.groups,
+      effectiveGroupIds,
       currentWorkspaceId,
-      assignToWorkspace
+      assignToWorkspace,
+      $groups
     )
     try {
       inviteUsersResponse = await users.invite(payload)
@@ -410,7 +414,8 @@
       if (isWorkspaceOnly) {
         const result = await assignExistingUsersToWorkspace(
           usersForCreation,
-          currentWorkspaceId
+          currentWorkspaceId,
+          $groups
         )
         usersForCreation = { ...usersForCreation, users: result.usersToInvite }
         addedToWorkspaceEmails = result.addedToWorkspaceEmails
@@ -427,7 +432,14 @@
         }
       }
 
-      bulkSaveResponse = (await users.create(usersForCreation)) || {
+      const effectiveGroupIds = getEffectiveGroupIds(
+        usersForCreation.groups,
+        $groups
+      )
+      bulkSaveResponse = (await users.create({
+        ...usersForCreation,
+        groups: effectiveGroupIds,
+      })) || {
         successful: [],
         unsuccessful: [],
       }
@@ -440,7 +452,9 @@
         const assignmentResult = await assignCreatedUsersToWorkspace(
           bulkSaveResponse.successful,
           usersForCreation.users,
-          currentWorkspaceId
+          currentWorkspaceId,
+          effectiveGroupIds,
+          $groups
         )
         if (assignmentResult.failedCount) {
           notifications.error("Error adding some users to workspace")

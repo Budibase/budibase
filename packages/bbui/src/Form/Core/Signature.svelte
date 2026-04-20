@@ -91,8 +91,8 @@
     signature.weight = 4
     signature.smoothing = 2
 
-    canvasWrap.style.width = `${width}px`
-    canvasWrap.style.height = `${height}px`
+    canvasWrap.style.width = "100%"
+    canvasWrap.style.maxWidth = `${width}px`
 
     const { width: wrapWidth, height: wrapHeight } =
       canvasWrap.getBoundingClientRect()
@@ -208,6 +208,7 @@
   }
   #signature-canvas {
     max-width: var(--max-sig-width);
+    width: 100%;
     max-height: var(--max-sig-height);
   }
   .signature.light img,

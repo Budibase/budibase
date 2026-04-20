@@ -6,7 +6,10 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import { getBudibaseTools } from "../../../../ai/tools/budibase"
+import {
+  createKnowledgeFilesTool,
+  getBudibaseTools,
+} from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
@@ -23,6 +26,7 @@ const HELPER_TOOL_NAMES = new Set([
   "get_table",
   "list_automations",
   "get_automation",
+  "list_knowledge_files",
 ])
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
@@ -142,6 +146,11 @@ export async function buildPromptAndTools(
   toolDisplayNames: Record<string, string>
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
+  const agentId = agent._id
+  if (!agentId) {
+    throw new Error("Agent _id is required")
+  }
+  const hasKnowledgeBases = agent.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
@@ -152,6 +161,13 @@ export async function buildPromptAndTools(
     allTools
   )
 
+  if (
+    hasKnowledgeBases &&
+    !enabledTools.some(tool => tool.name === "list_knowledge_files")
+  ) {
+    enabledTools.push(createKnowledgeFilesTool(agentId))
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -159,8 +175,12 @@ export async function buildPromptAndTools(
     includeGoal,
   })
 
+  const resolvedSystemPrompt = hasKnowledgeBases
+    ? `${systemPrompt}\n\nWhen users ask about attached files (for example size, type, upload status, or processing errors), call list_knowledge_files with a filename when possible.`
+    : systemPrompt
+
   return {
-    systemPrompt,
+    systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools),
     toolDisplayNames: getToolDisplayNames(enabledTools),
   }

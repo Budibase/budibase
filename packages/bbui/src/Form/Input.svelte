@@ -1,10 +1,10 @@
-<script lang="ts">
+<script lang="ts" generics="V extends string | number">
   import Field from "./Field.svelte"
   import TextField from "./Core/TextField.svelte"
   import { createEventDispatcher } from "svelte"
   import type { FullAutoFill } from "svelte/elements"
 
-  export let value: any = undefined
+  export let value: V | null | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: "above" | "left" = "above"
   export let placeholder: string | undefined = undefined
@@ -21,7 +21,7 @@
   export let description: string | undefined = undefined
 
   const dispatch = createEventDispatcher<{
-    change: any
+    change: V
     enterkey: KeyboardEvent
     blur: any
   }>()

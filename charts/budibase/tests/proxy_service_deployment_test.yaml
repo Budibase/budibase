@@ -1,0 +1,97 @@
+suite: proxy-service deployment
+templates:
+  - templates/proxy-service-deployment.yaml
+release:
+  name: budibase
+chart:
+  version: 3.0.0
+  appVersion: 3.0.0
+tests:
+  - it: should render default image from globals
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "budibase/proxy:3.0.0"
+
+  - it: should prepend dockerRegistry to default image
+    set:
+      globals.dockerRegistry: "registry.example.com/"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/budibase/proxy:3.0.0"
+
+  - it: should use custom image when set
+    set:
+      services.proxy.image: "my-registry.example.com/custom/proxy:1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.example.com/custom/proxy:1.2.3"
+
+  - it: should prefer custom image over dockerRegistry
+    set:
+      globals.dockerRegistry: "registry.example.com/"
+      services.proxy.image: "my-registry.example.com/custom/proxy:1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.example.com/custom/proxy:1.2.3"
+
+  - it: should not render securityContext by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+
+  - it: should render securityContext when set
+    set:
+      services.proxy.securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        allowPrivilegeEscalation: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 101
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+
+  - it: should be a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: should set correct container port
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 10000
+
+  - it: should set correct replica count
+    set:
+      services.proxy.replicaCount: 2
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+
+  - it: should use appVersion override
+    set:
+      globals.appVersion: "2.5.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "budibase/proxy:2.5.0"
+
+  - it: should set imagePullSecrets when configured
+    set:
+      imagePullSecrets:
+        - name: my-pull-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-pull-secret

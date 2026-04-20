@@ -6,7 +6,7 @@
   "license": "MPL-2.0",
   "svelte": "./src/index.ts",
   "scripts": {
-    "check:types": "yarn svelte-check",
+    "check:types": "yarn svelte-check --incremental",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -17,7 +17,7 @@
     "@budibase/types": "*",
     "ai": "^6.0.116",
     "dayjs": "^1.10.8",
-    "lodash": "4.17.23",
+    "lodash": "4.18.1",
     "socket.io-client": "^4.7.5"
   },
   "devDependencies": {

@@ -29,6 +29,8 @@ const { groups } = jest.mocked(_db)
 groups.save.mockResolvedValue({ id: GROUP_ID, rev: generator.guid() })
 groups.get.mockResolvedValue(group)
 groups.getGroupUsers.mockResolvedValue(group.users!)
+groups.getAll.mockResolvedValue([])
+groups.bulkSave.mockResolvedValue([])
 
 import {
   save,
@@ -75,6 +77,49 @@ describe("Creators quotas by group assignment", () => {
     groups.save.mockResolvedValue({ id: GROUP_ID, rev: generator.guid() })
     groups.get.mockResolvedValue(group)
     groups.getGroupUsers.mockResolvedValue(group.users!)
+    groups.getAll.mockResolvedValue([])
+    groups.bulkSave.mockResolvedValue([])
+  })
+
+  it("unsets an existing default group when saving a new default group", async () => {
+    const tenantId = `test_tenant_${generator.guid()}`
+
+    const { context } = require("@budibase/backend-core")
+
+    await context.doInTenant(tenantId, async () => {
+      const oldDefaultGroup = {
+        ...group,
+        _id: `old-default-${generator.guid()}`,
+        isDefault: true,
+      }
+      const newDefaultGroup = {
+        ...group,
+        _id: GROUP_ID,
+        isDefault: true,
+      }
+
+      groups.get.mockResolvedValue({ ...group, isDefault: false })
+      groups.getAll.mockResolvedValue([oldDefaultGroup, newDefaultGroup])
+      groups.bulkSave.mockResolvedValue([
+        { id: oldDefaultGroup._id, rev: generator.guid() },
+        { id: newDefaultGroup._id, rev: generator.guid() },
+      ])
+
+      await save(newDefaultGroup)
+
+      expect(groups.bulkSave).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: oldDefaultGroup._id,
+            isDefault: false,
+          }),
+          expect.objectContaining({
+            _id: newDefaultGroup._id,
+            isDefault: true,
+          }),
+        ])
+      )
+    })
   })
 
   it("shouldn't increment creators quotas if group doesn't have creator role", async () => {

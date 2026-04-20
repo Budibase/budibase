@@ -1,5 +1,4 @@
 import { findHBSBlocks } from "@budibase/string-templates"
-import { v4 as uuid } from "uuid"
 import restUtils from "@/helpers/data/utils"
 import {
   runtimeToReadableMap,
@@ -484,44 +483,5 @@ export function isValidEndpointUrl(url: string | undefined): boolean {
     return true
   } catch {
     return false
-  }
-}
-
-/**
- * Replaces the origin of `currentUrl` with `newBase`, preserving the path,
- * query string, hash, and any HBS template blocks (including port-position ones).
- */
-export function applyBaseUrl(currentUrl: string, newBase: string): string {
-  const nonce = uuid().replace(/-/g, "")
-  const blocks = findHBSBlocks(currentUrl)
-  const portBlocks: string[] = []
-
-  // Substitute HBS blocks in port position with ':0' so new URL() can parse it
-  let parseable = currentUrl
-  parseable = parseable.replace(/:(\{\{[^}]+\}\})/g, (_, block) => {
-    portBlocks.push(block)
-    return ":0"
-  })
-
-  const placeholder = (i: number) => `hbs${nonce}${i}`
-  const pathBlocks = blocks.filter(b => !portBlocks.includes(b))
-  parseable = pathBlocks.reduce(
-    (s, block, i) => s.replace(block, placeholder(i)),
-    parseable
-  )
-
-  const restore = (s: string) =>
-    pathBlocks.reduce((r, block, i) => r.replace(placeholder(i), block), s)
-
-  const base = newBase.replace(/\/$/, "")
-  try {
-    const parsed = new URL(parseable)
-    const path = parsed.pathname === "/" ? "" : parsed.pathname
-    return base + restore(path + parsed.search + parsed.hash)
-  } catch {
-    if (parseable.startsWith("/")) {
-      return base + restore(parseable)
-    }
-    return base
   }
 }

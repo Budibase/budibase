@@ -25,6 +25,7 @@
     name: "",
     icon: "users",
     color: "var(--spectrum-global-color-blue-600)",
+    isDefault: false,
     users: [],
     roles: {},
   }

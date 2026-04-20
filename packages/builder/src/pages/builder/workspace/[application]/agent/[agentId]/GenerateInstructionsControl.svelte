@@ -69,14 +69,16 @@
   )
   let modal = $state<Modal>()
   let promptField = $state<TextArea>()
-  let prompt = $state("")
+  let promptInputKey = $state(0)
+  let canGenerate = $state(false)
   let generatedInstructions = $state("")
   let generating = $state(false)
   let requestToken = $state(0)
 
   function resetState() {
     requestToken += 1
-    prompt = ""
+    promptInputKey += 1
+    canGenerate = false
     generatedInstructions = ""
     generating = false
   }
@@ -93,6 +95,12 @@
 
   async function generateInstructions() {
     if (generating) {
+      return
+    }
+
+    const prompt = promptField?.contents() || ""
+    if (!prompt.trim()) {
+      canGenerate = false
       return
     }
 
@@ -175,14 +183,19 @@
           >
         </div>
       {:else}
-        <TextArea
-          label="Prompt"
-          bind:this={promptField}
-          bind:value={prompt}
-          minHeight={140}
-          disabled={generating}
-          placeholder="Describe what kind of instructions you want to generate..."
-        />
+        {#key promptInputKey}
+          <TextArea
+            label="Prompt"
+            bind:this={promptField}
+            updateOnChange
+            minHeight={140}
+            disabled={generating}
+            placeholder="Describe what kind of instructions you want to generate..."
+            on:change={event => {
+              canGenerate = !!event.detail?.trim()
+            }}
+          />
+        {/key}
         <div class="generate-instructions-actions">
           <Button secondary disabled={generating} on:click={hideModal}
             >Cancel</Button
@@ -190,7 +203,7 @@
           <Button
             cta
             icon="sparkle"
-            disabled={generating || !prompt.trim()}
+            disabled={generating || !canGenerate}
             on:click={generateInstructions}
           >
             {generating ? "Generating..." : "Generate"}

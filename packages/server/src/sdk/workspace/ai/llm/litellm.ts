@@ -54,7 +54,6 @@ export const createLiteLLMOpenAI = async (
   const llm = createOpenAI(clientConfig)
   return {
     chat: llm.chat(modelId),
-    embedding: llm.embedding(modelId),
     providerOptions: getLiteLLMProviderOptions,
     uploadFile: async (stream: Readable, filename: string) => {
       const fileId = await uploadFile({

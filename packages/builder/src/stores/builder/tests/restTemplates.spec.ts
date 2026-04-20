@@ -19,18 +19,18 @@ describe("RestTemplatesStore", () => {
     })
 
     it("finds a top-level template by name", () => {
-      const template = store.templates[0]
+      const template = store.templates.find(t => !t.templates?.length)!
       const result = store.getByName(template.name)
       expect(result).toBeDefined()
       expect(result?.name).toBe(template.name)
     })
 
-    it("finds a grouped template by name and includes group icon", () => {
-      const group = store.templateGroups[0]
-      const template = group.templates[0]
-      const result = store.getByName(template.name)
+    it("finds a child template by name and includes icon", () => {
+      const collection = store.templates.find(t => t.templates?.length)!
+      const child = collection.templates![0]
+      const result = store.getByName(child.name)
       expect(result).toBeDefined()
-      expect(result?.name).toBe(template.name)
+      expect(result?.name).toBe(child.name)
       expect(result?.icon).toBeDefined()
     })
 
@@ -50,27 +50,36 @@ describe("RestTemplatesStore", () => {
 
   describe("getById", () => {
     it("finds a top-level template by id", () => {
-      const template = store.templates[0]
+      const template = store.templates.find(t => !t.templates?.length)!
       const result = store.getById(template.id)
       expect(result).toBeDefined()
       expect(result?.name).toBe(template.name)
     })
 
-    it("finds a grouped template by full prefixed id", () => {
-      const group = store.templateGroups[0]
-      const template = group.templates[0]
-      // Grouped template ids are stored with the group slug already prefixed
-      const result = store.getById(template.id)
+    it("finds a collection by id", () => {
+      const collection = store.templates.find(t => t.templates?.length)!
+      const result = store.getById(collection.id)
       expect(result).toBeDefined()
-      expect(result?.name).toBe(template.name)
+      expect(result?.name).toBe(collection.name)
     })
 
-    it("finds a grouped template using groupName prefix", () => {
-      const group = store.templateGroups[0]
-      const template = group.templates[0]
-      const result = store.getById(template.id, group.name)
+    it("resolves a child id to its parent collection", () => {
+      const collection = store.templates.find(t => t.templates?.length)!
+      const child = collection.templates![0]
+      const result = store.getById(child.id)
       expect(result).toBeDefined()
-      expect(result?.name).toBe(template.name)
+      expect(result?.id).toBe(collection.id)
+    })
+
+    it("resolves child id to parent even when group name prefix is passed", () => {
+      const collection = store.templates.find(t => t.templates?.length)!
+      const child = collection.templates![0]
+      // groupName prefix path: slugify(groupName) + "-" + id is tried first.
+      // Since child.id already includes the prefix, passing the collection name
+      // should still resolve via the plain id fallback.
+      const result = store.getById(child.id, collection.name)
+      expect(result).toBeDefined()
+      expect(result?.id).toBe(collection.id)
     })
 
     it("returns undefined for unknown id", () => {
@@ -85,14 +94,14 @@ describe("RestTemplatesStore", () => {
     })
 
     it("resolves by id", () => {
-      const template = store.templates[0]
+      const template = store.templates.find(t => !t.templates?.length)!
       const result = store.get(template.id as any)
       expect(result).toBeDefined()
       expect(result?.name).toBe(template.name)
     })
 
     it("falls back to name lookup when id not found", () => {
-      const template = store.templates[0]
+      const template = store.templates.find(t => !t.templates?.length)!
       const result = store.get(template.name as any)
       expect(result).toBeDefined()
       expect(result?.name).toBe(template.name)

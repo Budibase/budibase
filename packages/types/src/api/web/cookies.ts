@@ -1,6 +1,7 @@
 export interface DatasourceAuthCookie {
   appId: string
   provider: string
+  returnPath?: string
 }
 
 export interface SessionCookie {

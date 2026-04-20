@@ -41,4 +41,18 @@ describe("GroupNameTableRenderer", () => {
 
     expect(screen.queryByTestId("sync-badge")).not.toBeInTheDocument()
   })
+
+  it("shows a default badge for default groups", () => {
+    render(GroupNameTableRenderer, {
+      props: {
+        value: "Default group",
+        row: {
+          name: "Default group",
+          isDefault: true,
+        },
+      },
+    })
+
+    expect(screen.getByText("Default")).toBeInTheDocument()
+  })
 })

@@ -1,4 +1,4 @@
-import { db, features, HTTPError } from "@budibase/backend-core"
+import { db, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   CreateAgentRequest,
@@ -13,7 +13,6 @@ import {
   ToggleAgentDeploymentResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
-  FeatureFlag,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -53,6 +52,15 @@ const obfuscateAgentSecrets = (agent: Agent): Agent => ({
     ]),
   }),
 })
+
+const withoutKnowledgeConfig = <T extends Agent>(agent: T) => {
+  const {
+    knowledgeSources: _knowledgeSources,
+    knowledgeBases: _knowledgeBases,
+    ...rest
+  } = agent
+  return rest
+}
 
 const parseOptionalChatAppId = (value: unknown) => {
   if (typeof value !== "string") {
@@ -226,11 +234,12 @@ export async function createAgent(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
-  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
-  const createRequest: CreateAgentRequest = {
+  const createRequest: RequiredKeys<
+    Parameters<typeof sdk.ai.agents.create>[0]
+  > = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
@@ -242,15 +251,16 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
-    knowledgeBases: ragEnabled ? body.knowledgeBases : undefined,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
+    knowledgeSources: undefined,
+    knowledgeBases: undefined,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
 
-  ctx.body = obfuscateAgentSecrets(agent)
+  ctx.body = withoutKnowledgeConfig(obfuscateAgentSecrets(agent))
   ctx.status = 201
 }
 
@@ -258,7 +268,6 @@ export async function updateAgent(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
-  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -273,7 +282,6 @@ export async function updateAgent(
     live: body.live,
     publishedAt: undefined,
     enabledTools: body.enabledTools,
-    knowledgeBases: ragEnabled ? body.knowledgeBases : undefined,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
@@ -281,7 +289,7 @@ export async function updateAgent(
 
   const agent = await sdk.ai.agents.update(updateRequest)
 
-  ctx.body = obfuscateAgentSecrets(agent)
+  ctx.body = withoutKnowledgeConfig(obfuscateAgentSecrets(agent))
   ctx.status = 200
 }
 
@@ -539,6 +547,8 @@ export async function deleteAgent(
   ctx: UserCtx<void, { deleted: true }, { agentId: string }>
 ) {
   const agentId = ctx.params.agentId
+  await sdk.ai.rag.knowledgeSourceSyncQueue.removeAllAgentJobs(agentId ?? "")
+  await sdk.ai.rag.deleteKnowledgeSourceSyncStateForAgent(agentId ?? "")
   await sdk.ai.agents.remove(agentId ?? "")
   ctx.body = { deleted: true }
   ctx.status = 200

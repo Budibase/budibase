@@ -1,5 +1,5 @@
 import * as automationUtils from "../../automationUtils"
-import { getErrorMessage } from "@budibase/backend-core"
+import { events, getErrorMessage } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AgentStepInputs,
@@ -223,6 +223,8 @@ export async function run({
           outputData: responseText,
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
+
+        events.action.aiAgentExecuted({ agentId })
 
         return {
           success: true,

@@ -49,7 +49,6 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      knowledgeBases: Joi.array().items(Joi.string()).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -70,7 +69,6 @@ export function updateAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      knowledgeBases: Joi.array().items(Joi.string()).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -181,6 +179,22 @@ export function updateAgentEvalSuiteValidator() {
     Joi.object({
       _rev: OPTIONAL_STRING,
       cases: Joi.array().items(AGENT_EVAL_CASE_SCHEMA).required(),
+    }).required()
+  )
+}
+
+export function syncAgentKnowledgeSourcesValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      sourceIds: Joi.array().items(Joi.string().trim().disallow("")).optional(),
+    }).required()
+  )
+}
+
+export function setAgentKnowledgeSourcesValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      sourceIds: Joi.array().items(Joi.string().trim().disallow("")).required(),
     }).required()
   )
 }

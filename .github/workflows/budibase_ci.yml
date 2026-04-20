@@ -1,9 +1,5 @@
 name: Budibase CI
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 on:
   # Trigger the workflow on push or pull request,
   # but only for the master branch
@@ -20,10 +16,12 @@ on:
         description: Force running checks as if it was an OSS contributor
         default: false
 
+permissions:
+  contents: read
+
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   ONLY_AFFECTED_TASKS: ${{ github.event_name == 'pull_request' }}
   HUSKY: 0
@@ -31,11 +29,12 @@ env:
 jobs:
   install-deps:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-install-deps-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
@@ -66,12 +65,13 @@ jobs:
 
   lint:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-lint-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs: install-deps
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
@@ -89,11 +89,12 @@ jobs:
 
   litellm-version-sync:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-litellm-version-sync-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
@@ -105,6 +106,9 @@ jobs:
 
   build:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs:
       - install-deps
       - compute-affected-jobs
@@ -113,7 +117,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 2
 
       - name: Fetch base branch for affected tasks
@@ -145,8 +148,38 @@ jobs:
             yarn check:types
           fi
 
+  missing-deps:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-missing-deps-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    needs: install-deps
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
+
+      - name: Check missing deps
+        run: yarn check:missing-deps
+
   helm-lint:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-helm-lint-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -157,6 +190,9 @@ jobs:
 
   test-libraries:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-test-libraries-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs:
       - install-deps
       - compute-affected-jobs
@@ -165,7 +201,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 2
 
       - name: Fetch base branch for affected tasks
@@ -206,6 +241,9 @@ jobs:
   compute-affected-jobs:
     name: Compute affected jobs
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-compute-affected-jobs-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs: install-deps
     outputs:
       run_build: ${{ steps.affected.outputs.run_build }}
@@ -216,7 +254,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 2
 
       - name: Fetch base branch for affected tasks
@@ -280,6 +317,9 @@ jobs:
 
   test-worker:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-test-worker-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs:
       - install-deps
       - compute-affected-jobs
@@ -291,8 +331,6 @@ jobs:
       - name: Checkout repo
         if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
@@ -316,10 +354,14 @@ jobs:
 
   test-server:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-test-server-${{ matrix.datasource }}-${{ matrix.shard_index }}-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: false
     needs:
       - install-deps
       - compute-affected-jobs
     strategy:
+      fail-fast: false
       matrix:
         include:
           # Use uneven sharding to balance runtime across datasources.
@@ -383,8 +425,6 @@ jobs:
       - name: Checkout repo
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
@@ -469,13 +509,14 @@ jobs:
 
   check-lockfile:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-check-lockfile-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs: install-deps
     if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
@@ -501,12 +542,13 @@ jobs:
 
   check-openapi-specs:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-check-openapi-specs-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs: install-deps
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
@@ -537,6 +579,9 @@ jobs:
 
   build-database-image:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-build-database-image-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -556,12 +601,13 @@ jobs:
 
   check-client-build-size:
     runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-check-client-build-size-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     needs: install-deps
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6

@@ -1,12 +1,10 @@
 <script>
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
-  import { queries } from "@/stores/builder"
-  import { get } from "svelte/store"
+  import { queries, workspaceConnections } from "@/stores/builder"
 
-  const initialDatasourceId =
-    queries.resetTargetDatasourceId() ||
-    get(queries).list.find(q => q._id === get(queries).selectedQueryId)
-      ?.datasourceId
+  const initialDatasourceId = queries.resetTargetDatasourceId()
 </script>
 
-<APIEndpointViewer {initialDatasourceId} />
+{#key $workspaceConnections.draft?.key}
+  <APIEndpointViewer {initialDatasourceId} />
+{/key}

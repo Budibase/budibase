@@ -881,6 +881,27 @@ if (descriptions.length) {
                 expect(row.user).toEqual(config.getUser()._id)
               })
 
+              it("can bind the current user full name", async () => {
+                const table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      userFullName: {
+                        name: "userFullName",
+                        type: FieldType.STRING,
+                        default: `{{ [Current User].[fullName] }}`,
+                      },
+                    },
+                  })
+                )
+                const currentUser = config.getUser()
+                const row = await config.api.row.save(table._id!, {})
+                const expectedFullName =
+                  [currentUser.firstName, currentUser.lastName]
+                    .filter(part => !!part)
+                    .join(" ") || currentUser.email
+                expect(row.userFullName).toEqual(expectedFullName)
+              })
+
               it("cannot access current user password", async () => {
                 const table = await config.api.table.save(
                   saveTableRequest({
@@ -1080,12 +1101,13 @@ if (descriptions.length) {
               InternalTables.USER_METADATA,
               config.userMetadataId!
             )
+            const { roles: _roles, ...userWithoutRoles } = config.getUser()
 
             expect(res).toEqual({
-              ...config.getUser(),
+              ...userWithoutRoles,
+              fullName: expect.any(String),
               _id: config.userMetadataId!,
               _rev: expect.any(String),
-              roles: undefined,
               roleId: "ADMIN",
               tableId: InternalTables.USER_METADATA,
             })
@@ -3048,6 +3070,7 @@ if (descriptions.length) {
             email: row.email,
             firstName: row.firstName,
             lastName: row.lastName,
+            fullName: expect.any(String),
           }),
         ],
       ])("links - %s", (__, relSchema, dataGenerator, resultMapper) => {

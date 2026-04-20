@@ -25,6 +25,7 @@ interface CreateKnowledgeBaseFileOptions {
   uploadedBy: string
   objectStoreKey: string
   ragSourceId?: string
+  externalSourceId?: string
 }
 
 export const createKnowledgeBaseFile = async (
@@ -40,6 +41,7 @@ export const createKnowledgeBaseFile = async (
     uploadedBy,
     objectStoreKey,
     ragSourceId,
+    externalSourceId,
   } = options
   const _id = id || docIds.generateKnowledgeBaseFileID(knowledgeBaseId)
   if (!docIds.isKnowledgeBaseFileID(_id)) {
@@ -54,6 +56,7 @@ export const createKnowledgeBaseFile = async (
     size,
     objectStoreKey,
     ragSourceId: ragSourceId || _id,
+    externalSourceId,
     status: KnowledgeBaseFileStatus.PROCESSING,
     uploadedBy,
     errorMessage: undefined,

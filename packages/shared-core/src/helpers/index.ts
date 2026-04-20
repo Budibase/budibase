@@ -23,6 +23,7 @@ export {
   appAgentUrl,
   agentChatUrl,
   urlHelpers,
+  applyBaseUrl,
 } from "./url"
 export * from "./readableHelpers"
 export { isEnvironmentVariableKey } from "./envVariables"

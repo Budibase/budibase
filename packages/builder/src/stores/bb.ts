@@ -87,11 +87,13 @@ export class BBStore extends BudiStore<BBState> {
     }))
   }
 
-  hideSettings() {
+  hideSettings(path?: string) {
+    const matchedRoute = path ? settingsRouteResolver?.(path) : undefined
     this.update(state => ({
       ...state,
       settings: {
         ...state.settings,
+        ...(matchedRoute ? { route: matchedRoute } : {}),
         open: false,
       },
     }))
