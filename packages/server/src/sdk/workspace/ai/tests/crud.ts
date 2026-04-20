@@ -37,7 +37,7 @@ export async function saveSuite({
 
   const cases: AgentTestCase[] = request.cases.map((testCase, idx) => ({
     id: testCase.id ?? v4(),
-    name: testCase.name.trim() || `Test ${idx + 1}`,
+    name: testCase.name?.trim() || `Test ${idx + 1}`,
     input: testCase.input,
     context: testCase.context,
     reviewers: testCase.reviewers,
