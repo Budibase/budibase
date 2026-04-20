@@ -334,11 +334,6 @@
   }
 
   async function openSharePointSiteConfigModal(siteId: string) {
-    const agentId = currentAgent?._id
-    if (!agentId) {
-      return
-    }
-    await agentsStore.fetchAgentKnowledgeSourceEntries(agentId, siteId)
     selectedSharePointSiteId = siteId
     displaySharePointSiteModal?.show()
   }

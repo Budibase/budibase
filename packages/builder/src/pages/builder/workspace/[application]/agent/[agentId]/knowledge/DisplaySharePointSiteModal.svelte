@@ -14,7 +14,6 @@
   import { agentsStore, selectedAgent } from "@/stores/portal"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import { buildEntryTree } from "./sharePointModalUtils"
-  import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
 
   export interface Props {
     agentId?: string
@@ -77,16 +76,6 @@
     return runs.find(run => run.sourceId === sourceId)
   })
 
-  const sourceEntries = $derived.by(() => {
-    if (!agentId || !siteId) {
-      return []
-    }
-    return (
-      $agentsStore.knowledgeByAgentId[agentId]?.sourceEntriesBySiteId?.[siteId]
-        ?.entries || []
-    )
-  })
-
   const entryTree = $derived(
     buildEntryTree(
       sharePointFiles.map(file => ({
@@ -98,35 +87,6 @@
       sourceRun?.entries || []
     )
   )
-
-  const filterTreeByPaths = (
-    nodes: SharePointEntryTreeNode[],
-    allowedPaths: Set<string>
-  ): SharePointEntryTreeNode[] => {
-    const nextNodes: SharePointEntryTreeNode[] = []
-    for (const node of nodes) {
-      if (node.type === "file") {
-        if (allowedPaths.has(node.path)) {
-          nextNodes.push(node)
-        }
-        continue
-      }
-
-      const children = filterTreeByPaths(node.children, allowedPaths)
-      if (children.length > 0) {
-        nextNodes.push({ ...node, children })
-      }
-    }
-    return nextNodes
-  }
-
-  const displayTree = $derived.by(() => {
-    if (sourceEntries.length === 0) {
-      return entryTree
-    }
-    const allowedPaths = new Set(sourceEntries.map(entry => entry.path))
-    return filterTreeByPaths(entryTree, allowedPaths)
-  })
 
   const showProcessingState = $derived.by(() => {
     if (!sourceId) {
@@ -186,7 +146,7 @@
         </ActionButton>
       </div>
 
-      {#if displayTree.length === 0}
+      {#if entryTree.length === 0}
         <Body size="S">
           {showProcessingState
             ? "SharePoint sync is in progress. Files will appear here shortly."
@@ -195,7 +155,7 @@
       {:else}
         <div class="entries-list">
           <TreeView width="100%" standalone={false} quiet>
-            {#each displayTree as node (node.path)}
+            {#each entryTree as node (node.path)}
               <SharePointEntryTreeItem {node} />
             {/each}
           </TreeView>

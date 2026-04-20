@@ -8,9 +8,7 @@ import {
   ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   DisconnectAgentSharePointSiteResponse,
-  FetchAgentFilesResponse,
   FetchAgentKnowledgeResponse,
-  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeSourceOption,
   KnowledgeSourceSyncRun,
@@ -42,10 +40,6 @@ interface AgentStoreState {
       files: KnowledgeBaseFile[]
       sourceOptions: KnowledgeSourceOption[]
       sourceRuns: KnowledgeSourceSyncRun[]
-      sourceEntriesBySiteId: Record<
-        string,
-        FetchAgentKnowledgeSourceEntriesResponse
-      >
     }
   >
 }
@@ -79,7 +73,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         files: [],
         sourceOptions: [],
         sourceRuns: [],
-        sourceEntriesBySiteId: {},
       }
     )
   }
@@ -120,24 +113,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         ...existing,
         sourceOptions: Array.from(byId.values()),
         sourceRuns: runs,
-      }
-      return state
-    })
-  }
-
-  private setAgentKnowledgeSourceEntries = (
-    agentId: string,
-    siteId: string,
-    response: FetchAgentKnowledgeSourceEntriesResponse
-  ) => {
-    this.update(state => {
-      const existing = this.getAgentKnowledgeState(state, agentId)
-      state.knowledgeByAgentId[agentId] = {
-        ...existing,
-        sourceEntriesBySiteId: {
-          ...existing.sourceEntriesBySiteId,
-          [siteId]: response,
-        },
       }
       return state
     })
@@ -468,14 +443,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.toggleAgentSlackDeployment(agentId, enabled)
     )
 
-  fetchAgentFiles = async (
-    agentId: string
-  ): Promise<FetchAgentFilesResponse> => {
-    const response = await API.fetchAgentFiles(agentId)
-    this.setAgentFiles(agentId, response.files)
-    return response
-  }
-
   fetchAgentKnowledge = async (
     agentId: string
   ): Promise<FetchAgentKnowledgeResponse> => {
@@ -502,15 +469,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       response.options,
       response.runs
     )
-    return response
-  }
-
-  fetchAgentKnowledgeSourceEntries = async (
-    agentId: string,
-    siteId: string
-  ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-    const response = await API.fetchAgentKnowledgeSourceEntries(agentId, siteId)
-    this.setAgentKnowledgeSourceEntries(agentId, siteId, response)
     return response
   }
 
@@ -561,11 +519,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     body: UpdateAgentSharePointSiteRequest
   ): Promise<UpdateAgentSharePointSiteResponse> => {
     const response = await this.updateAgentSharePointSite(agentId, siteId, body)
-    await Promise.all([
-      this.fetchAgentFiles(agentId),
-      this.fetchAgents(),
-      this.fetchAgentKnowledgeSourceEntries(agentId, siteId),
-    ])
+    await this.fetchAgentKnowledge(agentId)
     return response
   }
 

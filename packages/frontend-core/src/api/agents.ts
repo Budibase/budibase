@@ -6,7 +6,6 @@ import {
   CreateAgentResponse,
   DisconnectAgentSharePointSiteResponse,
   DuplicateAgentResponse,
-  FetchAgentFilesResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -61,7 +60,6 @@ export interface AgentEndpoints {
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
-  fetchAgentFiles: (agentId: string) => Promise<FetchAgentFilesResponse>
   fetchAgentKnowledge: (agentId: string) => Promise<FetchAgentKnowledgeResponse>
   uploadAgentFile: (
     agentId: string,
@@ -74,10 +72,6 @@ export interface AgentEndpoints {
   fetchAgentKnowledgeSourceOptions: (
     agentId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
-  fetchAgentKnowledgeSourceEntries: (
-    agentId: string,
-    siteId: string
-  ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
   fetchAgentKnowledgeSourceAllEntries: (
     agentId: string,
     siteId: string
@@ -202,12 +196,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentFiles: async (agentId: string) => {
-    return await API.get({
-      url: `/api/agent/${agentId}/files`,
-    })
-  },
-
   fetchAgentKnowledge: async (agentId: string) => {
     return await API.get<FetchAgentKnowledgeResponse>({
       url: `/api/agent/${agentId}/knowledge`,
@@ -233,12 +221,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   fetchAgentKnowledgeSourceOptions: async (agentId: string) => {
     return await API.get<FetchAgentKnowledgeSourceOptionsResponse>({
       url: `/api/agent/${agentId}/knowledge-sources/options`,
-    })
-  },
-
-  fetchAgentKnowledgeSourceEntries: async (agentId: string, siteId: string) => {
-    return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
-      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/entries?siteId=${encodeURIComponent(siteId)}`,
     })
   },
 

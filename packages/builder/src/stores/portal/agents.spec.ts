@@ -14,7 +14,6 @@ vi.mock("@/api", () => {
   return {
     API: {
       fetchAgents: vi.fn(),
-      fetchAgentFiles: vi.fn(),
       fetchAgentKnowledge: vi.fn(),
       uploadAgentFile: vi.fn(),
       deleteAgentFile: vi.fn(),
@@ -25,7 +24,6 @@ vi.mock("@/api", () => {
 })
 
 const fetchAgents = vi.mocked(API.fetchAgents)
-const fetchAgentFiles = vi.mocked(API.fetchAgentFiles)
 const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadAgentFile = vi.mocked(API.uploadAgentFile)
 const deleteAgentFile = vi.mocked(API.deleteAgentFile)
@@ -76,7 +74,7 @@ describe("agentsStore sharepoint and file syncing", () => {
     expect(result.totalDiscovered).toBe(3)
   })
 
-  it("fetchAgentFiles stores files by agent id", async () => {
+  it("fetchAgentKnowledge stores files by agent id", async () => {
     const files: KnowledgeBaseFile[] = [
       {
         _id: "kb_file_1",
@@ -88,11 +86,11 @@ describe("agentsStore sharepoint and file syncing", () => {
         uploadedBy: "user_1",
       },
     ]
-    fetchAgentFiles.mockResolvedValue({ files })
+    fetchAgentKnowledge.mockResolvedValue({ files, options: [], runs: [] })
 
-    const response = await store.fetchAgentFiles("agent_1")
+    const response = await store.fetchAgentKnowledge("agent_1")
 
-    expect(fetchAgentFiles).toHaveBeenCalledWith("agent_1")
+    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
     expect(response.files).toHaveLength(1)
     expect(get(store.store).knowledgeByAgentId["agent_1"]?.files).toEqual(files)
   })
@@ -195,7 +193,7 @@ describe("agentsStore sharepoint and file syncing", () => {
     store.startAgentFilePolling("agent_1", 25)
     await vi.advanceTimersByTimeAsync(80)
 
-    expect(fetchAgentFiles).not.toHaveBeenCalled()
+    expect(fetchAgentKnowledge).not.toHaveBeenCalled()
   })
 
   it("startAgentFilePolling polls until first source run exists", async () => {
@@ -261,7 +259,6 @@ describe("agentsStore sharepoint and file syncing", () => {
     await vi.advanceTimersByTimeAsync(30)
 
     expect(fetchAgentKnowledge).toHaveBeenCalledTimes(2)
-    expect(fetchAgentFiles).not.toHaveBeenCalled()
   })
 })
 

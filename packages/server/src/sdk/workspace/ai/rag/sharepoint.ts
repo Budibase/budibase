@@ -427,59 +427,6 @@ export const fetchSharePointSitesForAgent = async (
   }
 }
 
-export const fetchSharePointEntriesForAgent = async (
-  agentId: string,
-  siteId: string
-): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-  const trimmedAgentId = trimString(agentId)
-  const trimmedSiteId = trimString(siteId)
-  if (!trimmedAgentId) {
-    throw new HTTPError("agentId is required", 400)
-  }
-  if (!trimmedSiteId) {
-    throw new HTTPError("siteId is required", 400)
-  }
-  if (!isValidSharePointSiteId(trimmedSiteId)) {
-    throw new HTTPError("Invalid SharePoint site id", 400)
-  }
-
-  const agent = await agentsSdk.getOrThrow(trimmedAgentId)
-  const source = getSharePointSources(agent).find(
-    source => trimString(source.config.site?.id) === trimmedSiteId
-  )
-  if (!source) {
-    throw new HTTPError("SharePoint site is not connected for this agent", 404)
-  }
-
-  const bearerToken = await getSharePointBearerToken(
-    getSharePointCurrentWorkspaceConnectionKey()
-  )
-  const driveIds = await listDrives(bearerToken, trimmedSiteId)
-  const entries: KnowledgeSourceEntry[] = []
-
-  for (const driveId of driveIds) {
-    const files = await collectFilesRecursive(bearerToken, driveId)
-    for (const file of files) {
-      const path = trimString(file.path)
-      if (!path) {
-        continue
-      }
-      if (!isSharePointPathIncludedByFilters(path, source.config.filters)) {
-        continue
-      }
-      entries.push({
-        id: `${trimString(file.driveId)}:${trimString(file.itemId)}`,
-        name: trimString(file.filename) || path.split("/").pop() || path,
-        path,
-        type: "file",
-      })
-    }
-  }
-
-  entries.sort((a, b) => a.path.localeCompare(b.path))
-  return { entries }
-}
-
 export const fetchAllSharePointEntriesForAgent = async (
   agentId: string,
   siteId: string
