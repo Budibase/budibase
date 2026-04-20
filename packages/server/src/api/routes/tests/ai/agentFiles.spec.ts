@@ -211,7 +211,7 @@ describe("agent files", () => {
     })
   })
 
-  it("deletes an uploaded agent file", async () => {
+  it("deletes an uploaded agent file after it has been processed", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
         name: "Support Agent",
@@ -238,6 +238,37 @@ describe("agent files", () => {
         getKnowledgeSourceSyncQueue().getBullQueue()
       )
 
+      expect(deleteScope.isDone()).toBe(true)
+
+      const { files } = await config.api.agent.fetchFiles(created._id!)
+      expect(files).toHaveLength(0)
+    })
+  })
+
+  it("deletes an uploaded agent file before processing starts", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "Support Agent",
+        aiconfig: "default",
+      })
+
+      mockAutoKnowledgeBaseCreate()
+
+      const upload = await config.api.agent.uploadFile(created._id!, {
+        file: fileBuffer,
+        name: "queued.txt",
+      })
+      expect(upload.file.status).toBe(KnowledgeBaseFileStatus.PROCESSING)
+      expect(upload.file._id).toBeDefined()
+
+      const deleteScope = mockGeminiFileDelete("vector-store-1", upload.file._id!)
+
+      await config.api.agent.removeFile(created._id!, upload.file._id!)
+      await utils.queue.processMessages(
+        getKnowledgeSourceSyncQueue().getBullQueue()
+      )
+
+      await utils.queue.processMessages(getQueue().getBullQueue())
       expect(deleteScope.isDone()).toBe(true)
 
       const { files } = await config.api.agent.fetchFiles(created._id!)
@@ -450,7 +481,7 @@ describe("agent files", () => {
     })
   })
 
-  it("disconnect endpoint removes all SharePoint files", async () => {
+  it("disconnecting SharePoint sources removes all synced files", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
         name: "SharePoint Disconnect Endpoint Agent",
