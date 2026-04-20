@@ -210,6 +210,7 @@
               {node}
               selectedPaths={selectedEntryPaths}
               onTogglePaths={toggleEntryPaths}
+              showStatus={false}
             />
           {/each}
         </TreeView>

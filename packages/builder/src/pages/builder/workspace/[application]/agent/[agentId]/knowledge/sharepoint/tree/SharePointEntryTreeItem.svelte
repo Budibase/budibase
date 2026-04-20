@@ -1,20 +1,20 @@
 <script lang="ts">
+  import {
+    AgentKnowledgeSourceSyncEntryStatus,
+    KnowledgeBaseFileStatus,
+  } from "@budibase/types"
   import { StatusLight, TreeItem } from "@budibase/bbui"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
-  import {
-    getSharePointStatusLightProps,
-    getSharePointStatusText,
-    isSelectableSharePointStatus,
-  } from "../sharePointStatus"
 
   export interface Props {
     node: SharePointEntryTreeNode
     selectedPaths?: string[]
     onTogglePaths?: (_paths: string[], _nextSelected: boolean) => void
+    showStatus?: boolean
   }
 
-  let { node, selectedPaths, onTogglePaths }: Props = $props()
+  let { node, selectedPaths, onTogglePaths, showStatus = true }: Props = $props()
 
   const collectPaths = (node: SharePointEntryTreeNode): string[] => {
     return [node.path, ...node.children.flatMap(child => collectPaths(child))]
@@ -30,7 +30,41 @@
     if (node.type === "folder") {
       return true
     }
-    return isSelectableSharePointStatus(node.status)
+    return node.status !== AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
+  }
+
+  const getSharePointStatusText = (status?: SharePointEntryTreeNode["status"]) => {
+    switch (status) {
+      case KnowledgeBaseFileStatus.PROCESSING:
+        return "Processing"
+      case KnowledgeBaseFileStatus.READY:
+      case AgentKnowledgeSourceSyncEntryStatus.SYNCED:
+        return "Ready"
+      case KnowledgeBaseFileStatus.FAILED:
+      case AgentKnowledgeSourceSyncEntryStatus.FAILED:
+        return "Failed"
+      case AgentKnowledgeSourceSyncEntryStatus.EXCLUDED:
+        return "Excluded"
+      case AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED:
+        return "Not supported"
+      default:
+        return undefined
+    }
+  }
+
+  const getSharePointStatusLightProps = (
+    status?: SharePointEntryTreeNode["status"]
+  ) => {
+    switch (status) {
+      case KnowledgeBaseFileStatus.READY:
+      case AgentKnowledgeSourceSyncEntryStatus.SYNCED:
+        return { positive: true }
+      case KnowledgeBaseFileStatus.FAILED:
+      case AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED:
+        return { negative: true }
+      default:
+        return { notice: true }
+    }
   }
 
   let hasChildren = $derived(node.children.length > 0)
@@ -91,7 +125,7 @@
     on:select={handleSelect}
   >
     <svelte:fragment slot="post">
-      {#if node.type === "file" && getSharePointStatusText(node.status)}
+      {#if showStatus && node.type === "file" && getSharePointStatusText(node.status)}
         <div class="status-container">
           <StatusLight size="S" {...getSharePointStatusLightProps(node.status)}>
             {getSharePointStatusText(node.status)}
@@ -107,7 +141,12 @@
 
     {#if hasChildren}
       {#each node.children as child (child.path)}
-        <SharePointEntryTreeItem node={child} {selectedPaths} {onTogglePaths} />
+        <SharePointEntryTreeItem
+          node={child}
+          {selectedPaths}
+          {onTogglePaths}
+          {showStatus}
+        />
       {/each}
     {/if}
   </TreeItem>

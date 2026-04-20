@@ -1,20 +1,18 @@
 import {
+  AgentKnowledgeSourceSyncEntryStatus,
   KnowledgeBaseFileStatus,
   type AgentKnowledgeSourceSyncEntry,
   type KnowledgeSourceEntry,
 } from "@budibase/types"
-import type { SharePointEntryTreeNode } from "./tree/sharePointEntryTree"
-import {
-  isSelectableSharePointStatus,
-  toSharePointDisplayStatusFromFile,
-  toSharePointDisplayStatusFromSyncEntry,
-  type SharePointDisplayStatus,
-} from "./sharePointStatus"
+import type {
+  SharePointEntryTreeNode,
+  SharePointStatus,
+} from "./tree/sharePointEntryTree"
 
 export interface TreeEntryInput {
   filename: string
   sourcePath?: string
-  status: KnowledgeBaseFileStatus
+  status?: KnowledgeBaseFileStatus
   errorMessage?: string
 }
 
@@ -137,7 +135,7 @@ export const buildEntryTree = (
 ): SharePointEntryTreeNode[] => {
   const fileNodesByPath = new Map<
     string,
-    { path: string; status: SharePointDisplayStatus; errorMessage?: string }
+    { path: string; status?: SharePointStatus; errorMessage?: string }
   >()
 
   for (const file of files) {
@@ -147,7 +145,7 @@ export const buildEntryTree = (
     }
     fileNodesByPath.set(path, {
       path,
-      status: toSharePointDisplayStatusFromFile(file.status),
+      status: file.status,
       errorMessage: file.errorMessage,
     })
   }
@@ -158,12 +156,12 @@ export const buildEntryTree = (
       continue
     }
     const existing = fileNodesByPath.get(path)
-    const displayStatus = toSharePointDisplayStatusFromSyncEntry(entry.status)
+    const syncStatus = entry.status
     if (!existing) {
-      if (displayStatus === "failed") {
+      if (syncStatus === AgentKnowledgeSourceSyncEntryStatus.FAILED) {
         fileNodesByPath.set(path, {
           path,
-          status: displayStatus,
+          status: syncStatus,
           errorMessage: entry.errorMessage,
         })
       }
@@ -231,14 +229,58 @@ export const buildEntryTree = (
 
 export const buildEntryTreeFromSourceEntries = (
   entries: KnowledgeSourceEntry[]
-): SharePointEntryTreeNode[] =>
-  buildEntryTree(
-    entries.map(entry => ({
-      filename: entry.name,
-      sourcePath: entry.path,
-      status: KnowledgeBaseFileStatus.READY,
-    }))
-  )
+): SharePointEntryTreeNode[] => {
+  const roots: SharePointEntryTreeNode[] = []
+  const byPath = new Map<string, SharePointEntryTreeNode>()
+
+  for (const entry of entries) {
+    const normalizedPath = normalizePath(entry.path)
+    if (!normalizedPath) {
+      continue
+    }
+
+    const parts = normalizedPath.split("/").filter(Boolean)
+    let parent = roots
+    let currentPath = ""
+
+    for (let i = 0; i < parts.length; i++) {
+      const segment = parts[i]
+      currentPath = currentPath ? `${currentPath}/${segment}` : segment
+      const isLeaf = i === parts.length - 1
+      const shouldBeFile = isLeaf && entry.type === "file"
+
+      let node = byPath.get(currentPath)
+      if (!node) {
+        node = {
+          id: currentPath,
+          name: segment,
+          path: currentPath,
+          type: shouldBeFile ? "file" : "folder",
+          children: [],
+        }
+        byPath.set(currentPath, node)
+        parent.push(node)
+      } else if (shouldBeFile) {
+        node.type = "file"
+      }
+      parent = node.children
+    }
+  }
+
+  const sortNodes = (nodes: SharePointEntryTreeNode[]) => {
+    nodes.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === "folder" ? -1 : 1
+      }
+      return a.name.localeCompare(b.name)
+    })
+    for (const node of nodes) {
+      sortNodes(node.children)
+    }
+  }
+  sortNodes(roots)
+  return roots
+}
 
 export const wrapSelectionTreeWithSiteRoot = (
   nodes: SharePointEntryTreeNode[]
@@ -262,10 +304,7 @@ export const collectSelectablePaths = (
 ): string[] => {
   const paths: string[] = []
   for (const node of nodes) {
-    if (
-      node.type === "folder" ||
-      (node.type === "file" && isSelectableSharePointStatus(node.status))
-    ) {
+    if (node.type === "folder" || node.type === "file") {
       paths.push(node.path)
     }
     paths.push(...collectSelectablePaths(node.children))
