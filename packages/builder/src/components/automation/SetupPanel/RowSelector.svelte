@@ -291,7 +291,7 @@
   {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
     <PropField
       label={field}
-      fullWidth={fullWidth || isFullWidth(schema.type)}
+      fullWidth={isTestModal || fullWidth || isFullWidth(schema.type)}
       {componentWidth}
     >
       {#if customDrawer.includes(schema.type) || isTestModal}

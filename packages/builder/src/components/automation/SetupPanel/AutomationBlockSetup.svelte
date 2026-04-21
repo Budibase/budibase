@@ -790,7 +790,11 @@
       {#if canShowField(stepLayouts[block.stepId].schema, inputData)}
         {#each stepLayouts[block.stepId][key].content as config}
           {#if config.title}
-            <PropField label={config.title} labelTooltip={config.tooltip}>
+            <PropField
+              label={config.title}
+              labelTooltip={config.tooltip}
+              fullWidth={isTestModal}
+            >
               <svelte:component
                 this={config.type}
                 {...config.props}
@@ -817,7 +821,10 @@
     {#each schemaProperties as [key, value]}
       {#if canShowField(value, inputData)}
         {@const label = getFieldLabel(key, value)}
-        <div class:block-field={shouldRenderField(value)}>
+        <div
+          class:block-field={shouldRenderField(value)}
+          class:is-test-modal={isTestModal}
+        >
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
             <div class="label-container">
               <Label>
@@ -1173,6 +1180,11 @@
     justify-content: space-between;
     display: grid;
     grid-template-columns: 1fr 320px;
+  }
+  .block-field.is-test-modal {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 
   .attachment-field-width {

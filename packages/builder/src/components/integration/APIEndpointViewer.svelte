@@ -93,6 +93,10 @@
   import { environment } from "@/stores/portal"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { onMount } from "svelte"
+  import {
+    createLandscapeTransition,
+    createMoveToExpandedAction,
+  } from "@/components/common/landscapeExpansion"
 
   export let queryId
   export let datasourceId: string | undefined = undefined
@@ -107,9 +111,6 @@
       props: { verb?: string; color?: string }
     }
   }
-  // Expanded sidebar dimensions
-  const EXPANDED_MARGIN = 0.15 // 15vh/15vw margins
-  const EXPANDED_SIZE = 0.7 // 70vh/70vw size
   const sidebarExpanded = writable(false)
 
   let _pickedDatasourceId: string | undefined =
@@ -779,94 +780,18 @@
     }
   }
 
-  // This behaviour needs to be turned into a component!
-  // Maybe add a slot behaviour to allow any component to expand to a modal?
-  const moveToExpanded = (node: HTMLElement) => {
-    let initialized = false
+  const moveToExpanded = createMoveToExpandedAction({
+    expanded: sidebarExpanded,
+    collapsedTargetSelector: ".side-bar.main .side-bar-content",
+    expandedTargetSelector: ".side-bar.expanded .side-bar-content",
+  })
 
-    const unsubscribe = sidebarExpanded.subscribe(expanded => {
-      // Skip the initial subscription call to avoid moving the node on mount
-      if (!initialized) {
-        initialized = true
-        return
-      }
-
-      if (expanded) {
-        // Move to expanded portal sidebar - need to wait for it to be rendered
-        setTimeout(() => {
-          const expandedTarget = document.querySelector(
-            ".side-bar.expanded .side-bar-content"
-          )
-          if (expandedTarget && node.parentNode !== expandedTarget) {
-            expandedTarget.appendChild(node)
-          }
-        }, 0)
-      } else {
-        // Move back to collapsed sidebar
-        const collapsedTarget = document.querySelector(
-          ".side-bar.main .side-bar-content"
-        )
-        if (collapsedTarget && node.parentNode !== collapsedTarget) {
-          collapsedTarget.appendChild(node)
-        }
-      }
-    })
-
-    return {
-      destroy() {
-        unsubscribe()
-      },
-    }
-  }
-
-  const sidebarTransition = (
-    _node: HTMLElement,
-    params: { direction: "in" | "out" }
-  ) => {
-    if (!sidebarElement) {
-      return { duration: 260 }
-    }
-
-    // Get the position of the collapsed sidebar (starting position)
-    const rect = sidebarElement.getBoundingClientRect()
-    const startTop = rect.top
-    const startRight = window.innerWidth - rect.right
-    const startWidth = rect.width
-    const startHeight = rect.height
-
-    // Ending position when expanded (uses constants that match CSS .side-bar.expanded)
-    const endTop = window.innerHeight * EXPANDED_MARGIN
-    const endRight = window.innerWidth * EXPANDED_MARGIN
-    const endWidth = window.innerWidth * EXPANDED_SIZE
-    const endHeight = window.innerHeight * EXPANDED_SIZE
-
-    isTransitioning = true
-
-    // For 'out' transition, reset isTransitioning after the duration
-    if (params.direction === "out") {
-      setTimeout(() => {
-        isTransitioning = false
-      }, 260)
-    }
-    return {
-      duration: 260,
-      css: (t: number) => {
-        // Ease in-out function and duration, taken from Drawer component
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
-        const currentTop = startTop + (endTop - startTop) * eased
-        const currentRight = startRight + (endRight - startRight) * eased
-        const currentWidth = startWidth + (endWidth - startWidth) * eased
-        const currentHeight = startHeight + (endHeight - startHeight) * eased
-
-        return `
-          top: ${currentTop}px;
-          right: ${currentRight}px;
-          width: ${currentWidth}px;
-          height: ${currentHeight}px;
-        `
-      },
-    }
-  }
+  const sidebarTransition = createLandscapeTransition({
+    getCollapsedElement: () => sidebarElement,
+    onTransitioningChange: transitioning => {
+      isTransitioning = transitioning
+    },
+  })
 
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {

@@ -18,6 +18,7 @@
   export let root: boolean = true
   export let path: (string | number)[] = []
   export let showCopyIcon: boolean = false
+  export let expandAll: boolean = false
 
   const dispatch = createEventDispatcher()
   const Colors = {
@@ -35,6 +36,7 @@
 
   let expanded = false
   let valueExpanded = false
+  let previousExpandAll = false
   let clickContext: JSONViewerClickContext
 
   $: isArray = Array.isArray(value)
@@ -45,6 +47,17 @@
   $: displayValue = getDisplayValue(isArray, isObject, keys, value)
   $: style = getStyle(isArray, isObject, value)
   $: clickContext = { value, label, path }
+  $: {
+    const shouldExpand = expandAll && !previousExpandAll
+    const shouldCollapse = !expandAll && previousExpandAll
+    previousExpandAll = expandAll
+    if (shouldExpand) {
+      expanded = true
+    }
+    if (shouldCollapse) {
+      expanded = false
+    }
+  }
 
   const getKeys = (isArray: boolean, isObject: boolean, value: any) => {
     if (isArray) {
@@ -173,6 +186,7 @@
           root={false}
           path={[...path, key]}
           {showCopyIcon}
+          {expandAll}
           on:click-label
           on:click-value
           on:click-copy

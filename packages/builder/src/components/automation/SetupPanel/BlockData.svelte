@@ -6,12 +6,14 @@
     Icon,
     Button,
     Divider,
+    TextArea,
   } from "@budibase/bbui"
   import ExpandableModalPanel from "@/components/common/ExpandableModalPanel.svelte"
   import JSONViewer, {
     type JSONViewerClickEvent,
   } from "@/components/common/JSONViewer.svelte"
   import AgentOutputViewer from "./AgentOutputViewer.svelte"
+  import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
   import {
     type AutomationStep,
     type AutomationTrigger,
@@ -32,6 +34,7 @@
     isLoopStep,
     BlockDefinitionTypes,
     AutomationActionStepId,
+    AutomationEventType,
   } from "@budibase/types"
   import Count from "./Count.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
@@ -68,6 +71,37 @@
 
   let dataMode: DataMode = DataMode.INPUT
   let issues: BlockStatus[] = []
+  let showInlineTestData = false
+  let failedParse: string | null = null
+  let selectedValues = true
+  let selectedJSON = false
+  let runningInlineTest = false
+  let expandablePanel: { close: () => void } | undefined
+  let previousSelectedNodeId: string | undefined
+  let previousSelectedNodeMode: DataMode | undefined
+  let trigger: AutomationTrigger | undefined
+  let schemaProperties: Array<[string, Record<string, unknown>]> = []
+  let testData: Record<string, unknown> | undefined
+
+  const rowTriggers = [
+    AutomationEventType.ROW_DELETE,
+    AutomationEventType.ROW_UPDATE,
+    AutomationEventType.ROW_SAVE,
+    AutomationEventType.ROW_ACTION,
+  ]
+
+  const isRowTriggerEvent = (
+    event: AutomationEventType | undefined
+  ): event is AutomationEventType => !!event && rowTriggers.includes(event)
+
+  const getTriggerTableId = (target: AutomationTrigger | undefined) => {
+    const inputs = target?.inputs
+    if (!inputs || typeof inputs !== "object" || !("tableId" in inputs)) {
+      return undefined
+    }
+    const tableId = inputs.tableId
+    return typeof tableId === "string" ? tableId : undefined
+  }
 
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
@@ -79,8 +113,17 @@
     : undefined
   $: loopBlock = automationStore.actions.getBlockByRef(automation, loopRef)
 
-  $: if ($automationStore.selectedNodeId) {
-    dataMode = $automationStore.selectedNodeMode || DataMode.INPUT
+  $: {
+    const selectedNodeId = $automationStore.selectedNodeId
+    const selectedNodeMode = $automationStore.selectedNodeMode || DataMode.INPUT
+    const selectedNodeChanged = selectedNodeId !== previousSelectedNodeId
+    const selectedNodeModeChanged = selectedNodeMode !== previousSelectedNodeMode
+
+    if (selectedNodeChanged || selectedNodeModeChanged) {
+      dataMode = selectedNodeMode
+      previousSelectedNodeId = selectedNodeId
+      previousSelectedNodeMode = selectedNodeMode
+    }
   }
 
   $: testResults = $automationStore.testResults as TestAutomationResponse
@@ -88,7 +131,131 @@
     testResults,
     block
   )
+  $: currentTestData = $selectedAutomation.data?.testData
+  $: testData = parseTestData(currentTestData)
+  $: {
+    trigger = cloneDeep($selectedAutomation.data?.definition?.trigger)
+
+    let schema = Object.entries(
+      trigger?.schema?.outputs?.properties || {}
+    ) as Array<[string, Record<string, unknown>]>
+    if (trigger?.event === AutomationEventType.APP_TRIGGER) {
+      schema = [["fields", { customType: "fields" }]]
+    }
+    schemaProperties = schema
+  }
+  $: isTestDataInvalid =
+    !isTriggerValid(trigger) ||
+    !(trigger?.schema?.outputs?.required || []).every(
+      required => testData?.[required] || required !== "row"
+    )
+  $: if (dataMode !== DataMode.OUTPUT) {
+    showInlineTestData = false
+  }
   $: processTestIssues(testResults, block)
+
+  const parseTestData = (data: Record<string, unknown> | undefined) => {
+    const autoTrigger = $selectedAutomation.data?.definition?.trigger
+    const tableId = getTriggerTableId(autoTrigger)
+
+    if (
+      isRowTriggerEvent(autoTrigger?.event) &&
+      (data as { row?: { tableId?: string } } | undefined)?.row?.tableId !==
+        tableId
+    ) {
+      return {
+        row: { tableId },
+        meta: {},
+        id: "",
+        revision: "",
+      } as Record<string, unknown>
+    }
+
+    return cloneDeep(data) as Record<string, unknown>
+  }
+
+  const isTriggerValid = (target: AutomationTrigger | undefined) => {
+    if (isRowTriggerEvent(target?.event) && !getTriggerTableId(target)) {
+      return false
+    }
+    return true
+  }
+
+  const openInlineTestData = () => {
+    dataMode = DataMode.OUTPUT
+    showInlineTestData = true
+    selectedValues = true
+    selectedJSON = false
+    failedParse = null
+  }
+
+  const toggleInlineTestDataMode = (showValues: boolean) => {
+    selectedValues = showValues
+    selectedJSON = !showValues
+  }
+
+  const handleInlineTestDataUpdate = (
+    e: CustomEvent<{ testData?: Record<string, unknown> }>
+  ) => {
+    const updatedTestData = e.detail?.testData
+    if (updatedTestData) {
+      testData = parseTestData(updatedTestData)
+    }
+  }
+
+  const parseTestJSON = async (e: CustomEvent<string>) => {
+    let jsonUpdate: Record<string, unknown>
+
+    try {
+      jsonUpdate = JSON.parse(e.detail)
+      failedParse = null
+    } catch (_e) {
+      failedParse = "Invalid JSON"
+      return
+    }
+
+    if (isRowTriggerEvent(trigger?.event)) {
+      const tableId = getTriggerTableId(trigger)
+      const data = jsonUpdate as { row?: { tableId?: string } }
+
+      if (!data.row) {
+        data.row = {}
+      }
+      if (data.row.tableId !== tableId) {
+        data.row.tableId = tableId
+      }
+    }
+
+    if (!$selectedAutomation.data) {
+      return
+    }
+
+    const updatedAuto =
+      automationStore.actions.addTestDataToAutomation(jsonUpdate)
+    if (!updatedAuto) {
+      return
+    }
+    await automationStore.actions.save(updatedAuto)
+  }
+
+  const runInlineTest = async () => {
+    const selectedAutomationData = $selectedAutomation.data
+    if (!selectedAutomationData || runningInlineTest) {
+      return
+    }
+
+    runningInlineTest = true
+    showInlineTestData = false
+    expandablePanel?.close()
+
+    try {
+      await automationStore.actions.test(selectedAutomationData, testData)
+    } catch (error) {
+      notifications.error(String(error))
+    } finally {
+      runningInlineTest = false
+    }
+  }
 
   /**
    * Take the results of an automation and generate a
@@ -267,103 +434,174 @@
       : undefined
 </script>
 
-<ExpandableModalPanel title="Step Data">
-  <div slot="header" class="tabs">
-    {#each visibleModes as mode}
-      <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
+<ExpandableModalPanel bind:this={expandablePanel} title="Step Data">
+  <svelte:fragment slot="header" let:expanded>
+    <div class="tabs">
+      {#each visibleModes as mode}
+        <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
+          <ActionButton
+            selected={!showInlineTestData && mode === dataMode}
+            quiet
+            on:click={() => {
+              showInlineTestData = false
+              dataMode = mode
+            }}
+          >
+            {DataModeTabs[mode]}
+          </ActionButton>
+        </Count>
+      {/each}
+      {#if expanded}
         <ActionButton
-          selected={mode === dataMode}
+          selected={showInlineTestData}
           quiet
-          on:click={() => {
-            dataMode = mode
-          }}
+          icon="Play"
+          on:click={openInlineTestData}
         >
-          {DataModeTabs[mode]}
+          Run Test
         </ActionButton>
-      </Count>
-    {/each}
-  </div>
+      {/if}
+    </div>
+  </svelte:fragment>
 
-  <div slot="content" class="viewer">
-    {#if dataMode === DataMode.INPUT}
-      <JSONViewer
-        value={parsedContext}
-        showCopyIcon
-        on:click-copy={copyContext}
-      />
-    {:else if dataMode === DataMode.OUTPUT}
-      {#if blockResults}
+  <svelte:fragment slot="content" let:expanded>
+    <div class="viewer" class:data-output={dataMode === DataMode.OUTPUT}>
+      {#if dataMode === DataMode.INPUT}
         <JSONViewer
-          value={blockResults.outputs}
+          value={parsedContext}
           showCopyIcon
+          expandAll={expanded}
           on:click-copy={copyContext}
         />
-      {:else if testResults && !blockResults}
-        <div class="content">
-          {#if isLoopChild}
+      {:else if dataMode === DataMode.OUTPUT}
+        {#if showInlineTestData}
+          <div class="inline-test-data">
+            <div class="inline-test-data-title">Add test data</div>
+            <div class="options">
+              <ActionButton
+                quiet
+                selected={selectedValues}
+                on:click={() => toggleInlineTestDataMode(true)}
+                >Use values</ActionButton
+              >
+              <ActionButton
+                quiet
+                selected={selectedJSON}
+                on:click={() => toggleInlineTestDataMode(false)}
+                >Use JSON</ActionButton
+              >
+            </div>
+            {#if selectedValues}
+              <div
+                class="tab-content-padding"
+                class:expanded-form-fields={expanded}
+              >
+                <AutomationBlockSetup
+                  {schemaProperties}
+                  isTestModal
+                  {testData}
+                  block={trigger}
+                  {automation}
+                  on:update={handleInlineTestDataUpdate}
+                />
+              </div>
+            {/if}
+            {#if selectedJSON}
+              <div class="text-area-container">
+                <TextArea
+                  value={JSON.stringify(
+                    $selectedAutomation.data?.testData,
+                    null,
+                    2
+                  )}
+                  error={failedParse || undefined}
+                  on:change={parseTestJSON}
+                />
+              </div>
+            {/if}
+            <div class="inline-test-data-run">
+              <Button
+                cta
+                disabled={isTestDataInvalid || runningInlineTest}
+                on:click={runInlineTest}
+              >
+                Run test
+              </Button>
+            </div>
+          </div>
+        {:else if blockResults}
+          <JSONViewer
+            value={blockResults.outputs}
+            showCopyIcon
+            on:click-copy={copyContext}
+          />
+        {:else if testResults && !blockResults}
+          <div class="content">
+            {#if isLoopChild}
+              <span class="info">
+                This step was executed, but outputs are not exposed for
+                individual steps inside loops. Click the loop node to view loop
+                outputs, or use the State block to expose specific data.
+              </span>
+            {:else}
+              <span class="info">
+                This step was not executed as part of the test run
+              </span>
+            {/if}
+          </div>
+        {:else}
+          <div class="content">
             <span class="info">
-              This step was executed, but outputs are not exposed for individual
-              steps inside loops. Click the loop node to view loop outputs, or
-              use the State block to expose specific data.
+              Run the automation to show the output of this step
             </span>
-          {:else}
+            <Button
+              size={"S"}
+              icon={"Play"}
+              secondary
+              on:click={() => {
+                dispatch("run")
+              }}
+            >
+              Run
+            </Button>
+          </div>
+        {/if}
+      {:else if dataMode === DataMode.AGENT}
+        {#if agentOutputs}
+          <AgentOutputViewer outputs={agentOutputs} />
+        {:else if testResults && !blockResults}
+          <div class="content">
             <span class="info">
               This step was not executed as part of the test run
             </span>
+          </div>
+        {:else}
+          <div class="content">
+            <span class="info">
+              Run the automation to show the agent details
+            </span>
+          </div>
+        {/if}
+      {:else}
+        <div class="issues" class:empty={!issues.length}>
+          {#if issues.length === 0}
+            <span>There are no current issues</span>
+          {:else}
+            {#each issues as issue}
+              <div class={`issue ${issue.type}`}>
+                <div class="icon"><Icon name="warning" /></div>
+                <!-- For custom automations, the error message needs a default -->
+                <div class="message">
+                  {issue.message || "There was an error"}
+                </div>
+              </div>
+              <Divider noMargin />
+            {/each}
           {/if}
         </div>
-      {:else}
-        <div class="content">
-          <span class="info">
-            Run the automation to show the output of this step
-          </span>
-          <Button
-            size={"S"}
-            icon={"Play"}
-            secondary
-            on:click={() => {
-              dispatch("run")
-            }}
-          >
-            Run
-          </Button>
-        </div>
       {/if}
-    {:else if dataMode === DataMode.AGENT}
-      {#if agentOutputs}
-        <AgentOutputViewer outputs={agentOutputs} />
-      {:else if testResults && !blockResults}
-        <div class="content">
-          <span class="info">
-            This step was not executed as part of the test run
-          </span>
-        </div>
-      {:else}
-        <div class="content">
-          <span class="info">
-            Run the automation to show the agent details
-          </span>
-        </div>
-      {/if}
-    {:else}
-      <div class="issues" class:empty={!issues.length}>
-        {#if issues.length === 0}
-          <span>There are no current issues</span>
-        {:else}
-          {#each issues as issue}
-            <div class={`issue ${issue.type}`}>
-              <div class="icon"><Icon name="warning" /></div>
-              <!-- For custom automations, the error message needs a default -->
-              <div class="message">
-                {issue.message || "There was an error"}
-              </div>
-            </div>
-            <Divider noMargin />
-          {/each}
-        {/if}
-      </div>
-    {/if}
-  </div>
+    </div>
+  </svelte:fragment>
 </ExpandableModalPanel>
 
 <style>
@@ -379,7 +617,13 @@
     overflow: auto;
     flex: 1 1 0px;
     min-height: 0;
-    padding-right: 0px;
+  }
+  .viewer.data-output {
+    padding-right: var(--spacing-l);
+  }
+  .viewer.data-output :global(.binding-text) {
+    /* Match the left JSON row indent (arrow slot + margins) */
+    padding-right: 20px;
   }
   .viewer .content {
     height: 100%;
@@ -393,6 +637,35 @@
     display: flex;
     gap: var(--spacing-s);
     padding: var(--spacing-m) var(--spacing-l);
+  }
+  .inline-test-data {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l);
+  }
+  .inline-test-data-title {
+    font-weight: 500;
+  }
+  .options {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab-content-padding {
+    padding: 0 var(--spacing-s);
+  }
+  .tab-content-padding.expanded-form-fields {
+    width: min(100%, 720px);
+  }
+  .text-area-container :global(textarea) {
+    min-height: 300px;
+    height: 300px;
+  }
+  .inline-test-data-run {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-start;
   }
   .issue {
     display: flex;

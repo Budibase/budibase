@@ -1,89 +1,146 @@
 <script lang="ts">
+  import { fade } from "svelte/transition"
+  import { writable } from "svelte/store"
+  import Portal from "svelte-portal"
+  import { ActionButton, Divider, Icon } from "@budibase/bbui"
   import {
-    ActionButton,
-    Divider,
-    Icon,
-    Modal,
-    ModalContent,
-  } from "@budibase/bbui"
-
-  type ModalSize = "S" | "M" | "L" | "XL"
+    createLandscapeTransition,
+    createMoveToExpandedAction,
+  } from "./landscapeExpansion"
 
   export let title = "Details"
-  export let modalSize: ModalSize = "XL"
-  export let modalHeight = "70vh"
 
-  let modal: Modal | undefined
-  let expanded = false
+  let panelElement: HTMLDivElement
+  let toggleButtonElement: HTMLDivElement
+  let isTransitioning = false
+  const expanded = writable(false)
+  const panelId = `expandable-modal-panel-${Math.random().toString(36).slice(2)}`
 
-  const open = () => {
-    expanded = true
-    modal?.show()
+  const collapsedTargetSelector = `.expandable-panel.main[data-expandable-panel-main="${panelId}"] .panel-target`
+  const expandedTargetSelector = `.expandable-panel.expanded[data-expandable-panel-expanded="${panelId}"] .panel-target`
+
+  const moveToExpanded = createMoveToExpandedAction({
+    expanded,
+    collapsedTargetSelector,
+    expandedTargetSelector,
+  })
+
+  const panelTransition = createLandscapeTransition({
+    getCollapsedElement: () => toggleButtonElement || panelElement,
+    onTransitioningChange: transitioning => {
+      isTransitioning = transitioning
+    },
+  })
+
+  const toggleExpanded = () => {
+    expanded.set(!$expanded)
   }
 
-  const close = () => {
-    expanded = false
-    modal?.hide()
+  const closeExpanded = () => {
+    expanded.set(false)
+  }
+
+  export const close = () => {
+    closeExpanded()
   }
 </script>
 
-<div class="expandable-panel">
-  <div class="panel-header">
-    <div class="header-content">
-      <slot name="header" />
-    </div>
-    <div class="toggle-button">
-      <ActionButton quiet on:click={open}>
-        <Icon name="arrows-out-simple" size="S" />
-      </ActionButton>
-    </div>
-  </div>
-  <Divider noMargin />
-  {#if !expanded}
-    <div class="panel-content">
-      <slot name="content" />
-    </div>
-  {/if}
-</div>
-
-<Modal bind:this={modal} on:hide={() => (expanded = false)}>
-  <ModalContent
-    {title}
-    size={modalSize}
-    showConfirmButton={false}
-    showCancelButton={false}
+<div class="expandable-panel-wrapper">
+  <div
+    class="expandable-panel main"
+    data-expandable-panel-main={panelId}
+    class:hidden={$expanded || isTransitioning}
+    bind:this={panelElement}
   >
-    {#if expanded}
-      <div class="modal-wrap" style={`--modal-height: ${modalHeight}`}>
+    <div class="panel-target">
+      <div class="panel-shell" use:moveToExpanded>
         <div class="panel-header">
           <div class="header-content">
-            <slot name="header" />
+            {#if $$slots.header}
+              <slot name="header" expanded={$expanded} />
+            {:else}
+              <div class="title">{title}</div>
+            {/if}
           </div>
-          <div class="toggle-button">
-            <ActionButton quiet on:click={close}>
-              <Icon name="arrows-in-simple" size="S" />
+          <div class="toggle-button" bind:this={toggleButtonElement}>
+            <ActionButton quiet on:click={toggleExpanded}>
+              <Icon
+                name={$expanded ? "arrows-in-simple" : "arrows-out-simple"}
+                size="S"
+              />
             </ActionButton>
           </div>
         </div>
         <Divider noMargin />
         <div class="panel-content">
-          <slot name="content" />
+          <slot name="content" close={closeExpanded} expanded={$expanded} />
         </div>
       </div>
-    {/if}
-  </ModalContent>
-</Modal>
+    </div>
+  </div>
+</div>
+
+<Portal target=".modal-container">
+  {#if $expanded}
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div
+      class="underlay"
+      transition:fade={{ duration: 260 }}
+      on:click={closeExpanded}
+    ></div>
+  {/if}
+  {#if $expanded}
+    <div
+      class="expandable-panel expanded"
+      data-expandable-panel-expanded={panelId}
+      in:panelTransition={{ direction: "in" }}
+      out:panelTransition={{ direction: "out" }}
+    >
+      <div class="panel-target"></div>
+    </div>
+  {/if}
+</Portal>
 
 <style>
+  .expandable-panel-wrapper,
   .expandable-panel,
-  .modal-wrap {
+  .panel-target,
+  .panel-shell {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    height: 100%;
   }
 
-  .modal-wrap {
-    height: var(--modal-height);
+  .expandable-panel.main {
+    position: relative;
+  }
+
+  .expandable-panel.expanded {
+    position: fixed;
+    top: 15vh;
+    right: 15vw;
+    bottom: 15vh;
+    left: 15vw;
+    width: auto;
+    height: auto;
+    border: var(--border-light);
+    border-radius: 8px;
+    background: var(--spectrum-global-color-gray-50);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .underlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    transition: opacity 260ms ease-out;
   }
 
   .panel-header {
@@ -98,6 +155,12 @@
     min-height: 0;
   }
 
+  .title {
+    padding: var(--spacing-m) var(--spacing-l);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
   .panel-content {
     flex: 1;
     min-height: 0;
@@ -107,5 +170,10 @@
 
   .toggle-button {
     margin-right: var(--spacing-l);
+  }
+
+  .hidden {
+    visibility: hidden;
+    pointer-events: none;
   }
 </style>

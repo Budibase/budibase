@@ -61,7 +61,7 @@
 {#if schemaFields?.length && isTestModal}
   <div class="fields">
     {#each schemaFields as [field, schema]}
-      <PropField label={field}>
+      <PropField label={field} fullWidth={isTestModal}>
         {#if [STRING, NUMBER, ARRAY].includes(schema.type)}
           <svelte:component
             this={isTestModal ? ModalBindableInput : DrawerBindableInput}
