@@ -261,7 +261,10 @@ describe("agent files", () => {
       expect(upload.file.status).toBe(KnowledgeBaseFileStatus.PROCESSING)
       expect(upload.file._id).toBeDefined()
 
-      const deleteScope = mockGeminiFileDelete("vector-store-1", upload.file._id!)
+      const deleteScope = mockGeminiFileDelete(
+        "vector-store-1",
+        upload.file._id!
+      )
 
       await config.api.agent.removeFile(created._id!, upload.file._id!)
       await utils.queue.processMessages(
@@ -431,6 +434,9 @@ describe("agent files", () => {
           sourceIds: ["site-2"],
         }
       )
+      await utils.queue.processMessages(
+        getKnowledgeSourceSyncQueue().getBullQueue()
+      )
 
       expect(deleteScope.isDone()).toBe(true)
       expect(response.options.map(site => site.id)).toEqual([
@@ -548,6 +554,9 @@ describe("agent files", () => {
 
       const response = await config.api.agent.disconnectKnowledgeSources(
         created._id!
+      )
+      await utils.queue.processMessages(
+        getKnowledgeSourceSyncQueue().getBullQueue()
       )
       expect(response).toEqual({
         agentId: created._id!,
