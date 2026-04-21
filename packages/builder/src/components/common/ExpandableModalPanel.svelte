@@ -9,11 +9,11 @@
   } from "./landscapeExpansion"
 
   export let title = "Details"
+  export let expanded = writable(false)
 
   let panelElement: HTMLDivElement
   let toggleButtonElement: HTMLDivElement
   let isTransitioning = false
-  const expanded = writable(false)
   const panelId = `expandable-modal-panel-${Math.random().toString(36).slice(2)}`
 
   const collapsedTargetSelector = `.expandable-panel.main[data-expandable-panel-main="${panelId}"] .panel-target`

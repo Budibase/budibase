@@ -52,6 +52,7 @@
     parseTestDataForTrigger,
   } from "./testDataUtils"
   import { type AutomationContext } from "@/stores/builder/automations"
+  import type { Writable } from "svelte/store"
 
   export let context: AutomationContext | undefined
   export let block: AutomationStep | AutomationTrigger | undefined
@@ -64,6 +65,7 @@
     [DataMode.OUTPUT]: "Data Out",
     [DataMode.AGENT]: "Agent",
     [DataMode.ERRORS]: "Errors",
+    [DataMode.TEST]: "Run Test",
   }
 
   // Add explicit weight to the issue types
@@ -74,6 +76,7 @@
   }
 
   let dataMode: DataMode = DataMode.INPUT
+  let expanded: Writable<boolean>
   let issues: BlockStatus[] = []
   let showInlineTestData = false
   let failedParse: string | null = null
@@ -117,13 +120,16 @@
     !(trigger?.schema?.outputs?.required || []).every(
       required => testData?.[required] || required !== "row"
     )
-  $: if (dataMode !== DataMode.OUTPUT) {
+  $: if (dataMode !== DataMode.TEST) {
     showInlineTestData = false
+  }
+  $: if (!$expanded && dataMode === DataMode.TEST) {
+    dataMode = DataMode.INPUT
   }
   $: processTestIssues(testResults, block)
 
   const openInlineTestData = () => {
-    dataMode = DataMode.OUTPUT
+    dataMode = DataMode.TEST
     showInlineTestData = true
     failedParse = null
   }
@@ -358,8 +364,12 @@
       : undefined
 </script>
 
-<ExpandableModalPanel bind:this={expandablePanel} title="Step Data">
-  <svelte:fragment slot="header" let:expanded>
+<ExpandableModalPanel
+  bind:this={expandablePanel}
+  bind:expanded
+  title="Step Data"
+>
+  <svelte:fragment slot="header">
     <div class="tabs">
       {#each visibleModes as mode}
         <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
@@ -375,7 +385,7 @@
           </ActionButton>
         </Count>
       {/each}
-      {#if expanded}
+      {#if $expanded}
         <ActionButton
           selected={showInlineTestData}
           quiet
@@ -388,38 +398,23 @@
     </div>
   </svelte:fragment>
 
-  <svelte:fragment slot="content" let:expanded>
+  <svelte:fragment slot="content">
     <div class="viewer" class:data-output={dataMode === DataMode.OUTPUT}>
       {#if dataMode === DataMode.INPUT}
         <JSONViewer
           value={parsedContext}
           showCopyIcon
-          expandAll={expanded}
+          expandAll={$expanded}
           on:click-copy={copyContext}
         />
       {:else if dataMode === DataMode.OUTPUT}
-        {#if showInlineTestData}
-          <TestDataEditor
-            {schemaProperties}
-            {testData}
-            block={trigger}
-            {automation}
-            showRunButton
-            constrainWidth={expanded}
-            runDisabled={isTestDataInvalid || runningInlineTest}
-            failedParse={failedParse}
-            jsonValue={JSON.stringify($selectedAutomation.data?.testData, null, 2)}
-            on:values-change={handleInlineTestDataValuesChange}
-            on:json-change={parseTestJSON}
-            on:run-test={runInlineTest}
-          />
-        {:else if blockResults}
+        {#if blockResults}
           <JSONViewer
             value={blockResults.outputs}
             showCopyIcon
             on:click-copy={copyContext}
           />
-        {:else if testResults && !blockResults}
+        {:else if testResults}
           <div class="content">
             {#if isLoopChild}
               <span class="info">
@@ -438,7 +433,7 @@
             <span class="info">
               Run the automation to show the output of this step
             </span>
-            {#if !expanded}
+            {#if !$expanded}
               <Button
                 size={"S"}
                 icon={"Play"}
@@ -452,6 +447,25 @@
             {/if}
           </div>
         {/if}
+      {:else if dataMode === DataMode.TEST}
+        <TestDataEditor
+          {schemaProperties}
+          {testData}
+          block={trigger}
+          {automation}
+          showRunButton
+          constrainWidth={$expanded}
+          runDisabled={isTestDataInvalid || runningInlineTest}
+          {failedParse}
+          jsonValue={JSON.stringify(
+            $selectedAutomation.data?.testData,
+            null,
+            2
+          )}
+          on:values-change={handleInlineTestDataValuesChange}
+          on:json-change={parseTestJSON}
+          on:run-test={runInlineTest}
+        />
       {:else if dataMode === DataMode.AGENT}
         {#if agentOutputs}
           <AgentOutputViewer outputs={agentOutputs} />
