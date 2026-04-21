@@ -1,12 +1,13 @@
 <script lang="ts">
   import {
-    Divider,
     ActionButton,
     notifications,
     Helpers,
     Icon,
     Button,
+    Divider,
   } from "@budibase/bbui"
+  import ExpandableModalPanel from "@/components/common/ExpandableModalPanel.svelte"
   import JSONViewer, {
     type JSONViewerClickEvent,
   } from "@/components/common/JSONViewer.svelte"
@@ -266,100 +267,104 @@
       : undefined
 </script>
 
-<div class="tabs">
-  {#each visibleModes as mode}
-    <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
-      <ActionButton
-        selected={mode === dataMode}
-        quiet
-        on:click={() => {
-          dataMode = mode
-        }}
-      >
-        {DataModeTabs[mode]}
-      </ActionButton>
-    </Count>
-  {/each}
-</div>
-<Divider noMargin />
-<div class="viewer">
-  {#if dataMode === DataMode.INPUT}
-    <JSONViewer
-      value={parsedContext}
-      showCopyIcon
-      on:click-copy={copyContext}
-    />
-  {:else if dataMode === DataMode.OUTPUT}
-    {#if blockResults}
+<ExpandableModalPanel title="Step Data">
+  <div slot="header" class="tabs">
+    {#each visibleModes as mode}
+      <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
+        <ActionButton
+          selected={mode === dataMode}
+          quiet
+          on:click={() => {
+            dataMode = mode
+          }}
+        >
+          {DataModeTabs[mode]}
+        </ActionButton>
+      </Count>
+    {/each}
+  </div>
+
+  <div slot="content" class="viewer">
+    {#if dataMode === DataMode.INPUT}
       <JSONViewer
-        value={blockResults.outputs}
+        value={parsedContext}
         showCopyIcon
         on:click-copy={copyContext}
       />
-    {:else if testResults && !blockResults}
-      <div class="content">
-        {#if isLoopChild}
+    {:else if dataMode === DataMode.OUTPUT}
+      {#if blockResults}
+        <JSONViewer
+          value={blockResults.outputs}
+          showCopyIcon
+          on:click-copy={copyContext}
+        />
+      {:else if testResults && !blockResults}
+        <div class="content">
+          {#if isLoopChild}
+            <span class="info">
+              This step was executed, but outputs are not exposed for individual
+              steps inside loops. Click the loop node to view loop outputs, or
+              use the State block to expose specific data.
+            </span>
+          {:else}
+            <span class="info">
+              This step was not executed as part of the test run
+            </span>
+          {/if}
+        </div>
+      {:else}
+        <div class="content">
           <span class="info">
-            This step was executed, but outputs are not exposed for individual
-            steps inside loops. Click the loop node to view loop outputs, or use
-            the State block to expose specific data.
+            Run the automation to show the output of this step
           </span>
-        {:else}
+          <Button
+            size={"S"}
+            icon={"Play"}
+            secondary
+            on:click={() => {
+              dispatch("run")
+            }}
+          >
+            Run
+          </Button>
+        </div>
+      {/if}
+    {:else if dataMode === DataMode.AGENT}
+      {#if agentOutputs}
+        <AgentOutputViewer outputs={agentOutputs} />
+      {:else if testResults && !blockResults}
+        <div class="content">
           <span class="info">
             This step was not executed as part of the test run
           </span>
+        </div>
+      {:else}
+        <div class="content">
+          <span class="info">
+            Run the automation to show the agent details
+          </span>
+        </div>
+      {/if}
+    {:else}
+      <div class="issues" class:empty={!issues.length}>
+        {#if issues.length === 0}
+          <span>There are no current issues</span>
+        {:else}
+          {#each issues as issue}
+            <div class={`issue ${issue.type}`}>
+              <div class="icon"><Icon name="warning" /></div>
+              <!-- For custom automations, the error message needs a default -->
+              <div class="message">
+                {issue.message || "There was an error"}
+              </div>
+            </div>
+            <Divider noMargin />
+          {/each}
         {/if}
       </div>
-    {:else}
-      <div class="content">
-        <span class="info">
-          Run the automation to show the output of this step
-        </span>
-        <Button
-          size={"S"}
-          icon={"Play"}
-          secondary
-          on:click={() => {
-            dispatch("run")
-          }}
-        >
-          Run
-        </Button>
-      </div>
     {/if}
-  {:else if dataMode === DataMode.AGENT}
-    {#if agentOutputs}
-      <AgentOutputViewer outputs={agentOutputs} />
-    {:else if testResults && !blockResults}
-      <div class="content">
-        <span class="info">
-          This step was not executed as part of the test run
-        </span>
-      </div>
-    {:else}
-      <div class="content">
-        <span class="info"> Run the automation to show the agent details </span>
-      </div>
-    {/if}
-  {:else}
-    <div class="issues" class:empty={!issues.length}>
-      {#if issues.length === 0}
-        <span>There are no current issues</span>
-      {:else}
-        {#each issues as issue}
-          <div class={`issue ${issue.type}`}>
-            <div class="icon"><Icon name="warning" /></div>
-            <!-- For custom automations, the error message needs a default -->
-            <div class="message">
-              {issue.message || "There was an error"}
-            </div>
-          </div>
-          <Divider noMargin />
-        {/each}
-      {/if}
-    </div>
-  {/if}
-</div>
+  </div>
+</ExpandableModalPanel>
 
 <style>
   .content .info {
