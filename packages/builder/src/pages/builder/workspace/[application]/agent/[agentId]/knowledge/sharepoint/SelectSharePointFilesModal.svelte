@@ -4,6 +4,7 @@
     Body,
     Modal,
     ModalContent,
+    RadioGroup,
     TreeView,
     notifications,
   } from "@budibase/bbui"
@@ -194,26 +195,17 @@
     onCancel={hide}
   >
     <div class="entries-header">
-      <div class="sync-mode">
-        <label class="sync-mode-option">
-          <input
-            type="radio"
-            name="sharepoint-new-files-mode"
-            checked={includeNewFilesByDefault}
-            onchange={() => (includeNewFilesByDefault = true)}
-          />
-          Include new files by default
-        </label>
-        <label class="sync-mode-option">
-          <input
-            type="radio"
-            name="sharepoint-new-files-mode"
-            checked={!includeNewFilesByDefault}
-            onchange={() => (includeNewFilesByDefault = false)}
-          />
-          Exclude new files by default
-        </label>
-      </div>
+      <RadioGroup
+        options={[
+          { label: "Include new files by default", value: true },
+          { label: "Exclude new files by default", value: false },
+        ]}
+        bind:value={includeNewFilesByDefault}
+        getOptionLabel={o => o.label}
+        getOptionValue={o => o.value}
+        getOptionSubtitle={o => o.subtitle}
+        direction="horizontal"
+      ></RadioGroup>
       <ActionButton quiet size="S" on:click={toggleAll}>
         {selectAllLabel}
       </ActionButton>
@@ -251,18 +243,6 @@
 
   .entries-header :global(.spectrum-ActionButton:first-of-type) {
     margin-left: auto;
-  }
-
-  .sync-mode {
-    display: flex;
-    gap: var(--spacing-m);
-  }
-
-  .sync-mode-option {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xxs);
-    font-size: 12px;
   }
 
   .selected-count {
