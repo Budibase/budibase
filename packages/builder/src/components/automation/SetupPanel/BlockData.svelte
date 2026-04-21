@@ -554,16 +554,18 @@
             <span class="info">
               Run the automation to show the output of this step
             </span>
-            <Button
-              size={"S"}
-              icon={"Play"}
-              secondary
-              on:click={() => {
-                dispatch("run")
-              }}
-            >
-              Run
-            </Button>
+            {#if !expanded}
+              <Button
+                size={"S"}
+                icon={"Play"}
+                secondary
+                on:click={() => {
+                  dispatch("run")
+                }}
+              >
+                Run
+              </Button>
+            {/if}
           </div>
         {/if}
       {:else if dataMode === DataMode.AGENT}
