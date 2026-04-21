@@ -9,7 +9,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "Generate Text",
+  name: "Generate text",
   icon: "Edit",
   tagline: "Generate contentusing AI",
   description:

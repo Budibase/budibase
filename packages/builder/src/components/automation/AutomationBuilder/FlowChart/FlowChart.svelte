@@ -24,6 +24,7 @@
     selectedAutomation,
     workspaceDeploymentStore,
     deploymentStore,
+    contextMenuStore,
   } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
@@ -34,8 +35,12 @@
     dagreLayoutAutomation,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
+  import {
+    NODE_SPACING,
+    DEFAULT_NODE_WIDTH,
+    DEFAULT_NODE_HEIGHT,
+  } from "./FlowCanvas/FlowGeometry"
 
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
   import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
@@ -59,6 +64,8 @@
 
   export let automation: UIAutomation
 
+  const VIEWPORT_ANIMATION_DURATION = 180
+
   const memoAutomation = memo(automation)
 
   const nodeTypes: NodeTypes = {
@@ -72,7 +79,6 @@
   }
 
   let testDataModal: Modal
-  let confirmDeleteDialog
   let blockRefs: Record<string, BlockRef> = {}
   let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
@@ -84,6 +90,11 @@
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
+  let focusNodeRequest = writable<{
+    nodeId: string
+    direction?: -1 | 1
+    zoom?: number
+  } | null>(null)
 
   const { getViewport, setViewport } = useSvelteFlow()
 
@@ -99,6 +110,7 @@
   setContext("draggableView", view)
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
+  setContext("focusNodeRequest", focusNodeRequest)
 
   $: updateGraph(blocks, layoutDirection)
 
@@ -149,7 +161,12 @@
     // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
-      { rankdir: direction, ranksep: 100, nodesep: 100, compactLoops: true }
+      {
+        rankdir: direction,
+        ranksep: NODE_SPACING,
+        nodesep: NODE_SPACING,
+        compactLoops: true,
+      }
     )
 
     nodes.set(laidOut.nodes)
@@ -159,6 +176,20 @@
   $: if ($nodes?.length && !initialViewportApplied && paneEl) {
     focusOnTrigger()
     initialViewportApplied = true
+  }
+
+  $: if ($focusNodeRequest && paneEl && $nodes?.length) {
+    const targetNode = $nodes.find(
+      node => node.id === $focusNodeRequest?.nodeId
+    )
+    if (targetNode) {
+      focusOnNode(
+        targetNode,
+        $focusNodeRequest.direction,
+        $focusNodeRequest.zoom
+      )
+      focusNodeRequest.set(null)
+    }
   }
 
   // Check if automation has unpublished changes
@@ -175,9 +206,9 @@
     const triggerNode = $nodes[0]
 
     const paneRect = paneEl.getBoundingClientRect()
-    const nodeWidth = 320
-    const nodeHeight = 150
-    const nodeOffset = 100
+    const nodeWidth = DEFAULT_NODE_WIDTH
+    const nodeHeight = DEFAULT_NODE_HEIGHT
+    const nodeOffset = NODE_SPACING
 
     let x, y
 
@@ -197,17 +228,58 @@
     setViewport({ x, y, zoom: 1 }, { duration: 0 })
   }
 
+  const focusOnNode = (
+    targetNode: FlowNode,
+    direction?: -1 | 1,
+    zoom?: number
+  ) => {
+    if (!paneEl) {
+      return
+    }
+
+    const currentViewport = getViewport()
+    if (!currentViewport) {
+      return
+    }
+
+    const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
+    const nodeHeight = targetNode.height || DEFAULT_NODE_HEIGHT
+    const desiredZoom = zoom ?? currentViewport.zoom ?? 1
+    const safeZoom = Math.min(Math.max(desiredZoom, 0.4), 1)
+
+    if (direction === -1 || direction === 1) {
+      if (layoutDirection === "LR") {
+        const yStride = (nodeHeight + NODE_SPACING) * safeZoom
+        const y = currentViewport.y - direction * yStride
+        setViewport(
+          { x: currentViewport.x, y, zoom: safeZoom },
+          { duration: VIEWPORT_ANIMATION_DURATION }
+        )
+        return
+      }
+
+      const xStride = (nodeWidth + NODE_SPACING) * safeZoom
+      const x = currentViewport.x - direction * xStride
+      setViewport(
+        { x, y: currentViewport.y, zoom: safeZoom },
+        { duration: VIEWPORT_ANIMATION_DURATION }
+      )
+      return
+    }
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const x = paneRect.width / 2 - targetNode.position.x - nodeWidth / 2
+    const y = paneRect.height / 2 - targetNode.position.y - nodeHeight / 2
+
+    setViewport(
+      { x, y, zoom: safeZoom },
+      { duration: VIEWPORT_ANIMATION_DURATION }
+    )
+  }
+
   const refresh = () => {
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
-  }
-
-  const deleteAutomation = async () => {
-    try {
-      await automationStore.actions.delete(automation)
-    } catch (error) {
-      notifications.error("Error deleting automation")
-    }
   }
 
   const publishChanges = async () => {
@@ -259,6 +331,19 @@
       })
     } finally {
       changingStatus = false
+    }
+  }
+
+  const closeContextMenuOnCanvasInteraction = () => {
+    if (get(contextMenuStore).visible) {
+      contextMenuStore.close()
+    }
+  }
+
+  const handleCanvasPointerMove = (e: PointerEvent) => {
+    dnd.handlePointerMove(e)
+    if (e.buttons > 0) {
+      closeContextMenuOnCanvasInteraction()
     }
   }
 
@@ -352,11 +437,14 @@
 <div class="main-flow">
   <div class="root">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="wrapper"
       bind:this={paneEl}
-      on:mousemove={dnd.handlePointerMove}
-      on:mousedown={dnd.updatePaneRect}
+      on:pointermove={handleCanvasPointerMove}
+      on:mousedown={() => {
+        dnd.updatePaneRect()
+      }}
     >
       <SvelteFlow
         {nodes}
@@ -369,6 +457,9 @@
         maxZoom={1}
         deleteKey={null}
         proOptions={{ hideAttribution: true }}
+        onMoveStart={closeContextMenuOnCanvasInteraction}
+        onMove={closeContextMenuOnCanvasInteraction}
+        on:paneclick={closeContextMenuOnCanvasInteraction}
       >
         <FlowControls
           historyStore={automationHistoryStore}
@@ -380,17 +471,6 @@
     </div>
   </div>
 </div>
-
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  okText="Delete Automation"
-  onOk={deleteAutomation}
-  title="Confirm Deletion"
->
-  Are you sure you wish to delete the automation
-  <i>{automation.name}?</i>
-  This action cannot be undone.
-</ConfirmDialog>
 
 <Modal
   bind:this={testDataModal}

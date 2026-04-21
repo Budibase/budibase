@@ -1,4 +1,10 @@
-import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  encryption,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
 import type { Agent, Optional } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
@@ -260,7 +266,9 @@ export async function create(
     slackIntegration: encodeSlackIntegrationSecrets(agent.slackIntegration),
   })
   agent._rev = rev
-  return withAgentDefaults(agent)
+  const result = withAgentDefaults(agent)
+  events.ai.agentCreated(result)
+  return result
 }
 
 export async function duplicate(
@@ -345,7 +353,9 @@ export async function update(agent: Agent): Promise<Agent> {
     slackIntegration: encodeSlackIntegrationSecrets(updated.slackIntegration),
   })
   updated._rev = rev
-  return withAgentDefaults(updated)
+  const result = withAgentDefaults(updated)
+  events.ai.agentUpdated(result)
+  return result
 }
 
 export async function remove(agentId: string) {
@@ -390,4 +400,5 @@ export async function remove(agentId: string) {
   }
 
   await db.remove(agent)
+  events.ai.agentDeleted(agent)
 }

@@ -101,13 +101,13 @@ describe("Execute Bash Automations", () => {
           tableId: table._id!,
           filters: {},
         },
-        { stepName: "Get Row" }
+        { stepName: "Get row" }
       )
       .bash(
         {
           command: "echo",
           args: [
-            "Row data: {{ steps.[Get Row].rows.[0].name }} - {{ steps.[Get Row].rows.[0].description }}",
+            "Row data: {{ steps.[Get row].rows.[0].name }} - {{ steps.[Get row].rows.[0].description }}",
           ],
         },
         { stepName: "Process Row Data" }

@@ -3,7 +3,6 @@ import {
   AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
-  type KnowledgeSourceSyncRun,
 } from "@budibase/types"
 import {
   formatTimestamp,
@@ -11,6 +10,7 @@ import {
   getSharePointFilesForSite,
   getSharePointLastSyncLabel,
   toFileTableRows,
+  toSharePointConnectionRows,
 } from "./knowledgeTableRows"
 
 const makeFile = (
@@ -51,17 +51,35 @@ describe("knowledgeTableRows", () => {
       makeFile({
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
-        externalSourceId: "sharepoint:site-1:drive-1:item-1",
+        source: {
+          type: "sharepoint",
+          knowledgeSourceId: "source-1",
+          siteId: "site-1",
+          driveId: "drive-1",
+          itemId: "item-1",
+        },
       }),
       makeFile({
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
-        externalSourceId: "sharepoint:site-1:drive-1:item-2",
+        source: {
+          type: "sharepoint",
+          knowledgeSourceId: "source-1",
+          siteId: "site-1",
+          driveId: "drive-1",
+          itemId: "item-2",
+        },
       }),
       makeFile({
         _id: "f3",
         status: KnowledgeBaseFileStatus.FAILED,
-        externalSourceId: "sharepoint:site-2:drive-1:item-3",
+        source: {
+          type: "sharepoint",
+          knowledgeSourceId: "source-2",
+          siteId: "site-2",
+          driveId: "drive-1",
+          itemId: "item-3",
+        },
       }),
     ]
 
@@ -76,21 +94,69 @@ describe("knowledgeTableRows", () => {
   })
 
   it("formats sharepoint last sync label from run state", () => {
-    const runsBySiteId: Record<string, KnowledgeSourceSyncRun> = {
-      "site-1": {
-        sourceId: "site-1",
-        lastRunAt: "2026-04-08T10:00:00.000Z",
-        synced: 1,
-        failed: 0,
-        skipped: 0,
-        unsupported: 0,
-        totalDiscovered: 1,
-        status: AgentKnowledgeSourceSyncRunStatus.SUCCESS,
-      },
-    }
-    expect(getSharePointLastSyncLabel(runsBySiteId, "site-1")).toContain(
+    expect(getSharePointLastSyncLabel("2026-04-08T10:00:00.000Z")).toContain(
       "Last sync at"
     )
-    expect(getSharePointLastSyncLabel({}, "site-1")).toBe("SharePoint")
+    expect(getSharePointLastSyncLabel()).toBe("SharePoint")
+  })
+
+  it("shows processing while syncing", () => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: { site: { id: "site-1", name: "Site 1" } },
+        },
+      ],
+      sharePointSourceSnapshots: [
+        {
+          sourceId: "source-1",
+          name: "Site 1",
+          syncedCount: 0,
+          failedCount: 0,
+          processingCount: 1,
+          totalCount: 1,
+          runStatus: AgentKnowledgeSourceSyncRunStatus.SUCCESS,
+          lastRunAt: "2026-04-08T10:00:00.000Z",
+        },
+      ],
+      loadingSharePointSites: false,
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].hasSynced).toBe(true)
+    expect(rows[0].displayStatus).toBe("0/1 files")
+  })
+
+  it("shows completed counts once syncing is done", () => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: { site: { id: "site-1", name: "Site 1" } },
+        },
+      ],
+      sharePointSourceSnapshots: [
+        {
+          sourceId: "source-1",
+          name: "Site 1",
+          syncedCount: 3,
+          failedCount: 0,
+          processingCount: 0,
+          totalCount: 3,
+          runStatus: AgentKnowledgeSourceSyncRunStatus.SUCCESS,
+          lastRunAt: "2026-04-08T10:00:00.000Z",
+        },
+      ],
+      loadingSharePointSites: false,
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].hasSynced).toBe(true)
+    expect(rows[0].displayStatus).toBe("3/3 files")
   })
 })

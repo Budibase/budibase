@@ -20,12 +20,22 @@ export enum KnowledgeBaseFileStatus {
   FAILED = "failed",
 }
 
+export interface SharePointKnowledgeBaseFileSource {
+  type: "sharepoint"
+  knowledgeSourceId: string
+  siteId: string
+  driveId: string
+  itemId: string
+}
+
+export type KnowledgeBaseFileSource = SharePointKnowledgeBaseFileSource
+
 export interface KnowledgeBaseFile extends Document {
   knowledgeBaseId: string
+  source?: KnowledgeBaseFileSource
   filename: string
   mimetype?: string
   size?: number
-  externalSourceId?: string
   objectStoreKey: string
   ragSourceId: string
   status: KnowledgeBaseFileStatus

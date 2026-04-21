@@ -4,6 +4,8 @@ const mockAgentsUpdate = jest.fn()
 const mockKnowledgeBaseFind = jest.fn()
 const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseCreate = jest.fn()
+const mockKnowledgeBaseGetFileOrThrow = jest.fn()
+const mockKnowledgeBaseRemoveFile = jest.fn()
 
 const mockProcessorIngest = jest.fn()
 const mockProcessorSearch = jest.fn()
@@ -30,6 +32,10 @@ jest.mock("..", () => ({
     listKnowledgeBaseFiles: (...args: any[]) =>
       mockKnowledgeBaseListFiles(...args),
     create: (...args: any[]) => mockKnowledgeBaseCreate(...args),
+    getKnowledgeBaseFileOrThrow: (...args: any[]) =>
+      mockKnowledgeBaseGetFileOrThrow(...args),
+    removeKnowledgeBaseFile: (...args: any[]) =>
+      mockKnowledgeBaseRemoveFile(...args),
   },
 }))
 
@@ -43,16 +49,19 @@ jest.mock("./processors/gemini", () => ({
 
 import {
   Agent,
+  DocumentType,
   KnowledgeBase,
   KnowledgeBaseFile,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
   LockName,
   LockType,
+  SEPARATOR,
 } from "@budibase/types"
 import { GeminiRagProcessor } from "./processors/gemini"
 import {
   deleteKnowledgeBaseFileChunks,
+  deleteFileForAgent,
   ensureKnowledgeBaseForAgent,
   ingestKnowledgeBaseFile,
   retrieveContextForAgent,
@@ -230,6 +239,42 @@ describe("rag files", () => {
       await deleteKnowledgeBaseFileChunks(knowledgeBase, [])
 
       expect(mockProcessorDelete).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("deleteFileForAgent", () => {
+    it("deletes file when its parsed knowledge base belongs to the agent", async () => {
+      const knowledgeBaseId = `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}abc123`
+      const fileId = `${DocumentType.KNOWLEDGE_BASE_FILE}${SEPARATOR}${knowledgeBaseId}${SEPARATOR}file123`
+      const file = {
+        _id: fileId,
+        knowledgeBaseId,
+        filename: "test.txt",
+        objectStoreKey: "obj",
+        ragSourceId: "source-1",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } as KnowledgeBaseFile
+      const knowledgeBase = {
+        _id: knowledgeBaseId,
+        name: "KB",
+        type: KnowledgeBaseType.GEMINI,
+        config: { googleFileStoreId: "store_1" },
+      } as KnowledgeBase
+
+      mockKnowledgeBaseGetFileOrThrow.mockResolvedValue(file)
+      mockAgentsGetOrThrow.mockResolvedValue({
+        _id: "agent_1",
+        knowledgeBases: [knowledgeBaseId],
+      } as Partial<Agent>)
+      mockKnowledgeBaseFind.mockResolvedValue(knowledgeBase)
+
+      await deleteFileForAgent("agent_1", fileId)
+
+      expect(mockKnowledgeBaseRemoveFile).toHaveBeenCalledWith(
+        knowledgeBase,
+        file
+      )
     })
   })
 

@@ -3,19 +3,17 @@ import { BudiStore } from "../BudiStore"
 import {
   Agent,
   AgentFileUploadResponse,
+  ConnectAgentSharePointSiteRequest,
+  ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
-  DisconnectAgentKnowledgeSourcesResponse,
-  FetchAgentFilesResponse,
-  FetchAgentKnowledgeSourceOptionsResponse,
-  KnowledgeSourceOption,
-  KnowledgeSourceSyncRun,
+  DisconnectAgentSharePointSiteResponse,
+  FetchAgentKnowledgeResponse,
+  SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   KnowledgeBaseFileStatus,
-  SetAgentKnowledgeSourcesRequest,
-  SetAgentKnowledgeSourcesResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
@@ -31,9 +29,14 @@ interface AgentStoreState {
   currentAgentId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
-  filesByAgentId: Record<string, KnowledgeBaseFile[]>
-  knowledgeSourceOptionsByAgentId: Record<string, KnowledgeSourceOption[]>
-  knowledgeSourceRunsByAgentId: Record<string, KnowledgeSourceSyncRun[]>
+  knowledgeByAgent: Record<
+    string,
+    {
+      files: KnowledgeBaseFile[]
+      hasSharePointConnection: boolean
+      sharePointSources: SharePointKnowledgeSourceSnapshot[]
+    }
+  >
 }
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
@@ -48,34 +51,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      filesByAgentId: {},
-      knowledgeSourceOptionsByAgentId: {},
-      knowledgeSourceRunsByAgentId: {},
-    })
-  }
-
-  private setAgentFiles = (agentId: string, files: KnowledgeBaseFile[]) => {
-    this.update(state => {
-      state.filesByAgentId[agentId] = files
-      return state
-    })
-  }
-
-  private setAgentKnowledgeSourceOptions = (
-    agentId: string,
-    options: KnowledgeSourceOption[],
-    runs: KnowledgeSourceSyncRun[]
-  ) => {
-    this.update(state => {
-      state.knowledgeSourceOptionsByAgentId[agentId] = options
-      state.knowledgeSourceRunsByAgentId[agentId] = runs
-      return state
+      knowledgeByAgent: {},
     })
   }
 
   private shouldPollAgentFiles = (agentId: string) => {
     const state = get(this.store)
-    const files = state.filesByAgentId[agentId] || []
+    const files = state.knowledgeByAgent[agentId]?.files || []
     return files.some(
       file => file.status === KnowledgeBaseFileStatus.PROCESSING
     )
@@ -85,13 +67,17 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     if (!this.agentFilePolling || this.agentFilePolling.agentId !== agentId) {
       return
     }
-    if (this.agentFilePolling.inFlight || !this.shouldPollAgentFiles(agentId)) {
+    if (this.agentFilePolling.inFlight) {
+      return
+    }
+    if (!this.shouldPollAgentFiles(agentId)) {
+      this.stopAgentFilePolling()
       return
     }
 
     this.agentFilePolling.inFlight = true
     try {
-      await this.fetchAgentFiles(agentId)
+      await this.fetchAgentKnowledge(agentId)
     } finally {
       if (this.agentFilePolling?.agentId === agentId) {
         this.agentFilePolling.inFlight = false
@@ -101,6 +87,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   startAgentFilePolling = (agentId: string, intervalMs = 1000) => {
     if (!agentId) {
+      return
+    }
+    if (!this.shouldPollAgentFiles(agentId)) {
       return
     }
     if (this.agentFilePolling?.agentId === agentId) {
@@ -249,11 +238,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.toggleAgentSlackDeployment(agentId, enabled)
     )
 
-  fetchAgentFiles = async (
+  fetchAgentKnowledge = async (
     agentId: string
-  ): Promise<FetchAgentFilesResponse> => {
-    const response = await API.fetchAgentFiles(agentId)
-    this.setAgentFiles(agentId, response.files)
+  ): Promise<FetchAgentKnowledgeResponse> => {
+    const response = await API.fetchAgentKnowledge(agentId)
+
+    this.update(state => {
+      state.knowledgeByAgent[agentId] = response
+      return state
+    })
     return response
   }
 
@@ -266,39 +259,29 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   deleteAgentFile = async (agentId: string, fileId: string) =>
     await API.deleteAgentFile(agentId, fileId)
 
-  fetchAgentKnowledgeSourceOptions = async (
-    agentId: string
-  ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
-    const response = await API.fetchAgentKnowledgeSourceOptions(agentId)
-    this.setAgentKnowledgeSourceOptions(
-      agentId,
-      response.options,
-      response.runs
-    )
-    return response
-  }
-
-  setAgentKnowledgeSources = async (
+  connectAgentSharePointSite = async (
     agentId: string,
-    body: SetAgentKnowledgeSourcesRequest
-  ): Promise<SetAgentKnowledgeSourcesResponse> => {
-    const response = await API.setAgentKnowledgeSources(agentId, body)
-    this.setAgentKnowledgeSourceOptions(
-      agentId,
-      response.options,
-      response.runs
-    )
+    body: ConnectAgentSharePointSiteRequest
+  ): Promise<ConnectAgentSharePointSiteResponse> => {
+    const response = await API.connectAgentSharePointSite(agentId, body)
+    await this.fetchAgents()
+    await this.fetchAgentKnowledge(agentId)
+    this.startAgentFilePolling(agentId)
     return response
   }
 
-  disconnectAgentKnowledgeSources = async (
-    agentId: string
-  ): Promise<DisconnectAgentKnowledgeSourcesResponse> =>
-    await API.disconnectAgentKnowledgeSources(agentId)
+  disconnectAgentSharePointSite = async (
+    agentId: string,
+    siteId: string
+  ): Promise<DisconnectAgentSharePointSiteResponse> => {
+    const response = await API.disconnectAgentSharePointSite(agentId, siteId)
+    await this.fetchAgents()
+    return response
+  }
 
   syncAgentKnowledgeSources = async (
     agentId: string,
-    body?: SyncAgentKnowledgeSourcesRequest
+    body: SyncAgentKnowledgeSourcesRequest
   ): Promise<SyncAgentKnowledgeSourcesResponse> =>
     await API.syncAgentKnowledgeSources(agentId, body)
 }

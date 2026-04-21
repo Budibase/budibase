@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "Row Updated",
+  name: "Row updated",
   event: AutomationEventType.ROW_UPDATE,
   icon: "arrow-clockwise",
   tagline: "Row is updated in {{inputs.enriched.table.name}}",

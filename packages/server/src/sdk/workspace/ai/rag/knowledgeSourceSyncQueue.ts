@@ -9,7 +9,7 @@ import env from "../../../../environment"
 import { deleteFileForAgent } from "./files"
 import {
   deleteKnowledgeSourceSyncStateForAgent,
-  deleteSharePointFilesForAgentSites,
+  deleteSharePointFilesForAgentSite,
   syncSharePointSourcesForAgent,
 } from "./sharepoint"
 
@@ -156,9 +156,10 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
             case "sync":
               switch (job.data.sourceType) {
                 case AgentKnowledgeSourceType.SHAREPOINT:
-                  await syncSharePointSourcesForAgent(agentId, [
-                    job.data.sourceId,
-                  ])
+                  await syncSharePointSourcesForAgent(
+                    agentId,
+                    job.data.sourceId
+                  )
                   break
                 default:
                   throw new Error(
@@ -170,12 +171,11 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
               await deleteFileForAgent(agentId, job.data.fileId)
               break
             case "disconnect_sharepoint_site":
-              await deleteSharePointFilesForAgentSites(agentId, [
-                job.data.siteId,
-              ])
-              await deleteKnowledgeSourceSyncStateForAgent(agentId, [
-                job.data.siteId,
-              ])
+              await deleteSharePointFilesForAgentSite(agentId, job.data.siteId)
+              await deleteKnowledgeSourceSyncStateForAgent(
+                agentId,
+                job.data.siteId
+              )
               break
             default:
               throw new Error("Unsupported knowledge source queue job type")

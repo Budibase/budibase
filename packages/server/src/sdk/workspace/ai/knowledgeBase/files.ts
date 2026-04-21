@@ -9,6 +9,7 @@ import {
   DocumentType,
   KnowledgeBase,
   KnowledgeBaseFile,
+  KnowledgeBaseFileSource,
   KnowledgeBaseFileStatus,
   RequiredKeys,
   ToDocCreateMetadata,
@@ -19,13 +20,13 @@ import { deleteKnowledgeBaseFileChunks } from "../rag/files"
 interface CreateKnowledgeBaseFileOptions {
   id: string
   knowledgeBaseId: string
+  source?: KnowledgeBaseFileSource
   filename: string
   mimetype?: string
   size?: number
   uploadedBy: string
   objectStoreKey: string
   ragSourceId?: string
-  externalSourceId?: string
 }
 
 export const createKnowledgeBaseFile = async (
@@ -35,13 +36,13 @@ export const createKnowledgeBaseFile = async (
   const {
     id,
     knowledgeBaseId,
+    source,
     filename,
     mimetype,
     size,
     uploadedBy,
     objectStoreKey,
     ragSourceId,
-    externalSourceId,
   } = options
   const _id = id || docIds.generateKnowledgeBaseFileID(knowledgeBaseId)
   if (!docIds.isKnowledgeBaseFileID(_id)) {
@@ -51,12 +52,12 @@ export const createKnowledgeBaseFile = async (
   const doc: RequiredKeys<ToDocCreateMetadata<KnowledgeBaseFile>> = {
     _id,
     knowledgeBaseId,
+    source,
     filename,
     mimetype,
     size,
     objectStoreKey,
     ragSourceId: ragSourceId || _id,
-    externalSourceId,
     status: KnowledgeBaseFileStatus.PROCESSING,
     uploadedBy,
     errorMessage: undefined,

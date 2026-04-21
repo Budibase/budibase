@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "Bash Scripting",
+  name: "Bash scripting",
   tagline: "Execute a system command",
   icon: "git-branch",
   description: "Run a command with explicit arguments",

@@ -1,5 +1,9 @@
 import { context, docIds, HTTPError, objectStore } from "@budibase/backend-core"
-import { KnowledgeBaseFile, KnowledgeBaseFileStatus } from "@budibase/types"
+import {
+  KnowledgeBaseFile,
+  KnowledgeBaseFileSource,
+  KnowledgeBaseFileStatus,
+} from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
 import { enqueueRagFileIngestion } from "../rag/queue"
 import { createKnowledgeBaseFile, updateKnowledgeBaseFile } from "./files"
@@ -7,12 +11,12 @@ import { find as findKnowledgeBase } from "./crud"
 
 interface UploadKnowledgeBaseFileInput {
   knowledgeBaseId: string
+  source?: KnowledgeBaseFileSource
   filename: string
   mimetype?: string
   size?: number
   buffer: Buffer
   uploadedBy: string
-  externalSourceId?: string
 }
 
 const buildKnowledgeBaseFileObjectStoreKey = (
@@ -51,12 +55,12 @@ export const uploadKnowledgeBaseFile = async (
     const knowledgeBaseFile = await createKnowledgeBaseFile({
       id: fileId,
       knowledgeBaseId: input.knowledgeBaseId,
+      source: input.source,
       filename: input.filename,
       mimetype: input.mimetype,
       objectStoreKey,
       size: input.size ?? input.buffer.byteLength,
       uploadedBy: input.uploadedBy,
-      externalSourceId: input.externalSourceId,
     })
 
     try {

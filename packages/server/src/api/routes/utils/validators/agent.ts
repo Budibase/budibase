@@ -69,6 +69,11 @@ export function updateAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      createdAt: OPTIONAL_STRING,
+      updatedAt: OPTIONAL_STRING,
+      publishedAt: OPTIONAL_STRING,
+      createdBy: OPTIONAL_STRING,
+      enabledTools: Joi.array().items(Joi.string()).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -136,15 +141,15 @@ export function generateAgentInstructionsValidator() {
 export function syncAgentKnowledgeSourcesValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      sourceIds: Joi.array().items(Joi.string().trim().disallow("")).optional(),
+      sourceId: Joi.string().trim().disallow("").required(),
     }).required()
   )
 }
 
-export function setAgentKnowledgeSourcesValidator() {
+export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      sourceIds: Joi.array().items(Joi.string().trim().disallow("")).required(),
+      siteId: Joi.string().trim().disallow("").required(),
     }).required()
   )
 }
