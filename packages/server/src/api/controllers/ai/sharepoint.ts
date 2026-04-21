@@ -61,7 +61,10 @@ export async function cleanupSharePointFilesForAgent({
       .map(file => file._id)
       .filter((fileId): fileId is string => !!fileId)
       .map(fileId =>
-        sdk.ai.rag.knowledgeSourceSyncQueue.enqueueDeleteFileJob(agentId, fileId)
+        sdk.ai.rag.knowledgeSourceSyncQueue.enqueueDeleteFileJob(
+          agentId,
+          fileId
+        )
       )
   )
   const failedDeletes = results.filter(

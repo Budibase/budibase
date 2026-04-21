@@ -7,6 +7,8 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseUploadFile = jest.fn()
 const mockGetSharePointBearerToken = jest.fn()
 const mockEnsureKnowledgeBaseForAgent = jest.fn()
+const mockDeleteFileForAgent = jest.fn()
+const mockListFilesForAgent = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -50,6 +52,8 @@ jest.mock("./files", () => {
   return {
     ensureKnowledgeBaseForAgent: (...args: any[]) =>
       mockEnsureKnowledgeBaseForAgent(...args),
+    deleteFileForAgent: (...args: any[]) => mockDeleteFileForAgent(...args),
+    listFilesForAgent: (...args: any[]) => mockListFilesForAgent(...args),
   }
 })
 
@@ -60,7 +64,10 @@ import {
   type Agent,
   type KnowledgeBaseFile,
 } from "@budibase/types"
-import { syncSharePointSourcesForAgent } from "./sharepoint"
+import {
+  deleteSharePointFilesForAgentSite,
+  syncSharePointSourcesForAgent,
+} from "./sharepoint"
 
 const toArrayBuffer = (value: string) => {
   const buffer = Buffer.from(value)
@@ -200,5 +207,43 @@ describe("rag/sharepoint sync deduplication", () => {
       unsupported: 0,
       totalDiscovered: 1,
     })
+  })
+})
+
+describe("rag/sharepoint cleanup", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it("throws when at least one SharePoint file deletion fails", async () => {
+    mockListFilesForAgent.mockResolvedValue([
+      {
+        _id: "file_1",
+        source: {
+          type: "sharepoint",
+          knowledgeSourceId: "source-1",
+          siteId: "site-1",
+          driveId: "drive-1",
+          itemId: "item-1",
+        },
+      },
+      {
+        _id: "file_2",
+        source: {
+          type: "sharepoint",
+          knowledgeSourceId: "source-1",
+          siteId: "site-1",
+          driveId: "drive-1",
+          itemId: "item-2",
+        },
+      },
+    ])
+    mockDeleteFileForAgent
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("delete failed"))
+
+    await expect(
+      deleteSharePointFilesForAgentSite("agent_1", "site-1")
+    ).rejects.toThrow("Failed to delete 1/2 SharePoint files for site site-1")
   })
 })

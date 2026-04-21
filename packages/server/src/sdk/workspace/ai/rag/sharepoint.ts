@@ -596,11 +596,21 @@ export const deleteSharePointFilesForAgentSite = async (
   const results = await Promise.allSettled(
     fileIdsToDelete.map(fileId => deleteFileForAgent(agentId, fileId))
   )
-  const failed = results.filter(result => result.status === "rejected").length
+  const failedFileIds = results
+    .map((result, index) => ({ result, fileId: fileIdsToDelete[index] }))
+    .filter(item => item.result.status === "rejected")
+    .map(item => item.fileId)
+  const failed = failedFileIds.length
   console.log("SharePoint file cleanup completed for site", {
     agentId,
     siteId,
     deleted: fileIdsToDelete.length - failed,
     failed,
   })
+
+  if (failed > 0) {
+    throw new Error(
+      `Failed to delete ${failed}/${fileIdsToDelete.length} SharePoint files for site ${siteId}: ${failedFileIds.join(", ")}`
+    )
+  }
 }

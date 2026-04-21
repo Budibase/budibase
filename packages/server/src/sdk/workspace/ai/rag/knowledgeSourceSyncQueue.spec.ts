@@ -255,6 +255,29 @@ describe("knowledgeSourceSyncQueue", () => {
     )
   })
 
+  it("fails disconnect job when SharePoint cleanup fails", async () => {
+    jest.resetModules()
+    mockDeleteSharePointFilesForAgentSite.mockRejectedValueOnce(
+      new Error("cleanup failed")
+    )
+    const queueModule = await import("./knowledgeSourceSyncQueue")
+    queueModule.init()
+
+    const processHandler = mockQueueProcess.mock.calls[0][1]
+
+    await expect(
+      processHandler({
+        data: {
+          workspaceId: "app_dev_test",
+          agentId: "agent_1",
+          jobType: "disconnect_sharepoint_site",
+          siteId: "site_1",
+        },
+      })
+    ).rejects.toThrow("cleanup failed")
+    expect(mockDeleteKnowledgeSourceSyncStateForAgent).not.toHaveBeenCalled()
+  })
+
   it("removes orphan jobs during rehydration", async () => {
     mockGetRepeatableJobs.mockResolvedValue([
       {
