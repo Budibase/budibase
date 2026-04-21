@@ -1,9 +1,6 @@
 <script lang="ts">
   import { ActionButton, Button, TextArea } from "@budibase/bbui"
-  import {
-    type Automation,
-    type AutomationTrigger,
-  } from "@budibase/types"
+  import { type Automation, type AutomationTrigger } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
 
@@ -37,14 +34,12 @@
     <ActionButton
       quiet
       selected={tab === "values"}
-      on:click={() => (tab = "values")}
-      >Use values</ActionButton
+      on:click={() => (tab = "values")}>Use values</ActionButton
     >
     <ActionButton
       quiet
       selected={tab === "json"}
-      on:click={() => (tab = "json")}
-      >Use JSON</ActionButton
+      on:click={() => (tab = "json")}>Use JSON</ActionButton
     >
   </div>
 

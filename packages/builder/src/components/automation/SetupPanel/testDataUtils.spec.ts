@@ -157,12 +157,12 @@ describe("testDataUtils", () => {
         inputs: { tableId: "table_99" } as AutomationTrigger["inputs"],
       })
 
-      expect(normalizeParsedJsonForTrigger(trigger, { hello: "world" })).toEqual(
-        {
-          hello: "world",
-          row: { tableId: "table_99" },
-        }
-      )
+      expect(
+        normalizeParsedJsonForTrigger(trigger, { hello: "world" })
+      ).toEqual({
+        hello: "world",
+        row: { tableId: "table_99" },
+      })
     })
   })
 

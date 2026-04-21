@@ -78,7 +78,7 @@
     {schemaProperties}
     {testData}
     block={trigger}
-    failedParse={failedParse}
+    {failedParse}
     jsonValue={JSON.stringify($selectedAutomation.data.testData, null, 2)}
     on:values-change={e => {
       const { testData: updatedTestData } = e.detail
