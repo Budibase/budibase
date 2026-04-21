@@ -4,6 +4,7 @@
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
     AgentKnowledgeSourceType,
+    KnowledgeBaseFileStatus,
     type Agent,
     type KnowledgeBaseFile,
     type SharePointKnowledgeSourceSnapshot,
@@ -26,6 +27,10 @@
   import { EXCLUDE_ALL_PATTERN } from "./sharepoint/sharePointModalUtils"
   import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
   import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
+  import {
+    coalesceAgentPollRequests,
+    createKnowledgePollingController,
+  } from "./polling"
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let activeAgentId = $derived(currentAgent?._id)
@@ -38,6 +43,9 @@
   let pendingUploadsByAgent = $state<Record<string, PendingUpload[]>>({})
   let uploadingByAgent = $state<Record<string, boolean>>({})
   let uploadProgressByAgent = $state<Record<string, string>>({})
+  const fetchFiles = coalesceAgentPollRequests(async (agentId: string) => {
+    await agentsStore.fetchAgentKnowledge(agentId)
+  })
   let files = $derived.by(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
@@ -75,6 +83,14 @@
   let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
   let selectedSharePointSiteId = $state("")
   let shouldOpenSharePointPickerAfterOauth = $state(false)
+  const KNOWLEDGE_POLL_INTERVAL_MS = 1000
+  const knowledgePollingController = createKnowledgePollingController({
+    intervalMs: KNOWLEDGE_POLL_INTERVAL_MS,
+    onPoll: fetchFiles,
+    onError: error => {
+      console.error("Failed to poll knowledge files", error)
+    },
+  })
   let activePendingUploads = $derived(
     activeAgentId ? pendingUploadsByAgent[activeAgentId] || [] : []
   )
@@ -117,6 +133,10 @@
     }
   }
 
+  const stopSharePointBootstrapPolling = () => {
+    knowledgePollingController.stop()
+  }
+
   const showSharePointSyncResult = (
     result: SyncAgentKnowledgeSourcesResponse
   ) => {
@@ -152,10 +172,6 @@
     } else {
       notifications.success(message)
     }
-  }
-
-  const fetchFiles = async (agentId: string) => {
-    await agentsStore.fetchAgentKnowledge(agentId)
   }
 
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
@@ -234,14 +250,13 @@
   $effect(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
-      agentsStore.stopAgentFilePolling()
+      knowledgePollingController.stop()
       return
     }
-
-    agentsStore.startAgentFilePolling(agentId)
-    return () => {
-      agentsStore.stopAgentFilePolling()
-    }
+    const hasProcessingFiles = files.some(
+      file => file.status === KnowledgeBaseFileStatus.PROCESSING
+    )
+    knowledgePollingController.setContinuous(agentId, hasProcessingFiles)
   })
 
   $effect(() => {
@@ -429,7 +444,8 @@
   }
 
   onDestroy(() => {
-    agentsStore.stopAgentFilePolling()
+    stopSharePointBootstrapPolling()
+    knowledgePollingController.stop()
   })
 </script>
 
