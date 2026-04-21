@@ -6,14 +6,13 @@
     Icon,
     Button,
     Divider,
-    TextArea,
   } from "@budibase/bbui"
   import ExpandableModalPanel from "@/components/common/ExpandableModalPanel.svelte"
   import JSONViewer, {
     type JSONViewerClickEvent,
   } from "@/components/common/JSONViewer.svelte"
   import AgentOutputViewer from "./AgentOutputViewer.svelte"
-  import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
+  import TestDataEditor from "./TestDataEditor.svelte"
   import {
     type AutomationStep,
     type AutomationTrigger,
@@ -34,7 +33,6 @@
     isLoopStep,
     BlockDefinitionTypes,
     AutomationActionStepId,
-    AutomationEventType,
   } from "@budibase/types"
   import Count from "./Count.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
@@ -47,6 +45,12 @@
   } from "@/types/automations"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
+  import {
+    buildTriggerSchemaProperties,
+    isTriggerValidForTestData,
+    normalizeParsedJsonForTrigger,
+    parseTestDataForTrigger,
+  } from "./testDataUtils"
   import { type AutomationContext } from "@/stores/builder/automations"
 
   export let context: AutomationContext | undefined
@@ -73,35 +77,12 @@
   let issues: BlockStatus[] = []
   let showInlineTestData = false
   let failedParse: string | null = null
-  let selectedValues = true
-  let selectedJSON = false
   let runningInlineTest = false
   let expandablePanel: { close: () => void } | undefined
-  let previousSelectedNodeId: string | undefined
-  let previousSelectedNodeMode: DataMode | undefined
+  let previousSelectionKey = ""
   let trigger: AutomationTrigger | undefined
   let schemaProperties: Array<[string, Record<string, unknown>]> = []
   let testData: Record<string, unknown> | undefined
-
-  const rowTriggers = [
-    AutomationEventType.ROW_DELETE,
-    AutomationEventType.ROW_UPDATE,
-    AutomationEventType.ROW_SAVE,
-    AutomationEventType.ROW_ACTION,
-  ]
-
-  const isRowTriggerEvent = (
-    event: AutomationEventType | undefined
-  ): event is AutomationEventType => !!event && rowTriggers.includes(event)
-
-  const getTriggerTableId = (target: AutomationTrigger | undefined) => {
-    const inputs = target?.inputs
-    if (!inputs || typeof inputs !== "object" || !("tableId" in inputs)) {
-      return undefined
-    }
-    const tableId = inputs.tableId
-    return typeof tableId === "string" ? tableId : undefined
-  }
 
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
@@ -114,15 +95,11 @@
   $: loopBlock = automationStore.actions.getBlockByRef(automation, loopRef)
 
   $: {
-    const selectedNodeId = $automationStore.selectedNodeId
-    const selectedNodeMode = $automationStore.selectedNodeMode || DataMode.INPUT
-    const selectedNodeChanged = selectedNodeId !== previousSelectedNodeId
-    const selectedNodeModeChanged = selectedNodeMode !== previousSelectedNodeMode
-
-    if (selectedNodeChanged || selectedNodeModeChanged) {
+    const selectedNodeMode = $automationStore.selectedNodeMode ?? DataMode.INPUT
+    const currentSelectionKey = `${$automationStore.selectedNodeId || ""}:${selectedNodeMode}`
+    if (currentSelectionKey !== previousSelectionKey) {
       dataMode = selectedNodeMode
-      previousSelectedNodeId = selectedNodeId
-      previousSelectedNodeMode = selectedNodeMode
+      previousSelectionKey = currentSelectionKey
     }
   }
 
@@ -131,21 +108,12 @@
     testResults,
     block
   )
+  $: trigger = cloneDeep($selectedAutomation.data?.definition?.trigger)
+  $: schemaProperties = buildTriggerSchemaProperties(trigger)
   $: currentTestData = $selectedAutomation.data?.testData
-  $: testData = parseTestData(currentTestData)
-  $: {
-    trigger = cloneDeep($selectedAutomation.data?.definition?.trigger)
-
-    let schema = Object.entries(
-      trigger?.schema?.outputs?.properties || {}
-    ) as Array<[string, Record<string, unknown>]>
-    if (trigger?.event === AutomationEventType.APP_TRIGGER) {
-      schema = [["fields", { customType: "fields" }]]
-    }
-    schemaProperties = schema
-  }
+  $: testData = parseTestDataForTrigger(trigger, currentTestData)
   $: isTestDataInvalid =
-    !isTriggerValid(trigger) ||
+    !isTriggerValidForTestData(trigger) ||
     !(trigger?.schema?.outputs?.required || []).every(
       required => testData?.[required] || required !== "row"
     )
@@ -154,53 +122,10 @@
   }
   $: processTestIssues(testResults, block)
 
-  const parseTestData = (data: Record<string, unknown> | undefined) => {
-    const autoTrigger = $selectedAutomation.data?.definition?.trigger
-    const tableId = getTriggerTableId(autoTrigger)
-
-    if (
-      isRowTriggerEvent(autoTrigger?.event) &&
-      (data as { row?: { tableId?: string } } | undefined)?.row?.tableId !==
-        tableId
-    ) {
-      return {
-        row: { tableId },
-        meta: {},
-        id: "",
-        revision: "",
-      } as Record<string, unknown>
-    }
-
-    return cloneDeep(data) as Record<string, unknown>
-  }
-
-  const isTriggerValid = (target: AutomationTrigger | undefined) => {
-    if (isRowTriggerEvent(target?.event) && !getTriggerTableId(target)) {
-      return false
-    }
-    return true
-  }
-
   const openInlineTestData = () => {
     dataMode = DataMode.OUTPUT
     showInlineTestData = true
-    selectedValues = true
-    selectedJSON = false
     failedParse = null
-  }
-
-  const toggleInlineTestDataMode = (showValues: boolean) => {
-    selectedValues = showValues
-    selectedJSON = !showValues
-  }
-
-  const handleInlineTestDataUpdate = (
-    e: CustomEvent<{ testData?: Record<string, unknown> }>
-  ) => {
-    const updatedTestData = e.detail?.testData
-    if (updatedTestData) {
-      testData = parseTestData(updatedTestData)
-    }
   }
 
   const parseTestJSON = async (e: CustomEvent<string>) => {
@@ -214,17 +139,7 @@
       return
     }
 
-    if (isRowTriggerEvent(trigger?.event)) {
-      const tableId = getTriggerTableId(trigger)
-      const data = jsonUpdate as { row?: { tableId?: string } }
-
-      if (!data.row) {
-        data.row = {}
-      }
-      if (data.row.tableId !== tableId) {
-        data.row.tableId = tableId
-      }
-    }
+    jsonUpdate = normalizeParsedJsonForTrigger(trigger, jsonUpdate)
 
     if (!$selectedAutomation.data) {
       return
@@ -236,6 +151,15 @@
       return
     }
     await automationStore.actions.save(updatedAuto)
+  }
+
+  const handleInlineTestDataValuesChange = (
+    e: CustomEvent<{ testData?: Record<string, unknown> }>
+  ) => {
+    const updatedTestData = e.detail?.testData
+    if (updatedTestData) {
+      testData = parseTestDataForTrigger(trigger, updatedTestData)
+    }
   }
 
   const runInlineTest = async () => {
@@ -475,60 +399,20 @@
         />
       {:else if dataMode === DataMode.OUTPUT}
         {#if showInlineTestData}
-          <div class="inline-test-data">
-            <div class="inline-test-data-title">Add test data</div>
-            <div class="options">
-              <ActionButton
-                quiet
-                selected={selectedValues}
-                on:click={() => toggleInlineTestDataMode(true)}
-                >Use values</ActionButton
-              >
-              <ActionButton
-                quiet
-                selected={selectedJSON}
-                on:click={() => toggleInlineTestDataMode(false)}
-                >Use JSON</ActionButton
-              >
-            </div>
-            {#if selectedValues}
-              <div
-                class="tab-content-padding"
-                class:expanded-form-fields={expanded}
-              >
-                <AutomationBlockSetup
-                  {schemaProperties}
-                  isTestModal
-                  {testData}
-                  block={trigger}
-                  {automation}
-                  on:update={handleInlineTestDataUpdate}
-                />
-              </div>
-            {/if}
-            {#if selectedJSON}
-              <div class="text-area-container">
-                <TextArea
-                  value={JSON.stringify(
-                    $selectedAutomation.data?.testData,
-                    null,
-                    2
-                  )}
-                  error={failedParse || undefined}
-                  on:change={parseTestJSON}
-                />
-              </div>
-            {/if}
-            <div class="inline-test-data-run">
-              <Button
-                cta
-                disabled={isTestDataInvalid || runningInlineTest}
-                on:click={runInlineTest}
-              >
-                Run test
-              </Button>
-            </div>
-          </div>
+          <TestDataEditor
+            {schemaProperties}
+            {testData}
+            block={trigger}
+            {automation}
+            showRunButton
+            constrainWidth={expanded}
+            runDisabled={isTestDataInvalid || runningInlineTest}
+            failedParse={failedParse}
+            jsonValue={JSON.stringify($selectedAutomation.data?.testData, null, 2)}
+            on:values-change={handleInlineTestDataValuesChange}
+            on:json-change={parseTestJSON}
+            on:run-test={runInlineTest}
+          />
         {:else if blockResults}
           <JSONViewer
             value={blockResults.outputs}
@@ -639,35 +523,6 @@
     display: flex;
     gap: var(--spacing-s);
     padding: var(--spacing-m) var(--spacing-l);
-  }
-  .inline-test-data {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-    padding: var(--spacing-l);
-  }
-  .inline-test-data-title {
-    font-weight: 500;
-  }
-  .options {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .tab-content-padding {
-    padding: 0 var(--spacing-s);
-  }
-  .tab-content-padding.expanded-form-fields {
-    width: min(100%, 720px);
-  }
-  .text-area-container :global(textarea) {
-    min-height: 300px;
-    height: 300px;
-  }
-  .inline-test-data-run {
-    margin-top: auto;
-    display: flex;
-    justify-content: flex-start;
   }
   .issue {
     display: flex;
