@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "Classify Text",
+  name: "Classify text",
   icon: "PageTag",
   tagline: "Classify text into predefined categories using AI",
   description:

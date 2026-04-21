@@ -46,6 +46,10 @@
   ) => void = () => {}
 
   const view = getContext<Writable<DragView>>("draggableView")
+  const focusNodeRequest =
+    getContext<
+      Writable<{ nodeId: string; direction?: -1 | 1; zoom?: number } | null>
+    >("focusNodeRequest")
   const memoContext = memo({})
   const memoEnvVariables = memo($environment.variables)
 
@@ -125,6 +129,10 @@
   $: unexecuted =
     viewMode === ViewMode.LOGS && Boolean(executedBranchId) && !executed
 
+  const createBranchNodeId = (idx: number, branchId: string) => {
+    return `branch-${step.id}-${idx}-${branchId}`
+  }
+
   const getContextMenuItems = () => {
     return [
       {
@@ -152,12 +160,18 @@
         visible: true,
         disabled: branchIdx == 0,
         callback: async () => {
-          if ($selectedAutomation.data) {
-            automationStore.actions.branchLeft(
+          const movedBranch = step.inputs?.branches?.[branchIdx]
+          const targetIdx = branchIdx - 1
+          if ($selectedAutomation.data && movedBranch && targetIdx >= 0) {
+            await automationStore.actions.branchLeft(
               branchBlockRef.pathTo,
               $selectedAutomation.data,
               step
             )
+            focusNodeRequest.set({
+              nodeId: createBranchNodeId(targetIdx, movedBranch.id),
+              direction: -1,
+            })
           }
         },
       },
@@ -168,12 +182,23 @@
         visible: true,
         disabled: isLast,
         callback: async () => {
-          if ($selectedAutomation.data) {
-            automationStore.actions.branchRight(
+          const movedBranch = step.inputs?.branches?.[branchIdx]
+          const targetIdx = branchIdx + 1
+          const branchCount = step.inputs?.branches?.length || 0
+          if (
+            $selectedAutomation.data &&
+            movedBranch &&
+            targetIdx < branchCount
+          ) {
+            await automationStore.actions.branchRight(
               branchBlockRef.pathTo,
               $selectedAutomation.data,
               step
             )
+            focusNodeRequest.set({
+              nodeId: createBranchNodeId(targetIdx, movedBranch.id),
+              direction: 1,
+            })
           }
         },
       },
@@ -303,6 +328,7 @@
     class:unexecuted
     on:click={e => {
       e.stopPropagation()
+      contextMenuStore.close()
       if (viewMode === ViewMode.LOGS && logStepData) {
         onStepSelect(logStepData)
       }
@@ -319,7 +345,11 @@
           itemName={branch.name}
           on:update={branchUpdate}
         />
-        <div class="actions">
+        <div
+          class="actions nodrag nopan"
+          on:mousedown|stopPropagation
+          on:click|stopPropagation
+        >
           <Icon
             name="info"
             tooltip="Branch sequencing checks each option in order and follows the first one that matches the rules."
@@ -341,11 +371,19 @@
     <Divider noMargin />
     <div class="blockSection filter-button">
       <PropField label="Only run when:" fullWidth>
-        <div style="width: 100%">
+        <div
+          class="nodrag nopan"
+          style="width: 100%"
+          on:mousedown|stopPropagation
+          on:click|stopPropagation
+        >
           <Button
             disabled={viewMode === ViewMode.LOGS}
             secondary
-            on:click={drawer.show}
+            on:click={() => {
+              contextMenuStore.close()
+              drawer?.show()
+            }}
           >
             {editableConditionUI?.groups?.length
               ? "Update condition"
