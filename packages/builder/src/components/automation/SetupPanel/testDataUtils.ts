@@ -32,10 +32,10 @@ export const parseTestDataForTrigger = (
       meta: {},
       id: "",
       revision: "",
-    } as Record<string, unknown>
+    }
   }
 
-  return cloneDeep(data) as Record<string, unknown>
+  return cloneDeep(data)
 }
 
 export const isTriggerValidForTestData = (
@@ -66,7 +66,7 @@ export const normalizeParsedJsonForTrigger = (
     }
   }
 
-  return normalized as Record<string, unknown>
+  return normalized
 }
 
 export const buildTriggerSchemaProperties = (
