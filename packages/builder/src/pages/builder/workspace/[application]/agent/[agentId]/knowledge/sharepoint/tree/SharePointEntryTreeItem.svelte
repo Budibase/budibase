@@ -14,7 +14,12 @@
     showStatus?: boolean
   }
 
-  let { node, selectedPaths, onTogglePaths, showStatus = true }: Props = $props()
+  let {
+    node,
+    selectedPaths,
+    onTogglePaths,
+    showStatus = true,
+  }: Props = $props()
 
   const collectPaths = (node: SharePointEntryTreeNode): string[] => {
     return [node.path, ...node.children.flatMap(child => collectPaths(child))]
@@ -33,7 +38,9 @@
     return node.status !== AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
   }
 
-  const getSharePointStatusText = (status?: SharePointEntryTreeNode["status"]) => {
+  const getSharePointStatusText = (
+    status?: SharePointEntryTreeNode["status"]
+  ) => {
     switch (status) {
       case KnowledgeBaseFileStatus.PROCESSING:
         return "Processing"
