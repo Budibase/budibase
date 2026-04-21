@@ -62,7 +62,7 @@
   let editing = $derived(draftCase ? isExisting(draftCase.id) : false)
 </script>
 
-<Modal size="L" bind:this={modal}>
+<Modal bind:this={modal}>
   <ModalContent
     title={editing ? "Edit test" : "Add test"}
     confirmText="Run test"

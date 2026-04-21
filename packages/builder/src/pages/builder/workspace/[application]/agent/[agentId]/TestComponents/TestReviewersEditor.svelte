@@ -14,6 +14,7 @@
     REVIEWER_TYPES,
     describeReviewer,
     type ReviewerType,
+    withReviewerDefinition,
   } from "@budibase/shared-core"
 
   type ToolOption = { label: string; value: string }
@@ -68,6 +69,12 @@
     const summary = describeReviewer(reviewer)
     return summary ? `${label} · ${truncate(summary, 48)}` : label
   }
+
+  const reviewerContentValue = (reviewer: AgentTestReviewer): string =>
+    withReviewerDefinition(reviewer, (def, r) => {
+      const field = def.contentField as keyof typeof r
+      return r[field] as string
+    })
 </script>
 
 <div class="reviewers">
@@ -117,20 +124,20 @@
               : reviewer.type === "llm_judge"
                 ? "Rubric"
                 : "Text"}
-            value={reviewer[def.contentField] as string}
+            value={reviewerContentValue(reviewer)}
             height={reviewer.type === "llm_judge" ? 110 : 90}
             on:change={updateReviewerField(reviewer.id, def.contentField)}
           />
         {:else if def.inputType === "input"}
           <Input
             label="Text to find"
-            value={reviewer[def.contentField] as string}
+            value={reviewerContentValue(reviewer)}
             on:change={updateReviewerField(reviewer.id, def.contentField)}
           />
         {:else if def.inputType === "select"}
           <Select
             label="Tool name"
-            value={reviewer[def.contentField] as string}
+            value={reviewerContentValue(reviewer)}
             options={toolOptions}
             getOptionLabel={o => o.label}
             getOptionValue={o => o.value}
