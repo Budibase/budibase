@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    Badge,
     Body,
     Button,
     Helpers,
@@ -145,6 +146,13 @@
     showConfirmButton={false}
     showCancelButton={false}
   >
+    <div class="deprecation-notice">
+      <Badge orange size="S">Deprecated</Badge>
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Agent Chat will be removed in a future release.
+      </Body>
+    </div>
+
     {#if showDefaultControls && !isDefault}
       <div class="agent-settings">
         <div class="agent-settings-default">
@@ -214,6 +222,17 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .deprecation-notice {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+  }
+
+  .deprecation-notice :global(p) {
+    margin: 0;
   }
 
   .agent-settings-default {
