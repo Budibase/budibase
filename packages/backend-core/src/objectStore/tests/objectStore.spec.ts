@@ -401,7 +401,8 @@ describe("objectStore", () => {
 
       expect(fetchWithBlacklistMock).toHaveBeenCalledWith(
         "http://169.254.169.254/metadata/v1/",
-        { headers: {} }
+        { headers: {} },
+        { followRedirects: true }
       )
     })
 

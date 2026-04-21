@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "API Request",
+  name: "API request",
   tagline: "Execute a REST request",
   icon: "globe",
   description: "Execute a HTTP query from a REST datasource",
