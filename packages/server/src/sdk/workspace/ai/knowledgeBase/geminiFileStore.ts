@@ -161,9 +161,11 @@ export async function ingestGeminiFile({
 export async function searchGeminiFileStore({
   vectorStoreId,
   query,
+  fileIds,
 }: {
   vectorStoreId: string
   query: string
+  fileIds?: string[]
 }): Promise<GeminiSearchResultItem[]> {
   const geminiApiKey = getGeminiApiKey()
   const response = await fetch(
@@ -175,6 +177,7 @@ export async function searchGeminiFileStore({
       headers: await getCommonAuthHeaders(),
       body: JSON.stringify({
         query,
+        ...(fileIds?.length ? { filters: { file_ids: fileIds } } : {}),
         custom_llm_provider: "gemini",
         ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
       }),
