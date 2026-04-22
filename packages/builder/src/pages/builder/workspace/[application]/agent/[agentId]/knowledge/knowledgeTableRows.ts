@@ -1,5 +1,6 @@
 import { helpers } from "@budibase/shared-core"
 import {
+  KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
   type SharePointKnowledgeSourceSnapshot,
@@ -87,7 +88,9 @@ export const getSharePointFilesForSite = (
   siteId: string
 ) =>
   files.filter(
-    file => file.source?.type === "sharepoint" && file.source.siteId === siteId
+    file =>
+      file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&
+      file.source.siteId === siteId
   )
 
 export const getSharePointFileProcessingCounts = (

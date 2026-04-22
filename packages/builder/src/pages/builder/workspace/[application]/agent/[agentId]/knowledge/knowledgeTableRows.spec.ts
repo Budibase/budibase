@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import {
   AgentKnowledgeSourceSyncRunStatus,
+  KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
 } from "@budibase/types"
@@ -52,33 +53,36 @@ describe("knowledgeTableRows", () => {
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
         source: {
-          type: "sharepoint",
+          type: KnowledgeBaseFileSourceType.SHAREPOINT,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
           itemId: "item-1",
+          path: "folder-1/file-1.txt",
         },
       }),
       makeFile({
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
         source: {
-          type: "sharepoint",
+          type: KnowledgeBaseFileSourceType.SHAREPOINT,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
           itemId: "item-2",
+          path: "folder-1/file-2.txt",
         },
       }),
       makeFile({
         _id: "f3",
         status: KnowledgeBaseFileStatus.FAILED,
         source: {
-          type: "sharepoint",
+          type: KnowledgeBaseFileSourceType.SHAREPOINT,
           knowledgeSourceId: "source-2",
           siteId: "site-2",
           driveId: "drive-1",
           itemId: "item-3",
+          path: "folder-2/file-3.txt",
         },
       }),
     ]

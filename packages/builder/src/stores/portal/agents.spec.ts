@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { get } from "svelte/store"
 import {
+  KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   type Agent,
   type AgentFileUploadResponse,
@@ -73,11 +74,12 @@ describe("agentsStore sharepoint and file syncing", () => {
         _id: "kb_file_1",
         knowledgeBaseId: "kb_1",
         source: {
-          type: "sharepoint",
+          type: KnowledgeBaseFileSourceType.SHAREPOINT,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
           itemId: "item-1",
+          path: "folder-1/notes.md",
         },
         ragSourceId: "rag_source_1",
         filename: "notes.md",

@@ -8,6 +8,7 @@ import {
   CreateAgentRequest,
   DisconnectAgentSharePointSiteResponse,
   FetchAgentKnowledgeResponse,
+  FetchAgentKnowledgeSourceOptionsResponse,
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -188,6 +189,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   deleteAgentFile = async (agentId: string, fileId: string) =>
     await API.deleteAgentFile(agentId, fileId)
+
+  fetchAgentKnowledgeSourceOptions = async (
+    agentId: string
+  ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
+    return await API.fetchAgentKnowledgeSourceOptions(agentId)
+  }
 
   connectAgentSharePointSite = async (
     agentId: string,

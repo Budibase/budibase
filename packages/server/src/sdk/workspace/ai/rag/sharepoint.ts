@@ -11,6 +11,7 @@ import {
   isKnowledgeFileSupported,
   type KnowledgeSourceEntry,
   type SyncAgentKnowledgeSourcesResponse,
+  KnowledgeBaseFileSourceType,
 } from "@budibase/types"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import {
@@ -452,7 +453,10 @@ export const syncSharePointSourcesForAgent = async (
   >()
   for (const file of existingFiles) {
     const fileId = file._id
-    if (!fileId || file.source?.type !== "sharepoint") {
+    if (
+      !fileId ||
+      file.source?.type !== KnowledgeBaseFileSourceType.SHAREPOINT
+    ) {
       continue
     }
     const externalId = getSharePointFileDedupKey({
@@ -515,11 +519,12 @@ export const syncSharePointSourcesForAgent = async (
           await knowledgeBaseSdk.uploadKnowledgeBaseFile({
             knowledgeBaseId,
             source: {
-              type: "sharepoint",
+              type: KnowledgeBaseFileSourceType.SHAREPOINT,
               knowledgeSourceId: sourceId,
               siteId,
               driveId,
               itemId: file.itemId,
+              path: file.path,
             },
             filename: file.filename,
             mimetype: file.mimetype,
@@ -588,7 +593,8 @@ export const deleteSharePointFilesForAgentSite = async (
   const fileIdsToDelete = files
     .filter(
       file =>
-        file.source?.type === "sharepoint" && file.source.siteId === siteId
+        file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&
+        file.source.siteId === siteId
     )
     .map(file => file._id)
     .filter((fileId): fileId is string => !!fileId)

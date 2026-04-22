@@ -3,6 +3,7 @@ import {
   AgentKnowledgeSource,
   AgentKnowledgeSourceType,
   KnowledgeBaseFile,
+  KnowledgeBaseFileSourceType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -20,14 +21,16 @@ export const getSharePointSiteIds = (agent?: Agent): Set<string> => {
 
 const isSharePointFile = (
   file: Pick<KnowledgeBaseFile, "source" | "uploadedBy">
-) => file.source?.type === "sharepoint"
+) => file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT
 
 const isSharePointFileForRemovedSite = (
   file: Pick<KnowledgeBaseFile, "source" | "uploadedBy">,
   removedSharePointSiteIds: string[]
 ) => {
   const sourceSiteId =
-    file.source?.type === "sharepoint" ? file.source.siteId : undefined
+    file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT
+      ? file.source.siteId
+      : undefined
   return removedSharePointSiteIds.some(siteId => {
     return sourceSiteId === siteId
   })
