@@ -5,6 +5,9 @@ const mockRemoveRepeatableByKey = jest.fn()
 const mockRemoveJobs = jest.fn()
 const mockDoInWorkspaceContext = jest.fn()
 const mockSyncSharePointSourcesForAgent = jest.fn()
+const mockDeleteFileForAgent = jest.fn()
+const mockDeleteSharePointFilesForAgentSite = jest.fn()
+const mockDeleteKnowledgeSourceSyncStateForAgent = jest.fn()
 const mockGetAllWorkspaces = jest.fn()
 const mockWorkspaceAllDocs = jest.fn()
 
@@ -54,6 +57,14 @@ jest.mock("@budibase/backend-core", () => {
 jest.mock("./sharepoint", () => ({
   syncSharePointSourcesForAgent: (...args: any[]) =>
     mockSyncSharePointSourcesForAgent(...args),
+  deleteSharePointFilesForAgentSite: (...args: any[]) =>
+    mockDeleteSharePointFilesForAgentSite(...args),
+  deleteKnowledgeSourceSyncStateForAgent: (...args: any[]) =>
+    mockDeleteKnowledgeSourceSyncStateForAgent(...args),
+}))
+
+jest.mock("./files", () => ({
+  deleteFileForAgent: (...args: any[]) => mockDeleteFileForAgent(...args),
 }))
 
 import { AgentKnowledgeSourceType, type Agent } from "@budibase/types"
@@ -83,6 +94,7 @@ describe("knowledgeSourceSyncQueue", () => {
     await scheduleJob({
       workspaceId: "app_dev_test",
       agentId: "agent_1",
+      jobType: "sync",
       sourceType: AgentKnowledgeSourceType.SHAREPOINT,
       sourceId: "sharepoint_site_site_1",
     })
@@ -91,6 +103,7 @@ describe("knowledgeSourceSyncQueue", () => {
       {
         workspaceId: "app_dev_test",
         agentId: "agent_1",
+        jobType: "sync",
         sourceType: AgentKnowledgeSourceType.SHAREPOINT,
         sourceId: "sharepoint_site_site_1",
       },
@@ -146,6 +159,7 @@ describe("knowledgeSourceSyncQueue", () => {
       {
         workspaceId: "app_dev_test",
         agentId: "agent_1",
+        jobType: "sync",
         sourceType: AgentKnowledgeSourceType.SHAREPOINT,
         sourceId: "sharepoint_site_site_2",
       },
@@ -196,6 +210,7 @@ describe("knowledgeSourceSyncQueue", () => {
       data: {
         workspaceId: "app_dev_test",
         agentId: "agent_1",
+        jobType: "sync",
         sourceType: AgentKnowledgeSourceType.SHAREPOINT,
         sourceId: "sharepoint_site_site_1",
       },
@@ -205,9 +220,39 @@ describe("knowledgeSourceSyncQueue", () => {
       "app_dev_test",
       expect.any(Function)
     )
-    expect(mockSyncSharePointSourcesForAgent).toHaveBeenCalledWith("agent_1", [
-      "sharepoint_site_site_1",
-    ])
+    expect(mockSyncSharePointSourcesForAgent).toHaveBeenCalledWith(
+      "agent_1",
+      "sharepoint_site_site_1"
+    )
+  })
+
+  it("processes queued disconnect jobs by deleting site files and sync state", async () => {
+    jest.resetModules()
+    const queueModule = await import("./knowledgeSourceSyncQueue")
+    queueModule.init()
+
+    const processHandler = mockQueueProcess.mock.calls[0][1]
+    await processHandler({
+      data: {
+        workspaceId: "app_dev_test",
+        agentId: "agent_1",
+        jobType: "disconnect_sharepoint_site",
+        siteId: "site_1",
+      },
+    })
+
+    expect(mockDoInWorkspaceContext).toHaveBeenCalledWith(
+      "app_dev_test",
+      expect.any(Function)
+    )
+    expect(mockDeleteSharePointFilesForAgentSite).toHaveBeenCalledWith(
+      "agent_1",
+      "site_1"
+    )
+    expect(mockDeleteKnowledgeSourceSyncStateForAgent).toHaveBeenCalledWith(
+      "agent_1",
+      "site_1"
+    )
   })
 
   it("removes orphan jobs during rehydration", async () => {
