@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Modal, ModalContent, keepOpen, notifications } from "@budibase/bbui"
+  import { Button, Modal, notifications } from "@budibase/bbui"
   import type { AgentTestCase } from "@budibase/types"
   import TestCaseFields from "./TestCaseFields.svelte"
   import TestReviewersEditor from "./TestReviewersEditor.svelte"
@@ -17,13 +17,31 @@
   let modal: Modal
   let loading = $state(false)
   let draftCase = $state<AgentTestCase | null>(null)
+  let modalSession = $state(0)
 
   const cloneCase = (testCase: AgentTestCase): AgentTestCase => ({
     ...testCase,
     reviewers: testCase.reviewers.map(reviewer => ({ ...reviewer })),
   })
 
+  const truncate = (value: string, max: number) =>
+    value.length <= max ? value : `${value.slice(0, Math.max(0, max - 1))}…`
+
+  const fallbackName = (testCase: AgentTestCase): string => {
+    const explicitName = testCase.name.trim()
+    if (explicitName) return explicitName
+
+    const inputPreview = testCase.input.trim().replace(/\s+/g, " ")
+    return inputPreview ? truncate(inputPreview, 48) : "Untitled test"
+  }
+
+  const normalizeCaseForSave = (testCase: AgentTestCase): AgentTestCase => ({
+    ...cloneCase(testCase),
+    name: fallbackName(testCase),
+  })
+
   export const show = (testCase: AgentTestCase) => {
+    modalSession += 1
     draftCase = cloneCase(testCase)
     loading = false
     modal.show()
@@ -42,18 +60,16 @@
   )
 
   const handleConfirm = async () => {
-    if (!draftCase || loading) return keepOpen
-    if (!canRunTest) return keepOpen
+    if (!draftCase || loading || !canRunTest) return
 
     loading = true
     try {
-      const saved = await onSave(cloneCase(draftCase))
-      if (!saved) return keepOpen
+      const saved = await onSave(normalizeCaseForSave(draftCase))
+      if (!saved) return
       modal.hide()
     } catch (error) {
       console.error("Failed to save test", error)
       notifications.error("Failed to save test")
-      return keepOpen
     } finally {
       loading = false
     }
@@ -62,69 +78,160 @@
   let editing = $derived(draftCase ? isExisting(draftCase.id) : false)
 </script>
 
-<Modal bind:this={modal}>
-  <ModalContent
-    title={editing ? "Edit test" : "Add test"}
-    confirmText="Run test"
-    size="L"
-    showConfirmButton
-    showCancelButton
-    showCloseIcon
-    disabled={loading || !draftCase || !canRunTest}
-    onConfirm={handleConfirm}
-  >
-    {#if draftCase}
-      <div class="modal-body">
-        <section class="section">
-          <TestCaseFields
-            selectedCase={draftCase}
-            onUpdateCase={updateDraftCase}
-          />
-        </section>
-
-        <section class="section">
-          <div class="section-header">
-            <div>
-              <h4>Reviewers</h4>
-              <p>Add checks for the final response or tool usage.</p>
-            </div>
+<Modal bind:this={modal} autoFocus={false}>
+  {#if draftCase}
+    {#key modalSession}
+      <div class="test-case-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div class="modal-heading">
+            <h2>{editing ? "Edit test case" : "Add test case"}</h2>
           </div>
+        </div>
 
-          <TestReviewersEditor
-            selectedCase={draftCase}
-            {toolOptions}
-            onUpdateCase={updateDraftCase}
-          />
-        </section>
+        <div class="modal-body">
+          <section class="section">
+            <div class="section-header">
+              <h3>Test input</h3>
+              <p>What the user or system will send to the agent.</p>
+            </div>
+
+            <TestCaseFields
+              selectedCase={draftCase}
+              onUpdateCase={updateDraftCase}
+            />
+          </section>
+
+          <div class="section-divider"></div>
+
+          <section class="section">
+            <div class="section-header">
+              <h3>Test criteria</h3>
+              <p>Describe what a good response looks like.</p>
+            </div>
+
+            <TestReviewersEditor
+              selectedCase={draftCase}
+              {toolOptions}
+              onUpdateCase={updateDraftCase}
+            />
+          </section>
+        </div>
+
+        <div class="modal-footer">
+          <Button secondary disabled={loading} on:click={() => modal.hide()}>
+            Cancel
+          </Button>
+
+          <Button
+            cta
+            disabled={loading || !canRunTest}
+            on:click={handleConfirm}
+          >
+            {loading ? "Running..." : "Run test"}
+          </Button>
+        </div>
       </div>
-    {/if}
-  </ModalContent>
+    {/key}
+  {/if}
 </Modal>
 
 <style>
+  .test-case-modal {
+    width: min(600px, calc(100vw - 32px));
+    border-radius: 8px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    background: var(--background);
+    color: var(--ink);
+    overflow: hidden;
+  }
+
+  .modal-header {
+    padding: 24px 40px 0;
+  }
+
+  .modal-heading h2 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.3;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
   .modal-body {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-l);
+    gap: 20px;
+    padding: 20px 40px 0;
+    max-height: min(72vh, 760px);
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .modal-body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .modal-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .modal-body::-webkit-scrollbar-thumb {
+    background: var(--spectrum-global-color-gray-300);
+    border-radius: 999px;
   }
 
   .section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
+    gap: 12px;
   }
 
-  .section-header h4 {
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .section-header h3 {
     margin: 0;
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.4;
     font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--ink);
   }
 
   .section-header p {
-    margin: 4px 0 0;
+    margin: 0;
     font-size: 12px;
     line-height: 1.5;
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .section-divider {
+    height: 1px;
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px 40px 28px;
+  }
+
+  :global(.spectrum-Modal:has(.test-case-modal)) {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  @media (max-width: 720px) {
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
   }
 </style>

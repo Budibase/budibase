@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Input, TextArea } from "@budibase/bbui"
+  import { TextArea } from "@budibase/bbui"
   import type { AgentTestCase } from "@budibase/types"
 
   type Props = {
@@ -11,23 +11,17 @@
 
   let { selectedCase, onUpdateCase }: Props = $props()
 
-  const updateField =
-    (field: "name" | "input") => (event: CustomEvent<string>) =>
-      onUpdateCase(testCase => ({ ...testCase, [field]: event.detail }))
+  const updateInput = (event: CustomEvent<string>) =>
+    onUpdateCase(testCase => ({ ...testCase, input: event.detail }))
 </script>
 
 <div class="case-fields">
-  <Input
-    label="Test name"
-    value={selectedCase.name}
-    on:change={updateField("name")}
-  />
-
   <TextArea
-    label="Input"
+    placeholder="Ask the agent a question, paste a prompt, or describe the incoming system message..."
     value={selectedCase.input}
-    height={140}
-    on:change={updateField("input")}
+    minHeight={156}
+    updateOnChange
+    on:change={updateInput}
   />
 </div>
 
@@ -35,6 +29,9 @@
   .case-fields {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+  }
+
+  .case-fields :global(.spectrum-Field) {
+    width: 100%;
   }
 </style>
