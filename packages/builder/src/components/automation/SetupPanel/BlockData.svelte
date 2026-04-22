@@ -275,10 +275,7 @@
       : undefined
 </script>
 
-<ExpandableModalPanel
-  bind:expanded
-  title="Step Data"
->
+<ExpandableModalPanel bind:expanded title="Step Data">
   <svelte:fragment slot="header">
     <div class="tabs">
       {#each visibleModes as mode}
@@ -332,16 +329,18 @@
             <span class="info">
               Run the automation to show the output of this step
             </span>
-            <Button
-              size={"S"}
-              icon={"Play"}
-              secondary
-              on:click={() => {
-                dispatch("run")
-              }}
-            >
-              Run
-            </Button>
+            {#if !$expanded}
+              <Button
+                size={"S"}
+                icon={"Play"}
+                secondary
+                on:click={() => {
+                  dispatch("run")
+                }}
+              >
+                Run
+              </Button>
+            {/if}
           </div>
         {/if}
       {:else if dataMode === DataMode.AGENT}
