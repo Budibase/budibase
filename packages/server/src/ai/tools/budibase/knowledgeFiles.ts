@@ -199,6 +199,7 @@ export const createKnowledgeFilesTool = (
       const sortedFiles = [...files].sort(
         (a, b) => toEpochMillis(b.createdAt) - toEpochMillis(a.createdAt)
       )
+      const totalFiles = sortedFiles.length
       const hasFilenameFilter = Boolean(filename)
 
       const rankedMatches = hasFilenameFilter
@@ -230,8 +231,10 @@ export const createKnowledgeFilesTool = (
 
       return {
         matchedCount: metadata.length,
+        totalFiles,
         total: metadata.length,
         ambiguous: isAmbiguous,
+        needsClarification: isAmbiguous,
         bestMatch,
         candidates,
         readyCount: metadata.filter(
