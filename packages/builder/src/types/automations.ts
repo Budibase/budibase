@@ -32,7 +32,6 @@ export enum DataMode {
   OUTPUT = "data_out",
   ERRORS = "errors",
   AGENT = "agent",
-  TEST = "test",
 }
 
 export enum ViewMode {

@@ -12,7 +12,6 @@
     type JSONViewerClickEvent,
   } from "@/components/common/JSONViewer.svelte"
   import AgentOutputViewer from "./AgentOutputViewer.svelte"
-  import TestDataEditor from "./TestDataEditor.svelte"
   import {
     type AutomationStep,
     type AutomationTrigger,
@@ -45,12 +44,6 @@
   } from "@/types/automations"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
-  import {
-    buildTriggerSchemaProperties,
-    isTriggerValidForTestData,
-    normalizeParsedJsonForTrigger,
-    parseTestDataForTrigger,
-  } from "./testDataUtils"
   import { type AutomationContext } from "@/stores/builder/automations"
   import type { Writable } from "svelte/store"
 
@@ -65,7 +58,6 @@
     [DataMode.OUTPUT]: "Data Out",
     [DataMode.AGENT]: "Agent",
     [DataMode.ERRORS]: "Errors",
-    [DataMode.TEST]: "Run Test",
   }
 
   // Add explicit weight to the issue types
@@ -78,14 +70,7 @@
   let dataMode: DataMode = DataMode.INPUT
   let expanded: Writable<boolean>
   let issues: BlockStatus[] = []
-  let showInlineTestData = false
-  let failedParse: string | null = null
-  let runningInlineTest = false
-  let expandablePanel: { close: () => void } | undefined
   let previousSelectionKey = ""
-  let trigger: AutomationTrigger | undefined
-  let schemaProperties: Array<[string, Record<string, unknown>]> = []
-  let testData: Record<string, unknown> | undefined
 
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
@@ -111,81 +96,7 @@
     testResults,
     block
   )
-  $: trigger = cloneDeep($selectedAutomation.data?.definition?.trigger)
-  $: schemaProperties = buildTriggerSchemaProperties(trigger)
-  $: currentTestData = $selectedAutomation.data?.testData
-  $: testData = parseTestDataForTrigger(trigger, currentTestData)
-  $: isTestDataInvalid =
-    !isTriggerValidForTestData(trigger) ||
-    !(trigger?.schema?.outputs?.required || []).every(
-      required => testData?.[required] || required !== "row"
-    )
-  $: if (dataMode !== DataMode.TEST) {
-    showInlineTestData = false
-  }
-  $: if (!$expanded && dataMode === DataMode.TEST) {
-    dataMode = DataMode.INPUT
-  }
   $: processTestIssues(testResults, block)
-
-  const openInlineTestData = () => {
-    dataMode = DataMode.TEST
-    showInlineTestData = true
-    failedParse = null
-  }
-
-  const parseTestJSON = async (e: CustomEvent<string>) => {
-    let jsonUpdate: Record<string, unknown>
-
-    try {
-      jsonUpdate = JSON.parse(e.detail)
-      failedParse = null
-    } catch (_e) {
-      failedParse = "Invalid JSON"
-      return
-    }
-
-    jsonUpdate = normalizeParsedJsonForTrigger(trigger, jsonUpdate)
-
-    if (!$selectedAutomation.data) {
-      return
-    }
-
-    const updatedAuto =
-      automationStore.actions.addTestDataToAutomation(jsonUpdate)
-    if (!updatedAuto) {
-      return
-    }
-    await automationStore.actions.save(updatedAuto)
-  }
-
-  const handleInlineTestDataValuesChange = (
-    e: CustomEvent<{ testData?: Record<string, unknown> }>
-  ) => {
-    const updatedTestData = e.detail?.testData
-    if (updatedTestData) {
-      testData = parseTestDataForTrigger(trigger, updatedTestData)
-    }
-  }
-
-  const runInlineTest = async () => {
-    const selectedAutomationData = $selectedAutomation.data
-    if (!selectedAutomationData || runningInlineTest) {
-      return
-    }
-
-    runningInlineTest = true
-    showInlineTestData = false
-    expandablePanel?.close()
-
-    try {
-      await automationStore.actions.test(selectedAutomationData, testData)
-    } catch (error) {
-      notifications.error(String(error))
-    } finally {
-      runningInlineTest = false
-    }
-  }
 
   /**
    * Take the results of an automation and generate a
@@ -365,7 +276,6 @@
 </script>
 
 <ExpandableModalPanel
-  bind:this={expandablePanel}
   bind:expanded
   title="Step Data"
 >
@@ -374,10 +284,9 @@
       {#each visibleModes as mode}
         <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
           <ActionButton
-            selected={!showInlineTestData && mode === dataMode}
+            selected={mode === dataMode}
             quiet
             on:click={() => {
-              showInlineTestData = false
               dataMode = mode
             }}
           >
@@ -385,16 +294,6 @@
           </ActionButton>
         </Count>
       {/each}
-      {#if $expanded}
-        <ActionButton
-          selected={showInlineTestData}
-          quiet
-          icon="Play"
-          on:click={openInlineTestData}
-        >
-          Run Test
-        </ActionButton>
-      {/if}
     </div>
   </svelte:fragment>
 
@@ -433,39 +332,18 @@
             <span class="info">
               Run the automation to show the output of this step
             </span>
-            {#if !$expanded}
-              <Button
-                size={"S"}
-                icon={"Play"}
-                secondary
-                on:click={() => {
-                  dispatch("run")
-                }}
-              >
-                Run
-              </Button>
-            {/if}
+            <Button
+              size={"S"}
+              icon={"Play"}
+              secondary
+              on:click={() => {
+                dispatch("run")
+              }}
+            >
+              Run
+            </Button>
           </div>
         {/if}
-      {:else if dataMode === DataMode.TEST}
-        <TestDataEditor
-          {schemaProperties}
-          {testData}
-          block={trigger}
-          {automation}
-          showRunButton
-          constrainWidth={$expanded}
-          runDisabled={isTestDataInvalid || runningInlineTest}
-          {failedParse}
-          jsonValue={JSON.stringify(
-            $selectedAutomation.data?.testData,
-            null,
-            2
-          )}
-          on:values-change={handleInlineTestDataValuesChange}
-          on:json-change={parseTestJSON}
-          on:run-test={runInlineTest}
-        />
       {:else if dataMode === DataMode.AGENT}
         {#if agentOutputs}
           <AgentOutputViewer outputs={agentOutputs} />
