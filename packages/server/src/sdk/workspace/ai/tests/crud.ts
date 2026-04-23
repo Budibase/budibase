@@ -48,7 +48,9 @@ export const normalizeSuite = (suite: AgentTestSuite): AgentTestSuite => {
     groups,
     cases: suite.cases.map(testCase => ({
       ...testCase,
-      groupId: groupIds.has(testCase.groupId) ? testCase.groupId : fallbackGroupId,
+      groupId: groupIds.has(testCase.groupId)
+        ? testCase.groupId
+        : fallbackGroupId,
     })),
   }
 }

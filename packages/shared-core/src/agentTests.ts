@@ -139,10 +139,10 @@ export const describeReviewer = (
   reviewer: AgentTestReviewer
 ): string | undefined => readReviewerContent(reviewer) || undefined
 
-export const validateReviewer = (
-  reviewer: AgentTestReviewer
-): string | null =>
-  readReviewerContent(reviewer) ? null : REVIEWERS[reviewer.type].requiredMessage
+export const validateReviewer = (reviewer: AgentTestReviewer): string | null =>
+  readReviewerContent(reviewer)
+    ? null
+    : REVIEWERS[reviewer.type].requiredMessage
 
 export const getReviewerLabel = (type: ReviewerType): string =>
   REVIEWERS[type].label

@@ -64,7 +64,10 @@
   const addReviewer = (type: ReviewerType = "llm_judge") => {
     onUpdateCase(testCase => ({
       ...testCase,
-      reviewers: [...testCase.reviewers, REVIEWERS[type].create(Helpers.uuid())],
+      reviewers: [
+        ...testCase.reviewers,
+        REVIEWERS[type].create(Helpers.uuid()),
+      ],
     }))
   }
 
@@ -105,7 +108,8 @@
     <div class="reviewer-empty">
       <span class="reviewer-empty-title">No test criteria yet</span>
       <span class="reviewer-empty-description">
-        Add one or more criteria to check the agent response or required tool usage.
+        Add one or more criteria to check the agent response or required tool
+        usage.
       </span>
     </div>
   {/if}
@@ -169,9 +173,7 @@
   {/each}
 
   <div class="add-reviewer">
-    <Button secondary on:click={() => addReviewer()}>
-      Add test criteria
-    </Button>
+    <Button secondary on:click={() => addReviewer()}>Add test criteria</Button>
   </div>
 </div>
 

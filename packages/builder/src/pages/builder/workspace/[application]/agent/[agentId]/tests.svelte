@@ -3,10 +3,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { Helpers, notifications } from "@budibase/bbui"
-  import {
-    buildDefaultAgentTestGroup,
-    FeatureFlag,
-  } from "@budibase/types"
+  import { buildDefaultAgentTestGroup, FeatureFlag } from "@budibase/types"
   import type {
     AgentTestCase,
     AgentTestGroup,
@@ -61,8 +58,8 @@
   let loading = $state(false)
   let saving = $state(false)
   let running = $state(false)
-  let selectedGroupId = $state<string | null>(buildDefaultAgentTestGroup().id)
-  let selectedCaseId = $state<string | null>(null)
+  let preferredGroupId = $state<string | null>(buildDefaultAgentTestGroup().id)
+  let preferredCaseId = $state<string | null>(null)
   let lastAgentId = $state<string | undefined>()
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
   let testCaseModal: TestCaseModal
@@ -83,14 +80,18 @@
       value: group.id,
     }))
   )
+  let selectedGroupId = $derived(
+    getSelectedGroupId(suite.groups, preferredGroupId)
+  )
+  let selectedCaseId = $derived(
+    getSelectedCaseId(suite.cases, selectedGroupId, preferredCaseId)
+  )
   let selectedGroup = $derived(
     suite.groups.find(group => group.id === selectedGroupId) ?? null
   )
   let latestResultsByCaseId = $derived(
     new Map(
-      suite.cases
-        .filter(c => c.lastResult)
-        .map(c => [c.id, c.lastResult!])
+      suite.cases.filter(c => c.lastResult).map(c => [c.id, c.lastResult!])
     )
   )
   let hasAnyLatestResult = $derived(suite.cases.some(c => !!c.lastResult))
@@ -103,8 +104,8 @@
 
   const resetState = (agentId?: string) => {
     suite = emptySuite(agentId)
-    selectedGroupId = getSelectedGroupId(suite.groups)
-    selectedCaseId = null
+    preferredGroupId = null
+    preferredCaseId = null
   }
 
   const loadSuite = async (agentId?: string) => {
@@ -122,12 +123,6 @@
     try {
       const response = await API.fetchAgentTestSuite(agentId)
       suite = response.suite
-      selectedGroupId = getSelectedGroupId(response.suite.groups, selectedGroupId)
-      selectedCaseId = getSelectedCaseId(
-        response.suite.cases,
-        selectedGroupId,
-        selectedCaseId
-      )
     } catch (error) {
       console.error("Failed to load agent test suite", error)
       resetState(agentId)
@@ -165,15 +160,12 @@
         groups,
         cases,
       })
-      selectedGroupId = getSelectedGroupId(
-        suite.groups,
-        nextSelectedGroupId !== undefined ? nextSelectedGroupId : selectedGroupId
-      )
-      selectedCaseId = getSelectedCaseId(
-        suite.cases,
-        selectedGroupId,
-        nextSelectedCaseId !== undefined ? nextSelectedCaseId : selectedCaseId
-      )
+      if (nextSelectedGroupId !== undefined) {
+        preferredGroupId = nextSelectedGroupId
+      }
+      if (nextSelectedCaseId !== undefined) {
+        preferredCaseId = nextSelectedCaseId
+      }
       if (successMessage) notifications.success(successMessage)
       return true
     } catch (error) {
@@ -190,11 +182,14 @@
     const cases = isNew
       ? [...suite.cases, testCase]
       : suite.cases.map(c => (c.id === testCase.id ? testCase : c))
-    return persistSuite({ cases }, {
-      nextSelectedGroupId: testCase.groupId,
-      nextSelectedCaseId: testCase.id,
-      successMessage: isNew ? "Test added" : "Test updated",
-    })
+    return persistSuite(
+      { cases },
+      {
+        nextSelectedGroupId: testCase.groupId,
+        nextSelectedCaseId: testCase.id,
+        successMessage: isNew ? "Test added" : "Test updated",
+      }
+    )
   }
 
   const saveAndRunCase = async (testCase: AgentTestCase) => {
@@ -216,27 +211,32 @@
         id: Helpers.uuid(),
       })),
     }
-    await persistSuite({ cases: [...suite.cases, duplicated] }, {
-      nextSelectedGroupId: duplicated.groupId,
-      nextSelectedCaseId: duplicated.id,
-      successMessage: "Test duplicated",
-    })
+    await persistSuite(
+      { cases: [...suite.cases, duplicated] },
+      {
+        nextSelectedGroupId: duplicated.groupId,
+        nextSelectedCaseId: duplicated.id,
+        successMessage: "Test duplicated",
+      }
+    )
   }
 
   const removeCase = async (caseId: string) => {
     const remaining = suite.cases.filter(c => c.id !== caseId)
-    await persistSuite({ cases: remaining }, {
-      nextSelectedGroupId: selectedGroupId,
-      nextSelectedCaseId: null,
-      successMessage: "Test deleted",
-    })
+    await persistSuite(
+      { cases: remaining },
+      {
+        nextSelectedGroupId: selectedGroupId,
+        nextSelectedCaseId: null,
+        successMessage: "Test deleted",
+      }
+    )
   }
 
   const saveGroup = async (
     group: AgentTestGroup | Omit<AgentTestGroup, "id">
   ) => {
-    const nextGroup =
-      "id" in group ? group : { ...group, id: Helpers.uuid() }
+    const nextGroup = "id" in group ? group : { ...group, id: Helpers.uuid() }
     const isNew = !suite.groups.some(existing => existing.id === nextGroup.id)
     const groups = isNew
       ? [...suite.groups, nextGroup]
@@ -244,10 +244,13 @@
           existing.id === nextGroup.id ? nextGroup : existing
         )
 
-    return persistSuite({ groups }, {
-      nextSelectedGroupId: nextGroup.id,
-      successMessage: isNew ? "Test group created" : "Test group renamed",
-    })
+    return persistSuite(
+      { groups },
+      {
+        nextSelectedGroupId: nextGroup.id,
+        successMessage: isNew ? "Test group created" : "Test group renamed",
+      }
+    )
   }
 
   const deleteGroup = async () => {
@@ -256,12 +259,17 @@
     }
 
     const groups = suite.groups.filter(group => group.id !== selectedGroupId)
-    const cases = suite.cases.filter(testCase => testCase.groupId !== selectedGroupId)
-    await persistSuite({ groups, cases }, {
-      nextSelectedGroupId: groups[0]?.id ?? null,
-      nextSelectedCaseId: null,
-      successMessage: "Test group deleted",
-    })
+    const cases = suite.cases.filter(
+      testCase => testCase.groupId !== selectedGroupId
+    )
+    await persistSuite(
+      { groups, cases },
+      {
+        nextSelectedGroupId: groups[0]?.id ?? null,
+        nextSelectedCaseId: null,
+        successMessage: "Test group deleted",
+      }
+    )
   }
 
   const mergeRunResults = (run: AgentTestRun) => {
@@ -281,7 +289,10 @@
 
     running = true
     try {
-      const { run } = await API.runAgentTestSuite(agentId, caseId ? { caseId } : {})
+      const { run } = await API.runAgentTestSuite(
+        agentId,
+        caseId ? { caseId } : {}
+      )
       mergeRunResults(run)
       notifications.success(`Run complete · ${run.passed}/${run.total} passed`)
       return true
@@ -316,14 +327,6 @@
   }
 
   $effect(() => {
-    selectedGroupId = getSelectedGroupId(suite.groups, selectedGroupId)
-  })
-
-  $effect(() => {
-    selectedCaseId = getSelectedCaseId(suite.cases, selectedGroupId, selectedCaseId)
-  })
-
-  $effect(() => {
     if (!testsEnabled) {
       $goto("../config")
       return
@@ -345,23 +348,25 @@
         {selectedCaseId}
         {selectedGroupId}
         {loading}
-        saving={saving}
-        running={running}
+        {saving}
+        {running}
         hasLatestRun={hasAnyLatestResult}
         {latestResultsByCaseId}
-        onSelectCase={id => (selectedCaseId = id)}
-        onSelectGroup={id => (selectedGroupId = id)}
+        onSelectCase={id => (preferredCaseId = id)}
+        onSelectGroup={id => (preferredGroupId = id)}
         onCreateGroup={() => testGroupModal?.show()}
-        onRenameGroup={() => selectedGroup && testGroupModal?.show(selectedGroup)}
+        onRenameGroup={() =>
+          selectedGroup && testGroupModal?.show(selectedGroup)}
         onDeleteGroup={() => deleteGroupDialog?.show()}
         onAddCase={() =>
-          selectedGroupId && testCaseModal?.show(newCase(suite.cases.length, selectedGroupId))}
+          selectedGroupId &&
+          testCaseModal?.show(newCase(suite.cases.length, selectedGroupId))}
         onEditCase={id => {
           const testCase = suite.cases.find(test => test.id === id)
           if (testCase) testCaseModal?.show(testCase)
         }}
         onRunCase={id => {
-          void runCase(id)
+          runCase(id)
         }}
         onRunAll={runAllTests}
         onDuplicateCase={duplicateCase}

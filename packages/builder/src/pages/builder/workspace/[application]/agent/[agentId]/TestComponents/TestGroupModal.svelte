@@ -3,7 +3,9 @@
   import type { AgentTestGroup } from "@budibase/types"
 
   type Props = {
-    onSave: (_group: AgentTestGroup | Omit<AgentTestGroup, "id">) => Promise<boolean>
+    onSave: (
+      _group: AgentTestGroup | Omit<AgentTestGroup, "id">
+    ) => Promise<boolean>
   }
 
   let { onSave }: Props = $props()
@@ -29,9 +31,7 @@
 
     loading = true
     try {
-      const saved = await onSave(
-        groupId ? { id: groupId, name } : { name }
-      )
+      const saved = await onSave(groupId ? { id: groupId, name } : { name })
       if (!saved) {
         return
       }
@@ -57,11 +57,6 @@
     disabled={loading || !!error}
     size="M"
   >
-    <Input
-      bind:value={name}
-      label="Name"
-      placeholder="Test group"
-      {error}
-    />
+    <Input bind:value={name} label="Name" placeholder="Test group" {error} />
   </ModalContent>
 </Modal>

@@ -34,8 +34,9 @@ const VERDICT_META: Record<VerdictStatus, VerdictMeta> = {
   },
 }
 
-export const getVerdictMeta = (status: VerdictStatus | undefined): VerdictMeta =>
-  VERDICT_META[status ?? "idle"]
+export const getVerdictMeta = (
+  status: VerdictStatus | undefined
+): VerdictMeta => VERDICT_META[status ?? "idle"]
 
 export const formatRunTime = (dateStr: string): string =>
   new Date(dateStr).toLocaleString()

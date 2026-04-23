@@ -345,7 +345,10 @@ export async function runSuite({
   }
 
   if (caseId && groupId) {
-    throw new HTTPError("Select either a single test or a test group to run.", 400)
+    throw new HTTPError(
+      "Select either a single test or a test group to run.",
+      400
+    )
   }
 
   let casesToRun: AgentTestCase[] = suite.cases
@@ -358,12 +361,18 @@ export async function runSuite({
   } else if (groupId) {
     const group = suite.groups.find(candidate => candidate.id === groupId)
     if (!group) {
-      throw new HTTPError("That test group was not found in the saved suite.", 400)
+      throw new HTTPError(
+        "That test group was not found in the saved suite.",
+        400
+      )
     }
 
     casesToRun = suite.cases.filter(testCase => testCase.groupId === group.id)
     if (!casesToRun.length) {
-      throw new HTTPError("Add at least one test to this group before running it.", 400)
+      throw new HTTPError(
+        "Add at least one test to this group before running it.",
+        400
+      )
     }
   }
 
