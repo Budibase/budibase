@@ -5,6 +5,7 @@ describe("agent test reviewers", () => {
     expect(
       validateTestCase({
         id: "case-1",
+        groupId: "default",
         name: "Case 1",
         input: "",
         reviewers: [],

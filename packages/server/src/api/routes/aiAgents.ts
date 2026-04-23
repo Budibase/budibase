@@ -17,6 +17,7 @@ import {
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
+  runAgentTestSuiteValidator,
   updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -72,7 +73,11 @@ aiTestBuilderAdminRoutes
     updateAgentTestSuiteValidator(),
     ai.updateAgentTestSuite
   )
-  .post("/api/agent/:agentId/tests/run", ai.runAgentTestSuite)
+  .post(
+    "/api/agent/:agentId/tests/run",
+    runAgentTestSuiteValidator(),
+    ai.runAgentTestSuite
+  )
 
 const aiRagBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)

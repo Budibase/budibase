@@ -1,80 +1,25 @@
 <script lang="ts">
-  import {
-    ActionButton,
-    Body,
-    Button,
-    Divider,
-    Icon,
-    MarkdownViewer,
-    StatusLight,
-  } from "@budibase/bbui"
+  import { Body, Divider, Icon, MarkdownViewer } from "@budibase/bbui"
   import type { AgentTestCase, AgentTestCaseResult } from "@budibase/types"
-  import {
-    formatRunTime,
-    getReviewerConfigSummary,
-    getReviewerLabel,
-    resultSummary,
-  } from "./utils"
-
-  type Verdict = "passed" | "failed" | "error" | "idle"
+  import { describeReviewer, getReviewerLabel } from "@budibase/shared-core"
+  import { getVerdictMeta } from "./utils"
 
   type Props = {
     selectedCase: AgentTestCase | null
     latestResult: AgentTestCaseResult | null
     hasLatestRun: boolean
-    saving: boolean
-    running: boolean
-    loading: boolean
-    onEditCase: () => void
-    onRun: () => void
-    onDuplicateCase: () => void
-    onRemoveCase: () => void
   }
 
-  let {
-    selectedCase,
-    latestResult,
-    hasLatestRun,
-    saving,
-    running,
-    loading,
-    onEditCase,
-    onRun,
-    onDuplicateCase,
-    onRemoveCase,
-  }: Props = $props()
-
-  let subtitle = $derived(
-    latestResult
-      ? `Last run ${formatRunTime(latestResult.completedAt)} · ${resultSummary(latestResult)}`
-      : hasLatestRun
-        ? "Not included in the latest run"
-        : "Not run yet"
-  )
+  let { selectedCase, latestResult, hasLatestRun }: Props = $props()
 
   let reviewerResultsById = $derived(
-    latestResult
-      ? new Map(
-          latestResult.reviewerResults.map(result => [
-            result.reviewerId,
-            result,
-          ])
-        )
-      : new Map()
+    new Map(
+      (latestResult?.reviewerResults ?? []).map(result => [
+        result.reviewerId,
+        result,
+      ])
+    )
   )
-
-  const verdictLabel = (status?: Verdict) => {
-    switch (status) {
-      case "passed":
-        return "Passed"
-      case "failed":
-        return "Failed"
-      case "error":
-        return "Error"
-      default:
-        return "Not available"
-    }
-  }
 </script>
 
 {#if !selectedCase}
@@ -89,45 +34,14 @@
     <div class="detail-header">
       <div class="detail-heading">
         <h3 class="detail-title">{selectedCase.name}</h3>
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          {subtitle}
-        </Body>
-      </div>
-      <div class="editor-actions">
-        <Button
-          primary
-          disabled={running || saving || loading}
-          on:click={onRun}
-        >
-          {running ? "Running..." : "Run"}
-        </Button>
-        <ActionButton
-          quiet
-          icon="copy"
-          tooltip="Duplicate"
-          disabled={saving || loading || running}
-          on:click={onDuplicateCase}
-        />
-        <ActionButton
-          quiet
-          icon="trash"
-          tooltip="Delete"
-          disabled={saving || loading || running}
-          on:click={onRemoveCase}
-        />
       </div>
     </div>
 
     <div class="detail-stack">
       <section class="card">
-        <div class="card-header">
-          <div class="card-eyebrow">
-            <Icon name="sliders-horizontal" size="S" />
-            <span>Configuration</span>
-          </div>
-          <Button secondary disabled={saving || loading} on:click={onEditCase}>
-            Edit test
-          </Button>
+        <div class="card-eyebrow">
+          <Icon name="sliders-horizontal" size="S" />
+          <span>Configuration</span>
         </div>
 
         <div class="summary-grid">
@@ -149,14 +63,13 @@
             {#if selectedCase.reviewers.length}
               <ul class="reviewer-summary-list">
                 {#each selectedCase.reviewers as reviewer (reviewer.id)}
+                  {@const summary = describeReviewer(reviewer)}
                   <li class="reviewer-summary-row">
                     <span class="reviewer-type">
                       {getReviewerLabel(reviewer.type)}
                     </span>
-                    {#if getReviewerConfigSummary(reviewer)}
-                      <span class="reviewer-config">
-                        {getReviewerConfigSummary(reviewer)}
-                      </span>
+                    {#if summary}
+                      <span class="reviewer-config">{summary}</span>
                     {/if}
                   </li>
                 {/each}
@@ -201,8 +114,7 @@
               <ul class="reviewer-results">
                 {#each latestResult.caseSnapshot.reviewers as reviewer (reviewer.id)}
                   {@const reviewerResult = reviewerResultsById.get(reviewer.id)}
-                  {@const status = (reviewerResult?.status ??
-                    "idle") as Verdict}
+                  {@const meta = getVerdictMeta(reviewerResult?.status)}
                   <li class="reviewer-row">
                     <div class="reviewer-result-row">
                       <div class="reviewer-result-copy">
@@ -216,13 +128,10 @@
                         {/if}
                       </div>
                       <div class="reviewer-result-status">
-                        <StatusLight
-                          size="S"
-                          positive={status === "passed"}
-                          negative={status === "failed" || status === "error"}
-                        >
-                          {verdictLabel(status)}
-                        </StatusLight>
+                        <span class={`verdict-pill ${meta.tone}`}>
+                          <Icon name={meta.icon} size="S" color={meta.color} />
+                          <span>{meta.label}</span>
+                        </span>
                       </div>
                     </div>
                   </li>
@@ -314,15 +223,6 @@
     min-height: 200px;
   }
 
-  .editor-actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: var(--spacing-s);
-    flex-shrink: 0;
-  }
-
   .detail-stack {
     display: flex;
     flex-direction: column;
@@ -339,13 +239,6 @@
     background: var(--background);
     padding: var(--spacing-l);
     min-width: 0;
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
   }
 
   .card-eyebrow {
@@ -487,6 +380,28 @@
 
   .reviewer-result-status {
     flex-shrink: 0;
+  }
+
+  .verdict-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .verdict-pill.passed {
+    color: var(--color-green-500);
+  }
+
+  .verdict-pill.failed,
+  .verdict-pill.error {
+    color: var(--color-orange-500);
+  }
+
+  .verdict-pill.idle {
+    color: #7c7c7c;
   }
 
   .reviewer-type {

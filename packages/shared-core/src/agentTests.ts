@@ -37,18 +37,6 @@ export interface ReviewerDefinition<T extends ReviewerType> {
     | "async"
 }
 
-function reviewerContent(reviewer: AgentTestReviewer): string {
-  switch (reviewer.type) {
-    case "exact_match":
-    case "contains_text":
-      return reviewer.text
-    case "llm_judge":
-      return reviewer.rubric
-    case "tool_used":
-      return reviewer.tool
-  }
-}
-
 export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
   exact_match: {
     label: "Exact match",
@@ -114,6 +102,28 @@ export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
 
 export const REVIEWER_TYPES = Object.keys(REVIEWERS) as ReviewerType[]
 
+export const readReviewerContent = (reviewer: AgentTestReviewer): string =>
+  (reviewer as Record<string, string>)[REVIEWERS[reviewer.type].contentField]
+
+export const writeReviewerContent = (
+  reviewer: AgentTestReviewer,
+  value: string
+): AgentTestReviewer =>
+  ({
+    ...reviewer,
+    [REVIEWERS[reviewer.type].contentField]: value,
+  }) as AgentTestReviewer
+
+export const createReviewer = (
+  type: ReviewerType,
+  id: string,
+  value = ""
+): AgentTestReviewer =>
+  ({
+    ...REVIEWERS[type].create(id),
+    [REVIEWERS[type].contentField]: value,
+  }) as AgentTestReviewer
+
 export function withReviewerDefinition<R>(
   reviewer: AgentTestReviewer,
   fn: <T extends ReviewerType>(
@@ -127,18 +137,12 @@ export function withReviewerDefinition<R>(
 
 export const describeReviewer = (
   reviewer: AgentTestReviewer
-): string | undefined => {
-  const v = reviewerContent(reviewer)
-  return v || undefined
-}
+): string | undefined => readReviewerContent(reviewer) || undefined
 
 export const validateReviewer = (
   reviewer: AgentTestReviewer
-): string | null => {
-  const def = REVIEWERS[reviewer.type]
-  const v = reviewerContent(reviewer)
-  return v ? null : def.requiredMessage
-}
+): string | null =>
+  readReviewerContent(reviewer) ? null : REVIEWERS[reviewer.type].requiredMessage
 
 export const getReviewerLabel = (type: ReviewerType): string =>
   REVIEWERS[type].label

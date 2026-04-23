@@ -53,6 +53,7 @@ export async function runAgentTestSuite(
     agentId,
     user: ctx.user,
     caseId: ctx.request.body?.caseId,
+    groupId: ctx.request.body?.groupId,
   })
 
   ctx.body = { run }

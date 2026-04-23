@@ -26,10 +26,12 @@ describe("agent test routes", () => {
       await config.api.agent.fetchTestSuite("agent_test", { status: 403 })
       await config.api.agent.updateTestSuite(
         "agent_test",
-        { cases: [] },
+        { groups: [], cases: [] },
         { status: 403 }
       )
-      await config.api.agent.runTestSuite("agent_test", { status: 403 })
+      await config.api.agent.runTestSuite("agent_test", { status: 403 }, {
+        groupId: "default",
+      })
     })
   })
 })

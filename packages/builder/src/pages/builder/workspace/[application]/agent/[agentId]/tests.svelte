@@ -1,39 +1,73 @@
 <script lang="ts">
   import { API } from "@/api"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { Helpers, notifications } from "@budibase/bbui"
-  import { FeatureFlag } from "@budibase/types"
+  import {
+    buildDefaultAgentTestGroup,
+    FeatureFlag,
+  } from "@budibase/types"
   import type {
     AgentTestCase,
+    AgentTestGroup,
     AgentTestRun,
     AgentTestSuite,
   } from "@budibase/types"
   import TestCaseList from "./TestComponents/TestCaseList.svelte"
   import TestCaseModal from "./TestComponents/TestCaseModal.svelte"
   import TestDetail from "./TestComponents/TestDetail.svelte"
+  import TestGroupModal from "./TestComponents/TestGroupModal.svelte"
   import * as routify from "@roxi/routify"
 
   const { goto } = routify
   $goto
 
-  const emptySuite = (agentId = ""): AgentTestSuite => ({ agentId, cases: [] })
+  const emptySuite = (agentId = ""): AgentTestSuite => ({
+    agentId,
+    groups: [buildDefaultAgentTestGroup()],
+    cases: [],
+  })
 
-  const newCase = (index: number): AgentTestCase => ({
+  const newCase = (index: number, groupId: string): AgentTestCase => ({
     id: Helpers.uuid(),
+    groupId,
     name: `Test ${index + 1}`,
     input: "",
     reviewers: [],
   })
 
+  const getSelectedGroupId = (
+    groups: AgentTestGroup[],
+    preferredGroupId?: string | null
+  ) =>
+    groups.find(group => group.id === preferredGroupId)?.id ??
+    groups[0]?.id ??
+    null
+
+  const getSelectedCaseId = (
+    cases: AgentTestCase[],
+    groupId: string | null,
+    preferredCaseId?: string | null
+  ) =>
+    cases.find(
+      testCase =>
+        testCase.id === preferredCaseId &&
+        (!groupId || testCase.groupId === groupId)
+    )?.id ??
+    cases.find(testCase => !groupId || testCase.groupId === groupId)?.id ??
+    null
+
   let suite = $state<AgentTestSuite>(emptySuite())
-  let lastRun = $state<AgentTestRun | null>(null)
   let loading = $state(false)
   let saving = $state(false)
   let running = $state(false)
+  let selectedGroupId = $state<string | null>(buildDefaultAgentTestGroup().id)
   let selectedCaseId = $state<string | null>(null)
   let lastAgentId = $state<string | undefined>()
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
   let testCaseModal: TestCaseModal
+  let testGroupModal: TestGroupModal
+  let deleteGroupDialog: ConfirmDialog
 
   let currentAgent = $derived($selectedAgent)
   let toolOptions = $derived.by(() => {
@@ -43,9 +77,23 @@
       .filter(t => enabled.has(t.name))
       .map(t => ({ label: t.readableName || t.name, value: t.name }))
   })
-  let latestResultsByCaseId = $derived(
-    new Map((lastRun?.results ?? []).map(r => [r.caseId, r]))
+  let groupOptions = $derived(
+    suite.groups.map(group => ({
+      label: group.name,
+      value: group.id,
+    }))
   )
+  let selectedGroup = $derived(
+    suite.groups.find(group => group.id === selectedGroupId) ?? null
+  )
+  let latestResultsByCaseId = $derived(
+    new Map(
+      suite.cases
+        .filter(c => c.lastResult)
+        .map(c => [c.id, c.lastResult!])
+    )
+  )
+  let hasAnyLatestResult = $derived(suite.cases.some(c => !!c.lastResult))
   let selectedCase = $derived(
     suite.cases.find(c => c.id === selectedCaseId) || null
   )
@@ -55,7 +103,7 @@
 
   const resetState = (agentId?: string) => {
     suite = emptySuite(agentId)
-    lastRun = null
+    selectedGroupId = getSelectedGroupId(suite.groups)
     selectedCaseId = null
   }
 
@@ -74,7 +122,12 @@
     try {
       const response = await API.fetchAgentTestSuite(agentId)
       suite = response.suite
-      selectedCaseId = suite.cases[0]?.id ?? null
+      selectedGroupId = getSelectedGroupId(response.suite.groups, selectedGroupId)
+      selectedCaseId = getSelectedCaseId(
+        response.suite.cases,
+        selectedGroupId,
+        selectedCaseId
+      )
     } catch (error) {
       console.error("Failed to load agent test suite", error)
       resetState(agentId)
@@ -84,12 +137,20 @@
     }
   }
 
-  const persistCases = async (
-    cases: AgentTestCase[],
+  const persistSuite = async (
     {
+      groups = suite.groups,
+      cases = suite.cases,
+    }: {
+      groups?: AgentTestGroup[]
+      cases?: AgentTestCase[]
+    },
+    {
+      nextSelectedGroupId,
       nextSelectedCaseId,
       successMessage,
     }: {
+      nextSelectedGroupId?: string | null
       nextSelectedCaseId?: string | null
       successMessage?: string
     } = {}
@@ -101,14 +162,18 @@
     try {
       suite = await API.updateAgentTestSuite(agentId, {
         _rev: suite._rev,
+        groups,
         cases,
       })
-      selectedCaseId =
-        (nextSelectedCaseId !== undefined
-          ? suite.cases.find(c => c.id === nextSelectedCaseId)?.id
-          : suite.cases.find(c => c.id === selectedCaseId)?.id) ??
-        suite.cases[0]?.id ??
-        null
+      selectedGroupId = getSelectedGroupId(
+        suite.groups,
+        nextSelectedGroupId !== undefined ? nextSelectedGroupId : selectedGroupId
+      )
+      selectedCaseId = getSelectedCaseId(
+        suite.cases,
+        selectedGroupId,
+        nextSelectedCaseId !== undefined ? nextSelectedCaseId : selectedCaseId
+      )
       if (successMessage) notifications.success(successMessage)
       return true
     } catch (error) {
@@ -125,7 +190,8 @@
     const cases = isNew
       ? [...suite.cases, testCase]
       : suite.cases.map(c => (c.id === testCase.id ? testCase : c))
-    return persistCases(cases, {
+    return persistSuite({ cases }, {
+      nextSelectedGroupId: testCase.groupId,
       nextSelectedCaseId: testCase.id,
       successMessage: isNew ? "Test added" : "Test updated",
     })
@@ -134,14 +200,89 @@
   const saveAndRunCase = async (testCase: AgentTestCase) => {
     const saved = await saveCase(testCase)
     if (!saved) return false
+    return runCase(testCase.id)
+  }
+
+  const duplicateCase = async (caseId: string) => {
+    const sourceCase = suite.cases.find(testCase => testCase.id === caseId)
+    if (!sourceCase) return
+
+    const duplicated: AgentTestCase = {
+      ...sourceCase,
+      id: Helpers.uuid(),
+      name: `${sourceCase.name} copy`,
+      reviewers: sourceCase.reviewers.map(r => ({
+        ...r,
+        id: Helpers.uuid(),
+      })),
+    }
+    await persistSuite({ cases: [...suite.cases, duplicated] }, {
+      nextSelectedGroupId: duplicated.groupId,
+      nextSelectedCaseId: duplicated.id,
+      successMessage: "Test duplicated",
+    })
+  }
+
+  const removeCase = async (caseId: string) => {
+    const remaining = suite.cases.filter(c => c.id !== caseId)
+    await persistSuite({ cases: remaining }, {
+      nextSelectedGroupId: selectedGroupId,
+      nextSelectedCaseId: null,
+      successMessage: "Test deleted",
+    })
+  }
+
+  const saveGroup = async (
+    group: AgentTestGroup | Omit<AgentTestGroup, "id">
+  ) => {
+    const nextGroup =
+      "id" in group ? group : { ...group, id: Helpers.uuid() }
+    const isNew = !suite.groups.some(existing => existing.id === nextGroup.id)
+    const groups = isNew
+      ? [...suite.groups, nextGroup]
+      : suite.groups.map(existing =>
+          existing.id === nextGroup.id ? nextGroup : existing
+        )
+
+    return persistSuite({ groups }, {
+      nextSelectedGroupId: nextGroup.id,
+      successMessage: isNew ? "Test group created" : "Test group renamed",
+    })
+  }
+
+  const deleteGroup = async () => {
+    if (!selectedGroupId || suite.groups.length <= 1) {
+      return
+    }
+
+    const groups = suite.groups.filter(group => group.id !== selectedGroupId)
+    const cases = suite.cases.filter(testCase => testCase.groupId !== selectedGroupId)
+    await persistSuite({ groups, cases }, {
+      nextSelectedGroupId: groups[0]?.id ?? null,
+      nextSelectedCaseId: null,
+      successMessage: "Test group deleted",
+    })
+  }
+
+  const mergeRunResults = (run: AgentTestRun) => {
+    const byCaseId = new Map(run.results.map(r => [r.caseId, r]))
+    suite = {
+      ...suite,
+      cases: suite.cases.map(testCase => {
+        const result = byCaseId.get(testCase.id)
+        return result ? { ...testCase, lastResult: result } : testCase
+      }),
+    }
+  }
+
+  const runCase = async (caseId?: string) => {
     const agentId = currentAgent?._id
-    if (!agentId) return false
+    if (!agentId || running || saving) return false
+
     running = true
     try {
-      const { run } = await API.runAgentTestSuite(agentId, {
-        caseId: testCase.id,
-      })
-      lastRun = run
+      const { run } = await API.runAgentTestSuite(agentId, caseId ? { caseId } : {})
+      mergeRunResults(run)
       notifications.success(`Run complete · ${run.passed}/${run.total} passed`)
       return true
     } catch (error) {
@@ -153,49 +294,34 @@
     }
   }
 
-  const duplicateSelected = async () => {
-    if (!selectedCase) return
-    const duplicated: AgentTestCase = {
-      ...selectedCase,
-      id: Helpers.uuid(),
-      name: `${selectedCase.name} copy`,
-      reviewers: selectedCase.reviewers.map(r => ({
-        ...r,
-        id: Helpers.uuid(),
-      })),
-    }
-    await persistCases([...suite.cases, duplicated], {
-      nextSelectedCaseId: duplicated.id,
-      successMessage: "Test duplicated",
-    })
-  }
-
-  const removeSelected = async () => {
-    if (!selectedCaseId) return
-    const remaining = suite.cases.filter(c => c.id !== selectedCaseId)
-    await persistCases(remaining, {
-      nextSelectedCaseId: remaining[0]?.id ?? null,
-      successMessage: "Test deleted",
-    })
-  }
-
-  const runSelected = async () => {
+  const runAllTests = async () => {
     const agentId = currentAgent?._id
-    const caseId = selectedCaseId
-    if (!agentId || !caseId || running || saving) return
+    if (!agentId || !selectedGroupId || running || saving) return false
 
     running = true
     try {
-      const { run } = await API.runAgentTestSuite(agentId, { caseId })
-      lastRun = run
+      const { run } = await API.runAgentTestSuite(agentId, {
+        groupId: selectedGroupId,
+      })
+      mergeRunResults(run)
       notifications.success(`Run complete · ${run.passed}/${run.total} passed`)
+      return true
     } catch (error) {
-      console.error("Failed to run test", error)
-      notifications.error("Failed to run test")
+      console.error("Failed to run tests", error)
+      notifications.error("Failed to run tests")
+      return false
     } finally {
       running = false
     }
   }
+
+  $effect(() => {
+    selectedGroupId = getSelectedGroupId(suite.groups, selectedGroupId)
+  })
+
+  $effect(() => {
+    selectedCaseId = getSelectedCaseId(suite.cases, selectedGroupId, selectedCaseId)
+  })
 
   $effect(() => {
     if (!testsEnabled) {
@@ -214,25 +340,39 @@
   <div class="tests-split">
     <div class="tests-list-panel">
       <TestCaseList
+        groups={suite.groups}
         cases={suite.cases}
         {selectedCaseId}
+        {selectedGroupId}
         {loading}
+        saving={saving}
+        running={running}
+        hasLatestRun={hasAnyLatestResult}
+        {latestResultsByCaseId}
         onSelectCase={id => (selectedCaseId = id)}
-        onAddCase={() => testCaseModal?.show(newCase(suite.cases.length))}
+        onSelectGroup={id => (selectedGroupId = id)}
+        onCreateGroup={() => testGroupModal?.show()}
+        onRenameGroup={() => selectedGroup && testGroupModal?.show(selectedGroup)}
+        onDeleteGroup={() => deleteGroupDialog?.show()}
+        onAddCase={() =>
+          selectedGroupId && testCaseModal?.show(newCase(suite.cases.length, selectedGroupId))}
+        onEditCase={id => {
+          const testCase = suite.cases.find(test => test.id === id)
+          if (testCase) testCaseModal?.show(testCase)
+        }}
+        onRunCase={id => {
+          void runCase(id)
+        }}
+        onRunAll={runAllTests}
+        onDuplicateCase={duplicateCase}
+        onRemoveCase={removeCase}
       />
     </div>
     <div class="detail-panel">
       <TestDetail
         {selectedCase}
         latestResult={latestResultForSelected}
-        hasLatestRun={!!lastRun}
-        {saving}
-        {running}
-        {loading}
-        onRun={runSelected}
-        onEditCase={() => selectedCase && testCaseModal?.show(selectedCase)}
-        onDuplicateCase={duplicateSelected}
-        onRemoveCase={removeSelected}
+        hasLatestRun={hasAnyLatestResult}
       />
     </div>
   </div>
@@ -240,8 +380,20 @@
   <TestCaseModal
     bind:this={testCaseModal}
     {toolOptions}
+    {groupOptions}
     isExisting={id => suite.cases.some(c => c.id === id)}
     onSave={saveAndRunCase}
+  />
+
+  <TestGroupModal bind:this={testGroupModal} onSave={saveGroup} />
+
+  <ConfirmDialog
+    bind:this={deleteGroupDialog}
+    title="Delete test group"
+    body={`Delete "${selectedGroup?.name || "this group"}" and all tests in it?`}
+    okText="Delete group"
+    onOk={deleteGroup}
+    disabled={suite.groups.length <= 1}
   />
 </div>
 
@@ -259,29 +411,29 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
-    background: var(--background);
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    background: #1a1a1a;
+    border-top: 1px solid #2c2c2c;
   }
 
   .tests-list-panel {
-    flex: 0 0 clamp(300px, 32vw, 400px);
+    flex: 0 0 50%;
     min-width: 0;
-    max-width: 440px;
+    max-width: none;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     min-height: 0;
     overflow: hidden;
-    border-right: 1px solid var(--spectrum-global-color-gray-200);
-    background: var(--background);
+    border-right: 1px solid #2c2c2c;
+    background: #1a1a1a;
   }
 
   .detail-panel {
-    flex: 1 1 auto;
+    flex: 0 0 50%;
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
-    background: var(--background-alt);
+    background: #1a1a1a;
     scrollbar-width: thin;
   }
 
@@ -309,7 +461,7 @@
       min-width: 0;
       max-width: none;
       border-right: none;
-      border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+      border-bottom: 1px solid #2c2c2c;
       max-height: 360px;
     }
   }

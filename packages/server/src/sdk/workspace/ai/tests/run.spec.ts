@@ -58,6 +58,7 @@ jest.mock("../agents", () => ({
 
 jest.mock("./crud", () => ({
   fetchSuite: jest.fn(),
+  persistRunResults: jest.fn().mockResolvedValue(undefined),
 }))
 
 jest.mock("ai", () => ({
@@ -93,9 +94,16 @@ describe("agent test runner", () => {
   const setSuite = (reviewers: unknown[]) => {
     fetchSuite.mockResolvedValue({
       agentId: "agent-1",
+      groups: [
+        {
+          id: "default",
+          name: "Default test group",
+        },
+      ],
       cases: [
         {
           id: "case-1",
+          groupId: "default",
           name: "Friendly greeting",
           input: "Say hello",
           context: "Keep it brief",
@@ -490,15 +498,27 @@ describe("agent test runner", () => {
   it("runs only the requested case when caseId is set", async () => {
     fetchSuite.mockResolvedValue({
       agentId: "agent-1",
+      groups: [
+        {
+          id: "group-a",
+          name: "Group A",
+        },
+        {
+          id: "group-b",
+          name: "Group B",
+        },
+      ],
       cases: [
         {
           id: "case-a",
+          groupId: "group-a",
           name: "First",
           input: "a",
           reviewers: [],
         },
         {
           id: "case-b",
+          groupId: "group-b",
           name: "Second",
           input: "b",
           reviewers: [],
@@ -516,5 +536,111 @@ describe("agent test runner", () => {
     expect(run.total).toBe(1)
     expect(run.results).toHaveLength(1)
     expect(run.results[0].caseId).toBe("case-b")
+  })
+
+  it("runs only the requested group when groupId is set", async () => {
+    fetchSuite.mockResolvedValue({
+      agentId: "agent-1",
+      groups: [
+        {
+          id: "group-a",
+          name: "Group A",
+        },
+        {
+          id: "group-b",
+          name: "Group B",
+        },
+      ],
+      cases: [
+        {
+          id: "case-a",
+          groupId: "group-a",
+          name: "First",
+          input: "a",
+          reviewers: [],
+        },
+        {
+          id: "case-b",
+          groupId: "group-b",
+          name: "Second",
+          input: "b",
+          reviewers: [],
+        },
+      ],
+    })
+    mockAgentRun({ response: "ok" })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+      groupId: "group-b",
+    })
+
+    expect(run.total).toBe(1)
+    expect(run.results).toHaveLength(1)
+    expect(run.results[0].caseId).toBe("case-b")
+  })
+
+  it("rejects group runs when the selected group is empty", async () => {
+    fetchSuite.mockResolvedValue({
+      agentId: "agent-1",
+      groups: [
+        {
+          id: "group-a",
+          name: "Group A",
+        },
+        {
+          id: "group-b",
+          name: "Group B",
+        },
+      ],
+      cases: [
+        {
+          id: "case-a",
+          groupId: "group-a",
+          name: "First",
+          input: "a",
+          reviewers: [],
+        },
+      ],
+    })
+
+    await expect(
+      runSuite({
+        agentId: "agent-1",
+        user,
+        groupId: "group-b",
+      })
+    ).rejects.toThrow("Add at least one test to this group before running it.")
+  })
+
+  it("rejects runs that specify both caseId and groupId", async () => {
+    fetchSuite.mockResolvedValue({
+      agentId: "agent-1",
+      groups: [
+        {
+          id: "group-a",
+          name: "Group A",
+        },
+      ],
+      cases: [
+        {
+          id: "case-a",
+          groupId: "group-a",
+          name: "First",
+          input: "a",
+          reviewers: [],
+        },
+      ],
+    })
+
+    await expect(
+      runSuite({
+        agentId: "agent-1",
+        user,
+        caseId: "case-a",
+        groupId: "group-a",
+      })
+    ).rejects.toThrow("Select either a single test or a test group to run.")
   })
 })

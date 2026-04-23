@@ -1,6 +1,19 @@
 import type { ReasoningEffort } from "./ai"
 import { Document } from "../../"
 
+export const DEFAULT_AGENT_TEST_GROUP_ID = "default"
+export const DEFAULT_AGENT_TEST_GROUP_NAME = "Default test group"
+
+export interface AgentTestGroup {
+  id: string
+  name: string
+}
+
+export const buildDefaultAgentTestGroup = (): AgentTestGroup => ({
+  id: DEFAULT_AGENT_TEST_GROUP_ID,
+  name: DEFAULT_AGENT_TEST_GROUP_NAME,
+})
+
 export type AgentTestReviewer =
   | {
       id: string
@@ -32,10 +45,12 @@ export interface AgentTestReviewerResult {
 
 export interface AgentTestCase {
   id: string
+  groupId: string
   name: string
   input: string
   context?: string
   reviewers: AgentTestReviewer[]
+  lastResult?: AgentTestCaseResult
 }
 
 export type AgentTestCaseSnapshot = AgentTestCase
@@ -51,6 +66,7 @@ export interface AgentTestModelSnapshot {
 
 export interface AgentTestSuite extends Document {
   agentId: string
+  groups: AgentTestGroup[]
   cases: AgentTestCase[]
   updatedBy?: string
 }

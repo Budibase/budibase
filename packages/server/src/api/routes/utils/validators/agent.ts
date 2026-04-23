@@ -148,17 +148,34 @@ const AGENT_TEST_REVIEWER_SCHEMA = Joi.alternatives()
 
 const AGENT_TEST_CASE_SCHEMA = Joi.object({
   id: Joi.string().optional(),
+  groupId: Joi.string().required(),
   name: Joi.string().required(),
   input: Joi.string().required(),
   context: Joi.string().allow("").optional(),
   reviewers: Joi.array().items(AGENT_TEST_REVIEWER_SCHEMA).required(),
+  lastResult: Joi.any().optional().strip(),
+}).required()
+
+const AGENT_TEST_GROUP_SCHEMA = Joi.object({
+  id: Joi.string().optional(),
+  name: Joi.string().trim().required(),
 }).required()
 
 export function updateAgentTestSuiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
       _rev: OPTIONAL_STRING,
+      groups: Joi.array().items(AGENT_TEST_GROUP_SCHEMA).required(),
       cases: Joi.array().items(AGENT_TEST_CASE_SCHEMA).required(),
+    }).required()
+  )
+}
+
+export function runAgentTestSuiteValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      caseId: OPTIONAL_STRING,
+      groupId: OPTIONAL_STRING,
     }).required()
   )
 }

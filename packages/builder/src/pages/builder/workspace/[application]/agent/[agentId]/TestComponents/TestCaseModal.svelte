@@ -8,24 +8,19 @@
 
   type Props = {
     toolOptions: ToolOption[]
+    groupOptions: ToolOption[]
     isExisting: (_id: string) => boolean
     onSave: (_testCase: AgentTestCase) => Promise<boolean>
   }
 
-  let { toolOptions, isExisting, onSave }: Props = $props()
+  let { toolOptions, groupOptions, isExisting, onSave }: Props = $props()
 
   let modal: Modal
   let loading = $state(false)
   let draftCase = $state<AgentTestCase | null>(null)
-  let modalSession = $state(0)
-
-  const cloneCase = (testCase: AgentTestCase): AgentTestCase => ({
-    ...testCase,
-    reviewers: testCase.reviewers.map(reviewer => ({ ...reviewer })),
-  })
 
   const truncate = (value: string, max: number) =>
-    value.length <= max ? value : `${value.slice(0, Math.max(0, max - 1))}…`
+    value.length <= max ? value : `${value.slice(0, max - 1)}…`
 
   const fallbackName = (testCase: AgentTestCase): string => {
     const explicitName = testCase.name.trim()
@@ -36,13 +31,12 @@
   }
 
   const normalizeCaseForSave = (testCase: AgentTestCase): AgentTestCase => ({
-    ...cloneCase(testCase),
+    ...structuredClone(testCase),
     name: fallbackName(testCase),
   })
 
   export const show = (testCase: AgentTestCase) => {
-    modalSession += 1
-    draftCase = cloneCase(testCase)
+    draftCase = structuredClone(testCase)
     loading = false
     modal.show()
   }
@@ -80,58 +74,53 @@
 
 <Modal bind:this={modal} autoFocus={false}>
   {#if draftCase}
-    {#key modalSession}
-      <div class="test-case-modal" role="dialog" aria-modal="true">
-        <div class="modal-header">
-          <div class="modal-heading">
-            <h2>{editing ? "Edit test case" : "Add test case"}</h2>
-          </div>
-        </div>
-
-        <div class="modal-body">
-          <section class="section">
-            <div class="section-header">
-              <h3>Test input</h3>
-              <p>What the user or system will send to the agent.</p>
-            </div>
-
-            <TestCaseFields
-              selectedCase={draftCase}
-              onUpdateCase={updateDraftCase}
-            />
-          </section>
-
-          <div class="section-divider"></div>
-
-          <section class="section">
-            <div class="section-header">
-              <h3>Test criteria</h3>
-              <p>Describe what a good response looks like.</p>
-            </div>
-
-            <TestReviewersEditor
-              selectedCase={draftCase}
-              {toolOptions}
-              onUpdateCase={updateDraftCase}
-            />
-          </section>
-        </div>
-
-        <div class="modal-footer">
-          <Button secondary disabled={loading} on:click={() => modal.hide()}>
-            Cancel
-          </Button>
-
-          <Button
-            cta
-            disabled={loading || !canRunTest}
-            on:click={handleConfirm}
-          >
-            {loading ? "Running..." : "Run test"}
-          </Button>
+    <div class="test-case-modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-heading">
+          <h2>{editing ? "Edit test case" : "Add test case"}</h2>
         </div>
       </div>
-    {/key}
+
+      <div class="modal-body">
+        <section class="section">
+          <div class="section-header">
+            <h3>Test input</h3>
+            <p>What the user or system will send to the agent.</p>
+          </div>
+
+          <TestCaseFields
+            selectedCase={draftCase}
+            {groupOptions}
+            onUpdateCase={updateDraftCase}
+          />
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="section">
+          <div class="section-header">
+            <h3>Test criteria</h3>
+            <p>Describe what a good response looks like.</p>
+          </div>
+
+          <TestReviewersEditor
+            selectedCase={draftCase}
+            {toolOptions}
+            onUpdateCase={updateDraftCase}
+          />
+        </section>
+      </div>
+
+      <div class="modal-footer">
+        <Button secondary disabled={loading} on:click={() => modal.hide()}>
+          Cancel
+        </Button>
+
+        <Button cta disabled={loading || !canRunTest} on:click={handleConfirm}>
+          {loading ? "Running..." : "Run test"}
+        </Button>
+      </div>
+    </div>
   {/if}
 </Modal>
 

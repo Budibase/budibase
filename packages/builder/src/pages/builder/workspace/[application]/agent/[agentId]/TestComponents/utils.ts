@@ -1,19 +1,41 @@
-import { REVIEWERS, describeReviewer } from "@budibase/shared-core"
-import type { AgentTestReviewer } from "@budibase/types"
+export type VerdictStatus = "passed" | "failed" | "error" | "idle"
 
-export function resultSummary(result?: { status: string } | null): string {
-  if (!result) return "Not run yet"
-  if (result.status === "passed") return "Passed"
-  if (result.status === "failed") return "Failed"
-  return "Error"
+export interface VerdictMeta {
+  label: string
+  icon: string
+  tone: VerdictStatus
+  color: string
 }
 
-export function formatRunTime(dateStr?: string | null): string {
-  return dateStr ? new Date(dateStr).toLocaleString() : "—"
+const VERDICT_META: Record<VerdictStatus, VerdictMeta> = {
+  passed: {
+    label: "Passed",
+    icon: "check-circle",
+    tone: "passed",
+    color: "var(--color-green-500)",
+  },
+  failed: {
+    label: "Failed",
+    icon: "warning",
+    tone: "failed",
+    color: "var(--color-orange-500)",
+  },
+  error: {
+    label: "Error",
+    icon: "warning",
+    tone: "error",
+    color: "var(--color-orange-500)",
+  },
+  idle: {
+    label: "Not run",
+    icon: "circle-dashed",
+    tone: "idle",
+    color: "#7c7c7c",
+  },
 }
 
-export const getReviewerLabel = (type: AgentTestReviewer["type"]): string =>
-  REVIEWERS[type].label
+export const getVerdictMeta = (status: VerdictStatus | undefined): VerdictMeta =>
+  VERDICT_META[status ?? "idle"]
 
-export const getReviewerConfigSummary = (reviewer: AgentTestReviewer): string =>
-  describeReviewer(reviewer) ?? ""
+export const formatRunTime = (dateStr: string): string =>
+  new Date(dateStr).toLocaleString()

@@ -7,10 +7,13 @@
     Select,
     TextArea,
   } from "@budibase/bbui"
-  import type { AgentTestCase, AgentTestReviewer } from "@budibase/types"
+  import type { AgentTestCase } from "@budibase/types"
   import {
     REVIEWERS,
     REVIEWER_TYPES,
+    createReviewer,
+    readReviewerContent,
+    writeReviewerContent,
     type ReviewerType,
   } from "@budibase/shared-core"
 
@@ -29,77 +32,20 @@
   const reviewerTypeOptions = REVIEWER_TYPES.map(type => ({
     label: REVIEWERS[type].label,
     value: type,
-    subtitle: REVIEWERS[type].description,
   }))
 
-  const reviewerContentValue = (reviewer: AgentTestReviewer): string => {
-    switch (reviewer.type) {
-      case "exact_match":
-      case "contains_text":
-        return reviewer.text
-      case "llm_judge":
-        return reviewer.rubric
-      case "tool_used":
-        return reviewer.tool
-    }
+  const FIELD_LABEL: Record<ReviewerType, string> = {
+    exact_match: "Expected final response",
+    contains_text: "Required text",
+    llm_judge: "Expected behaviour",
+    tool_used: "Expected tool",
   }
 
-  const setReviewerContent = (
-    reviewer: AgentTestReviewer,
-    value: string
-  ): AgentTestReviewer => {
-    switch (reviewer.type) {
-      case "exact_match":
-      case "contains_text":
-        return { ...reviewer, text: value }
-      case "llm_judge":
-        return { ...reviewer, rubric: value }
-      case "tool_used":
-        return { ...reviewer, tool: value }
-    }
-  }
-
-  const createReviewerOfType = (
-    type: ReviewerType,
-    reviewerId: string,
-    initialValue = ""
-  ): AgentTestReviewer => {
-    switch (type) {
-      case "exact_match":
-        return { id: reviewerId, type, text: initialValue }
-      case "contains_text":
-        return { id: reviewerId, type, text: initialValue }
-      case "llm_judge":
-        return { id: reviewerId, type, rubric: initialValue }
-      case "tool_used":
-        return { id: reviewerId, type, tool: initialValue }
-    }
-  }
-
-  const fieldLabel = (type: ReviewerType): string => {
-    switch (type) {
-      case "exact_match":
-        return "Expected final response"
-      case "contains_text":
-        return "Required text"
-      case "llm_judge":
-        return "Review rubric"
-      case "tool_used":
-        return "Expected tool"
-    }
-  }
-
-  const fieldPlaceholder = (type: ReviewerType): string => {
-    switch (type) {
-      case "exact_match":
-        return "Paste the exact response you expect from the agent."
-      case "contains_text":
-        return "Enter the phrase that should appear in the response."
-      case "llm_judge":
-        return "Describe what a good answer should include, avoid, or explain."
-      case "tool_used":
-        return "Choose a tool"
-    }
+  const FIELD_PLACEHOLDER: Record<ReviewerType, string> = {
+    exact_match: "Paste the exact response you expect from the agent.",
+    contains_text: "Enter the phrase that should appear in the response.",
+    llm_judge: "Describe what a good answer should include, avoid, or explain.",
+    tool_used: "Choose a tool",
   }
 
   const updateReviewerField =
@@ -109,26 +55,26 @@
         ...testCase,
         reviewers: testCase.reviewers.map(reviewer =>
           reviewer.id === reviewerId
-            ? setReviewerContent(reviewer, nextValue)
+            ? writeReviewerContent(reviewer, nextValue)
             : reviewer
         ),
       }))
     }
 
   const addReviewer = (type: ReviewerType = "llm_judge") => {
-    const reviewer = REVIEWERS[type].create(Helpers.uuid())
     onUpdateCase(testCase => ({
       ...testCase,
-      reviewers: [...testCase.reviewers, reviewer],
+      reviewers: [...testCase.reviewers, REVIEWERS[type].create(Helpers.uuid())],
     }))
   }
 
   const removeReviewer = (reviewerId: string) => {
     onUpdateCase(testCase => ({
       ...testCase,
-      reviewers: testCase.reviewers.filter(reviewer => reviewer.id !== reviewerId),
+      reviewers: testCase.reviewers.filter(
+        reviewer => reviewer.id !== reviewerId
+      ),
     }))
-
   }
 
   const changeReviewerType =
@@ -136,23 +82,21 @@
       const nextType = event.detail
       if (!nextType) return
 
-    onUpdateCase(testCase => ({
-      ...testCase,
-      reviewers: testCase.reviewers.map(reviewer => {
-        if (reviewer.id !== reviewerId || reviewer.type === nextType) {
-          return reviewer
-        }
+      onUpdateCase(testCase => ({
+        ...testCase,
+        reviewers: testCase.reviewers.map(reviewer => {
+          if (reviewer.id !== reviewerId) return reviewer
 
-        const previousValue = reviewerContentValue(reviewer).trim()
-        const nextValue =
-          nextType === "tool_used" &&
-          !toolOptions.some(option => option.value === previousValue)
-            ? ""
-            : previousValue
+          const previousValue = readReviewerContent(reviewer).trim()
+          const nextValue =
+            nextType === "tool_used" &&
+            !toolOptions.some(option => option.value === previousValue)
+              ? ""
+              : previousValue
 
-        return createReviewerOfType(nextType, reviewer.id, nextValue)
-      }),
-    }))
+          return createReviewer(nextType, reviewer.id, nextValue)
+        }),
+      }))
     }
 </script>
 
@@ -168,6 +112,9 @@
 
   {#each selectedCase.reviewers as reviewer (reviewer.id)}
     {@const def = REVIEWERS[reviewer.type]}
+    {@const label = FIELD_LABEL[reviewer.type]}
+    {@const placeholder = FIELD_PLACEHOLDER[reviewer.type]}
+    {@const value = readReviewerContent(reviewer)}
     <div class="reviewer-card">
       <div class="reviewer-card-header">
         <div class="reviewer-card-meta">
@@ -177,7 +124,6 @@
             options={reviewerTypeOptions}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
-            getOptionSubtitle={option => option.subtitle}
             on:change={changeReviewerType(reviewer.id)}
           />
         </div>
@@ -190,33 +136,31 @@
         />
       </div>
 
-      <p class="reviewer-description">{def.description}</p>
-
       <div class="field">
         {#if def.inputType === "textarea"}
           <TextArea
-            label={fieldLabel(reviewer.type)}
-            value={reviewerContentValue(reviewer)}
+            {label}
+            {value}
             minHeight={reviewer.type === "llm_judge" ? 112 : 96}
-            placeholder={fieldPlaceholder(reviewer.type)}
+            {placeholder}
             updateOnChange
             on:change={updateReviewerField(reviewer.id)}
           />
         {:else if def.inputType === "input"}
           <Input
-            label={fieldLabel(reviewer.type)}
-            value={reviewerContentValue(reviewer)}
-            placeholder={fieldPlaceholder(reviewer.type)}
+            {label}
+            {value}
+            {placeholder}
             on:change={updateReviewerField(reviewer.id)}
           />
         {:else}
           <Select
-            label={fieldLabel(reviewer.type)}
-            value={reviewerContentValue(reviewer)}
+            {label}
+            {value}
             options={toolOptions}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
-            placeholder={fieldPlaceholder(reviewer.type)}
+            {placeholder}
             on:change={updateReviewerField(reviewer.id)}
           />
         {/if}
@@ -267,14 +211,14 @@
   .reviewer-card {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 4px;
     padding: 12px;
     position: relative;
   }
 
   .reviewer-card-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
   }
@@ -284,25 +228,23 @@
     flex-direction: column;
     gap: 6px;
     min-width: 0;
-    flex: 1;
-  }
-
-  .reviewer-description {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.45;
-    color: var(--spectrum-global-color-gray-600);
+    flex: 0 1 50%;
+    max-width: 50%;
   }
 
   .field {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    gap: 4px;
   }
 
   .field :global(.spectrum-Field),
   .reviewer-card-meta :global(.spectrum-Field) {
     width: 100%;
+  }
+
+  .reviewer-card :global(.spectrum-Form-item.above) {
+    gap: 4px;
   }
 
   .add-reviewer {

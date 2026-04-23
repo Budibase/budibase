@@ -32,7 +32,7 @@ import {
   evaluateReviewer,
   getCaseStatus,
 } from "./reviewers"
-import { fetchSuite } from "./crud"
+import { fetchSuite, persistRunResults } from "./crud"
 import { v4 } from "uuid"
 
 type TestLLM = Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
@@ -149,6 +149,7 @@ async function runCase({
 }): Promise<AgentTestCaseResult> {
   const caseSnapshot: AgentTestCase = {
     id: testCase.id,
+    groupId: testCase.groupId,
     name: testCase.name,
     input: testCase.input,
     context: testCase.context,
@@ -329,16 +330,22 @@ export async function runSuite({
   agentId,
   user,
   caseId,
+  groupId,
 }: {
   agentId: string
   user: ContextUser
   caseId?: string
+  groupId?: string
 }): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const suite = await fetchSuite(agentId)
 
   if (suite.cases.length === 0) {
     throw new HTTPError("Add at least one test before running the suite.", 400)
+  }
+
+  if (caseId && groupId) {
+    throw new HTTPError("Select either a single test or a test group to run.", 400)
   }
 
   let casesToRun: AgentTestCase[] = suite.cases
@@ -348,6 +355,16 @@ export async function runSuite({
       throw new HTTPError("That test was not found in the saved suite.", 400)
     }
     casesToRun = [match]
+  } else if (groupId) {
+    const group = suite.groups.find(candidate => candidate.id === groupId)
+    if (!group) {
+      throw new HTTPError("That test group was not found in the saved suite.", 400)
+    }
+
+    casesToRun = suite.cases.filter(testCase => testCase.groupId === group.id)
+    if (!casesToRun.length) {
+      throw new HTTPError("Add at least one test to this group before running it.", 400)
+    }
   }
 
   const runId = v4()
@@ -382,6 +399,12 @@ export async function runSuite({
   const results: AgentTestCaseResult[] = []
   for (const testCase of casesToRun) {
     results.push(await runCase({ agent, user, testCase, runId }))
+  }
+
+  try {
+    await persistRunResults({ agentId, results })
+  } catch (error) {
+    console.error("Failed to persist agent test results", { agentId, error })
   }
 
   const passed = results.filter(r => r.status === "passed").length

@@ -1,74 +1,383 @@
 <script lang="ts">
-  import { Body, Button } from "@budibase/bbui"
-  import type { AgentTestCase } from "@budibase/types"
+  import {
+    ActionButton,
+    ActionMenu,
+    Body,
+    Button,
+    Icon,
+    MenuItem,
+    Search,
+    Select,
+  } from "@budibase/bbui"
+  import type {
+    AgentTestCase,
+    AgentTestCaseResult,
+    AgentTestGroup,
+  } from "@budibase/types"
+  import { formatRunTime, getVerdictMeta, type VerdictStatus } from "./utils"
 
-  type Props = {
-    cases: AgentTestCase[]
-    selectedCaseId: string | null
-    loading: boolean
-    onSelectCase: (_caseId: string) => void
-    onAddCase: () => void
+  type StatusFilter = "all" | VerdictStatus
+
+  interface Option<T extends string> {
+    label: string
+    value: T
   }
 
-  let { cases, selectedCaseId, loading, onSelectCase, onAddCase }: Props =
-    $props()
+  type Props = {
+    groups: AgentTestGroup[]
+    cases: AgentTestCase[]
+    selectedCaseId: string | null
+    selectedGroupId: string | null
+    loading: boolean
+    saving: boolean
+    running: boolean
+    hasLatestRun: boolean
+    latestResultsByCaseId: Map<string, AgentTestCaseResult>
+    onSelectCase: (_caseId: string) => void
+    onSelectGroup: (_groupId: string) => void
+    onCreateGroup: () => void
+    onRenameGroup: () => void
+    onDeleteGroup: () => void
+    onAddCase: () => void
+    onEditCase: (_caseId: string) => void
+    onRunCase: (_caseId: string) => void
+    onRunAll: () => void
+    onDuplicateCase: (_caseId: string) => void
+    onRemoveCase: (_caseId: string) => void
+  }
+
+  let {
+    groups,
+    cases,
+    selectedCaseId,
+    selectedGroupId,
+    loading,
+    saving,
+    running,
+    hasLatestRun,
+    latestResultsByCaseId,
+    onSelectCase,
+    onSelectGroup,
+    onCreateGroup,
+    onRenameGroup,
+    onDeleteGroup,
+    onAddCase,
+    onEditCase,
+    onRunCase,
+    onRunAll,
+    onDuplicateCase,
+    onRemoveCase,
+  }: Props = $props()
+
+  const statusOptions: Option<StatusFilter>[] = [
+    { label: "All statuses", value: "all" },
+    { label: "Passed", value: "passed" },
+    { label: "Failed", value: "failed" },
+    { label: "Error", value: "error" },
+    { label: "Not run", value: "idle" },
+  ]
+
+  let search = $state("")
+  let statusFilter = $state<StatusFilter>("all")
+
+  const getInputPreview = (input: string) =>
+    input.replace(/\s+/g, " ").trim() || "No input yet"
+
+  const getLastRunLabel = (result: AgentTestCaseResult | undefined) =>
+    result?.completedAt
+      ? formatRunTime(result.completedAt)
+      : hasLatestRun
+        ? "Not in latest run"
+        : "Not run yet"
+
+  let groupOptions = $derived(
+    groups.map(group => ({
+      label: group.name,
+      value: group.id,
+    }))
+  )
+
+  let selectedGroup = $derived(
+    groups.find(group => group.id === selectedGroupId) ?? null
+  )
+
+  let casesForSelectedGroup = $derived(
+    selectedGroupId
+      ? cases.filter(testCase => testCase.groupId === selectedGroupId)
+      : []
+  )
+
+  let filteredCases = $derived.by(() => {
+    const query = search.trim().toLowerCase()
+
+    return casesForSelectedGroup.filter(testCase => {
+      const status = latestResultsByCaseId.get(testCase.id)?.status ?? "idle"
+      const matchesStatus = statusFilter === "all" || status === statusFilter
+      const matchesQuery =
+        !query ||
+        testCase.name.toLowerCase().includes(query) ||
+        testCase.input.toLowerCase().includes(query)
+
+      return matchesStatus && matchesQuery
+    })
+  })
 </script>
 
-{#if cases.length > 0}
-  <div class="case-list-header">
-    <Button secondary icon="plus" size="M" on:click={onAddCase}>
-      Add test
-    </Button>
-  </div>
-{/if}
+<div class="case-list-shell">
+  <div class="toolbar-stack">
+    <div class="toolbar-row">
+      <div class="group-controls">
+        <div class="group-select-shell">
+          <Select
+            value={selectedGroupId ?? undefined}
+            options={groupOptions}
+            placeholder={false}
+            getOptionLabel={option => option.label}
+            getOptionValue={option => option.value}
+            on:change={event => onSelectGroup(event.detail)}
+          />
+        </div>
 
-<div class="case-list-body">
-  {#if loading && !cases.length}
-    <div class="empty-state">
-      <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Loading tests...
-      </Body>
-    </div>
-  {:else if !cases.length}
-    <div class="empty-state">
-      <div class="empty-state-content">
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          No tests yet.
-        </Body>
-        <Button secondary on:click={onAddCase}>Add first test</Button>
+        <Button
+          secondary
+          icon="plus"
+          size="M"
+          disabled={loading || saving || running}
+          on:click={onCreateGroup}
+        >
+          New group
+        </Button>
+      </div>
+
+      <div class="top-actions">
+        <ActionMenu
+          align="right"
+          disabled={!selectedGroupId || loading || saving || running}
+          roundedPopover
+        >
+          <div slot="control">
+            <ActionButton icon="pencil-simple">Manage</ActionButton>
+          </div>
+          <MenuItem icon="pencil-simple" on:click={onRenameGroup}>
+            Rename group
+          </MenuItem>
+          <MenuItem
+            icon="trash"
+            disabled={groups.length <= 1}
+            on:click={onDeleteGroup}
+          >
+            Delete group
+          </MenuItem>
+        </ActionMenu>
+
+        <Button
+          secondary
+          icon="play"
+          iconWeight="fill"
+          disabled={!casesForSelectedGroup.length ||
+            loading ||
+            saving ||
+            running}
+          on:click={onRunAll}
+        >
+          {running ? "Running..." : "Run all tests"}
+        </Button>
       </div>
     </div>
-  {:else}
-    <div class="case-items">
-      {#each cases as testCase (testCase.id)}
-        <button
-          class:selected={testCase.id === selectedCaseId}
-          class="case-item"
-          type="button"
-          onclick={() => onSelectCase(testCase.id)}
-        >
-          <span class="case-item-name">{testCase.name}</span>
-          <div class="case-item-subtitle">
-            {testCase.input || "No input yet"}
-          </div>
-        </button>
-      {/each}
+
+    <div class="toolbar-row toolbar-row-filters">
+      <div class="search-shell">
+        <Search bind:value={search} placeholder="Search tests" />
+      </div>
+      <div class="filter-shell">
+        <Select
+          bind:value={statusFilter}
+          options={statusOptions}
+          placeholder={false}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
+        />
+      </div>
+      <Button secondary icon="plus" size="M" on:click={onAddCase}>
+        Add test
+      </Button>
     </div>
-  {/if}
+  </div>
+
+  <div class="case-list-body">
+    {#if loading && !cases.length}
+      <div class="empty-state">
+        <Body size="S" color="var(--spectrum-global-color-gray-400)">
+          Loading tests...
+        </Body>
+      </div>
+    {:else if !cases.length}
+      <div class="empty-state">
+        <div class="empty-state-content">
+          <Body size="S" color="var(--spectrum-global-color-gray-400)">
+            No tests yet.
+          </Body>
+          <Button secondary icon="plus" on:click={onAddCase}>
+            Add first test
+          </Button>
+        </div>
+      </div>
+    {:else if !casesForSelectedGroup.length}
+      <div class="empty-state">
+        <div class="empty-state-content">
+          <Body size="S" color="var(--spectrum-global-color-gray-400)">
+            {selectedGroup?.name || "This group"} has no tests yet.
+          </Body>
+          <Button secondary icon="plus" on:click={onAddCase}>Add test</Button>
+        </div>
+      </div>
+    {:else if !filteredCases.length}
+      <div class="empty-state">
+        <div class="empty-state-content">
+          <Body size="S" color="var(--spectrum-global-color-gray-400)">
+            No tests match the current filters.
+          </Body>
+        </div>
+      </div>
+    {:else}
+      <div class="table-header" aria-hidden="true">
+        <span class="th-test">Test</span>
+        <span>Status</span>
+        <span>Last run</span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <div class="case-items" role="list" aria-label="Agent tests">
+        {#each filteredCases as testCase (testCase.id)}
+          {@const latestResult = latestResultsByCaseId.get(testCase.id)}
+          {@const statusMeta = getVerdictMeta(latestResult?.status)}
+          <div class="case-row" class:selected={testCase.id === selectedCaseId}>
+            <button
+              class="case-row-select"
+              type="button"
+              onclick={() => onSelectCase(testCase.id)}
+            >
+              <div class="case-cell case-cell-primary">
+                <span class="status-icon-badge">
+                  <Icon
+                    name={statusMeta.icon}
+                    size="S"
+                    color={statusMeta.color}
+                  />
+                </span>
+
+                <div class="case-text-block">
+                  <div class="case-title-line">
+                    <span class="case-item-name">{testCase.name}</span>
+                  </div>
+                  <div class="case-item-subtitle">
+                    {getInputPreview(testCase.input)}
+                  </div>
+                </div>
+              </div>
+
+              <div class="case-cell case-cell-status">
+                <span class={`status-pill ${statusMeta.tone}`}>
+                  {statusMeta.label}
+                </span>
+              </div>
+
+              <div class="case-cell case-cell-last-run">
+                {getLastRunLabel(latestResult)}
+              </div>
+            </button>
+
+            <div class="case-cell case-cell-run">
+              <ActionButton
+                quiet
+                icon="play"
+                size="S"
+                disabled={loading || saving || running}
+                on:click={() => onRunCase(testCase.id)}
+              />
+            </div>
+
+            <div class="case-cell case-cell-actions">
+              <ActionMenu align="right" roundedPopover>
+                <div slot="control">
+                  <Icon size="M" hoverable name="dots-three" />
+                </div>
+                {@render caseMenuItems(testCase.id)}
+              </ActionMenu>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
 </div>
 
+{#snippet caseMenuItems(caseId: string)}
+  <MenuItem icon="play" on:click={() => onRunCase(caseId)}>Run test</MenuItem>
+  <MenuItem icon="pencil-simple" on:click={() => onEditCase(caseId)}>
+    Edit test
+  </MenuItem>
+  <MenuItem icon="copy" on:click={() => onDuplicateCase(caseId)}>
+    Duplicate test
+  </MenuItem>
+  <MenuItem icon="trash" on:click={() => onRemoveCase(caseId)}>
+    Delete test
+  </MenuItem>
+{/snippet}
+
 <style>
-  .case-list-header {
-    box-sizing: border-box;
+  .case-list-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .toolbar-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #2c2c2c;
+  }
+
+  .toolbar-row {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    align-self: stretch;
-    width: 100%;
-    max-width: 100%;
-    gap: var(--spacing-m);
-    padding: var(--spacing-l) var(--spacing-l) var(--spacing-s);
-    flex-shrink: 0;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .toolbar-row-filters {
+    align-items: stretch;
+  }
+
+  .group-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .group-select-shell {
+    flex: 0 0 240px;
+    min-width: 0;
+  }
+
+  .search-shell {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .filter-shell {
+    flex: 0 0 180px;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .case-list-body {
@@ -76,83 +385,166 @@
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    padding: 0 var(--spacing-l) var(--spacing-l);
-    scrollbar-width: thin;
+    overflow: hidden;
   }
 
-  .case-list-body::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  .table-header,
+  .case-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px 140px 48px 48px;
+    gap: 12px;
+    align-items: center;
+    padding: 0 16px;
   }
 
-  .case-list-body::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .case-list-body::-webkit-scrollbar-thumb {
-    background: var(--spectrum-global-color-gray-300);
-    border-radius: 3px;
+  .table-header {
+    height: 40px;
+    color: #8a8a8a;
+    font-size: 12px;
+    border-bottom: 1px solid #2c2c2c;
   }
 
   .case-items {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
+    overflow-y: auto;
   }
 
-  .case-item {
-    width: 100%;
+  .case-row {
+    min-height: 56px;
+    border-bottom: 1px solid #242424;
+  }
+
+  .case-row.selected {
+    background: #262626;
+  }
+
+  .case-row-select {
+    display: contents;
     text-align: left;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
-    padding: var(--spacing-s);
-    background: var(--background);
-    cursor: pointer;
-    transition:
-      border-color 130ms ease,
-      background 130ms ease;
   }
 
-  .case-item:hover {
-    border-color: var(--spectrum-global-color-gray-400);
-    background: var(--background-alt);
+  .th-test {
+    padding-left: 32px;
   }
 
-  .case-item.selected {
-    background: var(--background-alt);
+  .case-cell {
+    min-width: 0;
+  }
+
+  .case-cell-primary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  .case-text-block {
+    min-width: 0;
+  }
+
+  .case-title-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .case-item-name,
+  .case-item-subtitle,
+  .case-cell-last-run {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .case-item-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--spectrum-global-color-gray-900);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: #f4f4f4;
   }
 
-  .case-item-subtitle {
+  .case-item-subtitle,
+  .case-cell-last-run {
+    color: #8a8a8a;
     font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-    margin-top: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  }
+
+  .status-icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    color: #d0d0d0;
+  }
+
+  .status-pill.passed {
+    color: var(--color-green-500);
+  }
+
+  .status-pill.failed,
+  .status-pill.error {
+    color: var(--color-orange-500);
+  }
+
+  .status-pill.idle {
+    color: #8a8a8a;
+  }
+
+  .case-cell-run,
+  .case-cell-actions {
+    display: flex;
+    justify-content: center;
   }
 
   .empty-state {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px var(--spacing-m);
-    text-align: center;
+    flex: 1 1 auto;
+    padding: 32px;
   }
 
   .empty-state-content {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
     align-items: center;
+    gap: 12px;
+  }
+
+  .group-select-shell :global(.spectrum-Field),
+  .search-shell :global(.spectrum-Field),
+  .filter-shell :global(.spectrum-Field) {
+    width: 100%;
+  }
+
+  @media (max-width: 960px) {
+    .toolbar-row,
+    .toolbar-row-filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .group-select-shell,
+    .filter-shell {
+      flex-basis: auto;
+    }
+
+    .group-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .top-actions {
+      justify-content: space-between;
+    }
+
+    .table-header,
+    .case-row {
+      grid-template-columns: minmax(0, 1fr) 90px 100px 48px 48px;
+    }
   }
 </style>
