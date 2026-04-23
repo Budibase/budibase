@@ -59,7 +59,7 @@
     "pouchdb": "9.0.0",
     "scim2-parse-filter": "^0.2.8",
     "scim-patch": "^0.8.1",
-    "uuid": "^8.3.2",
+    "uuid": "^14.0.0",
     "yaml": "^2.8.3"
   },
   "devDependencies": {

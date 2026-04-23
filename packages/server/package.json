@@ -130,7 +130,7 @@
     "tmp": "0.2.4",
     "to-json-schema": "0.2.5",
     "undici": "^6.24.0",
-    "uuid": "^8.3.2",
+    "uuid": "^14.0.0",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.6.2",
