@@ -147,7 +147,7 @@ const AGENT_TEST_REVIEWER_SCHEMA = Joi.alternatives()
   .required()
 
 const AGENT_TEST_CASE_SCHEMA = Joi.object({
-  id: Joi.string().optional(),
+  id: Joi.string().required(),
   groupId: Joi.string().required(),
   name: Joi.string().required(),
   input: Joi.string().required(),
@@ -157,7 +157,7 @@ const AGENT_TEST_CASE_SCHEMA = Joi.object({
 }).required()
 
 const AGENT_TEST_GROUP_SCHEMA = Joi.object({
-  id: Joi.string().optional(),
+  id: Joi.string().required(),
   name: Joi.string().trim().required(),
 }).required()
 

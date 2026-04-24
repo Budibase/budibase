@@ -1,4 +1,8 @@
-import type { AgentTestReviewer } from "@budibase/types"
+import type {
+  AgentTestCaseDefinition,
+  AgentTestCaseSnapshot,
+  AgentTestReviewer,
+} from "@budibase/types"
 
 export type ReviewerType = AgentTestReviewer["type"]
 
@@ -146,3 +150,14 @@ export const validateReviewer = (reviewer: AgentTestReviewer): string | null =>
 
 export const getReviewerLabel = (type: ReviewerType): string =>
   REVIEWERS[type].label
+
+export const buildAgentTestCaseSnapshot = (
+  testCase: AgentTestCaseDefinition
+): AgentTestCaseSnapshot => ({
+  id: testCase.id,
+  groupId: testCase.groupId,
+  name: testCase.name,
+  input: testCase.input,
+  context: testCase.context,
+  reviewers: testCase.reviewers,
+})

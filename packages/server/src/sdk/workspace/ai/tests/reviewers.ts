@@ -1,5 +1,5 @@
 import type {
-  AgentTestCase,
+  AgentTestCaseDefinition,
   AgentTestReviewer,
   AgentTestReviewerResult,
 } from "@budibase/types"
@@ -10,7 +10,7 @@ interface AgentTestValidationFailure {
 }
 
 export const validateTestCase = (
-  testCase: AgentTestCase
+  testCase: AgentTestCaseDefinition
 ): AgentTestValidationFailure[] => {
   const failures: AgentTestValidationFailure[] = []
   const reviewers = testCase.reviewers

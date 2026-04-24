@@ -1,13 +1,14 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { buildAgentTestCaseSnapshot } from "@budibase/shared-core"
 import type {
   AgentTestCase,
   AgentTestCaseResult,
+  AgentTestCaseSnapshot,
   AgentTestGroup,
   AgentTestSuite,
   UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
 import { buildDefaultAgentTestGroup } from "@budibase/types"
-import { v4 } from "uuid"
 import { validateTestCase } from "./reviewers"
 
 const MAX_RESPONSE_CHARS = 32 * 1024
@@ -24,6 +25,17 @@ const buildDefaultSuite = (agentId: string): AgentTestSuite => ({
   groups: [buildDefaultAgentTestGroup()],
   cases: [],
 })
+
+const hasSameCaseDefinition = (
+  testCase: AgentTestCase,
+  snapshot: AgentTestCaseSnapshot | undefined
+) => {
+  if (!snapshot) return false
+  return (
+    JSON.stringify(buildAgentTestCaseSnapshot(testCase)) ===
+    JSON.stringify(snapshot)
+  )
+}
 
 const normalizeGroups = (
   groups: AgentTestGroup[] | undefined
@@ -78,8 +90,8 @@ export async function saveSuite({
   )
   const existing = existingDoc ? normalizeSuite(existingDoc) : undefined
 
-  const groups = request.groups.map((group, idx) => ({
-    id: group.id || existing?.groups[idx]?.id || v4(),
+  const groups = request.groups.map(group => ({
+    id: group.id,
     name: group.name?.trim() || "",
   }))
 
@@ -97,27 +109,26 @@ export async function saveSuite({
   const fallbackGroupId = groups[0]!.id
 
   const cases: AgentTestCase[] = request.cases.map((testCase, idx) => {
-    const id = testCase.id ?? v4()
-    const existingCase =
-      testCase.id != null
-        ? existing?.cases.find(c => c.id === testCase.id)
-        : undefined
-    const reviewers = testCase.reviewers.map((reviewer, rIdx) => ({
-      ...reviewer,
-      id: reviewer.id || existingCase?.reviewers[rIdx]?.id || v4(),
-    })) as AgentTestCase["reviewers"]
+    const existingCase = existing?.cases.find(c => c.id === testCase.id)
 
-    return {
-      id,
+    const nextCase: AgentTestCase = {
+      id: testCase.id,
       groupId: testCase.groupId || existingCase?.groupId || fallbackGroupId,
       name: testCase.name?.trim() || `Test ${idx + 1}`,
       input: testCase.input,
       context: testCase.context,
-      reviewers,
-      ...(existingCase?.lastResult
-        ? { lastResult: existingCase.lastResult }
-        : {}),
+      reviewers: testCase.reviewers,
     }
+
+    const lastResult = existingCase?.lastResult
+    if (
+      lastResult &&
+      hasSameCaseDefinition(nextCase, lastResult.caseSnapshot)
+    ) {
+      nextCase.lastResult = lastResult
+    }
+
+    return nextCase
   })
 
   for (const testCase of cases) {

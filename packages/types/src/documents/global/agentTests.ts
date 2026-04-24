@@ -43,17 +43,20 @@ export interface AgentTestReviewerResult {
   message?: string
 }
 
-export interface AgentTestCase {
+export interface AgentTestCaseDefinition {
   id: string
   groupId: string
   name: string
   input: string
   context?: string
   reviewers: AgentTestReviewer[]
-  lastResult?: AgentTestCaseResult
 }
 
-export type AgentTestCaseSnapshot = AgentTestCase
+export type AgentTestCaseSnapshot = AgentTestCaseDefinition
+
+export interface AgentTestCase extends AgentTestCaseDefinition {
+  lastResult?: AgentTestCaseResult
+}
 
 export interface AgentTestModelSnapshot {
   aiConfigId: string

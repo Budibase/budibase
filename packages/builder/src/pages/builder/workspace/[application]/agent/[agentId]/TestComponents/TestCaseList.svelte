@@ -542,9 +542,24 @@
       justify-content: space-between;
     }
 
-    .table-header,
+    .table-header {
+      display: none;
+    }
+
     .case-row {
-      grid-template-columns: minmax(0, 1fr) 90px 100px 48px 48px;
+      grid-template-columns: minmax(0, 1fr) 40px 32px;
+      gap: 8px;
+      padding: 0 10px;
+    }
+
+    .case-cell-status,
+    .case-cell-last-run {
+      display: none;
+    }
+
+    .case-cell-run,
+    .case-cell-actions {
+      justify-content: flex-end;
     }
   }
 </style>

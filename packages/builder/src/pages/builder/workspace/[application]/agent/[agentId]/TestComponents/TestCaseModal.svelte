@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Button, Modal, notifications } from "@budibase/bbui"
   import type { AgentTestCase } from "@budibase/types"
+  import { validateReviewer } from "@budibase/shared-core"
   import TestCaseFields from "./TestCaseFields.svelte"
   import TestReviewersEditor from "./TestReviewersEditor.svelte"
 
@@ -48,10 +49,29 @@
     draftCase = updater(draftCase)
   }
 
-  let canRunTest = $derived(
-    !!draftCase &&
-      (draftCase.input.trim().length > 0 || draftCase.reviewers.length > 0)
-  )
+  const getValidationMessages = (testCase: AgentTestCase | null) => {
+    if (!testCase) return []
+
+    const messages: string[] = []
+    if (!testCase.input.trim()) {
+      messages.push("Input is required.")
+    }
+    if (!testCase.reviewers.length) {
+      messages.push("At least one test criteria is required.")
+    }
+
+    testCase.reviewers.forEach((reviewer, index) => {
+      const error = validateReviewer(reviewer)
+      if (error) {
+        messages.push(`Criteria ${index + 1} ${error}.`)
+      }
+    })
+
+    return messages
+  }
+
+  let validationMessages = $derived(getValidationMessages(draftCase))
+  let canRunTest = $derived(validationMessages.length === 0)
 
   const handleConfirm = async () => {
     if (!draftCase || loading || !canRunTest) return
@@ -110,6 +130,14 @@
           />
         </section>
       </div>
+
+      {#if validationMessages.length}
+        <div class="validation-summary">
+          {#each validationMessages as message}
+            <span>{message}</span>
+          {/each}
+        </div>
+      {/if}
 
       <div class="modal-footer">
         <Button secondary disabled={loading} on:click={() => modal.hide()}>
@@ -209,6 +237,29 @@
     padding: 20px 40px 28px;
   }
 
+  .validation-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 16px 40px 0;
+    padding: 10px 12px;
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-orange-500) 35%,
+        var(--spectrum-global-color-gray-200)
+      );
+    border-radius: 6px;
+    background: color-mix(
+      in srgb,
+      var(--color-orange-500) 8%,
+      var(--background-alt)
+    );
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
   :global(.spectrum-Modal:has(.test-case-modal)) {
     border: none;
     background: transparent;
@@ -221,6 +272,11 @@
     .modal-footer {
       padding-left: 20px;
       padding-right: 20px;
+    }
+
+    .validation-summary {
+      margin-left: 20px;
+      margin-right: 20px;
     }
   }
 </style>

@@ -1,16 +1,19 @@
-import { getErrorMessage, HTTPError } from "@budibase/backend-core"
+import { features, getErrorMessage, HTTPError } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
-import { helpers } from "@budibase/shared-core"
+import { buildAgentTestCaseSnapshot, helpers } from "@budibase/shared-core"
 import type {
   Agent,
   AgentTestCase,
   AgentTestCaseResult,
+  AgentTestCaseSnapshot,
+  AgentTestSuite,
   AgentTestReviewer,
   AgentTestReviewerResult,
   AgentTestRun,
   AgentTestSnapshot,
   ContextUser,
 } from "@budibase/types"
+import { FeatureFlag } from "@budibase/types"
 import {
   Output,
   ToolLoopAgent,
@@ -27,6 +30,8 @@ import {
   updatePendingToolCalls,
 } from "../agents"
 import { createSessionLogIndexer } from "../agentLogs"
+import { addRetrievedContextToMessages } from "../chatConversations"
+import { retrieveContextForAgent } from "../rag"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -37,6 +42,9 @@ import { v4 } from "uuid"
 
 type TestLLM = Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
 type SessionLogIndexer = ReturnType<typeof createSessionLogIndexer>
+type PromptAndTools = Awaited<
+  ReturnType<typeof sdk.ai.agents.buildPromptAndTools>
+>
 
 interface JudgeOutput {
   passed: boolean
@@ -77,6 +85,89 @@ ${input}
 
 ${context ? `Test context:\n${context}\n\n` : ""}Agent response:
 ${response}`
+
+const getRetrievedAgentContext = async (agent: Agent, input: string) => {
+  if (
+    !input ||
+    !agent.knowledgeBases?.length ||
+    !(await features.isEnabled(FeatureFlag.AI_RAG))
+  ) {
+    return ""
+  }
+
+  try {
+    const retrieved = await retrieveContextForAgent(agent, input)
+    return retrieved.text.trim()
+  } catch (error) {
+    console.error("Failed to retrieve agent test context", {
+      agentId: agent._id,
+      error,
+    })
+    return ""
+  }
+}
+
+const buildTestMessages = ({
+  testCase,
+  retrievedContext,
+}: {
+  testCase: AgentTestCase
+  retrievedContext: string
+}): ModelMessage[] =>
+  addRetrievedContextToMessages(
+    [
+      ...(testCase.context
+        ? [
+            {
+              role: "system" as const,
+              content: `Additional test context:\n${testCase.context}\n\nUse this context when answering the user.`,
+            },
+          ]
+        : []),
+      { role: "user", content: testCase.input },
+    ],
+    retrievedContext
+  )
+
+const buildResult = ({
+  testCase,
+  caseSnapshot,
+  sessionLogIndexer,
+  sessionId,
+  startedAt,
+  startedAtMs,
+  response,
+  status,
+  reviewerResults,
+  toolCalls,
+  error,
+}: {
+  testCase: AgentTestCase
+  caseSnapshot: AgentTestCaseSnapshot
+  sessionLogIndexer: SessionLogIndexer
+  sessionId: string
+  startedAt: string
+  startedAtMs: number
+  response: string
+  status: AgentTestCaseResult["status"]
+  reviewerResults: AgentTestReviewerResult[]
+  toolCalls: string[]
+  error?: string
+}): AgentTestCaseResult => ({
+  caseId: testCase.id,
+  name: testCase.name,
+  caseSnapshot,
+  response,
+  status,
+  reviewerResults,
+  toolCalls,
+  sessionId,
+  requestIds: sessionLogIndexer.getRequestIds(),
+  startedAt,
+  completedAt: new Date().toISOString(),
+  durationMs: Date.now() - startedAtMs,
+  ...(error ? { error } : {}),
+})
 
 async function runJudge({
   llm,
@@ -136,6 +227,131 @@ async function runJudge({
   }
 }
 
+async function runAgentForCase({
+  agent,
+  promptAndTools,
+  llm,
+  messages,
+  sessionId,
+  sessionLogIndexer,
+}: {
+  agent: Agent
+  promptAndTools: PromptAndTools
+  llm: TestLLM
+  messages: ModelMessage[]
+  sessionId: string
+  sessionLogIndexer: SessionLogIndexer
+}): Promise<{ response: string; toolCalls: string[] }> {
+  const pendingToolCalls = new Set<string>()
+  const toolCalls: string[] = []
+  const hasTools = Object.keys(promptAndTools.tools).length > 0
+
+  const stream = streamText({
+    model: wrapLanguageModel({
+      model: llm.chat,
+      middleware: extractReasoningMiddleware({ tagName: "think" }),
+    }),
+    messages,
+    system: promptAndTools.systemPrompt,
+    tools: hasTools ? promptAndTools.tools : undefined,
+    toolChoice: hasTools ? "auto" : "none",
+    stopWhen: stepCountIs(30),
+    providerOptions: llm.providerOptions?.(hasTools),
+    async onStepFinish({
+      content,
+      toolCalls: stepToolCalls,
+      toolResults,
+      response,
+    }) {
+      if (response?.id) sessionLogIndexer.addRequestId(response.id)
+      for (const toolCall of stepToolCalls) {
+        if (toolCall.toolName) toolCalls.push(toolCall.toolName)
+      }
+      updatePendingToolCalls(pendingToolCalls, stepToolCalls, toolResults)
+      for (const part of content) {
+        if (part.type === "tool-error") {
+          pendingToolCalls.delete(part.toolCallId)
+        }
+      }
+      for (const _toolResult of toolResults) {
+        await quotas.addAction(async () => {})
+      }
+    },
+    onFinish({ response }) {
+      if (response?.id) sessionLogIndexer.addRequestId(response.id)
+    },
+    onError({ error }) {
+      console.error("Agent test streaming error", {
+        agentId: agent._id,
+        sessionId,
+        error,
+      })
+    },
+  })
+
+  const [text, streamResponse] = await Promise.all([
+    stream.text,
+    stream.response,
+  ])
+  if (streamResponse?.id) sessionLogIndexer.addRequestId(streamResponse.id)
+
+  if (pendingToolCalls.size > 0) {
+    throw new Error(formatIncompleteToolCallError([]))
+  }
+
+  return {
+    response: text || "",
+    toolCalls,
+  }
+}
+
+async function runReviewers({
+  reviewers,
+  llm,
+  testCase,
+  response,
+  toolCalls,
+  sessionLogIndexer,
+}: {
+  reviewers: AgentTestReviewer[]
+  llm: TestLLM
+  testCase: AgentTestCase
+  response: string
+  toolCalls: string[]
+  sessionLogIndexer: SessionLogIndexer
+}): Promise<AgentTestReviewerResult[]> {
+  const results: AgentTestReviewerResult[] = []
+
+  for (const reviewer of reviewers) {
+    if (reviewer.type !== "llm_judge") {
+      results.push(evaluateReviewer({ reviewer, response, toolCalls }))
+      continue
+    }
+
+    try {
+      results.push(
+        await runJudge({
+          llm,
+          input: testCase.input,
+          context: testCase.context,
+          response,
+          reviewer,
+          sessionLogIndexer,
+        })
+      )
+    } catch (error) {
+      results.push({
+        reviewerId: reviewer.id,
+        type: reviewer.type,
+        status: "error",
+        message: `Judge failed: ${getErrorMessage(error)}`,
+      })
+    }
+  }
+
+  return results
+}
+
 async function runCase({
   agent,
   user,
@@ -147,19 +363,10 @@ async function runCase({
   testCase: AgentTestCase
   runId: string
 }): Promise<AgentTestCaseResult> {
-  const caseSnapshot: AgentTestCase = {
-    id: testCase.id,
-    groupId: testCase.groupId,
-    name: testCase.name,
-    input: testCase.input,
-    context: testCase.context,
-    reviewers: testCase.reviewers,
-  }
-
+  const caseSnapshot = buildAgentTestCaseSnapshot(testCase)
   const startedAt = new Date().toISOString()
   const startedAtMs = Date.now()
   const sessionId = `test:${runId}:${testCase.id}`
-  const toolCalls: string[] = []
   const sessionLogIndexer = createSessionLogIndexer({
     agentId: agent._id!,
     sessionId,
@@ -168,138 +375,33 @@ async function runCase({
     startedAt,
   })
 
-  const finish = ({
-    response,
-    status,
-    reviewerResults,
-    error,
-  }: {
-    response: string
-    status: AgentTestCaseResult["status"]
-    reviewerResults: AgentTestReviewerResult[]
-    error?: string
-  }): AgentTestCaseResult => ({
-    caseId: testCase.id,
-    name: testCase.name,
-    caseSnapshot,
-    response,
-    status,
-    reviewerResults,
-    toolCalls,
-    sessionId,
-    requestIds: sessionLogIndexer.getRequestIds(),
-    startedAt,
-    completedAt: new Date().toISOString(),
-    durationMs: Date.now() - startedAtMs,
-    ...(error ? { error } : {}),
-  })
-
   try {
-    const [promptAndTools, llm] = await Promise.all([
+    const [promptAndTools, llm, retrievedContext] = await Promise.all([
       sdk.ai.agents.buildPromptAndTools(agent, {
         baseSystemPrompt: ai.agentSystemPrompt(user),
         includeGoal: false,
       }),
       sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agent._id),
+      getRetrievedAgentContext(agent, testCase.input),
     ])
 
-    const pendingToolCalls = new Set<string>()
-    const hasTools = Object.keys(promptAndTools.tools).length > 0
-    const messages: ModelMessage[] = [
-      ...(testCase.context
-        ? [
-            {
-              role: "system" as const,
-              content: `Additional test context:\n${testCase.context}\n\nUse this context when answering the user.`,
-            },
-          ]
-        : []),
-      { role: "user", content: testCase.input },
-    ]
-
-    const stream = streamText({
-      model: wrapLanguageModel({
-        model: llm.chat,
-        middleware: extractReasoningMiddleware({ tagName: "think" }),
-      }),
+    const messages = buildTestMessages({ testCase, retrievedContext })
+    const { response, toolCalls } = await runAgentForCase({
+      agent,
+      promptAndTools,
+      llm,
       messages,
-      system: promptAndTools.systemPrompt,
-      tools: hasTools ? promptAndTools.tools : undefined,
-      toolChoice: hasTools ? "auto" : "none",
-      stopWhen: stepCountIs(30),
-      providerOptions: llm.providerOptions?.(hasTools),
-      async onStepFinish({
-        content,
-        toolCalls: stepToolCalls,
-        toolResults,
-        response,
-      }) {
-        if (response?.id) sessionLogIndexer.addRequestId(response.id)
-        for (const toolCall of stepToolCalls) {
-          if (toolCall.toolName) toolCalls.push(toolCall.toolName)
-        }
-        updatePendingToolCalls(pendingToolCalls, stepToolCalls, toolResults)
-        for (const part of content) {
-          if (part.type === "tool-error") {
-            pendingToolCalls.delete(part.toolCallId)
-          }
-        }
-        for (const _toolResult of toolResults) {
-          await quotas.addAction(async () => {})
-        }
-      },
-      onFinish({ response }) {
-        if (response?.id) sessionLogIndexer.addRequestId(response.id)
-      },
-      onError({ error }) {
-        console.error("Agent test streaming error", {
-          agentId: agent._id,
-          sessionId,
-          error,
-        })
-      },
+      sessionId,
+      sessionLogIndexer,
     })
-
-    const [text, streamResponse] = await Promise.all([
-      stream.text,
-      stream.response,
-    ])
-    if (streamResponse?.id) sessionLogIndexer.addRequestId(streamResponse.id)
-
-    if (pendingToolCalls.size > 0) {
-      throw new Error(formatIncompleteToolCallError([]))
-    }
-
-    const response = text || ""
-    const reviewerResults: AgentTestReviewerResult[] = []
-
-    for (const reviewer of caseSnapshot.reviewers) {
-      if (reviewer.type === "llm_judge") {
-        try {
-          reviewerResults.push(
-            await runJudge({
-              llm,
-              input: testCase.input,
-              context: testCase.context,
-              response,
-              reviewer,
-              sessionLogIndexer,
-            })
-          )
-        } catch (error) {
-          reviewerResults.push({
-            reviewerId: reviewer.id,
-            type: reviewer.type,
-            status: "error",
-            message: `Judge failed: ${getErrorMessage(error)}`,
-          })
-        }
-      } else {
-        reviewerResults.push(
-          evaluateReviewer({ reviewer, response, toolCalls })
-        )
-      }
-    }
+    const reviewerResults = await runReviewers({
+      reviewers: caseSnapshot.reviewers,
+      llm,
+      testCase,
+      response,
+      toolCalls,
+      sessionLogIndexer,
+    })
 
     await sessionLogIndexer.index()
 
@@ -309,37 +411,51 @@ async function runCase({
         ? reviewerResults.find(r => r.status === "error")?.message
         : undefined
 
-    return finish({ response, status, reviewerResults, error })
+    return buildResult({
+      testCase,
+      caseSnapshot,
+      sessionLogIndexer,
+      sessionId,
+      startedAt,
+      startedAtMs,
+      response,
+      status,
+      reviewerResults,
+      toolCalls,
+      error,
+    })
   } catch (error) {
     await sessionLogIndexer.index()
 
     const message = getErrorMessage(error)
-    return finish({
+    return buildResult({
+      testCase,
+      caseSnapshot,
+      sessionLogIndexer,
+      sessionId,
+      startedAt,
+      startedAtMs,
       response: "",
       status: "error",
       reviewerResults: buildErroredReviewerResults({
         reviewers: caseSnapshot.reviewers,
         message,
       }),
+      toolCalls: [],
       error: message,
     })
   }
 }
 
-export async function runSuite({
-  agentId,
-  user,
+const selectCasesToRun = ({
+  suite,
   caseId,
   groupId,
 }: {
-  agentId: string
-  user: ContextUser
+  suite: AgentTestSuite
   caseId?: string
   groupId?: string
-}): Promise<AgentTestRun> {
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const suite = await fetchSuite(agentId)
-
+}): AgentTestCase[] => {
   if (suite.cases.length === 0) {
     throw new HTTPError("Add at least one test before running the suite.", 400)
   }
@@ -351,38 +467,47 @@ export async function runSuite({
     )
   }
 
-  let casesToRun: AgentTestCase[] = suite.cases
   if (caseId) {
-    const match = suite.cases.find(c => c.id === caseId)
+    const match = suite.cases.find(testCase => testCase.id === caseId)
     if (!match) {
       throw new HTTPError("That test was not found in the saved suite.", 400)
     }
-    casesToRun = [match]
-  } else if (groupId) {
-    const group = suite.groups.find(candidate => candidate.id === groupId)
-    if (!group) {
-      throw new HTTPError(
-        "That test group was not found in the saved suite.",
-        400
-      )
-    }
-
-    casesToRun = suite.cases.filter(testCase => testCase.groupId === group.id)
-    if (!casesToRun.length) {
-      throw new HTTPError(
-        "Add at least one test to this group before running it.",
-        400
-      )
-    }
+    return [match]
   }
 
-  const runId = v4()
-  const startedAt = new Date().toISOString()
+  if (!groupId) return suite.cases
+
+  const group = suite.groups.find(candidate => candidate.id === groupId)
+  if (!group) {
+    throw new HTTPError(
+      "That test group was not found in the saved suite.",
+      400
+    )
+  }
+
+  const cases = suite.cases.filter(testCase => testCase.groupId === group.id)
+  if (!cases.length) {
+    throw new HTTPError(
+      "Add at least one test to this group before running it.",
+      400
+    )
+  }
+
+  return cases
+}
+
+const buildRunSnapshot = async ({
+  agent,
+  suite,
+}: {
+  agent: Agent
+  suite: AgentTestSuite
+}): Promise<AgentTestSnapshot> => {
   const aiConfig = agent.aiconfig
     ? await sdk.ai.configs.find(agent.aiconfig)
     : undefined
 
-  const snapshot: AgentTestSnapshot = {
+  return {
     agentId: agent._id!,
     agentName: agent.name,
     agentRev: agent._rev,
@@ -404,6 +529,25 @@ export async function runSuite({
     enabledTools: [...(agent.enabledTools || [])],
     knowledgeBases: [...(agent.knowledgeBases || [])],
   }
+}
+
+export async function runSuite({
+  agentId,
+  user,
+  caseId,
+  groupId,
+}: {
+  agentId: string
+  user: ContextUser
+  caseId?: string
+  groupId?: string
+}): Promise<AgentTestRun> {
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const suite = await fetchSuite(agentId)
+  const casesToRun = selectCasesToRun({ suite, caseId, groupId })
+  const runId = v4()
+  const startedAt = new Date().toISOString()
+  const snapshot = await buildRunSnapshot({ agent, suite })
 
   const results: AgentTestCaseResult[] = []
   for (const testCase of casesToRun) {

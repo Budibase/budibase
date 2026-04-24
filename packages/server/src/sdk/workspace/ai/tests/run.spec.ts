@@ -1,4 +1,5 @@
 import type { ContextUser } from "@budibase/types"
+import { FeatureFlag } from "@budibase/types"
 import { runSuite } from "./run"
 
 jest.mock("@budibase/backend-core", () => ({
@@ -49,6 +50,10 @@ jest.mock("../agentLogs", () => ({
   createSessionLogIndexer: jest.fn(),
 }))
 
+jest.mock("../rag", () => ({
+  retrieveContextForAgent: jest.fn(),
+}))
+
 jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
@@ -75,8 +80,10 @@ jest.mock("ai", () => ({
 
 describe("agent test runner", () => {
   const sdk = jest.requireMock("../../..").default
+  const backendCore = jest.requireMock("@budibase/backend-core")
   const ai = jest.requireMock("ai")
   const { createSessionLogIndexer } = jest.requireMock("../agentLogs")
+  const { retrieveContextForAgent } = jest.requireMock("../rag")
   const { fetchSuite } = jest.requireMock("./crud")
   const user = {} as ContextUser
 
@@ -217,6 +224,12 @@ describe("agent test runner", () => {
       providerOptions: jest.fn().mockReturnValue(undefined),
     })
     createSessionLogIndexer.mockImplementation(makeIndexer)
+    backendCore.features.isEnabled.mockResolvedValue(false)
+    retrieveContextForAgent.mockResolvedValue({
+      text: "",
+      chunks: [],
+      sources: [],
+    })
   })
 
   it("passes exact and contains reviewers when the response matches", async () => {
@@ -461,6 +474,55 @@ describe("agent test runner", () => {
     })
     expect(run.results[0].requestIds).toEqual(
       expect.arrayContaining(["agent-request", "judge-request"])
+    )
+  })
+
+  it("adds retrieved knowledge context when RAG is enabled", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "contains_text",
+        text: "policy",
+      },
+    ])
+    sdk.ai.agents.getOrThrow.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support Agent",
+      aiconfig: "config-1",
+      enabledTools: [],
+      knowledgeBases: ["kb-1"],
+    })
+    backendCore.features.isEnabled.mockImplementation(
+      async (flag: FeatureFlag) => {
+        return flag === FeatureFlag.AI_RAG
+      }
+    )
+    retrieveContextForAgent.mockResolvedValue({
+      text: "The refund policy is 30 days.",
+      chunks: [],
+      sources: [],
+    })
+    mockAgentRun({ response: "The policy is 30 days." })
+
+    await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(retrieveContextForAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "agent-1" }),
+      "Say hello"
+    )
+    expect(ai.streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: expect.arrayContaining([
+          {
+            role: "system",
+            content:
+              "Relevant knowledge:\nThe refund policy is 30 days.\n\nUse this content when answering the user.",
+          },
+        ]),
+      })
     )
   })
 

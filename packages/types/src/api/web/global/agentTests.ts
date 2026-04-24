@@ -1,4 +1,9 @@
-import { AgentTestRun, AgentTestSuite } from "../../../documents"
+import {
+  AgentTestCaseDefinition,
+  AgentTestGroup,
+  AgentTestRun,
+  AgentTestSuite,
+} from "../../../documents"
 
 export interface FetchAgentTestSuiteResponse {
   suite: AgentTestSuite
@@ -6,8 +11,8 @@ export interface FetchAgentTestSuiteResponse {
 
 export interface UpdateAgentTestSuiteRequest {
   _rev?: string
-  groups: AgentTestSuite["groups"]
-  cases: AgentTestSuite["cases"]
+  groups: AgentTestGroup[]
+  cases: AgentTestCaseDefinition[]
 }
 
 export type UpdateAgentTestSuiteResponse = AgentTestSuite

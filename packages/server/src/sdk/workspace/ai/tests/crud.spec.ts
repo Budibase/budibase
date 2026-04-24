@@ -22,7 +22,6 @@ import type {
   AgentTestCaseResult,
   AgentTestGroup,
   AgentTestSuite,
-  UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
 import * as testsCrud from "./crud"
 
@@ -89,67 +88,6 @@ describe("agent tests crud", () => {
   })
 
   describe("saveSuite", () => {
-    it("preserves reviewer ids from the stored suite when the request omits them", async () => {
-      const existing: AgentTestSuite = {
-        _id: `suite_${agentId}`,
-        _rev: "1-old",
-        agentId,
-        groups,
-        cases: [
-          {
-            id: "case-1",
-            groupId: "default",
-            name: "T1",
-            input: "hello",
-            reviewers: [
-              {
-                id: "reviewer-persisted",
-                type: "exact_match",
-                text: "expected",
-              },
-            ],
-          },
-        ],
-      }
-      mockDbTryGet.mockResolvedValue(existing)
-
-      const request = {
-        _rev: "1-old",
-        groups,
-        cases: [
-          {
-            id: "case-1",
-            groupId: "default",
-            name: "T1",
-            input: "hello",
-            reviewers: [
-              {
-                type: "exact_match",
-                text: "expected",
-              },
-            ],
-          },
-        ],
-      } as unknown as UpdateAgentTestSuiteRequest
-
-      const saved = await testsCrud.saveSuite({ agentId, request })
-
-      expect(saved.cases[0]?.reviewers[0]?.id).toBe("reviewer-persisted")
-      expect(mockDbPut).toHaveBeenCalledWith(
-        expect.objectContaining({
-          groups,
-          cases: [
-            expect.objectContaining({
-              groupId: "default",
-              reviewers: [
-                expect.objectContaining({ id: "reviewer-persisted" }),
-              ],
-            }),
-          ],
-        })
-      )
-    })
-
     it("rejects a suite without groups", async () => {
       await expect(
         testsCrud.saveSuite({
@@ -162,8 +100,7 @@ describe("agent tests crud", () => {
       ).rejects.toThrow("At least one test group is required.")
     })
 
-    it("preserves existing lastResult and ignores lastResult sent in the request", async () => {
-      const persistedResult = makeResult("case-1", { response: "persisted" })
+    it("preserves existing lastResult when the case definition is unchanged", async () => {
       const reviewers = [
         {
           id: "reviewer-1",
@@ -171,6 +108,17 @@ describe("agent tests crud", () => {
           text: "hello",
         },
       ]
+      const caseSnapshot = {
+        id: "case-1",
+        groupId: "default",
+        name: "T1",
+        input: "hello",
+        reviewers,
+      }
+      const persistedResult = makeResult("case-1", {
+        response: "persisted",
+        caseSnapshot,
+      })
       const existing: AgentTestSuite = {
         _id: `suite_${agentId}`,
         _rev: "1-old",
@@ -199,14 +147,66 @@ describe("agent tests crud", () => {
             name: "T1",
             input: "hello",
             reviewers,
-            lastResult: makeResult("case-1", { response: "client-sent" }),
           },
         ],
-      } as unknown as UpdateAgentTestSuiteRequest
+      }
 
       const saved = await testsCrud.saveSuite({ agentId, request })
 
       expect(saved.cases[0]?.lastResult).toEqual(persistedResult)
+    })
+
+    it("clears the existing lastResult when the case definition changes", async () => {
+      const reviewers = [
+        {
+          id: "reviewer-1",
+          type: "contains_text" as const,
+          text: "hello",
+        },
+      ]
+      const existing: AgentTestSuite = {
+        _id: `suite_${agentId}`,
+        _rev: "1-old",
+        agentId,
+        groups,
+        cases: [
+          {
+            id: "case-1",
+            groupId: "default",
+            name: "T1",
+            input: "hello",
+            reviewers,
+            lastResult: makeResult("case-1", {
+              caseSnapshot: {
+                id: "case-1",
+                groupId: "default",
+                name: "T1",
+                input: "hello",
+                reviewers,
+              },
+            }),
+          },
+        ],
+      }
+      mockDbTryGet.mockResolvedValue(existing)
+
+      const request = {
+        _rev: "1-old",
+        groups,
+        cases: [
+          {
+            id: "case-1",
+            groupId: "default",
+            name: "T1",
+            input: "hello again",
+            reviewers,
+          },
+        ],
+      }
+
+      const saved = await testsCrud.saveSuite({ agentId, request })
+
+      expect(saved.cases[0]?.lastResult).toBeUndefined()
     })
 
     it("rejects cases that reference a missing group", async () => {
