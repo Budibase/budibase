@@ -14,6 +14,7 @@
   export let options: O[] = []
   export let disabled = false
   export let readonly = false
+  export let columns = 1
   export let getOptionLabel = (option: O) => `${option}`
   export let getOptionValue = (option: O) => option as unknown as V
   export let showSelectAll = false
@@ -48,9 +49,19 @@
       dispatch("change", allValues)
     }
   }
+
+  $: horizontalColumns =
+    direction === "horizontal" && columns > 1
+      ? `repeat(${columns}, minmax(0, 1fr))`
+      : undefined
+  $: useGridLayout = Boolean(horizontalColumns)
 </script>
 
-<div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
+<div
+  class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}
+  class:horizontal={useGridLayout}
+  style:grid-template-columns={horizontalColumns}
+>
   {#if showSelectAll && options?.length > 0}
     <div
       title={selectAllText}
@@ -122,6 +133,13 @@
   .readonly {
     pointer-events: none;
   }
+  .horizontal {
+    display: grid;
+    align-items: start;
+    column-gap: var(--spectrum-global-dimension-size-200);
+    row-gap: var(--spectrum-global-dimension-size-100);
+    width: 100%;
+  }
   .icon {
     display: none;
     left: 50%;
@@ -138,6 +156,10 @@
   .select-all-checkbox {
     margin-bottom: 8px;
     padding: 0;
+  }
+  .horizontal .select-all-checkbox {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
   }
   .select-all-checkbox .spectrum-Checkbox {
     padding: 0;
