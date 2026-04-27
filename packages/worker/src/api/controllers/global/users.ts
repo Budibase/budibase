@@ -359,6 +359,7 @@ export const search = async (
       data: paginated.data,
       hasNextPage: paginated.hasNextPage,
       nextPage: paginated.nextPage,
+      totalRows: paginated.totalRows,
     }
   }
 
@@ -414,7 +415,7 @@ const searchWorkspaceUsers = async (
 ): Promise<SearchUsersResponse> => {
   const workspaceId = body.workspaceId
   if (!workspaceId) {
-    return { data: [], hasNextPage: false }
+    return { data: [], hasNextPage: false, totalRows: 0 }
   }
 
   const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
@@ -535,6 +536,7 @@ const searchWorkspaceUsers = async (
     data,
     hasNextPage,
     nextPage: hasNextPage ? nextPage : undefined,
+    totalRows: filtered.length,
   }
 }
 

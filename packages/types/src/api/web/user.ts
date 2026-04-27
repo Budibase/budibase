@@ -115,6 +115,7 @@ export interface SearchUsersResponse {
   data: User[] | StrippedUser[]
   hasNextPage?: boolean
   nextPage?: string
+  totalRows?: number
 }
 
 export type FetchUsersResponse = User[]

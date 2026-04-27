@@ -128,6 +128,10 @@
       currentWorkspaceId
   $: tableLoading =
     !workspaceReady || !isWorkspaceQueryReady || !$fetch.loaded || !groupsLoaded
+  $: totalPages =
+    $fetch.info?.totalRows == null
+      ? undefined
+      : Math.max(1, Math.ceil($fetch.info.totalRows / PAGE_SIZE))
 
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
@@ -691,6 +695,7 @@
       page={$fetch.pageNumber + 1}
       hasPrevPage={tableLoading ? false : $fetch.hasPrevPage}
       hasNextPage={tableLoading ? false : $fetch.hasNextPage}
+      totalPages={tableLoading ? undefined : totalPages}
       goToPrevPage={fetch.prevPage}
       goToNextPage={fetch.nextPage}
     />

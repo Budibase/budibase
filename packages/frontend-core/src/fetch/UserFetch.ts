@@ -76,6 +76,7 @@ export default class UserFetch extends BaseDataFetch<
       const res = await this.API.searchUsers(opts)
       return {
         rows: res?.data || [],
+        info: { totalRows: res?.totalRows },
         hasNextPage: res?.hasNextPage || false,
         cursor: res?.nextPage || null,
       }

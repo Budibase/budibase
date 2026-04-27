@@ -246,6 +246,7 @@ export async function paginatedUsers({
   const db = getGlobalDB()
   const pageSize = limit ?? PAGE_LIMIT
   const pageLimit = pageSize + 1
+  let totalRows: number | undefined
   // get one extra document, to have the next page
   const opts: DatabaseQueryOpts = {
     include_docs: true,
@@ -261,33 +262,57 @@ export async function paginatedUsers({
     getKey
   if (query?.equal?._id) {
     userList = [await getById(query.equal._id)]
+    totalRows = userList.length
   } else if (appId) {
     userList = await searchGlobalUsersByApp(appId, opts)
     getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)
   } else if (query?.string?.email) {
     userList = await searchGlobalUsersByEmail(query?.string?.email, opts)
+    totalRows = (
+      await searchGlobalUsersByEmail(query?.string?.email, {
+        ...opts,
+        limit: undefined,
+        startkey: undefined,
+      })
+    ).length
     property = "email"
   } else if (query?.oneOf?._id) {
     userList = await bulkGetGlobalUsersById(query?.oneOf?._id, {
       cleanup: true,
     })
+    totalRows = userList.length
   } else if (query) {
     // TODO: this should use SQS search, but the logic is built in the 'server' package. Using the in-memory filtering to get this working meanwhile
     const response = await db.allDocs<User>(
-      getGlobalUserParams(null, { ...opts, limit: undefined })
+      getGlobalUserParams(null, {
+        ...opts,
+        limit: undefined,
+        startkey: undefined,
+      })
     )
     userList = response.rows.map(row => row.doc!)
-    userList = dataFilters.search(userList, { query, limit: opts.limit }).rows
+    const searchResponse = dataFilters.search(userList, {
+      query,
+      countRows: true,
+    })
+    userList = bookmark
+      ? searchResponse.rows.filter(user => (user._id || "") >= bookmark)
+      : searchResponse.rows
+    totalRows = searchResponse.totalRows
   } else {
     // no search, query allDocs
     const response = await db.allDocs<User>(getGlobalUserParams(null, opts))
     userList = response.rows.map(row => row.doc!)
+    totalRows = await getUserCount()
   }
-  return pagination(userList, pageSize, {
-    paginate: true,
-    property,
-    getKey,
-  })
+  return {
+    ...pagination(userList, pageSize, {
+      paginate: true,
+      property,
+      getKey,
+    }),
+    totalRows,
+  }
 }
 
 export async function getUserCount() {

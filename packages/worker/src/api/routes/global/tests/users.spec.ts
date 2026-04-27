@@ -919,6 +919,7 @@ describe("/api/global/users", () => {
       })
       expect(response.body.data.length).toBe(1)
       expect(response.body.data[0].email).toBe(user.email)
+      expect(response.body.totalRows).toBe(1)
     })
 
     it("should support fuzzy email fragments", async () => {
@@ -930,6 +931,31 @@ describe("/api/global/users", () => {
       })
       expect(response.body.data.length).toBe(1)
       expect(response.body.data[0].email).toBe(email)
+      expect(response.body.totalRows).toBe(1)
+    })
+
+    it("should keep total rows stable when paginating searched users", async () => {
+      const users = await Promise.all(
+        Array.from({ length: 5 }).map((_, index) =>
+          config.createUser({
+            email: `stable-user-pages-${index}-${structures.users.newEmail()}`,
+          })
+        )
+      )
+      const firstPage = await config.api.users.searchUsers({
+        query: { fuzzy: { email: "stable-user-pages" } },
+        limit: 2,
+      })
+      const secondPage = await config.api.users.searchUsers({
+        bookmark: firstPage.body.nextPage,
+        query: { fuzzy: { email: "stable-user-pages" } },
+        limit: 2,
+      })
+
+      expect(firstPage.body.data.length).toBe(2)
+      expect(secondPage.body.data.length).toBe(2)
+      expect(firstPage.body.totalRows).toBe(users.length)
+      expect(secondPage.body.totalRows).toBe(users.length)
     })
 
     it("should filter by workspace access when workspaceId is provided", async () => {
@@ -1047,6 +1073,7 @@ describe("/api/global/users", () => {
 
       expect(response.body.data.length).toBe(0)
       expect(response.body.hasNextPage).toBe(false)
+      expect(response.body.totalRows).toBe(0)
     })
 
     it("should be able to search by email with numeric prefixing", async () => {

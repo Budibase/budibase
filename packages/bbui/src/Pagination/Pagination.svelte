@@ -9,6 +9,7 @@
   export let goToNextPage: () => void
   export let hasPrevPage: boolean = true
   export let hasNextPage: boolean = true
+  export let totalPages: number | undefined = undefined
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -23,6 +24,8 @@
   </div>
   <span class="spectrum-Body--secondary spectrum-Pagination-counter">
     Page {page}
+    {#if totalPages != null}
+      of {totalPages}{/if}
   </span>
   <div
     class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-ActionButton--quiet spectrum-Pagination-nextButton"
