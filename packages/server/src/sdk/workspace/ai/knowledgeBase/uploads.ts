@@ -98,13 +98,12 @@ export const uploadKnowledgeBaseFile = async (
         objectStoreKey,
         durationMs: Date.now() - startedAtMs,
       })
-      if (knowledgeBaseFile._id) {
-        events.ai.ragFileUploaded({
-          knowledgeBaseId: input.knowledgeBaseId,
-          fileId: knowledgeBaseFile._id,
-          sourceType: input.source?.type,
-        })
-      }
+
+      events.ai.ragFileUploaded({
+        knowledgeBaseId: input.knowledgeBaseId,
+        fileId: knowledgeBaseFile._id!,
+        sourceType: input.source?.type,
+      })
 
       return knowledgeBaseFile
     } catch (error: any) {

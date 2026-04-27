@@ -32,11 +32,12 @@ export class GeminiRagProcessor implements RagProcessor {
     fileBuffer: Buffer
   ): Promise<void> {
     const startedAtMs = Date.now()
-    const knowledgeBaseId = this.knowledgeBase._id
+    const knowledgeBaseId = this.knowledgeBase._id!
+    const fileId = input._id!
     console.log("Starting Gemini RAG file ingestion", {
       knowledgeBaseId,
       vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
-      fileId: input._id,
+      fileId,
       filename: input.filename,
       mimetype: input.mimetype,
       fileSize: fileBuffer.byteLength,
@@ -58,23 +59,22 @@ export class GeminiRagProcessor implements RagProcessor {
       console.log("Completed Gemini RAG file ingestion", {
         knowledgeBaseId,
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
-        fileId: input._id,
+        fileId,
         ragSourceId: input.ragSourceId,
         durationMs: Date.now() - startedAtMs,
       })
-      if (knowledgeBaseId && input._id) {
-        events.ai.ragFileProcessed({
-          knowledgeBaseId,
-          fileId: input._id,
-          sourceType: input.source?.type,
-          processor: this.knowledgeBase.type,
-        })
-      }
+
+      events.ai.ragFileProcessed({
+        knowledgeBaseId,
+        fileId,
+        sourceType: input.source?.type,
+        processor: this.knowledgeBase.type,
+      })
     } catch (error) {
       console.error("Failed Gemini RAG file ingestion", {
         knowledgeBaseId,
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
-        fileId: input._id,
+        fileId,
         filename: input.filename,
         durationMs: Date.now() - startedAtMs,
         error,

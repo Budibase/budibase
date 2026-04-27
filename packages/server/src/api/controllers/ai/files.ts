@@ -373,7 +373,7 @@ export async function disconnectAgentSharePointSite(
     agentId,
     siteId
   )
-  const sourceId = removedSource.id || sanitizeSharePointSourceId(siteId)
+  const sourceId = removedSource.id
   events.ai.ragFileSharePointDisconnected({
     agentId,
     siteId,

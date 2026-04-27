@@ -147,11 +147,10 @@ export const removeKnowledgeBaseFile = async (
   }
 
   await context.getWorkspaceDB().remove(file)
-  if (file._id) {
-    events.ai.ragFileDeleted({
-      knowledgeBaseId: file.knowledgeBaseId,
-      fileId: file._id,
-      sourceType: file.source?.type,
-    })
-  }
+
+  events.ai.ragFileDeleted({
+    knowledgeBaseId: file.knowledgeBaseId,
+    fileId: file._id!,
+    sourceType: file.source?.type,
+  })
 }

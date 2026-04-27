@@ -673,7 +673,6 @@ const runSharePointSourcesForAgent = async (
     })
     failed++
   } finally {
-    const runStatus = getSharePointSyncRunStatus(synced, failed)
     await saveSharePointSyncRunState({
       agentId,
       siteId,
@@ -683,6 +682,7 @@ const runSharePointSourcesForAgent = async (
       skipped,
       totalDiscovered,
     })
+    const runStatus = getSharePointSyncRunStatus(synced, failed)
     events.ai.ragFileSharePointSync({
       agentId,
       siteId,
