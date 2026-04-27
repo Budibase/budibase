@@ -385,7 +385,7 @@
     gap: var(--spacing-m);
     padding: var(--spacing-s) var(--spacing-s);
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    height: 40px;
+    min-height: 40px;
   }
 
   .integration-row:last-child {

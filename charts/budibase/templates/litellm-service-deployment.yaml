@@ -18,6 +18,11 @@ spec:
       labels:
         io.kompose.service: litellm-service
     spec:
+      terminationGracePeriodSeconds: {{ .Values.services.litellm.terminationGracePeriodSeconds }}
+      {{- if .Values.services.litellm.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.litellm.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
         - name: litellm
           image: {{ .Values.globals.dockerRegistry }}{{ .Values.services.litellm.image }}
@@ -56,6 +61,10 @@ spec:
           {{- if .Values.services.litellm.extraVolumeMounts }}
 {{- toYaml .Values.services.litellm.extraVolumeMounts | nindent 10 }}
           {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "{{ .Values.services.litellm.preStopDelaySeconds }}"]
       volumes:
         - name: litellm-config
           configMap:

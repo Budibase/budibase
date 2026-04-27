@@ -470,15 +470,6 @@ export async function toggleAgentDiscordDeployment(
       agentId,
     })
   } else {
-    const chatAppId = agent.discordIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await persistDiscordDeployment({
       agent,
       interactionsEndpointUrl: undefined,
@@ -521,15 +512,6 @@ export async function toggleAgentMSTeamsDeployment(
         }),
     })
   } else {
-    const chatAppId = agent.MSTeamsIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await sdk.ai.agents.update({
       ...agent,
       MSTeamsIntegration: {
@@ -573,15 +555,6 @@ export async function toggleAgentSlackDeployment(
         }),
     })
   } else {
-    const chatAppId = agent.slackIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await sdk.ai.agents.update({
       ...agent,
       slackIntegration: {

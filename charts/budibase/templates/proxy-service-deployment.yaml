@@ -39,6 +39,10 @@ spec:
 {{ end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.proxy.terminationGracePeriodSeconds }}
+      {{- if .Values.services.proxy.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.proxy.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
       - image: {{ .Values.services.proxy.image | default (printf "%sbudibase/proxy:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
         imagePullPolicy: Always
