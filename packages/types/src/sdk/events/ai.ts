@@ -41,3 +41,34 @@ export interface AIAgentDeletedEvent extends BaseEvent {
     name: string
   }
 }
+
+export interface RagFileUploadedEvent extends BaseEvent {
+  knowledgeBaseId: string
+  fileId: string
+  sourceType?: string
+}
+
+export interface RagFileDeletedEvent extends BaseEvent {
+  knowledgeBaseId: string
+  fileId: string
+  sourceType?: string
+}
+
+export interface RagFileSharePointConnectedEvent extends BaseEvent {
+  agentId: string
+  siteId: string
+  sourceId: string
+}
+
+export interface RagFileSharePointDisconnectedEvent extends BaseEvent {
+  agentId: string
+  siteId: string
+  sourceId: string
+}
+
+export interface RagFileProcessedEvent extends BaseEvent {
+  knowledgeBaseId: string
+  fileId: string
+  sourceType?: string
+  processor: string
+}

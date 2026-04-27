@@ -1,4 +1,10 @@
-import { context, docIds, HTTPError, objectStore } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  events,
+  HTTPError,
+  objectStore,
+} from "@budibase/backend-core"
 import {
   KnowledgeBaseFile,
   KnowledgeBaseFileSource,
@@ -92,6 +98,13 @@ export const uploadKnowledgeBaseFile = async (
         objectStoreKey,
         durationMs: Date.now() - startedAtMs,
       })
+      if (knowledgeBaseFile._id) {
+        events.ai.ragFileUploaded({
+          knowledgeBaseId: input.knowledgeBaseId,
+          fileId: knowledgeBaseFile._id,
+          sourceType: input.source?.type,
+        })
+      }
 
       return knowledgeBaseFile
     } catch (error: any) {

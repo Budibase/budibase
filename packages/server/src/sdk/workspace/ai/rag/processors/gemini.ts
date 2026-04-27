@@ -5,6 +5,7 @@ import {
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
 } from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import { RagProcessor, RetrievedContextChunk } from "."
 import {
   deleteGeminiFileFromStore,
@@ -61,6 +62,14 @@ export class GeminiRagProcessor implements RagProcessor {
         ragSourceId: input.ragSourceId,
         durationMs: Date.now() - startedAtMs,
       })
+      if (knowledgeBaseId && input._id) {
+        events.ai.ragFileProcessed({
+          knowledgeBaseId,
+          fileId: input._id,
+          sourceType: input.source?.type,
+          processor: this.knowledgeBase.type,
+        })
+      }
     } catch (error) {
       console.error("Failed Gemini RAG file ingestion", {
         knowledgeBaseId,

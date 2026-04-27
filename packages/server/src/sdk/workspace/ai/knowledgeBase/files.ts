@@ -2,6 +2,7 @@ import {
   context,
   db,
   docIds,
+  events,
   HTTPError,
   objectStore,
 } from "@budibase/backend-core"
@@ -146,4 +147,11 @@ export const removeKnowledgeBaseFile = async (
   }
 
   await context.getWorkspaceDB().remove(file)
+  if (file._id) {
+    events.ai.ragFileDeleted({
+      knowledgeBaseId: file.knowledgeBaseId,
+      fileId: file._id,
+      sourceType: file.source?.type,
+    })
+  }
 }

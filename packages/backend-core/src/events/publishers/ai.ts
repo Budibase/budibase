@@ -9,6 +9,11 @@ import {
   AIAgentCreatedEvent,
   AIAgentUpdatedEvent,
   AIAgentDeletedEvent,
+  RagFileUploadedEvent,
+  RagFileDeletedEvent,
+  RagFileSharePointConnectedEvent,
+  RagFileSharePointDisconnectedEvent,
+  RagFileProcessedEvent,
 } from "@budibase/types"
 
 function configCreated(
@@ -83,6 +88,44 @@ function agentDeleted(agent: Agent) {
   })
 }
 
+function ragFileUploaded(event: RagFileUploadedEvent) {
+  publishEvent(Event.RAG_FILE_UPLOADED, event).catch(err => {
+    console.error("ragFileUploaded telemetry failed", { event, err })
+  })
+}
+
+function ragFileDeleted(event: RagFileDeletedEvent) {
+  publishEvent(Event.RAG_FILE_DELETED, event).catch(err => {
+    console.error("ragFileDeleted telemetry failed", { event, err })
+  })
+}
+
+function ragFileSharePointConnected(event: RagFileSharePointConnectedEvent) {
+  publishEvent(Event.RAG_FILE_SHAREPOINT_CONNECTED, event).catch(err => {
+    console.error("ragFileSharePointConnected telemetry failed", {
+      event,
+      err,
+    })
+  })
+}
+
+function ragFileSharePointDisconnected(
+  event: RagFileSharePointDisconnectedEvent
+) {
+  publishEvent(Event.RAG_FILE_SHAREPOINT_DISCONNECTED, event).catch(err => {
+    console.error("ragFileSharePointDisconnected telemetry failed", {
+      event,
+      err,
+    })
+  })
+}
+
+function ragFileProcessed(event: RagFileProcessedEvent) {
+  publishEvent(Event.RAG_FILE_PROCESSED, event).catch(err => {
+    console.error("ragFileProcessed telemetry failed", { event, err })
+  })
+}
+
 export default {
   configCreated,
   configUpdated,
@@ -90,4 +133,9 @@ export default {
   agentCreated,
   agentUpdated,
   agentDeleted,
+  ragFileUploaded,
+  ragFileDeleted,
+  ragFileSharePointConnected,
+  ragFileSharePointDisconnected,
+  ragFileProcessed,
 }

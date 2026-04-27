@@ -1,5 +1,5 @@
 import { readFile, unlink } from "node:fs/promises"
-import { HTTPError } from "@budibase/backend-core"
+import { events, HTTPError } from "@budibase/backend-core"
 import {
   AgentKnowledgeSourceType,
   AgentFileUploadResponse,
@@ -288,6 +288,11 @@ export async function connectAgentSharePointSite(
     AgentKnowledgeSourceType.SHAREPOINT,
     [nextSource.id]
   )
+  events.ai.ragFileSharePointConnected({
+    agentId,
+    siteId,
+    sourceId: nextSource.id,
+  })
   ctx.body = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
   ctx.status = 200
 }
@@ -368,10 +373,16 @@ export async function disconnectAgentSharePointSite(
     agentId,
     siteId
   )
+  const sourceId = removedSource.id || sanitizeSharePointSourceId(siteId)
+  events.ai.ragFileSharePointDisconnected({
+    agentId,
+    siteId,
+    sourceId,
+  })
   console.log("Disconnected SharePoint site from agent", {
     agentId,
     siteId,
-    sourceId: removedSource.id,
+    sourceId,
   })
   ctx.body = {
     agentId,
