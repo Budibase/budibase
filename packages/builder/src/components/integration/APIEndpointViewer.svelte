@@ -77,6 +77,7 @@
   import restUtils from "@/helpers/data/utils"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import ConnectedQueryAutomations from "./ConnectedQueryAutomations.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "../common/CodeEditor"
@@ -1059,6 +1060,7 @@
             sourceId={editableQuery._id}
             buttonText="Usage"
           />
+          <ConnectedQueryAutomations queryId={editableQuery._id} />
         {/if}
       </div>
       <div class="save-btn">
