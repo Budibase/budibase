@@ -101,6 +101,7 @@ export async function create(
     },
     { returnDoc: true }
   )
+  events.workspace.appCreated(response.doc, context.getWorkspaceId()!)
   return response.doc
 }
 
@@ -142,6 +143,7 @@ export async function update(
     _deleted: undefined,
   }
   const response = await db.put(docToUpdate, { returnDoc: true })
+  events.workspace.appUpdated(response.doc, context.getWorkspaceId()!)
   return response.doc
 }
 
@@ -161,7 +163,7 @@ export async function remove(
     await db.remove(workspaceAppId, _rev)
 
     // Clear out any favourites related to this
-    events.workspace.deleted(existing, context.getWorkspaceId()!)
+    events.workspace.appDeleted(existing, context.getWorkspaceId()!)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(

@@ -67,6 +67,13 @@ const extractLinkUrl = (messages: string[]) => {
 describe("agent teams integration provisioning", () => {
   const config = new TestConfiguration()
 
+  const getPersistedChatApp = async (
+    workspaceId = config.getDevWorkspaceId()
+  ) =>
+    await config.doInContext(workspaceId, async () => {
+      return await sdk.ai.chatApps.getSingle()
+    })
+
   beforeEach(async () => {
     await config.newTenant()
     mockedWebhookChat.mockClear()
@@ -101,6 +108,13 @@ describe("agent teams integration provisioning", () => {
     expect(updated?.MSTeamsIntegration?.messagingEndpointUrl).toEqual(
       result.messagingEndpointUrl
     )
+
+    const chatApp = await getPersistedChatApp()
+    expect(chatApp?.agents).toContainEqual({
+      agentId: agent._id,
+      isEnabled: false,
+      isDefault: false,
+    })
   })
 
   it("obfuscates teams secrets in responses and preserves them on update", async () => {

@@ -104,11 +104,6 @@ RUN mkdir -p /var/log/nginx && \
 # Setup minio
 WORKDIR /minio
 
-# A 2022 version of minio that supports gateway mode
-COPY scripts/resources/minio /minio
-RUN chmod +x minio
-
-# Handles the installation of minio in non-aas environments
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
 

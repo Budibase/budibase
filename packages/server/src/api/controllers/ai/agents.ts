@@ -62,6 +62,47 @@ const withoutKnowledgeConfig = <T extends Agent>(agent: T) => {
   return rest
 }
 
+const stableSerialize = (value: unknown): string => {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableSerialize).join(",")}]`
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).sort(
+      ([a], [b]) => a.localeCompare(b)
+    )
+    return `{${entries
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableSerialize(item)}`)
+      .join(",")}}`
+  }
+  return JSON.stringify(value)
+}
+
+const normalizeKnowledgeBases = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value
+        .map(item => (typeof item === "string" ? item.trim() : ""))
+        .filter(Boolean)
+        .sort()
+    : []
+
+const normalizeKnowledgeSources = (value: unknown): unknown[] =>
+  Array.isArray(value)
+    ? value
+        .map(item => {
+          const source = item as Record<string, unknown>
+          return {
+            id: source?.id,
+            type: source?.type,
+            config: source?.config,
+          }
+        })
+        .sort((a, b) => {
+          const keyA = `${a.id ?? ""}:${a.type ?? ""}`
+          const keyB = `${b.id ?? ""}:${b.type ?? ""}`
+          return keyA.localeCompare(keyB)
+        })
+    : []
+
 const parseOptionalChatAppId = (value: unknown) => {
   if (typeof value !== "string") {
     return undefined
@@ -268,6 +309,30 @@ export async function updateAgent(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
+  const rawBody = ctx.request.body as Record<string, unknown>
+  const existing = await sdk.ai.agents.getOrThrow(body._id)
+
+  if (Object.prototype.hasOwnProperty.call(rawBody, "knowledgeSources")) {
+    const incoming = normalizeKnowledgeSources(rawBody.knowledgeSources)
+    const current = normalizeKnowledgeSources(existing.knowledgeSources || [])
+    if (stableSerialize(incoming) !== stableSerialize(current)) {
+      throw new HTTPError(
+        "knowledgeSources cannot be updated from this endpoint",
+        400
+      )
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(rawBody, "knowledgeBases")) {
+    const incoming = normalizeKnowledgeBases(rawBody.knowledgeBases)
+    const current = normalizeKnowledgeBases(existing.knowledgeBases || [])
+    if (stableSerialize(incoming) !== stableSerialize(current)) {
+      throw new HTTPError(
+        "knowledgeBases cannot be updated from this endpoint",
+        400
+      )
+    }
+  }
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -405,15 +470,6 @@ export async function toggleAgentDiscordDeployment(
       agentId,
     })
   } else {
-    const chatAppId = agent.discordIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await persistDiscordDeployment({
       agent,
       interactionsEndpointUrl: undefined,
@@ -456,15 +512,6 @@ export async function toggleAgentMSTeamsDeployment(
         }),
     })
   } else {
-    const chatAppId = agent.MSTeamsIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await sdk.ai.agents.update({
       ...agent,
       MSTeamsIntegration: {
@@ -508,15 +555,6 @@ export async function toggleAgentSlackDeployment(
         }),
     })
   } else {
-    const chatAppId = agent.slackIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await sdk.ai.agents.update({
       ...agent,
       slackIntegration: {
@@ -547,8 +585,8 @@ export async function deleteAgent(
   ctx: UserCtx<void, { deleted: true }, { agentId: string }>
 ) {
   const agentId = ctx.params.agentId
-  await sdk.ai.rag.knowledgeSourceSyncQueue.removeAllAgentJobs(agentId ?? "")
-  await sdk.ai.rag.deleteKnowledgeSourceSyncStateForAgent(agentId ?? "")
+  await sdk.ai.rag.knowledgeSourceSyncQueue.removeAllAgentJobs(agentId)
+  await sdk.ai.rag.deleteKnowledgeSourceSyncStateForAgent(agentId)
   await sdk.ai.agents.remove(agentId ?? "")
   ctx.body = { deleted: true }
   ctx.status = 200

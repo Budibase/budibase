@@ -353,6 +353,7 @@ export interface HandleChatMessageParams {
   chatAppId: string
   agentId: string
   provider: AgentChannelProvider
+  channelEnabled: boolean
   command: SupportedChatCommand
   content: string
   user: {
@@ -386,6 +387,7 @@ export const handleChatMessage = async ({
   chatAppId,
   agentId,
   provider,
+  channelEnabled,
   command,
   content,
   user,
@@ -402,11 +404,15 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (
-      !chatApp.agents?.some(
-        agent => agent.agentId === agentId && agent.isEnabled
-      )
-    ) {
+    if (!channelEnabled) {
+      await reply("Agent is not enabled for this chat app.")
+      return
+    }
+
+    const chatAgentConfig = chatApp.agents?.find(
+      agent => agent.agentId === agentId
+    )
+    if (!chatAgentConfig) {
       await reply("Agent is not enabled for this chat app.")
       return
     }
@@ -489,14 +495,6 @@ export const handleChatMessage = async ({
           provider
         )} to reconnect it.`
       )
-      return
-    }
-
-    const chatAgentConfig = chatApp.agents?.find(
-      agent => agent.agentId === agentId
-    )
-    if (!chatAgentConfig) {
-      await reply("Agent is not enabled for this chat app.")
       return
     }
 

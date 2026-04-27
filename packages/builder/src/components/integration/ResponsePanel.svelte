@@ -65,7 +65,7 @@
     selectedTab = "JSON"
   }
 
-  const handleTabChange = (e: CustomEvent<string>) => {
+  const handleTabChange = (e: CustomEvent<string | undefined>) => {
     selectedTab = e.detail
   }
 

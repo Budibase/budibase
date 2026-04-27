@@ -15,18 +15,17 @@ export const WEBHOOK_PATH_BY_PROVIDER: Record<AgentChannelProvider, string> = {
   [AgentChannelProvider.SLACK]: "slack",
 }
 
-const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
+const ensureAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
   const existingAgents = chatApp.agents || []
   const existing = existingAgents.find(agent => agent.agentId === agentId)
-  if (existing?.isEnabled) {
+  if (existing) {
     return chatApp
   }
 
-  const updatedAgents = existing
-    ? existingAgents.map(agent =>
-        agent.agentId === agentId ? { ...agent, isEnabled: true } : agent
-      )
-    : [...existingAgents, { agentId, isEnabled: true, isDefault: false }]
+  const updatedAgents = [
+    ...existingAgents,
+    { agentId, isEnabled: false, isDefault: false },
+  ]
 
   return await chatApps.update({ ...chatApp, agents: updatedAgents })
 }
@@ -61,16 +60,16 @@ export const resolveChatAppForAgent = async ({
 }) => {
   if (chatAppId) {
     const app = await chatApps.getOrThrow(chatAppId)
-    return await enableAgentOnChatApp(app, agentId)
+    return await ensureAgentOnChatApp(app, agentId)
   }
 
   const existing = await chatApps.getSingle()
   if (existing) {
-    return await enableAgentOnChatApp(existing, agentId)
+    return await ensureAgentOnChatApp(existing, agentId)
   }
 
   return await chatApps.create({
-    agents: [{ agentId, isEnabled: true, isDefault: false }],
+    agents: [{ agentId, isEnabled: false, isDefault: false }],
   })
 }
 

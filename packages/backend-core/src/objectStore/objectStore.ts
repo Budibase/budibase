@@ -706,10 +706,15 @@ export async function uploadDirectory(
 export async function downloadTarballDirect(
   url: string,
   path: string,
-  headers = {}
+  headers = {},
+  { followRedirects = true }: { followRedirects?: boolean } = {}
 ) {
   path = sanitizeKey(path)
-  const response = await fetchWithBlacklist(url, { headers })
+  const response = await fetchWithBlacklist(
+    url,
+    { headers },
+    { followRedirects }
+  )
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }

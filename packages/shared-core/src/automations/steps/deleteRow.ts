@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   description: "Delete a row from your database",
   icon: "trash-simple",
-  name: "Delete Row",
+  name: "Delete row",
   tagline: "Delete a {{inputs.enriched.table.name}} row",
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.DELETE_ROW,

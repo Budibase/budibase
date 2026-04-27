@@ -1,9 +1,17 @@
 const mockDbRemove = jest.fn()
 const mockDbTryGet = jest.fn()
+const mockDbPut = jest.fn()
+const mockDbAllDocs = jest.fn().mockResolvedValue({ rows: [] })
 const mockGetWorkspaceDB = jest.fn(() => ({
   tryGet: (...args: any[]) => mockDbTryGet(...args),
   remove: (...args: any[]) => mockDbRemove(...args),
+  put: (...args: any[]) => mockDbPut(...args),
+  allDocs: (...args: any[]) => mockDbAllDocs(...args),
 }))
+
+const mockAgentCreated = jest.fn()
+const mockAgentUpdated = jest.fn()
+const mockAgentDeleted = jest.fn()
 
 const mockKnowledgeBaseFind = jest.fn()
 const mockKnowledgeBaseListFiles = jest.fn()
@@ -18,6 +26,14 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.context,
       getWorkspaceDB: (...args: Parameters<typeof mockGetWorkspaceDB>) =>
         mockGetWorkspaceDB(...args),
+    },
+    events: {
+      ...actual.events,
+      ai: {
+        agentCreated: (...args: any[]) => mockAgentCreated(...args),
+        agentUpdated: (...args: any[]) => mockAgentUpdated(...args),
+        agentDeleted: (...args: any[]) => mockAgentDeleted(...args),
+      },
     },
   }
 })
@@ -120,6 +136,23 @@ describe("agents crud", () => {
       )
     })
 
+    it("emits ai:agent:deleted event", async () => {
+      const agent = {
+        _id: "agent_del",
+        _rev: "1-abc",
+        name: "Delete Me",
+        knowledgeBases: [] as string[],
+      } as Agent
+
+      mockDbTryGet.mockResolvedValue(agent)
+
+      await agentsCrud.remove("agent_del")
+
+      expect(mockAgentDeleted).toHaveBeenCalledWith(
+        expect.objectContaining({ _id: "agent_del", name: "Delete Me" })
+      )
+    })
+
     it("deletes the agent even when KB cleanup fails", async () => {
       const agent = {
         _id: "agent_3",
@@ -158,6 +191,44 @@ describe("agents crud", () => {
           _rev: agent._rev,
           name: agent.name,
         })
+      )
+    })
+  })
+
+  describe("create", () => {
+    it("emits ai:agent:created event", async () => {
+      mockDbPut.mockResolvedValue({ rev: "1-new" })
+      mockDbTryGet.mockResolvedValue(undefined)
+
+      await agentsCrud.create({ name: "New Agent", aiconfig: "cfg_1" })
+
+      expect(mockAgentCreated).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "New Agent" })
+      )
+    })
+  })
+
+  describe("update", () => {
+    it("emits ai:agent:updated event", async () => {
+      const existing = {
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        enabledTools: [],
+        knowledgeBases: [],
+      } as Agent
+
+      mockDbTryGet.mockResolvedValue(existing)
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      await agentsCrud.update({
+        ...existing,
+        name: "Updated Name",
+      })
+
+      expect(mockAgentUpdated).toHaveBeenCalledWith(
+        expect.objectContaining({ _id: "agent_upd", name: "Updated Name" })
       )
     })
   })

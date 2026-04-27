@@ -86,11 +86,13 @@ const createSlackInputHandler = ({
   workspaceId,
   chatAppId,
   agentId,
+  channelEnabled,
   idleTimeoutMinutes,
 }: {
   workspaceId: string
   chatAppId: string
   agentId: string
+  channelEnabled: boolean
   idleTimeoutMinutes?: number
 }) => {
   return async ({
@@ -149,6 +151,7 @@ const createSlackInputHandler = ({
         chatAppId,
         agentId,
         provider: AgentChannelProvider.SLACK,
+        channelEnabled,
         command,
         content,
         user: { externalUserId, displayName },
@@ -207,13 +210,15 @@ export async function slackWebhook(
     ctx,
     providerName: "Slack",
     createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
-      const { integration, idleTimeoutMinutes } =
+      const { integration, idleTimeoutMinutes, channelEnabled } =
         await context.doInWorkspaceContext(workspaceId, async () => {
           const agent = await sdk.ai.agents.getOrThrow(agentId)
           return {
             integration:
               sdk.ai.deployments.slack.validateSlackIntegration(agent),
             idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
+            channelEnabled:
+              !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
           }
         })
 
@@ -238,6 +243,7 @@ export async function slackWebhook(
         workspaceId,
         chatAppId,
         agentId,
+        channelEnabled,
         idleTimeoutMinutes,
       })
       const handler = createSlackMessageHandler(handleSlackInput)

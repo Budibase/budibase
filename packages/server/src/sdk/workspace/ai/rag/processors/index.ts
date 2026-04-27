@@ -11,6 +11,9 @@ export interface RagProcessor {
     fileBuffer: Buffer
   ): Promise<void>
 
-  search(question: string): Promise<RetrievedContextChunk[]>
+  search(
+    question: string,
+    sourceIds?: string[]
+  ): Promise<RetrievedContextChunk[]>
   deleteFiles(fileIds: string[]): Promise<void>
 }

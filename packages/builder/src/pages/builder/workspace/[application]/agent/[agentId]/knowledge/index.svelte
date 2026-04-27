@@ -4,25 +4,28 @@
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
     AgentKnowledgeSourceType,
+    KnowledgeBaseFileStatus,
     type Agent,
-    type KnowledgeSourceOption,
     type KnowledgeBaseFile,
-    type KnowledgeSourceSyncRun,
+    type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
   import { appStore } from "@/stores/builder/app"
   import { agentsStore, selectedAgent } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
-  import SelectSharePointSiteModal from "./SelectSharePointSiteModal.svelte"
-  import SharePointFilesStatusModal from "./SharePointFilesStatusModal.svelte"
+  import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
   import { onDestroy, onMount } from "svelte"
   import type { KnowledgeTableRow } from "./renderers/types"
   import type { PendingUpload } from "./knowledgeTableRows"
   import {
-    getSharePointFilesForSite,
     toFileTableRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
+  import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
+  import {
+    coalesceAgentPollRequests,
+    createKnowledgePollingController,
+  } from "./polling"
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let activeAgentId = $derived(currentAgent?._id)
@@ -31,55 +34,56 @@
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
-  let hasSharePointConnection = $derived(sharePointSources.length > 0)
   let loading = $state(true)
   let pendingUploadsByAgent = $state<Record<string, PendingUpload[]>>({})
   let uploadingByAgent = $state<Record<string, boolean>>({})
   let uploadProgressByAgent = $state<Record<string, string>>({})
+  const fetchFiles = coalesceAgentPollRequests(async (agentId: string) => {
+    await agentsStore.fetchAgentKnowledge(agentId)
+  })
   let files = $derived.by(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
       return [] as KnowledgeBaseFile[]
     }
-    return $agentsStore.filesByAgentId[agentId] || []
+    return $agentsStore.knowledgeByAgent[agentId]?.files || []
   })
 
   let initialKnowledgeLoadedForAgent = $state<string | undefined>()
-  let sharePointSites = $derived.by(() => {
+  let sharePointSourceSnapshots = $derived.by(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
-      return [] as KnowledgeSourceOption[]
+      return [] as SharePointKnowledgeSourceSnapshot[]
     }
-    return $agentsStore.knowledgeSourceOptionsByAgentId[agentId] || []
+    return $agentsStore.knowledgeByAgent[agentId]?.sharePointSources || []
   })
-  let sharePointSyncRunsBySiteId = $derived.by(() => {
+  let hasSharePointConnection = $derived.by(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
-      return {} as Record<string, KnowledgeSourceSyncRun>
+      return false
     }
-    return Object.fromEntries(
-      ($agentsStore.knowledgeSourceRunsByAgentId[agentId] || []).map(run => [
-        run.sourceId,
-        run,
-      ])
-    ) as Record<string, KnowledgeSourceSyncRun>
+    return (
+      $agentsStore.knowledgeByAgent[agentId]?.hasSharePointConnection || false
+    )
   })
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
       .map(source => source.config.site?.id)
       .filter((siteId): siteId is string => !!siteId)
   )
-  let pendingSiteIds = $state<string[]>([])
-  let effectiveSelectedSiteIds = $derived.by(() =>
-    Array.from(new Set([...selectedSiteIds, ...pendingSiteIds]))
-  )
-  let loadingSharePointSites = $state(false)
-  let sharePointSiteModal = $state<SelectSharePointSiteModal>()
-  let sharePointFilesStatusModal = $state<SharePointFilesStatusModal>()
+  let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
+  let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
   let selectedSharePointSiteId = $state("")
-  let selectedStatusSiteId = $state<string | undefined>()
-  let selectedStatusSiteName = $state<string | undefined>()
   let shouldOpenSharePointPickerAfterOauth = $state(false)
+  let loadingSharePointSites = $state(false)
+  const KNOWLEDGE_POLL_INTERVAL_MS = 1000
+  const knowledgePollingController = createKnowledgePollingController({
+    intervalMs: KNOWLEDGE_POLL_INTERVAL_MS,
+    onPoll: fetchFiles,
+    onError: error => {
+      console.error("Failed to poll knowledge files", error)
+    },
+  })
   let activePendingUploads = $derived(
     activeAgentId ? pendingUploadsByAgent[activeAgentId] || [] : []
   )
@@ -122,26 +126,35 @@
     }
   }
 
+  const stopSharePointBootstrapPolling = () => {
+    knowledgePollingController.stop()
+  }
+
   const showSharePointSyncResult = (
     result: SyncAgentKnowledgeSourcesResponse
   ) => {
-    const skipped = result.skipped - result.unsupported
-    const discovered = result.totalDiscovered ?? result.synced + skipped
+    const alreadySynced = result.alreadySynced
+    const discovered = result.totalDiscovered ?? result.synced + alreadySynced
 
     if (result.synced === 0 && result.failed === 0) {
       if (discovered === 0) {
         notifications.info("No files found in selected SharePoint site(s)")
         return
       }
-      if (skipped > 0) {
+      if (alreadySynced > 0) {
+        const details = [
+          alreadySynced > 0 ? `${alreadySynced} already synced` : "",
+        ]
+          .filter(Boolean)
+          .join(", ")
         notifications.info(
-          `SharePoint sync complete (0 new files, ${skipped} already synced)`
+          `SharePoint sync complete (0 new files${details ? `, ${details}` : ""})`
         )
         return
       }
     }
 
-    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${skipped > 0 ? `, ${skipped} skipped` : ""})`
+    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""})`
 
     if (result.failed > 0 && result.synced === 0) {
       notifications.error(message)
@@ -152,50 +165,31 @@
     }
   }
 
-  const fetchFiles = async (agentId: string) => {
-    await agentsStore.fetchAgentFiles(agentId)
-  }
-
-  const openSharePointFilesStatusModal = (siteId: string, siteName: string) => {
-    selectedStatusSiteId = siteId
-    selectedStatusSiteName = siteName
-    sharePointFilesStatusModal?.show()
-  }
-
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
     if (row.kind !== "sharepoint_connection") {
       return
     }
-    openSharePointFilesStatusModal(row.siteId, row.filename)
+    openSharePointSiteConfigModal(row.siteId).catch(error => {
+      console.error(error)
+      notifications.error("Failed to load SharePoint folders/files")
+    })
   }
-
-  let selectedStatusSiteFiles = $derived.by(() => {
-    if (!selectedStatusSiteId) {
-      return [] as KnowledgeBaseFile[]
-    }
-    return getSharePointFilesForSite(files, selectedStatusSiteId).sort((a, b) =>
-      a.filename.localeCompare(b.filename)
-    )
-  })
 
   let fileTableRows = $derived.by(() =>
     toFileTableRows(
-      files.filter(file => !file.externalSourceId?.startsWith("sharepoint:")),
+      files.filter(file => !file.source),
       removeFile,
       activePendingUploads
     )
   )
   let sharePointConnectionRows = $derived.by(() => {
     return toSharePointConnectionRows({
-      hasSharePointConnection,
-      selectedSiteIds: effectiveSelectedSiteIds,
       sharePointSources,
-      sharePointSyncRunsBySiteId,
-      files,
+      sharePointSourceSnapshots,
       loadingSharePointSites,
       onDelete: removeSharePointSite,
       onSync: async sourceId => {
-        await syncSharePointNow([sourceId])
+        await syncSharePointNow(sourceId)
       },
     })
   })
@@ -206,22 +200,13 @@
   const loadInitialKnowledge = async (agentId: string) => {
     loading = true
     try {
-      await agentsStore.fetchAgentFiles(agentId)
-      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
+      await agentsStore.fetchAgentKnowledge(agentId)
       initialKnowledgeLoadedForAgent = agentId
     } finally {
       loading = false
     }
   }
 
-  const loadSharePointSites = async (agentId: string) => {
-    loadingSharePointSites = true
-    try {
-      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
-    } finally {
-      loadingSharePointSites = false
-    }
-  }
   $effect(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
@@ -241,14 +226,19 @@
   $effect(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
-      agentsStore.stopAgentFilePolling()
+      knowledgePollingController.stop()
       return
     }
-
-    agentsStore.startAgentFilePolling(agentId)
-    return () => {
-      agentsStore.stopAgentFilePolling()
-    }
+    const hasProcessingFiles = files.some(
+      file => file.status === KnowledgeBaseFileStatus.PROCESSING
+    )
+    const hasUnsyncedSharePointSites = sharePointSourceSnapshots.some(
+      source => !source.lastRunAt
+    )
+    knowledgePollingController.setContinuous(
+      agentId,
+      hasProcessingFiles || hasUnsyncedSharePointSites
+    )
   })
 
   $effect(() => {
@@ -304,75 +294,43 @@
     window.location.href = oauthUrl
   }
 
-  async function handleAddSharePointKnowledge() {
-    if (hasSharePointConnection || sharePointSites.length > 0) {
-      await openSharePointSiteModal()
+  async function openSharePointFlow() {
+    if (!hasSharePointConnection) {
+      connectSharePoint()
       return
     }
-    connectSharePoint()
+    await openSharePointSiteModal()
   }
 
   async function openSharePointSiteModal() {
-    const agentId = currentAgent?._id
-    if (!agentId) {
-      return
-    }
-    await loadSharePointSites(agentId)
-    const selectedSiteIdSet = new Set(effectiveSelectedSiteIds)
-    const availableSites = sharePointSites.filter(
-      site => !selectedSiteIdSet.has(site.id)
-    )
-    selectedSharePointSiteId = availableSites[0]?.id || ""
-    sharePointSiteModal?.show()
+    await selectSharePointSiteModal?.show()
   }
 
-  async function saveSharePointSites() {
+  async function onSharePointSiteCreated(siteId: string) {
     const agentId = currentAgent?._id
-    if (!agentId) {
-      return
-    }
-    if (!selectedSharePointSiteId) {
-      notifications.error("Please select a SharePoint site")
-      return
-    }
-    try {
-      const nextSiteIds = Array.from(
-        new Set([...effectiveSelectedSiteIds, selectedSharePointSiteId])
-      )
-      await agentsStore.setAgentKnowledgeSources(agentId, {
-        sourceIds: nextSiteIds,
-      })
-      pendingSiteIds = nextSiteIds.filter(id => !selectedSiteIds.includes(id))
-      sharePointSiteModal?.hide()
-      await loadSharePointSites(agentId)
+    if (agentId) {
       await fetchFiles(agentId)
-      await agentsStore.fetchAgents()
-      pendingSiteIds = []
-      notifications.success("SharePoint site added")
-    } catch (error) {
-      pendingSiteIds = []
-      console.error(error)
-      notifications.error("Failed to sync SharePoint")
     }
+    selectedSharePointSiteId = siteId
+    selectSharePointSiteModal?.hide()
   }
 
-  async function syncSharePointNow(sourceIds: string[]) {
+  async function openSharePointSiteConfigModal(siteId: string) {
+    selectedSharePointSiteId = siteId
+    displaySharePointSiteModal?.show()
+  }
+
+  async function syncSharePointNow(sourceId: string) {
     const agentId = currentAgent?._id
     if (!agentId) {
-      return
-    }
-    if (sourceIds.length === 0) {
-      notifications.error("Please select at least one SharePoint site")
       return
     }
 
     try {
       const result = await agentsStore.syncAgentKnowledgeSources(agentId, {
-        sourceIds,
+        sourceId,
       })
-      await loadSharePointSites(agentId)
       await fetchFiles(agentId)
-      await agentsStore.fetchAgents()
       showSharePointSyncResult(result)
     } catch (error) {
       console.error(error)
@@ -382,7 +340,7 @@
 
   async function removeSharePointSite(siteId: string) {
     const agent = currentAgent
-    if (!agent?._id || !hasSharePointConnection) {
+    if (!agent?._id || sharePointSources.length === 0) {
       return
     }
     const agentId = agent._id
@@ -396,28 +354,9 @@
       body: `Are you sure you want to remove ${siteName}? This action can't be undone.`,
       okText: "Delete",
       onConfirm: async () => {
-        pendingSiteIds = pendingSiteIds.filter(id => id !== siteId)
-        const nextSites = sharePointSources
-          .map(source => source.config.site)
-          .filter(
-            (site): site is { id: string; name?: string; webUrl?: string } =>
-              !!site?.id && site.id !== siteId
-          )
-        const nextSiteIds = nextSites.map(site => site.id)
         try {
-          if (nextSiteIds.length === 0) {
-            await agentsStore.disconnectAgentKnowledgeSources(agentId)
-          } else {
-            await agentsStore.setAgentKnowledgeSources(agentId, {
-              sourceIds: nextSiteIds,
-            })
-          }
-          await agentsStore.fetchAgents()
-          pendingSiteIds = []
+          await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
           await fetchFiles(agentId)
-          if (nextSiteIds.length === 0) {
-            await loadSharePointSites(agentId)
-          }
           notifications.success("SharePoint site removed")
         } catch (error) {
           console.error(error)
@@ -452,7 +391,8 @@
   }
 
   onDestroy(() => {
-    agentsStore.stopAgentFilePolling()
+    stopSharePointBootstrapPolling()
+    knowledgePollingController.stop()
   })
 </script>
 
@@ -480,7 +420,7 @@
         await fetchFiles(agentId)
       }}
       onSharePoint={() =>
-        handleAddSharePointKnowledge().catch(error => {
+        openSharePointFlow().catch(error => {
           console.error(error)
           notifications.error("Failed to fetch SharePoint sites")
         })}
@@ -495,18 +435,17 @@
 </Layout>
 
 <SelectSharePointSiteModal
-  bind:this={sharePointSiteModal}
-  {loadingSharePointSites}
-  {sharePointSites}
-  bind:selectedSiteId={selectedSharePointSiteId}
-  onSave={saveSharePointSites}
+  bind:this={selectSharePointSiteModal}
+  agentId={activeAgentId || ""}
+  existingSiteIds={selectedSiteIds}
+  onCreated={onSharePointSiteCreated}
 />
 
-<SharePointFilesStatusModal
-  bind:this={sharePointFilesStatusModal}
-  siteName={selectedStatusSiteName}
-  files={selectedStatusSiteFiles}
-/>
+<DisplaySharePointSiteModal
+  bind:this={displaySharePointSiteModal}
+  agentId={currentAgent?._id}
+  siteId={selectedSharePointSiteId}
+></DisplaySharePointSiteModal>
 
 <style>
   .section-header {

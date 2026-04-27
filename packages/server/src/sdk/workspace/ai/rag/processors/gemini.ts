@@ -44,10 +44,14 @@ export class GeminiRagProcessor implements RagProcessor {
     await updateKnowledgeBaseFile(input)
   }
 
-  async search(question: string): Promise<RetrievedContextChunk[]> {
+  async search(
+    question: string,
+    sourceIds?: string[]
+  ): Promise<RetrievedContextChunk[]> {
     const rows = await searchGeminiFileStore({
       vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
       query: question,
+      fileIds: sourceIds,
     })
 
     const results = rows.map<RetrievedContextChunk>(row => {
@@ -56,7 +60,7 @@ export class GeminiRagProcessor implements RagProcessor {
         .join("\n")
         .trim()
       return {
-        source: row.filename ?? undefined,
+        source: row.file_id || row.filename || undefined,
         chunkText,
       }
     })

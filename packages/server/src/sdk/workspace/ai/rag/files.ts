@@ -49,6 +49,36 @@ const getAgentKnowledgeBase = async (
   return undefined
 }
 
+const normalizeFilenameLookup = (value?: string) =>
+  value?.trim().toLowerCase() || ""
+
+const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
+  const sourceIdByFilename = new Map<string, string>()
+  const ambiguousFilenames = new Set<string>()
+
+  for (const file of readyFiles) {
+    if (!file.ragSourceId) {
+      continue
+    }
+
+    const normalizedFilename = normalizeFilenameLookup(file.filename)
+    if (!normalizedFilename || ambiguousFilenames.has(normalizedFilename)) {
+      continue
+    }
+
+    const existingSourceId = sourceIdByFilename.get(normalizedFilename)
+    if (existingSourceId && existingSourceId !== file.ragSourceId) {
+      sourceIdByFilename.delete(normalizedFilename)
+      ambiguousFilenames.add(normalizedFilename)
+      continue
+    }
+
+    sourceIdByFilename.set(normalizedFilename, file.ragSourceId)
+  }
+
+  return sourceIdByFilename
+}
+
 export const ensureKnowledgeBaseForAgent = async (
   agentId: string
 ): Promise<KnowledgeBase> => {
@@ -137,12 +167,16 @@ export const deleteFileForAgent = async (
   fileId: string
 ): Promise<void> => {
   const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
   const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
-  if (!knowledgeBaseIds.includes(file.knowledgeBaseId)) {
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
 
-  const knowledgeBase = await knowledgeBaseSdk.find(file.knowledgeBaseId)
+  const knowledgeBase = await knowledgeBaseSdk.find(fileKnowledgeBaseId)
   if (!knowledgeBase) {
     throw new HTTPError("Agent file storage not found", 404)
   }
@@ -204,20 +238,45 @@ export const retrieveContextForAgent = async (
       await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
     files.push(...knowledgeBaseFiles)
 
-    const readyFileSources = knowledgeBaseFiles
-      .filter(
-        file =>
-          file.status === KnowledgeBaseFileStatus.READY && file.ragSourceId
-      )
+    const readyFiles = knowledgeBaseFiles.filter(
+      file => file.status === KnowledgeBaseFileStatus.READY
+    )
+    const readyFileSources = readyFiles
       .map(file => file.ragSourceId)
+      .filter((id): id is string => !!id)
 
-    if (readyFileSources.length === 0) {
+    if (readyFiles.length === 0) {
       continue
     }
 
+    const readyFileSourceIds = new Set(readyFileSources)
+    const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
     const processor = getProcessor(knowledgeBase)
-    const returned = await processor.search(question)
-    chunks.push(...returned)
+    const returned = await processor.search(question, readyFileSources)
+
+    for (const chunk of returned) {
+      if (!chunk.source) {
+        chunks.push(chunk)
+        continue
+      }
+
+      if (readyFileSourceIds.has(chunk.source)) {
+        chunks.push(chunk)
+        continue
+      }
+
+      const sourceIdFromFilename = readySourceIdByFilename.get(
+        normalizeFilenameLookup(chunk.source)
+      )
+      if (!sourceIdFromFilename) {
+        continue
+      }
+
+      chunks.push({
+        ...chunk,
+        source: sourceIdFromFilename,
+      })
+    }
   }
 
   if (chunks.length === 0) {
@@ -235,7 +294,12 @@ const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
   files: KnowledgeBaseFile[]
 ): AgentMessageRagSource[] => {
-  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
+  const readyFiles = files.filter(
+    file => file.status === KnowledgeBaseFileStatus.READY
+  )
+  const fileBySourceId = new Map(
+    readyFiles.map(file => [file.ragSourceId, file])
+  )
   const summary = new Map<string, AgentMessageRagSource>()
 
   for (const chunk of chunks) {
@@ -243,9 +307,10 @@ const toSourceMetadata = (
       continue
     }
     const file = fileBySourceId.get(chunk.source)
-    if (!summary.has(chunk.source)) {
-      summary.set(chunk.source, {
-        sourceId: chunk.source,
+    const sourceId = chunk.source
+    if (!summary.has(sourceId)) {
+      summary.set(sourceId, {
+        sourceId,
         fileId: file?._id,
         filename: file?.filename ?? chunk.source,
       })

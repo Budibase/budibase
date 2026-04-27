@@ -99,6 +99,7 @@ import { generate } from "shortid"
 import { derived, get, readable, Readable } from "svelte/store"
 import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
+import { contextMenuStore } from "./contextMenu"
 
 const initialAutomationState: AutomationStoreState = {
   automations: [],
@@ -2769,6 +2770,7 @@ const automationActions = (store: AutomationStore) => ({
    * @param mode Defaults to DataMode.Input
    */
   selectNode: async (blockId?: string, mode?: DataMode) => {
+    contextMenuStore.close()
     store.update(state => {
       return {
         ...state,
@@ -2779,6 +2781,7 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   openActionPanel: (block: BlockRef) => {
+    contextMenuStore.close()
     store.update(state => ({
       ...state,
       actionPanelBlock: block,
@@ -2796,6 +2799,7 @@ const automationActions = (store: AutomationStore) => ({
     log: AutomationLog,
     stepData: AutomationStepResult | AutomationTriggerResult
   ) => {
+    contextMenuStore.close()
     store.update(state => ({
       ...state,
       showLogDetailsPanel: true,
@@ -2816,6 +2820,7 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   openLogsPanel: () => {
+    contextMenuStore.close()
     store.update(state => ({
       ...state,
       showLogsPanel: true,
