@@ -60,7 +60,7 @@ export class GeminiRagProcessor implements RagProcessor {
         .join("\n")
         .trim()
       return {
-        source: row.file_id || row.filename || undefined,
+        source: row.file_id || undefined,
         chunkText,
       }
     })

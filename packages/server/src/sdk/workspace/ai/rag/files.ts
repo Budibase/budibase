@@ -49,36 +49,6 @@ const getAgentKnowledgeBase = async (
   return undefined
 }
 
-const normalizeFilenameLookup = (value?: string) =>
-  value?.trim().toLowerCase() || ""
-
-const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
-  const sourceIdByFilename = new Map<string, string>()
-  const ambiguousFilenames = new Set<string>()
-
-  for (const file of readyFiles) {
-    if (!file.ragSourceId) {
-      continue
-    }
-
-    const normalizedFilename = normalizeFilenameLookup(file.filename)
-    if (!normalizedFilename || ambiguousFilenames.has(normalizedFilename)) {
-      continue
-    }
-
-    const existingSourceId = sourceIdByFilename.get(normalizedFilename)
-    if (existingSourceId && existingSourceId !== file.ragSourceId) {
-      sourceIdByFilename.delete(normalizedFilename)
-      ambiguousFilenames.add(normalizedFilename)
-      continue
-    }
-
-    sourceIdByFilename.set(normalizedFilename, file.ragSourceId)
-  }
-
-  return sourceIdByFilename
-}
-
 export const ensureKnowledgeBaseForAgent = async (
   agentId: string
 ): Promise<KnowledgeBase> => {
@@ -241,16 +211,19 @@ export const retrieveContextForAgent = async (
     const readyFiles = knowledgeBaseFiles.filter(
       file => file.status === KnowledgeBaseFileStatus.READY
     )
-    const readyFileSources = readyFiles
-      .map(file => file.ragSourceId)
-      .filter((id): id is string => !!id)
+    const readyFileSources = Array.from(
+      new Set(
+        readyFiles
+          .map(file => file.ragSourceId)
+          .filter((id): id is string => !!id)
+      )
+    )
 
     if (readyFiles.length === 0) {
       continue
     }
 
     const readyFileSourceIds = new Set(readyFileSources)
-    const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
     const processor = getProcessor(knowledgeBase)
     const returned = await processor.search(question, readyFileSources)
 
@@ -265,17 +238,7 @@ export const retrieveContextForAgent = async (
         continue
       }
 
-      const sourceIdFromFilename = readySourceIdByFilename.get(
-        normalizeFilenameLookup(chunk.source)
-      )
-      if (!sourceIdFromFilename) {
-        continue
-      }
-
-      chunks.push({
-        ...chunk,
-        source: sourceIdFromFilename,
-      })
+      continue
     }
   }
 

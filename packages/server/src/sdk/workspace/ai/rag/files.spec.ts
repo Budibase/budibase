@@ -342,7 +342,7 @@ describe("rag files", () => {
       })
     })
 
-    it("maps chunks to source metadata", async () => {
+    it("maps chunks to source metadata from source ids", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([
         {
@@ -357,7 +357,7 @@ describe("rag files", () => {
       ])
       mockProcessorSearch.mockResolvedValue([
         {
-          source: "policy.md",
+          source: "source-1",
           chunkText: "4-day in-office policy",
         },
       ])
@@ -524,7 +524,7 @@ describe("rag files", () => {
       ])
     })
 
-    it("allows filename fallback only for currently ready files", async () => {
+    it("drops filename-only chunks to avoid stale source mapping", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([
         {
@@ -553,23 +553,14 @@ describe("rag files", () => {
         "What is policy?"
       )
 
-      expect(result.text).toBe("Current policy")
-      expect(result.chunks).toEqual([
-        {
-          source: "source-ready",
-          chunkText: "Current policy",
-        },
-      ])
-      expect(result.sources).toEqual([
-        {
-          sourceId: "source-ready",
-          fileId: "file_1",
-          filename: "policy.md",
-        },
-      ])
+      expect(result).toEqual({
+        text: "",
+        chunks: [],
+        sources: [],
+      })
     })
 
-    it("does not mix filename fallback metadata across knowledge bases", async () => {
+    it("keeps source mappings scoped to each knowledge base", async () => {
       const knowledgeBaseOne: KnowledgeBase = {
         _id: "kb_1",
         name: "Knowledge Base 1",
@@ -629,13 +620,13 @@ describe("rag files", () => {
       mockProcessorSearch
         .mockResolvedValueOnce([
           {
-            source: "policy.md",
+            source: "source-kb-1",
             chunkText: "Policy from KB1",
           },
         ])
         .mockResolvedValueOnce([
           {
-            source: "policy.md",
+            source: "source-kb-2",
             chunkText: "Policy from KB2",
           },
         ])
@@ -666,7 +657,7 @@ describe("rag files", () => {
       ])
     })
 
-    it("does not map ambiguous filename fallback within a knowledge base", async () => {
+    it("drops filename-only chunks when source ids cannot be validated", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([
         {
@@ -681,7 +672,7 @@ describe("rag files", () => {
         {
           _id: "file_2",
           knowledgeBaseId: "kb_123",
-          filename: "policy.md",
+          filename: "handbook.md",
           objectStoreKey: "obj-2",
           ragSourceId: "source-2",
           status: KnowledgeBaseFileStatus.READY,

@@ -52,7 +52,7 @@ describe("GeminiRagProcessor", () => {
     ])
   })
 
-  it("falls back to filename when Gemini file_id is missing", async () => {
+  it("keeps source unset when Gemini file_id is missing", async () => {
     mockSearchGeminiFileStore.mockResolvedValue([
       {
         file_id: null,
@@ -75,7 +75,6 @@ describe("GeminiRagProcessor", () => {
 
     expect(result).toEqual([
       {
-        source: "policy.md",
         chunkText: "4-day policy",
       },
     ])
