@@ -1,4 +1,11 @@
-import { context, db, docIds, HTTPError, locks } from "@budibase/backend-core"
+import {
+  context,
+  db,
+  docIds,
+  events,
+  HTTPError,
+  locks,
+} from "@budibase/backend-core"
 import { matchesConfiguredPatterns } from "@budibase/shared-core"
 import {
   type Agent,
@@ -666,6 +673,7 @@ const runSharePointSourcesForAgent = async (
     })
     failed++
   } finally {
+    const runStatus = getSharePointSyncRunStatus(synced, failed)
     await saveSharePointSyncRunState({
       agentId,
       siteId,
@@ -675,9 +683,27 @@ const runSharePointSourcesForAgent = async (
       skipped,
       totalDiscovered,
     })
+    events.ai.ragFileSharePointSync({
+      agentId,
+      siteId,
+      sourceId,
+      synced,
+      failed,
+      skipped,
+      alreadySynced,
+      retried,
+      unsupported,
+      filteredOut,
+      deleted,
+      deleteFailed,
+      totalDiscovered,
+      status: runStatus,
+    })
     console.log("Completed SharePoint site sync for agent", {
       agentId,
       siteId,
+      sourceId,
+      status: runStatus,
       synced,
       deleted,
       deleteFailed,

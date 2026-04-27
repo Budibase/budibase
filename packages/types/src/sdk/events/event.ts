@@ -46,6 +46,7 @@ export enum Event {
   RAG_FILE_DELETED = "rag:file:deleted",
   RAG_FILE_SHAREPOINT_CONNECTED = "rag:file:sharepoint:connected",
   RAG_FILE_SHAREPOINT_DISCONNECTED = "rag:file:sharepoint:disconnected",
+  RAG_FILE_SHAREPOINT_SYNC = "rag:file:sharepoint:sync",
   RAG_FILE_PROCESSED = "rag:file:processed",
 
   // AUTH
@@ -299,6 +300,7 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.RAG_FILE_DELETED]: undefined,
   [Event.RAG_FILE_SHAREPOINT_CONNECTED]: undefined,
   [Event.RAG_FILE_SHAREPOINT_DISCONNECTED]: undefined,
+  [Event.RAG_FILE_SHAREPOINT_SYNC]: undefined,
   [Event.RAG_FILE_PROCESSED]: undefined,
 
   // AUTH

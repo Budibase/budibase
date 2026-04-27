@@ -66,6 +66,23 @@ export interface RagFileSharePointDisconnectedEvent extends BaseEvent {
   sourceId: string
 }
 
+export interface RagFileSharePointSyncEvent extends BaseEvent {
+  agentId: string
+  siteId: string
+  sourceId: string
+  synced: number
+  failed: number
+  skipped: number
+  alreadySynced: number
+  retried: number
+  unsupported: number
+  filteredOut: number
+  deleted: number
+  deleteFailed: number
+  totalDiscovered: number
+  status: string
+}
+
 export interface RagFileProcessedEvent extends BaseEvent {
   knowledgeBaseId: string
   fileId: string

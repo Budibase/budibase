@@ -13,6 +13,7 @@ import {
   RagFileDeletedEvent,
   RagFileSharePointConnectedEvent,
   RagFileSharePointDisconnectedEvent,
+  RagFileSharePointSyncEvent,
   RagFileProcessedEvent,
 } from "@budibase/types"
 
@@ -126,6 +127,12 @@ function ragFileProcessed(event: RagFileProcessedEvent) {
   })
 }
 
+function ragFileSharePointSync(event: RagFileSharePointSyncEvent) {
+  publishEvent(Event.RAG_FILE_SHAREPOINT_SYNC, event).catch(err => {
+    console.error("ragFileSharePointSync telemetry failed", { event, err })
+  })
+}
+
 export default {
   configCreated,
   configUpdated,
@@ -137,5 +144,6 @@ export default {
   ragFileDeleted,
   ragFileSharePointConnected,
   ragFileSharePointDisconnected,
+  ragFileSharePointSync,
   ragFileProcessed,
 }
