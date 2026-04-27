@@ -6,6 +6,7 @@ interface MockWebhookChatPayload {
 }
 
 interface ChatMockModule {
+  getMockChatOptions: () => Record<string, unknown>[]
   resetMockChatState: () => void
   setMockPostEphemeralResult: (
     provider: "slack" | "teams",
@@ -52,9 +53,8 @@ import {
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
-const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
-  "chat"
-) as ChatMockModule
+const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
+  jest.requireActual("chat") as ChatMockModule
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 
 const extractLinkUrl = (messages: string[]) => {
@@ -114,6 +114,36 @@ describe("agent teams integration provisioning", () => {
       agentId: agent._id,
       isEnabled: false,
       isDefault: false,
+    })
+  })
+
+  it("preserves internal agent chat state when provisioning teams", async () => {
+    const agent = await config.api.agent.create({
+      name: "Teams Agent With Internal Chat",
+      MSTeamsIntegration: {
+        appId: "teams-app-id",
+        appPassword: "teams-app-password",
+        tenantId: "azure-tenant-id",
+      },
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      await db.put({
+        _id: docIds.generateChatAppID(),
+        agents: [{ agentId: agent._id!, isEnabled: true, isDefault: true }],
+        live: true,
+        createdAt: new Date().toISOString(),
+      })
+    })
+
+    await config.api.agent.provisionMSTeamsChannel(agent._id!)
+
+    const chatApp = await getPersistedChatApp()
+    expect(chatApp?.agents).toContainEqual({
+      agentId: agent._id,
+      isEnabled: true,
+      isDefault: true,
     })
   })
 
@@ -329,7 +359,14 @@ describe("agent teams integration provisioning", () => {
         },
       })
 
-      expect(response.body.messages).toContain("Mock assistant response")
+      expect(response.body.messages).toEqual(["Mock assistant response"])
+      const chatOptions = getMockChatOptions()
+      expect(chatOptions[chatOptions.length - 1]).toEqual(
+        expect.objectContaining({
+          fallbackStreamingPlaceholderText: "Got it. I'm working on it...",
+          streamingUpdateIntervalMs: 750,
+        })
+      )
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       const firstPart =
         mockedWebhookChat.mock.calls[0]?.[0].chat.messages[0]?.parts[0]

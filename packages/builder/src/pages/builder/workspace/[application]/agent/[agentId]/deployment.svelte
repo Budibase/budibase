@@ -16,6 +16,7 @@
     type DeploymentRow,
   } from "@budibase/types"
   import { selectedAgent, agentsStore, featureFlags } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
@@ -151,12 +152,15 @@
     toggling = true
     try {
       const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
+      let channelUpdated = false
       if (provider === AgentChannelProvider.DISCORD) {
         if (isChannelEnabled) {
           await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
+          channelUpdated = true
           notifications.success("Discord channel disabled")
         } else if (discordConfigured) {
           await agentsStore.toggleDiscordDeployment(currentAgent._id, true)
+          channelUpdated = true
           notifications.success("Discord channel enabled")
         } else {
           discordModal?.show()
@@ -164,9 +168,11 @@
       } else if (provider === AgentChannelProvider.MSTEAMS) {
         if (isChannelEnabled) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
+          channelUpdated = true
           notifications.success("Microsoft Teams channel disabled")
         } else if (MSTeamsConfigured) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, true)
+          channelUpdated = true
           notifications.success("Microsoft Teams channel enabled")
         } else {
           MSTeamsModal?.show()
@@ -174,13 +180,19 @@
       } else if (provider === AgentChannelProvider.SLACK) {
         if (isChannelEnabled) {
           await agentsStore.toggleSlackDeployment(currentAgent._id, false)
+          channelUpdated = true
           notifications.success("Slack channel disabled")
         } else if (slackConfigured) {
           await agentsStore.toggleSlackDeployment(currentAgent._id, true)
+          channelUpdated = true
           notifications.success("Slack channel enabled")
         } else {
           slackModal?.show()
         }
+      }
+
+      if (channelUpdated && currentAgent.live) {
+        await deploymentStore.publishApp()
       }
     } catch (e) {
       notifications.error(

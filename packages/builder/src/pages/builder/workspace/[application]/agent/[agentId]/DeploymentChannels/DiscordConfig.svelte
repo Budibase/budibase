@@ -3,6 +3,7 @@
   import { ChatCommands } from "@budibase/shared-core"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -134,6 +135,9 @@
     try {
       await saveDiscordIntegration()
       syncResult = await agentsStore.syncDiscordCommands(agent._id)
+      if (agent.live) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Discord channel enabled")
     } catch (error) {
       console.error(error)
