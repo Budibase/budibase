@@ -17,6 +17,7 @@ import {
   SupportedFileType,
 } from "./automation"
 import { AutomationStep } from "./schema"
+import type { EscalationRecipient, EscalationResponse } from "../escalation"
 
 export enum FilterCondition {
   EQUAL = "EQUAL",
@@ -529,4 +530,20 @@ export type RowActionTriggerOutputs = {
   id: string
   revision?: string
   table: Table
+}
+
+export type EscalationStepInputs = {
+  message: string
+  delay: number
+  operationId?: string
+  notifications?: { recipients?: EscalationRecipient[] }
+  resolutionStrategy?: string
+}
+
+export type EscalationStepOutputs = {
+  success: boolean
+  escalationId?: string
+  resolution?: "pending" | "resolved" | "expired" | "cancelled"
+  resolvedAt?: string
+  response?: EscalationResponse
 }

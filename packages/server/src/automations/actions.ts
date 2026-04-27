@@ -30,6 +30,7 @@ import * as generate from "./steps/ai/generate"
 import * as extract from "./steps/ai/extract"
 import * as agent from "./steps/ai/agent"
 import * as extractState from "./steps/extractState"
+import * as escalation from "./steps/escalation"
 
 import env from "../environment"
 import {
@@ -77,6 +78,7 @@ const ACTION_IMPLS: ActionImplType = {
   EXTRACT_FILE_DATA: extract.run,
   AGENT: agent.run,
   EXTRACT_STATE: extractState.run,
+  ESCALATION: escalation.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -115,6 +117,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   EXTRACT_FILE_DATA: automations.steps.extract.definition,
   EXTRACT_STATE: automations.steps.extractState.definition,
   LOOP_V2: automations.steps.loopV2.definition,
+  ESCALATION: automations.steps.escalation.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: automations.steps.discord.definition,
   slack: automations.steps.slack.definition,

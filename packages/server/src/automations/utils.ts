@@ -151,7 +151,10 @@ export async function processEvent(job: AutomationJob) {
           console.log("automation running", ...loggingArgs(job))
 
           const runFn = () => Runner.run(job)
-          const result = await quotas.addAutomation(runFn, { automationId })
+          // Skip quota increment for resumed escalations - the original run was already charged
+          const result = job.data.event.isResume
+            ? await runFn()
+            : await quotas.addAutomation(runFn, { automationId })
           console.log("automation completed", ...loggingArgs(job))
           return result
         })

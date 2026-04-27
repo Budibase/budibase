@@ -390,7 +390,8 @@
     // JS V2
     if (
       field.customType === AutomationCustomIOType.CODE &&
-      block?.stepId === AutomationActionStepId.EXECUTE_SCRIPT_V2
+      (block?.stepId === AutomationActionStepId.EXECUTE_SCRIPT_V2 ||
+        block?.stepId === AutomationActionStepId.ESCALATION)
     ) {
       return SchemaFieldTypes.CODE_V2
     }
@@ -421,7 +422,31 @@
 {#each schemaProperties as [key, field]}
   {#if canShowField(field, inputData)}
     {@const { config, props, value, title } = schemaToUI(key, field, block)}
-    {#if config}
+    <!-- 
+      Dean: Just testing better JSON support. The existing flow is weird and the UI stale.
+      The final UI would we a custom render yes, but I didnt want to get into that here.
+     -->
+    {#if block?.stepId === AutomationActionStepId.ESCALATION && field.type === AutomationIOType.JSON}
+      <PropField label={title} fullWidth>
+        <DrawerBindableInput
+          panel={AutomationBindingPanel}
+          {bindings}
+          {context}
+          value={typeof value === "string"
+            ? value
+            : JSON.stringify(value ?? {})}
+          placeholder={field.description}
+          updateOnChange={false}
+          on:change={e => {
+            let parsed = e.detail
+            try {
+              parsed = JSON.parse(e.detail)
+            } catch (_) {}
+            defaultChange({ [key]: parsed }, block)
+          }}
+        />
+      </PropField>
+    {:else if config}
       {#if config.wrapped === false}
         {#key shouldRerender(field, block, key)}
           <svelte:component
@@ -458,3 +483,6 @@
     {/if}
   {/if}
 {/each}
+
+<style>
+</style>

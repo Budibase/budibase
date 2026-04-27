@@ -186,6 +186,14 @@
       }
     }
 
+    if (outputStatus === AutomationStatus.SUSPENDED) {
+      return {
+        message: "Suspended",
+        icon: "PauseCircle",
+        type: FlowStatusType.WARN,
+      }
+    }
+
     if (branch && isBranchStep(block)) {
       // Do not give status markers to branch nodes that were not part of the run.
       if (outputs && "branchId" in outputs && outputs.branchId !== branch.id)
