@@ -196,6 +196,7 @@ vi.mock("@/stores/builder", async () => {
     integrations,
     queries,
     roles: writable([]),
+    automationStore: writable({ automations: [] }),
     oauth2,
     restTemplates,
   }
