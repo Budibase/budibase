@@ -226,8 +226,8 @@
 
   .icon-container.compact,
   .external-icon.compact {
-    width: 36px;
-    height: 36px;
+    width: 60px;
+    height: 60px;
     box-sizing: border-box;
     display: flex;
     align-items: center;

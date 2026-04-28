@@ -1,9 +1,7 @@
 <script lang="ts">
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
-  import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
-  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
@@ -37,10 +35,10 @@
   const contentPos =
     getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
 
-  let webhookModal: Modal | undefined
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
   let blockDims: DOMRect | undefined
+  let pressingDraggableNode = false
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
@@ -118,13 +116,14 @@
             --psheight: ${Math.round(height)}px;`
   }
 
-  function onHandleMouseDown(e: MouseEvent) {
-    if (isTrigger || isInsideLoop) {
+  function onNodeMouseDown(e: MouseEvent) {
+    if (!draggable || isTrigger || isInsideLoop) {
       e.preventDefault()
       return
     }
 
     e.stopPropagation()
+    pressingDraggableNode = true
 
     updateBlockDims()
 
@@ -150,6 +149,12 @@
   }
 </script>
 
+<svelte:window
+  on:mouseup={() => {
+    pressingDraggableNode = false
+  }}
+/>
+
 {#if block.stepId !== "LOOP"}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -157,6 +162,7 @@
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
     class:dragging
+    class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
     class:unexecuted
@@ -170,6 +176,7 @@
         class="block-content"
         class:dragging={$view?.dragging && dragging}
         style={positionStyles}
+        on:mousedown={onNodeMouseDown}
       >
         <div class="block-float">
           <FlowItemStatus
@@ -180,15 +187,6 @@
             {viewMode}
           />
         </div>
-        {#if draggable && !isInsideLoop}
-          <div
-            class="handle"
-            class:grabbing={dragging}
-            on:mousedown={onHandleMouseDown}
-          >
-            <Icon name="dots-six-vertical" weight="bold" />
-          </div>
-        {/if}
         <div
           class="block-core"
           on:click={async () => {
@@ -223,10 +221,6 @@
     </div>
   </div>
 {/if}
-
-<Modal bind:this={webhookModal}>
-  <CreateWebhookModal />
-</Modal>
 
 <style>
   .unexecuted {
@@ -268,29 +262,6 @@
   }
   .block.draggable .wrap {
     display: block;
-  }
-  .block.draggable .wrap .handle {
-    position: absolute;
-    top: 1px;
-    left: 1px;
-    z-index: 2;
-    height: calc(100% - 2px);
-    width: 14px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--grey-1);
-    padding: 0;
-    color: var(--grey-4);
-    cursor: grab;
-    border-top-left-radius: 7px;
-    border-bottom-left-radius: 7px;
-  }
-  .block.draggable .wrap .handle.grabbing {
-    cursor: grabbing;
-  }
-  .block.draggable .wrap .handle :global(.drag-handle) {
-    width: 6px;
   }
   .block .wrap .block-content {
     width: 100%;
@@ -348,6 +319,22 @@
   }
   .block-core {
     cursor: pointer;
+  }
+  .block.draggable .block-content {
+    cursor: pointer;
+  }
+  .block.draggable .block-core {
+    cursor: pointer;
+  }
+  .block.draggable.pressingDraggableNode .block-content,
+  .block.draggable.pressingDraggableNode .block-core {
+    cursor: grab;
+  }
+  .block.draggable .block-content.dragging {
+    cursor: grabbing;
+  }
+  .block.draggable .block-content.dragging .block-core {
+    cursor: grabbing;
   }
   .block.selected .block-content {
     border-color: var(--spectrum-global-color-blue-700);
