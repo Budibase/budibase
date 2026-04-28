@@ -1,27 +1,11 @@
 <script lang="ts">
-  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import {
-    Drawer,
-    DrawerContent,
-    Icon,
-    Body,
-    Divider,
-    Button,
-    Modal,
-    ModalContent,
-  } from "@budibase/bbui"
-  import PropField from "@/components/automation/SetupPanel/PropField.svelte"
-  import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import FlowItemStatus from "../../FlowItemStatus.svelte"
   import {
     automationStore,
     selectedAutomation,
-    evaluationContext,
     contextMenuStore,
   } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
-  import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
-  import { environment } from "@/stores/portal"
   import { cloneDeep } from "lodash/fp"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
@@ -32,7 +16,6 @@
     AutomationStepResult,
     AutomationTriggerResult,
     Branch,
-    EnrichedBinding,
   } from "@budibase/types"
   import { type DragView } from "../FlowChartDnD"
 
@@ -45,61 +28,9 @@
   ) => void = () => {}
 
   const view = getContext<Writable<DragView>>("draggableView")
-  const focusNodeRequest =
-    getContext<
-      Writable<{ nodeId: string; direction?: -1 | 1; zoom?: number } | null>
-    >("focusNodeRequest")
-  const memoContext = memo({})
-  const memoEnvVariables = memo($environment.variables)
-
-  let drawer: Drawer | undefined
-  let confirmDeleteModal: Modal | undefined
-
-  $: memoContext.set($evaluationContext)
-  $: memoEnvVariables.set($environment.variables)
-
   $: branch = step.inputs?.branches?.[branchIdx]
-  $: editableConditionUI = branch.conditionUI || {}
-  $: isLast = (step?.inputs?.branches?.length || 0) - 1 === branchIdx
   $: blockRef = $selectedAutomation?.blockRefs?.[step?.id]
-
-  // Build bindings for the condition builder
-  $: availableBindings = automationStore.actions.getPathBindings(
-    step.id,
-    automation
-  )
-  $: environmentBindings =
-    $memoEnvVariables && automationStore.actions.buildEnvironmentBindings()
-  $: userBindings = automationStore.actions.buildUserBindings()
-  $: settingBindings = automationStore.actions.buildSettingBindings()
-  $: stateBindings =
-    ($automationStore.selectedNodeId,
-    automationStore.actions.buildStateBindings())
-  $: bindings = [
-    ...availableBindings,
-    ...environmentBindings,
-    ...userBindings,
-    ...settingBindings,
-    ...stateBindings,
-  ] as EnrichedBinding[]
-
-  // Parse all the bindings into fields for the condition builder
-  $: schemaFields = bindings?.map(binding => {
-    return {
-      name: `{{${binding.runtimeBinding}}}`,
-      displayName: `${binding.category} - ${binding.display?.name}`,
-      type: "string",
-    }
-  })
-  $: branchBlockRef = {
-    branchNode: true,
-    pathTo: (blockRef?.pathTo || []).concat({
-      stepIdx: 0,
-      branchIdx,
-      branchStepId: step.id,
-      id: step.id,
-    }),
-  }
+  $: branchNodeId = branch ? createBranchNodeId(branchIdx, branch.id) : ""
 
   // Logs: compute step data and execution state
   $: logData = $automationStore.selectedLog
@@ -117,78 +48,6 @@
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
-  }
-
-  const getContextMenuItems = () => {
-    return [
-      {
-        icon: "trash",
-        name: "Delete",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: async () => {
-          const branchSteps = step.inputs?.children[branch.id]
-          if (branchSteps.length) {
-            confirmDeleteModal?.show()
-          } else if ($selectedAutomation.data) {
-            await automationStore.actions.deleteBranch(
-              branchBlockRef.pathTo,
-              $selectedAutomation.data
-            )
-          }
-        },
-      },
-      {
-        icon: "arrow-left",
-        name: "Move left",
-        keyBind: null,
-        visible: true,
-        disabled: branchIdx == 0,
-        callback: async () => {
-          const movedBranch = step.inputs?.branches?.[branchIdx]
-          const targetIdx = branchIdx - 1
-          if ($selectedAutomation.data && movedBranch && targetIdx >= 0) {
-            await automationStore.actions.branchLeft(
-              branchBlockRef.pathTo,
-              $selectedAutomation.data,
-              step
-            )
-            focusNodeRequest.set({
-              nodeId: createBranchNodeId(targetIdx, movedBranch.id),
-              direction: -1,
-            })
-          }
-        },
-      },
-      {
-        icon: "arrow-right",
-        name: "Move right",
-        keyBind: null,
-        visible: true,
-        disabled: isLast,
-        callback: async () => {
-          const movedBranch = step.inputs?.branches?.[branchIdx]
-          const targetIdx = branchIdx + 1
-          const branchCount = step.inputs?.branches?.length || 0
-          if (
-            $selectedAutomation.data &&
-            movedBranch &&
-            targetIdx < branchCount
-          ) {
-            await automationStore.actions.branchRight(
-              branchBlockRef.pathTo,
-              $selectedAutomation.data,
-              step
-            )
-            focusNodeRequest.set({
-              nodeId: createBranchNodeId(targetIdx, movedBranch.id),
-              direction: 1,
-            })
-          }
-        },
-      },
-    ]
   }
 
   const branchUpdate = async (e: CustomEvent<string>) => {
@@ -209,107 +68,14 @@
       }
     }
   }
-
-  const openContextMenu = (e: MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    const items = getContextMenuItems()
-    contextMenuStore.open(branch.id, items, { x: e.clientX, y: e.clientY })
-  }
 </script>
-
-<Modal bind:this={confirmDeleteModal}>
-  <ModalContent
-    size="M"
-    title={"Are you sure you want to delete?"}
-    confirmText="Delete"
-    onConfirm={async () => {
-      if ($selectedAutomation.data) {
-        await automationStore.actions.deleteBranch(
-          branchBlockRef.pathTo,
-          $selectedAutomation.data
-        )
-      }
-    }}
-  >
-    <Body>By deleting this branch, you will delete all of its contents.</Body>
-  </ModalContent>
-</Modal>
-
-<Drawer bind:this={drawer} title="Branch condition" forceModal>
-  <Button
-    cta
-    slot="buttons"
-    on:click={async () => {
-      drawer?.hide()
-      const updatedConditionsUI = Utils.parseFilter(editableConditionUI)
-      const updatedBranch = {
-        ...branch,
-        conditionUI: updatedConditionsUI,
-        condition: QueryUtils.buildQuery(updatedConditionsUI),
-      }
-
-      // Update step with modified branch
-      let branchStepUpdate = cloneDeep(step)
-      branchStepUpdate.inputs.branches[branchIdx] = updatedBranch
-
-      // Ensure valid base configuration for all branches
-      const branchesArray = branchStepUpdate.inputs.branches || []
-      for (let i = 0; i < branchesArray.length; i++) {
-        const br = branchesArray[i]
-        if (!Object.keys(br.condition).length) {
-          branchesArray[i] = {
-            ...br,
-            ...automationStore.actions.generateDefaultConditions(),
-          }
-        }
-      }
-      branchStepUpdate.inputs.branches = branchesArray
-
-      const updated = automation
-        ? automationStore.actions.updateStep(
-            blockRef?.pathTo,
-            automation,
-            branchStepUpdate
-          )
-        : null
-
-      if (updated) {
-        try {
-          await automationStore.actions.save(updated)
-        } catch (e) {
-          console.error("Error saving branch update", e)
-        }
-      }
-    }}
-  >
-    Save
-  </Button>
-  <DrawerContent slot="body">
-    <FilterBuilder
-      filters={editableConditionUI}
-      {bindings}
-      {schemaFields}
-      datasource={{ type: "custom" }}
-      panel={AutomationBindingPanel}
-      on:change={e => {
-        editableConditionUI = e.detail
-      }}
-      allowOnEmpty={false}
-      builderType={"condition"}
-      docsURL={null}
-      evaluationContext={$memoContext}
-    />
-  </DrawerContent>
-</Drawer>
 
 <div class="flow-item branch">
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
     class={`block branch-node hoverable`}
-    class:selected={false}
+    class:selected={$automationStore.selectedNodeId === branchNodeId}
     class:executed
     class:unexecuted
     on:click={e => {
@@ -317,6 +83,12 @@
       contextMenuStore.close()
       if (viewMode === ViewMode.LOGS && logStepData) {
         onStepSelect(logStepData)
+      } else if (branch) {
+        automationStore.actions.selectBranchNode({
+          nodeId: branchNodeId,
+          stepId: step.id,
+          branchIdx,
+        })
       }
     }}
   >
@@ -329,62 +101,15 @@
           {automation}
           block={step}
           itemName={branch.name}
+          compact
           on:update={branchUpdate}
         />
-        <div
-          class="actions nodrag nopan"
-          on:mousedown|stopPropagation
-          on:click|stopPropagation
-        >
-          <Icon
-            name="info"
-            tooltip="Branch sequencing checks each option in order and follows the first one that matches the rules."
-          />
-          <Icon
-            disabled={viewMode === ViewMode.LOGS}
-            on:click={e => {
-              openContextMenu(e)
-            }}
-            size="M"
-            weight="bold"
-            hoverable
-            name="dots-three"
-          />
-        </div>
       </div>
-    </div>
-
-    <Divider noMargin />
-    <div class="blockSection filter-button">
-      <PropField label="Only run when:" fullWidth>
-        <div
-          class="nodrag nopan"
-          style="width: 100%"
-          on:mousedown|stopPropagation
-          on:click|stopPropagation
-        >
-          <Button
-            disabled={viewMode === ViewMode.LOGS}
-            secondary
-            on:click={() => {
-              contextMenuStore.close()
-              drawer?.show()
-            }}
-          >
-            {editableConditionUI?.groups?.length
-              ? "Update condition"
-              : "Add condition"}
-          </Button>
-        </div>
-      </PropField>
     </div>
   </div>
 </div>
 
 <style>
-  .filter-button :global(.spectrum-Button) {
-    width: 100%;
-  }
   .branch-actions {
     display: flex;
     gap: var(--spacing-l);
@@ -422,15 +147,25 @@
     display: inline-block;
   }
   .block {
-    width: 320px;
+    width: 90px;
+    height: 90px;
     background-color: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    border-radius: 8px;
     cursor: default;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .blockSection {
-    padding: var(--spacing-xl);
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .separator {
@@ -462,15 +197,13 @@
   .blockSection .heading {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
+    justify-content: center;
+    width: 100%;
   }
 
-  .blockSection .heading .actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
+  .block.selected {
+    border-color: var(--spectrum-global-color-blue-700);
+    transition: border-color 130ms ease-out;
   }
 
   .block.executed {

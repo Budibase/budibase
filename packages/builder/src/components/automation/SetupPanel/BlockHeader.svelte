@@ -17,6 +17,7 @@
   export let automation: Automation | undefined = undefined
   export let itemName: string | undefined = undefined
   export let disabled: boolean = false
+  export let compact: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -100,17 +101,14 @@
   }
 </script>
 
-<div class="block-details">
+<div class="block-details" class:compact>
   {#if block}
     {#if externalAction}
-      <img
-        alt={externalAction.name}
-        src={externalAction.icon}
-        width="24px"
-        height="24px"
-      />
+      <div class="external-icon" class:compact>
+        <img alt={externalAction.name} src={externalAction.icon} />
+      </div>
     {:else}
-      <div class="icon-container">
+      <div class="icon-container" class:compact>
         <Icon
           name={block.icon}
           size="M"
@@ -118,7 +116,7 @@
         />
       </div>
     {/if}
-    <div class="heading">
+    <div class="heading" class:compact>
       <input
         class="input-text"
         placeholder={`Enter step name`}
@@ -196,6 +194,12 @@
     min-width: 0;
   }
 
+  .block-details.compact {
+    justify-content: center;
+    flex: 0 0 100%;
+    gap: 0;
+  }
+
   .error-icon :global(i) {
     fill: var(--spectrum-global-color-red-600);
   }
@@ -204,10 +208,30 @@
     flex: 1;
   }
 
+  .heading.compact {
+    display: none;
+  }
+
   .icon-container {
     background-color: #215f9e;
     border: 0.5px solid #467db4;
     padding: 4px;
     border-radius: 8px;
+  }
+
+  .external-icon img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .icon-container.compact,
+  .external-icon.compact {
+    width: 36px;
+    height: 36px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
   }
 </style>

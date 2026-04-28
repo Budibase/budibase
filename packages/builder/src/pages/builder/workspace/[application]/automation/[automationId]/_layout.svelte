@@ -53,7 +53,7 @@
       <slot />
     </div>
 
-    {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
+    {#if (blockRefs[$automationStore.selectedNodeId] || $automationStore.selectedBranchNode) && $automationStore.selectedNodeId}
       <div class="step-panel-container">
         <ResizablePanel
           storageKey="automation-side-panel-width"

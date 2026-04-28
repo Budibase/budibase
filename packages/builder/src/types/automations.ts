@@ -154,6 +154,12 @@ export interface BranchFlowContext {
   branchStepId: string
 }
 
+export interface SelectedBranchNode {
+  nodeId: string
+  stepId: string
+  branchIdx: number
+}
+
 export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
 
 export type AutomationBlockRef = BlockRef & {
@@ -190,6 +196,7 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedAutomationId: string | null
   appSelf?: SelfResponse
   selectedNodeId?: string
+  selectedBranchNode?: SelectedBranchNode
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
   selectedLog?: AutomationLog
