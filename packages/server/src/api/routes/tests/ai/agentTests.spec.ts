@@ -1,5 +1,5 @@
 import { features } from "@budibase/backend-core"
-import { FeatureFlag } from "@budibase/types"
+import { buildDefaultAgentTestGroup, FeatureFlag } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("agent test routes", () => {
@@ -37,5 +37,21 @@ describe("agent test routes", () => {
         }
       )
     })
+  })
+
+  it("saves a suite with no test cases", async () => {
+    const agent = await config.api.agent.create({
+      name: "Support Agent",
+      aiconfig: "default",
+    })
+    const group = buildDefaultAgentTestGroup()
+
+    const suite = await config.api.agent.updateTestSuite(agent._id!, {
+      groups: [group],
+      cases: [],
+    })
+
+    expect(suite.groups).toEqual([group])
+    expect(suite.cases).toEqual([])
   })
 })
