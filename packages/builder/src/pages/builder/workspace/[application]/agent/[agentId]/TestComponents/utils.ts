@@ -30,7 +30,7 @@ const VERDICT_META: Record<VerdictStatus, VerdictMeta> = {
     label: "Not run",
     icon: "circle-dashed",
     tone: "idle",
-    color: "#7c7c7c",
+    color: "var(--spectrum-global-color-gray-600)",
   },
 }
 

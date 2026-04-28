@@ -17,6 +17,14 @@ describe("agent test routes", () => {
     )
   }
 
+  const withTestsEnabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.AI_TESTS]: true },
+      f
+    )
+  }
+
   beforeEach(async () => {
     await config.newTenant()
   })
@@ -40,18 +48,20 @@ describe("agent test routes", () => {
   })
 
   it("saves a suite with no test cases", async () => {
-    const agent = await config.api.agent.create({
-      name: "Support Agent",
-      aiconfig: "default",
-    })
-    const group = buildDefaultAgentTestGroup()
+    await withTestsEnabled(async () => {
+      const agent = await config.api.agent.create({
+        name: "Support Agent",
+        aiconfig: "default",
+      })
+      const group = buildDefaultAgentTestGroup()
 
-    const suite = await config.api.agent.updateTestSuite(agent._id!, {
-      groups: [group],
-      cases: [],
-    })
+      const suite = await config.api.agent.updateTestSuite(agent._id!, {
+        groups: [group],
+        cases: [],
+      })
 
-    expect(suite.groups).toEqual([group])
-    expect(suite.cases).toEqual([])
+      expect(suite.groups).toEqual([group])
+      expect(suite.cases).toEqual([])
+    })
   })
 })

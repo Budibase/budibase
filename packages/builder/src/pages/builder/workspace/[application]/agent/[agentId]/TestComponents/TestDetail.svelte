@@ -401,7 +401,7 @@
   }
 
   .verdict-pill.idle {
-    color: #7c7c7c;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .reviewer-type {

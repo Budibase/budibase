@@ -58,6 +58,7 @@
   let loading = $state(false)
   let saving = $state(false)
   let running = $state(false)
+  let runningCaseId = $state<string | null>(null)
   let preferredGroupId = $state<string | null>(buildDefaultAgentTestGroup().id)
   let preferredCaseId = $state<string | null>(null)
   let lastAgentId = $state<string | undefined>()
@@ -195,7 +196,8 @@
   const saveAndRunCase = async (testCase: AgentTestCase) => {
     const saved = await saveCase(testCase)
     if (!saved) return false
-    return runCase(testCase.id)
+    void runCase(testCase.id)
+    return true
   }
 
   const duplicateCase = async (caseId: string) => {
@@ -288,6 +290,7 @@
     if (!agentId || running || saving) return false
 
     running = true
+    runningCaseId = caseId ?? null
     try {
       const { run } = await API.runAgentTestSuite(
         agentId,
@@ -302,6 +305,7 @@
       return false
     } finally {
       running = false
+      runningCaseId = null
     }
   }
 
@@ -310,6 +314,7 @@
     if (!agentId || !selectedGroupId || running || saving) return false
 
     running = true
+    runningCaseId = null
     try {
       const { run } = await API.runAgentTestSuite(agentId, {
         groupId: selectedGroupId,
@@ -323,6 +328,7 @@
       return false
     } finally {
       running = false
+      runningCaseId = null
     }
   }
 
@@ -350,6 +356,7 @@
         {loading}
         {saving}
         {running}
+        {runningCaseId}
         hasLatestRun={hasAnyLatestResult}
         {latestResultsByCaseId}
         onSelectCase={id => (preferredCaseId = id)}
@@ -416,8 +423,8 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
-    background: #1a1a1a;
-    border-top: 1px solid #2c2c2c;
+    background: var(--background);
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .tests-list-panel {
@@ -429,8 +436,8 @@
     align-items: stretch;
     min-height: 0;
     overflow: hidden;
-    border-right: 1px solid #2c2c2c;
-    background: #1a1a1a;
+    border-right: 1px solid var(--spectrum-global-color-gray-200);
+    background: var(--background);
   }
 
   .detail-panel {
@@ -438,7 +445,7 @@
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
-    background: #1a1a1a;
+    background: var(--background-alt);
     scrollbar-width: thin;
   }
 
@@ -466,7 +473,7 @@
       min-width: 0;
       max-width: none;
       border-right: none;
-      border-bottom: 1px solid #2c2c2c;
+      border-bottom: 1px solid var(--spectrum-global-color-gray-200);
       max-height: 360px;
     }
   }

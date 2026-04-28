@@ -31,13 +31,23 @@
     return inputPreview ? truncate(inputPreview, 48) : "Untitled test"
   }
 
+  const copyCase = (testCase: AgentTestCase): AgentTestCase => ({
+    id: testCase.id,
+    groupId: testCase.groupId,
+    name: testCase.name,
+    input: testCase.input,
+    context: testCase.context,
+    reviewers: testCase.reviewers.map(reviewer => ({ ...reviewer })),
+    lastResult: testCase.lastResult,
+  })
+
   const normalizeCaseForSave = (testCase: AgentTestCase): AgentTestCase => ({
-    ...structuredClone(testCase),
+    ...copyCase(testCase),
     name: fallbackName(testCase),
   })
 
   export const show = (testCase: AgentTestCase) => {
-    draftCase = structuredClone(testCase)
+    draftCase = copyCase(testCase)
     loading = false
     modal.show()
   }
@@ -49,29 +59,14 @@
     draftCase = updater(draftCase)
   }
 
-  const getValidationMessages = (testCase: AgentTestCase | null) => {
-    if (!testCase) return []
-
-    const messages: string[] = []
-    if (!testCase.input.trim()) {
-      messages.push("Input is required.")
-    }
-    if (!testCase.reviewers.length) {
-      messages.push("At least one test criteria is required.")
-    }
-
-    testCase.reviewers.forEach((reviewer, index) => {
-      const error = validateReviewer(reviewer)
-      if (error) {
-        messages.push(`Criteria ${index + 1} ${error}.`)
-      }
-    })
-
-    return messages
+  const isDraftValid = (testCase: AgentTestCase | null) => {
+    if (!testCase) return false
+    if (!testCase.input.trim()) return false
+    if (!testCase.reviewers.length) return false
+    return testCase.reviewers.every(reviewer => validateReviewer(reviewer) === null)
   }
 
-  let validationMessages = $derived(getValidationMessages(draftCase))
-  let canRunTest = $derived(validationMessages.length === 0)
+  let canRunTest = $derived(isDraftValid(draftCase))
 
   const handleConfirm = async () => {
     if (!draftCase || loading || !canRunTest) return
@@ -130,14 +125,6 @@
           />
         </section>
       </div>
-
-      {#if validationMessages.length}
-        <div class="validation-summary">
-          {#each validationMessages as message}
-            <span>{message}</span>
-          {/each}
-        </div>
-      {/if}
 
       <div class="modal-footer">
         <Button secondary disabled={loading} on:click={() => modal.hide()}>
@@ -237,29 +224,6 @@
     padding: 20px 40px 28px;
   }
 
-  .validation-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin: 16px 40px 0;
-    padding: 10px 12px;
-    border: 1px solid
-      color-mix(
-        in srgb,
-        var(--color-orange-500) 35%,
-        var(--spectrum-global-color-gray-200)
-      );
-    border-radius: 6px;
-    background: color-mix(
-      in srgb,
-      var(--color-orange-500) 8%,
-      var(--background-alt)
-    );
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 12px;
-    line-height: 1.45;
-  }
-
   :global(.spectrum-Modal:has(.test-case-modal)) {
     border: none;
     background: transparent;
@@ -272,11 +236,6 @@
     .modal-footer {
       padding-left: 20px;
       padding-right: 20px;
-    }
-
-    .validation-summary {
-      margin-left: 20px;
-      margin-right: 20px;
     }
   }
 </style>

@@ -31,6 +31,7 @@
     loading: boolean
     saving: boolean
     running: boolean
+    runningCaseId: string | null
     hasLatestRun: boolean
     latestResultsByCaseId: Map<string, AgentTestCaseResult>
     onSelectCase: (_caseId: string) => void
@@ -54,6 +55,7 @@
     loading,
     saving,
     running,
+    runningCaseId,
     hasLatestRun,
     latestResultsByCaseId,
     onSelectCase,
@@ -252,6 +254,7 @@
         {#each filteredCases as testCase (testCase.id)}
           {@const latestResult = latestResultsByCaseId.get(testCase.id)}
           {@const statusMeta = getVerdictMeta(latestResult?.status)}
+          {@const isRunningCase = runningCaseId === testCase.id}
           <div class="case-row" class:selected={testCase.id === selectedCaseId}>
             <button
               class="case-row-select"
@@ -291,7 +294,7 @@
             <div class="case-cell case-cell-run">
               <ActionButton
                 quiet
-                icon="play"
+                icon={isRunningCase ? "pause" : "play"}
                 size="S"
                 disabled={loading || saving || running}
                 on:click={() => onRunCase(testCase.id)}
@@ -339,7 +342,7 @@
     flex-direction: column;
     gap: 12px;
     padding: 16px;
-    border-bottom: 1px solid #2c2c2c;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .toolbar-row {
@@ -399,9 +402,9 @@
 
   .table-header {
     height: 40px;
-    color: #8a8a8a;
+    color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
-    border-bottom: 1px solid #2c2c2c;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .case-items {
@@ -410,11 +413,11 @@
 
   .case-row {
     min-height: 56px;
-    border-bottom: 1px solid #242424;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .case-row.selected {
-    background: #262626;
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .case-row-select {
@@ -456,12 +459,12 @@
   }
 
   .case-item-name {
-    color: #f4f4f4;
+    color: var(--spectrum-alias-text-color);
   }
 
   .case-item-subtitle,
   .case-cell-last-run {
-    color: #8a8a8a;
+    color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
   }
 
@@ -478,7 +481,7 @@
     display: inline-flex;
     align-items: center;
     font-size: 12px;
-    color: #d0d0d0;
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .status-pill.passed {
@@ -491,7 +494,7 @@
   }
 
   .status-pill.idle {
-    color: #8a8a8a;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .case-cell-run,
