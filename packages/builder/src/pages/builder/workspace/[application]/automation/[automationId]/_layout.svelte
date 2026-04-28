@@ -126,13 +126,13 @@
     overflow: auto;
   }
   .step-panel-container {
-    position: fixed;
-    right: 0;
+    position: relative;
     z-index: 99;
-    height: calc(100% - 60px);
+    height: 100%;
     display: flex;
     flex-direction: row;
     align-items: stretch;
+    overflow: hidden;
   }
   .step-panel {
     display: flex;

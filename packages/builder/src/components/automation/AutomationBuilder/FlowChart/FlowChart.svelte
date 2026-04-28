@@ -57,6 +57,7 @@
     type Edge as FlowEdge,
     type NodeTypes,
     type EdgeTypes,
+    type Viewport,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import FlowControls from "./Controls.svelte"
@@ -64,6 +65,8 @@
   export let automation: UIAutomation
 
   const VIEWPORT_ANIMATION_DURATION = 180
+  const NODE_NAME_ZOOM_THRESHOLD = 0.75
+  const MAX_ZOOM = 1.5
 
   const memoAutomation = memo(automation)
 
@@ -88,6 +91,8 @@
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
+  let flowViewport = writable<Viewport>({ x: 0, y: 0, zoom: 1 })
+  let showNodeNames = writable(false)
   let focusNodeRequest = writable<{
     nodeId: string
     direction?: -1 | 1
@@ -109,8 +114,10 @@
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
   setContext("focusNodeRequest", focusNodeRequest)
+  setContext("showNodeNames", showNodeNames)
 
   $: updateGraph(blocks)
+  $: showNodeNames.set($flowViewport.zoom > NODE_NAME_ZOOM_THRESHOLD)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -226,7 +233,7 @@
     const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
     const nodeHeight = targetNode.height || DEFAULT_NODE_HEIGHT
     const desiredZoom = zoom ?? currentViewport.zoom ?? 1
-    const safeZoom = Math.min(Math.max(desiredZoom, 0.4), 1)
+    const safeZoom = Math.min(Math.max(desiredZoom, 0.4), MAX_ZOOM)
 
     if (direction === -1 || direction === 1) {
       const yStride = (nodeHeight + NODE_SPACING) * safeZoom
@@ -295,6 +302,10 @@
     if (get(contextMenuStore).visible) {
       contextMenuStore.close()
     }
+  }
+
+  const handleMove = () => {
+    closeContextMenuOnCanvasInteraction()
   }
 
   const handleCanvasPointerMove = (e: PointerEvent) => {
@@ -408,14 +419,15 @@
         {nodeTypes}
         {edges}
         {edgeTypes}
+        viewport={flowViewport}
         colorMode="system"
         nodesDraggable={false}
         minZoom={0.4}
-        maxZoom={1}
+        maxZoom={MAX_ZOOM}
         deleteKey={null}
         proOptions={{ hideAttribution: true }}
         onMoveStart={closeContextMenuOnCanvasInteraction}
-        onMove={closeContextMenuOnCanvasInteraction}
+        onMove={handleMove}
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
         <FlowControls historyStore={automationHistoryStore} />

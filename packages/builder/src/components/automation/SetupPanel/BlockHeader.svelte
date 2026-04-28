@@ -111,7 +111,7 @@
       <div class="icon-container" class:compact>
         <Icon
           name={block.icon}
-          size="M"
+          size={compact ? "XL" : "M"}
           color="var(--spectrum-global-color-static-gray-50)"
         />
       </div>
@@ -233,5 +233,10 @@
     align-items: center;
     justify-content: center;
     padding: 0;
+  }
+
+  .icon-container.compact :global(svg) {
+    width: 42px;
+    height: 42px;
   }
 </style>
