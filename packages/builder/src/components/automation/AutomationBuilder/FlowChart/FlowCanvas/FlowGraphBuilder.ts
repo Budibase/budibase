@@ -4,7 +4,6 @@ import {
   type AutomationStep,
   type BranchStep,
   type Branch,
-  type LayoutDirection,
   type LoopV2Step,
   BlockRef,
 } from "@budibase/types"
@@ -30,7 +29,6 @@ export interface GraphBuildDeps {
   blockRefs: Record<string, BlockRef>
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
-  direction?: LayoutDirection
 }
 
 enum BranchMode {
@@ -89,7 +87,7 @@ const pushAnchor = (
   deps: GraphBuildDeps,
   parentId?: string
 ) => {
-  deps.newNodes.push(anchorNode(id, deps.direction, parentId, { x: 0, y }))
+  deps.newNodes.push(anchorNode(id, parentId, { x: 0, y }))
 }
 
 interface PlaceBranchClusterArgs {
@@ -114,8 +112,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
 
-  const internalDir = (deps.direction || "TB") as LayoutDirection
-  const isLR = internalDir === "LR"
+  const isLR = true
 
   const centers = computeLaneCenters(branches.length, mode, {
     laneWidth: visuals.laneWidth,
@@ -137,16 +134,10 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
 
     if (mode === BranchMode.TOPLEVEL) {
       deps.newNodes.push(
-        branchNode(
-          branchNodeId,
-          step,
-          branch,
-          bIdx,
-          deps.direction,
-          undefined,
-          undefined,
-          { x: 0, y: coords.y }
-        )
+        branchNode(branchNodeId, step, branch, bIdx, undefined, undefined, {
+          x: 0,
+          y: coords.y,
+        })
       )
     } else {
       let branchX: number
@@ -164,7 +155,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           step,
           branch,
           bIdx,
-          internalDir,
           parentId,
           visuals.laneWidth,
           { x: branchX, y: branchY }
@@ -175,7 +165,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
     deps.newEdges.push(
       edgeBranchAddItem(source.id, branchNodeId, {
         block: source.block,
-        direction: internalDir,
         isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
         branchStepId: baseId,
         branchIdx: bIdx,
@@ -238,7 +227,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
             terminalId,
             {
               block: terminalBlock,
-              direction: deps.direction,
               ...(terminalPath ? { pathTo: terminalPath } : {}),
             }
           )
@@ -262,7 +250,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
 
         branchChildren.forEach(child => {
           deps.newNodes.push(
-            stepNode(child.id, child, internalDir, parentId, {
+            stepNode(child.id, child, parentId, {
               x: childX,
               y: childY,
             })
@@ -271,7 +259,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           deps.newEdges.push(
             edgeAddItem(prevId, child.id, {
               block: prevBlock,
-              direction: internalDir,
               ...(prevPath ? { pathTo: prevPath } : {}),
             })
           )
@@ -282,7 +269,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
 
         const anchorId = `anchor-${branchNodeId}`
         deps.newNodes.push(
-          anchorNode(anchorId, internalDir, parentId, {
+          anchorNode(anchorId, parentId, {
             x: childX,
             y: childY,
           })
@@ -291,7 +278,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         deps.newEdges.push(
           edgeAddItem(prevId, anchorId, {
             block: prevBlock,
-            direction: internalDir,
             ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
           })
         )
@@ -312,7 +298,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
 
         branchChildren.forEach(child => {
           deps.newNodes.push(
-            stepNode(child.id, child, internalDir, parentId, {
+            stepNode(child.id, child, parentId, {
               x: childLeft,
               y: laneY,
             })
@@ -321,7 +307,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           deps.newEdges.push(
             edgeAddItem(prevId, child.id, {
               block: prevBlock,
-              direction: internalDir,
               ...(prevPath ? { pathTo: prevPath } : {}),
             })
           )
@@ -333,7 +318,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         const anchorId = `anchor-${branchNodeId}`
         const anchorY = laneY
         deps.newNodes.push(
-          anchorNode(anchorId, internalDir, parentId, {
+          anchorNode(anchorId, parentId, {
             x: childLeft,
             y: anchorY,
           })
@@ -342,7 +327,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         deps.newEdges.push(
           edgeAddItem(prevId, anchorId, {
             block: prevBlock,
-            direction: internalDir,
             ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
           })
         )
@@ -398,7 +382,6 @@ export const renderChain = (
       deps.newEdges.push(
         edgeAddItem(lastNodeId, step.id, {
           block: lastNodeBlock,
-          direction: deps.direction,
           ...(sourcePath ? { pathTo: sourcePath } : {}),
         })
       )
@@ -409,7 +392,7 @@ export const renderChain = (
     }
 
     deps.newNodes.push(
-      stepNode(step.id, step, deps.direction, undefined, {
+      stepNode(step.id, step, undefined, {
         x: baseX,
         y: currentY,
       })
@@ -418,7 +401,6 @@ export const renderChain = (
     deps.newEdges.push(
       edgeAddItem(lastNodeId, step.id, {
         block: lastNodeBlock,
-        direction: deps.direction,
         ...(sourcePath ? { pathTo: sourcePath } : {}),
       })
     )
@@ -469,8 +451,7 @@ export const renderLoopV2Container = (
     loopStep.inputs?.children || []
   )
   // Follow the global layout inside the loop container
-  const internalDir = (deps.direction || "TB") as LayoutDirection
-  const isLR = internalDir === "LR"
+  const isLR = true
 
   // Pre-compute container dimensions
   let containerWidth = 400
@@ -550,7 +531,6 @@ export const renderLoopV2Container = (
 
   const loopNodeData: LoopV2NodeData = {
     block: loopStep,
-    direction: deps.direction,
     containerHeight,
     containerWidth,
   }
@@ -580,15 +560,12 @@ export const renderLoopV2Container = (
     const isBranch = child.stepId === AutomationActionStepId.BRANCH
     if (!isBranch) {
       const nodePos = isLR ? { x: innerX, y: baseY } : { x: baseX, y: innerY }
-      deps.newNodes.push(
-        stepNode(child.id, child, internalDir, baseId, nodePos)
-      )
+      deps.newNodes.push(stepNode(child.id, child, baseId, nodePos))
       if (lastLinearChild) {
         const prevRef = deps.blockRefs?.[lastLinearChild.id]
         deps.newEdges.push(
           edgeLoopAddItem(lastLinearChild.id, child.id, {
             block: lastLinearChild,
-            direction: internalDir,
             loopStepId: loopStep.id,
             loopChildInsertIndex: cIdx,
             pathTo: prevRef?.pathTo,
@@ -689,12 +666,10 @@ export const renderLoopV2Container = (
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
     // Place exit anchor at container end according to layout
-    const exitAnchorY = isLR ? baseY : containerHeight - paddingBottom
-    const exitAnchorX = isLR
-      ? Math.max(containerWidth - 40, baseX + stepWidth)
-      : baseX
+    const exitAnchorY = baseY
+    const exitAnchorX = Math.max(containerWidth - 40, baseX + stepWidth)
     deps.newNodes.push(
-      anchorNode(exitAnchorId, internalDir, baseId, {
+      anchorNode(exitAnchorId, baseId, {
         x: exitAnchorX,
         y: exitAnchorY,
       })
@@ -702,7 +677,6 @@ export const renderLoopV2Container = (
     deps.newEdges.push(
       edgeLoopAddItem(lastChild.id, exitAnchorId, {
         block: lastChild,
-        direction: internalDir,
         loopStepId: loopStep.id,
         loopChildInsertIndex: children.length,
         pathTo: lastRef?.pathTo,

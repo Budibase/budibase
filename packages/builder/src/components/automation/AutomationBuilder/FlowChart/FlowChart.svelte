@@ -15,7 +15,6 @@
     PublishResourceState,
     AutomationStatus,
     type UIAutomation,
-    type LayoutDirection,
     type BlockRef,
   } from "@budibase/types"
   import {
@@ -86,7 +85,6 @@
 
   let initialViewportApplied = false
   let preserveViewport = false
-  let layoutDirection: LayoutDirection = automation.layoutDirection || "TB"
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
@@ -112,7 +110,7 @@
   setContext("contentPos", contentPos)
   setContext("focusNodeRequest", focusNodeRequest)
 
-  $: updateGraph(blocks, layoutDirection)
+  $: updateGraph(blocks)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -132,10 +130,7 @@
 
   $: viewMode = $automationStore.viewMode
 
-  const updateGraph = async (
-    blocks: AutomationBlock[],
-    direction: LayoutDirection
-  ) => {
+  const updateGraph = async (blocks: AutomationBlock[]) => {
     if (!preserveViewport) {
       initialViewportApplied = false
     }
@@ -152,17 +147,14 @@
       blockRefs,
       newNodes,
       newEdges,
-      direction,
     }
 
     // Build graph via helpers
     buildTopLevelGraph(blocks, deps)
 
-    // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
       {
-        rankdir: direction,
         ranksep: NODE_SPACING,
         nodesep: NODE_SPACING,
         compactLoops: true,
@@ -197,7 +189,7 @@
     $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
 
-  // Keep the trigger focused on load and when changing layout
+  // Keep the trigger focused on load
   const focusOnTrigger = () => {
     if (!paneEl || $nodes.length === 0) {
       return
@@ -206,24 +198,13 @@
     const triggerNode = $nodes[0]
 
     const paneRect = paneEl.getBoundingClientRect()
-    const nodeWidth = DEFAULT_NODE_WIDTH
     const nodeHeight = DEFAULT_NODE_HEIGHT
     const nodeOffset = NODE_SPACING
 
-    let x, y
-
     // These assume the trigger is at x=0, y=0
-    if (layoutDirection === "LR") {
-      // Center vertically with a slight left offset
-      const paneHeight = paneRect.height
-      x = nodeOffset - triggerNode.position.x
-      y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
-    } else {
-      // Vertical mode. Center horizontally, top offset
-      const paneWidth = paneRect.width
-      x = paneWidth / 2 - triggerNode.position.x - nodeWidth / 2
-      y = nodeOffset - triggerNode.position.y
-    }
+    const paneHeight = paneRect.height
+    const x = nodeOffset - triggerNode.position.x
+    const y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
 
     setViewport({ x, y, zoom: 1 }, { duration: 0 })
   }
@@ -248,20 +229,10 @@
     const safeZoom = Math.min(Math.max(desiredZoom, 0.4), 1)
 
     if (direction === -1 || direction === 1) {
-      if (layoutDirection === "LR") {
-        const yStride = (nodeHeight + NODE_SPACING) * safeZoom
-        const y = currentViewport.y - direction * yStride
-        setViewport(
-          { x: currentViewport.x, y, zoom: safeZoom },
-          { duration: VIEWPORT_ANIMATION_DURATION }
-        )
-        return
-      }
-
-      const xStride = (nodeWidth + NODE_SPACING) * safeZoom
-      const x = currentViewport.x - direction * xStride
+      const yStride = (nodeHeight + NODE_SPACING) * safeZoom
+      const y = currentViewport.y - direction * yStride
       setViewport(
-        { x, y: currentViewport.y, zoom: safeZoom },
+        { x: currentViewport.x, y, zoom: safeZoom },
         { duration: VIEWPORT_ANIMATION_DURATION }
       )
       return
@@ -287,20 +258,6 @@
       await deploymentStore.publishApp()
     } catch (error) {
       notifications.error("Error publishing changes")
-    }
-  }
-
-  const saveDirectionChange = async (direction: LayoutDirection) => {
-    layoutDirection = direction
-    preserveViewport = false
-    try {
-      await automationStore.actions.save({
-        ...automation,
-        layoutDirection,
-      })
-      focusOnTrigger()
-    } catch (error) {
-      notifications.error("Unable to save layout direction")
     }
   }
 
@@ -461,11 +418,7 @@
         onMove={closeContextMenuOnCanvasInteraction}
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
-        <FlowControls
-          historyStore={automationHistoryStore}
-          {layoutDirection}
-          onChangeDirection={saveDirectionChange}
-        />
+        <FlowControls historyStore={automationHistoryStore} />
         <Background variant={BackgroundVariant.Dots} gap={25} />
       </SvelteFlow>
     </div>

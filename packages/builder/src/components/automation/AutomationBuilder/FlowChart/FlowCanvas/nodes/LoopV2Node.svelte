@@ -2,14 +2,11 @@
   import { Handle, Position, NodeToolbar } from "@xyflow/svelte"
   import { ActionButton, Icon } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import type { LayoutDirection } from "@budibase/types"
   import type { LoopV2NodeData } from "@/types/automations"
   import FlowItemStatus from "../../FlowItemStatus.svelte"
 
   export let data: LoopV2NodeData
   $: block = data.block
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
   $: selected = $automationStore.selectedNodeId === block?.id
   $: loopChildCount = Array.isArray(block?.inputs?.children)
     ? block.inputs.children.length
@@ -38,14 +35,14 @@
   isConnectable={false}
   class="custom-handle"
   type="target"
-  position={isHorizontal ? Position.Left : Position.Top}
+  position={Position.Left}
 />
 
 <Handle
   isConnectable={false}
   class="custom-handle"
   type="source"
-  position={isHorizontal ? Position.Right : Position.Bottom}
+  position={Position.Right}
 />
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -66,10 +63,7 @@
       <span class="loop-label">Loop</span>
     </div>
 
-    <NodeToolbar
-      isVisible={loopChildCount === 0}
-      position={isHorizontal ? Position.Top : Position.Top}
-    >
+    <NodeToolbar isVisible={loopChildCount === 0} position={Position.Top}>
       <ActionButton icon="plus-circle" on:click={addStep}>Add step</ActionButton
       >
     </NodeToolbar>

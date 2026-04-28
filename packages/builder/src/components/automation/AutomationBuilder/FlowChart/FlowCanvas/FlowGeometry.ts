@@ -1,5 +1,3 @@
-import type { LayoutDirection } from "@budibase/types"
-
 export const NODE_SPACING = 100
 export const DEFAULT_NODE_WIDTH = 320
 export const DEFAULT_NODE_HEIGHT = 150
@@ -34,10 +32,9 @@ export const SUBFLOW = {
   stepWidth: 320,
 }
 
-export const defaultHandlePositions = (dir: LayoutDirection | undefined) => {
-  const isLR = dir === "LR"
+export const defaultHandlePositions = () => {
   return {
-    sourcePosition: isLR ? "right" : "bottom",
-    targetPosition: isLR ? "left" : "top",
+    sourcePosition: "right",
+    targetPosition: "left",
   } as const
 }

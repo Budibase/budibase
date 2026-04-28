@@ -8,7 +8,6 @@
   import {
     type AutomationStepResult,
     type AutomationTriggerResult,
-    type LayoutDirection,
   } from "@budibase/types"
 
   export let data: BranchNodeData
@@ -18,14 +17,11 @@
   $: branchIdx = data.branchIdx
   $: viewMode = $automationStore.viewMode as ViewMode
   $: automation = $selectedAutomation?.data
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
   $: isSubflow = !!data?.isSubflow
   $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
-  $: handleOffset =
-    isHorizontal && isSubflow
-      ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
-      : 0
+  $: handleOffset = isSubflow
+    ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
+    : 0
 
   // Handle step selection in logs mode (open details panel)
   function handleStepSelect(
@@ -51,10 +47,8 @@
     isConnectable={false}
     class="custom-handle"
     type="target"
-    position={isHorizontal ? Position.Left : Position.Top}
-    style={isHorizontal && isSubflow
-      ? `left: ${handleOffset - 3}px;`
-      : undefined}
+    position={Position.Left}
+    style={isSubflow ? `left: ${handleOffset - 3}px;` : undefined}
   />
   <div class="branch-container">
     <BranchNode
@@ -69,9 +63,7 @@
     isConnectable={false}
     class="custom-handle"
     type="source"
-    position={isHorizontal ? Position.Right : Position.Bottom}
-    style={isHorizontal && isSubflow
-      ? `right: ${handleOffset - 3}px;`
-      : undefined}
+    position={Position.Right}
+    style={isSubflow ? `right: ${handleOffset - 3}px;` : undefined}
   />
 </div>
