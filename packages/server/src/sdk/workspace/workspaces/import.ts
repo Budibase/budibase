@@ -42,6 +42,7 @@ async function getNewWorkspaceMetadata(
       automationErrors: undefined,
       theme: tempMetadata.theme,
       customTheme: tempMetadata.customTheme,
+      snippets: tempMetadata.snippets,
       features: tempMetadata.features,
       icon: tempMetadata.icon,
       navigation: tempMetadata.navigation,

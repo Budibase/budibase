@@ -1,4 +1,5 @@
 import path from "path"
+import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
 
@@ -218,5 +219,76 @@ describe("/applications/:appId/import", () => {
     expect(screens.length).toBe(2)
     expect(screens[0].routing.route).toBe("/derp")
     expect(screens[1].routing.route).toBe("/blank")
+  })
+
+  it("should import selected metadata while preserving workspace identity metadata", async () => {
+    const appId = config.getDevWorkspaceId()
+    const snippetName = `importSnippet_${Date.now()}`
+    const importedSnippetCode = "return 'imported-version'"
+    const existingSnippetCode = "return 'existing-version'"
+    const importedCustomTheme = { primaryColor: "#00A86B" }
+    const existingCustomTheme = { primaryColor: "#B22222" }
+    const importedFeatures = { componentValidation: true }
+    const existingFeatures = { componentValidation: false }
+
+    await config.api.workspace.update(appId!, {
+      customTheme: importedCustomTheme,
+      features: importedFeatures,
+      snippets: [{ name: snippetName, code: importedSnippetCode }],
+    })
+
+    const exportPath = await sdk.backups.exportWorkspace(appId!, {
+      excludeRows: true,
+      tar: true,
+    })
+
+    await config.api.workspace.update(appId!, {
+      customTheme: existingCustomTheme,
+      features: existingFeatures,
+      snippets: [{ name: snippetName, code: existingSnippetCode }],
+    })
+
+    const beforeImportWorkspace = await config.api.workspace.get(appId!)
+    expect(beforeImportWorkspace.snippets).toContainEqual({
+      name: snippetName,
+      code: existingSnippetCode,
+    })
+
+    await request
+      .post(`/api/applications/${appId}/import`)
+      .attach("appExport", exportPath)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+
+    const workspace = await config.api.workspace.get(appId!)
+    expect({
+      customTheme: workspace.customTheme,
+      features: workspace.features,
+      snippet: workspace.snippets?.find(
+        snippet => snippet.name === snippetName
+      ),
+    }).toEqual({
+      customTheme: importedCustomTheme,
+      features: expect.objectContaining(importedFeatures),
+      snippet: { name: snippetName, code: importedSnippetCode },
+    })
+
+    expect({
+      appId: workspace.appId,
+      tenantId: workspace.tenantId,
+    }).toEqual({
+      appId,
+      tenantId: beforeImportWorkspace.tenantId,
+    })
+
+    expect(workspace.snippets).toContainEqual({
+      name: snippetName,
+      code: importedSnippetCode,
+    })
+    expect(workspace.snippets).not.toContainEqual({
+      name: snippetName,
+      code: existingSnippetCode,
+    })
   })
 })

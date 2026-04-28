@@ -13,6 +13,7 @@
   import { environment } from "@/stores/portal"
   import { memo } from "@budibase/frontend-core"
   import { automationStore } from "@/stores/builder"
+  import { getLogStepData } from "../../AutomationStepHelpers"
 
   export let step: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -31,22 +32,8 @@
   $: viewMode = $automationStore.viewMode
 
   // Log execution state
-  $: logStepData = getLogStepData(logData, step)
-
-  function getLogStepData(
-    logData: AutomationLog | null,
-    step: AutomationStep | AutomationTrigger
-  ) {
-    if (!logData || viewMode !== ViewMode.LOGS) return null
-    // For trigger step
-    if (step.type === "TRIGGER") {
-      return logData.trigger
-    }
-
-    // For action steps, find by unique id match
-    const logSteps = logData.steps || []
-    return logSteps.find(logStep => logStep.id === step.id)
-  }
+  $: logStepData =
+    viewMode === ViewMode.LOGS ? getLogStepData(step, logData) : null
 </script>
 
 {#if !isBranch}

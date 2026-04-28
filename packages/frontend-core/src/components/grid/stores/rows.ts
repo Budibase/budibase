@@ -223,6 +223,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
+    rowChangeCache.set({})
 
     // Abandon if we don't have a valid datasource
     if (!datasource.actions.isDatasourceValid($datasource)) {
