@@ -40,6 +40,8 @@
     | AutomationTriggerResult
     | null = null
   export let viewMode: ViewMode = ViewMode.EDITOR
+  export let showBlockType: boolean = true
+  export let showFlowStatus: boolean = true
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null
   $: viewMode = $automationStore.viewMode
@@ -215,26 +217,20 @@
 
 <div class="flow-item-status">
   {#if blockRef || viewMode === ViewMode.LOGS}
-    {#if isTriggerBlock}
-      <span class="block-type">
-        <ActionButton size="S" active={false} icon="tree-structure">
-          Trigger
-        </ActionButton>
-      </span>
-    {:else if blockRef?.looped && viewMode === ViewMode.EDITOR}
+    {#if showBlockType && blockRef?.looped && viewMode === ViewMode.EDITOR}
       <ActionButton size="S" active={false} icon="recycle">Looping</ActionButton
       >
     {:else}
       <span></span>
     {/if}
-    {#if isRunning && !isTriggerBlock}
+    {#if showFlowStatus && isRunning && !isTriggerBlock}
       <span class="flow-blue flow-running flow-status-btn">
         <ActionButton size="S" active={false}>
           <Spinner size="12" />
           {runningLabel}
         </ActionButton>
       </span>
-    {:else if flowStatus && !hideStatus}
+    {:else if showFlowStatus && flowStatus && !hideStatus}
       {#if loopInfo?.total && $automationStore.inProgressTest}
         <span class="flow-success flow-status-btn">
           <ActionButton

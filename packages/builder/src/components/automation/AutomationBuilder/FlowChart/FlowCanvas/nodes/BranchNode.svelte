@@ -8,7 +8,7 @@
   import { ViewMode } from "@/types/automations"
   import { cloneDeep } from "lodash/fp"
   import { getContext } from "svelte"
-  import { type Writable } from "svelte/store"
+  import { type Readable, type Writable } from "svelte/store"
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
   import type {
@@ -28,6 +28,7 @@
   ) => void = () => {}
 
   const view = getContext<Writable<DragView>>("draggableView")
+  const showNodeNames = getContext<Readable<boolean>>("showNodeNames")
   $: branch = step.inputs?.branches?.[branchIdx]
   $: blockRef = $selectedAutomation?.blockRefs?.[step?.id]
   $: branchNodeId = branch ? createBranchNodeId(branchIdx, branch.id) : ""
@@ -93,7 +94,12 @@
     }}
   >
     <div class="block-float">
-      <FlowItemStatus block={step} {branch} hideStatus={$view?.dragging} />
+      <FlowItemStatus
+        block={step}
+        {branch}
+        hideStatus={$view?.dragging}
+        showBlockType={false}
+      />
     </div>
     <div class="blockSection">
       <div class="heading">
@@ -106,6 +112,9 @@
         />
       </div>
     </div>
+    {#if $showNodeNames}
+      <div class="node-name-pill">{branch.name}</div>
+    {/if}
   </div>
 </div>
 
@@ -190,8 +199,26 @@
     pointer-events: none;
     width: 100%;
     position: absolute;
-    top: -35px;
+    top: calc(100% + var(--spacing-xs));
     left: 0px;
+  }
+
+  .node-name-pill {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 180px;
+    padding: var(--spacing-xs) var(--spacing-m);
+    border-radius: 999px;
+    background-color: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-900);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
   }
 
   .blockSection .heading {

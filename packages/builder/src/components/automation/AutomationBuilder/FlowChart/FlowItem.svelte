@@ -1,10 +1,11 @@
 <script lang="ts">
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
+  import { Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
-  import { type Writable } from "svelte/store"
+  import { type Readable, type Writable } from "svelte/store"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
@@ -34,6 +35,7 @@
   const pos = getContext<Writable<{ x: number; y: number }>>("viewPos")
   const contentPos =
     getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
+  const showNodeNames = getContext<Readable<boolean>>("showNodeNames")
 
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
@@ -63,6 +65,8 @@
   })()
 
   $: selectedNodeId = $automationStore.selectedNodeId as string | undefined
+  $: blockHeading =
+    automation?.definition.stepNames?.[block.id] || block.name || ""
   $: selected =
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
@@ -162,6 +166,7 @@
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
     class:dragging
+    class:showNodeName={$showNodeNames}
     class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
@@ -185,8 +190,27 @@
             hideStatus={$view?.dragging}
             {logStepData}
             {viewMode}
+            showFlowStatus={false}
           />
         </div>
+        <div class="block-status">
+          <FlowItemStatus
+            {block}
+            branch={undefined}
+            hideStatus={$view?.dragging}
+            {logStepData}
+            {viewMode}
+            showBlockType={false}
+          />
+        </div>
+        {#if $showNodeNames}
+          <div class="node-name-pill">{blockHeading}</div>
+        {/if}
+        {#if isTrigger}
+          <div class="trigger-icon">
+            <Icon name="tree-structure" size="S" />
+          </div>
+        {/if}
         <div
           class="block-core"
           on:click={async () => {
@@ -316,6 +340,44 @@
     position: absolute;
     top: -35px;
     left: 0;
+  }
+  .node-name-pill {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 180px;
+    padding: var(--spacing-xs) var(--spacing-m);
+    border-radius: 999px;
+    background-color: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-900);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+  .block-status {
+    pointer-events: none;
+    width: 100%;
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+  }
+  .trigger-icon {
+    position: absolute;
+    right: var(--spacing-s);
+    bottom: var(--spacing-s);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background-color: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-700);
+    pointer-events: none;
   }
   .block-core {
     cursor: pointer;
