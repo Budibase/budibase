@@ -2261,6 +2261,7 @@ const automationActions = (store: AutomationStore) => ({
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
+      delete state.selectedBranchNode
       state.showLogsPanel = false
       state.showLogDetailsPanel = false
       delete state.selectedLog
@@ -2775,9 +2776,25 @@ const automationActions = (store: AutomationStore) => ({
       return {
         ...state,
         selectedNodeId: blockId,
+        selectedBranchNode: undefined,
         selectedNodeMode: mode ?? DataMode.INPUT,
       }
     })
+  },
+
+  selectBranchNode: async (selection: {
+    nodeId: string
+    stepId: string
+    branchIdx: number
+  }) => {
+    contextMenuStore.close()
+    store.update(state => ({
+      ...state,
+      selectedNodeId: selection.nodeId,
+      selectedBranchNode: selection,
+      selectedNodeMode: DataMode.INPUT,
+      actionPanelBlock: undefined,
+    }))
   },
 
   openActionPanel: (block: BlockRef) => {
@@ -2786,6 +2803,7 @@ const automationActions = (store: AutomationStore) => ({
       ...state,
       actionPanelBlock: block,
       selectedNodeId: undefined,
+      selectedBranchNode: undefined,
     }))
   },
   closeActionPanel: () => {
@@ -2806,6 +2824,7 @@ const automationActions = (store: AutomationStore) => ({
       selectedLog: log,
       selectedLogStepData: stepData,
       selectedNodeId: undefined,
+      selectedBranchNode: undefined,
       actionPanelBlock: undefined,
     }))
   },
@@ -2825,6 +2844,7 @@ const automationActions = (store: AutomationStore) => ({
       ...state,
       showLogsPanel: true,
       selectedNodeId: undefined,
+      selectedBranchNode: undefined,
       actionPanelBlock: undefined,
       showLogDetailsPanel: false,
     }))

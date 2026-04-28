@@ -202,6 +202,7 @@
           <div class="blockSection block-info">
             <BlockHeader
               disabled
+              compact
               {automation}
               {block}
               on:update={handleHeaderUpdate}
@@ -254,9 +255,10 @@
     display: inline-block;
   }
   .block {
-    width: 320px;
+    width: 90px;
+    height: 90px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
-    border-radius: 12px;
+    border-radius: 8px;
     font-weight: 600;
     cursor: default;
   }
@@ -265,20 +267,24 @@
     position: relative;
   }
   .block.draggable .wrap {
-    display: flex;
-    flex-direction: row;
+    display: block;
   }
   .block.draggable .wrap .handle {
-    height: auto;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    z-index: 2;
+    height: calc(100% - 2px);
+    width: 14px;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--grey-1);
-    padding: 6px 0;
+    padding: 0;
     color: var(--grey-4);
     cursor: grab;
-    border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px;
+    border-top-left-radius: 7px;
+    border-bottom-left-radius: 7px;
   }
   .block.draggable .wrap .handle.grabbing {
     cursor: grabbing;
@@ -288,14 +294,15 @@
   }
   .block .wrap .block-content {
     width: 100%;
+    height: 90px;
     display: flex;
     flex-direction: row;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    border-radius: 8px;
   }
   .blockSection {
-    padding: var(--spacing-xl);
+    padding: 0;
   }
   .separator {
     width: 1px;
@@ -314,11 +321,14 @@
     width: var(--pswidth);
     background-color: rgba(92, 92, 92, 0.1);
     border: 1px dashed #5c5c5c;
-    border-radius: 12px;
+    border-radius: 8px;
     display: block;
   }
   .block-core {
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .block-core.dragging {
     pointer-events: none;

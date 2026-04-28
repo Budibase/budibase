@@ -1,14 +1,14 @@
 export const NODE_SPACING = 100
-export const DEFAULT_NODE_WIDTH = 320
-export const DEFAULT_NODE_HEIGHT = 150
+export const DEFAULT_NODE_WIDTH = 90
+export const DEFAULT_NODE_HEIGHT = 90
 
 export const STEP = {
-  width: 320,
-  height: 100,
+  width: 90,
+  height: 90,
 }
 
 export const BRANCH = {
-  height: 180,
+  height: 90,
 }
 
 export const ANCHOR = {
