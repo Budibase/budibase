@@ -20,7 +20,6 @@ import {
   AutomationTriggerStepId,
   UIAutomation,
   Branch,
-  LayoutDirection,
   LoopV2Step,
   AutomationTestProgressEvent,
   InProgressTestState,
@@ -293,7 +292,6 @@ export type BlockStatus = {
  */
 export interface StepNodeData {
   block: AutomationBlock
-  direction?: LayoutDirection
   [key: string]: unknown
 }
 
@@ -301,7 +299,6 @@ export interface BranchNodeData {
   block: AutomationBlock
   branch: Branch
   branchIdx: number
-  direction?: LayoutDirection
   isSubflow?: boolean
   laneWidth?: number
   [key: string]: unknown
@@ -309,14 +306,12 @@ export interface BranchNodeData {
 
 export interface LoopV2NodeData {
   block: LoopV2Step
-  direction?: LayoutDirection
   containerHeight: number
   containerWidth: number
   [key: string]: unknown
 }
 
 export interface AnchorNodeData {
-  direction?: LayoutDirection
   [key: string]: unknown
 }
 
@@ -325,7 +320,6 @@ export interface AnchorNodeData {
  */
 export interface BaseEdgeData {
   block: FlowBlockContext
-  direction?: LayoutDirection
   pathTo?: FlowBlockPath
   isSubflowEdge?: boolean
   [key: string]: unknown

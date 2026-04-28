@@ -11,7 +11,6 @@ import type {
   Automation,
   AutomationLog,
   BlockDefinitions,
-  LayoutDirection,
   Branch,
   BranchStep,
   AutomationStep,
@@ -334,7 +333,7 @@ export const buildTopLevelGraph = (
         blockHeight = loopResult.containerHeight
       } else {
         deps.newNodes.push(
-          stepNode(baseId, block, deps.direction, undefined, {
+          stepNode(baseId, block, undefined, {
             x: 0,
             y: currentY,
           })
@@ -347,7 +346,6 @@ export const buildTopLevelGraph = (
       deps.newEdges.push(
         edgeAddItem(prevId, baseId, {
           block: blocks[idx - 1],
-          direction: deps.direction,
         })
       )
     }
@@ -356,7 +354,7 @@ export const buildTopLevelGraph = (
       const terminalY = currentY + blockHeight
       const terminalId = `anchor-${baseId}`
       deps.newNodes.push(
-        anchorNode(terminalId, deps.direction, undefined, {
+        anchorNode(terminalId, undefined, {
           x: 0,
           y: terminalY,
         })
@@ -364,7 +362,6 @@ export const buildTopLevelGraph = (
       deps.newEdges.push(
         edgeAddItem(baseId, terminalId, {
           block,
-          direction: deps.direction,
         })
       )
     }
@@ -392,7 +389,6 @@ export const buildTopLevelGraph = (
 // ---------
 
 export interface DagreLayoutOptions {
-  rankdir?: LayoutDirection
   ranksep?: number
   nodesep?: number
   compactLoops?: boolean
@@ -402,7 +398,7 @@ export const dagreLayoutAutomation = (
   graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
-  const rankdir = opts?.rankdir || "TB"
+  const rankdir = "LR"
   const ranksep = opts?.ranksep ?? 260
   const nodesep = opts?.nodesep ?? 220
   const compactLoops = opts?.compactLoops !== false
@@ -469,7 +465,7 @@ export const dagreLayoutAutomation = (
     })
 
   if (compactLoops) {
-    applyLoopClearance(graph, rankdir)
+    applyLoopClearance(graph)
   }
   return graph
 }

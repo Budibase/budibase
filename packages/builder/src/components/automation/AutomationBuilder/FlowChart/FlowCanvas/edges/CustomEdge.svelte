@@ -8,7 +8,6 @@
   } from "@xyflow/svelte"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
-  import { type LayoutDirection } from "@budibase/types"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     ViewMode,
@@ -33,7 +32,6 @@
   let block: FlowBlockContext | undefined
   $: viewMode = $automationStore.viewMode as ViewMode
   $: block = deriveBlockContext(data)
-  $: direction = (data?.direction || "TB") as LayoutDirection
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
 
@@ -57,7 +55,7 @@
 
   /*
   Need a type guard here because there can be different properties
-  coming in here depending on if it's a branch edge or not.  
+  coming in here depending on if it's a branch edge or not.
   */
   $: isBranchEdgeData = (d: EdgeData): d is BranchEdgeData =>
     "isBranchEdge" in d && d.isBranchEdge === true
@@ -78,7 +76,7 @@
   $: isAnchorTarget = target?.startsWith("anchor-")
   $: isSubflowEdge = data.isSubflowEdge === true
 
-  $: if (isAnchorTarget && direction === "LR") {
+  $: if (isAnchorTarget) {
     labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
     labelY = sourceY ?? 0
   }
@@ -132,28 +130,19 @@
   // --- Dropzone sizing & offsets for LR to reduce clutter ---
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v))
+  const baseOffset = -18
 
-  $: isLR = direction === "LR"
   $: dx = Math.abs((targetX ?? 0) - (sourceX ?? 0))
-  $: dzWidth = isLR ? clamp(Math.round(dx - 140), 160, 320) : 320
-  $: baseOffset = isLR ? -18 : 0
-  $: nudge = isLR ? ((Math.round(sourceX + targetX) % 3) - 1) * 6 : 0
+  $: dzWidth = clamp(Math.round(dx - 140), 160, 320)
+  $: nudge = ((Math.round(sourceX + targetX) % 3) - 1) * 6
   $: dzOffsetY = baseOffset + nudge
 
   // Pre-branch label sizing/offset
-  $: preDzWidth = isLR ? clamp(Math.round(dx - 160), 160, 300) : 320
-  $: preDzOffsetY = isLR ? -24 + nudge : 0
+  $: preDzWidth = clamp(Math.round(dx - 160), 160, 300)
+  $: preDzOffsetY = -24 + nudge
 
-  // For TB we keep it vertically centered under the source;
-  // for LR we center horizontally and align to the source Y.
-  $: preBranchLabelX =
-    direction === "LR"
-      ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-      : (sourceX ?? 0)
-  $: preBranchLabelY =
-    direction === "LR"
-      ? (sourceY ?? 0)
-      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
+  $: preBranchLabelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+  $: preBranchLabelY = sourceY ?? 0
 
   const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
     if (!ctx) {
