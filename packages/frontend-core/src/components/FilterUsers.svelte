@@ -36,5 +36,6 @@
     getOptionValue={option => option._id}
     {disabled}
     searchPlaceholder={pickerLabels.searchPlaceholder}
+    popoverAutoWidth
   />
 </div>

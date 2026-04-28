@@ -6,6 +6,7 @@
     ProvisionAgentMSTeamsChannelResponse,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -86,6 +87,9 @@
         },
       })
       provisionResult = await agentsStore.provisionMSTeamsChannel(agent._id)
+      if (agent.live) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Microsoft Teams channel settings saved")
     } catch (error) {
       console.error(error)

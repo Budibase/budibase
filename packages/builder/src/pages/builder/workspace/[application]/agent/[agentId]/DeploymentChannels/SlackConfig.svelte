@@ -6,6 +6,7 @@
     ProvisionAgentSlackChannelResponse,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -75,6 +76,9 @@
         },
       })
       provisionResult = await agentsStore.provisionSlackChannel(agent._id)
+      if (agent.live) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Slack channel settings saved")
     } catch (error) {
       console.error(error)

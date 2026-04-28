@@ -54,7 +54,8 @@
   $: group = $groups.find(x => x._id === groupId)
   $: isScimGroup = group?.scimInfo?.isSync
   $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: readonly = !isAdmin || isScimGroup
+  $: groupReadonly = !isAdmin || isScimGroup
+  $: workspaceReadonly = !isAdmin
   $: appSchema = {
     name: {
       width: "1fr",
@@ -62,7 +63,7 @@
     role: {
       width: "1fr",
     },
-    ...(readonly
+    ...(workspaceReadonly
       ? {}
       : {
           prodAppId: {
@@ -97,7 +98,7 @@
         ...app,
         _id: prodAppId,
         prodAppId,
-        readonly,
+        readonly: workspaceReadonly,
         role: group?.builder?.apps.includes(prodAppId)
           ? Constants.Roles.CREATOR
           : group?.roles?.[prodAppId],
@@ -191,7 +192,7 @@
   }
 
   const openWorkspaceRoleModal = workspace => {
-    if (readonly || workspace?.__skeleton) {
+    if (workspaceReadonly || workspace?.__skeleton) {
       return
     }
     selectedWorkspace = workspace
@@ -201,7 +202,7 @@
 
   setContext("groupApps", {
     removeApp,
-    getReadonly: () => readonly,
+    getReadonly: () => workspaceReadonly,
   })
 
   onMount(async () => {
@@ -226,7 +227,7 @@
         >
           <Toggle
             value={!!group?.isDefault}
-            disabled={readonly || defaultUpdating}
+            disabled={groupReadonly || defaultUpdating}
             on:change={e => updateDefaultStatus(e.detail)}
           />
           <span class="default-toggle-label">Default</span>
@@ -246,7 +247,7 @@
             <MenuItem
               icon="trash"
               on:click={() => deleteModal.show()}
-              disabled={readonly}
+              disabled={groupReadonly}
             >
               Delete
             </MenuItem>
@@ -256,13 +257,13 @@
     </div>
 
     <Layout noPadding gap="S">
-      <GroupUsers {groupId} {readonly} {isScimGroup} />
+      <GroupUsers {groupId} readonly={groupReadonly} {isScimGroup} />
     </Layout>
 
     <Layout noPadding gap="S">
       <Heading size="S">Workspaces</Heading>
       <div class="workspace-controls">
-        {#if !readonly}
+        {#if !workspaceReadonly}
           <AssignWorkspacePicker {groupId} />
         {/if}
         <div class="workspace-controls-right">

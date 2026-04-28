@@ -300,12 +300,14 @@
                   placeholder={false}
                   options={actionOptions}
                   bind:value={condition.action}
+                  popoverAutoWidth
                 />
                 {#if condition.action === "update"}
                   <Select
                     options={settingOptions}
                     bind:value={condition.setting}
                     on:change={e => onSettingChange(e, condition)}
+                    popoverAutoWidth
                   />
                   <div>TO</div>
                   {#if definition}
@@ -341,6 +343,7 @@
                   options={getOperatorOptions(condition)}
                   bind:value={condition.operator}
                   on:change={e => onOperatorChange(condition, e.detail)}
+                  popoverAutoWidth
                 />
                 <Select
                   disabled={condition.noValue || condition.operator === "oneOf"}
@@ -348,6 +351,7 @@
                   bind:value={condition.valueType}
                   placeholder={false}
                   on:change={e => onValueTypeChange(condition, e.detail)}
+                  popoverAutoWidth
                 />
                 {#if ["string", "number"].includes(condition.valueType)}
                   <DrawerBindableInput
@@ -369,6 +373,7 @@
                     disabled={condition.noValue}
                     options={["True", "False"]}
                     bind:value={condition.referenceValue}
+                    popoverAutoWidth
                   />
                 {/if}
                 <Icon

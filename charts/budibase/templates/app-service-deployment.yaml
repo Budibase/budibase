@@ -39,6 +39,10 @@ spec:
 {{ end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.apps.terminationGracePeriodSeconds }}
+      {{- if .Values.services.apps.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.apps.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT

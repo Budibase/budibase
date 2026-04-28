@@ -1,22 +1,56 @@
 import { publishEvent } from "../events"
 import {
   Agent,
+  CustomAIProviderConfig,
   Event,
   AIConfigCreatedEvent,
   AIConfigUpdatedEvent,
+  AIConfigDeletedEvent,
   AIAgentCreatedEvent,
   AIAgentUpdatedEvent,
   AIAgentDeletedEvent,
 } from "@budibase/types"
 
-async function configCreated(timestamp?: string | number) {
-  const properties: AIConfigCreatedEvent = {}
-  await publishEvent(Event.AI_CONFIG_CREATED, properties, timestamp)
+function configCreated(
+  config: CustomAIProviderConfig,
+  timestamp?: string | number
+) {
+  const properties: AIConfigCreatedEvent = {
+    configId: config._id as string,
+    audited: { name: config.name },
+  }
+  publishEvent(Event.AI_CONFIG_CREATED, properties, timestamp).catch(err => {
+    console.error("configCreated telemetry failed", {
+      configId: config._id,
+      err,
+    })
+  })
 }
 
-async function configUpdated() {
-  const properties: AIConfigUpdatedEvent = {}
-  await publishEvent(Event.AI_CONFIG_UPDATED, properties)
+function configUpdated(config: CustomAIProviderConfig) {
+  const properties: AIConfigUpdatedEvent = {
+    configId: config._id as string,
+    audited: { name: config.name },
+  }
+  publishEvent(Event.AI_CONFIG_UPDATED, properties).catch(err => {
+    console.error("configUpdated telemetry failed", {
+      configId: config._id,
+      err,
+    })
+  })
+}
+
+function configDeleted(config: CustomAIProviderConfig) {
+  const properties: AIConfigDeletedEvent = {
+    configId: config._id as string,
+    audited: { name: config.name },
+  }
+  publishEvent(Event.AI_CONFIG_DELETED, properties).catch(err => {
+    console.error("configDeleted telemetry failed", {
+      configId: config._id,
+      err,
+    })
+  })
 }
 
 function agentCreated(agent: Agent) {
@@ -52,6 +86,7 @@ function agentDeleted(agent: Agent) {
 export default {
   configCreated,
   configUpdated,
+  configDeleted,
   agentCreated,
   agentUpdated,
   agentDeleted,

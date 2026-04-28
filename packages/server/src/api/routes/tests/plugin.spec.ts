@@ -27,6 +27,7 @@ import path from "path"
 import { events, objectStore, tenancy } from "@budibase/backend-core"
 import { Plugin, PluginSource, PluginType } from "@budibase/types"
 import nock from "nock"
+import * as tar from "tar"
 import * as setup from "./utilities"
 import * as github from "../../controllers/plugin/github"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
@@ -38,6 +39,71 @@ const getTempDirsWithPrefix = (prefix: string) =>
     .readdirSync(budibaseTempDir())
     .filter(dir => dir.startsWith(prefix))
     .sort()
+
+const createDatasourcePluginTarball = async (opts: {
+  pluginName: string
+  js: string
+}) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), `${opts.pluginName}-`))
+  const pluginDir = path.join(tempDir, "plugin")
+  const tarPath = path.join(tempDir, `${opts.pluginName}.tar.gz`)
+
+  fs.mkdirSync(pluginDir)
+  fs.writeFileSync(
+    path.join(pluginDir, "package.json"),
+    JSON.stringify({
+      name: opts.pluginName,
+      version: "1.0.0",
+      description: "Test datasource plugin",
+    })
+  )
+  fs.writeFileSync(
+    path.join(pluginDir, "schema.json"),
+    JSON.stringify({
+      type: PluginType.DATASOURCE,
+      metadata: {},
+      hash: `${opts.pluginName}-hash`,
+      schema: {
+        docs: "https://docs.budibase.com",
+        friendlyName: "Test datasource",
+        type: "API",
+        description: "Performs a basic HTTP call to a URL",
+        datasource: {
+          url: {
+            type: "string",
+            required: true,
+          },
+        },
+        query: {
+          read: {
+            type: "fields",
+            fields: {
+              queryString: {
+                type: "string",
+                required: false,
+              },
+            },
+          },
+        },
+      },
+    })
+  )
+  fs.writeFileSync(path.join(pluginDir, "test.js"), opts.js)
+
+  await tar.create(
+    {
+      gzip: true,
+      file: tarPath,
+      cwd: pluginDir,
+    },
+    ["package.json", "schema.json", "test.js"]
+  )
+
+  return {
+    tarPath,
+    tempDir,
+  }
+}
 
 describe("/plugins", () => {
   let request = setup.getRequest()
@@ -134,6 +200,87 @@ describe("/plugins", () => {
         expect(getTempDirsWithPrefix(tempDirPrefix)).toEqual([])
       } finally {
         fs.unlinkSync(invalidTarballPath)
+      }
+    })
+
+    it("should upload a datasource plugin without executing top-level JS", async () => {
+      const pluginId = "plg_throwing-datasource"
+      const { tarPath, tempDir } = await createDatasourcePluginTarball({
+        pluginName: "throwing-datasource",
+        js: 'throw new Error("executed during upload")\nmodule.exports = {}\n',
+      })
+
+      try {
+        const res = await request
+          .post("/api/plugin/upload")
+          .attach("file", tarPath)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+
+        expect(res.body.plugins[0]._id).toEqual(pluginId)
+        expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+      } finally {
+        await config.doInTenant(async () => {
+          const db = tenancy.getGlobalDB()
+          const existing = await db.tryGet<Plugin>(pluginId)
+          if (existing) {
+            await db.remove(existing)
+          }
+        })
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it("should upload a datasource plugin with valid CommonJS top-level return", async () => {
+      const pluginId = "plg_returning-datasource"
+      const { tarPath, tempDir } = await createDatasourcePluginTarball({
+        pluginName: "returning-datasource",
+        js: "module.exports = {}\nreturn\n",
+      })
+
+      try {
+        const res = await request
+          .post("/api/plugin/upload")
+          .attach("file", tarPath)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+
+        expect(res.body.plugins[0]._id).toEqual(pluginId)
+        expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+      } finally {
+        await config.doInTenant(async () => {
+          const db = tenancy.getGlobalDB()
+          const existing = await db.tryGet<Plugin>(pluginId)
+          if (existing) {
+            await db.remove(existing)
+          }
+        })
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it("should reject a datasource plugin with invalid JS syntax", async () => {
+      const { tarPath, tempDir } = await createDatasourcePluginTarball({
+        pluginName: "invalid-datasource",
+        js: "module.exports = {\n",
+      })
+
+      try {
+        const res = await request
+          .post("/api/plugin/upload")
+          .attach("file", tarPath)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(res.body.message).toContain(
+          "Failed to import plugin: JS invalid:"
+        )
+        expect(events.plugin.imported).toHaveBeenCalledTimes(0)
+      } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true })
       }
     })
   })

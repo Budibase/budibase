@@ -8,16 +8,17 @@ import {
   publicRoutes,
 } from "./endpointGroups"
 import {
+  connectAgentSharePointSiteValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
   provisionAgentMSTeamsChannelValidator,
-  setAgentKnowledgeSourcesValidator,
   syncAgentDiscordCommandsValidator,
   syncAgentKnowledgeSourcesValidator,
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
   runAgentTestSuiteValidator,
+  updateAgentSharePointSiteValidator,
   updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -88,26 +89,35 @@ aiRagBuilderAdminRoutes
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
   )
-  .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
+  .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledge)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
   .get(
     "/api/agent/:agentId/knowledge-sources/options",
     ai.fetchAgentKnowledgeSourceOptions
   )
-  .put(
-    "/api/agent/:agentId/knowledge-sources",
-    setAgentKnowledgeSourcesValidator(),
-    ai.setAgentKnowledgeSources
-  )
-  .delete(
-    "/api/agent/:agentId/knowledge-sources",
-    ai.disconnectAgentKnowledgeSources
+  .get(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/entries/all",
+    ai.fetchAgentKnowledgeSourceAllEntries
   )
   .post(
-    "/api/agent/:agentId/knowledge-sources/sync",
+    "/api/agent/:agentId/knowledge-sources/sharepoint/sites",
+    connectAgentSharePointSiteValidator(),
+    ai.connectAgentSharePointSite
+  )
+  .patch(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
+    updateAgentSharePointSiteValidator(),
+    ai.updateAgentSharePointSite
+  )
+  .delete(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
+    ai.disconnectAgentSharePointSite
+  )
+  .post(
+    "/api/agent/:agentId/knowledge-sources/:sourceId/sync",
     syncAgentKnowledgeSourcesValidator(),
-    ai.syncAgentKnowledgeSources
+    ai.syncAgentKnowledgeSource
   )
 
 publicRoutes.get(

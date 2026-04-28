@@ -1,8 +1,11 @@
 import { context, docIds, features, roles } from "@budibase/backend-core"
-import { DocumentType, FeatureFlag } from "@budibase/types"
+import {
+  AgentChannelProvider,
+  DocumentType,
+  FeatureFlag,
+} from "@budibase/types"
 import type {
   Agent,
-  AgentChannelProvider,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
@@ -37,11 +40,31 @@ jest.mock("@budibase/pro", () => {
 
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
+  const mockStreamText = jest.fn()
+
+  class MockToolLoopAgent {
+    private settings: Record<string, any>
+
+    constructor(settings: Record<string, any>) {
+      this.settings = settings
+    }
+
+    async stream(options: Record<string, any>) {
+      const { instructions, ...settings } = this.settings
+      return mockStreamText({
+        ...settings,
+        ...options,
+        system: instructions,
+      })
+    }
+  }
+
   return {
     ...actual,
     convertToModelMessages: jest.fn(),
     pruneMessages: jest.fn(),
-    streamText: jest.fn(),
+    streamText: mockStreamText,
+    ToolLoopAgent: MockToolLoopAgent,
   }
 })
 
@@ -912,9 +935,52 @@ describe("chat conversation title helpers", () => {
 
 describe("chat conversation path validation", () => {
   const config = new TestConfiguration()
+  let basicUser: User
+  let bodyChatApp: ChatApp
+  let pathChatApp: ChatApp
+  let pathConversation: ChatConversation
 
   beforeAll(async () => {
     await config.init("chat-conversation-validation")
+    basicUser = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        bodyChatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          live: true,
+          createdAt: now,
+        }
+        pathChatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          live: true,
+          createdAt: now,
+        }
+        pathConversation = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: pathChatApp._id!,
+          agentId: "agent-1",
+          userId: config.getUser()._id!,
+          messages: [],
+          title: "body conversation",
+          createdAt: now,
+        }
+
+        await db.put(bodyChatApp)
+        await db.put(pathChatApp)
+        await db.put(pathConversation)
+      }
+    )
   })
 
   afterAll(() => {
@@ -926,10 +992,10 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .post(`/api/chatapps/${pathChatApp._id}/conversations/new/stream`)
       .set(headers)
       .send({
-        chatAppId: "chatapp-body",
+        chatAppId: bodyChatApp._id,
         agentId: "agent-1",
         messages: [],
         title: "hello",
@@ -943,17 +1009,38 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post("/api/chatapps/chatapp-path/conversations/convo-path/stream")
+      .post(
+        `/api/chatapps/${pathChatApp._id}/conversations/${pathConversation._id}/stream`
+      )
       .set(headers)
       .send({
-        chatAppId: "chatapp-path",
+        chatAppId: pathChatApp._id,
         agentId: "agent-1",
-        _id: "convo-body",
+        _id: docIds.generateChatConversationID(),
         messages: [],
         title: "hello",
       })
 
     expect(res.status).toBe(400)
+  })
+
+  it("rejects preview mode for non-builder users before input validation", async () => {
+    const headers = await config.withUser(basicUser, async () =>
+      config.defaultHeaders({}, true)
+    )
+
+    const res = await config
+      .getRequest()!
+      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .set(headers)
+      .send({
+        agentId: "agent-1",
+        isPreview: true,
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(403)
   })
 })
 
@@ -1460,6 +1547,48 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("webhookChat", () => {
+    it("allows configured channel deployments when internal agent chat is disabled", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock([]) as any)
+
+      await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          const disabledChatApp: ChatApp = {
+            ...chatApp,
+            _id: docIds.generateChatAppID(),
+            agents: [
+              { agentId: "agent-1", isEnabled: false, isDefault: false },
+            ],
+          }
+          await db.put(disabledChatApp)
+
+          const result = await webhookChat({
+            chat: {
+              chatAppId: disabledChatApp._id!,
+              agentId: "agent-1",
+              channel: {
+                provider: AgentChannelProvider.MSTEAMS,
+                externalUserId: "teams-user-1",
+              },
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+
+          expect(result.assistantText).toBe("response")
+        }
+      )
+    })
+
     it("counts each completed tool call as one action", async () => {
       jest
         .mocked(streamText)

@@ -30,11 +30,11 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.709.0",
-    "@aws-sdk/lib-storage": "3.709.0",
-    "@aws-sdk/s3-request-presigner": "3.709.0",
+    "@aws-sdk/client-s3": "3.1034.0",
+    "@aws-sdk/lib-storage": "3.1034.0",
+    "@aws-sdk/s3-request-presigner": "3.1034.0",
     "@smithy/node-http-handler": "^4.1.1",
-    "@budibase/nano": "10.1.5",
+    "@budibase/nano": "10.1.6",
     "@budibase/pouchdb-replication-stream": "1.2.11",
     "@budibase/shared-core": "*",
     "@budibase/types": "*",

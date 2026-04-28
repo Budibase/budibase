@@ -17,6 +17,7 @@ export default [
     ignores: [
       "**/node_modules",
       "**/dist",
+      "**/.svelte-check/**",
       "**/public",
       "**/bundle.js",
       "**/coverage",
@@ -54,6 +55,8 @@ export default [
     },
 
     rules: {
+      "no-eval": "error",
+      "no-new-func": "error",
       "no-self-compare": "error",
       "no-template-curly-in-string": "error",
       "no-unmodified-loop-condition": "error",
@@ -136,6 +139,21 @@ export default [
       "local-rules/no-barrel-imports": "error",
       "local-rules/no-budibase-imports": "error",
       "local-rules/no-console-error": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "vm",
+              message: "Use isolated-vm or an approved wrapper instead.",
+            },
+            {
+              name: "node:vm",
+              message: "Use isolated-vm or an approved wrapper instead.",
+            },
+          ],
+        },
+      ],
 
       "@typescript-eslint/no-inferrable-types": "error",
       "@typescript-eslint/adjacent-overload-signatures": "error",
@@ -201,6 +219,25 @@ export default [
 
       "local-rules/no-test-com": "error",
       "local-rules/email-domain-example-com": "error",
+    },
+  },
+  {
+    files: [
+      "packages/string-templates/src/helpers/javascript.ts",
+      "packages/server/src/db/inMemoryView.ts",
+      "packages/server/src/jsRunner/bundles/snippets.ts",
+      "packages/builder/src/components/backend/Datasources/ConfigEditor/stores/validatedConfig.ts",
+    ],
+
+    rules: {
+      "no-eval": "off",
+    },
+  },
+  {
+    files: ["packages/string-templates/src/index.ts"],
+
+    rules: {
+      "no-restricted-imports": "off",
     },
   },
   {

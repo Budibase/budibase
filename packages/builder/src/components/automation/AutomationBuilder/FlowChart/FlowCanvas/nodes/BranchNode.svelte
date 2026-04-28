@@ -26,10 +26,9 @@
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
+  import { getLogStepData } from "../../AutomationStepHelpers"
   import type {
     Automation,
-    AutomationLog,
-    AutomationStep,
     AutomationStepResult,
     AutomationTriggerResult,
     Branch,
@@ -103,23 +102,10 @@
   }
 
   // Logs: compute step data and execution state
-  function getLogStepData(
-    currentStep: AutomationStep,
-    logData?: AutomationLog
-  ) {
-    if (!logData || viewMode !== ViewMode.LOGS) return null
-    if (currentStep.type === "TRIGGER") {
-      return logData.trigger
-    }
-    const logSteps = logData.steps || []
-    return logSteps.find(
-      (logStep: AutomationStepResult | AutomationTriggerResult) =>
-        logStep.id === currentStep.id
-    )
-  }
   $: logData = $automationStore.selectedLog
   $: viewMode = $automationStore.viewMode
-  $: logStepData = getLogStepData(step, logData)
+  $: logStepData =
+    viewMode === ViewMode.LOGS ? getLogStepData(step, logData) : null
 
   $: executedBranchId =
     viewMode === ViewMode.LOGS && logStepData?.outputs?.branchId

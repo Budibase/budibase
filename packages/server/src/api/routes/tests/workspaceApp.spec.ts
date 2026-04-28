@@ -3,7 +3,7 @@ import { type Workspace } from "@budibase/types"
 import nock from "nock"
 import * as setup from "./utilities"
 import sdk from "../../../sdk"
-import { context } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 
 describe("/workspaceApp", () => {
   const testConfig = setup.getConfig()
@@ -146,6 +146,36 @@ describe("/workspaceApp", () => {
           },
         }
       )
+    })
+
+    it("emits workspace_app:created event", async () => {
+      await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({ name: "My App", url: "/my" })
+      )
+
+      expect(events.workspace.appCreated).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("/update", () => {
+    it("emits workspace_app:updated event", async () => {
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "App to update",
+          url: "/to-update",
+        })
+      )
+
+      await api.workspaceApp.update({
+        _id: workspaceApp._id,
+        _rev: workspaceApp._rev,
+        name: "App updated",
+        url: workspaceApp.url,
+        navigation: workspaceApp.navigation,
+        disabled: workspaceApp.disabled,
+      })
+
+      expect(events.workspace.appUpdated).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -30,18 +30,48 @@ export class GeminiRagProcessor implements RagProcessor {
     input: KnowledgeBaseFile,
     fileBuffer: Buffer
   ): Promise<void> {
-    const ingested = await ingestGeminiFile({
+    const startedAtMs = Date.now()
+    const knowledgeBaseId = this.knowledgeBase._id
+    console.log("Starting Gemini RAG file ingestion", {
+      knowledgeBaseId,
       vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+      fileId: input._id,
       filename: input.filename,
       mimetype: input.mimetype,
-      buffer: fileBuffer,
+      fileSize: fileBuffer.byteLength,
     })
 
-    input.status = KnowledgeBaseFileStatus.READY
-    input.ragSourceId = ingested.fileId || input.ragSourceId
-    input.processedAt = new Date().toISOString()
-    input.errorMessage = undefined
-    await updateKnowledgeBaseFile(input)
+    try {
+      const ingested = await ingestGeminiFile({
+        vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+        filename: input.filename,
+        mimetype: input.mimetype,
+        buffer: fileBuffer,
+      })
+
+      input.status = KnowledgeBaseFileStatus.READY
+      input.ragSourceId = ingested.fileId
+      input.processedAt = new Date().toISOString()
+      input.errorMessage = undefined
+      await updateKnowledgeBaseFile(input)
+      console.log("Completed Gemini RAG file ingestion", {
+        knowledgeBaseId,
+        vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+        fileId: input._id,
+        ragSourceId: input.ragSourceId,
+        durationMs: Date.now() - startedAtMs,
+      })
+    } catch (error) {
+      console.error("Failed Gemini RAG file ingestion", {
+        knowledgeBaseId,
+        vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+        fileId: input._id,
+        filename: input.filename,
+        durationMs: Date.now() - startedAtMs,
+        error,
+      })
+      throw error
+    }
   }
 
   async search(

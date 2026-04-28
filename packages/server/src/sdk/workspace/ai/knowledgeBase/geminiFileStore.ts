@@ -7,24 +7,28 @@ interface CreateVectorStoreResponse {
   id?: string
 }
 
-interface GeminiIngestResponse {
+interface RagIngestResponse {
+  id: string
+  status: "completed" | "in_progress" | "failed"
+  vector_store_id: string
   file_id: string
+  error?: string
 }
 
-interface GeminiSearchContent {
+interface RagSearchContent {
   text: string
   type: "text"
 }
 
-interface GeminiSearchResultItem {
+interface RagSearchResultItem {
   file_id?: string | null
   filename?: string
   score: number | null
-  content: GeminiSearchContent[]
+  content: RagSearchContent[]
 }
 
-interface GeminiSearchResponse {
-  data?: GeminiSearchResultItem[]
+interface RagSearchResponse {
+  data?: RagSearchResultItem[]
 }
 
 const getGeminiApiKey = () => {
@@ -149,7 +153,10 @@ export async function ingestGeminiFile({
     fallbackMessage: "Failed to ingest file into Gemini store",
   })
 
-  const payload = (await response.json()) as GeminiIngestResponse
+  const payload = (await response.json()) as RagIngestResponse
+  if (payload.status === "failed" && payload.error) {
+    throw new HTTPError(payload.error, 500)
+  }
   if (!payload.file_id) {
     throw new HTTPError("Gemini ingest did not return file_id", 500)
   }
@@ -166,7 +173,7 @@ export async function searchGeminiFileStore({
   vectorStoreId: string
   query: string
   fileIds?: string[]
-}): Promise<GeminiSearchResultItem[]> {
+}): Promise<RagSearchResultItem[]> {
   const geminiApiKey = getGeminiApiKey()
   const response = await fetch(
     `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
@@ -189,7 +196,7 @@ export async function searchGeminiFileStore({
     fallbackMessage: "Failed to search Gemini vector store",
   })
 
-  const payload = (await response.json()) as GeminiSearchResponse
+  const payload = (await response.json()) as RagSearchResponse
   return payload.data || []
 }
 

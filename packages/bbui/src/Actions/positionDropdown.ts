@@ -1,6 +1,6 @@
 // Strategies are defined as [Popover]To[Anchor].
 // They can apply for both horizontal and vertical alignment.
-import { PopoverAlignment } from "../constants"
+import { PopoverAlignment, type PopoverWidthMode } from "../constants"
 
 type Strategy =
   | "StartToStart"
@@ -14,6 +14,7 @@ export interface Styles {
   maxHeight?: number
   minWidth?: number
   maxWidth?: number
+  widthMode: PopoverWidthMode
   offset?: number
   left: number
   top: number
@@ -31,11 +32,12 @@ interface Opts {
   maxHeight?: number
   maxWidth?: number
   minWidth?: number
-  useAnchorWidth: boolean
+  widthMode: PopoverWidthMode
   offset: number
   customUpdate?: UpdateHandler
   resizable: boolean
   wrap: boolean
+  onScroll?: () => void
 }
 
 export default function positionDropdown(element: HTMLElement, opts: Opts) {
@@ -44,7 +46,16 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
 
   // We need a static reference to this function so that we can properly
   // clean up the scroll listener.
-  const scrollUpdate = () => updatePosition(latestOpts)
+  const scrollUpdate = (event: Event) => {
+    if (event.target instanceof Node && element.contains(event.target)) {
+      return
+    }
+    if (latestOpts.onScroll) {
+      latestOpts.onScroll()
+      return
+    }
+    updatePosition(latestOpts)
+  }
 
   // Updates the position of the dropdown
   const updatePosition = (opts: Opts) => {
@@ -54,7 +65,7 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
       maxHeight,
       maxWidth,
       minWidth,
-      useAnchorWidth,
+      widthMode,
       offset = 5,
       customUpdate,
       resizable,
@@ -70,10 +81,13 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
     const winWidth = window.innerWidth
     const winHeight = window.innerHeight
     const screenOffset = 8
+    const fixedToAnchor = widthMode === "fixed-to-anchor"
+    const minAnchor = widthMode === "min-to-anchor"
     let styles: Styles = {
       maxHeight,
-      minWidth: useAnchorWidth ? anchorBounds.width : minWidth,
-      maxWidth: useAnchorWidth ? anchorBounds.width : maxWidth,
+      minWidth: fixedToAnchor || minAnchor ? anchorBounds.width : minWidth,
+      maxWidth: fixedToAnchor ? anchorBounds.width : maxWidth,
+      widthMode,
       left: 0,
       top: 0,
     }
@@ -266,6 +280,9 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
 
     for (const [key, value] of Object.entries(styles)) {
       const name = key as keyof Styles
+      if (name === "widthMode") {
+        continue
+      }
       if (value != null) {
         element.style[name] = `${value}px`
       } else {

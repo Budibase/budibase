@@ -46,8 +46,6 @@ import {
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { render } from "svelte/server"
 
 const ACTIVE_CONTENT_EXTENSIONS = new Set([
   "html",
@@ -365,6 +363,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       false
 
     if (!env.isJest()) {
+      const [{ default: AppComponent }, { render }] = await Promise.all([
+        import("./templates/BudibaseApp.svelte"),
+        import("svelte/server"),
+      ])
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function

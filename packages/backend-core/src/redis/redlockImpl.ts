@@ -120,7 +120,9 @@ export async function doWithLock<T>(
 ): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
   let lock: Redlock.Lock | undefined
-  let timeout
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  let inflightExtend: Promise<void> | undefined
+  let stopped = false
   try {
     const name = getLockName(opts)
 
@@ -134,8 +136,17 @@ export async function doWithLock<T>(
       // We keep extending the lock while the task is running
       const extendInIntervals = (): void => {
         timeout = setTimeout(async () => {
-          lock = await lock!.extend(ttl, () => opts.onExtend && opts.onExtend())
-
+          if (stopped) {
+            return
+          }
+          inflightExtend = (async () => {
+            lock = await lock!.extend(
+              ttl,
+              () => opts.onExtend && opts.onExtend()
+            )
+          })()
+          await inflightExtend
+          inflightExtend = undefined
           extendInIntervals()
         }, ttl / 2)
       }
@@ -161,7 +172,12 @@ export async function doWithLock<T>(
       throw e
     }
   } finally {
+    stopped = true
     clearTimeout(timeout)
+    // If an extend is in-flight, wait for it to settle so that `lock` holds the
+    // latest token before we call unlock. Extend errors are swallowed here
+    // because the lock will expire on its own if unlock also fails.
+    await inflightExtend?.catch(() => {})
     await lock?.unlock()
   }
 }

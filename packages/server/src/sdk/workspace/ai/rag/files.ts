@@ -167,12 +167,16 @@ export const deleteFileForAgent = async (
   fileId: string
 ): Promise<void> => {
   const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
   const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
-  if (!knowledgeBaseIds.includes(file.knowledgeBaseId)) {
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
 
-  const knowledgeBase = await knowledgeBaseSdk.find(file.knowledgeBaseId)
+  const knowledgeBase = await knowledgeBaseSdk.find(fileKnowledgeBaseId)
   if (!knowledgeBase) {
     throw new HTTPError("Agent file storage not found", 404)
   }
