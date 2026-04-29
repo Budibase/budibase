@@ -253,7 +253,7 @@
           <div class="trigger-icon" class:completed={triggerCompleted}>
             <Icon
               name="lightning"
-              size="XXS"
+              size="M"
               color={triggerCompleted
                 ? "var(--spectrum-semantic-positive-color-status)"
                 : selected
@@ -398,19 +398,19 @@
   }
   .block-status {
     pointer-events: none;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     position: absolute;
-    right: -12px;
-    bottom: -12px;
+    right: 14px;
+    top: 14px;
     z-index: 1;
   }
   .trigger-icon {
     position: absolute;
-    right: -12px;
-    bottom: -12px;
-    width: 28px;
-    height: 28px;
+    right: 8px;
+    top: 14px;
+    width: 26px;
+    height: 26px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -419,20 +419,6 @@
     background-color: var(--background);
     color: var(--spectrum-global-color-gray-700);
     pointer-events: none;
-  }
-  .trigger-icon::before {
-    content: "";
-    position: absolute;
-    inset: 5px;
-    border-radius: 999px;
-    border: 1px solid var(--spectrum-global-color-gray-500);
-    background-color: transparent;
-  }
-  .trigger-icon.completed::before {
-    border-color: var(--spectrum-semantic-positive-color-status);
-  }
-  .block.selected .trigger-icon:not(.completed)::before {
-    border-color: var(--spectrum-global-color-blue-700);
   }
   .trigger-icon :global(i) {
     z-index: 1;

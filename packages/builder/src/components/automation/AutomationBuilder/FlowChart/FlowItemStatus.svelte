@@ -343,8 +343,8 @@
   }
 
   .flow-status-icon {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
