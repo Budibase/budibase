@@ -4,6 +4,7 @@ import {
   context,
   docIds,
   HTTPError,
+  logging,
   redis,
 } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
@@ -467,6 +468,26 @@ export const handleChatMessage = async ({
     }
 
     if (!existingLink) {
+      if (provider === AgentChannelProvider.MSTEAMS) {
+        const providerScopeKey = channel.tenantId || channel.teamId
+        const linkIdTried = `${DocumentType.CHAT_IDENTITY_LINK}_${encodeURIComponent(
+          context.getTenantId()
+        )}_${provider}${
+          providerScopeKey ? `_${encodeURIComponent(providerScopeKey)}` : ""
+        }_${encodeURIComponent(user.externalUserId)}`
+
+        logging.logWarn("chat_link_lookup_miss", {
+          workspaceId,
+          chatAppId,
+          agentId,
+          provider,
+          externalUserIdTried: user.externalUserId,
+          linkIdTried,
+          providerTenantId: channel.tenantId,
+          teamId: channel.teamId,
+        })
+      }
+
       const prompt = await createLinkPromptMessage({
         linkedAlready: false,
         prefix: `Your ${providerDisplayName(provider)} account is not linked yet.`,

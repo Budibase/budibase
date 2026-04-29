@@ -78,4 +78,7 @@
   .description {
     margin-bottom: var(--spacing-xs);
   }
+  .description :global(label) {
+    white-space: normal;
+  }
 </style>

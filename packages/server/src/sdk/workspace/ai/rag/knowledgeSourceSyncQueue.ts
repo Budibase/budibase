@@ -259,9 +259,7 @@ export async function enqueueAgentJobs(
         sourceType,
         sourceId,
       }
-      return getQueue().add(job, {
-        jobId: getJobId(job),
-      })
+      return getQueue().add(job)
     })
   )
 }

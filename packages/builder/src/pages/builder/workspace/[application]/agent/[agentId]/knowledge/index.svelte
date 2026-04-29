@@ -15,13 +15,17 @@
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
   import { onDestroy, onMount } from "svelte"
-  import type { KnowledgeTableRow } from "./renderers/types"
+  import type {
+    KnowledgeTableRow,
+    SharePointSelectionMode,
+  } from "./renderers/types"
   import type { PendingUpload } from "./knowledgeTableRows"
   import {
     toFileTableRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
   import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
+  import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
   import {
     coalesceAgentPollRequests,
     createKnowledgePollingController,
@@ -73,6 +77,7 @@
   )
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
   let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
+  let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
   let selectedSharePointSiteId = $state("")
   let shouldOpenSharePointPickerAfterOauth = $state(false)
   let loadingSharePointSites = $state(false)
@@ -134,16 +139,14 @@
     result: SyncAgentKnowledgeSourcesResponse
   ) => {
     const alreadySynced = result.alreadySynced
+    const deleted = result.deleted || 0
     const discovered = result.totalDiscovered ?? result.synced + alreadySynced
 
     if (result.synced === 0 && result.failed === 0) {
-      if (discovered === 0) {
-        notifications.info("No files found in selected SharePoint site(s)")
-        return
-      }
-      if (alreadySynced > 0) {
+      if (deleted > 0 || alreadySynced > 0) {
         const details = [
           alreadySynced > 0 ? `${alreadySynced} already synced` : "",
+          deleted > 0 ? `${deleted} removed by filters` : "",
         ]
           .filter(Boolean)
           .join(", ")
@@ -152,9 +155,13 @@
         )
         return
       }
+      if (discovered === 0) {
+        notifications.info("No files found in selected SharePoint site(s)")
+        return
+      }
     }
 
-    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""})`
+    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""}${deleted > 0 ? `, ${deleted} removed by filters` : ""})`
 
     if (result.failed > 0 && result.synced === 0) {
       notifications.error(message)
@@ -306,13 +313,28 @@
     await selectSharePointSiteModal?.show()
   }
 
-  async function onSharePointSiteCreated(siteId: string) {
+  async function onSharePointSiteCreated(
+    siteId: string,
+    mode: SharePointSelectionMode
+  ) {
     const agentId = currentAgent?._id
     if (agentId) {
       await fetchFiles(agentId)
     }
     selectedSharePointSiteId = siteId
     selectSharePointSiteModal?.hide()
+    if (mode === "selective") {
+      await selectSharePointFilesModal?.show()
+    }
+  }
+
+  async function openSharePointSiteSelectionModal(siteId: string) {
+    const agentId = currentAgent?._id
+    if (!agentId) {
+      return
+    }
+    selectedSharePointSiteId = siteId
+    await selectSharePointFilesModal?.show()
   }
 
   async function openSharePointSiteConfigModal(siteId: string) {
@@ -327,9 +349,10 @@
     }
 
     try {
-      const result = await agentsStore.syncAgentKnowledgeSources(agentId, {
-        sourceId,
-      })
+      const result = await agentsStore.syncAgentKnowledgeSources(
+        agentId,
+        sourceId
+      )
       await fetchFiles(agentId)
       showSharePointSyncResult(result)
     } catch (error) {
@@ -445,7 +468,14 @@
   bind:this={displaySharePointSiteModal}
   agentId={currentAgent?._id}
   siteId={selectedSharePointSiteId}
-></DisplaySharePointSiteModal>
+  onEdit={openSharePointSiteSelectionModal}
+/>
+
+<SelectSharePointFilesModal
+  bind:this={selectSharePointFilesModal}
+  agentId={currentAgent?._id}
+  siteId={selectedSharePointSiteId}
+/>
 
 <style>
   .section-header {

@@ -60,12 +60,31 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
 
     return getQueue().process(concurrency, async job => {
       const { workspaceId, knowledgeBaseId, fileId, objectStoreKey } = job.data
+      const startedAtMs = Date.now()
+      console.log("Starting RAG ingestion queue job", {
+        workspaceId,
+        knowledgeBaseId,
+        fileId,
+        objectStoreKey,
+        jobId: job.id,
+        attemptsMade: job.attemptsMade,
+        attempts: job.opts.attempts,
+      })
       await context.doInWorkspaceContext(workspaceId, async () => {
         let knowledgeBaseConfig: KnowledgeBase | undefined
         let knowledgeBaseFile: KnowledgeBaseFile | undefined
 
         knowledgeBaseConfig = await knowledgeBase.find(knowledgeBaseId)
         if (!knowledgeBaseConfig) {
+          console.log(
+            "Discarding RAG ingestion queue job: knowledge base missing",
+            {
+              workspaceId,
+              knowledgeBaseId,
+              fileId,
+              jobId: job.id,
+            }
+          )
           await job.discard()
           return
         }
@@ -75,6 +94,12 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
             await knowledgeBase.getKnowledgeBaseFileOrThrow(fileId)
         } catch (error: any) {
           if (error?.status === 404) {
+            console.log("Discarding RAG ingestion queue job: file missing", {
+              workspaceId,
+              knowledgeBaseId,
+              fileId,
+              jobId: job.id,
+            })
             await job.discard()
             return
           }
@@ -82,6 +107,12 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
         }
 
         if (!knowledgeBaseFile) {
+          console.log("Discarding RAG ingestion queue job: file not found", {
+            workspaceId,
+            knowledgeBaseId,
+            fileId,
+            jobId: job.id,
+          })
           await job.discard()
           return
         }
@@ -101,8 +132,25 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
             knowledgeBaseFile,
             buffer
           )
+          console.log("Completed RAG ingestion queue job", {
+            workspaceId,
+            knowledgeBaseId,
+            fileId,
+            jobId: job.id,
+            durationMs: Date.now() - startedAtMs,
+          })
         } catch (error: any) {
           await handleProcessingError(knowledgeBaseFile, job, error)
+          console.error("RAG ingestion queue job failed", {
+            workspaceId,
+            knowledgeBaseId,
+            fileId,
+            jobId: job.id,
+            durationMs: Date.now() - startedAtMs,
+            attemptsMade: job.attemptsMade,
+            attempts: job.opts.attempts,
+            error,
+          })
           throw error
         }
       })
@@ -115,6 +163,12 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
 
 export async function enqueueRagFileIngestion(job: RagIngestionJob) {
   init()
+  console.log("Enqueueing RAG ingestion job", {
+    workspaceId: job.workspaceId,
+    knowledgeBaseId: job.knowledgeBaseId,
+    fileId: job.fileId,
+    objectStoreKey: job.objectStoreKey,
+  })
   return await getQueue().add(job, { jobId: job.fileId })
 }
 
@@ -140,10 +194,22 @@ const handleProcessingError = async (
   const isFinalAttempt = job.attemptsMade + 1 >= attempts
 
   if (!isFinalAttempt) {
+    console.log("RAG ingestion job attempt failed, will retry", {
+      fileId: file._id,
+      attemptsMade: job.attemptsMade,
+      attempts,
+      errorMessage: error?.message,
+    })
     return
   }
 
   file.status = KnowledgeBaseFileStatus.FAILED
   file.errorMessage = error?.message || "Failed to process uploaded file"
+  console.error("RAG ingestion job exhausted retries, marking file failed", {
+    fileId: file._id,
+    attemptsMade: job.attemptsMade,
+    attempts,
+    errorMessage: file.errorMessage,
+  })
   await knowledgeBase.updateKnowledgeBaseFile(file)
 }

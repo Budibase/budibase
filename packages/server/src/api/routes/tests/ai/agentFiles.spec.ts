@@ -253,7 +253,8 @@ describe("agent files", () => {
 
       await config.api.agent.syncKnowledgeSources(
         created._id!,
-        { sourceId: "site-1" },
+        "site-1",
+        undefined,
         {
           status: 400,
           body: {
@@ -323,7 +324,8 @@ describe("agent files", () => {
 
       await config.api.agent.syncKnowledgeSources(
         created._id!,
-        { sourceId: "wrongId" },
+        "wrongId",
+        undefined,
         { status: 400 }
       )
     })

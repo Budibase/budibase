@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { KnowledgeBaseFileStatus } from "@budibase/types"
-import { buildEntryTree } from "./sharePointModalUtils"
+import {
+  buildEntryTree,
+  isExcludeNewByDefaultPatterns,
+  matchesConfiguredPatterns,
+} from "./sharePointModalUtils"
 
 describe("sharePointModalUtils.buildEntryTree", () => {
   it("builds a nested tree from source paths", () => {
@@ -95,5 +99,18 @@ describe("sharePointModalUtils.buildEntryTree", () => {
       "alpha/a.txt",
       "alpha/b.txt",
     ])
+  })
+})
+
+describe("sharePointModalUtils filter patterns", () => {
+  it("treats !** as exclude-all (including nested paths)", () => {
+    expect(matchesConfiguredPatterns("activities.txt", ["!**"])).toBe(false)
+    expect(matchesConfiguredPatterns("folder 1/sub 1/file.pdf", ["!**"])).toBe(
+      false
+    )
+  })
+
+  it("recognizes exclude-new-by-default for !**", () => {
+    expect(isExcludeNewByDefaultPatterns(["!**"])).toBe(true)
   })
 })

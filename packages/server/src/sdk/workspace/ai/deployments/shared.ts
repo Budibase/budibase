@@ -15,17 +15,48 @@ export const WEBHOOK_PATH_BY_PROVIDER: Record<AgentChannelProvider, string> = {
   [AgentChannelProvider.SLACK]: "slack",
 }
 
-const ensureAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
+const normalizeDefaultAgent = (agents: NonNullable<ChatApp["agents"]>) => {
+  const defaultAgentId =
+    agents.find(agent => agent.isEnabled && agent.isDefault)?.agentId ||
+    agents.find(agent => agent.isEnabled)?.agentId
+
+  return agents.map(agent => ({
+    ...agent,
+    isDefault: !!defaultAgentId && agent.agentId === defaultAgentId,
+  }))
+}
+
+const ensureAgentOnChatApp = async (
+  chatApp: ChatApp,
+  agentId: string,
+  isEnabled?: boolean
+) => {
   const existingAgents = chatApp.agents || []
   const existing = existingAgents.find(agent => agent.agentId === agentId)
   if (existing) {
-    return chatApp
+    if (isEnabled === undefined || existing.isEnabled === isEnabled) {
+      return chatApp
+    }
+
+    const updatedAgents = normalizeDefaultAgent(
+      existingAgents.map(agent =>
+        agent.agentId === agentId
+          ? {
+              ...agent,
+              isEnabled,
+              isDefault: isEnabled ? agent.isDefault : false,
+            }
+          : agent
+      )
+    )
+
+    return await chatApps.update({ ...chatApp, agents: updatedAgents })
   }
 
-  const updatedAgents = [
+  const updatedAgents = normalizeDefaultAgent([
     ...existingAgents,
-    { agentId, isEnabled: false, isDefault: false },
-  ]
+    { agentId, isEnabled: isEnabled === true, isDefault: false },
+  ])
 
   return await chatApps.update({ ...chatApp, agents: updatedAgents })
 }
@@ -54,22 +85,26 @@ export const disableAgentOnChatApp = async ({
 export const resolveChatAppForAgent = async ({
   agentId,
   chatAppId,
+  isEnabled,
 }: {
   agentId: string
   chatAppId?: string
+  isEnabled?: boolean
 }) => {
   if (chatAppId) {
     const app = await chatApps.getOrThrow(chatAppId)
-    return await ensureAgentOnChatApp(app, agentId)
+    return await ensureAgentOnChatApp(app, agentId, isEnabled)
   }
 
   const existing = await chatApps.getSingle()
   if (existing) {
-    return await ensureAgentOnChatApp(existing, agentId)
+    return await ensureAgentOnChatApp(existing, agentId, isEnabled)
   }
 
   return await chatApps.create({
-    agents: [{ agentId, isEnabled: false, isDefault: false }],
+    agents: normalizeDefaultAgent([
+      { agentId, isEnabled: isEnabled === true, isDefault: false },
+    ]),
   })
 }
 

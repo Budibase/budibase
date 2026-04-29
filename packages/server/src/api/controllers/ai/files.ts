@@ -6,6 +6,8 @@ import {
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   DisconnectAgentSharePointSiteResponse,
+  UpdateAgentSharePointSiteRequest,
+  UpdateAgentSharePointSiteResponse,
   SharePointKnowledgeSourceSnapshot,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -38,6 +40,20 @@ const unlinkSafe = async (path?: string) => {
   } catch (error) {
     console.log("Failed to delete temp file", error)
   }
+}
+
+const normalizeSourcePatterns = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined
+  }
+  const normalized = Array.from(
+    new Set(
+      value
+        .map(entry => (typeof entry === "string" ? entry.trim() : ""))
+        .filter(Boolean)
+    )
+  )
+  return normalized.length > 0 ? normalized : undefined
 }
 
 const sanitizeSharePointSourceId = (siteId: string) =>
@@ -186,15 +202,15 @@ export async function fetchAgentKnowledgeSourceAllEntries(
   ctx.status = 200
 }
 
-export async function syncAgentKnowledgeSources(
+export async function syncAgentKnowledgeSource(
   ctx: UserCtx<
     SyncAgentKnowledgeSourcesRequest,
     SyncAgentKnowledgeSourcesResponse,
-    { agentId: string }
+    { agentId: string; sourceId: string }
   >
 ) {
-  const { agentId } = ctx.params
-  const { sourceId } = ctx.request.body
+  const { agentId, sourceId } = ctx.params
+
   console.log("Agent knowledge source sync requested", {
     agentId,
     sourceId,
@@ -219,6 +235,7 @@ export async function connectAgentSharePointSite(
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
   }
+  const filters = normalizeSourcePatterns(ctx.request.body?.filters?.patterns)
 
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
   const hasWorkspaceConnection =
@@ -246,6 +263,7 @@ export async function connectAgentSharePointSite(
         name: selectedOption?.name,
         webUrl: selectedOption?.webUrl,
       },
+      filters: filters ? { patterns: filters } : undefined,
     },
   }
   console.log("Connecting SharePoint site to agent", {
@@ -269,6 +287,52 @@ export async function connectAgentSharePointSite(
     agentId,
     AgentKnowledgeSourceType.SHAREPOINT,
     [nextSource.id]
+  )
+  ctx.body = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
+  ctx.status = 200
+}
+
+export async function updateAgentSharePointSite(
+  ctx: UserCtx<
+    UpdateAgentSharePointSiteRequest,
+    UpdateAgentSharePointSiteResponse,
+    { agentId: string; siteId: string }
+  >
+) {
+  const { agentId, siteId } = ctx.params
+  const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
+  const source = getSharePointSources(existingAgent).find(
+    source => source.config.site?.id === siteId
+  )
+  if (!source) {
+    throw new HTTPError("SharePoint site is not connected for this agent", 404)
+  }
+
+  const patterns = normalizeSourcePatterns(ctx.request.body?.filters?.patterns)
+  const nextSharePointSources = getSharePointSources(existingAgent).map(
+    existingSource =>
+      existingSource.id === source.id
+        ? {
+            ...existingSource,
+            config: {
+              ...existingSource.config,
+              filters: patterns ? { patterns } : undefined,
+            },
+          }
+        : existingSource
+  )
+  const nonSharePointSources = (existingAgent.knowledgeSources || []).filter(
+    source => source.type !== AgentKnowledgeSourceType.SHAREPOINT
+  )
+  const updated = await sdk.ai.agents.update({
+    ...existingAgent,
+    knowledgeSources: [...nonSharePointSources, ...nextSharePointSources],
+  })
+  await sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(updated)
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueAgentJobs(
+    agentId,
+    AgentKnowledgeSourceType.SHAREPOINT,
+    [source.id]
   )
   ctx.body = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
   ctx.status = 200

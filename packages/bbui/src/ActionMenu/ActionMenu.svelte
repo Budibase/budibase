@@ -2,7 +2,7 @@
   import { setContext, getContext } from "svelte"
   import Popover from "../Popover/Popover.svelte"
   import Menu from "../Menu/Menu.svelte"
-  import type { PopoverAlignment } from "../constants"
+  import type { PopoverAlignment, PopoverWidthMode } from "../constants"
 
   export let disabled: boolean = false
   export let align: `${PopoverAlignment}` = "left"
@@ -10,7 +10,7 @@
   export let openOnHover: boolean = false
   export let animate: boolean | undefined = true
   export let offset: number | undefined = undefined
-  export let useAnchorWidth = false
+  export let widthMode: PopoverWidthMode = "no-anchor"
   export let roundedPopover: boolean = false
 
   const actionMenuContext = getContext("actionMenu")
@@ -76,7 +76,7 @@
   {portalTarget}
   {animate}
   {offset}
-  {useAnchorWidth}
+  {widthMode}
   resizable={false}
   borderRadius={roundedPopover ? "12px" : undefined}
   on:open

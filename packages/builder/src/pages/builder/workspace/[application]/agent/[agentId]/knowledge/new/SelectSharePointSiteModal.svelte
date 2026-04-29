@@ -11,11 +11,16 @@
   } from "@budibase/bbui"
 
   import { type KnowledgeSourceOption } from "@budibase/types"
+  import { EXCLUDE_ALL_PATTERN } from "../sharepoint/sharePointModalUtils"
+  import type { SharePointSelectionMode } from "../renderers/types"
 
   export interface Props {
     agentId: string
     existingSiteIds?: string[]
-    onCreated?: (_siteId: string) => Promise<void> | void
+    onCreated?: (
+      _siteId: string,
+      _mode: SharePointSelectionMode
+    ) => Promise<void> | void
   }
 
   let { agentId, existingSiteIds = [], onCreated }: Props = $props()
@@ -78,7 +83,7 @@
     modal?.hide()
   }
 
-  const handleSelect = async () => {
+  const handleSelect = async (mode: SharePointSelectionMode) => {
     if (!agentId || !selectedSiteId) {
       return
     }
@@ -87,11 +92,17 @@
     try {
       await agentsStore.connectAgentSharePointSite(agentId, {
         siteId: selectedSiteId,
+        filters:
+          mode === "selective"
+            ? {
+                patterns: [EXCLUDE_ALL_PATTERN],
+              }
+            : undefined,
       })
       notifications.success("SharePoint site added")
       hide()
 
-      await onCreated?.(selectedSiteId)
+      await onCreated?.(selectedSiteId, mode)
     } catch (error) {
       console.error(error)
       notifications.error("Failed to add SharePoint site")
@@ -133,10 +144,18 @@
     <ButtonGroup slot="footer">
       <Button
         cta
-        on:click={() => handleSelect()}
+        primary
+        on:click={() => handleSelect("selective")}
         disabled={!selectedSiteId || saving}
       >
-        Sync
+        Selective sync
+      </Button>
+      <Button
+        cta
+        on:click={() => handleSelect("all")}
+        disabled={!selectedSiteId || saving}
+      >
+        Sync all
       </Button>
     </ButtonGroup>
   </ModalContent>

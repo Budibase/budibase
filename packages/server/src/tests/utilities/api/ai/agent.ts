@@ -216,11 +216,12 @@ export class AgentAPI extends TestAPI {
 
   syncKnowledgeSources = async (
     agentId: string,
+    sourceId: string,
     body?: SyncAgentKnowledgeSourcesRequest,
     expectations?: Expectations
   ): Promise<SyncAgentKnowledgeSourcesResponse> => {
     return await this._post<SyncAgentKnowledgeSourcesResponse>(
-      `/api/agent/${agentId}/knowledge-sources/sync`,
+      `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
       {
         body,
         expectations,

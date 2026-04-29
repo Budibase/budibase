@@ -7,6 +7,7 @@ import {
   DisconnectAgentSharePointSiteResponse,
   DuplicateAgentResponse,
   FetchAgentKnowledgeResponse,
+  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
@@ -20,6 +21,8 @@ import {
   ToggleAgentDeploymentRequest,
   ToggleAgentDeploymentResponse,
   ToolMetadata,
+  UpdateAgentSharePointSiteRequest,
+  UpdateAgentSharePointSiteResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -69,17 +72,26 @@ export interface AgentEndpoints {
   fetchAgentKnowledgeSourceOptions: (
     agentId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
+  fetchAgentKnowledgeSourceAllEntries: (
+    agentId: string,
+    siteId: string
+  ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
   connectAgentSharePointSite: (
     agentId: string,
     body: ConnectAgentSharePointSiteRequest
   ) => Promise<ConnectAgentSharePointSiteResponse>
+  updateAgentSharePointSite: (
+    agentId: string,
+    siteId: string,
+    body: UpdateAgentSharePointSiteRequest
+  ) => Promise<UpdateAgentSharePointSiteResponse>
   disconnectAgentSharePointSite: (
     agentId: string,
     siteId: string
   ) => Promise<DisconnectAgentSharePointSiteResponse>
   syncAgentKnowledgeSources: (
     agentId: string,
-    body?: SyncAgentKnowledgeSourcesRequest
+    sourceId: string
   ) => Promise<SyncAgentKnowledgeSourcesResponse>
 }
 
@@ -212,6 +224,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  fetchAgentKnowledgeSourceAllEntries: async (
+    agentId: string,
+    siteId: string
+  ) => {
+    const query = new URLSearchParams({ siteId })
+    return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/entries/all?${query.toString()}`,
+    })
+  },
+
   connectAgentSharePointSite: async (agentId: string, body) => {
     return await API.post<
       ConnectAgentSharePointSiteRequest,
@@ -222,22 +244,28 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  updateAgentSharePointSite: async (agentId: string, siteId: string, body) => {
+    return await API.patch<
+      UpdateAgentSharePointSiteRequest,
+      UpdateAgentSharePointSiteResponse
+    >({
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+      body,
+    })
+  },
+
   disconnectAgentSharePointSite: async (agentId: string, siteId: string) => {
     return await API.delete<void, DisconnectAgentSharePointSiteResponse>({
       url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
     })
   },
 
-  syncAgentKnowledgeSources: async (
-    agentId: string,
-    body?: SyncAgentKnowledgeSourcesRequest
-  ) => {
+  syncAgentKnowledgeSources: async (agentId: string, sourceId: string) => {
     return await API.post<
       SyncAgentKnowledgeSourcesRequest | undefined,
       SyncAgentKnowledgeSourcesResponse
     >({
-      url: `/api/agent/${agentId}/knowledge-sources/sync`,
-      body,
+      url: `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
     })
   },
 })

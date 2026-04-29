@@ -40,3 +40,5 @@ export interface SharePointConnectionTableRow {
 export type KnowledgeTableRow =
   | FileKnowledgeTableRow
   | SharePointConnectionTableRow
+
+export type SharePointSelectionMode = "all" | "selective"

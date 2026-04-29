@@ -9,6 +9,14 @@ const CONFIG = {
   log: true,
 }
 
+const CORE_SERVICES = [
+  "minio-service",
+  "proxy-service",
+  "couchdb-service",
+  "redis-service",
+]
+const NON_CORE_SERVICES = ["litellm-service", "litellm-db"]
+
 const Commands = {
   Up: "up",
   Down: "down",
@@ -17,7 +25,13 @@ const Commands = {
 
 async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
-  await compose.upAll(CONFIG)
+
+  if (process.env.BUDIBASE_DEV_STACK === "core") {
+    await compose.stopMany(CONFIG, ...NON_CORE_SERVICES)
+    await compose.upMany(CORE_SERVICES, CONFIG)
+  } else {
+    await compose.upAll(CONFIG)
+  }
 
   // We always ensure to restart the proxy service in case of nginx conf changes
   await compose.restartOne("proxy-service", CONFIG)

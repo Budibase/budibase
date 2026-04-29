@@ -14,6 +14,9 @@ import type {
   LayoutDirection,
   Branch,
   BranchStep,
+  AutomationStep,
+  AutomationTrigger,
+  AutomationStepResultInputs,
 } from "@budibase/types"
 import {
   AutomationActionStepId,
@@ -50,6 +53,55 @@ const isLoopSubflowNode = (node: FlowNode): node is LoopSubflowNode => {
 // -----------------
 type BranchChild = { id: string; [key: string]: unknown }
 
+const getDefinitionChildren = (step: AutomationStep): AutomationStep[] => {
+  if (step.stepId === AutomationActionStepId.BRANCH) {
+    return Object.values(step.inputs?.children || {}).flat()
+  }
+
+  if (step.stepId === AutomationActionStepId.LOOP_V2) {
+    return step.inputs?.children || []
+  }
+
+  return []
+}
+
+const findStep = (
+  steps: AutomationStep[],
+  id: string
+): AutomationStep | undefined => {
+  for (const step of steps) {
+    if (step.id === id) {
+      return step
+    }
+
+    const match = findStep(getDefinitionChildren(step), id)
+    if (match) {
+      return match
+    }
+  }
+}
+
+const getLogStepInputs = (
+  definitionStep: AutomationStep | undefined,
+  logStep: AutomationLogStep
+): AutomationStepResultInputs => {
+  if (!definitionStep) {
+    return logStep.inputs || {}
+  }
+
+  if (
+    definitionStep.stepId === AutomationActionStepId.BRANCH ||
+    definitionStep.stepId === AutomationActionStepId.LOOP_V2
+  ) {
+    return {
+      ...logStep.inputs,
+      children: definitionStep.inputs.children,
+    }
+  }
+
+  return logStep.inputs || {}
+}
+
 export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
   const blockDefinitions = get(automationStore).blockDefinitions
   const selectedLog = get(automationStore).selectedLog
@@ -84,12 +136,18 @@ export const processLogSteps = (
     )
     .filter((logStep: AutomationLogStep) => !branchChildStepIds.has(logStep.id))
     .forEach((logStep: AutomationLogStep) => {
+      const definitionStep = findStep(
+        automation.definition.steps || [],
+        logStep.id
+      )
       const stepDefinition = getStepDefinition(
         automation.blockDefinitions,
         logStep.stepId
       )
       blocks.push({
+        ...definitionStep,
         ...logStep,
+        inputs: getLogStepInputs(definitionStep, logStep),
         name: stepDefinition?.name || logStep.name || "",
         icon: stepDefinition?.icon || logStep.icon || "",
       })
@@ -176,6 +234,42 @@ export const getStepErrors = (step: AutomationStepResult) => {
       type: "error",
     },
   ]
+}
+
+export const getLogStepData = (
+  step: AutomationStep | AutomationTrigger,
+  logData?: AutomationLog | null
+) => {
+  if (!logData) return null
+  if (step.type === "TRIGGER") {
+    return logData.trigger
+  }
+
+  const directLogStep = (logData.steps || []).find(
+    logStep => logStep.id === step.id
+  )
+  if (directLogStep) {
+    return directLogStep
+  }
+
+  for (const logStep of logData.steps || []) {
+    const loopResults = logStep.outputs?.items?.[step.id]
+    if (!Array.isArray(loopResults) || loopResults.length === 0) {
+      continue
+    }
+
+    const latest = loopResults[loopResults.length - 1]
+    return {
+      ...latest,
+      outputs: {
+        ...latest.outputs,
+        iterations: loopResults.length,
+        items: loopResults,
+      },
+    }
+  }
+
+  return null
 }
 
 // Branch-specific functions

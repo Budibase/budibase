@@ -68,6 +68,17 @@ const getEnabledChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
   return chatAgentConfig
 }
 
+const getConfiguredChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
+  const chatAgentConfig = chatApp.agents?.find(
+    agent => agent.agentId === agentId
+  )
+  if (!chatAgentConfig) {
+    throw new HTTPError("agentId is not configured for this chat app", 400)
+  }
+
+  return chatAgentConfig
+}
+
 const assertCanAccessChatAgent = async (
   ctx: UserCtx,
   chatAgentConfig: NonNullable<NonNullable<ChatApp["agents"]>[number]>
@@ -270,7 +281,7 @@ export async function webhookChat({
     throw new HTTPError("agentId is required", 400)
   }
 
-  getEnabledChatAgentConfig(chatApp, agentId)
+  getConfiguredChatAgentConfig(chatApp, agentId)
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const providerPrefix = chat.channel?.provider || "chat"
   const chatId = chat._id ?? docIds.generateChatConversationID()
@@ -363,13 +374,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
     const pendingToolCalls = new Set<string>()
-    let listedKnowledgeFiles = false
 
     const result = await run.stream({
       pendingToolCalls,
-      onKnowledgeFilesListed() {
-        listedKnowledgeFiles = true
-      },
     })
 
     const title = run.latestQuestion
@@ -393,6 +400,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           }
         }
         if (part.type === "finish") {
+          const usedKnowledgeSources = run.getUsedKnowledgeSourcesMetadata()
           // Check if model ended in a tool-call state or steps were incomplete
           const finishReason = (part as { finishReason?: string }).finishReason
           const toolCallsIncomplete =
@@ -400,8 +408,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
           return {
             ...sharedMetadata,
-            ...(run.ragSourcesMetadata?.length && !listedKnowledgeFiles
-              ? { ragSources: run.ragSourcesMetadata }
+            ...(usedKnowledgeSources?.length
+              ? { ragSources: usedKnowledgeSources }
               : {}),
             createdAt: streamStartTime,
             completedAt: Date.now(),

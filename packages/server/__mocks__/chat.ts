@@ -9,11 +9,17 @@ interface MockCardElement {
   [key: string]: unknown
 }
 
+interface MockSentMessage {
+  edit: (message: unknown) => Promise<MockSentMessage>
+}
+
 interface ChatOptions {
   userName?: string
   adapters?: Record<string, unknown>
   state?: unknown
   logger?: string
+  fallbackStreamingPlaceholderText?: string | null
+  streamingUpdateIntervalMs?: number
 }
 
 const defaultPostEphemeralResult = (): MockPostEphemeralResult => ({
@@ -24,16 +30,28 @@ const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
   slack: defaultPostEphemeralResult(),
   teams: defaultPostEphemeralResult(),
 }
+const mockChatOptions: ChatOptions[] = []
 
 const toMessageText = (value: unknown) =>
   typeof value === "string" ? value : JSON.stringify(value)
+
+const createSentMessage = (
+  messages: string[],
+  index: number
+): MockSentMessage => ({
+  edit: async (message: unknown) => {
+    messages[index] = toMessageText(message)
+    return createSentMessage(messages, index)
+  },
+})
 
 const createMessageCollector = (
   provider: MockProvider,
   messages: string[]
 ) => ({
   post: async (message: unknown) => {
-    messages.push(toMessageText(message))
+    const index = messages.push(toMessageText(message)) - 1
+    return createSentMessage(messages, index)
   },
   postEphemeral: async (
     _user: unknown,
@@ -116,6 +134,7 @@ const invokeHandlers = async (
 export const resetMockChatState = () => {
   mockWebhookState.slack = defaultPostEphemeralResult()
   mockWebhookState.teams = defaultPostEphemeralResult()
+  mockChatOptions.length = 0
 }
 
 export const setMockPostEphemeralResult = (
@@ -124,6 +143,8 @@ export const setMockPostEphemeralResult = (
 ) => {
   mockWebhookState[provider] = result
 }
+
+export const getMockChatOptions = () => mockChatOptions
 
 export class ConsoleLogger {
   level: string
@@ -149,6 +170,7 @@ export class Chat {
   }
 
   constructor(_options: ChatOptions) {
+    mockChatOptions.push(_options)
     this.adapters = _options.adapters || {}
     const discordPublicKey = String(
       (_options.adapters?.discord as { publicKey?: string } | undefined)
@@ -250,6 +272,7 @@ export class Chat {
           id: body.threadId || body.conversation?.id || "teams:thread-1",
           ...createMessageCollector("teams", messages),
           subscribe: async () => {},
+          startTyping: async () => {},
         }
         const isMention = isTeamsMentionActivity(body)
         const message = {
@@ -445,14 +468,15 @@ export interface Thread {
   channelId?: string
   channel?: {
     id?: string
-    post: (message: string | MockCardElement) => Promise<void>
+    post: (message: string | MockCardElement) => Promise<MockSentMessage>
     postEphemeral?: (
       user: string | { userId?: string },
       message: string | MockCardElement,
       options: { fallbackToDM: boolean }
     ) => Promise<{ usedFallback: boolean } | null>
   }
-  post: (message: string | MockCardElement) => Promise<void>
+  post: (message: string | MockCardElement) => Promise<MockSentMessage>
+  startTyping?: () => Promise<void>
   subscribe?: () => Promise<void>
   postEphemeral?: (
     user: string | { userId?: string },
@@ -470,7 +494,7 @@ export interface SlashCommandEvent {
     userName?: string
   }
   channel: {
-    post: (message: string | MockCardElement) => Promise<void>
+    post: (message: string | MockCardElement) => Promise<MockSentMessage>
     postEphemeral?: (
       user: string | { userId?: string },
       message: string | MockCardElement,

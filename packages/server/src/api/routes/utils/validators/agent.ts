@@ -139,17 +139,30 @@ export function generateAgentInstructionsValidator() {
 }
 
 export function syncAgentKnowledgeSourcesValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      sourceId: Joi.string().trim().disallow("").required(),
-    }).required()
-  )
+  return auth.joiValidator.body(Joi.object({}).optional())
 }
 
 export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
       siteId: Joi.string().trim().disallow("").required(),
+      filters: Joi.object({
+        patterns: Joi.array()
+          .items(Joi.string().trim().disallow(""))
+          .optional(),
+      }).optional(),
+    }).required()
+  )
+}
+
+export function updateAgentSharePointSiteValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      filters: Joi.object({
+        patterns: Joi.array()
+          .items(Joi.string().trim().disallow(""))
+          .optional(),
+      }).optional(),
     }).required()
   )
 }

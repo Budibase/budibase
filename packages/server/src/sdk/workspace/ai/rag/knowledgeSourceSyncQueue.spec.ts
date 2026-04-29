@@ -69,6 +69,7 @@ jest.mock("./files", () => ({
 
 import { AgentKnowledgeSourceType, type Agent } from "@budibase/types"
 import {
+  enqueueAgentJobs,
   reconcileAgentJobs,
   rehydrateScheduledJobs,
   removeAllAgentJobs,
@@ -253,6 +254,20 @@ describe("knowledgeSourceSyncQueue", () => {
       "agent_1",
       "site_1"
     )
+  })
+
+  it("enqueues immediate sync jobs without deterministic job ids", async () => {
+    await enqueueAgentJobs("agent_1", AgentKnowledgeSourceType.SHAREPOINT, [
+      "sharepoint_site_site_1",
+    ])
+
+    expect(mockQueueAdd).toHaveBeenCalledWith({
+      workspaceId: "app_dev_test",
+      agentId: "agent_1",
+      jobType: "sync",
+      sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+      sourceId: "sharepoint_site_site_1",
+    })
   })
 
   it("removes orphan jobs during rehydration", async () => {

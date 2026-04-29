@@ -53,17 +53,14 @@ describe("agentsStore sharepoint and file syncing", () => {
       synced: 2,
       failed: 0,
       alreadySynced: 1,
+      deleted: 0,
       unsupported: 0,
       totalDiscovered: 3,
     })
 
-    const result = await store.syncAgentKnowledgeSources("agent_1", {
-      sourceId: "site-1",
-    })
+    const result = await store.syncAgentKnowledgeSources("agent_1", "site-1")
 
-    expect(syncAgentKnowledgeSources).toHaveBeenCalledWith("agent_1", {
-      sourceId: "site-1",
-    })
+    expect(syncAgentKnowledgeSources).toHaveBeenCalledWith("agent_1", "site-1")
     expect(result.synced).toBe(2)
     expect(result.totalDiscovered).toBe(3)
   })

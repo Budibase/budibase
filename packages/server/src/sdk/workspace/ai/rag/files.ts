@@ -252,7 +252,7 @@ export const retrieveContextForAgent = async (
     const readyFileSourceIds = new Set(readyFileSources)
     const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
     const processor = getProcessor(knowledgeBase)
-    const returned = await processor.search(question, readyFileSources)
+    const returned = await processor.search(question)
 
     for (const chunk of returned) {
       if (!chunk.source) {
