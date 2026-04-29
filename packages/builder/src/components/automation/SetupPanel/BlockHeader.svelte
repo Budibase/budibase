@@ -188,12 +188,12 @@
     display: -webkit-box;
     width: 100%;
     box-sizing: border-box;
-    padding: 0 var(--spacing-s);
+    padding: 0;
     overflow: hidden;
     text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.2;
     -webkit-box-orient: vertical;
     line-clamp: 2;
@@ -227,7 +227,7 @@
     flex: 0 0 100%;
     gap: 0;
     height: 100%;
-    padding: 0;
+    padding: 22px;
     box-sizing: border-box;
   }
 
@@ -264,25 +264,25 @@
   .icon-container.compact,
   .external-icon.compact {
     position: absolute;
-    top: var(--spacing-s);
-    left: var(--spacing-s);
-    width: 20px;
-    height: 20px;
+    top: 22px;
+    left: 22px;
+    width: 26px;
+    height: 26px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 4px;
-    border-radius: 6px;
+    border-radius: 8px;
   }
 
   .icon-container.compact :global(svg) {
-    width: 12px;
-    height: 12px;
+    width: 18px;
+    height: 18px;
   }
 
   .external-icon.compact img {
-    width: 12px;
-    height: 12px;
+    width: 18px;
+    height: 18px;
   }
 </style>

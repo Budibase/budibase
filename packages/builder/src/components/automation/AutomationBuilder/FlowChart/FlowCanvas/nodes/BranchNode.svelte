@@ -152,8 +152,8 @@
     display: inline-block;
   }
   .block {
-    width: 120px;
-    height: 90px;
+    width: 200px;
+    height: 150px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;

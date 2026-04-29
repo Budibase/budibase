@@ -201,7 +201,7 @@
         </div>
         {#if isTrigger}
           <div class="trigger-icon">
-            <Icon name="tree-structure" size="S" />
+            <Icon name="lightning" size="S" />
           </div>
         {/if}
         <div
@@ -266,8 +266,8 @@
     display: inline-block;
   }
   .block {
-    width: 120px;
-    height: 90px;
+    width: 200px;
+    height: 150px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 8px;
     font-weight: 600;
@@ -282,7 +282,7 @@
   }
   .block .wrap .block-content {
     width: 100%;
-    height: 90px;
+    height: 150px;
     display: flex;
     flex-direction: row;
     background-color: var(--background);
