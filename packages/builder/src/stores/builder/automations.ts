@@ -2526,7 +2526,16 @@ const automationActions = (store: AutomationStore) => ({
 
     store.actions.replace(response.automation._id!, response.automation)
     store.actions.select(response.automation._id!)
+    store.actions.clearRunResults()
     return response.automation
+  },
+
+  clearRunResults: () => {
+    store.update(state => {
+      state.testResults = undefined
+      state.testProgress = {}
+      return state
+    })
   },
 
   delete: async (automation: Automation) => {
