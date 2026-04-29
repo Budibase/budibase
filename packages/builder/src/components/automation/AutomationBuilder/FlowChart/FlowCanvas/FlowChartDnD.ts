@@ -5,6 +5,8 @@ export interface DragViewMoveStep {
   id: string
   offsetX: number
   offsetY: number
+  startX: number
+  startY: number
   w?: number
   h?: number
   mouse?: { x: number; y: number }
@@ -26,6 +28,8 @@ export interface DragView {
 }
 
 type Viewport = { x: number; y: number; zoom: number }
+
+const DRAG_START_THRESHOLD = 6
 
 export interface DnDSelectedAutomation {
   blockRefs?: Record<string, BlockRef>
@@ -97,6 +101,12 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
 
     const v = get(view)
     if (v.moveStep && !v.dragging) {
+      const deltaX = e.clientX - v.moveStep.startX
+      const deltaY = e.clientY - v.moveStep.startY
+      const distance = Math.hypot(deltaX, deltaY)
+      if (distance < DRAG_START_THRESHOLD) {
+        return
+      }
       view.update(s => ({ ...s, dragging: true }))
     }
 

@@ -99,7 +99,8 @@
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
       : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
-  $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
+  $: dragging =
+    $view?.dragging && $view?.moveStep && $view?.moveStep?.id === block.id
 
   $: if (dragging && blockEle) {
     updateBlockDims()
@@ -166,6 +167,8 @@
         id: block.id,
         offsetX: $pos.x,
         offsetY: $pos.y,
+        startX: clientX,
+        startY: clientY,
         w: blockDims?.width,
         h: blockDims?.height,
         mouse: {
