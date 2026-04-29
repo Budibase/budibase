@@ -331,9 +331,6 @@
     font-weight: 600;
     cursor: default;
   }
-  .block.TRIGGER {
-    width: 120px;
-  }
   .block .wrap {
     width: 100%;
     position: relative;
@@ -445,7 +442,6 @@
   .block.selected .block-content {
     border-color: var(--spectrum-global-color-blue-700);
     border-width: 2px;
-    transition: border 130ms ease-out;
   }
   .block-info {
     pointer-events: none;
