@@ -118,7 +118,7 @@
   .branch-actions {
     display: flex;
     gap: var(--spacing-l);
-    cursor: default;
+    cursor: pointer;
   }
   .footer {
     display: flex;
@@ -152,12 +152,12 @@
     display: inline-block;
   }
   .block {
-    width: 200px;
+    width: 180px;
     height: 120px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;
-    cursor: default;
+    cursor: pointer;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -171,6 +171,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
   }
 
   .separator {
@@ -205,6 +206,7 @@
     justify-content: center;
     width: 100%;
     height: 100%;
+    cursor: pointer;
   }
 
   .block.selected {

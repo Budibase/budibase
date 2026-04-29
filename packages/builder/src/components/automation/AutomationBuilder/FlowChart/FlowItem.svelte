@@ -270,7 +270,7 @@
     display: inline-block;
   }
   .block {
-    width: 200px;
+    width: 180px;
     height: 120px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 8px;
