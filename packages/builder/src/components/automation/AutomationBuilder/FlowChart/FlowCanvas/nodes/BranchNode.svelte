@@ -38,6 +38,7 @@
   $: branch = step.inputs?.branches?.[branchIdx]
   $: blockRef = $selectedAutomation?.blockRefs?.[step?.id]
   $: branchNodeId = branch ? createBranchNodeId(branchIdx, branch.id) : ""
+  $: selected = $automationStore.selectedNodeId === branchNodeId
 
   // Logs: compute step data and execution state
   $: logData = $automationStore.selectedLog
@@ -108,9 +109,9 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
     class={`block branch-node hoverable`}
-    class:selected={$automationStore.selectedNodeId === branchNodeId}
-    class:success={branchSuccess}
-    class:error={branchFailed}
+    class:selected
+    class:success={selected && branchSuccess}
+    class:error={selected && branchFailed}
     class:executed
     class:unexecuted
     on:click={e => {

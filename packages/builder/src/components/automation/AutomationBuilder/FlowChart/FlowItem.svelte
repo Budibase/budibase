@@ -211,8 +211,8 @@
     class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
-    class:success={blockSuccess}
-    class:error={blockFailed}
+    class:success={selected && blockSuccess}
+    class:error={selected && blockFailed}
     class:unexecuted
   >
     <div class="wrap">
@@ -253,7 +253,7 @@
           <div class="trigger-icon" class:completed={triggerCompleted}>
             <Icon
               name="lightning"
-              size="M"
+              size="XS"
               color={triggerCompleted
                 ? "var(--spectrum-semantic-positive-color-status)"
                 : "var(--spectrum-global-color-static-gray-50)"}
@@ -414,15 +414,20 @@
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--background);
     color: var(--spectrum-global-color-gray-700);
     pointer-events: none;
   }
-  .block.selected .trigger-icon {
-    border: 1px solid var(--spectrum-global-color-blue-700);
+  .trigger-icon::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 999px;
+    border: 1px solid var(--spectrum-semantic-positive-color-status);
+    background-color: transparent;
   }
-  .block.selected.success .trigger-icon {
-    border-color: var(--spectrum-semantic-positive-color-status);
+  .trigger-icon :global(i) {
+    z-index: 1;
   }
   .block-core {
     cursor: pointer;

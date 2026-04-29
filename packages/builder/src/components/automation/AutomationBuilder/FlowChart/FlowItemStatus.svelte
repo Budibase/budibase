@@ -356,10 +356,12 @@
   }
 
   .flow-success.flow-status-icon {
+    background-color: var(--background);
     color: var(--spectrum-semantic-positive-color-status);
   }
 
   .flow-error.flow-status-icon {
+    background-color: var(--background);
     color: var(--spectrum-semantic-negative-color-status);
   }
 
