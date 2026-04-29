@@ -248,7 +248,7 @@
         >
           <Icon
             name={flowStatus.icon}
-            size={flowStatus.type === FlowStatusType.WARN ? "M" : "XL"}
+            size={flowStatus.type === FlowStatusType.WARN ? "M" : "L"}
             color="currentColor"
           />
         </span>
