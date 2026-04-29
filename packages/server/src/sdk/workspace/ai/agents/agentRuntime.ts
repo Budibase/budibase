@@ -1,11 +1,9 @@
-import { features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   Agent,
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
-  FeatureFlag,
 } from "@budibase/types"
 import {
   extractReasoningMiddleware,
@@ -18,12 +16,11 @@ import {
 import sdk from "../../.."
 import { createSessionLogIndexer } from "../agentLogs"
 import {
-  addRetrievedContextToMessages,
   findLatestUserQuestion,
   prepareModelMessages,
 } from "../chatConversations"
-import { retrieveContextForAgent } from "../rag"
 import { updatePendingToolCalls } from "./utils"
+import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -36,7 +33,7 @@ interface PrepareAgentChatRunParams {
 
 export interface AgentChatRun {
   latestQuestion: string
-  ragSourcesMetadata?: AgentMessageMetadata["ragSources"]
+  getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
     options?: AgentChatStreamOptions
@@ -46,34 +43,7 @@ export interface AgentChatRun {
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
-  onKnowledgeFilesListed?: () => void
   pendingToolCalls?: Set<string>
-}
-
-const getRetrievedAgentContext = async (
-  agent: Agent,
-  latestQuestion: string
-) => {
-  if (
-    !latestQuestion ||
-    !agent.knowledgeBases?.length ||
-    !(await features.isEnabled(FeatureFlag.AI_RAG))
-  ) {
-    return {
-      text: "",
-      sources: undefined as AgentMessageMetadata["ragSources"] | undefined,
-    }
-  }
-
-  try {
-    return await retrieveContextForAgent(agent, latestQuestion)
-  } catch (error) {
-    console.error("Failed to retrieve agent context", error)
-    return {
-      text: "",
-      sources: undefined as AgentMessageMetadata["ragSources"] | undefined,
-    }
-  }
 }
 
 export const prepareAgentChatRun = async ({
@@ -92,21 +62,43 @@ export const prepareAgentChatRun = async ({
     errorLabel,
   })
 
-  const [retrievedContext, promptAndTools, llm, modelMessages] =
-    await Promise.all([
-      getRetrievedAgentContext(agent, latestQuestion),
-      sdk.ai.agents.buildPromptAndTools(agent, {
-        baseSystemPrompt: ai.agentSystemPrompt(user),
-        includeGoal: false,
-      }),
-      sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agentId),
-      prepareModelMessages(chat.messages),
-    ])
+  const [promptAndTools, llm, modelMessages] = await Promise.all([
+    sdk.ai.agents.buildPromptAndTools(agent, {
+      baseSystemPrompt: ai.agentSystemPrompt(user),
+      includeGoal: false,
+    }),
+    sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agentId),
+    prepareModelMessages(chat.messages),
+  ])
 
-  const trimmedRetrievedContext = retrievedContext.text.trim()
-  const ragSourcesMetadata =
-    trimmedRetrievedContext.length > 0 ? retrievedContext.sources : undefined
   const tools = promptAndTools.tools
+  const retrievedKnowledgeSourceById = new Map<
+    string,
+    NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  >()
+  const usedKnowledgeSourceById = new Map<
+    string,
+    NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  >()
+  const setUsedKnowledgeSources = (
+    accepted?: AgentMessageMetadata["ragSources"]
+  ) => {
+    usedKnowledgeSourceById.clear()
+    for (const source of accepted || []) {
+      if (!source?.sourceId) {
+        continue
+      }
+      usedKnowledgeSourceById.set(source.sourceId, source)
+    }
+  }
+  const reportUsedSourcesTool = createReportUsedSourcesTool({
+    getSourceById: sourceId => retrievedKnowledgeSourceById.get(sourceId),
+    onAcceptedSources: accepted => setUsedKnowledgeSources(accepted),
+  })
+  if (tools.search_knowledge) {
+    tools.report_used_sources = reportUsedSourcesTool
+  }
+
   const hasTools = Object.keys(tools).length > 0
   const agentRunner = new ToolLoopAgent({
     model: wrapLanguageModel({
@@ -124,19 +116,13 @@ export const prepareAgentChatRun = async ({
 
   return {
     latestQuestion,
-    ragSourcesMetadata,
     sessionLogIndexer,
+    getUsedKnowledgeSourcesMetadata: () =>
+      Array.from(usedKnowledgeSourceById.values()),
     toolDisplayNames: promptAndTools.toolDisplayNames,
-    stream: async ({
-      onFinish,
-      onKnowledgeFilesListed,
-      pendingToolCalls,
-    } = {}) =>
+    stream: async ({ onFinish, pendingToolCalls } = {}) =>
       await agentRunner.stream({
-        messages: addRetrievedContextToMessages(
-          modelMessages,
-          trimmedRetrievedContext
-        ),
+        messages: modelMessages,
         async onStepFinish({ content, toolCalls, toolResults, response }) {
           sessionLogIndexer.addRequestId(response?.id)
           if (pendingToolCalls) {
@@ -145,10 +131,27 @@ export const prepareAgentChatRun = async ({
 
           for (const toolResult of toolResults) {
             if (
-              toolResult.toolName === "list_knowledge_files" &&
+              toolResult.toolName === "search_knowledge" &&
               !toolResult.preliminary
             ) {
-              onKnowledgeFilesListed?.()
+              const output = toolResult.output as
+                | { sources?: AgentMessageMetadata["ragSources"] }
+                | undefined
+              for (const source of output?.sources || []) {
+                if (!source?.sourceId) {
+                  continue
+                }
+                retrievedKnowledgeSourceById.set(source.sourceId, source)
+              }
+            }
+            if (
+              toolResult.toolName === "report_used_sources" &&
+              !toolResult.preliminary
+            ) {
+              const output = toolResult.output as
+                | { accepted?: AgentMessageMetadata["ragSources"] }
+                | undefined
+              setUsedKnowledgeSources(output?.accepted)
             }
             await quotas.addAction(async () => {})
           }
