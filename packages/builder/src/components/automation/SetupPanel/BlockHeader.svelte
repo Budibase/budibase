@@ -183,7 +183,7 @@
 
   .compact-label {
     position: absolute;
-    top: calc(50% - 0.6em - 1px);
+    top: calc(50% - 0.6em - 2px);
     left: 0;
     display: -webkit-box;
     width: 100%;
@@ -193,8 +193,9 @@
     text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
-    font-size: 12px;
-    line-height: 1.2;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.3;
     -webkit-box-orient: vertical;
     line-clamp: 2;
     -webkit-line-clamp: 2;
@@ -264,7 +265,7 @@
   .icon-container.compact,
   .external-icon.compact {
     position: absolute;
-    top: 18px;
+    top: 14px;
     left: 18px;
     width: 26px;
     height: 26px;
