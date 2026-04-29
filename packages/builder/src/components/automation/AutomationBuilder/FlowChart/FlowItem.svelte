@@ -256,7 +256,9 @@
               size="XXS"
               color={triggerCompleted
                 ? "var(--spectrum-semantic-positive-color-status)"
-                : "var(--spectrum-global-color-static-gray-50)"}
+                : selected
+                  ? "var(--spectrum-global-color-blue-700)"
+                  : "var(--spectrum-global-color-gray-500)"}
             />
           </div>
         {/if}
@@ -423,8 +425,14 @@
     position: absolute;
     inset: 5px;
     border-radius: 999px;
-    border: 1px solid var(--spectrum-semantic-positive-color-status);
+    border: 1px solid var(--spectrum-global-color-gray-500);
     background-color: transparent;
+  }
+  .trigger-icon.completed::before {
+    border-color: var(--spectrum-semantic-positive-color-status);
+  }
+  .block.selected .trigger-icon:not(.completed)::before {
+    border-color: var(--spectrum-global-color-blue-700);
   }
   .trigger-icon :global(i) {
     z-index: 1;
