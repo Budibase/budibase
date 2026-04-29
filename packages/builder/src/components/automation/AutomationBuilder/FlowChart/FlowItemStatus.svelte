@@ -23,7 +23,7 @@
     isBranchStep,
     isFilterStep,
   } from "@budibase/types"
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, Icon } from "@budibase/bbui"
   import Spinner from "@/components/common/Spinner.svelte"
 
   type StatusResult =
@@ -42,6 +42,7 @@
   export let viewMode: ViewMode = ViewMode.EDITOR
   export let showBlockType: boolean = true
   export let showFlowStatus: boolean = true
+  export let iconOnly: boolean = false
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null
   $: viewMode = $automationStore.viewMode
@@ -224,14 +225,34 @@
       <span></span>
     {/if}
     {#if showFlowStatus && isRunning && !isTriggerBlock}
-      <span class="flow-blue flow-running flow-status-btn">
-        <ActionButton size="S" active={false}>
+      {#if iconOnly}
+        <span class="flow-blue flow-status-icon" title={runningLabel}>
           <Spinner size="12" />
-          {runningLabel}
-        </ActionButton>
-      </span>
+        </span>
+      {:else}
+        <span class="flow-blue flow-running flow-status-btn">
+          <ActionButton size="S" active={false}>
+            <Spinner size="12" />
+            {runningLabel}
+          </ActionButton>
+        </span>
+      {/if}
     {:else if showFlowStatus && flowStatus && !hideStatus}
-      {#if loopInfo?.total && $automationStore.inProgressTest}
+      {#if iconOnly}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <span
+          class={`flow-${flowStatus.type} flow-status-icon`}
+          title={flowStatus.message}
+          on:click={async () => await onStatusClick(flowStatus.type)}
+        >
+          <Icon
+            name={flowStatus.icon}
+            size={flowStatus.type === FlowStatusType.WARN ? "M" : "XL"}
+            color="currentColor"
+          />
+        </span>
+      {:else if loopInfo?.total && $automationStore.inProgressTest}
         <span class="flow-success flow-status-btn">
           <ActionButton
             size="S"
@@ -319,5 +340,30 @@
 
   .flow-status-btn :global(.spectrum-ActionButton i) {
     color: unset;
+  }
+
+  .flow-status-icon {
+    width: 28px;
+    height: 28px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background-color: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-700);
+    cursor: pointer;
+  }
+
+  .flow-success.flow-status-icon {
+    color: var(--spectrum-semantic-positive-color-status);
+  }
+
+  .flow-error.flow-status-icon {
+    color: var(--spectrum-semantic-negative-color-status);
+  }
+
+  .flow-warn.flow-status-icon {
+    color: var(--spectrum-global-color-yellow-600);
   }
 </style>
