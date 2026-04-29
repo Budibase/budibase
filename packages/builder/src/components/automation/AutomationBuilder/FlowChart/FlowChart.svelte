@@ -66,7 +66,7 @@
 
   const VIEWPORT_ANIMATION_DURATION = 180
   const MIN_ZOOM = 0.75
-  const MAX_ZOOM = 1.5
+  const MAX_ZOOM = 2
 
   const memoAutomation = memo(automation)
 
