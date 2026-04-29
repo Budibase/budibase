@@ -458,15 +458,9 @@
   }
   .block.selected .block-content {
     border-color: var(--spectrum-global-color-blue-700);
+    border-width: 2px;
     transition: border 130ms ease-out;
   }
-  .block.selected.success .block-content {
-    border-color: var(--spectrum-semantic-positive-color-status);
-  }
-  .block.selected.error .block-content {
-    border-color: var(--spectrum-semantic-negative-color-status);
-  }
-
   .block-info {
     pointer-events: none;
     width: 100%;
