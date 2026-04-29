@@ -19,6 +19,13 @@
   } from "@budibase/types"
   import { type DragView } from "../FlowChartDnD"
 
+  type BranchResult = {
+    outputs: {
+      branchId?: string
+      success?: boolean
+    }
+  }
+
   export let branchIdx
   export let step
   export let automation: Automation | undefined
@@ -45,9 +52,35 @@
   $: executed = executedBranchId === branch?.id
   $: unexecuted =
     viewMode === ViewMode.LOGS && Boolean(executedBranchId) && !executed
+  $: branchResult =
+    viewMode === ViewMode.LOGS && logStepData
+      ? logStepData
+      : automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          step
+        )
+  $: branchExecuted =
+    branch && hasBranchResult(branchResult)
+      ? branchResult.outputs.branchId === branch.id
+      : false
+  $: branchSuccess = branchExecuted
+  $: branchFailed = false
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
+  }
+
+  const hasBranchResult = (value: unknown): value is BranchResult => {
+    if (!value || typeof value !== "object" || !("outputs" in value)) {
+      return false
+    }
+    const outputs = value.outputs
+    return (
+      !!outputs &&
+      typeof outputs === "object" &&
+      "branchId" in outputs &&
+      "success" in outputs
+    )
   }
 
   const branchUpdate = async (e: CustomEvent<string>) => {
@@ -76,6 +109,8 @@
   <div
     class={`block branch-node hoverable`}
     class:selected={$automationStore.selectedNodeId === branchNodeId}
+    class:success={branchSuccess}
+    class:error={branchFailed}
     class:executed
     class:unexecuted
     on:click={e => {
@@ -98,6 +133,7 @@
         {branch}
         hideStatus={$view?.dragging}
         showBlockType={false}
+        iconOnly
       />
     </div>
     <div class="blockSection">
@@ -194,10 +230,11 @@
 
   .block-float {
     pointer-events: none;
-    width: 100%;
+    width: 28px;
+    height: 28px;
     position: absolute;
-    top: calc(100% + var(--spacing-xs));
-    left: 0px;
+    right: -12px;
+    bottom: -12px;
   }
 
   .blockSection .heading {
@@ -212,6 +249,14 @@
   .block.selected {
     border-color: var(--spectrum-global-color-blue-700);
     transition: border-color 130ms ease-out;
+  }
+
+  .block.selected.success {
+    border-color: var(--spectrum-semantic-positive-color-status);
+  }
+
+  .block.selected.error {
+    border-color: var(--spectrum-semantic-negative-color-status);
   }
 
   .block.executed {

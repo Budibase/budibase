@@ -18,6 +18,12 @@
   } from "@budibase/types"
   import { type DragView } from "./FlowCanvas/FlowChartDnD"
 
+  type ResultWithOutputs = {
+    outputs: {
+      success?: boolean
+    }
+  }
+
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
   export let draggable: boolean = true
@@ -43,6 +49,31 @@
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
+  $: triggerCompleted =
+    isTrigger &&
+    !$view?.dragging &&
+    (viewMode === ViewMode.LOGS
+      ? !!logStepData
+      : !!$automationStore.inProgressTest ||
+        !!automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          block
+        ))
+  $: blockStatusResult =
+    viewMode === ViewMode.LOGS && logStepData
+      ? logStepData
+      : automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          block
+        )
+  $: blockSuccess =
+    blockStatusResult && hasSuccessOutput(blockStatusResult)
+      ? blockStatusResult.outputs.success === true
+      : isTrigger && triggerCompleted
+  $: blockFailed =
+    blockStatusResult && hasSuccessOutput(blockStatusResult)
+      ? blockStatusResult.outputs.success === false
+      : false
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
     : undefined
@@ -148,6 +179,17 @@
   function handleHeaderUpdate(e: CustomEvent) {
     automationStore.actions.updateBlockTitle(block, e.detail)
   }
+
+  function hasSuccessOutput(value: unknown): value is ResultWithOutputs {
+    return (
+      !!value &&
+      typeof value === "object" &&
+      "outputs" in value &&
+      !!value.outputs &&
+      typeof value.outputs === "object" &&
+      "success" in value.outputs
+    )
+  }
 </script>
 
 <svelte:window
@@ -166,6 +208,8 @@
     class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
+    class:success={blockSuccess}
+    class:error={blockFailed}
     class:unexecuted
   >
     <div class="wrap">
@@ -189,22 +233,27 @@
             showFlowStatus={false}
           />
         </div>
-        <div class="block-status">
-          <FlowItemStatus
-            {block}
-            branch={undefined}
-            hideStatus={$view?.dragging}
-            {logStepData}
-            {viewMode}
-            showBlockType={false}
-          />
-        </div>
+        {#if !isTrigger}
+          <div class="block-status">
+            <FlowItemStatus
+              {block}
+              branch={undefined}
+              hideStatus={$view?.dragging}
+              {logStepData}
+              {viewMode}
+              showBlockType={false}
+              iconOnly
+            />
+          </div>
+        {/if}
         {#if isTrigger}
-          <div class="trigger-icon">
+          <div class="trigger-icon" class:completed={triggerCompleted}>
             <Icon
               name="lightning"
               size="M"
-              color="var(--spectrum-global-color-static-gray-50)"
+              color={triggerCompleted
+                ? "var(--spectrum-semantic-positive-color-status)"
+                : "var(--spectrum-global-color-static-gray-50)"}
             />
           </div>
         {/if}
@@ -344,10 +393,12 @@
   }
   .block-status {
     pointer-events: none;
-    width: 100%;
+    width: 28px;
+    height: 28px;
     position: absolute;
-    top: calc(100% + var(--spacing-xs));
-    left: 0;
+    right: -12px;
+    bottom: -12px;
+    z-index: 1;
   }
   .trigger-icon {
     position: absolute;
@@ -366,6 +417,9 @@
   }
   .block.selected .trigger-icon {
     border: 1px solid var(--spectrum-global-color-blue-700);
+  }
+  .block.selected.success .trigger-icon {
+    border-color: var(--spectrum-semantic-positive-color-status);
   }
   .block-core {
     cursor: pointer;
@@ -389,6 +443,12 @@
   .block.selected .block-content {
     border-color: var(--spectrum-global-color-blue-700);
     transition: border 130ms ease-out;
+  }
+  .block.selected.success .block-content {
+    border-color: var(--spectrum-semantic-positive-color-status);
+  }
+  .block.selected.error .block-content {
+    border-color: var(--spectrum-semantic-negative-color-status);
   }
 
   .block-info {
