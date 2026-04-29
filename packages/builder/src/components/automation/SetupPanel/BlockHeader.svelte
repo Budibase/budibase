@@ -183,7 +183,7 @@
 
   .compact-label {
     position: absolute;
-    top: calc(50% - 0.6em);
+    top: calc(50% - 0.6em - 1px);
     left: 0;
     display: -webkit-box;
     width: 100%;
