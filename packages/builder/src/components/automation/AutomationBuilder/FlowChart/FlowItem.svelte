@@ -5,7 +5,7 @@
   import { sdk } from "@budibase/shared-core"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
-  import { type Readable, type Writable } from "svelte/store"
+  import { type Writable } from "svelte/store"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
@@ -35,7 +35,6 @@
   const pos = getContext<Writable<{ x: number; y: number }>>("viewPos")
   const contentPos =
     getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
-  const showNodeNames = getContext<Readable<boolean>>("showNodeNames")
 
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
@@ -65,8 +64,6 @@
   })()
 
   $: selectedNodeId = $automationStore.selectedNodeId as string | undefined
-  $: blockHeading =
-    automation?.definition.stepNames?.[block.id] || block.name || ""
   $: selected =
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
@@ -166,7 +163,6 @@
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
     class:dragging
-    class:showNodeName={$showNodeNames}
     class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
@@ -203,9 +199,6 @@
             showBlockType={false}
           />
         </div>
-        {#if $showNodeNames}
-          <div class="node-name-pill">{blockHeading}</div>
-        {/if}
         {#if isTrigger}
           <div class="trigger-icon">
             <Icon name="tree-structure" size="S" />
@@ -273,7 +266,7 @@
     display: inline-block;
   }
   .block {
-    width: 90px;
+    width: 120px;
     height: 90px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 8px;
@@ -324,6 +317,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 0;
   }
   .block-core.dragging {
     pointer-events: none;
@@ -341,23 +335,6 @@
     top: -35px;
     left: 0;
   }
-  .node-name-pill {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: 180px;
-    padding: var(--spacing-xs) var(--spacing-m);
-    border-radius: 999px;
-    background-color: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-900);
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    pointer-events: none;
-  }
   .block-status {
     pointer-events: none;
     width: 100%;
@@ -367,8 +344,8 @@
   }
   .trigger-icon {
     position: absolute;
-    right: var(--spacing-s);
-    bottom: var(--spacing-s);
+    right: var(--spacing-xs);
+    bottom: var(--spacing-xs);
     width: 20px;
     height: 20px;
     display: flex;
@@ -405,6 +382,8 @@
 
   .block-info {
     pointer-events: none;
+    width: 100%;
+    height: 100%;
   }
 
   .log-status-badge {
