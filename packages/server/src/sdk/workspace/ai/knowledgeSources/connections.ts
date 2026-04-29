@@ -1,5 +1,9 @@
 import { context, docIds } from "@budibase/backend-core"
-import type { AgentKnowledgeSourceConnection } from "@budibase/types"
+import {
+  DocumentType,
+  prefixed,
+  type AgentKnowledgeSourceConnection,
+} from "@budibase/types"
 
 const getConnectionDocId = (sourceType: string, connectionKey: string) =>
   docIds.generateAgentKnowledgeSourceConnectionID(sourceType, connectionKey)
@@ -66,4 +70,19 @@ export const hasKnowledgeSourceConnection = async (
     connectionKey
   )
   return !!connection?.refreshToken
+}
+
+export const listKnowledgeSourceConnections = async () => {
+  const db = context.getWorkspaceDB()
+  const response = await db.allDocs<AgentKnowledgeSourceConnection>({
+    include_docs: true,
+    startkey: prefixed(DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION),
+    endkey: `${prefixed(DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION)}\ufff0`,
+  })
+
+  return response.rows
+    .map(row => row.doc)
+    .filter(
+      (doc): doc is AgentKnowledgeSourceConnection => !!doc && !doc._deleted
+    )
 }

@@ -1,18 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { Layout, Table, Body } from "@budibase/bbui"
-  import { agentsStore } from "@/stores/portal"
-  import {
-    AgentKnowledgeSourceType,
-    type AgentKnowledgeSource,
-  } from "@budibase/types"
+  import { API } from "@/api"
+  import { AgentKnowledgeSourceType } from "@budibase/types"
   import KnowledgeConnectionIconRenderer from "./_components/KnowledgeConnectionIconRenderer.svelte"
+  import { agentsStore } from "@/stores/portal"
 
   interface KnowledgeConnectionRow {
+    id: string
     icon: string
     connectionName: string
-    sites: string
-    usedBy: string
+    account: string
   }
 
   const customRenderers = [
@@ -24,67 +22,43 @@
 
   const schema = {
     icon: { width: "40px", displayName: "" },
-    connectionName: { width: "220px", displayName: "Connection" },
-    sites: { width: "1fr", displayName: "Sites" },
-    usedBy: { width: "260px", displayName: "Used by" },
-  }
-
-  const compactList = (values: string[], max = 2) => {
-    if (values.length <= max) {
-      return values.join(", ")
-    }
-    return `${values.slice(0, max).join(", ")} +${values.length - max} more`
-  }
-
-  const toConnectionRows = (): KnowledgeConnectionRow[] => {
-    const siteNames = new Set<string>()
-    const agentNames = new Set<string>()
-
-    for (const agent of $agentsStore.agents) {
-      for (const source of (agent.knowledgeSources ||
-        []) as AgentKnowledgeSource[]) {
-        if (source.type !== AgentKnowledgeSourceType.SHAREPOINT) {
-          continue
-        }
-        const site = source.config.site
-        const siteId = site?.id?.trim()
-        if (!siteId) {
-          continue
-        }
-        siteNames.add(site?.name || site?.webUrl || siteId)
-        agentNames.add(agent.name || agent._id || "Agent")
-      }
-    }
-
-    if (siteNames.size === 0) {
-      return []
-    }
-
-    const orderedSites = Array.from(siteNames).sort((a, b) =>
-      a.localeCompare(b)
-    )
-    const orderedAgents = Array.from(agentNames).sort((a, b) =>
-      a.localeCompare(b)
-    )
-
-    return [
-      {
-        icon: "sharepoint",
-        connectionName: "SharePoint",
-        sites: compactList(orderedSites),
-        usedBy: compactList(orderedAgents),
-      } satisfies KnowledgeConnectionRow,
-    ]
+    connectionName: { width: "160px", displayName: "Connection" },
+    account: { width: "1fr", displayName: "Account" },
+    useCount: { width: "60px", displayName: "#" },
   }
 
   let loading = $state(true)
-  let rows = $derived(toConnectionRows())
+  let rows = $state<KnowledgeConnectionRow[]>([])
+
+  let enrichedRows = $derived(
+    rows.map(r => ({
+      ...r,
+      useCount: $agentsStore.agents.filter(a =>
+        a.knowledgeSources?.some(
+          s => s.type === AgentKnowledgeSourceType.SHAREPOINT
+        )
+      ).length,
+    }))
+  )
 
   onMount(async () => {
     try {
-      if (!$agentsStore.agentsLoaded) {
-        await agentsStore.init()
-      }
+      const [response] = await Promise.all([
+        API.fetchAgentKnowledgeSourceConnections(),
+        async () => {
+          if (!$agentsStore.agentsLoaded) {
+            await agentsStore.init()
+          }
+        },
+      ])
+      rows = (response.connections || [])
+        .map(connection => ({
+          id: connection._id!,
+          icon: connection.sourceType,
+          connectionName: "Microsoft",
+          account: connection.account || "-",
+        }))
+        .sort((a, b) => a.connectionName.localeCompare(b.connectionName))
     } finally {
       loading = false
     }
@@ -96,7 +70,7 @@
     <div class="section-title">Connected knowledge sources</div>
   </div>
 
-  {#if !loading && rows.length === 0}
+  {#if !loading && enrichedRows.length === 0}
     <div class="empty-state">
       <Body size="S">No knowledge sources are currently connected.</Body>
     </div>
@@ -104,7 +78,7 @@
     <Table
       compact
       rounded
-      data={rows}
+      data={enrichedRows}
       {loading}
       {schema}
       {customRenderers}

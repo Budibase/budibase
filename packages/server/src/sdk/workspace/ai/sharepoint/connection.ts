@@ -11,16 +11,18 @@ import {
   upsertKnowledgeSourceConnection,
 } from "../knowledgeSources"
 
-interface SharePointConnectionCacheRecord {
-  tenantId: string
-  tokenEndpoint: string
-  accessToken: string
-  refreshToken: string
-  tokenType?: string
-  expiresAt?: number
-  clientId: string
-  clientSecret: string
-}
+type SharePointConnectionRecord = Pick<
+  AgentKnowledgeSourceConnection,
+  | "account"
+  | "tenantId"
+  | "tokenEndpoint"
+  | "accessToken"
+  | "refreshToken"
+  | "tokenType"
+  | "expiresAt"
+  | "clientId"
+  | "clientSecret"
+>
 
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
@@ -51,12 +53,13 @@ interface SharePointConnectionDoc extends AgentKnowledgeSourceConnection {
 
 const persistConnection = async (
   connectionKey: string,
-  connection: SharePointConnectionCacheRecord
+  connection: SharePointConnectionRecord
 ) => {
   await upsertKnowledgeSourceConnection<SharePointConnectionDoc>(
     SHAREPOINT_SOURCE_TYPE,
     connectionKey,
     {
+      account: connection.account,
       tenantId: connection.tenantId,
       tokenEndpoint: connection.tokenEndpoint,
       accessToken: connection.accessToken,
@@ -69,10 +72,11 @@ const persistConnection = async (
   )
 }
 
-const mapPersistedToCacheRecord = (
+const mapPersistedToConnectionRecord = (
   doc: SharePointConnectionDoc
-): SharePointConnectionCacheRecord => {
+): SharePointConnectionRecord => {
   return {
+    account: doc.account || "unknown",
     tenantId: doc.tenantId,
     tokenEndpoint: doc.tokenEndpoint,
     accessToken: doc.accessToken,
@@ -86,7 +90,7 @@ const mapPersistedToCacheRecord = (
 
 const readPersistedConnection = async (
   connectionKey: string
-): Promise<SharePointConnectionCacheRecord | undefined> => {
+): Promise<SharePointConnectionRecord | undefined> => {
   const doc = await getKnowledgeSourceConnection<SharePointConnectionDoc>(
     SHAREPOINT_SOURCE_TYPE,
     connectionKey
@@ -94,12 +98,12 @@ const readPersistedConnection = async (
   if (!doc?.refreshToken) {
     return
   }
-  return mapPersistedToCacheRecord(doc)
+  return mapPersistedToConnectionRecord(doc)
 }
 
 const readConnection = async (
   connectionKey: string
-): Promise<SharePointConnectionCacheRecord> => {
+): Promise<SharePointConnectionRecord> => {
   const persistedConnection = await readPersistedConnection(connectionKey)
   if (persistedConnection?.refreshToken) {
     return persistedConnection
@@ -112,8 +116,8 @@ const readConnection = async (
 
 const refreshConnection = async (
   connectionKey: string,
-  connection: SharePointConnectionCacheRecord
-): Promise<SharePointConnectionCacheRecord> => {
+  connection: SharePointConnectionRecord
+): Promise<SharePointConnectionRecord> => {
   const response = await fetch(connection.tokenEndpoint, {
     method: "POST",
     headers: {
@@ -137,7 +141,7 @@ const refreshConnection = async (
   }
 
   const expiresIn = Number(payload?.expires_in || 0)
-  const updated: SharePointConnectionCacheRecord = {
+  const updated: SharePointConnectionRecord = {
     ...connection,
     accessToken: payload?.access_token || connection.accessToken,
     refreshToken: payload?.refresh_token || connection.refreshToken,
