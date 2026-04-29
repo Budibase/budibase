@@ -523,4 +523,63 @@ describe("agent files", () => {
       expect(hasDisconnectJob).toBe(true)
     })
   })
+
+  it("returns SharePoint connection usage and connected status", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "SharePoint Connection Status Agent",
+        aiconfig: "default",
+      })
+
+      await setSharePointConnection(created._id!)
+      await setSharePointSourceInAgent(created._id!, ["site-1"])
+
+      const response = await config.api.agent.fetchSharePointKnowledgeConnection()
+      expect(response.connected).toBe(true)
+      expect(response.usedBy).toEqual([
+        {
+          agentId: created._id!,
+          agentName: "SharePoint Connection Status Agent",
+        },
+      ])
+    })
+  })
+
+  it("rejects deleting SharePoint connection when an agent uses it", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "SharePoint Connection In Use Agent",
+        aiconfig: "default",
+      })
+
+      await setSharePointConnection(created._id!)
+      await setSharePointSourceInAgent(created._id!, ["site-1"])
+
+      await config.api.agent.deleteSharePointKnowledgeConnection({
+        status: 400,
+        body: {
+          message:
+            "Cannot delete SharePoint connection while it is used by one or more agents",
+        },
+      })
+    })
+  })
+
+  it("deletes SharePoint connection when no agents use it", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "SharePoint Connection Delete Agent",
+        aiconfig: "default",
+      })
+
+      await setSharePointConnection(created._id!)
+
+      const deleted = await config.api.agent.deleteSharePointKnowledgeConnection()
+      expect(deleted).toEqual({ deleted: true })
+
+      const status = await config.api.agent.fetchSharePointKnowledgeConnection()
+      expect(status.connected).toBe(false)
+      expect(status.usedBy).toEqual([])
+    })
+  })
 })

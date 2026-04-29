@@ -5,6 +5,8 @@ import {
   CreateAgentRequest,
   CreateAgentResponse,
   DisconnectAgentSharePointSiteResponse,
+  DeleteSharePointKnowledgeConnectionResponse,
+  FetchSharePointKnowledgeConnectionResponse,
   DuplicateAgentResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
@@ -94,6 +96,8 @@ export interface AgentEndpoints {
     agentId: string,
     sourceId: string
   ) => Promise<SyncAgentKnowledgeSourcesResponse>
+  fetchSharePointKnowledgeConnection: () => Promise<FetchSharePointKnowledgeConnectionResponse>
+  deleteSharePointKnowledgeConnection: () => Promise<DeleteSharePointKnowledgeConnectionResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -270,6 +274,18 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       SyncAgentKnowledgeSourcesResponse
     >({
       url: `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
+    })
+  },
+
+  fetchSharePointKnowledgeConnection: async () => {
+    return await API.get<FetchSharePointKnowledgeConnectionResponse>({
+      url: "/api/agent/knowledge-sources/sharepoint/connection",
+    })
+  },
+
+  deleteSharePointKnowledgeConnection: async () => {
+    return await API.delete<void, DeleteSharePointKnowledgeConnectionResponse>({
+      url: "/api/agent/knowledge-sources/sharepoint/connection",
     })
   },
 })

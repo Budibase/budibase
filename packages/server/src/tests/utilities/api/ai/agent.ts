@@ -3,11 +3,13 @@ import {
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
+  DeleteSharePointKnowledgeConnectionResponse,
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
+  FetchSharePointKnowledgeConnectionResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
@@ -225,6 +227,28 @@ export class AgentAPI extends TestAPI {
       `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
       {
         body,
+        expectations,
+      }
+    )
+  }
+
+  fetchSharePointKnowledgeConnection = async (
+    expectations?: Expectations
+  ): Promise<FetchSharePointKnowledgeConnectionResponse> => {
+    return await this._get<FetchSharePointKnowledgeConnectionResponse>(
+      "/api/agent/knowledge-sources/sharepoint/connection",
+      {
+        expectations,
+      }
+    )
+  }
+
+  deleteSharePointKnowledgeConnection = async (
+    expectations?: Expectations
+  ): Promise<DeleteSharePointKnowledgeConnectionResponse> => {
+    return await this._delete<DeleteSharePointKnowledgeConnectionResponse>(
+      "/api/agent/knowledge-sources/sharepoint/connection",
+      {
         expectations,
       }
     )

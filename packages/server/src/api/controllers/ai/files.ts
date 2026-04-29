@@ -1,11 +1,14 @@
 import { readFile, unlink } from "node:fs/promises"
-import { HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import {
+  Agent,
   AgentKnowledgeSourceType,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
+  DeleteSharePointKnowledgeConnectionResponse,
   DisconnectAgentSharePointSiteResponse,
+  FetchSharePointKnowledgeConnectionResponse,
   UpdateAgentSharePointSiteRequest,
   UpdateAgentSharePointSiteResponse,
   SharePointKnowledgeSourceSnapshot,
@@ -23,6 +26,51 @@ import { fetchSharePointSitesByDatasourceAuthConfig } from "../../../sdk/workspa
 import { getSharePointSiteIds, getSharePointSources } from "./sharepoint"
 
 const GEMINI_UPSTREAM_EVENT = "ai.gemini.upstream_unavailable"
+
+const getSharePointConnectionUsage = async (): Promise<
+  FetchSharePointKnowledgeConnectionResponse["usedBy"]
+> => {
+  const agents = await sdk.ai.agents.fetch()
+  return agents
+    .filter((agent: Agent) => getSharePointSources(agent).length > 0)
+    .map(agent => ({
+      agentId: agent._id!,
+      agentName: agent.name || "Agent",
+    }))
+}
+
+export async function fetchSharePointKnowledgeConnection(
+  ctx: UserCtx<void, FetchSharePointKnowledgeConnectionResponse>
+) {
+  const [connected, usedBy] = await Promise.all([
+    sdk.ai.rag.hasSharePointWorkspaceConnection(),
+    getSharePointConnectionUsage(),
+  ])
+  ctx.body = {
+    connected,
+    usedBy,
+  }
+  ctx.status = 200
+}
+
+export async function deleteSharePointKnowledgeConnection(
+  ctx: UserCtx<void, DeleteSharePointKnowledgeConnectionResponse>
+) {
+  const usedBy = await getSharePointConnectionUsage()
+  if (usedBy.length > 0) {
+    throw new HTTPError(
+      "Cannot delete SharePoint connection while it is used by one or more agents",
+      400
+    )
+  }
+
+  const workspaceId = context.getOrThrowWorkspaceId()
+  await sdk.ai.sharepoint.clearSharePointConnection(
+    sdk.ai.rag.getSharePointWorkspaceConnectionKey(workspaceId)
+  )
+  ctx.body = { deleted: true }
+  ctx.status = 200
+}
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {

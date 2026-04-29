@@ -113,6 +113,20 @@ export interface DisconnectAgentSharePointSiteResponse {
   siteId: string
 }
 
+export interface SharePointKnowledgeConnectionUsage {
+  agentId: string
+  agentName: string
+}
+
+export interface FetchSharePointKnowledgeConnectionResponse {
+  connected: boolean
+  usedBy: SharePointKnowledgeConnectionUsage[]
+}
+
+export interface DeleteSharePointKnowledgeConnectionResponse {
+  deleted: true
+}
+
 export interface FetchChatAppAgentsResponse {
   agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
 }

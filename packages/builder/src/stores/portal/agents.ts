@@ -7,9 +7,11 @@ import {
   ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   DisconnectAgentSharePointSiteResponse,
+  DeleteSharePointKnowledgeConnectionResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
+  FetchSharePointKnowledgeConnectionResponse,
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -251,6 +253,18 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     sourceId: string
   ): Promise<SyncAgentKnowledgeSourcesResponse> =>
     await API.syncAgentKnowledgeSources(agentId, sourceId)
+
+  fetchSharePointKnowledgeConnection = async (): Promise<
+    FetchSharePointKnowledgeConnectionResponse
+  > => {
+    return await API.fetchSharePointKnowledgeConnection()
+  }
+
+  deleteSharePointKnowledgeConnection = async (): Promise<
+    DeleteSharePointKnowledgeConnectionResponse
+  > => {
+    return await API.deleteSharePointKnowledgeConnection()
+  }
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>
