@@ -201,7 +201,11 @@
         </div>
         {#if isTrigger}
           <div class="trigger-icon">
-            <Icon name="lightning" size="S" />
+            <Icon
+              name="lightning"
+              size="M"
+              color="var(--spectrum-global-color-static-gray-50)"
+            />
           </div>
         {/if}
         <div
@@ -267,11 +271,14 @@
   }
   .block {
     width: 200px;
-    height: 150px;
+    height: 120px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 8px;
     font-weight: 600;
     cursor: default;
+  }
+  .block.TRIGGER {
+    width: 120px;
   }
   .block .wrap {
     width: 100%;
@@ -282,7 +289,7 @@
   }
   .block .wrap .block-content {
     width: 100%;
-    height: 150px;
+    height: 120px;
     display: flex;
     flex-direction: row;
     background-color: var(--background);
@@ -344,10 +351,11 @@
   }
   .trigger-icon {
     position: absolute;
-    right: var(--spacing-xs);
-    bottom: var(--spacing-xs);
-    width: 20px;
-    height: 20px;
+    right: -12px;
+    bottom: -12px;
+    width: 28px;
+    height: 28px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -355,6 +363,9 @@
     background-color: var(--spectrum-global-color-gray-200);
     color: var(--spectrum-global-color-gray-700);
     pointer-events: none;
+  }
+  .block.selected .trigger-icon {
+    border: 1px solid var(--spectrum-global-color-blue-700);
   }
   .block-core {
     cursor: pointer;

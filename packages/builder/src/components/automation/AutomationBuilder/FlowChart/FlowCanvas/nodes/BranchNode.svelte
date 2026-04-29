@@ -153,7 +153,7 @@
   }
   .block {
     width: 200px;
-    height: 150px;
+    height: 120px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;

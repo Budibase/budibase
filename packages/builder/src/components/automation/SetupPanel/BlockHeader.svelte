@@ -227,7 +227,7 @@
     flex: 0 0 100%;
     gap: 0;
     height: 100%;
-    padding: 22px;
+    padding: 18px;
     box-sizing: border-box;
   }
 
@@ -264,8 +264,8 @@
   .icon-container.compact,
   .external-icon.compact {
     position: absolute;
-    top: 22px;
-    left: 22px;
+    top: 18px;
+    left: 18px;
     width: 26px;
     height: 26px;
     box-sizing: border-box;
