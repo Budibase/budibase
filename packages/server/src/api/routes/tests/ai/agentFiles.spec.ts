@@ -534,7 +534,8 @@ describe("agent files", () => {
       await setSharePointConnection(created._id!)
       await setSharePointSourceInAgent(created._id!, ["site-1"])
 
-      const response = await config.api.agent.fetchSharePointKnowledgeConnection()
+      const response =
+        await config.api.agent.fetchSharePointKnowledgeConnection()
       expect(response.connected).toBe(true)
       expect(response.usedBy).toEqual([
         {
@@ -574,7 +575,8 @@ describe("agent files", () => {
 
       await setSharePointConnection(created._id!)
 
-      const deleted = await config.api.agent.deleteSharePointKnowledgeConnection()
+      const deleted =
+        await config.api.agent.deleteSharePointKnowledgeConnection()
       expect(deleted).toEqual({ deleted: true })
 
       const status = await config.api.agent.fetchSharePointKnowledgeConnection()

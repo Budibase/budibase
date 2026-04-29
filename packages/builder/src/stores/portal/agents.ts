@@ -254,17 +254,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   ): Promise<SyncAgentKnowledgeSourcesResponse> =>
     await API.syncAgentKnowledgeSources(agentId, sourceId)
 
-  fetchSharePointKnowledgeConnection = async (): Promise<
-    FetchSharePointKnowledgeConnectionResponse
-  > => {
-    return await API.fetchSharePointKnowledgeConnection()
-  }
+  fetchSharePointKnowledgeConnection =
+    async (): Promise<FetchSharePointKnowledgeConnectionResponse> => {
+      return await API.fetchSharePointKnowledgeConnection()
+    }
 
-  deleteSharePointKnowledgeConnection = async (): Promise<
-    DeleteSharePointKnowledgeConnectionResponse
-  > => {
-    return await API.deleteSharePointKnowledgeConnection()
-  }
+  deleteSharePointKnowledgeConnection =
+    async (): Promise<DeleteSharePointKnowledgeConnectionResponse> => {
+      return await API.deleteSharePointKnowledgeConnection()
+    }
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>
