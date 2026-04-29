@@ -253,7 +253,7 @@
           <div class="trigger-icon" class:completed={triggerCompleted}>
             <Icon
               name="lightning"
-              size="XS"
+              size="XXS"
               color={triggerCompleted
                 ? "var(--spectrum-semantic-positive-color-status)"
                 : "var(--spectrum-global-color-static-gray-50)"}

@@ -19,6 +19,14 @@
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "../FlowChartDnD"
+  import {
+    isAutomationResults,
+    isBranchStep,
+    type AutomationResults,
+    type AutomationStepResult,
+    type AutomationTriggerResult,
+    type BranchStep,
+  } from "@budibase/types"
 
   export let data: EdgeData
   export let sourceX: number
@@ -93,6 +101,10 @@
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
   $: sourcePathForDrop = passedPathTo || blockRef?.pathTo
+  $: isExecutedPathEdge = isOnExecutedPath(data)
+  $: edgeStyle = isExecutedPathEdge
+    ? "stroke: var(--spectrum-global-color-blue-600); stroke-width: 2px;"
+    : undefined
 
   $: collectBlockExists =
     viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
@@ -169,10 +181,82 @@
     }
     flow.fitView()
   }
+
+  const isOnExecutedPath = (edgeData: EdgeData | undefined) => {
+    const results = $automationStore.testResults
+    if (!edgeData || !results || !isAutomationResults(results)) {
+      return false
+    }
+
+    if (isBranchEdgeData(edgeData)) {
+      return didBranchRun(edgeData.branchStepId, edgeData.branchIdx)
+    }
+
+    if (isBranchContext(edgeData.block)) {
+      return didBranchRun(edgeData.block.branchStepId, edgeData.block.branchIdx)
+    }
+
+    const result = getResultByBlockId(results, edgeData.block)
+    if (!result) {
+      return false
+    }
+    if (result.id === results.trigger.id) {
+      return true
+    }
+    return didStepRun(result)
+  }
+
+  const didStepRun = (
+    result: AutomationStepResult | AutomationTriggerResult
+  ) => {
+    return !!result.outputs
+  }
+
+  const getResultByBlockId = (
+    results: AutomationResults,
+    blockContext: FlowBlockContext
+  ) => {
+    if (!("id" in blockContext)) {
+      return
+    }
+    return results.steps.find(step => step.id === blockContext.id)
+  }
+
+  const didBranchRun = (branchStepId: string, branchIdx: number) => {
+    const results = $automationStore.testResults
+    if (!results || !isAutomationResults(results)) {
+      return false
+    }
+    const branchStep = getBranchStep(branchStepId)
+    const branchId = branchStep?.inputs.branches?.[branchIdx]?.id
+    if (!branchId) {
+      return false
+    }
+    const result = results.steps.find(step => step.id === branchStepId)
+    const outputs = result?.outputs
+    return (
+      !!outputs &&
+      typeof outputs === "object" &&
+      "branchId" in outputs &&
+      outputs.branchId === branchId
+    )
+  }
+
+  const getBranchStep = (branchStepId: string): BranchStep | undefined => {
+    const ref = $selectedAutomation?.blockRefs?.[branchStepId]
+    const block = automationStore.actions.getBlockByRef(automation, ref)
+    return block && isBranchStep(block) ? block : undefined
+  }
+
+  const isBranchContext = (
+    value: FlowBlockContext
+  ): value is Extract<FlowBlockContext, { branchNode: true }> => {
+    return "branchNode" in value && value.branchNode === true
+  }
 </script>
 
 {#if !hideEdge}
-  <BaseEdge path={path[0]} />
+  <BaseEdge path={path[0]} style={edgeStyle} />
 {/if}
 
 <!-- Branch edge -->
