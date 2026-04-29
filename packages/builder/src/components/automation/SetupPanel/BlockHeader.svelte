@@ -111,31 +111,37 @@
       <div class="icon-container" class:compact>
         <Icon
           name={block.icon}
-          size={compact ? "XL" : "M"}
+          size="M"
           color="var(--spectrum-global-color-static-gray-50)"
         />
       </div>
     {/if}
     <div class="heading" class:compact>
-      <input
-        class="input-text"
-        placeholder={`Enter step name`}
-        name="name"
-        autocomplete="off"
-        disabled={isTrigger || disabled}
-        value={blockHeading}
-        on:input={handleInput}
-        on:click={e => {
-          e.stopPropagation()
-          startEditing()
-        }}
-        on:keydown={async e => {
-          if (e.key === "Enter") {
-            stopEditing()
-          }
-        }}
-        on:blur={stopEditing}
-      />
+      {#if compact}
+        <div class="input-text compact-label">
+          {blockHeading}
+        </div>
+      {:else}
+        <input
+          class="input-text"
+          placeholder={`Enter step name`}
+          name="name"
+          autocomplete="off"
+          disabled={isTrigger || disabled}
+          value={blockHeading}
+          on:input={handleInput}
+          on:click={e => {
+            e.stopPropagation()
+            startEditing()
+          }}
+          on:keydown={async e => {
+            if (e.key === "Enter") {
+              stopEditing()
+            }
+          }}
+          on:blur={stopEditing}
+        />
+      {/if}
     </div>
   {/if}
   {#if blockNameError && editing}
@@ -175,6 +181,25 @@
     line-height: 0;
   }
 
+  .compact-label {
+    position: absolute;
+    top: calc(50% - 0.6em);
+    left: 0;
+    display: -webkit-box;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 var(--spacing-s);
+    overflow: hidden;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 10px;
+    line-height: 1.2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+  }
+
   input:focus {
     outline: none;
   }
@@ -195,9 +220,15 @@
   }
 
   .block-details.compact {
+    position: relative;
+    flex-direction: column;
     justify-content: center;
+    align-items: stretch;
     flex: 0 0 100%;
     gap: 0;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   .error-icon :global(i) {
@@ -209,7 +240,13 @@
   }
 
   .heading.compact {
-    display: none;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
   }
 
   .icon-container {
@@ -226,17 +263,26 @@
 
   .icon-container.compact,
   .external-icon.compact {
-    width: 60px;
-    height: 60px;
+    position: absolute;
+    top: var(--spacing-s);
+    left: var(--spacing-s);
+    width: 20px;
+    height: 20px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    padding: 4px;
+    border-radius: 6px;
   }
 
   .icon-container.compact :global(svg) {
-    width: 42px;
-    height: 42px;
+    width: 12px;
+    height: 12px;
+  }
+
+  .external-icon.compact img {
+    width: 12px;
+    height: 12px;
   }
 </style>
