@@ -421,7 +421,7 @@
   .trigger-icon::before {
     content: "";
     position: absolute;
-    inset: 3px;
+    inset: 5px;
     border-radius: 999px;
     border: 1px solid var(--spectrum-semantic-positive-color-status);
     background-color: transparent;
