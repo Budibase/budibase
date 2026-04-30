@@ -248,7 +248,7 @@
         >
           <Icon
             name={flowStatus.icon}
-            size={flowStatus.type === FlowStatusType.WARN ? "M" : "L"}
+            size="L"
             weight="fill"
             color="currentColor"
           />
@@ -371,6 +371,23 @@
   }
 
   .flow-warn.flow-status-icon {
-    color: var(--spectrum-global-color-yellow-600);
+    width: 16px;
+    height: 16px;
+    position: relative;
+    background-color: transparent;
+    color: var(--spectrum-global-color-yellow-400);
+  }
+
+  .flow-warn.flow-status-icon::before {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 13px;
+    background-color: white;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  .flow-warn.flow-status-icon :global(i) {
+    position: relative;
   }
 </style>
