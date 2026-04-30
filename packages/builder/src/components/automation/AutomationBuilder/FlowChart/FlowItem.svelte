@@ -412,8 +412,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 999px;
-    background-color: var(--background);
     color: var(--spectrum-global-color-gray-700);
     pointer-events: none;
   }
