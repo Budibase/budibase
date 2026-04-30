@@ -185,9 +185,7 @@
   }
 
   .compact-label {
-    position: absolute;
-    top: calc(50% - 0.6em - 2px);
-    left: 0;
+    position: static;
     display: -webkit-box;
     width: 100%;
     box-sizing: border-box;
@@ -224,14 +222,13 @@
   }
 
   .block-details.compact {
-    position: relative;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
-    align-items: stretch;
+    align-items: center;
     flex: 0 0 100%;
-    gap: 0;
+    gap: var(--spacing-l);
     height: 100%;
-    padding: 24px;
+    padding: 16px;
     box-sizing: border-box;
   }
 
@@ -244,13 +241,11 @@
   }
 
   .heading.compact {
-    position: relative;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: flex-start;
-    flex: 0 0 100%;
-    width: 100%;
-    height: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .icon-container {
@@ -266,9 +261,7 @@
 
   .icon-container.compact,
   .external-icon.compact {
-    position: absolute;
-    top: 18px;
-    left: 24px;
+    flex: 0 0 32px;
     width: 32px;
     height: 32px;
     box-sizing: border-box;
