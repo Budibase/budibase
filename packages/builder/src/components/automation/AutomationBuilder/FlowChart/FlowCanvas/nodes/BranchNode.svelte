@@ -193,7 +193,7 @@
     height: 150px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     box-sizing: border-box;
     display: flex;
