@@ -190,9 +190,10 @@
     }
 
     if (branch && isBranchStep(block)) {
-      // Do not give status markers to branch nodes that were not part of the run.
-      if (outputs && "branchId" in outputs && outputs.branchId !== branch.id)
-        return
+      const branchStatus = getBranchFlowStatus(outputs, block.inputs?.branches)
+      if (branchStatus !== undefined) {
+        return branchStatus ?? undefined
+      }
 
       // Mark branches as stopped when no branch criteria was met
       if (outputs && outputs.success == false) {
@@ -212,6 +213,46 @@
         success || isTriggerBlock
           ? FlowStatusType.SUCCESS
           : FlowStatusType.ERROR,
+    }
+  }
+
+  const getBranchFlowStatus = (
+    outputs:
+      | AutomationStepResult["outputs"]
+      | AutomationTriggerResult["outputs"],
+    branches: Branch[] | undefined
+  ): FlowItemStatus | null | undefined => {
+    if (!outputs || !branch || !branches || !("branchId" in outputs)) {
+      return
+    }
+
+    const executedBranchIdx = branches.findIndex(
+      stepBranch => stepBranch.id === outputs.branchId
+    )
+    const currentBranchIdx = branches.findIndex(
+      stepBranch => stepBranch.id === branch.id
+    )
+
+    if (executedBranchIdx === -1 || currentBranchIdx === -1) {
+      return
+    }
+
+    if (currentBranchIdx < executedBranchIdx) {
+      return {
+        message: "Stopped",
+        icon: "warning",
+        type: FlowStatusType.WARN,
+      }
+    }
+
+    if (currentBranchIdx > executedBranchIdx) {
+      return null
+    }
+
+    return {
+      message: "Completed",
+      icon: "CheckmarkCircle",
+      type: FlowStatusType.SUCCESS,
     }
   }
 </script>
