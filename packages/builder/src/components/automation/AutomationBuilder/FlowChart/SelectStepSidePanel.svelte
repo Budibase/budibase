@@ -501,11 +501,7 @@
                         action.stepId
                       )}
                     >
-                      <Icon
-                        name={action.icon}
-                        size="M"
-                        color="var(--ink)"
-                      />
+                      <Icon name={action.icon} size="M" color="var(--ink)" />
                     </div>
                   {/if}
                   <Body
@@ -591,9 +587,7 @@
     --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
     --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
     --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-apps-color: var(
-      --spectrum-global-color-orange-100
-    );
+    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
   }
 
   :global(.spectrum--dark) .container,
