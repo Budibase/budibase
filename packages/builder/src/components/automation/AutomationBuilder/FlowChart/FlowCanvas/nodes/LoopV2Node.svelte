@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Handle, Position, NodeToolbar } from "@xyflow/svelte"
+  import { getContext } from "svelte"
+  import type { Writable } from "svelte/store"
   import { ActionButton, Icon } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import type { LoopV2NodeData } from "@/types/automations"
@@ -12,6 +14,10 @@
     ? block.inputs.children.length
     : 0
   $: viewMode = $automationStore.viewMode
+  const focusNodeRequest =
+    getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
+      "focusNodeRequest"
+    )
 
   const addStep = () => {
     // Provide a marker so the side panel knows we're inserting inside the loop subflow
@@ -27,6 +33,7 @@
   const selectNode = async () => {
     if (block?.id) {
       await automationStore.actions.selectNode(block.id)
+      focusNodeRequest.set({ nodeId: block.id, ensureVisible: true })
     }
   }
 </script>

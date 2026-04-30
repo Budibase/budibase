@@ -41,6 +41,10 @@
   const pos = getContext<Writable<{ x: number; y: number }>>("viewPos")
   const contentPos =
     getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
+  const focusNodeRequest =
+    getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
+      "focusNodeRequest"
+    )
 
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
@@ -268,6 +272,7 @@
           on:click={async () => {
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
+              focusNodeRequest.set({ nodeId: block.id, ensureVisible: true })
             } else if (viewMode === ViewMode.LOGS && logStepData) {
               onStepSelect(logStepData)
             }

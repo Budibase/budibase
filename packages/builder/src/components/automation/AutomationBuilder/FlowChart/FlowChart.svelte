@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, setContext } from "svelte"
+  import { onMount, onDestroy, setContext, tick } from "svelte"
   import { writable, get } from "svelte/store"
   import dayjs from "dayjs"
   import {
@@ -89,6 +89,8 @@
 
   let initialViewportApplied = false
   let preserveViewport = false
+  let visibleSelectionRequest: string | undefined
+  let lastVisibleSelectionCheck: string | undefined
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
@@ -97,6 +99,7 @@
     nodeId: string
     direction?: -1 | 1
     zoom?: number
+    ensureVisible?: boolean
   } | null>(null)
 
   const { getViewport, setViewport } = useSvelteFlow()
@@ -180,13 +183,32 @@
       node => node.id === $focusNodeRequest?.nodeId
     )
     if (targetNode) {
-      focusOnNode(
-        targetNode,
-        $focusNodeRequest.direction,
-        $focusNodeRequest.zoom
-      )
+      if ($focusNodeRequest.ensureVisible) {
+        ensureSelectedNodeVisible($focusNodeRequest.nodeId)
+      } else {
+        focusOnNode(
+          targetNode,
+          $focusNodeRequest.direction,
+          $focusNodeRequest.zoom
+        )
+      }
       focusNodeRequest.set(null)
     }
+  }
+
+  $: if (!$automationStore.selectedNodeId) {
+    lastVisibleSelectionCheck = undefined
+  }
+
+  $: if (
+    $automationStore.selectedNodeId &&
+    $automationStore.selectedNodeId !== lastVisibleSelectionCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleSelectionCheck = $automationStore.selectedNodeId
+    visibleSelectionRequest = $automationStore.selectedNodeId
+    ensureSelectedNodeVisible($automationStore.selectedNodeId)
   }
 
   // Check if automation has unpublished changes
@@ -249,6 +271,41 @@
 
     setViewport(
       { x, y, zoom: safeZoom },
+      { duration: VIEWPORT_ANIMATION_DURATION }
+    )
+  }
+
+  const ensureSelectedNodeVisible = async (nodeId: string) => {
+    await tick()
+    if (visibleSelectionRequest !== nodeId || !paneEl) {
+      return
+    }
+
+    const targetNode = get(nodes).find(node => node.id === nodeId)
+    const currentViewport = getViewport()
+    if (!targetNode || !currentViewport) {
+      return
+    }
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
+    const nodeRight =
+      targetNode.position.x * currentViewport.zoom +
+      currentViewport.x +
+      nodeWidth * currentViewport.zoom
+    const margin = 24
+    const overflow = nodeRight + margin - paneRect.width
+
+    if (overflow <= 0) {
+      return
+    }
+
+    setViewport(
+      {
+        x: currentViewport.x - overflow,
+        y: currentViewport.y,
+        zoom: currentViewport.zoom,
+      },
       { duration: VIEWPORT_ANIMATION_DURATION }
     )
   }
