@@ -36,6 +36,7 @@
   } from "./AutomationStepHelpers"
   import {
     NODE_SPACING,
+    FLOW_ITEM_ACTION_EDGE_SPACING,
     DEFAULT_NODE_WIDTH,
     DEFAULT_NODE_HEIGHT,
   } from "./FlowCanvas/FlowGeometry"
@@ -159,7 +160,7 @@
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
       {
-        ranksep: NODE_SPACING,
+        ranksep: FLOW_ITEM_ACTION_EDGE_SPACING,
         nodesep: NODE_SPACING,
         compactLoops: true,
       }

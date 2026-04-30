@@ -1822,6 +1822,7 @@ const automationActions = (store: AutomationStore) => ({
     ) {
       const branchNode = container[insertIdx] as BranchStep
       const branches = branchNode.inputs.branches
+      const branchIdx = branches.length
       const branchEntry = createBranch(`Branch ${branches.length + 1}`)
       branches.splice(branches.length, 0, branchEntry)
       branchNode.inputs.children = {
@@ -1830,6 +1831,11 @@ const automationActions = (store: AutomationStore) => ({
       }
       try {
         await store.actions.save(newAutomation)
+        await store.actions.selectBranchNode({
+          nodeId: `branch-${branchNode.id}-${branchIdx}-${branchEntry.id}`,
+          stepId: branchNode.id,
+          branchIdx,
+        })
       } catch (e) {
         notifications.error("Error adding branch to automation")
         console.error("Error adding automation branch", e)
