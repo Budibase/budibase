@@ -35,6 +35,10 @@
   ) => void = () => {}
 
   const view = getContext<Writable<DragView>>("draggableView")
+  const focusNodeRequest =
+    getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
+      "focusNodeRequest"
+    )
   $: branch = step.inputs?.branches?.[branchIdx]
   $: blockRef = $selectedAutomation?.blockRefs?.[step?.id]
   $: branchNodeId = branch ? createBranchNodeId(branchIdx, branch.id) : ""
@@ -125,6 +129,7 @@
           stepId: step.id,
           branchIdx,
         })
+        focusNodeRequest.set({ nodeId: branchNodeId, ensureVisible: true })
       }
     }}
   >
