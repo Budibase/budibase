@@ -268,17 +268,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: 2px;
     border-radius: 8px;
   }
 
+  .icon-container.compact :global(i) {
+    font-size: 22px;
+  }
+
   .icon-container.compact :global(svg) {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
 
   .external-icon.compact img {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
 </style>
