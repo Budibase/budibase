@@ -189,8 +189,8 @@
     display: inline-block;
   }
   .block {
-    width: 180px;
-    height: 120px;
+    width: 218px;
+    height: 150px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;
@@ -231,11 +231,12 @@
 
   .block-float {
     pointer-events: none;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     position: absolute;
-    right: -12px;
-    bottom: -12px;
+    right: 14px;
+    top: 14px;
+    z-index: 1;
   }
 
   .blockSection .heading {
