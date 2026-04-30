@@ -65,7 +65,7 @@
   export let automation: UIAutomation
 
   const VIEWPORT_ANIMATION_DURATION = 180
-  const MIN_ZOOM = 0.75
+  const MIN_ZOOM = 0.5
   const MAX_ZOOM = 2.5
 
   const memoAutomation = memo(automation)
