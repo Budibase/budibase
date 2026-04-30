@@ -132,6 +132,7 @@ describe("agent files", () => {
         "sharepoint",
         sharePointConnectionCacheKey("connection", workspaceConnectionId),
         {
+          account: "connected-sharepoint@budibase.com",
           tenantId: config.getTenantId(),
           tokenEndpoint:
             "https://login.microsoftonline.com/common/oauth2/v2.0/token",

@@ -14,6 +14,7 @@ const DEFAULT_SCOPE = env.RAG_SHAREPOINT_DEFAULT_SCOPE
 const STATE_CACHE_TTL_SECONDS = 600
 const MICROSOFT_PROVIDER = "microsoft"
 const SHAREPOINT_SOURCE_TYPE = "sharepoint"
+const MICROSOFT_GRAPH_BASE = "https://graph.microsoft.com/v1.0"
 
 const getMicrosoftConfig = () => {
   if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
@@ -178,7 +179,40 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   }
 
   const expiresIn = Number(tokenPayload?.expires_in || 0)
+  const tokenType = tokenPayload?.token_type || "Bearer"
+  const bearerToken = `${tokenType} ${accessToken}`
+  let account = "unknown"
 
+  try {
+    const meResponse = await fetch(
+      `${MICROSOFT_GRAPH_BASE}/me?$select=displayName,mail,userPrincipalName`,
+      {
+        headers: {
+          Authorization: bearerToken,
+        },
+      }
+    )
+    if (meResponse.ok) {
+      const mePayload = await meResponse.json()
+      const mail =
+        typeof mePayload?.mail === "string" ? mePayload.mail.trim() : ""
+      const upn =
+        typeof mePayload?.userPrincipalName === "string"
+          ? mePayload.userPrincipalName.trim()
+          : ""
+      account = mail || upn || "unknown"
+    } else {
+      console.log("Unable to fetch Microsoft account profile after OAuth", {
+        appId,
+        status: meResponse.status,
+      })
+    }
+  } catch (error) {
+    console.log("Unable to fetch Microsoft account profile after OAuth", {
+      appId,
+      error,
+    })
+  }
   await context.doInContext(appId, () =>
     sdk.ai.knowledgeSources.upsertKnowledgeSourceConnection(
       SHAREPOINT_SOURCE_TYPE,
@@ -188,10 +222,11 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
         tokenEndpoint,
         accessToken,
         refreshToken,
-        tokenType: tokenPayload?.token_type || "Bearer",
+        tokenType,
         expiresAt: Date.now() + Math.max((expiresIn || 0) - 60, 0) * 1000,
         clientId,
         clientSecret,
+        account,
       }
     )
   )

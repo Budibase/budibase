@@ -4,12 +4,14 @@
     Button,
     Icon,
     Layout,
+    StatusLight,
     notifications,
   } from "@budibase/bbui"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
+  import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
   import { FeatureFlag } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
@@ -46,6 +48,17 @@
     return "Configuration"
   })
   let currentAgent = $derived($selectedAgent)
+  let hasPublishedUnpublishedChanges = $derived.by(() => {
+    if (!currentAgent?._id) {
+      return false
+    }
+    const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
+    if (!publishStatus?.publishedAt) {
+      return false
+    }
+
+    return publishStatus.unpublishedChanges === true
+  })
 
   $effect(() => {
     if (!ragEnabled && $isActive("./knowledge")) {
@@ -125,6 +138,12 @@
       >
         Logs
       </ActionButton>
+      {#if hasPublishedUnpublishedChanges}
+        <div class="unpublished-changes-indicator">
+          <StatusLight color="var(--spectrum-global-color-blue-600)" size="L" />
+          <span>Unpublished changes</span>
+        </div>
+      {/if}
     </div>
     <div class="start-pause-row">
       <div class="status-icons">
@@ -272,6 +291,20 @@
   .filter {
     display: flex;
     gap: 10px;
+    align-items: center;
+    flex: 1 1 auto;
+  }
+
+  .unpublished-changes-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--font-size-s);
+    font-weight: 500;
+    margin-left: auto;
+    margin-right: var(--spacing-s);
+    white-space: nowrap;
   }
 
   .filter :global(.spectrum-ActionButton) {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { agentsStore } from "@/stores/portal"
+  import { workspaceDeploymentStore } from "@/stores/builder"
   import { notifications } from "@budibase/bbui"
   import {
     Body,
@@ -99,6 +100,7 @@
               }
             : undefined,
       })
+      await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")
       hide()
 

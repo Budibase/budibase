@@ -290,12 +290,14 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
-  const { automations, workspaceApps, tables } = await sdk.deployment.status()
+  const { automations, workspaceApps, tables, agents } =
+    await sdk.deployment.status()
 
   ctx.body = {
     automations,
     workspaceApps,
     tables,
+    agents,
   }
 }
 
@@ -488,10 +490,11 @@ export const publishWorkspaceInternal = async (
         deployment.appUrl = appDoc.url
         appDoc.appId = prodId
         appDoc.instance._id = prodId
-        const [automations, workspaceApps, tables] = await Promise.all([
+        const [automations, workspaceApps, tables, agents] = await Promise.all([
           sdk.automations.fetch(),
           sdk.workspaceApps.fetch(),
           sdk.tables.getAllInternalTables(),
+          sdk.ai.agents.fetch(),
         ])
         const tablesMarkedForPublish =
           restrictToTables && tablesToPublish
@@ -506,15 +509,21 @@ export const publishWorkspaceInternal = async (
           .filter(app => app.disabled !== true)
           .map(app => app._id!)
         const tableIds = tablesMarkedForPublish.map(table => table._id!)
+        const agentIds = agents.map(agent => agent._id!)
+        const deployedAgentIds = agents
+          .filter(agent => agent.live === true)
+          .map(agent => agent._id!)
         const fullMap = [
           ...(automationIds ?? []),
           ...(workspaceAppIds ?? []),
           ...(tableIds ?? []),
+          ...(agentIds ?? []),
         ]
         const deployedMap = [
           ...(deployedAutomationIds ?? []),
           ...(deployedWorkspaceAppIds ?? []),
           ...(tableIds ?? []),
+          ...(deployedAgentIds ?? []),
         ]
         const publishedAt = new Date().toISOString()
         appDoc.resourcesPublishedAt = {
