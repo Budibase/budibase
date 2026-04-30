@@ -17,12 +17,12 @@ type AutomationStepCategory =
   | "apps"
 
 const STEP_CATEGORY_COLORS: Record<AutomationStepCategory, string> = {
-  data: "var(--color-blue-600)",
-  flowLogic: "var(--color-purple-600)",
-  code: "var(--color-orange-600)",
-  email: "var(--color-green-600)",
-  ai: "var(--color-brand-500)",
-  apps: "var(--color-orange-400)",
+  data: "var(--automation-step-icon-data-color)",
+  flowLogic: "var(--automation-step-icon-flow-logic-color)",
+  code: "var(--automation-step-icon-code-color)",
+  email: "var(--automation-step-icon-email-color)",
+  ai: "var(--automation-step-icon-ai-color)",
+  apps: "var(--automation-step-icon-apps-color)",
 }
 
 const DATA_STEPS = new Set<AutomationStepId>([

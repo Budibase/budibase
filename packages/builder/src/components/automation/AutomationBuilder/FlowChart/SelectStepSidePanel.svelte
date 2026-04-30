@@ -504,7 +504,7 @@
                       <Icon
                         name={action.icon}
                         size="M"
-                        color="var(--spectrum-global-color-static-gray-50)"
+                        color="var(--ink)"
                       />
                     </div>
                   {/if}
@@ -584,6 +584,28 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
+    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-flow-logic-color: var(
+      --spectrum-global-color-indigo-100
+    );
+    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
+    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
+    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-apps-color: var(
+      --spectrum-global-color-orange-100
+    );
+  }
+
+  :global(.spectrum--dark) .container,
+  :global(.spectrum--darkest) .container,
+  :global(.spectrum--midnight) .container,
+  :global(.spectrum--nord) .container {
+    --automation-step-icon-data-color: var(--color-blue-600);
+    --automation-step-icon-flow-logic-color: var(--color-purple-600);
+    --automation-step-icon-code-color: var(--color-orange-600);
+    --automation-step-icon-email-color: var(--color-green-600);
+    --automation-step-icon-ai-color: var(--color-brand-500);
+    --automation-step-icon-apps-color: var(--color-orange-400);
   }
 
   .step-panel-content {

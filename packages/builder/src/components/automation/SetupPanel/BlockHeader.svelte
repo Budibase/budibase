@@ -119,7 +119,7 @@
         <Icon
           name={block.icon}
           size="M"
-          color="var(--spectrum-global-color-static-gray-50)"
+          color="var(--ink)"
         />
       </div>
     {/if}
