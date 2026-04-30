@@ -116,11 +116,7 @@
           block.stepId
         )}
       >
-        <Icon
-          name={block.icon}
-          size="M"
-          color="var(--ink)"
-        />
+        <Icon name={block.icon} size="M" color="var(--ink)" />
       </div>
     {/if}
     <div class="heading" class:compact>
@@ -281,11 +277,6 @@
     justify-content: center;
     padding: 4px;
     border-radius: 8px;
-  }
-
-  .icon-container.compact {
-    width: 64px;
-    justify-content: flex-start;
   }
 
   .icon-container.compact :global(svg) {
