@@ -193,7 +193,7 @@
     text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 400;
     line-height: 1.3;
     -webkit-box-orient: vertical;
@@ -228,7 +228,7 @@
     flex: 0 0 100%;
     gap: 0;
     height: 100%;
-    padding: 18px;
+    padding: 24px;
     box-sizing: border-box;
   }
 
@@ -252,7 +252,6 @@
 
   .icon-container {
     background-color: #215f9e;
-    border: 0.5px solid #467db4;
     padding: 4px;
     border-radius: 8px;
   }
@@ -265,16 +264,21 @@
   .icon-container.compact,
   .external-icon.compact {
     position: absolute;
-    top: 14px;
-    left: 18px;
-    width: 26px;
-    height: 26px;
+    top: 18px;
+    left: 24px;
+    width: 32px;
+    height: 32px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 4px;
     border-radius: 8px;
+  }
+
+  .icon-container.compact {
+    width: 64px;
+    justify-content: flex-start;
   }
 
   .icon-container.compact :global(svg) {
