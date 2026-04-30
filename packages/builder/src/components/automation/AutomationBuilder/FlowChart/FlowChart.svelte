@@ -459,6 +459,7 @@
     --automation-step-icon-apps-color: var(
       --spectrum-global-color-orange-100
     );
+    --automation-flow-item-background: var(--background);
     --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
     --xy-node-background-color: var(--background);
@@ -487,6 +488,7 @@
     --automation-step-icon-email-color: var(--color-green-600);
     --automation-step-icon-ai-color: var(--color-brand-500);
     --automation-step-icon-apps-color: var(--color-orange-400);
+    --automation-flow-item-background: var(--spectrum-global-color-gray-200);
   }
 
   .main-flow {

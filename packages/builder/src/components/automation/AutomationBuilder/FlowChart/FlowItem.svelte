@@ -343,7 +343,7 @@
     height: 150px;
     display: flex;
     flex-direction: row;
-    background-color: var(--background);
+    background-color: var(--automation-flow-item-background, var(--background));
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
   }

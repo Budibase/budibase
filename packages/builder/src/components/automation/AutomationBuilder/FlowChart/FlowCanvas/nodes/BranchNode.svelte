@@ -191,7 +191,7 @@
   .block {
     width: 218px;
     height: 150px;
-    background-color: var(--background);
+    background-color: var(--automation-flow-item-background, var(--background));
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
     cursor: pointer;
