@@ -47,6 +47,7 @@
     "build:apps": "DISABLE_V8_COMPILE_CACHE=1 yarn build --scope @budibase/server --scope @budibase/worker",
     "build:cli": "yarn build --scope @budibase/cli",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
+    "precheck:types": "yarn build:check-types-deps",
     "build:check-types-deps": "yarn build --scope @budibase/types --scope @budibase/backend-core --scope @budibase/shared-core --scope @budibase/pro",
     "check:types": "CI=1 lerna run check:types --concurrency 6",
     "check:missing-deps": "knip --include unlisted --workspace packages/server --workspace packages/backend-core --workspace packages/worker",
