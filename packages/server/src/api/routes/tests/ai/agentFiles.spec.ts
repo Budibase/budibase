@@ -614,10 +614,16 @@ describe("agent files", () => {
 
       const [devConnection, prodConnection] = await Promise.all([
         config.doInContext(devWorkspaceId, async () => {
-          return await getKnowledgeSourceConnection("sharepoint", devConnectionKey)
+          return await getKnowledgeSourceConnection(
+            "sharepoint",
+            devConnectionKey
+          )
         }),
         config.doInContext(prodWorkspaceId, async () => {
-          return await getKnowledgeSourceConnection("sharepoint", prodConnectionKey)
+          return await getKnowledgeSourceConnection(
+            "sharepoint",
+            prodConnectionKey
+          )
         }),
       ])
       expect(devConnection).toBeUndefined()
