@@ -1,11 +1,21 @@
 <script lang="ts">
   import { API } from "@/api"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    featureFlags,
+    selectedAgent,
+  } from "@/stores/portal"
   import { Helpers, notifications } from "@budibase/bbui"
-  import { buildDefaultAgentTestGroup, FeatureFlag } from "@budibase/types"
+  import {
+    AIConfigType,
+    buildDefaultAgentTestGroup,
+    FeatureFlag,
+  } from "@budibase/types"
   import type {
     AgentTestCase,
+    AgentTestCaseResult,
     AgentTestGroup,
     AgentTestRun,
     AgentTestSuite,
@@ -30,6 +40,7 @@
     groupId,
     name: `Test ${index + 1}`,
     input: "",
+    aiConfigIds: currentAgent?.aiconfig ? [currentAgent.aiconfig] : [],
     reviewers: [],
   })
 
@@ -54,6 +65,9 @@
     cases.find(testCase => !groupId || testCase.groupId === groupId)?.id ??
     null
 
+  const getLatestResults = (testCase: AgentTestCase): AgentTestCaseResult[] =>
+    testCase.lastResults || (testCase.lastResult ? [testCase.lastResult] : [])
+
   let suite = $state<AgentTestSuite>(emptySuite())
   let loading = $state(false)
   let saving = $state(false)
@@ -75,6 +89,14 @@
       .filter(t => enabled.has(t.name))
       .map(t => ({ label: t.readableName || t.name, value: t.name }))
   })
+  let aiConfigOptions = $derived(
+    $aiConfigsStore.customConfigsPerType[AIConfigType.COMPLETIONS].map(
+      config => ({
+        label: config.name || config._id || "Unnamed",
+        value: config._id || "",
+      })
+    )
+  )
   let groupOptions = $derived(
     suite.groups.map(group => ({
       label: group.name,
@@ -92,15 +114,19 @@
   )
   let latestResultsByCaseId = $derived(
     new Map(
-      suite.cases.filter(c => c.lastResult).map(c => [c.id, c.lastResult!])
+      suite.cases
+        .map(testCase => [testCase.id, getLatestResults(testCase)] as const)
+        .filter(([, results]) => results.length)
     )
   )
-  let hasAnyLatestResult = $derived(suite.cases.some(c => !!c.lastResult))
+  let hasAnyLatestResult = $derived(
+    suite.cases.some(c => !!c.lastResult || !!c.lastResults?.length)
+  )
   let selectedCase = $derived(
     suite.cases.find(c => c.id === selectedCaseId) || null
   )
-  let latestResultForSelected = $derived(
-    selectedCaseId ? (latestResultsByCaseId.get(selectedCaseId) ?? null) : null
+  let latestResultsForSelected = $derived(
+    selectedCaseId ? (latestResultsByCaseId.get(selectedCaseId) ?? []) : []
   )
 
   const resetState = (agentId?: string) => {
@@ -208,6 +234,7 @@
       ...sourceCase,
       id: Helpers.uuid(),
       name: `${sourceCase.name} copy`,
+      aiConfigIds: sourceCase.aiConfigIds ? [...sourceCase.aiConfigIds] : [],
       reviewers: sourceCase.reviewers.map(r => ({
         ...r,
         id: Helpers.uuid(),
@@ -275,12 +302,20 @@
   }
 
   const mergeRunResults = (run: AgentTestRun) => {
-    const byCaseId = new Map(run.results.map(r => [r.caseId, r]))
+    const byCaseId = new Map<string, AgentTestRun["results"]>()
+    for (const result of run.results) {
+      const results = byCaseId.get(result.caseId) || []
+      results.push(result)
+      byCaseId.set(result.caseId, results)
+    }
+
     suite = {
       ...suite,
       cases: suite.cases.map(testCase => {
-        const result = byCaseId.get(testCase.id)
-        return result ? { ...testCase, lastResult: result } : testCase
+        const results = byCaseId.get(testCase.id)
+        return results
+          ? { ...testCase, lastResult: results[0], lastResults: results }
+          : testCase
       }),
     }
   }
@@ -383,7 +418,7 @@
     <div class="detail-panel">
       <TestDetail
         {selectedCase}
-        latestResult={latestResultForSelected}
+        latestResults={latestResultsForSelected}
         hasLatestRun={hasAnyLatestResult}
       />
     </div>
@@ -393,6 +428,8 @@
     bind:this={testCaseModal}
     {toolOptions}
     {groupOptions}
+    {aiConfigOptions}
+    defaultAiConfigId={currentAgent?.aiconfig}
     isExisting={id => suite.cases.some(c => c.id === id)}
     onSave={saveAndRunCase}
   />

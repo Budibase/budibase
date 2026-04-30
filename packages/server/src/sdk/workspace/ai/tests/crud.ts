@@ -37,6 +37,9 @@ const hasSameCaseDefinition = (
   )
 }
 
+const getLastResults = (testCase: AgentTestCase): AgentTestCaseResult[] =>
+  testCase.lastResults || (testCase.lastResult ? [testCase.lastResult] : [])
+
 const normalizeGroups = (
   groups: AgentTestGroup[] | undefined
 ): AgentTestGroup[] => {
@@ -117,15 +120,19 @@ export async function saveSuite({
       name: testCase.name?.trim() || `Test ${idx + 1}`,
       input: testCase.input,
       context: testCase.context,
+      aiConfigIds: testCase.aiConfigIds,
       reviewers: testCase.reviewers,
     }
 
-    const lastResult = existingCase?.lastResult
-    if (
-      lastResult &&
-      hasSameCaseDefinition(nextCase, lastResult.caseSnapshot)
-    ) {
-      nextCase.lastResult = lastResult
+    const lastResults = existingCase
+      ? getLastResults(existingCase).filter(result =>
+          hasSameCaseDefinition(nextCase, result.caseSnapshot)
+        )
+      : []
+
+    if (lastResults.length) {
+      nextCase.lastResults = lastResults
+      nextCase.lastResult = lastResults[0]
     }
 
     return nextCase
@@ -175,16 +182,26 @@ export async function persistRunResults({
   )
   if (!suite) return
 
-  const byCaseId = new Map(results.map(r => [r.caseId, r]))
+  const byCaseId = new Map<string, AgentTestCaseResult[]>()
+  for (const result of results) {
+    const caseResults = byCaseId.get(result.caseId) || []
+    caseResults.push(result)
+    byCaseId.set(result.caseId, caseResults)
+  }
+
   const cases = suite.cases.map(testCase => {
-    const result = byCaseId.get(testCase.id)
-    if (!result) return testCase
+    const caseResults = byCaseId.get(testCase.id)
+    if (!caseResults?.length) return testCase
+
+    const lastResults = caseResults.map(result => ({
+      ...result,
+      response: truncateResponse(result.response),
+    }))
+
     return {
       ...testCase,
-      lastResult: {
-        ...result,
-        response: truncateResponse(result.response),
-      },
+      lastResult: lastResults[0],
+      lastResults,
     }
   })
 

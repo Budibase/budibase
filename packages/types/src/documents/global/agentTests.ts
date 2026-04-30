@@ -49,6 +49,7 @@ export interface AgentTestCaseDefinition {
   name: string
   input: string
   context?: string
+  aiConfigIds?: string[]
   reviewers: AgentTestReviewer[]
 }
 
@@ -56,6 +57,7 @@ export type AgentTestCaseSnapshot = AgentTestCaseDefinition
 
 export interface AgentTestCase extends AgentTestCaseDefinition {
   lastResult?: AgentTestCaseResult
+  lastResults?: AgentTestCaseResult[]
 }
 
 export interface AgentTestModelSnapshot {
@@ -82,6 +84,7 @@ export interface AgentTestSnapshot {
   suiteRev?: string
   aiconfig: string
   aiConfig?: AgentTestModelSnapshot
+  aiConfigs?: AgentTestModelSnapshot[]
   promptInstructions?: string
   goal?: string
   enabledTools: string[]
@@ -90,6 +93,8 @@ export interface AgentTestSnapshot {
 
 export interface AgentTestCaseResult {
   caseId: string
+  aiConfigId?: string
+  aiConfig?: AgentTestModelSnapshot
   name: string
   caseSnapshot: AgentTestCaseSnapshot
   response: string

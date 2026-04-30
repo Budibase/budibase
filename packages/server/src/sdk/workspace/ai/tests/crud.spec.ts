@@ -156,6 +156,73 @@ describe("agent tests crud", () => {
       expect(saved.cases[0]?.lastResult).toEqual(persistedResult)
     })
 
+    it("preserves existing lastResults when the case definition is unchanged", async () => {
+      const reviewers = [
+        {
+          id: "reviewer-1",
+          type: "contains_text" as const,
+          text: "hello",
+        },
+      ]
+      const caseSnapshot = {
+        id: "case-1",
+        groupId: "default",
+        name: "T1",
+        input: "hello",
+        aiConfigIds: ["config-1", "config-2"],
+        reviewers,
+      }
+      const persistedResults = [
+        makeResult("case-1", {
+          aiConfigId: "config-1",
+          caseSnapshot,
+        }),
+        makeResult("case-1", {
+          aiConfigId: "config-2",
+          caseSnapshot,
+        }),
+      ]
+      const existing: AgentTestSuite = {
+        _id: `suite_${agentId}`,
+        _rev: "1-old",
+        agentId,
+        groups,
+        cases: [
+          {
+            id: "case-1",
+            groupId: "default",
+            name: "T1",
+            input: "hello",
+            aiConfigIds: ["config-1", "config-2"],
+            reviewers,
+            lastResult: persistedResults[0],
+            lastResults: persistedResults,
+          },
+        ],
+      }
+      mockDbTryGet.mockResolvedValue(existing)
+
+      const saved = await testsCrud.saveSuite({
+        agentId,
+        request: {
+          _rev: "1-old",
+          groups,
+          cases: [
+            {
+              id: "case-1",
+              groupId: "default",
+              name: "T1",
+              input: "hello",
+              aiConfigIds: ["config-1", "config-2"],
+              reviewers,
+            },
+          ],
+        },
+      })
+
+      expect(saved.cases[0]?.lastResults).toEqual(persistedResults)
+    })
+
     it("clears the existing lastResult when the case definition changes", async () => {
       const reviewers = [
         {
@@ -272,6 +339,37 @@ describe("agent tests crud", () => {
       const putDoc = mockDbPut.mock.calls[0][0] as AgentTestSuite
       expect(putDoc.cases[0]?.lastResult?.response).toBe("old-1")
       expect(putDoc.cases[1]?.lastResult?.response).toBe("new-2")
+    })
+
+    it("writes lastResults for every config result on a case", async () => {
+      mockDbTryGet.mockResolvedValue(structuredClone(existing))
+
+      await testsCrud.persistRunResults({
+        agentId,
+        results: [
+          makeResult("case-2", {
+            aiConfigId: "config-1",
+            response: "new-2-a",
+          }),
+          makeResult("case-2", {
+            aiConfigId: "config-2",
+            response: "new-2-b",
+          }),
+        ],
+      })
+
+      const putDoc = mockDbPut.mock.calls[0][0] as AgentTestSuite
+      expect(putDoc.cases[1]?.lastResults).toEqual([
+        expect.objectContaining({
+          aiConfigId: "config-1",
+          response: "new-2-a",
+        }),
+        expect.objectContaining({
+          aiConfigId: "config-2",
+          response: "new-2-b",
+        }),
+      ])
+      expect(putDoc.cases[1]?.lastResult?.aiConfigId).toBe("config-1")
     })
 
     it("truncates oversized responses with a marker", async () => {

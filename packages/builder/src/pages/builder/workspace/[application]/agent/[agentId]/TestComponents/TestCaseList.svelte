@@ -33,7 +33,7 @@
     running: boolean
     runningCaseId: string | null
     hasLatestRun: boolean
-    latestResultsByCaseId: Map<string, AgentTestCaseResult>
+    latestResultsByCaseId: Map<string, AgentTestCaseResult[]>
     onSelectCase: (_caseId: string) => void
     onSelectGroup: (_groupId: string) => void
     onCreateGroup: () => void
@@ -85,12 +85,32 @@
   const getInputPreview = (input: string) =>
     input.replace(/\s+/g, " ").trim() || "No input yet"
 
-  const getLastRunLabel = (result: AgentTestCaseResult | undefined) =>
-    result?.completedAt
-      ? formatRunTime(result.completedAt)
-      : hasLatestRun
-        ? "Not in latest run"
-        : "Not run yet"
+  const getLastRunLabel = (results: AgentTestCaseResult[] | undefined) => {
+    if (!results?.length) {
+      return hasLatestRun ? "Not in latest run" : "Not run yet"
+    }
+
+    const completedAt = results
+      .map(result => result.completedAt)
+      .sort()
+      .slice(-1)[0]
+    return formatRunTime(completedAt)
+  }
+
+  const getCaseStatus = (
+    results: AgentTestCaseResult[] | undefined
+  ): VerdictStatus => {
+    if (!results?.length) return "idle"
+    if (results.some(result => result.status === "error")) return "error"
+    if (results.some(result => result.status === "failed")) return "failed"
+    return "passed"
+  }
+
+  const getStatusLabel = (results: AgentTestCaseResult[] | undefined) => {
+    if (!results?.length) return "Not run"
+    const passed = results.filter(result => result.status === "passed").length
+    return `${passed}/${results.length} passed`
+  }
 
   let groupOptions = $derived(
     groups.map(group => ({
@@ -113,7 +133,7 @@
     const query = search.trim().toLowerCase()
 
     return casesForSelectedGroup.filter(testCase => {
-      const status = latestResultsByCaseId.get(testCase.id)?.status ?? "idle"
+      const status = getCaseStatus(latestResultsByCaseId.get(testCase.id))
       const matchesStatus = statusFilter === "all" || status === statusFilter
       const matchesQuery =
         !query ||
@@ -252,8 +272,8 @@
 
       <div class="case-items" role="list" aria-label="Agent tests">
         {#each filteredCases as testCase (testCase.id)}
-          {@const latestResult = latestResultsByCaseId.get(testCase.id)}
-          {@const statusMeta = getVerdictMeta(latestResult?.status)}
+          {@const latestResults = latestResultsByCaseId.get(testCase.id)}
+          {@const statusMeta = getVerdictMeta(getCaseStatus(latestResults))}
           {@const isRunningCase = runningCaseId === testCase.id}
           <div class="case-row" class:selected={testCase.id === selectedCaseId}>
             <button
@@ -282,12 +302,12 @@
 
               <div class="case-cell case-cell-status">
                 <span class={`status-pill ${statusMeta.tone}`}>
-                  {statusMeta.label}
+                  {getStatusLabel(latestResults)}
                 </span>
               </div>
 
               <div class="case-cell case-cell-last-run">
-                {getLastRunLabel(latestResult)}
+                {getLastRunLabel(latestResults)}
               </div>
             </button>
 

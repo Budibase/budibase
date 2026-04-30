@@ -139,16 +139,15 @@ export function generateAgentInstructionsValidator() {
   )
 }
 
-const AGENT_TEST_REVIEWER_SCHEMA = Joi.alternatives()
-  .try(
-    ...REVIEWER_TYPES.map(type =>
-      Joi.object({
-        id: Joi.string().required(),
-        type: Joi.string().valid(type).required(),
-        [REVIEWERS[type].contentField]: Joi.string().trim().min(1).required(),
-      })
-    )
+const AGENT_TEST_REVIEWER_SCHEMA = Joi.alternatives().try(
+  ...REVIEWER_TYPES.map(type =>
+    Joi.object({
+      id: Joi.string().required(),
+      type: Joi.string().valid(type).required(),
+      [REVIEWERS[type].contentField]: Joi.string().trim().min(1).required(),
+    })
   )
+)
 
 const AGENT_TEST_CASE_SCHEMA = Joi.object({
   id: Joi.string().required(),
@@ -156,8 +155,10 @@ const AGENT_TEST_CASE_SCHEMA = Joi.object({
   name: Joi.string().required(),
   input: Joi.string().required(),
   context: Joi.string().allow("").optional(),
+  aiConfigIds: Joi.array().items(Joi.string().trim().disallow("")).max(3),
   reviewers: Joi.array().items(AGENT_TEST_REVIEWER_SCHEMA).required(),
   lastResult: Joi.any().optional().strip(),
+  lastResults: Joi.any().optional().strip(),
 })
 
 const AGENT_TEST_GROUP_SCHEMA = Joi.object({
@@ -180,6 +181,7 @@ export function runAgentTestSuiteValidator() {
     Joi.object({
       caseId: OPTIONAL_STRING,
       groupId: OPTIONAL_STRING,
+      aiConfigIds: Joi.array().items(Joi.string().trim().disallow("")).max(3),
     }).required()
   )
 }

@@ -159,5 +159,6 @@ export const buildAgentTestCaseSnapshot = (
   name: testCase.name,
   input: testCase.input,
   context: testCase.context,
+  aiConfigIds: testCase.aiConfigIds,
   reviewers: testCase.reviewers,
 })

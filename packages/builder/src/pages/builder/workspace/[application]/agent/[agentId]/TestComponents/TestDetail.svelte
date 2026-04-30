@@ -6,20 +6,27 @@
 
   type Props = {
     selectedCase: AgentTestCase | null
-    latestResult: AgentTestCaseResult | null
+    latestResults: AgentTestCaseResult[]
     hasLatestRun: boolean
   }
 
-  let { selectedCase, latestResult, hasLatestRun }: Props = $props()
+  let { selectedCase, latestResults, hasLatestRun }: Props = $props()
+  let primaryResult = $derived(latestResults[0] ?? null)
 
   let reviewerResultsById = $derived(
     new Map(
-      (latestResult?.reviewerResults ?? []).map(result => [
+      (primaryResult?.reviewerResults ?? []).map(result => [
         result.reviewerId,
         result,
       ])
     )
   )
+
+  const getConfigName = (result: AgentTestCaseResult) =>
+    result.aiConfig?.name || result.aiConfigId || "AI config"
+
+  const getResultMeta = (result: AgentTestCaseResult) =>
+    getVerdictMeta(result.status)
 </script>
 
 {#if !selectedCase}
@@ -84,82 +91,169 @@
       </section>
 
       <section class="card">
-        {#if latestResult}
-          {#if latestResult.error}
+        {#if primaryResult}
+          {#if latestResults.length > 1}
             <div class="result-block">
-              <div class="eyebrow error">
-                <Icon
-                  name="warning-circle"
-                  size="XS"
-                  color="var(--spectrum-global-color-red-600)"
-                />
-                <span>Error</span>
+              <div class="eyebrow">
+                <span>Comparison</span>
+                <span class="eyebrow-count">{latestResults.length}</span>
               </div>
-              <pre class="result-pre">{latestResult.error}</pre>
+
+              <div class="comparison-grid">
+                {#each latestResults as result (result.aiConfigId || result.sessionId)}
+                  {@const meta = getResultMeta(result)}
+                  <article class="comparison-column">
+                    <div class="comparison-header">
+                      <span class="comparison-title"
+                        >{getConfigName(result)}</span
+                      >
+                      <span class={`verdict-pill ${meta.tone}`}>
+                        <Icon name={meta.icon} size="S" color={meta.color} />
+                        <span>{meta.label}</span>
+                      </span>
+                    </div>
+
+                    {#if result.error}
+                      <pre class="result-pre">{result.error}</pre>
+                    {/if}
+
+                    <div class="comparison-section">
+                      <span class="eyebrow">Reviewer verdicts</span>
+                      <ul class="reviewer-results compact">
+                        {#each result.caseSnapshot.reviewers as reviewer (reviewer.id)}
+                          {@const reviewerResult = result.reviewerResults.find(
+                            r => r.reviewerId === reviewer.id
+                          )}
+                          {@const reviewerMeta = getVerdictMeta(
+                            reviewerResult?.status
+                          )}
+                          <li class="reviewer-row">
+                            <div class="reviewer-result-row">
+                              <div class="reviewer-result-copy">
+                                <span class="reviewer-type">
+                                  {getReviewerLabel(reviewer.type)}
+                                </span>
+                                {#if reviewerResult?.message}
+                                  <span class="reviewer-message">
+                                    {reviewerResult.message}
+                                  </span>
+                                {/if}
+                              </div>
+                              <div class="reviewer-result-status">
+                                <Icon
+                                  name={reviewerMeta.icon}
+                                  size="S"
+                                  color={reviewerMeta.color}
+                                />
+                              </div>
+                            </div>
+                          </li>
+                        {/each}
+                      </ul>
+                    </div>
+
+                    <div class="comparison-section">
+                      <span class="eyebrow">Final response</span>
+                      <div class="response-surface comparison-response">
+                        {#if result.response}
+                          <MarkdownViewer value={result.response} />
+                        {:else}
+                          <Body
+                            size="S"
+                            color="var(--spectrum-global-color-gray-600)"
+                          >
+                            No response returned.
+                          </Body>
+                        {/if}
+                      </div>
+                    </div>
+                  </article>
+                {/each}
+              </div>
+            </div>
+          {:else}
+            {#if primaryResult.error}
+              <div class="result-block">
+                <div class="eyebrow error">
+                  <Icon
+                    name="warning-circle"
+                    size="XS"
+                    color="var(--spectrum-global-color-red-600)"
+                  />
+                  <span>Error</span>
+                </div>
+                <pre class="result-pre">{primaryResult.error}</pre>
+              </div>
+
+              <Divider noMargin />
+            {/if}
+
+            <div class="result-block">
+              <div class="eyebrow">
+                <span>Reviewer verdicts</span>
+                {#if primaryResult.caseSnapshot.reviewers.length}
+                  <span class="eyebrow-count">
+                    {primaryResult.caseSnapshot.reviewers.length}
+                  </span>
+                {/if}
+              </div>
+              {#if primaryResult.caseSnapshot.reviewers.length}
+                <ul class="reviewer-results">
+                  {#each primaryResult.caseSnapshot.reviewers as reviewer (reviewer.id)}
+                    {@const reviewerResult = reviewerResultsById.get(
+                      reviewer.id
+                    )}
+                    {@const meta = getVerdictMeta(reviewerResult?.status)}
+                    <li class="reviewer-row">
+                      <div class="reviewer-result-row">
+                        <div class="reviewer-result-copy">
+                          <span class="reviewer-type">
+                            {getReviewerLabel(reviewer.type)}
+                          </span>
+                          {#if reviewerResult?.message}
+                            <span class="reviewer-message">
+                              {reviewerResult.message}
+                            </span>
+                          {/if}
+                        </div>
+                        <div class="reviewer-result-status">
+                          <span class={`verdict-pill ${meta.tone}`}>
+                            <Icon
+                              name={meta.icon}
+                              size="S"
+                              color={meta.color}
+                            />
+                            <span>{meta.label}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                  {/each}
+                </ul>
+              {:else}
+                <Body size="S" color="var(--spectrum-global-color-gray-600)">
+                  No reviewers configured at run time.
+                </Body>
+              {/if}
             </div>
 
             <Divider noMargin />
-          {/if}
 
-          <div class="result-block">
-            <div class="eyebrow">
-              <span>Reviewer verdicts</span>
-              {#if latestResult.caseSnapshot.reviewers.length}
-                <span class="eyebrow-count">
-                  {latestResult.caseSnapshot.reviewers.length}
-                </span>
+            <div class="result-block">
+              <div class="eyebrow">
+                <span>Final response</span>
+              </div>
+              {#if primaryResult.response}
+                <div class="response-surface">
+                  <MarkdownViewer value={primaryResult.response} />
+                </div>
+              {:else}
+                <Body size="S" color="var(--spectrum-global-color-gray-600)">
+                  No response returned.
+                </Body>
               {/if}
             </div>
-            {#if latestResult.caseSnapshot.reviewers.length}
-              <ul class="reviewer-results">
-                {#each latestResult.caseSnapshot.reviewers as reviewer (reviewer.id)}
-                  {@const reviewerResult = reviewerResultsById.get(reviewer.id)}
-                  {@const meta = getVerdictMeta(reviewerResult?.status)}
-                  <li class="reviewer-row">
-                    <div class="reviewer-result-row">
-                      <div class="reviewer-result-copy">
-                        <span class="reviewer-type">
-                          {getReviewerLabel(reviewer.type)}
-                        </span>
-                        {#if reviewerResult?.message}
-                          <span class="reviewer-message">
-                            {reviewerResult.message}
-                          </span>
-                        {/if}
-                      </div>
-                      <div class="reviewer-result-status">
-                        <span class={`verdict-pill ${meta.tone}`}>
-                          <Icon name={meta.icon} size="S" color={meta.color} />
-                          <span>{meta.label}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </li>
-                {/each}
-              </ul>
-            {:else}
-              <Body size="S" color="var(--spectrum-global-color-gray-600)">
-                No reviewers configured at run time.
-              </Body>
-            {/if}
-          </div>
-
-          <Divider noMargin />
-
-          <div class="result-block">
-            <div class="eyebrow">
-              <span>Final response</span>
-            </div>
-            {#if latestResult.response}
-              <div class="response-surface">
-                <MarkdownViewer value={latestResult.response} />
-              </div>
-            {:else}
-              <Body size="S" color="var(--spectrum-global-color-gray-600)">
-                No response returned.
-              </Body>
-            {/if}
-          </div>
+          {/if}
         {:else}
           <div class="result-empty">
             <Icon
@@ -315,6 +409,47 @@
     gap: var(--spacing-s);
   }
 
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    gap: var(--spacing-m);
+  }
+
+  .comparison-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    min-width: 0;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 10px;
+    background: var(--background-alt);
+    padding: var(--spacing-m);
+  }
+
+  .comparison-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
+    min-width: 0;
+  }
+
+  .comparison-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .comparison-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    min-width: 0;
+  }
+
   .reviewer-summary-list,
   .reviewer-results {
     display: flex;
@@ -331,6 +466,10 @@
 
   .reviewer-summary-list {
     background: var(--background-alt);
+  }
+
+  .reviewer-results.compact {
+    background: var(--background);
   }
 
   .reviewer-summary-row {
@@ -454,6 +593,10 @@
     max-height: min(480px, 55vh);
     overflow: auto;
     scrollbar-width: thin;
+  }
+
+  .comparison-response {
+    max-height: min(340px, 42vh);
   }
 
   .response-surface::-webkit-scrollbar {

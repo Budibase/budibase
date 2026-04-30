@@ -20,6 +20,7 @@ export type UpdateAgentTestSuiteResponse = AgentTestSuite
 export interface RunAgentTestSuiteRequest {
   caseId?: string
   groupId?: string
+  aiConfigIds?: string[]
 }
 
 export interface RunAgentTestSuiteResponse {

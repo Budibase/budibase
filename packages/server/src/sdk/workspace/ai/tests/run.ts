@@ -3,6 +3,7 @@ import { ai, quotas } from "@budibase/pro"
 import { buildAgentTestCaseSnapshot, helpers } from "@budibase/shared-core"
 import type {
   Agent,
+  AgentTestModelSnapshot,
   AgentTestCase,
   AgentTestCaseResult,
   AgentTestCaseSnapshot,
@@ -45,6 +46,8 @@ type SessionLogIndexer = ReturnType<typeof createSessionLogIndexer>
 type PromptAndTools = Awaited<
   ReturnType<typeof sdk.ai.agents.buildPromptAndTools>
 >
+
+const MAX_COMPARE_CONFIGS = 3
 
 interface JudgeOutput {
   passed: boolean
@@ -132,6 +135,8 @@ const buildTestMessages = ({
 const buildResult = ({
   testCase,
   caseSnapshot,
+  aiConfigId,
+  aiConfig,
   sessionLogIndexer,
   sessionId,
   startedAt,
@@ -144,6 +149,8 @@ const buildResult = ({
 }: {
   testCase: AgentTestCase
   caseSnapshot: AgentTestCaseSnapshot
+  aiConfigId: string
+  aiConfig?: AgentTestModelSnapshot
   sessionLogIndexer: SessionLogIndexer
   sessionId: string
   startedAt: string
@@ -155,6 +162,8 @@ const buildResult = ({
   error?: string
 }): AgentTestCaseResult => ({
   caseId: testCase.id,
+  aiConfigId,
+  aiConfig,
   name: testCase.name,
   caseSnapshot,
   response,
@@ -357,16 +366,24 @@ async function runCase({
   user,
   testCase,
   runId,
+  aiConfigId,
+  aiConfig,
 }: {
   agent: Agent
   user: ContextUser
   testCase: AgentTestCase
   runId: string
+  aiConfigId: string
+  aiConfig?: AgentTestModelSnapshot
 }): Promise<AgentTestCaseResult> {
+  const agentForRun = {
+    ...agent,
+    aiconfig: aiConfigId,
+  }
   const caseSnapshot = buildAgentTestCaseSnapshot(testCase)
   const startedAt = new Date().toISOString()
   const startedAtMs = Date.now()
-  const sessionId = `test:${runId}:${testCase.id}`
+  const sessionId = `test:${runId}:${testCase.id}:${aiConfigId}`
   const sessionLogIndexer = createSessionLogIndexer({
     agentId: agent._id!,
     sessionId,
@@ -377,12 +394,12 @@ async function runCase({
 
   try {
     const [promptAndTools, llm, retrievedContext] = await Promise.all([
-      sdk.ai.agents.buildPromptAndTools(agent, {
+      sdk.ai.agents.buildPromptAndTools(agentForRun, {
         baseSystemPrompt: ai.agentSystemPrompt(user),
         includeGoal: false,
       }),
-      sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agent._id),
-      getRetrievedAgentContext(agent, testCase.input),
+      sdk.ai.llm.createLLM(aiConfigId, sessionId, undefined, agent._id),
+      getRetrievedAgentContext(agentForRun, testCase.input),
     ])
 
     const messages = buildTestMessages({ testCase, retrievedContext })
@@ -414,6 +431,8 @@ async function runCase({
     return buildResult({
       testCase,
       caseSnapshot,
+      aiConfigId,
+      aiConfig,
       sessionLogIndexer,
       sessionId,
       startedAt,
@@ -431,6 +450,8 @@ async function runCase({
     return buildResult({
       testCase,
       caseSnapshot,
+      aiConfigId,
+      aiConfig,
       sessionLogIndexer,
       sessionId,
       startedAt,
@@ -496,16 +517,89 @@ const selectCasesToRun = ({
   return cases
 }
 
+const uniqueConfigIds = (configIds: string[]): string[] => [
+  ...new Set(configIds.filter(Boolean)),
+]
+
+const getCaseConfigIds = ({
+  agent,
+  testCase,
+  aiConfigIds,
+}: {
+  agent: Agent
+  testCase: AgentTestCase
+  aiConfigIds?: string[]
+}) => {
+  const selectedConfigIds = aiConfigIds?.length
+    ? aiConfigIds
+    : testCase.aiConfigIds?.length
+      ? testCase.aiConfigIds
+      : [agent.aiconfig]
+
+  const configIds = uniqueConfigIds(selectedConfigIds).slice(
+    0,
+    MAX_COMPARE_CONFIGS
+  )
+
+  if (!configIds.length) {
+    throw new HTTPError("Select at least one AI config to run this test.", 400)
+  }
+
+  return configIds
+}
+
+const buildConfigSnapshot = async (
+  aiConfigId: string
+): Promise<AgentTestModelSnapshot | undefined> => {
+  let aiConfig
+  try {
+    aiConfig = await sdk.ai.configs.find(aiConfigId)
+  } catch (error) {
+    console.log("Failed to snapshot AI config for agent test", {
+      aiConfigId,
+      error,
+    })
+    return undefined
+  }
+  if (!aiConfig?._id) return undefined
+
+  return {
+    aiConfigId: aiConfig._id,
+    name: aiConfig.name,
+    provider: aiConfig.provider,
+    model: aiConfig.model,
+    liteLLMModelId: aiConfig.liteLLMModelId,
+    reasoningEffort: aiConfig.reasoningEffort,
+  }
+}
+
+const buildConfigSnapshotMap = async (aiConfigIds: string[]) => {
+  const configSnapshots = new Map<string, AgentTestModelSnapshot>()
+
+  for (const aiConfigId of aiConfigIds) {
+    const snapshot = await buildConfigSnapshot(aiConfigId)
+    if (snapshot) {
+      configSnapshots.set(aiConfigId, snapshot)
+    }
+  }
+
+  return configSnapshots
+}
+
 const buildRunSnapshot = async ({
   agent,
   suite,
+  aiConfigIds,
 }: {
   agent: Agent
   suite: AgentTestSuite
+  aiConfigIds: string[]
 }): Promise<AgentTestSnapshot> => {
-  const aiConfig = agent.aiconfig
-    ? await sdk.ai.configs.find(agent.aiconfig)
-    : undefined
+  const configSnapshots = await buildConfigSnapshotMap(aiConfigIds)
+  const aiConfigs = [...configSnapshots.values()]
+  const aiConfig = aiConfigs.find(
+    config => config.aiConfigId === agent.aiconfig
+  )
 
   return {
     agentId: agent._id!,
@@ -514,16 +608,8 @@ const buildRunSnapshot = async ({
     agentUpdatedAt: agent.updatedAt,
     suiteRev: suite._rev,
     aiconfig: agent.aiconfig,
-    aiConfig: aiConfig?._id
-      ? {
-          aiConfigId: aiConfig._id,
-          name: aiConfig.name,
-          provider: aiConfig.provider,
-          model: aiConfig.model,
-          liteLLMModelId: aiConfig.liteLLMModelId,
-          reasoningEffort: aiConfig.reasoningEffort,
-        }
-      : undefined,
+    aiConfig,
+    aiConfigs,
     promptInstructions: agent.promptInstructions,
     goal: agent.goal,
     enabledTools: [...(agent.enabledTools || [])],
@@ -536,22 +622,46 @@ export async function runSuite({
   user,
   caseId,
   groupId,
+  aiConfigIds,
 }: {
   agentId: string
   user: ContextUser
   caseId?: string
   groupId?: string
+  aiConfigIds?: string[]
 }): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const suite = await fetchSuite(agentId)
   const casesToRun = selectCasesToRun({ suite, caseId, groupId })
+  const runConfigIds = uniqueConfigIds(
+    casesToRun.flatMap(testCase =>
+      getCaseConfigIds({ agent, testCase, aiConfigIds })
+    )
+  )
+  const configSnapshots = await buildConfigSnapshotMap(runConfigIds)
   const runId = v4()
   const startedAt = new Date().toISOString()
-  const snapshot = await buildRunSnapshot({ agent, suite })
+  const snapshot = await buildRunSnapshot({
+    agent,
+    suite,
+    aiConfigIds: runConfigIds,
+  })
 
   const results: AgentTestCaseResult[] = []
   for (const testCase of casesToRun) {
-    results.push(await runCase({ agent, user, testCase, runId }))
+    const testConfigIds = getCaseConfigIds({ agent, testCase, aiConfigIds })
+    for (const aiConfigId of testConfigIds) {
+      results.push(
+        await runCase({
+          agent,
+          user,
+          testCase,
+          runId,
+          aiConfigId,
+          aiConfig: configSnapshots.get(aiConfigId),
+        })
+      )
+    }
   }
 
   try {

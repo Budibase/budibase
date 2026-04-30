@@ -1,20 +1,30 @@
 <script lang="ts">
-  import { Button, Modal, notifications } from "@budibase/bbui"
+  import { Body, Button, Modal, notifications } from "@budibase/bbui"
   import type { AgentTestCase } from "@budibase/types"
   import { validateReviewer } from "@budibase/shared-core"
   import TestCaseFields from "./TestCaseFields.svelte"
   import TestReviewersEditor from "./TestReviewersEditor.svelte"
 
   type ToolOption = { label: string; value: string }
+  type AIConfigOption = { label: string; value: string }
 
   type Props = {
     toolOptions: ToolOption[]
     groupOptions: ToolOption[]
+    aiConfigOptions: AIConfigOption[]
+    defaultAiConfigId?: string
     isExisting: (_id: string) => boolean
     onSave: (_testCase: AgentTestCase) => Promise<boolean>
   }
 
-  let { toolOptions, groupOptions, isExisting, onSave }: Props = $props()
+  let {
+    toolOptions,
+    groupOptions,
+    aiConfigOptions,
+    defaultAiConfigId,
+    isExisting,
+    onSave,
+  }: Props = $props()
 
   let modal: Modal
   let loading = $state(false)
@@ -37,8 +47,14 @@
     name: testCase.name,
     input: testCase.input,
     context: testCase.context,
+    aiConfigIds: testCase.aiConfigIds
+      ? [...testCase.aiConfigIds]
+      : defaultAiConfigId
+        ? [defaultAiConfigId]
+        : [],
     reviewers: testCase.reviewers.map(reviewer => ({ ...reviewer })),
     lastResult: testCase.lastResult,
+    lastResults: testCase.lastResults,
   })
 
   const normalizeCaseForSave = (testCase: AgentTestCase): AgentTestCase => ({
@@ -59,11 +75,33 @@
     draftCase = updater(draftCase)
   }
 
+  const toggleAiConfig = (aiConfigId: string) => {
+    updateDraftCase(testCase => {
+      const selected = testCase.aiConfigIds || []
+      if (selected.includes(aiConfigId)) {
+        return {
+          ...testCase,
+          aiConfigIds: selected.filter(id => id !== aiConfigId),
+        }
+      }
+
+      if (selected.length >= 3) return testCase
+
+      return {
+        ...testCase,
+        aiConfigIds: [...selected, aiConfigId],
+      }
+    })
+  }
+
   const isDraftValid = (testCase: AgentTestCase | null) => {
     if (!testCase) return false
     if (!testCase.input.trim()) return false
+    if (!testCase.aiConfigIds?.length) return false
     if (!testCase.reviewers.length) return false
-    return testCase.reviewers.every(reviewer => validateReviewer(reviewer) === null)
+    return testCase.reviewers.every(
+      reviewer => validateReviewer(reviewer) === null
+    )
   }
 
   let canRunTest = $derived(isDraftValid(draftCase))
@@ -108,6 +146,42 @@
             {groupOptions}
             onUpdateCase={updateDraftCase}
           />
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="section">
+          <div class="section-header">
+            <h3>Compare AI models</h3>
+            <p>
+              Select up to 3 AI models to compare response. To add models, go to
+              AI Connectors.
+            </p>
+          </div>
+
+          {#if aiConfigOptions.length}
+            <div class="ai-config-pills">
+              {#each aiConfigOptions as option (option.value)}
+                {@const selected = draftCase.aiConfigIds?.includes(
+                  option.value
+                )}
+                <button
+                  type="button"
+                  class:selected
+                  class="ai-config-pill"
+                  disabled={!selected &&
+                    (draftCase.aiConfigIds?.length || 0) >= 3}
+                  onclick={() => toggleAiConfig(option.value)}
+                >
+                  {option.label}
+                </button>
+              {/each}
+            </div>
+          {:else}
+            <Body size="S" color="var(--spectrum-global-color-gray-600)">
+              No AI configs available.
+            </Body>
+          {/if}
         </section>
 
         <div class="section-divider"></div>
@@ -215,6 +289,38 @@
   .section-divider {
     height: 1px;
     background: var(--spectrum-global-color-gray-200);
+  }
+
+  .ai-config-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ai-config-pill {
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 999px;
+    background: var(--background-alt);
+    color: var(--ink);
+    padding: 7px 12px;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .ai-config-pill.selected {
+    border-color: var(--spectrum-global-color-blue-500);
+    background: color-mix(
+      in srgb,
+      var(--spectrum-global-color-blue-500) 22%,
+      var(--background-alt)
+    );
+    color: var(--spectrum-global-color-blue-700);
+  }
+
+  .ai-config-pill:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 
   .modal-footer {
