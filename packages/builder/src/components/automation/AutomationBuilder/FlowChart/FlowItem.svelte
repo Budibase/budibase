@@ -324,8 +324,8 @@
     display: inline-block;
   }
   .block {
-    width: 180px;
-    height: 120px;
+    width: 218px;
+    height: 150px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 8px;
     font-weight: 600;
@@ -340,12 +340,12 @@
   }
   .block .wrap .block-content {
     width: 100%;
-    height: 120px;
+    height: 150px;
     display: flex;
     flex-direction: row;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
+    border-radius: 12px;
   }
   .blockSection {
     padding: 0;
