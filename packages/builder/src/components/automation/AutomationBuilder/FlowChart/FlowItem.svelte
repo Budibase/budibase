@@ -254,6 +254,7 @@
             <Icon
               name="lightning"
               size="M"
+              weight="fill"
               color={triggerCompleted
                 ? "var(--spectrum-semantic-positive-color-status)"
                 : selected
