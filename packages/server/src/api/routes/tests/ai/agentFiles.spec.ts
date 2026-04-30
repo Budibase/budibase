@@ -10,8 +10,13 @@ import {
   RestAuthType,
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
-import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
-import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/sources/knowledgeSourceSyncQueue"
+import { getQueue } from "../../../../sdk/workspace/ai/rag/queue"
+import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/knowledgeSourceSyncQueue"
+import {
+  getKnowledgeSourceConnection,
+  upsertKnowledgeSourceConnection,
+} from "../../../../sdk/workspace/ai/knowledgeSources"
+import { sharePointConnectionCacheKey } from "../../../../sdk/workspace/ai/sharepoint"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
@@ -128,12 +133,15 @@ describe("agent files", () => {
     })
   }
 
-  const setSharePointConnection = async (_agentId: string) => {
-    return await config.doInContext(config.getDevWorkspaceId(), async () => {
-      const db = context.getWorkspaceDB()
-      const datasourceId = `datasource_${new Date().getTime()}`
-      const authConfigId = `auth_${new Date().getTime()}`
-      await db.put({
+  const setSharePointConnection = async (
+    workspaceId = config.getDevWorkspaceId()
+  ) => {
+    const datasourceId = "datasource_1"
+    const authConfigId = "auth_1"
+    await config.doInContext(workspaceId, async () => {
+      const workspaceConnectionId = db.getProdWorkspaceID(workspaceId)
+      const workspaceDb = context.getWorkspaceDB()
+      await workspaceDb.put({
         _id: datasourceId,
         type: "datasource",
         source: "REST",
@@ -158,11 +166,24 @@ describe("agent files", () => {
           ],
         },
       })
-      return {
-        datasourceId,
-        authConfigId,
-      }
+      await upsertKnowledgeSourceConnection(
+        "sharepoint",
+        sharePointConnectionCacheKey("connection", workspaceConnectionId),
+        {
+          account: "connected-sharepoint@budibase.com",
+          tenantId: config.getTenantId(),
+          tokenEndpoint:
+            "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+          accessToken: "header.payload.signature",
+          refreshToken: "refresh-token",
+          tokenType: "Bearer",
+          expiresAt: Date.now() + 60_000,
+          clientId: "client-id",
+          clientSecret: "client-secret",
+        }
+      )
     })
+    return { datasourceId, authConfigId }
   }
 
   const mockSharePointSitesFetch = (
@@ -207,7 +228,7 @@ describe("agent files", () => {
     }>
   ) => {
     const times = 1
-    const connection = await setSharePointConnection(agentId)
+    const connection = await setSharePointConnection()
     mockSharePointOAuthTokenFetch(times)
     mockSharePointSitesFetch(sites, times)
     return connection
@@ -531,7 +552,7 @@ describe("agent files", () => {
         aiconfig: "default",
       })
 
-      await setSharePointConnection(created._id!)
+      await setSharePointConnection()
       await setSharePointSourceInAgent(created._id!, ["site-1"])
 
       const response =
@@ -553,7 +574,7 @@ describe("agent files", () => {
         aiconfig: "default",
       })
 
-      await setSharePointConnection(created._id!)
+      await setSharePointConnection()
       await setSharePointSourceInAgent(created._id!, ["site-1"])
 
       await config.api.agent.deleteSharePointKnowledgeConnection({
@@ -568,16 +589,39 @@ describe("agent files", () => {
 
   it("deletes SharePoint connection when no agents use it", async () => {
     await withRagEnabled(async () => {
-      const created = await config.api.agent.create({
+      await config.api.agent.create({
         name: "SharePoint Connection Delete Agent",
         aiconfig: "default",
       })
 
-      await setSharePointConnection(created._id!)
+      const devWorkspaceId = config.getDevWorkspaceId()
+      const prodWorkspaceId = config.getProdWorkspaceId()
+      await setSharePointConnection(devWorkspaceId)
+      await setSharePointConnection(prodWorkspaceId)
 
       const deleted =
         await config.api.agent.deleteSharePointKnowledgeConnection()
       expect(deleted).toEqual({ deleted: true })
+
+      const devConnectionKey = sharePointConnectionCacheKey(
+        "connection",
+        db.getProdWorkspaceID(devWorkspaceId)
+      )
+      const prodConnectionKey = sharePointConnectionCacheKey(
+        "connection",
+        db.getProdWorkspaceID(prodWorkspaceId)
+      )
+
+      const [devConnection, prodConnection] = await Promise.all([
+        config.doInContext(devWorkspaceId, async () => {
+          return await getKnowledgeSourceConnection("sharepoint", devConnectionKey)
+        }),
+        config.doInContext(prodWorkspaceId, async () => {
+          return await getKnowledgeSourceConnection("sharepoint", prodConnectionKey)
+        }),
+      ])
+      expect(devConnection).toBeUndefined()
+      expect(prodConnection).toBeUndefined()
 
       const status = await config.api.agent.fetchSharePointKnowledgeConnection()
       expect(status.connected).toBe(false)

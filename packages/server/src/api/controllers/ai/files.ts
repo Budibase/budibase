@@ -64,10 +64,18 @@ export async function deleteSharePointKnowledgeConnection(
     )
   }
 
-  const workspaceId = context.getOrThrowWorkspaceId()
-  await sdk.ai.sharepoint.clearSharePointConnection(
-    sdk.ai.rag.getSharePointWorkspaceConnectionKey(workspaceId)
-  )
+  const clearConnectionForWorkspace = async (workspaceId: string) => {
+    await context.doInWorkspaceContext(workspaceId, async () => {
+      await sdk.ai.sharepoint.clearSharePointConnection(
+        sdk.ai.rag.getSharePointWorkspaceConnectionKey(workspaceId)
+      )
+    })
+  }
+
+  await Promise.all([
+    clearConnectionForWorkspace(context.getDevWorkspaceId()),
+    clearConnectionForWorkspace(context.getProdWorkspaceId()),
+  ])
   ctx.body = { deleted: true }
   ctx.status = 200
 }
