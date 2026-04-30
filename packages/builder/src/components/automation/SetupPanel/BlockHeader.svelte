@@ -11,6 +11,7 @@
     type ExternalAction,
     externalActions,
   } from "@/components/automation/AutomationBuilder/FlowChart/ExternalActions"
+  import { getAutomationStepIconColor } from "@/components/automation/AutomationBuilder/FlowChart/AutomationStepCategories"
   import { createEventDispatcher } from "svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
@@ -108,7 +109,13 @@
         <img alt={externalAction.name} src={externalAction.icon} />
       </div>
     {:else}
-      <div class="icon-container" class:compact>
+      <div
+        class="icon-container"
+        class:compact
+        style:--automation-step-icon-color={getAutomationStepIconColor(
+          block.stepId
+        )}
+      >
         <Icon
           name={block.icon}
           size="M"
@@ -251,7 +258,7 @@
   }
 
   .icon-container {
-    background-color: #215f9e;
+    background-color: var(--automation-step-icon-color);
     padding: 4px;
     border-radius: 8px;
   }
