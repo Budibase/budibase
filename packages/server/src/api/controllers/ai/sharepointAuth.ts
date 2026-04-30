@@ -80,6 +80,7 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
   authorizeUrl.searchParams.set("redirect_uri", callbackUrl)
   authorizeUrl.searchParams.set("response_mode", "query")
   authorizeUrl.searchParams.set("scope", DEFAULT_SCOPE)
+  authorizeUrl.searchParams.set("prompt", "select_account")
   authorizeUrl.searchParams.set("state", state)
 
   ctx.redirect(authorizeUrl.toString())
