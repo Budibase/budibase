@@ -6,6 +6,7 @@
     Button,
     Icon,
     MenuItem,
+    ProgressCircle,
     Search,
     Select,
   } from "@budibase/bbui"
@@ -267,7 +268,6 @@
         <span>Status</span>
         <span>Last run</span>
         <span></span>
-        <span></span>
       </div>
 
       <div class="case-items" role="list" aria-label="Agent tests">
@@ -275,6 +275,8 @@
           {@const latestResults = latestResultsByCaseId.get(testCase.id)}
           {@const statusMeta = getVerdictMeta(getCaseStatus(latestResults))}
           {@const isRunningCase = runningCaseId === testCase.id}
+          {@const showSpinner =
+            running && (runningCaseId === null || isRunningCase)}
           <div class="case-row" class:selected={testCase.id === selectedCaseId}>
             <button
               class="case-row-select"
@@ -283,11 +285,15 @@
             >
               <div class="case-cell case-cell-primary">
                 <span class="status-icon-badge">
-                  <Icon
-                    name={statusMeta.icon}
-                    size="S"
-                    color={statusMeta.color}
-                  />
+                  {#if showSpinner}
+                    <ProgressCircle size="S" />
+                  {:else}
+                    <Icon
+                      name={statusMeta.icon}
+                      size="S"
+                      color={statusMeta.color}
+                    />
+                  {/if}
                 </span>
 
                 <div class="case-text-block">
@@ -310,16 +316,6 @@
                 {getLastRunLabel(latestResults)}
               </div>
             </button>
-
-            <div class="case-cell case-cell-run">
-              <ActionButton
-                quiet
-                icon={isRunningCase ? "pause" : "play"}
-                size="S"
-                disabled={loading || saving || running}
-                on:click={() => onRunCase(testCase.id)}
-              />
-            </div>
 
             <div class="case-cell case-cell-actions">
               <ActionMenu align="right" roundedPopover>
@@ -414,7 +410,7 @@
   .table-header,
   .case-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 120px 140px 48px 48px;
+    grid-template-columns: minmax(0, 1fr) 120px 140px 48px;
     gap: 12px;
     align-items: center;
     padding: 0 16px;
@@ -517,7 +513,6 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .case-cell-run,
   .case-cell-actions {
     display: flex;
     justify-content: center;
@@ -570,7 +565,7 @@
     }
 
     .case-row {
-      grid-template-columns: minmax(0, 1fr) 40px 32px;
+      grid-template-columns: minmax(0, 1fr) 32px;
       gap: 8px;
       padding: 0 10px;
     }
@@ -580,7 +575,6 @@
       display: none;
     }
 
-    .case-cell-run,
     .case-cell-actions {
       justify-content: flex-end;
     }

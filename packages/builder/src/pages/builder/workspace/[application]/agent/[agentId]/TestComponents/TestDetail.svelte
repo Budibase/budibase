@@ -1,7 +1,20 @@
 <script lang="ts">
-  import { Body, Divider, Icon, MarkdownViewer } from "@budibase/bbui"
+  import {
+    Body,
+    Icon,
+    MarkdownViewer,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
   import type { AgentTestCase, AgentTestCaseResult } from "@budibase/types"
   import { describeReviewer, getReviewerLabel } from "@budibase/shared-core"
+  import AnthropicLogo from "assets/llm-icons/anthropic.svg"
+  import BudibaseLogo from "assets/llm-icons/bbai.svg"
+  import GoogleLogo from "assets/llm-icons/google.svg"
+  import GroqLogo from "assets/llm-icons/groq.svg"
+  import MistralLogo from "assets/llm-icons/mistral_ai.svg"
+  import OpenrouterLogo from "assets/llm-icons/openrouter.svg"
+  import OpenAiLogo from "assets/llm-icons/openai.svg"
   import { getVerdictMeta } from "./utils"
 
   type Props = {
@@ -11,22 +24,69 @@
   }
 
   let { selectedCase, latestResults, hasLatestRun }: Props = $props()
-  let primaryResult = $derived(latestResults[0] ?? null)
 
-  let reviewerResultsById = $derived(
-    new Map(
-      (primaryResult?.reviewerResults ?? []).map(result => [
-        result.reviewerId,
-        result,
-      ])
-    )
-  )
+  const PROVIDER_LOGOS: Record<string, string> = {
+    Anthropic: AnthropicLogo,
+    Budibase: BudibaseLogo,
+    Google_AI_Studio: GoogleLogo,
+    Groq: GroqLogo,
+    MistralAI: MistralLogo,
+    OpenAI: OpenAiLogo,
+    Openrouter: OpenrouterLogo,
+  }
+
+  const INVERT_ON_LIGHT = new Set(["Anthropic", "Budibase", "OpenAI"])
+  const INVERT_ON_DARK = new Set(["Openrouter"])
+
+  const getProviderLogo = (provider?: string) =>
+    provider ? PROVIDER_LOGOS[provider] || null : null
+
+  const getProviderThemeClass = (provider?: string) => {
+    if (!provider) return ""
+    if (INVERT_ON_LIGHT.has(provider)) return "invert-on-light"
+    if (INVERT_ON_DARK.has(provider)) return "invert-on-dark"
+    return ""
+  }
 
   const getConfigName = (result: AgentTestCaseResult) =>
     result.aiConfig?.name || result.aiConfigId || "AI config"
 
   const getResultMeta = (result: AgentTestCaseResult) =>
     getVerdictMeta(result.status)
+
+  const formatLatency = (ms: number): string => {
+    if (!Number.isFinite(ms) || ms < 0) return "—"
+    if (ms < 1000) return `${Math.round(ms)}ms`
+    return `${(ms / 1000).toFixed(2)}s`
+  }
+
+  const previewText = (markdown: string, max = 220): string => {
+    const stripped = markdown
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/[#>*_~-]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+    if (stripped.length <= max) return stripped
+    return `${stripped.slice(0, max).trimEnd()}…`
+  }
+
+  let responseModal = $state<Modal>()
+  let activeResponse = $state<{
+    title: string
+    body: string
+  } | null>(null)
+
+  const openResponseModal = (result: AgentTestCaseResult) => {
+    if (!result.response) return
+    activeResponse = {
+      title: getConfigName(result),
+      body: result.response,
+    }
+    responseModal?.show()
+  }
 </script>
 
 {#if !selectedCase}
@@ -91,169 +151,111 @@
       </section>
 
       <section class="card">
-        {#if primaryResult}
-          {#if latestResults.length > 1}
-            <div class="result-block">
-              <div class="eyebrow">
-                <span>Comparison</span>
-                <span class="eyebrow-count">{latestResults.length}</span>
-              </div>
-
-              <div class="comparison-grid">
-                {#each latestResults as result (result.aiConfigId || result.sessionId)}
-                  {@const meta = getResultMeta(result)}
-                  <article class="comparison-column">
-                    <div class="comparison-header">
-                      <span class="comparison-title"
-                        >{getConfigName(result)}</span
-                      >
-                      <span class={`verdict-pill ${meta.tone}`}>
-                        <Icon name={meta.icon} size="S" color={meta.color} />
-                        <span>{meta.label}</span>
-                      </span>
-                    </div>
-
-                    {#if result.error}
-                      <pre class="result-pre">{result.error}</pre>
-                    {/if}
-
-                    <div class="comparison-section">
-                      <span class="eyebrow">Reviewer verdicts</span>
-                      <ul class="reviewer-results compact">
-                        {#each result.caseSnapshot.reviewers as reviewer (reviewer.id)}
-                          {@const reviewerResult = result.reviewerResults.find(
-                            r => r.reviewerId === reviewer.id
-                          )}
-                          {@const reviewerMeta = getVerdictMeta(
-                            reviewerResult?.status
-                          )}
-                          <li class="reviewer-row">
-                            <div class="reviewer-result-row">
-                              <div class="reviewer-result-copy">
-                                <span class="reviewer-type">
-                                  {getReviewerLabel(reviewer.type)}
-                                </span>
-                                {#if reviewerResult?.message}
-                                  <span class="reviewer-message">
-                                    {reviewerResult.message}
-                                  </span>
-                                {/if}
-                              </div>
-                              <div class="reviewer-result-status">
-                                <Icon
-                                  name={reviewerMeta.icon}
-                                  size="S"
-                                  color={reviewerMeta.color}
-                                />
-                              </div>
-                            </div>
-                          </li>
-                        {/each}
-                      </ul>
-                    </div>
-
-                    <div class="comparison-section">
-                      <span class="eyebrow">Final response</span>
-                      <div class="response-surface comparison-response">
-                        {#if result.response}
-                          <MarkdownViewer value={result.response} />
-                        {:else}
-                          <Body
-                            size="S"
-                            color="var(--spectrum-global-color-gray-600)"
-                          >
-                            No response returned.
-                          </Body>
-                        {/if}
-                      </div>
-                    </div>
-                  </article>
-                {/each}
-              </div>
-            </div>
-          {:else}
-            {#if primaryResult.error}
-              <div class="result-block">
-                <div class="eyebrow error">
-                  <Icon
-                    name="warning-circle"
-                    size="XS"
-                    color="var(--spectrum-global-color-red-600)"
-                  />
-                  <span>Error</span>
-                </div>
-                <pre class="result-pre">{primaryResult.error}</pre>
-              </div>
-
-              <Divider noMargin />
+        {#if latestResults.length}
+          <div class="card-eyebrow">
+            <Icon name="play-circle" size="S" />
+            <span>Latest run</span>
+            {#if latestResults.length > 1}
+              <span class="eyebrow-count">{latestResults.length}</span>
             {/if}
+          </div>
 
-            <div class="result-block">
-              <div class="eyebrow">
-                <span>Reviewer verdicts</span>
-                {#if primaryResult.caseSnapshot.reviewers.length}
-                  <span class="eyebrow-count">
-                    {primaryResult.caseSnapshot.reviewers.length}
-                  </span>
+          <div
+            class="results-grid"
+            class:single={latestResults.length === 1}
+          >
+            {#each latestResults as result (result.aiConfigId || result.sessionId)}
+              {@const meta = getResultMeta(result)}
+              {@const providerLogo = getProviderLogo(result.aiConfig?.provider)}
+              {@const providerTheme = getProviderThemeClass(
+                result.aiConfig?.provider
+              )}
+              {@const reviewers = result.caseSnapshot.reviewers}
+              <article class="result-card">
+                <header class="result-card-header">
+                  <div class="identity">
+                    {#if providerLogo}
+                      <span class={`provider-logo ${providerTheme}`}>
+                        <img src={providerLogo} alt="" />
+                      </span>
+                    {/if}
+                    <span class="model-name">
+                      {getConfigName(result)}
+                    </span>
+                  </div>
+                  <div class="result-meta">
+                    <span class={`status ${meta.tone}`}>
+                      <Icon name={meta.icon} size="S" color={meta.color} />
+                      <span>{meta.label}</span>
+                    </span>
+                    <span class="meta-divider" aria-hidden="true">·</span>
+                    <span class="latency">
+                      {formatLatency(result.durationMs)}
+                    </span>
+                  </div>
+                </header>
+
+                {#if result.error}
+                  <pre class="result-error">{result.error}</pre>
                 {/if}
-              </div>
-              {#if primaryResult.caseSnapshot.reviewers.length}
-                <ul class="reviewer-results">
-                  {#each primaryResult.caseSnapshot.reviewers as reviewer (reviewer.id)}
-                    {@const reviewerResult = reviewerResultsById.get(
-                      reviewer.id
-                    )}
-                    {@const meta = getVerdictMeta(reviewerResult?.status)}
-                    <li class="reviewer-row">
-                      <div class="reviewer-result-row">
-                        <div class="reviewer-result-copy">
-                          <span class="reviewer-type">
+
+                {#if reviewers.length}
+                  <div class="hairline" aria-hidden="true"></div>
+                  <ul class="verdicts" role="list">
+                    {#each reviewers as reviewer (reviewer.id)}
+                      {@const reviewerResult = result.reviewerResults.find(
+                        r => r.reviewerId === reviewer.id
+                      )}
+                      {@const reviewerMeta = getVerdictMeta(
+                        reviewerResult?.status
+                      )}
+                      <li class="verdict">
+                        <span class="verdict-icon">
+                          <Icon
+                            name={reviewerMeta.icon}
+                            size="S"
+                            color={reviewerMeta.color}
+                          />
+                        </span>
+                        <div class="verdict-body">
+                          <span class="verdict-name">
                             {getReviewerLabel(reviewer.type)}
                           </span>
                           {#if reviewerResult?.message}
-                            <span class="reviewer-message">
+                            <span class="verdict-message">
                               {reviewerResult.message}
                             </span>
                           {/if}
                         </div>
-                        <div class="reviewer-result-status">
-                          <span class={`verdict-pill ${meta.tone}`}>
-                            <Icon
-                              name={meta.icon}
-                              size="S"
-                              color={meta.color}
-                            />
-                            <span>{meta.label}</span>
-                          </span>
-                        </div>
-                      </div>
-                    </li>
-                  {/each}
-                </ul>
-              {:else}
-                <Body size="S" color="var(--spectrum-global-color-gray-600)">
-                  No reviewers configured at run time.
-                </Body>
-              {/if}
-            </div>
+                      </li>
+                    {/each}
+                  </ul>
+                {/if}
 
-            <Divider noMargin />
+                <div class="hairline" aria-hidden="true"></div>
 
-            <div class="result-block">
-              <div class="eyebrow">
-                <span>Final response</span>
-              </div>
-              {#if primaryResult.response}
-                <div class="response-surface">
-                  <MarkdownViewer value={primaryResult.response} />
-                </div>
-              {:else}
-                <Body size="S" color="var(--spectrum-global-color-gray-600)">
-                  No response returned.
-                </Body>
-              {/if}
-            </div>
-          {/if}
+                {#if result.response}
+                  <div class="response">
+                    <p class="response-preview">
+                      {previewText(result.response)}
+                    </p>
+                    <button
+                      type="button"
+                      class="response-link"
+                      onclick={() => openResponseModal(result)}
+                    >
+                      <span>View full response</span>
+                      <Icon name="arrow-square-out" size="XS" />
+                    </button>
+                  </div>
+                {:else}
+                  <Body size="S" color="var(--spectrum-global-color-gray-600)">
+                    No response returned.
+                  </Body>
+                {/if}
+              </article>
+            {/each}
+          </div>
         {:else}
           <div class="result-empty">
             <Icon
@@ -272,6 +274,22 @@
     </div>
   </div>
 {/if}
+
+<Modal bind:this={responseModal}>
+  <ModalContent
+    title={activeResponse?.title || "Response"}
+    confirmText="Close"
+    showCancelButton={false}
+    showCloseIcon
+    size="L"
+  >
+    {#if activeResponse}
+      <div class="response-modal-body">
+        <MarkdownViewer value={activeResponse.body} />
+      </div>
+    {/if}
+  </ModalContent>
+</Modal>
 
 <style>
   .detail-content {
@@ -389,10 +407,6 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .eyebrow.error {
-    color: var(--spectrum-global-color-red-600);
-  }
-
   .eyebrow-count {
     font-size: 11px;
     font-weight: 600;
@@ -403,55 +417,110 @@
     padding: 1px 8px;
   }
 
-  .result-block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .comparison-grid {
+  .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
     gap: var(--spacing-m);
   }
 
-  .comparison-column {
+  .results-grid.single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .result-card {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-m);
     min-width: 0;
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 10px;
+    border-radius: 12px;
     background: var(--background-alt);
-    padding: var(--spacing-m);
+    padding: var(--spacing-l);
   }
 
-  .comparison-header {
+  .result-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
     min-width: 0;
   }
 
-  .comparison-title {
+  .identity {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .provider-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .provider-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  :global(.spectrum--light) .provider-logo.invert-on-light img,
+  :global(.spectrum--lightest) .provider-logo.invert-on-light img {
+    filter: invert(100%);
+  }
+
+  :global(.spectrum--darkest) .provider-logo.invert-on-dark img,
+  :global(.spectrum--dark) .provider-logo.invert-on-dark img,
+  :global(.spectrum--nord) .provider-logo.invert-on-dark img,
+  :global(.spectrum--midnight) .provider-logo.invert-on-dark img {
+    filter: invert(100%);
+  }
+
+  .model-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
+    letter-spacing: -0.005em;
     color: var(--spectrum-global-color-gray-900);
-  }
-
-  .comparison-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
     min-width: 0;
   }
 
-  .reviewer-summary-list,
-  .reviewer-results {
+  .result-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .meta-divider {
+    color: var(--spectrum-global-color-gray-400);
+    font-size: 13px;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .latency {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-600);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+
+  .hairline {
+    height: 1px;
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .reviewer-summary-list {
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -461,15 +530,7 @@
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 10px;
     overflow: hidden;
-    background: var(--background);
-  }
-
-  .reviewer-summary-list {
     background: var(--background-alt);
-  }
-
-  .reviewer-results.compact {
-    background: var(--background);
   }
 
   .reviewer-summary-row {
@@ -492,24 +553,31 @@
     border-bottom-right-radius: 10px;
   }
 
-  .reviewer-row {
-    padding: var(--spacing-s) var(--spacing-m);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-  }
-
-  .reviewer-row:last-child {
-    border-bottom: none;
-  }
-
-  .reviewer-result-row {
+  .verdicts {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
+    flex-direction: column;
+    gap: var(--spacing-s);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .verdict {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
     min-width: 0;
   }
 
-  .reviewer-result-copy {
+  .verdict-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .verdict-body {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -517,29 +585,39 @@
     flex: 1;
   }
 
-  .reviewer-result-status {
-    flex-shrink: 0;
+  .verdict-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
+    line-height: 1.45;
   }
 
-  .verdict-pill {
+  .verdict-message {
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-600);
+    line-height: 1.55;
+    word-break: break-word;
+  }
+
+  .status {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    font-weight: 400;
+    font-weight: 500;
     white-space: nowrap;
   }
 
-  .verdict-pill.passed {
+  .status.passed {
     color: var(--color-green-500);
   }
 
-  .verdict-pill.failed,
-  .verdict-pill.error {
+  .status.failed,
+  .status.error {
     color: var(--color-orange-500);
   }
 
-  .verdict-pill.idle {
+  .status.idle {
     color: var(--spectrum-global-color-gray-600);
   }
 
@@ -556,13 +634,7 @@
     word-break: break-word;
   }
 
-  .reviewer-message {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-    line-height: 1.5;
-  }
-
-  .result-pre {
+  .result-error {
     white-space: pre-wrap;
     word-break: break-word;
     font-family: "ui-monospace", "SFMono-Regular", monospace;
@@ -585,30 +657,76 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .response-surface {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 10px;
-    background: var(--background-alt);
-    padding: var(--spacing-m);
-    max-height: min(480px, 55vh);
+  .response {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    min-width: 0;
+  }
+
+  .response-preview {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--spectrum-global-color-gray-800);
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .response-link {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-blue-600);
+    transition: color 120ms ease;
+  }
+
+  .response-link :global(.spectrum-Icon) {
+    transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .response-link:hover {
+    color: var(--spectrum-global-color-blue-700);
+  }
+
+  .response-link:hover :global(.spectrum-Icon) {
+    transform: translate(2px, -1px);
+  }
+
+  .response-link:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-blue-500);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .response-modal-body {
+    max-height: min(60vh, 540px);
     overflow: auto;
+    padding-right: var(--spacing-s);
     scrollbar-width: thin;
   }
 
-  .comparison-response {
-    max-height: min(340px, 42vh);
-  }
-
-  .response-surface::-webkit-scrollbar {
+  .response-modal-body::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
-  .response-surface::-webkit-scrollbar-track {
+  .response-modal-body::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .response-surface::-webkit-scrollbar-thumb {
+  .response-modal-body::-webkit-scrollbar-thumb {
     background: var(--spectrum-global-color-gray-300);
     border-radius: 3px;
   }
