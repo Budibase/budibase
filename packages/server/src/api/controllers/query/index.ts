@@ -390,12 +390,10 @@ export async function preview(
   const { rows, keys, info, extra } = queryResponse
   const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
-  // if existing schema, update to include any previous schema keys
+  // if existing schema, prefer user's customizations over auto-detected types
   if (existingSchema) {
     for (let key of Object.keys(existingSchema)) {
-      if (!previewSchema[key]) {
-        previewSchema[key] = existingSchema[key]
-      }
+      previewSchema[key] = existingSchema[key]
     }
   }
   // remove configuration before sending event
