@@ -1,7 +1,8 @@
 <script lang="ts">
   import { Body, Button, Modal, notifications } from "@budibase/bbui"
-  import type { AgentTestCase } from "@budibase/types"
+  import { AIConfigType, type AgentTestCase } from "@budibase/types"
   import { validateReviewer } from "@budibase/shared-core"
+  import { bb } from "@/stores/bb"
   import TestCaseFields from "./TestCaseFields.svelte"
   import TestReviewersEditor from "./TestReviewersEditor.svelte"
 
@@ -154,8 +155,16 @@
           <div class="section-header">
             <h3>Compare AI models</h3>
             <p>
-              Select up to 3 AI models to compare response. To add models, go to
-              AI Connectors.
+              Select up to 3 AI models to compare response. To add models, go to{" "}
+              <button
+                class="link-button"
+                onclick={() => {
+                  modal.hide()
+                  bb.settings(`/connections/${AIConfigType.COMPLETIONS}`)
+                }}
+              >
+                AI Connectors
+              </button>.
             </p>
           </div>
 
@@ -284,6 +293,22 @@
     font-size: 12px;
     line-height: 1.5;
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--spectrum-global-color-gray-800);
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+    cursor: pointer;
+  }
+
+  .link-button:hover {
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .section-divider {
