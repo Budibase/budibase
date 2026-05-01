@@ -307,13 +307,15 @@
               </div>
 
               <div class="case-cell case-cell-status">
-                <span class={`status-pill ${statusMeta.tone}`}>
-                  {getStatusLabel(latestResults)}
+                <span
+                  class={`status-pill ${showSpinner ? "idle" : statusMeta.tone}`}
+                >
+                  {showSpinner ? "Running..." : getStatusLabel(latestResults)}
                 </span>
               </div>
 
               <div class="case-cell case-cell-last-run">
-                {getLastRunLabel(latestResults)}
+                {showSpinner ? "Running..." : getLastRunLabel(latestResults)}
               </div>
             </button>
 
