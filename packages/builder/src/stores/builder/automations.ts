@@ -1475,18 +1475,33 @@ const automationActions = (store: AutomationStore) => ({
     automationId,
     startDate,
     status,
+    statuses,
     page,
+    durationGte,
+    durationLte,
+    attemptGte,
+    attemptLte,
   }: {
     automationId?: string
     startDate?: string
     status?: AutomationStatus
+    statuses?: AutomationStatus[]
     page?: string
+    durationGte?: number
+    durationLte?: number
+    attemptGte?: number
+    attemptLte?: number
   } = {}) => {
     return await API.getAutomationLogs({
       automationId,
       startDate,
       status,
+      statuses,
       page,
+      durationGte,
+      durationLte,
+      attemptGte,
+      attemptLte,
     })
   },
 

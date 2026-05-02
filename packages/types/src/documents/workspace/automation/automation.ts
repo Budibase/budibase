@@ -245,6 +245,8 @@ export interface AutomationResults {
   trigger: AutomationTriggerResult
   steps: [AutomationTriggerResult, ...AutomationStepResult[]]
   state?: Record<string, any>
+  durationMs?: number
+  attempt?: number
 }
 
 export interface DidNotTriggerResponse {
@@ -258,6 +260,8 @@ export interface DidNotTriggerResponse {
 export interface AutomationLog extends AutomationResults, Document {
   automationName: string
   _rev?: string
+  durationMs?: number
+  attempt?: number
 }
 
 export interface AutomationLogPage {

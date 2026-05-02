@@ -51,8 +51,13 @@ export interface CreateAutomationResponse {
 export interface SearchAutomationLogsRequest {
   startDate?: string
   status?: AutomationStatus
+  statuses?: AutomationStatus[]
   automationId?: string
   page?: string
+  durationGte?: number
+  durationLte?: number
+  attemptGte?: number
+  attemptLte?: number
 }
 export interface SearchAutomationLogsResponse extends AutomationLogPage {}
 

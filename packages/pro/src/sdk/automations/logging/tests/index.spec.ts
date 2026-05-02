@@ -51,6 +51,8 @@ async function generateAutomationLog(
   log: {
     date: Date
     status: AutomationStatus
+    durationMs?: number
+    attempt?: number
   }
 ) {
   const _id = generateAutomationLogID(
@@ -71,6 +73,8 @@ async function generateAutomationLog(
     automationName: "automationName",
     trigger: triggerResult,
     steps: [triggerResult],
+    durationMs: log.durationMs,
+    attempt: log.attempt,
   }
   await workspaceDb.put(obj)
   const result = await workspaceDb.get<AutomationLog>(_id)
@@ -231,6 +235,159 @@ describe("paid log testing", () => {
         totalLogs: allLogs.length,
         totalRows: 180,
       })
+    })
+  })
+})
+
+describe("filter testing", () => {
+  const automationId = "au_filter_test_123"
+
+  beforeAll(async () => {
+    newApp()
+    await generateAutomationLog(automationId, {
+      date: daysAgo(0),
+      status: AutomationStatus.SUCCESS,
+      durationMs: 500,
+      attempt: 0,
+    })
+    await generateAutomationLog(automationId, {
+      date: daysAgo(0),
+      status: AutomationStatus.ERROR,
+      durationMs: 1500,
+      attempt: 0,
+    })
+    await generateAutomationLog(automationId, {
+      date: daysAgo(0),
+      status: AutomationStatus.STOPPED_ERROR,
+      durationMs: 3000,
+      attempt: 2,
+    })
+    await generateAutomationLog(automationId, {
+      date: daysAgo(0),
+      status: AutomationStatus.TIMED_OUT,
+      durationMs: 10000,
+      attempt: 3,
+    })
+    await generateAutomationLog(automationId, {
+      date: daysAgo(0),
+      status: AutomationStatus.SUCCESS,
+      durationMs: 200,
+      attempt: 1,
+    })
+  })
+
+  beforeEach(() => {
+    mocks.licenses.setAutomationLogsQuota(30)
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
+  describe("statuses filtering", () => {
+    it("should filter by multiple failure statuses", async () => {
+      const logs = await logSearch({
+        statuses: [
+          AutomationStatus.ERROR,
+          AutomationStatus.STOPPED_ERROR,
+          AutomationStatus.TIMED_OUT,
+        ],
+      })
+      expect(logs.data).toHaveLength(3)
+      expect(logs.data.every(l => l.status !== AutomationStatus.SUCCESS)).toBe(
+        true
+      )
+    })
+
+    it("should handle single status in statuses array", async () => {
+      const logs = await logSearch({
+        statuses: [AutomationStatus.SUCCESS],
+      })
+      expect(logs.data).toHaveLength(2)
+      expect(logs.data.every(l => l.status === AutomationStatus.SUCCESS)).toBe(
+        true
+      )
+    })
+  })
+
+  describe("duration filtering", () => {
+    it("should filter by duration greater than", async () => {
+      const logs = await logSearch({
+        durationGte: 1000,
+      })
+      expect(logs.data).toHaveLength(3)
+      expect(logs.data.every(l => l.durationMs! >= 1000)).toBe(true)
+    })
+
+    it("should filter by duration less than", async () => {
+      const logs = await logSearch({
+        durationLte: 1000,
+      })
+      expect(logs.data).toHaveLength(2)
+      expect(logs.data.every(l => l.durationMs! <= 1000)).toBe(true)
+    })
+
+    it("should filter by duration range", async () => {
+      const logs = await logSearch({
+        durationGte: 1000,
+        durationLte: 5000,
+      })
+      expect(logs.data).toHaveLength(2)
+      expect(
+        logs.data.every(l => l.durationMs! >= 1000 && l.durationMs! <= 5000)
+      ).toBe(true)
+    })
+  })
+
+  describe("attempt filtering", () => {
+    it("should filter by attempt greater than", async () => {
+      const logs = await logSearch({
+        attemptGte: 1,
+      })
+      expect(logs.data).toHaveLength(3)
+      expect(logs.data.every(l => l.attempt! >= 1)).toBe(true)
+    })
+
+    it("should filter by attempt greater than 2", async () => {
+      const logs = await logSearch({
+        attemptGte: 2,
+      })
+      expect(logs.data).toHaveLength(2)
+      expect(logs.data.every(l => l.attempt! >= 2)).toBe(true)
+    })
+  })
+
+  describe("combined filtering", () => {
+    it("should filter by failure statuses AND with retries", async () => {
+      const logs = await logSearch({
+        statuses: [
+          AutomationStatus.ERROR,
+          AutomationStatus.STOPPED_ERROR,
+          AutomationStatus.TIMED_OUT,
+        ],
+        attemptGte: 1,
+      })
+      expect(logs.data).toHaveLength(2)
+      expect(
+        logs.data.every(
+          l =>
+            l.status !== AutomationStatus.SUCCESS &&
+            l.attempt! >= 1
+        )
+      ).toBe(true)
+    })
+
+    it("should filter by failure statuses AND duration range", async () => {
+      const logs = await logSearch({
+        statuses: [
+          AutomationStatus.ERROR,
+          AutomationStatus.STOPPED_ERROR,
+          AutomationStatus.TIMED_OUT,
+        ],
+        durationGte: 1000,
+        durationLte: 5000,
+      })
+      expect(logs.data).toHaveLength(2)
     })
   })
 })

@@ -274,6 +274,7 @@ class Orchestrator {
   private emitter: ContextEmitter
   private stopped: boolean
   private readonly onProgress?: (event: AutomationTestProgressEvent) => void
+  private startTime: number = Date.now()
 
   constructor(
     job: Readonly<AutomationJob>,
@@ -328,6 +329,10 @@ class Orchestrator {
   }
 
   private async logResult(result: AutomationResults) {
+    result.durationMs = Date.now() - this.startTime
+    if (this.job.attemptsMade !== undefined) {
+      result.attempt = this.job.attemptsMade
+    }
     await storeLog(this.automation, result)
   }
 
