@@ -390,11 +390,28 @@ export async function preview(
   const { rows, keys, info, extra } = queryResponse
   const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
-  // if existing schema, update to include any previous schema keys
+  // if existing schema, merge with the preview schema:
+  // - keys present in existingSchema but absent from previewSchema are preserved (e.g. removed columns)
+  // - keys present in BOTH schemas keep the existingSchema type, so user-defined type overrides
+  //   are not discarded when the query is re-run
   if (existingSchema) {
     for (let key of Object.keys(existingSchema)) {
+      const existingEntry = existingSchema[key]
+      // Normalise legacy string-only schema entries to objects
+      const normalisedExisting: QuerySchema =
+        typeof existingEntry === "string"
+          ? { type: existingEntry, name: key }
+          : existingEntry
       if (!previewSchema[key]) {
-        previewSchema[key] = existingSchema[key]
+        // Field is in saved schema but not returned by this run — keep it
+        previewSchema[key] = normalisedExisting
+      } else {
+        // Field exists in both: preserve the user's saved type override while
+        // still accepting any structural updates (e.g. subtype) from the new run.
+        previewSchema[key] = {
+          ...previewSchema[key],
+          ...normalisedExisting,
+        }
       }
     }
   }
