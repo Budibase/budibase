@@ -3,6 +3,9 @@ import { KnowledgeBaseFile } from "@budibase/types"
 export interface RetrievedContextChunk {
   source?: string
   chunkText: string
+  previewUrl?: string
+  previewPage?: number
+  previewScore?: number
 }
 
 export interface RagProcessor {

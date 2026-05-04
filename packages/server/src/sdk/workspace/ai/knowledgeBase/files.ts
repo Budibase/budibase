@@ -145,5 +145,23 @@ export const removeKnowledgeBaseFile = async (
     }
   }
 
+  if (file.previews?.length) {
+    await Promise.all(
+      file.previews.map(async preview => {
+        try {
+          await objectStore.deleteFile(
+            ObjectStoreBuckets.APPS,
+            preview.objectStoreKey
+          )
+        } catch (error) {
+          console.log(
+            "Failed to delete knowledge base preview from object store",
+            error
+          )
+        }
+      })
+    )
+  }
+
   await context.getWorkspaceDB().remove(file)
 }

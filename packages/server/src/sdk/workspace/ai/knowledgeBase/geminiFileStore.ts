@@ -16,14 +16,18 @@ interface RagIngestResponse {
 }
 
 interface RagSearchContent {
-  text: string
-  type: "text"
+  type: string
+  text?: string
+  image_url?: string
+  page?: number
 }
 
 interface RagSearchResultItem {
   file_id?: string | null
   filename?: string
   score: number | null
+  page?: number
+  image_url?: string
   content: RagSearchContent[]
 }
 

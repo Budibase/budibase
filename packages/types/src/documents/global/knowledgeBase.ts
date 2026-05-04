@@ -35,6 +35,12 @@ export interface SharePointKnowledgeBaseFileSource {
 
 export type KnowledgeBaseFileSource = SharePointKnowledgeBaseFileSource
 
+export interface KnowledgeBaseFilePreview {
+  page: number
+  objectStoreKey: string
+  textExcerpt?: string
+}
+
 export interface KnowledgeBaseFile extends Document {
   knowledgeBaseId: string
   source?: KnowledgeBaseFileSource
@@ -47,4 +53,5 @@ export interface KnowledgeBaseFile extends Document {
   uploadedBy: string
   errorMessage?: string
   processedAt?: string
+  previews?: KnowledgeBaseFilePreview[]
 }

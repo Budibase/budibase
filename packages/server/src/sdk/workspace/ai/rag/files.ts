@@ -8,7 +8,7 @@ import {
   LockName,
   LockType,
 } from "@budibase/types"
-import { HTTPError, locks } from "@budibase/backend-core"
+import { HTTPError, locks, objectStore } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
@@ -51,6 +51,117 @@ const getAgentKnowledgeBase = async (
 
 const normalizeFilenameLookup = (value?: string) =>
   value?.trim().toLowerCase() || ""
+
+const STOP_WORDS = new Set([
+  "the",
+  "and",
+  "for",
+  "with",
+  "that",
+  "this",
+  "from",
+  "have",
+  "were",
+  "your",
+  "into",
+  "what",
+  "when",
+  "where",
+  "which",
+  "about",
+  "they",
+  "them",
+  "their",
+  "there",
+  "been",
+  "also",
+  "than",
+  "over",
+  "under",
+  "such",
+  "very",
+  "more",
+  "most",
+  "many",
+  "some",
+  "each",
+  "golden",
+  "eagle",
+])
+
+const tokenize = (value?: string) => {
+  if (!value) {
+    return [] as string[]
+  }
+
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(token => token.length >= 4 && !STOP_WORDS.has(token))
+}
+
+const pickBestPreviewPage = (
+  previewCandidates: NonNullable<KnowledgeBaseFile["previews"]>,
+  sourceChunks: RetrievedContextChunk[],
+  question: string
+) => {
+  const queryTokens = tokenize(
+    [question, ...sourceChunks.map(chunk => chunk.chunkText)].join(" ")
+  )
+  if (queryTokens.length === 0) {
+    return previewCandidates[0]
+  }
+
+  const perPageTokenCounts = previewCandidates.map(candidate => {
+    const counts = new Map<string, number>()
+    for (const token of tokenize(candidate.textExcerpt)) {
+      counts.set(token, (counts.get(token) || 0) + 1)
+    }
+    return counts
+  })
+
+  const tokenDocumentFrequency = new Map<string, number>()
+  for (const tokenCount of perPageTokenCounts) {
+    for (const token of tokenCount.keys()) {
+      tokenDocumentFrequency.set(token, (tokenDocumentFrequency.get(token) || 0) + 1)
+    }
+  }
+
+  const tokenQueryFrequency = new Map<string, number>()
+  for (const token of queryTokens) {
+    tokenQueryFrequency.set(token, (tokenQueryFrequency.get(token) || 0) + 1)
+  }
+
+  let best = previewCandidates[0]
+  let bestScore = Number.NEGATIVE_INFINITY
+  for (let index = 0; index < previewCandidates.length; index++) {
+    const candidate = previewCandidates[index]
+    const tokenCounts = perPageTokenCounts[index]
+    if (tokenCounts.size === 0) {
+      continue
+    }
+
+    let score = 0
+    for (const [token, queryCount] of tokenQueryFrequency.entries()) {
+      const pageTf = tokenCounts.get(token) || 0
+      if (pageTf === 0) {
+        continue
+      }
+
+      const docFrequency = tokenDocumentFrequency.get(token) || 1
+      const idf = Math.log((previewCandidates.length + 1) / (docFrequency + 0.5))
+      score += Math.min(pageTf, 4) * (1 + Math.log(queryCount)) * (1 + idf)
+    }
+
+    if (score > bestScore) {
+      best = candidate
+      bestScore = score
+    }
+  }
+
+  return best
+}
 
 const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
   const sourceIdByFilename = new Map<string, string>()
@@ -286,14 +397,15 @@ export const retrieveContextForAgent = async (
   return {
     text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
     chunks,
-    sources: toSourceMetadata(chunks, files),
+    sources: await toSourceMetadata(chunks, files, question),
   }
 }
 
 const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
-  files: KnowledgeBaseFile[]
-): AgentMessageRagSource[] => {
+  files: KnowledgeBaseFile[],
+  question: string
+): Promise<AgentMessageRagSource[]> => {
   const readyFiles = files.filter(
     file => file.status === KnowledgeBaseFileStatus.READY
   )
@@ -301,11 +413,16 @@ const toSourceMetadata = (
     readyFiles.map(file => [file.ragSourceId, file])
   )
   const summary = new Map<string, AgentMessageRagSource>()
+  const chunksBySourceId = new Map<string, RetrievedContextChunk[]>()
 
   for (const chunk of chunks) {
     if (!chunk.source) {
       continue
     }
+    const currentChunks = chunksBySourceId.get(chunk.source) || []
+    currentChunks.push(chunk)
+    chunksBySourceId.set(chunk.source, currentChunks)
+
     const file = fileBySourceId.get(chunk.source)
     const sourceId = chunk.source
     if (!summary.has(sourceId)) {
@@ -313,10 +430,64 @@ const toSourceMetadata = (
         sourceId,
         fileId: file?._id,
         filename: file?.filename ?? chunk.source,
+        ...(chunk.previewUrl ? { previewUrl: chunk.previewUrl } : {}),
+        ...(chunk.previewPage ? { previewPage: chunk.previewPage } : {}),
+        ...(chunk.previewScore ? { previewScore: chunk.previewScore } : {}),
       })
+      continue
+    }
+
+    const existing = summary.get(sourceId)
+    if (!existing) {
+      continue
+    }
+
+    const existingScore = existing.previewScore ?? Number.NEGATIVE_INFINITY
+    const nextScore = chunk.previewScore ?? Number.NEGATIVE_INFINITY
+    if (!existing.previewUrl && chunk.previewUrl) {
+      existing.previewUrl = chunk.previewUrl
+      existing.previewPage = chunk.previewPage
+      existing.previewScore = chunk.previewScore
+      continue
+    }
+
+    if (chunk.previewUrl && nextScore > existingScore) {
+      existing.previewUrl = chunk.previewUrl
+      existing.previewPage = chunk.previewPage
+      existing.previewScore = chunk.previewScore
     }
   }
-  return Array.from(summary.values())
+  const values = Array.from(summary.values())
+  return Promise.all(
+    values.map(async source => {
+      if (source.previewUrl) {
+        return source
+      }
+
+      const file = source.fileId
+        ? readyFiles.find(x => x._id === source.fileId)
+        : readyFiles.find(x => x.ragSourceId === source.sourceId)
+      const filePreviews = file?.previews || []
+      if (filePreviews.length === 0) {
+        return source
+      }
+
+      const selected = source.previewPage
+        ? filePreviews.find(preview => preview.page === source.previewPage) ||
+          filePreviews[0]
+        : pickBestPreviewPage(
+            filePreviews,
+            chunksBySourceId.get(source.sourceId) || [],
+            question
+          )
+      const previewUrl = await objectStore.getAppFileUrl(selected.objectStoreKey)
+      return {
+        ...source,
+        previewUrl,
+        previewPage: selected.page,
+      }
+    })
+  )
 }
 
 export const deleteKnowledgeBaseFileChunks = async (

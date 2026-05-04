@@ -11,7 +11,11 @@ import {
   ingestGeminiFile,
   searchGeminiFileStore,
 } from "../../knowledgeBase/geminiFileStore"
-import { updateKnowledgeBaseFile } from "../../knowledgeBase"
+import {
+  getKnowledgeBaseFileOrThrow,
+  updateKnowledgeBaseFile,
+} from "../../knowledgeBase"
+import { generatePdfPreviews, isPdfFile } from "../../knowledgeBase/pdfPreviews"
 
 export class GeminiRagProcessor implements RagProcessor {
   private knowledgeBase: GeminiKnowledgeBase
@@ -53,7 +57,18 @@ export class GeminiRagProcessor implements RagProcessor {
       input.ragSourceId = ingested.fileId
       input.processedAt = new Date().toISOString()
       input.errorMessage = undefined
-      await updateKnowledgeBaseFile(input)
+      const updatedFile = await updateKnowledgeBaseFile(input)
+
+      if (
+        updatedFile._id &&
+        isPdfFile({
+          filename: updatedFile.filename,
+          mimetype: updatedFile.mimetype,
+        })
+      ) {
+        void this.generateAndPersistPreviews(updatedFile, fileBuffer)
+      }
+
       console.log("Completed Gemini RAG file ingestion", {
         knowledgeBaseId,
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
@@ -74,6 +89,45 @@ export class GeminiRagProcessor implements RagProcessor {
     }
   }
 
+  private async generateAndPersistPreviews(
+    file: KnowledgeBaseFile,
+    fileBuffer: Buffer
+  ) {
+    const knowledgeBaseId = this.knowledgeBase._id
+    if (!file._id || !knowledgeBaseId) {
+      return
+    }
+
+    try {
+      const previews = await generatePdfPreviews({
+        knowledgeBaseId,
+        fileId: file._id,
+        filename: file.filename,
+        buffer: fileBuffer,
+      })
+      if (previews.length === 0) {
+        return
+      }
+
+      const latestFile = await getKnowledgeBaseFileOrThrow(file._id)
+      await updateKnowledgeBaseFile({
+        ...latestFile,
+        previews,
+      })
+      console.log("Stored PDF preview metadata", {
+        knowledgeBaseId,
+        fileId: file._id,
+        previewCount: previews.length,
+      })
+    } catch (error) {
+      console.error("Failed to persist PDF preview metadata", {
+        knowledgeBaseId,
+        fileId: file._id,
+        error,
+      })
+    }
+  }
+
   async search(question: string): Promise<RetrievedContextChunk[]> {
     const rows = await searchGeminiFileStore({
       vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
@@ -82,12 +136,22 @@ export class GeminiRagProcessor implements RagProcessor {
 
     const results = rows.map<RetrievedContextChunk>(row => {
       const chunkText = row.content
-        ?.map(x => x.text)
+        ?.filter(content => content.type === "text" && content.text)
+        .map(content => content.text)
         .join("\n")
         .trim()
+      const imagePreviewContent = row.content?.find(content =>
+        Boolean(content.image_url)
+      )
+      const previewUrl = row.image_url || imagePreviewContent?.image_url
+      const previewPage = row.page || imagePreviewContent?.page
+
       return {
         source: row.file_id || row.filename || undefined,
         chunkText,
+        ...(previewUrl ? { previewUrl } : {}),
+        ...(previewPage ? { previewPage } : {}),
+        ...(row.score ? { previewScore: row.score } : {}),
       }
     })
 

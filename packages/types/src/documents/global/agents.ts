@@ -91,6 +91,9 @@ export interface AgentMessageRagSource {
   sourceId: string
   fileId?: string
   filename?: string
+  previewUrl?: string
+  previewPage?: number
+  previewScore?: number
 }
 
 export interface AgentMessageMetadata {

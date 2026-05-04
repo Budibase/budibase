@@ -136,6 +136,72 @@
     return displayName
   }
 
+  type SourcePreview = {
+    sourceId: string
+    fileId?: string
+    filename?: string
+    previewUrl?: string
+    previewPage?: number
+  }
+
+  const normalizeSourcePreview = (value: unknown): SourcePreview | undefined => {
+    if (!value || typeof value !== "object") {
+      return undefined
+    }
+
+    const sourceId = Reflect.get(value, "sourceId")
+    if (typeof sourceId !== "string" || !sourceId.trim()) {
+      return undefined
+    }
+
+    const fileId = Reflect.get(value, "fileId")
+    const filename = Reflect.get(value, "filename")
+    const previewUrl = Reflect.get(value, "previewUrl")
+    const previewPage = Reflect.get(value, "previewPage")
+
+    return {
+      sourceId,
+      ...(typeof fileId === "string" ? { fileId } : {}),
+      ...(typeof filename === "string" ? { filename } : {}),
+      ...(typeof previewUrl === "string" ? { previewUrl } : {}),
+      ...(typeof previewPage === "number" ? { previewPage } : {}),
+    }
+  }
+
+  const getMessageSourcePreviews = (
+    message: UIMessage<AgentMessageMetadata>
+  ): SourcePreview[] => {
+    const fromMetadata = (message.metadata?.ragSources || [])
+      .map(source => normalizeSourcePreview(source))
+      .filter((source): source is SourcePreview => Boolean(source))
+    if (fromMetadata.length > 0) {
+      return fromMetadata
+    }
+
+    const fromSearchTool = (message.parts || [])
+      .filter(part => isToolUIPart(part) && getToolName(part) === "search_knowledge")
+      .flatMap(part => {
+        if (part.state !== "output-available" || !part.output) {
+          return [] as SourcePreview[]
+        }
+        const sources = Reflect.get(part.output, "sources")
+        if (!Array.isArray(sources)) {
+          return [] as SourcePreview[]
+        }
+        return sources
+          .map(source => normalizeSourcePreview(source))
+          .filter((source): source is SourcePreview => Boolean(source))
+      })
+
+    const dedupedBySourceId = new Map<string, SourcePreview>()
+    for (const source of fromSearchTool) {
+      if (!dedupedBySourceId.has(source.sourceId)) {
+        dedupedBySourceId.set(source.sourceId, source)
+      }
+    }
+    return Array.from(dedupedBySourceId.values())
+  }
+
   const PREVIEW_CHAT_APP_ID = "agent-preview"
 
   let resolvedChatAppId = $state<string | undefined>()
@@ -522,6 +588,7 @@
         {@const toolError = hasToolError(message)}
         {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
+        {@const messageSources = getMessageSourcePreviews(message)}
         {@const isThinking =
           (reasoningStreaming || pendingAssistant) &&
           !toolError &&
@@ -643,7 +710,7 @@
                 </div>
               {/if}
             {/each}
-            {#if message.metadata?.ragSources?.length}
+            {#if messageSources.length}
               <div class="sources">
                 <div class="sources-header">
                   <span class="sources-icon">
@@ -656,11 +723,24 @@
                   <span class="sources-title">Sources</span>
                 </div>
                 <ul>
-                  {#each message.metadata.ragSources as source (source.sourceId)}
+                  {#each messageSources as source (source.sourceId)}
                     <li class="source-item">
-                      <span class="source-name"
-                        >{source.filename || source.sourceId}</span
-                      >
+                      <div class="source-content">
+                        <span class="source-name"
+                          >{source.filename || source.sourceId}</span
+                        >
+                        {#if source.previewPage}
+                          <span class="source-page">Page {source.previewPage}</span>
+                        {/if}
+                      </div>
+                      {#if source.previewUrl}
+                        <img
+                          class="source-preview"
+                          src={source.previewUrl}
+                          alt={`Preview for ${source.filename || source.sourceId}`}
+                          loading="lazy"
+                        />
+                      {/if}
                     </li>
                   {/each}
                 </ul>
@@ -1136,12 +1216,34 @@
 
   .source-item {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
     font-size: 13px;
     color: var(--spectrum-global-color-gray-900);
   }
 
+  .source-content {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+
   .source-name {
     font-weight: 400;
+  }
+
+  .source-page {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .source-preview {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 8px;
+    border: 1px solid var(--grey-3);
+    object-fit: cover;
+    background: var(--spectrum-alias-background-color-secondary);
   }
 </style>

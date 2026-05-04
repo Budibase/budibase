@@ -6,6 +6,7 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseCreate = jest.fn()
 const mockKnowledgeBaseGetFileOrThrow = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
+const mockGetAppFileUrl = jest.fn()
 
 const mockProcessorIngest = jest.fn()
 const mockProcessorSearch = jest.fn()
@@ -13,13 +14,17 @@ const mockProcessorDelete = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
-  return {
-    ...actual,
-    locks: {
-      ...actual.locks,
-      doWithLock: (...args: any[]) => mockDoWithLock(...args),
-    },
-  }
+    return {
+      ...actual,
+      objectStore: {
+        ...actual.objectStore,
+        getAppFileUrl: (...args: any[]) => mockGetAppFileUrl(...args),
+      },
+      locks: {
+        ...actual.locks,
+        doWithLock: (...args: any[]) => mockDoWithLock(...args),
+      },
+    }
 })
 
 jest.mock("..", () => ({
@@ -73,6 +78,7 @@ describe("rag files", () => {
     mockDoWithLock.mockImplementation(async (_opts: unknown, fn: any) => ({
       result: await fn(),
     }))
+    mockGetAppFileUrl.mockImplementation(async (key: string) => `signed:${key}`)
   })
 
   describe("ensureKnowledgeBaseForAgent", () => {
@@ -379,6 +385,91 @@ describe("rag files", () => {
           sourceId: "source-1",
           fileId: "file_1",
           filename: "policy.md",
+        },
+      ])
+    })
+
+    it("adds preview metadata from stored PDF previews", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "policy.pdf",
+          objectStoreKey: "obj",
+          ragSourceId: "source-1",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+          previews: [
+            {
+              page: 1,
+              objectStoreKey: "wk/kb/file/page-1.png",
+            },
+          ],
+        } as KnowledgeBaseFile,
+      ])
+      mockProcessorSearch.mockResolvedValue([
+        {
+          source: "source-1",
+          chunkText: "Golden eagle description",
+        },
+      ])
+
+      const result = await retrieveContextForAgent(defaultAgent, "Describe eagle")
+
+      expect(result.sources).toEqual([
+        {
+          sourceId: "source-1",
+          fileId: "file_1",
+          filename: "policy.pdf",
+          previewUrl: "signed:wk/kb/file/page-1.png",
+          previewPage: 1,
+        },
+      ])
+    })
+
+    it("selects preview page based on chunk text overlap", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "birds.pdf",
+          objectStoreKey: "obj",
+          ragSourceId: "source-1",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+          previews: [
+            {
+              page: 1,
+              objectStoreKey: "wk/kb/file/page-1.png",
+              textExcerpt: "Introduction landscape mountains and weather",
+            },
+            {
+              page: 7,
+              objectStoreKey: "wk/kb/file/page-7.png",
+              textExcerpt:
+                "Golden eagle juvenile white tail bands and broad wingspan",
+            },
+          ],
+        } as KnowledgeBaseFile,
+      ])
+      mockProcessorSearch.mockResolvedValue([
+        {
+          source: "source-1",
+          chunkText: "Juvenile golden eagle has white tail bands",
+        },
+      ])
+
+      const result = await retrieveContextForAgent(defaultAgent, "Describe eagle")
+
+      expect(result.sources).toEqual([
+        {
+          sourceId: "source-1",
+          fileId: "file_1",
+          filename: "birds.pdf",
+          previewUrl: "signed:wk/kb/file/page-7.png",
+          previewPage: 7,
         },
       ])
     })
