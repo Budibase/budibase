@@ -1,5 +1,7 @@
 import { quotas } from "@budibase/pro"
 import { destroy, find, patch, save } from "../../api/controllers/row"
+import * as rowUtils from "../../api/controllers/row/utils"
+import sdk from "../../sdk"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -124,10 +126,20 @@ describe("External table row operations quota tracking", () => {
     typeof quotas.addAction
   >
   const addRowMock = quotas.addRow as jest.MockedFunction<typeof quotas.addRow>
+  const getSourceIdMock = rowUtils.getSourceId as jest.MockedFunction<
+    typeof rowUtils.getSourceId
+  >
+  const findMock = sdk.rows.find as jest.MockedFunction<typeof sdk.rows.find>
 
   beforeEach(() => {
     addActionMock.mockClear()
     addRowMock.mockClear()
+    getSourceIdMock.mockReturnValue({
+      tableId: "datasource_plus_xxx",
+      viewId: undefined,
+    })
+    findMock.mockReset()
+    findMock.mockResolvedValue({ _id: "row1" })
   })
 
   describe("HTTP (UI/API) scope — addAction is called", () => {
@@ -162,6 +174,45 @@ describe("External table row operations quota tracking", () => {
       const ctx = makeCtx({}, { rowId: "row1" })
       await find(ctx as any)
       expect(addActionMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("View trigger context", () => {
+    beforeEach(() => {
+      getSourceIdMock.mockReturnValue({
+        tableId: "datasource_plus_xxx",
+        viewId: "view_datasource_plus_xxx_test",
+      })
+    })
+
+    it("emits created row events with the underlying table row", async () => {
+      const fullRow = { _id: "row1", name: "visible", hidden: "secret" }
+      findMock.mockResolvedValue(fullRow)
+      const ctx = makeCtx({ name: "visible" })
+
+      await save(ctx as any)
+
+      expect(ctx.eventEmitter.emitRow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          row: fullRow,
+        })
+      )
+    })
+
+    it("emits updated row events with underlying table rows", async () => {
+      const oldRow = { _id: "row1", name: "before", hidden: "secret" }
+      const updatedRow = { _id: "row1", name: "after", hidden: "secret" }
+      findMock.mockResolvedValueOnce(oldRow).mockResolvedValueOnce(updatedRow)
+      const ctx = makeCtx({ _id: "row1", name: "after" })
+
+      await patch(ctx as any)
+
+      expect(ctx.eventEmitter.emitRow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          row: updatedRow,
+          oldRow,
+        })
+      )
     })
   })
 
