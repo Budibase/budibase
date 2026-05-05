@@ -146,8 +146,9 @@ export async function finaliseRow(
     : source
 
   row.type = "row"
-  // process the row before return, to include relationships
-  let enrichedRow = await outputProcessing(source, cloneDeep(row), {
+  // process the row before return, to include relationships.
+  // use the full table schema so automation row triggers receive columns hidden by a view.
+  let enrichedRow = await outputProcessing(table, cloneDeep(row), {
     squash: false,
   })
   // use enriched row to generate formulas for saving, specifically only use as context

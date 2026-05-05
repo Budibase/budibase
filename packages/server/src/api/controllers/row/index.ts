@@ -55,21 +55,6 @@ function pickApi(tableId: string) {
   return internal
 }
 
-interface PatchResult {
-  row: Row
-  table: Table
-  oldRow: Row
-  automationRow?: Row
-  oldAutomationRow?: Row
-}
-
-interface SaveResult {
-  row: Row
-  table: Table
-  squashed?: Row
-  automationRow?: Row
-}
-
 async function _patch(
   ctx: UserCtx<PatchRowRequest, PatchRowResponse>,
   { isAutomation = false }: { isAutomation?: boolean } = {}
@@ -84,12 +69,12 @@ async function _patch(
   }
   try {
     const api = pickApi(tableId)
-    const work = async (): Promise<PatchResult> => {
+    const work = async () => {
       const response = await api.patch(ctx)
       events.action.crudExecuted({ type: "update" })
       return response
     }
-    const { row, table, oldRow, automationRow, oldAutomationRow } = isAutomation
+    const { row, table, oldRow } = isAutomation
       ? await work()
       : await quotas.addAction(work)
     if (!row) {
@@ -99,9 +84,9 @@ async function _patch(
     ctx.eventEmitter?.emitRow({
       eventName: EventType.ROW_UPDATE,
       appId,
-      row: automationRow || row,
+      row,
       table,
-      oldRow: oldAutomationRow || oldRow,
+      oldRow,
       user: sdk.users.getUserContextBindings(ctx.user),
     })
     ctx.message = `${table.name} updated successfully.`
@@ -140,7 +125,7 @@ async function _save(
       isAutomation,
     })
   }
-  let saveResult: SaveResult
+  let saveResult: { row: Row; table: Table; squashed?: Row }
   if (tableId.includes("datasource_plus")) {
     if (isAutomation) {
       saveResult = await sdk.rows.save(
@@ -172,12 +157,12 @@ async function _save(
       return response
     })
   }
-  const { row, table, squashed, automationRow } = saveResult
+  const { row, table, squashed } = saveResult
 
   ctx.eventEmitter?.emitRow({
     eventName: EventType.ROW_SAVE,
     appId,
-    row: automationRow || row,
+    row,
     table,
     user: sdk.users.getUserContextBindings(ctx.user),
   })

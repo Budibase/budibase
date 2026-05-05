@@ -78,28 +78,15 @@ export async function save(
 
   const rowId = response.row._id
   if (rowId) {
-    const [row, responseRow] = await Promise.all([
-      getRow(table, rowId, {
-        relationships: true,
-      }),
-      getRow(source, rowId, {
-        relationships: true,
-      }),
-    ])
-    const [enrichedRow, automationRow] = await Promise.all([
-      outputProcessing(source, responseRow, {
-        preserveLinks: true,
-        squash: true,
-      }),
-      outputProcessing(table, row, {
-        preserveLinks: true,
-        squash: true,
-      }),
-    ])
+    const row = await getRow(table, rowId, {
+      relationships: true,
+    })
     return {
       ...response,
-      row: enrichedRow,
-      automationRow,
+      row: await outputProcessing(table, row, {
+        preserveLinks: true,
+        squash: true,
+      }),
     }
   } else {
     return response

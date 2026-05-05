@@ -52,14 +52,9 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const table = await utils.getTableFromSource(source)
   const { _id, ...rowData } = ctx.request.body
 
-  const [beforeRow, beforeResponseRow] = await Promise.all([
-    sdk.rows.external.getRow(table._id!, _id, {
-      relationships: true,
-    }),
-    sdk.rows.external.getRow(source, _id, {
-      relationships: true,
-    }),
-  ])
+  const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
+    relationships: true,
+  })
 
   let dataToUpdate = cloneDeep(beforeRow)
   const allowedField = utils.getSourceFields(source)
@@ -91,42 +86,26 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // The id might have been changed, so the refetching would fail. Recalculating the id just in case
   const updatedId =
     generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
-  const [row, responseRow] = await Promise.all([
-    sdk.rows.external.getRow(table._id!, updatedId, {
-      relationships: true,
+  const row = await sdk.rows.external.getRow(table._id!, updatedId, {
+    relationships: true,
+  })
+
+  const [enrichedRow, oldRow] = await Promise.all([
+    outputProcessing(table, row, {
+      squash: true,
+      preserveLinks: true,
     }),
-    sdk.rows.external.getRow(source, updatedId, {
-      relationships: true,
+    outputProcessing(table, beforeRow, {
+      squash: true,
+      preserveLinks: true,
     }),
   ])
-
-  const [enrichedRow, oldRow, automationRow, oldAutomationRow] =
-    await Promise.all([
-      outputProcessing(source, responseRow, {
-        squash: true,
-        preserveLinks: true,
-      }),
-      outputProcessing(source, beforeResponseRow, {
-        squash: true,
-        preserveLinks: true,
-      }),
-      outputProcessing(table, row, {
-        squash: true,
-        preserveLinks: true,
-      }),
-      outputProcessing(table, beforeRow, {
-        squash: true,
-        preserveLinks: true,
-      }),
-    ])
 
   return {
     ...response,
     row: enrichedRow,
     table,
     oldRow,
-    automationRow,
-    oldAutomationRow,
   }
 }
 
