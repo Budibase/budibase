@@ -89,16 +89,16 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // The id might have been changed, so the refetching would fail. Recalculating the id just in case
   const updatedId =
     generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
-  const row = await sdk.rows.external.getRow(sourceId, updatedId, {
+  const row = await sdk.rows.external.getRow(table._id!, updatedId, {
     relationships: true,
   })
 
   const [enrichedRow, oldRow] = await Promise.all([
-    outputProcessing(source, row, {
+    outputProcessing(table, row, {
       squash: true,
       preserveLinks: true,
     }),
-    outputProcessing(source, beforeRow, {
+    outputProcessing(table, beforeRow, {
       squash: true,
       preserveLinks: true,
     }),

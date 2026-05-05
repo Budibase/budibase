@@ -49,10 +49,13 @@ export async function save(
 ) {
   const { tableId, viewId } = tryExtractingTableAndViewId(sourceId)
   let source: Table | ViewV2
+  let table: Table
   if (viewId) {
     source = await sdk.views.get(viewId)
+    table = await sdk.views.getTable(viewId)
   } else {
     source = await sdk.tables.getTable(tableId)
+    table = source
   }
 
   if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
@@ -75,12 +78,12 @@ export async function save(
 
   const rowId = response.row._id
   if (rowId) {
-    const row = await getRow(source, rowId, {
+    const row = await getRow(table, rowId, {
       relationships: true,
     })
     return {
       ...response,
-      row: await outputProcessing(source, row, {
+      row: await outputProcessing(table, row, {
         preserveLinks: true,
         squash: true,
       }),
