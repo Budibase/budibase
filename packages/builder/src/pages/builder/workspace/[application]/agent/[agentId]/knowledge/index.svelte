@@ -10,7 +10,12 @@
     type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
   import { appStore } from "@/stores/builder/app"
-  import { agentsStore, selectedAgent } from "@/stores/portal"
+  import { workspaceDeploymentStore } from "@/stores/builder"
+  import {
+    agentsStore,
+    knowledgeConnectionsStore,
+    selectedAgent,
+  } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
@@ -61,18 +66,15 @@
     }
     return $agentsStore.knowledgeByAgent[agentId]?.sharePointSources || []
   })
-  let hasSharePointConnection = $derived.by(() => {
-    const agentId = currentAgent?._id
-    if (!agentId) {
-      return false
-    }
-    return (
-      $agentsStore.knowledgeByAgent[agentId]?.hasSharePointConnection || false
+  let hasSharePointConnection = $derived(
+    $knowledgeConnectionsStore.connections.some(
+      connection =>
+        connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
     )
-  })
+  )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
-      .map(source => source.config.site?.id)
+      .map(source => source.config.site.id)
       .filter((siteId): siteId is string => !!siteId)
   )
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
@@ -133,6 +135,10 @@
 
   const stopSharePointBootstrapPolling = () => {
     knowledgePollingController.stop()
+  }
+
+  const refreshDeploymentStatus = async () => {
+    await workspaceDeploymentStore.fetch()
   }
 
   const showSharePointSyncResult = (
@@ -207,7 +213,10 @@
   const loadInitialKnowledge = async (agentId: string) => {
     loading = true
     try {
-      await agentsStore.fetchAgentKnowledge(agentId)
+      await Promise.all([
+        agentsStore.fetchAgentKnowledge(agentId),
+        knowledgeConnectionsStore.fetch(),
+      ])
       initialKnowledgeLoadedForAgent = agentId
     } finally {
       loading = false
@@ -353,7 +362,7 @@
         agentId,
         sourceId
       )
-      await fetchFiles(agentId)
+      await Promise.all([fetchFiles(agentId), refreshDeploymentStatus()])
       showSharePointSyncResult(result)
     } catch (error) {
       console.error(error)
@@ -380,6 +389,7 @@
         try {
           await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
           await fetchFiles(agentId)
+          await refreshDeploymentStatus()
           notifications.success("SharePoint site removed")
         } catch (error) {
           console.error(error)
@@ -404,6 +414,7 @@
         try {
           await agentsStore.deleteAgentFile(agentId, fileId)
           await fetchFiles(agentId)
+          await refreshDeploymentStatus()
           notifications.success("File removed")
         } catch (error) {
           console.error(error)
@@ -441,6 +452,7 @@
       }}
       onUploaded={async agentId => {
         await fetchFiles(agentId)
+        await refreshDeploymentStatus()
       }}
       onSharePoint={() =>
         openSharePointFlow().catch(error => {

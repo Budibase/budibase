@@ -1,5 +1,12 @@
 <script>
-  import { Body, Icon, ActionButton, Divider } from "@budibase/bbui"
+  import {
+    Body,
+    Icon,
+    ActionButton,
+    Divider,
+    Helpers,
+    notifications,
+  } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import dayjs from "dayjs"
@@ -36,6 +43,11 @@
       expandedBranches.add(id)
     }
     expandedBranches = new Set(expandedBranches)
+  }
+
+  function copyContext(e) {
+    Helpers.copyToClipboard(JSON.stringify(e.detail?.value))
+    notifications.success("Copied to clipboard")
   }
 </script>
 
@@ -95,10 +107,18 @@
                 <Body size="S" textAlign="center">No inputs available</Body>
               </div>
             {:else}
-              <JSONViewer value={currentStepData?.inputs} />
+              <JSONViewer
+                value={currentStepData?.inputs}
+                showCopyIcon
+                on:click-copy={copyContext}
+              />
             {/if}
           {:else if selectedTab === "Data out"}
-            <JSONViewer value={currentStepData?.outputs} />
+            <JSONViewer
+              value={currentStepData?.outputs}
+              showCopyIcon
+              on:click-copy={copyContext}
+            />
           {:else if selectedTab === "Branch Info"}
             {#if branchDetails}
               <div class="branch-list">

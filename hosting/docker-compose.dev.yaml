@@ -90,6 +90,8 @@ services:
   litellm-db:
     image: postgres:16
     restart: always
+    volumes:
+      - litellm_db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: ${LITELLM_DB_NAME}
       POSTGRES_USER: ${LITELLM_DB_USER}
@@ -107,4 +109,6 @@ volumes:
   minio_data:
     driver: local
   redis_data:
+    driver: local
+  litellm_db_data:
     driver: local

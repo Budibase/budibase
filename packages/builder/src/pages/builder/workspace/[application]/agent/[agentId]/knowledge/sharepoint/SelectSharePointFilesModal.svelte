@@ -13,6 +13,7 @@
     type KnowledgeSourceEntry,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
+  import { workspaceDeploymentStore } from "@/stores/builder"
   import SharePointEntryTreeItem from "./tree/SharePointEntryTreeItem.svelte"
   import {
     buildFileDescendantPathsByNodePath,
@@ -44,14 +45,14 @@
     return $selectedAgent?.knowledgeSources?.find(
       source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
-        source.config.site?.id === siteId
+        source.config.site.id === siteId
     )
   })
 
   const sourceId = $derived(sharePointSource?.id)
   const selectedSiteLabel = $derived(
-    sharePointSource?.config.site?.name ||
-      sharePointSource?.config.site?.webUrl ||
+    sharePointSource?.config.site.name ||
+      sharePointSource?.config.site.webUrl ||
       siteId ||
       ""
   )
@@ -141,7 +142,10 @@
       if (sourceId) {
         await agentsStore.syncAgentKnowledgeSources(agentId, sourceId)
       }
-      await agentsStore.fetchAgentKnowledge(agentId)
+      await Promise.all([
+        agentsStore.fetchAgentKnowledge(agentId),
+        workspaceDeploymentStore.fetch(),
+      ])
 
       notifications.success("SharePoint folders/files updated")
       hide()

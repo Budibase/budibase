@@ -57,7 +57,7 @@ yarn build
 yarn dev:agent
 ```
 
-`yarn dev:agent` preserves existing build artifacts by skipping the root clean/prebuild step. Use it after a successful build or when restoring a VM image that already contains valid `dist` outputs.
+`yarn dev:agent` preserves existing build artifacts by skipping the root clean/prebuild step. It also starts only the core Docker services and disables LiteLLM readiness checks for the dev process, which keeps startup lighter in constrained VM environments. Use it after a successful build or when restoring a VM image that already contains valid `dist` outputs.
 
 ## Manual Setup
 
@@ -92,7 +92,7 @@ For automated VM runs after a successful build, use:
 yarn dev:agent
 ```
 
-This keeps the normal developer workflow unchanged while reducing startup work in cached environments.
+This keeps the normal developer workflow unchanged while reducing startup work and memory usage in cached environments.
 
 Access Budibase at:
 
@@ -164,20 +164,6 @@ Run the optimized automated-environment startup path:
 
 ```bash
 yarn dev:agent
-```
-
-Run frontend/dev stack without local server processes:
-
-```bash
-yarn dev:noserver
-```
-
-Switch development modes:
-
-```bash
-yarn mode:self
-yarn mode:cloud
-yarn mode:account
 ```
 
 ## Troubleshooting

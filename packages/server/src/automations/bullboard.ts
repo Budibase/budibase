@@ -42,7 +42,7 @@ export async function init() {
   }
 
   queues.push(new BullAdapter(UserSyncProcessor.queue.getBullQueue()))
-  queues.push(new BullAdapter(rag.queue.getQueue().getBullQueue()))
+  queues.push(new BullAdapter(rag.ragQueue.getQueue().getBullQueue()))
   queues.push(
     new BullAdapter(rag.knowledgeSourceSyncQueue.getQueue().getBullQueue())
   )

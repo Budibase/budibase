@@ -1,7 +1,7 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
-  AgentKnowledgeSourceFilterConfig,
+  AgentKnowledgeSourceConnection,
   AgentKnowledgeSourceSyncRunStatus,
   ChatApp,
   ChatConversation,
@@ -38,7 +38,6 @@ export interface KnowledgeSourceOption {
 
 export interface FetchAgentKnowledgeSourceOptionsResponse {
   options: KnowledgeSourceOption[]
-  runs: KnowledgeSourceSyncRun[]
 }
 
 export interface SharePointKnowledgeSourceSnapshot {
@@ -55,8 +54,16 @@ export interface SharePointKnowledgeSourceSnapshot {
 
 export interface FetchAgentKnowledgeResponse {
   files: KnowledgeBaseFile[]
-  hasSharePointConnection: boolean
   sharePointSources: SharePointKnowledgeSourceSnapshot[]
+}
+
+export type AgentKnowledgeSourceConnectionSummary = Pick<
+  AgentKnowledgeSourceConnection,
+  "_id" | "_rev" | "createdAt" | "updatedAt" | "sourceType" | "account"
+>
+
+export interface FetchAgentKnowledgeSourceConnectionsResponse {
+  connections: AgentKnowledgeSourceConnectionSummary[]
 }
 
 export interface KnowledgeSourceEntry {
@@ -95,14 +102,15 @@ export interface SyncAgentKnowledgeSourcesResponse {
 
 export interface ConnectAgentSharePointSiteRequest {
   siteId: string
-  filters?: AgentKnowledgeSourceFilterConfig
+  connectionId: string
+  filters?: string[]
 }
 
 export type ConnectAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
 export interface UpdateAgentSharePointSiteRequest {
-  filters?: AgentKnowledgeSourceFilterConfig
+  filters?: string[]
 }
 
 export type UpdateAgentSharePointSiteResponse =

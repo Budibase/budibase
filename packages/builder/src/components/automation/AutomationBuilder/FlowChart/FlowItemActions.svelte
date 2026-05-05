@@ -48,6 +48,8 @@
       tooltipPosition={TooltipPosition.Left}
       tooltip={"Create branch"}
       size="S"
+      color="var(--automation-flow-action-icon-color)"
+      hoverColor="var(--automation-flow-action-icon-hover-color)"
     />
   {/if}
   {#if canShowAddBranch}
@@ -62,6 +64,8 @@
       tooltipPosition={TooltipPosition.Right}
       tooltip={"Add branch"}
       size="S"
+      color="var(--automation-flow-action-icon-color)"
+      hoverColor="var(--automation-flow-action-icon-hover-color)"
     />
   {/if}
   <Icon
@@ -75,16 +79,37 @@
     tooltipPosition={TooltipPosition.Right}
     tooltip={"Add a step"}
     size="S"
+    color="var(--automation-flow-action-icon-color)"
+    hoverColor="var(--automation-flow-action-icon-hover-color)"
   />
 </div>
 
 <style>
   .action-bar {
-    background-color: var(--spectrum-global-color-gray-100);
+    --automation-flow-action-icon-color: var(--spectrum-global-color-gray-700);
+    --automation-flow-action-icon-hover-color: var(
+      --spectrum-global-color-gray-900
+    );
+    background-color: var(
+      --automation-flow-action-background,
+      var(--spectrum-global-color-gray-100)
+    );
+    border: var(--automation-flow-action-border, 0);
     border-radius: 4px 4px 4px 4px;
     display: flex;
     gap: var(--spacing-m);
     padding: 8px 12px;
     cursor: default;
+  }
+
+  :global(.spectrum--light) .action-bar,
+  :global(.spectrum--lightest) .action-bar {
+    --automation-flow-action-background: var(--spectrum-global-color-gray-50);
+    --automation-flow-action-border: 1px solid
+      var(--spectrum-global-color-gray-200);
+    --automation-flow-action-icon-color: var(--spectrum-global-color-gray-900);
+    --automation-flow-action-icon-hover-color: var(
+      --spectrum-global-color-gray-900
+    );
   }
 </style>

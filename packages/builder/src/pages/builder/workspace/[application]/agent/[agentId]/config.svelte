@@ -16,6 +16,7 @@
     restTemplates,
     automationStore,
     queries,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { onDestroy, onMount, untrack } from "svelte"
@@ -617,6 +618,7 @@ Any constraints the agent must follow.
         notifications.success("Agent saved successfully")
       }
       await agentsStore.fetchAgents()
+      await workspaceDeploymentStore.fetch()
     } catch (error) {
       notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
     } finally {
