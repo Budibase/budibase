@@ -26,7 +26,7 @@ jest.mock("./files", () => ({
     mockGetKnowledgeBaseFileOrThrow(...args),
 }))
 
-jest.mock("../rag/queue", () => ({
+jest.mock("../rag/ragQueue", () => ({
   enqueueRagFileIngestion: (...args: any[]) =>
     mockEnqueueRagFileIngestion(...args),
 }))

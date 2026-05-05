@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { execSync, spawnSync } = require("node:child_process")
+const { existsSync } = require("node:fs")
 
 const mode = process.argv[2] || "check"
 
@@ -42,6 +43,7 @@ const changedSets = [
 const lintableFiles = [...new Set(changedSets.join("\n").split("\n"))].filter(
   file =>
     file.startsWith("packages/") &&
+    existsSync(file) &&
     (file.endsWith(".js") || file.endsWith(".ts") || file.endsWith(".svelte"))
 )
 

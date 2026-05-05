@@ -31,13 +31,13 @@
     return $selectedAgent?.knowledgeSources?.find(
       source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
-        source.config.site?.id === siteId
+        source.config.site.id === siteId
     )
   })
 
   const selectedSiteLabel = $derived(
-    sharePointSource?.config.site?.name ||
-      sharePointSource?.config.site?.webUrl ||
+    sharePointSource?.config.site.name ||
+      sharePointSource?.config.site.webUrl ||
       siteId ||
       ""
   )

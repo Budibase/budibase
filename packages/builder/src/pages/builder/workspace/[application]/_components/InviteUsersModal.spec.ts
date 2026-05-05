@@ -1,6 +1,13 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+interface SearchUser {
+  _id: string
+  email: string
+  firstName: string
+  lastName: string
+}
+
 vi.mock("svelte", async importOriginal => {
   const actual = await importOriginal<typeof import("svelte")>()
   return {
@@ -17,6 +24,7 @@ const {
   organisationStore,
   licensingStore,
   usersMock,
+  searchUsersMock,
   assignExistingUsersToWorkspaceMock,
 } = vi.hoisted(() => {
   const createStore = <T>(initialValue: T) => {
@@ -70,6 +78,7 @@ const {
       create: vi.fn(async () => ({ successful: [], unsuccessful: [] })),
       fetch: vi.fn(async () => []),
     },
+    searchUsersMock: vi.fn(async () => ({ data: [] as SearchUser[] })),
     assignExistingUsersToWorkspaceMock: vi.fn(async (userData: any) => ({
       usersToInvite: userData.users,
       addedToWorkspaceEmails: [],
@@ -110,6 +119,7 @@ vi.mock("@budibase/bbui", async importOriginal => {
     PillInput: actual.PillInput,
     RadioGroup: MockSelect,
     Select: MockSelect,
+    Avatar: MockBody,
     Helpers: {
       uuid: vi.fn(() => "session-id"),
     },
@@ -130,6 +140,12 @@ vi.mock("@/components/common/GlobalRoleSelect.svelte", async () => {
     default: MockGlobalRoleSelect,
   }
 })
+
+vi.mock("@/api", () => ({
+  API: {
+    searchUsers: searchUsersMock,
+  },
+}))
 
 vi.mock(
   "@/settings/pages/people/users/_components/InvitedModal.svelte",
@@ -224,6 +240,7 @@ describe("InviteUsersModal", () => {
     })
     licensingStore.usersLimitReached.mockReturnValue(false)
     licensingStore.usersLimitExceeded.mockReturnValue(false)
+    searchUsersMock.mockResolvedValue({ data: [] })
   })
 
   it("keeps invite action disabled when no emails are entered", () => {
@@ -270,6 +287,168 @@ describe("InviteUsersModal", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Invite users" })).toBeEnabled()
+    })
+  })
+
+  it("adds an existing user from the email suggestions", async () => {
+    searchUsersMock.mockResolvedValue({
+      data: [
+        {
+          _id: "user_1",
+          email: "existing@example.com",
+          firstName: "Existing",
+          lastName: "User",
+        },
+      ],
+    })
+    render(InviteUsersModal, { props: { onHide: vi.fn() } })
+
+    await fireEvent.input(getEmailInput(), {
+      target: { value: "existing" },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("existing@example.com")).toBeInTheDocument()
+    })
+
+    await fireEvent.mouseDown(screen.getByText("existing@example.com"))
+
+    await waitFor(() => {
+      expect(searchUsersMock).toHaveBeenCalledWith({
+        query: { fuzzy: { email: "existing" } },
+        limit: 8,
+      })
+      expect(screen.getByText("existing@example.com")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Invite users" })).toBeEnabled()
+    })
+  })
+
+  it("shows an already selected suggested user as disabled", async () => {
+    searchUsersMock.mockResolvedValue({
+      data: [
+        {
+          _id: "user_1",
+          email: "existing@example.com",
+          firstName: "Existing",
+          lastName: "User",
+        },
+      ],
+    })
+    render(InviteUsersModal, { props: { onHide: vi.fn() } })
+
+    await fireEvent.input(getEmailInput(), {
+      target: { value: "existing" },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("existing@example.com")).toBeInTheDocument()
+    })
+
+    await fireEvent.mouseDown(screen.getByText("existing@example.com"))
+    await fireEvent.input(getEmailInput(), {
+      target: { value: "existing" },
+    })
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("option", {
+          name: /Existing User existing@example.com/,
+        })
+      ).toBeDisabled()
+    })
+  })
+
+  it("adds the highlighted suggested user when tab is pressed", async () => {
+    searchUsersMock.mockResolvedValue({
+      data: [
+        {
+          _id: "user_1",
+          email: "first@example.com",
+          firstName: "First",
+          lastName: "User",
+        },
+        {
+          _id: "user_2",
+          email: "second@example.com",
+          firstName: "Second",
+          lastName: "User",
+        },
+      ],
+    })
+    render(InviteUsersModal, { props: { onHide: vi.fn() } })
+
+    await fireEvent.input(getEmailInput(), {
+      target: { value: "user" },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("first@example.com")).toBeInTheDocument()
+    })
+
+    await fireEvent.keyDown(getEmailInput(), { key: "ArrowDown" })
+    await fireEvent.keyDown(getEmailInput(), { key: "Tab" })
+
+    await waitFor(() => {
+      expect(screen.getByText("second@example.com")).toBeInTheDocument()
+      expect(screen.queryByText("first@example.com")).not.toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Invite users" })).toBeEnabled()
+    })
+  })
+
+  it("adds the highlighted suggested user when enter is pressed", async () => {
+    searchUsersMock.mockResolvedValue({
+      data: [
+        {
+          _id: "user_1",
+          email: "enter@example.com",
+          firstName: "Enter",
+          lastName: "User",
+        },
+      ],
+    })
+    render(InviteUsersModal, { props: { onHide: vi.fn() } })
+
+    await fireEvent.input(getEmailInput(), {
+      target: { value: "enter" },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("enter@example.com")).toBeInTheDocument()
+    })
+
+    await fireEvent.keyDown(getEmailInput(), { key: "Enter" })
+
+    await waitFor(() => {
+      expect(screen.getByText("enter@example.com")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Invite users" })).toBeEnabled()
+    })
+  })
+
+  it("closes the user suggestions when the email input blurs", async () => {
+    searchUsersMock.mockResolvedValue({
+      data: [
+        {
+          _id: "user_1",
+          email: "existing@example.com",
+          firstName: "Existing",
+          lastName: "User",
+        },
+      ],
+    })
+    render(InviteUsersModal, { props: { onHide: vi.fn() } })
+
+    await fireEvent.input(getEmailInput(), {
+      target: { value: "existing" },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("existing@example.com")).toBeInTheDocument()
+    })
+
+    await fireEvent.blur(getEmailInput())
+
+    await waitFor(() => {
+      expect(screen.queryByText("existing@example.com")).not.toBeInTheDocument()
     })
   })
 })

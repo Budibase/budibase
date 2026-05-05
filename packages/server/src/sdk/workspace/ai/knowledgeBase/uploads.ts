@@ -5,7 +5,7 @@ import {
   KnowledgeBaseFileStatus,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
-import { enqueueRagFileIngestion } from "../rag/queue"
+import { enqueueRagFileIngestion } from "../rag/ragQueue"
 import {
   createKnowledgeBaseFile,
   getKnowledgeBaseFileOrThrow,

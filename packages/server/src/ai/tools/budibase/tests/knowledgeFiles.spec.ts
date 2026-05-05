@@ -2,19 +2,34 @@ import {
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
 } from "@budibase/types"
+
+import { features } from "@budibase/backend-core"
+import sdk from "../../../../sdk"
+import {
+  createKnowledgeFilesTool,
+  createKnowledgeSearchTool,
+} from "../knowledgeFiles"
+
+jest.mock("@budibase/backend-core", () => ({
+  features: {
+    isEnabled: jest.fn(),
+  },
+}))
+
 jest.mock("../../../../sdk", () => ({
   __esModule: true,
   default: {
     ai: {
+      agents: {
+        getOrThrow: jest.fn(),
+      },
       rag: {
         listFilesForAgent: jest.fn(),
+        retrieveContextForAgent: jest.fn(),
       },
     },
   },
 }))
-
-import sdk from "../../../../sdk"
-import { createKnowledgeFilesTool } from "../knowledgeFiles"
 
 const executeTool = async (
   agentId: string,
@@ -25,6 +40,21 @@ const executeTool = async (
   } = {}
 ) => {
   const toolDef = createKnowledgeFilesTool(agentId)
+  if (!toolDef.tool.execute) {
+    throw new Error("tool.execute is not a function")
+  }
+
+  return await toolDef.tool.execute(input, {
+    toolCallId: "test-tool-call",
+    messages: [],
+  })
+}
+
+const executeSearchTool = async (
+  agentId: string,
+  input: { question: string }
+) => {
+  const toolDef = createKnowledgeSearchTool(agentId)
   if (!toolDef.tool.execute) {
     throw new Error("tool.execute is not a function")
   }
@@ -317,5 +347,40 @@ describe("AI Tools - Knowledge files", () => {
       "project-filename.pdf",
     ])
     expect(result.files[0].matchedBy).toBe("filename-contains")
+  })
+})
+
+describe("AI Tools - Knowledge search", () => {
+  beforeEach(() => {
+    jest.restoreAllMocks()
+    jest.mocked(features.isEnabled).mockResolvedValue(true)
+  })
+
+  it("hard-fails with a clear message when Gemini retrieval is unavailable", async () => {
+    jest
+      .spyOn(sdk.ai.agents, "getOrThrow")
+      .mockResolvedValue({ _id: "agent_1" } as any)
+    jest
+      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
+      .mockRejectedValue({ status: 503, message: "upstream unavailable" })
+
+    await expect(
+      executeSearchTool("agent_1", { question: "What is policy?" })
+    ).rejects.toThrow(
+      "Gemini knowledge retrieval is temporarily unavailable (upstream 503). Budibase is operating normally; please retry shortly."
+    )
+  })
+
+  it("preserves non-provider retrieval errors", async () => {
+    jest
+      .spyOn(sdk.ai.agents, "getOrThrow")
+      .mockResolvedValue({ _id: "agent_1" } as any)
+    jest
+      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
+      .mockRejectedValue(new Error("Failed to map source metadata"))
+
+    await expect(
+      executeSearchTool("agent_1", { question: "What is policy?" })
+    ).rejects.toThrow("Failed to map source metadata")
   })
 })
