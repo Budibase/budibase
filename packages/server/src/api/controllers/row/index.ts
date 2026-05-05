@@ -48,6 +48,15 @@ import * as utils from "./utils"
 
 export * as views from "./views"
 
+interface RowMutationResult {
+  row: Row
+  table: Table
+  oldRow?: Row
+  squashed?: Row
+  automationRow?: Row
+  automationOldRow?: Row
+}
+
 function pickApi(tableId: string) {
   if (isExternalTableID(tableId)) {
     return external
@@ -69,12 +78,12 @@ async function _patch(
   }
   try {
     const api = pickApi(tableId)
-    const work = async () => {
+    const work = async (): Promise<RowMutationResult> => {
       const response = await api.patch(ctx)
       events.action.crudExecuted({ type: "update" })
       return response
     }
-    const { row, table, oldRow } = isAutomation
+    const { row, table, oldRow, automationRow, automationOldRow } = isAutomation
       ? await work()
       : await quotas.addAction(work)
     if (!row) {
@@ -84,9 +93,9 @@ async function _patch(
     ctx.eventEmitter?.emitRow({
       eventName: EventType.ROW_UPDATE,
       appId,
-      row,
+      row: automationRow || row,
       table,
-      oldRow,
+      oldRow: automationOldRow || oldRow || {},
       user: sdk.users.getUserContextBindings(ctx.user),
     })
     ctx.message = `${table.name} updated successfully.`
@@ -125,7 +134,7 @@ async function _save(
       isAutomation,
     })
   }
-  let saveResult: { row: Row; table: Table; squashed?: Row }
+  let saveResult: RowMutationResult
   if (tableId.includes("datasource_plus")) {
     if (isAutomation) {
       saveResult = await sdk.rows.save(
@@ -157,12 +166,12 @@ async function _save(
       return response
     })
   }
-  const { row, table, squashed } = saveResult
+  const { row, table, squashed, automationRow } = saveResult
 
   ctx.eventEmitter?.emitRow({
     eventName: EventType.ROW_SAVE,
     appId,
-    row,
+    row: automationRow || row,
     table,
     user: sdk.users.getUserContextBindings(ctx.user),
   })

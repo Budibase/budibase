@@ -78,15 +78,24 @@ export async function save(
 
   const rowId = response.row._id
   if (rowId) {
-    const row = await getRow(table, rowId, {
+    const fullRow = await getRow(table, rowId, {
       relationships: true,
+    })
+    const row = sdk.views.isView(source)
+      ? await getRow(source, rowId, {
+          relationships: true,
+        })
+      : fullRow
+    const processedRow = await outputProcessing(source, row, {
+      preserveLinks: true,
+      squash: true,
     })
     return {
       ...response,
-      row: await outputProcessing(table, row, {
-        preserveLinks: true,
-        squash: true,
-      }),
+      row: processedRow,
+      automationRow: sdk.views.isView(source)
+        ? { ...fullRow, ...processedRow }
+        : processedRow,
     }
   } else {
     return response

@@ -40,8 +40,13 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const inputs = ctx.request.body
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
+  let automationOldRow
   try {
-    oldRow = await outputProcessing(source, await findRow(tableId, inputs._id!))
+    const beforeRow = await findRow(tableId, inputs._id!)
+    oldRow = await outputProcessing(source, cloneDeep(beforeRow))
+    automationOldRow = sdk.views.isView(source)
+      ? { ...beforeRow, ...oldRow }
+      : oldRow
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
@@ -49,6 +54,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
       oldRow = {
         _id: inputs._id,
       }
+      automationOldRow = oldRow
     } else {
       throw "Row does not exist"
     }
@@ -94,7 +100,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     updateAIColumns: true,
   })
 
-  return { ...result, oldRow }
+  return { ...result, oldRow, automationOldRow }
 }
 
 export async function destroy(ctx: UserCtx) {

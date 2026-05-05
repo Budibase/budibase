@@ -146,20 +146,22 @@ export async function finaliseRow(
     : source
 
   row.type = "row"
-  // process the row before return, to include relationships.
-  // use the full table schema so automation row triggers receive columns hidden by a view.
-  let enrichedRow = await outputProcessing(table, cloneDeep(row), {
+  // process the row before return, to include relationships
+  let enrichedRow = await outputProcessing(source, cloneDeep(row), {
     squash: false,
   })
+  let automationRow = sdk.views.isView(source)
+    ? mergeRows(cloneDeep(row), enrichedRow)
+    : enrichedRow
   // use enriched row to generate formulas for saving, specifically only use as context
   row = await processFormulas(table, row, {
     dynamic: false,
-    contextRows: [enrichedRow],
+    contextRows: [automationRow],
   })
 
   if (updateAIColumns) {
     row = await processAIColumns(table, row, {
-      contextRows: [enrichedRow],
+      contextRows: [automationRow],
     })
   }
 
@@ -175,10 +177,14 @@ export async function finaliseRow(
     dynamic: false,
   })
 
+  automationRow = sdk.views.isView(source)
+    ? mergeRows(retrieved, enrichedRow)
+    : enrichedRow
+
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)
   }
   const squashed = await linkRows.squashLinks(source, enrichedRow)
-  return { row: enrichedRow, squashed, table }
+  return { row: enrichedRow, squashed, table, automationRow }
 }
