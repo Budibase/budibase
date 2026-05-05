@@ -76,6 +76,7 @@ export type RestTemplateId =
   | "peach-payments"
   | "pinpoint"
   | "podium"
+  | "postmark"
   | "remote"
   | "resend"
   | "rivery"

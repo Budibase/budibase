@@ -61,6 +61,7 @@ import OysterLogo from "assets/rest-template-icons/oyster.svg"
 import PeachPaymentsLogo from "assets/rest-template-icons/peach-payments.svg"
 import PinpointLogo from "assets/rest-template-icons/pinpoint.svg"
 import PodiumLogo from "assets/rest-template-icons/podium.svg"
+import PostmarkLogo from "assets/rest-template-icons/postmark.svg"
 import RemoteLogo from "assets/rest-template-icons/remote.svg"
 import ResendLogo from "assets/rest-template-icons/resend.svg"
 import RiveryLogo from "assets/rest-template-icons/rivery.svg"
@@ -2717,6 +2718,20 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 78,
       icon: PodiumLogo,
+    },
+    {
+      id: "postmark",
+      name: "Postmark",
+      description:
+        "Send transactional email and manage Postmark server resources.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/postmark/openapi.yaml",
+        },
+      ],
+      operationsCount: 43,
+      icon: PostmarkLogo,
     },
     {
       id: "remote",
