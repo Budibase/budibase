@@ -203,6 +203,7 @@ describe("Branching automations", () => {
     expect(results.steps[1].outputs.status).toEqual(
       AutomationStatus.NO_CONDITION_MET
     )
+    expect(results.status).toEqual(AutomationStatus.ERROR)
     expect(results.steps[2]).toBeUndefined()
   })
 

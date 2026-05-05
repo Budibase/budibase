@@ -5,71 +5,81 @@ import {
   type AgentKnowledgeSourceConnection,
 } from "@budibase/types"
 
-const getConnectionDocId = (sourceType: string, connectionKey: string) =>
-  docIds.generateAgentKnowledgeSourceConnectionID(sourceType, connectionKey)
-
-type KnowledgeSourceConnectionInput = Omit<
+type CreateKnowledgeSourceConnectionInput = Omit<
   AgentKnowledgeSourceConnection,
-  "_id" | "_rev" | "createdAt" | "updatedAt" | "sourceType" | "connectionKey"
+  "_id" | "_rev" | "createdAt" | "updatedAt"
+>
+
+type UpdateKnowledgeSourceConnectionInput = Partial<
+  Omit<
+    AgentKnowledgeSourceConnection,
+    "_id" | "_rev" | "createdAt" | "updatedAt" | "sourceType"
+  >
 >
 
 export const getKnowledgeSourceConnection = async <
   T extends AgentKnowledgeSourceConnection = AgentKnowledgeSourceConnection,
 >(
-  sourceType: string,
-  connectionKey: string
+  id: string
 ): Promise<T | undefined> => {
+  if (!id) {
+    return
+  }
   const db = context.getWorkspaceDB()
-  return db.tryGet<T>(getConnectionDocId(sourceType, connectionKey))
+  return db.tryGet<T>(id)
 }
 
-export const upsertKnowledgeSourceConnection = async <
+export const createKnowledgeSourceConnection = async <
   T extends AgentKnowledgeSourceConnection = AgentKnowledgeSourceConnection,
 >(
-  sourceType: string,
-  connectionKey: string,
-  data: KnowledgeSourceConnectionInput
-) => {
+  data: CreateKnowledgeSourceConnectionInput
+): Promise<T> => {
   const db = context.getWorkspaceDB()
-  const docId = getConnectionDocId(sourceType, connectionKey)
-  const existing = await db.tryGet<T>(docId)
-  const now = new Date().toISOString()
-  await db.put({
-    ...existing,
+
+  const doc = {
     ...data,
-    _id: docId,
-    sourceType,
-    connectionKey,
-    createdAt: existing?.createdAt || now,
-    updatedAt: now,
-  })
+    _id: docIds.generateAgentKnowledgeSourceConnectionID(),
+  } as T
+  await db.put(doc)
+  return doc
 }
 
-export const deleteKnowledgeSourceConnection = async (
-  sourceType: string,
-  connectionKey: string
-) => {
+export const updateKnowledgeSourceConnection = async <
+  T extends AgentKnowledgeSourceConnection = AgentKnowledgeSourceConnection,
+>(
+  id: string,
+  patch: UpdateKnowledgeSourceConnectionInput
+): Promise<T | undefined> => {
   const db = context.getWorkspaceDB()
-  const existing = await db.tryGet<AgentKnowledgeSourceConnection>(
-    getConnectionDocId(sourceType, connectionKey)
-  )
+  const existing = await db.tryGet<T>(id)
+  if (!existing?._id) {
+    return
+  }
+
+  const next = {
+    ...existing,
+    ...patch,
+    _id: existing._id,
+    _rev: existing._rev,
+    createdAt: existing.createdAt,
+  } as T
+
+  await db.put(next)
+  return next
+}
+
+export const deleteKnowledgeSourceConnection = async (id: string) => {
+  const db = context.getWorkspaceDB()
+  if (!docIds.isType(id, DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION)) {
+    throw new Error("Invalid knowledge source connection ID")
+  }
+  const existing = await db.tryGet<AgentKnowledgeSourceConnection>(id)
   if (existing?._id && existing._rev) {
     await db.put({
       ...existing,
       _deleted: true,
     })
   }
-}
-
-export const hasKnowledgeSourceConnection = async (
-  sourceType: string,
-  connectionKey: string
-) => {
-  const connection = await getKnowledgeSourceConnection(
-    sourceType,
-    connectionKey
-  )
-  return !!connection?.refreshToken
 }
 
 export const listKnowledgeSourceConnections = async () => {

@@ -384,11 +384,15 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                                     ? EscalationStepOutputs
                                                                     : never
 
+export interface AutomationStepInputSettings {
+  continueOnError?: boolean
+}
+
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
   id: string
   stepId: TStep
-  inputs: AutomationStepInputs<TStep>
+  inputs: AutomationStepInputs<TStep> & AutomationStepInputSettings
 }
 
 export type CollectStep = AutomationStepSchema<AutomationActionStepId.COLLECT>

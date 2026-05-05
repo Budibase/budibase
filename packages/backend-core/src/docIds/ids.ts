@@ -139,17 +139,13 @@ export const generateAgentToolSourceID = () => {
 
 export const generateAgentKnowledgeSourceSyncStateID = (
   agentId: string,
-  sourceType: string,
   sourceId: string
 ) => {
-  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_SYNC_STATE}${SEPARATOR}${agentId}${SEPARATOR}${sourceType}${SEPARATOR}${encodeURIComponent(sourceId)}`
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_SYNC_STATE}${SEPARATOR}${agentId}${SEPARATOR}${encodeURIComponent(sourceId)}`
 }
 
-export const generateAgentKnowledgeSourceConnectionID = (
-  sourceType: string,
-  connectionKey: string
-) => {
-  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION}${SEPARATOR}${sourceType}${SEPARATOR}${encodeURIComponent(connectionKey)}`
+export const generateAgentKnowledgeSourceConnectionID = () => {
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION}${SEPARATOR}${newid()}`
 }
 
 export const generateKnowledgeBaseFileID = (knowledgeBaseId: string) => {

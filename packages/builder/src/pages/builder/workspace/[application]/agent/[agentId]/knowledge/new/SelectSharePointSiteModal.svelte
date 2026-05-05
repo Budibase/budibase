@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import { notifications } from "@budibase/bbui"
   import {
@@ -33,6 +33,7 @@
   })
 
   let selectedSiteId = $state("")
+  let selectedConnectionId = $state("")
   let modal = $state<Modal>()
   let loadingSites = $state(false)
 
@@ -61,8 +62,18 @@
     sharePointSites = []
     selectedSiteId = ""
     try {
+      const connections = await knowledgeConnectionsStore.fetch()
+      const sharePointConnections = connections.filter(
+        connection => connection.sourceType === "sharepoint"
+      )
+      selectedConnectionId = sharePointConnections[0]?._id || ""
+      if (!selectedConnectionId) {
+        sharePointSites = []
+        selectedSiteId = ""
+        return
+      }
       const response =
-        await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
+        await agentsStore.fetchAgentKnowledgeSourceOptions(selectedConnectionId)
       sharePointSites = response.options
       selectedSiteId = displaySharePointSites[0]?.id || ""
     } catch (error) {
@@ -91,14 +102,14 @@
 
     saving = true
     try {
+      if (!selectedConnectionId) {
+        notifications.error("No SharePoint connection found")
+        return
+      }
       await agentsStore.connectAgentSharePointSite(agentId, {
+        connectionId: selectedConnectionId,
         siteId: selectedSiteId,
-        filters:
-          mode === "selective"
-            ? {
-                patterns: [EXCLUDE_ALL_PATTERN],
-              }
-            : undefined,
+        filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
       })
       await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")
@@ -135,6 +146,8 @@
         <Select
           bind:value={selectedSiteId}
           label="Select site"
+          autocomplete={true}
+          searchPlaceholder="Search SharePoint sites"
           options={displaySharePointSites}
           getOptionLabel={o => o.name || o.webUrl || o.id}
           getOptionSubtitle={o => o.webUrl}

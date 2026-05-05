@@ -583,6 +583,27 @@ class Orchestrator {
         results.push(result)
       }
 
+      const shouldStopAfterFailure = (stepResults: AutomationStepResult[]) => {
+        return stepResults.some(
+          result =>
+            result.outputs.success === false && !canContinueOnError(result)
+        )
+      }
+
+      const canContinueOnError = (result: AutomationStepResult) => {
+        if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
+          return true
+        }
+        return (
+          result.inputs?.continueOnError === true &&
+          [
+            AutomationActionStepId.API_REQUEST,
+            AutomationActionStepId.EXECUTE_QUERY,
+            AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+          ].includes(result.stepId)
+        )
+      }
+
       while (stepIndex < steps.length) {
         if (this.stopped) {
           break
@@ -604,6 +625,10 @@ class Orchestrator {
                 ctx
               )
             }
+            if (shouldStopAfterFailure(branchResults)) {
+              ctx._error = true
+              return results
+            }
             stepIndex++
             break
           }
@@ -621,7 +646,8 @@ class Orchestrator {
             this.reportStepProgress(step, progressStatus(result), result, ctx)
             if (
               result.outputs.success === false &&
-              result.outputs.status == null
+              result.outputs.status == null &&
+              !canContinueOnError(result)
             ) {
               return results
             }
@@ -649,8 +675,15 @@ class Orchestrator {
               if (
                 step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
                 latest.outputs.success === false &&
+                !canContinueOnError(latest) &&
                 (latest.outputs.status === AutomationStatus.ERROR ||
                   latest.outputs.status === AutomationStatus.STOPPED_ERROR)
+              ) {
+                return results
+              }
+              if (
+                latest.outputs.success === false &&
+                !canContinueOnError(latest)
               ) {
                 return results
               }

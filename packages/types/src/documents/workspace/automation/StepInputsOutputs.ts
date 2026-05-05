@@ -98,6 +98,7 @@ export type ExecuteQueryStepInputs = {
     queryId: string
     [key: string]: any
   }
+  continueOnError?: boolean
 }
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
@@ -109,6 +110,7 @@ export type APIRequestStepInputs = {
     queryId: string
     [key: string]: any
   }
+  continueOnError?: boolean
 }
 
 export type APIRequestStepOutputs = BaseAutomationOutputs & {
@@ -406,6 +408,7 @@ export type TriggerAutomationStepInputs = {
     automationId: string
   }
   timeout?: number
+  continueOnError?: boolean
 }
 
 export type TriggerAutomationStepOutputs = BaseAutomationOutputs & {

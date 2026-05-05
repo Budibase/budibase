@@ -6,14 +6,16 @@ import {
   env,
   utils,
 } from "@budibase/backend-core"
-import { DatasourceAuthCookie, UserCtx } from "@budibase/types"
-import { getSharePointWorkspaceConnectionKey } from "../../../sdk/workspace/ai/rag/sharepoint"
+import {
+  AgentKnowledgeSourceType,
+  DatasourceAuthCookie,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 
 const DEFAULT_SCOPE = env.RAG_SHAREPOINT_DEFAULT_SCOPE
 const STATE_CACHE_TTL_SECONDS = 600
 const MICROSOFT_PROVIDER = "microsoft"
-const SHAREPOINT_SOURCE_TYPE = "sharepoint"
 const MICROSOFT_GRAPH_BASE = "https://graph.microsoft.com/v1.0"
 
 const getMicrosoftConfig = () => {
@@ -80,6 +82,7 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
   authorizeUrl.searchParams.set("redirect_uri", callbackUrl)
   authorizeUrl.searchParams.set("response_mode", "query")
   authorizeUrl.searchParams.set("scope", DEFAULT_SCOPE)
+  authorizeUrl.searchParams.set("prompt", "select_account")
   authorizeUrl.searchParams.set("state", state)
 
   ctx.redirect(authorizeUrl.toString())
@@ -90,17 +93,6 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
     ctx,
     constants.Cookie.DatasourceAuth
   )
-  if (!authStateCookie) {
-    throw new Error("Unable to fetch datasource auth cookie")
-  }
-
-  const appId = String(authStateCookie.appId || "").trim()
-  if (!appId) {
-    throw new Error("Missing app id from datasource auth cookie")
-  }
-  if (authStateCookie.provider !== MICROSOFT_PROVIDER) {
-    throw new Error("Invalid datasource provider for Microsoft OAuth callback")
-  }
 
   const state = String(ctx.query.state || "").trim()
   if (!state) {
@@ -115,11 +107,11 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   if (
     !statePayload ||
     !stateAppId ||
-    stateAppId !== appId ||
     statePayload.provider !== MICROSOFT_PROVIDER
   ) {
     throw new Error("Microsoft OAuth state is invalid or expired")
   }
+  const appId = stateAppId
 
   const oauthError = String(ctx.query.error || "").trim()
   if (oauthError) {
@@ -214,11 +206,9 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
     })
   }
   await context.doInContext(appId, () =>
-    sdk.ai.knowledgeSources.upsertKnowledgeSourceConnection(
-      SHAREPOINT_SOURCE_TYPE,
-      getSharePointWorkspaceConnectionKey(appId),
-      {
-        tenantId,
+    (async () => {
+      await sdk.ai.knowledgeSources.createKnowledgeSourceConnection({
+        sourceType: AgentKnowledgeSourceType.SHAREPOINT,
         tokenEndpoint,
         accessToken,
         refreshToken,
@@ -227,8 +217,8 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
         clientId,
         clientSecret,
         account,
-      }
-    )
+      })
+    })()
   )
   console.log("Completed SharePoint OAuth flow", {
     appId,
@@ -237,6 +227,7 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
 
   utils.clearCookie(ctx, constants.Cookie.DatasourceAuth)
 
-  const returnPath = authStateCookie.returnPath || `/builder/workspace/${appId}`
+  const returnPath =
+    authStateCookie?.returnPath || `/builder/workspace/${appId}`
   ctx.redirect(appendQueryParam(returnPath, "microsoft_connected", "1"))
 }

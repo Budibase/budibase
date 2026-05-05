@@ -173,7 +173,7 @@ export async function startup(
       pro.sdk.licensing.client.getLicenseKey
     )
   )
-  queuePromises.push(rag.queue.init())
+  queuePromises.push(rag.ragQueue.init())
   queuePromises.push(escalation.init())
   queuePromises.push(rag.knowledgeSourceSyncQueue.init())
   queuePromises.push(

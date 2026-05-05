@@ -11,7 +11,11 @@
   } from "@budibase/types"
   import { appStore } from "@/stores/builder/app"
   import { workspaceDeploymentStore } from "@/stores/builder"
-  import { agentsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    knowledgeConnectionsStore,
+    selectedAgent,
+  } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
@@ -62,18 +66,15 @@
     }
     return $agentsStore.knowledgeByAgent[agentId]?.sharePointSources || []
   })
-  let hasSharePointConnection = $derived.by(() => {
-    const agentId = currentAgent?._id
-    if (!agentId) {
-      return false
-    }
-    return (
-      $agentsStore.knowledgeByAgent[agentId]?.hasSharePointConnection || false
+  let hasSharePointConnection = $derived(
+    $knowledgeConnectionsStore.connections.some(
+      connection =>
+        connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
     )
-  })
+  )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
-      .map(source => source.config.site?.id)
+      .map(source => source.config.site.id)
       .filter((siteId): siteId is string => !!siteId)
   )
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
@@ -212,7 +213,10 @@
   const loadInitialKnowledge = async (agentId: string) => {
     loading = true
     try {
-      await agentsStore.fetchAgentKnowledge(agentId)
+      await Promise.all([
+        agentsStore.fetchAgentKnowledge(agentId),
+        knowledgeConnectionsStore.fetch(),
+      ])
       initialKnowledgeLoadedForAgent = agentId
     } finally {
       loading = false
