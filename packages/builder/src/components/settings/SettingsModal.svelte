@@ -27,7 +27,7 @@
   let settingsSideBarCollapsed = false
   let settingsNav: ModalSideBar
 
-  $: ({ route, open } = $bb.settings ?? {})
+  $: ({ route, open, locked } = $bb.settings ?? {})
   $: matchedRoute = route
 
   $beforeUrlChange(() => {
@@ -142,107 +142,110 @@
 </script>
 
 <div class="settings-wrap">
-  <Modal bind:this={modal} on:hide>
+  <Modal bind:this={modal} on:hide beforeClose={() => bb.runBeforeClose()}>
     <div
       class="settings-dialog spectrum-Dialog spectrum-Dialog--extraLarge"
+      class:locked
       style="position: relative;"
       role="dialog"
       tabindex="-1"
       aria-modal="true"
     >
       <section class="spectrum-Dialog-content">
-        <ModalSideBar
-          bind:this={settingsNav}
-          on:toggle={e => {
-            settingsSideBarCollapsed = e.detail
-          }}
-        >
-          <div slot="header_icon">
-            <Icon name="gear" />
-          </div>
-          <div class="groups" class:full={!settingsSideBarCollapsed}>
-            {#each groupEntries as [key, group], idx}
-              {#if key !== "none"}
-                <div class="group-title">
-                  <div class="placeholder">
-                    <Icon
-                      name="dot-outline"
-                      color="var(--spectrum-global-color-gray-700)"
-                    />
-                  </div>
-                  <div class="group-title-text">
-                    <Body
-                      color="var(--spectrum-global-color-gray-700)"
-                      size="XS"
-                    >
-                      {key}
-                    </Body>
-                  </div>
-                </div>
-              {/if}
-              {#each group || [] as route}
-                {@const selected =
-                  route.section === matchedRoute?.entry?.section}
-                <span
-                  class="root-nav"
-                  class:selected
-                  class:error={route?.error?.()}
-                  style={route.color ? `--routeColour:${route.color}` : ""}
-                >
-                  {#if (route.new || route?.error?.()) && settingsSideBarCollapsed}
-                    <span class="status-indicator">
-                      <StatusLight
-                        color={route?.error?.()
-                          ? "var(--spectrum-global-color-static-red-600)"
-                          : "#433872"}
-                        size="M"
+        {#if !locked}
+          <ModalSideBar
+            bind:this={settingsNav}
+            on:toggle={e => {
+              settingsSideBarCollapsed = e.detail
+            }}
+          >
+            <div slot="header_icon">
+              <Icon name="gear" />
+            </div>
+            <div class="groups" class:full={!settingsSideBarCollapsed}>
+              {#each groupEntries as [key, group], idx}
+                {#if key !== "none"}
+                  <div class="group-title">
+                    <div class="placeholder">
+                      <Icon
+                        name="dot-outline"
+                        color="var(--spectrum-global-color-gray-700)"
                       />
-                    </span>
-                  {/if}
-                  <SideNavLink
-                    icon={typeof route?.icon === "string"
-                      ? route?.icon
-                      : undefined}
-                    text={route.section || ""}
-                    collapsed={settingsSideBarCollapsed}
-                    on:click={() => {
-                      settingsNav.keepCollapsed()
-                      navItemClick(route)
-                    }}
-                    forceActive={selected}
-                    iconColor={route.color ||
-                      "var(--spectrum-global-color-gray-800)"}
+                    </div>
+                    <div class="group-title-text">
+                      <Body
+                        color="var(--spectrum-global-color-gray-700)"
+                        size="XS"
+                      >
+                        {key}
+                      </Body>
+                    </div>
+                  </div>
+                {/if}
+                {#each group || [] as route}
+                  {@const selected =
+                    route.section === matchedRoute?.entry?.section}
+                  <span
+                    class="root-nav"
+                    class:selected
+                    class:error={route?.error?.()}
+                    style={route.color ? `--routeColour:${route.color}` : ""}
                   >
-                    <svelte:fragment slot="icon">
-                      {#if route.icon && isSettingIcon(route.icon)}
-                        <div class="custom-icon">
-                          <svelte:component
-                            this={route.icon.component}
-                            {...route.icon.props}
-                          />
-                        </div>
-                      {/if}
-                    </svelte:fragment>
-
-                    <svelte:fragment slot="right">
-                      {#if route.error?.()}
+                    {#if (route.new || route?.error?.()) && settingsSideBarCollapsed}
+                      <span class="status-indicator">
                         <StatusLight
-                          color={"var(--spectrum-global-color-static-red-600)"}
+                          color={route?.error?.()
+                            ? "var(--spectrum-global-color-static-red-600)"
+                            : "#433872"}
                           size="M"
                         />
-                      {:else if route.new}
-                        <NewPill />
-                      {/if}
-                    </svelte:fragment>
-                  </SideNavLink>
-                </span>
+                      </span>
+                    {/if}
+                    <SideNavLink
+                      icon={typeof route?.icon === "string"
+                        ? route?.icon
+                        : undefined}
+                      text={route.section || ""}
+                      collapsed={settingsSideBarCollapsed}
+                      on:click={() => {
+                        settingsNav.keepCollapsed()
+                        navItemClick(route)
+                      }}
+                      forceActive={selected}
+                      iconColor={route.color ||
+                        "var(--spectrum-global-color-gray-800)"}
+                    >
+                      <svelte:fragment slot="icon">
+                        {#if route.icon && isSettingIcon(route.icon)}
+                          <div class="custom-icon">
+                            <svelte:component
+                              this={route.icon.component}
+                              {...route.icon.props}
+                            />
+                          </div>
+                        {/if}
+                      </svelte:fragment>
+
+                      <svelte:fragment slot="right">
+                        {#if route.error?.()}
+                          <StatusLight
+                            color={"var(--spectrum-global-color-static-red-600)"}
+                            size="M"
+                          />
+                        {:else if route.new}
+                          <NewPill />
+                        {/if}
+                      </svelte:fragment>
+                    </SideNavLink>
+                  </span>
+                {/each}
+                {#if idx < groupEntries.length - 1}
+                  <div class="group-divider"><Divider size="S" noMargin /></div>
+                {/if}
               {/each}
-              {#if idx < groupEntries.length - 1}
-                <div class="group-divider"><Divider size="S" noMargin /></div>
-              {/if}
-            {/each}
-          </div>
-        </ModalSideBar>
+            </div>
+          </ModalSideBar>
+        {/if}
         <div class="setting-main" class:scrolling>
           <RouteHeader />
           <div bind:this={page} class="setting-page" on:scroll={handleScroll}>
@@ -414,6 +417,9 @@
     width: 1150px;
     min-height: 720px;
     height: 720px;
+  }
+  .spectrum-Dialog.spectrum-Dialog--extraLarge.locked {
+    width: 910px;
   }
 
   .spectrum-Dialog-content {

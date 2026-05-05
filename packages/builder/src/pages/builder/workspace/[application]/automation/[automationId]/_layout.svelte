@@ -129,7 +129,7 @@
     position: fixed;
     right: 0;
     z-index: 99;
-    height: calc(100% - 60px);
+    height: calc(100% - var(--top-bar-height, 51px));
     display: flex;
     flex-direction: row;
     align-items: stretch;

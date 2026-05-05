@@ -43,6 +43,7 @@
   } from "@budibase/bbui"
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
+  import { confirm } from "@/helpers"
   import HTTPAuthEditor from "./HTTPAuthEditor.svelte"
   import OAuth2Editor from "./OAuth2Editor.svelte"
   import ServerUrlInput from "./ServerUrlInput.svelte"
@@ -56,7 +57,7 @@
     OAuth2GrantType,
   } from "@budibase/types"
 
-  import { tick } from "svelte"
+  import { tick, onDestroy } from "svelte"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import {
     keyValueArrayToRecord,
@@ -567,6 +568,34 @@
     data = { ...data }
   }
 
+  const unregister = bb.registerBeforeClose(async () => {
+    const ok = await confirmIfDirty()
+    if (ok) unregister()
+    return ok
+  })
+  onDestroy(unregister)
+
+  export async function confirmIfDirty(): Promise<boolean> {
+    if (!hasChanges) return true
+    return confirm({
+      title: "Your changes are not saved",
+      body: "Your changes are not yet saved. Do you want to save them before leaving?",
+      okText: "Save and continue",
+      cancelText: "Discard and continue",
+      size: "M",
+      onConfirm: async () => {
+        try {
+          await onSave()
+          return true
+        } catch {
+          return false
+        }
+      },
+      onCancel: () => true,
+      onClose: () => false,
+    })
+  }
+
   const getTemplateStaticVariableKeys = (
     ds: Datasource | UIInternalDatasource | undefined,
     apiInfo: ImportRestQueryInfoResponse | undefined
@@ -586,19 +615,34 @@
   <Layout gap="S" noPadding>
     <RouteActions>
       <div class="route-buttons">
-        {#if isDatasource && !isNewConnection}
-          <Button on:click={() => deleteModal.show()} quiet overBackground
-            >Delete</Button
-          >
-          {#if !hasDraft}
-            <Button size="M" on:click={openInApiEditor} secondary>
-              Open in API Editor
+        {#if !$bb.settings.locked}
+          {#if isDatasource && !isNewConnection}
+            <Button on:click={() => deleteModal.show()} quiet overBackground>
+              Delete
             </Button>
+            {#if !hasDraft}
+              <Button size="M" on:click={openInApiEditor} secondary>
+                Open in API Editor
+              </Button>
+            {/if}
           {/if}
         {/if}
-        <Button size="M" disabled={saveDisabled} on:click={onSave} cta>
-          {hasDraft && isNewConnection ? "Save and close" : "Save"}
-        </Button>
+        {#if $bb.settings.locked && saveDisabled}
+          <Button
+            secondary
+            size="M"
+            on:click={async () => {
+              const ok = await confirmIfDirty()
+              if (ok) bb.clearSettings()
+            }}
+          >
+            Close
+          </Button>
+        {:else}
+          <Button size="M" disabled={saveDisabled} on:click={onSave} cta>
+            {hasDraft && isNewConnection ? "Save and close" : "Save"}
+          </Button>
+        {/if}
       </div>
     </RouteActions>
     <div class="details-box">

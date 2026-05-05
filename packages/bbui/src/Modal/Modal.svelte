@@ -10,23 +10,42 @@
 <script lang="ts">
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
-  import { createEventDispatcher, setContext, tick, onMount } from "svelte"
+  import {
+    createEventDispatcher,
+    setContext,
+    tick,
+    onMount,
+    onDestroy,
+  } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
   import { ModalCancelFrom } from "../constants"
   import { generate } from "shortid"
+  import {
+    BASE_Z_INDEX,
+    overlayStack,
+    addOverlay,
+    removeOverlay,
+    isActiveOverlay,
+  } from "./overlayStack"
 
   export let fixed: boolean = false
   export let inline: boolean = false
   export let disableCancel: boolean = false
   export let closeOnOutsideClick: boolean = true
   export let autoFocus: boolean = true
-  export let zIndex: number = 1001
+  export let zIndex: number | undefined = undefined
+  export let beforeClose: (() => Promise<boolean>) | undefined = undefined
+
+  $: stackIndex = $overlayStack.indexOf(modalId)
+  $: computedZIndex =
+    zIndex ?? (stackIndex === -1 ? BASE_Z_INDEX : BASE_Z_INDEX + stackIndex)
 
   // Ensure any popovers inside this modal are rendered inside this modal
   // Unique ids are required to ensure nested modals are parented correctly
   const uniqueId = generate()
+  const modalId = uniqueId
   setContext(Context.PopoverRoot, `.spectrum-Modal-${uniqueId}`)
 
   const dispatch = createEventDispatcher<{
@@ -48,6 +67,7 @@
       return
     }
     visible = true
+    addOverlay(modalId)
   }
 
   export function hide(): void {
@@ -55,6 +75,7 @@
       return
     }
     visible = false
+    removeOverlay(modalId)
   }
 
   export function toggle(): void {
@@ -65,23 +86,30 @@
     }
   }
 
-  export function cancel(from: ModalCancelFrom): void {
+  export async function cancel(from: ModalCancelFrom): Promise<void> {
     if (!visible || disableCancel) {
       return
+    }
+    if (beforeClose) {
+      const ok = await beforeClose()
+      if (!ok) return
     }
     dispatch("cancel", from)
     hide()
   }
 
-  function handleKey(e: KeyboardEvent): void {
-    if (visible && e.key === "Escape") {
-      cancel(ModalCancelFrom.ESCAPE_KEY)
+  const isActiveModal = () => isActiveOverlay(modalId)
+
+  async function handleKey(e: KeyboardEvent): Promise<void> {
+    if (visible && e.key === "Escape" && isActiveModal()) {
+      e.stopImmediatePropagation()
+      await cancel(ModalCancelFrom.ESCAPE_KEY)
     }
   }
 
-  function handleOutsideClick(): void {
-    if (closeOnOutsideClick) {
-      cancel(ModalCancelFrom.OUTSIDE_CLICK)
+  async function handleOutsideClick(): Promise<void> {
+    if (closeOnOutsideClick && isActiveModal()) {
+      await cancel(ModalCancelFrom.OUTSIDE_CLICK)
     }
   }
 
@@ -109,13 +137,19 @@
     show: () => void
     hide: () => void
     toggle: () => void
-    cancel: () => void
+    cancel: (_: ModalCancelFrom) => Promise<void>
   })
 
   onMount(() => {
     document.addEventListener("keydown", handleKey)
     return () => {
       document.removeEventListener("keydown", handleKey)
+    }
+  })
+
+  onDestroy(() => {
+    if (visible) {
+      removeOverlay(modalId)
     }
   })
 </script>
@@ -145,7 +179,7 @@
         <div
           class="spectrum-Underlay is-open"
           on:mousedown|self={handleOutsideClick}
-          style="z-index:{zIndex || 999}"
+          style="z-index:{computedZIndex}"
         >
           <div
             class="background"
@@ -185,7 +219,7 @@
     overflow-x: hidden;
     background: transparent;
   }
-  .background {
+  .spectrum-Underlay .background {
     background: var(--modal-background, rgba(0, 0, 0, 0.75));
     opacity: 0.65;
     position: fixed;

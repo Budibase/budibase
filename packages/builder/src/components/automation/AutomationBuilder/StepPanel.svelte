@@ -360,8 +360,7 @@
     display: flex;
     flex-direction: column;
   }
-  .panel,
-  .config.panel .content {
+  .panel {
     padding: var(--spacing-l);
   }
   .config.panel {
@@ -382,10 +381,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
+    padding: var(--spacing-l);
   }
   .config.panel .loop,
   .config.panel .content .props {
-    height: 100%;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
