@@ -178,6 +178,23 @@ describe("External table row operations quota tracking", () => {
   })
 
   describe("View trigger context", () => {
+    it("does not refetch the row through the table for non-views", async () => {
+      getSourceIdMock.mockReturnValue({
+        tableId: "datasource_plus_xxx",
+        viewId: undefined,
+      })
+      const ctx = makeCtx({ name: "visible" })
+
+      await save(ctx as any)
+
+      expect(findMock).not.toHaveBeenCalled()
+      expect(ctx.eventEmitter.emitRow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          row: { _id: "row1" },
+        })
+      )
+    })
+
     beforeEach(() => {
       getSourceIdMock.mockReturnValue({
         tableId: "datasource_plus_xxx",

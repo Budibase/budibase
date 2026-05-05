@@ -55,13 +55,29 @@ function pickApi(tableId: string) {
   return internal
 }
 
+async function getAutomationTriggerRow(
+  tableId: string,
+  viewId: string | undefined,
+  row: Row
+): Promise<Row> {
+  if (!viewId || !row._id) {
+    return row
+  }
+
+  return sdk.rows.find(tableId, row._id)
+}
+
 async function _patch(
   ctx: UserCtx<PatchRowRequest, PatchRowResponse>,
   { isAutomation = false }: { isAutomation?: boolean } = {}
 ): Promise<void> {
   const appId = ctx.appId
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
   const body = ctx.request.body
+  const automationOldRow =
+    ctx.eventEmitter && body?._id && viewId
+      ? await getAutomationTriggerRow(tableId, viewId, body)
+      : undefined
 
   // if it doesn't have an _id then its save
   if (body && !body._id) {
@@ -81,14 +97,17 @@ async function _patch(
       ctx.throw(404, "Row not found")
     }
 
-    ctx.eventEmitter?.emitRow({
-      eventName: EventType.ROW_UPDATE,
-      appId,
-      row,
-      table,
-      oldRow,
-      user: sdk.users.getUserContextBindings(ctx.user),
-    })
+    if (ctx.eventEmitter) {
+      const automationRow = await getAutomationTriggerRow(tableId, viewId, row)
+      ctx.eventEmitter.emitRow({
+        eventName: EventType.ROW_UPDATE,
+        appId,
+        row: automationRow,
+        table,
+        oldRow: automationOldRow || oldRow,
+        user: sdk.users.getUserContextBindings(ctx.user),
+      })
+    }
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
@@ -159,13 +178,16 @@ async function _save(
   }
   const { row, table, squashed } = saveResult
 
-  ctx.eventEmitter?.emitRow({
-    eventName: EventType.ROW_SAVE,
-    appId,
-    row,
-    table,
-    user: sdk.users.getUserContextBindings(ctx.user),
-  })
+  if (ctx.eventEmitter) {
+    const automationRow = await getAutomationTriggerRow(tableId, viewId, row)
+    ctx.eventEmitter.emitRow({
+      eventName: EventType.ROW_SAVE,
+      appId,
+      row: automationRow,
+      table,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
+  }
   ctx.message = `${table.name} saved successfully`
   // prefer squashed for response
   ctx.body = row || squashed
