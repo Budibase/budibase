@@ -1,5 +1,6 @@
 import type {
   FetchAgentTestSuiteResponse,
+  FetchAgentTestRunResponse,
   RunAgentTestSuiteRequest,
   RunAgentTestSuiteResponse,
   UpdateAgentTestSuiteRequest,
@@ -17,6 +18,10 @@ export interface AgentTestEndpoints {
     agentId: string,
     body?: RunAgentTestSuiteRequest
   ) => Promise<RunAgentTestSuiteResponse>
+  fetchAgentTestRun: (
+    agentId: string,
+    runId: string
+  ) => Promise<FetchAgentTestRunResponse>
 }
 
 export const buildAgentTestEndpoints = (
@@ -39,6 +44,12 @@ export const buildAgentTestEndpoints = (
     return await API.post({
       url: `/api/agent/${agentId}/tests/run`,
       body: body ?? {},
+    })
+  },
+
+  fetchAgentTestRun: async (agentId, runId) => {
+    return await API.get({
+      url: `/api/agent/${agentId}/tests/run/${runId}`,
     })
   },
 })

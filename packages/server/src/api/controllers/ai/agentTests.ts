@@ -1,5 +1,6 @@
 import { db, HTTPError } from "@budibase/backend-core"
 import type {
+  FetchAgentTestRunResponse,
   FetchAgentTestSuiteResponse,
   RunAgentTestSuiteRequest,
   RunAgentTestSuiteResponse,
@@ -49,7 +50,7 @@ export async function runAgentTestSuite(
   ctx: UserCtx<RunAgentTestSuiteRequest, RunAgentTestSuiteResponse>
 ) {
   const agentId = await getAgentId(ctx)
-  const run = await sdk.ai.tests.runSuite({
+  const run = await sdk.ai.tests.startRunSuite({
     agentId,
     user: ctx.user,
     caseId: ctx.request.body?.caseId,
@@ -57,5 +58,22 @@ export async function runAgentTestSuite(
     aiConfigIds: ctx.request.body?.aiConfigIds,
   })
 
-  ctx.body = { run }
+  ctx.body = {
+    runId: run.runId,
+    status: run.status,
+  }
+}
+
+export async function fetchAgentTestRun(
+  ctx: UserCtx<void, FetchAgentTestRunResponse>
+) {
+  const agentId = await getAgentId(ctx)
+  const { runId } = ctx.params
+  if (!runId) {
+    throw new HTTPError("runId is required", 400)
+  }
+
+  ctx.body = {
+    run: await sdk.ai.tests.fetchRun({ agentId, runId }),
+  }
 }

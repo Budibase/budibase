@@ -1,7 +1,7 @@
 import {
   AgentTestCaseDefinition,
   AgentTestGroup,
-  AgentTestRun,
+  AgentTestRunDocument,
   AgentTestSuite,
 } from "../../../documents"
 
@@ -24,5 +24,10 @@ export interface RunAgentTestSuiteRequest {
 }
 
 export interface RunAgentTestSuiteResponse {
-  run: AgentTestRun
+  runId: string
+  status: AgentTestRunDocument["status"]
+}
+
+export interface FetchAgentTestRunResponse {
+  run: AgentTestRunDocument
 }

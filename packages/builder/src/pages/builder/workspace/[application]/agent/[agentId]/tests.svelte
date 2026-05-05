@@ -25,9 +25,13 @@
   import TestDetail from "./TestComponents/TestDetail.svelte"
   import TestGroupModal from "./TestComponents/TestGroupModal.svelte"
   import * as routify from "@roxi/routify"
+  import { createPolling } from "@/utils/polling"
+  import { onDestroy } from "svelte"
+  import type { RunAgentTestSuiteRequest } from "@budibase/types"
 
   const { goto } = routify
   $goto
+  const TEST_RUN_POLL_INTERVAL_MS = 1000
 
   const emptySuite = (agentId = ""): AgentTestSuite => ({
     agentId,
@@ -73,6 +77,8 @@
   let saving = $state(false)
   let running = $state(false)
   let runningCaseId = $state<string | null>(null)
+  let activeRunId = $state<string | null>(null)
+  let runPollErrorCount = 0
   let preferredGroupId = $state<string | null>(buildDefaultAgentTestGroup().id)
   let preferredCaseId = $state<string | null>(null)
   let lastAgentId = $state<string | undefined>()
@@ -319,51 +325,86 @@
     }
   }
 
-  const runCase = async (caseId?: string) => {
+  const finishActiveRun = () => {
+    testRunPolling.stop()
+    activeRunId = null
+    running = false
+    runningCaseId = null
+    runPollErrorCount = 0
+  }
+
+  const pollActiveRun = async () => {
+    const agentId = currentAgent?._id
+    const runId = activeRunId
+    if (!agentId || !runId) return
+
+    const { run } = await API.fetchAgentTestRun(agentId, runId)
+    runPollErrorCount = 0
+    if (run.runId !== activeRunId || run.status === "running") {
+      return
+    }
+
+    finishActiveRun()
+    if (run.status === "completed" && run.run) {
+      mergeRunResults(run.run)
+      notifications.success(
+        `Run complete · ${run.run.passed}/${run.run.total} passed`
+      )
+      return
+    }
+
+    notifications.error(run.error || "Failed to run test")
+  }
+
+  const testRunPolling = createPolling({
+    intervalMs: TEST_RUN_POLL_INTERVAL_MS,
+    immediate: true,
+    poll: pollActiveRun,
+    shouldPoll: () => !!activeRunId && running,
+    onError: error => {
+      console.error("Failed to poll test run", error)
+      runPollErrorCount += 1
+      if (runPollErrorCount < 3) return
+
+      finishActiveRun()
+      notifications.error("Failed to fetch test run status")
+    },
+  })
+
+  const startRun = async (
+    body: RunAgentTestSuiteRequest,
+    caseId?: string
+  ) => {
     const agentId = currentAgent?._id
     if (!agentId || running || saving) return false
 
     running = true
     runningCaseId = caseId ?? null
+    activeRunId = null
+    runPollErrorCount = 0
     try {
-      const { run } = await API.runAgentTestSuite(
-        agentId,
-        caseId ? { caseId } : {}
-      )
-      mergeRunResults(run)
-      notifications.success(`Run complete · ${run.passed}/${run.total} passed`)
+      const { runId } = await API.runAgentTestSuite(agentId, body)
+      activeRunId = runId
+      testRunPolling.start()
       return true
     } catch (error) {
       console.error("Failed to run test", error)
       notifications.error("Failed to run test")
-      return false
-    } finally {
       running = false
       runningCaseId = null
+      return false
     }
+  }
+
+  const runCase = async (caseId?: string) => {
+    return startRun(caseId ? { caseId } : {}, caseId)
   }
 
   const runAllTests = async () => {
     const agentId = currentAgent?._id
     if (!agentId || !selectedGroupId || running || saving) return false
 
-    running = true
-    runningCaseId = null
-    try {
-      const { run } = await API.runAgentTestSuite(agentId, {
-        groupId: selectedGroupId,
-      })
-      mergeRunResults(run)
-      notifications.success(`Run complete · ${run.passed}/${run.total} passed`)
-      return true
-    } catch (error) {
-      console.error("Failed to run tests", error)
-      notifications.error("Failed to run tests")
-      return false
-    } finally {
-      running = false
-      runningCaseId = null
-    }
+    return startRun({ groupId: selectedGroupId })
   }
 
   $effect(() => {
@@ -374,8 +415,15 @@
     const agentId = currentAgent?._id
     if (agentId === lastAgentId) return
     lastAgentId = agentId
+    if (activeRunId) {
+      finishActiveRun()
+    }
     resetState(agentId)
     loadSuite(agentId)
+  })
+
+  onDestroy(() => {
+    testRunPolling.stop()
   })
 </script>
 

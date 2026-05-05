@@ -79,6 +79,7 @@ aiTestBuilderAdminRoutes
     runAgentTestSuiteValidator(),
     ai.runAgentTestSuite
   )
+  .get("/api/agent/:agentId/tests/run/:runId", ai.fetchAgentTestRun)
 
 const aiRagBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)
