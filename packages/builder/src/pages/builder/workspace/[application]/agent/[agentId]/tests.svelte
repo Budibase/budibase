@@ -222,8 +222,7 @@
   const saveAndRunCase = async (testCase: AgentTestCase) => {
     const saved = await saveCase(testCase)
     if (!saved) return false
-    void runCase(testCase.id)
-    return true
+    return runCase(testCase.id)
   }
 
   const duplicateCase = async (caseId: string) => {

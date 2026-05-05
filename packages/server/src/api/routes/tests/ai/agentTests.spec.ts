@@ -1,4 +1,4 @@
-import { features } from "@budibase/backend-core"
+import { features, roles } from "@budibase/backend-core"
 import { buildDefaultAgentTestGroup, FeatureFlag } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
@@ -44,6 +44,37 @@ describe("agent test routes", () => {
           groupId: "default",
         }
       )
+    })
+  })
+
+  it("returns 403 for app users", async () => {
+    await withTestsEnabled(async () => {
+      const agent = await config.api.agent.create({
+        name: "Support Agent",
+        aiconfig: "default",
+      })
+      const headers = await config.login({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        userId: "basic_user",
+        builder: false,
+        prodApp: false,
+      })
+
+      await config.withHeaders(headers, async () => {
+        await config.api.agent.fetchTestSuite(agent._id!, { status: 403 })
+        await config.api.agent.updateTestSuite(
+          agent._id!,
+          { groups: [], cases: [] },
+          { status: 403 }
+        )
+        await config.api.agent.runTestSuite(
+          agent._id!,
+          { status: 403 },
+          {
+            groupId: "default",
+          }
+        )
+      })
     })
   })
 
