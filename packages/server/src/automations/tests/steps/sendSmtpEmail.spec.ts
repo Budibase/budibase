@@ -1,7 +1,7 @@
 import { SendEmailResponse, SmtpEmailStepInputs } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
-import { run } from "../../steps/sendSmtpEmail"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 jest.mock("../../../utilities/workerRequests", () => ({
   sendSmtpEmail: jest.fn(),
@@ -37,9 +37,7 @@ const smtpInputs = (
   ...overrides,
 })
 
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-
-describe("test the outgoing webhook action", () => {
+describe("SMTP email automations", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -49,6 +47,10 @@ describe("test the outgoing webhook action", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
   it("should be able to run the action", async () => {
@@ -115,13 +117,16 @@ describe("test the outgoing webhook action", () => {
         generateResponse("user1@example.com", "admin@example.com")
       )
 
-    const result = await run({
-      inputs: smtpInputs({
-        contents: "",
-      }),
-    })
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(
+        smtpInputs({
+          contents: "",
+        })
+      )
+      .test({ fields: {} })
 
-    expect(result.success).toEqual(true)
+    expect(steps[0].outputs.success).toEqual(true)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith({
       to: "user1@example.com",
       from: "admin@example.com",
@@ -144,13 +149,16 @@ describe("test the outgoing webhook action", () => {
       )
 
     const attachment = { url: "attachment1", filename: "attachment1.txt" }
-    const result = await run({
-      inputs: smtpInputs({
-        attachments: attachment,
-      } as unknown as Partial<SmtpEmailStepInputs>),
-    })
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(
+        smtpInputs({
+          attachments: attachment,
+        } as unknown as Partial<SmtpEmailStepInputs>)
+      )
+      .test({ fields: {} })
 
-    expect(result.success).toEqual(true)
+    expect(steps[0].outputs.success).toEqual(true)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         attachments: attachment,
@@ -164,11 +172,12 @@ describe("test the outgoing webhook action", () => {
       .spyOn(workerRequests, "sendSmtpEmail")
       .mockRejectedValueOnce(new Error("SMTP failed"))
 
-    const result = await run({
-      inputs: smtpInputs(),
-    })
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(smtpInputs())
+      .test({ fields: {} })
 
-    expect(result).toEqual({
+    expect(steps[0].outputs).toEqual({
       success: false,
       response: "Error: SMTP failed",
     })

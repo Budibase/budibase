@@ -1,7 +1,6 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { run } from "../../steps/make"
 
 describe("test the outgoing webhook action", () => {
   const config = new TestConfiguration()
@@ -129,14 +128,15 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should return a 400 when the webhook URL is missing", async () => {
-    const result = await run({
-      inputs: {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
         url: "   ",
         body: { value: "{}" },
-      },
-    })
+      })
+      .test({ fields: {} })
 
-    expect(result).toEqual({
+    expect(result.steps[0].outputs).toEqual({
       httpStatus: 400,
       response: "Missing Webhook URL",
       success: false,
@@ -152,8 +152,9 @@ describe("test the outgoing webhook action", () => {
       })
       .reply(200, "ok")
 
-    const result = await run({
-      inputs: {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
         url: "http://www.example.com",
         body: {
           value: JSON.stringify({
@@ -161,8 +162,8 @@ describe("test the outgoing webhook action", () => {
             metadata: '{"source":"automation"}',
           }),
         },
-      },
-    })
+      })
+      .test({ fields: {} })
 
     expect(capturedRequestBody).toEqual({
       message: "plain string",
@@ -170,7 +171,7 @@ describe("test the outgoing webhook action", () => {
         source: "automation",
       },
     })
-    expect(result).toEqual({
+    expect(result.steps[0].outputs).toEqual({
       httpStatus: 200,
       response: "ok",
       success: true,
@@ -180,15 +181,16 @@ describe("test the outgoing webhook action", () => {
   it("should report fetch failures", async () => {
     nock("http://www.example.com/").post("/").replyWithError("network failed")
 
-    const result = await run({
-      inputs: {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
         url: "http://www.example.com",
         body: null,
-      },
-    })
+      })
+      .test({ fields: {} })
 
-    expect(result.httpStatus).toEqual(400)
-    expect(result.response).toContain("network failed")
-    expect(result.success).toEqual(false)
+    expect(result.steps[0].outputs.httpStatus).toEqual(400)
+    expect(result.steps[0].outputs.response).toContain("network failed")
+    expect(result.steps[0].outputs.success).toEqual(false)
   })
 })

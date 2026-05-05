@@ -1,11 +1,11 @@
 import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import { ContentType, Model } from "@budibase/types"
 import nock from "nock"
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
-import * as automation from "../../index"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
+import { mockChatGPTResponse } from "../../../../tests/utilities/mocks/ai/openai"
+import * as automation from "../../../index"
+import { createAutomationBuilder } from "../../utilities/AutomationTestBuilder"
 
 describe("AI action automations", () => {
   const config = new TestConfiguration()

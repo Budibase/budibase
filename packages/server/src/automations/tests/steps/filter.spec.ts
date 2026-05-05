@@ -105,20 +105,26 @@ describe("test the filter logic", () => {
       expectedRefValue,
       expectedComparisonValue
     ) => {
-      const result = await run({
-        inputs: {
+      const result = await createAutomationBuilder(config)
+        .onAppAction()
+        .filter({
           field,
           condition,
           value,
-        },
-      })
+        })
+        .test({ fields: {} })
 
-      expect(result).toEqual({
+      const expectedOutput: Record<string, unknown> = {
         success: true,
         result: expectedResult,
         refValue: expectedRefValue,
         comparisonValue: expectedComparisonValue,
-      })
+      }
+      if (!expectedResult) {
+        expectedOutput.status = "stopped"
+      }
+
+      expect(result.steps[0].outputs).toEqual(expectedOutput)
     }
   )
 
