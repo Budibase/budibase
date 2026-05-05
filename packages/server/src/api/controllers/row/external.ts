@@ -45,9 +45,6 @@ export async function handleRequest<T extends Operation>(
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const source = await utils.getSource(ctx)
 
-  const { viewId, tableId } = utils.getSourceId(ctx)
-  const sourceId = viewId || tableId
-
   if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
     ctx.throw(400, "Cannot update rows through a calculation view")
   }
