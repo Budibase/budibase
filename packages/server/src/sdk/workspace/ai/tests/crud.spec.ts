@@ -438,9 +438,7 @@ describe("agent tests crud", () => {
       const run = await testsCrud.fetchRun({ agentId, runId: "run-1" })
 
       expect(run.runId).toBe("run-1")
-      expect(mockDbTryGet).toHaveBeenCalledWith(
-        `agenttestrun_${agentId}_run-1`
-      )
+      expect(mockDbTryGet).toHaveBeenCalledWith(`agenttestrun_${agentId}_run-1`)
     })
 
     it("marks a test run as completed", async () => {

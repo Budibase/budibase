@@ -371,10 +371,7 @@
     },
   })
 
-  const startRun = async (
-    body: RunAgentTestSuiteRequest,
-    caseId?: string
-  ) => {
+  const startRun = async (body: RunAgentTestSuiteRequest, caseId?: string) => {
     const agentId = currentAgent?._id
     if (!agentId || running || saving) return false
 
