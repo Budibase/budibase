@@ -1,7 +1,7 @@
 import { AutomationStatus, EmptyFilterOption, Table } from "@budibase/types"
-import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import * as automation from "../index"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import * as automation from "../../index"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("Branching automations", () => {
   const config = new TestConfiguration()

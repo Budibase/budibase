@@ -10,11 +10,11 @@ import { Knex } from "knex"
 import {
   DatabaseName,
   datasourceDescribe,
-} from "../../integrations/tests/utils"
-import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { basicTable } from "../../tests/utilities/structures"
-import * as automation from "../index"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+} from "../../../integrations/tests/utils"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../../tests/utilities/structures"
+import * as automation from "../../index"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("Automation Scenarios", () => {
   const config = new TestConfiguration()
