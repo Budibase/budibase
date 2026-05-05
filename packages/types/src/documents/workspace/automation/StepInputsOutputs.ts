@@ -536,6 +536,7 @@ export type EscalationStepInputs = {
   message: string
   delay: number
   operationId?: string
+  agentId?: string
   notifications?: { recipients?: EscalationRecipient[] }
   resolutionStrategy?: string
 }
