@@ -2,6 +2,7 @@ import { run as promptLLM } from "../../../steps/ai/promptLLM"
 import { run as summarise } from "../../../steps/ai/summarise"
 import { run as translate } from "../../../steps/ai/translate"
 import { promptWithDefaultLLM } from "../../../steps/ai/llm"
+import { Model } from "@budibase/types"
 
 jest.mock("../../../steps/ai/llm", () => ({
   promptWithDefaultLLM: jest.fn(),
@@ -19,6 +20,7 @@ describe("AI prompt, summarise and translate steps", () => {
       const result = await promptLLM({
         inputs: {
           prompt: null as unknown as string,
+          model: Model.GPT_4O_MINI,
         },
       })
 
@@ -35,6 +37,7 @@ describe("AI prompt, summarise and translate steps", () => {
       const result = await promptLLM({
         inputs: {
           prompt: "Say hello",
+          model: Model.GPT_4O_MINI,
         },
       })
 
@@ -50,6 +53,7 @@ describe("AI prompt, summarise and translate steps", () => {
       const result = await promptLLM({
         inputs: {
           prompt: "Say hello",
+          model: Model.GPT_4O_MINI,
         },
       })
 

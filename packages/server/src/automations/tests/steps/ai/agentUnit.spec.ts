@@ -1,5 +1,6 @@
 import { run } from "../../../steps/ai/agent"
 import sdk from "../../../../sdk"
+import { AutomationStepInputBase } from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
@@ -22,7 +23,7 @@ jest.mock("dd-trace", () => ({
   __esModule: true,
   default: {
     llmobs: {
-      trace: (...args: unknown[]) => mockTrace(...args),
+      trace: (...args: [unknown, unknown]) => mockTrace(...args),
       annotate: (...args: unknown[]) => mockAnnotate(...args),
     },
   },
@@ -125,6 +126,17 @@ const buildStreamResult = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
+const buildStepInput = (
+  inputs: Parameters<typeof run>[0]["inputs"]
+): Parameters<typeof run>[0] => ({
+  appId: "app_dev",
+  context: {},
+  emitter: {
+    emit: jest.fn(),
+  } as unknown as AutomationStepInputBase["emitter"],
+  inputs,
+})
+
 describe("agent step unit", () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -154,13 +166,12 @@ describe("agent step unit", () => {
   })
 
   it("requires an agent id", async () => {
-    const result = await run({
-      appId: "app_dev",
-      inputs: {
+    const result = await run(
+      buildStepInput({
         agentId: "",
         prompt: "Hello",
-      },
-    })
+      })
+    )
 
     expect(result).toEqual({
       success: false,
@@ -170,13 +181,12 @@ describe("agent step unit", () => {
   })
 
   it("requires a prompt", async () => {
-    const result = await run({
-      appId: "app_dev",
-      inputs: {
+    const result = await run(
+      buildStepInput({
         agentId: "agent_1",
         prompt: "",
-      },
-    })
+      })
+    )
 
     expect(result).toEqual({
       success: false,
@@ -193,11 +203,11 @@ describe("agent step unit", () => {
     })
 
     const result = await run({
-      appId: "app_prod",
-      inputs: {
+      ...buildStepInput({
         agentId: "agent_1",
         prompt: "Hello",
-      },
+      }),
+      appId: "app_prod",
     })
 
     expect(result).toEqual({
@@ -209,13 +219,12 @@ describe("agent step unit", () => {
   })
 
   it("streams an agent response", async () => {
-    const result = await run({
-      appId: "app_dev",
-      inputs: {
+    const result = await run(
+      buildStepInput({
         agentId: "agent_1",
         prompt: "Hello",
-      },
-    })
+      })
+    )
 
     expect(result).toEqual({
       success: true,
@@ -238,9 +247,8 @@ describe("agent step unit", () => {
       },
     })
 
-    const result = await run({
-      appId: "app_dev",
-      inputs: {
+    const result = await run(
+      buildStepInput({
         agentId: "agent_1",
         prompt: "Hello",
         useStructuredOutput: true,
@@ -249,8 +257,8 @@ describe("agent step unit", () => {
             type: "string",
           },
         },
-      },
-    })
+      })
+    )
 
     expect(result.output).toEqual({ value: "structured" })
     expect(mockAgentOptions.tools).toEqual({ lookup: {} })
@@ -261,13 +269,12 @@ describe("agent step unit", () => {
   it("returns incomplete tool call errors", async () => {
     mockFindIncompleteToolCalls.mockReturnValue([{ toolCallId: "tool_1" }])
 
-    const result = await run({
-      appId: "app_dev",
-      inputs: {
+    const result = await run(
+      buildStepInput({
         agentId: "agent_1",
         prompt: "Hello",
-      },
-    })
+      })
+    )
 
     expect(result).toEqual({
       success: false,
@@ -284,13 +291,12 @@ describe("agent step unit", () => {
       text: Promise.reject(new Error("stream failed")),
     })
 
-    const result = await run({
-      appId: "app_dev",
-      inputs: {
+    const result = await run(
+      buildStepInput({
         agentId: "agent_1",
         prompt: "Hello",
-      },
-    })
+      })
+    )
 
     expect(result).toEqual({
       success: false,
@@ -305,13 +311,12 @@ describe("agent step unit", () => {
     mockGetOrThrow.mockRejectedValue(new Error("agent missing"))
     const consoleError = jest.spyOn(console, "error").mockImplementation()
 
-    const result = await run({
-      appId: "app_dev",
-      inputs: {
+    const result = await run(
+      buildStepInput({
         agentId: "agent_1",
         prompt: "Hello",
-      },
-    })
+      })
+    )
 
     consoleError.mockRestore()
     expect(result).toEqual({

@@ -83,7 +83,7 @@ describe("getActionDefinitions", () => {
     try {
       const definitions = await getActionDefinitions()
 
-      expect(definitions.CUSTOM_ACTION).toEqual({
+      expect((definitions as Record<string, unknown>).CUSTOM_ACTION).toEqual({
         stepId: "CUSTOM_ACTION",
         name: "Custom action",
         custom: true,

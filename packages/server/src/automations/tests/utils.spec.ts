@@ -239,7 +239,7 @@ describe("enableCronOrEmailTrigger", () => {
       ...(automationQueue.getBullQueue() ?? {}),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
       getRepeatableJobs: mockGetRepeatableJobs,
-    } as ReturnType<typeof automationQueue.getBullQueue>)
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
 
     await enableCronOrEmailTrigger("app_dev_123", automation)
 
@@ -267,7 +267,7 @@ describe("enableCronOrEmailTrigger", () => {
     mockGetBullQueue.mockReturnValue({
       getRepeatableJobs: jest.fn().mockRejectedValue(new Error("redis failed")),
       removeRepeatableByKey: jest.fn(),
-    } as ReturnType<typeof automationQueue.getBullQueue>)
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
     const consoleLog = jest.spyOn(console, "log").mockImplementation()
 
     const result = await enableCronOrEmailTrigger("app_dev_123", automation)
@@ -373,7 +373,7 @@ describe("enableCronOrEmailTrigger", () => {
     mockGetBullQueue.mockReturnValue({
       removeRepeatableByKey: mockRemoveRepeatableByKey,
       getRepeatableJobs: mockGetRepeatableJobs,
-    } as ReturnType<typeof automationQueue.getBullQueue>)
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
 
     const result = await enableCronOrEmailTrigger("app_dev_123", automation)
 
@@ -429,7 +429,7 @@ describe("automation utils process helpers", () => {
   it("skips email jobs when mail polling should not proceed", async () => {
     const automation = buildEmailAutomation(validEmailInputs)
     const job = buildJob(automation)
-    mockCheckMail.mockResolvedValue({ proceed: false })
+    mockCheckMail.mockResolvedValue({ proceed: false, reason: "not due" })
 
     const result = await processEvent(job)
 
@@ -466,7 +466,7 @@ describe("automation utils process helpers", () => {
         { id: "other", key: "other:key" },
       ]),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
-    } as ReturnType<typeof automationQueue.getBullQueue>)
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
     const consoleWarn = jest.spyOn(console, "warn").mockImplementation()
     const consoleLog = jest.spyOn(console, "log").mockImplementation()
 
@@ -527,7 +527,7 @@ describe("automation utils process helpers", () => {
         ]),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
       removeJobs: mockRemoveJobs,
-    } as ReturnType<typeof automationQueue.getBullQueue>)
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
 
     const result = await disableAllCrons("app_1")
     await cleanupAutomations("app_1")
@@ -545,7 +545,7 @@ describe("automation utils process helpers", () => {
         .fn()
         .mockResolvedValue([{ id: "job_1", key: "job_1:key" }]),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
-    } as ReturnType<typeof automationQueue.getBullQueue>)
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
     const consoleLog = jest.spyOn(console, "log").mockImplementation()
 
     await disableCronById("job_1")

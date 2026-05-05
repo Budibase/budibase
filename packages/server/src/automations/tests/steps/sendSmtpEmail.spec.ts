@@ -1,4 +1,4 @@
-import { SendEmailResponse } from "@budibase/types"
+import { SendEmailResponse, SmtpEmailStepInputs } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
 import { run } from "../../steps/sendSmtpEmail"
@@ -21,6 +21,21 @@ function generateResponse(to: string, from: string): SendEmailResponse {
     response: "response",
   }
 }
+
+const smtpInputs = (
+  overrides: Partial<SmtpEmailStepInputs> = {}
+): SmtpEmailStepInputs => ({
+  to: "user1@example.com",
+  from: "admin@example.com",
+  subject: "hello",
+  contents: "testing",
+  cc: undefined as unknown as string,
+  bcc: undefined as unknown as string,
+  startTime: undefined as unknown as Date,
+  endTime: undefined as unknown as Date,
+  summary: undefined as unknown as string,
+  ...overrides,
+})
 
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
@@ -101,12 +116,9 @@ describe("test the outgoing webhook action", () => {
       )
 
     const result = await run({
-      inputs: {
-        to: "user1@example.com",
-        from: "admin@example.com",
-        subject: "hello",
+      inputs: smtpInputs({
         contents: "",
-      },
+      }),
     })
 
     expect(result.success).toEqual(true)
@@ -133,13 +145,9 @@ describe("test the outgoing webhook action", () => {
 
     const attachment = { url: "attachment1", filename: "attachment1.txt" }
     const result = await run({
-      inputs: {
-        to: "user1@example.com",
-        from: "admin@example.com",
-        subject: "hello",
-        contents: "testing",
+      inputs: smtpInputs({
         attachments: attachment,
-      },
+      } as unknown as Partial<SmtpEmailStepInputs>),
     })
 
     expect(result.success).toEqual(true)
@@ -157,12 +165,7 @@ describe("test the outgoing webhook action", () => {
       .mockRejectedValueOnce(new Error("SMTP failed"))
 
     const result = await run({
-      inputs: {
-        to: "user1@example.com",
-        from: "admin@example.com",
-        subject: "hello",
-        contents: "testing",
-      },
+      inputs: smtpInputs(),
     })
 
     expect(result).toEqual({

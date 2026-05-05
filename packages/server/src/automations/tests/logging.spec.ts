@@ -1,6 +1,13 @@
 import { logging } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
-import { Automation, AutomationResults, Workspace } from "@budibase/types"
+import {
+  Automation,
+  AutomationActionStepId,
+  AutomationResults,
+  AutomationStatus,
+  AutomationTriggerStepId,
+  Workspace,
+} from "@budibase/types"
 import { setEnv } from "../../environment"
 import { checkAppMetadata, storeLog } from "../logging"
 
@@ -33,29 +40,47 @@ const automation = {
   name: "Test automation",
 } as Automation
 
-const buildResults = (): AutomationResults =>
-  ({
-    steps: [
-      {
-        inputs: {
-          value: "input",
-        },
-        outputs: {
-          value: "output",
-          success: true,
-        },
+const buildResults = (): AutomationResults => ({
+  status: AutomationStatus.SUCCESS,
+  trigger: {
+    id: "trigger",
+    stepId: AutomationTriggerStepId.APP,
+    outputs: {
+      success: true,
+    },
+  },
+  steps: [
+    {
+      id: "trigger",
+      stepId: AutomationTriggerStepId.APP,
+      outputs: {
+        success: true,
       },
-      {
-        inputs: {
-          value: "input",
-        },
-        outputs: {
-          value: "output",
-          success: false,
-        },
+    },
+    {
+      id: "step_1",
+      stepId: AutomationActionStepId.SERVER_LOG,
+      inputs: {
+        value: "input",
       },
-    ],
-  }) as AutomationResults
+      outputs: {
+        value: "output",
+        success: true,
+      },
+    },
+    {
+      id: "step_2",
+      stepId: AutomationActionStepId.SERVER_LOG,
+      inputs: {
+        value: "input",
+      },
+      outputs: {
+        value: "output",
+        success: false,
+      },
+    },
+  ],
+})
 
 describe("automation logging", () => {
   afterEach(() => {
@@ -64,7 +89,7 @@ describe("automation logging", () => {
   })
 
   it("does not store logs when automation logs are disabled", async () => {
-    const restoreEnv = setEnv({ DISABLE_AUTOMATION_LOGS: true })
+    const restoreEnv = setEnv({ DISABLE_AUTOMATION_LOGS: "1" })
     mockStoreLog.mockResolvedValue(undefined)
 
     try {
@@ -104,7 +129,7 @@ describe("automation logging", () => {
       message: "[removed] - max results size of 0MB exceeded",
       success: true,
     })
-    expect(results.steps[1].outputs).toEqual({
+    expect(results.steps[2].outputs).toEqual({
       message: "[removed] - max results size of 0MB exceeded",
       success: false,
     })
