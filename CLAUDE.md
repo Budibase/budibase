@@ -55,13 +55,13 @@
 
 ## Git
 
-Never auto-commit changes unless explicitly asked to do so. You may ask permission to commit.
-Each commit requires permission.
+Never run `git add`, `git commit`, or `git push` unless the most recent user prompt
+expressly asks for that exact git action. Requests to fix, test, or handle failing checks do not imply permission to stage, commit, or push.
+You may ask permission to run these commands, but do not run them until the user
+explicitly grants it.
 
-Never auto-push changes unless explicitly asked to do so. You may ask permission to push.
-Each push requires permission.
-
-For example, if I command `git add, commit, push` go ahead and do that once. Any subsequent changes will require permission. You may ask for permission on a per commit basis.
+Each `git add`, `git commit`, and `git push` requires permission from the most recent user
+prompt. Permission does not carry over from earlier prompts.
 
 ## Pull requests
 
