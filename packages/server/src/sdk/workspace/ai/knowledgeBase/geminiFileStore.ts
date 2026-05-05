@@ -1,4 +1,5 @@
 import { HTTPError } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
 import fetch from "node-fetch"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
@@ -31,6 +32,14 @@ interface RagSearchResponse {
   data?: RagSearchResultItem[]
 }
 
+interface GeminiFileStoreResponse {
+  ok: boolean
+  status: number
+}
+
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
+const RETRY_DELAYS_MS = [500, 1500, 3000]
+
 const getGeminiApiKey = () => {
   const key = environment.GEMINI_API_KEY
   if (!key) {
@@ -40,6 +49,41 @@ const getGeminiApiKey = () => {
     )
   }
   return key
+}
+
+const isRetryableResponse = (response: GeminiFileStoreResponse) => {
+  return !response.ok && RETRYABLE_STATUS_CODES.has(response.status)
+}
+
+const isRetryableFetchError = (error: unknown) => {
+  return error instanceof Error && error.name === "FetchError"
+}
+
+const requestWithRetries = async <TResponse extends GeminiFileStoreResponse>(
+  request: () => Promise<TResponse>
+): Promise<TResponse> => {
+  let attempt = 0
+
+  while (true) {
+    try {
+      const response = await request()
+      if (!isRetryableResponse(response) || attempt >= RETRY_DELAYS_MS.length) {
+        return response
+      }
+
+      const delayMs = RETRY_DELAYS_MS[attempt]
+      await helpers.wait(delayMs)
+    } catch (error) {
+      if (!isRetryableFetchError(error) || attempt >= RETRY_DELAYS_MS.length) {
+        throw error
+      }
+
+      const delayMs = RETRY_DELAYS_MS[attempt]
+      await helpers.wait(delayMs)
+    }
+
+    attempt++
+  }
 }
 
 const handleNotOkResponse = async ({
@@ -97,16 +141,18 @@ export async function deleteGeminiVectorStore(
   vectorStoreId: string
 ): Promise<void> {
   const geminiApiKey = getGeminiApiKey()
-  const response = await fetch(
-    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
-    {
-      method: "DELETE",
-      headers: await getCommonAuthHeaders(),
-      body: JSON.stringify({
-        custom_llm_provider: "gemini",
-        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
-      }),
-    }
+  const response = await requestWithRetries(async () =>
+    fetch(
+      `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
+      {
+        method: "DELETE",
+        headers: await getCommonAuthHeaders(),
+        body: JSON.stringify({
+          custom_llm_provider: "gemini",
+          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+        }),
+      }
+    )
   )
 
   await handleNotOkResponse({
@@ -173,19 +219,21 @@ export async function searchGeminiFileStore({
   query: string
 }): Promise<RagSearchResultItem[]> {
   const geminiApiKey = getGeminiApiKey()
-  const response = await fetch(
-    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
-      vectorStoreId
-    )}/search`,
-    {
-      method: "POST",
-      headers: await getCommonAuthHeaders(),
-      body: JSON.stringify({
-        query,
-        custom_llm_provider: "gemini",
-        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
-      }),
-    }
+  const response = await requestWithRetries(async () =>
+    fetch(
+      `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
+        vectorStoreId
+      )}/search`,
+      {
+        method: "POST",
+        headers: await getCommonAuthHeaders(),
+        body: JSON.stringify({
+          query,
+          custom_llm_provider: "gemini",
+          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+        }),
+      }
+    )
   )
 
   await handleNotOkResponse({
@@ -205,18 +253,20 @@ export async function deleteGeminiFileFromStore({
   fileId: string
 }): Promise<void> {
   const geminiApiKey = getGeminiApiKey()
-  const response = await fetch(
-    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
-      vectorStoreId
-    )}/files/${encodeURIComponent(fileId)}`,
-    {
-      method: "DELETE",
-      headers: await getCommonAuthHeaders(),
-      body: JSON.stringify({
-        custom_llm_provider: "gemini",
-        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
-      }),
-    }
+  const response = await requestWithRetries(async () =>
+    fetch(
+      `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
+        vectorStoreId
+      )}/files/${encodeURIComponent(fileId)}`,
+      {
+        method: "DELETE",
+        headers: await getCommonAuthHeaders(),
+        body: JSON.stringify({
+          custom_llm_provider: "gemini",
+          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+        }),
+      }
+    )
   )
 
   await handleNotOkResponse({
