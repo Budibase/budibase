@@ -1,6 +1,7 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { run } from "../../steps/make"
 
 describe("test the outgoing webhook action", () => {
   const config = new TestConfiguration()
@@ -125,5 +126,69 @@ describe("test the outgoing webhook action", () => {
     expect(Array.isArray(capturedRequestBody.Rows)).toBe(true)
     expect(capturedRequestBody.Rows[0].Name).toEqual("blah de' blah")
     expect(result.steps[0].outputs.success).toEqual(true)
+  })
+
+  it("should return a 400 when the webhook URL is missing", async () => {
+    const result = await run({
+      inputs: {
+        url: "   ",
+        body: { value: "{}" },
+      },
+    })
+
+    expect(result).toEqual({
+      httpStatus: 400,
+      response: "Missing Webhook URL",
+      success: false,
+    })
+  })
+
+  it("should keep nested string props when they are not JSON", async () => {
+    let capturedRequestBody: Record<string, unknown> | undefined
+    nock("http://www.example.com/")
+      .post("/", body => {
+        capturedRequestBody = body
+        return true
+      })
+      .reply(200, "ok")
+
+    const result = await run({
+      inputs: {
+        url: "http://www.example.com",
+        body: {
+          value: JSON.stringify({
+            message: "plain string",
+            metadata: "{\"source\":\"automation\"}",
+          }),
+        },
+      },
+    })
+
+    expect(capturedRequestBody).toEqual({
+      message: "plain string",
+      metadata: {
+        source: "automation",
+      },
+    })
+    expect(result).toEqual({
+      httpStatus: 200,
+      response: "ok",
+      success: true,
+    })
+  })
+
+  it("should report fetch failures", async () => {
+    nock("http://www.example.com/").post("/").replyWithError("network failed")
+
+    const result = await run({
+      inputs: {
+        url: "http://www.example.com",
+        body: null,
+      },
+    })
+
+    expect(result.httpStatus).toEqual(400)
+    expect(result.response).toContain("network failed")
+    expect(result.success).toEqual(false)
   })
 })

@@ -51,6 +51,7 @@ const config: Config = {
     "!src/db/views/staticViews.*",
     "!src/**/*.spec.{js,ts}",
     "!src/tests/**/*.{js,ts}",
+    "!src/**/tests/**/*.{js,ts}",
     // The use of coverage in the JS runner breaks tests by inserting
     // coverage functions into code that will run inside of the isolate.
     "!src/jsRunner/**/*.{js,ts}",

@@ -1,6 +1,7 @@
 import { SendEmailResponse } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
+import { run } from "../../steps/sendSmtpEmail"
 
 jest.mock("../../../utilities/workerRequests", () => ({
   sendSmtpEmail: jest.fn(),
@@ -89,6 +90,84 @@ describe("test the outgoing webhook action", () => {
         { url: "attachment1", filename: "attachment1.txt" },
         { url: "attachment2", filename: "attachment2.txt" },
       ],
+    })
+  })
+
+  it("should provide default contents when none are supplied", async () => {
+    jest
+      .spyOn(workerRequests, "sendSmtpEmail")
+      .mockImplementationOnce(async () =>
+        generateResponse("user1@example.com", "admin@example.com")
+      )
+
+    const result = await run({
+      inputs: {
+        to: "user1@example.com",
+        from: "admin@example.com",
+        subject: "hello",
+        contents: "",
+      },
+    })
+
+    expect(result.success).toEqual(true)
+    expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith({
+      to: "user1@example.com",
+      from: "admin@example.com",
+      replyTo: undefined,
+      subject: "hello",
+      contents: "<h1>No content</h1>",
+      cc: undefined,
+      bcc: undefined,
+      automation: true,
+      attachments: undefined,
+      invite: undefined,
+    })
+  })
+
+  it("should support a single attachment without an invite", async () => {
+    jest
+      .spyOn(workerRequests, "sendSmtpEmail")
+      .mockImplementationOnce(async () =>
+        generateResponse("user1@example.com", "admin@example.com")
+      )
+
+    const attachment = { url: "attachment1", filename: "attachment1.txt" }
+    const result = await run({
+      inputs: {
+        to: "user1@example.com",
+        from: "admin@example.com",
+        subject: "hello",
+        contents: "testing",
+        attachments: attachment,
+      },
+    })
+
+    expect(result.success).toEqual(true)
+    expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: attachment,
+        invite: undefined,
+      })
+    )
+  })
+
+  it("should return an error when sending fails", async () => {
+    jest
+      .spyOn(workerRequests, "sendSmtpEmail")
+      .mockRejectedValueOnce(new Error("SMTP failed"))
+
+    const result = await run({
+      inputs: {
+        to: "user1@example.com",
+        from: "admin@example.com",
+        subject: "hello",
+        contents: "testing",
+      },
+    })
+
+    expect(result).toEqual({
+      success: false,
+      response: "Error: SMTP failed",
     })
   })
 })
