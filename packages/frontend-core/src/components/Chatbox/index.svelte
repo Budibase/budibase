@@ -86,9 +86,8 @@
       .map(p => p.text)
       .join("")
 
-  const getCachedReasoningText = (
-    message: UIMessage<AgentMessageMetadata>
-  ) => reasoningTextByMessageId[message.id] || getReasoningText(message)
+  const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
+    reasoningTextByMessageId[message.id] || getReasoningText(message)
 
   const isReasoningStreaming = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(

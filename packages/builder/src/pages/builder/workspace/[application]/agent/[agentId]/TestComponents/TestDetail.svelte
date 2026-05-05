@@ -160,10 +160,7 @@
             {/if}
           </div>
 
-          <div
-            class="results-grid"
-            class:single={latestResults.length === 1}
-          >
+          <div class="results-grid" class:single={latestResults.length === 1}>
             {#each latestResults as result (result.aiConfigId || result.sessionId)}
               {@const meta = getResultMeta(result)}
               {@const providerLogo = getProviderLogo(result.aiConfig?.provider)}
