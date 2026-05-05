@@ -158,7 +158,7 @@ describe("test the outgoing webhook action", () => {
         body: {
           value: JSON.stringify({
             message: "plain string",
-            metadata: "{\"source\":\"automation\"}",
+            metadata: '{"source":"automation"}',
           }),
         },
       },

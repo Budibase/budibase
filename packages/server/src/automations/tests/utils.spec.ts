@@ -17,14 +17,18 @@ import {
   MetadataType,
 } from "@budibase/types"
 import { automationQueue } from "../bullboard"
-import { context, db as dbCore, utils as coreUtils } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  utils as coreUtils,
+} from "@budibase/backend-core"
 import { REBOOT_CRON } from "@budibase/shared-core"
 import { quotas } from "@budibase/pro"
 import { checkMail } from "../email"
 import { updateEntityMetadata } from "../../utilities"
 import type { MockedFunction } from "jest-mock"
 
-var mockRunnerRun = jest.fn()
+let mockRunnerRun = jest.fn()
 
 jest.mock("../../features", () => ({
   automationsEnabled: () => true,
@@ -93,9 +97,10 @@ const mockAddAutomation = quotas.addAutomation as jest.MockedFunction<
   typeof quotas.addAutomation
 >
 const mockCheckMail = checkMail as jest.MockedFunction<typeof checkMail>
-const mockDoInAutomationContext = context.doInAutomationContext as MockedFunction<
-  typeof context.doInAutomationContext
->
+const mockDoInAutomationContext =
+  context.doInAutomationContext as MockedFunction<
+    typeof context.doInAutomationContext
+  >
 const mockGetProdWorkspaceDB = context.getProdWorkspaceDB as MockedFunction<
   typeof context.getProdWorkspaceDB
 >
@@ -194,7 +199,10 @@ describe("enableCronOrEmailTrigger", () => {
 
     const disabled = buildCronAutomation()
     disabled.disabled = true
-    const disabledResult = await enableCronOrEmailTrigger("app_dev_123", disabled)
+    const disabledResult = await enableCronOrEmailTrigger(
+      "app_dev_123",
+      disabled
+    )
     expect(disabledResult.enabled).toEqual(false)
 
     const reboot = buildCronAutomation()
@@ -351,7 +359,10 @@ describe("enableCronOrEmailTrigger", () => {
   })
 
   it("migrates legacy email repeatable job ids", async () => {
-    const automation = buildEmailAutomation(validEmailInputs, "repeat:email:123")
+    const automation = buildEmailAutomation(
+      validEmailInputs,
+      "repeat:email:123"
+    )
     const mockRemoveRepeatableByKey = jest.fn()
     const mockGetRepeatableJobs = jest
       .fn()
@@ -507,11 +518,13 @@ describe("automation utils process helpers", () => {
     const mockRemoveRepeatableByKey = jest.fn()
     const mockRemoveJobs = jest.fn()
     mockGetBullQueue.mockReturnValue({
-      getRepeatableJobs: jest.fn().mockResolvedValue([
-        { key: "app_1_cron_a", id: "cron_job" },
-        { key: "app_1_email_a" },
-        { key: "other_cron_a", id: "other" },
-      ]),
+      getRepeatableJobs: jest
+        .fn()
+        .mockResolvedValue([
+          { key: "app_1_cron_a", id: "cron_job" },
+          { key: "app_1_email_a" },
+          { key: "other_cron_a", id: "other" },
+        ]),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
       removeJobs: mockRemoveJobs,
     } as ReturnType<typeof automationQueue.getBullQueue>)
@@ -528,9 +541,9 @@ describe("automation utils process helpers", () => {
   it("disables a cron by id", async () => {
     const mockRemoveRepeatableByKey = jest.fn()
     mockGetBullQueue.mockReturnValue({
-      getRepeatableJobs: jest.fn().mockResolvedValue([
-        { id: "job_1", key: "job_1:key" },
-      ]),
+      getRepeatableJobs: jest
+        .fn()
+        .mockResolvedValue([{ id: "job_1", key: "job_1:key" }]),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
     } as ReturnType<typeof automationQueue.getBullQueue>)
     const consoleLog = jest.spyOn(console, "log").mockImplementation()

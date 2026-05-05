@@ -113,7 +113,8 @@ const mockGetOrThrow = sdk.ai.agents.getOrThrow as jest.Mock
 const mockBuildPromptAndTools = sdk.ai.agents.buildPromptAndTools as jest.Mock
 const mockCreateLLM = sdk.ai.llm.createLLM as jest.Mock
 const mockFindIncompleteToolCalls = findIncompleteToolCalls as jest.Mock
-const mockFormatIncompleteToolCallError = formatIncompleteToolCallError as jest.Mock
+const mockFormatIncompleteToolCallError =
+  formatIncompleteToolCallError as jest.Mock
 
 const buildStreamResult = (overrides: Record<string, unknown> = {}) => ({
   toUIMessageStream: jest.fn(() => "stream"),

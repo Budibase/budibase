@@ -52,7 +52,9 @@ describe("getActionDefinitions", () => {
 
   it("includes the agent action when the feature flag is enabled", async () => {
     const restoreEnv = setEnv({ SELF_HOSTED: undefined })
-    mockIsEnabled.mockImplementation(async flag => flag === FeatureFlag.AI_AGENTS)
+    mockIsEnabled.mockImplementation(
+      async flag => flag === FeatureFlag.AI_AGENTS
+    )
 
     try {
       const definitions = await getActionDefinitions()

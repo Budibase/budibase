@@ -85,9 +85,16 @@ describe("test the filter logic", () => {
       Date.parse("2024-01-01T00:00:00.000Z"),
     ],
     [5, FilterCondition.LESS_THAN, 10, true, 5, 10],
-    [{ name: "Jane" }, FilterCondition.EQUAL, { name: "Jane" }, false, {
-      name: "Jane",
-    }, { name: "Jane" }],
+    [
+      { name: "Jane" },
+      FilterCondition.EQUAL,
+      { name: "Jane" },
+      false,
+      {
+        name: "Jane",
+      },
+      { name: "Jane" },
+    ],
   ])(
     "should compare inputs directly for %p %p %p",
     async (
