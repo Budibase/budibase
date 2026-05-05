@@ -1,31 +1,38 @@
-import { run } from "../../steps/collect"
-import { CollectStepInputs } from "@budibase/types"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("collect step", () => {
-  it("fails when no collection is supplied", async () => {
-    const result = await run({
-      inputs: {
-        collection: undefined,
-      } as unknown as CollectStepInputs,
-    })
+  const config = new TestConfiguration()
 
-    expect(result).toEqual({
+  beforeAll(async () => {
+    await config.init()
+    await config.api.automation.deleteAll()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("fails when no collection is supplied", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .collect({ collection: "" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs).toEqual({
       success: false,
     })
   })
 
   it("returns the supplied collection", async () => {
-    const collection = [{ id: 1 }, { id: 2 }]
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .collect({ collection: "saved value" })
+      .test({ fields: {} })
 
-    const result = await run({
-      inputs: {
-        collection,
-      } as unknown as CollectStepInputs,
-    })
-
-    expect(result).toEqual({
+    expect(result.steps[0].outputs).toEqual({
       success: true,
-      value: collection,
+      value: "saved value",
     })
   })
 })
