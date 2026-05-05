@@ -8,15 +8,15 @@ describe("rehydrateScheduledTriggers (integration)", () => {
 
   const loadModules = async () => {
     const { default: TestConfiguration } = await import(
-      "../../tests/utilities/TestConfiguration"
+      "../../../tests/utilities/TestConfiguration"
     )
     const { createAutomationBuilder } = await import(
-      "./utilities/AutomationTestBuilder"
+      "../utilities/AutomationTestBuilder"
     )
-    const { rehydrateScheduledTriggers } = await import("../rehydrate")
-    const { automationQueue } = await import("../bullboard")
-    const { disableAllCrons } = await import("../utils")
-    const { default: env } = await import("../../environment")
+    const { rehydrateScheduledTriggers } = await import("../../rehydrate")
+    const { automationQueue } = await import("../../bullboard")
+    const { disableAllCrons } = await import("../../utils")
+    const { default: env } = await import("../../../environment")
     const { queue: coreQueue } = await import("@budibase/backend-core")
 
     return {

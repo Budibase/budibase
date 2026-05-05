@@ -126,6 +126,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   openai = this.step(AutomationActionStepId.OPENAI)
   collect = this.step(AutomationActionStepId.COLLECT)
   zapier = this.step(AutomationActionStepId.zapier)
+  slack = this.step(AutomationActionStepId.slack)
   triggerAutomationRun = this.step(
     AutomationActionStepId.TRIGGER_AUTOMATION_RUN
   )
