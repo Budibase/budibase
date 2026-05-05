@@ -43,31 +43,26 @@ describe("AI generate and classify steps", () => {
       expect(mockPromptWithDefaultLLM).not.toHaveBeenCalled()
     })
 
-    it.each([
-      ContentType.EMAIL,
-      ContentType.DOCUMENT,
-      ContentType.BLOG_POST,
-      ContentType.CHAT_MESSAGE,
-      ContentType.LETTER,
-      ContentType.PROPOSAL,
-      ContentType.OTHER,
-    ])("generates content for %s", async contentType => {
-      mockPromptWithDefaultLLM.mockResolvedValue(" Generated content ")
+    it.each(Object.values(ContentType))(
+      "generates content for %s",
+      async contentType => {
+        mockPromptWithDefaultLLM.mockResolvedValue(" Generated content ")
 
-      const result = await createAutomationBuilder(config)
-        .onAppAction()
-        .generateText({
-          contentType,
-          instructions: "Write something useful",
+        const result = await createAutomationBuilder(config)
+          .onAppAction()
+          .generateText({
+            contentType,
+            instructions: "Write something useful",
+          })
+          .test({ fields: {} })
+
+        expect(result.steps[0].outputs).toEqual({
+          success: true,
+          response: "Generated content",
         })
-        .test({ fields: {} })
-
-      expect(result.steps[0].outputs).toEqual({
-        success: true,
-        response: "Generated content",
-      })
-      expect(mockPromptWithDefaultLLM).toHaveBeenCalledTimes(1)
-    })
+        expect(mockPromptWithDefaultLLM).toHaveBeenCalledTimes(1)
+      }
+    )
 
     it("reports empty LLM responses", async () => {
       mockPromptWithDefaultLLM.mockResolvedValue("   ")

@@ -26,11 +26,13 @@ describe("slack step", () => {
   })
 
   it("posts the message text to Slack", async () => {
-    nock("http://www.example.com").post("/", { text: "Hello" }).reply(200, "ok")
+    nock("http://www.example.com")
+      .post("/services/test/webhook", { text: "Hello" })
+      .reply(200, "ok")
 
     const result = await run({
       inputs: {
-        url: "http://www.example.com",
+        url: "http://www.example.com/services/test/webhook",
         text: "Hello",
       },
     })
