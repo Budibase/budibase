@@ -63,6 +63,12 @@
   import ActionButton from "../ActionButton/ActionButton.svelte"
   import Button from "../Button/Button.svelte"
   import Icon from "../Icon/Icon.svelte"
+  import {
+    addOverlay,
+    removeOverlay,
+    overlayStack,
+    BASE_Z_INDEX,
+  } from "../Modal/overlayStack"
 
   export let title = ""
   export let forceModal = false
@@ -75,7 +81,10 @@
   let drawerId = generate()
 
   $: depth = $openDrawers.length - $openDrawers.indexOf(drawerId) - 1
-  $: style = getStyle(depth, $drawerLeft, $drawerWidth, $modal, zIndex)
+  $: stackIndex = $overlayStack.indexOf(drawerId)
+  $: computedZIndex =
+    zIndex ?? (stackIndex === -1 ? BASE_Z_INDEX : BASE_Z_INDEX + stackIndex)
+  $: style = getStyle(depth, $drawerLeft, $drawerWidth, $modal, computedZIndex)
 
   const getStyle = (depth, left, width, modal, zIndex) => {
     let style = `
@@ -108,6 +117,7 @@
     visible = true
     dispatch("drawerShow", drawerId)
     openDrawers.update(state => [...state, drawerId])
+    addOverlay(drawerId)
   }
 
   export function hide() {
@@ -117,6 +127,7 @@
     visible = false
     dispatch("drawerHide", drawerId)
     openDrawers.update(state => state.filter(id => id !== drawerId))
+    removeOverlay(drawerId)
     unobserve()
   }
 
@@ -180,7 +191,7 @@
         class="underlay"
         class:hidden={!$modal}
         transition:drawerFade|local
-        style={zIndex != null ? `z-index: ${zIndex - 1}` : undefined}
+        style="z-index: {computedZIndex - 1}"
       ></div>
       <div
         class="drawer"

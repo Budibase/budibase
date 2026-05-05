@@ -1,5 +1,5 @@
 import nock from "nock"
-import { context, db, features } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { utils } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
 import {
@@ -9,10 +9,9 @@ import {
   KnowledgeBaseFileStatus,
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
-import { getQueue } from "../../../../sdk/workspace/ai/rag/queue"
-import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/knowledgeSourceSyncQueue"
-import { upsertKnowledgeSourceConnection } from "../../../../sdk/workspace/ai/knowledgeSources"
-import { sharePointConnectionCacheKey } from "../../../../sdk/workspace/ai/sharepoint"
+import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
+import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/sources/knowledgeSourceSyncQueue"
+import { createKnowledgeSourceConnection } from "../../../../sdk/workspace/ai/knowledgeSources"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
@@ -106,7 +105,8 @@ describe("agent files", () => {
 
   const setSharePointSourceInAgent = async (
     agentId: string,
-    siteIds: string[]
+    siteIds: string[],
+    connectionId = "connection_1"
   ) => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       const db = context.getWorkspaceDB()
@@ -117,6 +117,7 @@ describe("agent files", () => {
           id: `sharepoint_site_${siteId}`,
           type: AgentKnowledgeSourceType.SHAREPOINT,
           config: {
+            connectionId,
             site: { id: siteId },
           },
         })),
@@ -125,25 +126,20 @@ describe("agent files", () => {
   }
 
   const setSharePointConnection = async (_agentId: string) => {
-    await config.doInContext(config.getDevWorkspaceId(), async () => {
-      const workspaceId = context.getOrThrowWorkspaceId()
-      const workspaceConnectionId = db.getProdWorkspaceID(workspaceId)
-      await upsertKnowledgeSourceConnection(
-        "sharepoint",
-        sharePointConnectionCacheKey("connection", workspaceConnectionId),
-        {
-          account: "connected-sharepoint@budibase.com",
-          tenantId: config.getTenantId(),
-          tokenEndpoint:
-            "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-          accessToken: "header.payload.signature",
-          refreshToken: "refresh-token",
-          tokenType: "Bearer",
-          expiresAt: Date.now() + 60_000,
-          clientId: "client-id",
-          clientSecret: "client-secret",
-        }
-      )
+    return await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const connection = await createKnowledgeSourceConnection({
+        sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+        account: "connected-sharepoint@budibase.com",
+        tokenEndpoint:
+          "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        accessToken: "header.payload.signature",
+        refreshToken: "refresh-token",
+        tokenType: "Bearer",
+        expiresAt: Date.now() + 60_000,
+        clientId: "client-id",
+        clientSecret: "client-secret",
+      })
+      return connection._id!
     })
   }
 
@@ -275,7 +271,7 @@ describe("agent files", () => {
 
       await config.api.agent.connectSharePointSite(
         created._id!,
-        { siteId: "site-1" },
+        { siteId: "site-1", connectionId: "connection-1" },
         {
           status: 400,
           body: {
@@ -286,33 +282,35 @@ describe("agent files", () => {
     })
   })
 
-  it("returns empty SharePoint sites for an agent without a connection", async () => {
+  it("returns empty SharePoint sites for a connection without sites", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
         name: "SharePoint Sites Agent",
         aiconfig: "default",
       })
+      const connectionId = await setSharePointConnection(created._id!)
+      mockSharePointSitesFetch([], 1)
 
-      const response = await config.api.agent.fetchKnowledgeSourceOptions(
-        created._id!
-      )
+      const response =
+        await config.api.agent.fetchKnowledgeSourceOptions(connectionId)
 
       expect(response.options).toEqual([])
     })
   })
 
-  it("returns empty SharePoint sync state for an agent without sync runs", async () => {
+  it("returns only options for connection-scoped knowledge source options", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
-        name: "SharePoint Sync State Agent",
+        name: "SharePoint Options Shape Agent",
         aiconfig: "default",
       })
+      const connectionId = await setSharePointConnection(created._id!)
+      mockSharePointSitesFetch([], 1)
 
-      const response = await config.api.agent.fetchKnowledgeSourceOptions(
-        created._id!
-      )
+      const response =
+        await config.api.agent.fetchKnowledgeSourceOptions(connectionId)
 
-      expect(response.runs).toEqual([])
+      expect(response).not.toHaveProperty("runs")
     })
   })
 
@@ -414,7 +412,7 @@ describe("agent files", () => {
         const updated = await db.tryGet<Agent>(created._id!)
         const siteIds = (updated?.knowledgeSources || [])
           .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
-          .map(source => source.config.site?.id)
+          .map(source => source.config.site.id)
           .filter((id): id is string => !!id)
         expect(siteIds).toEqual(["site-2"])
       })
@@ -428,7 +426,7 @@ describe("agent files", () => {
         aiconfig: "default",
       })
 
-      await setSharePointConnection(created._id!)
+      const connectionId = await setSharePointConnection(created._id!)
       mockSharePointSitesFetch(
         [
           {
@@ -441,9 +439,8 @@ describe("agent files", () => {
         1
       )
 
-      const response = await config.api.agent.fetchKnowledgeSourceOptions(
-        created._id!
-      )
+      const response =
+        await config.api.agent.fetchKnowledgeSourceOptions(connectionId)
 
       expect(response.options).toEqual([
         {
@@ -474,6 +471,70 @@ describe("agent files", () => {
         )
       })
       expect(hasDisconnectJob).toBe(true)
+    })
+  })
+
+  it("maps SharePoint sync run by raw site id when source id is sanitized", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "SharePoint Snapshot Mapping Agent",
+        aiconfig: "default",
+      })
+      const siteId = "contoso.sharepoint.com,site-guid,web-guid"
+      const sourceId = `sharepoint_site_${siteId}`
+      const nowIso = "2026-05-04T10:32:21.401Z"
+
+      await setSharePointSourceInAgent(created._id!, [siteId])
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const agentDoc = await db.tryGet<Agent>(created._id!)
+        const knowledgeBaseId = "knowledgebase_test_snapshot_mapping"
+        await db.put({
+          ...agentDoc!,
+          knowledgeBases: [{ _id: knowledgeBaseId }],
+        })
+
+        await db.put({
+          _id: `knowledgebasefile_${knowledgeBaseId}_file_1`,
+          knowledgeBaseId,
+          filename: "file-1.txt",
+          mimetype: "text/plain",
+          size: 100,
+          objectStoreKey: "test/object-store-key",
+          ragSourceId: "rag-source-1",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: `sharepoint:${sourceId}`,
+          source: {
+            type: "sharepoint",
+            knowledgeSourceId: sourceId,
+            siteId,
+            driveId: "drive-1",
+            itemId: "item-1",
+            path: "file-1.txt",
+          },
+        } as any)
+
+        await db.put({
+          _id: `agentknowledgesync_${created._id!}_sharepoint_${encodeURIComponent(siteId)}`,
+          agentId: created._id!,
+          sourceType: "sharepoint",
+          sourceId: siteId,
+          lastRunAt: nowIso,
+          synced: 1,
+          failed: 0,
+          skipped: 0,
+          totalDiscovered: 1,
+          status: "success",
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        } as any)
+      })
+
+      const response = await config.api.agent.fetchFiles(created._id!)
+      expect(response.sharePointSources).toHaveLength(1)
+      expect(response.sharePointSources[0].sourceId).toBe(sourceId)
+      expect(response.sharePointSources[0].lastRunAt).toBe(nowIso)
     })
   })
 })

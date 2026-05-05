@@ -70,6 +70,13 @@ export { default as MenuSection } from "./Menu/Section.svelte"
 export { default as MenuSeparator } from "./Menu/Separator.svelte"
 export { default as Modal, type ModalAPI } from "./Modal/Modal.svelte"
 export { keepOpen, default as ModalContent } from "./Modal/ModalContent.svelte"
+export {
+  addOverlay,
+  removeOverlay,
+  isActiveOverlay,
+  overlayStack,
+  BASE_Z_INDEX,
+} from "./Modal/overlayStack"
 export { default as Notification } from "./Notification/Notification.svelte"
 export { default as NotificationDisplay } from "./Notification/NotificationDisplay.svelte"
 export { default as Pagination } from "./Pagination/Pagination.svelte"

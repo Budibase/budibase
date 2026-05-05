@@ -71,7 +71,7 @@ export interface AgentEndpoints {
     fileId: string
   ) => Promise<{ deleted: true }>
   fetchAgentKnowledgeSourceOptions: (
-    agentId: string
+    connectionId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
   fetchAgentKnowledgeSourceConnections: () => Promise<FetchAgentKnowledgeSourceConnectionsResponse>
   fetchAgentKnowledgeSourceAllEntries: (
@@ -220,9 +220,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentKnowledgeSourceOptions: async (agentId: string) => {
+  fetchAgentKnowledgeSourceOptions: async (connectionId: string) => {
     return await API.get<FetchAgentKnowledgeSourceOptionsResponse>({
-      url: `/api/agent/${agentId}/knowledge-sources/options`,
+      url: `/api/knowledge-sources/${encodeURIComponent(connectionId)}/options`,
     })
   },
 

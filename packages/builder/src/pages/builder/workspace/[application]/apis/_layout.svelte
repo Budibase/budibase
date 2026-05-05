@@ -175,8 +175,8 @@
     transition: width 300ms ease-out;
   }
   .content {
-    padding: 28px 40px 40px 40px;
-    overflow-y: auto;
+    padding: 0;
+    overflow: hidden;
     gap: var(--spacing-l);
     display: flex;
     flex-direction: column;

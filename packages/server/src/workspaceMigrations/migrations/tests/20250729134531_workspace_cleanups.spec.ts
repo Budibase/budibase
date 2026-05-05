@@ -38,6 +38,7 @@ describe.each([
   })
 
   beforeEach(async () => {
+    tk.freeze(structures.generator.date())
     await config.newTenant()
     for (const workspaceId of [
       config.getDevWorkspaceId(),
@@ -58,7 +59,6 @@ describe.each([
       defaultWorkspaceApp = workspaceApps[0]
     }
 
-    tk.freeze(structures.generator.date())
     jest.clearAllMocks()
   })
 
@@ -127,7 +127,6 @@ describe.each([
       const workspaceApp2 = await createWorkspaceApp(true)
 
       tk.travel(Date.now() + 1000)
-
       await sdk.workspaceApps.update(workspaceApp1)
 
       const toDelete1 = defaultWorkspaceApp._id!
@@ -164,6 +163,7 @@ describe.each([
 
     expect(workspaceApps).toHaveLength(1)
     expect(workspaceApps[0]._id).toBe(keptWorkspaceAppId)
+    expect(workspaceApps[0].isDefault).toBe(true)
 
     // All screens should now reference the kept workspace app
     const screensWithWorkspaceAppId = screens.filter(s => s.workspaceAppId)

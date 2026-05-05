@@ -209,14 +209,14 @@ describe("fetchSharePointSitesByBearerToken", () => {
         webUrl: "https://contoso.sharepoint.com/sites/site-1",
       },
       {
-        id: "site-2",
-        name: "Site Two Updated",
-        webUrl: "https://contoso.sharepoint.com/sites/site-2",
-      },
-      {
         id: "site-3",
         name: "Site Three",
         webUrl: "https://contoso.sharepoint.com/sites/site-3",
+      },
+      {
+        id: "site-2",
+        name: "Site Two Updated",
+        webUrl: "https://contoso.sharepoint.com/sites/site-2",
       },
     ])
   })

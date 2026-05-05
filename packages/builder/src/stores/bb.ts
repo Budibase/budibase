@@ -20,9 +20,13 @@ const resolvePathParams = (
   return path.replace(/:([^/]+)/g, (_match, key) => params[key] ?? `:${key}`)
 }
 
+export type SettingsLocked = "self" | "subtree"
+
 export interface Settings {
   open: boolean
   route?: MatchedRoute
+  locked?: SettingsLocked
+  subtreeStack?: MatchedRoute[]
 }
 
 export interface BBState {
@@ -35,7 +39,25 @@ export const INITIAL_GLOBAL_STATE: BBState = {
   },
 }
 
+type BeforeCloseGuard = () => Promise<boolean>
+
 export class BBStore extends BudiStore<BBState> {
+  private beforeCloseGuard: BeforeCloseGuard | null = null
+
+  registerBeforeClose(guard: BeforeCloseGuard) {
+    this.beforeCloseGuard = guard
+    return () => {
+      if (this.beforeCloseGuard === guard) {
+        this.beforeCloseGuard = null
+      }
+    }
+  }
+
+  async runBeforeClose(): Promise<boolean> {
+    if (!this.beforeCloseGuard) return true
+    return this.beforeCloseGuard()
+  }
+
   constructor() {
     super(INITIAL_GLOBAL_STATE)
     this.clearSettings = this.clearSettings.bind(this)
@@ -47,7 +69,50 @@ export class BBStore extends BudiStore<BBState> {
     this.store.set({ ...INITIAL_GLOBAL_STATE })
   }
 
-  settings(path?: string, params?: Record<string, any>) {
+  private subtreeNavigate(matchedRoute: MatchedRoute) {
+    const currentState = get(this.store).settings
+    const currentRoute = currentState.route
+    const stack = currentState.subtreeStack ?? []
+
+    // Navigating back - pop to it
+    const existingIdx = stack.findIndex(
+      r => r.entry.path === matchedRoute.entry.path
+    )
+    if (existingIdx !== -1) {
+      const restored = stack[existingIdx]
+      this.update(state => ({
+        ...state,
+        settings: {
+          ...state.settings,
+          route: restored,
+          subtreeStack: stack.slice(0, existingIdx),
+          open: true,
+        },
+      }))
+      return
+    }
+
+    // Navigating forward
+    const newStack = currentRoute ? [...stack, currentRoute] : stack
+    this.update(state => ({
+      ...state,
+      settings: {
+        ...state.settings,
+        route: matchedRoute,
+        subtreeStack: newStack,
+        open: true,
+      },
+    }))
+  }
+
+  settings(path?: string, { locked }: { locked?: SettingsLocked } = {}) {
+    const currentState = get(this.store).settings
+
+    // blocks all navigation when self-locked
+    if (currentState.locked === "self" && locked === undefined) {
+      return
+    }
+
     if (!path) {
       this.update(state => ({
         ...state,
@@ -60,22 +125,38 @@ export class BBStore extends BudiStore<BBState> {
     }
 
     const matchedRoute = settingsRouteResolver?.(path)
-    if (matchedRoute) {
+    if (!matchedRoute) return
+
+    // Entering subtree mode — initialise with empty stack
+    if (locked === "subtree") {
       this.update(state => ({
         ...state,
         settings: {
           ...state.settings,
-          route: {
-            ...matchedRoute,
-            params: {
-              ...matchedRoute.params,
-              ...(params || {}),
-            },
-          },
+          route: matchedRoute,
+          locked: "subtree",
+          subtreeStack: [],
           open: true,
         },
       }))
+      return
     }
+
+    // Already in subtree mode — push/pop the stack
+    if (currentState.locked === "subtree") {
+      this.subtreeNavigate(matchedRoute)
+      return
+    }
+
+    this.update(state => ({
+      ...state,
+      settings: {
+        ...state.settings,
+        route: matchedRoute,
+        locked: locked ?? currentState.locked,
+        open: true,
+      },
+    }))
   }
 
   clearSettings() {
@@ -94,6 +175,7 @@ export class BBStore extends BudiStore<BBState> {
       settings: {
         ...state.settings,
         ...(matchedRoute ? { route: matchedRoute } : {}),
+        locked: undefined,
         open: false,
       },
     }))

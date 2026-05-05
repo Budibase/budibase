@@ -128,7 +128,7 @@
   .step-panel-container {
     position: relative;
     z-index: 99;
-    height: 100%;
+    height: calc(100% - var(--top-bar-height, 51px));
     display: flex;
     flex-direction: row;
     align-items: stretch;

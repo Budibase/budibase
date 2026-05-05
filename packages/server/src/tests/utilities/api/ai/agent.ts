@@ -176,11 +176,11 @@ export class AgentAPI extends TestAPI {
   }
 
   fetchKnowledgeSourceOptions = async (
-    agentId: string,
+    connectionId: string,
     expectations?: Expectations
   ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
     return await this._get<FetchAgentKnowledgeSourceOptionsResponse>(
-      `/api/agent/${agentId}/knowledge-sources/options`,
+      `/api/knowledge-sources/${encodeURIComponent(connectionId)}/options`,
       {
         expectations,
       }

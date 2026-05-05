@@ -87,7 +87,6 @@ describe("agentsStore sharepoint and file syncing", () => {
     ]
     fetchAgentKnowledge.mockResolvedValue({
       files,
-      hasSharePointConnection: false,
       sharePointSources: [],
     })
 

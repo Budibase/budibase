@@ -21,6 +21,7 @@ export { temporalStore } from "./temporal"
 export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
 export { agentsStore, selectedAgent } from "./agents"
+export { knowledgeConnectionsStore } from "./knowledgeConnections"
 export {
   chatAppsStore,
   currentChatApp,

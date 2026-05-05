@@ -78,7 +78,7 @@ aiRagBuilderAdminRoutes
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
   .get(
-    "/api/agent/:agentId/knowledge-sources/options",
+    "/api/knowledge-sources/:connectionId/options",
     ai.fetchAgentKnowledgeSourceOptions
   )
   .get(
