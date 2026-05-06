@@ -36,7 +36,6 @@
   } from "./AutomationStepHelpers"
   import {
     NODE_SPACING,
-    FLOW_ITEM_ACTION_EDGE_SPACING,
     DEFAULT_NODE_WIDTH,
     DEFAULT_NODE_HEIGHT,
   } from "./FlowCanvas/FlowGeometry"

@@ -409,16 +409,12 @@
   .flow-success.flow-status-icon {
     width: 18px;
     height: 18px;
-    background-color: white;
-    border-radius: 999px;
     color: var(--spectrum-semantic-positive-color-status);
   }
 
   .flow-error.flow-status-icon {
     width: 18px;
     height: 18px;
-    background-color: white;
-    border-radius: 999px;
     color: var(--spectrum-semantic-negative-color-status);
   }
 

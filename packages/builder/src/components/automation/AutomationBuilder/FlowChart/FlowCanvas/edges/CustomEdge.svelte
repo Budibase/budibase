@@ -21,6 +21,7 @@
   import type { DragView } from "../FlowChartDnD"
   import {
     isAutomationResults,
+    AutomationStatus,
     isBranchStep,
     type AutomationResults,
     type AutomationStepResult,
@@ -201,13 +202,33 @@
     if (result.id === results.trigger.id) {
       return true
     }
-    return didStepRun(result)
+    return didStepRun(result) && !isTerminalResult(result)
   }
 
   const didStepRun = (
     result: AutomationStepResult | AutomationTriggerResult
   ) => {
     return !!result.outputs
+  }
+
+  const isTerminalResult = (
+    result: AutomationStepResult | AutomationTriggerResult | undefined
+  ) => {
+    const outputs = result?.outputs
+    if (!outputs) {
+      return false
+    }
+
+    const outputStatus =
+      "status" in outputs && typeof outputs.status === "string"
+        ? outputs.status.toLowerCase()
+        : undefined
+
+    return (
+      outputs.success === false ||
+      outputStatus === AutomationStatus.STOPPED ||
+      outputStatus === AutomationStatus.STOPPED_ERROR
+    )
   }
 
   const getResultByBlockId = (
@@ -231,6 +252,9 @@
       return false
     }
     const result = results.steps.find(step => step.id === branchStepId)
+    if (isTerminalResult(result)) {
+      return false
+    }
     const outputs = result?.outputs
     return (
       !!outputs &&

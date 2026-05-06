@@ -260,6 +260,7 @@
         {/if}
         <div
           class="block-core"
+          class:has-status={!isTrigger}
           on:click={async () => {
             if (draggedDuringPress) {
               draggedDuringPress = false
@@ -350,6 +351,7 @@
     width: fit-content;
     display: flex;
     flex-direction: row;
+    position: relative;
     background-color: var(--automation-flow-item-background, var(--background));
     border: 0.5px solid var(--spectrum-global-color-gray-200);
     border-radius: 16px;
@@ -384,6 +386,9 @@
     justify-content: center;
     min-width: 0;
   }
+  .block-core.has-status {
+    padding-right: 32px;
+  }
   .block-core.dragging {
     pointer-events: none;
   }
@@ -405,8 +410,9 @@
     width: 26px;
     height: 26px;
     position: absolute;
-    right: 14px;
-    top: 14px;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 1;
   }
   .block-core {
