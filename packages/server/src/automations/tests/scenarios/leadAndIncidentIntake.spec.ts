@@ -151,6 +151,7 @@ describe("Lead and incident intake automations", () => {
           name: "{{ steps.[Current Row].row.name }}",
           description: "Status {{ state.reviewStatus }}",
         },
+        meta: {},
       })
       .test({
         fields: {
