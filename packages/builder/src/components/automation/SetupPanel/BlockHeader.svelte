@@ -187,6 +187,7 @@
   .compact-label {
     position: static;
     display: -webkit-box;
+    margin-bottom: 3px;
     width: 100%;
     box-sizing: border-box;
     padding: 0;
@@ -222,13 +223,14 @@
   }
 
   .block-details.compact {
+    position: relative;
     flex-direction: row;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: stretch;
     flex: 0 0 100%;
-    gap: var(--spacing-l);
+    gap: 0;
     height: 100%;
-    padding: 16px;
+    padding: 22px;
     box-sizing: border-box;
   }
 
@@ -246,6 +248,7 @@
     justify-content: flex-start;
     flex: 1 1 auto;
     min-width: 0;
+    width: 100%;
   }
 
   .icon-container {
@@ -261,6 +264,9 @@
 
   .icon-container.compact,
   .external-icon.compact {
+    position: absolute;
+    top: 22px;
+    left: 22px;
     flex: 0 0 32px;
     width: 32px;
     height: 32px;
