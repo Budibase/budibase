@@ -341,8 +341,8 @@
     display: inline-block;
   }
   .block {
-    width: 218px;
-    height: 150px;
+    width: 200px;
+    height: 100px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 8px;
     font-weight: 600;
@@ -357,7 +357,7 @@
   }
   .block .wrap .block-content {
     width: 100%;
-    height: 150px;
+    height: 100px;
     display: flex;
     flex-direction: row;
     background-color: var(--automation-flow-item-background, var(--background));
