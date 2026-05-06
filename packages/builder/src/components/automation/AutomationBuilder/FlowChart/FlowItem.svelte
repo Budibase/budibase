@@ -50,6 +50,7 @@
   let positionStyles: string | undefined
   let blockDims: DOMRect | undefined
   let pressingDraggableNode = false
+  let draggedDuringPress = false
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
@@ -106,6 +107,10 @@
   $: dragging =
     $view?.dragging && $view?.moveStep && $view?.moveStep?.id === block.id
 
+  $: if (pressingDraggableNode && dragging) {
+    draggedDuringPress = true
+  }
+
   $: if (dragging && blockEle) {
     updateBlockDims()
   }
@@ -161,6 +166,7 @@
 
     e.stopPropagation()
     pressingDraggableNode = true
+    draggedDuringPress = false
 
     updateBlockDims()
 
@@ -270,6 +276,11 @@
         <div
           class="block-core"
           on:click={async () => {
+            if (draggedDuringPress) {
+              draggedDuringPress = false
+              return
+            }
+
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
               focusNodeRequest.set({ nodeId: block.id, ensureVisible: true })

@@ -139,19 +139,17 @@
     isPrimaryBranchEdge &&
     $view?.dragging
 
-  // --- Dropzone sizing & offsets for LR to reduce clutter ---
+  // --- Dropzone sizing for LR to reduce clutter ---
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v))
-  const baseOffset = -18
 
   $: dx = Math.abs((targetX ?? 0) - (sourceX ?? 0))
   $: dzWidth = clamp(Math.round(dx - 140), 160, 320)
-  $: nudge = ((Math.round(sourceX + targetX) % 3) - 1) * 6
-  $: dzOffsetY = baseOffset + nudge
+  $: dzOffsetY = 0
 
-  // Pre-branch label sizing/offset
+  // Pre-branch label sizing
   $: preDzWidth = clamp(Math.round(dx - 160), 160, 300)
-  $: preDzOffsetY = -24 + nudge
+  $: preDzOffsetY = 0
 
   $: preBranchLabelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
   $: preBranchLabelY = sourceY ?? 0
