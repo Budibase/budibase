@@ -187,16 +187,16 @@
   .compact-label {
     position: static;
     display: -webkit-box;
-    width: 100%;
+    width: max-content;
     box-sizing: border-box;
     padding: 0;
     overflow: hidden;
     text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
-    font-size: 16px;
+    font-size: 24px;
     font-weight: 400;
-    line-height: 1.3;
+    line-height: 1.2;
     -webkit-box-orient: vertical;
     line-clamp: 2;
     -webkit-line-clamp: 2;
@@ -225,10 +225,11 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    flex: 0 0 100%;
+    width: max-content;
+    flex: 0 0 auto;
     gap: var(--spacing-l);
     height: 100%;
-    padding: 16px;
+    padding: 24px;
     box-sizing: border-box;
   }
 
@@ -261,9 +262,9 @@
 
   .icon-container.compact,
   .external-icon.compact {
-    flex: 0 0 32px;
-    width: 32px;
-    height: 32px;
+    flex: 0 0 60px;
+    width: 60px;
+    height: 60px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -273,16 +274,16 @@
   }
 
   .icon-container.compact :global(i) {
-    font-size: 22px;
+    font-size: 42px;
   }
 
   .icon-container.compact :global(svg) {
-    width: 22px;
-    height: 22px;
+    width: 42px;
+    height: 42px;
   }
 
   .external-icon.compact img {
-    width: 22px;
-    height: 22px;
+    width: 42px;
+    height: 42px;
   }
 </style>
