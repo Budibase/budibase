@@ -86,7 +86,6 @@
 
 <style>
   .action-bar {
-    --automation-flow-action-bar-width: 72px;
     --automation-flow-action-icon-color: var(--spectrum-global-color-gray-700);
     --automation-flow-action-icon-hover-color: var(
       --spectrum-global-color-gray-900
@@ -96,13 +95,13 @@
       var(--spectrum-global-color-gray-100)
     );
     border: var(--automation-flow-action-border, 0);
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 16px;
     display: flex;
-    width: var(--automation-flow-action-bar-width);
+    width: fit-content;
     box-sizing: border-box;
     gap: var(--spacing-m);
     justify-content: center;
-    padding: 8px 12px;
+    padding: 8px;
     cursor: default;
   }
 

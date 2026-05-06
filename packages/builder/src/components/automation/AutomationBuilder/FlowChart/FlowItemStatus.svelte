@@ -289,7 +289,7 @@
         >
           <Icon
             name={flowStatus.icon}
-            size="L"
+            size="S"
             weight="fill"
             color="currentColor"
           />
@@ -395,25 +395,36 @@
     cursor: pointer;
   }
 
+  .flow-status-icon :global(i) {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .flow-status-icon :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
   .flow-success.flow-status-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     background-color: white;
     border-radius: 999px;
     color: var(--spectrum-semantic-positive-color-status);
   }
 
   .flow-error.flow-status-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     background-color: white;
     border-radius: 999px;
     color: var(--spectrum-semantic-negative-color-status);
   }
 
   .flow-warn.flow-status-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     position: relative;
     background-color: transparent;
     color: var(--spectrum-global-color-yellow-400);
@@ -422,8 +433,8 @@
   .flow-warn.flow-status-icon::before {
     content: "";
     position: absolute;
-    width: 14px;
-    height: 13px;
+    width: 16px;
+    height: 15px;
     background-color: white;
     clip-path: polygon(50% 0, 100% 100%, 0 100%);
   }

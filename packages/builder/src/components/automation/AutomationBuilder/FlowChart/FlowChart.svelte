@@ -51,8 +51,6 @@
 
   import {
     SvelteFlow,
-    Background,
-    BackgroundVariant,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -143,7 +141,7 @@
       initialViewportApplied = false
     }
     preserveViewport = true
-    const xSpacing = 300
+    const xSpacing = 100
     const ySpacing = 340
 
     const newNodes: FlowNode[] = []
@@ -163,7 +161,7 @@
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
       {
-        ranksep: FLOW_ITEM_ACTION_EDGE_SPACING,
+        ranksep: xSpacing,
         nodesep: NODE_SPACING,
         compactLoops: true,
       }
@@ -486,7 +484,6 @@
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
         <FlowControls historyStore={automationHistoryStore} />
-        <Background variant={BackgroundVariant.Dots} gap={25} />
       </SvelteFlow>
     </div>
   </div>
@@ -511,6 +508,7 @@
       --spectrum-global-color-indigo-100
     );
     --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
+    --automation-step-icon-trigger-color: var(--color-green-200);
     --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
     --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
     --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
@@ -540,6 +538,7 @@
     --automation-step-icon-data-color: var(--color-blue-600);
     --automation-step-icon-flow-logic-color: var(--color-purple-600);
     --automation-step-icon-code-color: var(--color-orange-600);
+    --automation-step-icon-trigger-color: var(--color-green-600);
     --automation-step-icon-email-color: var(--color-green-600);
     --automation-step-icon-ai-color: var(--color-brand-500);
     --automation-step-icon-apps-color: var(--color-orange-400);
@@ -581,6 +580,14 @@
   .root :global(.svelte-flow__edgelabel-renderer) {
     z-index: 4;
     pointer-events: none;
+  }
+
+  .root :global(.svelte-flow__edge-interaction) {
+    stroke-width: 12;
+  }
+
+  .root :global(.svelte-flow__pane) {
+    background-color: var(--xy-background-color);
   }
 
   .root :global(.block) {

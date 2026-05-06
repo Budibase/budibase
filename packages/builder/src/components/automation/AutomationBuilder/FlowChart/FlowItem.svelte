@@ -1,7 +1,6 @@
 <script lang="ts">
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
-  import { Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
@@ -259,20 +258,6 @@
             />
           </div>
         {/if}
-        {#if isTrigger}
-          <div class="trigger-icon" class:completed={triggerCompleted}>
-            <Icon
-              name="lightning"
-              size="M"
-              weight="fill"
-              color={triggerCompleted
-                ? "var(--spectrum-semantic-positive-color-status)"
-                : selected
-                  ? "var(--spectrum-global-color-blue-700)"
-                  : "var(--spectrum-global-color-gray-500)"}
-            />
-          </div>
-        {/if}
         <div
           class="block-core"
           on:click={async () => {
@@ -295,6 +280,12 @@
               compact
               {automation}
               {block}
+              showTriggerIcon={isTrigger}
+              triggerIconColor={triggerCompleted
+                ? "var(--spectrum-semantic-positive-color-status)"
+                : selected
+                  ? "var(--spectrum-global-color-blue-700)"
+                  : "var(--spectrum-global-color-gray-500)"}
               on:update={handleHeaderUpdate}
             />
           </div>
@@ -342,7 +333,6 @@
   }
   .block {
     width: fit-content;
-    height: 100px;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 32px;
     font-weight: 600;
@@ -358,12 +348,11 @@
   }
   .block .wrap .block-content {
     width: fit-content;
-    height: 100px;
     display: flex;
     flex-direction: row;
     background-color: var(--automation-flow-item-background, var(--background));
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 24px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 16px;
   }
   .blockSection {
     padding: 0;
@@ -420,22 +409,6 @@
     top: 14px;
     z-index: 1;
   }
-  .trigger-icon {
-    position: absolute;
-    right: 8px;
-    top: 14px;
-    width: 26px;
-    height: 26px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--spectrum-global-color-gray-700);
-    pointer-events: none;
-  }
-  .trigger-icon :global(i) {
-    z-index: 1;
-  }
   .block-core {
     cursor: pointer;
   }
@@ -456,9 +429,9 @@
     cursor: grabbing;
   }
   .block.selected .block-content {
-    border-color: var(--spectrum-global-color-blue-700);
-    border-width: 2px;
+    border-color: var(--spectrum-global-color-blue-600);
   }
+
   .block-info {
     pointer-events: none;
     width: 100%;

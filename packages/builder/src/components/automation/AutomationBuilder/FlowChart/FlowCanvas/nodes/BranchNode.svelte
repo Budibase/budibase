@@ -194,11 +194,10 @@
     display: inline-block;
   }
   .block {
-    width: 200px;
-    height: 100px;
+    width: fit-content;
     background-color: var(--automation-flow-item-background, var(--background));
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 16px;
     cursor: pointer;
     box-sizing: border-box;
     display: flex;
@@ -208,8 +207,8 @@
 
   .blockSection {
     padding: 0;
-    width: 100%;
-    height: 100%;
+    width: auto;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -254,9 +253,7 @@
   }
 
   .block.selected {
-    border-color: var(--spectrum-global-color-blue-700);
-    border-width: 2px;
-    transition: border-color 130ms ease-out;
+    border-color: var(--spectrum-global-color-blue-600);
   }
 
   .block.executed {
