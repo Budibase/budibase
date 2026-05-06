@@ -323,25 +323,20 @@
       targetNode.position.y * currentViewport.zoom +
       currentViewport.y +
       nodeHeight * currentViewport.zoom
-    const overflow =
-      layoutDirection === "LR"
-        ? nodeRight + margin - paneRect.width
-        : nodeBottom + margin - paneRect.height
+    const xOverflow = nodeRight + margin - paneRect.width
+    const yOverflow = nodeBottom + margin - paneRect.height
 
-    if (overflow <= 0) {
+    if (xOverflow <= 0 && (layoutDirection === "LR" || yOverflow <= 0)) {
       return
     }
 
     setViewport(
       {
-        x:
-          layoutDirection === "LR"
-            ? currentViewport.x - overflow
-            : currentViewport.x,
+        x: xOverflow > 0 ? currentViewport.x - xOverflow : currentViewport.x,
         y:
-          layoutDirection === "LR"
+          layoutDirection === "LR" || yOverflow <= 0
             ? currentViewport.y
-            : currentViewport.y - overflow,
+            : currentViewport.y - yOverflow,
         zoom: currentViewport.zoom,
       },
       { duration: VIEWPORT_ANIMATION_DURATION }
