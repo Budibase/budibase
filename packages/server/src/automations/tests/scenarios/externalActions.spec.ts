@@ -274,7 +274,9 @@ describe("External action automations", () => {
   })
 
   it("reports Discord fetch failures", async () => {
-    nock("http://www.example.com").post("/discord").replyWithError("discord failed")
+    nock("http://www.example.com")
+      .post("/discord")
+      .replyWithError("discord failed")
 
     const results = await createAutomationBuilder(config)
       .onAppAction()
@@ -288,7 +290,9 @@ describe("External action automations", () => {
   })
 
   it("reports Zapier fetch failures", async () => {
-    nock("http://www.example.com").post("/zapier").replyWithError("zapier failed")
+    nock("http://www.example.com")
+      .post("/zapier")
+      .replyWithError("zapier failed")
 
     const results = await createAutomationBuilder(config)
       .onAppAction()
