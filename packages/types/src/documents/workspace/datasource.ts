@@ -65,6 +65,12 @@ export interface OAuth2RestAuthConfig
   extends Omit<OAuth2Config, keyof Document> {
   _id: string
   type: RestAuthType.OAUTH2
+  account?: string
+  accessToken?: string
+  refreshToken?: string
+  tokenType?: string
+  expiresAt?: number
+  authType?: "client_credentials" | "delegated_oauth"
 }
 
 export const isOAuth2ClientCredentialsAuthConfig = (
@@ -72,6 +78,13 @@ export const isOAuth2ClientCredentialsAuthConfig = (
 ): authConfig is OAuth2RestAuthConfig =>
   authConfig?.type === RestAuthType.OAUTH2 &&
   authConfig.grantType === OAuth2GrantType.CLIENT_CREDENTIALS
+
+export const isOAuth2DelegatedAuthConfig = (
+  authConfig: RestAuthConfig | OAuth2RestAuthConfig | undefined
+): authConfig is OAuth2RestAuthConfig =>
+  authConfig?.type === RestAuthType.OAUTH2 &&
+  authConfig.grantType === OAuth2GrantType.AUTHORIZATION_CODE &&
+  authConfig.authType === "delegated_oauth"
 
 export const REST_AUTH_SECRET_FIELD: Partial<Record<RestAuthType, string>> = {
   [RestAuthType.BASIC]: "password" satisfies keyof RestBasicAuthConfig,

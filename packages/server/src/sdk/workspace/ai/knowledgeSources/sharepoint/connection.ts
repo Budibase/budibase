@@ -5,6 +5,8 @@ import {
   OAuth2RestAuthConfig,
   RestAuthType,
   isOAuth2ClientCredentialsAuthConfig,
+  isOAuth2DelegatedAuthConfig,
+  OAuth2GrantType,
 } from "@budibase/types"
 import sdk from "../../../.."
 
@@ -14,6 +16,7 @@ enum SharePointConnectionAuthType {
 }
 type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
   accessToken?: string
+  refreshToken?: string
   tokenType?: string
   expiresAt?: number
 }
@@ -60,11 +63,11 @@ const readConnection = async (
   if (!authConfig) {
     throw new HTTPError("SharePoint auth config not found.", 400)
   }
-  if (!isOAuth2ClientCredentialsAuthConfig(authConfig)) {
-    throw new HTTPError(
-      "SharePoint requires an OAuth2 client credentials auth config.",
-      400
-    )
+  if (
+    !isOAuth2ClientCredentialsAuthConfig(authConfig) &&
+    !isOAuth2DelegatedAuthConfig(authConfig)
+  ) {
+    throw new HTTPError("SharePoint requires an OAuth2 auth config.", 400)
   }
   if (!authConfig.url || !authConfig.clientId) {
     throw new HTTPError(
@@ -72,7 +75,32 @@ const readConnection = async (
       400
     )
   }
+  if (isOAuth2DelegatedAuthConfig(authConfig) && !authConfig.refreshToken) {
+    throw new HTTPError("OAuth2 auth config is missing refresh token.", 400)
+  }
   return authConfig
+}
+
+const getRefreshBody = (connection: OAuth2RestAuthConfigWithTokenCache) => {
+  if (
+    connection.authType === "delegated_oauth" &&
+    connection.grantType === OAuth2GrantType.AUTHORIZATION_CODE
+  ) {
+    return new URLSearchParams({
+      client_id: connection.clientId,
+      client_secret: decryptSecretOrPlaintext(connection.clientSecret),
+      grant_type: "refresh_token",
+      refresh_token: decryptSecretOrPlaintext(connection.refreshToken!),
+      ...(connection.scope ? { scope: connection.scope } : {}),
+    })
+  }
+
+  return new URLSearchParams({
+    client_id: connection.clientId,
+    client_secret: decryptSecretOrPlaintext(connection.clientSecret),
+    grant_type: "client_credentials",
+    ...(connection.scope ? { scope: connection.scope } : {}),
+  })
 }
 
 const refreshConnection = async (
@@ -85,12 +113,7 @@ const refreshConnection = async (
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
-      client_id: connection.clientId,
-      client_secret: decryptSecretOrPlaintext(connection.clientSecret),
-      grant_type: "client_credentials",
-      ...(connection.scope ? { scope: connection.scope } : {}),
-    }),
+    body: getRefreshBody(connection),
   })
   const payload = await response.json()
   if (!response.ok) {
@@ -106,6 +129,7 @@ const refreshConnection = async (
   const baseUpdated = {
     ...connection,
     accessToken: payload?.access_token || connection.accessToken,
+    refreshToken: payload?.refresh_token || connection.refreshToken,
     tokenType: payload?.token_type || connection.tokenType || "Bearer",
     expiresAt: Date.now() + Math.max(expiresIn - 60, 0) * 1000,
   }
@@ -124,7 +148,12 @@ const refreshConnection = async (
     }
     return {
       ...config,
-      accessToken: updated.accessToken,
+      accessToken: updated.accessToken
+        ? encryption.encrypt(decryptSecretOrPlaintext(updated.accessToken))
+        : updated.accessToken,
+      refreshToken: updated.refreshToken
+        ? encryption.encrypt(decryptSecretOrPlaintext(updated.refreshToken))
+        : updated.refreshToken,
       tokenType: updated.tokenType,
       expiresAt: updated.expiresAt,
       clientSecret: encryption.encrypt(
@@ -154,7 +183,7 @@ export const getSharePointBearerToken = async (
     connection = await refreshConnection(datasourceId, authConfigId, connection)
   }
   const tokenType = connection.tokenType?.trim() || "Bearer"
-  return `${tokenType} ${connection.accessToken}`
+  return `${tokenType} ${decryptSecretOrPlaintext(connection.accessToken!)}`
 }
 
 const fetchSharePointSitesByAppToken = async (
@@ -246,11 +275,13 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
   datasourceId: string,
   authConfigId: string
 ): Promise<KnowledgeSourceOption[]> => {
-  await readConnection(datasourceId, authConfigId)
+  const connection = await readConnection(datasourceId, authConfigId)
   const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
   return fetchSharePointSitesByAppToken(
     bearerToken,
-    SharePointConnectionAuthType.CLIENT_CREDENTIALS
+    isOAuth2DelegatedAuthConfig(connection)
+      ? SharePointConnectionAuthType.DELEGATED_OAUTH
+      : SharePointConnectionAuthType.CLIENT_CREDENTIALS
   )
 }
 

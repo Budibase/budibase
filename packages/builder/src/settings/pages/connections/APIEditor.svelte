@@ -130,6 +130,7 @@
     (selected?.templateId
       ? restTemplates.getById(selected.templateId)
       : undefined)
+  $: isSharePointDatasource = template?.id === "microsoft-sharepoint"
   $: isIndependentCollection =
     template?.connectionMode === "independent" &&
     (template.templates?.length ?? 0) > 0
@@ -334,6 +335,21 @@
     }
     data.authConfigs = [...(data.authConfigs || []), newConfig]
     data = { ...data }
+  }
+
+  const startSharePointDelegatedOAuth = () => {
+    if (!datasource?._id || !$appStore.appId) {
+      notifications.error(
+        "Save this SharePoint connection before connecting OAuth"
+      )
+      return
+    }
+    const query = new URLSearchParams({
+      appId: $appStore.appId,
+      datasourceId: datasource._id,
+      returnPath: window.location.pathname,
+    })
+    window.location.href = `/api/datasource/sharepoint/connect?${query.toString()}`
   }
 
   const createAuthConfig = (
@@ -796,6 +812,17 @@
                 Add authentication
               </Button>
             </div>
+            {#if isSharePointDatasource && !isNewConnection}
+              <div>
+                <Button
+                  quiet
+                  secondary
+                  on:click={startSharePointDelegatedOAuth}
+                >
+                  Connect Microsoft account
+                </Button>
+              </div>
+            {/if}
           {/if}
         </Layout>
       {:else if mode === "advanced"}

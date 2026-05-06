@@ -3,6 +3,8 @@ export interface DatasourceAuthCookie {
   provider: string
   returnPath?: string
   connectionId?: string
+  datasourceId?: string
+  authConfigId?: string
 }
 
 export interface SessionCookie {

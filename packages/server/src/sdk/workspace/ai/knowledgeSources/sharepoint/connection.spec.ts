@@ -309,4 +309,107 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
       })
     )
   })
+
+  it("refreshes delegated OAuth credentials with the refresh token", async () => {
+    jest.spyOn(sdk.datasources, "get").mockResolvedValue({
+      _id: datasourceId,
+      type: "datasource",
+      source: "REST",
+      config: {
+        authConfigs: [
+          {
+            _id: authConfigId,
+            type: RestAuthType.OAUTH2,
+            authType: "delegated_oauth",
+            url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            clientId: "client-id",
+            clientSecret: "secret",
+            refreshToken: "refresh-token",
+            grantType: OAuth2GrantType.AUTHORIZATION_CODE,
+            accessToken: "expired-token",
+            tokenType: "Bearer",
+            expiresAt: Date.now() - 60_000,
+          },
+        ],
+      },
+    } as Datasource)
+    jest.spyOn(sdk.datasources, "save").mockResolvedValue({} as any)
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "fresh-token",
+          refresh_token: "fresh-refresh-token",
+          token_type: "Bearer",
+          expires_in: 3600,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ value: [] }),
+      } as Response)
+
+    await fetchSharePointSitesByDatasourceAuthConfig(datasourceId, authConfigId)
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.any(URLSearchParams),
+      })
+    )
+    const body = fetchMock.mock.calls[0][1]!.body as URLSearchParams
+    expect(body.get("grant_type")).toBe("refresh_token")
+    expect(body.get("refresh_token")).toBe("refresh-token")
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("https://graph.microsoft.com/v1.0/sites?"),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer fresh-token",
+        }),
+      })
+    )
+  })
+
+  it("uses delegated guidance for delegated OAuth 403", async () => {
+    jest.spyOn(sdk.datasources, "get").mockResolvedValue({
+      _id: datasourceId,
+      type: "datasource",
+      source: "REST",
+      config: {
+        authConfigs: [
+          {
+            _id: authConfigId,
+            type: RestAuthType.OAUTH2,
+            authType: "delegated_oauth",
+            url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            clientId: "client-id",
+            clientSecret: "secret",
+            refreshToken: "refresh-token",
+            grantType: OAuth2GrantType.AUTHORIZATION_CODE,
+            accessToken: "token",
+            tokenType: "Bearer",
+            expiresAt: Date.now() + 60_000,
+          },
+        ],
+      },
+    } as Datasource)
+    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({}),
+    } as Response)
+
+    await expect(
+      fetchSharePointSitesByDatasourceAuthConfig(datasourceId, authConfigId)
+    ).rejects.toEqual(
+      expect.objectContaining({
+        message:
+          "Access denied by Microsoft Graph. Ensure delegated SharePoint permissions are granted.",
+      })
+    )
+  })
 })

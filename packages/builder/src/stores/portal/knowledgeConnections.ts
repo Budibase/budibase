@@ -3,6 +3,7 @@ import {
   Datasource,
   OAuth2RestAuthConfig,
   isOAuth2ClientCredentialsAuthConfig,
+  isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
 import { derived, Writable } from "svelte/store"
 import { datasources } from "../builder/datasources"
@@ -12,7 +13,7 @@ interface KnowledgeConnection {
   datasourceId: string
   authConfigId: string
   sourceType: "sharepoint"
-  authType: "client_credentials"
+  authType: "client_credentials" | "delegated_oauth"
   datasourceName: string
   authConfigName: string
 }
@@ -30,18 +31,30 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
       derived([datasources], ([$datasources]) => {
         const list = $datasources.rawList as Datasource[]
         const connections = list.flatMap(datasource => {
+          const isSharePointDatasource =
+            datasource.restTemplateId === "microsoft-sharepoint" ||
+            datasource.restTemplate === "Microsoft SharePoint"
+          if (!isSharePointDatasource) {
+            return []
+          }
           const authConfigs = (datasource.config?.authConfigs ||
             []) as OAuth2RestAuthConfig[]
           return authConfigs
-            .filter(config => isOAuth2ClientCredentialsAuthConfig(config))
+            .filter(
+              config =>
+                isOAuth2ClientCredentialsAuthConfig(config) ||
+                isOAuth2DelegatedAuthConfig(config)
+            )
             .map(config => ({
               _id: `${datasource._id}:${config._id}`,
               datasourceId: datasource._id!,
               authConfigId: config._id,
               sourceType: "sharepoint" as const,
-              authType: "client_credentials" as const,
+              authType: isOAuth2DelegatedAuthConfig(config)
+                ? ("delegated_oauth" as const)
+                : ("client_credentials" as const),
               datasourceName: datasource.name || "Datasource",
-              authConfigName: config.name || "OAuth2 config",
+              authConfigName: config.account || config.name || "OAuth2 config",
             }))
         })
         return { connections }

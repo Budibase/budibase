@@ -152,6 +152,7 @@
     }
 
     return {
+      ...data,
       _id: data._id || crypto.randomUUID(),
       type: RestAuthType.OAUTH2,
       name: data.name!,

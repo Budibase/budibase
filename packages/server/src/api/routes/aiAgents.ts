@@ -67,7 +67,7 @@ const aiRagBuilderAdminRoutes = endpointGroupList
 
 aiRagBuilderAdminRoutes
   .get(
-    "/api/agent/knowledge-sources/sharepoint/connect",
+    "/api/datasource/sharepoint/connect",
     ai.startSharePointAuth
   )
   .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledge)
@@ -102,6 +102,6 @@ aiRagBuilderAdminRoutes
   )
 
 publicRoutes.get(
-  "/api/agent/knowledge-sources/sharepoint/callback",
+  "/api/datasource/sharepoint/callback",
   ai.completeSharePointAuth
 )

@@ -1,5 +1,24 @@
-import { cache, configs, constants, env, utils } from "@budibase/backend-core"
-import { DatasourceAuthCookie, UserCtx } from "@budibase/types"
+import {
+  cache,
+  configs,
+  constants,
+  context,
+  encryption,
+  env,
+  utils,
+} from "@budibase/backend-core"
+import {
+  Datasource,
+  DatasourceAuthCookie,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  OAuth2RestAuthConfig,
+  RestAuthType,
+  SourceName,
+  UserCtx,
+  isOAuth2DelegatedAuthConfig,
+} from "@budibase/types"
+import sdk from "../../../sdk"
 
 const DEFAULT_SCOPE = env.RAG_SHAREPOINT_DEFAULT_SCOPE
 const STATE_CACHE_TTL_SECONDS = 600
@@ -13,6 +32,24 @@ export const calculateBufferedTokenExpiry = (expiresInSeconds: number) => {
     0
   )
   return Date.now() + bufferedTtlSeconds * 1000
+}
+
+interface SharePointOAuthState {
+  appId?: string
+  provider?: string
+  datasourceId?: string
+  authConfigId?: string
+}
+
+interface DelegatedSharePointCredentials {
+  account: string
+  accessToken: string
+  refreshToken: string
+  tokenType: string
+  expiresAt: number
+  tokenEndpoint: string
+  clientId: string
+  clientSecret: string
 }
 
 const getMicrosoftConfig = () => {
@@ -36,28 +73,37 @@ const appendQueryParam = (path: string, key: string, value: string) => {
 
 export async function startSharePointAuth(ctx: UserCtx<void, void>) {
   const appId = String(ctx.query.appId || "").trim()
+  const datasourceId = String(ctx.query.datasourceId || "").trim()
+  const authConfigId = String(ctx.query.authConfigId || "").trim()
   const returnPath =
     typeof ctx.query.returnPath === "string" ? ctx.query.returnPath : undefined
 
   if (!appId) {
     ctx.throw(400, "appId query param not present.")
   }
+  if (!datasourceId) {
+    ctx.throw(400, "datasourceId query param not present.")
+  }
   console.log("Starting SharePoint OAuth flow", {
     appId,
+    datasourceId,
+    hasAuthConfigId: !!authConfigId,
     hasReturnPath: !!returnPath,
   })
 
   const { clientId, tenantId } = getMicrosoftConfig()
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
-  const callbackUrl = `${platformUrl}/api/agent/knowledge-sources/sharepoint/callback`
+  const callbackUrl = `${platformUrl}/api/datasource/sharepoint/callback`
 
   const state = utils.newid()
   await cache.store(
     `datasource:${MICROSOFT_PROVIDER}:state:${state}`,
     {
       appId,
+      datasourceId,
+      authConfigId,
       provider: MICROSOFT_PROVIDER,
-    },
+    } satisfies SharePointOAuthState,
     STATE_CACHE_TTL_SECONDS
   )
 
@@ -67,6 +113,8 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
       provider: MICROSOFT_PROVIDER,
       appId,
       returnPath,
+      datasourceId,
+      authConfigId,
     } satisfies DatasourceAuthCookie,
     constants.Cookie.DatasourceAuth
   )
@@ -85,6 +133,80 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
   ctx.redirect(authorizeUrl.toString())
 }
 
+const isSharePointDatasource = (datasource: Datasource) => {
+  return (
+    datasource.source === SourceName.REST &&
+    (datasource.restTemplateId === "microsoft-sharepoint" ||
+      datasource.restTemplate === "Microsoft SharePoint")
+  )
+}
+
+export const upsertDelegatedSharePointAuthConfig = async (
+  appId: string,
+  datasourceId: string,
+  authConfigId: string | undefined,
+  credentials: DelegatedSharePointCredentials
+) => {
+  return context.doInWorkspaceContext(appId, async () => {
+    const datasource = await sdk.datasources.get(datasourceId)
+    if (!isSharePointDatasource(datasource)) {
+      throw new Error(
+        "SharePoint OAuth can only be used with SharePoint datasources"
+      )
+    }
+
+    const authConfigs = (
+      (datasource.config?.authConfigs || []) as OAuth2RestAuthConfig[]
+    ).filter(Boolean)
+    const account = credentials.account.trim() || "unknown"
+    const matchingConfig =
+      (authConfigId
+        ? authConfigs.find(config => config._id === authConfigId)
+        : undefined) ||
+      authConfigs.find(
+        config =>
+          isOAuth2DelegatedAuthConfig(config) &&
+          config.account?.toLowerCase() === account.toLowerCase()
+      )
+    const nextAuthConfig: OAuth2RestAuthConfig = {
+      ...(matchingConfig || {}),
+      _id: matchingConfig?._id || `auth_${utils.newid()}`,
+      type: RestAuthType.OAUTH2,
+      authType: "delegated_oauth",
+      name: matchingConfig?.name || `Microsoft SharePoint (${account})`,
+      account,
+      url: credentials.tokenEndpoint,
+      clientId: credentials.clientId,
+      clientSecret: encryption.encrypt(credentials.clientSecret),
+      method: OAuth2CredentialsMethod.BODY,
+      grantType: OAuth2GrantType.AUTHORIZATION_CODE,
+      scope: DEFAULT_SCOPE,
+      accessToken: encryption.encrypt(credentials.accessToken),
+      refreshToken: encryption.encrypt(credentials.refreshToken),
+      tokenType: credentials.tokenType,
+      expiresAt: credentials.expiresAt,
+    }
+    const nextAuthConfigs = matchingConfig
+      ? authConfigs.map(config =>
+          config._id === matchingConfig._id ? nextAuthConfig : config
+        )
+      : [...authConfigs, nextAuthConfig]
+
+    await sdk.datasources.save({
+      ...datasource,
+      config: {
+        ...datasource.config,
+        authConfigs: nextAuthConfigs,
+      },
+    })
+
+    return {
+      authConfigId: nextAuthConfig._id,
+      reusedExistingConnection: !!matchingConfig,
+    }
+  })
+}
+
 export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   const authStateCookie = utils.getCookie<DatasourceAuthCookie>(
     ctx,
@@ -97,14 +219,15 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   }
   const statePayload = (await cache.get(
     `datasource:${MICROSOFT_PROVIDER}:state:${state}`
-  )) as { appId?: string; provider?: string }
+  )) as SharePointOAuthState
   await cache.destroy(`datasource:${MICROSOFT_PROVIDER}:state:${state}`)
   const stateAppId =
     typeof statePayload?.appId === "string" ? statePayload.appId.trim() : ""
   if (
     !statePayload ||
     !stateAppId ||
-    statePayload.provider !== MICROSOFT_PROVIDER
+    statePayload.provider !== MICROSOFT_PROVIDER ||
+    !statePayload.datasourceId
   ) {
     throw new Error("Microsoft OAuth state is invalid or expired")
   }
@@ -130,7 +253,7 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
 
   const { clientId, clientSecret, tenantId } = getMicrosoftConfig()
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
-  const callbackUrl = `${platformUrl}/api/agent/knowledge-sources/sharepoint/callback`
+  const callbackUrl = `${platformUrl}/api/datasource/sharepoint/callback`
   const tokenEndpoint = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`
 
   const tokenResponse = await fetch(tokenEndpoint, {
@@ -202,19 +325,31 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
       error,
     })
   }
-  // TODO(rag/sharepoint/reuse-api-credentials):
-  // Persist delegated OAuth credentials onto datasource OAuth2 auth configs
-  // (datasourceId/authConfigId), reusing existing credentials by account where
-  // appropriate. This replaces all legacy AgentKnowledgeSourceConnection usage.
+  const { reusedExistingConnection, authConfigId } =
+    await upsertDelegatedSharePointAuthConfig(
+      appId,
+      statePayload.datasourceId!,
+      statePayload.authConfigId,
+      {
+        account,
+        accessToken,
+        refreshToken,
+        tokenType,
+        tokenEndpoint,
+        clientId,
+        clientSecret,
+        expiresAt: calculateBufferedTokenExpiry(expiresIn),
+      }
+    )
   console.log("SharePoint delegated OAuth callback received", {
     appId,
+    datasourceId: statePayload.datasourceId,
+    authConfigId,
     account,
     hasAccessToken: !!accessToken,
     hasRefreshToken: !!refreshToken,
     tokenEndpoint,
-    expiresAt: calculateBufferedTokenExpiry(expiresIn),
   })
-  const reusedExistingConnection = false
   console.log("Completed SharePoint OAuth flow", {
     appId,
     connected: true,
