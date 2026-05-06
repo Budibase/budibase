@@ -59,8 +59,7 @@ describe("Lead and incident intake automations", () => {
                   row: {
                     tableId: table._id,
                     name: "VIP {{ loop.currentItem }}",
-                    description:
-                      "Region {{ steps.[Normalise Region].stdout }}",
+                    description: "Region {{ steps.[Normalise Region].stdout }}",
                   },
                 }),
               condition: {
@@ -73,8 +72,7 @@ describe("Lead and incident intake automations", () => {
                   row: {
                     tableId: table._id,
                     name: "Lead {{ loop.currentItem }}",
-                    description:
-                      "Region {{ steps.[Normalise Region].stdout }}",
+                    description: "Region {{ steps.[Normalise Region].stdout }}",
                   },
                 }),
               condition: {
@@ -162,8 +160,6 @@ describe("Lead and incident intake automations", () => {
 
     expect(results.steps[1].outputs.value).toBe("needs-review")
     expect(results.state?.reviewStatus).toBe("needs-review")
-    expect(results.steps[4].outputs.row.description).toBe(
-      "Status needs-review"
-    )
+    expect(results.steps[4].outputs.row.description).toBe("Status needs-review")
   })
 })

@@ -125,8 +125,7 @@ describe("AI action automations", () => {
 
     expect(results.steps[0].outputs).toEqual({
       success: false,
-      response:
-        "Generate Text AI Step Failed: AI did not return any content.",
+      response: "Generate Text AI Step Failed: AI did not return any content.",
     })
   })
 
