@@ -9,15 +9,16 @@ describe("Branching automations", () => {
 
   beforeAll(async () => {
     await config.init()
+    await automation.init()
   })
 
   beforeEach(async () => {
-    await automation.init()
     table = await config.createTable()
     await config.createRow()
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 

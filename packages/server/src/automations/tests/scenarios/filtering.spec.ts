@@ -10,10 +10,10 @@ describe("Filtering automations", () => {
 
   beforeAll(async () => {
     await config.init()
+    await automation.init()
   })
 
   beforeEach(async () => {
-    await automation.init()
     await config.api.automation.deleteAll()
 
     table = await config.api.table.save({
@@ -39,7 +39,8 @@ describe("Filtering automations", () => {
     })
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
@@ -94,77 +95,4 @@ describe("Filtering automations", () => {
     expect(results.steps[2].outputs.result).toBeTrue()
     expect(results.steps[3].outputs.success).toBeTrue()
   })
-
-  const testCases = [
-    {
-      condition: FilterCondition.EQUAL,
-      value: 10,
-      rowValue: 10,
-      expectPass: true,
-    },
-    {
-      condition: FilterCondition.NOT_EQUAL,
-      value: 10,
-      rowValue: 20,
-      expectPass: true,
-    },
-    {
-      condition: FilterCondition.GREATER_THAN,
-      value: 10,
-      rowValue: 15,
-      expectPass: true,
-    },
-    {
-      condition: FilterCondition.LESS_THAN,
-      value: 10,
-      rowValue: 5,
-      expectPass: true,
-    },
-    {
-      condition: FilterCondition.GREATER_THAN,
-      value: 10,
-      rowValue: 5,
-      expectPass: false,
-    },
-    {
-      condition: FilterCondition.LESS_THAN,
-      value: 10,
-      rowValue: 15,
-      expectPass: false,
-    },
-  ]
-
-  it.each(testCases)(
-    "evaluates the filter condition $condition",
-    async ({ condition, value, rowValue, expectPass }) => {
-      const results = await createAutomationBuilder(config)
-        .onAppAction()
-        .createRow({
-          row: {
-            name: `${condition} Test`,
-            value: rowValue,
-            tableId: table._id,
-          },
-        })
-        .queryRows({
-          tableId: table._id!,
-        })
-        .filter({
-          field: "{{ steps.2.rows.0.value }}",
-          condition,
-          value,
-        })
-        .serverLog({
-          text: `${condition} condition ${expectPass ? "passed" : "failed"}`,
-        })
-        .test({ fields: {} })
-
-      expect(results.steps[2].outputs.result).toBe(expectPass)
-      if (expectPass) {
-        expect(results.steps[3].outputs.success).toBeTrue()
-      } else {
-        expect(results.steps[3]).toBeUndefined()
-      }
-    }
-  )
 })

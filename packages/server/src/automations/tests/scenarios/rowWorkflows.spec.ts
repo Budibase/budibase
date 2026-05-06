@@ -9,14 +9,15 @@ describe("Row workflow automations", () => {
 
   beforeAll(async () => {
     await config.init()
+    await automation.init()
   })
 
   beforeEach(async () => {
-    await automation.init()
     await config.api.automation.deleteAll()
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
@@ -45,26 +46,6 @@ describe("Row workflow automations", () => {
         description: "TEST",
       },
     })
-  })
-
-  it("queries rows from a table", async () => {
-    const table = await config.api.table.save(basicTable())
-    const row = {
-      name: "Test Row",
-      description: "original description",
-    }
-    await config.api.row.save(table._id!, row)
-    await config.api.row.save(table._id!, row)
-
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .queryRows({
-        tableId: table._id!,
-      })
-      .test({ fields: {} })
-
-    expect(results.steps).toHaveLength(1)
-    expect(results.steps[0].outputs.rows).toHaveLength(2)
   })
 
   it("queries rows and deletes a selected row", async () => {

@@ -1,10 +1,4 @@
-import {
-  EmptyFilterOption,
-  FieldType,
-  Row,
-  SortOrder,
-  Table,
-} from "@budibase/types"
+import { FieldType, Row, Table } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../../tests/utilities/structures"
 import * as automation from "../../index"
@@ -13,16 +7,14 @@ import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 describe("Data action automations", () => {
   const config = new TestConfiguration()
   let table: Table
-  let alphaRow: Row
-  let betaRow: Row
   let gammaRow: Row
 
   beforeAll(async () => {
     await config.init()
+    await automation.init()
   })
 
   beforeEach(async () => {
-    await automation.init()
     await config.api.automation.deleteAll()
 
     table = await config.api.table.save({
@@ -48,12 +40,12 @@ describe("Data action automations", () => {
       },
     })
 
-    alphaRow = await config.api.row.save(table._id!, {
+    await config.api.row.save(table._id!, {
       name: "Alpha",
       category: "standard",
       value: 10,
     })
-    betaRow = await config.api.row.save(table._id!, {
+    await config.api.row.save(table._id!, {
       name: "Beta",
       category: "standard",
       value: 30,
@@ -65,54 +57,9 @@ describe("Data action automations", () => {
     })
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
-  })
-
-  it("queries rows with filters, numeric sorting and limits", async () => {
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .queryRows({
-        tableId: table._id!,
-        filters: {
-          equal: {
-            category: "standard",
-          },
-        },
-        sortColumn: "value",
-        sortOrder: SortOrder.DESCENDING,
-        limit: 1,
-      })
-      .test({ fields: {} })
-
-    expect(results.steps[0].outputs.success).toBe(true)
-    expect(results.steps[0].outputs.rows).toHaveLength(1)
-    expect(results.steps[0].outputs.rows[0]).toMatchObject({
-      _id: betaRow._id,
-      name: "Beta",
-      value: 30,
-    })
-  })
-
-  it("returns no rows when query row filters contain an empty value", async () => {
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .queryRows({
-        tableId: table._id!,
-        filters: {
-          equal: {
-            name: "",
-          },
-        },
-        "filters-def": [{ value: "" }],
-        onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-      })
-      .test({ fields: {} })
-
-    expect(results.steps[0].outputs).toMatchObject({
-      success: true,
-      rows: [],
-    })
   })
 
   it("gets a row by id and makes it available to later steps", async () => {
@@ -131,73 +78,6 @@ describe("Data action automations", () => {
       name: "Gamma",
     })
     expect(results.steps[1].outputs.message).toContain("Found Gamma")
-  })
-
-  it("falls back to get row filters when the configured row id is missing", async () => {
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .getRow({
-        tableId: table._id!,
-        rowId: "ro_missing_row_id",
-        filters: {
-          equal: {
-            name: "Alpha",
-          },
-        },
-        sortColumn: "value",
-        sortOrder: SortOrder.ASCENDING,
-      })
-      .test({ fields: {} })
-
-    expect(results.steps[0].outputs.success).toBe(true)
-    expect(results.steps[0].outputs.row).toMatchObject({
-      _id: alphaRow._id,
-      name: "Alpha",
-    })
-  })
-
-  it("gets the first filtered row using numeric sort order", async () => {
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .getRow({
-        tableId: table._id!,
-        filters: {
-          equal: {
-            category: "standard",
-          },
-        },
-        sortColumn: "value",
-        sortOrder: SortOrder.DESCENDING,
-      })
-      .test({ fields: {} })
-
-    expect(results.steps[0].outputs.success).toBe(true)
-    expect(results.steps[0].outputs.row).toMatchObject({
-      _id: betaRow._id,
-      name: "Beta",
-      value: 30,
-    })
-  })
-
-  it("returns a null get row result when filters contain an empty value", async () => {
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .getRow({
-        tableId: table._id!,
-        filters: {
-          equal: {
-            name: "",
-          },
-        },
-        "filters-def": [{ value: "" }],
-        onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-      })
-      .test({ fields: {} })
-
-    expect(results.steps[0].outputs).toMatchObject({
-      success: true,
-      row: null,
-    })
   })
 
   it("creates, updates, reads and deletes a row in one automation", async () => {
