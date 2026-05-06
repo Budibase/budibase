@@ -11,12 +11,7 @@
   import { type Writable } from "svelte/store"
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
-  import type {
-    Automation,
-    AutomationStepResult,
-    AutomationTriggerResult,
-    Branch,
-  } from "@budibase/types"
+  import type { Automation, Branch } from "@budibase/types"
   import { type DragView } from "../FlowChartDnD"
 
   type BranchResult = {
@@ -30,9 +25,6 @@
   export let step
   export let automation: Automation | undefined
   export let viewMode: ViewMode = ViewMode.EDITOR
-  export let onStepSelect: (
-    _data: AutomationStepResult | AutomationTriggerResult
-  ) => void = () => {}
 
   const view = getContext<Writable<DragView>>("draggableView")
   const focusNodeRequest =
@@ -121,9 +113,10 @@
     on:click={e => {
       e.stopPropagation()
       contextMenuStore.close()
-      if (viewMode === ViewMode.LOGS && logStepData) {
-        onStepSelect(logStepData)
-      } else if (branch) {
+      if (viewMode === ViewMode.LOGS) {
+        return
+      }
+      if (branch) {
         automationStore.actions.selectBranchNode({
           nodeId: branchNodeId,
           stepId: step.id,
