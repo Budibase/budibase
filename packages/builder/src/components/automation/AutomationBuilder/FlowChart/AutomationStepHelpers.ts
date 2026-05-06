@@ -36,7 +36,12 @@ import {
   renderBranches,
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
-import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
+import {
+  ANCHOR,
+  BRANCH,
+  STEP,
+  type FlowLayoutDirection,
+} from "./FlowCanvas/FlowGeometry"
 import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
 
 // -----------------
@@ -392,13 +397,14 @@ export interface DagreLayoutOptions {
   ranksep?: number
   nodesep?: number
   compactLoops?: boolean
+  layoutDirection?: FlowLayoutDirection
 }
 
 export const dagreLayoutAutomation = (
   graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
-  const rankdir = "LR"
+  const rankdir = opts?.layoutDirection ?? "LR"
   const ranksep = opts?.ranksep ?? 260
   const nodesep = opts?.nodesep ?? 220
   const compactLoops = opts?.compactLoops !== false
@@ -464,7 +470,7 @@ export const dagreLayoutAutomation = (
       }
     })
 
-  if (compactLoops) {
+  if (compactLoops && rankdir === "LR") {
     applyLoopClearance(graph)
   }
   return graph

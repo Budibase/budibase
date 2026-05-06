@@ -14,6 +14,12 @@
     ? block.inputs.children.length
     : 0
   $: viewMode = $automationStore.viewMode
+  const layoutDirection = getContext<Writable<"LR" | "TB">>(
+    "flowLayoutDirection"
+  )
+  $: targetPosition = $layoutDirection === "TB" ? Position.Top : Position.Left
+  $: sourcePosition =
+    $layoutDirection === "TB" ? Position.Bottom : Position.Right
   const focusNodeRequest =
     getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
       "focusNodeRequest"
@@ -42,14 +48,14 @@
   isConnectable={false}
   class="custom-handle"
   type="target"
-  position={Position.Left}
+  position={targetPosition}
 />
 
 <Handle
   isConnectable={false}
   class="custom-handle"
   type="source"
-  position={Position.Right}
+  position={sourcePosition}
 />
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

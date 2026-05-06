@@ -13,7 +13,13 @@ import type {
   FlowBlockContext,
   FlowBlockPath,
 } from "@/types/automations"
-import { SUBFLOW, STEP, BRANCH, LOOP } from "./FlowGeometry"
+import {
+  SUBFLOW,
+  STEP,
+  BRANCH,
+  LOOP,
+  type FlowLayoutDirection,
+} from "./FlowGeometry"
 import {
   stepNode,
   anchorNode,
@@ -29,6 +35,7 @@ export interface GraphBuildDeps {
   blockRefs: Record<string, BlockRef>
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
+  layoutDirection: FlowLayoutDirection
 }
 
 enum BranchMode {
@@ -112,7 +119,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
 
-  const isLR = true
+  const isLR = deps.layoutDirection === "LR"
 
   const centers = computeLaneCenters(branches.length, mode, {
     laneWidth: visuals.laneWidth,
@@ -451,7 +458,7 @@ export const renderLoopV2Container = (
     loopStep.inputs?.children || []
   )
   // Follow the global layout inside the loop container
-  const isLR = true
+  const isLR = deps.layoutDirection === "LR"
 
   // Pre-compute container dimensions
   let containerWidth = 400
@@ -666,8 +673,10 @@ export const renderLoopV2Container = (
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
     // Place exit anchor at container end according to layout
-    const exitAnchorY = baseY
-    const exitAnchorX = Math.max(containerWidth - 40, baseX + stepWidth)
+    const exitAnchorY = isLR ? baseY : innerY
+    const exitAnchorX = isLR
+      ? Math.max(containerWidth - 40, baseX + stepWidth)
+      : baseX
     deps.newNodes.push(
       anchorNode(exitAnchorId, baseId, {
         x: exitAnchorX,

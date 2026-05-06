@@ -3,6 +3,8 @@
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import { ViewMode, type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
+  import { getContext } from "svelte"
+  import type { Writable } from "svelte/store"
   import { enrichLog } from "../../AutomationStepHelpers"
   import { STEP, SUBFLOW } from "../FlowGeometry"
   import {
@@ -11,6 +13,9 @@
   } from "@budibase/types"
 
   export let data: BranchNodeData
+  const layoutDirection = getContext<Writable<"LR" | "TB">>(
+    "flowLayoutDirection"
+  )
 
   // unwrap data passed from SvelteFlow
   $: block = data.block
@@ -22,6 +27,13 @@
   $: handleOffset = isSubflow
     ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
     : 0
+  $: isVertical = $layoutDirection === "TB"
+  $: targetPosition = isVertical ? Position.Top : Position.Left
+  $: sourcePosition = isVertical ? Position.Bottom : Position.Right
+  $: targetHandleStyle =
+    isSubflow && !isVertical ? `left: ${handleOffset - 3}px;` : undefined
+  $: sourceHandleStyle =
+    isSubflow && !isVertical ? `right: ${handleOffset - 3}px;` : undefined
 
   // Handle step selection in logs mode (open details panel)
   function handleStepSelect(
@@ -47,8 +59,8 @@
     isConnectable={false}
     class="custom-handle"
     type="target"
-    position={Position.Left}
-    style={isSubflow ? `left: ${handleOffset - 3}px;` : undefined}
+    position={targetPosition}
+    style={targetHandleStyle}
   />
   <div class="branch-container">
     <BranchNode
@@ -63,7 +75,7 @@
     isConnectable={false}
     class="custom-handle"
     type="source"
-    position={Position.Right}
-    style={isSubflow ? `right: ${handleOffset - 3}px;` : undefined}
+    position={sourcePosition}
+    style={sourceHandleStyle}
   />
 </div>

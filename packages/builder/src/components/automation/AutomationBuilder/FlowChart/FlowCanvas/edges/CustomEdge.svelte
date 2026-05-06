@@ -45,6 +45,9 @@
   $: automation = $selectedAutomation?.data
 
   const view = getContext<Writable<DragView>>("draggableView")
+  const layoutDirection = getContext<Writable<"LR" | "TB">>(
+    "flowLayoutDirection"
+  )
   const flow = useSvelteFlow()
 
   const deriveBlockContext = (
@@ -84,10 +87,15 @@
   $: isBranchTarget = target?.startsWith("branch-")
   $: isAnchorTarget = target?.startsWith("anchor-")
   $: isSubflowEdge = data.isSubflowEdge === true
+  $: isLR = $layoutDirection !== "TB"
 
   $: if (isAnchorTarget) {
-    labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-    labelY = sourceY ?? 0
+    labelX = isLR
+      ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+      : (sourceX ?? 0)
+    labelY = isLR
+      ? (sourceY ?? 0)
+      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
   }
 
   $: path = isAnchorTarget
@@ -145,15 +153,20 @@
     Math.max(min, Math.min(max, v))
 
   $: dx = Math.abs((targetX ?? 0) - (sourceX ?? 0))
-  $: dzWidth = clamp(Math.round(dx - 140), 160, 320)
+  $: dy = Math.abs((targetY ?? 0) - (sourceY ?? 0))
+  $: dzWidth = clamp(Math.round((isLR ? dx : dy) - 140), 160, 320)
   $: dzOffsetY = 0
 
   // Pre-branch label sizing
-  $: preDzWidth = clamp(Math.round(dx - 160), 160, 300)
+  $: preDzWidth = clamp(Math.round((isLR ? dx : dy) - 160), 160, 300)
   $: preDzOffsetY = 0
 
-  $: preBranchLabelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-  $: preBranchLabelY = sourceY ?? 0
+  $: preBranchLabelX = isLR
+    ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+    : (sourceX ?? 0)
+  $: preBranchLabelY = isLR
+    ? (sourceY ?? 0)
+    : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
 
   const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
     if (!ctx) {

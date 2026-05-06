@@ -38,6 +38,7 @@
     NODE_SPACING,
     DEFAULT_NODE_WIDTH,
     DEFAULT_NODE_HEIGHT,
+    type FlowLayoutDirection,
   } from "./FlowCanvas/FlowGeometry"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
@@ -88,6 +89,8 @@
   let preserveViewport = false
   let visibleSelectionRequest: string | undefined
   let lastVisibleSelectionCheck: string | undefined
+  let layoutDirection: FlowLayoutDirection = "LR"
+  let flowLayoutDirection = writable<FlowLayoutDirection>(layoutDirection)
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
@@ -114,8 +117,10 @@
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
   setContext("focusNodeRequest", focusNodeRequest)
+  setContext("flowLayoutDirection", flowLayoutDirection)
 
-  $: updateGraph(blocks)
+  $: updateGraph(blocks, layoutDirection)
+  $: flowLayoutDirection.set(layoutDirection)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -135,7 +140,10 @@
 
   $: viewMode = $automationStore.viewMode
 
-  const updateGraph = async (blocks: AutomationBlock[]) => {
+  const updateGraph = async (
+    blocks: AutomationBlock[],
+    layoutDirection: FlowLayoutDirection
+  ) => {
     if (!preserveViewport) {
       initialViewportApplied = false
     }
@@ -152,6 +160,7 @@
       blockRefs,
       newNodes,
       newEdges,
+      layoutDirection,
     }
 
     // Build graph via helpers
@@ -163,6 +172,7 @@
         ranksep: xSpacing,
         nodesep: NODE_SPACING,
         compactLoops: true,
+        layoutDirection,
       }
     )
 
@@ -227,8 +237,15 @@
 
     // These assume the trigger is at x=0, y=0
     const paneHeight = paneRect.height
-    const x = nodeOffset - triggerNode.position.x
-    const y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
+    const paneWidth = paneRect.width
+    const x =
+      layoutDirection === "LR"
+        ? nodeOffset - triggerNode.position.x
+        : paneWidth / 2 - triggerNode.position.x - DEFAULT_NODE_WIDTH / 2
+    const y =
+      layoutDirection === "LR"
+        ? paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
+        : nodeOffset - triggerNode.position.y
 
     setViewport({ x, y, zoom: 1 }, { duration: 0 })
   }
@@ -253,10 +270,20 @@
     const safeZoom = Math.min(Math.max(desiredZoom, MIN_ZOOM), MAX_ZOOM)
 
     if (direction === -1 || direction === 1) {
-      const yStride = (nodeHeight + NODE_SPACING) * safeZoom
-      const y = currentViewport.y - direction * yStride
+      const stride =
+        layoutDirection === "LR"
+          ? (nodeWidth + NODE_SPACING) * safeZoom
+          : (nodeHeight + NODE_SPACING) * safeZoom
+      const x =
+        layoutDirection === "LR"
+          ? currentViewport.x - direction * stride
+          : currentViewport.x
+      const y =
+        layoutDirection === "LR"
+          ? currentViewport.y
+          : currentViewport.y - direction * stride
       setViewport(
-        { x: currentViewport.x, y, zoom: safeZoom },
+        { x, y, zoom: safeZoom },
         { duration: VIEWPORT_ANIMATION_DURATION }
       )
       return
@@ -286,12 +313,20 @@
 
     const paneRect = paneEl.getBoundingClientRect()
     const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
+    const nodeHeight = targetNode.height || DEFAULT_NODE_HEIGHT
+    const margin = 24
     const nodeRight =
       targetNode.position.x * currentViewport.zoom +
       currentViewport.x +
       nodeWidth * currentViewport.zoom
-    const margin = 24
-    const overflow = nodeRight + margin - paneRect.width
+    const nodeBottom =
+      targetNode.position.y * currentViewport.zoom +
+      currentViewport.y +
+      nodeHeight * currentViewport.zoom
+    const overflow =
+      layoutDirection === "LR"
+        ? nodeRight + margin - paneRect.width
+        : nodeBottom + margin - paneRect.height
 
     if (overflow <= 0) {
       return
@@ -299,12 +334,26 @@
 
     setViewport(
       {
-        x: currentViewport.x - overflow,
-        y: currentViewport.y,
+        x:
+          layoutDirection === "LR"
+            ? currentViewport.x - overflow
+            : currentViewport.x,
+        y:
+          layoutDirection === "LR"
+            ? currentViewport.y
+            : currentViewport.y - overflow,
         zoom: currentViewport.zoom,
       },
       { duration: VIEWPORT_ANIMATION_DURATION }
     )
+  }
+
+  const setLayoutDirection = (direction: FlowLayoutDirection) => {
+    if (direction === layoutDirection) {
+      return
+    }
+    layoutDirection = direction
+    preserveViewport = false
   }
 
   const refresh = () => {
@@ -460,6 +509,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="wrapper"
+      class:vertical-layout={layoutDirection === "TB"}
       bind:this={paneEl}
       on:pointermove={handleCanvasPointerMove}
       on:mousedown={() => {
@@ -482,7 +532,11 @@
         onMove={handleMove}
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
-        <FlowControls historyStore={automationHistoryStore} />
+        <FlowControls
+          historyStore={automationHistoryStore}
+          {layoutDirection}
+          on:layout={e => setLayoutDirection(e.detail)}
+        />
       </SvelteFlow>
     </div>
   </div>
@@ -599,6 +653,14 @@
   .root :global(.blockSection) {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .vertical-layout :global(.svelte-flow__node-step-node .block),
+  .vertical-layout :global(.svelte-flow__node-step-node .block .wrap),
+  .vertical-layout
+    :global(.svelte-flow__node-step-node .block .wrap .block-content),
+  .vertical-layout :global(.svelte-flow__node-branch-node .block) {
+    width: 200px;
   }
 
   .toggle-active :global(.spectrum-Switch-label) {
