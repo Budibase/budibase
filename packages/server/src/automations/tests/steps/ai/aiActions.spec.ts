@@ -14,10 +14,10 @@ describe("AI action automations", () => {
 
   beforeAll(async () => {
     await config.init()
+    await automation.init()
   })
 
   beforeEach(async () => {
-    await automation.init()
     await config.api.automation.deleteAll()
     resetEnv = setCoreEnv({ SELF_HOSTED: false })
     cleanupDefaultAIConfig = await setupDefaultCompletionsAIConfig(config)
@@ -30,7 +30,8 @@ describe("AI action automations", () => {
     nock.cleanAll()
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
