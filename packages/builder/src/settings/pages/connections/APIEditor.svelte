@@ -29,6 +29,7 @@
   } from "@/dataBinding"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import {
+    ActionMenu,
     Button,
     Input,
     Layout,
@@ -40,6 +41,7 @@
     Select,
     Toggle,
     notifications,
+    MenuItem,
   } from "@budibase/bbui"
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
@@ -350,6 +352,26 @@
       returnPath: window.location.pathname,
     })
     window.location.href = `/api/datasource/sharepoint/connect?${query.toString()}`
+  }
+
+  const reconnectSharePointDelegatedOAuth = (authConfigId: string) => {
+    if (!datasource?._id || !$appStore.appId) {
+      notifications.error(
+        "Save this SharePoint connection before connecting OAuth"
+      )
+      return
+    }
+    const query = new URLSearchParams({
+      appId: $appStore.appId,
+      datasourceId: datasource._id,
+      authConfigId,
+      returnPath: window.location.pathname,
+    })
+    window.location.href = `/api/datasource/sharepoint/connect?${query.toString()}`
+  }
+
+  const isDelegatedSharePointOAuth = (auth: RestAuthConfig) => {
+    return auth.type === RestAuthType.OAUTH2 && auth.authType === "delegated_oauth"
   }
 
   const createAuthConfig = (
@@ -776,14 +798,33 @@
                       on:update={e => onAuthConfigUpdate(e.detail)}
                     />
                   {:else if auth.type === RestAuthType.OAUTH2}
-                    <OAuth2Editor
-                      bind:this={authEditors[i]}
-                      config={auth}
-                      existingConfigs={authConfigs.filter(
-                        c => c.type === RestAuthType.OAUTH2
-                      )}
-                      on:update={e => onAuthConfigUpdate(e.detail)}
-                    />
+                    {#if isDelegatedSharePointOAuth(auth)}
+                      <Layout gap="S" noPadding>
+                        <Input
+                          label="Display name"
+                          value={auth.name}
+                          on:change={e =>
+                            onAuthConfigUpdate({ ...auth, name: e.detail })
+                          }
+                        />
+                        <Button
+                          quiet
+                          secondary
+                          on:click={() => reconnectSharePointDelegatedOAuth(auth._id)}
+                        >
+                          Reconnect
+                        </Button>
+                      </Layout>
+                    {:else}
+                      <OAuth2Editor
+                        bind:this={authEditors[i]}
+                        config={auth}
+                        existingConfigs={authConfigs.filter(
+                          c => c.type === RestAuthType.OAUTH2
+                        )}
+                        on:update={e => onAuthConfigUpdate(e.detail)}
+                      />
+                    {/if}
                   {/if}
                   {#if isDatasource}
                     <div>
@@ -803,26 +844,30 @@
 
           {#if isDatasource}
             <div>
-              <Button
-                quiet
-                secondary
-                disabled={!canAddConfig}
-                on:click={() => addAuthConfig(RestAuthType.BASIC)}
-              >
-                Add authentication
-              </Button>
+              <ActionMenu align="left" widthMode="fixed-to-anchor">
+                <svelte:fragment slot="control" let:open>
+                  <div class:active={open}>
+                    <Button quiet secondary disabled={!canAddConfig}>
+                      Add authentication
+                    </Button>
+                  </div>
+                </svelte:fragment>
+                <MenuItem on:click={() => addAuthConfig(RestAuthType.BASIC)}>
+                  Basic
+                </MenuItem>
+                <MenuItem on:click={() => addAuthConfig(RestAuthType.BEARER)}>
+                  Bearer
+                </MenuItem>
+                <MenuItem on:click={() => addAuthConfig(RestAuthType.OAUTH2)}>
+                  OAuth2 (Client credentials)
+                </MenuItem>
+                {#if isSharePointDatasource && !isNewConnection}
+                  <MenuItem on:click={startSharePointDelegatedOAuth}>
+                    Connect Microsoft account
+                  </MenuItem>
+                {/if}
+              </ActionMenu>
             </div>
-            {#if isSharePointDatasource && !isNewConnection}
-              <div>
-                <Button
-                  quiet
-                  secondary
-                  on:click={startSharePointDelegatedOAuth}
-                >
-                  Connect Microsoft account
-                </Button>
-              </div>
-            {/if}
           {/if}
         </Layout>
       {:else if mode === "advanced"}
