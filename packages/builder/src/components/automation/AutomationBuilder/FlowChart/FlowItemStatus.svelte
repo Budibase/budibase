@@ -239,9 +239,9 @@
 
     if (currentBranchIdx < executedBranchIdx) {
       return {
-        message: "Stopped",
+        message: "Skipped",
         icon: "warning",
-        type: FlowStatusType.WARN,
+        type: FlowStatusType.SKIPPED,
       }
     }
 
@@ -423,19 +423,16 @@
     height: 18px;
     position: relative;
     background-color: transparent;
-    color: var(--spectrum-global-color-yellow-400);
-  }
-
-  .flow-warn.flow-status-icon::before {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 15px;
-    background-color: white;
-    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    color: var(--spectrum-global-color-orange-500);
   }
 
   .flow-warn.flow-status-icon :global(i) {
     position: relative;
+  }
+
+  .flow-skipped.flow-status-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--spectrum-global-color-gray-500);
   }
 </style>

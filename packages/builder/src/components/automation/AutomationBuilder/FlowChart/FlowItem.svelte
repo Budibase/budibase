@@ -412,7 +412,7 @@
     position: absolute;
     right: 13px;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(calc(-50% + 3px));
     z-index: 1;
   }
   .block-core {
