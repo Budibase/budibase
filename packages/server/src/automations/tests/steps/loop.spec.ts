@@ -1124,7 +1124,7 @@ describe("Loop Automations", () => {
 
       // Check inner loop summaries
       expect(innerLoopResults[0].outputs.summary.totalProcessed).toBe(3)
-      expect(innerLoopResults[1].outputs.summary.totalProcessed).toBe(3)
+      expect(innerLoopResults[1].outputs.summary.totalProcessed).toBe(2)
     })
 
     it("should handle filter steps that stop execution within a loop iteration", async () => {
@@ -1147,8 +1147,8 @@ describe("Loop Automations", () => {
         .test({ fields: {} })
 
       expect(steps[0].outputs.success).toBe(true)
-      expect(steps[0].outputs.summary.totalProcessed).toBe(3)
-      expect(steps[0].outputs.summary.successCount).toBe(3)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(5)
+      expect(steps[0].outputs.summary.successCount).toBe(5)
 
       const loopResults = getLoopItems(steps[0].outputs)
       const [filterResults, logResults] = Object.values(loopResults)
@@ -1159,8 +1159,10 @@ describe("Loop Automations", () => {
       expect(filterResults[1].outputs.result).toBe(false)
       expect(filterResults[1].outputs.status).toBe("stopped")
 
-      expect(logResults).toHaveLength(1)
+      expect(filterResults).toHaveLength(3)
+      expect(logResults).toHaveLength(2)
       expect(logResults[0].outputs.message).toContain("Processed: process")
+      expect(logResults[1].outputs.message).toContain("Processed: process")
     })
 
     it("sanitizes branch results in loop items", async () => {

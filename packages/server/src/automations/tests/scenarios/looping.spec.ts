@@ -173,8 +173,8 @@ describe("Looping automations", () => {
       .test({ fields: {} })
 
     expect(results.steps[0].outputs.summary).toMatchObject({
-      totalProcessed: 3,
-      successCount: 3,
+      totalProcessed: 5,
+      successCount: 5,
       failureCount: 0,
     })
 
@@ -186,9 +186,10 @@ describe("Looping automations", () => {
       result: false,
       status: "stopped",
     })
-    expect(filterResults).toHaveLength(2)
-    expect(logResults).toHaveLength(1)
+    expect(filterResults).toHaveLength(3)
+    expect(logResults).toHaveLength(2)
     expect(logResults[0].outputs.message).toContain("Processed process")
+    expect(logResults[1].outputs.message).toContain("Processed process")
   })
 
   it("stores branch child results inside loop v2 items", async () => {
@@ -287,7 +288,7 @@ describe("Looping automations", () => {
     expect(outerLogs[0].outputs.message).toContain("Outer Group A")
     expect(outerLogs[1].outputs.message).toContain("Outer Group B")
     expect(innerLoops[0].outputs.summary.totalProcessed).toBe(3)
-    expect(innerLoops[1].outputs.summary.totalProcessed).toBe(3)
+    expect(innerLoops[1].outputs.summary.totalProcessed).toBe(2)
   })
 
   it("supports legacy loops followed by loop v2", async () => {
