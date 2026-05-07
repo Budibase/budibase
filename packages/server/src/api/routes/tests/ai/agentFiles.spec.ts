@@ -1,5 +1,5 @@
 import nock from "nock"
-import { context, features } from "@budibase/backend-core"
+import { context, encryption, features } from "@budibase/backend-core"
 import { mocks, utils } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
 import {
@@ -147,7 +147,7 @@ describe("agent files", () => {
               name: "SharePoint OAuth2",
               url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
               clientId: "client-id",
-              clientSecret: "client-secret",
+              clientSecret: encryption.encrypt("client-secret"),
               method: "BODY",
               grantType: "client_credentials",
               scope: "https://graph.microsoft.com/.default",
