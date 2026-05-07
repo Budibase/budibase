@@ -135,17 +135,6 @@ const readConnection = async (
   return authConfig
 }
 
-const decryptSecretOrPlaintext = (value?: string): string => {
-  if (!value) {
-    return ""
-  }
-  try {
-    return encryption.decrypt(value)
-  } catch {
-    return value
-  }
-}
-
 const getRefreshBody = (connection: OAuth2RestAuthConfigWithTokenCache) => {
   if (
     connection.authType === "delegated_oauth" &&
@@ -153,16 +142,16 @@ const getRefreshBody = (connection: OAuth2RestAuthConfigWithTokenCache) => {
   ) {
     return new URLSearchParams({
       client_id: connection.clientId,
-      client_secret: decryptSecretOrPlaintext(connection.clientSecret),
+      client_secret: encryption.decrypt(connection.clientSecret),
       grant_type: "refresh_token",
-      refresh_token: decryptSecretOrPlaintext(connection.refreshToken!),
+      refresh_token: encryption.decrypt(connection.refreshToken!),
       ...(connection.scope ? { scope: connection.scope } : {}),
     })
   }
 
   return new URLSearchParams({
     client_id: connection.clientId,
-    client_secret: decryptSecretOrPlaintext(connection.clientSecret),
+    client_secret: encryption.decrypt(connection.clientSecret),
     grant_type: "client_credentials",
     ...(connection.scope ? { scope: connection.scope } : {}),
   })
