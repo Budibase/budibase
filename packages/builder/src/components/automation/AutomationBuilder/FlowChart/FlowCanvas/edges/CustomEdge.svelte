@@ -19,8 +19,10 @@
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "../FlowChartDnD"
+  import { FLOW_ITEM_ACTION_BAR_WIDTH } from "../FlowGeometry"
   import {
     isBranchStep,
+    AutomationActionStepId,
     type AutomationResults,
     type BranchStep,
   } from "@budibase/types"
@@ -89,10 +91,18 @@
 
   $: isBranchTarget = target?.startsWith("branch-")
   $: isAnchorTarget = target?.startsWith("anchor-")
+  $: targetBlockRef = target
+    ? $selectedAutomation?.blockRefs?.[target]
+    : undefined
+  $: targetBlock = automationStore.actions.getBlockByRef(
+    automation,
+    targetBlockRef
+  )
+  $: isLoopTarget = targetBlock?.stepId === AutomationActionStepId.LOOP_V2
   $: isSubflowEdge = data.isSubflowEdge === true
   $: isLR = $layoutDirection !== "TB"
 
-  $: if (isAnchorTarget) {
+  $: if (isAnchorTarget || (isLR && isLoopTarget)) {
     labelX = isLR
       ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
       : (sourceX ?? 0)
@@ -101,14 +111,16 @@
       : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
   }
 
-  $: path = isAnchorTarget
+  $: loopTargetPath = isLR && isLoopTarget ? getLoopTargetPath() : undefined
+
+  $: edgePath = isAnchorTarget
     ? getStraightPath({
         sourceX,
         sourceY,
         targetX: labelX,
         targetY: labelY,
-      })
-    : basePath
+      })[0]
+    : loopTargetPath || basePath[0]
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
@@ -206,6 +218,35 @@
     flow.fitView()
   }
 
+  const getLoopTargetPath = () => {
+    const radius = 12
+    const desiredBendX =
+      labelX + Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
+    const bendX = Math.max(
+      sourceX + radius,
+      Math.min(targetX - radius, desiredBendX)
+    )
+    const yDirection = targetY >= sourceY ? 1 : -1
+
+    if (Math.abs(targetY - sourceY) <= radius * 2) {
+      return [
+        `M ${sourceX},${sourceY}`,
+        `L ${bendX},${sourceY}`,
+        `L ${bendX},${targetY}`,
+        `L ${targetX},${targetY}`,
+      ].join(" ")
+    }
+
+    return [
+      `M ${sourceX},${sourceY}`,
+      `L ${bendX - radius},${sourceY}`,
+      `Q ${bendX},${sourceY} ${bendX},${sourceY + yDirection * radius}`,
+      `L ${bendX},${targetY - yDirection * radius}`,
+      `Q ${bendX},${targetY} ${bendX + radius},${targetY}`,
+      `L ${targetX},${targetY}`,
+    ].join(" ")
+  }
+
   const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
     const results =
       viewMode === ViewMode.LOGS
@@ -279,7 +320,7 @@
 </script>
 
 {#if !hideEdge}
-  <BaseEdge path={path[0]} style={edgeStyle} />
+  <BaseEdge path={edgePath} style={edgeStyle} />
 {/if}
 
 <!-- Branch edge -->
