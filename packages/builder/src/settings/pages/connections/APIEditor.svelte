@@ -802,6 +802,7 @@
                     label="Type"
                     value={auth.type}
                     placeholder={false}
+                    disabled={isDelegatedSharePointOAuth(auth)}
                     on:change={e => onAuthTypeChange(e.detail, auth._id!)}
                     options={authTypeOptions}
                     required
@@ -866,7 +867,7 @@
 
           {#if isDatasource}
             <div>
-              <ActionMenu align="left" widthMode="fixed-to-anchor">
+              <ActionMenu widthMode="fixed-to-anchor">
                 <svelte:fragment slot="control" let:open>
                   <div class:active={open}>
                     <Button quiet secondary disabled={!canAddConfig}>
