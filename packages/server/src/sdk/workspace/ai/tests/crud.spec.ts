@@ -404,6 +404,8 @@ describe("agent tests crud", () => {
   })
 
   describe("run status documents", () => {
+    const runDocId = `agenttestsuite_${agentId}_agenttestrun_run-1`
+
     it("creates a running test run document", async () => {
       const run = await testsCrud.createRun({
         agentId,
@@ -412,7 +414,7 @@ describe("agent tests crud", () => {
       })
 
       expect(run).toMatchObject({
-        _id: `agenttestrun_${agentId}_run-1`,
+        _id: runDocId,
         _rev: "2-newrev",
         agentId,
         runId: "run-1",
@@ -420,7 +422,7 @@ describe("agent tests crud", () => {
       })
       expect(mockDbPut).toHaveBeenCalledWith(
         expect.objectContaining({
-          _id: `agenttestrun_${agentId}_run-1`,
+          _id: runDocId,
           status: "running",
         })
       )
@@ -428,7 +430,7 @@ describe("agent tests crud", () => {
 
     it("fetches a test run document", async () => {
       mockDbTryGet.mockResolvedValue({
-        _id: `agenttestrun_${agentId}_run-1`,
+        _id: runDocId,
         agentId,
         runId: "run-1",
         status: "running",
@@ -438,12 +440,12 @@ describe("agent tests crud", () => {
       const run = await testsCrud.fetchRun({ agentId, runId: "run-1" })
 
       expect(run.runId).toBe("run-1")
-      expect(mockDbTryGet).toHaveBeenCalledWith(`agenttestrun_${agentId}_run-1`)
+      expect(mockDbTryGet).toHaveBeenCalledWith(runDocId)
     })
 
     it("marks a test run as completed", async () => {
       mockDbTryGet.mockResolvedValue({
-        _id: `agenttestrun_${agentId}_run-1`,
+        _id: runDocId,
         _rev: "1-old",
         agentId,
         runId: "run-1",
@@ -484,7 +486,7 @@ describe("agent tests crud", () => {
 
     it("marks a test run as errored", async () => {
       mockDbTryGet.mockResolvedValue({
-        _id: `agenttestrun_${agentId}_run-1`,
+        _id: runDocId,
         _rev: "1-old",
         agentId,
         runId: "run-1",

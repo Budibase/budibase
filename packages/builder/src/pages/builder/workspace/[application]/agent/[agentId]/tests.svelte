@@ -32,6 +32,7 @@
   const { goto } = routify
   $goto
   const TEST_RUN_POLL_INTERVAL_MS = 1000
+  const MAX_RUN_POLL_ERRORS = 3
 
   const emptySuite = (agentId = ""): AgentTestSuite => ({
     agentId,
@@ -72,13 +73,16 @@
   const getLatestResults = (testCase: AgentTestCase): AgentTestCaseResult[] =>
     testCase.lastResults || (testCase.lastResult ? [testCase.lastResult] : [])
 
+  interface ActiveTestRun {
+    runId: string
+    caseIds: string[]
+    pollErrorCount: number
+  }
+
   let suite = $state<AgentTestSuite>(emptySuite())
   let loading = $state(false)
   let saving = $state(false)
-  let running = $state(false)
-  let runningCaseId = $state<string | null>(null)
-  let activeRunId = $state<string | null>(null)
-  let runPollErrorCount = 0
+  let activeRuns = $state<ActiveTestRun[]>([])
   let preferredGroupId = $state<string | null>(buildDefaultAgentTestGroup().id)
   let preferredCaseId = $state<string | null>(null)
   let lastAgentId = $state<string | undefined>()
@@ -133,6 +137,10 @@
   )
   let latestResultsForSelected = $derived(
     selectedCaseId ? (latestResultsByCaseId.get(selectedCaseId) ?? []) : []
+  )
+  let running = $derived(activeRuns.length > 0)
+  let runningCaseIds = $derived(
+    new Set(activeRuns.flatMap(run => run.caseIds))
   )
 
   const resetState = (agentId?: string) => {
@@ -325,83 +333,120 @@
     }
   }
 
-  const finishActiveRun = () => {
-    testRunPolling.stop()
-    activeRunId = null
-    running = false
-    runningCaseId = null
-    runPollErrorCount = 0
+  const stopPollingIfIdle = () => {
+    if (!activeRuns.length) {
+      testRunPolling.stop()
+    }
   }
 
-  const pollActiveRun = async () => {
+  const clearActiveRuns = () => {
+    activeRuns = []
+    testRunPolling.stop()
+  }
+
+  const finishActiveRun = (runId: string) => {
+    activeRuns = activeRuns.filter(run => run.runId !== runId)
+    stopPollingIfIdle()
+  }
+
+  const updatePollErrorCount = (runId: string) => {
+    activeRuns = activeRuns.map(run =>
+      run.runId === runId
+        ? { ...run, pollErrorCount: run.pollErrorCount + 1 }
+        : run
+    )
+  }
+
+  const pollActiveRun = async (activeRun: ActiveTestRun) => {
     const agentId = currentAgent?._id
-    const runId = activeRunId
-    if (!agentId || !runId) return
+    if (!agentId) return
 
-    const { run } = await API.fetchAgentTestRun(agentId, runId)
-    runPollErrorCount = 0
-    if (run.runId !== activeRunId || run.status === "running") {
+    try {
+      const { run } = await API.fetchAgentTestRun(agentId, activeRun.runId)
+      if (run.runId !== activeRun.runId || run.status === "running") {
+        return
+      }
+
+      finishActiveRun(activeRun.runId)
+      if (run.status === "completed" && run.run) {
+        mergeRunResults(run.run)
+        notifications.success(
+          `Run complete · ${run.run.passed}/${run.run.total} passed`
+        )
+        return
+      }
+
+      notifications.error(run.error || "Failed to run test")
+    } catch (error) {
+      console.error("Failed to poll test run", error)
+      updatePollErrorCount(activeRun.runId)
+      if (activeRun.pollErrorCount + 1 < MAX_RUN_POLL_ERRORS) return
+
+      finishActiveRun(activeRun.runId)
+      notifications.error("Failed to fetch test run status")
+    }
+  }
+
+  const pollActiveRuns = async () => {
+    if (!activeRuns.length) {
       return
     }
 
-    finishActiveRun()
-    if (run.status === "completed" && run.run) {
-      mergeRunResults(run.run)
-      notifications.success(
-        `Run complete · ${run.run.passed}/${run.run.total} passed`
-      )
-      return
-    }
-
-    notifications.error(run.error || "Failed to run test")
+    await Promise.all(activeRuns.map(pollActiveRun))
   }
 
   const testRunPolling = createPolling({
     intervalMs: TEST_RUN_POLL_INTERVAL_MS,
     immediate: true,
-    poll: pollActiveRun,
-    shouldPoll: () => !!activeRunId && running,
-    onError: error => {
-      console.error("Failed to poll test run", error)
-      runPollErrorCount += 1
-      if (runPollErrorCount < 3) return
-
-      finishActiveRun()
-      notifications.error("Failed to fetch test run status")
-    },
+    poll: pollActiveRuns,
+    shouldPoll: () => activeRuns.length > 0,
   })
 
-  const startRun = async (body: RunAgentTestSuiteRequest, caseId?: string) => {
+  const startRun = async ({
+    body,
+    caseIds,
+  }: {
+    body: RunAgentTestSuiteRequest
+    caseIds: string[]
+  }) => {
     const agentId = currentAgent?._id
-    if (!agentId || running || saving) return false
+    if (!agentId || saving) return false
 
-    running = true
-    runningCaseId = caseId ?? null
-    activeRunId = null
-    runPollErrorCount = 0
     try {
       const { runId } = await API.runAgentTestSuite(agentId, body)
-      activeRunId = runId
+      activeRuns = [...activeRuns, { runId, caseIds, pollErrorCount: 0 }]
       testRunPolling.start()
       return true
     } catch (error) {
       console.error("Failed to run test", error)
       notifications.error("Failed to run test")
-      running = false
-      runningCaseId = null
       return false
     }
   }
 
-  const runCase = async (caseId?: string) => {
-    return startRun(caseId ? { caseId } : {}, caseId)
+  const runCase = async (caseId: string) => {
+    if (runningCaseIds.has(caseId)) return false
+    return startRun({
+      body: { caseId },
+      caseIds: [caseId],
+    })
   }
 
   const runAllTests = async () => {
     const agentId = currentAgent?._id
-    if (!agentId || !selectedGroupId || running || saving) return false
+    if (!agentId || !selectedGroupId || saving) return false
 
-    return startRun({ groupId: selectedGroupId })
+    const groupCaseIds = suite.cases
+      .filter(testCase => testCase.groupId === selectedGroupId)
+      .map(testCase => testCase.id)
+
+    if (!groupCaseIds.length) return false
+    if (groupCaseIds.some(caseId => runningCaseIds.has(caseId))) return false
+
+    return startRun({
+      body: { groupId: selectedGroupId },
+      caseIds: groupCaseIds,
+    })
   }
 
   $effect(() => {
@@ -412,9 +457,7 @@
     const agentId = currentAgent?._id
     if (agentId === lastAgentId) return
     lastAgentId = agentId
-    if (activeRunId) {
-      finishActiveRun()
-    }
+    clearActiveRuns()
     resetState(agentId)
     loadSuite(agentId)
   })
@@ -435,7 +478,7 @@
         {loading}
         {saving}
         {running}
-        {runningCaseId}
+        {runningCaseIds}
         hasLatestRun={hasAnyLatestResult}
         {latestResultsByCaseId}
         onSelectCase={id => (preferredCaseId = id)}
