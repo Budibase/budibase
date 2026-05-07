@@ -129,6 +129,104 @@ describe("agent teams integration provisioning", () => {
     })
   })
 
+  it("builds a Teams app manifest from agent settings", async () => {
+    const manifest = sdk.ai.deployments.MSTeams.buildMSTeamsAppManifest({
+      agent: {
+        _id: "agent_1",
+        name: "Support Agent",
+        description: "Answers support questions",
+        aiconfig: "test-config",
+      },
+      appId: "teams-app-id",
+      messagingEndpointUrl:
+        "https://example.budibase.app/api/webhooks/ms-teams/prod/chatapp/agent",
+    })
+
+    expect(manifest).toMatchObject({
+      manifestVersion: "1.17",
+      id: "teams-app-id",
+      name: {
+        short: "Support Agent",
+        full: "Support Agent",
+      },
+      description: {
+        short: "Answers support questions",
+        full: "Answers support questions",
+      },
+      icons: {
+        color: "color.png",
+        outline: "outline.png",
+      },
+      bots: [
+        {
+          botId: "teams-app-id",
+          scopes: ["personal", "team", "groupchat"],
+        },
+      ],
+      validDomains: ["example.budibase.app"],
+    })
+  })
+
+  it("downloads a Teams app package for an agent", async () => {
+    const agent = await config.api.agent.create({
+      name: "Teams Package Agent",
+      MSTeamsIntegration: {
+        appId: "teams-app-id",
+        appPassword: "teams-app-password",
+        tenantId: "azure-tenant-id",
+      },
+    })
+
+    const response = await config
+      .getRequest()!
+      .post(`/api/agent/${agent._id}/ms-teams/package`)
+      .set(config.defaultHeaders())
+      .send({
+        colorIcon:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR4nGNkYPgPAAEDAQCDeeU1AAAAAElFTkSuQmCC",
+        outlineIcon:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC",
+      })
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = []
+        res.on("data", chunk => chunks.push(Buffer.from(chunk)))
+        res.on("end", () => callback(null, Buffer.concat(chunks)))
+      })
+      .expect(200)
+
+    expect(response.headers["content-type"]).toContain("application/zip")
+    expect(response.headers["content-disposition"]).toContain(
+      "teams-package-agent-teams-app.zip"
+    )
+    expect(Buffer.isBuffer(response.body)).toBe(true)
+    expect(response.body.length).toBeGreaterThan(0)
+
+    const { agents } = await config.api.agent.fetch()
+    const updated = agents.find(candidate => candidate._id === agent._id)
+    expect(updated?.MSTeamsIntegration?.messagingEndpointUrl).toContain(
+      "/api/webhooks/ms-teams/"
+    )
+  })
+
+  it("requires app icons when downloading a Teams app package", async () => {
+    const agent = await config.api.agent.create({
+      name: "Teams Package Agent",
+      MSTeamsIntegration: {
+        appId: "teams-app-id",
+        appPassword: "teams-app-password",
+        tenantId: "azure-tenant-id",
+      },
+    })
+
+    await config
+      .getRequest()!
+      .post(`/api/agent/${agent._id}/ms-teams/package`)
+      .set(config.defaultHeaders())
+      .send({})
+      .expect(400)
+  })
+
   it("preserves internal agent chat state when provisioning teams", async () => {
     const agent = await config.api.agent.create({
       name: "Teams Agent With Internal Chat",

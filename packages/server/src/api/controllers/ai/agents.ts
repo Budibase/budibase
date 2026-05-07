@@ -3,6 +3,7 @@ import {
   Agent,
   CreateAgentRequest,
   CreateAgentResponse,
+  DownloadAgentMSTeamsAppPackageRequest,
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -111,6 +112,11 @@ const parseOptionalChatAppId = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : undefined
 }
 
+const parsePngDataUrl = (value: string) => {
+  const base64 = value.trim().replace(/^data:image\/png;base64,/, "")
+  return Buffer.from(base64, "base64")
+}
+
 interface ConfiguredDeployment<TValidatedIntegration> {
   chatAppId: string
   endpointUrl: string
@@ -119,6 +125,10 @@ interface ConfiguredDeployment<TValidatedIntegration> {
 
 type DiscordDeployment = ConfiguredDeployment<
   ReturnType<typeof sdk.ai.deployments.discord.validateDiscordIntegration>
+>
+
+type MSTeamsDeployment = ConfiguredDeployment<
+  ReturnType<typeof sdk.ai.deployments.MSTeams.validateMSTeamsIntegration>
 >
 
 const configureDeploymentChannel = async <
@@ -254,6 +264,30 @@ const configureDiscordDeployment = async ({
         agent,
         chatAppId,
         interactionsEndpointUrl,
+      }),
+  })
+
+const configureMSTeamsDeployment = async ({
+  agent,
+  agentId,
+  requestedChatAppId,
+}: {
+  agent: Agent
+  agentId: string
+  requestedChatAppId?: string
+}): Promise<MSTeamsDeployment> =>
+  await configureDeploymentChannel({
+    agent,
+    agentId,
+    requestedChatAppId,
+    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
+    resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
+    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
+    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      await persistMSTeamsDeployment({
+        agent,
+        chatAppId,
+        messagingEndpointUrl,
       }),
   })
 
@@ -397,19 +431,10 @@ export async function provisionAgentMSTeamsChannel(
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-  const { chatAppId, endpointUrl } = await configureDeploymentChannel({
+  const { chatAppId, endpointUrl } = await configureMSTeamsDeployment({
     agent,
     agentId,
     requestedChatAppId,
-    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
-    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
-    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-      await persistMSTeamsDeployment({
-        agent,
-        chatAppId,
-        messagingEndpointUrl,
-      }),
   })
 
   ctx.body = {
@@ -418,6 +443,34 @@ export async function provisionAgentMSTeamsChannel(
     messagingEndpointUrl: endpointUrl,
   }
   ctx.status = 200
+}
+
+export async function downloadAgentMSTeamsAppPackage(
+  ctx: UserCtx<
+    DownloadAgentMSTeamsAppPackageRequest,
+    Buffer,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
+  const { endpointUrl, integration } = await configureMSTeamsDeployment({
+    agent,
+    agentId,
+    requestedChatAppId,
+  })
+  const appPackage = await sdk.ai.deployments.MSTeams.buildMSTeamsAppPackage({
+    agent,
+    appId: integration.appId,
+    messagingEndpointUrl: endpointUrl,
+    colorIcon: parsePngDataUrl(ctx.request.body?.colorIcon),
+    outlineIcon: parsePngDataUrl(ctx.request.body?.outlineIcon),
+  })
+
+  ctx.attachment(appPackage.filename)
+  ctx.type = "application/zip"
+  ctx.body = appPackage.buffer
 }
 
 export async function provisionAgentSlackChannel(
@@ -496,20 +549,10 @@ export async function toggleAgentMSTeamsDeployment(
     const requestedChatAppId = parseOptionalChatAppId(
       agent.MSTeamsIntegration?.chatAppId?.trim() || undefined
     )
-    await configureDeploymentChannel({
+    await configureMSTeamsDeployment({
       agent,
       agentId,
       requestedChatAppId,
-      validateIntegration:
-        sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
-      resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
-      buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
-      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-        await persistMSTeamsDeployment({
-          agent,
-          chatAppId,
-          messagingEndpointUrl,
-        }),
     })
   } else {
     await sdk.ai.agents.update({

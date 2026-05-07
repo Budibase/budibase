@@ -1,10 +1,14 @@
 <script lang="ts">
-  import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    CopyInput,
+    Input,
+    Label,
+    notifications,
+  } from "@budibase/bbui"
   import { ChatCommands } from "@budibase/shared-core"
-  import type {
-    Agent,
-    ProvisionAgentMSTeamsChannelResponse,
-  } from "@budibase/types"
+  import type { Agent } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
@@ -24,17 +28,17 @@
     appPassword: "",
     tenantId: "",
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
+    iconName: "",
+    iconPreview: "",
+    colorIcon: "",
+    outlineIcon: "",
   })
 
   let provisioning = $state(false)
-  let provisionResult = $state<
-    ProvisionAgentMSTeamsChannelResponse | undefined
-  >()
+  let iconInput: HTMLInputElement | undefined = $state()
 
   const messagingEndpointUrl = $derived(
-    provisionResult?.messagingEndpointUrl ||
-      agent?.MSTeamsIntegration?.messagingEndpointUrl ||
-      ""
+    agent?.MSTeamsIntegration?.messagingEndpointUrl || ""
   )
 
   const hasRequiredCredentials = $derived.by(
@@ -48,6 +52,12 @@
 
   const isProvisioned = $derived.by(
     () => messagingEndpointUrl.trim().length > 0
+  )
+  const hasAppIcon = $derived.by(
+    () => !!(draft.colorIcon.trim() && draft.outlineIcon.trim())
+  )
+  const canDownloadPackage = $derived.by(
+    () => hasRequiredCredentials && hasAppIcon
   )
 
   $effect(() => {
@@ -63,13 +73,128 @@
       tenantId: integration?.tenantId || "",
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
+      iconName: "",
+      iconPreview: "",
+      colorIcon: "",
+      outlineIcon: "",
     }
-    provisionResult = undefined
     draftAgentId = currentAgent._id
   })
 
-  const provisionMSTeamsChannel = async () => {
-    if (!agent?._id || provisioning) {
+  const readFileAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result || ""))
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(file)
+    })
+
+  const loadImage = (src: string) =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image()
+      image.onload = () => resolve(image)
+      image.onerror = reject
+      image.src = src
+    })
+
+  const createTeamsIcon = (
+    image: HTMLImageElement,
+    size: number,
+    monochrome = false
+  ) => {
+    const canvas = document.createElement("canvas")
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      return ""
+    }
+
+    if (!monochrome) {
+      ctx.fillStyle = "#1e1e2f"
+      ctx.fillRect(0, 0, size, size)
+    }
+
+    const scale = Math.min(
+      size / image.naturalWidth,
+      size / image.naturalHeight
+    )
+    const width = image.naturalWidth * scale
+    const height = image.naturalHeight * scale
+    ctx.drawImage(image, (size - width) / 2, (size - height) / 2, width, height)
+
+    if (monochrome) {
+      const pixels = ctx.getImageData(0, 0, size, size)
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        if (pixels.data[i + 3] > 16) {
+          pixels.data[i] = 255
+          pixels.data[i + 1] = 255
+          pixels.data[i + 2] = 255
+        }
+      }
+      ctx.putImageData(pixels, 0, 0)
+    }
+
+    return canvas.toDataURL("image/png")
+  }
+
+  const chooseIcon = () => {
+    iconInput?.click()
+  }
+
+  const clearIcon = () => {
+    draft = {
+      ...draft,
+      iconName: "",
+      iconPreview: "",
+      colorIcon: "",
+      outlineIcon: "",
+    }
+    if (iconInput) {
+      iconInput.value = ""
+    }
+  }
+
+  const handleIconUpload = async (event: Event) => {
+    const input = event.currentTarget as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) {
+      return
+    }
+    if (!file.type.startsWith("image/")) {
+      notifications.error("Choose an image file for the Teams app icon")
+      return
+    }
+
+    try {
+      const preview = await readFileAsDataUrl(file)
+      const image = await loadImage(preview)
+      draft = {
+        ...draft,
+        iconName: file.name,
+        iconPreview: preview,
+        colorIcon: createTeamsIcon(image, 192),
+        outlineIcon: createTeamsIcon(image, 32, true),
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to prepare the Teams app icon")
+    }
+  }
+
+  const downloadPackage = (blob: Blob) => {
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${agent?.name || "budibase-agent"}-teams-app.zip`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 0)
+  }
+
+  const saveAndDownloadMSTeamsPackage = async () => {
+    if (!agent?._id || provisioning || !canDownloadPackage) {
       return
     }
 
@@ -86,14 +211,21 @@
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
         },
       })
-      provisionResult = await agentsStore.provisionMSTeamsChannel(agent._id)
+      const appPackage = await agentsStore.downloadMSTeamsAppPackage(
+        agent._id,
+        {
+          colorIcon: draft.colorIcon,
+          outlineIcon: draft.outlineIcon,
+        }
+      )
+      downloadPackage(appPackage)
       if (agent.live) {
         await deploymentStore.publishApp()
       }
-      notifications.success("Microsoft Teams channel settings saved")
+      notifications.success("Microsoft Teams app package downloaded")
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to save Microsoft Teams channel settings")
+      notifications.error("Failed to download Microsoft Teams app package")
     } finally {
       provisioning = false
     }
@@ -105,12 +237,12 @@
   positiveStatusLabel="Configured"
   negativeStatusLabel="Not configured"
   actionLabel={provisioning
-    ? "Saving..."
+    ? "Downloading..."
     : isProvisioned
-      ? "Save changes"
-      : "Save channel"}
-  actionDisabled={provisioning || !hasRequiredCredentials}
-  onAction={provisionMSTeamsChannel}
+      ? "Download app package"
+      : "Save and download package"}
+  actionDisabled={provisioning || !canDownloadPackage}
+  onAction={saveAndDownloadMSTeamsPackage}
 >
   {#snippet fields()}
     <Input label="App ID (client ID)" bind:value={draft.appId} />
@@ -119,15 +251,45 @@
       type="password"
       bind:value={draft.appPassword}
     />
-    <Input
-      label="Directory (tenant) ID (Azure AD tenant ID)"
-      bind:value={draft.tenantId}
-    />
+    <Input label="Directory (tenant) ID" bind:value={draft.tenantId} />
     <Input
       label="Idle timeout (minutes)"
       type="number"
       bind:value={draft.idleTimeoutMinutes}
     />
+
+    <div class="icon-row">
+      <Label>App icon</Label>
+      <div class="icon-control">
+        <div class="icon-thumb">
+          {#if draft.iconPreview}
+            <img src={draft.iconPreview} alt="" />
+          {:else}
+            <span>{agent?.name?.trim()?.[0]?.toUpperCase() || "B"}</span>
+          {/if}
+        </div>
+        <div class="icon-meta">
+          <Body size="S">
+            {draft.iconName || "Choose an icon to continue"}
+          </Body>
+          <Body size="XS">Required for the installable Teams app package</Body>
+        </div>
+        <div class="icon-buttons">
+          {#if draft.iconPreview}
+            <Button secondary quiet on:click={clearIcon}>Reset</Button>
+          {/if}
+          <Button secondary icon="image" on:click={chooseIcon}>
+            Choose icon
+          </Button>
+        </div>
+      </div>
+      <input
+        bind:this={iconInput}
+        type="file"
+        accept="image/*"
+        onchange={handleIconUpload}
+      />
+    </div>
   {/snippet}
 
   {#snippet response()}
@@ -147,3 +309,66 @@
     />
   {/snippet}
 </ChannelConfigLayout>
+
+<style>
+  .icon-row {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .icon-control {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .icon-thumb {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 4px;
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 16px;
+    font-weight: 600;
+    overflow: hidden;
+  }
+
+  .icon-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .icon-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .icon-buttons {
+    flex: 0 0 auto;
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+  }
+
+  .icon-row input[type="file"] {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .icon-control {
+      flex-wrap: wrap;
+    }
+
+    .icon-buttons {
+      margin-left: auto;
+    }
+  }
+</style>

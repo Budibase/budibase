@@ -5,6 +5,9 @@ const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
 const NON_EMPTY_STRING = Joi.string().trim().min(1)
+const ICON_DATA_URL = Joi.string()
+  .pattern(/^data:image\/png;base64,/)
+  .max(500000)
 
 const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   applicationId: OPTIONAL_STRING,
@@ -88,6 +91,16 @@ export function syncAgentDiscordCommandsValidator() {
 
 export function provisionAgentMSTeamsChannelValidator() {
   return chatAppIdBodyValidator()
+}
+
+export function downloadAgentMSTeamsAppPackageValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      chatAppId: OPTIONAL_STRING,
+      colorIcon: ICON_DATA_URL.required(),
+      outlineIcon: ICON_DATA_URL.required(),
+    }).required()
+  )
 }
 
 export function provisionAgentSlackChannelValidator() {

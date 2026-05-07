@@ -7,6 +7,7 @@ import {
   ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   DisconnectAgentSharePointSiteResponse,
+  DownloadAgentMSTeamsAppPackageRequest,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -145,6 +146,14 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   ): Promise<ProvisionAgentMSTeamsChannelResponse> =>
     await this.runAndRefreshAgents(() =>
       API.provisionAgentMSTeamsChannel(agentId, body)
+    )
+
+  downloadMSTeamsAppPackage = async (
+    agentId: string,
+    body: DownloadAgentMSTeamsAppPackageRequest
+  ): Promise<Blob> =>
+    await this.runAndRefreshAgents(() =>
+      API.downloadAgentMSTeamsAppPackage(agentId, body)
     )
 
   provisionSlackChannel = async (

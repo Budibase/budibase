@@ -9,6 +9,7 @@ import {
 import {
   connectAgentSharePointSiteValidator,
   createAgentValidator,
+  downloadAgentMSTeamsAppPackageValidator,
   provisionAgentSlackChannelValidator,
   provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
@@ -40,6 +41,11 @@ builderAdminRoutes
     "/api/agent/:agentId/ms-teams/provision",
     provisionAgentMSTeamsChannelValidator(),
     ai.provisionAgentMSTeamsChannel
+  )
+  .post(
+    "/api/agent/:agentId/ms-teams/package",
+    downloadAgentMSTeamsAppPackageValidator(),
+    ai.downloadAgentMSTeamsAppPackage
   )
   .post(
     "/api/agent/:agentId/ms-teams/toggle",

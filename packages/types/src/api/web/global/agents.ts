@@ -143,6 +143,12 @@ export interface ProvisionAgentMSTeamsChannelResponse
   messagingEndpointUrl: string
 }
 
+export interface DownloadAgentMSTeamsAppPackageRequest
+  extends ConfigureAgentDeploymentChannelRequest {
+  colorIcon: string
+  outlineIcon: string
+}
+
 export type ProvisionAgentSlackChannelRequest =
   ConfigureAgentDeploymentChannelRequest
 

@@ -5,6 +5,7 @@ import {
   CreateAgentRequest,
   CreateAgentResponse,
   DisconnectAgentSharePointSiteResponse,
+  DownloadAgentMSTeamsAppPackageRequest,
   DuplicateAgentResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
@@ -44,6 +45,10 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ) => Promise<ProvisionAgentMSTeamsChannelResponse>
+  downloadAgentMSTeamsAppPackage: (
+    agentId: string,
+    body: DownloadAgentMSTeamsAppPackageRequest
+  ) => Promise<Blob>
   provisionAgentSlackChannel: (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
@@ -154,6 +159,17 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     >({
       url: `/api/agent/${agentId}/ms-teams/provision`,
       body,
+    })
+  },
+
+  downloadAgentMSTeamsAppPackage: async (agentId: string, body) => {
+    return await API.post<
+      DownloadAgentMSTeamsAppPackageRequest | undefined,
+      Blob
+    >({
+      url: `/api/agent/${agentId}/ms-teams/package`,
+      body,
+      parseResponse: async response => await response.blob(),
     })
   },
 
