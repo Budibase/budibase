@@ -52,8 +52,8 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
               authType: isOAuth2DelegatedAuthConfig(config)
                 ? ("delegated_oauth" as const)
                 : ("client_credentials" as const),
-              datasourceName: datasource.name || "Datasource",
-              authConfigName: config.account || config.name || "OAuth2 config",
+              datasourceName: datasource.name || "Unknown Datasource",
+              authConfigName: config.name || "Unknown Auth Config",
             }))
         })
         return { connections }
