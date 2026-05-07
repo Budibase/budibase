@@ -1,4 +1,3 @@
-import { encryption } from "@budibase/backend-core"
 import {
   OAuth2CredentialsMethod,
   OAuth2GrantType,
@@ -11,7 +10,15 @@ import {
   upsertDelegatedSharePointAuthConfig,
 } from "./sharepointAuth"
 import sdk from "../../../sdk"
+import * as sharePointCredentials from "../../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials"
 import tk from "timekeeper"
+
+jest.mock(
+  "../../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials",
+  () => ({
+    saveSharePointCredential: jest.fn(),
+  })
+)
 
 describe("calculateBufferedTokenExpiry", () => {
   beforeEach(() => {
@@ -50,7 +57,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
     jest.restoreAllMocks()
   })
 
-  const credentials = {
+  const delegatedCredentials = {
     account: "person@example.com",
     accessToken: "access-token",
     refreshToken: "refresh-token",
@@ -79,12 +86,16 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
     const save = jest
       .spyOn(sdk.datasources, "save")
       .mockResolvedValue({} as any)
+    const saveCredential = jest.mocked(
+      sharePointCredentials.saveSharePointCredential
+    )
+    saveCredential.mockResolvedValue(undefined)
 
     const result = await upsertDelegatedSharePointAuthConfig(
       "app_1",
       datasourceId,
       undefined,
-      credentials
+      delegatedCredentials
     )
 
     const savedDatasource = save.mock.calls[0][0] as Datasource
@@ -96,15 +107,20 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
         authType: "delegated_oauth",
         name: "Microsoft SharePoint (person@example.com)",
         account: "person@example.com",
-        url: credentials.tokenEndpoint,
-        clientId: credentials.clientId,
+        url: delegatedCredentials.tokenEndpoint,
+        clientId: delegatedCredentials.clientId,
         method: OAuth2CredentialsMethod.BODY,
         grantType: OAuth2GrantType.AUTHORIZATION_CODE,
-        tokenType: "Bearer",
-        expiresAt: credentials.expiresAt,
       })
     )
-    expect(encryption.decrypt(authConfig.refreshToken)).toBe("refresh-token")
+    expect(saveCredential).toHaveBeenCalledWith(
+      expect.objectContaining({
+        datasourceId,
+        authConfigId: authConfig._id,
+        accessToken: "access-token",
+        refreshToken: "refresh-token",
+      })
+    )
   })
 
   it("reuses an existing delegated config for the same account", async () => {
@@ -116,7 +132,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
           authType: "delegated_oauth",
           name: "Existing",
           account: "person@example.com",
-          url: credentials.tokenEndpoint,
+          url: delegatedCredentials.tokenEndpoint,
           clientId: "old-client-id",
           clientSecret: "old-secret",
           method: OAuth2CredentialsMethod.BODY,
@@ -132,7 +148,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       "app_1",
       datasourceId,
       undefined,
-      credentials
+      delegatedCredentials
     )
 
     const savedDatasource = save.mock.calls[0][0] as Datasource

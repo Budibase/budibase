@@ -371,7 +371,9 @@
   }
 
   const isDelegatedSharePointOAuth = (auth: RestAuthConfig) => {
-    return auth.type === RestAuthType.OAUTH2 && auth.authType === "delegated_oauth"
+    return (
+      auth.type === RestAuthType.OAUTH2 && auth.authType === "delegated_oauth"
+    )
   }
 
   const createAuthConfig = (
@@ -804,13 +806,13 @@
                           label="Display name"
                           value={auth.name}
                           on:change={e =>
-                            onAuthConfigUpdate({ ...auth, name: e.detail })
-                          }
+                            onAuthConfigUpdate({ ...auth, name: e.detail })}
                         />
                         <Button
                           quiet
                           secondary
-                          on:click={() => reconnectSharePointDelegatedOAuth(auth._id)}
+                          on:click={() =>
+                            reconnectSharePointDelegatedOAuth(auth._id)}
                         >
                           Reconnect
                         </Button>

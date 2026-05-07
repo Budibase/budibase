@@ -38,7 +38,10 @@ export async function processEnvironmentVariable<
     for (const key of Object.keys(value).filter(
       k => typeof value[k] === "string" && value[k]
     )) {
-      value[key] = await _processEnvironmentVariable(value[key], getEnvVariables)
+      value[key] = await _processEnvironmentVariable(
+        value[key],
+        getEnvVariables
+      )
     }
     return value
   }

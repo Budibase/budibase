@@ -4,6 +4,12 @@ import {
 } from "./connection"
 import { type Datasource, OAuth2GrantType, RestAuthType } from "@budibase/types"
 import sdk from "../../../.."
+import * as credentials from "./credentials"
+
+jest.mock("./credentials", () => ({
+  getSharePointCredential: jest.fn(),
+  saveSharePointCredential: jest.fn(),
+}))
 
 describe("isAllowedSharePointNextLink", () => {
   it("accepts Graph v1.0 root and nested paths", () => {
@@ -67,19 +73,23 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
             clientId: "client-id",
             clientSecret: "secret",
             grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-            accessToken: "token",
-            tokenType: "Bearer",
-            expiresAt: Date.now() + 60_000,
           },
         ],
       },
     } as Datasource
 
     jest.spyOn(sdk.datasources, "get").mockResolvedValue(datasource)
+    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+      accessToken: "token",
+      tokenType: "Bearer",
+      expiresAt: Date.now() + 60_000,
+    } as any)
   }
 
   afterEach(() => {
     jest.restoreAllMocks()
+    jest.mocked(credentials.getSharePointCredential).mockReset()
+    jest.mocked(credentials.saveSharePointCredential).mockReset()
   })
 
   it("uses Graph search query and maps displayName with webUrl", async () => {
@@ -258,9 +268,6 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
             clientId: "client-id",
             clientSecret: "secret",
             grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-            accessToken: "token",
-            tokenType: "Bearer",
-            expiresAt: Date.now() + 60_000,
           },
         ],
       },
@@ -276,6 +283,11 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
 
   it("uses app-permission guidance for client credentials 403", async () => {
     mockDatasource()
+    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+      accessToken: "token",
+      tokenType: "Bearer",
+      expiresAt: Date.now() + 60_000,
+    } as any)
     jest.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
       status: 403,
@@ -294,6 +306,11 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
 
   it("uses credential guidance for client credentials 401", async () => {
     mockDatasource()
+    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+      accessToken: "token",
+      tokenType: "Bearer",
+      expiresAt: Date.now() + 60_000,
+    } as any)
     jest.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
       status: 401,
@@ -324,16 +341,27 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
             url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
             clientId: "client-id",
             clientSecret: "secret",
-            refreshToken: "refresh-token",
             grantType: OAuth2GrantType.AUTHORIZATION_CODE,
-            accessToken: "expired-token",
-            tokenType: "Bearer",
-            expiresAt: Date.now() - 60_000,
           },
         ],
       },
     } as Datasource)
-    jest.spyOn(sdk.datasources, "save").mockResolvedValue({} as any)
+    const saveCredential = jest.mocked(credentials.saveSharePointCredential)
+    saveCredential.mockResolvedValue(undefined)
+    jest
+      .mocked(credentials.getSharePointCredential)
+      .mockResolvedValueOnce({
+        accessToken: "expired-token",
+        refreshToken: "refresh-token",
+        tokenType: "Bearer",
+        expiresAt: Date.now() - 60_000,
+      } as any)
+      .mockResolvedValueOnce({
+        accessToken: "fresh-token",
+        refreshToken: "fresh-refresh-token",
+        tokenType: "Bearer",
+        expiresAt: Date.now() + 3600 * 1000,
+      } as any)
     const fetchMock = jest
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce({
@@ -372,6 +400,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
         }),
       })
     )
+    expect(saveCredential).toHaveBeenCalled()
   })
 
   it("uses delegated guidance for delegated OAuth 403", async () => {
@@ -388,15 +417,17 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
             url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
             clientId: "client-id",
             clientSecret: "secret",
-            refreshToken: "refresh-token",
             grantType: OAuth2GrantType.AUTHORIZATION_CODE,
-            accessToken: "token",
-            tokenType: "Bearer",
-            expiresAt: Date.now() + 60_000,
           },
         ],
       },
     } as Datasource)
+    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+      accessToken: "token",
+      refreshToken: "refresh-token",
+      tokenType: "Bearer",
+      expiresAt: Date.now() + 60_000,
+    } as any)
     jest.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
       status: 403,

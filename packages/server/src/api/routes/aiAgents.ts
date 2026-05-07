@@ -66,10 +66,7 @@ const aiRagBuilderAdminRoutes = endpointGroupList
   .addGroupMiddleware(aiRagEnabled)
 
 aiRagBuilderAdminRoutes
-  .get(
-    "/api/datasource/sharepoint/connect",
-    ai.startSharePointAuth
-  )
+  .get("/api/datasource/sharepoint/connect", ai.startSharePointAuth)
   .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledge)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)

@@ -3,22 +3,22 @@ import {
   Datasource,
   KnowledgeSourceOption,
   OAuth2RestAuthConfig,
-  RestAuthType,
   isOAuth2ClientCredentialsAuthConfig,
   isOAuth2DelegatedAuthConfig,
   OAuth2GrantType,
 } from "@budibase/types"
 import sdk from "../../../.."
+import {
+  getSharePointCredential,
+  saveSharePointCredential,
+} from "./credentials"
 
 enum SharePointConnectionAuthType {
   DELEGATED_OAUTH = "delegated_oauth",
   CLIENT_CREDENTIALS = "client_credentials",
 }
 type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
-  accessToken?: string
   refreshToken?: string
-  tokenType?: string
-  expiresAt?: number
 }
 
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
@@ -75,9 +75,6 @@ const readConnection = async (
       400
     )
   }
-  if (isOAuth2DelegatedAuthConfig(authConfig) && !authConfig.refreshToken) {
-    throw new HTTPError("OAuth2 auth config is missing refresh token.", 400)
-  }
   return authConfig
 }
 
@@ -106,14 +103,23 @@ const getRefreshBody = (connection: OAuth2RestAuthConfigWithTokenCache) => {
 const refreshConnection = async (
   datasourceId: string,
   authConfigId: string,
-  connection: OAuth2RestAuthConfigWithTokenCache
+  connection: OAuth2RestAuthConfigWithTokenCache,
+  credential: {
+    accessToken?: string
+    refreshToken?: string
+    tokenType?: string
+    expiresAt?: number
+  }
 ): Promise<OAuth2RestAuthConfigWithTokenCache> => {
+  if (isOAuth2DelegatedAuthConfig(connection) && !credential.refreshToken) {
+    throw new HTTPError("OAuth2 auth config is missing refresh token.", 400)
+  }
   const response = await fetch(connection.url, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: getRefreshBody(connection),
+    body: getRefreshBody({ ...connection, ...credential }),
   })
   const payload = await response.json()
   if (!response.ok) {
@@ -126,64 +132,39 @@ const refreshConnection = async (
   }
 
   const expiresIn = Number(payload?.expires_in || 0)
-  const baseUpdated = {
-    ...connection,
-    accessToken: payload?.access_token || connection.accessToken,
-    refreshToken: payload?.refresh_token || connection.refreshToken,
-    tokenType: payload?.token_type || connection.tokenType || "Bearer",
+  const nextCredential = {
+    accessToken: payload?.access_token || credential.accessToken,
+    refreshToken: payload?.refresh_token || credential.refreshToken,
+    tokenType: payload?.token_type || credential.tokenType || "Bearer",
     expiresAt: Date.now() + Math.max(expiresIn - 60, 0) * 1000,
   }
-  const updated: OAuth2RestAuthConfigWithTokenCache = {
-    ...connection,
-    ...baseUpdated,
-  }
-  const datasource = await sdk.datasources.get(datasourceId)
-  const authConfigs = (
-    (datasource.config?.authConfigs as
-      | OAuth2RestAuthConfigWithTokenCache[]
-      | undefined) || []
-  ).map(config => {
-    if (config._id !== authConfigId || config.type !== RestAuthType.OAUTH2) {
-      return config
-    }
-    return {
-      ...config,
-      accessToken: updated.accessToken
-        ? encryption.encrypt(decryptSecretOrPlaintext(updated.accessToken))
-        : updated.accessToken,
-      refreshToken: updated.refreshToken
-        ? encryption.encrypt(decryptSecretOrPlaintext(updated.refreshToken))
-        : updated.refreshToken,
-      tokenType: updated.tokenType,
-      expiresAt: updated.expiresAt,
-      clientSecret: encryption.encrypt(
-        decryptSecretOrPlaintext(updated.clientSecret)
-      ),
-    }
+  await saveSharePointCredential({
+    datasourceId,
+    authConfigId,
+    ...nextCredential,
   })
-  const updatedDatasource: Datasource = {
-    ...datasource,
-    config: {
-      ...datasource.config,
-      authConfigs,
-    },
-  }
-  await sdk.datasources.save(updatedDatasource)
-  return updated
+  return connection
 }
 
 export const getSharePointBearerToken = async (
   datasourceId: string,
   authConfigId: string
 ): Promise<string> => {
-  let connection = await readConnection(datasourceId, authConfigId)
-  const expiresAt = Number(connection.expiresAt || 0)
-  const needsRefresh = !connection.accessToken || expiresAt <= Date.now()
+  const connection = await readConnection(datasourceId, authConfigId)
+  let credential = await getSharePointCredential(datasourceId, authConfigId)
+  const expiresAt = Number(credential?.expiresAt || 0)
+  const needsRefresh = !credential?.accessToken || expiresAt <= Date.now()
   if (needsRefresh) {
-    connection = await refreshConnection(datasourceId, authConfigId, connection)
+    await refreshConnection(datasourceId, authConfigId, connection, {
+      accessToken: credential?.accessToken,
+      refreshToken: credential?.refreshToken,
+      tokenType: credential?.tokenType,
+      expiresAt: credential?.expiresAt,
+    })
+    credential = await getSharePointCredential(datasourceId, authConfigId)
   }
-  const tokenType = connection.tokenType?.trim() || "Bearer"
-  return `${tokenType} ${decryptSecretOrPlaintext(connection.accessToken!)}`
+  const tokenType = credential?.tokenType?.trim() || "Bearer"
+  return `${tokenType} ${credential?.accessToken}`
 }
 
 const fetchSharePointSitesByAppToken = async (

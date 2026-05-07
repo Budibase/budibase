@@ -252,8 +252,6 @@ export async function removeSecrets(datasources: Datasource[]) {
             if (!useEnvVars(oauth2.clientSecret)) {
               oauth2.clientSecret = PASSWORD_REPLACEMENT
             }
-            oauth2.accessToken = PASSWORD_REPLACEMENT
-            oauth2.refreshToken = PASSWORD_REPLACEMENT
           }
         }
       }
@@ -297,12 +295,6 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
       }
       if (cfg[field] === PASSWORD_REPLACEMENT) {
         cfg[field] = oldCfg?.[field]
-      }
-      if (isOAuth2 && cfg.accessToken === PASSWORD_REPLACEMENT) {
-        cfg.accessToken = oldCfg?.accessToken
-      }
-      if (isOAuth2 && cfg.refreshToken === PASSWORD_REPLACEMENT) {
-        cfg.refreshToken = oldCfg?.refreshToken
       }
     }
   }

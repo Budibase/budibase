@@ -19,6 +19,7 @@ import {
   isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { saveSharePointCredential } from "../../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials"
 
 const DEFAULT_SCOPE = env.RAG_SHAREPOINT_DEFAULT_SCOPE
 const STATE_CACHE_TTL_SECONDS = 600
@@ -148,62 +149,81 @@ export const upsertDelegatedSharePointAuthConfig = async (
   credentials: DelegatedSharePointCredentials
 ) => {
   return context.doInWorkspaceContext(appId, async () => {
-    const datasource = await sdk.datasources.get(datasourceId)
-    if (!isSharePointDatasource(datasource)) {
-      throw new Error(
-        "SharePoint OAuth can only be used with SharePoint datasources"
-      )
-    }
-
-    const authConfigs = (
-      (datasource.config?.authConfigs || []) as OAuth2RestAuthConfig[]
-    ).filter(Boolean)
     const account = credentials.account.trim() || "unknown"
-    const matchingConfig =
-      (authConfigId
-        ? authConfigs.find(config => config._id === authConfigId)
-        : undefined) ||
-      authConfigs.find(
-        config =>
-          isOAuth2DelegatedAuthConfig(config) &&
-          config.account?.toLowerCase() === account.toLowerCase()
-      )
-    const nextAuthConfig: OAuth2RestAuthConfig = {
-      ...(matchingConfig || {}),
-      _id: matchingConfig?._id || `auth_${utils.newid()}`,
-      type: RestAuthType.OAUTH2,
-      authType: "delegated_oauth",
-      name: matchingConfig?.name || `Microsoft SharePoint (${account})`,
-      account,
-      url: credentials.tokenEndpoint,
-      clientId: credentials.clientId,
-      clientSecret: encryption.encrypt(credentials.clientSecret),
-      method: OAuth2CredentialsMethod.BODY,
-      grantType: OAuth2GrantType.AUTHORIZATION_CODE,
-      scope: DEFAULT_SCOPE,
-      accessToken: encryption.encrypt(credentials.accessToken),
-      refreshToken: encryption.encrypt(credentials.refreshToken),
-      tokenType: credentials.tokenType,
-      expiresAt: credentials.expiresAt,
-    }
-    const nextAuthConfigs = matchingConfig
-      ? authConfigs.map(config =>
-          config._id === matchingConfig._id ? nextAuthConfig : config
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const datasource = await sdk.datasources.get(datasourceId)
+      if (!isSharePointDatasource(datasource)) {
+        throw new Error(
+          "SharePoint OAuth can only be used with SharePoint datasources"
         )
-      : [...authConfigs, nextAuthConfig]
+      }
 
-    await sdk.datasources.save({
-      ...datasource,
-      config: {
-        ...datasource.config,
-        authConfigs: nextAuthConfigs,
-      },
-    })
+      const authConfigs = (
+        (datasource.config?.authConfigs || []) as OAuth2RestAuthConfig[]
+      ).filter(Boolean)
+      const matchingConfig =
+        (authConfigId
+          ? authConfigs.find(config => config._id === authConfigId)
+          : undefined) ||
+        authConfigs.find(
+          config =>
+            isOAuth2DelegatedAuthConfig(config) &&
+            config.account?.toLowerCase() === account.toLowerCase()
+        )
+      const nextAuthConfig: OAuth2RestAuthConfig = {
+        ...(matchingConfig || {}),
+        _id: matchingConfig?._id || `auth_${utils.newid()}`,
+        type: RestAuthType.OAUTH2,
+        authType: "delegated_oauth",
+        name: matchingConfig?.name || `Microsoft SharePoint (${account})`,
+        account,
+        url: credentials.tokenEndpoint,
+        clientId: credentials.clientId,
+        clientSecret: encryption.encrypt(credentials.clientSecret),
+        method: OAuth2CredentialsMethod.BODY,
+        grantType: OAuth2GrantType.AUTHORIZATION_CODE,
+        scope: DEFAULT_SCOPE,
+      }
+      const nextAuthConfigs = matchingConfig
+        ? authConfigs.map(config =>
+            config._id === matchingConfig._id ? nextAuthConfig : config
+          )
+        : [...authConfigs, nextAuthConfig]
 
-    return {
-      authConfigId: nextAuthConfig._id,
-      reusedExistingConnection: !!matchingConfig,
+      try {
+        await sdk.datasources.save({
+          ...datasource,
+          config: {
+            ...datasource.config,
+            authConfigs: nextAuthConfigs,
+          },
+        })
+      } catch (error: any) {
+        if (
+          (error?.status === 409 || error?.statusCode === 409) &&
+          attempt < 2
+        ) {
+          continue
+        }
+        throw error
+      }
+
+      await saveSharePointCredential({
+        datasourceId,
+        authConfigId: nextAuthConfig._id,
+        accessToken: credentials.accessToken,
+        refreshToken: credentials.refreshToken,
+        tokenType: credentials.tokenType,
+        expiresAt: credentials.expiresAt,
+      })
+
+      return {
+        authConfigId: nextAuthConfig._id,
+        reusedExistingConnection: !!matchingConfig,
+      }
     }
+
+    throw new Error("Failed to save SharePoint OAuth config due to conflicts")
   })
 }
 

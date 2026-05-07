@@ -66,10 +66,6 @@ export interface OAuth2RestAuthConfig
   _id: string
   type: RestAuthType.OAUTH2
   account?: string
-  accessToken?: string
-  refreshToken?: string
-  tokenType?: string
-  expiresAt?: number
   authType?: "client_credentials" | "delegated_oauth"
 }
 
