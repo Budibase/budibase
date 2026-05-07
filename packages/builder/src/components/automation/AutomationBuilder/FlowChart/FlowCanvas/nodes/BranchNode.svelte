@@ -48,10 +48,9 @@
       ? logStepData.outputs.branchId
       : null
   $: executed = executedBranchId === branch?.id
-  $: unexecuted =
-    viewMode === ViewMode.LOGS && Boolean(executedBranchId) && !executed
+  $: unexecuted = viewMode === ViewMode.LOGS && (!logStepData || !executed)
   $: branchResult =
-    viewMode === ViewMode.LOGS && logStepData
+    viewMode === ViewMode.LOGS
       ? logStepData
       : automationStore.actions.processBlockResults(
           $automationStore.testResults,
@@ -62,7 +61,7 @@
       ? branchResult.outputs.branchId === branch.id
       : false
   $: runHighlight = getRunHighlight(
-    viewMode === ViewMode.LOGS && $automationStore.selectedLog
+    viewMode === ViewMode.LOGS
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )

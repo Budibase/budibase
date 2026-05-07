@@ -208,7 +208,7 @@
 
   const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
     const results =
-      viewMode === ViewMode.LOGS && $automationStore.selectedLog
+      viewMode === ViewMode.LOGS
         ? $automationStore.selectedLog
         : $automationStore.testResults
     if (!edgeData || !isRunResults(results)) {
@@ -241,7 +241,7 @@
 
   const didBranchRun = (branchStepId: string, branchIdx: number) => {
     const results =
-      viewMode === ViewMode.LOGS && $automationStore.selectedLog
+      viewMode === ViewMode.LOGS
         ? $automationStore.selectedLog
         : $automationStore.testResults
     if (!isRunResults(results)) {

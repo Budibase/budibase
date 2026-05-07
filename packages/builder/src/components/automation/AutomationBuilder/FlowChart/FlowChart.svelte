@@ -176,8 +176,20 @@
       }
     )
 
-    nodes.set(laidOut.nodes)
-    edges.set(laidOut.edges)
+    const selectable = viewMode === ViewMode.EDITOR
+    nodes.set(
+      laidOut.nodes.map(node => ({
+        ...node,
+        selected: false,
+        selectable,
+      }))
+    )
+    edges.set(
+      laidOut.edges.map(edge => ({
+        ...edge,
+        selected: false,
+      }))
+    )
   }
 
   $: if ($nodes?.length && !initialViewportApplied && paneEl) {
@@ -519,6 +531,7 @@
         viewport={flowViewport}
         colorMode="system"
         nodesDraggable={false}
+        elementsSelectable={viewMode === ViewMode.EDITOR}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
         deleteKey={null}
