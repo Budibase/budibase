@@ -16,6 +16,7 @@ import {
 type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
   refreshToken?: string
 }
+type SharePointAuthType = "client_credentials" | "delegated_oauth"
 
 const decryptSecretOrPlaintext = (value?: string): string => {
   if (!value) {
@@ -209,11 +210,28 @@ const refreshConnection = async (
   })
   return connection
 }
-export const getSharePointBearerToken = async (
+
+const getClientCredentialsBearerToken = async (
   datasourceId: string,
-  authConfigId: string
-): Promise<string> => {
-  const connection = await readConnection(datasourceId, authConfigId)
+  authConfigId: string,
+  connection: OAuth2RestAuthConfigWithTokenCache
+) => {
+  return sdk.oauth2.getTokenFromConfig(`${datasourceId}:${authConfigId}`, {
+    url: connection.url,
+    clientId: connection.clientId,
+    clientSecret: connection.clientSecret,
+    method: connection.method,
+    grantType: connection.grantType,
+    scope: connection.scope,
+    audience: connection.audience,
+  })
+}
+
+const getDelegatedBearerToken = async (
+  datasourceId: string,
+  authConfigId: string,
+  connection: OAuth2RestAuthConfigWithTokenCache
+) => {
   let credential = await getSharePointCredential(datasourceId, authConfigId)
   const expiresAt = Number(credential?.expiresAt || 0)
   const needsRefresh = !credential?.accessToken || expiresAt <= Date.now()
@@ -228,6 +246,35 @@ export const getSharePointBearerToken = async (
   }
   const tokenType = credential?.tokenType?.trim() || "Bearer"
   return `${tokenType} ${credential?.accessToken}`
+}
+
+const TOKEN_RESOLVERS: Record<
+  SharePointAuthType,
+  (
+    datasourceId: string,
+    authConfigId: string,
+    connection: OAuth2RestAuthConfigWithTokenCache
+  ) => Promise<string>
+> = {
+  client_credentials: getClientCredentialsBearerToken,
+  delegated_oauth: getDelegatedBearerToken,
+}
+
+const getSharePointAuthType = (
+  connection: OAuth2RestAuthConfigWithTokenCache
+): SharePointAuthType => connection.authType ?? "client_credentials"
+
+export const getSharePointBearerToken = async (
+  datasourceId: string,
+  authConfigId: string
+): Promise<string> => {
+  const connection = await readConnection(datasourceId, authConfigId)
+  const authType = getSharePointAuthType(connection)
+  const resolveToken = TOKEN_RESOLVERS[authType]
+  if (!resolveToken) {
+    throw new HTTPError(`Unsupported SharePoint auth type: ${authType}`, 400)
+  }
+  return resolveToken(datasourceId, authConfigId, connection)
 }
 
 const fetchSharePointSitesByAppToken = async (
