@@ -13,8 +13,7 @@ interface SharePointCredentialDoc {
   updatedAt: string
 }
 
-const docId = (datasourceId: string, authConfigId: string) =>
-  `sharepoint_credential_${datasourceId}_${authConfigId}`
+const docId = (authConfigId: string) => `sharepoint_credential_${authConfigId}`
 
 const decrypt = (value?: string) => {
   if (!value) {
@@ -40,9 +39,7 @@ export const getSharePointCredential = async (
 ) => {
   const db = context.getWorkspaceDB()
   try {
-    const doc = await db.get<SharePointCredentialDoc>(
-      docId(datasourceId, authConfigId)
-    )
+    const doc = await db.get<SharePointCredentialDoc>(docId(authConfigId))
     return {
       ...doc,
       accessToken: decrypt(doc.accessToken),
@@ -69,7 +66,7 @@ export const saveSharePointCredential = async ({
   expiresAt?: number
 }) => {
   const db = context.getWorkspaceDB()
-  const _id = docId(datasourceId, authConfigId)
+  const _id = docId(authConfigId)
   let _rev: string | undefined
   try {
     const existing = await db.get<SharePointCredentialDoc>(_id)
