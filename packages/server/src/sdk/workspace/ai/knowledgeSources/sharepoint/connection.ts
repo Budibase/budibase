@@ -18,11 +18,6 @@ type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
   refreshToken?: string
 }
 
-enum SharePointConnectionAuthType {
-  CLIENT_CREDENTIALS = "client_credentials",
-  DELEGATED_OAUTH = "delegated_oauth",
-}
-
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
@@ -241,7 +236,7 @@ export const getSharePointBearerToken = async (
 
 const fetchSharePointSitesByAppToken = async (
   bearerToken: string,
-  authType: SharePointConnectionAuthType
+  isDelegatedAuth: boolean
 ): Promise<KnowledgeSourceOption[]> => {
   const sitesById = new Map<string, KnowledgeSourceOption>()
   let nextLink = `${SHAREPOINT_API_BASE}/sites?search=*&$top=200&$select=id,displayName,name,webUrl`
@@ -273,15 +268,13 @@ const fetchSharePointSitesByAppToken = async (
       })
       let errorMessage = `Failed to fetch SharePoint sites (${response.status})`
       if (response.status === 401) {
-        errorMessage =
-          authType === SharePointConnectionAuthType.DELEGATED_OAUTH
-            ? "Authentication failed with Microsoft Graph. Reconnect Microsoft account and try again."
-            : "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again."
+        errorMessage = isDelegatedAuth
+          ? "Authentication failed with Microsoft Graph. Reconnect Microsoft account and try again."
+          : "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again."
       } else if (response.status === 403) {
-        errorMessage =
-          authType === SharePointConnectionAuthType.DELEGATED_OAUTH
-            ? "Access denied by Microsoft Graph. Ensure delegated SharePoint permissions are granted and consented."
-            : "Access denied by Microsoft Graph. Ensure SharePoint application permissions are granted."
+        errorMessage = isDelegatedAuth
+          ? "Access denied by Microsoft Graph. Ensure delegated SharePoint permissions are granted and consented."
+          : "Access denied by Microsoft Graph. Ensure SharePoint application permissions are granted."
       } else if (response.status === 400 && errorDescription) {
         errorMessage = `Microsoft Graph rejected the SharePoint search request: ${errorDescription}`
       }
@@ -344,8 +337,6 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
   return fetchSharePointSitesByAppToken(
     bearerToken,
     isOAuth2DelegatedAuthConfig(connection)
-      ? SharePointConnectionAuthType.DELEGATED_OAUTH
-      : SharePointConnectionAuthType.CLIENT_CREDENTIALS
   )
 }
 
