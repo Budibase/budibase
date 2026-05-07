@@ -6,7 +6,7 @@ import {
   isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
 import { derived, Writable } from "svelte/store"
-import { datasources } from "../builder/datasources"
+import { datasources, getRestTemplateIdentifier } from "../builder/datasources"
 
 interface KnowledgeConnection {
   _id: string
@@ -31,10 +31,9 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
       derived([datasources], ([$datasources]) => {
         const list = $datasources.rawList as Datasource[]
         const connections = list.flatMap(datasource => {
-          const isSharePointDatasource =
-            datasource.restTemplateId === "microsoft-sharepoint" ||
-            datasource.restTemplate === "Microsoft SharePoint"
-          if (!isSharePointDatasource) {
+          if (
+            getRestTemplateIdentifier(datasource) !== "microsoft-sharepoint"
+          ) {
             return []
           }
           const authConfigs = (datasource.config?.authConfigs ||
