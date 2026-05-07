@@ -1,10 +1,4 @@
-import {
-  cache,
-  context,
-  docIds,
-  encryption,
-  HTTPError,
-} from "@budibase/backend-core"
+import { cache, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   Document,
   OAuth2CredentialsMethod,
@@ -13,7 +7,6 @@ import {
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
 import { processEnvironmentVariable } from "../../utils"
-import { getSharePointCredential } from "../ai/knowledgeSources/sharepoint/credentials"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -31,14 +24,6 @@ async function fetchToken(config: {
   audience?: string
 }) {
   config = await processEnvironmentVariable(config)
-  const decryptSecretOrPlaintext = (value: string) => {
-    try {
-      return encryption.decrypt(value)
-    } catch {
-      return value
-    }
-  }
-  const clientSecret = decryptSecretOrPlaintext(config.clientSecret)
 
   const fetchConfig: RequestInit = {
     method: "POST",
@@ -55,28 +40,17 @@ async function fetchToken(config: {
     grant_type: config.grantType,
   }
 
-  if (config.grantType === OAuth2GrantType.AUTHORIZATION_CODE) {
-    const credential = await getSharePointCredential("unused", config._id || "")
-    if (!credential?.refreshToken) {
-      throw new Error(
-        "OAuth2 authorization_code config is missing refresh token. Reconnect Microsoft account."
-      )
-    }
-    bodyParams.grant_type = "refresh_token"
-    bodyParams.refresh_token = credential.refreshToken
-  }
-
   if (config.method === OAuth2CredentialsMethod.HEADER) {
     fetchConfig.headers = {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
-        `${config.clientId}:${clientSecret}`,
+        `${config.clientId}:${config.clientSecret}`,
         "utf-8"
       ).toString("base64")}`,
     }
   } else {
     bodyParams["client_id"] = config.clientId
-    bodyParams["client_secret"] = clientSecret
+    bodyParams["client_secret"] = config.clientSecret
   }
   if (config.scope) {
     bodyParams.scope = config.scope
@@ -139,7 +113,6 @@ export async function getToken(id: string) {
 export async function getTokenFromConfig(
   cacheKey: string,
   config: {
-    _id?: string
     url: string
     clientId: string
     clientSecret: string
