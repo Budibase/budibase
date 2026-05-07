@@ -386,8 +386,13 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   const returnPath =
     authStateCookie?.returnPath || `/builder/workspace/${appId}`
   const withConnected = appendQueryParam(returnPath, "microsoft_connected", "1")
+  const withDatasourceId = appendQueryParam(
+    withConnected,
+    "microsoft_datasource_id",
+    statePayload.datasourceId
+  )
   const finalPath = reusedExistingConnection
-    ? appendQueryParam(withConnected, "microsoft_connection_reused", "1")
-    : withConnected
+    ? appendQueryParam(withDatasourceId, "microsoft_connection_reused", "1")
+    : withDatasourceId
   ctx.redirect(finalPath)
 }

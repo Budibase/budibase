@@ -300,12 +300,14 @@
       currentUrl.searchParams.get("microsoft_connected") === "1"
     const microsoftConnectionReused =
       currentUrl.searchParams.get("microsoft_connection_reused") === "1"
+    const datasourceId = currentUrl.searchParams.get("microsoft_datasource_id")
     if (!microsoftConnected) {
       return
     }
 
     currentUrl.searchParams.delete("microsoft_connected")
     currentUrl.searchParams.delete("microsoft_connection_reused")
+    currentUrl.searchParams.delete("microsoft_datasource_id")
     const query = currentUrl.searchParams.toString()
     const path = query ? `${currentUrl.pathname}?${query}` : currentUrl.pathname
     window.history.replaceState({}, "", path)
@@ -315,6 +317,10 @@
       )
     } else {
       notifications.success("SharePoint connected")
+    }
+    if (datasourceId?.startsWith("datasource_")) {
+      bb.settings(`/connections/apis/${datasourceId}`)
+      return
     }
     bb.settings("/connections/apis")
   }
