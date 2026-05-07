@@ -64,13 +64,19 @@
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
-  $: testStatusResult = automationStore.actions.processBlockResults(
-    $automationStore.testResults,
-    block
-  ) as FlowItemStatusResult
+  $: testStatusResult =
+    viewMode === ViewMode.LOGS
+      ? undefined
+      : (automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          block
+        ) as FlowItemStatusResult)
   $: resolvedStatusResult = statusResult ?? testStatusResult
   $: resolvedRunResults =
-    runResults || getRunResults($automationStore.testResults)
+    runResults ||
+    (viewMode === ViewMode.LOGS
+      ? undefined
+      : getRunResults($automationStore.testResults))
   $: resolvedTriggerCompleted =
     triggerCompleted ??
     (isTrigger &&

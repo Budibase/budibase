@@ -17,11 +17,6 @@
   import type { DragView } from "./FlowCanvas/FlowChartDnD"
   import FlowItem from "./FlowItem.svelte"
 
-  type FlowItemStatusResult =
-    | AutomationStepResult
-    | AutomationTriggerResult
-    | undefined
-
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
   export let logData: AutomationLog | null = null
@@ -33,18 +28,11 @@
   const view = getContext<Writable<DragView>>("draggableView")
 
   $: logStepData = getLogStepData(block, logData)
-  $: testStatusResult = automationStore.actions.processBlockResults(
-    $automationStore.testResults,
-    block
-  ) as FlowItemStatusResult
-  $: statusResult = logStepData || testStatusResult
-  $: runResults =
-    getRunResults($automationStore.selectedLog) ||
-    getRunResults($automationStore.testResults)
+  $: runResults = getRunResults($automationStore.selectedLog)
   $: triggerCompleted =
     block.type === AutomationStepType.TRIGGER &&
     !$view?.dragging &&
-    !!statusResult
+    !!logStepData
 
   const getRunResults = (value: unknown): AutomationResults | undefined => {
     const isRunResults =
@@ -64,9 +52,10 @@
   {automation}
   draggable={block.type !== AutomationStepType.TRIGGER}
   {logStepData}
-  {statusResult}
+  statusResult={logStepData}
   {runResults}
   {triggerCompleted}
+  unexecuted={!logStepData}
   viewMode={ViewMode.LOGS}
   {selectedLogStepId}
   {onStepSelect}

@@ -69,7 +69,7 @@
   }
 
   $: blockResult = toStatusResult(
-    isLogsMode && logStepData
+    isLogsMode
       ? logStepData
       : progressResult
         ? progressResult
