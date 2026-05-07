@@ -99,7 +99,7 @@ interface RestTemplatesState {
 }
 
 export const featuredTemplates: RestTemplateId[] = [
-  "slack-web-api",
+  "slack",
   "jira-cloud",
   "bamboohr",
   "hubspot",
@@ -2040,6 +2040,44 @@ const splunkRestTemplateGroup: RestTemplate = {
   ],
 }
 
+const slackRestTemplateGroup: RestTemplate = {
+  id: "slack",
+  name: "Slack",
+  icon: SlackLogo,
+  description:
+    "Slack platform APIs: Web API for apps and workspaces, and the AI Plugin API for AI-assisted workflows.",
+  connectionMode: "independent",
+  operationsCount: 173,
+  templates: [
+    {
+      id: "slack-web-api",
+      name: "Web API",
+      description:
+        "HTTP RPC methods to read and change Slack workspace data with OAuth tokens.",
+      specs: [
+        {
+          version: "1.7.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/slack-web-api/openapi.json",
+        },
+      ],
+      operationsCount: 172,
+    },
+    {
+      id: "slack-ai-plugin",
+      name: "AI Plugin",
+      description:
+        "Slack AI Plugin endpoints used with ChatGPT and AI-assisted messaging.",
+      specs: [
+        {
+          version: "v1",
+          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/main/APIs/slack.com/openai/v1/openapi.yaml",
+        },
+      ],
+      operationsCount: 1,
+    },
+  ],
+}
+
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
@@ -2219,20 +2257,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 390,
       icon: PagerDutyLogo,
-    },
-    {
-      id: "slack-web-api",
-      name: "Slack",
-      description:
-        "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
-      specs: [
-        {
-          version: "1.7.0",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/slack-web-api/openapi.json",
-        },
-      ],
-      operationsCount: 172,
-      icon: SlackLogo,
     },
     {
       id: "servicenow",
@@ -3215,6 +3239,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     salesforceRestTemplateGroup,
     splunkRestTemplateGroup,
     twilioRestTemplateGroup,
+    slackRestTemplateGroup,
     zendeskRestTemplateGroup,
   ],
 }

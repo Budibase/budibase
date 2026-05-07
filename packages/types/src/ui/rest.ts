@@ -34,7 +34,8 @@ export type RestTemplateId =
   | "okta-management"
   | "pagerduty"
   | "servicenow"
-  | "slack-web-api"
+  | "slack"
+  | SlackRestTemplateId
   | "stripe"
   | "virustotal"
   | "ashby"
@@ -228,6 +229,8 @@ export type HubSpotRestTemplateId =
 export type DocuSignRestTemplateId = "docusign-esignature"
 
 export type GongRestTemplateId = "gong-engage" | "gong-public-api"
+
+export type SlackRestTemplateId = "slack-web-api" | "slack-ai-plugin"
 
 export type SalesforceRestTemplateId =
   | "salesforce-bulk-api-2"

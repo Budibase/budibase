@@ -107,6 +107,12 @@ describe("RestTemplatesStore", () => {
         connectionMode: "independent",
         childNames: ["eSignature"],
       },
+      {
+        id: "slack",
+        name: "Slack",
+        connectionMode: "independent",
+        childNames: ["Web API", "AI Plugin"],
+      },
     ])(
       "exposes $name as one vendor template with the expected connection mode and child API choices",
       ({ id, name, connectionMode, childNames }) => {
@@ -119,7 +125,7 @@ describe("RestTemplatesStore", () => {
       }
     )
 
-    it("does not expose Salesforce, Gong, or DocuSign child APIs as top-level templates", () => {
+    it("does not expose child APIs as top-level templates", () => {
       const topLevelIds = store.flatTemplates.map(t => t.id)
 
       expect(topLevelIds).not.toContain("salesforce-core")
@@ -127,6 +133,8 @@ describe("RestTemplatesStore", () => {
       expect(topLevelIds).not.toContain("gong-public-api")
       expect(topLevelIds).not.toContain("gong-engage")
       expect(topLevelIds).not.toContain("docusign-esignature")
+      expect(topLevelIds).not.toContain("slack-web-api")
+      expect(topLevelIds).not.toContain("slack-ai-plugin")
     })
   })
 
