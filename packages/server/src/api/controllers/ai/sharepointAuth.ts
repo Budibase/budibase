@@ -11,7 +11,6 @@ import {
   Datasource,
   DatasourceAuthCookie,
   OAuth2CredentialsMethod,
-  OAuth2GrantType,
   OAuth2RestAuthConfig,
   RestAuthType,
   SourceName,
@@ -97,8 +96,9 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
   const callbackUrl = `${platformUrl}/api/datasource/sharepoint/callback`
 
   const state = utils.newid()
+  const stateCacheKey = `datasource:${MICROSOFT_PROVIDER}:state:${state}`
   await cache.store(
-    `datasource:${MICROSOFT_PROVIDER}:state:${state}`,
+    stateCacheKey,
     {
       appId,
       datasourceId,
@@ -165,10 +165,10 @@ export const upsertDelegatedSharePointAuthConfig = async (
       const explicitConfig = authConfigId
         ? authConfigs.find(config => config._id === authConfigId)
         : undefined
-
       if (authConfigId && !explicitConfig) {
         throw new Error("SharePoint auth config not found on datasource")
       }
+
       const matchingConfig =
         explicitConfig ||
         authConfigs.find(
@@ -187,7 +187,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
         clientId: credentials.clientId,
         clientSecret: encryption.encrypt(credentials.clientSecret),
         method: OAuth2CredentialsMethod.BODY,
-        grantType: OAuth2GrantType.AUTHORIZATION_CODE,
+        grantType: "client_credentials",
         scope: DEFAULT_SCOPE,
       }
       const nextAuthConfigs = matchingConfig
@@ -243,10 +243,10 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   if (!state) {
     throw new Error("Microsoft OAuth callback is missing state")
   }
-  const statePayload = (await cache.get(
-    `datasource:${MICROSOFT_PROVIDER}:state:${state}`
-  )) as SharePointOAuthState
-  await cache.destroy(`datasource:${MICROSOFT_PROVIDER}:state:${state}`)
+
+  const stateCacheKey = `datasource:${MICROSOFT_PROVIDER}:state:${state}`
+  const statePayload = (await cache.get(stateCacheKey)) as SharePointOAuthState
+  await cache.destroy(stateCacheKey)
   const stateAppId =
     typeof statePayload?.appId === "string" ? statePayload.appId.trim() : ""
   if (
@@ -351,10 +351,11 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
       error,
     })
   }
-  const { reusedExistingConnection, authConfigId } =
+
+  const { reusedExistingConnection } =
     await upsertDelegatedSharePointAuthConfig(
       appId,
-      statePayload.datasourceId!,
+      statePayload.datasourceId,
       statePayload.authConfigId,
       {
         account,
@@ -370,7 +371,6 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   console.log("SharePoint delegated OAuth callback received", {
     appId,
     datasourceId: statePayload.datasourceId,
-    authConfigId,
     account,
     hasAccessToken: !!accessToken,
     hasRefreshToken: !!refreshToken,

@@ -6,7 +6,6 @@ import {
   OAuth2RestAuthConfig,
   isOAuth2ClientCredentialsAuthConfig,
   isOAuth2DelegatedAuthConfig,
-  OAuth2GrantType,
 } from "@budibase/types"
 import sdk from "../../../.."
 import {
@@ -136,10 +135,7 @@ const readConnection = async (
 }
 
 const getRefreshBody = (connection: OAuth2RestAuthConfigWithTokenCache) => {
-  if (
-    connection.authType === "delegated_oauth" &&
-    connection.grantType === OAuth2GrantType.AUTHORIZATION_CODE
-  ) {
+  if (connection.authType === "delegated_oauth") {
     return new URLSearchParams({
       client_id: connection.clientId,
       client_secret: encryption.decrypt(connection.clientSecret),
