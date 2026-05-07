@@ -34,9 +34,7 @@ export function isRunResults(value: unknown): value is AutomationResults {
 /**
  * Get run results from a value, returns undefined if not valid results
  */
-export function getRunResults(
-  value: unknown
-): AutomationResults | undefined {
+export function getRunResults(value: unknown): AutomationResults | undefined {
   return isRunResults(value) ? value : undefined
 }
 
@@ -103,9 +101,7 @@ export function isTerminalFailure(
  * Determine the run highlight state based on automation results
  * Returns "error" if terminal failure, "stopped" if stopped status, "success" otherwise
  */
-export function getRunHighlight(
-  results: unknown
-): RunHighlight | undefined {
+export function getRunHighlight(results: unknown): RunHighlight | undefined {
   const runResults = getRunResults(results)
   if (!runResults) {
     return undefined
