@@ -25,7 +25,7 @@
       success?: boolean
     }
   }
-  type RunHighlight = "success" | "error"
+  type RunHighlight = "success" | "error" | "stopped"
   type FlowItemStatusResult =
     | AutomationStepResult
     | AutomationTriggerResult
@@ -106,10 +106,12 @@
       ? runHighlight === "error"
       : terminalFailure
     : false
+  $: warnHighlight = blockExecuted ? runHighlight === "stopped" : false
   $: triggerIconColor = getTriggerIconColor({
     selected,
     errorHighlight,
     successHighlight,
+    warnHighlight,
     triggerCompleted: resolvedTriggerCompleted,
     runHighlight,
   })
@@ -261,7 +263,6 @@
 
     return (
       (result.outputs.success === false && !canContinueOnError(result)) ||
-      outputStatus === AutomationStatus.STOPPED ||
       outputStatus === AutomationStatus.STOPPED_ERROR
     )
   }
@@ -276,21 +277,30 @@
     if (!runResults) {
       return
     }
-    return isTerminalFailure(getLastExecutedResult(runResults))
-      ? "error"
-      : "success"
+    const lastResult = getLastExecutedResult(runResults)
+    if (isTerminalFailure(lastResult)) {
+      return "error"
+    }
+    const outputStatus =
+      "status" in lastResult.outputs &&
+      typeof lastResult.outputs.status === "string"
+        ? lastResult.outputs.status.toLowerCase()
+        : undefined
+    return outputStatus === AutomationStatus.STOPPED ? "stopped" : "success"
   }
 
   function getTriggerIconColor({
     selected,
     errorHighlight,
     successHighlight,
+    warnHighlight,
     triggerCompleted,
     runHighlight,
   }: {
     selected: boolean
     errorHighlight: boolean
     successHighlight: boolean
+    warnHighlight: boolean
     triggerCompleted: boolean
     runHighlight: RunHighlight | undefined
   }) {
@@ -299,6 +309,9 @@
     }
     if (selected && successHighlight) {
       return "var(--spectrum-semantic-positive-color-status)"
+    }
+    if ((selected || triggerCompleted) && warnHighlight) {
+      return "var(--spectrum-global-color-orange-500)"
     }
     if (triggerCompleted && runHighlight !== "error") {
       return "var(--spectrum-semantic-positive-color-status)"
@@ -355,6 +368,7 @@
     class:selected
     class:success={successHighlight}
     class:error={errorHighlight}
+    class:warn={warnHighlight}
     class:unexecuted
   >
     <div class="wrap">
@@ -584,6 +598,14 @@
     border-width: 2px;
   }
   .block.error.selected .block-content {
+    border-width: 3px;
+  }
+
+  .block.warn .block-content {
+    border-color: var(--spectrum-global-color-orange-500);
+    border-width: 2px;
+  }
+  .block.warn.selected .block-content {
     border-width: 3px;
   }
 
