@@ -54,15 +54,16 @@
       </div>
 
       {#if options.length === 0}
-        <Body size="S">No SharePoint connections found.</Body>
+        <Body size="S">No SharePoint OAuth2 auth configs found.</Body>
       {:else}
         <Select
           value={selectedConnectionId}
           on:change={e => e.detail && onConnectionChange(e.detail)}
-          label="Select connection"
+          label="Select auth config"
           {options}
           getOptionLabel={o => `${o.name} - ${o.account}`}
           getOptionValue={o => o.id}
+          sort
         />
       {/if}
     </div>

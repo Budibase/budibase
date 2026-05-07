@@ -17,10 +17,7 @@ import { runChatWebhook } from "./runChatWebhook"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
-const TEAMS_PROCESSING_MESSAGE = "Got it. I'm working on it..."
-const TEAMS_DELAY_MESSAGE =
-  "Still working. This is taking a little longer than usual..."
-const TEAMS_DELAY_MS = 10_000
+const TEAMS_PROCESSING_MESSAGE = "Thinking..."
 const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
 
 export const stripTeamsMentions = (
@@ -133,6 +130,9 @@ export const isTeamsMentionActivity = (activity?: MSTeamsActivity) => {
   )
 }
 
+const isTeamsPersonalConversation = (conversationType?: string) =>
+  conversationType?.trim().toLowerCase() === "personal"
+
 const createTeamsMessageHandler = ({
   workspaceId,
   chatAppId,
@@ -208,25 +208,18 @@ const createTeamsMessageHandler = ({
     const shouldShowProgress =
       command === ChatCommands.ASK ||
       (command === ChatCommands.NEW && !!content)
+
+    const shouldPostChannelWorkingIndicator =
+      shouldShowProgress && !isTeamsPersonalConversation(conversationType)
+
     let progressMessage: SentMessage | undefined
     let hasUsedProgressMessage = false
-    let delayTimer: ReturnType<typeof setTimeout> | undefined
-    let delayUpdateInFlight: Promise<void> | undefined
-
-    const clearDelayTimer = () => {
-      if (delayTimer) {
-        clearTimeout(delayTimer)
-        delayTimer = undefined
-      }
-    }
 
     const editProgressMessage = async (text: string) => {
       if (!progressMessage || hasUsedProgressMessage) {
         return false
       }
 
-      clearDelayTimer()
-      await delayUpdateInFlight
       hasUsedProgressMessage = true
 
       try {
@@ -238,12 +231,16 @@ const createTeamsMessageHandler = ({
       }
     }
 
-    const editOrPost = async (text: string) => {
-      if (await editProgressMessage(text)) {
-        return
+    const editOrPostTextReply = async (text: string) => {
+      const chunks = splitTeamsMessage(text)
+      const firstChunk = chunks[0] || "No response generated."
+      const remainingChunks = chunks.slice(1)
+      if (!(await editProgressMessage(firstChunk))) {
+        await thread.post(firstChunk)
       }
-
-      await thread.post(text)
+      for (const chunk of remainingChunks) {
+        await thread.post(chunk)
+      }
     }
 
     try {
@@ -258,32 +255,20 @@ const createTeamsMessageHandler = ({
         } catch (error) {
           console.error("Teams typing indicator failed", error)
         }
-        progressMessage = await thread.post(TEAMS_PROCESSING_MESSAGE)
-        delayTimer = setTimeout(() => {
-          if (!progressMessage || hasUsedProgressMessage) {
-            return
-          }
-          delayUpdateInFlight = progressMessage
-            .edit(TEAMS_DELAY_MESSAGE)
-            .then(updatedMessage => {
-              progressMessage = updatedMessage
-            })
-            .catch(error => {
-              console.error("Teams progress update failed", error)
-            })
-        }, TEAMS_DELAY_MS)
       }
 
       await handleChatMessage({
-        reply: async (text: string) => {
-          const chunks = splitTeamsMessage(text)
-          const firstChunk = chunks[0] || "No response generated."
-          const remainingChunks = chunks.slice(1)
-          await editOrPost(firstChunk)
-          for (const chunk of remainingChunks) {
-            await thread.post(chunk)
-          }
-        },
+        reply: editOrPostTextReply,
+        replyWithAssistantStream: shouldPostChannelWorkingIndicator
+          ? undefined
+          : async stream => {
+              await thread.post(stream)
+            },
+        beforeAssistantWebhook: shouldPostChannelWorkingIndicator
+          ? async () => {
+              progressMessage = await thread.post(TEAMS_PROCESSING_MESSAGE)
+            }
+          : undefined,
         replyLinkPrompt: async prompt => {
           const delivery = await postLinkPromptPrivately({
             target: thread,
@@ -292,18 +277,18 @@ const createTeamsMessageHandler = ({
             linkUrl: prompt.linkUrl,
           })
           if (delivery.usedDirectMessageFallback) {
-            await editOrPost("I sent you a DM with your Budibase link.")
+            await editOrPostTextReply(
+              "I sent you a DM with your Budibase link."
+            )
             return
           }
           if (!delivery.delivered) {
-            await editOrPost(
+            await editOrPostTextReply(
               "I couldn't send a private Budibase link. Please try again in a direct message."
             )
             return
           }
-          if (progressMessage && !hasUsedProgressMessage) {
-            await editOrPost("I sent you a private Budibase link.")
-          }
+          await editOrPostTextReply("I sent you a private Budibase link.")
         },
         workspaceId,
         chatAppId,
@@ -326,9 +311,7 @@ const createTeamsMessageHandler = ({
         error instanceof HTTPError
           ? error.message
           : TEAMS_FALLBACK_ERROR_MESSAGE
-      await editOrPost(msg)
-    } finally {
-      clearDelayTimer()
+      await editOrPostTextReply(msg)
     }
   }
 }

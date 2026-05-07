@@ -67,10 +67,6 @@ const aiRagBuilderAdminRoutes = endpointGroupList
 
 aiRagBuilderAdminRoutes
   .get(
-    "/api/agent/knowledge-sources/connections",
-    ai.fetchAgentKnowledgeSourceConnections
-  )
-  .get(
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
   )
@@ -78,7 +74,7 @@ aiRagBuilderAdminRoutes
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
   .get(
-    "/api/knowledge-sources/:connectionId/options",
+    "/api/knowledge-sources/:datasourceId/:authConfigId/options",
     ai.fetchAgentKnowledgeSourceOptions
   )
   .get(

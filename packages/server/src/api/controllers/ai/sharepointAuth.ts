@@ -1,17 +1,5 @@
-import {
-  cache,
-  configs,
-  constants,
-  context,
-  env,
-  utils,
-} from "@budibase/backend-core"
-import {
-  AgentKnowledgeSourceType,
-  DatasourceAuthCookie,
-  UserCtx,
-} from "@budibase/types"
-import sdk from "../../../sdk"
+import { cache, configs, constants, env, utils } from "@budibase/backend-core"
+import { DatasourceAuthCookie, UserCtx } from "@budibase/types"
 
 const DEFAULT_SCOPE = env.RAG_SHAREPOINT_DEFAULT_SCOPE
 const STATE_CACHE_TTL_SECONDS = 600
@@ -50,10 +38,6 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
   const appId = String(ctx.query.appId || "").trim()
   const returnPath =
     typeof ctx.query.returnPath === "string" ? ctx.query.returnPath : undefined
-  const connectionId =
-    typeof ctx.query.connectionId === "string"
-      ? ctx.query.connectionId.trim()
-      : undefined
 
   if (!appId) {
     ctx.throw(400, "appId query param not present.")
@@ -61,7 +45,6 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
   console.log("Starting SharePoint OAuth flow", {
     appId,
     hasReturnPath: !!returnPath,
-    hasConnectionId: !!connectionId,
   })
 
   const { clientId, tenantId } = getMicrosoftConfig()
@@ -74,7 +57,6 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
     {
       appId,
       provider: MICROSOFT_PROVIDER,
-      ...(connectionId ? { connectionId } : {}),
     },
     STATE_CACHE_TTL_SECONDS
   )
@@ -85,7 +67,6 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
       provider: MICROSOFT_PROVIDER,
       appId,
       returnPath,
-      connectionId,
     } satisfies DatasourceAuthCookie,
     constants.Cookie.DatasourceAuth
   )
@@ -116,7 +97,7 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   }
   const statePayload = (await cache.get(
     `datasource:${MICROSOFT_PROVIDER}:state:${state}`
-  )) as { appId?: string; provider?: string; connectionId?: string }
+  )) as { appId?: string; provider?: string }
   await cache.destroy(`datasource:${MICROSOFT_PROVIDER}:state:${state}`)
   const stateAppId =
     typeof statePayload?.appId === "string" ? statePayload.appId.trim() : ""
@@ -128,12 +109,6 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
     throw new Error("Microsoft OAuth state is invalid or expired")
   }
   const appId = stateAppId
-  const reconnectConnectionId =
-    (typeof statePayload?.connectionId === "string" &&
-      statePayload.connectionId.trim()) ||
-    (typeof authStateCookie?.connectionId === "string" &&
-      authStateCookie.connectionId.trim()) ||
-    undefined
 
   const oauthError = String(ctx.query.error || "").trim()
   if (oauthError) {
@@ -227,73 +202,19 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
       error,
     })
   }
-  const reusedExistingConnection = await context.doInContext(
+  // TODO(rag/sharepoint/reuse-api-credentials):
+  // Persist delegated OAuth credentials onto datasource OAuth2 auth configs
+  // (datasourceId/authConfigId), reusing existing credentials by account where
+  // appropriate. This replaces all legacy AgentKnowledgeSourceConnection usage.
+  console.log("SharePoint delegated OAuth callback received", {
     appId,
-    async () => {
-      if (reconnectConnectionId) {
-        const existingConnection =
-          await sdk.ai.knowledgeSources.getKnowledgeSourceConnection(
-            reconnectConnectionId
-          )
-        if (
-          existingConnection?._id &&
-          existingConnection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
-        ) {
-          await sdk.ai.knowledgeSources.updateKnowledgeSourceConnection(
-            reconnectConnectionId,
-            {
-              tokenEndpoint,
-              accessToken,
-              refreshToken,
-              tokenType,
-              expiresAt: calculateBufferedTokenExpiry(expiresIn),
-              clientId,
-              clientSecret,
-              account,
-            }
-          )
-          return true
-        }
-      }
-
-      const existingConnections =
-        await sdk.ai.knowledgeSources.listKnowledgeSourceConnections()
-      const normalizedAccount = account.trim().toLowerCase()
-      const canReuseByAccount =
-        !!normalizedAccount && normalizedAccount !== "unknown"
-      const matchedConnection = existingConnections.find(
-        connection =>
-          canReuseByAccount &&
-          connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT &&
-          connection.account?.toLowerCase() === normalizedAccount
-      )
-
-      const nextConnection = {
-        sourceType: AgentKnowledgeSourceType.SHAREPOINT,
-        tokenEndpoint,
-        accessToken,
-        refreshToken,
-        tokenType,
-        expiresAt: calculateBufferedTokenExpiry(expiresIn),
-        clientId,
-        clientSecret,
-        account,
-      }
-
-      if (matchedConnection?._id) {
-        await sdk.ai.knowledgeSources.updateKnowledgeSourceConnection(
-          matchedConnection._id,
-          nextConnection
-        )
-        return true
-      } else {
-        await sdk.ai.knowledgeSources.createKnowledgeSourceConnection(
-          nextConnection
-        )
-        return false
-      }
-    }
-  )
+    account,
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken,
+    tokenEndpoint,
+    expiresAt: calculateBufferedTokenExpiry(expiresIn),
+  })
+  const reusedExistingConnection = false
   console.log("Completed SharePoint OAuth flow", {
     appId,
     connected: true,

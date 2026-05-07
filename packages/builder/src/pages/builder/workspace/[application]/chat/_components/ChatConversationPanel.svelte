@@ -24,7 +24,6 @@
     | "ready" = "ready"
 
   export let chat: ChatConversationLike
-  export let loading: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""
 
@@ -37,7 +36,6 @@
   {enabledAgentList}
   {conversationStarters}
   {agentAvailability}
-  {loading}
   {workspaceId}
   {initialPrompt}
   {userName}

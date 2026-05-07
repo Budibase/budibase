@@ -21,6 +21,9 @@ const resolvePathParams = (
 }
 
 export type SettingsLocked = "self" | "subtree"
+type SettingsOptions = Record<string, any> & {
+  locked?: SettingsLocked
+}
 
 export interface Settings {
   open: boolean
@@ -108,7 +111,9 @@ export class BBStore extends BudiStore<BBState> {
     }))
   }
 
-  settings(path?: string, { locked }: { locked?: SettingsLocked } = {}) {
+  settings(path?: string, options: SettingsOptions = {}) {
+    const { locked, ...params } = options
+    const routeParams = Object.keys(params).length ? params : undefined
     const currentState = get(this.store).settings
 
     // blocks all navigation when self-locked
@@ -134,7 +139,7 @@ export class BBStore extends BudiStore<BBState> {
         settings: {
           ...state.settings,
           pendingPath: path,
-          pendingParams: undefined,
+          pendingParams: routeParams,
         },
       }))
       return
@@ -167,7 +172,13 @@ export class BBStore extends BudiStore<BBState> {
       ...state,
       settings: {
         ...state.settings,
-        route: matchedRoute,
+        route: {
+          ...matchedRoute,
+          params: {
+            ...matchedRoute.params,
+            ...(routeParams || {}),
+          },
+        },
         locked: locked ?? currentState.locked,
         open: true,
         pendingPath: undefined,
