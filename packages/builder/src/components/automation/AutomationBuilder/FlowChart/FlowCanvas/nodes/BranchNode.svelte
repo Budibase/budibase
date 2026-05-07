@@ -187,7 +187,8 @@
     display: inline-block;
   }
   .block {
-    width: fit-content;
+    width: 100%;
+    max-width: 100%;
     background-color: var(--automation-flow-item-background, var(--background));
     border: 0.5px solid var(--spectrum-global-color-gray-200);
     border-radius: 16px;
@@ -201,7 +202,8 @@
   .blockSection {
     padding: 0;
     padding-right: 32px;
-    width: auto;
+    width: 100%;
+    max-width: 100%;
     height: auto;
     display: flex;
     align-items: center;
@@ -243,8 +245,17 @@
     align-items: center;
     justify-content: center;
     width: 100%;
+    min-width: 0;
     height: 100%;
     cursor: pointer;
+  }
+  .blockSection .heading :global(.block-details.compact) {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+  .blockSection .heading :global(.heading.compact) {
+    flex: 1 1 auto;
   }
 
   .block.selected {

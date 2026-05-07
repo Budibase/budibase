@@ -31,7 +31,10 @@
     isSubflow && !isVertical ? `right: ${handleOffset - 3}px;` : undefined
 </script>
 
-<div class="branch-wrapper">
+<div
+  class="branch-wrapper"
+  style:--branch-wrapper-width={`${isSubflow ? laneWidth : STEP.width}px`}
+>
   <Handle
     isConnectable={false}
     class="custom-handle"
@@ -50,3 +53,14 @@
     style={sourceHandleStyle}
   />
 </div>
+
+<style>
+  .branch-wrapper {
+    position: relative;
+    width: var(--branch-wrapper-width);
+  }
+  .branch-container {
+    width: 200px;
+    margin: 0 auto;
+  }
+</style>

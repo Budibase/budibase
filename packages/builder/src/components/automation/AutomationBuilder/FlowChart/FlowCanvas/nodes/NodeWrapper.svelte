@@ -48,7 +48,7 @@
   }
 </script>
 
-<div style="position: relative;">
+<div class="step-wrapper">
   {#if !isTrigger}
     <Handle
       isConnectable={false}
@@ -74,3 +74,10 @@
     />
   </div>
 </div>
+
+<style>
+  .step-wrapper {
+    position: relative;
+    width: 200px;
+  }
+</style>
