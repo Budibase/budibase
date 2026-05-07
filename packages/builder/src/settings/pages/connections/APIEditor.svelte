@@ -339,16 +339,35 @@
     data = { ...data }
   }
 
-  const startSharePointDelegatedOAuth = () => {
-    if (!datasource?._id || !$appStore.appId) {
-      notifications.error(
-        "Save this SharePoint connection before connecting OAuth"
-      )
+  const startSharePointDelegatedOAuth = async () => {
+    if (!$appStore.appId) {
+      notifications.error("Missing workspace app context for OAuth setup")
+      return
+    }
+    let datasourceId = datasource?._id
+    if (!datasourceId && isDatasource) {
+      if (!validateAuth()) {
+        notifications.error(
+          "Please fix authentication errors before connecting Microsoft account"
+        )
+        return
+      }
+      try {
+        const created = await createNewDatasource()
+        datasourceId = created?._id
+      } catch (error) {
+        console.error(error)
+        notifications.error("Failed to create connection before OAuth setup")
+        return
+      }
+    }
+    if (!datasourceId) {
+      notifications.error("Datasource not available for OAuth setup")
       return
     }
     const query = new URLSearchParams({
       appId: $appStore.appId,
-      datasourceId: datasource._id,
+      datasourceId,
       returnPath: window.location.pathname,
     })
     window.location.href = `/api/datasource/sharepoint/connect?${query.toString()}`
@@ -448,6 +467,7 @@
     } else {
       bb.settings(`/connections/apis/${ds._id}`)
     }
+    return ds
   }
 
   const updateDatasource = async () => {
@@ -863,7 +883,7 @@
                 <MenuItem on:click={() => addAuthConfig(RestAuthType.OAUTH2)}>
                   OAuth2 (Client credentials)
                 </MenuItem>
-                {#if isSharePointDatasource && !isNewConnection}
+                {#if isSharePointDatasource}
                   <MenuItem on:click={startSharePointDelegatedOAuth}>
                     Connect Microsoft account
                   </MenuItem>
