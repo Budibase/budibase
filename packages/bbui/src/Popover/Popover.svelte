@@ -17,6 +17,7 @@
   } from "../Actions/positionDropdown"
   import { PopoverAlignment, type PopoverWidthMode } from "../constants"
   import Context from "../context"
+  import { type Readable } from "svelte/store"
 
   export let anchor: HTMLElement | undefined
   export let align: PopoverAlignment | `${PopoverAlignment}` =
@@ -47,9 +48,14 @@
   let blockPointerEvents = false
 
   // Portal library lacks types, so we have to type this as any even though it's
-  // actually a string
+  const popoverRoot = getContext<string>(Context.PopoverRoot)
+  const popoverPortalOverride = getContext(Context.PopoverPortalOverride) as
+    | Readable<HTMLElement | undefined>
+    | undefined
+
   $: target = (portalTarget ||
-    getContext(Context.PopoverRoot) ||
+    $popoverPortalOverride ||
+    popoverRoot ||
     ".spectrum") as any
   $: {
     // Disable pointer events for the initial part of the animation, because we

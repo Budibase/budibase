@@ -61,9 +61,7 @@
   ])
 
   function createAIConfig() {
-    bb.settings(`/connections/${AIConfigType.COMPLETIONS}/new`, {
-      type: AIConfigType.COMPLETIONS,
-    })
+    bb.settings(`/connections/${AIConfigType.COMPLETIONS}/new`)
   }
 
   onMount(async () => {

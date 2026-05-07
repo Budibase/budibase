@@ -8,7 +8,6 @@ import {
   DuplicateAgentResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
-  FetchAgentKnowledgeSourceConnectionsResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
@@ -71,9 +70,9 @@ export interface AgentEndpoints {
     fileId: string
   ) => Promise<{ deleted: true }>
   fetchAgentKnowledgeSourceOptions: (
-    connectionId: string
+    datasourceId: string,
+    authConfigId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
-  fetchAgentKnowledgeSourceConnections: () => Promise<FetchAgentKnowledgeSourceConnectionsResponse>
   fetchAgentKnowledgeSourceAllEntries: (
     agentId: string,
     siteId: string
@@ -220,15 +219,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentKnowledgeSourceOptions: async (connectionId: string) => {
+  fetchAgentKnowledgeSourceOptions: async (
+    datasourceId: string,
+    authConfigId: string
+  ) => {
     return await API.get<FetchAgentKnowledgeSourceOptionsResponse>({
-      url: `/api/knowledge-sources/${encodeURIComponent(connectionId)}/options`,
-    })
-  },
-
-  fetchAgentKnowledgeSourceConnections: async () => {
-    return await API.get<FetchAgentKnowledgeSourceConnectionsResponse>({
-      url: "/api/agent/knowledge-sources/connections",
+      url: `/api/knowledge-sources/${encodeURIComponent(datasourceId)}/${encodeURIComponent(authConfigId)}/options`,
     })
   },
 

@@ -58,7 +58,7 @@
   async function close(): Promise<void> {
     loading = true
     if (!onCancel || (await onCancel()) !== keepOpen) {
-      cancel(ModalCancelFrom.CANCEL_BUTTON)
+      await cancel(ModalCancelFrom.CANCEL_BUTTON)
     }
     loading = false
   }
@@ -153,7 +153,7 @@
         <Icon
           hoverable
           name="x"
-          on:click={() => cancel(ModalCancelFrom.CLOSE_BUTTON)}
+          on:click={async () => cancel(ModalCancelFrom.CLOSE_BUTTON)}
         />
       </div>
     {/if}
