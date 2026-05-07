@@ -176,6 +176,7 @@
 
   // Initialisation
   $: init(initialised, selected)
+
   $: {
     // Reset child selection when navigating to a different connection
     selected
@@ -669,6 +670,8 @@
     }
     return []
   }
+
+  $datasources.list && init(false, selected)
 </script>
 
 <Layout noPadding>
