@@ -93,19 +93,23 @@ describe("tenants", () => {
       })
     })
 
-    it("should throw error when settings config not found", async () => {
-      const tenantId = structures.tenant.id()
+    it("should create settings config when not found", async () => {
       const lockReason = LockReason.FREE_TIER
 
       mockDb.tryGet.mockResolvedValue(null)
 
-      await expect(lockTenant(tenantId, lockReason)).rejects.toThrow(
-        `Cannot lock. Settings config not found for tenant ${tenantId}`
-      )
+      await lockTenant(structures.tenant.id(), lockReason)
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {
+          lockedBy: lockReason,
+        },
+      })
     })
 
-    it("should throw error when settings config has no config property", async () => {
-      const tenantId = structures.tenant.id()
+    it("should initialise config property when missing", async () => {
       const lockReason = LockReason.FREE_TIER
 
       const settingsConfig = {
@@ -115,9 +119,14 @@ describe("tenants", () => {
 
       mockDb.tryGet.mockResolvedValue(settingsConfig)
 
-      await expect(lockTenant(tenantId, lockReason)).rejects.toThrow(
-        `Cannot lock. Settings config not found for tenant ${tenantId}`
-      )
+      await lockTenant(structures.tenant.id(), lockReason)
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        ...settingsConfig,
+        config: {
+          lockedBy: lockReason,
+        },
+      })
     })
   })
 
@@ -149,14 +158,18 @@ describe("tenants", () => {
       })
     })
 
-    it("should throw error when settings config not found", async () => {
-      const tenantId = structures.tenant.id()
-
+    it("should create settings config when not found", async () => {
       mockDb.tryGet.mockResolvedValue(null)
 
-      await expect(unlockTenant(tenantId)).rejects.toThrow(
-        `Cannot lock. Settings config not found for tenant ${tenantId}`
-      )
+      await unlockTenant(structures.tenant.id())
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {
+          lockedBy: undefined,
+        },
+      })
     })
   })
 
@@ -213,19 +226,21 @@ describe("tenants", () => {
       })
     })
 
-    it("should throw error when settings config not found", async () => {
-      const tenantId = structures.tenant.id()
-
+    it("should create settings config when not found", async () => {
       mockDb.tryGet.mockResolvedValue(null)
 
-      await expect(setActivation(tenantId, true)).rejects.toThrow(
-        `Cannot set activation. Settings config not found for tenant ${tenantId}`
-      )
+      await setActivation(structures.tenant.id(), true)
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {
+          active: true,
+        },
+      })
     })
 
-    it("should throw error when settings config has no config property", async () => {
-      const tenantId = structures.tenant.id()
-
+    it("should initialise config property when missing", async () => {
       const settingsConfig = {
         _id: "config_settings",
         type: ConfigType.SETTINGS,
@@ -233,9 +248,14 @@ describe("tenants", () => {
 
       mockDb.tryGet.mockResolvedValue(settingsConfig)
 
-      await expect(setActivation(tenantId, true)).rejects.toThrow(
-        `Cannot set activation. Settings config not found for tenant ${tenantId}`
-      )
+      await setActivation(structures.tenant.id(), true)
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        ...settingsConfig,
+        config: {
+          active: true,
+        },
+      })
     })
   })
 })

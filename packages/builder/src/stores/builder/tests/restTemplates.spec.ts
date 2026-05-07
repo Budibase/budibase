@@ -87,6 +87,67 @@ describe("RestTemplatesStore", () => {
     })
   })
 
+  describe("multi-spec vendor templates", () => {
+    it.each([
+      {
+        id: "salesforce",
+        name: "Salesforce",
+        connectionMode: "shared",
+        childNames: ["Core", "Bulk API 2.0"],
+      },
+      {
+        id: "gong",
+        name: "Gong",
+        connectionMode: "independent",
+        childNames: ["Public API", "Engage"],
+      },
+      {
+        id: "docusign",
+        name: "DocuSign",
+        connectionMode: "independent",
+        childNames: ["eSignature"],
+      },
+    ])(
+      "exposes $name as one vendor template with the expected connection mode and child API choices",
+      ({ id, name, connectionMode, childNames }) => {
+        const template = store.flatTemplates.find(t => t.id === id)
+
+        expect(template).toBeDefined()
+        expect(template?.name).toBe(name)
+        expect(template?.connectionMode).toBe(connectionMode)
+        expect(template?.templates?.map(t => t.name)).toEqual(childNames)
+      }
+    )
+
+    it("does not expose Salesforce, Gong, or DocuSign child APIs as top-level templates", () => {
+      const topLevelIds = store.flatTemplates.map(t => t.id)
+
+      expect(topLevelIds).not.toContain("salesforce-core")
+      expect(topLevelIds).not.toContain("salesforce-bulk-api-2")
+      expect(topLevelIds).not.toContain("gong-public-api")
+      expect(topLevelIds).not.toContain("gong-engage")
+      expect(topLevelIds).not.toContain("docusign-esignature")
+    })
+  })
+
+  describe("flat vendor templates", () => {
+    it("exposes Documenso as a single-spec flat template", () => {
+      const template = store.flatTemplates.find(t => t.id === "documenso")
+
+      expect(template).toBeDefined()
+      expect(template?.name).toBe("Documenso")
+      expect(template?.connectionMode).toBeUndefined()
+      expect(template?.templates).toBeUndefined()
+      expect(template?.operationsCount).toBe(85)
+      expect(template?.specs).toEqual([
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/documenso/openapi.yaml",
+        },
+      ])
+    })
+  })
+
   describe("get", () => {
     it("returns undefined for undefined/empty input", () => {
       expect(store.get(undefined)).toBeUndefined()
