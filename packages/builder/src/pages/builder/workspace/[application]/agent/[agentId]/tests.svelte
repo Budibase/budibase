@@ -139,9 +139,7 @@
     selectedCaseId ? (latestResultsByCaseId.get(selectedCaseId) ?? []) : []
   )
   let running = $derived(activeRuns.length > 0)
-  let runningCaseIds = $derived(
-    new Set(activeRuns.flatMap(run => run.caseIds))
-  )
+  let runningCaseIds = $derived(new Set(activeRuns.flatMap(run => run.caseIds)))
 
   const resetState = (agentId?: string) => {
     suite = emptySuite(agentId)
