@@ -468,15 +468,17 @@ export const renderLoopV2Container = (
   const childHeight = SUBFLOW.childHeight
   const lrWidth = 60
   const lrGapForWidth = isLR ? lrWidth : 0
-  const lrSpacing = SUBFLOW.internalSpacing + (isLR ? lrWidth : 0)
-  const lrMinExit = lrSpacing + 20
+  const lrMinExit = 16
+  const horizontalStepWidth = STEP.width
 
   let dynamicHeight = paddingTop
-  let maxFanoutWidth = SUBFLOW.stepWidth
+  let maxFanoutWidth = isLR ? horizontalStepWidth : SUBFLOW.stepWidth
+  let hasBranchChild = false
   let linearWidth = 0
   let maxRowHeight = childHeight
   for (const step of children) {
     if (step.stepId === AutomationActionStepId.BRANCH) {
+      hasBranchChild = true
       const branches: Branch[] = step?.inputs?.branches || []
       const childrenMap: Record<string, AutomationStep[]> =
         step?.inputs?.children || {}
@@ -512,7 +514,7 @@ export const renderLoopV2Container = (
       }
     } else {
       if (isLR) {
-        linearWidth += SUBFLOW.stepWidth + internalSpacing + lrGapForWidth
+        linearWidth += horizontalStepWidth + internalSpacing + lrGapForWidth
       } else {
         dynamicHeight += childHeight + internalSpacing
       }
@@ -523,11 +525,12 @@ export const renderLoopV2Container = (
   }
   dynamicHeight += paddingBottom
   if (isLR) {
+    const minLinearLoopWidth = 280
     containerWidth = Math.max(
-      containerWidth,
+      hasBranchChild ? containerWidth : minLinearLoopWidth,
       linearWidth + lrMinExit + 40,
       maxFanoutWidth + 80,
-      SUBFLOW.laneWidth + 80
+      hasBranchChild ? SUBFLOW.laneWidth + 80 : 0
     )
   } else {
     containerWidth = Math.max(containerWidth, maxFanoutWidth + 80)
@@ -552,7 +555,7 @@ export const renderLoopV2Container = (
   })
 
   // Render children inside the container
-  const stepWidth = SUBFLOW.stepWidth
+  const stepWidth = isLR ? horizontalStepWidth : SUBFLOW.stepWidth
   const baseX = Math.max(0, Math.floor((containerWidth - stepWidth) / 2))
   const contentHeight = containerHeight - paddingTop - paddingBottom
   const baseY = isLR

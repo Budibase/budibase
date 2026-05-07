@@ -99,19 +99,27 @@
     targetBlockRef
   )
   $: isLoopTarget = targetBlock?.stepId === AutomationActionStepId.LOOP_V2
+  $: isLoopSource =
+    data?.block && "stepId" in data.block
+      ? data.block.stepId === AutomationActionStepId.LOOP_V2
+      : false
   $: isSubflowEdge = data.isSubflowEdge === true
   $: isLR = $layoutDirection !== "TB"
 
-  $: if (isAnchorTarget || (isLR && isLoopTarget)) {
+  $: if (isAnchorTarget || (isLR && (isLoopTarget || isLoopSource))) {
     labelX = isLR
       ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
       : (sourceX ?? 0)
-    labelY = isLR
-      ? (sourceY ?? 0)
-      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
+    labelY =
+      isLR && isLoopSource
+        ? (targetY ?? 0)
+        : isLR
+          ? (sourceY ?? 0)
+          : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
   }
 
   $: loopTargetPath = isLR && isLoopTarget ? getLoopTargetPath() : undefined
+  $: loopSourcePath = isLR && isLoopSource ? getLoopSourcePath() : undefined
 
   $: edgePath = isAnchorTarget
     ? getStraightPath({
@@ -120,7 +128,7 @@
         targetX: labelX,
         targetY: labelY,
       })[0]
-    : loopTargetPath || basePath[0]
+    : loopTargetPath || loopSourcePath || basePath[0]
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
@@ -222,6 +230,35 @@
     const radius = 12
     const desiredBendX =
       labelX + Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
+    const bendX = Math.max(
+      sourceX + radius,
+      Math.min(targetX - radius, desiredBendX)
+    )
+    const yDirection = targetY >= sourceY ? 1 : -1
+
+    if (Math.abs(targetY - sourceY) <= radius * 2) {
+      return [
+        `M ${sourceX},${sourceY}`,
+        `L ${bendX},${sourceY}`,
+        `L ${bendX},${targetY}`,
+        `L ${targetX},${targetY}`,
+      ].join(" ")
+    }
+
+    return [
+      `M ${sourceX},${sourceY}`,
+      `L ${bendX - radius},${sourceY}`,
+      `Q ${bendX},${sourceY} ${bendX},${sourceY + yDirection * radius}`,
+      `L ${bendX},${targetY - yDirection * radius}`,
+      `Q ${bendX},${targetY} ${bendX + radius},${targetY}`,
+      `L ${targetX},${targetY}`,
+    ].join(" ")
+  }
+
+  const getLoopSourcePath = () => {
+    const radius = 12
+    const desiredBendX =
+      labelX - Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) - radius
     const bendX = Math.max(
       sourceX + radius,
       Math.min(targetX - radius, desiredBendX)
