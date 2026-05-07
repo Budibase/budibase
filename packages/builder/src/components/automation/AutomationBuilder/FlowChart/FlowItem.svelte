@@ -8,24 +8,24 @@
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
-    AutomationActionStepId,
-    AutomationStatus,
     AutomationStepType,
     type Automation,
-    type AutomationResults,
     type AutomationStep,
     type AutomationTrigger,
     type AutomationStepResult,
     type AutomationTriggerResult,
+    type AutomationResults,
   } from "@budibase/types"
+  import {
+    getRunHighlight,
+    isTerminalFailure,
+    hasSuccessOutput,
+    isAutomationStepResult,
+    getRunResults,
+    type RunHighlight,
+  } from "./FlowCanvas/FlowRunHelpers"
   import { type DragView } from "./FlowCanvas/FlowChartDnD"
 
-  type ResultWithOutputs = {
-    outputs: {
-      success?: boolean
-    }
-  }
-  type RunHighlight = "success" | "error" | "stopped"
   type FlowItemStatusResult =
     | AutomationStepResult
     | AutomationTriggerResult
@@ -55,11 +55,6 @@
     getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
       "focusNodeRequest"
     )
-  const continueOnErrorStepIds = [
-    AutomationActionStepId.API_REQUEST,
-    AutomationActionStepId.EXECUTE_QUERY,
-    AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
-  ] as string[]
 
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
@@ -228,67 +223,6 @@
     automationStore.actions.updateBlockTitle(block, e.detail)
   }
 
-  function hasSuccessOutput(value: unknown): value is ResultWithOutputs {
-    return (
-      !!value &&
-      typeof value === "object" &&
-      "outputs" in value &&
-      !!value.outputs &&
-      typeof value.outputs === "object" &&
-      "success" in value.outputs
-    )
-  }
-
-  function isAutomationStepResult(
-    value: unknown
-  ): value is AutomationStepResult {
-    return (
-      !!value &&
-      typeof value === "object" &&
-      "inputs" in value &&
-      !!value.inputs &&
-      "outputs" in value &&
-      !!value.outputs &&
-      "stepId" in value
-    )
-  }
-
-  function isTerminalFailure(
-    result: AutomationStepResult | AutomationTriggerResult
-  ) {
-    const outputStatus =
-      "status" in result.outputs && typeof result.outputs.status === "string"
-        ? result.outputs.status.toLowerCase()
-        : undefined
-
-    return (
-      (result.outputs.success === false && !canContinueOnError(result)) ||
-      outputStatus === AutomationStatus.STOPPED_ERROR
-    )
-  }
-
-  function getLastExecutedResult(results: AutomationResults) {
-    const executedSteps = results.steps.filter(step => !!step.outputs)
-    return executedSteps.at(-1) || results.trigger
-  }
-
-  function getRunHighlight(results: unknown): RunHighlight | undefined {
-    const runResults = getRunResults(results)
-    if (!runResults) {
-      return
-    }
-    const lastResult = getLastExecutedResult(runResults)
-    if (isTerminalFailure(lastResult)) {
-      return "error"
-    }
-    const outputStatus =
-      "status" in lastResult.outputs &&
-      typeof lastResult.outputs.status === "string"
-        ? lastResult.outputs.status.toLowerCase()
-        : undefined
-    return outputStatus === AutomationStatus.STOPPED ? "stopped" : "success"
-  }
-
   function getTriggerIconColor({
     selected,
     errorHighlight,
@@ -320,33 +254,6 @@
       return "var(--spectrum-global-color-blue-700)"
     }
     return "var(--spectrum-global-color-gray-500)"
-  }
-
-  function getRunResults(value: unknown): AutomationResults | undefined {
-    const isRunResults =
-      !!value &&
-      typeof value === "object" &&
-      "steps" in value &&
-      Array.isArray(value.steps) &&
-      "trigger" in value &&
-      !!value.trigger
-
-    return isRunResults ? (value as AutomationResults) : undefined
-  }
-
-  function canContinueOnError(
-    result: AutomationStepResult | AutomationTriggerResult
-  ) {
-    if (!("inputs" in result) || !result.inputs) {
-      return false
-    }
-    if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
-      return true
-    }
-    return (
-      result.inputs?.continueOnError === true &&
-      continueOnErrorStepIds.includes(result.stepId)
-    )
   }
 </script>
 

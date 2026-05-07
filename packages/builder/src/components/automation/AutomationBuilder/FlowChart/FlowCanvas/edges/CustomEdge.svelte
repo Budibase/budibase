@@ -20,14 +20,16 @@
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "../FlowChartDnD"
   import {
-    AutomationStatus,
-    AutomationActionStepId,
     isBranchStep,
     type AutomationResults,
-    type AutomationStepResult,
-    type AutomationTriggerResult,
     type BranchStep,
   } from "@budibase/types"
+  import {
+    getRunHighlight,
+    isRunResults,
+    didStepRun,
+    isTerminalFailure,
+  } from "../FlowRunHelpers"
 
   export let data: EdgeData
   export let sourceX: number
@@ -50,11 +52,6 @@
     "flowLayoutDirection"
   )
   const flow = useSvelteFlow()
-  const continueOnErrorStepIds = [
-    AutomationActionStepId.API_REQUEST,
-    AutomationActionStepId.EXECUTE_QUERY,
-    AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
-  ] as string[]
 
   const deriveBlockContext = (
     edgeData: EdgeData | undefined
@@ -234,82 +231,12 @@
     return didTargetRun(results) ? runHighlight : undefined
   }
 
-  const getRunHighlight = (
-    results: AutomationResults
-  ): "error" | "success" | "stopped" => {
-    const lastResult = getLastExecutedResult(results)
-    if (isTerminalResult(lastResult)) {
-      if (lastResult.outputs.status === "stopped") {
-        return "stopped"
-      }
-      return "error"
-    }
-    return "success"
-  }
-
-  const isRunResults = (value: unknown): value is AutomationResults => {
-    return (
-      !!value &&
-      typeof value === "object" &&
-      "steps" in value &&
-      Array.isArray(value.steps) &&
-      "trigger" in value &&
-      !!value.trigger
-    )
-  }
-
-  const getLastExecutedResult = (results: AutomationResults) => {
-    const executedSteps = results.steps.filter(didStepRun)
-    return executedSteps.at(-1) || results.trigger
-  }
-
   const didTargetRun = (results: AutomationResults) => {
     if (target === results.trigger.id) {
       return didStepRun(results.trigger)
     }
     const targetResult = results.steps.find(step => step.id === target)
     return targetResult ? didStepRun(targetResult) : false
-  }
-
-  const didStepRun = (
-    result: AutomationStepResult | AutomationTriggerResult
-  ) => {
-    return !!result.outputs
-  }
-
-  const isTerminalResult = (
-    result: AutomationStepResult | AutomationTriggerResult | undefined
-  ) => {
-    const outputs = result?.outputs
-    if (!outputs) {
-      return false
-    }
-
-    const outputStatus =
-      "status" in outputs && typeof outputs.status === "string"
-        ? outputs.status.toLowerCase()
-        : undefined
-
-    return (
-      (outputs.success === false && !canContinueOnError(result)) ||
-      outputStatus === AutomationStatus.STOPPED ||
-      outputStatus === AutomationStatus.STOPPED_ERROR
-    )
-  }
-
-  const canContinueOnError = (
-    result: AutomationStepResult | AutomationTriggerResult
-  ) => {
-    if (!("inputs" in result) || !result.inputs) {
-      return false
-    }
-    if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
-      return true
-    }
-    return (
-      result.inputs.continueOnError === true &&
-      continueOnErrorStepIds.includes(result.stepId)
-    )
   }
 
   const didBranchRun = (branchStepId: string, branchIdx: number) => {
@@ -326,7 +253,7 @@
       return false
     }
     const result = results.steps.find(step => step.id === branchStepId)
-    if (isTerminalResult(result)) {
+    if (isTerminalFailure(result)) {
       return false
     }
     const outputs = result?.outputs
