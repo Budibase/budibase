@@ -16,12 +16,12 @@ export async function getEnvironmentVariables() {
   return envVars
 }
 
-export function isEnvironmentVariableKey(str: string) {
-  return str.match(/{{\s*env\.[^\s]+\s*}}/)
+export function isEnvironmentVariableKey(str: unknown) {
+  return typeof str === "string" && str.match(/{{\s*env\.[^\s]+\s*}}/)
 }
 
 export async function processEnvironmentVariable<
-  T extends string | Record<string, string> | undefined,
+  T extends string | Record<string, unknown> | undefined,
 >(value: T): Promise<T> {
   let envVariables: Record<string, string>
   const getEnvVariables = async () => {
@@ -35,11 +35,10 @@ export async function processEnvironmentVariable<
     return value
   }
   if (typeof value !== "string") {
-    for (const key of Object.keys(value).filter(k => value[k])) {
-      value[key] = await _processEnvironmentVariable(
-        value[key],
-        getEnvVariables
-      )
+    for (const key of Object.keys(value).filter(
+      k => typeof value[k] === "string" && value[k]
+    )) {
+      value[key] = await _processEnvironmentVariable(value[key], getEnvVariables)
     }
     return value
   }
@@ -49,9 +48,12 @@ export async function processEnvironmentVariable<
 }
 
 async function _processEnvironmentVariable(
-  str: string,
+  str: unknown,
   envVariables: () => Promise<Record<string, string>>
 ) {
+  if (typeof str !== "string") {
+    return str
+  }
   if (!isEnvironmentVariableKey(str)) {
     return str
   }
