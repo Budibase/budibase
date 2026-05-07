@@ -11,7 +11,15 @@
   import { type Writable } from "svelte/store"
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
-  import type { Automation, Branch } from "@budibase/types"
+  import {
+    AutomationActionStepId,
+    AutomationStatus,
+    type Automation,
+    type AutomationResults,
+    type AutomationStepResult,
+    type AutomationTriggerResult,
+    type Branch,
+  } from "@budibase/types"
   import { type DragView } from "../FlowChartDnD"
 
   type BranchResult = {
@@ -31,6 +39,11 @@
     getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
       "focusNodeRequest"
     )
+  const continueOnErrorStepIds = [
+    AutomationActionStepId.API_REQUEST,
+    AutomationActionStepId.EXECUTE_QUERY,
+    AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+  ] as string[]
   $: branch = step.inputs?.branches?.[branchIdx]
   $: blockRef = $selectedAutomation?.blockRefs?.[step?.id]
   $: branchNodeId = branch ? createBranchNodeId(branchIdx, branch.id) : ""
@@ -60,8 +73,13 @@
     branch && hasBranchResult(branchResult)
       ? branchResult.outputs.branchId === branch.id
       : false
-  $: branchSuccess = branchExecuted
-  $: branchFailed = false
+  $: runHighlight = getRunHighlight(
+    viewMode === ViewMode.LOGS && $automationStore.selectedLog
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
+  )
+  $: branchSuccess = branchExecuted && runHighlight !== "error"
+  $: branchFailed = branchExecuted && runHighlight === "error"
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
@@ -77,6 +95,66 @@
       typeof outputs === "object" &&
       "branchId" in outputs &&
       "success" in outputs
+    )
+  }
+
+  const getLastExecutedResult = (results: AutomationResults) => {
+    const executedSteps = results.steps.filter(step => !!step.outputs)
+    return executedSteps.at(-1) || results.trigger
+  }
+
+  const getRunHighlight = (results: unknown) => {
+    if (!isRunResults(results)) {
+      return
+    }
+    return isTerminalFailure(getLastExecutedResult(results))
+      ? "error"
+      : "success"
+  }
+
+  const isRunResults = (value: unknown): value is AutomationResults => {
+    return (
+      !!value &&
+      typeof value === "object" &&
+      "steps" in value &&
+      Array.isArray(value.steps) &&
+      "trigger" in value &&
+      !!value.trigger
+    )
+  }
+
+  const isTerminalFailure = (
+    result: AutomationStepResult | AutomationTriggerResult
+  ) => {
+    const outputs = result.outputs
+    if (!outputs) {
+      return false
+    }
+
+    const outputStatus =
+      "status" in outputs && typeof outputs.status === "string"
+        ? outputs.status.toLowerCase()
+        : undefined
+
+    return (
+      (outputs.success === false && !canContinueOnError(result)) ||
+      outputStatus === AutomationStatus.STOPPED ||
+      outputStatus === AutomationStatus.STOPPED_ERROR
+    )
+  }
+
+  const canContinueOnError = (
+    result: AutomationStepResult | AutomationTriggerResult
+  ) => {
+    if (!("inputs" in result) || !result.inputs) {
+      return false
+    }
+    if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
+      return true
+    }
+    return (
+      result.inputs.continueOnError === true &&
+      continueOnErrorStepIds.includes(result.stepId)
     )
   }
 
@@ -106,8 +184,8 @@
   <div
     class={`block branch-node hoverable`}
     class:selected
-    class:success={selected && branchSuccess}
-    class:error={selected && branchFailed}
+    class:success={branchSuccess}
+    class:error={branchFailed}
     class:executed
     class:unexecuted
     on:click={e => {
@@ -260,10 +338,27 @@
 
   .block.selected {
     border-color: var(--spectrum-global-color-blue-600);
+    border-width: 2px;
+  }
+
+  .block.success {
+    border-color: var(--spectrum-semantic-positive-color-status);
+    border-width: 2px;
+  }
+  .block.success.selected {
+    border-width: 3px;
+  }
+
+  .block.error {
+    border-color: var(--spectrum-semantic-negative-color-status);
+    border-width: 2px;
+  }
+  .block.error.selected {
+    border-width: 3px;
   }
 
   .block.executed {
-    border-color: var(--spectrum-global-color-green-600);
+    border-color: var(--spectrum-semantic-positive-color-status);
     border-width: 2px;
   }
 

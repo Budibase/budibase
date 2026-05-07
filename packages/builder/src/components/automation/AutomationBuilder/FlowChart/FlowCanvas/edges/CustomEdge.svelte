@@ -20,8 +20,8 @@
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "../FlowChartDnD"
   import {
-    isAutomationResults,
     AutomationStatus,
+    AutomationActionStepId,
     isBranchStep,
     type AutomationResults,
     type AutomationStepResult,
@@ -49,6 +49,11 @@
     "flowLayoutDirection"
   )
   const flow = useSvelteFlow()
+  const continueOnErrorStepIds = [
+    AutomationActionStepId.API_REQUEST,
+    AutomationActionStepId.EXECUTE_QUERY,
+    AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+  ] as string[]
 
   const deriveBlockContext = (
     edgeData: EdgeData | undefined
@@ -110,10 +115,13 @@
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
   $: sourcePathForDrop = passedPathTo || blockRef?.pathTo
-  $: isExecutedPathEdge = isOnExecutedPath(data)
-  $: edgeStyle = isExecutedPathEdge
-    ? "stroke: var(--spectrum-global-color-blue-600); stroke-width: 2px;"
-    : undefined
+  $: edgeHighlight = getEdgeHighlight(data)
+  $: edgeStyle =
+    edgeHighlight === "success"
+      ? "stroke: var(--spectrum-semantic-positive-color-status); stroke-width: 2px;"
+      : edgeHighlight === "error"
+        ? "stroke: var(--spectrum-semantic-negative-color-status); stroke-width: 2px;"
+        : undefined
 
   $: collectBlockExists =
     viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
@@ -194,28 +202,58 @@
     flow.fitView()
   }
 
-  const isOnExecutedPath = (edgeData: EdgeData | undefined) => {
-    const results = $automationStore.testResults
-    if (!edgeData || !results || !isAutomationResults(results)) {
-      return false
+  const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
+    const results =
+      viewMode === ViewMode.LOGS && $automationStore.selectedLog
+        ? $automationStore.selectedLog
+        : $automationStore.testResults
+    if (!edgeData || !isRunResults(results)) {
+      return
     }
+    const runHighlight = getRunHighlight(results)
 
     if (isBranchEdgeData(edgeData)) {
       return didBranchRun(edgeData.branchStepId, edgeData.branchIdx)
+        ? runHighlight
+        : undefined
     }
 
     if (isBranchContext(edgeData.block)) {
       return didBranchRun(edgeData.block.branchStepId, edgeData.block.branchIdx)
+        ? runHighlight
+        : undefined
     }
 
-    const result = getResultByBlockId(results, edgeData.block)
-    if (!result) {
-      return false
+    return didTargetRun(results) ? runHighlight : undefined
+  }
+
+  const getRunHighlight = (results: AutomationResults) => {
+    const lastResult = getLastExecutedResult(results)
+    return isTerminalResult(lastResult) ? "error" : "success"
+  }
+
+  const isRunResults = (value: unknown): value is AutomationResults => {
+    return (
+      !!value &&
+      typeof value === "object" &&
+      "steps" in value &&
+      Array.isArray(value.steps) &&
+      "trigger" in value &&
+      !!value.trigger
+    )
+  }
+
+  const getLastExecutedResult = (results: AutomationResults) => {
+    const executedSteps = results.steps.filter(didStepRun)
+    return executedSteps.at(-1) || results.trigger
+  }
+
+  const didTargetRun = (results: AutomationResults) => {
+    if (target === results.trigger.id) {
+      return didStepRun(results.trigger)
     }
-    if (result.id === results.trigger.id) {
-      return true
-    }
-    return didStepRun(result) && !isTerminalResult(result)
+    const targetResult = results.steps.find(step => step.id === target)
+    return targetResult ? didStepRun(targetResult) : false
   }
 
   const didStepRun = (
@@ -238,25 +276,33 @@
         : undefined
 
     return (
-      outputs.success === false ||
+      (outputs.success === false && !canContinueOnError(result)) ||
       outputStatus === AutomationStatus.STOPPED ||
       outputStatus === AutomationStatus.STOPPED_ERROR
     )
   }
 
-  const getResultByBlockId = (
-    results: AutomationResults,
-    blockContext: FlowBlockContext
+  const canContinueOnError = (
+    result: AutomationStepResult | AutomationTriggerResult
   ) => {
-    if (!("id" in blockContext)) {
-      return
+    if (!("inputs" in result) || !result.inputs) {
+      return false
     }
-    return results.steps.find(step => step.id === blockContext.id)
+    if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
+      return true
+    }
+    return (
+      result.inputs.continueOnError === true &&
+      continueOnErrorStepIds.includes(result.stepId)
+    )
   }
 
   const didBranchRun = (branchStepId: string, branchIdx: number) => {
-    const results = $automationStore.testResults
-    if (!results || !isAutomationResults(results)) {
+    const results =
+      viewMode === ViewMode.LOGS && $automationStore.selectedLog
+        ? $automationStore.selectedLog
+        : $automationStore.testResults
+    if (!isRunResults(results)) {
       return false
     }
     const branchStep = getBranchStep(branchStepId)

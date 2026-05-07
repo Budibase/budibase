@@ -8,8 +8,11 @@
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
+    AutomationActionStepId,
+    AutomationStatus,
     AutomationStepType,
     type Automation,
+    type AutomationResults,
     type AutomationStep,
     type AutomationTrigger,
     type AutomationStepResult,
@@ -22,6 +25,7 @@
       success?: boolean
     }
   }
+  type RunHighlight = "success" | "error"
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -44,6 +48,11 @@
     getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
       "focusNodeRequest"
     )
+  const continueOnErrorStepIds = [
+    AutomationActionStepId.API_REQUEST,
+    AutomationActionStepId.EXECUTE_QUERY,
+    AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+  ] as string[]
 
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
@@ -53,11 +62,19 @@
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
+  $: resultSource =
+    viewMode === ViewMode.LOGS && $automationStore.selectedLog
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
   $: triggerCompleted =
     isTrigger &&
     !$view?.dragging &&
     (viewMode === ViewMode.LOGS
-      ? !!logStepData
+      ? !!logStepData ||
+        !!automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          block
+        )
       : !!$automationStore.inProgressTest ||
         !!automationStore.actions.processBlockResults(
           $automationStore.testResults,
@@ -78,6 +95,33 @@
     blockStatusResult && hasSuccessOutput(blockStatusResult)
       ? blockStatusResult.outputs.success === false
       : false
+  $: terminalFailure =
+    !isTrigger && blockStatusResult && isAutomationStepResult(blockStatusResult)
+      ? isTerminalFailure(blockStatusResult)
+      : false
+  $: continuedFailure = blockFailed && !terminalFailure
+  $: runHighlight = getRunHighlight(resultSource)
+  $: blockExecuted =
+    blockStatusResult && hasSuccessOutput(blockStatusResult)
+      ? true
+      : isTrigger && triggerCompleted
+  $: successHighlight = blockExecuted
+    ? runHighlight
+      ? runHighlight === "success"
+      : blockSuccess || continuedFailure
+    : false
+  $: errorHighlight = blockExecuted
+    ? runHighlight
+      ? runHighlight === "error"
+      : terminalFailure
+    : false
+  $: triggerIconColor = getTriggerIconColor({
+    selected,
+    errorHighlight,
+    successHighlight,
+    triggerCompleted,
+    runHighlight,
+  })
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
     : undefined
@@ -202,6 +246,103 @@
       "success" in value.outputs
     )
   }
+
+  function isAutomationStepResult(
+    value: unknown
+  ): value is AutomationStepResult {
+    return (
+      !!value &&
+      typeof value === "object" &&
+      "inputs" in value &&
+      !!value.inputs &&
+      "outputs" in value &&
+      !!value.outputs &&
+      "stepId" in value
+    )
+  }
+
+  function isTerminalFailure(
+    result: AutomationStepResult | AutomationTriggerResult
+  ) {
+    const outputStatus =
+      "status" in result.outputs && typeof result.outputs.status === "string"
+        ? result.outputs.status.toLowerCase()
+        : undefined
+
+    return (
+      (result.outputs.success === false && !canContinueOnError(result)) ||
+      outputStatus === AutomationStatus.STOPPED ||
+      outputStatus === AutomationStatus.STOPPED_ERROR
+    )
+  }
+
+  function getLastExecutedResult(results: AutomationResults) {
+    const executedSteps = results.steps.filter(step => !!step.outputs)
+    return executedSteps.at(-1) || results.trigger
+  }
+
+  function getRunHighlight(results: unknown): RunHighlight | undefined {
+    if (!isRunResults(results)) {
+      return
+    }
+    return isTerminalFailure(getLastExecutedResult(results))
+      ? "error"
+      : "success"
+  }
+
+  function getTriggerIconColor({
+    selected,
+    errorHighlight,
+    successHighlight,
+    triggerCompleted,
+    runHighlight,
+  }: {
+    selected: boolean
+    errorHighlight: boolean
+    successHighlight: boolean
+    triggerCompleted: boolean
+    runHighlight: RunHighlight | undefined
+  }) {
+    if (selected && errorHighlight) {
+      return "var(--spectrum-semantic-negative-color-status)"
+    }
+    if (selected && successHighlight) {
+      return "var(--spectrum-semantic-positive-color-status)"
+    }
+    if (triggerCompleted && runHighlight !== "error") {
+      return "var(--spectrum-semantic-positive-color-status)"
+    }
+    if (selected) {
+      return "var(--spectrum-global-color-blue-700)"
+    }
+    return "var(--spectrum-global-color-gray-500)"
+  }
+
+  function isRunResults(value: unknown): value is AutomationResults {
+    return (
+      !!value &&
+      typeof value === "object" &&
+      "steps" in value &&
+      Array.isArray(value.steps) &&
+      "trigger" in value &&
+      !!value.trigger
+    )
+  }
+
+  function canContinueOnError(
+    result: AutomationStepResult | AutomationTriggerResult
+  ) {
+    if (!("inputs" in result) || !result.inputs) {
+      return false
+    }
+    if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
+      return true
+    }
+    return (
+      result.inputs?.continueOnError === true &&
+      continueOnErrorStepIds.includes(result.stepId)
+    )
+  }
 </script>
 
 <svelte:window
@@ -220,8 +361,8 @@
     class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
-    class:success={selected && blockSuccess}
-    class:error={selected && blockFailed}
+    class:success={successHighlight}
+    class:error={errorHighlight}
     class:unexecuted
   >
     <div class="wrap">
@@ -282,11 +423,7 @@
               {automation}
               {block}
               showTriggerIcon={isTrigger}
-              triggerIconColor={triggerCompleted
-                ? "var(--spectrum-semantic-positive-color-status)"
-                : selected
-                  ? "var(--spectrum-global-color-blue-700)"
-                  : "var(--spectrum-global-color-gray-500)"}
+              {triggerIconColor}
               on:update={handleHeaderUpdate}
             />
           </div>
@@ -441,6 +578,21 @@
   }
   .block.selected .block-content {
     border-color: var(--spectrum-global-color-blue-600);
+    border-width: 2px;
+  }
+  .block.success .block-content {
+    border-color: var(--spectrum-semantic-positive-color-status);
+    border-width: 2px;
+  }
+  .block.success.selected .block-content {
+    border-width: 3px;
+  }
+  .block.error .block-content {
+    border-color: var(--spectrum-semantic-negative-color-status);
+    border-width: 2px;
+  }
+  .block.error.selected .block-content {
+    border-width: 3px;
   }
 
   .block-info {

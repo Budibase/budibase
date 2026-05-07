@@ -280,20 +280,22 @@
       {/if}
     {:else if showFlowStatus && flowStatus && !hideStatus}
       {#if iconOnly}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <span
-          class={`flow-${flowStatus.type} flow-status-icon`}
-          title={flowStatus.message}
-          on:click={async () => await onStatusClick(flowStatus.type)}
-        >
-          <Icon
-            name={flowStatus.icon}
-            size="S"
-            weight="fill"
-            color="currentColor"
-          />
-        </span>
+        {#if flowStatus.type !== FlowStatusType.SUCCESS}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <span
+            class={`flow-${flowStatus.type} flow-status-icon`}
+            title={flowStatus.message}
+            on:click={async () => await onStatusClick(flowStatus.type)}
+          >
+            <Icon
+              name={flowStatus.icon}
+              size="S"
+              weight="fill"
+              color="currentColor"
+            />
+          </span>
+        {/if}
       {:else if loopInfo?.total && $automationStore.inProgressTest}
         <span class="flow-success flow-status-btn">
           <ActionButton
