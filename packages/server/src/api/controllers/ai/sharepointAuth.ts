@@ -161,10 +161,16 @@ export const upsertDelegatedSharePointAuthConfig = async (
       const authConfigs = (
         (datasource.config?.authConfigs || []) as OAuth2RestAuthConfig[]
       ).filter(Boolean)
+
+      const explicitConfig = authConfigId
+        ? authConfigs.find(config => config._id === authConfigId)
+        : undefined
+
+      if (authConfigId && !explicitConfig) {
+        throw new Error("SharePoint auth config not found on datasource")
+      }
       const matchingConfig =
-        (authConfigId
-          ? authConfigs.find(config => config._id === authConfigId)
-          : undefined) ||
+        explicitConfig ||
         authConfigs.find(
           config =>
             isOAuth2DelegatedAuthConfig(config) &&
