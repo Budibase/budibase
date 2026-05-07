@@ -78,8 +78,9 @@
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
-  $: branchSuccess = branchExecuted && runHighlight !== "error"
+  $: branchSuccess = branchExecuted && runHighlight === "success"
   $: branchFailed = branchExecuted && runHighlight === "error"
+  $: branchStopped = branchExecuted && runHighlight === "stopped"
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
@@ -103,13 +104,19 @@
     return executedSteps.at(-1) || results.trigger
   }
 
-  const getRunHighlight = (results: unknown) => {
+  const getRunHighlight = (
+    results: unknown
+  ): "error" | "success" | "stopped" | undefined => {
     if (!isRunResults(results)) {
       return
     }
-    return isTerminalFailure(getLastExecutedResult(results))
-      ? "error"
-      : "success"
+    const lastResult = getLastExecutedResult(results)
+    if (isTerminalFailure(lastResult)) {
+      return "error"
+    } else if (lastResult.outputs.status === "stopped") {
+      return "stopped"
+    }
+    return "success"
   }
 
   const isRunResults = (value: unknown): value is AutomationResults => {
@@ -138,7 +145,6 @@
 
     return (
       (outputs.success === false && !canContinueOnError(result)) ||
-      outputStatus === AutomationStatus.STOPPED ||
       outputStatus === AutomationStatus.STOPPED_ERROR
     )
   }
@@ -186,6 +192,7 @@
     class:selected
     class:success={branchSuccess}
     class:error={branchFailed}
+    class:warn={branchStopped}
     class:executed
     class:unexecuted
     on:click={e => {
@@ -354,6 +361,14 @@
     border-width: 2px;
   }
   .block.error.selected {
+    border-width: 3px;
+  }
+
+  .block.warn {
+    border-color: var(--spectrum-global-color-orange-500);
+    border-width: 2px;
+  }
+  .block.warn.selected {
     border-width: 3px;
   }
 
