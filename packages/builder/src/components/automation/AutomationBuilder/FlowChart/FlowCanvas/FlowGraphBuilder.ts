@@ -677,9 +677,7 @@ export const renderLoopV2Container = (
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
     // Place exit anchor at container end according to layout
     const exitAnchorY = isLR ? baseY : innerY
-    const exitAnchorX = isLR
-      ? Math.max(containerWidth - 40, baseX + stepWidth)
-      : baseX
+    const exitAnchorX = isLR ? containerWidth : baseX
     deps.newNodes.push(
       anchorNode(exitAnchorId, baseId, {
         x: exitAnchorX,

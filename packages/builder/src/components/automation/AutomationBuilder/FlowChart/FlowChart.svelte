@@ -119,8 +119,8 @@
   setContext("focusNodeRequest", focusNodeRequest)
   setContext("flowLayoutDirection", flowLayoutDirection)
 
-  $: updateGraph(blocks, layoutDirection)
   $: flowLayoutDirection.set(layoutDirection)
+  $: updateGraph(blocks, layoutDirection)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -523,29 +523,31 @@
         dnd.updatePaneRect()
       }}
     >
-      <SvelteFlow
-        {nodes}
-        {nodeTypes}
-        {edges}
-        {edgeTypes}
-        viewport={flowViewport}
-        colorMode="system"
-        nodesDraggable={false}
-        elementsSelectable={viewMode === ViewMode.EDITOR}
-        minZoom={MIN_ZOOM}
-        maxZoom={MAX_ZOOM}
-        deleteKey={null}
-        proOptions={{ hideAttribution: true }}
-        onMoveStart={closeContextMenuOnCanvasInteraction}
-        onMove={handleMove}
-        on:paneclick={closeContextMenuOnCanvasInteraction}
-      >
-        <FlowControls
-          historyStore={automationHistoryStore}
-          {layoutDirection}
-          on:layout={e => setLayoutDirection(e.detail)}
-        />
-      </SvelteFlow>
+      {#key layoutDirection}
+        <SvelteFlow
+          {nodes}
+          {nodeTypes}
+          {edges}
+          {edgeTypes}
+          viewport={flowViewport}
+          colorMode="system"
+          nodesDraggable={false}
+          elementsSelectable={viewMode === ViewMode.EDITOR}
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
+          deleteKey={null}
+          proOptions={{ hideAttribution: true }}
+          onMoveStart={closeContextMenuOnCanvasInteraction}
+          onMove={handleMove}
+          on:paneclick={closeContextMenuOnCanvasInteraction}
+        >
+          <FlowControls
+            historyStore={automationHistoryStore}
+            {layoutDirection}
+            on:layout={e => setLayoutDirection(e.detail)}
+          />
+        </SvelteFlow>
+      {/key}
     </div>
   </div>
 </div>

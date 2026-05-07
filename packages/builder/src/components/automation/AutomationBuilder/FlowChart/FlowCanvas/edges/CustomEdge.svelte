@@ -263,6 +263,7 @@
       sourceX + radius,
       Math.min(targetX - radius, desiredBendX)
     )
+
     const yDirection = targetY >= sourceY ? 1 : -1
 
     if (Math.abs(targetY - sourceY) <= radius * 2) {
