@@ -84,11 +84,11 @@
   let statusFilter = $state<StatusFilter>("all")
 
   const getInputPreview = (input: string) =>
-    input.replace(/\s+/g, " ").trim() || "No input yet"
+    input.replace(/\s+/g, " ").trim() || "No input"
 
   const getLastRunLabel = (results: AgentTestCaseResult[] | undefined) => {
     if (!results?.length) {
-      return hasLatestRun ? "Not in latest run" : "Not run yet"
+      return hasLatestRun ? "Not in latest run" : "Not run"
     }
 
     const completedAt = results

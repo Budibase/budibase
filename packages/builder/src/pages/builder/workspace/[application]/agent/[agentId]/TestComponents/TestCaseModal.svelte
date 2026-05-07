@@ -31,8 +31,8 @@
   let loading = $state(false)
   let draftCase = $state<AgentTestCase | null>(null)
 
-  const truncate = (value: string, max: number) =>
-    value.length <= max ? value : `${value.slice(0, max - 1)}…`
+  const truncate = (text: string, max: number) =>
+    text.length <= max ? text : `${text.slice(0, max - 1)}…`
 
   const fallbackName = (testCase: AgentTestCase): string => {
     const explicitName = testCase.name.trim()

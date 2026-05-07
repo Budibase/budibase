@@ -282,9 +282,7 @@ async function runAgentForCase({
           pendingToolCalls.delete(part.toolCallId)
         }
       }
-      for (const _toolResult of toolResults) {
-        await quotas.addAction(async () => {})
-      }
+      toolResults.forEach(async () => await quotas.addAction(async () => {}))
     },
     onFinish({ response }) {
       if (response?.id) sessionLogIndexer.addRequestId(response.id)
