@@ -1,7 +1,8 @@
 <script lang="ts">
   import BranchNode from "./BranchNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
-  import { ViewMode, type BranchNodeData } from "@/types/automations"
+  import type { ViewMode } from "@/types/automations"
+  import { type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
   import { getContext } from "svelte"
   import type { Writable } from "svelte/store"
