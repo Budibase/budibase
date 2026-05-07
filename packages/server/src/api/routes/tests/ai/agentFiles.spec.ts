@@ -187,6 +187,32 @@ describe("agent files", () => {
     }
   }
 
+  const mockSharePointOAuthTokenFetch = (times = 10) =>
+    nock("https://login.microsoftonline.com")
+      .post("/common/oauth2/v2.0/token")
+      .times(times)
+      .reply(200, {
+        access_token: "sharepoint-test-token",
+        token_type: "Bearer",
+        expires_in: 3600,
+      })
+
+  const setupSharePointKnowledgeOptionsFixture = async (
+    agentId: string,
+    sites: Array<{
+      id: string
+      displayName?: string
+      name?: string
+      webUrl?: string
+    }>
+  ) => {
+    const times = 1
+    const connection = await setSharePointConnection(agentId)
+    mockSharePointOAuthTokenFetch(times)
+    mockSharePointSitesFetch(sites, times)
+    return connection
+  }
+
   it("uploads and lists files attached to an agent", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
@@ -303,8 +329,10 @@ describe("agent files", () => {
         name: "SharePoint Sites Agent",
         aiconfig: "default",
       })
-      const connection = await setSharePointConnection(created._id!)
-      mockSharePointSitesFetch([], 1)
+      const connection = await setupSharePointKnowledgeOptionsFixture(
+        created._id!,
+        []
+      )
 
       const response = await config.api.agent.fetchKnowledgeSourceOptions(
         connection.datasourceId,
@@ -321,8 +349,10 @@ describe("agent files", () => {
         name: "SharePoint Options Shape Agent",
         aiconfig: "default",
       })
-      const connection = await setSharePointConnection(created._id!)
-      mockSharePointSitesFetch([], 1)
+      const connection = await setupSharePointKnowledgeOptionsFixture(
+        created._id!,
+        []
+      )
 
       const response = await config.api.agent.fetchKnowledgeSourceOptions(
         connection.datasourceId,
@@ -445,8 +475,8 @@ describe("agent files", () => {
         aiconfig: "default",
       })
 
-      const connection = await setSharePointConnection(created._id!)
-      mockSharePointSitesFetch(
+      const connection = await setupSharePointKnowledgeOptionsFixture(
+        created._id!,
         [
           {
             id: "site-1",
@@ -454,8 +484,7 @@ describe("agent files", () => {
             name: "Legacy Name",
             webUrl: "https://contoso.sharepoint.com/sites/adria",
           },
-        ],
-        1
+        ]
       )
 
       const response = await config.api.agent.fetchKnowledgeSourceOptions(
