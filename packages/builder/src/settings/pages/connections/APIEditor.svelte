@@ -671,7 +671,7 @@
     return []
   }
 
-  $datasources.list && init(false, selected)
+  $: $datasources.list && init(false, selected)
 </script>
 
 <Layout noPadding>
