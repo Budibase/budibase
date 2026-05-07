@@ -30,7 +30,8 @@ const encrypt = (value?: string) => {
   if (!value) {
     return value
   }
-  return encryption.encrypt(decrypt(value))
+  const decrypted = decrypt(value)
+  return decrypted ? encryption.encrypt(decrypted) : undefined
 }
 
 export const getSharePointCredential = async (
