@@ -371,12 +371,6 @@
     min-height: 0;
   }
 
-  .deployment-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
   .section {
     display: flex;
     gap: var(--spacing-xs);
@@ -413,18 +407,6 @@
 
   .channel-main :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-700);
-  }
-
-  .status-chip {
-    font-weight: 500;
-  }
-
-  .status-chip.enabled {
-    color: var(--spectrum-semantic-positive-status-color);
-  }
-
-  .status-chip.disabled {
-    color: var(--spectrum-global-color-gray-600);
   }
 
   .channel-details {

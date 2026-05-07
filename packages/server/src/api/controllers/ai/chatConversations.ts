@@ -18,7 +18,7 @@ import {
   UserCtx,
   WebhookChatCompleteResult,
 } from "@budibase/types"
-import { consumeStream } from "ai"
+import { consumeStream, type StreamTextResult, type ToolSet } from "ai"
 import sdk from "../../../sdk"
 import {
   formatIncompleteToolCallError,
@@ -257,12 +257,19 @@ const resolveChatStreamRequest = async (
   }
 }
 
+export type WebhookAssistantStream = StreamTextResult<
+  ToolSet,
+  never
+>["fullStream"]
+
 export async function webhookChat({
   chat,
   user,
+  onAssistantStream,
 }: {
   chat: ChatConversationRequest
   user: ContextUser
+  onAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
 }): Promise<WebhookChatCompleteResult> {
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
@@ -300,10 +307,20 @@ export async function webhookChat({
 
   const result = await run.stream()
 
-  const [textResult, responseResult] = await Promise.allSettled([
+  const streamTask = onAssistantStream
+    ? onAssistantStream(result.fullStream)
+    : Promise.resolve()
+
+  const [textResult, responseResult, streamOutcome] = await Promise.allSettled([
     result.text,
     result.response,
+    streamTask,
   ])
+
+  if (streamOutcome.status === "rejected") {
+    console.error("Chat webhook stream delivery failed", streamOutcome.reason)
+    throw streamOutcome.reason
+  }
   const requestId =
     responseResult.status === "fulfilled"
       ? (responseResult.value.id ?? undefined)

@@ -21,9 +21,11 @@ declare module "svelte" {
 interface Module {
   Modal: "bbui-modal"
   PopoverRoot: "bbui-popover-root"
+  PopoverPortalOverride: "bbui-popover-portal-override"
 }
 
 export default {
   Modal: "bbui-modal",
   PopoverRoot: "bbui-popover-root",
+  PopoverPortalOverride: "bbui-popover-portal-override",
 } as Module

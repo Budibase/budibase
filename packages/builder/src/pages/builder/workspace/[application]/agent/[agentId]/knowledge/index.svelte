@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, Layout, notifications } from "@budibase/bbui"
+  import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
@@ -9,7 +10,6 @@
     type KnowledgeBaseFile,
     type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
-  import { appStore } from "@/stores/builder/app"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import {
     agentsStore,
@@ -81,7 +81,6 @@
   let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
   let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
   let selectedSharePointSiteId = $state("")
-  let shouldOpenSharePointPickerAfterOauth = $state(false)
   let loadingSharePointSites = $state(false)
   const KNOWLEDGE_POLL_INTERVAL_MS = 1000
   const knowledgePollingController = createKnowledgePollingController({
@@ -213,10 +212,7 @@
   const loadInitialKnowledge = async (agentId: string) => {
     loading = true
     try {
-      await Promise.all([
-        agentsStore.fetchAgentKnowledge(agentId),
-        knowledgeConnectionsStore.fetch(),
-      ])
+      await agentsStore.fetchAgentKnowledge(agentId)
       initialKnowledgeLoadedForAgent = agentId
     } finally {
       loading = false
@@ -257,41 +253,10 @@
     )
   })
 
-  $effect(() => {
-    if (!shouldOpenSharePointPickerAfterOauth) {
-      return
-    }
-    const agentId = currentAgent?._id
-    if (!agentId || loading) {
-      return
-    }
-    shouldOpenSharePointPickerAfterOauth = false
-    openSharePointSiteModal().catch(error => {
-      console.error(error)
-      notifications.error("Failed to fetch SharePoint sites")
-    })
-  })
-
   onMount(async () => {
     try {
       if (!$agentsStore.agentsLoaded) {
         await agentsStore.init()
-      }
-      const currentUrl = new URL(window.location.href)
-      const microsoftConnected =
-        currentUrl.searchParams.get("microsoft_connected") === "1"
-      if (microsoftConnected) {
-        currentUrl.searchParams.delete("microsoft_connected")
-        const query = currentUrl.searchParams.toString()
-        const path = query
-          ? `${currentUrl.pathname}?${query}`
-          : currentUrl.pathname
-        window.history.replaceState({}, "", path)
-        notifications.success("SharePoint connected")
-        shouldOpenSharePointPickerAfterOauth = true
-      }
-      if (currentAgent?._id && microsoftConnected) {
-        initialKnowledgeLoadedForAgent = undefined
       }
     } catch (error) {
       console.error(error)
@@ -299,20 +264,9 @@
     }
   })
 
-  function connectSharePoint() {
-    const appId = $appStore.appId
-    if (!appId) {
-      notifications.error("Missing context to connect SharePoint")
-      return
-    }
-    const returnPath = window.location.pathname
-    const oauthUrl = `/api/agent/knowledge-sources/sharepoint/connect?appId=${encodeURIComponent(appId)}&returnPath=${encodeURIComponent(returnPath)}`
-    window.location.href = oauthUrl
-  }
-
   async function openSharePointFlow() {
     if (!hasSharePointConnection) {
-      connectSharePoint()
+      bb.settings("/connections/apis")
       return
     }
     await openSharePointSiteModal()

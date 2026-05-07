@@ -875,27 +875,6 @@
     align-items: center;
   }
 
-  .header-link {
-    text-decoration: none;
-    color: var(--spectrum-global-color-gray-800);
-    transition: color 130ms ease-out;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .header-link:hover {
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .header-link--with-icons {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
   .controls-row {
     display: flex;
     align-items: center;

@@ -1,22 +1,19 @@
-import {
-  cache,
-  configs,
-  constants,
-  context,
-  env,
-  utils,
-} from "@budibase/backend-core"
-import {
-  AgentKnowledgeSourceType,
-  DatasourceAuthCookie,
-  UserCtx,
-} from "@budibase/types"
-import sdk from "../../../sdk"
+import { cache, configs, constants, env, utils } from "@budibase/backend-core"
+import { DatasourceAuthCookie, UserCtx } from "@budibase/types"
 
 const DEFAULT_SCOPE = env.RAG_SHAREPOINT_DEFAULT_SCOPE
 const STATE_CACHE_TTL_SECONDS = 600
 const MICROSOFT_PROVIDER = "microsoft"
 const MICROSOFT_GRAPH_BASE = "https://graph.microsoft.com/v1.0"
+const TOKEN_EXPIRY_BUFFER_SECONDS = 60
+
+export const calculateBufferedTokenExpiry = (expiresInSeconds: number) => {
+  const bufferedTtlSeconds = Math.max(
+    expiresInSeconds - TOKEN_EXPIRY_BUFFER_SECONDS,
+    0
+  )
+  return Date.now() + bufferedTtlSeconds * 1000
+}
 
 const getMicrosoftConfig = () => {
   if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
@@ -205,21 +202,19 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
       error,
     })
   }
-  await context.doInContext(appId, () =>
-    (async () => {
-      await sdk.ai.knowledgeSources.createKnowledgeSourceConnection({
-        sourceType: AgentKnowledgeSourceType.SHAREPOINT,
-        tokenEndpoint,
-        accessToken,
-        refreshToken,
-        tokenType,
-        expiresAt: Date.now() + Math.max((expiresIn || 0) - 60, 0) * 1000,
-        clientId,
-        clientSecret,
-        account,
-      })
-    })()
-  )
+  // TODO(rag/sharepoint/reuse-api-credentials):
+  // Persist delegated OAuth credentials onto datasource OAuth2 auth configs
+  // (datasourceId/authConfigId), reusing existing credentials by account where
+  // appropriate. This replaces all legacy AgentKnowledgeSourceConnection usage.
+  console.log("SharePoint delegated OAuth callback received", {
+    appId,
+    account,
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken,
+    tokenEndpoint,
+    expiresAt: calculateBufferedTokenExpiry(expiresIn),
+  })
+  const reusedExistingConnection = false
   console.log("Completed SharePoint OAuth flow", {
     appId,
     connected: true,
@@ -229,5 +224,9 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
 
   const returnPath =
     authStateCookie?.returnPath || `/builder/workspace/${appId}`
-  ctx.redirect(appendQueryParam(returnPath, "microsoft_connected", "1"))
+  const withConnected = appendQueryParam(returnPath, "microsoft_connected", "1")
+  const finalPath = reusedExistingConnection
+    ? appendQueryParam(withConnected, "microsoft_connection_reused", "1")
+    : withConnected
+  ctx.redirect(finalPath)
 }

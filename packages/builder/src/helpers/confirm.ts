@@ -19,7 +19,7 @@ export async function confirm(props: {
   onClose?: () => boolean | void
   warning?: boolean
 }) {
-  return await new Promise(resolve => {
+  return await new Promise<boolean>(resolve => {
     let dialog: DialogExports | null = null
     let mounted = false
 
