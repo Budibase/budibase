@@ -1,38 +1,5 @@
-import { context, encryption } from "@budibase/backend-core"
-
-interface SharePointCredentialDoc {
-  _id: string
-  _rev?: string
-  type: "sharepoint_oauth_credential"
-  datasourceId: string
-  authConfigId: string
-  accessToken?: string
-  refreshToken?: string
-  tokenType?: string
-  expiresAt?: number
-  updatedAt: string
-}
-
-const docId = (authConfigId: string) => `sharepoint_credential_${authConfigId}`
-
-const decrypt = (value?: string) => {
-  if (!value) {
-    return value
-  }
-  try {
-    return encryption.decrypt(value)
-  } catch {
-    return value
-  }
-}
-
-const encrypt = (value?: string) => {
-  if (!value) {
-    return value
-  }
-  const decrypted = decrypt(value)
-  return decrypted ? encryption.encrypt(decrypted) : undefined
-}
+import { context, docIds, encryption } from "@budibase/backend-core"
+import type { SharePointCredentialDoc } from "@budibase/types"
 
 export const getSharePointCredential = async (
   datasourceId: string,
@@ -40,11 +7,17 @@ export const getSharePointCredential = async (
 ) => {
   const db = context.getWorkspaceDB()
   try {
-    const doc = await db.get<SharePointCredentialDoc>(docId(authConfigId))
+    const doc = await db.get<SharePointCredentialDoc>(
+      docIds.generateSharePointCredentialID(datasourceId, authConfigId)
+    )
     return {
       ...doc,
-      accessToken: decrypt(doc.accessToken),
-      refreshToken: decrypt(doc.refreshToken),
+      accessToken: doc.accessToken
+        ? encryption.decrypt(doc.accessToken)
+        : undefined,
+      refreshToken: doc.refreshToken
+        ? encryption.decrypt(doc.refreshToken)
+        : undefined,
     }
   } catch {
     return undefined
@@ -58,16 +31,9 @@ export const saveSharePointCredential = async ({
   refreshToken,
   tokenType,
   expiresAt,
-}: {
-  datasourceId: string
-  authConfigId: string
-  accessToken?: string
-  refreshToken?: string
-  tokenType?: string
-  expiresAt?: number
-}) => {
+}: SharePointCredentialDoc) => {
   const db = context.getWorkspaceDB()
-  const _id = docId(authConfigId)
+  const _id = docIds.generateSharePointCredentialID(datasourceId, authConfigId)
   let _rev: string | undefined
   try {
     const existing = await db.get<SharePointCredentialDoc>(_id)
@@ -78,11 +44,10 @@ export const saveSharePointCredential = async ({
   await db.put<SharePointCredentialDoc>({
     _id,
     _rev,
-    type: "sharepoint_oauth_credential",
     datasourceId,
     authConfigId,
-    accessToken: encrypt(accessToken),
-    refreshToken: encrypt(refreshToken),
+    accessToken: encryption.encrypt(accessToken),
+    refreshToken: encryption.encrypt(refreshToken),
     tokenType,
     expiresAt,
     updatedAt: new Date().toISOString(),

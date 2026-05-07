@@ -177,3 +177,10 @@ export const generateWorkspaceFavouriteID = () => {
 export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }
+
+export const generateSharePointCredentialID = (
+  datasourceId: string,
+  authConfigId: string
+) => {
+  return `sharepoint_credential_${datasourceId}_${authConfigId}`
+}
