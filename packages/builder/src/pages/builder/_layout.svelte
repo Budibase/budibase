@@ -318,11 +318,8 @@
     } else {
       notifications.success("SharePoint connected")
     }
-    if (datasourceId?.startsWith("datasource_")) {
-      bb.settings(`/connections/apis/${datasourceId}`)
-      return
-    }
-    bb.settings("/connections/apis")
+
+    bb.settings(`/connections/apis/${datasourceId}`)
   }
 
   onMount(() => {
