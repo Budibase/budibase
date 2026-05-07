@@ -39,6 +39,7 @@
   export let target: string
 
   let block: FlowBlockContext | undefined
+  let edgeStyle: string | undefined
   $: viewMode = $automationStore.viewMode as ViewMode
   $: block = deriveBlockContext(data)
   $: passedPathTo = data?.pathTo
@@ -116,12 +117,18 @@
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
   $: sourcePathForDrop = passedPathTo || blockRef?.pathTo
   $: edgeHighlight = getEdgeHighlight(data)
-  $: edgeStyle =
-    edgeHighlight === "success"
-      ? "stroke: var(--spectrum-semantic-positive-color-status); stroke-width: 2px;"
-      : edgeHighlight === "error"
-        ? "stroke: var(--spectrum-semantic-negative-color-status); stroke-width: 2px;"
-        : undefined
+  $: if (edgeHighlight === "success") {
+    edgeStyle =
+      "stroke: var(--spectrum-semantic-positive-color-status); stroke-width: 2px;"
+  } else if (edgeHighlight === "error") {
+    edgeStyle =
+      "stroke: var(--spectrum-semantic-negative-color-status); stroke-width: 2px;"
+  } else if (edgeHighlight === "stopped") {
+    edgeStyle =
+      "stroke: var(--spectrum-global-color-orange-500); stroke-width: 2px;"
+  } else {
+    edgeStyle = undefined
+  }
 
   $: collectBlockExists =
     viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
@@ -227,9 +234,17 @@
     return didTargetRun(results) ? runHighlight : undefined
   }
 
-  const getRunHighlight = (results: AutomationResults) => {
+  const getRunHighlight = (
+    results: AutomationResults
+  ): "error" | "success" | "stopped" => {
     const lastResult = getLastExecutedResult(results)
-    return isTerminalResult(lastResult) ? "error" : "success"
+    if (isTerminalResult(lastResult)) {
+      if (lastResult.outputs.status === "stopped") {
+        return "stopped"
+      }
+      return "error"
+    }
+    return "success"
   }
 
   const isRunResults = (value: unknown): value is AutomationResults => {
