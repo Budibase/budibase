@@ -79,7 +79,6 @@ export const isOAuth2DelegatedAuthConfig = (
   authConfig: RestAuthConfig | OAuth2RestAuthConfig | undefined
 ): authConfig is OAuth2RestAuthConfig =>
   authConfig?.type === RestAuthType.OAUTH2 &&
-  authConfig.grantType === OAuth2GrantType.AUTHORIZATION_CODE &&
   authConfig.authType === "delegated_oauth"
 
 export const REST_AUTH_SECRET_FIELD: Partial<Record<RestAuthType, string>> = {

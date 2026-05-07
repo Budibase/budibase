@@ -11,6 +11,7 @@ import {
   Datasource,
   DatasourceAuthCookie,
   OAuth2CredentialsMethod,
+  OAuth2GrantType,
   OAuth2RestAuthConfig,
   RestAuthType,
   SourceName,
@@ -187,7 +188,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
         clientId: credentials.clientId,
         clientSecret: encryption.encrypt(credentials.clientSecret),
         method: OAuth2CredentialsMethod.BODY,
-        grantType: "client_credentials",
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
         scope: DEFAULT_SCOPE,
       }
       const nextAuthConfigs = matchingConfig

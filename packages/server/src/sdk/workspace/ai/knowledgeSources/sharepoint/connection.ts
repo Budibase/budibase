@@ -17,6 +17,17 @@ type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
   refreshToken?: string
 }
 
+const decryptSecretOrPlaintext = (value?: string): string => {
+  if (!value) {
+    return ""
+  }
+  try {
+    return encryption.decrypt(value)
+  } catch {
+    return value
+  }
+}
+
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
@@ -138,16 +149,16 @@ const getRefreshBody = (connection: OAuth2RestAuthConfigWithTokenCache) => {
   if (connection.authType === "delegated_oauth") {
     return new URLSearchParams({
       client_id: connection.clientId,
-      client_secret: encryption.decrypt(connection.clientSecret),
+      client_secret: decryptSecretOrPlaintext(connection.clientSecret),
       grant_type: "refresh_token",
-      refresh_token: encryption.decrypt(connection.refreshToken!),
+      refresh_token: decryptSecretOrPlaintext(connection.refreshToken!),
       ...(connection.scope ? { scope: connection.scope } : {}),
     })
   }
 
   return new URLSearchParams({
     client_id: connection.clientId,
-    client_secret: encryption.decrypt(connection.clientSecret),
+    client_secret: decryptSecretOrPlaintext(connection.clientSecret),
     grant_type: "client_credentials",
     ...(connection.scope ? { scope: connection.scope } : {}),
   })
@@ -258,7 +269,7 @@ const fetchSharePointSitesByAppToken = async (
           : "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again."
       } else if (response.status === 403) {
         errorMessage = isDelegatedAuth
-          ? "Access denied by Microsoft Graph. Ensure delegated SharePoint permissions are granted and consented."
+          ? "Access denied by Microsoft Graph. Ensure delegated SharePoint permissions are granted."
           : "Access denied by Microsoft Graph. Ensure SharePoint application permissions are granted."
       } else if (response.status === 400 && errorDescription) {
         errorMessage = `Microsoft Graph rejected the SharePoint search request: ${errorDescription}`

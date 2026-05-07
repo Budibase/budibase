@@ -110,7 +110,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
         url: delegatedCredentials.tokenEndpoint,
         clientId: delegatedCredentials.clientId,
         method: OAuth2CredentialsMethod.BODY,
-        grantType: OAuth2GrantType.AUTHORIZATION_CODE,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
     )
     expect(saveCredential).toHaveBeenCalledWith(
@@ -136,7 +136,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
           clientId: "old-client-id",
           clientSecret: "old-secret",
           method: OAuth2CredentialsMethod.BODY,
-          grantType: OAuth2GrantType.AUTHORIZATION_CODE,
+          grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
         },
       ])
     )
