@@ -26,6 +26,10 @@
     }
   }
   type RunHighlight = "success" | "error"
+  type FlowItemStatusResult =
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | undefined
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -34,6 +38,9 @@
     | AutomationStepResult
     | AutomationTriggerResult
     | null = null
+  export let statusResult: FlowItemStatusResult | null = null
+  export let runResults: AutomationResults | undefined = undefined
+  export let triggerCompleted: boolean | undefined = undefined
   export let viewMode: ViewMode = ViewMode.EDITOR
   export let selectedLogStepId: string | null = null
   export let unexecuted: boolean = false
@@ -62,49 +69,33 @@
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
-  $: resultSource =
-    viewMode === ViewMode.LOGS && $automationStore.selectedLog
-      ? $automationStore.selectedLog
-      : $automationStore.testResults
-  $: triggerCompleted =
-    isTrigger &&
-    !$view?.dragging &&
-    (viewMode === ViewMode.LOGS
-      ? !!logStepData ||
-        !!automationStore.actions.processBlockResults(
-          $automationStore.testResults,
-          block
-        )
-      : !!$automationStore.inProgressTest ||
-        !!automationStore.actions.processBlockResults(
-          $automationStore.testResults,
-          block
-        ))
-  $: blockStatusResult =
-    viewMode === ViewMode.LOGS && logStepData
-      ? logStepData
-      : automationStore.actions.processBlockResults(
-          $automationStore.testResults,
-          block
-        )
-  $: blockSuccess =
-    blockStatusResult && hasSuccessOutput(blockStatusResult)
-      ? blockStatusResult.outputs.success === true
-      : isTrigger && triggerCompleted
-  $: blockFailed =
-    blockStatusResult && hasSuccessOutput(blockStatusResult)
-      ? blockStatusResult.outputs.success === false
-      : false
+  $: testStatusResult = automationStore.actions.processBlockResults(
+    $automationStore.testResults,
+    block
+  ) as FlowItemStatusResult
+  $: resolvedStatusResult = statusResult ?? testStatusResult
+  $: resolvedRunResults =
+    runResults || getRunResults($automationStore.testResults)
+  $: resolvedTriggerCompleted =
+    triggerCompleted ??
+    (isTrigger &&
+      !$view?.dragging &&
+      (!!$automationStore.inProgressTest || !!testStatusResult))
+  $: blockSuccess = hasSuccessOutput(resolvedStatusResult)
+    ? resolvedStatusResult.outputs.success === true
+    : isTrigger && resolvedTriggerCompleted
+  $: blockFailed = hasSuccessOutput(resolvedStatusResult)
+    ? resolvedStatusResult.outputs.success === false
+    : false
   $: terminalFailure =
-    !isTrigger && blockStatusResult && isAutomationStepResult(blockStatusResult)
-      ? isTerminalFailure(blockStatusResult)
+    !isTrigger && isAutomationStepResult(resolvedStatusResult)
+      ? isTerminalFailure(resolvedStatusResult)
       : false
   $: continuedFailure = blockFailed && !terminalFailure
-  $: runHighlight = getRunHighlight(resultSource)
-  $: blockExecuted =
-    blockStatusResult && hasSuccessOutput(blockStatusResult)
-      ? true
-      : isTrigger && triggerCompleted
+  $: runHighlight = getRunHighlight(resolvedRunResults)
+  $: blockExecuted = hasSuccessOutput(resolvedStatusResult)
+    ? true
+    : isTrigger && resolvedTriggerCompleted
   $: successHighlight = blockExecuted
     ? runHighlight
       ? runHighlight === "success"
@@ -119,7 +110,7 @@
     selected,
     errorHighlight,
     successHighlight,
-    triggerCompleted,
+    triggerCompleted: resolvedTriggerCompleted,
     runHighlight,
   })
   $: blockRef = block?.id
@@ -149,7 +140,6 @@
       : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
   $: dragging =
     $view?.dragging && $view?.moveStep && $view?.moveStep?.id === block.id
-
   $: if (pressingDraggableNode && dragging) {
     draggedDuringPress = true
   }
@@ -282,10 +272,11 @@
   }
 
   function getRunHighlight(results: unknown): RunHighlight | undefined {
-    if (!isRunResults(results)) {
+    const runResults = getRunResults(results)
+    if (!runResults) {
       return
     }
-    return isTerminalFailure(getLastExecutedResult(results))
+    return isTerminalFailure(getLastExecutedResult(runResults))
       ? "error"
       : "success"
   }
@@ -318,15 +309,16 @@
     return "var(--spectrum-global-color-gray-500)"
   }
 
-  function isRunResults(value: unknown): value is AutomationResults {
-    return (
+  function getRunResults(value: unknown): AutomationResults | undefined {
+    const isRunResults =
       !!value &&
       typeof value === "object" &&
       "steps" in value &&
       Array.isArray(value.steps) &&
       "trigger" in value &&
       !!value.trigger
-    )
+
+    return isRunResults ? (value as AutomationResults) : undefined
   }
 
   function canContinueOnError(
