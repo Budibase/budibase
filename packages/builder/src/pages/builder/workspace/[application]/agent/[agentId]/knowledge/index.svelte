@@ -212,10 +212,7 @@
   const loadInitialKnowledge = async (agentId: string) => {
     loading = true
     try {
-      await Promise.all([
-        agentsStore.fetchAgentKnowledge(agentId),
-        knowledgeConnectionsStore.fetch(),
-      ])
+      await agentsStore.fetchAgentKnowledge(agentId)
       initialKnowledgeLoadedForAgent = agentId
     } finally {
       loading = false
@@ -269,7 +266,7 @@
 
   async function openSharePointFlow() {
     if (!hasSharePointConnection) {
-      bb.settings("/connections/knowledge")
+      bb.settings("/connections/apis")
       return
     }
     await openSharePointSiteModal()

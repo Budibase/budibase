@@ -57,7 +57,8 @@ export interface AgentSharePointKnowledgeSource {
   id: string
   type: AgentKnowledgeSourceType.SHAREPOINT
   config: {
-    connectionId: string
+    datasourceId: string
+    authConfigId: string
     site: {
       id: string
       name?: string
