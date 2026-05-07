@@ -24,9 +24,10 @@ import {
 } from "../../.."
 import {
   collectSharePointFilesRecursive,
-  downloadSharePointFileBuffer,
+  downloadSharePointFile,
   getSharePointBearerToken,
   listSharePointDrives,
+  listSharePointFiles,
 } from "../../../knowledgeSources/sharepoint"
 import {
   deleteFileForAgent,
@@ -158,23 +159,20 @@ export const fetchAllSharePointEntriesForAgent = async (
     throw new HTTPError("SharePoint is not connected for this workspace", 400)
   }
   const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-  const driveIds = await listSharePointDrives(bearerToken, siteId)
+  const files = await listSharePointFiles(bearerToken, siteId)
   const entries: KnowledgeSourceEntry[] = []
 
-  for (const driveId of driveIds) {
-    const files = await collectSharePointFilesRecursive(bearerToken, driveId)
-    for (const file of files) {
-      const path = file.path
-      if (!path) {
-        continue
-      }
-      entries.push({
-        id: `${file.driveId}:${file.itemId}`,
-        name: file.filename || path.split("/").pop() || path,
-        path,
-        type: "file",
-      })
+  for (const file of files) {
+    const path = file.path
+    if (!path) {
+      continue
     }
+    entries.push({
+      id: `${file.driveId}:${file.itemId}`,
+      name: file.filename || path.split("/").pop() || path,
+      path,
+      type: "file",
+    })
   }
 
   entries.sort((a, b) => a.path.localeCompare(b.path))
@@ -428,7 +426,7 @@ const runSharePointSourcesForAgent = async (
         }
 
         try {
-          const buffer = await downloadSharePointFileBuffer(
+          const buffer = await downloadSharePointFile(
             bearerToken,
             driveId,
             file.itemId

@@ -1,4 +1,10 @@
-import { cache, context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  docIds,
+  encryption,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   Document,
   OAuth2CredentialsMethod,
@@ -7,6 +13,7 @@ import {
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
 import { processEnvironmentVariable } from "../../utils"
+import { getSharePointCredential } from "../ai/knowledgeSources/sharepoint/credentials"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -15,15 +22,18 @@ interface OAuth2LogDocument extends Document {
 const { DocWritethrough } = cache.docWritethrough
 
 async function fetchToken(config: {
+  _id?: string
   url: string
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  authType?: "client_credentials" | "delegated_oauth"
   scope?: string
   audience?: string
 }) {
   config = await processEnvironmentVariable(config)
+  const clientSecret = encryption.decrypt(config.clientSecret)
 
   const fetchConfig: RequestInit = {
     method: "POST",
@@ -39,18 +49,33 @@ async function fetchToken(config: {
   const bodyParams: Record<string, string> = {
     grant_type: config.grantType,
   }
+  if (config.authType === "delegated_oauth") {
+    if (!config._id) {
+      throw new Error(
+        "OAuth2 delegated config is missing config ID. Reconnect Microsoft account."
+      )
+    }
+    const credential = await getSharePointCredential("unused", config._id)
+    if (!credential?.refreshToken) {
+      throw new Error(
+        "OAuth2 delegated config is missing refresh token. Reconnect Microsoft account."
+      )
+    }
+    bodyParams.grant_type = "refresh_token"
+    bodyParams.refresh_token = credential.refreshToken
+  }
 
   if (config.method === OAuth2CredentialsMethod.HEADER) {
     fetchConfig.headers = {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
-        `${config.clientId}:${config.clientSecret}`,
+        `${config.clientId}:${clientSecret}`,
         "utf-8"
       ).toString("base64")}`,
     }
   } else {
     bodyParams["client_id"] = config.clientId
-    bodyParams["client_secret"] = config.clientSecret
+    bodyParams["client_secret"] = clientSecret
   }
   if (config.scope) {
     bodyParams.scope = config.scope
@@ -75,11 +100,13 @@ const trackUsage = async (id: string) => {
 }
 
 async function fetchAndParseToken(config: {
+  _id?: string
   url: string
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  authType?: "client_credentials" | "delegated_oauth"
   scope?: string
   audience?: string
 }): Promise<{ value: string; ttl: number }> {
@@ -113,11 +140,13 @@ export async function getToken(id: string) {
 export async function getTokenFromConfig(
   cacheKey: string,
   config: {
+    _id?: string
     url: string
     clientId: string
     clientSecret: string
     method: OAuth2CredentialsMethod
     grantType: OAuth2GrantType
+    authType?: "client_credentials" | "delegated_oauth"
     scope?: string
     audience?: string
   }
@@ -129,11 +158,13 @@ export async function getTokenFromConfig(
 }
 
 export async function validateConfig(config: {
+  _id?: string
   url: string
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  authType?: "client_credentials" | "delegated_oauth"
   scope?: string
   audience?: string
 }): Promise<{ valid: boolean; message?: string }> {

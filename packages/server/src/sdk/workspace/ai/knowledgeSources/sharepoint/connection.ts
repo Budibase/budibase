@@ -1,5 +1,5 @@
-import { encryption, HTTPError } from "@budibase/backend-core"
-import { helpers } from "@budibase/shared-core"
+import { HTTPError } from "@budibase/backend-core"
+import { helpers, utils } from "@budibase/shared-core"
 import {
   Datasource,
   KnowledgeSourceOption,
@@ -8,26 +8,12 @@ import {
   isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
 import sdk from "../../../.."
-import {
-  getSharePointCredential,
-  saveSharePointCredential,
-} from "./credentials"
 
 type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
   refreshToken?: string
 }
-type SharePointAuthType = "client_credentials" | "delegated_oauth"
 
-const decryptSecretOrPlaintext = (value?: string): string => {
-  if (!value) {
-    return ""
-  }
-  try {
-    return encryption.decrypt(value)
-  } catch {
-    return value
-  }
-}
+type SharePointAuthType = "client_credentials" | "delegated_oauth"
 
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
@@ -146,120 +132,6 @@ const readConnection = async (
   return authConfig
 }
 
-const getRefreshBody = (connection: OAuth2RestAuthConfigWithTokenCache) => {
-  if (connection.authType === "delegated_oauth") {
-    return new URLSearchParams({
-      client_id: connection.clientId,
-      client_secret: decryptSecretOrPlaintext(connection.clientSecret),
-      grant_type: "refresh_token",
-      refresh_token: decryptSecretOrPlaintext(connection.refreshToken!),
-      ...(connection.scope ? { scope: connection.scope } : {}),
-    })
-  }
-
-  return new URLSearchParams({
-    client_id: connection.clientId,
-    client_secret: decryptSecretOrPlaintext(connection.clientSecret),
-    grant_type: "client_credentials",
-    ...(connection.scope ? { scope: connection.scope } : {}),
-  })
-}
-
-const refreshConnection = async (
-  datasourceId: string,
-  authConfigId: string,
-  connection: OAuth2RestAuthConfigWithTokenCache,
-  credential: {
-    accessToken?: string
-    refreshToken?: string
-    tokenType?: string
-    expiresAt?: number
-  }
-): Promise<OAuth2RestAuthConfigWithTokenCache> => {
-  if (isOAuth2DelegatedAuthConfig(connection) && !credential.refreshToken) {
-    throw new HTTPError("OAuth2 auth config is missing refresh token.", 400)
-  }
-  const response = await fetch(connection.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: getRefreshBody({ ...connection, ...credential }),
-  })
-  const payload = await response.json()
-  if (!response.ok) {
-    console.error("Failed to refresh SharePoint OAuth credentials", {
-      status: response.status,
-      error: payload?.error,
-      hasDescription: !!payload?.error_description,
-    })
-    throw new HTTPError("Failed to refresh SharePoint OAuth credentials", 400)
-  }
-
-  const expiresIn = Number(payload?.expires_in || 0)
-  const nextCredential = {
-    accessToken: payload?.access_token || credential.accessToken,
-    refreshToken: payload?.refresh_token || credential.refreshToken,
-    tokenType: payload?.token_type || credential.tokenType || "Bearer",
-    expiresAt: Date.now() + Math.max(expiresIn - 60, 0) * 1000,
-  }
-  await saveSharePointCredential({
-    datasourceId,
-    authConfigId,
-    ...nextCredential,
-  })
-  return connection
-}
-
-const getClientCredentialsBearerToken = async (
-  datasourceId: string,
-  authConfigId: string,
-  connection: OAuth2RestAuthConfigWithTokenCache
-) => {
-  return sdk.oauth2.getTokenFromConfig(`${datasourceId}:${authConfigId}`, {
-    url: connection.url,
-    clientId: connection.clientId,
-    clientSecret: connection.clientSecret,
-    method: connection.method,
-    grantType: connection.grantType,
-    scope: connection.scope,
-    audience: connection.audience,
-  })
-}
-
-const getDelegatedBearerToken = async (
-  datasourceId: string,
-  authConfigId: string,
-  connection: OAuth2RestAuthConfigWithTokenCache
-) => {
-  let credential = await getSharePointCredential(datasourceId, authConfigId)
-  const expiresAt = Number(credential?.expiresAt || 0)
-  const needsRefresh = !credential?.accessToken || expiresAt <= Date.now()
-  if (needsRefresh) {
-    await refreshConnection(datasourceId, authConfigId, connection, {
-      accessToken: credential?.accessToken,
-      refreshToken: credential?.refreshToken,
-      tokenType: credential?.tokenType,
-      expiresAt: credential?.expiresAt,
-    })
-    credential = await getSharePointCredential(datasourceId, authConfigId)
-  }
-  const tokenType = credential?.tokenType?.trim() || "Bearer"
-  return `${tokenType} ${credential?.accessToken}`
-}
-
-const TOKEN_RESOLVERS: Record<
-  SharePointAuthType,
-  (
-    datasourceId: string,
-    authConfigId: string,
-    connection: OAuth2RestAuthConfigWithTokenCache
-  ) => Promise<string>
-> = {
-  client_credentials: getClientCredentialsBearerToken,
-  delegated_oauth: getDelegatedBearerToken,
-}
-
 const getSharePointAuthType = (
   connection: OAuth2RestAuthConfigWithTokenCache
 ): SharePointAuthType => connection.authType ?? "client_credentials"
@@ -270,11 +142,23 @@ export const getSharePointBearerToken = async (
 ): Promise<string> => {
   const connection = await readConnection(datasourceId, authConfigId)
   const authType = getSharePointAuthType(connection)
-  const resolveToken = TOKEN_RESOLVERS[authType]
-  if (!resolveToken) {
-    throw new HTTPError(`Unsupported SharePoint auth type: ${authType}`, 400)
+  switch (authType) {
+    case "client_credentials":
+    case "delegated_oauth":
+      return sdk.oauth2.getTokenFromConfig(`${datasourceId}:${authConfigId}`, {
+        _id: authConfigId,
+        authType,
+        url: connection.url,
+        clientId: connection.clientId,
+        clientSecret: connection.clientSecret,
+        method: connection.method,
+        grantType: connection.grantType,
+        scope: connection.scope,
+        audience: connection.audience,
+      })
+    default:
+      throw utils.unreachable(authType)
   }
-  return resolveToken(datasourceId, authConfigId, connection)
 }
 
 const fetchSharePointSitesByAppToken = async (
@@ -478,15 +362,12 @@ const listSharePointDriveItems = async (
         400
       )
     }
-
     const payload = (await response.json()) as SharePointDriveItemsResponse
-    items.push(...(Array.isArray(payload.value) ? payload.value : []))
-    const nextPageLink = payload?.["@odata.nextLink"]
+    items.push(...(payload.value || []))
+    const nextPageLink = payload["@odata.nextLink"]
     if (!nextPageLink) {
-      nextLink = ""
-      continue
+      break
     }
-
     if (!isAllowedSharePointNextLink(nextPageLink)) {
       throw new HTTPError("Invalid SharePoint pagination URL", 400)
     }
@@ -496,63 +377,68 @@ const listSharePointDriveItems = async (
   return items
 }
 
+const traverseSharePointDrive = async (
+  bearerToken: string,
+  driveId: string,
+  itemId: string | undefined,
+  parentPath: string,
+  files: SharePointFileRef[]
+) => {
+  const items = await listSharePointDriveItems(bearerToken, driveId, itemId)
+  for (const item of items) {
+    if (!item.id || !item.name) {
+      continue
+    }
+    const path = parentPath ? `${parentPath}/${item.name}` : item.name
+    if (item.file) {
+      files.push({
+        driveId,
+        itemId: item.id,
+        filename: item.name,
+        path,
+        mimetype: item.file.mimeType,
+      })
+    } else if (item.folder) {
+      await traverseSharePointDrive(bearerToken, driveId, item.id, path, files)
+    }
+  }
+}
+
 export const collectSharePointFilesRecursive = async (
   bearerToken: string,
   driveId: string,
-  folderId?: string,
+  itemId?: string,
   parentPath = ""
 ): Promise<SharePointFileRef[]> => {
-  const items = await listSharePointDriveItems(bearerToken, driveId, folderId)
   const files: SharePointFileRef[] = []
-
-  for (const item of items) {
-    const itemId = item.id
-    const name = item.name
-    if (!itemId || !name) {
-      continue
-    }
-
-    if (item.folder) {
-      const nextPath = parentPath ? `${parentPath}/${name}` : name
-      files.push(
-        ...(await collectSharePointFilesRecursive(
-          bearerToken,
-          driveId,
-          itemId,
-          nextPath
-        ))
-      )
-      continue
-    }
-
-    if (!item.file) {
-      continue
-    }
-
-    files.push({
-      driveId,
-      itemId,
-      filename: name,
-      path: parentPath ? `${parentPath}/${name}` : name,
-      mimetype: item.file.mimeType || undefined,
-    })
-  }
-
+  await traverseSharePointDrive(bearerToken, driveId, itemId, parentPath, files)
   return files
 }
 
-export const downloadSharePointFileBuffer = async (
+export const listSharePointFiles = async (
+  bearerToken: string,
+  siteId: string
+): Promise<SharePointFileRef[]> => {
+  const driveIds = await listSharePointDrives(bearerToken, siteId)
+  const files: SharePointFileRef[] = []
+  for (const driveId of driveIds) {
+    await traverseSharePointDrive(bearerToken, driveId, undefined, "", files)
+  }
+  return files
+}
+
+export const downloadSharePointFile = async (
   bearerToken: string,
   driveId: string,
   itemId: string
-) => {
-  const response = await fetch(
-    `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/content`,
-    {
+): Promise<Buffer> => {
+  const response = await requestWithRetries("downloadSharePointFile", () =>
+    fetch(`${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/content`, {
       headers: {
         Authorization: bearerToken,
       },
-    }
+      redirect: "follow",
+    })
   )
   if (!response.ok) {
     console.error("Failed to download SharePoint file", {
@@ -567,5 +453,6 @@ export const downloadSharePointFileBuffer = async (
       400
     )
   }
-  return Buffer.from(await response.arrayBuffer())
+  const arrayBuffer = await response.arrayBuffer()
+  return Buffer.from(arrayBuffer)
 }
