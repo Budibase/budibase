@@ -23,10 +23,8 @@ import {
   knowledgeBase as knowledgeBaseSdk,
 } from "../../.."
 import {
-  collectSharePointFilesRecursive,
   downloadSharePointFile,
   getSharePointBearerToken,
-  listSharePointDrives,
   listSharePointFiles,
 } from "../../../knowledgeSources/sharepoint"
 import {
@@ -360,107 +358,100 @@ const runSharePointSourcesForAgent = async (
   }
 
   try {
-    const driveIds = await listSharePointDrives(bearerToken, siteId)
-    console.log("Fetched SharePoint drives for site", {
+    const files = await listSharePointFiles(bearerToken, siteId)
+    console.log("Fetched SharePoint files for site", {
       agentId,
       siteId,
-      driveCount: driveIds.length,
+      fileCount: files.length,
     })
-    for (const driveId of driveIds) {
-      const files = await collectSharePointFilesRecursive(bearerToken, driveId)
+    totalDiscovered += files.length
+    for (const file of files) {
+      if (!isSharePointPathIncludedByFilters(file.path, sourceFilters)) {
+        skipped++
+        filteredOut++
+        continue
+      }
+      if (!isSupportedSharePointFile(file)) {
+        skipped++
+        unsupported++
+        continue
+      }
+      const externalSourceId = getSharePointFileDedupKey({
+        siteId,
+        driveId: file.driveId,
+        itemId: file.itemId,
+      })
+      if (existingExternalIds.has(externalSourceId)) {
+        const existingEntry =
+          existingSharePointFilesByExternalId.get(externalSourceId)
+        const shouldRetryFailedIngestion =
+          existingEntry?.status === KnowledgeBaseFileStatus.FAILED &&
+          existingEntry.siteId === siteId &&
+          existingEntry.knowledgeSourceId === sourceId
 
-      totalDiscovered += files.length
-      for (const file of files) {
-        if (!isSharePointPathIncludedByFilters(file.path, sourceFilters)) {
-          skipped++
-          filteredOut++
-          continue
-        }
-        if (!isSupportedSharePointFile(file)) {
-          skipped++
-
-          unsupported++
-
-          continue
-        }
-        const externalSourceId = getSharePointFileDedupKey({
-          siteId,
-          driveId,
-          itemId: file.itemId,
-        })
-        if (existingExternalIds.has(externalSourceId)) {
-          const existingEntry =
-            existingSharePointFilesByExternalId.get(externalSourceId)
-          const shouldRetryFailedIngestion =
-            existingEntry?.status === KnowledgeBaseFileStatus.FAILED &&
-            existingEntry.siteId === siteId &&
-            existingEntry.knowledgeSourceId === sourceId
-
-          if (shouldRetryFailedIngestion && existingEntry?.fileId) {
-            try {
-              await knowledgeBaseSdk.retryKnowledgeBaseFileIngestion(
-                existingEntry.fileId
-              )
-              synced++
-              retried++
-            } catch (error) {
-              console.error(
-                "Failed to retry SharePoint file ingestion for agent",
-                {
-                  agentId,
-                  siteId,
-                  driveId,
-                  itemId: file.itemId,
-                  error,
-                }
-              )
-              failed++
-            }
-            continue
-          } else {
-            skipped++
-            alreadySynced++
-
-            continue
+        if (shouldRetryFailedIngestion && existingEntry?.fileId) {
+          try {
+            await knowledgeBaseSdk.retryKnowledgeBaseFileIngestion(
+              existingEntry.fileId
+            )
+            synced++
+            retried++
+          } catch (error) {
+            console.error(
+              "Failed to retry SharePoint file ingestion for agent",
+              {
+                agentId,
+                siteId,
+                driveId: file.driveId,
+                itemId: file.itemId,
+                error,
+              }
+            )
+            failed++
           }
+          continue
+        } else {
+          skipped++
+          alreadySynced++
+          continue
         }
+      }
 
-        try {
-          const buffer = await downloadSharePointFile(
-            bearerToken,
-            driveId,
-            file.itemId
-          )
+      try {
+        const buffer = await downloadSharePointFile(
+          bearerToken,
+          file.driveId,
+          file.itemId
+        )
 
-          await knowledgeBaseSdk.uploadKnowledgeBaseFile({
-            knowledgeBaseId,
-            source: {
-              type: KnowledgeBaseFileSourceType.SHAREPOINT,
-              knowledgeSourceId: sourceId,
-              siteId,
-              driveId,
-              itemId: file.itemId,
-              path: file.path,
-            },
-            filename: file.filename,
-            mimetype: file.mimetype,
-            size: buffer.byteLength,
-            buffer,
-            uploadedBy: `sharepoint:${sourceId}`,
-          })
-
-          existingExternalIds.add(externalSourceId)
-          synced++
-        } catch (error) {
-          console.error("Failed to sync SharePoint file for agent", {
-            agentId,
+        await knowledgeBaseSdk.uploadKnowledgeBaseFile({
+          knowledgeBaseId,
+          source: {
+            type: KnowledgeBaseFileSourceType.SHAREPOINT,
+            knowledgeSourceId: sourceId,
             siteId,
-            driveId,
+            driveId: file.driveId,
             itemId: file.itemId,
-            error,
-          })
-          failed++
-        }
+            path: file.path,
+          },
+          filename: file.filename,
+          mimetype: file.mimetype,
+          size: buffer.byteLength,
+          buffer,
+          uploadedBy: `sharepoint:${sourceId}`,
+        })
+
+        existingExternalIds.add(externalSourceId)
+        synced++
+      } catch (error) {
+        console.error("Failed to sync SharePoint file for agent", {
+          agentId,
+          siteId,
+          driveId: file.driveId,
+          itemId: file.itemId,
+          error,
+        })
+        failed++
       }
     }
   } catch (error) {
