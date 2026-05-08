@@ -1,8 +1,9 @@
-import { features, getErrorMessage, HTTPError } from "@budibase/backend-core"
+import { getErrorMessage, HTTPError } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { buildAgentTestCaseSnapshot, helpers } from "@budibase/shared-core"
 import type {
   Agent,
+  AgentMessageMetadata,
   AgentTestModelSnapshot,
   AgentTestCase,
   AgentTestCaseResult,
@@ -14,7 +15,6 @@ import type {
   AgentTestSnapshot,
   ContextUser,
 } from "@budibase/types"
-import { FeatureFlag } from "@budibase/types"
 import {
   Output,
   ToolLoopAgent,
@@ -25,14 +25,13 @@ import {
   wrapLanguageModel,
   type ModelMessage,
 } from "ai"
+import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import sdk from "../../.."
 import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
 } from "../agents"
 import { createSessionLogIndexer } from "../agentLogs"
-import { addRetrievedContextToMessages } from "../chatConversations"
-import { retrieveContextForAgent } from "../rag"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -46,6 +45,7 @@ type SessionLogIndexer = ReturnType<typeof createSessionLogIndexer>
 type PromptAndTools = Awaited<
   ReturnType<typeof sdk.ai.agents.buildPromptAndTools>
 >
+type RagSource = NonNullable<AgentMessageMetadata["ragSources"]>[number]
 
 const MAX_COMPARE_CONFIGS = 3
 
@@ -89,48 +89,21 @@ ${input}
 ${context ? `Test context:\n${context}\n\n` : ""}Agent response:
 ${response}`
 
-const getRetrievedAgentContext = async (agent: Agent, input: string) => {
-  if (
-    !input ||
-    !agent.knowledgeBases?.length ||
-    !(await features.isEnabled(FeatureFlag.AI_RAG))
-  ) {
-    return ""
-  }
-
-  try {
-    const retrieved = await retrieveContextForAgent(agent, input)
-    return retrieved.text.trim()
-  } catch (error) {
-    console.error("Failed to retrieve agent test context", {
-      agentId: agent._id,
-      error,
-    })
-    return ""
-  }
-}
-
 const buildTestMessages = ({
   testCase,
-  retrievedContext,
 }: {
   testCase: AgentTestCase
-  retrievedContext: string
-}): ModelMessage[] =>
-  addRetrievedContextToMessages(
-    [
-      ...(testCase.context
-        ? [
-            {
-              role: "system" as const,
-              content: `Additional test context:\n${testCase.context}\n\nUse this context when answering the user.`,
-            },
-          ]
-        : []),
-      { role: "user", content: testCase.input },
-    ],
-    retrievedContext
-  )
+}): ModelMessage[] => [
+  ...(testCase.context
+    ? [
+        {
+          role: "system" as const,
+          content: `Additional test context:\n${testCase.context}\n\nUse this context when answering the user.`,
+        },
+      ]
+    : []),
+  { role: "user", content: testCase.input },
+]
 
 const buildResult = ({
   testCase,
@@ -253,7 +226,17 @@ async function runAgentForCase({
 }): Promise<{ response: string; toolCalls: string[] }> {
   const pendingToolCalls = new Set<string>()
   const toolCalls: string[] = []
-  const hasTools = Object.keys(promptAndTools.tools).length > 0
+  const tools = promptAndTools.tools
+  const retrievedKnowledgeSourceById = new Map<string, RagSource>()
+
+  if (tools.search_knowledge) {
+    tools.report_used_sources = createReportUsedSourcesTool({
+      getSourceById: sourceId => retrievedKnowledgeSourceById.get(sourceId),
+      onAcceptedSources: () => {},
+    })
+  }
+
+  const hasTools = Object.keys(tools).length > 0
 
   const stream = streamText({
     model: wrapLanguageModel({
@@ -262,7 +245,7 @@ async function runAgentForCase({
     }),
     messages,
     system: promptAndTools.systemPrompt,
-    tools: hasTools ? promptAndTools.tools : undefined,
+    tools: hasTools ? tools : undefined,
     toolChoice: hasTools ? "auto" : "none",
     stopWhen: stepCountIs(30),
     providerOptions: llm.providerOptions?.(hasTools),
@@ -282,7 +265,19 @@ async function runAgentForCase({
           pendingToolCalls.delete(part.toolCallId)
         }
       }
-      for (const _toolResult of toolResults) {
+      for (const toolResult of toolResults) {
+        if (
+          toolResult.toolName === "search_knowledge" &&
+          !toolResult.preliminary
+        ) {
+          const output = toolResult.output
+          for (const source of output?.sources || []) {
+            if (!source?.sourceId) {
+              continue
+            }
+            retrievedKnowledgeSourceById.set(source.sourceId, source)
+          }
+        }
         await quotas.addAction(async () => {})
       }
     },
@@ -393,16 +388,15 @@ async function runCase({
   })
 
   try {
-    const [promptAndTools, llm, retrievedContext] = await Promise.all([
+    const [promptAndTools, llm] = await Promise.all([
       sdk.ai.agents.buildPromptAndTools(agentForRun, {
         baseSystemPrompt: ai.agentSystemPrompt(user),
         includeGoal: false,
       }),
       sdk.ai.llm.createLLM(aiConfigId, sessionId, undefined, agent._id),
-      getRetrievedAgentContext(agentForRun, testCase.input),
     ])
 
-    const messages = buildTestMessages({ testCase, retrievedContext })
+    const messages = buildTestMessages({ testCase })
     const { response, toolCalls } = await runAgentForCase({
       agent,
       promptAndTools,

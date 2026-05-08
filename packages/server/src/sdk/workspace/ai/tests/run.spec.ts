@@ -1,11 +1,7 @@
 import type { ContextUser } from "@budibase/types"
-import { FeatureFlag } from "@budibase/types"
 import { runSuite } from "./run"
 
 jest.mock("@budibase/backend-core", () => ({
-  features: {
-    isEnabled: jest.fn().mockResolvedValue(false),
-  },
   getErrorMessage: jest.fn((error: unknown) =>
     error instanceof Error ? error.message : String(error)
   ),
@@ -50,10 +46,6 @@ jest.mock("../agentLogs", () => ({
   createSessionLogIndexer: jest.fn(),
 }))
 
-jest.mock("../rag", () => ({
-  retrieveContextForAgent: jest.fn(),
-}))
-
 jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
@@ -75,15 +67,14 @@ jest.mock("ai", () => ({
   jsonSchema: jest.fn((schema: unknown) => schema),
   stepCountIs: jest.fn().mockReturnValue(() => false),
   streamText: jest.fn(),
+  tool: jest.fn(definition => definition),
   wrapLanguageModel: jest.fn().mockReturnValue({}),
 }))
 
 describe("agent test runner", () => {
   const sdk = jest.requireMock("../../..").default
-  const backendCore = jest.requireMock("@budibase/backend-core")
   const ai = jest.requireMock("ai")
   const { createSessionLogIndexer } = jest.requireMock("../agentLogs")
-  const { retrieveContextForAgent } = jest.requireMock("../rag")
   const { fetchSuite } = jest.requireMock("./crud")
   const user = {} as ContextUser
 
@@ -224,12 +215,6 @@ describe("agent test runner", () => {
       providerOptions: jest.fn().mockReturnValue(undefined),
     })
     createSessionLogIndexer.mockImplementation(makeIndexer)
-    backendCore.features.isEnabled.mockResolvedValue(false)
-    retrieveContextForAgent.mockResolvedValue({
-      text: "",
-      chunks: [],
-      sources: [],
-    })
   })
 
   it("passes exact and contains reviewers when the response matches", async () => {
@@ -477,7 +462,7 @@ describe("agent test runner", () => {
     )
   })
 
-  it("adds retrieved knowledge context when RAG is enabled", async () => {
+  it("adds the production knowledge source reporting tool for RAG runs", async () => {
     setSuite([
       {
         id: "reviewer-1",
@@ -492,15 +477,11 @@ describe("agent test runner", () => {
       enabledTools: [],
       knowledgeBases: ["kb-1"],
     })
-    backendCore.features.isEnabled.mockImplementation(
-      async (flag: FeatureFlag) => {
-        return flag === FeatureFlag.AI_RAG
-      }
-    )
-    retrieveContextForAgent.mockResolvedValue({
-      text: "The refund policy is 30 days.",
-      chunks: [],
-      sources: [],
+    sdk.ai.agents.buildPromptAndTools.mockResolvedValue({
+      systemPrompt: "Use search_knowledge and report_used_sources.",
+      tools: {
+        search_knowledge: {},
+      },
     })
     mockAgentRun({ response: "The policy is 30 days." })
 
@@ -509,19 +490,23 @@ describe("agent test runner", () => {
       user,
     })
 
-    expect(retrieveContextForAgent).toHaveBeenCalledWith(
-      expect.objectContaining({ _id: "agent-1" }),
-      "Say hello"
-    )
     expect(ai.streamText).toHaveBeenCalledWith(
       expect.objectContaining({
-        messages: expect.arrayContaining([
+        messages: [
           {
             role: "system",
             content:
-              "Relevant knowledge:\nThe refund policy is 30 days.\n\nUse this content when answering the user.",
+              "Additional test context:\nKeep it brief\n\nUse this context when answering the user.",
           },
-        ]),
+          {
+            role: "user",
+            content: "Say hello",
+          },
+        ],
+        tools: expect.objectContaining({
+          search_knowledge: {},
+          report_used_sources: expect.any(Object),
+        }),
       })
     )
   })
