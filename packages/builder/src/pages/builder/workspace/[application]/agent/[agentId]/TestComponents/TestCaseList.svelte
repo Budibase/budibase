@@ -32,7 +32,7 @@
     loading: boolean
     saving: boolean
     running: boolean
-    runningCaseId: string | null
+    runningCaseIds: Set<string>
     hasLatestRun: boolean
     latestResultsByCaseId: Map<string, AgentTestCaseResult[]>
     onSelectCase: (_caseId: string) => void
@@ -56,7 +56,7 @@
     loading,
     saving,
     running,
-    runningCaseId,
+    runningCaseIds,
     hasLatestRun,
     latestResultsByCaseId,
     onSelectCase,
@@ -200,10 +200,12 @@
           disabled={!casesForSelectedGroup.length ||
             loading ||
             saving ||
-            running}
+            casesForSelectedGroup.some(testCase =>
+              runningCaseIds.has(testCase.id)
+            )}
           on:click={onRunAll}
         >
-          {running ? "Running..." : "Run all tests"}
+          Run all tests
         </Button>
       </div>
     </div>
@@ -274,9 +276,7 @@
         {#each filteredCases as testCase (testCase.id)}
           {@const latestResults = latestResultsByCaseId.get(testCase.id)}
           {@const statusMeta = getVerdictMeta(getCaseStatus(latestResults))}
-          {@const isRunningCase = runningCaseId === testCase.id}
-          {@const showSpinner =
-            running && (runningCaseId === null || isRunningCase)}
+          {@const showSpinner = runningCaseIds.has(testCase.id)}
           <div class="case-row" class:selected={testCase.id === selectedCaseId}>
             <button
               class="case-row-select"
@@ -335,7 +335,13 @@
 </div>
 
 {#snippet caseMenuItems(caseId: string)}
-  <MenuItem icon="play" on:click={() => onRunCase(caseId)}>Run test</MenuItem>
+  <MenuItem
+    icon="play"
+    disabled={runningCaseIds.has(caseId)}
+    on:click={() => onRunCase(caseId)}
+  >
+    Run test
+  </MenuItem>
   <MenuItem icon="pencil-simple" on:click={() => onEditCase(caseId)}>
     Edit test
   </MenuItem>

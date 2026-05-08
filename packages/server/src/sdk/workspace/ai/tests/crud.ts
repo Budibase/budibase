@@ -5,6 +5,8 @@ import type {
   AgentTestCaseResult,
   AgentTestCaseSnapshot,
   AgentTestGroup,
+  AgentTestRun,
+  AgentTestRunDocument,
   AgentTestSuite,
   UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
@@ -206,4 +208,81 @@ export async function persistRunResults({
   })
 
   await db.put({ ...suite, cases })
+}
+
+export async function createRun({
+  agentId,
+  runId,
+  startedAt,
+}: {
+  agentId: string
+  runId: string
+  startedAt: string
+}): Promise<AgentTestRunDocument> {
+  const db = context.getWorkspaceDB()
+  const run: AgentTestRunDocument = {
+    _id: docIds.getAgentTestRunID(agentId, runId),
+    agentId,
+    runId,
+    status: "running",
+    startedAt,
+  }
+
+  const response = await db.put(run)
+  return { ...run, _rev: response.rev }
+}
+
+export async function fetchRun({
+  agentId,
+  runId,
+}: {
+  agentId: string
+  runId: string
+}): Promise<AgentTestRunDocument> {
+  const db = context.getWorkspaceDB()
+  const run = await db.tryGet<AgentTestRunDocument>(
+    docIds.getAgentTestRunID(agentId, runId)
+  )
+  if (!run) {
+    throw new HTTPError("That test run was not found.", 404)
+  }
+  return run
+}
+
+export async function completeRun({
+  agentId,
+  runId,
+  run,
+}: {
+  agentId: string
+  runId: string
+  run: AgentTestRun
+}): Promise<void> {
+  const existing = await fetchRun({ agentId, runId })
+  const db = context.getWorkspaceDB()
+  await db.put({
+    ...existing,
+    status: "completed",
+    completedAt: run.completedAt,
+    run,
+  })
+}
+
+export async function failRun({
+  agentId,
+  runId,
+  error,
+}: {
+  agentId: string
+  runId: string
+  error: string
+}): Promise<void> {
+  const existing = await fetchRun({ agentId, runId })
+  const db = context.getWorkspaceDB()
+  await db.put({
+    ...existing,
+    status: "error",
+    completedAt: new Date().toISOString(),
+    error,
+  })
 }

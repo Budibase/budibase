@@ -402,4 +402,110 @@ describe("agent tests crud", () => {
       expect(mockDbPut).not.toHaveBeenCalled()
     })
   })
+
+  describe("run status documents", () => {
+    const runDocId = `agenttestsuite_${agentId}_agenttestrun_run-1`
+
+    it("creates a running test run document", async () => {
+      const run = await testsCrud.createRun({
+        agentId,
+        runId: "run-1",
+        startedAt: "2026-01-01T00:00:00.000Z",
+      })
+
+      expect(run).toMatchObject({
+        _id: runDocId,
+        _rev: "2-newrev",
+        agentId,
+        runId: "run-1",
+        status: "running",
+      })
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _id: runDocId,
+          status: "running",
+        })
+      )
+    })
+
+    it("fetches a test run document", async () => {
+      mockDbTryGet.mockResolvedValue({
+        _id: runDocId,
+        agentId,
+        runId: "run-1",
+        status: "running",
+        startedAt: "2026-01-01T00:00:00.000Z",
+      })
+
+      const run = await testsCrud.fetchRun({ agentId, runId: "run-1" })
+
+      expect(run.runId).toBe("run-1")
+      expect(mockDbTryGet).toHaveBeenCalledWith(runDocId)
+    })
+
+    it("marks a test run as completed", async () => {
+      mockDbTryGet.mockResolvedValue({
+        _id: runDocId,
+        _rev: "1-old",
+        agentId,
+        runId: "run-1",
+        status: "running",
+        startedAt: "2026-01-01T00:00:00.000Z",
+      })
+
+      await testsCrud.completeRun({
+        agentId,
+        runId: "run-1",
+        run: {
+          agentId,
+          runId: "run-1",
+          total: 1,
+          passed: 1,
+          failed: 0,
+          startedAt: "2026-01-01T00:00:00.000Z",
+          completedAt: "2026-01-01T00:00:01.000Z",
+          snapshot: {
+            agentId,
+            agentName: "Agent",
+            aiconfig: "config-1",
+            enabledTools: [],
+            knowledgeBases: [],
+          },
+          results: [makeResult("case-1")],
+        },
+      })
+
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "completed",
+          completedAt: "2026-01-01T00:00:01.000Z",
+          run: expect.objectContaining({ total: 1 }),
+        })
+      )
+    })
+
+    it("marks a test run as errored", async () => {
+      mockDbTryGet.mockResolvedValue({
+        _id: runDocId,
+        _rev: "1-old",
+        agentId,
+        runId: "run-1",
+        status: "running",
+        startedAt: "2026-01-01T00:00:00.000Z",
+      })
+
+      await testsCrud.failRun({
+        agentId,
+        runId: "run-1",
+        error: "No tests found",
+      })
+
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "error",
+          error: "No tests found",
+        })
+      )
+    })
+  })
 })

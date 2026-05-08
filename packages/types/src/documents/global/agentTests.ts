@@ -120,3 +120,15 @@ export interface AgentTestRun {
   snapshot: AgentTestSnapshot
   results: AgentTestCaseResult[]
 }
+
+export type AgentTestRunStatus = "running" | "completed" | "error"
+
+export interface AgentTestRunDocument extends Document {
+  agentId: string
+  runId: string
+  status: AgentTestRunStatus
+  startedAt: string
+  completedAt?: string
+  run?: AgentTestRun
+  error?: string
+}

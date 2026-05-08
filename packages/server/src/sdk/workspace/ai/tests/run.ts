@@ -623,12 +623,16 @@ export async function runSuite({
   caseId,
   groupId,
   aiConfigIds,
+  runId = v4(),
+  startedAt = new Date().toISOString(),
 }: {
   agentId: string
   user: ContextUser
   caseId?: string
   groupId?: string
   aiConfigIds?: string[]
+  runId?: string
+  startedAt?: string
 }): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const suite = await fetchSuite(agentId)
@@ -639,8 +643,6 @@ export async function runSuite({
     )
   )
   const configSnapshots = await buildConfigSnapshotMap(runConfigIds)
-  const runId = v4()
-  const startedAt = new Date().toISOString()
   const snapshot = await buildRunSnapshot({
     agent,
     suite,
