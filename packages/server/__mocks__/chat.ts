@@ -266,6 +266,47 @@ export class Chat {
           })
         }
 
+        if (parsed?.type === 2) {
+          const data = parsed.data as
+            | {
+                name?: string
+                options?: Array<{ value?: string | number | boolean }>
+              }
+            | undefined
+          const command = data?.name ? `/${data.name}` : ""
+          const slashHandler = this.slashHandlers.get(command)
+          if (!slashHandler) {
+            return new Response(JSON.stringify({ messages: [] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            })
+          }
+
+          const messages: string[] = []
+          const rawUser =
+            ((parsed.member as { user?: { id?: string; username?: string } })
+              ?.user as { id?: string; username?: string } | undefined) ||
+            (parsed.user as { id?: string; username?: string } | undefined) ||
+            {}
+          const text = String(data?.options?.[0]?.value || "")
+          await slashHandler({
+            command,
+            text,
+            raw: parsed,
+            user: {
+              userId: rawUser.id || "",
+              userName: rawUser.username || rawUser.id || "",
+              fullName: rawUser.username || rawUser.id || "",
+            },
+            channel: createMessageCollector("teams", messages),
+          })
+
+          return new Response(JSON.stringify({ messages }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          })
+        }
+
         return new Response("", { status: 200 })
       },
       teams: async request => {

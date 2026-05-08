@@ -14,6 +14,7 @@ const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   chatAppId: OPTIONAL_STRING,
   interactionsEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+  requireUserLink: Joi.boolean().optional(),
 })
   .optional()
   .allow(null)
@@ -25,6 +26,7 @@ const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+  requireUserLink: Joi.boolean().optional(),
 })
   .optional()
   .allow(null)
@@ -35,6 +37,7 @@ const SLACK_INTEGRATION_SCHEMA = Joi.object({
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+  requireUserLink: Joi.boolean().optional(),
 })
   .optional()
   .allow(null)
