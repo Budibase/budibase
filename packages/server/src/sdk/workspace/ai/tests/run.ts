@@ -549,7 +549,7 @@ const buildConfigSnapshot = async (
   try {
     aiConfig = await sdk.ai.configs.find(aiConfigId)
   } catch (error) {
-    console.log("Failed to snapshot AI config for agent test", {
+    console.error("Failed to snapshot AI config for agent test", {
       aiConfigId,
       error,
     })
