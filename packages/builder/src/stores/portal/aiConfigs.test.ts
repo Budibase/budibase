@@ -37,7 +37,7 @@ describe("AIConfigStore", () => {
     })
     const missingTypeConfig = makeConfig({
       _id: "cfg_3",
-      configType: undefined as AIConfigType,
+      configType: undefined as unknown as AIConfigType,
     })
 
     store.set({

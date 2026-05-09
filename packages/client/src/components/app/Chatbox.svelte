@@ -48,7 +48,6 @@
     agentId: lockedAgentId || "",
   }
   let deletingChat = false
-  let loading = true
   let initialPrompt = ""
   let selectedAgentId: string | null = lockedAgentId || null
   let enabledAgentList: ChatboxState["enabledAgentList"] = []
@@ -121,7 +120,6 @@
     lockedAgentId = next.lockedAgentId
     chat = next.chat
     deletingChat = next.deletingChat
-    loading = next.loading
     initialPrompt = next.initialPrompt
     selectedAgentId = next.selectedAgentId
     enabledAgentList = next.enabledAgentList
@@ -235,7 +233,6 @@
       {conversationStarters}
       {agentAvailability}
       {initialPrompt}
-      {loading}
       {suppressAgentPicker}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}

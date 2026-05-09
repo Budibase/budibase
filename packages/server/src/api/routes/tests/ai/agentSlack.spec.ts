@@ -89,6 +89,11 @@ describe("agent slack integration provisioning", () => {
     return result
   }
 
+  const getPersistedChatApp = async () =>
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      return await sdk.ai.chatApps.getSingle()
+    })
+
   beforeEach(async () => {
     await config.newTenant()
     mockedWebhookChat.mockClear()
@@ -125,6 +130,13 @@ describe("agent slack integration provisioning", () => {
     expect(updated?.slackIntegration?.messagingEndpointUrl).toEqual(
       result.messagingEndpointUrl
     )
+
+    const chatApp = await getPersistedChatApp()
+    expect(chatApp?.agents).toContainEqual({
+      agentId: agent._id,
+      isEnabled: false,
+      isDefault: false,
+    })
   })
 
   it("obfuscates slack secrets in responses and preserves them on update", async () => {

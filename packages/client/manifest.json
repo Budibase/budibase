@@ -4157,6 +4157,38 @@
         }
       },
       {
+        "type": "select",
+        "label": "Box columns",
+        "key": "columns",
+        "defaultValue": 1,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 1,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 2,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 3,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ],
+        "dependsOn": {
+          "setting": "direction",
+          "value": "horizontal"
+        }
+      },
+      {
         "type": "boolean",
         "label": "Show Select All",
         "key": "showSelectAll",

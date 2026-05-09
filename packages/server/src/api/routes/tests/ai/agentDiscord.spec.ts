@@ -3,6 +3,7 @@ import nock from "nock"
 import { db, encryption } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import type { Agent } from "@budibase/types"
+import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 const DISCORD_PUBLIC_KEY_DER_PREFIX = "302a300506032b6570032100"
@@ -60,6 +61,11 @@ describe("agent discord integration sync", () => {
     }
     return result
   }
+
+  const getPersistedChatApp = async () =>
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      return await sdk.ai.chatApps.getSingle()
+    })
 
   beforeEach(async () => {
     await config.newTenant()
@@ -149,6 +155,13 @@ describe("agent discord integration sync", () => {
     expect(result.inviteUrl).toContain("client_id=app-123")
     expect(globalScope.isDone()).toBe(true)
     expect(guildScope.isDone()).toBe(true)
+
+    const chatApp = await getPersistedChatApp()
+    expect(chatApp?.agents).toContainEqual({
+      agentId: agent._id,
+      isEnabled: false,
+      isDefault: false,
+    })
   })
 
   it("obfuscates discord secrets in responses and preserves them on update", async () => {

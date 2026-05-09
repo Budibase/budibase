@@ -36,6 +36,12 @@ export enum Event {
   // AI
   AI_CONFIG_CREATED = "ai:config:created",
   AI_CONFIG_UPDATED = "ai:config:updated",
+  AI_CONFIG_DELETED = "ai:config:deleted",
+
+  // AI AGENT
+  AI_AGENT_CREATED = "ai:agent:created",
+  AI_AGENT_UPDATED = "ai:agent:updated",
+  AI_AGENT_DELETED = "ai:agent:deleted",
 
   // AUTH
   AUTH_SSO_CREATED = "auth:sso:created",
@@ -278,8 +284,12 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.EMAIL_SMTP_UPDATED]: `Email configuration updated`,
 
   // AI
-  [Event.AI_CONFIG_CREATED]: `AI configuration created`,
-  [Event.AI_CONFIG_UPDATED]: `AI configuration updated`,
+  [Event.AI_CONFIG_CREATED]: `AI configuration "{{ name }}" created`,
+  [Event.AI_CONFIG_UPDATED]: `AI configuration "{{ name }}" updated`,
+  [Event.AI_CONFIG_DELETED]: `AI configuration "{{ name }}" deleted`,
+  [Event.AI_AGENT_CREATED]: `AI agent "{{ name }}" created`,
+  [Event.AI_AGENT_UPDATED]: `AI agent "{{ name }}" updated`,
+  [Event.AI_AGENT_DELETED]: `AI agent "{{ name }}" deleted`,
 
   // AUTH
   [Event.AUTH_SSO_CREATED]: `SSO configuration created`,

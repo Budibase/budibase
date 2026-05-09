@@ -7,6 +7,7 @@
 </script>
 
 <script lang="ts">
+  import { onDestroy } from "svelte"
   import { Body, Icon, Popover, PopoverAlignment, Tag } from "@budibase/bbui"
   import PublishMenu from "./PublishMenu.svelte"
   import { deploymentStore } from "@/stores/builder"
@@ -21,6 +22,19 @@
 
   let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
+  let topBarEl: HTMLElement | undefined
+  let topBarObserver: ResizeObserver | undefined
+
+  $: if (topBarEl) {
+    topBarObserver?.disconnect()
+    topBarObserver = new ResizeObserver(([entry]) => {
+      document.documentElement.style.setProperty(
+        "--top-bar-height",
+        `${entry.borderBoxSize[0].blockSize}px`
+      )
+    })
+    topBarObserver.observe(topBarEl)
+  }
 
   $: hasBeenPublished($deploymentStore.publishCount)
 
@@ -32,9 +46,14 @@
       publishSuccessPopover?.show()
     }
   }
+
+  onDestroy(() => {
+    topBarObserver?.disconnect()
+    document.documentElement.style.removeProperty("--top-bar-height")
+  })
 </script>
 
-<div class="top-bar">
+<div class="top-bar" bind:this={topBarEl}>
   {#if icon}
     <div class="icon-container">
       <Icon name={icon} size="M" weight="regular" />

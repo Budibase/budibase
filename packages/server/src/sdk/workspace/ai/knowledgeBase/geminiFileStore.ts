@@ -1,4 +1,5 @@
 import { HTTPError } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
 import fetch from "node-fetch"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
@@ -7,25 +8,37 @@ interface CreateVectorStoreResponse {
   id?: string
 }
 
-interface GeminiIngestResponse {
+interface RagIngestResponse {
+  id: string
+  status: "completed" | "in_progress" | "failed"
+  vector_store_id: string
   file_id: string
+  error?: string
 }
 
-interface GeminiSearchContent {
+interface RagSearchContent {
   text: string
   type: "text"
 }
 
-interface GeminiSearchResultItem {
+interface RagSearchResultItem {
   file_id?: string | null
   filename?: string
   score: number | null
-  content: GeminiSearchContent[]
+  content: RagSearchContent[]
 }
 
-interface GeminiSearchResponse {
-  data?: GeminiSearchResultItem[]
+interface RagSearchResponse {
+  data?: RagSearchResultItem[]
 }
+
+interface GeminiFileStoreResponse {
+  ok: boolean
+  status: number
+}
+
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
+const RETRY_DELAYS_MS = [500, 1500, 3000]
 
 const getGeminiApiKey = () => {
   const key = environment.GEMINI_API_KEY
@@ -36,6 +49,41 @@ const getGeminiApiKey = () => {
     )
   }
   return key
+}
+
+const isRetryableResponse = (response: GeminiFileStoreResponse) => {
+  return !response.ok && RETRYABLE_STATUS_CODES.has(response.status)
+}
+
+const isRetryableFetchError = (error: unknown) => {
+  return error instanceof Error && error.name === "FetchError"
+}
+
+const requestWithRetries = async <TResponse extends GeminiFileStoreResponse>(
+  request: () => Promise<TResponse>
+): Promise<TResponse> => {
+  let attempt = 0
+
+  while (true) {
+    try {
+      const response = await request()
+      if (!isRetryableResponse(response) || attempt >= RETRY_DELAYS_MS.length) {
+        return response
+      }
+
+      const delayMs = RETRY_DELAYS_MS[attempt]
+      await helpers.wait(delayMs)
+    } catch (error) {
+      if (!isRetryableFetchError(error) || attempt >= RETRY_DELAYS_MS.length) {
+        throw error
+      }
+
+      const delayMs = RETRY_DELAYS_MS[attempt]
+      await helpers.wait(delayMs)
+    }
+
+    attempt++
+  }
 }
 
 const handleNotOkResponse = async ({
@@ -93,16 +141,18 @@ export async function deleteGeminiVectorStore(
   vectorStoreId: string
 ): Promise<void> {
   const geminiApiKey = getGeminiApiKey()
-  const response = await fetch(
-    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
-    {
-      method: "DELETE",
-      headers: await getCommonAuthHeaders(),
-      body: JSON.stringify({
-        custom_llm_provider: "gemini",
-        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
-      }),
-    }
+  const response = await requestWithRetries(async () =>
+    fetch(
+      `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
+      {
+        method: "DELETE",
+        headers: await getCommonAuthHeaders(),
+        body: JSON.stringify({
+          custom_llm_provider: "gemini",
+          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+        }),
+      }
+    )
   )
 
   await handleNotOkResponse({
@@ -149,7 +199,10 @@ export async function ingestGeminiFile({
     fallbackMessage: "Failed to ingest file into Gemini store",
   })
 
-  const payload = (await response.json()) as GeminiIngestResponse
+  const payload = (await response.json()) as RagIngestResponse
+  if (payload.status === "failed" && payload.error) {
+    throw new HTTPError(payload.error, 500)
+  }
   if (!payload.file_id) {
     throw new HTTPError("Gemini ingest did not return file_id", 500)
   }
@@ -164,21 +217,23 @@ export async function searchGeminiFileStore({
 }: {
   vectorStoreId: string
   query: string
-}): Promise<GeminiSearchResultItem[]> {
+}): Promise<RagSearchResultItem[]> {
   const geminiApiKey = getGeminiApiKey()
-  const response = await fetch(
-    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
-      vectorStoreId
-    )}/search`,
-    {
-      method: "POST",
-      headers: await getCommonAuthHeaders(),
-      body: JSON.stringify({
-        query,
-        custom_llm_provider: "gemini",
-        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
-      }),
-    }
+  const response = await requestWithRetries(async () =>
+    fetch(
+      `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
+        vectorStoreId
+      )}/search`,
+      {
+        method: "POST",
+        headers: await getCommonAuthHeaders(),
+        body: JSON.stringify({
+          query,
+          custom_llm_provider: "gemini",
+          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+        }),
+      }
+    )
   )
 
   await handleNotOkResponse({
@@ -186,7 +241,7 @@ export async function searchGeminiFileStore({
     fallbackMessage: "Failed to search Gemini vector store",
   })
 
-  const payload = (await response.json()) as GeminiSearchResponse
+  const payload = (await response.json()) as RagSearchResponse
   return payload.data || []
 }
 
@@ -198,18 +253,20 @@ export async function deleteGeminiFileFromStore({
   fileId: string
 }): Promise<void> {
   const geminiApiKey = getGeminiApiKey()
-  const response = await fetch(
-    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
-      vectorStoreId
-    )}/files/${encodeURIComponent(fileId)}`,
-    {
-      method: "DELETE",
-      headers: await getCommonAuthHeaders(),
-      body: JSON.stringify({
-        custom_llm_provider: "gemini",
-        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
-      }),
-    }
+  const response = await requestWithRetries(async () =>
+    fetch(
+      `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
+        vectorStoreId
+      )}/files/${encodeURIComponent(fileId)}`,
+      {
+        method: "DELETE",
+        headers: await getCommonAuthHeaders(),
+        body: JSON.stringify({
+          custom_llm_provider: "gemini",
+          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+        }),
+      }
+    )
   )
 
   await handleNotOkResponse({

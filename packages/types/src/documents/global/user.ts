@@ -113,6 +113,7 @@ export type StrippedUser = Pick<User, "_id" | "tenantId" | "email" | "userId">
 export interface UserBindings extends Document {
   firstName?: string
   lastName?: string
+  fullName?: string
   email?: string
   status?: string
   roleId?: string | null

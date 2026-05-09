@@ -26,6 +26,9 @@ spec:
     metadata:
       annotations:
         ad.datadoghq.com/bbapps.logs: '[{"source":"nodejs"}]'
+{{- if .Values.services.couchdb.enabled }}
+        checksum/couchdb-secret: {{ (lookup "v1" "Secret" .Release.Namespace (include "couchdb.fullname" .)) | toYaml | sha256sum }}
+{{- end }}
 {{ if .Values.services.apps.templateAnnotations }}
 {{- toYaml .Values.services.apps.templateAnnotations | indent 8 -}}
 {{ end }}
@@ -36,6 +39,10 @@ spec:
 {{ end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.apps.terminationGracePeriodSeconds }}
+      {{- if .Values.services.apps.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.apps.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT

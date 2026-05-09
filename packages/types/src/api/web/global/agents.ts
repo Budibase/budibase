@@ -25,10 +25,6 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
-export interface FetchAgentFilesResponse {
-  files: KnowledgeBaseFile[]
-}
-
 export interface AgentFileUploadResponse {
   file: KnowledgeBaseFile
 }
@@ -41,7 +37,34 @@ export interface KnowledgeSourceOption {
 
 export interface FetchAgentKnowledgeSourceOptionsResponse {
   options: KnowledgeSourceOption[]
-  runs: KnowledgeSourceSyncRun[]
+}
+
+export interface SharePointKnowledgeSourceSnapshot {
+  sourceId: string
+  name?: string
+  webUrl?: string
+  runStatus?: AgentKnowledgeSourceSyncRunStatus
+  lastRunAt?: string
+  syncedCount: number
+  failedCount: number
+  processingCount: number
+  totalCount: number
+}
+
+export interface FetchAgentKnowledgeResponse {
+  files: KnowledgeBaseFile[]
+  sharePointSources: SharePointKnowledgeSourceSnapshot[]
+}
+
+export interface KnowledgeSourceEntry {
+  id: string
+  name: string
+  path: string
+  type: "folder" | "file"
+}
+
+export interface FetchAgentKnowledgeSourceEntriesResponse {
+  entries: KnowledgeSourceEntry[]
 }
 
 export interface KnowledgeSourceSyncRun {
@@ -55,29 +78,39 @@ export interface KnowledgeSourceSyncRun {
   status: AgentKnowledgeSourceSyncRunStatus
 }
 
-export interface SyncAgentKnowledgeSourcesRequest {
-  sourceIds?: string[]
-}
+export interface SyncAgentKnowledgeSourcesRequest {}
 
 export interface SyncAgentKnowledgeSourcesResponse {
   agentId: string
   synced: number
   failed: number
-  skipped: number
+  alreadySynced: number
+  deleted: number
   unsupported: number
   totalDiscovered: number
 }
 
-export interface SetAgentKnowledgeSourcesRequest {
-  sourceIds: string[]
+export interface ConnectAgentSharePointSiteRequest {
+  siteId: string
+  datasourceId: string
+  authConfigId: string
+  filters?: string[]
 }
 
-export type SetAgentKnowledgeSourcesResponse =
+export type ConnectAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
-export interface DisconnectAgentKnowledgeSourcesResponse {
+export interface UpdateAgentSharePointSiteRequest {
+  filters?: string[]
+}
+
+export type UpdateAgentSharePointSiteResponse =
+  FetchAgentKnowledgeSourceOptionsResponse
+
+export interface DisconnectAgentSharePointSiteResponse {
   agentId: string
   disconnected: true
+  siteId: string
 }
 
 export interface FetchChatAppAgentsResponse {
@@ -136,6 +169,7 @@ export type CreateAgentRequest = Optional<
     | "updatedAt"
     | "knowledgeSources"
     | "knowledgeBases"
+    | "publishedAt"
   >,
   "aiconfig"
 >

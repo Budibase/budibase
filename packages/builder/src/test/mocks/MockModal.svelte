@@ -3,11 +3,11 @@
 
   const dispatch = createEventDispatcher()
 
-  export let show = () => {
+  export const show = () => {
     dispatch("show")
   }
 
-  export let hide = () => {
+  export const hide = () => {
     dispatch("hide")
   }
 </script>

@@ -1,24 +1,14 @@
 <script lang="ts">
-  import { Button, CollapsibleSearch, Divider, Select } from "@budibase/bbui"
+  import { Button, CollapsibleSearch, Divider } from "@budibase/bbui"
   import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
-  import type {
-    ConnectorCard,
-    GroupTemplateName,
-    RestTemplate,
-    RestTemplateGroup,
-    RestTemplateGroupName,
-    RestTemplateName,
-    TemplateSelection,
-  } from "@budibase/types"
-  import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
+  import type { RestTemplate } from "@budibase/types"
 
   export let templates: RestTemplate[] = []
-  export let templateGroups: RestTemplateGroup<RestTemplateGroupName>[] = []
   export let loading = false
   export let customDisabled = false
 
   const dispatch = createEventDispatcher<{
-    selectTemplate: TemplateSelection
+    selectTemplate: RestTemplate
     custom: void
   }>()
 
@@ -27,8 +17,6 @@
   let loadTrigger: HTMLDivElement | undefined
   let observer: IntersectionObserver | null = null
   let loadingMore = false
-  let activeGroup: RestTemplateGroup<RestTemplateGroupName> | null = null
-  let activeGroupTemplateName: GroupTemplateName | null = null
   let currentPage = 1
   let lastConnectorCount = 0
   let searchValue = ""
@@ -48,108 +36,40 @@
     }
   }
 
-  $: groupedTemplateNames = new Set<RestTemplateName>(
-    templateGroups.flatMap(group =>
-      group.templates.map(template => template.name)
-    )
-  )
-  $: visibleTemplates = (templates || []).filter(
-    template => !groupedTemplateNames.has(template.name)
-  )
-  $: filteredTemplateGroups = normalizedSearchValue
-    ? templateGroups.filter(
-        group =>
-          group.name.toLowerCase().includes(normalizedSearchValue) ||
-          group.templates.some(template =>
-            template.name.toLowerCase().includes(normalizedSearchValue)
+  $: filteredTemplates = normalizedSearchValue
+    ? templates.filter(
+        t =>
+          t.name.toLowerCase().includes(normalizedSearchValue) ||
+          t.templates?.some(c =>
+            c.name.toLowerCase().includes(normalizedSearchValue)
           )
       )
-    : templateGroups
-  $: filteredTemplates = normalizedSearchValue
-    ? visibleTemplates.filter(template =>
-        template.name.toLowerCase().includes(normalizedSearchValue)
-      )
-    : visibleTemplates
-  $: connectorCards = [
-    ...filteredTemplateGroups.map<ConnectorCard>(group => ({
-      type: "group",
-      name: group.name,
-      icon: group.icon,
-      key: `group-${group.name}`,
-      group,
-    })),
-    ...filteredTemplates.map<ConnectorCard>(template => ({
-      type: "template",
-      name: template.name,
-      icon: template.icon,
-      key: `template-${template.name}`,
-      template,
-    })),
-  ].sort((a, b) => a.name.localeCompare(b.name))
-  $: if (connectorCards.length !== lastConnectorCount) {
-    lastConnectorCount = connectorCards.length
+    : templates
+
+  $: sortedTemplates = [...filteredTemplates].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  )
+
+  $: if (sortedTemplates.length !== lastConnectorCount) {
+    lastConnectorCount = sortedTemplates.length
     currentPage = 1
   }
-  $: if (activeGroup) {
-    currentPage = 1
-  }
-  $: totalPages = Math.max(1, Math.ceil(connectorCards.length / itemsPerPage))
+
+  $: totalPages = Math.max(1, Math.ceil(sortedTemplates.length / itemsPerPage))
   $: if (currentPage > totalPages) {
     currentPage = totalPages
   }
-  $: pagedConnectorCards = connectorCards.slice(0, currentPage * itemsPerPage)
+
+  $: pagedTemplates = sortedTemplates.slice(0, currentPage * itemsPerPage)
   $: hasNextPage = currentPage < totalPages
-  $: activeGroupOptions = activeGroup
-    ? activeGroup.templates.map(template => ({
-        label: template.name,
-        value: template.name,
-        description: template.description,
-      }))
-    : []
-  $: selectedTemplateGroupItem =
-    activeGroup && activeGroupTemplateName
-      ? activeGroup.templates.find(
-          template => template.name === activeGroupTemplateName
-        ) || null
-      : null
-  $: selectedTemplateGroupItemDescription = activeGroupOptions.find(
-    option => option.value === activeGroupTemplateName
-  )?.description
 
   const handleScroll = (event: Event) => {
     const target = event.target as HTMLDivElement
     scrolling = target?.scrollTop !== 0
   }
 
-  const openTemplateGroup = (
-    group: RestTemplateGroup<RestTemplateGroupName>
-  ) => {
-    if (loading) {
-      return
-    }
-    activeGroup = group
-    activeGroupTemplateName = group.templates[0]?.name || null
-  }
-
-  const resetGroupSelection = () => {
-    activeGroup = null
-    activeGroupTemplateName = null
-    searchValue = ""
-  }
-
-  const confirmGroupTemplateSelection = () => {
-    if (!activeGroup || !selectedTemplateGroupItem) {
-      return
-    }
-    dispatch("selectTemplate", {
-      kind: "group",
-      groupName: activeGroup.name,
-      template: selectedTemplateGroupItem,
-    })
-  }
-
   const handleTemplateSelection = (template: RestTemplate) => {
-    dispatch("selectTemplate", { kind: "template", template })
+    dispatch("selectTemplate", template)
   }
 
   const handleCustomClick = () => {
@@ -157,13 +77,9 @@
   }
 
   const handleIntersect = async (entries: IntersectionObserverEntry[]) => {
-    if (loadingMore || !hasNextPage) {
-      return
-    }
+    if (loadingMore || !hasNextPage) return
     const isVisible = entries.some(entry => entry.isIntersecting)
-    if (!isVisible) {
-      return
-    }
+    if (!isVisible) return
     loadingMore = true
     currentPage += 1
     await tick()
@@ -171,9 +87,7 @@
   }
 
   const ensureObserver = () => {
-    if (!scrollContainer || !loadTrigger) {
-      return
-    }
+    if (!scrollContainer || !loadTrigger) return
     observer?.disconnect()
     if (!observer) {
       observer = new IntersectionObserver(handleIntersect, {
@@ -195,34 +109,26 @@
       observer = null
     }
   })
-
-  $: if (activeGroup) {
-    observer?.disconnect()
-  } else if (loadTrigger) {
-    ensureObserver()
-  }
 </script>
 
 <div class="api-main" class:scrolling>
   <div class="api-header">
     <div>API connectors</div>
-    {#if !activeGroup}
-      <div class="api-header-actions">
-        <CollapsibleSearch
-          placeholder="Search templates"
-          value={searchValue}
-          on:change={event => (searchValue = event.detail)}
-        />
-        <Button
-          secondary
-          icon="plus"
-          disabled={loading || customDisabled}
-          on:click={handleCustomClick}
-        >
-          Custom REST API
-        </Button>
-      </div>
-    {/if}
+    <div class="api-header-actions">
+      <CollapsibleSearch
+        placeholder="Search templates"
+        value={searchValue}
+        on:change={event => (searchValue = event.detail)}
+      />
+      <Button
+        secondary
+        icon="plus"
+        disabled={loading || customDisabled}
+        on:click={handleCustomClick}
+      >
+        Custom REST API
+      </Button>
+    </div>
   </div>
   <Divider size={"S"} noMargin />
   <div
@@ -231,72 +137,23 @@
     on:scroll={handleScroll}
   >
     <div class="contents">
-      {#if activeGroup}
-        <div class="group-step">
-          <div class="group-step-summary">
-            <div class="api-icon group-icon">
-              <img src={activeGroup.icon} alt={activeGroup.name} />
+      <div class="grid">
+        {#each pagedTemplates as template (template.id)}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <div
+            class="api"
+            class:disabled={loading}
+            on:click={() => handleTemplateSelection(template)}
+          >
+            <div class="api-icon">
+              <img src={template.icon} alt={template.name} />
             </div>
-            <div>
-              <div class="group-step-name">{activeGroup.name}</div>
-              <div class="group-step-description">
-                {activeGroup.description}
-              </div>
-            </div>
+            <div class="api-name">{template.name}</div>
           </div>
-          <div class="group-step-body">
-            <Select
-              label="Select category"
-              options={activeGroupOptions}
-              bind:value={activeGroupTemplateName}
-              disabled={loading}
-            />
-            {#if selectedTemplateGroupItemDescription}
-              <DescriptionViewer
-                description={selectedTemplateGroupItemDescription}
-                label={undefined}
-              />
-            {/if}
-          </div>
-          <div class="group-step-actions">
-            <Button secondary on:click={resetGroupSelection} disabled={loading}>
-              Back
-            </Button>
-            <Button
-              cta
-              on:click={confirmGroupTemplateSelection}
-              disabled={!selectedTemplateGroupItem || loading}
-            >
-              Use template
-            </Button>
-          </div>
-        </div>
-      {:else}
-        <div class="grid">
-          {#each pagedConnectorCards as card (card.key)}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div
-              class="api"
-              class:disabled={loading}
-              on:click={() => {
-                if (card.type === "group") {
-                  openTemplateGroup(card.group)
-                } else {
-                  handleTemplateSelection(card.template)
-                }
-              }}
-            >
-              <div class="api-icon">
-                <img src={card.icon} alt={card.name} />
-              </div>
-
-              <div class="api-name">{card.name}</div>
-            </div>
-          {/each}
-        </div>
-        <div class="load-trigger" bind:this={loadTrigger}></div>
-      {/if}
+        {/each}
+      </div>
+      <div class="load-trigger" bind:this={loadTrigger}></div>
     </div>
   </div>
 </div>
@@ -366,11 +223,6 @@
     overflow: hidden;
   }
 
-  .api-icon.group-icon {
-    width: 48px;
-    height: 48px;
-  }
-
   .api-header {
     padding: var(--spacing-l) var(--spectrum-dialog-confirm-padding);
     width: 100%;
@@ -408,57 +260,6 @@
     height: calc(
       (6 * 51px) + (5 * 12px) + var(--spacing-xl) + var(--spacing-l)
     );
-  }
-
-  .group-step {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .group-step-summary {
-    display: flex;
-    gap: var(--spacing-m);
-    align-items: center;
-  }
-
-  .group-step-name {
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .group-step-description {
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 14px;
-    margin-top: var(--spacing-xs);
-  }
-
-  .group-step-description :global(.description-viewer) {
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: inherit;
-    color: inherit;
-    gap: 4px;
-  }
-
-  .group-step-description :global(.description-content) {
-    font-size: inherit;
-    color: inherit;
-  }
-
-  .group-step-body {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .group-step-actions {
-    margin-top: 12px;
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-l);
   }
 
   .load-trigger {

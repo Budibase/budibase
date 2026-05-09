@@ -4,6 +4,7 @@ import Joi from "joi"
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
+const NON_EMPTY_STRING = Joi.string().trim().min(1)
 
 const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   applicationId: OPTIONAL_STRING,
@@ -20,7 +21,7 @@ const DISCORD_INTEGRATION_SCHEMA = Joi.object({
 const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   appId: OPTIONAL_STRING,
   appPassword: OPTIONAL_STRING,
-  tenantId: Joi.string().required().trim().disallow(""),
+  tenantId: NON_EMPTY_STRING.required(),
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
@@ -69,6 +70,11 @@ export function updateAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      createdAt: OPTIONAL_STRING,
+      updatedAt: OPTIONAL_STRING,
+      publishedAt: OPTIONAL_STRING,
+      createdBy: OPTIONAL_STRING,
+      enabledTools: Joi.array().items(Joi.string()).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -125,7 +131,7 @@ export function toggleAgentSlackDeploymentValidator() {
 export function generateAgentInstructionsValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      prompt: Joi.string().trim().disallow("").required(),
+      prompt: NON_EMPTY_STRING.required(),
       agentName: OPTIONAL_STRING,
       goal: OPTIONAL_STRING,
       toolReferences: Joi.array().items(Joi.string()).optional(),
@@ -134,17 +140,24 @@ export function generateAgentInstructionsValidator() {
 }
 
 export function syncAgentKnowledgeSourcesValidator() {
+  return auth.joiValidator.body(Joi.object({}).optional())
+}
+
+export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      sourceIds: Joi.array().items(Joi.string().trim().disallow("")).optional(),
+      siteId: NON_EMPTY_STRING.required(),
+      datasourceId: NON_EMPTY_STRING.required(),
+      authConfigId: NON_EMPTY_STRING.required(),
+      filters: Joi.array().items(NON_EMPTY_STRING).optional(),
     }).required()
   )
 }
 
-export function setAgentKnowledgeSourcesValidator() {
+export function updateAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      sourceIds: Joi.array().items(Joi.string().trim().disallow("")).required(),
+      filters: Joi.array().items(NON_EMPTY_STRING).optional(),
     }).required()
   )
 }

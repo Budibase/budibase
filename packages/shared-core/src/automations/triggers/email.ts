@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "Email Received",
+  name: "Email received",
   event: AutomationEventType.EMAIL_TRIGGER,
   icon: "envelope",
   tagline: "Email Trigger",

@@ -5,6 +5,7 @@ import {
   DocumentType,
   SEPARATOR,
 } from "@budibase/types"
+import { getUserFullName } from "../users"
 import { InvalidBBRefError } from "./errors"
 
 const ROW_PREFIX = DocumentType.ROW + SEPARATOR
@@ -113,6 +114,7 @@ interface UserReferenceInfo {
   email: string
   firstName?: string
   lastName?: string
+  fullName?: string
 }
 
 export async function processOutputBBReference(
@@ -145,6 +147,7 @@ export async function processOutputBBReference(
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        fullName: getUserFullName(user),
       }
     }
     default:
@@ -176,6 +179,7 @@ export async function processOutputBBReferences(
         email: u.email,
         firstName: u.firstName,
         lastName: u.lastName,
+        fullName: getUserFullName(u),
       }))
     }
     default:

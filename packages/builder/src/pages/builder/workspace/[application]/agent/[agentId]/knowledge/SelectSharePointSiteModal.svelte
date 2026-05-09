@@ -18,6 +18,19 @@
 
   let modal = $state<Modal>()
 
+  const displaySharePointSites = $derived(
+    [...sharePointSites]
+      .map(site => ({
+        ...site,
+        name: site.name || site.webUrl || site.id,
+      }))
+      .sort((a, b) => {
+        const aKey = a.name.trim().toLocaleLowerCase()
+        const bKey = b.name.trim().toLocaleLowerCase()
+        return aKey.localeCompare(bKey)
+      })
+  )
+
   export function show() {
     modal?.show()
   }
@@ -48,8 +61,9 @@
         <Select
           bind:value={selectedSiteId}
           label="Select site"
-          options={sharePointSites}
+          options={displaySharePointSites}
           getOptionLabel={o => o.name || o.webUrl || o.id}
+          getOptionSubtitle={o => o.webUrl}
           getOptionValue={o => o.id}
         ></Select>
       {/if}

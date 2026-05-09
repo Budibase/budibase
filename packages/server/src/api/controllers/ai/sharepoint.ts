@@ -3,6 +3,7 @@ import {
   AgentKnowledgeSource,
   AgentKnowledgeSourceType,
   KnowledgeBaseFile,
+  KnowledgeBaseFileSourceType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -13,29 +14,25 @@ export const getSharePointSources = (agent?: Agent): AgentKnowledgeSource[] =>
 
 export const getSharePointSiteIds = (agent?: Agent): Set<string> => {
   const ids = getSharePointSources(agent)
-    .map(source => source.config.site?.id?.trim())
+    .map(source => source.config.site.id.trim())
     .filter((id): id is string => !!id)
   return new Set(ids)
 }
 
 const isSharePointFile = (
-  file: Pick<KnowledgeBaseFile, "externalSourceId" | "uploadedBy">
-) =>
-  !!file.externalSourceId?.startsWith("sharepoint:") ||
-  !!file.uploadedBy?.startsWith("sharepoint:")
+  file: Pick<KnowledgeBaseFile, "source" | "uploadedBy">
+) => file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT
 
 const isSharePointFileForRemovedSite = (
-  file: Pick<KnowledgeBaseFile, "externalSourceId" | "uploadedBy">,
+  file: Pick<KnowledgeBaseFile, "source" | "uploadedBy">,
   removedSharePointSiteIds: string[]
 ) => {
-  const externalSourceId = file.externalSourceId
-  const uploadedBy = file.uploadedBy
+  const sourceSiteId =
+    file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT
+      ? file.source.siteId
+      : undefined
   return removedSharePointSiteIds.some(siteId => {
-    const sourcePrefix = `sharepoint:${siteId}:`
-    return (
-      !!externalSourceId?.startsWith(sourcePrefix) ||
-      uploadedBy === `sharepoint:${siteId}`
-    )
+    return sourceSiteId === siteId
   })
 }
 

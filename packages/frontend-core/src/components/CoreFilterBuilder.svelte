@@ -304,6 +304,7 @@
                 })
               }}
               placeholder={false}
+              popoverAutoWidth
             />
           </span>
           <span>of the following {builderType} groups:</span>
@@ -333,6 +334,7 @@
                         })
                       }}
                       placeholder={false}
+                      popoverAutoWidth
                     />
                   </span>
                   <span>of the following {builderType}s are matched:</span>
@@ -376,6 +378,7 @@
                           onFilterFieldUpdate(updated, groupIdx, filterIdx)
                         }}
                         placeholder="Column"
+                        popoverAutoWidth
                       />
                     {:else}
                       <ConditionField
@@ -406,6 +409,7 @@
                         onFilterFieldUpdate(updated, groupIdx, filterIdx)
                       }}
                       placeholder={false}
+                      popoverAutoWidth
                     />
                     <FilterField
                       placeholder="Value"
@@ -471,6 +475,7 @@
                     })
                   }}
                   placeholder={false}
+                  popoverAutoWidth
                 />
               </span>
               <span>when all {builderType}s are empty</span>

@@ -1,10 +1,10 @@
-import { db, roles } from "@budibase/backend-core"
+import { context, db, roles } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import { sdk as proSdk } from "@budibase/pro"
 import tk from "timekeeper"
 
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { rawUserMetadata, syncGlobalUsers } from "../utils"
+import { fetchMetadata, rawUserMetadata, syncGlobalUsers } from "../utils"
 
 describe("syncGlobalUsers", () => {
   const config = new TestConfiguration()
@@ -123,6 +123,78 @@ describe("syncGlobalUsers", () => {
     })
   })
 
+  it("does not compute fullName when first and last names are empty", async () => {
+    const user = await config.createUser({
+      firstName: "",
+      lastName: "",
+      admin: { global: false },
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    })
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      await syncGlobalUsers()
+
+      const metadata = await fetchMetadata()
+      expect(metadata).toContainEqual(
+        expect.objectContaining({
+          _id: db.generateUserMetadataID(user._id!),
+          fullName: undefined,
+        })
+      )
+    })
+  })
+
+  it("uses single-name computed fullName fallback when only one name part exists", async () => {
+    const user = await config.createUser({
+      firstName: "Only",
+      lastName: "",
+      admin: { global: false },
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    })
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      await syncGlobalUsers()
+
+      const metadata = await fetchMetadata()
+      expect(metadata).toContainEqual(
+        expect.objectContaining({
+          _id: db.generateUserMetadataID(user._id!),
+          fullName: "Only",
+        })
+      )
+    })
+  })
+
+  it("uses single-name computed fullName fallback when only last name exists", async () => {
+    const user = await config.createUser({
+      firstName: "",
+      lastName: "SurnameOnly",
+      admin: { global: false },
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    })
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      await syncGlobalUsers()
+
+      const metadata = await fetchMetadata()
+      expect(metadata).toContainEqual(
+        expect.objectContaining({
+          _id: db.generateUserMetadataID(user._id!),
+          fullName: "SurnameOnly",
+        })
+      )
+    })
+  })
+
   it("workspace users audit data is updated", async () => {
     tk.freeze(new Date())
     const user1 = await config.createUser({
@@ -155,6 +227,35 @@ describe("syncGlobalUsers", () => {
           updatedAt: new Date().toISOString(),
         })
       )
+    })
+  })
+
+  it("computes fullName in fetchMetadata when missing from persisted metadata", async () => {
+    const user = await config.createUser({
+      firstName: "Jane",
+      lastName: "Doe",
+      admin: { global: false },
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    })
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      const workspaceDb = context.getWorkspaceDB()
+      const userMetadataId = db.generateUserMetadataID(user._id!)
+      await workspaceDb.put({
+        _id: userMetadataId,
+        tableId: "ta_users",
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+      })
+
+      const metadata = await fetchMetadata()
+      const found = metadata.find(doc => doc._id === userMetadataId)
+      expect(found?.fullName).toEqual("Jane Doe")
     })
   })
 

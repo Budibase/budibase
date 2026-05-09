@@ -170,6 +170,47 @@
       </div>
     </DetailSummary>
 
+    <DetailSummary name="Link states" initiallyShow collapsible={false}>
+      <div class="settings">
+        <PropertyControl
+          label="Hover text"
+          control={ColorPicker}
+          onChange={color => update("navLinkHoverTextColor", color)}
+          value={$nav.navLinkHoverTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Hover background"
+          control={ColorPicker}
+          onChange={color => update("navLinkHoverBackground", color)}
+          value={$nav.navLinkHoverBackground}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Active text"
+          control={ColorPicker}
+          onChange={color => update("navLinkActiveTextColor", color)}
+          value={$nav.navLinkActiveTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Active background"
+          control={ColorPicker}
+          onChange={color => update("navLinkActiveBackground", color)}
+          value={$nav.navLinkActiveBackground}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+      </div>
+    </DetailSummary>
+
     <DetailSummary name="Title" initiallyShow collapsible={false}>
       <div class="settings">
         <PropertyControl

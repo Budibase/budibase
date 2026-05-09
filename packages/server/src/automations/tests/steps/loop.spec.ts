@@ -1204,13 +1204,75 @@ describe("Loop Automations", () => {
       // Inputs should be stripped
       expect(first.inputs).toEqual({})
 
-      // Only expose success/status/branchName
+      // Only expose the data needed to render the selected branch
       expect(Object.keys(first.outputs).sort()).toEqual([
+        "branchId",
         "branchName",
         "status",
         "success",
       ])
       expect(first.outputs.branchName).toBe("takeA")
+      expect(first.outputs.branchId).toBeDefined()
+    })
+
+    it("stores branch child results in loop items", async () => {
+      const branchALogId = "11111111-1111-1111-1111-111111111111"
+      const branchBLogId = "22222222-2222-2222-2222-222222222222"
+      const afterBranchLogId = "33333333-3333-3333-3333-333333333333"
+
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.branch({
+                takeA: {
+                  steps: b =>
+                    b.serverLog(
+                      { text: "Branch A {{loop.currentItem}}" },
+                      { stepId: branchALogId }
+                    ),
+                  condition: {
+                    equal: { "{{ literal loop.currentItem }}": 1 },
+                  },
+                },
+                takeB: {
+                  steps: b =>
+                    b.serverLog(
+                      { text: "Branch B {{loop.currentItem}}" },
+                      { stepId: branchBLogId }
+                    ),
+                  condition: {
+                    notEqual: { "{{ literal loop.currentItem }}": 1 },
+                  },
+                },
+              }),
+              builder.serverLog(
+                { text: "After branch {{loop.currentItem}}" },
+                { stepId: afterBranchLogId }
+              ),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [1, 2],
+        })
+        .test({ fields: {} })
+
+      const items = getLoopItems(steps[0].outputs)
+
+      expect(items[branchALogId]).toHaveLength(1)
+      expect(items[branchALogId][0].outputs.message).toContain("Branch A 1")
+
+      expect(items[branchBLogId]).toHaveLength(1)
+      expect(items[branchBLogId][0].outputs.message).toContain("Branch B 2")
+
+      expect(items[afterBranchLogId]).toHaveLength(2)
+      expect(items[afterBranchLogId][0].outputs.message).toContain(
+        "After branch 1"
+      )
+      expect(items[afterBranchLogId][1].outputs.message).toContain(
+        "After branch 2"
+      )
     })
   })
 })

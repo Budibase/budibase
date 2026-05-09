@@ -39,6 +39,10 @@
   // New props from new design UI
   export let navBackground
   export let navTextColor
+  export let navLinkHoverTextColor
+  export let navLinkHoverBackground
+  export let navLinkActiveTextColor
+  export let navLinkActiveBackground
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
@@ -86,13 +90,17 @@
   })
   setContext("layout", store)
 
-  $: enrichedNavItems = enrichNavItems(links, $roleStore)
+  $: enrichedNavItems = enrichNavItems(links, $roleStore, $routeStore.routes)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
   $: navStyle = getNavStyle(
     navBackground,
     navTextColor,
+    navLinkHoverTextColor,
+    navLinkHoverBackground,
+    navLinkActiveTextColor,
+    navLinkActiveBackground,
     logoHeight,
     $context.device.width,
     $context.device.height
@@ -157,10 +165,37 @@
     }
   }
 
-  const enrichNavItems = (navItems, userRoleHierarchy) => {
+  const getRouteWithoutQueryParams = route => {
+    if (!route) {
+      return route
+    }
+    try {
+      return new URL(route, "http://localhost").pathname
+    } catch (error) {
+      return route
+    }
+  }
+
+  const canAccessSubLink = (subLink, accessibleRoutes) => {
+    const url = subLink?.url
+    if (!url) {
+      return false
+    }
+
+    // We can only reliably validate static internal routes here.
+    if (!isInternal(url) || url.includes("{{")) {
+      return true
+    }
+
+    return accessibleRoutes.has(getRouteWithoutQueryParams(url))
+  }
+
+  const enrichNavItems = (navItems, userRoleHierarchy, routeEntries = []) => {
     if (!navItems?.length) {
       return []
     }
+    const accessibleRoutes = new Set(routeEntries.map(route => route.path))
+
     return navItems
       .filter(navItem => {
         // Strip nav items without text
@@ -181,11 +216,17 @@
         const enrichedNavItem = enrichNavItem(navItem)
         if (navItem.type === "sublinks" && navItem.subLinks?.length) {
           enrichedNavItem.subLinks = navItem.subLinks
-            .filter(subLink => subLink.text && subLink.url)
+            .filter(
+              subLink =>
+                subLink.text && canAccessSubLink(subLink, accessibleRoutes)
+            )
             .map(enrichNavItem)
         }
         return enrichedNavItem
       })
+      .filter(
+        navItem => navItem.type !== "sublinks" || navItem.subLinks?.length > 0
+      )
   }
 
   function evaluateNavItemConditions(conditions = []) {
@@ -231,6 +272,10 @@
   const getNavStyle = (
     backgroundColor,
     textColor,
+    linkHoverTextColor,
+    linkHoverBackground,
+    linkActiveTextColor,
+    linkActiveBackground,
     logoHeight,
     width,
     height
@@ -241,6 +286,18 @@
     }
     if (textColor) {
       style += `--navTextColor:${textColor};`
+    }
+    if (linkHoverTextColor) {
+      style += `--navLinkHoverTextColor:${linkHoverTextColor};`
+    }
+    if (linkHoverBackground) {
+      style += `--navLinkHoverBackground:${linkHoverBackground};`
+    }
+    if (linkActiveTextColor) {
+      style += `--navLinkActiveTextColor:${linkActiveTextColor};`
+    }
+    if (linkActiveBackground) {
+      style += `--navLinkActiveBackground:${linkActiveBackground};`
     }
     style += `--logoHeight:${logoHeight || 24}px;`
     return style
@@ -906,7 +963,7 @@
     padding: 16px;
   }
   .mobile:not(.layout--none)
-    .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    .main:not(.size--max):has(:global(.screenslot-dom > .component > .grid)) {
     padding: 6px;
   }
   .mobile .main.size--max {

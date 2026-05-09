@@ -123,3 +123,29 @@ tests:
           content:
             name: APP_FEATURES
             value: "api"
+
+  - it: should set terminationGracePeriodSeconds to 75 by default
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 75
+
+  - it: should set preStop sleep to 40 by default
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.exec.command
+          value: ["sleep", "40"]
+
+  - it: should not render readinessGates by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.readinessGates
+
+  - it: should render readinessGates when configured
+    set:
+      services.apps.readinessGates:
+        - conditionType: target-health.elbv2.k8s.aws/my-tgb
+    asserts:
+      - equal:
+          path: spec.template.spec.readinessGates[0].conditionType
+          value: target-health.elbv2.k8s.aws/my-tgb

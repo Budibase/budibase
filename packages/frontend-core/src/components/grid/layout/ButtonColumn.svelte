@@ -135,6 +135,7 @@
                   <Button
                     newStyles
                     size="S"
+                    icon={button.icon}
                     cta={button.type === "cta"}
                     primary={button.type === "primary"}
                     secondary={button.type === "secondary"}
@@ -142,9 +143,6 @@
                     overBackground={button.type === "overBackground"}
                     on:click={() => handleClick(button, row)}
                   >
-                    {#if button.icon}
-                      <i class="{button.icon} S"></i>
-                    {/if}
                     {button.text || "Button"}
                   </Button>
                 {/each}

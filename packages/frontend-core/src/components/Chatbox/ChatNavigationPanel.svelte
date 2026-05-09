@@ -306,7 +306,6 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .list-item.selected,
   .conversation-row.selected .list-item {
     color: var(--spectrum-global-color-gray-900);
     font-weight: 600;

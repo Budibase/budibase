@@ -6,7 +6,11 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import { getBudibaseTools } from "../../../../ai/tools/budibase"
+import {
+  createKnowledgeFilesTool,
+  createKnowledgeSearchTool,
+  getBudibaseTools,
+} from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
@@ -23,6 +27,8 @@ const HELPER_TOOL_NAMES = new Set([
   "get_table",
   "list_automations",
   "get_automation",
+  "list_knowledge_files",
+  "search_knowledge",
 ])
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
@@ -142,6 +148,11 @@ export async function buildPromptAndTools(
   toolDisplayNames: Record<string, string>
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
+  const agentId = agent._id
+  if (!agentId) {
+    throw new Error("Agent _id is required")
+  }
+  const hasKnowledgeBases = agent.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
@@ -152,6 +163,19 @@ export async function buildPromptAndTools(
     allTools
   )
 
+  if (
+    hasKnowledgeBases &&
+    !enabledTools.some(tool => tool.name === "list_knowledge_files")
+  ) {
+    enabledTools.push(createKnowledgeFilesTool(agentId))
+  }
+  if (
+    hasKnowledgeBases &&
+    !enabledTools.some(tool => tool.name === "search_knowledge")
+  ) {
+    enabledTools.push(createKnowledgeSearchTool(agentId))
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -159,8 +183,12 @@ export async function buildPromptAndTools(
     includeGoal,
   })
 
+  const resolvedSystemPrompt = hasKnowledgeBases
+    ? `${systemPrompt}\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor factual questions that may depend on uploaded documentation, call search_knowledge before answering. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
+    : systemPrompt
+
   return {
-    systemPrompt,
+    systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools),
     toolDisplayNames: getToolDisplayNames(enabledTools),
   }

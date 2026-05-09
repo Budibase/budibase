@@ -3,7 +3,7 @@
   import { KNOWLEDGE_FILE_ACCEPT_ATTRIBUTE } from "@budibase/types"
   import { notifications } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
-  import AddKnowledgeModal from "./AddKnowledgeModal.svelte"
+  import AddKnowledgeModal from "./new/AddKnowledgeModal.svelte"
   import type { PendingUpload } from "./knowledgeTableRows"
 
   const BYTES_IN_MB = 1024 * 1024

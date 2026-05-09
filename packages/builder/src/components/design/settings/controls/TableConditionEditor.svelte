@@ -183,11 +183,13 @@
                   placeholder={null}
                   options={targetOptions}
                   bind:value={condition.target}
+                  popoverAutoWidth
                 />
                 <Select
                   placeholder={null}
                   options={conditionOptions}
                   bind:value={condition.metadataKey}
+                  popoverAutoWidth
                 />
                 <span>to</span>
                 <ColorPicker
@@ -200,6 +202,7 @@
                   options={operatorOptions}
                   bind:value={condition.operator}
                   on:change={e => onOperatorChange(condition, e.detail)}
+                  popoverAutoWidth
                 />
                 {#if hasValueOption}
                   <Select
@@ -208,6 +211,7 @@
                     bind:value={condition.valueType}
                     placeholder={null}
                     on:change={() => onValueTypeChange(condition)}
+                    popoverAutoWidth
                   />
                 {/if}
                 {#if type === FieldType.DATETIME && condition.valueType === type}
@@ -222,6 +226,7 @@
                     disabled={condition.noValue}
                     options={["True", "False"]}
                     bind:value={condition.referenceValue}
+                    popoverAutoWidth
                   />
                 {:else if (type === FieldType.OPTIONS || type === FieldType.ARRAY) && condition.valueType === type}
                   {#if condition.operator === Constants.OperatorOptions.In.value}
@@ -231,6 +236,7 @@
                         componentInstance.field
                       ]?.constraints?.inclusion || []}
                       bind:value={condition.referenceValue}
+                      popoverAutoWidth
                     />
                   {:else}
                     <Combobox
@@ -239,6 +245,8 @@
                         componentInstance.field
                       ]?.constraints?.inclusion || []}
                       bind:value={condition.referenceValue}
+                      popoverAutoWidth
+                      wrapText
                     />
                   {/if}
                 {:else if (type === FieldType.BB_REFERENCE || type === FieldType.BB_REFERENCE_SINGLE) && condition.valueType === type}

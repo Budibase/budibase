@@ -329,11 +329,6 @@ export const workspaceRoutes = (
             },
           ],
         },
-        {
-          path: "knowledge",
-          title: "Knowledge",
-          component: Pages.get("knowledge_connections"),
-        },
       ],
     },
     {

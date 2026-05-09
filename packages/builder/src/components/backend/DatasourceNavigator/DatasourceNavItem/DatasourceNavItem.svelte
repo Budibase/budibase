@@ -83,7 +83,11 @@
   }
 
   const openContextMenu = (e: MouseEvent) => {
-    if (datasourceId === BUDIBASE_INTERNAL_DB_ID || !datasourceId) {
+    if (
+      datasourceId === BUDIBASE_INTERNAL_DB_ID ||
+      !datasourceId ||
+      datasourceId === "__draft__"
+    ) {
       return
     }
     e.preventDefault()
@@ -115,7 +119,7 @@
         size="18"
       />
     </div>
-    {#if datasourceId !== BUDIBASE_INTERNAL_DB_ID}
+    {#if datasourceId !== BUDIBASE_INTERNAL_DB_ID && datasourceId !== "__draft__"}
       <Icon on:click={openContextMenu} size="M" hoverable name="dots-three" />
     {/if}
   </NavItem>

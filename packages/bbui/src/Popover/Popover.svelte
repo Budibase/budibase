@@ -15,8 +15,9 @@
   import positionDropdown, {
     type UpdateHandler,
   } from "../Actions/positionDropdown"
-  import { PopoverAlignment } from "../constants"
+  import { PopoverAlignment, type PopoverWidthMode } from "../constants"
   import Context from "../context"
+  import { type Readable } from "svelte/store"
 
   export let anchor: HTMLElement | undefined
   export let align: PopoverAlignment | `${PopoverAlignment}` =
@@ -27,7 +28,7 @@
   export let maxHeight: number | undefined = undefined
   export let borderRadius: string | undefined = undefined
   export let open = false
-  export let useAnchorWidth = false
+  export let widthMode: PopoverWidthMode = "no-anchor"
   export let dismissible = true
   export let offset = 4
   export let customHeight: string | undefined = undefined
@@ -38,6 +39,7 @@
   export let clickOutsideOverride = false
   export let resizable = true
   export let wrap = false
+  export let closeOnScroll = false
 
   const dispatch = createEventDispatcher<{ open: void; close: void }>()
   const animationDuration = 260
@@ -46,9 +48,14 @@
   let blockPointerEvents = false
 
   // Portal library lacks types, so we have to type this as any even though it's
-  // actually a string
+  const popoverRoot = getContext<string>(Context.PopoverRoot)
+  const popoverPortalOverride = getContext(Context.PopoverPortalOverride) as
+    | Readable<HTMLElement | undefined>
+    | undefined
+
   $: target = (portalTarget ||
-    getContext(Context.PopoverRoot) ||
+    $popoverPortalOverride ||
+    popoverRoot ||
     ".spectrum") as any
   $: {
     // Disable pointer events for the initial part of the animation, because we
@@ -127,11 +134,12 @@
         maxHeight,
         maxWidth,
         minWidth,
-        useAnchorWidth,
+        widthMode,
         offset,
         customUpdate: handlePositionUpdate,
         resizable,
         wrap,
+        onScroll: closeOnScroll ? hide : undefined,
       }}
       use:clickOutside={{
         callback: dismissible ? handleOutsideClick : () => {},

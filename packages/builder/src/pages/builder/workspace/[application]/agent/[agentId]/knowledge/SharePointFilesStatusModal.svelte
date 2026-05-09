@@ -49,7 +49,7 @@
       </div>
       {#if files.length === 0}
         <div class="empty">
-          <Body size="S">No files synced yet.</Body>
+          <Body size="S">This SharePoint site has no files</Body>
         </div>
       {:else}
         <Table

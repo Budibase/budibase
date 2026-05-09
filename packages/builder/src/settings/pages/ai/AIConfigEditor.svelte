@@ -235,7 +235,7 @@
       model={draft.model}
       {providers}
       disabled={disableProviderOnEdit && isEdit}
-      on:providerChange={event => (draft.provider = event.detail)}
+      on:providerChange={event => (draft.provider = event.detail || "")}
       on:modelChange={event => (draft.model = event.detail)}
     />
 

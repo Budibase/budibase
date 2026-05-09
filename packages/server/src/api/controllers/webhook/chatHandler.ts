@@ -4,6 +4,7 @@ import {
   context,
   docIds,
   HTTPError,
+  logging,
   redis,
 } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
@@ -19,7 +20,10 @@ import { AgentChannelProvider, DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
 import { canAccessChatAppAgentForUser } from "../ai/chatApps"
-import { webhookChat } from "../ai/chatConversations"
+import {
+  webhookChat,
+  type WebhookAssistantStream,
+} from "../ai/chatConversations"
 import {
   isConversationExpired,
   pickLatestConversation,
@@ -348,11 +352,14 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 
 export interface HandleChatMessageParams {
   reply: (text: string) => Promise<void>
+  replyWithAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
+  beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
   chatAppId: string
   agentId: string
   provider: AgentChannelProvider
+  channelEnabled: boolean
   command: SupportedChatCommand
   content: string
   user: {
@@ -381,11 +388,14 @@ const getLinkCommand = (provider: HandleChatMessageParams["provider"]) =>
 
 export const handleChatMessage = async ({
   reply,
+  replyWithAssistantStream,
+  beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
   chatAppId,
   agentId,
   provider,
+  channelEnabled,
   command,
   content,
   user,
@@ -402,11 +412,15 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (
-      !chatApp.agents?.some(
-        agent => agent.agentId === agentId && agent.isEnabled
-      )
-    ) {
+    if (!channelEnabled) {
+      await reply("Agent is not enabled for this chat app.")
+      return
+    }
+
+    const chatAgentConfig = chatApp.agents?.find(
+      agent => agent.agentId === agentId
+    )
+    if (!chatAgentConfig) {
       await reply("Agent is not enabled for this chat app.")
       return
     }
@@ -461,6 +475,26 @@ export const handleChatMessage = async ({
     }
 
     if (!existingLink) {
+      if (provider === AgentChannelProvider.MSTEAMS) {
+        const providerScopeKey = channel.tenantId || channel.teamId
+        const linkIdTried = `${DocumentType.CHAT_IDENTITY_LINK}_${encodeURIComponent(
+          context.getTenantId()
+        )}_${provider}${
+          providerScopeKey ? `_${encodeURIComponent(providerScopeKey)}` : ""
+        }_${encodeURIComponent(user.externalUserId)}`
+
+        logging.logWarn("chat_link_lookup_miss", {
+          workspaceId,
+          chatAppId,
+          agentId,
+          provider,
+          externalUserIdTried: user.externalUserId,
+          linkIdTried,
+          providerTenantId: channel.tenantId,
+          teamId: channel.teamId,
+        })
+      }
+
       const prompt = await createLinkPromptMessage({
         linkedAlready: false,
         prefix: `Your ${providerDisplayName(provider)} account is not linked yet.`,
@@ -489,14 +523,6 @@ export const handleChatMessage = async ({
           provider
         )} to reconnect it.`
       )
-      return
-    }
-
-    const chatAgentConfig = chatApp.agents?.find(
-      agent => agent.agentId === agentId
-    )
-    if (!chatAgentConfig) {
-      await reply("Agent is not enabled for this chat app.")
       return
     }
 
@@ -587,7 +613,14 @@ export const handleChatMessage = async ({
 
     let result: Awaited<ReturnType<typeof webhookChat>>
     try {
-      result = await webhookChat({ chat: draftChat, user: linkedUser })
+      await beforeAssistantWebhook?.()
+      result = await webhookChat({
+        chat: draftChat,
+        user: linkedUser,
+        ...(replyWithAssistantStream
+          ? { onAssistantStream: replyWithAssistantStream }
+          : {}),
+      })
     } catch (error) {
       const message =
         error instanceof HTTPError
@@ -614,6 +647,8 @@ export const handleChatMessage = async ({
       idleTimeoutMs,
     })
 
-    await reply(result.assistantText || "No response generated.")
+    if (!replyWithAssistantStream) {
+      await reply(result.assistantText || "No response generated.")
+    }
   })
 }
