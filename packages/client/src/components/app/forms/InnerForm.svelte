@@ -459,17 +459,21 @@
 
   const handleUpdateFieldValue = ({
     type,
-    field,
-    value,
+    fields,
+    fieldValues,
   }: {
     type: "set" | "reset"
-    field: string
-    value: any
+    fields?: string[]
+    fieldValues?: Record<string, any>
   }) => {
-    if (type === "set") {
-      formApi.setFieldValue(field, value)
-    } else {
-      formApi.resetField(field)
+    if (type === "set" && fieldValues && Object.keys(fieldValues).length > 0) {
+      Object.entries(fieldValues).forEach(([fieldName, fieldValue]) => {
+        formApi.setFieldValue(fieldName, fieldValue)
+      })
+    } else if (type === "reset" && Array.isArray(fields) && fields.length > 0) {
+      fields.forEach(fieldName => {
+        formApi.resetField(fieldName)
+      })
     }
   }
 
