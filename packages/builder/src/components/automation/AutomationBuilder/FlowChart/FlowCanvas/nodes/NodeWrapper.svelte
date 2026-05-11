@@ -70,6 +70,7 @@
 <style>
   .step-wrapper {
     position: relative;
-    width: 200px;
+    width: fit-content;
+    max-width: 360px;
   }
 </style>

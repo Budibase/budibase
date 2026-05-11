@@ -28,7 +28,8 @@
 
 <div
   class="branch-wrapper"
-  style:--branch-wrapper-width={`${isSubflow ? laneWidth : STEP.width}px`}
+  class:subflow={isSubflow}
+  style:--branch-wrapper-width={`${laneWidth}px`}
 >
   <Handle
     isConnectable={false}
@@ -52,10 +53,16 @@
 <style>
   .branch-wrapper {
     position: relative;
+    width: fit-content;
+    max-width: 360px;
+  }
+  .branch-wrapper.subflow {
     width: var(--branch-wrapper-width);
+    max-width: var(--branch-wrapper-width);
   }
   .branch-container {
-    width: 200px;
+    width: fit-content;
+    max-width: 360px;
     margin: 0 auto;
   }
 </style>
