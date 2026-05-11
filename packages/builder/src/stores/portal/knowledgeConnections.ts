@@ -1,28 +1,58 @@
-import type { AgentKnowledgeSourceConnectionSummary } from "@budibase/types"
-import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
+import { DerivedBudiStore } from "../BudiStore"
+import {
+  Datasource,
+  OAuth2RestAuthConfig,
+  isOAuth2ClientCredentialsAuthConfig,
+} from "@budibase/types"
+import { derived, Writable } from "svelte/store"
+import { datasources, getRestTemplateIdentifier } from "../builder/datasources"
 
-interface KnowledgeConnectionsState {
-  connections: AgentKnowledgeSourceConnectionSummary[]
-  loaded: boolean
+interface KnowledgeConnection {
+  _id: string
+  datasourceId: string
+  authConfigId: string
+  sourceType: "sharepoint"
+  authType: "client_credentials"
+  datasourceName: string
+  authConfigName: string
 }
 
-class KnowledgeConnectionsStore extends BudiStore<KnowledgeConnectionsState> {
-  constructor() {
-    super({
-      connections: [],
-      loaded: false,
-    })
-  }
+interface KnowledgeConnectionsState {
+  connections: KnowledgeConnection[]
+}
 
-  fetch = async () => {
-    const response = await API.fetchAgentKnowledgeSourceConnections()
-    this.update(state => {
-      state.connections = response.connections || []
-      state.loaded = true
-      return state
-    })
-    return response.connections || []
+class KnowledgeConnectionsStore extends DerivedBudiStore<
+  KnowledgeConnectionsState,
+  KnowledgeConnectionsState
+> {
+  constructor() {
+    const makeDerivedStore = (_store: Writable<KnowledgeConnectionsState>) =>
+      derived([datasources], ([$datasources]) => {
+        const list = $datasources.rawList as Datasource[]
+        const connections = list.flatMap(datasource => {
+          if (
+            getRestTemplateIdentifier(datasource) !== "microsoft-sharepoint"
+          ) {
+            return []
+          }
+          const authConfigs = (datasource.config?.authConfigs ||
+            []) as OAuth2RestAuthConfig[]
+          return authConfigs
+            .filter(config => isOAuth2ClientCredentialsAuthConfig(config))
+            .map(config => ({
+              _id: `${datasource._id}:${config._id}`,
+              datasourceId: datasource._id!,
+              authConfigId: config._id,
+              sourceType: "sharepoint" as const,
+              authType: "client_credentials" as const,
+              datasourceName: datasource.name || "Datasource",
+              authConfigName: config.name || "OAuth2 config",
+            }))
+        })
+        return { connections }
+      })
+
+    super({ connections: [] }, makeDerivedStore)
   }
 }
 

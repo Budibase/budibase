@@ -253,6 +253,7 @@ export enum FlowStatusType {
   WARN = "warn",
   ERROR = "error",
   SUCCESS = "success",
+  SKIPPED = "skipped",
 }
 
 /**

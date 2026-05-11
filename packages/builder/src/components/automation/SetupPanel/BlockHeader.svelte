@@ -19,6 +19,8 @@
   export let itemName: string | undefined = undefined
   export let disabled: boolean = false
   export let compact: boolean = false
+  export let showTriggerIcon: boolean = false
+  export let triggerIconColor: string = "var(--spectrum-global-color-gray-500)"
 
   const dispatch = createEventDispatcher()
 
@@ -112,9 +114,9 @@
       <div
         class="icon-container"
         class:compact
-        style:--automation-step-icon-color={getAutomationStepIconColor(
-          block.stepId
-        )}
+        style:--automation-step-icon-color={isTrigger
+          ? "var(--automation-step-icon-trigger-color)"
+          : getAutomationStepIconColor(block.stepId)}
       >
         <Icon name={block.icon} size="M" color="var(--ink)" />
       </div>
@@ -146,6 +148,16 @@
         />
       {/if}
     </div>
+    {#if showTriggerIcon}
+      <div class="trigger-icon">
+        <Icon
+          name="lightning"
+          size="S"
+          weight="fill"
+          color={triggerIconColor}
+        />
+      </div>
+    {/if}
   {/if}
   {#if blockNameError && editing}
     <div class="error-container">
@@ -188,15 +200,17 @@
     position: static;
     display: -webkit-box;
     width: 100%;
+    max-width: 180px;
     box-sizing: border-box;
     padding: 0;
     overflow: hidden;
     text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.3;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-overflow: ellipsis;
     -webkit-box-orient: vertical;
     line-clamp: 2;
     -webkit-line-clamp: 2;
@@ -225,10 +239,11 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    flex: 0 0 100%;
-    gap: var(--spacing-l);
+    width: max-content;
+    flex: 0 0 auto;
+    gap: 8px;
     height: 100%;
-    padding: 16px;
+    padding: 13px;
     box-sizing: border-box;
   }
 
@@ -244,7 +259,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    max-width: 180px;
     min-width: 0;
   }
 
@@ -261,9 +277,9 @@
 
   .icon-container.compact,
   .external-icon.compact {
-    flex: 0 0 32px;
-    width: 32px;
-    height: 32px;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -273,16 +289,37 @@
   }
 
   .icon-container.compact :global(i) {
-    font-size: 22px;
+    font-size: 18px;
   }
 
   .icon-container.compact :global(svg) {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
   }
 
   .external-icon.compact img {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .trigger-icon {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .trigger-icon :global(i) {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .trigger-icon :global(svg) {
+    width: 18px;
+    height: 18px;
   }
 </style>

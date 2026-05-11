@@ -20,10 +20,13 @@ export interface OpenAPIServer {
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateId =
+  | "activecampaign"
   | "ansible-awx"
+  | "apollo"
   | "attio"
   | "bamboohr"
   | "confluence"
+  | "customer-io"
   | "discord"
   | "figma"
   | "github"
@@ -47,6 +50,7 @@ export type RestTemplateId =
   | "deel"
   | "dixa"
   | "dodo-payments"
+  | "documenso"
   | "dots"
   | "factorial"
   | "fastspring"
@@ -73,8 +77,10 @@ export type RestTemplateId =
   | "nanonets"
   | "notion"
   | "oyster-hr"
+  | "pandadoc"
   | "peach-payments"
   | "pinpoint"
+  | "pipedrive"
   | "podium"
   | "remote"
   | "resend"
@@ -99,10 +105,16 @@ export type RestTemplateId =
   | "workable"
   | "openrouter"
   | "x"
+  | "docusign"
+  | DocuSignRestTemplateId
+  | "gong"
+  | GongRestTemplateId
   | "hubspot"
   | HubSpotRestTemplateId
   | "microsoft-sharepoint"
   | MicrosoftSharepointRestTemplateId
+  | "salesforce"
+  | SalesforceRestTemplateId
   | "splunk"
   | SplunkRestTemplateId
   | "twilio"
@@ -212,6 +224,14 @@ export type HubSpotRestTemplateId =
   | "hubspot-video-conferencing-extension"
   | "hubspot-visitor-identification"
   | "hubspot-webhooks"
+
+export type DocuSignRestTemplateId = "docusign-esignature"
+
+export type GongRestTemplateId = "gong-engage" | "gong-public-api"
+
+export type SalesforceRestTemplateId =
+  | "salesforce-bulk-api-2"
+  | "salesforce-core"
 
 export type TwilioRestTemplateId =
   | "twilio-accounts"

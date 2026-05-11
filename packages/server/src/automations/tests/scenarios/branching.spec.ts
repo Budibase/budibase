@@ -343,4 +343,35 @@ describe("Branching automations", () => {
     expect(results.steps[0].outputs.status).toContain("branch2 branch taken")
     expect(results.steps[1].outputs.message).toContain("Branch 2")
   })
+
+  it("emits automationStepFailed with NO_CONDITION_MET when no branch condition matches", async () => {
+    jest.clearAllMocks()
+
+    await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        neverTrue: {
+          steps: s => s.serverLog({ text: "unreachable" }),
+          condition: { equal: { "{{ 1 }}": 2 } },
+        },
+      })
+      .test({ fields: {} })
+
+    expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: ActionFailureReason.NO_CONDITION_MET })
+    )
+  })
+
+  it("emits automationStepFailed with ERROR when a step returns success false", async () => {
+    jest.clearAllMocks()
+
+    await createAutomationBuilder(config)
+      .onAppAction()
+      .createRow({ row: {} }) // no tableId → step returns success: false without throwing
+      .test({ fields: {} })
+
+    expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: ActionFailureReason.ERROR })
+    )
+  })
 })

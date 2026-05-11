@@ -7,6 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import {
+  ActionFailureReason,
   ChatAgentRequest,
   ChatApp,
   ChatConversation,
@@ -18,7 +19,7 @@ import {
   UserCtx,
   WebhookChatCompleteResult,
 } from "@budibase/types"
-import { consumeStream } from "ai"
+import { consumeStream, type StreamTextResult, type ToolSet } from "ai"
 import sdk from "../../../sdk"
 import {
   formatIncompleteToolCallError,
@@ -257,12 +258,19 @@ const resolveChatStreamRequest = async (
   }
 }
 
+export type WebhookAssistantStream = StreamTextResult<
+  ToolSet,
+  never
+>["fullStream"]
+
 export async function webhookChat({
   chat,
   user,
+  onAssistantStream,
 }: {
   chat: ChatConversationRequest
   user: ContextUser
+  onAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
 }): Promise<WebhookChatCompleteResult> {
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
@@ -300,10 +308,25 @@ export async function webhookChat({
 
   const result = await run.stream()
 
-  const [textResult, responseResult] = await Promise.allSettled([
+  const streamTask = onAssistantStream
+    ? onAssistantStream(result.fullStream)
+    : Promise.resolve()
+
+  const [textResult, responseResult, streamOutcome] = await Promise.allSettled([
     result.text,
     result.response,
+    streamTask,
   ])
+
+  if (streamOutcome.status === "rejected") {
+    console.error("Chat webhook stream delivery failed", streamOutcome.reason)
+    events.action.aiAgentFailed({
+      agentId,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: getErrorMessage(streamOutcome.reason),
+    })
+    throw streamOutcome.reason
+  }
   const requestId =
     responseResult.status === "fulfilled"
       ? (responseResult.value.id ?? undefined)
@@ -318,6 +341,11 @@ export async function webhookChat({
       sessionId,
       error: textResult.reason,
     })
+    events.action.aiAgentFailed({
+      agentId,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: getErrorMessage(textResult.reason),
+    })
     throw textResult.reason
   }
   if (responseResult.status === "rejected") {
@@ -326,6 +354,11 @@ export async function webhookChat({
       chatAppId,
       sessionId,
       error: responseResult.reason,
+    })
+    events.action.aiAgentFailed({
+      agentId,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: getErrorMessage(responseResult.reason),
     })
     throw responseResult.reason
   }
@@ -433,6 +466,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           chatAppId,
           sessionId,
           error,
+        })
+        events.action.aiAgentFailed({
+          agentId,
+          reason: ActionFailureReason.ERROR,
+          errorMessage: getErrorMessage(error),
         })
         return getErrorMessage(error)
       },

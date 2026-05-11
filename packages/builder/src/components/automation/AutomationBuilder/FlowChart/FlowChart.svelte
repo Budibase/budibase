@@ -36,9 +36,9 @@
   } from "./AutomationStepHelpers"
   import {
     NODE_SPACING,
-    FLOW_ITEM_ACTION_EDGE_SPACING,
     DEFAULT_NODE_WIDTH,
     DEFAULT_NODE_HEIGHT,
+    type FlowLayoutDirection,
   } from "./FlowCanvas/FlowGeometry"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
@@ -51,8 +51,6 @@
 
   import {
     SvelteFlow,
-    Background,
-    BackgroundVariant,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -91,6 +89,8 @@
   let preserveViewport = false
   let visibleSelectionRequest: string | undefined
   let lastVisibleSelectionCheck: string | undefined
+  let layoutDirection: FlowLayoutDirection = "LR"
+  let flowLayoutDirection = writable<FlowLayoutDirection>(layoutDirection)
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
@@ -117,8 +117,10 @@
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
   setContext("focusNodeRequest", focusNodeRequest)
+  setContext("flowLayoutDirection", flowLayoutDirection)
 
-  $: updateGraph(blocks)
+  $: flowLayoutDirection.set(layoutDirection)
+  $: updateGraph(blocks, layoutDirection)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -138,12 +140,15 @@
 
   $: viewMode = $automationStore.viewMode
 
-  const updateGraph = async (blocks: AutomationBlock[]) => {
+  const updateGraph = async (
+    blocks: AutomationBlock[],
+    layoutDirection: FlowLayoutDirection
+  ) => {
     if (!preserveViewport) {
       initialViewportApplied = false
     }
     preserveViewport = true
-    const xSpacing = 300
+    const xSpacing = 100
     const ySpacing = 340
 
     const newNodes: FlowNode[] = []
@@ -155,6 +160,7 @@
       blockRefs,
       newNodes,
       newEdges,
+      layoutDirection,
     }
 
     // Build graph via helpers
@@ -163,14 +169,27 @@
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
       {
-        ranksep: FLOW_ITEM_ACTION_EDGE_SPACING,
+        ranksep: xSpacing,
         nodesep: NODE_SPACING,
         compactLoops: true,
+        layoutDirection,
       }
     )
 
-    nodes.set(laidOut.nodes)
-    edges.set(laidOut.edges)
+    const selectable = viewMode === ViewMode.EDITOR
+    nodes.set(
+      laidOut.nodes.map(node => ({
+        ...node,
+        selected: false,
+        selectable,
+      }))
+    )
+    edges.set(
+      laidOut.edges.map(edge => ({
+        ...edge,
+        selected: false,
+      }))
+    )
   }
 
   $: if ($nodes?.length && !initialViewportApplied && paneEl) {
@@ -230,8 +249,15 @@
 
     // These assume the trigger is at x=0, y=0
     const paneHeight = paneRect.height
-    const x = nodeOffset - triggerNode.position.x
-    const y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
+    const paneWidth = paneRect.width
+    const x =
+      layoutDirection === "LR"
+        ? nodeOffset - triggerNode.position.x
+        : paneWidth / 2 - triggerNode.position.x - DEFAULT_NODE_WIDTH / 2
+    const y =
+      layoutDirection === "LR"
+        ? paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
+        : nodeOffset - triggerNode.position.y
 
     setViewport({ x, y, zoom: 1 }, { duration: 0 })
   }
@@ -256,10 +282,20 @@
     const safeZoom = Math.min(Math.max(desiredZoom, MIN_ZOOM), MAX_ZOOM)
 
     if (direction === -1 || direction === 1) {
-      const yStride = (nodeHeight + NODE_SPACING) * safeZoom
-      const y = currentViewport.y - direction * yStride
+      const stride =
+        layoutDirection === "LR"
+          ? (nodeWidth + NODE_SPACING) * safeZoom
+          : (nodeHeight + NODE_SPACING) * safeZoom
+      const x =
+        layoutDirection === "LR"
+          ? currentViewport.x - direction * stride
+          : currentViewport.x
+      const y =
+        layoutDirection === "LR"
+          ? currentViewport.y
+          : currentViewport.y - direction * stride
       setViewport(
-        { x: currentViewport.x, y, zoom: safeZoom },
+        { x, y, zoom: safeZoom },
         { duration: VIEWPORT_ANIMATION_DURATION }
       )
       return
@@ -289,25 +325,65 @@
 
     const paneRect = paneEl.getBoundingClientRect()
     const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
+    const nodeHeight = targetNode.height || DEFAULT_NODE_HEIGHT
+    const margin = 24
     const nodeRight =
       targetNode.position.x * currentViewport.zoom +
       currentViewport.x +
       nodeWidth * currentViewport.zoom
-    const margin = 24
-    const overflow = nodeRight + margin - paneRect.width
+    const nodeBottom =
+      targetNode.position.y * currentViewport.zoom +
+      currentViewport.y +
+      nodeHeight * currentViewport.zoom
+    const nodeLeft =
+      targetNode.position.x * currentViewport.zoom + currentViewport.x
+    const nodeTop =
+      targetNode.position.y * currentViewport.zoom + currentViewport.y
+    const xOverflow = nodeRight + margin - paneRect.width
+    const yOverflow = nodeBottom + margin - paneRect.height
+    const xUnderflow = margin - nodeLeft
+    const yUnderflow = margin - nodeTop
 
-    if (overflow <= 0) {
+    if (
+      xOverflow <= 0 &&
+      xUnderflow <= 0 &&
+      (layoutDirection === "LR" || (yOverflow <= 0 && yUnderflow <= 0))
+    ) {
       return
+    }
+
+    let nextX = currentViewport.x
+    if (xOverflow > 0) {
+      nextX -= xOverflow
+    } else if (xUnderflow > 0) {
+      nextX += xUnderflow
+    }
+
+    let nextY = currentViewport.y
+    if (layoutDirection !== "LR") {
+      if (yOverflow > 0) {
+        nextY -= yOverflow
+      } else if (yUnderflow > 0) {
+        nextY += yUnderflow
+      }
     }
 
     setViewport(
       {
-        x: currentViewport.x - overflow,
-        y: currentViewport.y,
+        x: nextX,
+        y: nextY,
         zoom: currentViewport.zoom,
       },
       { duration: VIEWPORT_ANIMATION_DURATION }
     )
+  }
+
+  const setLayoutDirection = (direction: FlowLayoutDirection) => {
+    if (direction === layoutDirection) {
+      return
+    }
+    layoutDirection = direction
+    preserveViewport = false
   }
 
   const refresh = () => {
@@ -463,31 +539,38 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="wrapper"
+      class:vertical-layout={layoutDirection === "TB"}
       bind:this={paneEl}
       on:pointermove={handleCanvasPointerMove}
       on:mousedown={() => {
         dnd.updatePaneRect()
       }}
     >
-      <SvelteFlow
-        {nodes}
-        {nodeTypes}
-        {edges}
-        {edgeTypes}
-        viewport={flowViewport}
-        colorMode="system"
-        nodesDraggable={false}
-        minZoom={MIN_ZOOM}
-        maxZoom={MAX_ZOOM}
-        deleteKey={null}
-        proOptions={{ hideAttribution: true }}
-        onMoveStart={closeContextMenuOnCanvasInteraction}
-        onMove={handleMove}
-        on:paneclick={closeContextMenuOnCanvasInteraction}
-      >
-        <FlowControls historyStore={automationHistoryStore} />
-        <Background variant={BackgroundVariant.Dots} gap={25} />
-      </SvelteFlow>
+      {#key layoutDirection}
+        <SvelteFlow
+          {nodes}
+          {nodeTypes}
+          {edges}
+          {edgeTypes}
+          viewport={flowViewport}
+          colorMode="system"
+          nodesDraggable={false}
+          elementsSelectable={viewMode === ViewMode.EDITOR}
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
+          deleteKey={null}
+          proOptions={{ hideAttribution: true }}
+          onMoveStart={closeContextMenuOnCanvasInteraction}
+          onMove={handleMove}
+          on:paneclick={closeContextMenuOnCanvasInteraction}
+        >
+          <FlowControls
+            historyStore={automationHistoryStore}
+            {layoutDirection}
+            on:layout={e => setLayoutDirection(e.detail)}
+          />
+        </SvelteFlow>
+      {/key}
     </div>
   </div>
 </div>
@@ -511,6 +594,7 @@
       --spectrum-global-color-indigo-100
     );
     --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
+    --automation-step-icon-trigger-color: var(--color-green-200);
     --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
     --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
     --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
@@ -540,6 +624,7 @@
     --automation-step-icon-data-color: var(--color-blue-600);
     --automation-step-icon-flow-logic-color: var(--color-purple-600);
     --automation-step-icon-code-color: var(--color-orange-600);
+    --automation-step-icon-trigger-color: var(--color-green-600);
     --automation-step-icon-email-color: var(--color-green-600);
     --automation-step-icon-ai-color: var(--color-brand-500);
     --automation-step-icon-apps-color: var(--color-orange-400);
@@ -583,6 +668,14 @@
     pointer-events: none;
   }
 
+  .root :global(.svelte-flow__edge-interaction) {
+    stroke-width: 12;
+  }
+
+  .root :global(.svelte-flow__pane) {
+    background-color: var(--xy-background-color);
+  }
+
   .root :global(.block) {
     display: flex;
     flex-direction: column;
@@ -593,6 +686,14 @@
   .root :global(.blockSection) {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .vertical-layout :global(.svelte-flow__node-step-node .block),
+  .vertical-layout :global(.svelte-flow__node-step-node .block .wrap),
+  .vertical-layout
+    :global(.svelte-flow__node-step-node .block .wrap .block-content),
+  .vertical-layout :global(.svelte-flow__node-branch-node .block) {
+    width: 200px;
   }
 
   .toggle-active :global(.spectrum-Switch-label) {

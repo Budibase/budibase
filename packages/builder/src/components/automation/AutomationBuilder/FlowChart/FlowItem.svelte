@@ -1,7 +1,6 @@
 <script lang="ts">
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
-  import { Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
@@ -15,14 +14,22 @@
     type AutomationTrigger,
     type AutomationStepResult,
     type AutomationTriggerResult,
+    type AutomationResults,
   } from "@budibase/types"
+  import {
+    getRunHighlight,
+    isTerminalFailure,
+    hasSuccessOutput,
+    isAutomationStepResult,
+    getRunResults,
+    type RunHighlight,
+  } from "./FlowCanvas/FlowRunHelpers"
   import { type DragView } from "./FlowCanvas/FlowChartDnD"
 
-  type ResultWithOutputs = {
-    outputs: {
-      success?: boolean
-    }
-  }
+  type FlowItemStatusResult =
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | undefined
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -31,6 +38,9 @@
     | AutomationStepResult
     | AutomationTriggerResult
     | null = null
+  export let statusResult: FlowItemStatusResult | null = null
+  export let runResults: AutomationResults | undefined = undefined
+  export let triggerCompleted: boolean | undefined = undefined
   export let viewMode: ViewMode = ViewMode.EDITOR
   export let selectedLogStepId: string | null = null
   export let unexecuted: boolean = false
@@ -50,34 +60,62 @@
   let positionStyles: string | undefined
   let blockDims: DOMRect | undefined
   let pressingDraggableNode = false
+  let draggedDuringPress = false
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
-  $: triggerCompleted =
-    isTrigger &&
-    !$view?.dragging &&
+  $: testStatusResult =
+    viewMode === ViewMode.LOGS
+      ? undefined
+      : (automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          block
+        ) as FlowItemStatusResult)
+  $: resolvedStatusResult = statusResult ?? testStatusResult
+  $: resolvedRunResults =
+    runResults ||
     (viewMode === ViewMode.LOGS
-      ? !!logStepData
-      : !!$automationStore.inProgressTest ||
-        !!automationStore.actions.processBlockResults(
-          $automationStore.testResults,
-          block
-        ))
-  $: blockStatusResult =
-    viewMode === ViewMode.LOGS && logStepData
-      ? logStepData
-      : automationStore.actions.processBlockResults(
-          $automationStore.testResults,
-          block
-        )
-  $: blockSuccess =
-    blockStatusResult && hasSuccessOutput(blockStatusResult)
-      ? blockStatusResult.outputs.success === true
-      : isTrigger && triggerCompleted
-  $: blockFailed =
-    blockStatusResult && hasSuccessOutput(blockStatusResult)
-      ? blockStatusResult.outputs.success === false
+      ? undefined
+      : getRunResults($automationStore.testResults))
+  $: resolvedTriggerCompleted =
+    triggerCompleted ??
+    (isTrigger &&
+      !$view?.dragging &&
+      (!!$automationStore.inProgressTest || !!testStatusResult))
+  $: blockSuccess = hasSuccessOutput(resolvedStatusResult)
+    ? resolvedStatusResult.outputs.success === true
+    : isTrigger && resolvedTriggerCompleted
+  $: blockFailed = hasSuccessOutput(resolvedStatusResult)
+    ? resolvedStatusResult.outputs.success === false
+    : false
+  $: terminalFailure =
+    !isTrigger && isAutomationStepResult(resolvedStatusResult)
+      ? isTerminalFailure(resolvedStatusResult)
       : false
+  $: continuedFailure = blockFailed && !terminalFailure
+  $: runHighlight = getRunHighlight(resolvedRunResults)
+  $: blockExecuted = hasSuccessOutput(resolvedStatusResult)
+    ? true
+    : isTrigger && resolvedTriggerCompleted
+  $: successHighlight = blockExecuted
+    ? runHighlight
+      ? runHighlight === "success"
+      : blockSuccess || continuedFailure
+    : false
+  $: errorHighlight = blockExecuted
+    ? runHighlight
+      ? runHighlight === "error"
+      : terminalFailure
+    : false
+  $: warnHighlight = blockExecuted ? runHighlight === "stopped" : false
+  $: triggerIconColor = getTriggerIconColor({
+    selected,
+    errorHighlight,
+    successHighlight,
+    warnHighlight,
+    triggerCompleted: resolvedTriggerCompleted,
+    runHighlight,
+  })
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
     : undefined
@@ -105,6 +143,9 @@
       : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
   $: dragging =
     $view?.dragging && $view?.moveStep && $view?.moveStep?.id === block.id
+  $: if (pressingDraggableNode && dragging) {
+    draggedDuringPress = true
+  }
 
   $: if (dragging && blockEle) {
     updateBlockDims()
@@ -161,6 +202,7 @@
 
     e.stopPropagation()
     pressingDraggableNode = true
+    draggedDuringPress = false
 
     updateBlockDims()
 
@@ -187,15 +229,37 @@
     automationStore.actions.updateBlockTitle(block, e.detail)
   }
 
-  function hasSuccessOutput(value: unknown): value is ResultWithOutputs {
-    return (
-      !!value &&
-      typeof value === "object" &&
-      "outputs" in value &&
-      !!value.outputs &&
-      typeof value.outputs === "object" &&
-      "success" in value.outputs
-    )
+  function getTriggerIconColor({
+    selected,
+    errorHighlight,
+    successHighlight,
+    warnHighlight,
+    triggerCompleted,
+    runHighlight,
+  }: {
+    selected: boolean
+    errorHighlight: boolean
+    successHighlight: boolean
+    warnHighlight: boolean
+    triggerCompleted: boolean
+    runHighlight: RunHighlight | undefined
+  }) {
+    if (selected && errorHighlight) {
+      return "var(--spectrum-semantic-negative-color-status)"
+    }
+    if (selected && successHighlight) {
+      return "var(--spectrum-semantic-positive-color-status)"
+    }
+    if ((selected || triggerCompleted) && warnHighlight) {
+      return "var(--spectrum-global-color-orange-500)"
+    }
+    if (triggerCompleted && runHighlight !== "error") {
+      return "var(--spectrum-semantic-positive-color-status)"
+    }
+    if (selected) {
+      return "var(--spectrum-global-color-blue-700)"
+    }
+    return "var(--spectrum-global-color-gray-500)"
   }
 </script>
 
@@ -215,8 +279,9 @@
     class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
-    class:success={selected && blockSuccess}
-    class:error={selected && blockFailed}
+    class:success={successHighlight}
+    class:error={errorHighlight}
+    class:warn={warnHighlight}
     class:unexecuted
   >
     <div class="wrap">
@@ -253,23 +318,15 @@
             />
           </div>
         {/if}
-        {#if isTrigger}
-          <div class="trigger-icon" class:completed={triggerCompleted}>
-            <Icon
-              name="lightning"
-              size="M"
-              weight="fill"
-              color={triggerCompleted
-                ? "var(--spectrum-semantic-positive-color-status)"
-                : selected
-                  ? "var(--spectrum-global-color-blue-700)"
-                  : "var(--spectrum-global-color-gray-500)"}
-            />
-          </div>
-        {/if}
         <div
           class="block-core"
+          class:has-status={!isTrigger}
           on:click={async () => {
+            if (draggedDuringPress) {
+              draggedDuringPress = false
+              return
+            }
+
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
               focusNodeRequest.set({ nodeId: block.id, ensureVisible: true })
@@ -284,6 +341,8 @@
               compact
               {automation}
               {block}
+              showTriggerIcon={isTrigger}
+              {triggerIconColor}
               on:update={handleHeaderUpdate}
             />
           </div>
@@ -330,15 +389,16 @@
     display: inline-block;
   }
   .block {
-    width: 200px;
-    height: 100px;
+    width: 100%;
+    max-width: 100%;
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
-    border-radius: 8px;
+    border-radius: 32px;
     font-weight: 600;
     cursor: default;
   }
   .block .wrap {
     width: 100%;
+    min-width: 100%;
     position: relative;
   }
   .block.draggable .wrap {
@@ -346,12 +406,14 @@
   }
   .block .wrap .block-content {
     width: 100%;
-    height: 100px;
+    max-width: 100%;
     display: flex;
     flex-direction: row;
+    position: relative;
     background-color: var(--automation-flow-item-background, var(--background));
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 16px;
+    box-sizing: border-box;
   }
   .blockSection {
     padding: 0;
@@ -377,11 +439,16 @@
     display: block;
   }
   .block-core {
-    flex: 1;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
+  }
+  .block-core.has-status {
+    padding-right: 32px;
   }
   .block-core.dragging {
     pointer-events: none;
@@ -404,24 +471,9 @@
     width: 26px;
     height: 26px;
     position: absolute;
-    right: 14px;
-    top: 14px;
-    z-index: 1;
-  }
-  .trigger-icon {
-    position: absolute;
-    right: 8px;
-    top: 14px;
-    width: 26px;
-    height: 26px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--spectrum-global-color-gray-700);
-    pointer-events: none;
-  }
-  .trigger-icon :global(i) {
+    right: 13px;
+    top: 50%;
+    transform: translateY(calc(-50% + 3px));
     z-index: 1;
   }
   .block-core {
@@ -444,13 +496,44 @@
     cursor: grabbing;
   }
   .block.selected .block-content {
-    border-color: var(--spectrum-global-color-blue-700);
+    border-color: var(--spectrum-global-color-blue-600);
     border-width: 2px;
   }
+  .block.success .block-content {
+    border-color: var(--spectrum-semantic-positive-color-status);
+    border-width: 2px;
+  }
+  .block.success.selected .block-content {
+    border-width: 3px;
+  }
+  .block.error .block-content {
+    border-color: var(--spectrum-semantic-negative-color-status);
+    border-width: 2px;
+  }
+  .block.error.selected .block-content {
+    border-width: 3px;
+  }
+
+  .block.warn .block-content {
+    border-color: var(--spectrum-global-color-orange-500);
+    border-width: 2px;
+  }
+  .block.warn.selected .block-content {
+    border-width: 3px;
+  }
+
   .block-info {
     pointer-events: none;
     width: 100%;
     height: 100%;
+  }
+  .block-info :global(.block-details.compact) {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+  .block-info :global(.heading.compact) {
+    flex: 1 1 auto;
   }
 
   .log-status-badge {

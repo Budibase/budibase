@@ -69,7 +69,7 @@
   }
 
   $: blockResult = toStatusResult(
-    isLogsMode && logStepData
+    isLogsMode
       ? logStepData
       : progressResult
         ? progressResult
@@ -239,9 +239,9 @@
 
     if (currentBranchIdx < executedBranchIdx) {
       return {
-        message: "Stopped",
+        message: "Skipped",
         icon: "warning",
-        type: FlowStatusType.WARN,
+        type: FlowStatusType.SKIPPED,
       }
     }
 
@@ -280,20 +280,22 @@
       {/if}
     {:else if showFlowStatus && flowStatus && !hideStatus}
       {#if iconOnly}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <span
-          class={`flow-${flowStatus.type} flow-status-icon`}
-          title={flowStatus.message}
-          on:click={async () => await onStatusClick(flowStatus.type)}
-        >
-          <Icon
-            name={flowStatus.icon}
-            size="L"
-            weight="fill"
-            color="currentColor"
-          />
-        </span>
+        {#if flowStatus.type !== FlowStatusType.SUCCESS}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <span
+            class={`flow-${flowStatus.type} flow-status-icon`}
+            title={flowStatus.message}
+            on:click={async () => await onStatusClick(flowStatus.type)}
+          >
+            <Icon
+              name={flowStatus.icon}
+              size="S"
+              weight="fill"
+              color="currentColor"
+            />
+          </span>
+        {/if}
       {:else if loopInfo?.total && $automationStore.inProgressTest}
         <span class="flow-success flow-status-btn">
           <ActionButton
@@ -395,40 +397,44 @@
     cursor: pointer;
   }
 
+  .flow-status-icon :global(i) {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .flow-status-icon :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
   .flow-success.flow-status-icon {
-    width: 16px;
-    height: 16px;
-    background-color: white;
-    border-radius: 999px;
+    width: 18px;
+    height: 18px;
     color: var(--spectrum-semantic-positive-color-status);
   }
 
   .flow-error.flow-status-icon {
-    width: 16px;
-    height: 16px;
-    background-color: white;
-    border-radius: 999px;
+    width: 18px;
+    height: 18px;
     color: var(--spectrum-semantic-negative-color-status);
   }
 
   .flow-warn.flow-status-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     position: relative;
     background-color: transparent;
-    color: var(--spectrum-global-color-yellow-400);
-  }
-
-  .flow-warn.flow-status-icon::before {
-    content: "";
-    position: absolute;
-    width: 14px;
-    height: 13px;
-    background-color: white;
-    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    color: var(--spectrum-global-color-orange-500);
   }
 
   .flow-warn.flow-status-icon :global(i) {
     position: relative;
+  }
+
+  .flow-skipped.flow-status-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--spectrum-global-color-gray-500);
   }
 </style>

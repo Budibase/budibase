@@ -83,10 +83,15 @@ const APP_STEPS = new Set<AutomationStepId>([
 const getAutomationStepCategory = (
   stepId?: AutomationStepId
 ): AutomationStepCategory => {
-  if (stepId === AutomationActionStepId.SEND_EMAIL_SMTP) {
-    return "email"
+  if (
+    stepId &&
+    Object.values(AutomationTriggerStepId).includes(
+      stepId as AutomationTriggerStepId
+    )
+  ) {
+    return "flowLogic"
   }
-  if (stepId === AutomationTriggerStepId.EMAIL) {
+  if (stepId === AutomationActionStepId.SEND_EMAIL_SMTP) {
     return "email"
   }
   if (stepId && DATA_STEPS.has(stepId)) {

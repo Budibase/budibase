@@ -1866,6 +1866,11 @@ const automationActions = (store: AutomationStore) => ({
 
     try {
       await store.actions.save(newAutomation)
+      await store.actions.selectBranchNode({
+        nodeId: `branch-${newBranch.id}-0-${newBranch.inputs.branches[0].id}`,
+        stepId: newBranch.id,
+        branchIdx: 0,
+      })
     } catch (e) {
       notifications.error("Error adding branch to automation")
       console.error("Error adding automation branch", e)
@@ -2793,6 +2798,7 @@ const automationActions = (store: AutomationStore) => ({
         selectedNodeId: blockId,
         selectedBranchNode: undefined,
         selectedNodeMode: mode ?? DataMode.INPUT,
+        actionPanelBlock: undefined,
       }
     })
   },

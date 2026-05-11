@@ -3,6 +3,8 @@
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import { ViewMode, type StepNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
+  import { getContext } from "svelte"
+  import type { Writable } from "svelte/store"
   import { enrichLog } from "../../AutomationStepHelpers"
   import {
     type AutomationStep,
@@ -12,11 +14,17 @@
   } from "@budibase/types"
 
   export let data: StepNodeData
+  const layoutDirection = getContext<Writable<"LR" | "TB">>(
+    "flowLayoutDirection"
+  )
 
   $: block = data.block
   $: viewMode = $automationStore.viewMode
   $: automation = $selectedAutomation?.data
   $: isTrigger = "type" in block && block.type === "TRIGGER"
+  $: targetPosition = $layoutDirection === "TB" ? Position.Top : Position.Left
+  $: sourcePosition =
+    $layoutDirection === "TB" ? Position.Bottom : Position.Right
 
   // TODO: Fix Casting this temporarily
   // Don't want to drill down into the block types here
@@ -40,13 +48,13 @@
   }
 </script>
 
-<div style="position: relative;">
+<div class="step-wrapper">
   {#if !isTrigger}
     <Handle
       isConnectable={false}
       class="custom-handle"
       type="target"
-      position={Position.Left}
+      position={targetPosition}
     />
   {/if}
   <StepNode
@@ -62,7 +70,14 @@
       isConnectable={false}
       class="custom-handle"
       type="source"
-      position={Position.Right}
+      position={sourcePosition}
     />
   </div>
 </div>
+
+<style>
+  .step-wrapper {
+    position: relative;
+    width: 200px;
+  }
+</style>

@@ -21,12 +21,17 @@ const resolvePathParams = (
 }
 
 export type SettingsLocked = "self" | "subtree"
+type SettingsOptions = Record<string, any> & {
+  locked?: SettingsLocked
+}
 
 export interface Settings {
   open: boolean
   route?: MatchedRoute
   locked?: SettingsLocked
   subtreeStack?: MatchedRoute[]
+  pendingPath?: string
+  pendingParams?: Record<string, any>
 }
 
 export interface BBState {
@@ -63,6 +68,7 @@ export class BBStore extends BudiStore<BBState> {
     this.clearSettings = this.clearSettings.bind(this)
     this.hideSettings = this.hideSettings.bind(this)
     this.goToParent = this.goToParent.bind(this)
+    this.tryResolvePendingSettings = this.tryResolvePendingSettings.bind(this)
   }
 
   reset() {
@@ -105,7 +111,9 @@ export class BBStore extends BudiStore<BBState> {
     }))
   }
 
-  settings(path?: string, { locked }: { locked?: SettingsLocked } = {}) {
+  settings(path?: string, options: SettingsOptions = {}) {
+    const { locked, ...params } = options
+    const routeParams = Object.keys(params).length ? params : undefined
     const currentState = get(this.store).settings
 
     // blocks all navigation when self-locked
@@ -125,7 +133,17 @@ export class BBStore extends BudiStore<BBState> {
     }
 
     const matchedRoute = settingsRouteResolver?.(path)
-    if (!matchedRoute) return
+    if (!matchedRoute) {
+      this.update(state => ({
+        ...state,
+        settings: {
+          ...state.settings,
+          pendingPath: path,
+          pendingParams: routeParams,
+        },
+      }))
+      return
+    }
 
     // Entering subtree mode — initialise with empty stack
     if (locked === "subtree") {
@@ -137,6 +155,8 @@ export class BBStore extends BudiStore<BBState> {
           locked: "subtree",
           subtreeStack: [],
           open: true,
+          pendingPath: undefined,
+          pendingParams: undefined,
         },
       }))
       return
@@ -152,9 +172,17 @@ export class BBStore extends BudiStore<BBState> {
       ...state,
       settings: {
         ...state.settings,
-        route: matchedRoute,
+        route: {
+          ...matchedRoute,
+          params: {
+            ...matchedRoute.params,
+            ...(routeParams || {}),
+          },
+        },
         locked: locked ?? currentState.locked,
         open: true,
+        pendingPath: undefined,
+        pendingParams: undefined,
       },
     }))
   }
@@ -177,6 +205,8 @@ export class BBStore extends BudiStore<BBState> {
         ...(matchedRoute ? { route: matchedRoute } : {}),
         locked: undefined,
         open: false,
+        pendingPath: undefined,
+        pendingParams: undefined,
       },
     }))
   }
@@ -191,6 +221,34 @@ export class BBStore extends BudiStore<BBState> {
       return
     }
     this.settings(parentPath)
+  }
+
+  tryResolvePendingSettings() {
+    const pendingPath = get(this.store).settings.pendingPath
+    const pendingParams = get(this.store).settings.pendingParams
+    if (!pendingPath) {
+      return
+    }
+    const matchedRoute = settingsRouteResolver?.(pendingPath)
+    if (!matchedRoute) {
+      return
+    }
+    this.update(state => ({
+      ...state,
+      settings: {
+        ...state.settings,
+        route: {
+          ...matchedRoute,
+          params: {
+            ...matchedRoute.params,
+            ...(pendingParams || {}),
+          },
+        },
+        open: true,
+        pendingPath: undefined,
+        pendingParams: undefined,
+      },
+    }))
   }
 }
 

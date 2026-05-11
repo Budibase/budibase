@@ -33,7 +33,7 @@
     evaluationContext,
   } from "@/stores/builder"
   import { environment } from "@/stores/portal"
-  import { getNewStepName } from "@/helpers/automations/nameHelpers"
+  import { getDuplicateStepName } from "@/helpers/automations/nameHelpers"
   import BlockData from "../SetupPanel/BlockData.svelte"
   import BlockProperties from "../SetupPanel/BlockProperties.svelte"
   import BlockHeader from "../SetupPanel/BlockHeader.svelte"
@@ -310,7 +310,7 @@
     const branchesArray = branchStepUpdate.inputs.branches || []
     for (let i = 0; i < branchesArray.length; i++) {
       const br = branchesArray[i]
-      if (!Object.keys(br.condition).length) {
+      if (!Object.keys(br.condition || {}).length) {
         branchesArray[i] = {
           ...br,
           ...automationStore.actions.generateDefaultConditions(),
@@ -516,13 +516,19 @@
             }
             // Deep-duplicate the selected step and re-id any nested children
             const duplicatedBlock = cloneStepWithNewIds($memoBlock)
-            const newName = getNewStepName($memoAutomation, duplicatedBlock)
-            duplicatedBlock.name = newName
+            const displayName =
+              $memoAutomation?.definition.stepNames?.[$memoBlock.id] ||
+              $memoBlock.name
+            duplicatedBlock.name = getDuplicateStepName(
+              $memoAutomation,
+              displayName
+            )
 
             await automationStore.actions.addBlockToAutomation(
               duplicatedBlock,
               blockRef.pathTo
             )
+            await automationStore.actions.selectNode(duplicatedBlock.id)
           }}
         >
           Duplicate

@@ -35,6 +35,32 @@ const mockChatOptions: ChatOptions[] = []
 const toMessageText = (value: unknown) =>
   typeof value === "string" ? value : JSON.stringify(value)
 
+const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
+  !!value &&
+  typeof value === "object" &&
+  Symbol.asyncIterator in value &&
+  typeof (value as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+
+const streamToMockText = async (stream: AsyncIterable<unknown>) => {
+  let text = ""
+  for await (const part of stream) {
+    if (typeof part === "string") {
+      text += part
+      continue
+    }
+    if (
+      typeof part === "object" &&
+      part !== null &&
+      "type" in part &&
+      (part as { type: string }).type === "text-delta" &&
+      "text" in part
+    ) {
+      text += String((part as { text: string }).text)
+    }
+  }
+  return text
+}
+
 const createSentMessage = (
   messages: string[],
   index: number
@@ -50,7 +76,13 @@ const createMessageCollector = (
   messages: string[]
 ) => ({
   post: async (message: unknown) => {
-    const index = messages.push(toMessageText(message)) - 1
+    let index: number
+    if (isAsyncIterable(message)) {
+      const text = await streamToMockText(message)
+      index = messages.push(text || "[stream]") - 1
+    } else {
+      index = messages.push(toMessageText(message)) - 1
+    }
     return createSentMessage(messages, index)
   },
   postEphemeral: async (
@@ -468,14 +500,18 @@ export interface Thread {
   channelId?: string
   channel?: {
     id?: string
-    post: (message: string | MockCardElement) => Promise<MockSentMessage>
+    post: (
+      message: string | MockCardElement | AsyncIterable<unknown>
+    ) => Promise<MockSentMessage>
     postEphemeral?: (
       user: string | { userId?: string },
       message: string | MockCardElement,
       options: { fallbackToDM: boolean }
     ) => Promise<{ usedFallback: boolean } | null>
   }
-  post: (message: string | MockCardElement) => Promise<MockSentMessage>
+  post: (
+    message: string | MockCardElement | AsyncIterable<unknown>
+  ) => Promise<MockSentMessage>
   startTyping?: () => Promise<void>
   subscribe?: () => Promise<void>
   postEphemeral?: (
@@ -494,7 +530,9 @@ export interface SlashCommandEvent {
     userName?: string
   }
   channel: {
-    post: (message: string | MockCardElement) => Promise<MockSentMessage>
+    post: (
+      message: string | MockCardElement | AsyncIterable<unknown>
+    ) => Promise<MockSentMessage>
     postEphemeral?: (
       user: string | { userId?: string },
       message: string | MockCardElement,

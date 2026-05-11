@@ -358,7 +358,7 @@ jobs:
     runs-on: ubuntu-24.04
     concurrency:
       group: ${{ github.workflow }}-test-server-${{ matrix.datasource }}-${{ matrix.shard_index }}-${{ github.event.pull_request.number || github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true
     needs:
       - install-deps
       - compute-affected-jobs

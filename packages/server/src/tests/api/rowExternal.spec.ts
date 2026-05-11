@@ -1,4 +1,5 @@
 import { quotas } from "@budibase/pro"
+import { ActionFailureReason } from "@budibase/types"
 import { destroy, find, patch, save } from "../../api/controllers/row"
 
 jest.mock("@budibase/pro", () => {
@@ -21,7 +22,7 @@ jest.mock("@budibase/backend-core", () => {
     ...actual,
     events: {
       ...actual.events,
-      action: { crudExecuted: jest.fn() },
+      action: { crudExecuted: jest.fn(), crudFailed: jest.fn() },
     },
   }
 })
@@ -119,6 +120,8 @@ function makeCtx(
   }
 }
 
+import { events } from "@budibase/backend-core"
+
 describe("External table row operations quota tracking", () => {
   const addActionMock = quotas.addAction as jest.MockedFunction<
     typeof quotas.addAction
@@ -128,6 +131,7 @@ describe("External table row operations quota tracking", () => {
   beforeEach(() => {
     addActionMock.mockClear()
     addRowMock.mockClear()
+    jest.clearAllMocks()
   })
 
   describe("HTTP (UI/API) scope — addAction is called", () => {
@@ -154,6 +158,23 @@ describe("External table row operations quota tracking", () => {
       const ctx = makeCtx({ rows: [{ _id: "row1" }, { _id: "row2" }] })
       await destroy(ctx as any)
       expect(addActionMock).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("crudFailed telemetry", () => {
+    it("emits crudFailed when patch throws", async () => {
+      const external = jest.requireMock("../../api/controllers/row/external")
+      external.patch.mockRejectedValueOnce(new Error("db error"))
+
+      const ctx = makeCtx({ _id: "row1" })
+      await expect(patch(ctx as any)).rejects.toThrow("db error")
+
+      expect(events.action.crudFailed).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "update",
+          reason: ActionFailureReason.ERROR,
+        })
+      )
     })
   })
 

@@ -192,9 +192,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await API.deleteAgentFile(agentId, fileId)
 
   fetchAgentKnowledgeSourceOptions = async (
-    connectionId: string
+    datasourceId: string,
+    authConfigId: string
   ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
-    return await API.fetchAgentKnowledgeSourceOptions(connectionId)
+    return await API.fetchAgentKnowledgeSourceOptions(
+      datasourceId,
+      authConfigId
+    )
   }
 
   fetchAgentKnowledgeSourceAllEntries = async (

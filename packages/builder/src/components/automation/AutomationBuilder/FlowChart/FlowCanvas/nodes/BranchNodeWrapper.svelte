@@ -1,16 +1,17 @@
 <script lang="ts">
   import BranchNode from "./BranchNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
-  import { ViewMode, type BranchNodeData } from "@/types/automations"
+  import type { ViewMode } from "@/types/automations"
+  import { type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
-  import { enrichLog } from "../../AutomationStepHelpers"
+  import { getContext } from "svelte"
+  import type { Writable } from "svelte/store"
   import { STEP, SUBFLOW } from "../FlowGeometry"
-  import {
-    type AutomationStepResult,
-    type AutomationTriggerResult,
-  } from "@budibase/types"
 
   export let data: BranchNodeData
+  const layoutDirection = getContext<Writable<"LR" | "TB">>(
+    "flowLayoutDirection"
+  )
 
   // unwrap data passed from SvelteFlow
   $: block = data.block
@@ -22,48 +23,45 @@
   $: handleOffset = isSubflow
     ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
     : 0
-
-  // Handle step selection in logs mode (open details panel)
-  function handleStepSelect(
-    stepData: AutomationStepResult | AutomationTriggerResult
-  ) {
-    if (
-      stepData &&
-      viewMode === ViewMode.LOGS &&
-      $automationStore.selectedLog
-    ) {
-      const enriched =
-        enrichLog(
-          $automationStore.blockDefinitions,
-          $automationStore.selectedLog
-        ) ?? $automationStore.selectedLog
-      automationStore.actions.openLogPanel(enriched, stepData)
-    }
-  }
+  $: isVertical = $layoutDirection === "TB"
+  $: targetPosition = isVertical ? Position.Top : Position.Left
+  $: sourcePosition = isVertical ? Position.Bottom : Position.Right
+  $: targetHandleStyle =
+    isSubflow && !isVertical ? `left: ${handleOffset - 3}px;` : undefined
+  $: sourceHandleStyle =
+    isSubflow && !isVertical ? `right: ${handleOffset - 3}px;` : undefined
 </script>
 
-<div class="branch-wrapper">
+<div
+  class="branch-wrapper"
+  style:--branch-wrapper-width={`${isSubflow ? laneWidth : STEP.width}px`}
+>
   <Handle
     isConnectable={false}
     class="custom-handle"
     type="target"
-    position={Position.Left}
-    style={isSubflow ? `left: ${handleOffset - 3}px;` : undefined}
+    position={targetPosition}
+    style={targetHandleStyle}
   />
   <div class="branch-container">
-    <BranchNode
-      {automation}
-      step={block}
-      {branchIdx}
-      {viewMode}
-      onStepSelect={handleStepSelect}
-    />
+    <BranchNode {automation} step={block} {branchIdx} {viewMode} />
   </div>
   <Handle
     isConnectable={false}
     class="custom-handle"
     type="source"
-    position={Position.Right}
-    style={isSubflow ? `right: ${handleOffset - 3}px;` : undefined}
+    position={sourcePosition}
+    style={sourceHandleStyle}
   />
 </div>
+
+<style>
+  .branch-wrapper {
+    position: relative;
+    width: var(--branch-wrapper-width);
+  }
+  .branch-container {
+    width: 200px;
+    margin: 0 auto;
+  }
+</style>

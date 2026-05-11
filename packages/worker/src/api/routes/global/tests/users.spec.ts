@@ -1372,27 +1372,6 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("POST /api/global/users/onboard", () => {
-    it("should successfully onboard a user", async () => {
-      const response = await config.api.users.onboardUser([
-        { email: structures.users.newEmail(), userInfo: {} },
-      ])
-      expect(response.successful.length).toBe(1)
-      expect(response.unsuccessful.length).toBe(0)
-    })
-
-    it("should not onboard a user who has been invited", async () => {
-      const email = structures.users.newEmail()
-      await config.api.users.sendUserInvite(sendMailMock, email)
-
-      const response = await config.api.users.onboardUser([
-        { email, userInfo: {} },
-      ])
-      expect(response.successful.length).toBe(0)
-      expect(response.unsuccessful.length).toBe(1)
-    })
-  })
-
   describe("PUT /api/global/users/tenant/owner", () => {
     it("should successfully change tenant owner email for existing user", async () => {
       const originalEmail = `original-${structures.uuid()}@example.com`

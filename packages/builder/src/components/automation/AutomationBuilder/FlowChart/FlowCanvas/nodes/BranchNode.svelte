@@ -11,12 +11,8 @@
   import { type Writable } from "svelte/store"
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
-  import type {
-    Automation,
-    AutomationStepResult,
-    AutomationTriggerResult,
-    Branch,
-  } from "@budibase/types"
+  import { type Automation, type Branch } from "@budibase/types"
+  import { getRunHighlight } from "../FlowRunHelpers"
   import { type DragView } from "../FlowChartDnD"
 
   type BranchResult = {
@@ -30,9 +26,6 @@
   export let step
   export let automation: Automation | undefined
   export let viewMode: ViewMode = ViewMode.EDITOR
-  export let onStepSelect: (
-    _data: AutomationStepResult | AutomationTriggerResult
-  ) => void = () => {}
 
   const view = getContext<Writable<DragView>>("draggableView")
   const focusNodeRequest =
@@ -55,10 +48,9 @@
       ? logStepData.outputs.branchId
       : null
   $: executed = executedBranchId === branch?.id
-  $: unexecuted =
-    viewMode === ViewMode.LOGS && Boolean(executedBranchId) && !executed
+  $: unexecuted = viewMode === ViewMode.LOGS && (!logStepData || !executed)
   $: branchResult =
-    viewMode === ViewMode.LOGS && logStepData
+    viewMode === ViewMode.LOGS
       ? logStepData
       : automationStore.actions.processBlockResults(
           $automationStore.testResults,
@@ -68,8 +60,14 @@
     branch && hasBranchResult(branchResult)
       ? branchResult.outputs.branchId === branch.id
       : false
-  $: branchSuccess = branchExecuted
-  $: branchFailed = false
+  $: runHighlight = getRunHighlight(
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
+  )
+  $: branchSuccess = branchExecuted && runHighlight === "success"
+  $: branchFailed = branchExecuted && runHighlight === "error"
+  $: branchStopped = branchExecuted && runHighlight === "stopped"
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
@@ -80,12 +78,7 @@
       return false
     }
     const outputs = value.outputs
-    return (
-      !!outputs &&
-      typeof outputs === "object" &&
-      "branchId" in outputs &&
-      "success" in outputs
-    )
+    return !!outputs && typeof outputs === "object" && "branchId" in outputs
   }
 
   const branchUpdate = async (e: CustomEvent<string>) => {
@@ -114,16 +107,18 @@
   <div
     class={`block branch-node hoverable`}
     class:selected
-    class:success={selected && branchSuccess}
-    class:error={selected && branchFailed}
+    class:success={branchSuccess}
+    class:error={branchFailed}
+    class:warn={branchStopped}
     class:executed
     class:unexecuted
     on:click={e => {
       e.stopPropagation()
       contextMenuStore.close()
-      if (viewMode === ViewMode.LOGS && logStepData) {
-        onStepSelect(logStepData)
-      } else if (branch) {
+      if (viewMode === ViewMode.LOGS) {
+        return
+      }
+      if (branch) {
         automationStore.actions.selectBranchNode({
           nodeId: branchNodeId,
           stepId: step.id,
@@ -194,11 +189,11 @@
     display: inline-block;
   }
   .block {
-    width: 200px;
-    height: 100px;
+    width: 100%;
+    max-width: 100%;
     background-color: var(--automation-flow-item-background, var(--background));
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 16px;
     cursor: pointer;
     box-sizing: border-box;
     display: flex;
@@ -208,8 +203,10 @@
 
   .blockSection {
     padding: 0;
+    padding-right: 32px;
     width: 100%;
-    height: 100%;
+    max-width: 100%;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -239,8 +236,9 @@
     width: 26px;
     height: 26px;
     position: absolute;
-    right: 14px;
-    top: 14px;
+    right: 13px;
+    top: 50%;
+    transform: translateY(calc(-50% + 3px));
     z-index: 1;
   }
 
@@ -249,18 +247,50 @@
     align-items: center;
     justify-content: center;
     width: 100%;
+    min-width: 0;
     height: 100%;
     cursor: pointer;
   }
+  .blockSection .heading :global(.block-details.compact) {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+  .blockSection .heading :global(.heading.compact) {
+    flex: 1 1 auto;
+  }
 
   .block.selected {
-    border-color: var(--spectrum-global-color-blue-700);
+    border-color: var(--spectrum-global-color-blue-600);
     border-width: 2px;
-    transition: border-color 130ms ease-out;
+  }
+
+  .block.success {
+    border-color: var(--spectrum-semantic-positive-color-status);
+    border-width: 2px;
+  }
+  .block.success.selected {
+    border-width: 3px;
+  }
+
+  .block.error {
+    border-color: var(--spectrum-semantic-negative-color-status);
+    border-width: 2px;
+  }
+  .block.error.selected {
+    border-width: 3px;
+  }
+
+  .block.warn {
+    border-color: var(--spectrum-global-color-orange-500);
+    border-width: 2px;
+  }
+  .block.warn.selected {
+    border-width: 3px;
   }
 
   .block.executed {
-    border-color: var(--spectrum-global-color-green-600);
+    border-color: var(--spectrum-semantic-positive-color-status);
     border-width: 2px;
   }
 

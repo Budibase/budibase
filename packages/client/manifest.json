@@ -3517,6 +3517,29 @@
         "key": "helpText"
       },
       {
+        "type": "boolean",
+        "label": "Enable step controls",
+        "key": "enableStepper",
+        "defaultValue": false
+      },
+      {
+        "type": "number",
+        "label": "Min",
+        "key": "min"
+      },
+      {
+        "type": "number",
+        "label": "Max",
+        "key": "max"
+      },
+      {
+        "type": "number",
+        "label": "Increment",
+        "key": "step",
+        "defaultValue": 1,
+        "dependsOn": "enableStepper"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3534,6 +3557,12 @@
         "dependsOn": "onChange",
         "info": "Trigger actions by 'input' events as well as 'change' events",
         "defaultValue": false
+      },
+      {
+        "type": "number",
+        "label": "Debounce (ms)",
+        "key": "debounceMs",
+        "defaultValue": 500
       },
       {
         "type": "boolean",

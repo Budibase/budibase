@@ -28,3 +28,9 @@ export interface UsageInScreensResponse {
   sourceType: SourceType
   screens: ScreenUsage[]
 }
+
+export interface AutomationUsage {
+  _id: string
+  name: string
+  disabled?: boolean
+}

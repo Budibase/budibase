@@ -36,7 +36,12 @@ import {
   renderBranches,
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
-import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
+import {
+  ANCHOR,
+  BRANCH,
+  STEP,
+  type FlowLayoutDirection,
+} from "./FlowCanvas/FlowGeometry"
 import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
 
 // -----------------
@@ -392,13 +397,14 @@ export interface DagreLayoutOptions {
   ranksep?: number
   nodesep?: number
   compactLoops?: boolean
+  layoutDirection?: FlowLayoutDirection
 }
 
 export const dagreLayoutAutomation = (
   graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
-  const rankdir = "LR"
+  const rankdir = opts?.layoutDirection ?? "LR"
   const ranksep = opts?.ranksep ?? 260
   const nodesep = opts?.nodesep ?? 220
   const compactLoops = opts?.compactLoops !== false
@@ -423,11 +429,8 @@ export const dagreLayoutAutomation = (
       } else if (isLoopSubflowNode(node)) {
         const w = node.data?.containerWidth
         if (w > 0) width = w
-        // In horizontal (LR) layouts Dagre must know the vertical
-        // length of the loop container so it can place rows correctly.
         const h = node?.data?.containerHeight
-        const shouldUseHeight = rankdir === "LR" || !compactLoops
-        if (shouldUseHeight && h > 0) {
+        if (h > 0) {
           height = h
         }
       }
@@ -464,7 +467,7 @@ export const dagreLayoutAutomation = (
       }
     })
 
-  if (compactLoops) {
+  if (compactLoops && rankdir === "LR") {
     applyLoopClearance(graph)
   }
   return graph

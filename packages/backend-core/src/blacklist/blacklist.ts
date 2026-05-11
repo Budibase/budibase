@@ -55,7 +55,7 @@ function parseAddress(address: string) {
   if (net.isIP(address)) {
     return address
   }
-  if (!address.startsWith("http")) {
+  if (!/^https?:\/\//.test(address)) {
     address = `https://${address}`
   }
   return new URL(address).hostname.replace(/^\[|\]$/g, "")
@@ -138,7 +138,11 @@ export async function isBlacklisted(address: string): Promise<boolean> {
   if (!net.isIP(address)) {
     try {
       ips = await lookup(address)
-    } catch {
+    } catch (e) {
+      if (e instanceof TypeError) {
+        console.error("Black list error: could not parse address: ", address)
+        return true
+      }
       return shouldApplyDefaultBlacklist()
     }
   } else {
