@@ -1,4 +1,4 @@
-import { context, encryption, utils } from "@budibase/backend-core"
+import { context, utils } from "@budibase/backend-core"
 import {
   Datasource,
   OAuth2CredentialsMethod,
@@ -85,7 +85,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
       account,
       url: credentials.tokenEndpoint,
       clientId: credentials.clientId,
-      clientSecret: encryption.encrypt(credentials.clientSecret),
+      clientSecret: credentials.clientSecret,
       method: OAuth2CredentialsMethod.BODY,
       grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       scope,

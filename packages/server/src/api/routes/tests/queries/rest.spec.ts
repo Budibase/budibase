@@ -1055,7 +1055,7 @@ describe("rest", () => {
               type: RestAuthType.OAUTH2,
               url: "https://auth.example.com/token",
               clientId: "my-client-id",
-              clientSecret: encryption.encrypt("my-client-secret"),
+              clientSecret: "my-client-secret",
               method: OAuth2CredentialsMethod.BODY,
               grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
             },

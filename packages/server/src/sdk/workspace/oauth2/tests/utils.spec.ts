@@ -1,4 +1,4 @@
-import { cache, encryption } from "@budibase/backend-core"
+import { cache } from "@budibase/backend-core"
 import { generator, utils as testUtils } from "@budibase/backend-core/tests"
 import {
   OAuth2CredentialsMethod,
@@ -67,7 +67,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
             clientId: "my-client",
-            clientSecret: encryption.encrypt("my-secret"),
+            clientSecret: "my-secret",
             method,
             grantType,
           })
@@ -86,7 +86,7 @@ describe("oauth2 utils", () => {
           name: generator.guid(),
           url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
           clientId: "my-client",
-          clientSecret: encryption.encrypt("my-secret"),
+          clientSecret: "my-secret",
           method,
           grantType,
         })
@@ -108,7 +108,7 @@ describe("oauth2 utils", () => {
           name: generator.guid(),
           url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
           clientId: "my-client",
-          clientSecret: encryption.encrypt("my-secret"),
+          clientSecret: "my-secret",
           method,
           grantType,
         })
@@ -134,7 +134,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/wrong/protocol/openid-connect/token`,
             clientId: "my-client",
-            clientSecret: encryption.encrypt("my-secret"),
+            clientSecret: "my-secret",
             method,
             grantType,
           })
@@ -151,7 +151,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
             clientId: "wrong-client-id",
-            clientSecret: encryption.encrypt("my-secret"),
+            clientSecret: "my-secret",
             method,
             grantType,
           })
@@ -170,7 +170,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
             clientId: "my-client",
-            clientSecret: encryption.encrypt("wrong-secret"),
+            clientSecret: "wrong-secret",
             method,
             grantType,
           })
@@ -195,7 +195,7 @@ describe("oauth2 utils", () => {
               name: generator.guid(),
               url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
               clientId: "my-client",
-              clientSecret: encryption.encrypt("my-secret"),
+              clientSecret: "my-secret",
               method,
               grantType,
             })
@@ -223,7 +223,7 @@ describe("oauth2 utils", () => {
               name: generator.guid(),
               url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
               clientId: "wrong-client",
-              clientSecret: encryption.encrypt("my-secret"),
+              clientSecret: "my-secret",
               method,
               grantType,
             })
@@ -253,7 +253,7 @@ describe("oauth2 utils", () => {
               name: generator.guid(),
               url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
               clientId: "my-client",
-              clientSecret: encryption.encrypt("my-secret"),
+              clientSecret: "my-secret",
               method,
               grantType,
             })
@@ -314,7 +314,7 @@ describe("oauth2 utils", () => {
           type: RestAuthType.DELEGATED_OAUTH,
           url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
           clientId: "client-id",
-          clientSecret: encryption.encrypt("client-secret"),
+          clientSecret: "client-secret",
           method: OAuth2CredentialsMethod.BODY,
           grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
         })
