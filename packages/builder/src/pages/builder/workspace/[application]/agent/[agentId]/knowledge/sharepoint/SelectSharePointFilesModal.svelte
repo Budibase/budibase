@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    ActionButton,
     Body,
     Modal,
     ModalContent,
@@ -34,6 +35,7 @@
 
   let selectedEntryPaths = $state<string[]>([])
   let loadingEntries = $state(false)
+  let loadEntriesError = $state<string | null>(null)
   let allEntries = $state<KnowledgeSourceEntry[]>([])
   let includeNewFilesByDefault = $state(true)
   let modal = $state<Modal>()
@@ -79,9 +81,10 @@
 
   const loadAllEntries = async () => {
     if (!agentId || !siteId) {
-      return
+      return false
     }
     loadingEntries = true
+    loadEntriesError = null
     allEntries = []
     try {
       const response = await agentsStore.fetchAgentKnowledgeSourceAllEntries(
@@ -89,27 +92,45 @@
         siteId
       )
       allEntries = response.entries
+      return true
     } catch (error) {
       console.error(error)
-      notifications.error(
+      loadEntriesError =
         "Failed to load SharePoint files. Check your network connection and try again."
-      )
+      notifications.error(loadEntriesError)
+      return false
     } finally {
       loadingEntries = false
     }
   }
 
-  export async function show() {
-    selectedEntryPaths = []
-    includeNewFilesByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
-
-    await loadAllEntries()
-
+  const rehydrateSelectedEntryPaths = () => {
     const selectablePathSet = new Set(selectablePaths)
     selectedEntryPaths = rehydrateFromPatterns(
       initialPatterns,
       selectablePaths
     ).filter(path => selectablePathSet.has(path))
+  }
+
+  const retryLoadAllEntries = async () => {
+    const loaded = await loadAllEntries()
+    if (!loaded) {
+      return
+    }
+    rehydrateSelectedEntryPaths()
+  }
+
+  export async function show() {
+    selectedEntryPaths = []
+    loadEntriesError = null
+    includeNewFilesByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
+
+    const loaded = await loadAllEntries()
+    if (!loaded) {
+      modal?.show()
+      return
+    }
+    rehydrateSelectedEntryPaths()
 
     modal?.show()
   }
@@ -178,7 +199,7 @@
     size="XL"
     confirmText="Save"
     cancelText="Cancel"
-    disabled={!sourceId}
+    disabled={!sourceId || loadingEntries || !!loadEntriesError}
     onConfirm={handleConfirm}
     onCancel={hide}
   >
@@ -202,6 +223,13 @@
 
     {#if loadingEntries}
       <Body size="S">Loading SharePoint files...</Body>
+    {:else if loadEntriesError}
+      <div class="load-error">
+        <Body size="S">{loadEntriesError}</Body>
+        <ActionButton quiet icon="refresh" on:click={retryLoadAllEntries}
+          >Retry</ActionButton
+        >
+      </div>
     {:else if selectionTree.length === 0}
       <Body size="S">No folders or files found for this site.</Body>
     {:else}
@@ -246,5 +274,12 @@
     overflow: auto;
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
+  }
+
+  .load-error {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+    justify-content: space-between;
   }
 </style>

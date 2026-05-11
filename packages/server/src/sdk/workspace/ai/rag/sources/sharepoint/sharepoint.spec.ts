@@ -8,7 +8,6 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseUploadFile = jest.fn()
 const mockRetryKnowledgeBaseFileIngestion = jest.fn()
 const mockGetSharePointBearerToken = jest.fn()
-const mockListKnowledgeSourceConnections = jest.fn()
 const mockEnsureKnowledgeBaseForAgent = jest.fn()
 const mockDeleteFileForAgent = jest.fn()
 
@@ -47,21 +46,12 @@ jest.mock("../../../index", () => ({
   },
 }))
 
-jest.mock("../../../knowledgeSources/sharepointConnection", () => {
-  const actual = jest.requireActual(
-    "../../../knowledgeSources/sharepointConnection"
-  )
+jest.mock("../../../knowledgeSources/sharepoint", () => {
+  const actual = jest.requireActual("../../../knowledgeSources/sharepoint")
   return {
     ...actual,
     getSharePointBearerToken: (...args: any[]) =>
       mockGetSharePointBearerToken(...args),
-  }
-})
-
-jest.mock("../../../knowledgeSources", () => {
-  return {
-    listKnowledgeSourceConnections: (...args: any[]) =>
-      mockListKnowledgeSourceConnections(...args),
   }
 })
 
@@ -95,7 +85,8 @@ const makeSharePointAgent = (
   sourceId: string,
   siteId: string,
   patterns?: string[],
-  connectionId?: string
+  datasourceId = "datasource_1",
+  authConfigId = "auth_1"
 ): Agent =>
   ({
     _id: "agent_1",
@@ -104,7 +95,8 @@ const makeSharePointAgent = (
         id: sourceId,
         type: AgentKnowledgeSourceType.SHAREPOINT,
         config: {
-          ...(connectionId ? { connectionId } : {}),
+          datasourceId,
+          authConfigId,
           site: { id: siteId },
           ...(patterns ? { filters: { patterns } } : {}),
         },
@@ -173,12 +165,6 @@ describe("rag/sharepoint sync deduplication", () => {
     })
     mockGenerateSyncStateId.mockReturnValue("sync_state_1")
     mockGetSharePointBearerToken.mockResolvedValue("Bearer token")
-    mockListKnowledgeSourceConnections.mockResolvedValue([
-      {
-        _id: "connection_1",
-        sourceType: AgentKnowledgeSourceType.SHAREPOINT,
-      },
-    ])
     mockDoWithLock.mockImplementation(
       async (_options: any, handler: () => Promise<any>) => ({
         result: await handler(),
@@ -283,45 +269,6 @@ describe("rag/sharepoint sync deduplication", () => {
       totalDiscovered: 1,
     })
   })
-
-  it("uses the oldest SharePoint connection for legacy fallback", async () => {
-    const sourceId = "sharepoint_source_1"
-    const siteId = "site-1"
-
-    mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, undefined, undefined)
-    )
-    mockListKnowledgeSourceConnections.mockResolvedValue([
-      {
-        _id: "connection_newer",
-        sourceType: AgentKnowledgeSourceType.SHAREPOINT,
-        createdAt: "2026-01-01T00:00:00.000Z",
-      },
-      {
-        _id: "connection_older",
-        sourceType: AgentKnowledgeSourceType.SHAREPOINT,
-        createdAt: "2025-01-01T00:00:00.000Z",
-      },
-    ])
-    mockKnowledgeBaseListFiles.mockResolvedValue([])
-    jest.spyOn(globalThis, "fetch").mockImplementation(async input => {
-      const url = input.toString()
-      if (url.includes(`/sites/${encodeURIComponent(siteId)}/drives`)) {
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({ value: [] }),
-        } as Response
-      }
-      throw new Error(`Unexpected fetch URL: ${url}`)
-    })
-
-    await syncSharePointSourcesForAgent("agent_1", sourceId)
-    expect(mockGetSharePointBearerToken).toHaveBeenCalledWith(
-      "connection_older"
-    )
-  })
-
   it("deletes existing files that no longer match source filters", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"

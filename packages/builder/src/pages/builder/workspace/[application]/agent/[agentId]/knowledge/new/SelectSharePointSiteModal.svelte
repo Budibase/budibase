@@ -25,6 +25,9 @@
   let sharePointConnectionOptions = $state<SharePointConnectionOption[]>([])
   let selectedSiteId = $state("")
   let selectedConnectionId = $state("")
+  let selectedDatasourceId = $state("")
+  let selectedAuthConfigId = $state("")
+  let siteLoadError = $state("")
   let loadingNextStep = $state(false)
   let saving = $state(false)
   let skippedConnectionStep = $state(false)
@@ -46,16 +49,18 @@
       return
     }
     try {
-      const connections = await knowledgeConnectionsStore.fetch()
+      const connections = $knowledgeConnectionsStore.connections
       const sharePointConnections = connections.filter(
         connection => connection.sourceType === "sharepoint"
       )
       sharePointConnectionOptions = sharePointConnections.map(connection => ({
         id: connection._id!,
-        name: "Microsoft",
-        account: connection.account || "-",
+        name: connection.datasourceName,
+        account: connection.authConfigName,
       }))
       selectedConnectionId = sharePointConnections[0]?._id || ""
+      selectedDatasourceId = sharePointConnections[0]?.datasourceId || ""
+      selectedAuthConfigId = sharePointConnections[0]?.authConfigId || ""
     } catch (error) {
       console.error(error)
       notifications.error("Failed to fetch SharePoint connections")
@@ -68,20 +73,29 @@
     if (!selectedConnectionId) {
       sharePointSites = []
       selectedSiteId = ""
+      siteLoadError = ""
       return
     }
     sharePointSites = []
     selectedSiteId = ""
+    siteLoadError = ""
     try {
-      const response =
-        await agentsStore.fetchAgentKnowledgeSourceOptions(selectedConnectionId)
+      const response = await agentsStore.fetchAgentKnowledgeSourceOptions(
+        selectedDatasourceId,
+        selectedAuthConfigId
+      )
       sharePointSites = response.options
       const excluded = new Set(existingSiteIds)
       selectedSiteId =
         sharePointSites.find(site => !excluded.has(site.id))?.id || ""
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
-      notifications.error("Failed to fetch SharePoint sites")
+      const message =
+        error?.cause?.message ||
+        error?.message ||
+        "Failed to fetch SharePoint sites for this auth config."
+      siteLoadError = message
+      notifications.error(`Error fetching sites: ${message}`)
       sharePointSites = []
       selectedSiteId = ""
     }
@@ -94,6 +108,9 @@
     loadingNextStep = true
     try {
       await loadSharePointSites()
+      if (siteLoadError) {
+        return
+      }
       connectionStepModal?.hide()
       siteStepModal?.show()
     } finally {
@@ -108,7 +125,8 @@
     saving = true
     try {
       await agentsStore.connectAgentSharePointSite(agentId, {
-        connectionId: selectedConnectionId,
+        datasourceId: selectedDatasourceId,
+        authConfigId: selectedAuthConfigId,
         siteId: selectedSiteId,
         filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
       })
@@ -131,6 +149,9 @@
       loadingNextStep = true
       try {
         await loadSharePointSites()
+        if (siteLoadError) {
+          return
+        }
         siteStepModal?.show()
       } finally {
         loadingNextStep = false
@@ -154,6 +175,12 @@
   {loadingNextStep}
   onConnectionChange={connectionId => {
     selectedConnectionId = connectionId
+    const full = $knowledgeConnectionsStore.connections.find(
+      connection => connection._id === connectionId
+    )
+    if (!full) return
+    selectedDatasourceId = full.datasourceId
+    selectedAuthConfigId = full.authConfigId
   }}
   onNext={goToSitesStep}
 />

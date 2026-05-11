@@ -316,7 +316,7 @@
     } else {
       notifications.success("SharePoint connected")
     }
-    bb.settings("/connections/knowledge")
+    bb.settings("/connections/apis")
   }
 
   onMount(() => {

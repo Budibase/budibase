@@ -22,13 +22,12 @@ import {
   agents as agentsSdk,
   knowledgeBase as knowledgeBaseSdk,
 } from "../../.."
-import * as knowledgeSourcesSdk from "../../../knowledgeSources"
 import {
   collectSharePointFilesRecursive,
   downloadSharePointFileBuffer,
   getSharePointBearerToken,
   listSharePointDrives,
-} from "../../../knowledgeSources/sharepointConnection"
+} from "../../../knowledgeSources/sharepoint"
 import {
   deleteFileForAgent,
   ensureKnowledgeBaseForAgent,
@@ -154,11 +153,11 @@ export const fetchAllSharePointEntriesForAgent = async (
     throw new HTTPError("SharePoint site is not connected for this agent", 404)
   }
 
-  const connectionId = source.config.connectionId
-  if (!connectionId) {
+  const { datasourceId, authConfigId } = source.config
+  if (!datasourceId || !authConfigId) {
     throw new HTTPError("SharePoint is not connected for this workspace", 400)
   }
-  const bearerToken = await getSharePointBearerToken(connectionId)
+  const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
   const driveIds = await listSharePointDrives(bearerToken, siteId)
   const entries: KnowledgeSourceEntry[] = []
 
@@ -251,9 +250,12 @@ const runSharePointSourcesForAgent = async (
   }
 
   const site = agent.knowledgeSources?.find(s => s.id === sourceId)?.config.site
-  const sourceConnectionId = agent.knowledgeSources?.find(
+  const sourceDatasourceId = agent.knowledgeSources?.find(
     s => s.id === sourceId
-  )?.config.connectionId
+  )?.config.datasourceId
+  const sourceAuthConfigId = agent.knowledgeSources?.find(
+    s => s.id === sourceId
+  )?.config.authConfigId
   if (!site) {
     throw new HTTPError(
       "Specified SharePoint site is not connected for this agent",
@@ -273,39 +275,13 @@ const runSharePointSourcesForAgent = async (
     sourceFilters,
   })
 
-  let connectionId = sourceConnectionId
-  if (!connectionId) {
-    // Temporary compatibility for legacy sources created before connectionId
-    // was persisted on agent knowledge source config. New sources must include
-    // config.connectionId and should not rely on this fallback.
-    const sharePointConnections =
-      await knowledgeSourcesSdk.listKnowledgeSourceConnections()
-    const sharePointOnlyConnections = sharePointConnections
-      .filter(
-        connection =>
-          connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
-      )
-      .sort((a, b) => {
-        function toDate(value: string | number | undefined): number {
-          if (!value) {
-            return Number.MAX_SAFE_INTEGER
-          }
-          if (typeof value === "number") {
-            return value
-          }
-          const parsed = Date.parse(value)
-          return isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed
-        }
-        return toDate(a.createdAt) - toDate(b.createdAt)
-      })
-    // Legacy fallback: when connectionId is missing, use the oldest SharePoint
-    // connection because that was historically the one used at connection time.
-    connectionId = sharePointOnlyConnections[0]?._id
-  }
-  if (!connectionId) {
+  if (!sourceDatasourceId || !sourceAuthConfigId) {
     throw new HTTPError("SharePoint is not connected for this workspace", 400)
   }
-  const bearerToken = await getSharePointBearerToken(connectionId)
+  const bearerToken = await getSharePointBearerToken(
+    sourceDatasourceId,
+    sourceAuthConfigId
+  )
   const knowledgeBase = await ensureKnowledgeBaseForAgent(agentId)
   const knowledgeBaseId = knowledgeBase._id
   if (!knowledgeBaseId) {

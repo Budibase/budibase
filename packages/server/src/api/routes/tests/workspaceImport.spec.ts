@@ -1,4 +1,5 @@
 import path from "path"
+import { db, objectStore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
@@ -219,6 +220,33 @@ describe("/applications/:appId/import", () => {
     expect(screens.length).toBe(2)
     expect(screens[0].routing.route).toBe("/derp")
     expect(screens[1].routing.route).toBe("/blank")
+  })
+
+  it("should preserve existing attachment files when importing an export that does not include attachments", async () => {
+    const appId = config.getDevWorkspaceId()
+    const prodAppId = db.getProdWorkspaceID(appId)
+
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: `${prodAppId}/attachments/test-file.txt`,
+      body: Buffer.from("test attachment content"),
+      type: "text/plain",
+    })
+
+    const exportPath = await sdk.backups.exportWorkspace(appId!, {
+      excludeRows: true,
+      tar: true,
+    })
+
+    await request
+      .post(`/api/applications/${appId}/import`)
+      .attach("appExport", exportPath)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+
+    const fileEtags = await getAppObjectStorageEtags(appId)
+    expect(Object.keys(fileEtags)).toContain("attachments/test-file.txt")
   })
 
   it("should import selected metadata while preserving workspace identity metadata", async () => {

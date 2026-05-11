@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { Helpers } from "@budibase/bbui"
-  import { KnowledgeBaseFileStatus } from "@budibase/types"
+  import {
+    getKnowledgeFileDisplayType,
+    KnowledgeBaseFileStatus,
+  } from "@budibase/types"
   import type { KnowledgeTableRow } from "./types"
 
   export interface Props {
@@ -12,10 +14,17 @@
 
 <div class="file-name">
   <span class="file-title">{row.filename}</span>
-  <span class="file-meta"
+  <span
+    class="file-meta"
+    title={row.kind === "sharepoint_connection"
+      ? row.subtitle || "SharePoint"
+      : row.mimetype || "text/plain"}
     >{row.kind === "sharepoint_connection"
       ? row.subtitle || "SharePoint"
-      : Helpers.capitalise(row.mimetype || "text")}</span
+      : getKnowledgeFileDisplayType({
+          filename: row.filename,
+          mimetype: row.mimetype,
+        })}</span
   >
   {#if row.kind !== "sharepoint_connection" && row.status === KnowledgeBaseFileStatus.FAILED && row.errorMessage}
     <span class="file-error">{row.errorMessage}</span>
@@ -40,6 +49,12 @@
   .file-error {
     font-size: 12px;
     color: var(--spectrum-global-color-gray-700);
+  }
+
+  .file-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .file-error {
