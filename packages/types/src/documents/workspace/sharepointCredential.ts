@@ -1,6 +1,6 @@
 import type { Document } from "../document"
 
-export interface SharePointCredentialDoc extends Document {
+export interface DelegatedOAuthCredentialDoc extends Document {
   datasourceId: string
   authConfigId: string
   accessToken: string

@@ -178,9 +178,9 @@ export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }
 
-export const generateSharePointCredentialID = (
+export const generateDelegatedOAuthCredentialID = (
   datasourceId: string,
   authConfigId: string
 ) => {
-  return `sharepoint_credential_${datasourceId}_${authConfigId}`
+  return `oauth_delegated_credential_${datasourceId}_${authConfigId}`
 }

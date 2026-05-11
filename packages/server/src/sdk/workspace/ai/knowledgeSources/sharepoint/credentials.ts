@@ -1,5 +1,5 @@
 import { context, docIds, encryption } from "@budibase/backend-core"
-import type { SharePointCredentialDoc } from "@budibase/types"
+import type { DelegatedOAuthCredentialDoc } from "@budibase/types"
 
 export const getSharePointCredential = async (
   datasourceId: string,
@@ -7,8 +7,8 @@ export const getSharePointCredential = async (
 ) => {
   const db = context.getWorkspaceDB()
   try {
-    const doc = await db.get<SharePointCredentialDoc>(
-      docIds.generateSharePointCredentialID(datasourceId, authConfigId)
+    const doc = await db.get<DelegatedOAuthCredentialDoc>(
+      docIds.generateDelegatedOAuthCredentialID(datasourceId, authConfigId)
     )
     return {
       ...doc,
@@ -31,17 +31,20 @@ export const saveSharePointCredential = async ({
   refreshToken,
   tokenType,
   expiresAt,
-}: SharePointCredentialDoc) => {
+}: DelegatedOAuthCredentialDoc) => {
   const db = context.getWorkspaceDB()
-  const _id = docIds.generateSharePointCredentialID(datasourceId, authConfigId)
+  const _id = docIds.generateDelegatedOAuthCredentialID(
+    datasourceId,
+    authConfigId
+  )
   let _rev: string | undefined
   try {
-    const existing = await db.get<SharePointCredentialDoc>(_id)
+    const existing = await db.get<DelegatedOAuthCredentialDoc>(_id)
     _rev = existing._rev
   } catch {
     _rev = undefined
   }
-  await db.put<SharePointCredentialDoc>({
+  await db.put<DelegatedOAuthCredentialDoc>({
     _id,
     _rev,
     datasourceId,
