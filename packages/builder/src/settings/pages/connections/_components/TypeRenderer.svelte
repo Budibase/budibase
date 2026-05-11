@@ -1,14 +1,16 @@
 <script lang="ts">
   import { Tags, Tag } from "@budibase/bbui"
   import type { UIWorkspaceConnection } from "@/types"
+  import type { RestAuthType } from "@budibase/types"
 
   export let row: UIWorkspaceConnection
 
-  const authTypeLabels: Record<string, string> = {
+  const authTypeLabels: Record<RestAuthType, string> = {
     basic: "HTTP: Basic",
     bearer: "HTTP: Bearer",
     oauth2: "OAuth2",
     apiKey: "API Key",
+    delegated_oauth: "Delegated auth",
   }
 
   $: authConfigs = row.auth || []
