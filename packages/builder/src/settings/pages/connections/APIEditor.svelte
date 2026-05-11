@@ -188,9 +188,7 @@
   // Auth
   $: authConfigs = data.authConfigs || []
   $: authTypeOptions = AUTH_TYPE_OPTIONS.filter(
-    o =>
-      o.value !== RestAuthType.API_KEY &&
-      o.value !== RestAuthType.DELEGATED_OAUTH
+    o => o.value !== RestAuthType.API_KEY
   )
   $: if (authConfigs.length === 0) {
     canAddConfig = true
@@ -896,7 +894,7 @@
                 </MenuItem>
                 {#if isSharePointDatasource}
                   <MenuItem on:click={startSharePointDelegatedOAuth}>
-                    Delegated OAuth
+                    Delegated auth
                   </MenuItem>
                 {/if}
               </ActionMenu>

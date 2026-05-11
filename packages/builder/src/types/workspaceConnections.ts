@@ -7,6 +7,7 @@ export const AUTH_TYPE_OPTIONS: Array<{
   { label: "Basic Auth", value: RestAuthType.BASIC },
   { label: "Bearer Token", value: RestAuthType.BEARER },
   { label: "OAuth2", value: RestAuthType.OAUTH2 },
+  { label: "Delegated auth", value: RestAuthType.DELEGATED_OAUTH },
 ]
 
 export type ConnectionType = "unknown" | "oauth2" | "datasource"
