@@ -61,15 +61,16 @@ async function fetchToken(config: OAuth2TokenRequestConfig) {
     grant_type: config.grantType,
   }
   if (config.type === RestAuthType.DELEGATED_OAUTH) {
-    if (
-      !config._id ||
-      !parseDatasourceIdFromDelegatedAuthConfigId(config._id)
-    ) {
+    const authConfigId = config._id
+    const datasourceId = authConfigId
+      ? parseDatasourceIdFromDelegatedAuthConfigId(authConfigId)
+      : undefined
+    if (!authConfigId || !datasourceId) {
       throw new Error(
         "OAuth2 delegated config is missing connection context. Reconnect Microsoft account."
       )
     }
-    const credential = await getDelegatedOAuthCredential(config._id)
+    const credential = await getDelegatedOAuthCredential(authConfigId)
     if (!credential?.refreshToken) {
       throw new Error(
         "OAuth2 delegated config is missing refresh token. Reconnect Microsoft account."

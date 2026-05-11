@@ -653,7 +653,10 @@ export class RestIntegration implements IntegrationBase {
     }
     if (!this.config.authConfigs) return null
     const authConfig = this.config.authConfigs.find(
-      c => c._id === authConfigId && c.type !== RestAuthType.OAUTH2
+      c =>
+        c._id === authConfigId &&
+        c.type !== RestAuthType.OAUTH2 &&
+        c.type !== RestAuthType.DELEGATED_OAUTH
     )
     if (!authConfig) return null
     return { type: "auth", auth: authConfig as AuthConfig }

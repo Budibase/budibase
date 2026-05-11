@@ -25,8 +25,7 @@ interface DelegatedSharePointCredentials {
 const isSharePointDatasource = (datasource: Datasource) => {
   return (
     datasource.source === SourceName.REST &&
-    (datasource.restTemplateId === "microsoft-sharepoint" ||
-      datasource.restTemplate === "Microsoft SharePoint")
+    datasource.restTemplateId === "microsoft-sharepoint"
   )
 }
 
