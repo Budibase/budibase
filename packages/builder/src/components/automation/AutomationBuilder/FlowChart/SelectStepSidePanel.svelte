@@ -45,8 +45,7 @@
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
-    ([key, action]) =>
-      key !== AutomationActionStepId.BRANCH && action.deprecated !== true
+    ([_, action]) => action.deprecated !== true
   )
 
   $: {
@@ -360,6 +359,20 @@
     isSelectingAction = true
     let stepInserted = false
     try {
+      if (action.stepId === AutomationActionStepId.BRANCH) {
+        if (!$selectedAutomation.data) {
+          return
+        }
+        await automationStore.actions.branchAutomation(
+          targetPath,
+          $selectedAutomation.data
+        )
+        stepInserted = true
+        automationStore.actions.closeActionPanel()
+        onClose()
+        return
+      }
+
       const newBlock = automationStore.actions.constructBlock(
         BlockDefinitionTypes.ACTION,
         action.stepId,

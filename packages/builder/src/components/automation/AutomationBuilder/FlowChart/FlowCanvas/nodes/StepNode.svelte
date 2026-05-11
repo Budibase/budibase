@@ -3,7 +3,6 @@
   import LogFlowItem from "../../LogFlowItem.svelte"
   import { ViewMode } from "@/types/automations"
   import {
-    AutomationActionStepId,
     type AutomationLog,
     type Automation,
     type AutomationStep,
@@ -28,27 +27,24 @@
   let stepEle
 
   $: memoEnvVariables.set($environment.variables)
-  $: isBranch = step.stepId === AutomationActionStepId.BRANCH
   $: viewMode = $automationStore.viewMode
 </script>
 
-{#if !isBranch}
-  <div class="block" bind:this={stepEle}>
-    {#if viewMode === ViewMode.LOGS}
-      <LogFlowItem
-        block={step}
-        {automation}
-        {logData}
-        {selectedLogStepId}
-        {onStepSelect}
-      />
-    {:else}
-      <FlowItem
-        block={step}
-        {automation}
-        draggable={step.type !== "TRIGGER"}
-        {viewMode}
-      />
-    {/if}
-  </div>
-{/if}
+<div class="block" bind:this={stepEle}>
+  {#if viewMode === ViewMode.LOGS}
+    <LogFlowItem
+      block={step}
+      {automation}
+      {logData}
+      {selectedLogStepId}
+      {onStepSelect}
+    />
+  {:else}
+    <FlowItem
+      block={step}
+      {automation}
+      draggable={step.type !== "TRIGGER"}
+      {viewMode}
+    />
+  {/if}
+</div>

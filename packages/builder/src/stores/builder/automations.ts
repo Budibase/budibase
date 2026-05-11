@@ -1833,8 +1833,7 @@ const automationActions = (store: AutomationStore) => ({
 
   /**
    * Generates a new branch in the tree at the given location.
-   * All steps below the path, if any, are added to a new default branch
-   * 2 branch nodes are created by default.
+   * All steps below the path, if any, are added to a new default branch.
    *
    * @param {Array<Object>} path - the insertion point on the tree.
    * @param {Object} automation - the target automation to update.
@@ -1918,7 +1917,6 @@ const automationActions = (store: AutomationStore) => ({
     ) {
       const branchNode = container[insertIdx] as BranchStep
       const branches = branchNode.inputs.branches
-      const branchIdx = branches.length
       const branchEntry = createBranch(`Branch ${branches.length + 1}`)
       branches.splice(branches.length, 0, branchEntry)
       branchNode.inputs.children = {
@@ -1927,11 +1925,7 @@ const automationActions = (store: AutomationStore) => ({
       }
       try {
         await store.actions.save(newAutomation)
-        await store.actions.selectBranchNode({
-          nodeId: `branch-${branchNode.id}-${branchIdx}-${branchEntry.id}`,
-          stepId: branchNode.id,
-          branchIdx,
-        })
+        await store.actions.selectNode(branchNode.id)
       } catch (e) {
         notifications.error("Error adding branch to automation")
         console.error("Error adding automation branch", e)
@@ -1941,10 +1935,7 @@ const automationActions = (store: AutomationStore) => ({
 
     const newBranch = store.actions.generateBranchBlock()
 
-    // Default branch node count is 2. Build 2 default entries
-    newBranch.inputs.branches = Array.from({ length: 2 }).map((_, idx) =>
-      createBranch(`Branch ${idx + 1}`)
-    )
+    newBranch.inputs.branches = [createBranch("Condition 1")]
 
     // Init the branch children. Shift all steps following the new branch step
     // into the 0th branch.
@@ -1962,11 +1953,7 @@ const automationActions = (store: AutomationStore) => ({
 
     try {
       await store.actions.save(newAutomation)
-      await store.actions.selectBranchNode({
-        nodeId: `branch-${newBranch.id}-0-${newBranch.inputs.branches[0].id}`,
-        stepId: newBranch.id,
-        branchIdx: 0,
-      })
+      await store.actions.selectNode(newBranch.id)
     } catch (e) {
       notifications.error("Error adding branch to automation")
       console.error("Error adding automation branch", e)
@@ -2039,6 +2026,78 @@ const automationActions = (store: AutomationStore) => ({
     let [neighbour] = newBlock.inputs.branches.splice(targetIdx + direction, 1)
     newBlock.inputs.branches.splice(targetIdx, 0, neighbour)
     return newBlock
+  },
+
+  addBranchCondition: async (
+    pathTo: Array<BlockPath>,
+    automation: Automation
+  ) => {
+    const blockRef = { pathTo }
+    const branchStep = store.actions.getBlockByRef(
+      automation,
+      blockRef as BlockRef
+    )
+    if (!branchStep || !isBranchStep(branchStep)) {
+      return
+    }
+
+    const updatedStep = cloneDeep(branchStep)
+    const branches = updatedStep.inputs.branches || []
+    const branchEntry: Branch = {
+      name: `Condition ${branches.length + 1}`,
+      ...store.actions.generateDefaultConditions(),
+      id: generate(),
+    }
+    updatedStep.inputs.branches = [...branches, branchEntry]
+    updatedStep.inputs.children = {
+      ...(updatedStep.inputs.children || {}),
+      [branchEntry.id]: [],
+    }
+
+    const updatedAuto = store.actions.updateStep(
+      pathTo,
+      automation,
+      updatedStep
+    )
+    if (updatedAuto) {
+      await store.actions.save(updatedAuto)
+    }
+  },
+
+  deleteBranchCondition: async (
+    pathTo: Array<BlockPath>,
+    automation: Automation,
+    branchIdx: number
+  ) => {
+    const blockRef = { pathTo }
+    const branchStep = store.actions.getBlockByRef(
+      automation,
+      blockRef as BlockRef
+    )
+    if (!branchStep || !isBranchStep(branchStep)) {
+      return
+    }
+
+    const branches = branchStep.inputs.branches || []
+    if (branches.length <= 1 || !branches[branchIdx]) {
+      return
+    }
+
+    const updatedStep = cloneDeep(branchStep)
+    const [removedBranch] = updatedStep.inputs.branches.splice(branchIdx, 1)
+    if (removedBranch?.id) {
+      updatedStep.inputs.children = updatedStep.inputs.children || {}
+      delete updatedStep.inputs.children[removedBranch.id]
+    }
+
+    const updatedAuto = store.actions.updateStep(
+      pathTo,
+      automation,
+      updatedStep
+    )
+    if (updatedAuto) {
+      await store.actions.save(updatedAuto)
+    }
   },
 
   /**

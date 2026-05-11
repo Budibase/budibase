@@ -1,41 +1,15 @@
 <script lang="ts">
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { ViewMode } from "@/types/automations"
-  import { type BlockRef } from "@budibase/types"
 
   export let block
-  export let hideBranch = false
-  export let showAddBranch = false
-  export let branchStepId: string | undefined = undefined
-  export let viewMode: ViewMode = ViewMode.EDITOR
-
-  const dispatch = createEventDispatcher()
 
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
     : undefined
-  $: isInsideBranchInLoop = checkIsInsideBranchInLoop(blockRef)
-  $: canShowAddBranch =
-    showAddBranch &&
-    branchStepId &&
-    $selectedAutomation?.blockRefs?.[branchStepId] &&
-    viewMode === ViewMode.EDITOR
   $: isActiveInsertionPoint =
     getActionTargetKey($automationStore.actionPanelBlock) ===
     getActionTargetKey(block)
-
-  const checkIsInsideBranchInLoop = (blockRef: BlockRef | undefined) => {
-    if (!blockRef?.pathTo) return false
-    for (const hop of blockRef.pathTo) {
-      if (hop.loopStepId && Number.isInteger(hop.branchIdx)) {
-        return true
-      }
-    }
-
-    return false
-  }
 
   const getActionTargetKey = (value: unknown) => {
     if (!value || typeof value !== "object") {
@@ -60,38 +34,6 @@
 </script>
 
 <div class="action-bar" class:active-insertion-point={isActiveInsertionPoint}>
-  {#if !hideBranch && !block.branchNode && !isInsideBranchInLoop}
-    <Icon
-      hoverable
-      name="git-branch"
-      weight="fill"
-      on:click={() => {
-        dispatch("branch")
-      }}
-      tooltipType={TooltipType.Info}
-      tooltipPosition={TooltipPosition.Left}
-      tooltip={"Create branch"}
-      size="S"
-      color="var(--automation-flow-action-icon-color)"
-      hoverColor="var(--automation-flow-action-icon-hover-color)"
-    />
-  {/if}
-  {#if canShowAddBranch}
-    <Icon
-      hoverable
-      name="git-branch"
-      weight="fill"
-      on:click={() => {
-        dispatch("addBranch")
-      }}
-      tooltipType={TooltipType.Info}
-      tooltipPosition={TooltipPosition.Right}
-      tooltip={"Add branch"}
-      size="S"
-      color="var(--automation-flow-action-icon-color)"
-      hoverColor="var(--automation-flow-action-icon-hover-color)"
-    />
-  {/if}
   <Icon
     hoverable
     name="plus-circle"

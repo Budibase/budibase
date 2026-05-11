@@ -27,6 +27,7 @@ import {
   ViewMode,
   type AutomationBlock,
   type AutomationLogStep,
+  type BranchFlowContext,
   LoopV2NodeData,
 } from "@/types/automations"
 
@@ -36,12 +37,16 @@ import {
   renderBranches,
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
-import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
 import {
-  applyBranchLaneClearance,
-  applyLoopClearance,
-  applyPostLoopBranchClearance,
-} from "./FlowCanvas/FlowLayout"
+  ANCHOR,
+  BRANCH,
+  STEP,
+  type FlowLayoutDirection,
+} from "./FlowCanvas/FlowGeometry"
+import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
+
+const FLOW_ITEM_CARD_HEIGHT = 60
+const SWITCH_BRANCH_VERTICAL_SPACING = 140
 
 // -----------------
 // Type Guards
@@ -283,12 +288,7 @@ export const summariseBranch = (branch: Branch) => {
   const filters = groups[0]?.filters || []
   if (filters.length === 0) return ""
 
-  const firstFilter = filters[0]
-  if (!("field" in firstFilter)) {
-    return ""
-  }
-
-  const { field, operator, value } = firstFilter
+  const { field, operator, value } = filters[0]
   let summary = `${field} ${operator} ${value}`
 
   if (filters.length > 1) {
@@ -401,19 +401,21 @@ export interface DagreLayoutOptions {
   ranksep?: number
   nodesep?: number
   compactLoops?: boolean
+  layoutDirection?: FlowLayoutDirection
 }
 
 export const dagreLayoutAutomation = (
   graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
+  const rankdir = opts?.layoutDirection ?? "LR"
   const ranksep = opts?.ranksep ?? 260
   const nodesep = opts?.nodesep ?? 220
   const compactLoops = opts?.compactLoops !== false
 
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
-  dagreGraph.setGraph({ rankdir: "LR", ranksep, nodesep })
+  dagreGraph.setGraph({ rankdir, ranksep, nodesep })
 
   const nodeById: Record<string, FlowNode> = {}
   graph.nodes.forEach(n => (nodeById[n.id] = n))
@@ -456,20 +458,111 @@ export const dagreLayoutAutomation = (
       if (!dims) return
       const width = dims.width
       const height = dims.height
-      node.targetPosition = Position.Left
-      node.sourcePosition = Position.Right
+      if (rankdir === "LR") {
+        node.targetPosition = Position.Left
+        node.sourcePosition = Position.Right
+      } else {
+        node.targetPosition = Position.Top
+        node.sourcePosition = Position.Bottom
+      }
       node.position = {
         x: Math.round(dims.x - width / 2),
         y: Math.round(dims.y - height / 2),
       }
     })
 
-  if (compactLoops) {
+  alignSwitchBranchTargets(graph)
+
+  if (compactLoops && rankdir === "LR") {
     applyLoopClearance(graph)
-    applyPostLoopBranchClearance(graph)
-    applyBranchLaneClearance(graph)
   }
   return graph
+}
+
+const isBranchFlowContext = (value: unknown): value is BranchFlowContext => {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    "branchNode" in value &&
+    value.branchNode === true
+  )
+}
+
+const getNodeHeight = (node: FlowNode) => {
+  if (node.type === "anchor-node") {
+    return 0
+  }
+  if (isLoopSubflowNode(node)) {
+    const height = node.data?.containerHeight
+    return height > 0 ? height : STEP.height
+  }
+  return FLOW_ITEM_CARD_HEIGHT
+}
+
+const alignSwitchBranchTargets = (graph: {
+  nodes: FlowNode[]
+  edges: FlowEdge[]
+}) => {
+  const nodesById: Record<string, FlowNode> = {}
+  graph.nodes.forEach(node => (nodesById[node.id] = node))
+
+  const switchBranchEdges = graph.edges.filter(edge => {
+    const target = nodesById[edge.target]
+    return (
+      target?.type === "anchor-node" && isBranchFlowContext(edge.data?.block)
+    )
+  })
+
+  const edgesBySwitchId = switchBranchEdges.reduce<Record<string, FlowEdge[]>>(
+    (acc, edge) => {
+      const block = edge.data?.block
+      if (isBranchFlowContext(block)) {
+        ;(acc[block.branchStepId] ||= []).push(edge)
+      }
+      return acc
+    },
+    {}
+  )
+
+  Object.entries(edgesBySwitchId).forEach(([switchId, edges]) => {
+    const switchNode = nodesById[switchId]
+    if (!switchNode) {
+      return
+    }
+
+    const sortedEdges = edges.slice().sort((a, b) => {
+      const aBlock = a.data?.block
+      const bBlock = b.data?.block
+      const aIdx = isBranchFlowContext(aBlock) ? aBlock.branchIdx : 0
+      const bIdx = isBranchFlowContext(bBlock) ? bBlock.branchIdx : 0
+      return aIdx - bIdx
+    })
+    const switchCenterY = switchNode.position.y + FLOW_ITEM_CARD_HEIGHT / 2
+    const startY =
+      switchCenterY -
+      ((sortedEdges.length - 1) * SWITCH_BRANCH_VERTICAL_SPACING) / 2
+
+    sortedEdges.forEach((edge, idx) => {
+      const targetNode = nodesById[edge.target]
+      if (!targetNode) {
+        return
+      }
+      const middleBranchNudge =
+        sortedEdges.length % 2 === 1 &&
+        idx === Math.floor(sortedEdges.length / 2)
+          ? 0.5
+          : 0
+
+      targetNode.position = {
+        ...targetNode.position,
+        y:
+          startY +
+          idx * SWITCH_BRANCH_VERTICAL_SPACING -
+          getNodeHeight(targetNode) / 2 -
+          middleBranchNudge,
+      }
+    })
+  })
 }
 
 export type { GraphBuildDeps }

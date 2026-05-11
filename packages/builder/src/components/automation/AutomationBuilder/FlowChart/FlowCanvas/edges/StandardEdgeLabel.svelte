@@ -11,7 +11,6 @@
   export let collectBlockExists: boolean
   export let sourcePathForDrop: FlowBlockPath | undefined
   export let block: FlowBlockContext | undefined
-  export let handleBranch: () => void
   // Orientation-aware dropzone sizing/offset in LR
   export let dzWidth: number | undefined
   export let dzOffsetY: number = 0
@@ -36,7 +35,7 @@
             on:mousedown|stopPropagation
             on:click|stopPropagation
           >
-            <FlowItemActions {block} on:branch={handleBranch} />
+            <FlowItemActions {block} />
           </div>
         {/if}
       {/if}

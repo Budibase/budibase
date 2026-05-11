@@ -7,10 +7,10 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "Branch",
+  name: "Switch",
   icon: "git-branch",
-  tagline: "Branch from this step",
-  description: "Branching",
+  tagline: "Switch between conditions",
+  description: "Switch between condition paths",
   stepId: AutomationActionStepId.BRANCH,
   internal: true,
   features: {},

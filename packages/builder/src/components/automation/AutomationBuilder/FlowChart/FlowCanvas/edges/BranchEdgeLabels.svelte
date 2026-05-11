@@ -1,15 +1,12 @@
 <script lang="ts">
   import { EdgeLabelRenderer } from "@xyflow/svelte"
-  import type { ViewMode } from "@/types/automations"
   import {
-    type BranchEdgeData,
     type FlowBlockContext,
     type FlowBlockPath,
   } from "@/types/automations"
   import DragZone from "../../DragZone.svelte"
   import FlowItemActions from "../../FlowItemActions.svelte"
 
-  export let data: BranchEdgeData
   export let labelX: number
   export let labelY: number
   export let preBranchLabelX: number
@@ -21,10 +18,6 @@
   export let collectBlockExists: boolean
   export let sourcePathForDrop: FlowBlockPath | undefined
   export let block: FlowBlockContext | undefined
-  export let handleBranch: () => void
-  export let handleAddBranch: () => void
-  export let viewMode: ViewMode
-  export let isPrimaryBranchEdge: boolean
   // LR layout sizing/offsets
   export let edgeDzWidth: number | undefined
   export let edgeDzOffsetY: number = 0
@@ -52,7 +45,7 @@
             on:mousedown|stopPropagation
             on:click|stopPropagation
           >
-            <FlowItemActions {block} on:branch={handleBranch} />
+            <FlowItemActions {block} />
           </div>
         {/if}
       {/if}
@@ -77,14 +70,7 @@
           />
         {/if}
         <div class="actions-stack">
-          <FlowItemActions
-            {block}
-            hideBranch
-            showAddBranch={isPrimaryBranchEdge}
-            branchStepId={data.branchStepId}
-            {viewMode}
-            on:addBranch={handleAddBranch}
-          />
+          <FlowItemActions {block} />
         </div>
       </div>
     {/key}
