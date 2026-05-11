@@ -1,8 +1,8 @@
-import { cache, context, docIds, HTTPError } from "@budibase/backend-core"
+import { cache, context, docIds, env, HTTPError } from "@budibase/backend-core"
 import {
   Document,
-  OAuth2Config,
   OAuth2CredentialsMethod,
+  OAuth2GrantType,
   RestAuthType,
 } from "@budibase/types"
 import fetch, { RequestInit } from "node-fetch"
@@ -14,31 +14,71 @@ interface OAuth2LogDocument extends Document {
   lastUsage: number
 }
 
-type OAuth2TokenRequestConfig = Pick<
-  OAuth2Config,
-  | "url"
-  | "clientId"
-  | "clientSecret"
-  | "method"
-  | "grantType"
-  | "scope"
-  | "audience"
-> & { _id?: string; type?: RestAuthType }
+interface OAuth2ClientCredentialsTokenRequestConfig {
+  _id?: string
+  type?: RestAuthType.OAUTH2
+  url: string
+  clientId: string
+  clientSecret: string
+  method: OAuth2CredentialsMethod
+  grantType?: OAuth2GrantType
+  scope?: string
+  audience?: string
+}
+
+interface DelegatedOAuthTokenRequestConfig {
+  _id: string
+  type: RestAuthType.DELEGATED_OAUTH
+  scope?: string
+  audience?: string
+}
+
+type OAuth2TokenRequestConfig =
+  | OAuth2ClientCredentialsTokenRequestConfig
+  | DelegatedOAuthTokenRequestConfig
 
 const { DocWritethrough } = cache.docWritethrough
 
-const parseDatasourceIdFromDelegatedAuthConfigId = (authConfigId: string) => {
-  const marker = "_auth_"
-  const markerIndex = authConfigId.indexOf(marker)
-  if (markerIndex <= 0) {
-    return undefined
-  }
-  return authConfigId.slice(0, markerIndex)
-}
-
 async function fetchToken(config: OAuth2TokenRequestConfig) {
   config = await processEnvironmentVariable(config)
-  const clientSecret = config.clientSecret
+  if (config.type === RestAuthType.DELEGATED_OAUTH) {
+    const tenantId = env.MICROSOFT_TENANT_ID || "common"
+    const clientId = env.MICROSOFT_CLIENT_ID
+    const clientSecret = env.MICROSOFT_CLIENT_SECRET
+    if (!clientId || !clientSecret) {
+      throw new Error("No Microsoft datasource configuration found")
+    }
+    if (!config._id) {
+      throw new Error(
+        "OAuth2 delegated config is missing connection context. Reconnect Microsoft account."
+      )
+    }
+    const credential = await getDelegatedOAuthCredential(config._id)
+    if (!credential?.refreshToken) {
+      throw new Error(
+        "OAuth2 delegated config is missing refresh token. Reconnect Microsoft account."
+      )
+    }
+    const fetchConfig: RequestInit = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: credential.refreshToken,
+        client_id: clientId,
+        client_secret: clientSecret,
+        ...(config.scope ? { scope: config.scope } : {}),
+        ...(config.audience ? { audience: config.audience } : {}),
+      }),
+      redirect: "follow",
+    }
+    return fetch(
+      `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+      fetchConfig
+    )
+  }
 
   const fetchConfig: RequestInit = {
     method: "POST",
@@ -46,54 +86,34 @@ async function fetchToken(config: OAuth2TokenRequestConfig) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      grant_type: "client_credentials",
+      grant_type: config.grantType || OAuth2GrantType.CLIENT_CREDENTIALS,
     }),
     redirect: "follow",
   }
 
-  const bodyParams: Record<string, string> = {
-    grant_type: config.grantType,
-  }
-  if (config.type === RestAuthType.DELEGATED_OAUTH) {
-    const authConfigId = config._id
-    const datasourceId = authConfigId
-      ? parseDatasourceIdFromDelegatedAuthConfigId(authConfigId)
-      : undefined
-    if (!authConfigId || !datasourceId) {
-      throw new Error(
-        "OAuth2 delegated config is missing connection context. Reconnect Microsoft account."
-      )
-    }
-    const credential = await getDelegatedOAuthCredential(authConfigId)
-    if (!credential?.refreshToken) {
-      throw new Error(
-        "OAuth2 delegated config is missing refresh token. Reconnect Microsoft account."
-      )
-    }
-    bodyParams.grant_type = "refresh_token"
-    bodyParams.refresh_token = credential.refreshToken
-  }
-
+  const bodyParams = new URLSearchParams({
+    grant_type: config.grantType || OAuth2GrantType.CLIENT_CREDENTIALS,
+  })
   if (config.method === OAuth2CredentialsMethod.HEADER) {
     fetchConfig.headers = {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
-        `${config.clientId}:${clientSecret}`,
+        `${config.clientId}:${config.clientSecret}`,
         "utf-8"
       ).toString("base64")}`,
     }
   } else {
-    bodyParams["client_id"] = config.clientId
-    bodyParams["client_secret"] = clientSecret
+    bodyParams.set("client_id", config.clientId)
+    bodyParams.set("client_secret", config.clientSecret)
   }
+
   if (config.scope) {
-    bodyParams.scope = config.scope
+    bodyParams.set("scope", config.scope)
   }
   if (config.audience) {
-    bodyParams.audience = config.audience
+    bodyParams.set("audience", config.audience)
   }
-  fetchConfig.body = new URLSearchParams(bodyParams)
-
+  fetchConfig.body = bodyParams
   const resp = await fetch(config.url, fetchConfig)
   return resp
 }

@@ -52,9 +52,10 @@
   import {
     RestAuthType,
     type RestAuthConfig,
-    type OAuth2RestAuthConfig,
     type BasicRestAuthConfig,
     type BearerRestAuthConfig,
+    type OAuth2ClientCredentialsRestAuthConfig,
+    type DelegatedOAuthRestAuthConfig,
     type RestTemplateId,
     OAuth2CredentialsMethod,
     OAuth2GrantType,
@@ -75,6 +76,9 @@
   $isActive
 
   type HTTPRestAuthConfig = BasicRestAuthConfig | BearerRestAuthConfig
+  type OAuth2LikeRestAuthConfig =
+    | OAuth2ClientCredentialsRestAuthConfig
+    | DelegatedOAuthRestAuthConfig
   type Mode = "auth" | "creds" | "advanced"
 
   // Form data
@@ -397,9 +401,14 @@
 
   const isOAuth2LikeAuthConfig = (
     auth: RestAuthConfig
-  ): auth is OAuth2RestAuthConfig =>
+  ): auth is OAuth2LikeRestAuthConfig =>
     auth.type === RestAuthType.OAUTH2 ||
     auth.type === RestAuthType.DELEGATED_OAUTH
+
+  const isOAuth2AppAuthConfig = (
+    auth: RestAuthConfig
+  ): auth is OAuth2ClientCredentialsRestAuthConfig =>
+    auth.type === RestAuthType.OAUTH2
 
   const createAuthConfig = (
     authType: RestAuthType
@@ -851,7 +860,7 @@
                         bind:this={authEditors[i]}
                         config={auth}
                         existingConfigs={authConfigs.filter(
-                          isOAuth2LikeAuthConfig
+                          isOAuth2AppAuthConfig
                         )}
                         on:update={e => onAuthConfigUpdate(e.detail)}
                       />

@@ -74,11 +74,11 @@ export interface OAuth2ClientCredentialsRestAuthConfig
   type: RestAuthType.OAUTH2
 }
 
-export interface DelegatedOAuthRestAuthConfig
-  extends Omit<OAuth2Config, keyof Document> {
+export interface DelegatedOAuthRestAuthConfig extends Document {
   _id: string
+  name: string
   type: RestAuthType.DELEGATED_OAUTH
-  account?: string
+  account: string
 }
 
 export const isOAuth2AppAuthConfig = (

@@ -1,10 +1,4 @@
-import {
-  OAuth2CredentialsMethod,
-  OAuth2GrantType,
-  RestAuthType,
-  SourceName,
-  type Datasource,
-} from "@budibase/types"
+import { RestAuthType, SourceName, type Datasource } from "@budibase/types"
 import { upsertDelegatedSharePointAuthConfig } from "./authConfig"
 import sdk from "../../../.."
 import * as sharePointCredentials from "./credentials"
@@ -26,9 +20,6 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
     refreshToken: "refresh-token",
     tokenType: "Bearer",
     expiresAt: 123456,
-    tokenEndpoint: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-    clientId: "client-id",
-    clientSecret: "client-secret",
   }
 
   const datasource = (authConfigs: unknown[] = []): Datasource => ({
@@ -58,8 +49,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       "app_1",
       datasourceId,
       undefined,
-      delegatedCredentials,
-      "scope-value"
+      delegatedCredentials
     )
 
     const savedDatasource = save.mock.calls[0][0] as Datasource
@@ -70,10 +60,6 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
         type: RestAuthType.DELEGATED_OAUTH,
         name: "Microsoft SharePoint (person@example.com)",
         account: "person@example.com",
-        url: delegatedCredentials.tokenEndpoint,
-        clientId: delegatedCredentials.clientId,
-        method: OAuth2CredentialsMethod.BODY,
-        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
     )
     expect(saveCredential).toHaveBeenCalledWith(
@@ -93,11 +79,6 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
           type: RestAuthType.DELEGATED_OAUTH,
           name: "Existing",
           account: "person@example.com",
-          url: delegatedCredentials.tokenEndpoint,
-          clientId: "old-client-id",
-          clientSecret: "old-secret",
-          method: OAuth2CredentialsMethod.BODY,
-          grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
         },
       ])
     )
@@ -109,8 +90,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       "app_1",
       datasourceId,
       undefined,
-      delegatedCredentials,
-      "scope-value"
+      delegatedCredentials
     )
 
     const savedDatasource = save.mock.calls[0][0] as Datasource
@@ -119,6 +99,8 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       reusedExistingConnection: true,
     })
     expect(savedDatasource.config!.authConfigs).toHaveLength(1)
-    expect(savedDatasource.config!.authConfigs[0].clientId).toBe("client-id")
+    expect(savedDatasource.config!.authConfigs[0].account).toBe(
+      "person@example.com"
+    )
   })
 })

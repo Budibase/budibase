@@ -1,9 +1,8 @@
 import { context, utils } from "@budibase/backend-core"
 import {
   Datasource,
-  OAuth2CredentialsMethod,
-  OAuth2GrantType,
-  OAuth2RestAuthConfig,
+  DelegatedOAuthRestAuthConfig,
+  RestAuthConfig,
   RestAuthType,
   SourceName,
   isOAuth2DelegatedAuthConfig,
@@ -17,9 +16,6 @@ interface DelegatedSharePointCredentials {
   refreshToken: string
   tokenType: string
   expiresAt: number
-  tokenEndpoint: string
-  clientId: string
-  clientSecret: string
 }
 
 const isSharePointDatasource = (datasource: Datasource) => {
@@ -30,7 +26,7 @@ const isSharePointDatasource = (datasource: Datasource) => {
 }
 
 const generateUniqueAuthConfigId = (
-  authConfigs: OAuth2RestAuthConfig[],
+  authConfigs: RestAuthConfig[],
   datasourceId: string
 ) => {
   const existingIds = new Set(authConfigs.map(config => config._id))
@@ -45,8 +41,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
   appId: string,
   datasourceId: string,
   authConfigId: string | undefined,
-  credentials: DelegatedSharePointCredentials,
-  scope: string
+  credentials: DelegatedSharePointCredentials
 ) => {
   return context.doInWorkspaceContext(appId, async () => {
     const account = credentials.account.trim() || "unknown"
@@ -57,23 +52,21 @@ export const upsertDelegatedSharePointAuthConfig = async (
       )
     }
 
-    const authConfigs = (
-      (datasource.config?.authConfigs || []) as OAuth2RestAuthConfig[]
-    ).filter(Boolean)
+    const authConfigs =
+      (datasource.config?.authConfigs as RestAuthConfig[]) || []
+    const delegatedAuthConfigs = authConfigs.filter(isOAuth2DelegatedAuthConfig)
 
-    const explicitConfig = authConfigId
-      ? authConfigs.find(config => config._id === authConfigId)
-      : undefined
+    const explicitConfig = delegatedAuthConfigs.find(
+      config => config._id === authConfigId
+    )
     if (authConfigId && !explicitConfig) {
       throw new Error("SharePoint auth config not found on datasource")
     }
 
     const matchingConfig =
       explicitConfig ||
-      authConfigs.find(
-        config =>
-          isOAuth2DelegatedAuthConfig(config) &&
-          config.account?.toLowerCase() === account.toLowerCase()
+      delegatedAuthConfigs.find(
+        config => config.account?.toLowerCase() === account.toLowerCase()
       )
     const nextAuthConfig = {
       ...(matchingConfig || {}),
@@ -83,13 +76,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
       type: RestAuthType.DELEGATED_OAUTH,
       name: matchingConfig?.name || `Microsoft SharePoint (${account})`,
       account,
-      url: credentials.tokenEndpoint,
-      clientId: credentials.clientId,
-      clientSecret: credentials.clientSecret,
-      method: OAuth2CredentialsMethod.BODY,
-      grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-      scope,
-    }
+    } satisfies DelegatedOAuthRestAuthConfig
     const nextAuthConfigs = matchingConfig
       ? authConfigs.map(config =>
           config._id === matchingConfig._id ? nextAuthConfig : config

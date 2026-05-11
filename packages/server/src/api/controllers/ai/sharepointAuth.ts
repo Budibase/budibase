@@ -229,12 +229,8 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
         accessToken,
         refreshToken,
         tokenType,
-        tokenEndpoint,
-        clientId,
-        clientSecret,
         expiresAt: calculateBufferedTokenExpiry(expiresIn),
-      },
-      DEFAULT_SCOPE
+      }
     )
   console.log("SharePoint delegated OAuth callback received", {
     appId,

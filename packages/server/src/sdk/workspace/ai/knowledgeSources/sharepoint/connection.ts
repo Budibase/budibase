@@ -116,7 +116,10 @@ const readConfig = async (
   if (!authConfig) {
     throw new HTTPError("SharePoint auth config not found.", 400)
   }
-  if (!authConfig.url || !authConfig.clientId) {
+  if (
+    authConfig.type === RestAuthType.OAUTH2 &&
+    (!authConfig.url || !authConfig.clientId)
+  ) {
     throw new HTTPError(
       "OAuth2 auth config is missing token URL or client ID.",
       400

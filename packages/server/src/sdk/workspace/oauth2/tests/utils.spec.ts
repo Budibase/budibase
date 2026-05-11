@@ -1,4 +1,4 @@
-import { cache } from "@budibase/backend-core"
+import { cache, withEnv } from "@budibase/backend-core"
 import { generator, utils as testUtils } from "@budibase/backend-core/tests"
 import {
   OAuth2CredentialsMethod,
@@ -309,15 +309,18 @@ describe("oauth2 utils", () => {
         })
 
       await config.doInContext(config.devWorkspaceId, () =>
-        getTokenFromConfig({
-          _id: "datasource_1_auth_1",
-          type: RestAuthType.DELEGATED_OAUTH,
-          url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-          clientId: "client-id",
-          clientSecret: "client-secret",
-          method: OAuth2CredentialsMethod.BODY,
-          grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-        })
+        withEnv(
+          {
+            MICROSOFT_CLIENT_ID: "client-id",
+            MICROSOFT_CLIENT_SECRET: "client-secret",
+            MICROSOFT_TENANT_ID: "common",
+          },
+          () =>
+            getTokenFromConfig({
+              _id: "datasource_1_auth_1",
+              type: RestAuthType.DELEGATED_OAUTH,
+            })
+        )
       )
 
       expect(getDelegatedOAuthCredential).toHaveBeenCalledWith(
