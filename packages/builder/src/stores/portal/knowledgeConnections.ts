@@ -44,13 +44,13 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
                   config.authType === "delegated_oauth")
             )
             .map(config => ({
-            _id: `${datasource._id}:${config._id}`,
-            datasourceId: datasource._id!,
-            authConfigId: config._id,
-            sourceType: AgentKnowledgeSourceType.SHAREPOINT,
-            datasourceName: datasource.name || "Unknown Datasource",
-            authConfigName: config.name || "Unknown Auth Config",
-          }))
+              _id: `${datasource._id}:${config._id}`,
+              datasourceId: datasource._id!,
+              authConfigId: config._id,
+              sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+              datasourceName: datasource.name || "Unknown Datasource",
+              authConfigName: config.name || "Unknown Auth Config",
+            }))
         })
         return { connections }
       })

@@ -388,18 +388,15 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
 
     await fetchSharePointSitesByDatasourceAuthConfig(datasourceId, authConfigId)
 
-    expect(getTokenFromConfigMock).toHaveBeenCalledWith(
-      `${datasourceId}:${authConfigId}`,
-      expect.objectContaining({
-        _id: authConfigId,
-        datasourceId,
-        authType: "delegated_oauth",
-        url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-        clientId: "client-id",
-        clientSecret: "secret",
-        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-      })
-    )
+    expect(getTokenFromConfigMock).toHaveBeenCalledWith({
+      _id: authConfigId,
+      datasourceId,
+      authType: "delegated_oauth",
+      url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+      clientId: "client-id",
+      clientSecret: "secret",
+      grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+    })
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining("https://graph.microsoft.com/v1.0/sites?"),
