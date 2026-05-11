@@ -61,12 +61,14 @@ export interface BearerRestAuthConfig {
   config: RestBearerAuthConfig
 }
 
+export type OAuth2AuthType = "client_credentials" | "delegated_oauth"
+
 export interface OAuth2RestAuthConfig
   extends Omit<OAuth2Config, keyof Document> {
   _id: string
   type: RestAuthType.OAUTH2
   account?: string
-  authType?: "client_credentials" | "delegated_oauth"
+  authType?: OAuth2AuthType
 }
 
 export const isOAuth2ClientCredentialsAuthConfig = (

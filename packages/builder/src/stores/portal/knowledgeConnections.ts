@@ -1,6 +1,7 @@
 import { DerivedBudiStore } from "../BudiStore"
 import {
   Datasource,
+  OAuth2AuthType,
   OAuth2RestAuthConfig,
   isOAuth2ClientCredentialsAuthConfig,
   isOAuth2DelegatedAuthConfig,
@@ -13,7 +14,7 @@ interface KnowledgeConnection {
   datasourceId: string
   authConfigId: string
   sourceType: "sharepoint"
-  authType: "client_credentials" | "delegated_oauth"
+  authType: OAuth2AuthType
   datasourceName: string
   authConfigName: string
 }
@@ -51,7 +52,7 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
               sourceType: "sharepoint" as const,
               authType: isOAuth2DelegatedAuthConfig(config)
                 ? ("delegated_oauth" as const)
-                : ("client_credentials" as const),
+                : ("app_oauth" as const),
               datasourceName: datasource.name || "Unknown Datasource",
               authConfigName: config.name || "Unknown Auth Config",
             }))

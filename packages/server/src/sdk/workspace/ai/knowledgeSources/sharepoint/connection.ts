@@ -13,8 +13,6 @@ type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
   refreshToken?: string
 }
 
-type SharePointAuthType = "client_credentials" | "delegated_oauth"
-
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
@@ -132,22 +130,20 @@ const readConnection = async (
   return authConfig
 }
 
-const getSharePointAuthType = (
-  connection: OAuth2RestAuthConfigWithTokenCache
-): SharePointAuthType => connection.authType ?? "client_credentials"
-
 export const getSharePointBearerToken = async (
   datasourceId: string,
   authConfigId: string
 ): Promise<string> => {
   const connection = await readConnection(datasourceId, authConfigId)
-  const authType = getSharePointAuthType(connection)
-  switch (authType) {
-    case "client_credentials":
+
+  switch (connection.authType) {
+    case "app_oauth":
     case "delegated_oauth":
+    case undefined:
       return sdk.oauth2.getTokenFromConfig(`${datasourceId}:${authConfigId}`, {
         _id: authConfigId,
-        authType,
+        datasourceId,
+        authType: connection.authType ?? "app_oauth",
         url: connection.url,
         clientId: connection.clientId,
         clientSecret: connection.clientSecret,
@@ -157,7 +153,7 @@ export const getSharePointBearerToken = async (
         audience: connection.audience,
       })
     default:
-      throw utils.unreachable(authType)
+      throw utils.unreachable(connection.authType)
   }
 }
 

@@ -7,6 +7,7 @@ import {
 } from "@budibase/backend-core"
 import {
   Document,
+  OAuth2AuthType,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
 } from "@budibase/types"
@@ -19,19 +20,22 @@ interface OAuth2LogDocument extends Document {
   lastUsage: number
 }
 
-const { DocWritethrough } = cache.docWritethrough
-
-async function fetchToken(config: {
+interface OAuth2TokenRequestConfig {
   _id?: string
+  datasourceId?: string
   url: string
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
-  authType?: "client_credentials" | "delegated_oauth"
+  authType?: OAuth2AuthType
   scope?: string
   audience?: string
-}) {
+}
+
+const { DocWritethrough } = cache.docWritethrough
+
+async function fetchToken(config: OAuth2TokenRequestConfig) {
   config = await processEnvironmentVariable(config)
   const clientSecret = encryption.decrypt(config.clientSecret)
 
@@ -50,12 +54,15 @@ async function fetchToken(config: {
     grant_type: config.grantType,
   }
   if (config.authType === "delegated_oauth") {
-    if (!config._id) {
+    if (!config._id || !config.datasourceId) {
       throw new Error(
-        "OAuth2 delegated config is missing config ID. Reconnect Microsoft account."
+        "OAuth2 delegated config is missing connection context. Reconnect Microsoft account."
       )
     }
-    const credential = await getSharePointCredential("unused", config._id)
+    const credential = await getSharePointCredential(
+      config.datasourceId,
+      config._id
+    )
     if (!credential?.refreshToken) {
       throw new Error(
         "OAuth2 delegated config is missing refresh token. Reconnect Microsoft account."
@@ -99,17 +106,9 @@ const trackUsage = async (id: string) => {
   })
 }
 
-async function fetchAndParseToken(config: {
-  _id?: string
-  url: string
-  clientId: string
-  clientSecret: string
-  method: OAuth2CredentialsMethod
-  grantType: OAuth2GrantType
-  authType?: "client_credentials" | "delegated_oauth"
-  scope?: string
-  audience?: string
-}): Promise<{ value: string; ttl: number }> {
+async function fetchAndParseToken(
+  config: OAuth2TokenRequestConfig
+): Promise<{ value: string; ttl: number }> {
   const resp = await fetchToken(config)
   const jsonResponse = await resp.json()
   if (!resp.ok) {
@@ -139,17 +138,7 @@ export async function getToken(id: string) {
 
 export async function getTokenFromConfig(
   cacheKey: string,
-  config: {
-    _id?: string
-    url: string
-    clientId: string
-    clientSecret: string
-    method: OAuth2CredentialsMethod
-    grantType: OAuth2GrantType
-    authType?: "client_credentials" | "delegated_oauth"
-    scope?: string
-    audience?: string
-  }
+  config: OAuth2TokenRequestConfig
 ): Promise<string> {
   return cache.withCacheWithDynamicTTL(
     cache.CacheKey.OAUTH2_TOKEN(cacheKey),
@@ -157,17 +146,9 @@ export async function getTokenFromConfig(
   )
 }
 
-export async function validateConfig(config: {
-  _id?: string
-  url: string
-  clientId: string
-  clientSecret: string
-  method: OAuth2CredentialsMethod
-  grantType: OAuth2GrantType
-  authType?: "client_credentials" | "delegated_oauth"
-  scope?: string
-  audience?: string
-}): Promise<{ valid: boolean; message?: string }> {
+export async function validateConfig(
+  config: OAuth2TokenRequestConfig
+): Promise<{ valid: boolean; message?: string }> {
   try {
     const resp = await fetchToken(config)
 
