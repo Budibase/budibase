@@ -112,6 +112,7 @@
   let canAddConfig = true
   let deleteModal: DeleteDataConfirmationModal
   let restBindings: EnrichedBinding[] = []
+  let lastLoadedDatasourceRev: string | undefined
 
   // Connection state
   $: datasource =
@@ -685,7 +686,18 @@
     return []
   }
 
-  $: $datasources.list && !isNewConnection && init(false, selected)
+  $: {
+    if (selected && isDatasource && !isNewConnection) {
+      const currentDatasource = $datasources.list.find(
+        ds => ds._id === selected.sourceId
+      )
+      const currentRev = currentDatasource?._rev
+      if (currentRev && currentRev !== lastLoadedDatasourceRev) {
+        init(false, selected)
+        lastLoadedDatasourceRev = currentRev
+      }
+    }
+  }
 </script>
 
 <Layout noPadding>
