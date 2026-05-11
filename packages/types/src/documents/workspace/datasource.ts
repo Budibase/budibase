@@ -95,8 +95,6 @@ export const REST_AUTH_SECRET_FIELD: Partial<Record<RestAuthType, string>> = {
   [RestAuthType.BASIC]: "password" satisfies keyof RestBasicAuthConfig,
   [RestAuthType.BEARER]: "token" satisfies keyof RestBearerAuthConfig,
   [RestAuthType.OAUTH2]: "clientSecret" satisfies keyof OAuth2RestAuthConfig,
-  [RestAuthType.DELEGATED_OAUTH]:
-    "clientSecret" satisfies keyof OAuth2RestAuthConfig,
 }
 
 export type RestAuthConfig =
