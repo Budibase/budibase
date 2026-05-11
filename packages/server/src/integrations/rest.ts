@@ -663,12 +663,13 @@ export class RestIntegration implements IntegrationBase {
     if (authConfigId && authConfigType === RestAuthType.OAUTH2) {
       const inlineOAuth2 = this.config.authConfigs?.find(
         c => c._id === authConfigId && c.type === RestAuthType.OAUTH2
-      )
+      ) as OAuth2RestAuthConfig | undefined
       if (inlineOAuth2) {
-        const token = await sdk.oauth2.getTokenFromConfig(
-          authConfigId,
-          inlineOAuth2 as OAuth2RestAuthConfig
-        )
+        const datasourceId = (this.config as { _id?: string })._id
+        const token = await sdk.oauth2.getTokenFromConfig({
+          ...(inlineOAuth2 as OAuth2RestAuthConfig),
+          datasourceId,
+        })
         return { Authorization: token }
       }
     }

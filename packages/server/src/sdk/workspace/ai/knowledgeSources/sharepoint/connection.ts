@@ -134,7 +134,7 @@ export const getSharePointBearerToken = async (
     case "app_oauth":
     case "delegated_oauth":
     case undefined:
-      return sdk.oauth2.getTokenFromConfig(`${datasourceId}:${authConfigId}`, {
+      return sdk.oauth2.getTokenFromConfig({
         _id: authConfigId,
         datasourceId,
         authType: connection.authType ?? "app_oauth",

@@ -137,11 +137,17 @@ export async function getToken(id: string) {
 }
 
 export async function getTokenFromConfig(
-  cacheKey: string,
   config: OAuth2TokenRequestConfig
 ): Promise<string> {
+  const resolvedCacheKey =
+    config.authType === "delegated_oauth"
+      ? `${config.datasourceId}:${config._id}`
+      : config._id
+  if (!resolvedCacheKey) {
+    throw new Error("OAuth2 config is missing cache identity.")
+  }
   return cache.withCacheWithDynamicTTL(
-    cache.CacheKey.OAUTH2_TOKEN(cacheKey),
+    cache.CacheKey.OAUTH2_TOKEN(resolvedCacheKey),
     () => fetchAndParseToken(config)
   )
 }

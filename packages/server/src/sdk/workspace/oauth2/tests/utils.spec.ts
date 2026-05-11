@@ -305,7 +305,7 @@ describe("oauth2 utils", () => {
         })
 
       await config.doInContext(config.devWorkspaceId, () =>
-        getTokenFromConfig(`delegated-${Date.now()}`, {
+        getTokenFromConfig({
           _id: "auth_1",
           datasourceId: "datasource_1",
           authType: "delegated_oauth",
