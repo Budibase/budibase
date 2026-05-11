@@ -21,6 +21,7 @@ import {
   FindDatasourcesResponse,
   RelationshipFieldMetadata,
   RestAuthType,
+  RestAuthConfig,
   RowValue,
   SourceName,
   Table,
@@ -36,6 +37,7 @@ import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
 import { builderSocket } from "../../websockets"
+import { deleteDelegatedOAuthCredential } from "../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
   const authConfigs = datasource.config?.authConfigs
@@ -44,6 +46,20 @@ async function clearOAuth2TokenCaches(datasource: Datasource) {
     if (config.type === RestAuthType.OAUTH2 && config._id) {
       await sdk.oauth2.cleanStoredToken(config._id)
     }
+  }
+}
+
+const getDelegatedAuthConfigIds = (datasource: Datasource): string[] => {
+  const authConfigs = (datasource.config?.authConfigs || []) as RestAuthConfig[]
+  return authConfigs
+    .filter(config => config.type === RestAuthType.DELEGATED_OAUTH)
+    .map(config => config._id)
+    .filter(Boolean)
+}
+
+async function clearDelegatedOAuthCredentials(authConfigIds: string[]) {
+  for (const authConfigId of authConfigIds) {
+    await deleteDelegatedOAuthCredential(authConfigId)
   }
 }
 
@@ -243,7 +259,17 @@ export async function update(
     ctx.throw(400, "Duplicate dynamic/static variable names are invalid.")
   }
 
+  const existingDelegatedAuthConfigIds =
+    getDelegatedAuthConfigIds(baseDatasource)
+  const nextDelegatedAuthConfigIds = new Set(
+    getDelegatedAuthConfigIds(datasource)
+  )
+  const removedDelegatedAuthConfigIds = existingDelegatedAuthConfigIds.filter(
+    authConfigId => !nextDelegatedAuthConfigIds.has(authConfigId)
+  )
+
   await clearOAuth2TokenCaches(baseDatasource)
+  await clearDelegatedOAuthCredentials(removedDelegatedAuthConfigIds)
   const response = await db.put(
     sdk.tables.populateExternalTableSchemas(datasource)
   )
@@ -359,6 +385,7 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
 
   // delete the datasource
   await clearOAuth2TokenCaches(datasource)
+  await clearDelegatedOAuthCredentials(getDelegatedAuthConfigIds(datasource))
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
 

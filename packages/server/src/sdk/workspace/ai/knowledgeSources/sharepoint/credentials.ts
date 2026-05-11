@@ -48,3 +48,14 @@ export const saveDelegatedOAuthCredential = async ({
     updatedAt: new Date().toISOString(),
   })
 }
+
+export const deleteDelegatedOAuthCredential = async (authConfigId: string) => {
+  const db = context.getWorkspaceDB()
+  const _id = docIds.generateDelegatedOAuthCredentialID(authConfigId)
+  try {
+    const existing = await db.get<DelegatedOAuthCredentialDoc>(_id)
+    await db.remove(_id, existing._rev!)
+  } catch {
+    return
+  }
+}

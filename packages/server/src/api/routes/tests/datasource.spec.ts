@@ -1,4 +1,4 @@
-import { cache, context, events } from "@budibase/backend-core"
+import { cache, context, docIds, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { getCachedVariable } from "../../../threads/utils"
 import * as setup from "./utilities"
@@ -741,6 +741,106 @@ describe("/datasources", () => {
       await config.doInTenant(async () => {
         expect(await cache.get(cacheKey)).toBeNull()
       })
+    })
+
+    it("deletes delegated OAuth credential doc when auth config is removed", async () => {
+      const authId = "delegated-auth-1"
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: authId,
+              name: "Delegated Auth",
+              type: RestAuthType.DELEGATED_OAUTH,
+              account: "person@example.com",
+            },
+          ],
+        },
+      })
+
+      await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          await db.put({
+            _id: docIds.generateDelegatedOAuthCredentialID(authId),
+            authConfigId: authId,
+            accessToken: "a",
+            refreshToken: "r",
+            tokenType: "Bearer",
+            expiresAt: Date.now() + 60000,
+            updatedAt: new Date().toISOString(),
+          })
+        }
+      )
+
+      await config.api.datasource.update({
+        ...ds,
+        config: {
+          ...ds.config,
+          authConfigs: [],
+        },
+      })
+
+      await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          await expect(
+            db.get(docIds.generateDelegatedOAuthCredentialID(authId))
+          ).rejects.toThrow()
+        }
+      )
+    })
+
+    it("deletes delegated OAuth credential docs on datasource delete", async () => {
+      const authId = "delegated-auth-2"
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: authId,
+              name: "Delegated Auth",
+              type: RestAuthType.DELEGATED_OAUTH,
+              account: "person@example.com",
+            },
+          ],
+        },
+      })
+
+      await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          await db.put({
+            _id: docIds.generateDelegatedOAuthCredentialID(authId),
+            authConfigId: authId,
+            accessToken: "a",
+            refreshToken: "r",
+            tokenType: "Bearer",
+            expiresAt: Date.now() + 60000,
+            updatedAt: new Date().toISOString(),
+          })
+        }
+      )
+
+      await config.api.datasource.delete(ds)
+
+      await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          await expect(
+            db.get(docIds.generateDelegatedOAuthCredentialID(authId))
+          ).rejects.toThrow()
+        }
+      )
     })
   })
 
