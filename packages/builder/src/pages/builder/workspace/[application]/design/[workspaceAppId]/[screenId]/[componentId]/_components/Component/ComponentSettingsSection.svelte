@@ -163,6 +163,7 @@
                 // Number fields
                 min: setting.min ?? null,
                 max: setting.max ?? null,
+                hideButtons: setting.hideButtons ?? true,
 
                 // Field select settings
                 explanation: setting.explanation,

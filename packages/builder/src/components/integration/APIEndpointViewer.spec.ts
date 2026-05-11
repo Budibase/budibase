@@ -192,6 +192,7 @@ vi.mock("@/stores/builder", async () => {
       ...writable({ screens: [], selected: null }),
       usageInScreens: vi.fn().mockResolvedValue({ screens: [] }),
     },
+    automationStore: writable({ automations: [] }),
     workspaceConnections,
     integrations,
     queries,

@@ -12,6 +12,8 @@ import {
   DocumentType,
   type FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
+  type KnowledgeBaseFile,
+  type SharePointKnowledgeBaseFileSource,
   type KnowledgeSourceEntry,
   type KnowledgeSourceSyncRun,
   type SyncAgentKnowledgeSourcesResponse,
@@ -139,6 +141,87 @@ const isSharePointPathIncludedByFilters = (
     return true
   }
   return matchesConfiguredPatterns(path, patterns)
+}
+
+const isSharePointKnowledgeBaseFile = (
+  file: KnowledgeBaseFile,
+  sourceId: string,
+  siteId: string
+): file is KnowledgeBaseFile & {
+  _id: string
+  source: SharePointKnowledgeBaseFileSource
+} => {
+  return (
+    !!file._id &&
+    file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&
+    file.source.knowledgeSourceId === sourceId &&
+    file.source.siteId === siteId
+  )
+}
+
+type SharePointFileMetadataFingerprint = {
+  etag?: string
+  lastModifiedAt?: string
+  remoteSize?: number
+}
+
+const hasSharePointFileMetadataChanged = ({
+  local,
+  remote,
+}: {
+  local: SharePointFileMetadataFingerprint
+  remote: SharePointFileMetadataFingerprint
+}) => {
+  const {
+    etag: localEtag,
+    lastModifiedAt: localLastModifiedAt,
+    remoteSize: localRemoteSize,
+  } = local
+  const {
+    etag: remoteEtag,
+    lastModifiedAt: remoteLastModifiedAt,
+    remoteSize,
+  } = remote
+
+  if (localEtag && remoteEtag) {
+    return localEtag !== remoteEtag
+  }
+
+  const hasLocalMetadata =
+    localEtag !== undefined ||
+    localLastModifiedAt !== undefined ||
+    localRemoteSize !== undefined
+  const hasRemoteMetadata =
+    remoteEtag !== undefined ||
+    remoteLastModifiedAt !== undefined ||
+    remoteSize !== undefined
+  if (!hasLocalMetadata) {
+    return hasRemoteMetadata
+  }
+
+  const hasLocalFallbackMetadata =
+    localLastModifiedAt !== undefined || localRemoteSize !== undefined
+  if (!hasLocalFallbackMetadata) {
+    return false
+  }
+
+  if (
+    localLastModifiedAt !== undefined &&
+    remoteLastModifiedAt !== undefined &&
+    localLastModifiedAt !== remoteLastModifiedAt
+  ) {
+    return true
+  }
+
+  if (
+    localRemoteSize !== undefined &&
+    remoteSize !== undefined &&
+    localRemoteSize !== remoteSize
+  ) {
+    return true
+  }
+
+  return false
 }
 
 export const fetchAllSharePointEntriesForAgent = async (
@@ -297,6 +380,9 @@ const runSharePointSourcesForAgent = async (
       siteId: string
       knowledgeSourceId?: string
       status?: KnowledgeBaseFileStatus
+      etag?: string
+      lastModifiedAt?: string
+      remoteSize?: number
     }
   >()
   for (const file of existingFiles) {
@@ -317,6 +403,9 @@ const runSharePointSourcesForAgent = async (
       siteId: file.source.siteId,
       knowledgeSourceId: file.source.knowledgeSourceId,
       status: file.status,
+      etag: file.source.etag,
+      lastModifiedAt: file.source.lastModifiedAt,
+      remoteSize: file.source.remoteSize,
     })
   }
   const existingExternalIds = new Set(
@@ -334,12 +423,8 @@ const runSharePointSourcesForAgent = async (
   let deleted = 0
   let deleteFailed = 0
 
-  const existingSourceFiles = existingFiles.filter(
-    file =>
-      file._id &&
-      file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&
-      file.source.knowledgeSourceId === sourceId &&
-      file.source.siteId === siteId
+  const existingSourceFiles = existingFiles.filter(file =>
+    isSharePointKnowledgeBaseFile(file, sourceId, siteId)
   )
   const filteredOutFileIds = existingSourceFiles
     .filter(file => {
@@ -360,6 +445,25 @@ const runSharePointSourcesForAgent = async (
     ).length
     deleteFailed = deleteResults.length - deleted
   }
+
+  const existingSourceExternalIdsByFileId = new Map<string, string>()
+  for (const file of existingSourceFiles) {
+    const fileId = file._id
+    if (!fileId) {
+      continue
+    }
+    existingSourceExternalIdsByFileId.set(
+      fileId,
+      getSharePointFileDedupKey({
+        siteId,
+        driveId: file.source.driveId,
+        itemId: file.source.itemId,
+      })
+    )
+  }
+
+  const discoveredExternalIds = new Set<string>()
+  let discoveryCompleted = false
 
   try {
     const driveIds = await listSharePointDrives(bearerToken, siteId)
@@ -390,9 +494,22 @@ const runSharePointSourcesForAgent = async (
           driveId,
           itemId: file.itemId,
         })
+        discoveredExternalIds.add(externalSourceId)
         if (existingExternalIds.has(externalSourceId)) {
           const existingEntry =
             existingSharePointFilesByExternalId.get(externalSourceId)
+          const hasMetadataChanged = hasSharePointFileMetadataChanged({
+            local: {
+              etag: existingEntry?.etag,
+              lastModifiedAt: existingEntry?.lastModifiedAt,
+              remoteSize: existingEntry?.remoteSize,
+            },
+            remote: {
+              etag: file.etag,
+              lastModifiedAt: file.lastModifiedAt,
+              remoteSize: file.remoteSize,
+            },
+          })
           const shouldRetryFailedIngestion =
             existingEntry?.status === KnowledgeBaseFileStatus.FAILED &&
             existingEntry.siteId === siteId &&
@@ -419,12 +536,47 @@ const runSharePointSourcesForAgent = async (
               failed++
             }
             continue
-          } else {
+          }
+
+          if (!hasMetadataChanged) {
             skipped++
             alreadySynced++
 
             continue
           }
+
+          const isOwnedByCurrentSource =
+            existingEntry?.knowledgeSourceId === sourceId
+
+          if (existingEntry?.fileId && isOwnedByCurrentSource) {
+            try {
+              await deleteFileForAgent(agentId, existingEntry.fileId)
+              deleted++
+            } catch (error) {
+              console.error(
+                "Failed to delete stale SharePoint file before re-sync",
+                {
+                  agentId,
+                  siteId,
+                  driveId,
+                  itemId: file.itemId,
+                  error,
+                }
+              )
+              deleteFailed++
+              failed++
+              continue
+            }
+          }
+
+          if (!isOwnedByCurrentSource) {
+            skipped++
+            alreadySynced++
+
+            continue
+          }
+
+          existingExternalIds.delete(externalSourceId)
         }
 
         try {
@@ -443,6 +595,10 @@ const runSharePointSourcesForAgent = async (
               driveId,
               itemId: file.itemId,
               path: file.path,
+              externalId: `${siteId}:${driveId}:${file.itemId}`,
+              etag: file.etag,
+              lastModifiedAt: file.lastModifiedAt,
+              remoteSize: file.remoteSize,
             },
             filename: file.filename,
             mimetype: file.mimetype,
@@ -465,6 +621,28 @@ const runSharePointSourcesForAgent = async (
         }
       }
     }
+
+    discoveryCompleted = true
+
+    const staleFileIds = existingSourceFiles
+      .map(file => file._id)
+      .filter((fileId): fileId is string => !!fileId)
+      .filter(fileId => !filteredOutFileIds.includes(fileId))
+      .filter(fileId => {
+        const externalId = existingSourceExternalIdsByFileId.get(fileId)
+        return !!externalId && !discoveredExternalIds.has(externalId)
+      })
+
+    if (staleFileIds.length > 0) {
+      const staleDeleteResults = await Promise.allSettled(
+        staleFileIds.map(fileId => deleteFileForAgent(agentId, fileId))
+      )
+      const staleDeleted = staleDeleteResults.filter(
+        result => result.status === "fulfilled"
+      ).length
+      deleted += staleDeleted
+      deleteFailed += staleDeleteResults.length - staleDeleted
+    }
   } catch (error) {
     console.error("Failed to sync SharePoint site for agent", {
       agentId,
@@ -485,6 +663,7 @@ const runSharePointSourcesForAgent = async (
     console.log("Completed SharePoint site sync for agent", {
       agentId,
       siteId,
+      discoveryCompleted,
       synced,
       deleted,
       deleteFailed,

@@ -1,6 +1,22 @@
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      action: {
+        ...actual.events.action,
+        automationStepExecuted: jest.fn(),
+        automationStepFailed: jest.fn(),
+      },
+    },
+  }
+})
+
 import * as automation from "../../index"
 import { basicTable } from "../../../tests/utilities/structures"
 import {
+  ActionFailureReason,
   Table,
   LoopStepType,
   ServerLogStepOutputs,
@@ -11,6 +27,7 @@ import {
   AutomationStepResult,
   AutomationActionStepId,
 } from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -1272,6 +1289,46 @@ describe("Loop Automations", () => {
       )
       expect(items[afterBranchLogId][1].outputs.message).toContain(
         "After branch 2"
+      )
+    })
+  })
+
+  describe("failed action telemetry", () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it("emits automationStepFailed with MAX_ITERATIONS when loop exceeds max iterations", async () => {
+      await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          option: LoopStepType.ARRAY,
+          binding: ["a", "b", "c"],
+          iterations: 2,
+          steps: s => s.serverLog({ text: "log" }),
+        })
+        .test({ fields: {} })
+
+      expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: ActionFailureReason.MAX_ITERATIONS })
+      )
+    })
+
+    it("emits automationStepFailed with FAILURE_CONDITION when loop matches failure condition", async () => {
+      await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          option: LoopStepType.ARRAY,
+          binding: ["ok", "stop", "also-ok"],
+          failure: "stop",
+          steps: s => s.serverLog({ text: "log" }),
+        })
+        .test({ fields: {} })
+
+      expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reason: ActionFailureReason.FAILURE_CONDITION,
+        })
       )
     })
   })

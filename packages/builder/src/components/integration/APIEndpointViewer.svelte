@@ -72,7 +72,7 @@
   import { applyBaseUrl } from "@budibase/shared-core"
   import restUtils from "@/helpers/data/utils"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
-  import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import ConnectedQueryUsage from "./ConnectedQueryUsage.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "../common/CodeEditor"
@@ -977,7 +977,7 @@
             </ActionButton>
           {/if}
           {#if editableQuery?._id}
-            <ConnectedQueryScreens
+            <ConnectedQueryUsage
               icon={"link-simple-horizontal-break"}
               sourceId={editableQuery._id}
               buttonText="Usage"

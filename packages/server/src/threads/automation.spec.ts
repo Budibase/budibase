@@ -1,5 +1,21 @@
-import { context } from "@budibase/backend-core"
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      action: {
+        ...actual.events.action,
+        automationStepExecuted: jest.fn(),
+        automationStepFailed: jest.fn(),
+      },
+    },
+  }
+})
+
+import { context, events } from "@budibase/backend-core"
 import {
+  ActionFailureReason,
   AutomationActionStepId,
   AutomationData,
   AutomationStep,
@@ -299,5 +315,55 @@ describe("automation thread", () => {
       e => e.blockId === childStepId && e.status === "running"
     )
     expect(firstChildRunningIndex).toBeGreaterThan(firstBranchEventIndex)
+  })
+
+  it("emits automationStepFailed with ERROR when a step fails", async () => {
+    jest.clearAllMocks()
+
+    const appId = config.getDevWorkspaceId()
+
+    const { id: _scriptId, ...scriptDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT as AutomationStep
+    const failingStep: AutomationStep = {
+      ...scriptDefinition,
+      id: "failing-step",
+      stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+      inputs: { code: "return missingValue.map(x => x)" },
+    }
+
+    const job = {
+      data: {
+        automation: basicAutomation({
+          appId,
+          definition: {
+            trigger: {
+              stepId: AutomationTriggerStepId.APP,
+              name: "test",
+              tagline: "test",
+              icon: "test",
+              description: "test",
+              type: AutomationStepType.TRIGGER,
+              inputs: {},
+              id: "trigger",
+              schema: {
+                inputs: { properties: {} },
+                outputs: { properties: {} },
+              },
+            },
+            steps: [failingStep],
+          },
+        }),
+        event: { appId },
+      },
+    } as Job<AutomationData>
+
+    await executeInThread(job)
+
+    expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+        reason: ActionFailureReason.ERROR,
+      })
+    )
   })
 })

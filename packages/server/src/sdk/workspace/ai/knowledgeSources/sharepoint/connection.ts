@@ -249,6 +249,9 @@ interface SharePointDriveListResponse {
 interface SharePointDriveItem {
   id?: string
   name?: string
+  eTag?: string
+  lastModifiedDateTime?: string
+  size?: number
   file?: {
     mimeType?: string
   }
@@ -266,6 +269,9 @@ interface SharePointFileRef {
   filename: string
   path: string
   mimetype?: string
+  etag?: string
+  lastModifiedAt?: string
+  remoteSize?: number
 }
 
 export const listSharePointDrives = async (
@@ -306,8 +312,8 @@ const listSharePointDriveItems = async (
   itemId?: string
 ): Promise<SharePointDriveItem[]> => {
   const initialPath = itemId
-    ? `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/children?$top=200&$select=id,name,file,folder`
-    : `${SHAREPOINT_API_BASE}/drives/${driveId}/root/children?$top=200&$select=id,name,file,folder`
+    ? `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/children?$top=200&$select=id,name,eTag,lastModifiedDateTime,size,file,folder`
+    : `${SHAREPOINT_API_BASE}/drives/${driveId}/root/children?$top=200&$select=id,name,eTag,lastModifiedDateTime,size,file,folder`
 
   const items: SharePointDriveItem[] = []
   let nextLink = initialPath

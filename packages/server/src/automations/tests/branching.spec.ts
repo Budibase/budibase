@@ -1,4 +1,25 @@
-import { AutomationStatus, EmptyFilterOption, Table } from "@budibase/types"
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      action: {
+        ...actual.events.action,
+        automationStepExecuted: jest.fn(),
+        automationStepFailed: jest.fn(),
+      },
+    },
+  }
+})
+
+import {
+  ActionFailureReason,
+  AutomationStatus,
+  EmptyFilterOption,
+  Table,
+} from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import * as automation from "../index"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
@@ -341,5 +362,36 @@ describe("Branching automations", () => {
 
     expect(results.steps[0].outputs.status).toContain("branch2 branch taken")
     expect(results.steps[1].outputs.message).toContain("Branch 2")
+  })
+
+  it("emits automationStepFailed with NO_CONDITION_MET when no branch condition matches", async () => {
+    jest.clearAllMocks()
+
+    await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        neverTrue: {
+          steps: s => s.serverLog({ text: "unreachable" }),
+          condition: { equal: { "{{ 1 }}": 2 } },
+        },
+      })
+      .test({ fields: {} })
+
+    expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: ActionFailureReason.NO_CONDITION_MET })
+    )
+  })
+
+  it("emits automationStepFailed with ERROR when a step returns success false", async () => {
+    jest.clearAllMocks()
+
+    await createAutomationBuilder(config)
+      .onAppAction()
+      .createRow({ row: {} }) // no tableId → step returns success: false without throwing
+      .test({ fields: {} })
+
+    expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: ActionFailureReason.ERROR })
+    )
   })
 })
