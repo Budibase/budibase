@@ -339,12 +339,15 @@ const listSharePointDriveItems = async (
         400
       )
     }
+
     const payload = (await response.json()) as SharePointDriveItemsResponse
-    items.push(...(payload.value || []))
-    const nextPageLink = payload["@odata.nextLink"]
+    items.push(...(Array.isArray(payload.value) ? payload.value : []))
+    const nextPageLink = payload?.["@odata.nextLink"]
     if (!nextPageLink) {
-      break
+      nextLink = ""
+      continue
     }
+
     if (!isAllowedSharePointNextLink(nextPageLink)) {
       throw new HTTPError("Invalid SharePoint pagination URL", 400)
     }
@@ -354,53 +357,51 @@ const listSharePointDriveItems = async (
   return items
 }
 
-const traverseSharePointDrive = async (
-  bearerToken: string,
-  driveId: string,
-  itemId: string | undefined,
-  parentPath: string,
-  files: SharePointFileRef[]
-) => {
-  const items = await listSharePointDriveItems(bearerToken, driveId, itemId)
-  for (const item of items) {
-    if (!item.id || !item.name) {
-      continue
-    }
-    const path = parentPath ? `${parentPath}/${item.name}` : item.name
-    if (item.file) {
-      files.push({
-        driveId,
-        itemId: item.id,
-        filename: item.name,
-        path,
-        mimetype: item.file.mimeType,
-      })
-    } else if (item.folder) {
-      await traverseSharePointDrive(bearerToken, driveId, item.id, path, files)
-    }
-  }
-}
-
 export const collectSharePointFilesRecursive = async (
   bearerToken: string,
   driveId: string,
-  itemId?: string,
+  folderId?: string,
   parentPath = ""
 ): Promise<SharePointFileRef[]> => {
+  const items = await listSharePointDriveItems(bearerToken, driveId, folderId)
   const files: SharePointFileRef[] = []
-  await traverseSharePointDrive(bearerToken, driveId, itemId, parentPath, files)
-  return files
-}
 
-export const listSharePointFiles = async (
-  bearerToken: string,
-  siteId: string
-): Promise<SharePointFileRef[]> => {
-  const driveIds = await listSharePointDrives(bearerToken, siteId)
-  const files: SharePointFileRef[] = []
-  for (const driveId of driveIds) {
-    await traverseSharePointDrive(bearerToken, driveId, undefined, "", files)
+  for (const item of items) {
+    const itemId = item.id
+    const name = item.name
+    if (!itemId || !name) {
+      continue
+    }
+
+    if (item.folder) {
+      const nextPath = parentPath ? `${parentPath}/${name}` : name
+      files.push(
+        ...(await collectSharePointFilesRecursive(
+          bearerToken,
+          driveId,
+          itemId,
+          nextPath
+        ))
+      )
+      continue
+    }
+
+    if (!item.file) {
+      continue
+    }
+
+    files.push({
+      driveId,
+      itemId,
+      filename: name,
+      path: parentPath ? `${parentPath}/${name}` : name,
+      mimetype: item.file.mimeType || undefined,
+      etag: item.eTag || undefined,
+      lastModifiedAt: item.lastModifiedDateTime || undefined,
+      remoteSize: item.size,
+    })
   }
+
   return files
 }
 
@@ -408,14 +409,14 @@ export const downloadSharePointFile = async (
   bearerToken: string,
   driveId: string,
   itemId: string
-): Promise<Buffer> => {
-  const response = await requestWithRetries("downloadSharePointFile", () =>
-    fetch(`${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/content`, {
+) => {
+  const response = await fetch(
+    `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/content`,
+    {
       headers: {
         Authorization: bearerToken,
       },
-      redirect: "follow",
-    })
+    }
   )
   if (!response.ok) {
     console.error("Failed to download SharePoint file", {
@@ -430,6 +431,5 @@ export const downloadSharePointFile = async (
       400
     )
   }
-  const arrayBuffer = await response.arrayBuffer()
-  return Buffer.from(arrayBuffer)
+  return Buffer.from(await response.arrayBuffer())
 }
