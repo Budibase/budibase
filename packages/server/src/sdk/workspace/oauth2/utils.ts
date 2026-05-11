@@ -1,10 +1,4 @@
-import {
-  cache,
-  context,
-  docIds,
-  encryption,
-  HTTPError,
-} from "@budibase/backend-core"
+import { cache, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   Document,
   OAuth2Config,
@@ -44,7 +38,7 @@ const parseDatasourceIdFromDelegatedAuthConfigId = (authConfigId: string) => {
 
 async function fetchToken(config: OAuth2TokenRequestConfig) {
   config = await processEnvironmentVariable(config)
-  const clientSecret = encryption.decrypt(config.clientSecret)
+  const clientSecret = config.clientSecret
 
   const fetchConfig: RequestInit = {
     method: "POST",

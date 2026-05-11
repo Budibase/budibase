@@ -1,5 +1,5 @@
 import nock from "nock"
-import { context, encryption, features } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { mocks, utils } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
 import {
@@ -8,6 +8,7 @@ import {
   FeatureFlag,
   KnowledgeBaseFileStatus,
   RestAuthType,
+  SourceName,
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
@@ -129,40 +130,35 @@ describe("agent files", () => {
   }
 
   const setSharePointConnection = async (_agentId: string) => {
-    return await config.doInContext(config.getDevWorkspaceId(), async () => {
-      const db = context.getWorkspaceDB()
-      const datasourceId = `datasource_${new Date().getTime()}`
-      const authConfigId = `auth_${new Date().getTime()}`
-      await db.put({
-        _id: datasourceId,
-        type: "datasource",
-        source: "REST",
-        name: "SharePoint Test DS",
-        config: {
-          url: "https://graph.microsoft.com/v1.0",
-          authConfigs: [
-            {
-              _id: authConfigId,
-              type: RestAuthType.OAUTH2,
-              name: "SharePoint OAuth2",
-              url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-              clientId: "client-id",
-              clientSecret: encryption.encrypt("client-secret"),
-              method: "BODY",
-              grantType: "client_credentials",
-              scope: "https://graph.microsoft.com/.default",
-              accessToken: "header.payload.signature",
-              tokenType: "Bearer",
-              expiresAt: Date.now() + 60_000,
-            },
-          ],
-        },
-      })
-      return {
-        datasourceId,
-        authConfigId,
-      }
+    const authConfigId = `auth_${Date.now()}`
+    const datasource = await config.api.datasource.create({
+      name: "SharePoint Test DS",
+      type: "datasource",
+      source: SourceName.REST,
+      config: {
+        url: "https://graph.microsoft.com/v1.0",
+        authConfigs: [
+          {
+            _id: authConfigId,
+            type: RestAuthType.OAUTH2,
+            name: "SharePoint OAuth2",
+            url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            clientId: "client-id",
+            clientSecret: "client-secret",
+            method: "BODY",
+            grantType: "client_credentials",
+            scope: "https://graph.microsoft.com/.default",
+            accessToken: "header.payload.signature",
+            tokenType: "Bearer",
+            expiresAt: Date.now() + 60_000,
+          },
+        ],
+      },
     })
+    return {
+      datasourceId: datasource._id!,
+      authConfigId,
+    }
   }
 
   const mockSharePointSitesFetch = (

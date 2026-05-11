@@ -11,7 +11,6 @@ import {
   UpdateOAuth2ConfigRequest,
   UpdateOAuth2ConfigResponse,
 } from "@budibase/types"
-import { encryption } from "@budibase/backend-core"
 import sdk from "../../sdk"
 
 function toFetchOAuth2ConfigsResponse(
@@ -126,8 +125,6 @@ export async function validate(
     }
 
     config.clientSecret = existingConfig.clientSecret
-  } else {
-    config.clientSecret = encryption.encrypt(config.clientSecret)
   }
 
   const validation = await sdk.oauth2.validateConfig(config)
