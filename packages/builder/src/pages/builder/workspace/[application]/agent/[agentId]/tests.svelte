@@ -28,6 +28,7 @@
   import { createPolling } from "@/utils/polling"
   import { onDestroy } from "svelte"
   import type { RunAgentTestSuiteRequest } from "@budibase/types"
+  import analytics, { Events } from "@/analytics"
 
   const { goto } = routify
   $goto
@@ -78,6 +79,8 @@
     caseIds: string[]
     pollErrorCount: number
   }
+
+  type RunScope = "case" | "group"
 
   let suite = $state<AgentTestSuite>(emptySuite())
   let loading = $state(false)
@@ -141,6 +144,86 @@
   let running = $derived(activeRuns.length > 0)
   let runningCaseIds = $derived(new Set(activeRuns.flatMap(run => run.caseIds)))
 
+  const getSuiteEventProps = (
+    testSuite: AgentTestSuite = suite,
+    agentId = currentAgent?._id
+  ) => ({
+    agentId,
+    groupCount: testSuite.groups.length,
+    testCount: testSuite.cases.length,
+  })
+
+  const getCaseEventProps = (testCase: AgentTestCase) => ({
+    caseId: testCase.id,
+    groupId: testCase.groupId,
+    aiConfigCount: testCase.aiConfigIds?.length || 0,
+    reviewerCount: testCase.reviewers.length,
+    reviewerTypes: testCase.reviewers.map(reviewer => reviewer.type),
+    hasContext: !!testCase.context?.trim(),
+  })
+
+  const getRunDurationMs = (run: AgentTestRun) =>
+    new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime()
+
+  const getRunEventProps = (run: AgentTestRun, activeRun?: ActiveTestRun) => ({
+    ...getSuiteEventProps(suite, run.agentId),
+    runId: run.runId,
+    caseCount:
+      activeRun?.caseIds.length || new Set(run.results.map(r => r.caseId)).size,
+    resultCount: run.total,
+    passed: run.passed,
+    failed: run.failed,
+    durationMs: getRunDurationMs(run),
+  })
+
+  const getRunAiConfigCount = ({
+    body,
+    caseIds,
+  }: {
+    body: RunAgentTestSuiteRequest
+    caseIds: string[]
+  }) => {
+    if (body.aiConfigIds?.length) {
+      return body.aiConfigIds.length
+    }
+
+    const configIds = new Set<string>()
+    for (const testCase of suite.cases) {
+      if (!caseIds.includes(testCase.id)) continue
+      for (const configId of testCase.aiConfigIds || []) {
+        configIds.add(configId)
+      }
+    }
+
+    if (!configIds.size && currentAgent?.aiconfig) {
+      configIds.add(currentAgent.aiconfig)
+    }
+    return configIds.size
+  }
+
+  const trackRunStarted = ({
+    scope,
+    caseIds,
+    body,
+    runId,
+  }: {
+    scope: RunScope
+    caseIds: string[]
+    body: RunAgentTestSuiteRequest
+    runId: string
+  }) => {
+    analytics.captureEvent(Events.AGENT_TEST_RUN_STARTED, {
+      ...getSuiteEventProps(),
+      runId,
+      scope,
+      caseCount: caseIds.length,
+      caseId: body.caseId,
+      groupId: body.groupId,
+      aiConfigCount: getRunAiConfigCount({ body, caseIds }),
+      hasAiConfigOverride: !!body.aiConfigIds?.length,
+    })
+  }
+
   const resetState = (agentId?: string) => {
     suite = emptySuite(agentId)
     preferredGroupId = null
@@ -162,6 +245,9 @@
     try {
       const response = await API.fetchAgentTestSuite(agentId)
       suite = response.suite
+      analytics.captureEvent(Events.AGENT_TESTS_VIEWED, {
+        ...getSuiteEventProps(response.suite, agentId),
+      })
     } catch (error) {
       console.error("Failed to load agent test suite", error)
       resetState(agentId)
@@ -221,7 +307,7 @@
     const cases = isNew
       ? [...suite.cases, testCase]
       : suite.cases.map(c => (c.id === testCase.id ? testCase : c))
-    return persistSuite(
+    const saved = await persistSuite(
       { cases },
       {
         nextSelectedGroupId: testCase.groupId,
@@ -229,6 +315,16 @@
         successMessage: isNew ? "Test added" : "Test updated",
       }
     )
+    if (saved) {
+      analytics.captureEvent(
+        isNew ? Events.AGENT_TEST_CREATED : Events.AGENT_TEST_UPDATED,
+        {
+          ...getSuiteEventProps(),
+          ...getCaseEventProps(testCase),
+        }
+      )
+    }
+    return saved
   }
 
   const saveAndRunCase = async (testCase: AgentTestCase) => {
@@ -251,7 +347,7 @@
         id: Helpers.uuid(),
       })),
     }
-    await persistSuite(
+    const saved = await persistSuite(
       { cases: [...suite.cases, duplicated] },
       {
         nextSelectedGroupId: duplicated.groupId,
@@ -259,11 +355,21 @@
         successMessage: "Test duplicated",
       }
     )
+    if (saved) {
+      analytics.captureEvent(Events.AGENT_TEST_DUPLICATED, {
+        ...getSuiteEventProps(),
+        ...getCaseEventProps(duplicated),
+        sourceCaseId: sourceCase.id,
+      })
+    }
   }
 
   const removeCase = async (caseId: string) => {
+    const testCase = suite.cases.find(c => c.id === caseId)
+    if (!testCase) return
+
     const remaining = suite.cases.filter(c => c.id !== caseId)
-    await persistSuite(
+    const saved = await persistSuite(
       { cases: remaining },
       {
         nextSelectedGroupId: selectedGroupId,
@@ -271,6 +377,12 @@
         successMessage: "Test deleted",
       }
     )
+    if (saved) {
+      analytics.captureEvent(Events.AGENT_TEST_DELETED, {
+        ...getSuiteEventProps(),
+        ...getCaseEventProps(testCase),
+      })
+    }
   }
 
   const saveGroup = async (
@@ -284,13 +396,25 @@
           existing.id === nextGroup.id ? nextGroup : existing
         )
 
-    return persistSuite(
+    const saved = await persistSuite(
       { groups },
       {
         nextSelectedGroupId: nextGroup.id,
         successMessage: isNew ? "Test group created" : "Test group renamed",
       }
     )
+    if (saved) {
+      analytics.captureEvent(
+        isNew
+          ? Events.AGENT_TEST_GROUP_CREATED
+          : Events.AGENT_TEST_GROUP_UPDATED,
+        {
+          ...getSuiteEventProps(),
+          groupId: nextGroup.id,
+        }
+      )
+    }
+    return saved
   }
 
   const deleteGroup = async () => {
@@ -298,11 +422,15 @@
       return
     }
 
-    const groups = suite.groups.filter(group => group.id !== selectedGroupId)
+    const deletedGroupId = selectedGroupId
+    const deletedTestCount = suite.cases.filter(
+      testCase => testCase.groupId === deletedGroupId
+    ).length
+    const groups = suite.groups.filter(group => group.id !== deletedGroupId)
     const cases = suite.cases.filter(
-      testCase => testCase.groupId !== selectedGroupId
+      testCase => testCase.groupId !== deletedGroupId
     )
-    await persistSuite(
+    const saved = await persistSuite(
       { groups, cases },
       {
         nextSelectedGroupId: groups[0]?.id ?? null,
@@ -310,6 +438,13 @@
         successMessage: "Test group deleted",
       }
     )
+    if (saved) {
+      analytics.captureEvent(Events.AGENT_TEST_GROUP_DELETED, {
+        ...getSuiteEventProps(),
+        groupId: deletedGroupId,
+        deletedTestCount,
+      })
+    }
   }
 
   const mergeRunResults = (run: AgentTestRun) => {
@@ -368,12 +503,22 @@
       finishActiveRun(activeRun.runId)
       if (run.status === "completed" && run.run) {
         mergeRunResults(run.run)
+        analytics.captureEvent(Events.AGENT_TEST_RUN_COMPLETED, {
+          ...getRunEventProps(run.run, activeRun),
+        })
         notifications.success(
           `Run complete · ${run.run.passed}/${run.run.total} passed`
         )
         return
       }
 
+      analytics.captureEvent(Events.AGENT_TEST_RUN_FAILED, {
+        ...getSuiteEventProps(),
+        runId: run.runId,
+        caseCount: activeRun.caseIds.length,
+        reason: "run_failed",
+        hasErrorMessage: !!run.error,
+      })
       notifications.error(run.error || "Failed to run test")
     } catch (error) {
       console.error("Failed to poll test run", error)
@@ -381,6 +526,12 @@
       if (activeRun.pollErrorCount + 1 < MAX_RUN_POLL_ERRORS) return
 
       finishActiveRun(activeRun.runId)
+      analytics.captureEvent(Events.AGENT_TEST_RUN_FAILED, {
+        ...getSuiteEventProps(),
+        runId: activeRun.runId,
+        caseCount: activeRun.caseIds.length,
+        reason: "poll_failed",
+      })
       notifications.error("Failed to fetch test run status")
     }
   }
@@ -403,9 +554,11 @@
   const startRun = async ({
     body,
     caseIds,
+    scope,
   }: {
     body: RunAgentTestSuiteRequest
     caseIds: string[]
+    scope: RunScope
   }) => {
     const agentId = currentAgent?._id
     if (!agentId || saving) return false
@@ -413,10 +566,17 @@
     try {
       const { runId } = await API.runAgentTestSuite(agentId, body)
       activeRuns = [...activeRuns, { runId, caseIds, pollErrorCount: 0 }]
+      trackRunStarted({ scope, body, caseIds, runId })
       testRunPolling.start()
       return true
     } catch (error) {
       console.error("Failed to run test", error)
+      analytics.captureEvent(Events.AGENT_TEST_RUN_FAILED, {
+        ...getSuiteEventProps(),
+        scope,
+        caseCount: caseIds.length,
+        reason: "start_failed",
+      })
       notifications.error("Failed to run test")
       return false
     }
@@ -427,6 +587,7 @@
     return startRun({
       body: { caseId },
       caseIds: [caseId],
+      scope: "case",
     })
   }
 
@@ -444,6 +605,7 @@
     return startRun({
       body: { groupId: selectedGroupId },
       caseIds: groupCaseIds,
+      scope: "group",
     })
   }
 
