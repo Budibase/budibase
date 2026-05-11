@@ -4,6 +4,7 @@ import {
   Datasource,
   KnowledgeSourceOption,
   OAuth2RestAuthConfig,
+  RestAuthType,
   isOAuth2AppAuthConfig,
   isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
@@ -134,8 +135,10 @@ export const getSharePointBearerToken = async (
 
 const fetchSharePointSitesByAppToken = async (
   bearerToken: string,
-  isDelegatedAuth: boolean
+  type: RestAuthType.OAUTH2 | RestAuthType.DELEGATED_OAUTH
 ): Promise<KnowledgeSourceOption[]> => {
+  const isDelegatedAuth = type === RestAuthType.DELEGATED_OAUTH
+
   const sitesById = new Map<string, KnowledgeSourceOption>()
   let nextLink = `${SHAREPOINT_API_BASE}/sites?search=*&$top=200&$select=id,displayName,name,webUrl`
 
@@ -232,10 +235,7 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
 ): Promise<KnowledgeSourceOption[]> => {
   const config = await readConfig(datasourceId, authConfigId)
   const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-  return fetchSharePointSitesByAppToken(
-    bearerToken,
-    isOAuth2DelegatedAuthConfig(config)
-  )
+  return fetchSharePointSitesByAppToken(bearerToken, config.type)
 }
 
 interface SharePointDrive {
