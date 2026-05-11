@@ -1,6 +1,7 @@
-import { cache } from "@budibase/backend-core"
+import { cache, encryption } from "@budibase/backend-core"
 import { generator, utils as testUtils } from "@budibase/backend-core/tests"
 import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
+import nock from "nock"
 import path from "path"
 import { GenericContainer, Wait } from "testcontainers"
 import tk from "timekeeper"
@@ -8,7 +9,12 @@ import sdk from "../../.."
 import { startContainer } from "../../../../integrations/tests/utils"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { getToken } from "../utils"
+import { getToken, getTokenFromConfig } from "../utils"
+import * as sharePointCredentials from "../../ai/knowledgeSources/sharepoint/credentials"
+
+jest.mock("../../ai/knowledgeSources/sharepoint/credentials", () => ({
+  getSharePointCredential: jest.fn(),
+}))
 
 const config = new TestConfiguration()
 
@@ -57,7 +63,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
             clientId: "my-client",
-            clientSecret: "my-secret",
+            clientSecret: encryption.encrypt("my-secret"),
             method,
             grantType,
           })
@@ -76,7 +82,7 @@ describe("oauth2 utils", () => {
           name: generator.guid(),
           url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
           clientId: "my-client",
-          clientSecret: "my-secret",
+          clientSecret: encryption.encrypt("my-secret"),
           method,
           grantType,
         })
@@ -98,7 +104,7 @@ describe("oauth2 utils", () => {
           name: generator.guid(),
           url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
           clientId: "my-client",
-          clientSecret: "my-secret",
+          clientSecret: encryption.encrypt("my-secret"),
           method,
           grantType,
         })
@@ -124,7 +130,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/wrong/protocol/openid-connect/token`,
             clientId: "my-client",
-            clientSecret: "my-secret",
+            clientSecret: encryption.encrypt("my-secret"),
             method,
             grantType,
           })
@@ -141,7 +147,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
             clientId: "wrong-client-id",
-            clientSecret: "my-secret",
+            clientSecret: encryption.encrypt("my-secret"),
             method,
             grantType,
           })
@@ -160,7 +166,7 @@ describe("oauth2 utils", () => {
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
             clientId: "my-client",
-            clientSecret: "wrong-secret",
+            clientSecret: encryption.encrypt("wrong-secret"),
             method,
             grantType,
           })
@@ -185,7 +191,7 @@ describe("oauth2 utils", () => {
               name: generator.guid(),
               url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
               clientId: "my-client",
-              clientSecret: "my-secret",
+              clientSecret: encryption.encrypt("my-secret"),
               method,
               grantType,
             })
@@ -213,7 +219,7 @@ describe("oauth2 utils", () => {
               name: generator.guid(),
               url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
               clientId: "wrong-client",
-              clientSecret: "my-secret",
+              clientSecret: encryption.encrypt("my-secret"),
               method,
               grantType,
             })
@@ -243,7 +249,7 @@ describe("oauth2 utils", () => {
               name: generator.guid(),
               url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
               clientId: "my-client",
-              clientSecret: "my-secret",
+              clientSecret: encryption.encrypt("my-secret"),
               method,
               grantType,
             })
@@ -273,6 +279,49 @@ describe("oauth2 utils", () => {
           })
         }
       })
+    })
+  })
+
+  describe("delegated oauth", () => {
+    it("uses refresh_token grant for delegated OAuth token refresh", async () => {
+      const getSharePointCredential = jest.mocked(
+        sharePointCredentials.getSharePointCredential
+      )
+      getSharePointCredential.mockResolvedValue({
+        refreshToken: "refresh-token",
+      } as any)
+      const tokenScope = nock("https://login.microsoftonline.com")
+        .post("/common/oauth2/v2.0/token", (body: any) => {
+          const params = new URLSearchParams(body)
+          return (
+            params.get("grant_type") === "refresh_token" &&
+            params.get("refresh_token") === "refresh-token"
+          )
+        })
+        .reply(200, {
+          access_token: "access-token",
+          token_type: "Bearer",
+          expires_in: 3600,
+        })
+
+      await config.doInContext(config.devWorkspaceId, () =>
+        getTokenFromConfig(`delegated-${Date.now()}`, {
+          _id: "auth_1",
+          datasourceId: "datasource_1",
+          authType: "delegated_oauth",
+          url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+          clientId: "client-id",
+          clientSecret: encryption.encrypt("client-secret"),
+          method: OAuth2CredentialsMethod.BODY,
+          grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+        })
+      )
+
+      expect(getSharePointCredential).toHaveBeenCalledWith(
+        "datasource_1",
+        "auth_1"
+      )
+      expect(tokenScope.isDone()).toBe(true)
     })
   })
 })

@@ -348,7 +348,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
     )
   })
 
-  it("refreshes delegated OAuth credentials with the refresh token", async () => {
+  it("requests bearer token using delegated OAuth config", async () => {
     jest.spyOn(sdk.datasources, "get").mockResolvedValue({
       _id: datasourceId,
       type: "datasource",
@@ -367,8 +367,6 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
         ],
       },
     } as Datasource)
-    const saveCredential = jest.mocked(credentials.saveSharePointCredential)
-    saveCredential.mockResolvedValue(undefined)
     jest
       .mocked(credentials.getSharePointCredential)
       .mockResolvedValueOnce({
@@ -383,45 +381,34 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
         tokenType: "Bearer",
         expiresAt: Date.now() + 3600 * 1000,
       } as any)
-    const fetchMock = jest
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          access_token: "fresh-token",
-          refresh_token: "fresh-refresh-token",
-          token_type: "Bearer",
-          expires_in: 3600,
-        }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ value: [] }),
-      } as Response)
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ value: [] }),
+    } as Response)
 
     await fetchSharePointSitesByDatasourceAuthConfig(datasourceId, authConfigId)
 
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+    expect(getTokenFromConfigMock).toHaveBeenCalledWith(
+      `${datasourceId}:${authConfigId}`,
       expect.objectContaining({
-        method: "POST",
-        body: expect.any(URLSearchParams),
+        _id: authConfigId,
+        datasourceId,
+        authType: "delegated_oauth",
+        url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        clientId: "client-id",
+        clientSecret: "secret",
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
     )
-    const body = fetchMock.mock.calls[0][1]!.body as URLSearchParams
-    expect(body.get("grant_type")).toBe("refresh_token")
-    expect(body.get("refresh_token")).toBe("refresh-token")
     expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
+      1,
       expect.stringContaining("https://graph.microsoft.com/v1.0/sites?"),
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: "Bearer fresh-token",
+          Authorization: "Bearer token",
         }),
       })
     )
-    expect(saveCredential).toHaveBeenCalled()
   })
 
   it("uses delegated guidance for delegated OAuth 403", async () => {

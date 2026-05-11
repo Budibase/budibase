@@ -10,7 +10,11 @@ import {
 } from "@budibase/types"
 import nock from "nock"
 import { getCachedVariable } from "../../../../threads/utils"
-import { blacklist, setEnv as setCoreEnv } from "@budibase/backend-core"
+import {
+  blacklist,
+  encryption,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
 import { setEnv as setServerEnv } from "../../../../environment"
@@ -1049,7 +1053,7 @@ describe("rest", () => {
               type: RestAuthType.OAUTH2,
               url: "https://auth.example.com/token",
               clientId: "my-client-id",
-              clientSecret: "my-client-secret",
+              clientSecret: encryption.encrypt("my-client-secret"),
               method: OAuth2CredentialsMethod.BODY,
               grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
             },
