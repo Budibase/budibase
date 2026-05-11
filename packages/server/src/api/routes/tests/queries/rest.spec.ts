@@ -16,6 +16,7 @@ import {
   docIds,
   encryption,
   setEnv as setCoreEnv,
+  withEnv,
 } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
@@ -1095,78 +1096,84 @@ describe("rest", () => {
     })
 
     it("should apply datasource delegated OAuth2 auth config to the request", async () => {
-      const delegatedDatasourceId = "datasource_test"
-      const authId = `${delegatedDatasourceId}_auth_${generator.guid()}`
-      const ds = await config.api.datasource.create({
-        name: generator.guid(),
-        type: "datasource",
-        source: SourceName.REST,
-        config: {
-          authConfigs: [
-            {
-              _id: authId,
-              name: "Delegated OAuth2 Auth",
-              type: RestAuthType.DELEGATED_OAUTH,
-              url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-              clientId: "my-client-id",
-              clientSecret: "my-client-secret",
-              method: OAuth2CredentialsMethod.BODY,
-              grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      await withEnv(
+        {
+          MICROSOFT_CLIENT_ID: "my-client-id",
+          MICROSOFT_CLIENT_SECRET: "my-client-secret",
+          MICROSOFT_TENANT_ID: "common",
+        },
+        async () => {
+          const delegatedDatasourceId = "datasource_test"
+          const authId = `${delegatedDatasourceId}_auth_${generator.guid()}`
+
+          const ds = await config.api.datasource.create({
+            name: generator.guid(),
+            type: "datasource",
+            source: SourceName.REST,
+            config: {
+              authConfigs: [
+                {
+                  _id: authId,
+                  name: "Delegated OAuth2 Auth",
+                  type: RestAuthType.DELEGATED_OAUTH,
+                  account: "person@example.com",
+                },
+              ],
             },
-          ],
-        },
-      })
+          })
 
-      await config.doInContext(config.devWorkspaceId, async () => {
-        await context.getWorkspaceDB().put({
-          _id: docIds.generateDelegatedOAuthCredentialID(authId),
-          datasourceId: delegatedDatasourceId,
-          authConfigId: authId,
-          accessToken: encryption.encrypt("stale-access-token"),
-          refreshToken: encryption.encrypt("delegated-refresh-token"),
-          tokenType: "Bearer",
-          expiresAt: Date.now() - 10_000,
-          updatedAt: new Date().toISOString(),
-        })
-      })
+          await config.doInContext(config.devWorkspaceId, async () => {
+            await context.getWorkspaceDB().put({
+              _id: docIds.generateDelegatedOAuthCredentialID(authId),
+              datasourceId: delegatedDatasourceId,
+              authConfigId: authId,
+              accessToken: encryption.encrypt("stale-access-token"),
+              refreshToken: encryption.encrypt("delegated-refresh-token"),
+              tokenType: "Bearer",
+              expiresAt: Date.now() - 10_000,
+              updatedAt: new Date().toISOString(),
+            })
+          })
 
-      nock("https://login.microsoftonline.com")
-        .post("/common/oauth2/v2.0/token", (body: any) => {
-          const params = new URLSearchParams(body)
-          return (
-            params.get("grant_type") === "refresh_token" &&
-            params.get("refresh_token") === "delegated-refresh-token"
-          )
-        })
-        .reply(200, {
-          access_token: "oauth-access-token",
-          token_type: "Bearer",
-          expires_in: 3600,
-        })
+          nock("https://login.microsoftonline.com")
+            .post("/common/oauth2/v2.0/token", (body: any) => {
+              const params = new URLSearchParams(body)
+              return (
+                params.get("grant_type") === "refresh_token" &&
+                params.get("refresh_token") === "delegated-refresh-token"
+              )
+            })
+            .reply(200, {
+              access_token: "oauth-access-token",
+              token_type: "Bearer",
+              expires_in: 3600,
+            })
 
-      mockAgent!
-        .get("http://www.example.com")
-        .intercept({
-          path: "/",
-          method: "GET",
-          headers: { authorization: "Bearer oauth-access-token" },
-        })
-        .reply(200, { ok: true }, { headers: jsonHeaders })
+          mockAgent!
+            .get("http://www.example.com")
+            .intercept({
+              path: "/",
+              method: "GET",
+              headers: { authorization: "Bearer oauth-access-token" },
+            })
+            .reply(200, { ok: true }, { headers: jsonHeaders })
 
-      await config.api.query.preview({
-        datasourceId: ds._id!,
-        name: generator.guid(),
-        parameters: [],
-        queryVerb: "read",
-        transformer: "",
-        schema: {},
-        readable: true,
-        fields: {
-          path: "www.example.com",
-          authConfigId: authId,
-          authConfigType: RestAuthType.OAUTH2,
-        },
-      })
+          await config.api.query.preview({
+            datasourceId: ds._id!,
+            name: generator.guid(),
+            parameters: [],
+            queryVerb: "read",
+            transformer: "",
+            schema: {},
+            readable: true,
+            fields: {
+              path: "www.example.com",
+              authConfigId: authId,
+              authConfigType: RestAuthType.DELEGATED_OAUTH,
+            },
+          })
+        }
+      )
     })
 
     it("query-level headers override datasource defaultHeaders", async () => {
