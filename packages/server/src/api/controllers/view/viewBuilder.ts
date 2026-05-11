@@ -1,3 +1,4 @@
+import { HTTPError } from "@budibase/backend-core"
 import { ViewFilter, DBView } from "@budibase/types"
 
 const TOKEN_MAP: Record<string, string> = {
@@ -89,6 +90,15 @@ const SCHEMA_MAP: Record<string, any> = {
   },
 }
 
+function validateCalculation(calculation?: string) {
+  if (
+    calculation &&
+    !Object.prototype.hasOwnProperty.call(SCHEMA_MAP, calculation)
+  ) {
+    throw new HTTPError(`Invalid calculation type: ${calculation}`, 400)
+  }
+}
+
 /**
  * Iterates through the array of filters to create a JS
  * expression that gets used in a CouchDB view.
@@ -167,6 +177,8 @@ export default function (
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction
   }
+
+  validateCalculation(calculation)
 
   let schema = null,
     statFilter = null

@@ -5,6 +5,7 @@ import { context, events, objectStore } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { dataFilters } from "@budibase/shared-core"
 import {
+  ActionFailureReason,
   Ctx,
   DeleteRow,
   DeleteRowRequest,
@@ -93,6 +94,10 @@ async function _patch(
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
   } catch (err: any) {
+    events.action.crudFailed({
+      type: "update",
+      reason: ActionFailureReason.ERROR,
+    })
     ctx.throw(400, err)
   }
 }

@@ -1,7 +1,7 @@
 import { Document } from "../document"
 import { RestAuthType } from "./datasource"
 import { Row } from "./row"
-import type { RestTemplateId } from "../../ui/rest"
+import type { RestTemplateId } from "../../ui"
 
 export interface QuerySchema {
   name?: string

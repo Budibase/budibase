@@ -1,3 +1,5 @@
+import { DefaultNewAppFontFamily } from "@budibase/shared-core"
+
 export const TableNames = {
   USERS: "ta_users",
 }
@@ -46,6 +48,7 @@ export const DefaultAppTheme = {
   primaryColor: "var(--spectrum-global-color-blue-600)",
   primaryColorHover: "var(--spectrum-global-color-blue-500)",
   buttonBorderRadius: "16px",
+  fontFamily: DefaultNewAppFontFamily,
   navBackground: "var(--spectrum-global-color-gray-50)",
   navTextColor: "var(--spectrum-global-color-gray-800)",
 }
