@@ -596,54 +596,33 @@ export const renderLoopV2Container = (
       loopChildInsertIndex: cIdx,
     }
 
-    if (lastLinearChild) {
-      const prevRef = deps.blockRefs?.[lastLinearChild.id]
-      placeBranchCluster({
-        step: child,
-        source: {
+    const source = lastLinearChild
+      ? {
           id: lastLinearChild.id,
           block: lastLinearChild,
-          pathTo: prevRef?.pathTo,
-        },
-        coords: isLR
-          ? { x: innerX, y: baseY + childHeight / 2 }
-          : { y: innerY },
-        deps,
-        mode: BranchMode.SUBFLOW,
-        parentId: baseId,
-        visuals: {
-          laneWidth: SUBFLOW.laneWidth,
-          gap: SUBFLOW.laneGap,
-          laneYSpacing: SUBFLOW.ySpacing,
-          anchorWidth: STEP.width,
-          containerWidth,
-        },
-        loopContext,
-      })
-    } else {
-      placeBranchCluster({
-        step: child,
-        source: {
+          pathTo: deps.blockRefs?.[lastLinearChild.id]?.pathTo,
+        }
+      : {
           id: child.id,
           block: child,
           pathTo: resolveBlockPath(child, deps),
-        },
-        coords: isLR
-          ? { x: innerX, y: baseY + childHeight / 2 }
-          : { y: innerY },
-        deps,
-        mode: BranchMode.SUBFLOW,
-        parentId: baseId,
-        visuals: {
-          laneWidth: SUBFLOW.laneWidth,
-          gap: SUBFLOW.laneGap,
-          laneYSpacing: SUBFLOW.ySpacing,
-          anchorWidth: STEP.width,
-          containerWidth,
-        },
-        loopContext,
-      })
-    }
+        }
+    const branchResult = placeBranchCluster({
+      step: child,
+      source,
+      coords: isLR ? { x: innerX, y: baseY + childHeight / 2 } : { y: innerY },
+      deps,
+      mode: BranchMode.SUBFLOW,
+      parentId: baseId,
+      visuals: {
+        laneWidth: SUBFLOW.laneWidth,
+        gap: SUBFLOW.laneGap,
+        laneYSpacing: SUBFLOW.ySpacing,
+        anchorWidth: STEP.width,
+        containerWidth,
+      },
+      loopContext,
+    })
 
     lastLinearChild = undefined
     if (isLR) {
@@ -663,7 +642,7 @@ export const renderLoopV2Container = (
 
       innerX += branchLaneWidth + internalSpacing + lrGap
     } else {
-      innerY += BRANCH.height + internalSpacing
+      innerY = branchResult.bottomY
     }
   })
 

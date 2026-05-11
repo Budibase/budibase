@@ -78,12 +78,7 @@
       return false
     }
     const outputs = value.outputs
-    return (
-      !!outputs &&
-      typeof outputs === "object" &&
-      "branchId" in outputs &&
-      "success" in outputs
-    )
+    return !!outputs && typeof outputs === "object" && "branchId" in outputs
   }
 
   const branchUpdate = async (e: CustomEvent<string>) => {

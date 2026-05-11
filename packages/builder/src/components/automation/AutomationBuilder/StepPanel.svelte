@@ -310,7 +310,7 @@
     const branchesArray = branchStepUpdate.inputs.branches || []
     for (let i = 0; i < branchesArray.length; i++) {
       const br = branchesArray[i]
-      if (!Object.keys(br.condition).length) {
+      if (!Object.keys(br.condition || {}).length) {
         branchesArray[i] = {
           ...br,
           ...automationStore.actions.generateDefaultConditions(),
