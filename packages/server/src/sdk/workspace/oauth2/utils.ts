@@ -14,7 +14,7 @@ import {
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
 import { processEnvironmentVariable } from "../../utils"
-import { getSharePointCredential } from "../ai/knowledgeSources/sharepoint/credentials"
+import { getDelegatedOAuthCredential } from "../ai/knowledgeSources/sharepoint/credentials"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -59,7 +59,7 @@ async function fetchToken(config: OAuth2TokenRequestConfig) {
         "OAuth2 delegated config is missing connection context. Reconnect Microsoft account."
       )
     }
-    const credential = await getSharePointCredential(
+    const credential = await getDelegatedOAuthCredential(
       config.datasourceId,
       config._id
     )

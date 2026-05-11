@@ -19,7 +19,7 @@ import {
   isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import { saveSharePointCredential } from "../../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials"
+import { saveDelegatedOAuthCredential } from "../../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials"
 
 const DEFAULT_SCOPE = env.RAG_SHAREPOINT_DEFAULT_SCOPE
 const STATE_CACHE_TTL_SECONDS = 600
@@ -36,9 +36,9 @@ export const calculateBufferedTokenExpiry = (expiresInSeconds: number) => {
 }
 
 interface SharePointOAuthState {
-  appId?: string
-  provider?: string
-  datasourceId?: string
+  appId: string
+  provider: string
+  datasourceId: string
   authConfigId?: string
 }
 
@@ -215,7 +215,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
         throw error
       }
 
-      await saveSharePointCredential({
+      await saveDelegatedOAuthCredential({
         datasourceId,
         authConfigId: nextAuthConfig._id,
         accessToken: credentials.accessToken,
@@ -248,17 +248,14 @@ export async function completeSharePointAuth(ctx: UserCtx<void, void>) {
   const stateCacheKey = `datasource:${MICROSOFT_PROVIDER}:state:${state}`
   const statePayload = (await cache.get(stateCacheKey)) as SharePointOAuthState
   await cache.destroy(stateCacheKey)
-  const stateAppId =
-    typeof statePayload?.appId === "string" ? statePayload.appId.trim() : ""
   if (
     !statePayload ||
-    !stateAppId ||
     statePayload.provider !== MICROSOFT_PROVIDER ||
     !statePayload.datasourceId
   ) {
     throw new Error("Microsoft OAuth state is invalid or expired")
   }
-  const appId = stateAppId
+  const appId = statePayload.appId
 
   const oauthError = String(ctx.query.error || "").trim()
   if (oauthError) {

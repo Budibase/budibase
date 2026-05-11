@@ -13,7 +13,7 @@ import { getToken, getTokenFromConfig } from "../utils"
 import * as sharePointCredentials from "../../ai/knowledgeSources/sharepoint/credentials"
 
 jest.mock("../../ai/knowledgeSources/sharepoint/credentials", () => ({
-  getSharePointCredential: jest.fn(),
+  getDelegatedOAuthCredential: jest.fn(),
 }))
 
 const config = new TestConfiguration()
@@ -284,10 +284,10 @@ describe("oauth2 utils", () => {
 
   describe("delegated oauth", () => {
     it("uses refresh_token grant for delegated OAuth token refresh", async () => {
-      const getSharePointCredential = jest.mocked(
-        sharePointCredentials.getSharePointCredential
+      const getDelegatedOAuthCredential = jest.mocked(
+        sharePointCredentials.getDelegatedOAuthCredential
       )
-      getSharePointCredential.mockResolvedValue({
+      getDelegatedOAuthCredential.mockResolvedValue({
         refreshToken: "refresh-token",
       } as any)
       const tokenScope = nock("https://login.microsoftonline.com")
@@ -317,7 +317,7 @@ describe("oauth2 utils", () => {
         })
       )
 
-      expect(getSharePointCredential).toHaveBeenCalledWith(
+      expect(getDelegatedOAuthCredential).toHaveBeenCalledWith(
         "datasource_1",
         "auth_1"
       )

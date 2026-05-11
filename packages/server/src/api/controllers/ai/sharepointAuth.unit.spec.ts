@@ -16,7 +16,7 @@ import tk from "timekeeper"
 jest.mock(
   "../../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials",
   () => ({
-    saveSharePointCredential: jest.fn(),
+    saveDelegatedOAuthCredential: jest.fn(),
   })
 )
 
@@ -87,7 +87,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       .spyOn(sdk.datasources, "save")
       .mockResolvedValue({} as any)
     const saveCredential = jest.mocked(
-      sharePointCredentials.saveSharePointCredential
+      sharePointCredentials.saveDelegatedOAuthCredential
     )
     saveCredential.mockResolvedValue(undefined)
 

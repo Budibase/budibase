@@ -1,7 +1,7 @@
 import { context, docIds, encryption } from "@budibase/backend-core"
 import type { DelegatedOAuthCredentialDoc } from "@budibase/types"
 
-export const getSharePointCredential = async (
+export const getDelegatedOAuthCredential = async (
   datasourceId: string,
   authConfigId: string
 ) => {
@@ -24,7 +24,7 @@ export const getSharePointCredential = async (
   }
 }
 
-export const saveSharePointCredential = async ({
+export const saveDelegatedOAuthCredential = async ({
   datasourceId,
   authConfigId,
   accessToken,

@@ -17,8 +17,8 @@ import sdk from "../../../.."
 import * as credentials from "./credentials"
 
 jest.mock("./credentials", () => ({
-  getSharePointCredential: jest.fn(),
-  saveSharePointCredential: jest.fn(),
+  getDelegatedOAuthCredential: jest.fn(),
+  saveDelegatedOAuthCredential: jest.fn(),
 }))
 
 const getTokenFromConfigMock = jest.mocked(sdk.oauth2.getTokenFromConfig)
@@ -93,7 +93,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
     } as Datasource
 
     jest.spyOn(sdk.datasources, "get").mockResolvedValue(datasource)
-    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+    jest.mocked(credentials.getDelegatedOAuthCredential).mockResolvedValue({
       accessToken: "token",
       tokenType: "Bearer",
       expiresAt: Date.now() + 60_000,
@@ -102,8 +102,8 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
-    jest.mocked(credentials.getSharePointCredential).mockReset()
-    jest.mocked(credentials.saveSharePointCredential).mockReset()
+    jest.mocked(credentials.getDelegatedOAuthCredential).mockReset()
+    jest.mocked(credentials.saveDelegatedOAuthCredential).mockReset()
   })
 
   beforeEach(() => {
@@ -304,7 +304,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
 
   it("uses app-permission guidance for client credentials 403", async () => {
     mockDatasource()
-    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+    jest.mocked(credentials.getDelegatedOAuthCredential).mockResolvedValue({
       accessToken: "token",
       tokenType: "Bearer",
       expiresAt: Date.now() + 60_000,
@@ -327,7 +327,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
 
   it("uses credential guidance for client credentials 401", async () => {
     mockDatasource()
-    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+    jest.mocked(credentials.getDelegatedOAuthCredential).mockResolvedValue({
       accessToken: "token",
       tokenType: "Bearer",
       expiresAt: Date.now() + 60_000,
@@ -368,7 +368,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
       },
     } as Datasource)
     jest
-      .mocked(credentials.getSharePointCredential)
+      .mocked(credentials.getDelegatedOAuthCredential)
       .mockResolvedValueOnce({
         accessToken: "expired-token",
         refreshToken: "refresh-token",
@@ -430,7 +430,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
         ],
       },
     } as Datasource)
-    jest.mocked(credentials.getSharePointCredential).mockResolvedValue({
+    jest.mocked(credentials.getDelegatedOAuthCredential).mockResolvedValue({
       accessToken: "token",
       refreshToken: "refresh-token",
       tokenType: "Bearer",
