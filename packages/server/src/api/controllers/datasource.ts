@@ -268,11 +268,11 @@ export async function update(
     authConfigId => !nextDelegatedAuthConfigIds.has(authConfigId)
   )
 
-  await clearOAuth2TokenCaches(baseDatasource)
-  await clearDelegatedOAuthCredentials(removedDelegatedAuthConfigIds)
   const response = await db.put(
     sdk.tables.populateExternalTableSchemas(datasource)
   )
+  await clearOAuth2TokenCaches(baseDatasource)
+  await clearDelegatedOAuthCredentials(removedDelegatedAuthConfigIds)
   await events.datasource.updated(datasource)
   datasource._rev = response.rev
 
@@ -384,9 +384,9 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   }
 
   // delete the datasource
+  await db.remove(datasourceId, ctx.params.revId)
   await clearOAuth2TokenCaches(datasource)
   await clearDelegatedOAuthCredentials(getDelegatedAuthConfigIds(datasource))
-  await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
 
   ctx.body = { message: `Datasource deleted.` }
