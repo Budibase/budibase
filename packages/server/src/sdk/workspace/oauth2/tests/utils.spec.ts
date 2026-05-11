@@ -306,8 +306,7 @@ describe("oauth2 utils", () => {
 
       await config.doInContext(config.devWorkspaceId, () =>
         getTokenFromConfig({
-          _id: "auth_1",
-          datasourceId: "datasource_1",
+          _id: "datasource_1_auth_1",
           authType: "delegated_oauth",
           url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
           clientId: "client-id",
@@ -318,8 +317,7 @@ describe("oauth2 utils", () => {
       )
 
       expect(getDelegatedOAuthCredential).toHaveBeenCalledWith(
-        "datasource_1",
-        "auth_1"
+        "datasource_1_auth_1"
       )
       expect(tokenScope.isDone()).toBe(true)
     })

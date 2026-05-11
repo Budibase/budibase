@@ -178,9 +178,6 @@ export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }
 
-export const generateDelegatedOAuthCredentialID = (
-  datasourceId: string,
-  authConfigId: string
-) => {
-  return `oauth_delegated_credential_${datasourceId}_${authConfigId}`
+export const generateDelegatedOAuthCredentialID = (authConfigId: string) => {
+  return `oauth_delegated_credential_${authConfigId}`
 }

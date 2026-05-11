@@ -94,7 +94,7 @@ export const isAllowedSharePointNextLink = (value: string): boolean => {
   }
 }
 
-const readConnection = async (
+const readConfig = async (
   datasourceId: string,
   authConfigId: string
 ): Promise<OAuth2RestAuthConfig> => {
@@ -128,26 +128,15 @@ export const getSharePointBearerToken = async (
   datasourceId: string,
   authConfigId: string
 ): Promise<string> => {
-  const connection = await readConnection(datasourceId, authConfigId)
+  const config = await readConfig(datasourceId, authConfigId)
 
-  switch (connection.authType) {
+  switch (config.authType) {
     case "app_oauth":
     case "delegated_oauth":
     case undefined:
-      return sdk.oauth2.getTokenFromConfig({
-        _id: authConfigId,
-        datasourceId,
-        authType: connection.authType ?? "app_oauth",
-        url: connection.url,
-        clientId: connection.clientId,
-        clientSecret: connection.clientSecret,
-        method: connection.method,
-        grantType: connection.grantType,
-        scope: connection.scope,
-        audience: connection.audience,
-      })
+      return sdk.oauth2.getTokenFromConfig(config)
     default:
-      throw utils.unreachable(connection.authType)
+      throw utils.unreachable(config.authType)
   }
 }
 
@@ -249,11 +238,11 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
   datasourceId: string,
   authConfigId: string
 ): Promise<KnowledgeSourceOption[]> => {
-  const connection = await readConnection(datasourceId, authConfigId)
+  const config = await readConfig(datasourceId, authConfigId)
   const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
   return fetchSharePointSitesByAppToken(
     bearerToken,
-    isOAuth2DelegatedAuthConfig(connection)
+    isOAuth2DelegatedAuthConfig(config)
   )
 }
 

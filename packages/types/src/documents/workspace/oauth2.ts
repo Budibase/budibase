@@ -13,6 +13,7 @@ export type OAuth2AuthType = "app_oauth" | "delegated_oauth"
 
 export interface OAuth2Config extends Document {
   name: string
+  authType?: OAuth2AuthType
   url: string
   clientId: string
   clientSecret: string

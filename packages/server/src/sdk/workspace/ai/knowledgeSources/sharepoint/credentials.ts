@@ -1,14 +1,11 @@
 import { context, docIds, encryption } from "@budibase/backend-core"
 import type { DelegatedOAuthCredentialDoc } from "@budibase/types"
 
-export const getDelegatedOAuthCredential = async (
-  datasourceId: string,
-  authConfigId: string
-) => {
+export const getDelegatedOAuthCredential = async (authConfigId: string) => {
   const db = context.getWorkspaceDB()
   try {
     const doc = await db.get<DelegatedOAuthCredentialDoc>(
-      docIds.generateDelegatedOAuthCredentialID(datasourceId, authConfigId)
+      docIds.generateDelegatedOAuthCredentialID(authConfigId)
     )
     return {
       ...doc,
@@ -25,7 +22,6 @@ export const getDelegatedOAuthCredential = async (
 }
 
 export const saveDelegatedOAuthCredential = async ({
-  datasourceId,
   authConfigId,
   accessToken,
   refreshToken,
@@ -33,10 +29,7 @@ export const saveDelegatedOAuthCredential = async ({
   expiresAt,
 }: DelegatedOAuthCredentialDoc) => {
   const db = context.getWorkspaceDB()
-  const _id = docIds.generateDelegatedOAuthCredentialID(
-    datasourceId,
-    authConfigId
-  )
+  const _id = docIds.generateDelegatedOAuthCredentialID(authConfigId)
   let _rev: string | undefined
   try {
     const existing = await db.get<DelegatedOAuthCredentialDoc>(_id)
@@ -47,7 +40,6 @@ export const saveDelegatedOAuthCredential = async ({
   await db.put<DelegatedOAuthCredentialDoc>({
     _id,
     _rev,
-    datasourceId,
     authConfigId,
     accessToken: encryption.encrypt(accessToken),
     refreshToken: encryption.encrypt(refreshToken),

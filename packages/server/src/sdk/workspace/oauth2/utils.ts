@@ -7,9 +7,8 @@ import {
 } from "@budibase/backend-core"
 import {
   Document,
-  OAuth2AuthType,
+  OAuth2Config,
   OAuth2CredentialsMethod,
-  OAuth2GrantType,
 } from "@budibase/types"
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
@@ -20,20 +19,29 @@ interface OAuth2LogDocument extends Document {
   lastUsage: number
 }
 
-interface OAuth2TokenRequestConfig {
-  _id?: string
-  datasourceId?: string
-  url: string
-  clientId: string
-  clientSecret: string
-  method: OAuth2CredentialsMethod
-  grantType: OAuth2GrantType
-  authType?: OAuth2AuthType
-  scope?: string
-  audience?: string
-}
+type OAuth2TokenRequestConfig = Pick<
+  OAuth2Config,
+  | "_id"
+  | "authType"
+  | "url"
+  | "clientId"
+  | "clientSecret"
+  | "method"
+  | "grantType"
+  | "scope"
+  | "audience"
+>
 
 const { DocWritethrough } = cache.docWritethrough
+
+const parseDatasourceIdFromDelegatedAuthConfigId = (authConfigId: string) => {
+  const marker = "_auth_"
+  const markerIndex = authConfigId.indexOf(marker)
+  if (markerIndex <= 0) {
+    return undefined
+  }
+  return authConfigId.slice(0, markerIndex)
+}
 
 async function fetchToken(config: OAuth2TokenRequestConfig) {
   config = await processEnvironmentVariable(config)
@@ -54,15 +62,15 @@ async function fetchToken(config: OAuth2TokenRequestConfig) {
     grant_type: config.grantType,
   }
   if (config.authType === "delegated_oauth") {
-    if (!config._id || !config.datasourceId) {
+    const datasourceId = config._id
+      ? parseDatasourceIdFromDelegatedAuthConfigId(config._id)
+      : undefined
+    if (!config._id || !datasourceId) {
       throw new Error(
         "OAuth2 delegated config is missing connection context. Reconnect Microsoft account."
       )
     }
-    const credential = await getDelegatedOAuthCredential(
-      config.datasourceId,
-      config._id
-    )
+    const credential = await getDelegatedOAuthCredential(config._id)
     if (!credential?.refreshToken) {
       throw new Error(
         "OAuth2 delegated config is missing refresh token. Reconnect Microsoft account."
@@ -139,10 +147,7 @@ export async function getToken(id: string) {
 export async function getTokenFromConfig(
   config: OAuth2TokenRequestConfig
 ): Promise<string> {
-  const resolvedCacheKey =
-    config.authType === "delegated_oauth"
-      ? `${config.datasourceId}:${config._id}`
-      : config._id
+  const resolvedCacheKey = config._id
   if (!resolvedCacheKey) {
     throw new Error("OAuth2 config is missing cache identity.")
   }
@@ -157,13 +162,11 @@ export async function validateConfig(
 ): Promise<{ valid: boolean; message?: string }> {
   try {
     const resp = await fetchToken(config)
-
     const jsonResponse = await resp.json()
     if (!resp.ok) {
       const message = jsonResponse.error_description ?? resp.statusText
       return { valid: false, message }
     }
-
     return { valid: true }
   } catch (e: any) {
     return { valid: false, message: e.message }

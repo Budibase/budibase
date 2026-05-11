@@ -6,7 +6,7 @@ import {
   RestTemplateName,
   RestTemplateSpecVersion,
 } from "../../ui/rest"
-import { OAuth2AuthType, OAuth2Config } from "./oauth2"
+import { OAuth2Config } from "./oauth2"
 
 export interface Datasource extends Document {
   type: string
@@ -65,8 +65,8 @@ export interface OAuth2RestAuthConfig
   extends Omit<OAuth2Config, keyof Document> {
   _id: string
   type: RestAuthType.OAUTH2
+  datasourceId?: string
   account?: string
-  authType?: OAuth2AuthType
 }
 
 export const isOAuth2AppAuthConfig = (

@@ -30,6 +30,18 @@ const isSharePointDatasource = (datasource: Datasource) => {
   )
 }
 
+const generateUniqueAuthConfigId = (
+  authConfigs: OAuth2RestAuthConfig[],
+  datasourceId: string
+) => {
+  const existingIds = new Set(authConfigs.map(config => config._id))
+  let nextId = ""
+  do {
+    nextId = `${datasourceId}_auth_${utils.newid()}`
+  } while (existingIds.has(nextId))
+  return nextId
+}
+
 export const upsertDelegatedSharePointAuthConfig = async (
   appId: string,
   datasourceId: string,
@@ -66,7 +78,9 @@ export const upsertDelegatedSharePointAuthConfig = async (
       )
     const nextAuthConfig: OAuth2RestAuthConfig = {
       ...(matchingConfig || {}),
-      _id: matchingConfig?._id || `auth_${utils.newid()}`,
+      _id:
+        matchingConfig?._id ||
+        generateUniqueAuthConfigId(authConfigs, datasourceId),
       type: RestAuthType.OAUTH2,
       authType: "delegated_oauth",
       name: matchingConfig?.name || `Microsoft SharePoint (${account})`,
@@ -93,7 +107,6 @@ export const upsertDelegatedSharePointAuthConfig = async (
     })
 
     await saveDelegatedOAuthCredential({
-      datasourceId,
       authConfigId: nextAuthConfig._id,
       accessToken: credentials.accessToken,
       refreshToken: credentials.refreshToken,
