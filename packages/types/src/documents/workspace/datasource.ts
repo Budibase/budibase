@@ -6,7 +6,7 @@ import {
   RestTemplateName,
   RestTemplateSpecVersion,
 } from "../../ui/rest"
-import { OAuth2Config, OAuth2GrantType } from "./oauth2"
+import { OAuth2AuthType, OAuth2Config, OAuth2GrantType } from "./oauth2"
 
 export interface Datasource extends Document {
   type: string
@@ -60,8 +60,6 @@ export interface BearerRestAuthConfig {
   type: RestAuthType.BEARER
   config: RestBearerAuthConfig
 }
-
-export type OAuth2AuthType = "client_credentials" | "delegated_oauth"
 
 export interface OAuth2RestAuthConfig
   extends Omit<OAuth2Config, keyof Document> {
