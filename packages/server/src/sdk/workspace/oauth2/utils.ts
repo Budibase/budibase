@@ -7,9 +7,8 @@ import {
 } from "@budibase/backend-core"
 import {
   Document,
-  OAuth2AuthType,
+  OAuth2TokenRequestConfig,
   OAuth2CredentialsMethod,
-  OAuth2GrantType,
 } from "@budibase/types"
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
@@ -18,19 +17,6 @@ import { getDelegatedOAuthCredential } from "../ai/knowledgeSources/sharepoint/c
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
-}
-
-interface OAuth2TokenRequestConfig {
-  _id?: string
-  datasourceId?: string
-  url: string
-  clientId: string
-  clientSecret: string
-  method: OAuth2CredentialsMethod
-  grantType: OAuth2GrantType
-  authType?: OAuth2AuthType
-  scope?: string
-  audience?: string
 }
 
 const { DocWritethrough } = cache.docWritethrough

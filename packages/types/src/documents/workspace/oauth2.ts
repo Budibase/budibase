@@ -21,16 +21,3 @@ export interface OAuth2Config extends Document {
   scope?: string
   audience?: string
 }
-
-export interface OAuth2TokenRequestConfig {
-  _id?: string
-  datasourceId?: string
-  url: string
-  clientId: string
-  clientSecret: string
-  method: OAuth2CredentialsMethod
-  grantType: OAuth2GrantType
-  authType?: OAuth2AuthType
-  scope?: string
-  audience?: string
-}
