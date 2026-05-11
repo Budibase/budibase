@@ -429,7 +429,7 @@
     min-width: 0;
   }
   .block-core.has-status {
-    padding-right: 32px;
+    padding-right: 20px;
   }
   .block-core.dragging {
     pointer-events: none;
@@ -451,7 +451,7 @@
     width: 26px;
     height: 26px;
     position: absolute;
-    right: 13px;
+    right: 8px;
     top: 50%;
     transform: translateY(calc(-50% + 3px));
     z-index: 1;

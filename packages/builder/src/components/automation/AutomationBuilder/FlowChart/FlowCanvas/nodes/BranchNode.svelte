@@ -203,7 +203,7 @@
 
   .blockSection {
     padding: 0;
-    padding-right: 32px;
+    padding-right: 20px;
     width: fit-content;
     max-width: 100%;
     height: auto;
@@ -236,7 +236,7 @@
     width: 26px;
     height: 26px;
     position: absolute;
-    right: 13px;
+    right: 8px;
     top: 50%;
     transform: translateY(calc(-50% + 3px));
     z-index: 1;
