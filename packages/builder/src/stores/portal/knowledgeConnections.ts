@@ -1,10 +1,8 @@
 import { DerivedBudiStore } from "../BudiStore"
 import {
+  AgentKnowledgeSourceType,
   Datasource,
-  OAuth2AuthType,
   OAuth2RestAuthConfig,
-  isOAuth2ClientCredentialsAuthConfig,
-  isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
 import { derived, Writable } from "svelte/store"
 import { datasources, getRestTemplateIdentifier } from "../builder/datasources"
@@ -13,8 +11,7 @@ interface KnowledgeConnection {
   _id: string
   datasourceId: string
   authConfigId: string
-  sourceType: "sharepoint"
-  authType: OAuth2AuthType
+  sourceType: AgentKnowledgeSourceType
   datasourceName: string
   authConfigName: string
 }
@@ -39,23 +36,14 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
           }
           const authConfigs = (datasource.config?.authConfigs ||
             []) as OAuth2RestAuthConfig[]
-          return authConfigs
-            .filter(
-              config =>
-                isOAuth2ClientCredentialsAuthConfig(config) ||
-                isOAuth2DelegatedAuthConfig(config)
-            )
-            .map(config => ({
-              _id: `${datasource._id}:${config._id}`,
-              datasourceId: datasource._id!,
-              authConfigId: config._id,
-              sourceType: "sharepoint" as const,
-              authType: isOAuth2DelegatedAuthConfig(config)
-                ? ("delegated_oauth" as const)
-                : ("app_oauth" as const),
-              datasourceName: datasource.name || "Unknown Datasource",
-              authConfigName: config.name || "Unknown Auth Config",
-            }))
+          return authConfigs.map(config => ({
+            _id: `${datasource._id}:${config._id}`,
+            datasourceId: datasource._id!,
+            authConfigId: config._id,
+            sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+            datasourceName: datasource.name || "Unknown Datasource",
+            authConfigName: config.name || "Unknown Auth Config",
+          }))
         })
         return { connections }
       })
