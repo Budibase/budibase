@@ -85,8 +85,6 @@ export async function startSharePointAuth(ctx: UserCtx<void, void>) {
       provider: MICROSOFT_PROVIDER,
       appId,
       returnPath,
-      datasourceId,
-      authConfigId,
     } satisfies DatasourceAuthCookie,
     constants.Cookie.DatasourceAuth
   )
