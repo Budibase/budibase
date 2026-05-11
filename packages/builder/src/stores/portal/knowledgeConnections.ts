@@ -36,7 +36,14 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
           }
           const authConfigs = (datasource.config?.authConfigs ||
             []) as OAuth2RestAuthConfig[]
-          return authConfigs.map(config => ({
+          return authConfigs
+            .filter(
+              config =>
+                config.type === "oauth2" &&
+                (config.grantType === "client_credentials" ||
+                  config.authType === "delegated_oauth")
+            )
+            .map(config => ({
             _id: `${datasource._id}:${config._id}`,
             datasourceId: datasource._id!,
             authConfigId: config._id,
