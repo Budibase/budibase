@@ -66,7 +66,6 @@ export interface OAuth2RestAuthConfig
   extends Omit<OAuth2Config, keyof Document> {
   _id: string
   type: RestAuthType.OAUTH2 | RestAuthType.DELEGATED_OAUTH
-  account?: string
 }
 
 export interface OAuth2ClientCredentialsRestAuthConfig

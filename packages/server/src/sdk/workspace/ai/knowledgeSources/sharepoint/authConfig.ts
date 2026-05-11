@@ -75,7 +75,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
           isOAuth2DelegatedAuthConfig(config) &&
           config.account?.toLowerCase() === account.toLowerCase()
       )
-    const nextAuthConfig: OAuth2RestAuthConfig = {
+    const nextAuthConfig = {
       ...(matchingConfig || {}),
       _id:
         matchingConfig?._id ||
