@@ -79,8 +79,14 @@ export interface AppNavigationLink {
   icon?: string
 }
 
+export enum AppFontFamily {
+  SOURCE_SANS = "sourceSans",
+  INTER = "inter",
+}
+
 export interface AppCustomTheme {
   buttonBorderRadius?: string
+  fontFamily?: AppFontFamily
   primaryColor?: string
   primaryColorHover?: string
 

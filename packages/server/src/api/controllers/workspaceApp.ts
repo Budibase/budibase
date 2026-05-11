@@ -1,3 +1,4 @@
+import { DefaultNewAppFontFamily } from "@budibase/shared-core"
 import {
   Ctx,
   FetchWorkspaceAppResponse,
@@ -22,6 +23,8 @@ function toWorkspaceAppResponse(
     name: workspaceApp.name,
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
+    theme: workspaceApp.theme,
+    customTheme: workspaceApp.customTheme,
     isDefault: workspaceApp.isDefault,
     createdAt: workspaceApp.createdAt as string,
     updatedAt: workspaceApp.updatedAt!,
@@ -73,6 +76,9 @@ export async function create(
     url: body.url,
     disabled: body.disabled,
     navigation: defaultAppNavigator(body.name),
+    customTheme: {
+      fontFamily: DefaultNewAppFontFamily,
+    },
     isDefault: false,
   }
 
@@ -92,16 +98,7 @@ export async function edit(
     ctx.throw(400, "Path and body ids do not match")
   }
 
-  const toUpdate = {
-    _id: body._id,
-    _rev: body._rev,
-    name: body.name,
-    url: body.url,
-    navigation: body.navigation,
-    disabled: body.disabled,
-  }
-
-  const workspaceApp = await sdk.workspaceApps.update(toUpdate)
+  const workspaceApp = await sdk.workspaceApps.update(body)
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }

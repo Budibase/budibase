@@ -104,11 +104,6 @@ builderOrAdminRoutes
     controller.removeWorkspaceIdFromInvite
   )
   .post(
-    "/api/global/users/onboard",
-    buildInviteMultipleValidation(),
-    controller.onboardUsers
-  )
-  .post(
     "/api/global/users/:userId/permission/:role",
     controller.addUserToWorkspace
   )

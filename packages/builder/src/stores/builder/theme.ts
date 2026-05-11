@@ -1,4 +1,3 @@
-import { API } from "@/api"
 import { DefaultAppTheme, ensureValidTheme } from "@budibase/shared-core"
 import {
   AppCustomTheme,
@@ -6,20 +5,40 @@ import {
   UpdateWorkspaceResponse,
   Workspace,
 } from "@budibase/types"
-import { get } from "svelte/store"
-import { BudiStore } from "../BudiStore"
+import { derived, get, Writable } from "svelte/store"
+import { DerivedBudiStore } from "../BudiStore"
+import { workspaceAppStore } from "./workspaceApps"
 
 interface ThemeState {
   theme: Theme
   customTheme: AppCustomTheme
 }
 
-export class ThemeStore extends BudiStore<ThemeState> {
+export class ThemeStore extends DerivedBudiStore<ThemeState, ThemeState> {
   constructor() {
-    super({
-      theme: DefaultAppTheme,
-      customTheme: {},
-    })
+    const makeDerivedStore = (store: Writable<ThemeState>) => {
+      return derived(
+        [store, workspaceAppStore],
+        ([$store, $workspaceAppStore]) => {
+          const workspaceApp = $workspaceAppStore.selectedWorkspaceApp
+          return {
+            theme: ensureValidTheme(workspaceApp?.theme, $store.theme),
+            customTheme: {
+              ...$store.customTheme,
+              ...(workspaceApp?.customTheme || {}),
+            },
+          }
+        }
+      )
+    }
+
+    super(
+      {
+        theme: DefaultAppTheme,
+        customTheme: {},
+      },
+      makeDerivedStore
+    )
   }
 
   syncAppTheme = (workspace: Workspace) => {
@@ -33,21 +52,29 @@ export class ThemeStore extends BudiStore<ThemeState> {
     })
   }
 
-  save = async (theme: Theme, appId: string) => {
-    const app = await API.saveAppMetadata(appId, { theme })
-    this.update(state => ({
-      ...state,
-      theme: ensureValidTheme(app.theme, DefaultAppTheme),
-    }))
+  save = async (theme: Theme) => {
+    const { selectedWorkspaceApp } = get(workspaceAppStore)
+    if (!selectedWorkspaceApp) {
+      return
+    }
+
+    await workspaceAppStore.edit({
+      ...selectedWorkspaceApp,
+      theme,
+    })
   }
 
-  saveCustom = async (theme: Partial<AppCustomTheme>, appId: string) => {
-    const updated = { ...get(this).customTheme, ...theme }
-    const app = await API.saveAppMetadata(appId, { customTheme: updated })
-    this.update(state => ({
-      ...state,
-      customTheme: app.customTheme || {},
-    }))
+  saveCustom = async (theme: Partial<AppCustomTheme>) => {
+    const { selectedWorkspaceApp } = get(workspaceAppStore)
+    if (!selectedWorkspaceApp) {
+      return
+    }
+
+    const updated = { ...selectedWorkspaceApp.customTheme, ...theme }
+    await workspaceAppStore.edit({
+      ...selectedWorkspaceApp,
+      customTheme: updated,
+    })
   }
 
   syncMetadata = (metadata: UpdateWorkspaceResponse) => {
