@@ -58,6 +58,8 @@ export const API = createAPIClient({
   onError: error => {
     const { status, method, url, message, handled, suppressErrors } =
       error || {}
+    const suppressErrorNotifications =
+      !!get(appStore)?.application?.features?.suppressErrorNotifications
     const ignoreErrorUrls = [
       "bbtel",
       "/api/global/self",
@@ -87,7 +89,7 @@ export const API = createAPIClient({
       }
       if (!ignore) {
         const validationErrors = error?.json?.validationErrors
-        if (validationErrors) {
+        if (validationErrors && !suppressErrorNotifications) {
           for (let field in validationErrors) {
             notificationStore.actions.error(
               `${field} ${validationErrors[field]}`
@@ -102,6 +104,8 @@ export const API = createAPIClient({
               onClick: () => redirectToLoginWithReturnUrl(),
             },
           })
+        } else if (suppressErrorNotifications) {
+          // Errors are still logged to console
         } else {
           notificationStore.actions.error(message)
         }

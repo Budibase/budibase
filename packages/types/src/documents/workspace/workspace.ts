@@ -106,6 +106,7 @@ export interface WorkspaceFeatures {
   disableUserMetadata?: boolean
   skeletonLoader?: boolean
   recaptchaEnabled?: boolean
+  suppressErrorNotifications?: boolean
 }
 
 export interface AutomationSettings {
