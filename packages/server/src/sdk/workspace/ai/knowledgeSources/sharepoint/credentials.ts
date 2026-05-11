@@ -55,7 +55,10 @@ export const deleteDelegatedOAuthCredential = async (authConfigId: string) => {
   try {
     const existing = await db.get<DelegatedOAuthCredentialDoc>(_id)
     await db.remove(_id, existing._rev!)
-  } catch {
-    return
+  } catch (err: any) {
+    if (err?.status === 404 || err?.statusCode === 404) {
+      return
+    }
+    throw err
   }
 }
