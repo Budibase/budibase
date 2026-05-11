@@ -285,11 +285,15 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
       const oldConfig = oldConfigs.find(old => old._id === config._id)
       const field = REST_AUTH_SECRET_FIELD[config.type]
       if (!field) continue
-      const isOAuth2 = config.type === RestAuthType.OAUTH2
-      const cfg: any = isOAuth2 ? config : config.config
+      const isOAuth2Like =
+        config.type === RestAuthType.OAUTH2 ||
+        config.type === RestAuthType.DELEGATED_OAUTH
+      const cfg: any = isOAuth2Like
+        ? config
+        : (config as BasicRestAuthConfig | BearerRestAuthConfig).config
       let oldCfg: any
       if (oldConfig?.type === config.type) {
-        oldCfg = isOAuth2
+        oldCfg = isOAuth2Like
           ? oldConfig
           : (oldConfig as BasicRestAuthConfig | BearerRestAuthConfig).config
       }

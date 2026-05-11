@@ -1,5 +1,5 @@
 import { HTTPError } from "@budibase/backend-core"
-import { helpers, utils } from "@budibase/shared-core"
+import { helpers } from "@budibase/shared-core"
 import {
   Datasource,
   KnowledgeSourceOption,
@@ -129,15 +129,7 @@ export const getSharePointBearerToken = async (
   authConfigId: string
 ): Promise<string> => {
   const config = await readConfig(datasourceId, authConfigId)
-
-  switch (config.authType) {
-    case "app_oauth":
-    case "delegated_oauth":
-    case undefined:
-      return sdk.oauth2.getTokenFromConfig(config)
-    default:
-      throw utils.unreachable(config.authType)
-  }
+  return sdk.oauth2.getTokenFromConfig(config)
 }
 
 const fetchSharePointSitesByAppToken = async (

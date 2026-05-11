@@ -357,8 +357,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
         authConfigs: [
           {
             _id: authConfigId,
-            type: RestAuthType.OAUTH2,
-            authType: "delegated_oauth",
+            type: RestAuthType.DELEGATED_OAUTH,
             url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
             clientId: "client-id",
             clientSecret: "secret",
@@ -390,8 +389,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
 
     expect(getTokenFromConfigMock).toHaveBeenCalledWith({
       _id: authConfigId,
-      datasourceId,
-      authType: "delegated_oauth",
+      type: RestAuthType.DELEGATED_OAUTH,
       url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
       clientId: "client-id",
       clientSecret: "secret",
@@ -417,8 +415,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
         authConfigs: [
           {
             _id: authConfigId,
-            type: RestAuthType.OAUTH2,
-            authType: "delegated_oauth",
+            type: RestAuthType.DELEGATED_OAUTH,
             url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
             clientId: "client-id",
             clientSecret: "secret",

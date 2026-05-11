@@ -1,6 +1,10 @@
 import { cache, encryption } from "@budibase/backend-core"
 import { generator, utils as testUtils } from "@budibase/backend-core/tests"
-import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
+import {
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  RestAuthType,
+} from "@budibase/types"
 import nock from "nock"
 import path from "path"
 import { GenericContainer, Wait } from "testcontainers"
@@ -307,7 +311,7 @@ describe("oauth2 utils", () => {
       await config.doInContext(config.devWorkspaceId, () =>
         getTokenFromConfig({
           _id: "datasource_1_auth_1",
-          authType: "delegated_oauth",
+          type: RestAuthType.DELEGATED_OAUTH,
           url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
           clientId: "client-id",
           clientSecret: encryption.encrypt("client-secret"),

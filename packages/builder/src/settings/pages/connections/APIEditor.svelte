@@ -52,6 +52,7 @@
   import {
     RestAuthType,
     type RestAuthConfig,
+    type OAuth2RestAuthConfig,
     type BasicRestAuthConfig,
     type BearerRestAuthConfig,
     type RestTemplateId,
@@ -187,7 +188,9 @@
   // Auth
   $: authConfigs = data.authConfigs || []
   $: authTypeOptions = AUTH_TYPE_OPTIONS.filter(
-    o => o.value !== RestAuthType.API_KEY
+    o =>
+      o.value !== RestAuthType.API_KEY &&
+      o.value !== RestAuthType.DELEGATED_OAUTH
   )
   $: if (authConfigs.length === 0) {
     canAddConfig = true
@@ -391,10 +394,14 @@
   }
 
   const isDelegatedSharePointOAuth = (auth: RestAuthConfig) => {
-    return (
-      auth.type === RestAuthType.OAUTH2 && auth.authType === "delegated_oauth"
-    )
+    return auth.type === RestAuthType.DELEGATED_OAUTH
   }
+
+  const isOAuth2LikeAuthConfig = (
+    auth: RestAuthConfig
+  ): auth is OAuth2RestAuthConfig =>
+    auth.type === RestAuthType.OAUTH2 ||
+    auth.type === RestAuthType.DELEGATED_OAUTH
 
   const createAuthConfig = (
     authType: RestAuthType
@@ -823,7 +830,7 @@
                         .map(asHTTPAuth)}
                       on:update={e => onAuthConfigUpdate(e.detail)}
                     />
-                  {:else if auth.type === RestAuthType.OAUTH2}
+                  {:else if isOAuth2LikeAuthConfig(auth)}
                     {#if isDelegatedSharePointOAuth(auth)}
                       <Layout gap="S" noPadding>
                         <Input
@@ -846,7 +853,7 @@
                         bind:this={authEditors[i]}
                         config={auth}
                         existingConfigs={authConfigs.filter(
-                          c => c.type === RestAuthType.OAUTH2
+                          isOAuth2LikeAuthConfig
                         )}
                         on:update={e => onAuthConfigUpdate(e.detail)}
                       />
@@ -889,7 +896,7 @@
                 </MenuItem>
                 {#if isSharePointDatasource}
                   <MenuItem on:click={startSharePointDelegatedOAuth}>
-                    Connect Microsoft account
+                    Delegated OAuth
                   </MenuItem>
                 {/if}
               </ActionMenu>

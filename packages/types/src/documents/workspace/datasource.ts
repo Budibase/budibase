@@ -35,6 +35,7 @@ export enum RestAuthType {
   BASIC = "basic",
   BEARER = "bearer",
   OAUTH2 = "oauth2",
+  DELEGATED_OAUTH = "delegated_oauth",
   API_KEY = "apiKey",
 }
 
@@ -64,33 +65,46 @@ export interface BearerRestAuthConfig {
 export interface OAuth2RestAuthConfig
   extends Omit<OAuth2Config, keyof Document> {
   _id: string
+  type: RestAuthType.OAUTH2 | RestAuthType.DELEGATED_OAUTH
+  account?: string
+}
+
+export interface OAuth2ClientCredentialsRestAuthConfig
+  extends Omit<OAuth2Config, keyof Document> {
+  _id: string
   type: RestAuthType.OAUTH2
-  datasourceId?: string
+}
+
+export interface DelegatedOAuthRestAuthConfig
+  extends Omit<OAuth2Config, keyof Document> {
+  _id: string
+  type: RestAuthType.DELEGATED_OAUTH
   account?: string
 }
 
 export const isOAuth2AppAuthConfig = (
   authConfig: RestAuthConfig | OAuth2RestAuthConfig | undefined
-): authConfig is OAuth2RestAuthConfig =>
-  authConfig?.type === RestAuthType.OAUTH2 &&
-  authConfig.authType !== "delegated_oauth"
+): authConfig is OAuth2ClientCredentialsRestAuthConfig =>
+  authConfig?.type === RestAuthType.OAUTH2
 
 export const isOAuth2DelegatedAuthConfig = (
   authConfig: RestAuthConfig | OAuth2RestAuthConfig | undefined
-): authConfig is OAuth2RestAuthConfig =>
-  authConfig?.type === RestAuthType.OAUTH2 &&
-  authConfig.authType === "delegated_oauth"
+): authConfig is DelegatedOAuthRestAuthConfig =>
+  authConfig?.type === RestAuthType.DELEGATED_OAUTH
 
 export const REST_AUTH_SECRET_FIELD: Partial<Record<RestAuthType, string>> = {
   [RestAuthType.BASIC]: "password" satisfies keyof RestBasicAuthConfig,
   [RestAuthType.BEARER]: "token" satisfies keyof RestBearerAuthConfig,
   [RestAuthType.OAUTH2]: "clientSecret" satisfies keyof OAuth2RestAuthConfig,
+  [RestAuthType.DELEGATED_OAUTH]:
+    "clientSecret" satisfies keyof OAuth2RestAuthConfig,
 }
 
 export type RestAuthConfig =
   | BasicRestAuthConfig
   | BearerRestAuthConfig
-  | OAuth2RestAuthConfig
+  | OAuth2ClientCredentialsRestAuthConfig
+  | DelegatedOAuthRestAuthConfig
 
 export interface DynamicVariable {
   name: string

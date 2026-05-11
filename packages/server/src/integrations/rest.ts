@@ -645,7 +645,10 @@ export class RestIntegration implements IntegrationBase {
     authConfigType?: RestAuthType
   ): Promise<ResolvedAuthConfig | null> {
     if (!authConfigId) return null
-    if (authConfigType === RestAuthType.OAUTH2) {
+    if (
+      authConfigType === RestAuthType.OAUTH2 ||
+      authConfigType === RestAuthType.DELEGATED_OAUTH
+    ) {
       return { type: "oauth2", sourceId: authConfigId }
     }
     if (!this.config.authConfigs) return null
@@ -660,9 +663,16 @@ export class RestIntegration implements IntegrationBase {
     authConfigId?: string,
     authConfigType?: RestAuthType
   ): Promise<Record<string, string>> {
-    if (authConfigId && authConfigType === RestAuthType.OAUTH2) {
+    if (
+      authConfigId &&
+      (authConfigType === RestAuthType.OAUTH2 ||
+        authConfigType === RestAuthType.DELEGATED_OAUTH)
+    ) {
       const inlineOAuth2 = this.config.authConfigs?.find(
-        c => c._id === authConfigId && c.type === RestAuthType.OAUTH2
+        c =>
+          c._id === authConfigId &&
+          (c.type === RestAuthType.OAUTH2 ||
+            c.type === RestAuthType.DELEGATED_OAUTH)
       ) as OAuth2RestAuthConfig | undefined
       if (inlineOAuth2) {
         const token = await sdk.oauth2.getTokenFromConfig(inlineOAuth2)

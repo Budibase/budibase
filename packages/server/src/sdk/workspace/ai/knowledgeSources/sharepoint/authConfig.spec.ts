@@ -67,8 +67,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
     expect(result.reusedExistingConnection).toBe(false)
     expect(authConfig).toEqual(
       expect.objectContaining({
-        type: RestAuthType.OAUTH2,
-        authType: "delegated_oauth",
+        type: RestAuthType.DELEGATED_OAUTH,
         name: "Microsoft SharePoint (person@example.com)",
         account: "person@example.com",
         url: delegatedCredentials.tokenEndpoint,
@@ -91,8 +90,7 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       datasource([
         {
           _id: "auth_existing",
-          type: RestAuthType.OAUTH2,
-          authType: "delegated_oauth",
+          type: RestAuthType.DELEGATED_OAUTH,
           name: "Existing",
           account: "person@example.com",
           url: delegatedCredentials.tokenEndpoint,

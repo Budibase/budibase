@@ -9,6 +9,7 @@ import {
   Document,
   OAuth2Config,
   OAuth2CredentialsMethod,
+  RestAuthType,
 } from "@budibase/types"
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
@@ -21,8 +22,6 @@ interface OAuth2LogDocument extends Document {
 
 type OAuth2TokenRequestConfig = Pick<
   OAuth2Config,
-  | "_id"
-  | "authType"
   | "url"
   | "clientId"
   | "clientSecret"
@@ -30,7 +29,7 @@ type OAuth2TokenRequestConfig = Pick<
   | "grantType"
   | "scope"
   | "audience"
->
+> & { _id?: string; type?: RestAuthType }
 
 const { DocWritethrough } = cache.docWritethrough
 
@@ -61,11 +60,11 @@ async function fetchToken(config: OAuth2TokenRequestConfig) {
   const bodyParams: Record<string, string> = {
     grant_type: config.grantType,
   }
-  if (config.authType === "delegated_oauth") {
-    const datasourceId = config._id
-      ? parseDatasourceIdFromDelegatedAuthConfigId(config._id)
-      : undefined
-    if (!config._id || !datasourceId) {
+  if (config.type === RestAuthType.DELEGATED_OAUTH) {
+    if (
+      !config._id ||
+      !parseDatasourceIdFromDelegatedAuthConfigId(config._id)
+    ) {
       throw new Error(
         "OAuth2 delegated config is missing connection context. Reconnect Microsoft account."
       )

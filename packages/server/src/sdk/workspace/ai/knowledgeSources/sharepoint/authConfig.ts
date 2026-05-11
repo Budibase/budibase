@@ -81,8 +81,7 @@ export const upsertDelegatedSharePointAuthConfig = async (
       _id:
         matchingConfig?._id ||
         generateUniqueAuthConfigId(authConfigs, datasourceId),
-      type: RestAuthType.OAUTH2,
-      authType: "delegated_oauth",
+      type: RestAuthType.DELEGATED_OAUTH,
       name: matchingConfig?.name || `Microsoft SharePoint (${account})`,
       account,
       url: credentials.tokenEndpoint,

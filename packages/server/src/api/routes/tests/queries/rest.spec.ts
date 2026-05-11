@@ -1106,8 +1106,7 @@ describe("rest", () => {
             {
               _id: authId,
               name: "Delegated OAuth2 Auth",
-              type: RestAuthType.OAUTH2,
-              authType: "delegated_oauth",
+              type: RestAuthType.DELEGATED_OAUTH,
               url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
               clientId: "my-client-id",
               clientSecret: encryption.encrypt("my-client-secret"),

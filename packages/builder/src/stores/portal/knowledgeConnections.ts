@@ -39,9 +39,7 @@ class KnowledgeConnectionsStore extends DerivedBudiStore<
           return authConfigs
             .filter(
               config =>
-                config.type === "oauth2" &&
-                (config.grantType === "client_credentials" ||
-                  config.authType === "delegated_oauth")
+                config.type === "oauth2" || config.type === "delegated_oauth"
             )
             .map(config => ({
               _id: `${datasource._id}:${config._id}`,
