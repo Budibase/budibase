@@ -9,10 +9,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../../.."
 
-type OAuth2RestAuthConfigWithTokenCache = OAuth2RestAuthConfig & {
-  refreshToken?: string
-}
-
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
@@ -101,7 +97,7 @@ export const isAllowedSharePointNextLink = (value: string): boolean => {
 const readConnection = async (
   datasourceId: string,
   authConfigId: string
-): Promise<OAuth2RestAuthConfigWithTokenCache> => {
+): Promise<OAuth2RestAuthConfig> => {
   let datasource: Datasource
   try {
     datasource = await sdk.datasources.get(datasourceId)
@@ -109,7 +105,7 @@ const readConnection = async (
     throw new HTTPError("SharePoint auth config not found.", 400)
   }
   const authConfigs = datasource.config?.authConfigs as
-    | OAuth2RestAuthConfigWithTokenCache[]
+    | OAuth2RestAuthConfig[]
     | undefined
   const authConfig = authConfigs?.find(
     config =>
