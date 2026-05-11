@@ -4,14 +4,9 @@
   import type { ViewMode } from "@/types/automations"
   import { type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
-  import { getContext } from "svelte"
-  import type { Writable } from "svelte/store"
   import { STEP, SUBFLOW } from "../FlowGeometry"
 
   export let data: BranchNodeData
-  const layoutDirection = getContext<Writable<"LR" | "TB">>(
-    "flowLayoutDirection"
-  )
 
   // unwrap data passed from SvelteFlow
   $: block = data.block
@@ -23,13 +18,12 @@
   $: handleOffset = isSubflow
     ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
     : 0
-  $: isVertical = $layoutDirection === "TB"
-  $: targetPosition = isVertical ? Position.Top : Position.Left
-  $: sourcePosition = isVertical ? Position.Bottom : Position.Right
-  $: targetHandleStyle =
-    isSubflow && !isVertical ? `left: ${handleOffset - 3}px;` : undefined
-  $: sourceHandleStyle =
-    isSubflow && !isVertical ? `right: ${handleOffset - 3}px;` : undefined
+  $: targetHandleStyle = isSubflow
+    ? `left: ${handleOffset - 3}px;`
+    : undefined
+  $: sourceHandleStyle = isSubflow
+    ? `right: ${handleOffset - 3}px;`
+    : undefined
 </script>
 
 <div
@@ -40,7 +34,7 @@
     isConnectable={false}
     class="custom-handle"
     type="target"
-    position={targetPosition}
+    position={Position.Left}
     style={targetHandleStyle}
   />
   <div class="branch-container">
@@ -50,7 +44,7 @@
     isConnectable={false}
     class="custom-handle"
     type="source"
-    position={sourcePosition}
+    position={Position.Right}
     style={sourceHandleStyle}
   />
 </div>

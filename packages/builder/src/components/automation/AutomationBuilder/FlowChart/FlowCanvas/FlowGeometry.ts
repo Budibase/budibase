@@ -4,8 +4,6 @@ export const FLOW_ITEM_ACTION_EDGE_SPACING = FLOW_ITEM_ACTION_BAR_WIDTH * 3
 export const DEFAULT_NODE_WIDTH = 200
 export const DEFAULT_NODE_HEIGHT = 120
 
-export type FlowLayoutDirection = "LR" | "TB"
-
 export const STEP = {
   width: 200,
   height: 120,
