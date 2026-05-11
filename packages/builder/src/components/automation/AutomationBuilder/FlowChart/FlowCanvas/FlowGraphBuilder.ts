@@ -13,12 +13,7 @@ import type {
   FlowBlockContext,
   FlowBlockPath,
 } from "@/types/automations"
-import {
-  SUBFLOW,
-  STEP,
-  BRANCH,
-  LOOP,
-} from "./FlowGeometry"
+import { SUBFLOW, STEP, BRANCH, LOOP } from "./FlowGeometry"
 import {
   stepNode,
   anchorNode,

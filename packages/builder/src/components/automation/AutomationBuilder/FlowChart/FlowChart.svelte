@@ -298,29 +298,17 @@
 
     const paneRect = paneEl.getBoundingClientRect()
     const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
-    const nodeHeight = targetNode.height || DEFAULT_NODE_HEIGHT
     const margin = 24
     const nodeRight =
       targetNode.position.x * currentViewport.zoom +
       currentViewport.x +
       nodeWidth * currentViewport.zoom
-    const nodeBottom =
-      targetNode.position.y * currentViewport.zoom +
-      currentViewport.y +
-      nodeHeight * currentViewport.zoom
     const nodeLeft =
       targetNode.position.x * currentViewport.zoom + currentViewport.x
-    const nodeTop =
-      targetNode.position.y * currentViewport.zoom + currentViewport.y
     const xOverflow = nodeRight + margin - paneRect.width
-    const yOverflow = nodeBottom + margin - paneRect.height
     const xUnderflow = margin - nodeLeft
-    const yUnderflow = margin - nodeTop
 
-    if (
-      xOverflow <= 0 &&
-      xUnderflow <= 0
-    ) {
+    if (xOverflow <= 0 && xUnderflow <= 0) {
       return
     }
 

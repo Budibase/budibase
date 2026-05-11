@@ -18,12 +18,8 @@
   $: handleOffset = isSubflow
     ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
     : 0
-  $: targetHandleStyle = isSubflow
-    ? `left: ${handleOffset - 3}px;`
-    : undefined
-  $: sourceHandleStyle = isSubflow
-    ? `right: ${handleOffset - 3}px;`
-    : undefined
+  $: targetHandleStyle = isSubflow ? `left: ${handleOffset - 3}px;` : undefined
+  $: sourceHandleStyle = isSubflow ? `right: ${handleOffset - 3}px;` : undefined
 </script>
 
 <div
