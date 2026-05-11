@@ -1109,7 +1109,7 @@ describe("rest", () => {
               type: RestAuthType.DELEGATED_OAUTH,
               url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
               clientId: "my-client-id",
-              clientSecret: encryption.encrypt("my-client-secret"),
+              clientSecret: "my-client-secret",
               method: OAuth2CredentialsMethod.BODY,
               grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
             },
