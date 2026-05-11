@@ -6,7 +6,7 @@ import {
   RestTemplateName,
   RestTemplateSpecVersion,
 } from "../../ui/rest"
-import { OAuth2AuthType, OAuth2Config, OAuth2GrantType } from "./oauth2"
+import { OAuth2AuthType, OAuth2Config } from "./oauth2"
 
 export interface Datasource extends Document {
   type: string
@@ -69,11 +69,11 @@ export interface OAuth2RestAuthConfig
   authType?: OAuth2AuthType
 }
 
-export const isOAuth2ClientCredentialsAuthConfig = (
+export const isOAuth2AppAuthConfig = (
   authConfig: RestAuthConfig | OAuth2RestAuthConfig | undefined
 ): authConfig is OAuth2RestAuthConfig =>
   authConfig?.type === RestAuthType.OAUTH2 &&
-  authConfig.grantType === OAuth2GrantType.CLIENT_CREDENTIALS
+  authConfig.authType !== "delegated_oauth"
 
 export const isOAuth2DelegatedAuthConfig = (
   authConfig: RestAuthConfig | OAuth2RestAuthConfig | undefined

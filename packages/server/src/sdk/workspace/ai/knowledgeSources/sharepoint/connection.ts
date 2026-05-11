@@ -4,7 +4,7 @@ import {
   Datasource,
   KnowledgeSourceOption,
   OAuth2RestAuthConfig,
-  isOAuth2ClientCredentialsAuthConfig,
+  isOAuth2AppAuthConfig,
   isOAuth2DelegatedAuthConfig,
 } from "@budibase/types"
 import sdk from "../../../.."
@@ -111,15 +111,13 @@ const readConnection = async (
   const authConfigs = datasource.config?.authConfigs as
     | OAuth2RestAuthConfigWithTokenCache[]
     | undefined
-  const authConfig = authConfigs?.find(config => config._id === authConfigId)
+  const authConfig = authConfigs?.find(
+    config =>
+      config._id === authConfigId &&
+      (isOAuth2AppAuthConfig(config) || isOAuth2DelegatedAuthConfig(config))
+  )
   if (!authConfig) {
     throw new HTTPError("SharePoint auth config not found.", 400)
-  }
-  if (
-    !isOAuth2ClientCredentialsAuthConfig(authConfig) &&
-    !isOAuth2DelegatedAuthConfig(authConfig)
-  ) {
-    throw new HTTPError("SharePoint requires an OAuth2 auth config.", 400)
   }
   if (!authConfig.url || !authConfig.clientId) {
     throw new HTTPError(
