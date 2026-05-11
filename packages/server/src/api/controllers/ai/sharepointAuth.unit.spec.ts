@@ -5,10 +5,8 @@ import {
   SourceName,
   type Datasource,
 } from "@budibase/types"
-import {
-  calculateBufferedTokenExpiry,
-  upsertDelegatedSharePointAuthConfig,
-} from "./sharepointAuth"
+import { calculateBufferedTokenExpiry } from "./sharepointAuth"
+import { upsertDelegatedSharePointAuthConfig } from "../../../sdk/workspace/ai/knowledgeSources/sharepoint/authConfig"
 import sdk from "../../../sdk"
 import * as sharePointCredentials from "../../../sdk/workspace/ai/knowledgeSources/sharepoint/credentials"
 import tk from "timekeeper"
@@ -95,7 +93,8 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       "app_1",
       datasourceId,
       undefined,
-      delegatedCredentials
+      delegatedCredentials,
+      "scope-value"
     )
 
     const savedDatasource = save.mock.calls[0][0] as Datasource
@@ -148,7 +147,8 @@ describe("upsertDelegatedSharePointAuthConfig", () => {
       "app_1",
       datasourceId,
       undefined,
-      delegatedCredentials
+      delegatedCredentials,
+      "scope-value"
     )
 
     const savedDatasource = save.mock.calls[0][0] as Datasource
