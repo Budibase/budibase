@@ -135,7 +135,10 @@ export async function uploadAgentFile(
       : Number(upload.size) || undefined
   if (!isKnowledgeFileSupported({ filename, mimetype })) {
     await unlinkSafe(filePath)
-    throw new HTTPError("Unsupported file type for knowledge ingestion", 400)
+    throw new HTTPError(
+      `Unsupported file type for knowledge ingestion (filename: ${filename}, mimetype: ${mimetype || "unknown"})`,
+      400
+    )
   }
 
   const buffer = await readFile(filePath)

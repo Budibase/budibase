@@ -25,6 +25,10 @@ const expectedByExtension: Record<string, string> = {
   ".xls": "XLS",
   ".xlsx": "XLSX",
   ".rtf": "RTF",
+  ".png": "PNG",
+  ".jpg": "JPG",
+  ".jpeg": "JPEG",
+  ".webp": "WEBP",
 }
 
 const expectedByMimeType: Record<string, string> = {
@@ -49,6 +53,10 @@ const expectedByMimeType: Record<string, string> = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "XLSX",
   "application/rtf": "RTF",
   "text/rtf": "RTF",
+  "image/png": "PNG",
+  "image/jpeg": "JPEG",
+  "image/jpg": "JPG",
+  "image/webp": "WEBP",
 }
 
 describe("getKnowledgeFileDisplayType", () => {

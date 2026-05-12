@@ -2,8 +2,10 @@ import {
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
 } from "@budibase/types"
+import { Readable } from "stream"
+import { generateText } from "ai"
 
-import { features } from "@budibase/backend-core"
+import { features, objectStore } from "@budibase/backend-core"
 import sdk from "../../../../sdk"
 import {
   createKnowledgeFilesTool,
@@ -14,7 +16,21 @@ jest.mock("@budibase/backend-core", () => ({
   features: {
     isEnabled: jest.fn(),
   },
+  objectStore: {
+    ObjectStoreBuckets: {
+      APPS: "apps",
+    },
+    getReadStream: jest.fn(),
+  },
 }))
+
+jest.mock("ai", () => {
+  const actual = jest.requireActual("ai")
+  return {
+    ...actual,
+    generateText: jest.fn(),
+  }
+})
 
 jest.mock("../../../../sdk", () => ({
   __esModule: true,
@@ -26,6 +42,9 @@ jest.mock("../../../../sdk", () => ({
       rag: {
         listFilesForAgent: jest.fn(),
         retrieveContextForAgent: jest.fn(),
+      },
+      llm: {
+        createLLM: jest.fn(),
       },
     },
   },
@@ -382,5 +401,101 @@ describe("AI Tools - Knowledge search", () => {
     await expect(
       executeSearchTool("agent_1", { question: "What is policy?" })
     ).rejects.toThrow("Failed to map source metadata")
+  })
+
+  it("returns image evidence when retrieval is unavailable", async () => {
+    jest.spyOn(sdk.ai.agents, "getOrThrow").mockResolvedValue({
+      _id: "agent_1",
+      aiconfig: "config_1",
+    } as any)
+    jest
+      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
+      .mockRejectedValue({ status: 503, message: "upstream unavailable" })
+    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
+      {
+        _id: "file_1",
+        knowledgeBaseId: "kb_1",
+        filename: "diagram.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_1",
+        ragSourceId: "source_img_1",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+    ])
+    jest.spyOn(sdk.ai.llm, "createLLM").mockResolvedValue({
+      chat: {} as any,
+      uploadFile: jest.fn(),
+      providerOptions: jest.fn(() => undefined),
+    })
+    jest.mocked(objectStore.getReadStream).mockResolvedValue({
+      stream: Readable.from([Buffer.from("img")]),
+    } as any)
+    jest.mocked(generateText).mockResolvedValue({
+      text: "The image shows the product color palette.",
+    } as any)
+
+    const result = (await executeSearchTool("agent_1", {
+      question: "What colors are shown?",
+    })) as any
+
+    expect(result.context).toContain("Image diagram.png")
+    expect(result.sources).toEqual([
+      {
+        sourceId: "source_img_1",
+        fileId: "file_1",
+        filename: "diagram.png",
+      },
+    ])
+    expect(result.chunks).toEqual([
+      {
+        source: "source_img_1",
+        chunkText: "The image shows the product color palette.",
+      },
+    ])
+  })
+
+  it("merges rag and image evidence", async () => {
+    jest.spyOn(sdk.ai.agents, "getOrThrow").mockResolvedValue({
+      _id: "agent_1",
+      aiconfig: "config_1",
+    } as any)
+    jest.spyOn(sdk.ai.rag, "retrieveContextForAgent").mockResolvedValue({
+      text: "RAG context",
+      sources: [{ sourceId: "source_doc_1", filename: "policy.md" }],
+      chunks: [{ source: "source_doc_1", chunkText: "Policy summary" }],
+    } as any)
+    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
+      {
+        _id: "file_1",
+        knowledgeBaseId: "kb_1",
+        filename: "diagram.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_1",
+        ragSourceId: "source_img_1",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+    ])
+    jest.spyOn(sdk.ai.llm, "createLLM").mockResolvedValue({
+      chat: {} as any,
+      uploadFile: jest.fn(),
+      providerOptions: jest.fn(() => undefined),
+    })
+    jest.mocked(objectStore.getReadStream).mockResolvedValue({
+      stream: Readable.from([Buffer.from("img")]),
+    } as any)
+    jest.mocked(generateText).mockResolvedValue({
+      text: "Image evidence",
+    } as any)
+
+    const result = (await executeSearchTool("agent_1", {
+      question: "Summarize",
+    })) as any
+
+    expect(result.context).toContain("RAG context")
+    expect(result.context).toContain("Image diagram.png: Image evidence")
+    expect(result.sources).toHaveLength(2)
+    expect(result.chunks).toHaveLength(2)
   })
 })
