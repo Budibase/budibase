@@ -141,7 +141,9 @@ export const prepareAgentChatRun = async ({
                 if (!source?.sourceId) {
                   continue
                 }
-                const existing = retrievedKnowledgeSourceById.get(source.sourceId)
+                const existing = retrievedKnowledgeSourceById.get(
+                  source.sourceId
+                )
                 retrievedKnowledgeSourceById.set(source.sourceId, {
                   ...existing,
                   ...source,
