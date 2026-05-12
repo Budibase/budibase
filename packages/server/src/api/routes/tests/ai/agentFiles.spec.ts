@@ -244,6 +244,33 @@ describe("agent files", () => {
     })
   })
 
+  it("uploads supported image files for agent knowledge", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "Support Agent",
+        aiconfig: "default",
+      })
+
+      const autoKbScope = mockAutoKnowledgeBaseCreate()
+      const ingestScope = mockGeminiIngest("gemini-image-file-1")
+
+      const upload = await config.api.agent.uploadFile(created._id!, {
+        file: fileBuffer,
+        name: "diagram.png",
+      })
+      expect(upload.file.status).toBe(KnowledgeBaseFileStatus.PROCESSING)
+
+      await utils.queue.processMessages(getQueue().getBullQueue())
+      expect(ingestScope.isDone()).toBe(true)
+      expect(autoKbScope.isDone()).toBe(true)
+
+      const { files } = await config.api.agent.fetchFiles(created._id!)
+      expect(files).toHaveLength(1)
+      expect(files[0].status).toBe(KnowledgeBaseFileStatus.READY)
+      expect(files[0].filename).toBe("diagram.png")
+    })
+  })
+
   it("deletes an uploaded agent file", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({

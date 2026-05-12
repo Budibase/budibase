@@ -18,6 +18,10 @@ export const KNOWLEDGE_FILE_EXTENSIONS = [
   ".xls",
   ".xlsx",
   ".rtf",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
 ] as const
 
 export const KNOWLEDGE_FILE_MIME_TYPES = [
@@ -40,6 +44,10 @@ export const KNOWLEDGE_FILE_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/rtf",
   "text/rtf",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
 ] as const
 
 export const KNOWLEDGE_FILE_ACCEPT_ATTRIBUTE =
@@ -73,6 +81,10 @@ const DISPLAY_LABEL_BY_EXTENSION: Partial<
   ".xls": "XLS",
   ".xlsx": "XLSX",
   ".rtf": "RTF",
+  ".png": "PNG",
+  ".jpg": "JPG",
+  ".jpeg": "JPEG",
+  ".webp": "WEBP",
 }
 
 const DISPLAY_LABEL_BY_MIME_TYPE: Partial<
@@ -99,6 +111,10 @@ const DISPLAY_LABEL_BY_MIME_TYPE: Partial<
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "XLSX",
   "application/rtf": "RTF",
   "text/rtf": "RTF",
+  "image/png": "PNG",
+  "image/jpeg": "JPEG",
+  "image/jpg": "JPG",
+  "image/webp": "WEBP",
 }
 
 const fallbackLabelFromMimeType = (mimetype?: string) => {
@@ -136,9 +152,6 @@ export const isKnowledgeFileSupported = ({
 
   const normalizedMimetype = trimString(mimetype).toLowerCase()
   if (!normalizedMimetype) {
-    return false
-  }
-  if (normalizedMimetype.startsWith("image/")) {
     return false
   }
   if (normalizedMimetype.startsWith("text/")) {

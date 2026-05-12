@@ -1,11 +1,14 @@
 import {
+  type AgentMessageRagSource,
+  type Agent,
   KnowledgeBaseFileStatus,
   ToolType,
   FeatureFlag,
   type KnowledgeBaseFile,
 } from "@budibase/types"
-import { features } from "@budibase/backend-core"
-import { tool } from "ai"
+import { features, objectStore } from "@budibase/backend-core"
+import { generateText, type ModelMessage, tool } from "ai"
+import { buffer } from "stream/consumers"
 import { z } from "zod"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
@@ -33,6 +36,159 @@ interface RankedMatch {
 const GEMINI_RETRIEVAL_UNAVAILABLE_MESSAGE =
   "Gemini knowledge retrieval is temporarily unavailable (upstream 503). Budibase is operating normally; please retry shortly."
 const GEMINI_UPSTREAM_EVENT = "ai.gemini.upstream_unavailable"
+const MAX_IMAGE_FILES_FOR_HYBRID_SEARCH = 2
+const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024
+const IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+])
+
+interface SearchKnowledgeChunk {
+  source?: string
+  chunkText?: string
+}
+
+const isSupportedImageKnowledgeFile = (file: KnowledgeBaseFile) => {
+  if (file.status !== KnowledgeBaseFileStatus.READY) {
+    return false
+  }
+  if (!file.objectStoreKey) {
+    return false
+  }
+  const normalizedMimetype = (file.mimetype || "").trim().toLowerCase()
+  return IMAGE_MIME_TYPES.has(normalizedMimetype)
+}
+
+const toImageDataUrl = (input: { data: Buffer; mimetype?: string }) => {
+  const contentType = (input.mimetype || "application/octet-stream").trim()
+  return `data:${contentType};base64,${input.data.toString("base64")}`
+}
+
+const createImageSearchPrompt = ({
+  question,
+  filename,
+}: {
+  question: string
+  filename: string
+}) => {
+  return [
+    "You are extracting evidence from an image file for a knowledge search.",
+    `Image filename: ${filename}`,
+    `User question: ${question}`,
+    "Return only concise factual evidence relevant to the user question.",
+    "If the image does not contain relevant information, return: NO_RELEVANT_EVIDENCE",
+  ].join("\n\n")
+}
+
+const searchImageKnowledgeForAgent = async ({
+  agent,
+  agentId,
+  question,
+}: {
+  agent: Agent
+  agentId: string
+  question: string
+}): Promise<{
+  text: string
+  chunks: SearchKnowledgeChunk[]
+  sources: AgentMessageRagSource[]
+}> => {
+  if (!agent.aiconfig) {
+    return { text: "", chunks: [], sources: [] }
+  }
+
+  const files = await sdk.ai.rag.listFilesForAgent(agentId)
+  const candidateImages = files
+    .filter(isSupportedImageKnowledgeFile)
+    .sort((a, b) => toEpochMillis(b.createdAt) - toEpochMillis(a.createdAt))
+    .slice(0, MAX_IMAGE_FILES_FOR_HYBRID_SEARCH)
+
+  if (candidateImages.length === 0) {
+    return { text: "", chunks: [], sources: [] }
+  }
+
+  const llm = await sdk.ai.llm.createLLM(agent.aiconfig)
+  const textSegments: string[] = []
+  const chunks: SearchKnowledgeChunk[] = []
+  const sources: AgentMessageRagSource[] = []
+
+  for (const file of candidateImages) {
+    try {
+      const sourceId = file.ragSourceId || file._id || file.filename
+      if (!sourceId) {
+        continue
+      }
+      const size = file.size || 0
+      if (size > MAX_IMAGE_FILE_SIZE_BYTES) {
+        continue
+      }
+
+      const { stream } = await objectStore.getReadStream(
+        objectStore.ObjectStoreBuckets.APPS,
+        file.objectStoreKey
+      )
+      const imageBuffer = await buffer(stream)
+      const dataUrl = toImageDataUrl({
+        data: imageBuffer,
+        mimetype: file.mimetype,
+      })
+      const messages: ModelMessage[] = [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              image: new URL(dataUrl),
+            },
+            {
+              type: "text",
+              text: createImageSearchPrompt({
+                question,
+                filename: file.filename,
+              }),
+            },
+          ],
+        },
+      ]
+      const response = await generateText({
+        model: llm.chat,
+        messages,
+        providerOptions: llm.providerOptions?.(false),
+      })
+      const content = response.text.trim()
+      if (!content || content === "NO_RELEVANT_EVIDENCE") {
+        continue
+      }
+
+      sources.push({
+        sourceId,
+        fileId: file._id,
+        filename: file.filename,
+      })
+      chunks.push({
+        source: sourceId,
+        chunkText: content,
+      })
+      textSegments.push(`Image ${file.filename}: ${content}`)
+    } catch (error: any) {
+      console.error("Failed to analyze knowledge image", {
+        agentId,
+        fileId: file._id,
+        filename: file.filename,
+        status: error?.status,
+        message: error?.message,
+      })
+    }
+  }
+
+  return {
+    text: textSegments.join("\n\n"),
+    chunks,
+    sources,
+  }
+}
 
 const isGeminiRetrievalUnavailable = (error: unknown): boolean => {
   if (!error || typeof error !== "object") {
@@ -301,13 +457,16 @@ export const createKnowledgeSearchTool = (
       }
 
       const agent = await sdk.ai.agents.getOrThrow(agentId)
+      let ragText = ""
+      let ragSources: AgentMessageRagSource[] = []
+      let ragChunks: SearchKnowledgeChunk[] = []
+      let ragUnavailable = false
+
       try {
         const result = await sdk.ai.rag.retrieveContextForAgent(agent, question)
-        return {
-          context: result.text,
-          sources: result.sources,
-          chunks: result.chunks,
-        }
+        ragText = result.text
+        ragSources = result.sources
+        ragChunks = result.chunks
       } catch (error: any) {
         if (isGeminiRetrievalUnavailable(error)) {
           console.error("[AI_UPSTREAM] Gemini unavailable", {
@@ -318,14 +477,34 @@ export const createKnowledgeSearchTool = (
             agentId,
             errorMessage: error?.message,
           })
-          throw new Error(GEMINI_RETRIEVAL_UNAVAILABLE_MESSAGE)
+          ragUnavailable = true
+        } else {
+          console.error("Failed to retrieve agent knowledge context", {
+            agentId,
+            status: error?.status,
+            message: error?.message,
+          })
+          throw error
         }
-        console.error("Failed to retrieve agent knowledge context", {
-          agentId,
-          status: error?.status,
-          message: error?.message,
-        })
-        throw error
+      }
+
+      const imageResult = await searchImageKnowledgeForAgent({
+        agent,
+        agentId,
+        question,
+      })
+      const allSources = [...ragSources, ...imageResult.sources]
+      const allChunks = [...ragChunks, ...imageResult.chunks]
+      const context = [ragText, imageResult.text].filter(Boolean).join("\n\n")
+
+      if (ragUnavailable && allSources.length === 0) {
+        throw new Error(GEMINI_RETRIEVAL_UNAVAILABLE_MESSAGE)
+      }
+
+      return {
+        context,
+        sources: allSources,
+        chunks: allChunks,
       }
     },
   }),

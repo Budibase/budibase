@@ -1,5 +1,6 @@
 import { context, docIds, HTTPError, objectStore } from "@budibase/backend-core"
 import {
+  getKnowledgeFileExtension,
   KnowledgeBaseFile,
   KnowledgeBaseFileSource,
   KnowledgeBaseFileStatus,
@@ -21,6 +22,23 @@ interface UploadKnowledgeBaseFileInput {
   size?: number
   buffer: Buffer
   uploadedBy: string
+}
+
+const IMAGE_KNOWLEDGE_FILE_EXTENSIONS = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+])
+
+const isImageKnowledgeFile = (input: { filename: string; mimetype?: string }) => {
+  const normalizedMimetype = (input.mimetype || "").trim().toLowerCase()
+  if (normalizedMimetype.startsWith("image/")) {
+    return true
+  }
+
+  const extension = getKnowledgeFileExtension(input.filename)
+  return IMAGE_KNOWLEDGE_FILE_EXTENSIONS.has(extension)
 }
 
 const buildKnowledgeBaseFileObjectStoreKey = (
@@ -77,6 +95,22 @@ export const uploadKnowledgeBaseFile = async (
       size: input.size ?? input.buffer.byteLength,
       uploadedBy: input.uploadedBy,
     })
+
+    if (isImageKnowledgeFile({ filename: input.filename, mimetype: input.mimetype })) {
+      knowledgeBaseFile.status = KnowledgeBaseFileStatus.READY
+      knowledgeBaseFile.processedAt = new Date().toISOString()
+      knowledgeBaseFile.errorMessage = undefined
+      const readyFile = await updateKnowledgeBaseFile(knowledgeBaseFile)
+      const persistedFile = readyFile || knowledgeBaseFile
+      console.log("Completed knowledge base image upload without vector ingestion", {
+        workspaceId,
+        knowledgeBaseId: input.knowledgeBaseId,
+        fileId: persistedFile._id,
+        objectStoreKey,
+        durationMs: Date.now() - startedAtMs,
+      })
+      return persistedFile
+    }
 
     try {
       await enqueueRagFileIngestion({
@@ -138,6 +172,19 @@ export const retryKnowledgeBaseFileIngestion = async (fileId: string) => {
   }
   if (file.status !== KnowledgeBaseFileStatus.FAILED) {
     throw new HTTPError("Knowledge base file is not in failed state", 400)
+  }
+
+  if (isImageKnowledgeFile({ filename: file.filename, mimetype: file.mimetype })) {
+    file.status = KnowledgeBaseFileStatus.READY
+    file.errorMessage = undefined
+    file.processedAt = new Date().toISOString()
+    await updateKnowledgeBaseFile(file)
+    console.log("Marked image knowledge base file ready during retry", {
+      workspaceId,
+      knowledgeBaseId: file.knowledgeBaseId,
+      fileId,
+    })
+    return file
   }
 
   file.status = KnowledgeBaseFileStatus.PROCESSING
