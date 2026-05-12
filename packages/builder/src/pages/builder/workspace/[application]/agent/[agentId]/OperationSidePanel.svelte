@@ -13,6 +13,8 @@
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
   import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
+  import ToolsDropdown from "./ToolsDropdown.svelte"
+  import type { AgentTool } from "./toolTypes"
   import addToolsIcons from "assets/add-tools-icons.svg"
 
   export let open = false
@@ -23,16 +25,41 @@
   export let bindingIcons: Record<string, string | undefined> = {}
   export let completions: BindingCompletion[] = []
   export let toolsLoaded = false
+  export let availableTools: AgentTool[] = []
+  export let webSearchConfigured = false
   export let onClose: () => void = () => {}
   export let onDelete: () => void = () => {}
   export let onUpdated: () => void = () => {}
   export let onHelpWriteInstructions: () => void = () => {}
   export let onOpenSidePeak: () => void = () => {}
   export let onAddKnowledge: () => void = () => {}
+  export let onAddApiConnection: () => void = () => {}
+  export let onConfigureWebSearch: () => void = () => {}
 
   let insertAtPos: InsertAtPositionFn | undefined
   let getCaretPosition: CaretPositionFn | undefined
   $: resolvedIconCount = Object.values(bindingIcons).filter(Boolean).length
+  let toolSearch = ""
+  $: filteredTools = availableTools.filter(tool => {
+    const query = toolSearch.trim().toLowerCase()
+    if (!query) {
+      return true
+    }
+    return `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
+      .toLowerCase()
+      .includes(query)
+  })
+  $: toolSections = filteredTools.reduce(
+    (acc, tool) => {
+      const section = tool.sourceLabel || "Tools"
+      if (!acc[section]) {
+        acc[section] = []
+      }
+      acc[section].push(tool)
+      return acc
+    },
+    {} as Record<string, AgentTool[]>
+  )
 
   const insertCurlyBindingToken = () => {
     const currentValue = operationDraft.promptInstructions || ""
@@ -54,6 +81,20 @@
     }
     operationDraft.promptInstructions =
       currentValue.slice(0, start) + value + currentValue.slice(end)
+  }
+
+  const handleToolClick = (tool: AgentTool) => {
+    const binding = tool.readableBinding || tool.runtimeBinding
+    if (!binding) {
+      return
+    }
+    const current = operationDraft.promptInstructions || ""
+    const insertion = `{{ ${binding} }}`
+    operationDraft.promptInstructions = `${current}${current ? "\n" : ""}${insertion}`
+    operationDraft.enabledTools = Array.from(
+      new Set([...(operationDraft.enabledTools || []), tool.runtimeBinding])
+    )
+    onUpdated()
   }
 </script>
 
@@ -149,21 +190,17 @@
                       right.
                     </span>
                   </div>
-                  <button
-                    class="add-tools"
-                    type="button"
-                    on:click={insertCurlyBindingToken}
-                  >
-                    <span class="add-tools-label">
-                      <Icon
-                        name="plus"
-                        size="S"
-                        color="var(--spectrum-global-color-gray-900)"
-                      />
-                      Add tools
-                    </span>
-                    <img src={addToolsIcons} alt="" class="tool-avatars" />
-                  </button>
+                  <div class="tools-popover-container">
+                    <ToolsDropdown
+                      {filteredTools}
+                      {toolSections}
+                      bind:toolSearch
+                      webSearchEnabled={webSearchConfigured}
+                      onToolClick={handleToolClick}
+                      {onAddApiConnection}
+                      {onConfigureWebSearch}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

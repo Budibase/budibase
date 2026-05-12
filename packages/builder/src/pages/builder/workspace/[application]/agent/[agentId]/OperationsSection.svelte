@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Body, Button, Icon, notifications } from "@budibase/bbui"
   import type { AgentOperation, EnrichedBinding } from "@budibase/types"
+  import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import * as routify from "@roxi/routify"
   import { selectedAgent } from "@/stores/portal"
@@ -15,6 +16,8 @@
     bindingIcons = {},
     completions = [],
     toolsLoaded = false,
+    availableTools = [],
+    webSearchConfigured = false,
   }: {
     operations?: AgentOperation[]
     onSaveOperations?: (_nextOperations: AgentOperation[]) => Promise<void>
@@ -22,6 +25,8 @@
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
     toolsLoaded?: boolean
+    availableTools?: AgentTool[]
+    webSearchConfigured?: boolean
   } = $props()
 
   let operationPanelOpen = $state(false)
@@ -217,6 +222,8 @@ Any constraints the agent must follow.
   {bindingIcons}
   {completions}
   {toolsLoaded}
+  {availableTools}
+  {webSearchConfigured}
   onAddKnowledge={handleAddKnowledge}
   onUpdated={saveOperation}
   onClose={closeOperationPanel}

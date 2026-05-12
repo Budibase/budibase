@@ -487,13 +487,15 @@
   </div>
 </div>
 
-<OperationsSection
+  <OperationsSection
   operations={draft.operations}
   onSaveOperations={saveOperations}
   {promptBindings}
   bindingIcons={readableToIcon}
   completions={promptCompletions}
   {toolsLoaded}
+  {availableTools}
+  {webSearchConfigured}
 />
 
 <style>
