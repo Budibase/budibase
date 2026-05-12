@@ -82,6 +82,7 @@
   let blockRefs: Record<string, BlockRef> = {}
   let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
+  let paneResizeObserver: ResizeObserver | undefined
   let changingStatus = false
 
   let initialViewportApplied = false
@@ -139,7 +140,7 @@
       initialViewportApplied = false
     }
     preserveViewport = true
-    const xSpacing = 100
+    const xSpacing = 0
     const ySpacing = 340
 
     const newNodes: FlowNode[] = []
@@ -403,10 +404,17 @@
       console.error(error)
     }
     dnd.setPaneEl(paneEl)
+    paneResizeObserver = new ResizeObserver(() => {
+      dnd.updatePaneRect()
+    })
+    if (paneEl) {
+      paneResizeObserver.observe(paneEl)
+    }
     dnd.initDnD()
   })
 
   onDestroy(() => {
+    paneResizeObserver?.disconnect()
     dnd.destroyDnD()
   })
 </script>

@@ -95,12 +95,30 @@ export interface AgentMessageRagSource {
   filename?: string
 }
 
+export type AgentMessageUsageSegmentType =
+  | "system"
+  | "input"
+  | "cachedInput"
+  | "output"
+  | "reasoning"
+
+export interface AgentMessageUsageSegment {
+  type: AgentMessageUsageSegmentType
+  tokens: number
+}
+
+export interface AgentMessageUsage {
+  maxTokens?: number
+  segments: AgentMessageUsageSegment[]
+}
+
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>
   createdAt?: number
   completedAt?: number
   error?: string
+  usage?: AgentMessageUsage
 }
 
 export interface AgentChat extends Document {

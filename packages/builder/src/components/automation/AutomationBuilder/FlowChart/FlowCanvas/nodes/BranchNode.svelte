@@ -192,7 +192,7 @@
     width: fit-content;
     max-width: var(--automation-flow-item-max-width, 360px);
     background-color: var(--automation-flow-item-background, var(--background));
-    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border: 2px solid var(--spectrum-global-color-gray-200);
     border-radius: 16px;
     cursor: pointer;
     box-sizing: border-box;

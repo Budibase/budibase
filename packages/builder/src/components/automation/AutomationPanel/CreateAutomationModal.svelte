@@ -79,7 +79,7 @@
           on:click={() => selectTrigger(trigger)}
         >
           <div class="icon-container">
-            <Icon name={trigger.icon} size="M" />
+            <Icon name={trigger.icon} size="M" color="var(--ink)" />
           </div>
           <Body size="S">{trigger.name}</Body>
         </div>
@@ -93,6 +93,14 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
+    --automation-step-icon-trigger-color: var(--color-green-200);
+  }
+
+  :global(.spectrum--dark) .item-list,
+  :global(.spectrum--darkest) .item-list,
+  :global(.spectrum--midnight) .item-list,
+  :global(.spectrum--nord) .item-list {
+    --automation-step-icon-trigger-color: var(--color-green-600);
   }
 
   .item {
@@ -109,7 +117,9 @@
   }
 
   .icon-container {
+    background-color: var(--automation-step-icon-trigger-color);
     padding: 4px;
+    border-radius: 8px;
   }
 
   .item:hover {
