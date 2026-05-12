@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, notifications, Select, Button, Icon } from "@budibase/bbui"
+  import { Body, notifications, Select, Button } from "@budibase/bbui"
   import {
     AIConfigType,
     ToolType,
@@ -8,31 +8,21 @@
     type AgentOperation,
     type ToolMetadata,
     type EnrichedBinding,
-    type InsertAtPositionFn,
-    type CaretPositionFn,
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import {
     datasources,
     restTemplates,
-    automationStore,
-    queries,
     workspaceDeploymentStore,
   } from "@/stores/builder"
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
-  import { onDestroy, onMount, untrack } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import { bb } from "@/stores/bb"
-  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
-  import ToolsDropdown from "./ToolsDropdown.svelte"
-  import ToolIcon from "./ToolIcon.svelte"
-  import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
   import type { AgentTool } from "./toolTypes"
-  import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
   import {
     EditorModes,
     hbAutocomplete,
-    hbInsert,
     bindingsToCompletions,
   } from "@/components/common/CodeEditor"
   import BudibaseLogo from "../logos/Budibase.svelte"
@@ -43,35 +33,16 @@
     WEB_SEARCH_TAG_ICON_URL,
   } from "../logos/tagIconUrls"
   import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
-  import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
   import { shouldAutoSelectAgentModel } from "./configUtils"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
-  import OperationSidePanel from "./OperationSidePanel.svelte"
+  import OperationsSection from "./OperationsSection.svelte"
 
-  $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
   const AUTO_SAVE_DEBOUNCE_MS = 800
-  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
-What is this agent responsible for?
-
-**Inputs**
-What information does the agent receive?
-
-**Actions**
-- What should the agent do?
-- When should it use tools or APIs?
-
-**Output**
-- What should the response look like?
-- Include any structure, formatting, or fields required.
-
-**Rules**
-Any constraints the agent must follow.
-`
   // Agent state
   let draftAgentId: string | undefined = $state()
   let draft = $state({
@@ -79,27 +50,14 @@ Any constraints the agent must follow.
     description: "",
     aiconfig: "",
     goal: "",
-    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+    promptInstructions: "",
     icon: "",
     iconColor: "",
     operations: [] as AgentOperation[],
   })
 
-  let operationPanelOpen = $state(false)
-  let editingOperationId: string | undefined = $state()
-  let operationDraft = $state<AgentOperation>({
-    id: "",
-    name: "",
-    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
-    live: false,
-    enabledTools: [],
-    knowledgeBases: [],
-  })
-  let insertAtPos: InsertAtPositionFn | undefined = $state()
-  let toolSearch = $state("")
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
-  let getCaretPosition: CaretPositionFn | undefined = $state.raw()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
@@ -111,9 +69,7 @@ Any constraints the agent must follow.
   )
 
   // Web search Config
-  let webSearchConfigModal = $state<WebSearchConfigModal>()
   let lastWebSearchConfigId: string | undefined = $state()
-  let pendingWebSearchInsert = $state(false)
   let webSearchConfig = $derived(
     $aiConfigsStore.customConfigs.find(config => config._id === draft.aiconfig)
       ?.webSearchConfig
@@ -180,17 +136,16 @@ Any constraints the agent must follow.
     return { readableToRuntimeBinding: runtimeMap, readableToIcon: iconMap }
   })
 
-  /**
-   * Doing this and key'ing the CodeEditor triggers a re-mount of the editor.
-   * Else we would need to do some complex logic in CodeEditor and it's not worth it
-   */
-  let resolvedIconCount = $derived(
-    Object.values(readableToIcon).filter(Boolean).length
-  )
   let includedToolRuntimeBindings = $derived(
-    getIncludedToolRuntimeBindings(
-      draft.promptInstructions,
-      readableToRuntimeBinding
+    Array.from(
+      new Set(
+        (draft.operations || []).flatMap(operation =>
+          getIncludedToolRuntimeBindings(
+            operation.promptInstructions || "",
+            readableToRuntimeBinding
+          )
+        )
+      )
     )
   )
   let promptBindings: EnrichedBinding[] = $derived.by(() => {
@@ -227,31 +182,6 @@ Any constraints the agent must follow.
       : []
   })
 
-  let includedToolsWithDetails = $derived(
-    includedToolRuntimeBindings
-      .map(runtimeBinding =>
-        availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
-      )
-      .filter((tool): tool is AgentTool => !!tool)
-  )
-  let filteredTools = $derived.by(() => {
-    return availableTools.filter(tool => {
-      const query = toolSearch.toLowerCase()
-      return (
-        tool.name?.toLowerCase().includes(query) ||
-        tool.readableBinding?.toLowerCase().includes(query)
-      )
-    })
-  })
-  let toolSections = $derived(
-    filteredTools.reduce<Record<string, AgentTool[]>>((acc, tool) => {
-      const key = getSectionName(tool.sourceType, tool.sourceLabel)
-      acc[key] = acc[key] || []
-      acc[key].push(tool)
-      return acc
-    }, {})
-  )
-
   $effect(() => {
     const agent = currentAgent
     if (agent && agent._id !== draftAgentId) {
@@ -260,8 +190,7 @@ Any constraints the agent must follow.
         description: agent.description || "",
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
-        promptInstructions:
-          agent.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS,
+        promptInstructions: agent.promptInstructions || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
         operations: agent.operations || [],
@@ -289,20 +218,6 @@ Any constraints the agent must follow.
     ) {
       draft.aiconfig = modelOptions[0].value
       scheduleSave(true)
-    }
-  })
-
-  $effect(() => {
-    if (pendingWebSearchInsert && webSearchConfigured) {
-      const searchTool = availableTools.find(
-        tool => tool.sourceType === ToolType.SEARCH
-      )
-      if (searchTool?.readableBinding) {
-        untrack(() => {
-          insertToolBinding(searchTool.readableBinding!)
-          pendingWebSearchInsert = false
-        })
-      }
     }
   })
 
@@ -444,86 +359,6 @@ Any constraints the agent must follow.
     return "Tools"
   }
 
-  function normaliseToolNameForMatch(name: string) {
-    const sanitised = name.replace(/[^a-zA-Z0-9_-]/g, "_")
-    return sanitised.length > 64
-      ? `${sanitised.substring(0, 64)}...`
-      : sanitised
-  }
-
-  const findResourceByName = <T extends { name?: string; _id?: string }>(
-    list: T[] | undefined,
-    tool: AgentTool
-  ) => {
-    const targetName = normaliseToolNameForMatch(
-      tool.runtimeBinding || tool.name || ""
-    )
-    return list?.find(
-      item =>
-        normaliseToolNameForMatch(item.name || "") === targetName ||
-        item.name === tool.name
-    )
-  }
-
-  const getQueryForTool = (tool: AgentTool) => {
-    const normalizedReadableName = normaliseToolNameForMatch(
-      tool.readableName || tool.runtimeBinding || tool.name || ""
-    )
-    const matchingDatasource = $datasources.list.find(
-      datasource =>
-        datasource.name === tool.sourceLabel &&
-        (tool.sourceType === ToolType.REST_QUERY
-          ? datasource.source === "REST"
-          : datasource.source !== "REST")
-    )
-
-    return $queries.list.find(query => {
-      const queryNameMatches =
-        query.name === tool.readableName ||
-        normaliseToolNameForMatch(query.name || "") === normalizedReadableName
-      if (!queryNameMatches) {
-        return false
-      }
-      if (!matchingDatasource?._id) {
-        return true
-      }
-      return query.datasourceId === matchingDatasource._id
-    })
-  }
-
-  const getToolResourcePath = (tool: AgentTool): string | null => {
-    if (tool.sourceType === ToolType.AUTOMATION) {
-      const automation = findResourceByName($automationStore.automations, tool)
-      if (automation?._id) {
-        return `../../automation/${automation._id}`
-      }
-    }
-
-    if (
-      tool.sourceType === ToolType.REST_QUERY ||
-      tool.sourceType === ToolType.DATASOURCE_QUERY
-    ) {
-      const query = getQueryForTool(tool)
-      if (query?._id) {
-        return `../../apis/query/${query._id}`
-      }
-    }
-    return null
-  }
-
-  const openToolResourceInNewTab = (tool: AgentTool) => {
-    const path = getToolResourcePath(tool)
-    if (path) {
-      const currentPath = window.location.pathname
-      const pathParts = currentPath.split("/").filter(Boolean)
-      const basePath = pathParts.slice(0, -3).join("/")
-      const cleanPath = path.replace(/^\.\.\/\.\./, "")
-      const fullPath = `/${basePath}${cleanPath}`
-      const url = `${window.location.origin}${fullPath}${window.location.hash}`
-      window.open(url, "_blank")
-    }
-  }
-
   // list_tables -> List tables
   const formatToolLabel = (tool: AgentTool) =>
     (tool.readableName || tool.name)
@@ -535,41 +370,6 @@ Any constraints the agent must follow.
           .replace(/\b\w/g, l => l.toUpperCase())
       )
       .join(".")
-
-  const insertToolBinding = (readableBinding: string) => {
-    const currentValue = draft.promptInstructions || ""
-    const caretPos = getCaretPosition?.() ?? {
-      start: currentValue.length,
-      end: currentValue.length,
-    }
-    const start = caretPos.start
-    const end = caretPos.end
-    const wrapped = hbInsert(currentValue, start, end, readableBinding)
-
-    if (insertAtPos) {
-      insertAtPos({
-        start,
-        end,
-        value: wrapped,
-        cursor: { anchor: start + wrapped.length },
-      })
-    } else {
-      draft.promptInstructions =
-        currentValue.slice(0, start) + wrapped + currentValue.slice(end)
-    }
-  }
-
-  const handleToolClick = (tool: AgentTool) => {
-    if (!tool.readableBinding) {
-      return
-    }
-    if (tool.sourceType === ToolType.SEARCH && !webSearchConfigured) {
-      pendingWebSearchInsert = true
-      configureWebSearch()
-      return
-    }
-    insertToolBinding(tool.readableBinding)
-  }
 
   function getWebSearchRuntimeBinding(
     configured?: boolean,
@@ -587,95 +387,9 @@ Any constraints the agent must follow.
     return undefined
   }
 
-  const escapeRegExp = (str: string) =>
-    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-
-  const removeToolBindingFromPrompt = (tool: AgentTool) => {
-    if (!tool.readableBinding) {
-      return
-    }
-    const current = draft.promptInstructions || ""
-    const binding = escapeRegExp(tool.readableBinding)
-    const regex = new RegExp(`\\{\\{\\s*${binding}\\s*\\}\\}`, "g")
-    const next = current.replace(regex, "").replace(/\n{3,}/g, "\n\n")
-    draft.promptInstructions = next
-  }
-
-  const configureWebSearch = () => {
-    webSearchConfigModal?.show()
-  }
-
-  const createOperationId = () => {
-    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-      return `operation_${crypto.randomUUID()}`
-    }
-    return `operation_${Date.now()}`
-  }
-
-  const getNewOperationDraft = (): AgentOperation => ({
-    id: createOperationId(),
-    name: "",
-    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
-    live: false,
-    enabledTools: [],
-    knowledgeBases: [],
-  })
-
-  const openOperationPanel = (operation?: AgentOperation) => {
-    editingOperationId = operation?.id
-    operationDraft = operation
-      ? {
-          ...operation,
-          enabledTools: operation.enabledTools || [],
-          knowledgeBases: operation.knowledgeBases || [],
-        }
-      : getNewOperationDraft()
-    operationPanelOpen = true
-  }
-
-  const closeOperationPanel = () => {
-    operationPanelOpen = false
-  }
-
-  const saveOperation = async () => {
-    const name = operationDraft.name.trim()
-    if (!name) {
-      notifications.error("Operation name is required")
-      return
-    }
-
-    const nextOperation: AgentOperation = {
-      ...operationDraft,
-      name,
-      id: operationDraft.id || createOperationId(),
-      enabledTools: operationDraft.enabledTools || [],
-      knowledgeBases: operationDraft.knowledgeBases || [],
-    }
-
-    const operations = draft.operations || []
-    const existingIndex = operations.findIndex(
-      operation => operation.id === editingOperationId
-    )
-    draft.operations =
-      existingIndex === -1
-        ? [...operations, nextOperation]
-        : operations.map(operation =>
-            operation.id === editingOperationId ? nextOperation : operation
-          )
-
+  const saveOperations = async (nextOperations: AgentOperation[]) => {
+    draft.operations = nextOperations
     await saveAgent({ showNotifications: true })
-    closeOperationPanel()
-  }
-
-  const deleteOperation = async () => {
-    if (!editingOperationId) {
-      return
-    }
-    draft.operations = (draft.operations || []).filter(
-      operation => operation.id !== editingOperationId
-    )
-    await saveAgent({ showNotifications: true })
-    closeOperationPanel()
   }
 
   async function saveAgent({
@@ -791,467 +505,17 @@ Any constraints the agent must follow.
   </div>
 </div>
 
-<div class="tools-section">
-  <div class="llm-section-container">
-    <div class="llm-header">
-      <Body size="XS" color="var(--spectrum-global-color-gray-900)">Tools</Body>
-      <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-        Select which tools the agent can use.
-      </Body>
-    </div>
-    <div>
-      <div class="form-row">
-        <div class="form-field">
-          <div class="tools-popover-container"></div>
-          <ToolsDropdown
-            {filteredTools}
-            {toolSections}
-            bind:toolSearch
-            onToolClick={handleToolClick}
-            onAddApiConnection={() => $goto(`./apis`)}
-            webSearchEnabled={webSearchConfigured}
-            onConfigureWebSearch={configureWebSearch}
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-  {#if includedToolsWithDetails.length > 0}
-    <div class="tools-list">
-      {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
-        <div
-          class="tool-card"
-          role="button"
-          tabindex="0"
-          onclick={() => openToolResourceInNewTab(tool)}
-          onkeydown={e => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault()
-              openToolResourceInNewTab(tool)
-            }
-          }}
-        >
-          <div class="tool-main">
-            <div class="tool-item-icon">
-              <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
-            </div>
-            <div class="tool-label">
-              <span>
-                {tool.sourceLabel || "Tool"}:
-              </span>
-              <span>{formatToolLabel(tool)}</span>
-            </div>
-          </div>
-          <div class="tool-actions">
-            <button
-              class="tool-close-button"
-              type="button"
-              onclick={e => {
-                e.stopPropagation()
-                removeToolBindingFromPrompt(tool)
-                scheduleSave(true)
-              }}
-            >
-              <Icon
-                name="x"
-                size="XS"
-                color="var(--spectrum-global-color-gray-600)"
-                hoverable
-              />
-            </button>
-          </div>
-        </div>
-      {/each}
-    </div>
-  {/if}
-</div>
-
-<div class="operations-section">
-  <div class="operations-header">
-    <div class="section-header">
-      <Body size="XS" color="var(--spectrum-global-color-gray-900)"
-        >Operations</Body
-      >
-      <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-        Define the types of requests this agent can handle.
-      </Body>
-    </div>
-    <Button
-      secondary
-      size="M"
-      icon="plus"
-      on:click={() => openOperationPanel()}
-    >
-      Add operation
-    </Button>
-  </div>
-
-  {#if draft.operations.length === 0}
-    <button
-      class="empty-operation"
-      type="button"
-      onclick={() => openOperationPanel()}
-    >
-      <span>No operations yet</span>
-      <span>Add the first request type this agent can handle.</span>
-    </button>
-  {:else}
-    <div class="operation-list">
-      {#each draft.operations as operation (operation.id)}
-        <button
-          class="operation-row"
-          type="button"
-          onclick={() => openOperationPanel(operation)}
-        >
-          <span class="operation-name">{operation.name}</span>
-          <span class="operation-actions">
-            <span class="operation-status" class:stopped={!operation.live}>
-              <span></span>
-              {operation.live ? "Live" : "Stopped"}
-            </span>
-            <Icon
-              name="dots-three"
-              size="XS"
-              color="var(--spectrum-global-color-gray-600)"
-            />
-          </span>
-        </button>
-      {/each}
-    </div>
-  {/if}
-</div>
-
-<div class="section">
-  <div class="section-header">
-    <Body size="XS" color="var(--spectrum-global-color-gray-900)"
-      >Instructions</Body
-    >
-    <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-      Set the rules for how the AI agent responds, uses tools, and structures
-      output.
-    </Body>
-  </div>
-  <div class="prompt-editor-wrapper">
-    <div class="prompt-editor">
-      {#if toolsLoaded}
-        {#key resolvedIconCount}
-          <CodeEditor
-            value={draft.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS}
-            bindings={promptBindings}
-            bindingIcons={readableToIcon}
-            completions={promptCompletions}
-            mode={EditorModes.Handlebars}
-            bind:insertAtPos
-            renderBindingsAsTags={true}
-            renderMarkdownDecorations={true}
-            placeholder=""
-            on:change={event => {
-              draft.promptInstructions = event.detail || ""
-              scheduleSave()
-            }}
-            bind:getCaretPosition
-          />
-        {/key}
-      {/if}
-    </div>
-    <div class="bindings-bar">
-      <span class="bindings-bar-text"
-        >Use <code>{`{{`}</code> to add to tools & knowledge sources</span
-      >
-      <GenerateInstructionsControl
-        agentName={draft.name}
-        goal={draft.goal}
-        promptInstructions={draft.promptInstructions}
-        {promptBindings}
-        bindingIcons={readableToIcon}
-        onApplyInstructions={instructions => {
-          draft.promptInstructions = instructions
-          scheduleSave(true)
-        }}
-      />
-    </div>
-  </div>
-</div>
-
-<WebSearchConfigModal
-  bind:this={webSearchConfigModal}
-  aiconfigId={draft.aiconfig}
-/>
-
-<OperationSidePanel
-  open={operationPanelOpen}
-  {editingOperationId}
-  bind:operationDraft
+<OperationsSection
+  operations={draft.operations}
   {saving}
-  onClose={closeOperationPanel}
-  onSave={saveOperation}
-  onDelete={deleteOperation}
+  onSaveOperations={saveOperations}
+  {promptBindings}
+  bindingIcons={readableToIcon}
+  completions={promptCompletions}
+  {toolsLoaded}
 />
 
 <style>
-  :global(.tools-popover-container .spectrum-Popover) {
-    background-color: var(--background-alt);
-  }
-
-  .prompt-editor-wrapper {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .prompt-editor {
-    flex: 1;
-  }
-
-  .prompt-editor :global(.cm-editor) {
-    background: var(--background-alt) !important;
-  }
-
-  .bindings-bar {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-m) var(--spacing-l);
-    background: var(--background-alt);
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-700);
-    flex-shrink: 0;
-  }
-
-  .bindings-bar-text {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-700);
-    line-height: 1.4;
-  }
-
-  .bindings-bar code {
-    background: var(--spectrum-global-color-gray-200);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 11px;
-  }
-
-  .tools-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--spacing-s);
-    margin-top: 8px;
-  }
-
-  .tool-card {
-    display: flex;
-    width: fit-content;
-    height: fit-content;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: 8px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-left: 6px;
-    padding-right: 6px;
-    background: #215f9e33;
-    border: none;
-    gap: 6px;
-    cursor: pointer;
-    transition: background 130ms ease-out;
-    outline: none;
-  }
-
-  .tool-card:focus-visible {
-    outline: 2px solid var(--spectrum-global-color-blue-500);
-    outline-offset: 2px;
-  }
-
-  .tool-card:hover {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
-  .tool-main {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-    min-width: 0;
-  }
-
-  .tool-item-icon {
-    width: 14px;
-    height: 14px;
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    margin-bottom: var(--spacing-xs);
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  .tool-item-icon :global(svg),
-  .tool-item-icon :global(img) {
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  .tool-label {
-    color: var(--spectrum-global-color-gray-900);
-    font-weight: 500;
-    font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .tool-label > span:first-child {
-    color: var(--spectrum-global-color-gray-800);
-    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
-  }
-
-  .tool-label > span:last-child {
-    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
-    font-weight: 400;
-    color: var(--spectrum-global-color-gray-800);
-  }
-
-  .tool-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
-
-  .tool-close-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    height: fit-content;
-    padding: 4px;
-    border: none;
-    background: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 130ms ease-out;
-  }
-
-  .tool-close-button:hover {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
-  .tools-section {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .operations-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-  }
-
-  .operations-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-l);
-  }
-
-  .operation-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .operation-row,
-  .empty-operation {
-    width: 100%;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    background: transparent;
-    color: var(--spectrum-global-color-gray-900);
-    border-radius: 4px;
-    cursor: pointer;
-    transition:
-      background 130ms ease-out,
-      border-color 130ms ease-out;
-  }
-
-  .operation-row {
-    min-height: 36px;
-    padding: 8px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
-    text-align: left;
-  }
-
-  .operation-row:hover,
-  .empty-operation:hover {
-    background: var(--spectrum-global-color-gray-100);
-    border-color: var(--spectrum-global-color-gray-300);
-  }
-
-  .operation-name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 13px;
-  }
-
-  .operation-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    flex-shrink: 0;
-  }
-
-  .operation-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-800);
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .operation-status span {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--spectrum-global-color-green-500);
-  }
-
-  .operation-status.stopped span {
-    background: var(--spectrum-global-color-orange-500);
-  }
-
-  .empty-operation {
-    min-height: 84px;
-    padding: var(--spacing-l);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  .empty-operation span:first-child {
-    color: var(--spectrum-global-color-gray-900);
-    font-size: 14px;
-  }
-
-  .empty-operation span:last-child {
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 13px;
-  }
-
   .llm-section-container {
     display: flex;
     align-items: center;
@@ -1301,18 +565,7 @@ Any constraints the agent must follow.
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .section-header {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    max-width: 600px;
-  }
-
   .llm-header > :global(.spectrum-Body):first-child {
-    font-weight: 500;
-  }
-
-  .section-header > :global(.spectrum-Body):first-child {
     font-weight: 500;
   }
 </style>
