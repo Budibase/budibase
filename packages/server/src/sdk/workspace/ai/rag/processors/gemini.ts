@@ -124,9 +124,22 @@ const getStringValue = (value: unknown): string | undefined => {
 
 const getChunkSource = (row: Record<string, unknown>): string | undefined => {
   const retrievedContext = getRetrievedContext(row)
+  const content = row.content
+  const contentRetrievedContexts = Array.isArray(content)
+    ? content
+        .map(part => asRecord(part))
+        .map(partRecord => (partRecord ? getRetrievedContext(partRecord) : undefined))
+    : []
+
   const sourceCandidates = [
     row.file_id,
     row.filename,
+    ...contentRetrievedContexts.flatMap(context => [
+      context?.mediaId,
+      context?.media_id,
+      context?.title,
+      context?.uri,
+    ]),
     row.id,
     retrievedContext?.title,
     retrievedContext?.uri,
