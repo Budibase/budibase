@@ -7,7 +7,7 @@ import type {
   ChatConversationRequest,
   User,
 } from "@budibase/types"
-import type { ModelMessage, ToolSet } from "ai"
+import type { LanguageModelUsage, ModelMessage, ToolSet } from "ai"
 import { convertToModelMessages, pruneMessages, streamText } from "ai"
 import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
@@ -1066,10 +1066,30 @@ describe("Agent chat tool call tracking", () => {
     })
   }
 
+  const lmTestUsage = (
+    inputTokens: number,
+    outputTokens: number
+  ): LanguageModelUsage => ({
+    inputTokens,
+    outputTokens,
+    totalTokens: inputTokens + outputTokens,
+    inputTokenDetails: {
+      noCacheTokens: inputTokens,
+      cacheReadTokens: undefined,
+      cacheWriteTokens: undefined,
+    },
+    outputTokenDetails: {
+      textTokens: outputTokens,
+      reasoningTokens: undefined,
+    },
+  })
+
   function makeStreamTextMockWithMetadata({
     toolCalls,
     toolResults,
     onMetadata,
+    stepLmUsages,
+    finishTotalLmUsage,
   }: {
     toolCalls: { toolCallId: string; toolName?: string }[]
     toolResults: {
@@ -1081,6 +1101,8 @@ describe("Agent chat tool call tracking", () => {
       startMetadata: Record<string, any> | undefined
       finishMetadata: Record<string, any> | undefined
     }) => void
+    stepLmUsages?: LanguageModelUsage[]
+    finishTotalLmUsage?: LanguageModelUsage
   }) {
     return (options: any) => ({
       response: Promise.resolve({
@@ -1097,11 +1119,16 @@ describe("Agent chat tool call tracking", () => {
         .fn()
         .mockImplementation(async (res: any, pipeOptions: any) => {
           if (options.onStepFinish) {
-            await options.onStepFinish({
-              content: [],
-              toolCalls,
-              toolResults,
-            })
+            const usages = stepLmUsages?.length ? stepLmUsages : [undefined]
+            for (const usage of usages) {
+              await options.onStepFinish({
+                content: [],
+                toolCalls,
+                toolResults,
+                response: { id: "step-resp" } as any,
+                usage,
+              })
+            }
           }
 
           onMetadata({
@@ -1109,7 +1136,11 @@ describe("Agent chat tool call tracking", () => {
               part: { type: "start" },
             }),
             finishMetadata: pipeOptions?.messageMetadata?.({
-              part: { type: "finish", finishReason: "stop" },
+              part: {
+                type: "finish",
+                finishReason: "stop",
+                totalUsage: finishTotalLmUsage,
+              },
             }),
           })
 
@@ -1265,6 +1296,45 @@ describe("Agent chat tool call tracking", () => {
 
       expect(res.status).toBe(200)
       expect(addActionMock).not.toHaveBeenCalled()
+    })
+
+    it("exposes context usage from the first model step in metadata", async () => {
+      let finishMetadata: Record<string, any> | undefined
+      jest.mocked(streamText).mockImplementation(
+        makeStreamTextMockWithMetadata({
+          toolCalls: [],
+          toolResults: [],
+          stepLmUsages: [lmTestUsage(1700, 20), lmTestUsage(3500, 120)],
+          finishTotalLmUsage: lmTestUsage(5200, 140),
+          onMetadata: metadata => {
+            finishMetadata = metadata.finishMetadata
+          },
+        }) as any
+      )
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      expect(finishMetadata?.usage?.segments).toEqual([
+        { type: "system", tokens: 2 },
+        { type: "input", tokens: 1698 },
+        { type: "output", tokens: 120 },
+      ])
     })
 
     it("includes ragSources when search_knowledge returns sources", async () => {
