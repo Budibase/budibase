@@ -449,8 +449,7 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="llm-section-container">
   <div class="llm-header">
-    <Body size="XS" color="var(--spectrum-global-color-gray-900)"
-      >AI Model*</Body
+    <Body size="XS" color="var(--spectrum-global-color-gray-900)">AI Model</Body
     >
     <Body size="XS" color="var(--spectrum-global-color-gray-700)">
       Select which provider and model to use for the agent.{" "}
@@ -467,7 +466,7 @@
       {#if modelOptions.length === 0}
         <Button
           secondary
-          size="M"
+          size="S"
           icon="sparkle"
           iconWeight="fill"
           iconColor="#8777D1"
@@ -487,7 +486,7 @@
   </div>
 </div>
 
-  <OperationsSection
+<OperationsSection
   operations={draft.operations}
   onSaveOperations={saveOperations}
   {promptBindings}
