@@ -2,7 +2,11 @@
   import { Body, Button, Icon, notifications } from "@budibase/bbui"
   import type { AgentOperation, EnrichedBinding } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
+  import * as routify from "@roxi/routify"
+  import { selectedAgent } from "@/stores/portal"
   import OperationSidePanel from "./OperationSidePanel.svelte"
+  const { goto } = routify
+  $goto
 
   export let operations: AgentOperation[] = []
   export let saving = false
@@ -15,6 +19,8 @@
   export let toolsLoaded = false
 
   let operationPanelOpen = false
+  let currentAgentId: string | undefined
+  $: currentAgentId = $selectedAgent?._id
   let editingOperationId: string | undefined = undefined
   const DEFAULT_OPERATION_INSTRUCTIONS = `**Agent role**
 What is this agent responsible for?
@@ -130,6 +136,10 @@ Any constraints the agent must follow.
     await onSaveOperations(nextOperations)
     closeOperationPanel()
   }
+
+  const handleAddKnowledge = () => {
+    $goto("./knowledge")
+  }
 </script>
 
 <div class="operations-section">
@@ -184,6 +194,7 @@ Any constraints the agent must follow.
 
 <OperationSidePanel
   open={operationPanelOpen}
+  agentId={currentAgentId}
   {editingOperationId}
   bind:operationDraft
   {saving}
@@ -191,6 +202,7 @@ Any constraints the agent must follow.
   {bindingIcons}
   {completions}
   {toolsLoaded}
+  onAddKnowledge={handleAddKnowledge}
   onClose={closeOperationPanel}
   onSave={saveOperation}
   onDelete={deleteOperation}

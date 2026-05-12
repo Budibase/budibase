@@ -35,7 +35,6 @@
   import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
   import { shouldAutoSelectAgentModel } from "./configUtils"
-  import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
 
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
@@ -122,32 +121,16 @@
   })
 
   // Build lookup maps from readable binding to runtime binding and icon URL
-  let { readableToRuntimeBinding, readableToIcon } = $derived.by(() => {
-    const runtimeMap: Record<string, string> = {}
+  let { readableToIcon } = $derived.by(() => {
     const iconMap: Record<string, string | undefined> = {}
     for (const tool of availableTools) {
       if (tool.readableBinding) {
         iconMap[tool.readableBinding] = tool.tagIconUrl
-        if (tool.runtimeBinding) {
-          runtimeMap[tool.readableBinding] = tool.runtimeBinding
-        }
       }
     }
-    return { readableToRuntimeBinding: runtimeMap, readableToIcon: iconMap }
+    return { readableToIcon: iconMap }
   })
 
-  let includedToolRuntimeBindings = $derived(
-    Array.from(
-      new Set(
-        (draft.operations || []).flatMap(operation =>
-          getIncludedToolRuntimeBindings(
-            operation.promptInstructions || "",
-            readableToRuntimeBinding
-          )
-        )
-      )
-    )
-  )
   let promptBindings: EnrichedBinding[] = $derived.by(() => {
     return availableTools
       .filter(tool => !!tool.name)
@@ -190,7 +173,7 @@
         description: agent.description || "",
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
-        promptInstructions: agent.promptInstructions || "",
+        promptInstructions: "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
         operations: agent.operations || [],
@@ -411,7 +394,6 @@
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
-        enabledTools: includedToolRuntimeBindings,
         operations: draft.operations,
       })
 

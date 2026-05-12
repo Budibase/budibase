@@ -12,10 +12,12 @@
   import Panel from "@/components/design/Panel.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
+  import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
 
   export let open = false
   export let editingOperationId: string | undefined = undefined
   export let operationDraft: AgentOperation
+  export let agentId: string | undefined = undefined
   export let saving = false
   export let promptBindings: EnrichedBinding[] = []
   export let bindingIcons: Record<string, string | undefined> = {}
@@ -26,6 +28,7 @@
   export let onDelete: () => void = () => {}
   export let onHelpWriteInstructions: () => void = () => {}
   export let onOpenSidePeak: () => void = () => {}
+  export let onAddKnowledge: () => void = () => {}
 
   let insertAtPos: InsertAtPositionFn | undefined
   let getCaretPosition: CaretPositionFn | undefined
@@ -163,6 +166,50 @@
                     </span>
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div class="operation-panel-section">
+              <div class="knowledge-header">
+                <Body size="S" color="var(--spectrum-global-color-gray-900)">
+                  Knowledge
+                </Body>
+                <div class="knowledge-add-control">
+                  <KnowledgeAddControls
+                    {agentId}
+                    onSharePoint={onAddKnowledge}
+                  />
+                </div>
+              </div>
+
+              <div class="knowledge-list">
+                {#if (operationDraft.knowledgeSources || []).length === 0}
+                  <div class="knowledge-row empty">
+                    <span>No knowledge sources yet</span>
+                  </div>
+                {:else}
+                  {#each operationDraft.knowledgeSources || [] as source (source.id)}
+                    <div class="knowledge-row">
+                      <div class="knowledge-main">
+                        <Icon
+                          name="file"
+                          size="S"
+                          color="var(--spectrum-global-color-gray-700)"
+                        />
+                        <span>
+                          {source.type === "sharepoint"
+                            ? `SharePoint: ${source.config.site.name || source.config.site.id}`
+                            : source.id}
+                        </span>
+                      </div>
+                      <Icon
+                        name="dots-three"
+                        size="S"
+                        color="var(--spectrum-global-color-gray-600)"
+                      />
+                    </div>
+                  {/each}
+                {/if}
               </div>
             </div>
 
@@ -321,6 +368,54 @@
     gap: 6px;
     font-size: 13px;
     font-weight: 500;
+  }
+
+  .knowledge-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
+  }
+
+  .knowledge-add-control {
+    flex-shrink: 0;
+  }
+
+  .knowledge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .knowledge-row {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 4px;
+    padding: 8px 12px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .knowledge-row.empty {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 13px;
+  }
+
+  .knowledge-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .knowledge-main > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .tool-avatars {

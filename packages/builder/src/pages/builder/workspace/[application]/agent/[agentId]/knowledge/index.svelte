@@ -39,7 +39,7 @@
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let activeAgentId = $derived(currentAgent?._id)
   let sharePointSources = $derived.by(() =>
-    (currentAgent?.knowledgeSources || []).filter(
+    (currentAgent?.operations?.[0]?.knowledgeSources || []).filter(
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
