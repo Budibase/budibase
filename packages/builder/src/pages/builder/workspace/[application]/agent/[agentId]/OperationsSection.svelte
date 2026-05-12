@@ -70,6 +70,18 @@ Any constraints the agent must follow.
     operationPanelOpen = true
   }
 
+  const showSingleOperationLimitInfo = () => {
+    notifications.info("Only one operation is supported at the moment.")
+  }
+
+  const handleAddOperation = () => {
+    if (operations.length >= 1) {
+      showSingleOperationLimitInfo()
+      return
+    }
+    openOperationPanel()
+  }
+
   const closeOperationPanel = () => {
     operationPanelOpen = false
   }
@@ -92,6 +104,11 @@ Any constraints the agent must follow.
     const existingIndex = operations.findIndex(
       operation => operation.id === editingOperationId
     )
+    if (existingIndex === -1 && operations.length >= 1) {
+      showSingleOperationLimitInfo()
+      return
+    }
+
     const nextOperations =
       existingIndex === -1
         ? [...operations, nextOperation]
@@ -125,12 +142,7 @@ Any constraints the agent must follow.
         Define the types of requests this agent can handle.
       </Body>
     </div>
-    <Button
-      secondary
-      size="S"
-      icon="plus"
-      on:click={() => openOperationPanel()}
-    >
+    <Button secondary size="S" icon="plus" on:click={handleAddOperation}>
       Add operation
     </Button>
   </div>
