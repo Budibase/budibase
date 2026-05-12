@@ -5,6 +5,7 @@
     ToolType,
     WebSearchProvider,
     type Agent,
+    type AgentOperation,
     type ToolMetadata,
     type EnrichedBinding,
     type InsertAtPositionFn,
@@ -46,6 +47,7 @@
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
   import { shouldAutoSelectAgentModel } from "./configUtils"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
+  import OperationSidePanel from "./OperationSidePanel.svelte"
 
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
@@ -70,7 +72,6 @@ What information does the agent receive?
 **Rules**
 Any constraints the agent must follow.
 `
-
   // Agent state
   let draftAgentId: string | undefined = $state()
   let draft = $state({
@@ -81,8 +82,19 @@ Any constraints the agent must follow.
     promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
     icon: "",
     iconColor: "",
+    operations: [] as AgentOperation[],
   })
 
+  let operationPanelOpen = $state(false)
+  let editingOperationId: string | undefined = $state()
+  let operationDraft = $state<AgentOperation>({
+    id: "",
+    name: "",
+    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+    live: false,
+    enabledTools: [],
+    knowledgeBases: [],
+  })
   let insertAtPos: InsertAtPositionFn | undefined = $state()
   let toolSearch = $state("")
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
@@ -252,6 +264,7 @@ Any constraints the agent must follow.
           agent.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS,
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
+        operations: agent.operations || [],
       }
       draftAgentId = agent._id
     }
@@ -592,6 +605,79 @@ Any constraints the agent must follow.
     webSearchConfigModal?.show()
   }
 
+  const createOperationId = () => {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return `operation_${crypto.randomUUID()}`
+    }
+    return `operation_${Date.now()}`
+  }
+
+  const getNewOperationDraft = (): AgentOperation => ({
+    id: createOperationId(),
+    name: "",
+    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+    live: false,
+    enabledTools: [],
+    knowledgeBases: [],
+  })
+
+  const openOperationPanel = (operation?: AgentOperation) => {
+    editingOperationId = operation?.id
+    operationDraft = operation
+      ? {
+          ...operation,
+          enabledTools: operation.enabledTools || [],
+          knowledgeBases: operation.knowledgeBases || [],
+        }
+      : getNewOperationDraft()
+    operationPanelOpen = true
+  }
+
+  const closeOperationPanel = () => {
+    operationPanelOpen = false
+  }
+
+  const saveOperation = async () => {
+    const name = operationDraft.name.trim()
+    if (!name) {
+      notifications.error("Operation name is required")
+      return
+    }
+
+    const nextOperation: AgentOperation = {
+      ...operationDraft,
+      name,
+      id: operationDraft.id || createOperationId(),
+      enabledTools: operationDraft.enabledTools || [],
+      knowledgeBases: operationDraft.knowledgeBases || [],
+    }
+
+    const operations = draft.operations || []
+    const existingIndex = operations.findIndex(
+      operation => operation.id === editingOperationId
+    )
+    draft.operations =
+      existingIndex === -1
+        ? [...operations, nextOperation]
+        : operations.map(operation =>
+            operation.id === editingOperationId ? nextOperation : operation
+          )
+
+    await saveAgent({ showNotifications: true })
+    closeOperationPanel()
+  }
+
+  const deleteOperation = async () => {
+    if (!editingOperationId) {
+      return
+    }
+    draft.operations = (draft.operations || []).filter(
+      operation => operation.id !== editingOperationId
+    )
+    await saveAgent({ showNotifications: true })
+    closeOperationPanel()
+  }
+
   async function saveAgent({
     showNotifications = true,
   }: {
@@ -612,6 +698,7 @@ Any constraints the agent must follow.
         ...currentAgent,
         ...draft,
         enabledTools: includedToolRuntimeBindings,
+        operations: draft.operations,
       })
 
       if (showNotifications) {
@@ -778,6 +865,61 @@ Any constraints the agent must follow.
   {/if}
 </div>
 
+<div class="operations-section">
+  <div class="operations-header">
+    <div class="section-header">
+      <Body size="S" color="var(--spectrum-global-color-gray-900)"
+        >Operations</Body
+      >
+      <Body size="S" color="var(--spectrum-global-color-gray-700)">
+        Define the types of requests this agent can handle.
+      </Body>
+    </div>
+    <Button
+      secondary
+      size="M"
+      icon="plus"
+      on:click={() => openOperationPanel()}
+    >
+      Add operation
+    </Button>
+  </div>
+
+  {#if draft.operations.length === 0}
+    <button
+      class="empty-operation"
+      type="button"
+      onclick={() => openOperationPanel()}
+    >
+      <span>No operations yet</span>
+      <span>Add the first request type this agent can handle.</span>
+    </button>
+  {:else}
+    <div class="operation-list">
+      {#each draft.operations as operation (operation.id)}
+        <button
+          class="operation-row"
+          type="button"
+          onclick={() => openOperationPanel(operation)}
+        >
+          <span class="operation-name">{operation.name}</span>
+          <span class="operation-actions">
+            <span class="operation-status" class:stopped={!operation.live}>
+              <span></span>
+              {operation.live ? "Live" : "Stopped"}
+            </span>
+            <Icon
+              name="dots-three"
+              size="S"
+              color="var(--spectrum-global-color-gray-600)"
+            />
+          </span>
+        </button>
+      {/each}
+    </div>
+  {/if}
+</div>
+
 <div class="section">
   <div class="section-header">
     <Body size="S" color="var(--spectrum-global-color-gray-900)"
@@ -833,6 +975,16 @@ Any constraints the agent must follow.
 <WebSearchConfigModal
   bind:this={webSearchConfigModal}
   aiconfigId={draft.aiconfig}
+/>
+
+<OperationSidePanel
+  open={operationPanelOpen}
+  {editingOperationId}
+  bind:operationDraft
+  {saving}
+  onClose={closeOperationPanel}
+  onSave={saveOperation}
+  onDelete={deleteOperation}
 />
 
 <style>
@@ -991,6 +1143,112 @@ Any constraints the agent must follow.
   .tools-section {
     display: flex;
     flex-direction: column;
+  }
+
+  .operations-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+
+  .operations-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-l);
+  }
+
+  .operation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .operation-row,
+  .empty-operation {
+    width: 100%;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    background: transparent;
+    color: var(--spectrum-global-color-gray-900);
+    border-radius: 4px;
+    cursor: pointer;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
+  }
+
+  .operation-row {
+    min-height: 36px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    text-align: left;
+  }
+
+  .operation-row:hover,
+  .empty-operation:hover {
+    background: var(--spectrum-global-color-gray-100);
+    border-color: var(--spectrum-global-color-gray-300);
+  }
+
+  .operation-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .operation-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    flex-shrink: 0;
+  }
+
+  .operation-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-800);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .operation-status span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--spectrum-global-color-green-500);
+  }
+
+  .operation-status.stopped span {
+    background: var(--spectrum-global-color-orange-500);
+  }
+
+  .empty-operation {
+    min-height: 84px;
+    padding: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .empty-operation span:first-child {
+    color: var(--spectrum-global-color-gray-900);
+    font-size: 14px;
+  }
+
+  .empty-operation span:last-child {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 13px;
   }
 
   .llm-section-container {
