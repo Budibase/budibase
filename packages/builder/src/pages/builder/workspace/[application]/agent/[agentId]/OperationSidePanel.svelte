@@ -1,10 +1,14 @@
 <script lang="ts">
-  import { Body, Button, Icon, Input, Toggle } from "@budibase/bbui"
+  import { Body, Button, Icon, Input, Toggle, notifications } from "@budibase/bbui"
+  import { confirm } from "@/helpers"
+  import { agentsStore } from "@/stores/portal"
   import type {
     AgentOperation,
     CaretPositionFn,
     EnrichedBinding,
     InsertAtPositionFn,
+    KnowledgeBaseFile,
+    SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import { fly } from "svelte/transition"
@@ -13,6 +17,11 @@
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
   import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
+  import KnowledgeTable from "./knowledge/KnowledgeTable.svelte"
+  import {
+    toFileTableRows,
+    toSharePointConnectionRows,
+  } from "./knowledge/knowledgeTableRows"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
   import type { AgentTool } from "./toolTypes"
@@ -60,6 +69,59 @@
     },
     {} as Record<string, AgentTool[]>
   )
+  $: if (open && agentId) {
+    const operationId = editingOperationId || operationDraft.id
+    if (operationId) {
+      agentsStore.fetchAgentKnowledge(agentId, operationId)
+    }
+  }
+  $: knowledgeFiles =
+    agentId && $agentsStore.knowledgeByAgent[agentId]
+      ? $agentsStore.knowledgeByAgent[agentId].files || []
+      : ([] as KnowledgeBaseFile[])
+  $: sharePointSourceSnapshots =
+    agentId && $agentsStore.knowledgeByAgent[agentId]
+      ? $agentsStore.knowledgeByAgent[agentId].sharePointSources ||
+        ([] as SharePointKnowledgeSourceSnapshot[])
+      : ([] as SharePointKnowledgeSourceSnapshot[])
+  $: sharePointSources = (operationDraft.knowledgeSources || []).filter(
+    source => source.type === "sharepoint"
+  )
+  const handleDeleteFile = async (file: KnowledgeBaseFile) => {
+    if (!agentId || !file._id) {
+      return
+    }
+    const operationId = editingOperationId || operationDraft.id
+    if (!operationId) {
+      return
+    }
+
+    await confirm({
+      title: "Confirm deletion",
+      body: `Are you sure you want to remove ${file.filename}? This action can't be undone.`,
+      okText: "Delete",
+      onConfirm: async () => {
+        try {
+          await agentsStore.deleteAgentFile(agentId, file._id!, operationId)
+          await agentsStore.fetchAgentKnowledge(agentId, operationId)
+          notifications.success("File removed")
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to remove file")
+        }
+      },
+    })
+  }
+  $: knowledgeRows = [
+    ...toSharePointConnectionRows({
+      sharePointSources,
+      sharePointSourceSnapshots,
+      loadingSharePointSites: false,
+      onDelete: async () => {},
+      onSync: async () => {},
+    }),
+    ...toFileTableRows(knowledgeFiles, handleDeleteFile),
+  ]
 
   const handleToolClick = (tool: AgentTool) => {
     const binding = tool.readableBinding || tool.runtimeBinding
@@ -214,40 +276,13 @@
                 <div class="knowledge-add-control">
                   <KnowledgeAddControls
                     {agentId}
+                    operationId={editingOperationId}
                     onSharePoint={onAddKnowledge}
                   />
                 </div>
               </div>
 
-              <div class="knowledge-list">
-                {#if (operationDraft.knowledgeSources || []).length === 0}
-                  <div class="knowledge-row empty">
-                    <span>No knowledge sources yet</span>
-                  </div>
-                {:else}
-                  {#each operationDraft.knowledgeSources || [] as source (source.id)}
-                    <div class="knowledge-row">
-                      <div class="knowledge-main">
-                        <Icon
-                          name="file"
-                          size="S"
-                          color="var(--spectrum-global-color-gray-700)"
-                        />
-                        <span>
-                          {source.type === "sharepoint"
-                            ? `SharePoint: ${source.config.site.name || source.config.site.id}`
-                            : source.id}
-                        </span>
-                      </div>
-                      <Icon
-                        name="dots-three"
-                        size="S"
-                        color="var(--spectrum-global-color-gray-600)"
-                      />
-                    </div>
-                  {/each}
-                {/if}
-              </div>
+              <KnowledgeTable loading={false} rows={knowledgeRows} />
             </div>
           </div>
 
@@ -405,43 +440,6 @@
 
   .knowledge-add-control {
     flex-shrink: 0;
-  }
-
-  .knowledge-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .knowledge-row {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
-    padding: 8px 12px;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .knowledge-row.empty {
-    color: var(--spectrum-global-color-gray-600);
-    font-size: 13px;
-  }
-
-  .knowledge-main {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    font-size: 14px;
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .knowledge-main > span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .operation-panel-footer {
