@@ -9,7 +9,6 @@
   $goto
 
   export let operations: AgentOperation[] = []
-  export let saving = false
   export let onSaveOperations: (
     _nextOperations: AgentOperation[]
   ) => Promise<void> = async () => {}
@@ -21,6 +20,7 @@
   let operationPanelOpen = false
   let currentAgentId: string | undefined
   $: currentAgentId = $selectedAgent?._id
+  let savingDraft = false
   let editingOperationId: string | undefined = undefined
   const DEFAULT_OPERATION_INSTRUCTIONS = `**Agent role**
 What is this agent responsible for?
@@ -92,10 +92,12 @@ Any constraints the agent must follow.
     operationPanelOpen = false
   }
 
-  const saveOperation = async () => {
+  const saveOperation = async ({ closeAfterSave = false } = {}) => {
+    if (savingDraft) {
+      return
+    }
     const name = operationDraft.name.trim()
     if (!name) {
-      notifications.error("Operation name is required")
       return
     }
 
@@ -122,8 +124,15 @@ Any constraints the agent must follow.
             operation.id === editingOperationId ? nextOperation : operation
           )
 
-    await onSaveOperations(nextOperations)
-    closeOperationPanel()
+    savingDraft = true
+    try {
+      await onSaveOperations(nextOperations)
+    } finally {
+      savingDraft = false
+    }
+    if (closeAfterSave) {
+      closeOperationPanel()
+    }
   }
 
   const deleteOperation = async () => {
@@ -197,14 +206,13 @@ Any constraints the agent must follow.
   agentId={currentAgentId}
   {editingOperationId}
   bind:operationDraft
-  {saving}
   {promptBindings}
   {bindingIcons}
   {completions}
   {toolsLoaded}
   onAddKnowledge={handleAddKnowledge}
+  onUpdated={saveOperation}
   onClose={closeOperationPanel}
-  onSave={saveOperation}
   onDelete={deleteOperation}
 />
 

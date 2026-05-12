@@ -489,7 +489,6 @@
 
 <OperationsSection
   operations={draft.operations}
-  {saving}
   onSaveOperations={saveOperations}
   {promptBindings}
   bindingIcons={readableToIcon}

@@ -18,14 +18,13 @@
   export let editingOperationId: string | undefined = undefined
   export let operationDraft: AgentOperation
   export let agentId: string | undefined = undefined
-  export let saving = false
   export let promptBindings: EnrichedBinding[] = []
   export let bindingIcons: Record<string, string | undefined> = {}
   export let completions: BindingCompletion[] = []
   export let toolsLoaded = false
   export let onClose: () => void = () => {}
-  export let onSave: () => void = () => {}
   export let onDelete: () => void = () => {}
+  export let onUpdated: () => void = () => {}
   export let onHelpWriteInstructions: () => void = () => {}
   export let onOpenSidePeak: () => void = () => {}
   export let onAddKnowledge: () => void = () => {}
@@ -82,11 +81,13 @@
                 label="Name"
                 placeholder="Access requests"
                 bind:value={operationDraft.name}
+                on:change={onUpdated}
               />
               <Toggle
                 label="Status"
                 text={operationDraft.live ? "Live" : "Stopped"}
                 bind:value={operationDraft.live}
+                on:change={onUpdated}
               />
             </div>
 
@@ -131,6 +132,7 @@
                         placeholder=""
                         on:change={event => {
                           operationDraft.promptInstructions = event.detail || ""
+                          onUpdated()
                         }}
                         bind:getCaretPosition
                       />
@@ -212,19 +214,14 @@
                 {/if}
               </div>
             </div>
-
-            {#if editingOperationId}
-              <div class="operation-danger">
-                <Button secondary quiet icon="trash" on:click={onDelete}>
-                  Delete operation
-                </Button>
-              </div>
-            {/if}
           </div>
 
           <div class="operation-panel-footer">
-            <Button secondary on:click={onClose}>Cancel</Button>
-            <Button primary on:click={onSave} disabled={saving}>Save</Button>
+            {#if editingOperationId}
+              <Button secondary quiet icon="trash" warning on:click={onDelete}>
+                Delete operation
+              </Button>
+            {/if}
           </div>
         </div>
       </Panel>
@@ -451,10 +448,5 @@
     padding: var(--spacing-m) var(--spacing-xl);
     border-top: 1px solid var(--spectrum-global-color-gray-200);
     background: var(--background);
-  }
-
-  .operation-danger {
-    padding-top: var(--spacing-m);
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
   }
 </style>
