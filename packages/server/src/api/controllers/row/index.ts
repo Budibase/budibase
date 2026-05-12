@@ -6,6 +6,7 @@ import { quotas } from "@budibase/pro"
 import { dataFilters } from "@budibase/shared-core"
 import {
   ActionFailureReason,
+  ActionType,
   Ctx,
   DeleteRow,
   DeleteRowRequest,
@@ -77,7 +78,7 @@ async function _patch(
     }
     const { row, table, oldRow } = isAutomation
       ? await work()
-      : await quotas.addAction(work)
+      : await quotas.addAction(ActionType.CRUD, work)
     if (!row) {
       ctx.throw(404, "Row not found")
     }
@@ -139,7 +140,7 @@ async function _save(
         ctx.user?._id
       )
     } else {
-      saveResult = await quotas.addAction(async () => {
+      saveResult = await quotas.addAction(ActionType.CRUD, async () => {
         const response = await sdk.rows.save(
           sourceId,
           ctx.request.body,
@@ -154,7 +155,7 @@ async function _save(
       sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
     )
   } else {
-    saveResult = await quotas.addAction(async () => {
+    saveResult = await quotas.addAction(ActionType.CRUD, async () => {
       const response = await quotas.addRow(() =>
         sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
@@ -251,7 +252,9 @@ async function deleteRows(
     events.action.crudExecuted({ type: "delete" })
     return response
   }
-  const { rows } = isAutomation ? await work() : await quotas.addAction(work)
+  const { rows } = isAutomation
+    ? await work()
+    : await quotas.addAction(ActionType.CRUD, work)
 
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRows(rows.length)
@@ -281,7 +284,9 @@ async function deleteRow(
     events.action.crudExecuted({ type: "delete" })
     return response
   }
-  const resp = isAutomation ? await work() : await quotas.addAction(work)
+  const resp = isAutomation
+    ? await work()
+    : await quotas.addAction(ActionType.CRUD, work)
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRow()
   }
