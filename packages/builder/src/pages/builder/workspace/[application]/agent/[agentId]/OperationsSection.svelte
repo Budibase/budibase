@@ -155,8 +155,9 @@ Any constraints the agent must follow.
       knowledgeBases: operationDraft.knowledgeBases || [],
       knowledgeSources: operationDraft.knowledgeSources || [],
     }
+    const effectiveOperationId = editingOperationId || operationDraft.id
     const existingOperation = operations.find(
-      operation => operation.id === editingOperationId
+      operation => operation.id === effectiveOperationId
     )
     if (existingOperation) {
       const existingSnapshot = JSON.stringify(existingOperation)
@@ -170,7 +171,7 @@ Any constraints the agent must follow.
     }
 
     const existingIndex = operations.findIndex(
-      operation => operation.id === editingOperationId
+      operation => operation.id === effectiveOperationId
     )
     if (existingIndex === -1 && operations.length >= 1) {
       showSingleOperationLimitInfo()
@@ -187,6 +188,13 @@ Any constraints the agent must follow.
     savingDraft = true
     try {
       await onSaveOperations(nextOperations)
+      editingOperationId = nextOperation.id
+      operationDraft = {
+        ...nextOperation,
+        enabledTools: nextOperation.enabledTools || [],
+        knowledgeBases: nextOperation.knowledgeBases || [],
+        knowledgeSources: nextOperation.knowledgeSources || [],
+      }
     } finally {
       savingDraft = false
     }
