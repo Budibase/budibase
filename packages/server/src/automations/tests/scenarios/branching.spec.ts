@@ -1,4 +1,25 @@
-import { AutomationStatus, EmptyFilterOption, Table } from "@budibase/types"
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      action: {
+        ...actual.events.action,
+        automationStepExecuted: jest.fn(),
+        automationStepFailed: jest.fn(),
+      },
+    },
+  }
+})
+
+import {
+  ActionFailureReason,
+  AutomationStatus,
+  EmptyFilterOption,
+  Table,
+} from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as automation from "../../index"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
