@@ -1,4 +1,5 @@
 import { quotas } from "@budibase/pro"
+import { ActionType } from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
 
 jest.mock("@budibase/pro", () => {
@@ -7,7 +8,11 @@ jest.mock("@budibase/pro", () => {
     ...actual,
     quotas: {
       ...actual.quotas,
-      addAction: jest.fn().mockImplementation((fn: () => Promise<any>) => fn()),
+      addAction: jest
+        .fn()
+        .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
+          fn()
+        ),
     },
   }
 })
