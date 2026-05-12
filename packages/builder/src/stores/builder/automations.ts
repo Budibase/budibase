@@ -1359,6 +1359,8 @@ const automationActions = (store: AutomationStore) => ({
       }
       state.testProgress = {}
       state.testResults = undefined
+      state.selectedNodeId = undefined
+      state.selectedBranchNode = undefined
       return state
     })
     try {

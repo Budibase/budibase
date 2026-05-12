@@ -231,7 +231,7 @@
     triggerCompleted: boolean
     runHighlight: RunHighlight | undefined
   }) {
-    if (selected && errorHighlight) {
+    if (errorHighlight) {
       return "var(--spectrum-semantic-negative-color-status)"
     }
     if (selected && successHighlight) {
@@ -480,31 +480,24 @@
   .block.draggable .block-content.dragging .block-core {
     cursor: grabbing;
   }
-  .block.selected .block-content {
-    border-color: var(--spectrum-global-color-blue-600);
-    border-width: 2px;
-  }
   .block.success .block-content {
     border-color: var(--spectrum-semantic-positive-color-status);
     border-width: 2px;
   }
-  .block.success.selected .block-content {
-    border-width: 3px;
-  }
   .block.error .block-content {
     border-color: var(--spectrum-semantic-negative-color-status);
     border-width: 2px;
-  }
-  .block.error.selected .block-content {
-    border-width: 3px;
   }
 
   .block.warn .block-content {
     border-color: var(--spectrum-global-color-orange-500);
     border-width: 2px;
   }
-  .block.warn.selected .block-content {
-    border-width: 3px;
+  .block.selected .block-content {
+    border-color: var(--spectrum-global-color-blue-600);
+    border-width: 2px;
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--spectrum-global-color-blue-600) 20%, transparent);
   }
 
   .block-info {
