@@ -281,6 +281,7 @@
     top: calc(var(--top-bar-height, 51px) + 45px);
     right: 0;
     bottom: 0;
+    border-top: var(--border-light);
     z-index: 99;
     display: flex;
     align-items: stretch;
