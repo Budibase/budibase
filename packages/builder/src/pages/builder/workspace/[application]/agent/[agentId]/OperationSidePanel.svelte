@@ -38,6 +38,7 @@
   let insertAtPos: InsertAtPositionFn | undefined
   let getCaretPosition: CaretPositionFn | undefined
   $: resolvedIconCount = Object.values(bindingIcons).filter(Boolean).length
+  let panelRoot: HTMLDivElement | undefined
   let toolSearch = ""
   $: filteredTools = availableTools.filter(tool => {
     const query = toolSearch.trim().toLowerCase()
@@ -77,12 +78,24 @@
 
 {#if open}
   <div
+    class="operation-panel-overlay"
+    role="presentation"
+    on:click={event => {
+      const target = event.target as Node | null
+      if (target && panelRoot?.contains(target)) {
+        return
+      }
+      onClose()
+    }}
+  ></div>
+  <div
     class="operation-panel-container"
+    bind:this={panelRoot}
     transition:fly|local={{ x: 260, duration: 300 }}
   >
     <ResizablePanel
       storageKey="agent-operation-side-panel-width"
-      defaultWidth={420}
+      defaultWidth={540}
       minWidth={360}
       maxWidthRatio={0.6}
       position="right"
@@ -241,6 +254,16 @@
 {/if}
 
 <style>
+  .operation-panel-overlay {
+    position: fixed;
+    top: calc(var(--top-bar-height, 51px) + 45px);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 98;
+    background: transparent;
+  }
+
   .operation-panel-container {
     position: fixed;
     top: calc(var(--top-bar-height, 51px) + 45px);
@@ -353,31 +376,6 @@
     background: var(--spectrum-global-color-blue-700);
   }
 
-  .add-tools {
-    border: none;
-    border-radius: 20px;
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-900);
-    padding: 4px 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .add-tools:hover {
-    background: var(--spectrum-global-color-gray-300);
-  }
-
-  .add-tools-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 500;
-  }
-
   .knowledge-header {
     display: flex;
     align-items: center;
@@ -424,13 +422,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .tool-avatars {
-    width: 56px;
-    height: 24px;
-    object-fit: contain;
-    pointer-events: none;
   }
 
   .operation-panel-footer {
