@@ -13,6 +13,7 @@
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
   import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
+  import addToolsIcons from "assets/add-tools-icons.svg"
 
   export let open = false
   export let editingOperationId: string | undefined = undefined
@@ -161,11 +162,7 @@
                       />
                       Add tools
                     </span>
-                    <span class="tool-avatars">
-                      <span>J</span>
-                      <span>A</span>
-                      <span>H</span>
-                    </span>
+                    <img src={addToolsIcons} alt="" class="tool-avatars" />
                   </button>
                 </div>
               </div>
@@ -416,27 +413,10 @@
   }
 
   .tool-avatars {
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .tool-avatars > span {
-    width: 20px;
-    height: 20px;
-    margin-left: -4px;
-    border-radius: 50%;
-    border: 1px solid var(--spectrum-global-color-gray-100);
-    background: var(--spectrum-global-color-gray-75);
-    color: var(--spectrum-global-color-gray-900);
-    font-size: 10px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .tool-avatars > span:first-child {
-    margin-left: 0;
+    width: 56px;
+    height: 24px;
+    object-fit: contain;
+    pointer-events: none;
   }
 
   .operation-panel-footer {
