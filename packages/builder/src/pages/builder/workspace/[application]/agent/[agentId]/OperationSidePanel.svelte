@@ -14,6 +14,7 @@
   import { EditorModes } from "@/components/common/CodeEditor"
   import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
   import ToolsDropdown from "./ToolsDropdown.svelte"
+  import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
   import type { AgentTool } from "./toolTypes"
 
   export let open = false
@@ -29,7 +30,6 @@
   export let onClose: () => void = () => {}
   export let onDelete: () => void = () => {}
   export let onUpdated: () => void = () => {}
-  export let onHelpWriteInstructions: () => void = () => {}
   export let onOpenSidePeak: () => void = () => {}
   export let onAddKnowledge: () => void = () => {}
   export let onAddApiConnection: () => void = () => {}
@@ -106,6 +106,22 @@
         onClickCloseButton={onClose}
         resizable
       >
+        <svelte:fragment slot="panel-title-content">
+          <div class="operation-title-row">
+            <Body
+              size="S"
+              weight="500"
+              color="var(--spectrum-global-color-gray-900)"
+              >Operation</Body
+            >
+            <Toggle
+              label=""
+              text={operationDraft.live ? "Live" : "Stopped"}
+              bind:value={operationDraft.live}
+              on:change={onUpdated}
+            />
+          </div>
+        </svelte:fragment>
         <div class="operation-panel">
           <div class="operation-panel-content">
             <div class="operation-panel-section">
@@ -113,12 +129,6 @@
                 label="Name"
                 placeholder="Access requests"
                 bind:value={operationDraft.name}
-                on:change={onUpdated}
-              />
-              <Toggle
-                label="Status"
-                text={operationDraft.live ? "Live" : "Stopped"}
-                bind:value={operationDraft.live}
                 on:change={onUpdated}
               />
             </div>
@@ -129,14 +139,16 @@
                   Instructions
                 </Body>
                 <div class="instructions-actions">
-                  <button type="button" on:click={onHelpWriteInstructions}>
-                    <Icon
-                      name="star-four"
-                      size="S"
-                      color="var(--spectrum-global-color-gray-700)"
-                    />
-                    <span>Help write instructions</span>
-                  </button>
+                  <GenerateInstructionsControl
+                    triggerLabel="Help write instructions"
+                    promptInstructions={operationDraft.promptInstructions || ""}
+                    promptBindings={promptBindings}
+                    bindingIcons={bindingIcons}
+                    onApplyInstructions={instructions => {
+                      operationDraft.promptInstructions = instructions
+                      onUpdated()
+                    }}
+                  />
                   <button type="button" on:click={onOpenSidePeak}>
                     <Icon
                       name="square-half"
@@ -290,6 +302,14 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
+  }
+
+  .operation-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--spacing-s);
   }
 
   .operation-panel-section {
