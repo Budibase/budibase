@@ -496,7 +496,8 @@
   .block.selected .block-content {
     border-color: var(--spectrum-global-color-blue-600);
     border-width: 2px;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--spectrum-global-color-blue-600) 20%, transparent);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--spectrum-global-color-blue-600) 20%, transparent);
   }
 
   .block-info {
