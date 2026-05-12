@@ -506,11 +506,20 @@ const alignSwitchBranchTargets = (graph: {
 }) => {
   const nodesById: Record<string, FlowNode> = {}
   graph.nodes.forEach(node => (nodesById[node.id] = node))
+  const outgoingEdgesBySource = graph.edges.reduce<Record<string, FlowEdge[]>>(
+    (acc, edge) => {
+      ;(acc[edge.source] ||= []).push(edge)
+      return acc
+    },
+    {}
+  )
 
   const switchBranchEdges = graph.edges.filter(edge => {
-    const target = nodesById[edge.target]
+    const block = edge.data?.block
     return (
-      target?.type === "anchor-node" && isBranchFlowContext(edge.data?.block)
+      isBranchFlowContext(block) &&
+      edge.source === block.branchStepId &&
+      !!nodesById[edge.target]
     )
   })
 
@@ -562,8 +571,48 @@ const alignSwitchBranchTargets = (graph: {
           getNodeHeight(targetNode) / 2 -
           middleBranchNudge,
       }
+      alignLinearBranchDescendants(
+        targetNode.id,
+        targetNode.position.y + getNodeHeight(targetNode) / 2,
+        nodesById,
+        outgoingEdgesBySource
+      )
     })
   })
+}
+
+const alignLinearBranchDescendants = (
+  startNodeId: string,
+  centerY: number,
+  nodesById: Record<string, FlowNode>,
+  outgoingEdgesBySource: Record<string, FlowEdge[]>
+) => {
+  const visited = new Set<string>()
+  let currentId: string | undefined = startNodeId
+
+  while (currentId && !visited.has(currentId)) {
+    visited.add(currentId)
+    const outgoingEdges: FlowEdge[] = outgoingEdgesBySource[currentId] || []
+    if (outgoingEdges.length !== 1) {
+      return
+    }
+
+    const nextEdge: FlowEdge = outgoingEdges[0]
+    if (isBranchFlowContext(nextEdge.data?.block)) {
+      return
+    }
+
+    const nextNode: FlowNode | undefined = nodesById[nextEdge.target]
+    if (!nextNode || nextNode.parentId) {
+      return
+    }
+
+    nextNode.position = {
+      ...nextNode.position,
+      y: centerY - getNodeHeight(nextNode) / 2,
+    }
+    currentId = nextNode.id
+  }
 }
 
 export type { GraphBuildDeps }

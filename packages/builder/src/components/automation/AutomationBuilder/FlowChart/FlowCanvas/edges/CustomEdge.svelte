@@ -101,6 +101,8 @@
   $: isSubflowEdge = data.isSubflowEdge === true
   $: isEmptyBranchAnchor =
     isAnchorTarget && block ? isBranchContext(block) : false
+  $: isPopulatedBranchTarget =
+    !isAnchorTarget && block ? isBranchContext(block) : false
 
   $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
     labelX = isEmptyBranchAnchor
@@ -111,6 +113,12 @@
       : isLoopSource
         ? (targetY ?? 0)
         : (sourceY ?? 0)
+  }
+
+  $: if (isPopulatedBranchTarget) {
+    const bendX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+    labelX = Math.round((bendX + (targetX ?? 0)) / 2)
+    labelY = targetY ?? 0
   }
 
   $: loopTargetPath = isLoopTarget ? getLoopTargetPath() : undefined
