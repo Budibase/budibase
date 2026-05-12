@@ -6,8 +6,7 @@
     Drawer,
     DrawerContent,
   } from "@budibase/bbui"
-  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
+  import AutomationSwitchConditionsBuilder from "./AutomationSwitchConditionsBuilder.svelte"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { automationStore } from "@/stores/builder"
   import { Constants, QueryUtils, Utils } from "@budibase/frontend-core"
@@ -123,10 +122,6 @@
   }
 
   const updateBranchCondition = (branchIdx: number, conditionUI: any) => {
-    if (!conditionUI?.groups?.length) {
-      deleteBranch(branchIdx)
-      return
-    }
     editableBranches = editableBranches.map((branch, idx) => {
       if (idx !== branchIdx) {
         return branch
@@ -149,15 +144,6 @@
         condition: QueryUtils.buildQuery(conditionUI),
       },
     ]
-  }
-
-  const deleteBranch = (branchIdx: number) => {
-    if (editableBranches.length <= 2) {
-      return
-    }
-    editableBranches = editableBranches.filter(
-      (_branch, idx) => idx !== branchIdx
-    )
   }
 
   const saveConditions = async () => {
@@ -201,9 +187,7 @@
   body="Checks each condition in order and follows the first one that matches."
 />
 <div class="open-modal">
-  <Button secondary icon="FullScreen" on:click={openConditionsModal}>
-    Open in modal
-  </Button>
+  <Button secondary on:click={openConditionsModal}>Update conditions</Button>
 </div>
 {#each branches as branch, idx (branch.id)}
   {#if idx > 0}
@@ -221,24 +205,17 @@
   <DrawerContent slot="body">
     <div class="conditions">
       <div class="conditions-header">
-        Run branch when matching the first branch condition that matches:
+        Run the first branch that matches the condition:
       </div>
       {#each editableBranches as branch, idx (branch.id)}
         <div class="condition">
-          <FilterBuilder
+          <AutomationSwitchConditionsBuilder
             filters={branch.conditionUI}
             bindings={branchBindings}
             schemaFields={branchSchemaFields}
-            datasource={{ type: "custom" }}
-            panel={AutomationBindingPanel}
-            on:change={e => updateBranchCondition(idx, e.detail)}
-            allowOnEmpty={false}
-            builderType={"condition"}
-            docsURL={null}
             {evaluationContext}
-            showGlobalHeader={false}
+            on:change={e => updateBranchCondition(idx, e.detail)}
             showDeleteGroupAction={editableBranches.length > 2}
-            showAddGroupButton={false}
             groupLabel={`${idx + 1}.`}
           />
         </div>
@@ -255,6 +232,7 @@
 <style>
   .open-modal {
     display: flex;
+    margin-bottom: var(--spacing-m);
   }
 
   .condition-summary {

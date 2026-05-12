@@ -2687,8 +2687,12 @@ const automationActions = (store: AutomationStore) => ({
     }
   ),
 
-  save: async (automation: Automation) => {
-    const response = await API.updateAutomation(automation)
+  save: Utils.sequential(async (automation: Automation) => {
+    // Re-read the latest automation from the store to get the current _rev,
+    // preventing 409 conflicts from stale revisions.
+    const latest = get(selectedAutomation)?.data
+    const toSave = latest ? { ...automation, _rev: latest._rev } : automation
+    const response = await API.updateAutomation(toSave)
 
     // Mark automation as having unpublished changes
     if (response.automation._id) {
@@ -2701,7 +2705,7 @@ const automationActions = (store: AutomationStore) => ({
     store.actions.select(response.automation._id!)
     store.actions.clearRunResults()
     return response.automation
-  },
+  }),
 
   clearRunResults: () => {
     store.update(state => {
