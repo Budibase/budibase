@@ -476,6 +476,7 @@ export const dagreLayoutAutomation = (
   if (compactLoops && rankdir === "LR") {
     applyLoopClearance(graph)
   }
+  alignSwitchBranchTargets(graph)
   return graph
 }
 
