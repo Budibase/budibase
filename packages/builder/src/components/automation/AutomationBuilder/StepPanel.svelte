@@ -616,11 +616,13 @@
                 ? branch.name
                 : "Add condition"}
             </Button>
-            <Icon
-              name="trash"
-              hoverable
-              on:click={() => deleteSwitchCondition(idx)}
-            />
+            {#if (switchStep.inputs?.branches || []).length > 2}
+              <Icon
+                name="trash"
+                hoverable
+                on:click={() => deleteSwitchCondition(idx)}
+              />
+            {/if}
           </div>
         {/each}
         <Button secondary on:click={addSwitchCondition}>Add condition</Button>
