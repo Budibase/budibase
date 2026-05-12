@@ -99,9 +99,18 @@
     }
 
     try {
-      const resolvedUrl = chat?.agentId
-        ? (await API.fetchAgentFileUrl(chat.agentId, source.fileId)).url
-        : undefined
+      const resolvedUrl =
+        !isAgentPreviewChat && chat?.chatAppId && chat?.agentId
+          ? (
+              await API.fetchChatAppAgentFileUrl(
+                chat.chatAppId,
+                chat.agentId,
+                source.fileId
+              )
+            ).url
+          : chat?.agentId
+            ? (await API.fetchAgentFileUrl(chat.agentId, source.fileId)).url
+            : undefined
       if (!resolvedUrl) {
         notifications.error("Could not resolve source file URL")
         return
