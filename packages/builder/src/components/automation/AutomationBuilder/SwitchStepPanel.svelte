@@ -3,7 +3,6 @@
     Button,
     Drawer,
     DrawerContent,
-    Icon,
   } from "@budibase/bbui"
   import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
@@ -107,13 +106,17 @@
   }
 
   const updateBranchCondition = (branchIdx: number, conditionUI: any) => {
+    if (!conditionUI?.groups?.length) {
+      deleteBranch(branchIdx)
+      return
+    }
     editableBranches = editableBranches.map((branch, idx) => {
       if (idx !== branchIdx) {
         return branch
       }
       return {
         ...branch,
-        conditionUI: conditionUI?.groups?.length ? conditionUI : createDefaultConditionUI(),
+        conditionUI,
       }
     })
   }
@@ -193,11 +196,6 @@
       </div>
       {#each editableBranches as branch, idx (branch.id)}
         <div class="condition">
-          {#if editableBranches.length > 2}
-            <div class="condition-delete">
-              <Icon name="trash" hoverable on:click={() => deleteBranch(idx)} />
-            </div>
-          {/if}
           <FilterBuilder
             filters={branch.conditionUI}
             bindings={branchBindings}
@@ -210,7 +208,7 @@
             docsURL={null}
             evaluationContext={evaluationContext}
             showGlobalHeader={false}
-            showDeleteGroupAction={false}
+            showDeleteGroupAction={editableBranches.length > 2}
             showAddGroupButton={false}
             groupLabel={`${idx + 1}.`}
           />
@@ -234,17 +232,6 @@
 
   .conditions-header {
     color: var(--ink);
-  }
-
-  .condition {
-    position: relative;
-  }
-
-  .condition-delete {
-    position: absolute;
-    top: var(--spacing-xl);
-    right: var(--spacing-xl);
-    z-index: 1;
   }
 
   .add-branch {
