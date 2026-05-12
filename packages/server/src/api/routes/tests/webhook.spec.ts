@@ -128,6 +128,18 @@ describe("/webhooks", () => {
         type: "object",
       })
     })
+
+    it("requires authorization to build a schema", async () => {
+      await request
+        .post(
+          `/api/webhooks/schema/${config.getDevWorkspaceId()}/${webhook._id}`
+        )
+        .send({
+          a: 1,
+        })
+        .expect("Content-Type", /json/)
+        .expect(401)
+    })
   })
 
   describe("trigger", () => {
