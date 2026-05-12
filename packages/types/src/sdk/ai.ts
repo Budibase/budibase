@@ -111,6 +111,7 @@ export interface LLMResponse {
     filename: string,
     contentType?: string
   ) => Promise<string>
+  contextWindowTokens?: number
 }
 
 export type LLMProviderOptions = ProviderOptions

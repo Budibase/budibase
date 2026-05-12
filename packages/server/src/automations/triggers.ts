@@ -7,6 +7,7 @@ import { context, db as dbCore, logging } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { dataFilters, sdk } from "@budibase/shared-core"
 import {
+  ActionType,
   Automation,
   AutomationData,
   AutomationEventType,
@@ -117,7 +118,7 @@ async function queueRelevantRowAutomations(
       })
       if (shouldTrigger) {
         try {
-          await quotas.addAction(() =>
+          await quotas.addAction(ActionType.AUTOMATION_STEP, () =>
             automationQueue.add({ automation, event }, JOB_OPTS)
           )
         } catch (e) {
@@ -264,11 +265,13 @@ export async function externalTrigger(
       appId: context.getWorkspaceId(),
       automation,
     }
-    return quotas.addAction(() =>
+    return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
       executeInThread({ data } as AutomationJob, { onProgress })
     )
   } else {
-    return quotas.addAction(() => automationQueue.add(data, JOB_OPTS))
+    return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
+      automationQueue.add(data, JOB_OPTS)
+    )
   }
 }
 

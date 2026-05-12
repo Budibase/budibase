@@ -241,11 +241,24 @@ export async function run(
   tableId: any,
   rowActionId: any,
   rowId: string,
-  user: User
+  user: User,
+  sourceId?: string
 ) {
   const table = await sdk.tables.getTable(tableId)
   if (!table) {
     throw new HTTPError("Table not found", 404)
+  }
+
+  if (sourceId && isViewId(sourceId)) {
+    const result = await sdk.rows.search({
+      tableId,
+      viewId: sourceId,
+      query: { equal: { _id: rowId } },
+      limit: 1,
+    })
+    if (!result.rows.length) {
+      throw new HTTPError("Row not found", 404)
+    }
   }
 
   const { automationId } = await get(tableId, rowActionId)

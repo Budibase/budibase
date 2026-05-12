@@ -22,6 +22,7 @@ import sdk from "../../sdk"
 import { discordWebhook } from "./webhook/discord"
 import { MSTeamsWebhook } from "./webhook/ms-teams"
 import { slackWebhook } from "./webhook/slack"
+import { telegramWebhook } from "./webhook/telegram"
 
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
@@ -157,3 +158,4 @@ export async function trigger(
 export const discord = discordWebhook
 export const MSTeams = MSTeamsWebhook
 export const slack = slackWebhook
+export const telegram = telegramWebhook

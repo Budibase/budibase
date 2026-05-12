@@ -261,6 +261,14 @@ const matchesScope = ({
     )
   }
 
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return (
+      ch?.channelId === scope.channelId &&
+      (ch?.threadId || undefined) === scope.threadId &&
+      ch?.externalUserId === scope.externalUserId
+    )
+  }
+
   return false
 }
 
@@ -379,6 +387,9 @@ const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
   }
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
+  }
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return "Telegram"
   }
   return "Slack"
 }
