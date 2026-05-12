@@ -59,9 +59,25 @@ const automation: Automation = {
   },
 }
 
+const testAutomationResponse: AutomationResults = {
+  status: AutomationStatus.SUCCESS,
+  trigger: {
+    id: "trigger1",
+    stepId: AutomationTriggerStepId.APP,
+    outputs: {},
+  },
+  steps: [
+    {
+      id: "trigger1",
+      stepId: AutomationTriggerStepId.APP,
+      outputs: {},
+    },
+  ],
+}
+
 describe("automation test progress handling", () => {
   beforeEach(() => {
-    vi.mocked(API.testAutomation).mockResolvedValue(undefined)
+    vi.mocked(API.testAutomation).mockResolvedValue(testAutomationResponse)
     automationStore.update(state => {
       state.automations = [automation]
       state.selectedAutomationId = automation._id!
