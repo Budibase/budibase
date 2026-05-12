@@ -753,9 +753,10 @@ Any constraints the agent must follow.
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="llm-section-container">
   <div class="llm-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body
+    <Body size="XS" color="var(--spectrum-global-color-gray-900)"
+      >AI Model*</Body
     >
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+    <Body size="XS" color="var(--spectrum-global-color-gray-700)">
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
@@ -793,8 +794,8 @@ Any constraints the agent must follow.
 <div class="tools-section">
   <div class="llm-section-container">
     <div class="llm-header">
-      <Body size="S" color="var(--spectrum-global-color-gray-900)">Tools</Body>
-      <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      <Body size="XS" color="var(--spectrum-global-color-gray-900)">Tools</Body>
+      <Body size="XS" color="var(--spectrum-global-color-gray-700)">
         Select which tools the agent can use.
       </Body>
     </div>
@@ -868,10 +869,10 @@ Any constraints the agent must follow.
 <div class="operations-section">
   <div class="operations-header">
     <div class="section-header">
-      <Body size="S" color="var(--spectrum-global-color-gray-900)"
+      <Body size="XS" color="var(--spectrum-global-color-gray-900)"
         >Operations</Body
       >
-      <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      <Body size="XS" color="var(--spectrum-global-color-gray-700)">
         Define the types of requests this agent can handle.
       </Body>
     </div>
@@ -910,7 +911,7 @@ Any constraints the agent must follow.
             </span>
             <Icon
               name="dots-three"
-              size="S"
+              size="XS"
               color="var(--spectrum-global-color-gray-600)"
             />
           </span>
@@ -922,10 +923,10 @@ Any constraints the agent must follow.
 
 <div class="section">
   <div class="section-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)"
+    <Body size="XS" color="var(--spectrum-global-color-gray-900)"
       >Instructions</Body
     >
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+    <Body size="XS" color="var(--spectrum-global-color-gray-700)">
       Set the rules for how the AI agent responds, uses tools, and structures
       output.
     </Body>
