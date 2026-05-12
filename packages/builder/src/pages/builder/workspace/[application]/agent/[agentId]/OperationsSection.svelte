@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, Button, Icon, notifications } from "@budibase/bbui"
+  import { confirm } from "@/helpers"
   import type { AgentOperation, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
@@ -207,11 +208,18 @@ Any constraints the agent must follow.
     if (!editingOperationId) {
       return
     }
-    const nextOperations = operations.filter(
-      operation => operation.id !== editingOperationId
-    )
-    await onSaveOperations(nextOperations)
-    closeOperationPanel()
+    await confirm({
+      title: "Delete operation?",
+      body: "This will remove the operation and its configuration.",
+      okText: "Delete",
+      onConfirm: async () => {
+        const nextOperations = operations.filter(
+          operation => operation.id !== editingOperationId
+        )
+        await onSaveOperations(nextOperations)
+        closeOperationPanel()
+      },
+    })
   }
 
   const handleAddKnowledge = () => {

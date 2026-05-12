@@ -57,7 +57,7 @@
       />
     </AbsTooltip>
   {:else if row.onDelete}
-    <AbsTooltip text="Remove file">
+    <AbsTooltip text="Remove file" noWrap>
       <ActionButton
         icon="trash"
         size="M"

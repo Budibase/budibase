@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { Body, Button, Icon, Input, Toggle, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Icon,
+    Input,
+    Toggle,
+    notifications,
+  } from "@budibase/bbui"
   import { confirm } from "@/helpers"
   import { agentsStore } from "@/stores/portal"
   import type {
@@ -288,7 +295,7 @@
 
           <div class="operation-panel-footer">
             {#if editingOperationId}
-              <Button secondary quiet icon="trash" warning on:click={onDelete}>
+              <Button secondary quiet icon="trash" on:click={onDelete}>
                 Delete operation
               </Button>
             {/if}
