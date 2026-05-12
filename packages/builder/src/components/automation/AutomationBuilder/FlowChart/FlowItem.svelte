@@ -48,7 +48,6 @@
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
   const view = getContext<Writable<DragView>>("draggableView")
-  const pos = getContext<Writable<{ x: number; y: number }>>("viewPos")
   const contentPos =
     getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
   const focusNodeRequest =
@@ -151,8 +150,6 @@
     updateBlockDims()
   }
 
-  $: placeholderDims = buildPlaceholderStyles(blockDims)
-
   // Move the selected item
   // Listen for scrolling in the content. As its scrolled this will be updated
   $: move(
@@ -180,18 +177,9 @@
       return
     }
     positionStyles = `
-      --blockPosX: ${Math.round(dragPos.x - scrollX / $view.scale)}px;
-      --blockPosY: ${Math.round(dragPos.y - scrollY / $view.scale)}px;
+      --blockTranslateX: ${Math.round(dragPos.x - scrollX / $view.scale)}px;
+      --blockTranslateY: ${Math.round(dragPos.y - scrollY / $view.scale)}px;
     `
-  }
-
-  function buildPlaceholderStyles(dims?: DOMRect) {
-    if (!dims) {
-      return ""
-    }
-    const { width, height } = dims
-    return `--pswidth: ${Math.round(width)}px;
-            --psheight: ${Math.round(height)}px;`
   }
 
   function onNodeMouseDown(e: MouseEvent) {
@@ -211,16 +199,10 @@
       ...state,
       moveStep: {
         id: block.id,
-        offsetX: $pos.x,
-        offsetY: $pos.y,
         startX: clientX,
         startY: clientY,
         w: blockDims?.width,
         h: blockDims?.height,
-        mouse: {
-          x: Math.max(Math.round(clientX - (blockDims?.left || 0)), 0),
-          y: Math.max(Math.round(clientY - (blockDims?.top || 0)), 0),
-        },
       },
     }))
   }
@@ -285,9 +267,6 @@
     class:unexecuted
   >
     <div class="wrap">
-      {#if $view?.dragging && dragging}
-        <div class="drag-placeholder" style={placeholderDims}></div>
-      {/if}
       <div
         bind:this={blockEle}
         class="block-content"
@@ -389,24 +368,34 @@
     display: inline-block;
   }
   .block {
-    width: 100%;
-    max-width: 100%;
+    width: fit-content;
+    max-width: var(--automation-flow-item-max-width, 360px);
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 32px;
     font-weight: 600;
     cursor: default;
   }
   .block .wrap {
-    width: 100%;
-    min-width: 100%;
+    width: fit-content;
+    max-width: 100%;
     position: relative;
+  }
+  .block.dragging .wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(92, 92, 92, 0.1);
+    border: 1px dashed #5c5c5c;
+    border-radius: 8px;
+    box-sizing: border-box;
+    pointer-events: none;
   }
   .block.draggable .wrap {
     display: block;
   }
   .block .wrap .block-content {
-    width: 100%;
-    max-width: 100%;
+    width: fit-content;
+    max-width: var(--automation-flow-item-max-width, 360px);
     display: flex;
     flex-direction: row;
     position: relative;
@@ -430,34 +419,25 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .drag-placeholder {
-    height: calc(var(--psheight) - 2px);
-    width: var(--pswidth);
-    background-color: rgba(92, 92, 92, 0.1);
-    border: 1px dashed #5c5c5c;
-    border-radius: 8px;
-    display: block;
-  }
   .block-core {
     flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
+    width: fit-content;
     max-width: 100%;
     min-width: 0;
   }
   .block-core.has-status {
-    padding-right: 32px;
+    padding-right: 20px;
   }
   .block-core.dragging {
     pointer-events: none;
   }
   .block-content.dragging {
-    position: absolute;
+    position: relative;
     z-index: 3;
-    top: var(--blockPosY);
-    left: var(--blockPosX);
+    transform: translate(var(--blockTranslateX), var(--blockTranslateY));
   }
   .block-float {
     pointer-events: none;
@@ -471,7 +451,7 @@
     width: 26px;
     height: 26px;
     position: absolute;
-    right: 13px;
+    right: 8px;
     top: 50%;
     transform: translateY(calc(-50% + 3px));
     z-index: 1;
@@ -524,7 +504,8 @@
 
   .block-info {
     pointer-events: none;
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     height: 100%;
   }
   .block-info :global(.block-details.compact) {

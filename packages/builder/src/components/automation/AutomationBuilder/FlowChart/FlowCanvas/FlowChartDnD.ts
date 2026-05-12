@@ -3,13 +3,10 @@ import type { Automation, BlockPath, BlockRef } from "@budibase/types"
 
 export interface DragViewMoveStep {
   id: string
-  offsetX: number
-  offsetY: number
   startX: number
   startY: number
   w?: number
   h?: number
-  mouse?: { x: number; y: number }
 }
 
 export interface DragViewDropzone {
@@ -99,7 +96,7 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
     const localY = Math.round(e.clientY - paneRect.top)
     viewPos.set({ x: Math.max(localX, 0), y: Math.max(localY, 0) })
 
-    const v = get(view)
+    let v = get(view)
     if (v.moveStep && !v.dragging) {
       const deltaX = e.clientX - v.moveStep.startX
       const deltaY = e.clientY - v.moveStep.startY
@@ -107,7 +104,12 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
       if (distance < DRAG_START_THRESHOLD) {
         return
       }
-      view.update(s => ({ ...s, dragging: true }))
+      view.update(s => ({
+        ...s,
+        dragging: true,
+        dragSpot: { x: deltaX / s.scale, y: deltaY / s.scale },
+      }))
+      v = get(view)
     }
 
     if (v.dragging && v.moveStep) {
@@ -117,8 +119,8 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
         view.update(s => ({ ...s, scale }))
       }
 
-      const adjustedX = (e.clientX - paneRect.left - v.moveStep.offsetX) / scale
-      const adjustedY = (e.clientY - paneRect.top - v.moveStep.offsetY) / scale
+      const adjustedX = (e.clientX - v.moveStep.startX) / scale
+      const adjustedY = (e.clientY - v.moveStep.startY) / scale
       view.update(s => ({ ...s, dragSpot: { x: adjustedX, y: adjustedY } }))
 
       // Hover detection over DragZones

@@ -189,8 +189,8 @@
     display: inline-block;
   }
   .block {
-    width: 100%;
-    max-width: 100%;
+    width: fit-content;
+    max-width: var(--automation-flow-item-max-width, 360px);
     background-color: var(--automation-flow-item-background, var(--background));
     border: 0.5px solid var(--spectrum-global-color-gray-200);
     border-radius: 16px;
@@ -203,8 +203,8 @@
 
   .blockSection {
     padding: 0;
-    padding-right: 32px;
-    width: 100%;
+    padding-right: 20px;
+    width: fit-content;
     max-width: 100%;
     height: auto;
     display: flex;
@@ -236,7 +236,7 @@
     width: 26px;
     height: 26px;
     position: absolute;
-    right: 13px;
+    right: 8px;
     top: 50%;
     transform: translateY(calc(-50% + 3px));
     z-index: 1;
