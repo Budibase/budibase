@@ -1,5 +1,6 @@
 import { beforeEach, afterEach, describe, it, vi } from "vitest"
 import { get, writable } from "svelte/store"
+import { API } from "@/api"
 import { automationStore } from "../automations"
 import {
   type Automation,
@@ -18,6 +19,14 @@ vi.mock("@/stores/builder", () => {
     permissions: writable({}),
     tables: writable({ list: [] }),
     workspaceDeploymentStore: writable({ automations: {} }),
+  }
+})
+
+vi.mock("@/api", () => {
+  return {
+    API: {
+      testAutomation: vi.fn(),
+    },
   }
 })
 
@@ -52,23 +61,29 @@ const automation: Automation = {
 
 describe("automation test progress handling", () => {
   beforeEach(() => {
+    vi.mocked(API.testAutomation).mockResolvedValue(undefined)
     automationStore.update(state => {
       state.automations = [automation]
       state.selectedAutomationId = automation._id!
       state.testProgress = {}
       state.inProgressTest = undefined
       state.testResults = undefined
+      state.selectedNodeId = undefined
+      state.selectedBranchNode = undefined
       return state
     })
   })
 
   afterEach(() => {
+    vi.clearAllMocks()
     automationStore.update(state => {
       state.automations = []
       state.selectedAutomationId = null
       state.testProgress = {}
       state.inProgressTest = undefined
       state.testResults = undefined
+      state.selectedNodeId = undefined
+      state.selectedBranchNode = undefined
       return state
     })
   })
@@ -128,5 +143,23 @@ describe("automation test progress handling", () => {
     expect(state.testResults).toBe(result)
     expect(state.inProgressTest).toBeUndefined()
     expect(state.testProgress).toEqual({})
+  })
+
+  it("clears selected nodes when starting a test run", async () => {
+    automationStore.update(state => {
+      state.selectedNodeId = "step1"
+      state.selectedBranchNode = {
+        nodeId: "branch-step1-0-branch1",
+        stepId: "step1",
+        branchIdx: 0,
+      }
+      return state
+    })
+
+    await automationStore.actions.test(automation, {})
+
+    const state = get(automationStore)
+    expect(state.selectedNodeId).toBeUndefined()
+    expect(state.selectedBranchNode).toBeUndefined()
   })
 })
