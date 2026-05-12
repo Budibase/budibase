@@ -103,10 +103,14 @@
     isAnchorTarget && block ? isBranchContext(block) : false
   $: isPopulatedBranchTarget =
     !isAnchorTarget && block ? isBranchContext(block) : false
+  $: branchLabelX = (() => {
+    const bendX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+    return Math.round((bendX + (targetX ?? 0)) / 2)
+  })()
 
   $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
     labelX = isEmptyBranchAnchor
-      ? (targetX ?? 0)
+      ? branchLabelX - Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 4)
       : Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
     labelY = isEmptyBranchAnchor
       ? (targetY ?? 0)
@@ -116,23 +120,34 @@
   }
 
   $: if (isPopulatedBranchTarget) {
-    const bendX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-    labelX = Math.round((bendX + (targetX ?? 0)) / 2)
+    labelX = branchLabelX
     labelY = targetY ?? 0
   }
 
   $: loopTargetPath = isLoopTarget ? getLoopTargetPath() : undefined
   $: loopSourcePath = isLoopSource ? getLoopSourcePath() : undefined
+  $: emptyBranchAnchorPath = isEmptyBranchAnchor
+    ? getSmoothStepPath({
+        sourceX,
+        sourceY,
+        targetX: targetX - Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 4) - 1,
+        targetY,
+        sourcePosition,
+        targetPosition,
+        borderRadius: 12,
+      })[0]
+    : undefined
 
   $: edgePath =
-    isAnchorTarget && !isEmptyBranchAnchor
+    emptyBranchAnchorPath ||
+    (isAnchorTarget && !isEmptyBranchAnchor
       ? getStraightPath({
           sourceX,
           sourceY,
           targetX: labelX,
           targetY: labelY,
         })[0]
-      : loopTargetPath || loopSourcePath || basePath[0]
+      : loopTargetPath || loopSourcePath || basePath[0])
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
