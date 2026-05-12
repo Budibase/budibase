@@ -1,17 +1,19 @@
 <script lang="ts">
   import {
     Button,
+    DetailSummary,
+    Divider,
     Drawer,
     DrawerContent,
   } from "@budibase/bbui"
   import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
-  import { PropField } from "../SetupPanel"
   import { automationStore } from "@/stores/builder"
   import { Constants, QueryUtils, Utils } from "@budibase/frontend-core"
   import { generate } from "shortid"
   import { cloneDeep } from "lodash/fp"
+  import type { EmptyFilterOption } from "@budibase/types"
   import {
     type Automation,
     type BlockRef,
@@ -19,10 +21,10 @@
     type BranchStep,
     type EnrichedBinding,
     BasicOperator,
-    EmptyFilterOption,
     UILogicalOperator,
   } from "@budibase/types"
   import { type AutomationContext } from "@/stores/builder/automations"
+  import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
 
   type SwitchConditionUI = Omit<
     NonNullable<Branch["conditionUI"]>,
@@ -55,7 +57,7 @@
   let conditionsDrawer: Drawer | undefined
   let editableBranches: Branch[] = []
 
-  $: conditionCount = getConfiguredConditionCount(switchStep.inputs?.branches || [])
+  $: branches = switchStep.inputs?.branches || []
 
   const createDefaultConditionUI = () => {
     const defaults = automationStore.actions.generateDefaultConditions()
@@ -89,13 +91,28 @@
     }
   }
 
-  const hasConfiguredCondition = (branch: Branch) => {
-    const groups = branch.conditionUI?.groups || []
-    return groups.some(group => group.filters?.some(filter => filter.field))
-  }
-
-  const getConfiguredConditionCount = (branches: Branch[]) => {
-    return branches.filter(hasConfiguredCondition).length
+  const getConditionSummary = (branch: Branch): string => {
+    const conditionUI = branch.conditionUI as SwitchConditionUI | undefined
+    const groups = conditionUI?.groups || []
+    const logicalOperator = groups[0]?.logicalOperator
+    const label =
+      logicalOperator === UILogicalOperator.ALL ? "When all:" : "When any:"
+    const parts: string[] = []
+    for (const group of groups) {
+      const filters = group.filters || []
+      for (const filter of filters) {
+        if (!filter.field) {
+          continue
+        }
+        const op = filter.operator === BasicOperator.EQUAL ? "is" : "is not"
+        const val = filter.value ?? ""
+        parts.push(`- ${filter.field} ${op} "${val}"`)
+      }
+    }
+    if (!parts.length) {
+      return "No conditions configured"
+    }
+    return `${label}\n\n${parts.join("\n")}`
   }
 
   const openConditionsModal = () => {
@@ -138,7 +155,9 @@
     if (editableBranches.length <= 2) {
       return
     }
-    editableBranches = editableBranches.filter((_branch, idx) => idx !== branchIdx)
+    editableBranches = editableBranches.filter(
+      (_branch, idx) => idx !== branchIdx
+    )
   }
 
   const saveConditions = async () => {
@@ -181,11 +200,21 @@
   icon="info"
   body="Checks each condition in order and follows the first one that matches."
 />
-<PropField label="Conditions" fullWidth>
-  <Button secondary on:click={openConditionsModal}>
-    {conditionCount ? `Update conditions (${conditionCount})` : "Add conditions"}
+<div class="open-modal">
+  <Button secondary icon="FullScreen" on:click={openConditionsModal}>
+    Open in modal
   </Button>
-</PropField>
+</div>
+{#each branches as branch, idx (branch.id)}
+  {#if idx > 0}
+    <Divider noMargin />
+  {/if}
+  <DetailSummary name={`${idx + 1}. ${branch.name}`} padded={false}>
+    <div class="condition-summary">
+      <DescriptionViewer label="" description={getConditionSummary(branch)} />
+    </div>
+  </DetailSummary>
+{/each}
 
 <Drawer bind:this={conditionsDrawer} title="Conditions" forceModal>
   <Button cta slot="buttons" on:click={saveConditions}>Save</Button>
@@ -206,7 +235,7 @@
             allowOnEmpty={false}
             builderType={"condition"}
             docsURL={null}
-            evaluationContext={evaluationContext}
+            {evaluationContext}
             showGlobalHeader={false}
             showDeleteGroupAction={editableBranches.length > 2}
             showAddGroupButton={false}
@@ -224,6 +253,14 @@
 </Drawer>
 
 <style>
+  .open-modal {
+    display: flex;
+  }
+
+  .condition-summary {
+    padding: 0 0 var(--spacing-s);
+  }
+
   .conditions {
     display: flex;
     flex-direction: column;
