@@ -75,6 +75,39 @@ Any constraints the agent must follow.
     knowledgeBases: [],
   })
 
+  const inferEnabledToolsFromInstructions = (
+    promptInstructions: string | undefined
+  ): string[] => {
+    if (!promptInstructions) {
+      return []
+    }
+
+    const runtimeByReadable: Record<string, string> = {}
+    const runtimeSet = new Set<string>()
+    for (const binding of promptBindings) {
+      if (binding.runtimeBinding) {
+        runtimeSet.add(binding.runtimeBinding)
+      }
+      if (binding.readableBinding && binding.runtimeBinding) {
+        runtimeByReadable[binding.readableBinding] = binding.runtimeBinding
+      }
+    }
+
+    const enabled = new Set<string>()
+    const matches = promptInstructions.matchAll(/{{\s*([^}]+?)\s*}}/g)
+    for (const match of matches) {
+      const token = match[1]?.trim()
+      if (!token) {
+        continue
+      }
+      const runtime = runtimeByReadable[token] || token
+      if (runtimeSet.has(runtime)) {
+        enabled.add(runtime)
+      }
+    }
+    return Array.from(enabled)
+  }
+
   const openOperationPanel = (operation?: AgentOperation) => {
     editingOperationId = operation?.id
     operationDraft = operation
@@ -116,7 +149,9 @@ Any constraints the agent must follow.
       ...operationDraft,
       name,
       id: operationDraft.id || createOperationId(),
-      enabledTools: operationDraft.enabledTools || [],
+      enabledTools: inferEnabledToolsFromInstructions(
+        operationDraft.promptInstructions
+      ),
       knowledgeBases: operationDraft.knowledgeBases || [],
       knowledgeSources: operationDraft.knowledgeSources || [],
     }

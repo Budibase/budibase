@@ -174,8 +174,8 @@
                         placeholder=""
                         on:change={event => {
                           operationDraft.promptInstructions = event.detail || ""
-                          onUpdated()
                         }}
+                        on:blur={onUpdated}
                         bind:getCaretPosition
                       />
                     {/key}
