@@ -140,7 +140,7 @@
       initialViewportApplied = false
     }
     preserveViewport = true
-    const xSpacing = 100
+    const xSpacing = 0
     const ySpacing = 340
 
     const newNodes: FlowNode[] = []
