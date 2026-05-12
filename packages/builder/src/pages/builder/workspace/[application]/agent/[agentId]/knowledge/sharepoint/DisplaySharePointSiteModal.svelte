@@ -28,7 +28,8 @@
     if (!siteId) {
       return undefined
     }
-    return $selectedAgent?.operations?.[0]?.knowledgeSources?.find(
+    const operation = $selectedAgent?.operations?.[0]
+    return operation?.knowledgeSources?.find(
       source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
         source.config.site.id === siteId

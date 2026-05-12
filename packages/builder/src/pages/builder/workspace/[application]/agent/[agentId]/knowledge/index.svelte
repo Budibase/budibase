@@ -37,9 +37,10 @@
   } from "./polling"
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
+  let currentOperation = $derived(currentAgent?.operations?.[0])
   let activeAgentId = $derived(currentAgent?._id)
   let sharePointSources = $derived.by(() =>
-    (currentAgent?.operations?.[0]?.knowledgeSources || []).filter(
+    (currentOperation?.knowledgeSources || []).filter(
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )

@@ -8,20 +8,26 @@
   const { goto } = routify
   $goto
 
-  export let operations: AgentOperation[] = []
-  export let onSaveOperations: (
-    _nextOperations: AgentOperation[]
-  ) => Promise<void> = async () => {}
-  export let promptBindings: EnrichedBinding[] = []
-  export let bindingIcons: Record<string, string | undefined> = {}
-  export let completions: BindingCompletion[] = []
-  export let toolsLoaded = false
+  let {
+    operations = [],
+    onSaveOperations = async () => {},
+    promptBindings = [],
+    bindingIcons = {},
+    completions = [],
+    toolsLoaded = false,
+  }: {
+    operations?: AgentOperation[]
+    onSaveOperations?: (_nextOperations: AgentOperation[]) => Promise<void>
+    promptBindings?: EnrichedBinding[]
+    bindingIcons?: Record<string, string | undefined>
+    completions?: BindingCompletion[]
+    toolsLoaded?: boolean
+  } = $props()
 
-  let operationPanelOpen = false
-  let currentAgentId: string | undefined
-  $: currentAgentId = $selectedAgent?._id
-  let savingDraft = false
-  let editingOperationId: string | undefined = undefined
+  let operationPanelOpen = $state(false)
+  let currentAgentId: string | undefined = $derived($selectedAgent?._id)
+  let savingDraft = $state(false)
+  let editingOperationId: string | undefined = $state(undefined)
   const DEFAULT_OPERATION_INSTRUCTIONS = `**Agent role**
 What is this agent responsible for?
 
@@ -39,14 +45,14 @@ What information does the agent receive?
 **Rules**
 Any constraints the agent must follow.
 `
-  let operationDraft: AgentOperation = {
+  let operationDraft: AgentOperation = $state({
     id: "",
     name: "",
     promptInstructions: DEFAULT_OPERATION_INSTRUCTIONS,
     live: false,
     enabledTools: [],
     knowledgeBases: [],
-  }
+  })
 
   const createOperationId = () => {
     if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -107,6 +113,7 @@ Any constraints the agent must follow.
       id: operationDraft.id || createOperationId(),
       enabledTools: operationDraft.enabledTools || [],
       knowledgeBases: operationDraft.knowledgeBases || [],
+      knowledgeSources: operationDraft.knowledgeSources || [],
     }
 
     const existingIndex = operations.findIndex(
