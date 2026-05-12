@@ -93,7 +93,6 @@ export interface AgentMessageRagSource {
   sourceId: string
   fileId?: string
   filename?: string
-  pageNumber?: number
 }
 
 export interface AgentMessageMetadata {

@@ -147,7 +147,6 @@ export const prepareAgentChatRun = async ({
                 retrievedKnowledgeSourceById.set(source.sourceId, {
                   ...existing,
                   ...source,
-                  pageNumber: source.pageNumber || existing?.pageNumber,
                 })
               }
             }

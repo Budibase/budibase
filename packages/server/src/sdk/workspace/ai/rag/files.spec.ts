@@ -359,7 +359,6 @@ describe("rag files", () => {
         {
           source: "policy.md",
           chunkText: "4-day in-office policy",
-          pageNumber: 3,
         },
       ])
 
@@ -373,7 +372,6 @@ describe("rag files", () => {
         {
           source: "source-1",
           chunkText: "4-day in-office policy",
-          pageNumber: 3,
         },
       ])
       expect(result.sources).toEqual([
@@ -381,7 +379,6 @@ describe("rag files", () => {
           sourceId: "source-1",
           fileId: "file_1",
           filename: "policy.md",
-          pageNumber: 3,
         },
       ])
     })

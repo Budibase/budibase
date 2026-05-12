@@ -3,7 +3,6 @@ import { KnowledgeBaseFile } from "@budibase/types"
 export interface RetrievedContextChunk {
   source?: string
   chunkText: string
-  pageNumber?: number
 }
 
 export interface RagProcessor {

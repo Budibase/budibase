@@ -334,21 +334,11 @@ const toSourceMetadata = (
     }
     const file = fileBySourceId.get(chunk.source)
     const sourceId = chunk.source
-    const existing = summary.get(sourceId)
-    if (!existing) {
+    if (!summary.has(sourceId)) {
       summary.set(sourceId, {
         sourceId,
         fileId: file?._id,
         filename: file?.filename ?? chunk.source,
-        pageNumber: chunk.pageNumber,
-      })
-      continue
-    }
-
-    if (!existing.pageNumber && chunk.pageNumber) {
-      summary.set(sourceId, {
-        ...existing,
-        pageNumber: chunk.pageNumber,
       })
     }
   }
