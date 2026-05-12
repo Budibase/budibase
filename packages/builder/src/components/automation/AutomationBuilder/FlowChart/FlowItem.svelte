@@ -405,7 +405,7 @@
     flex-direction: row;
     position: relative;
     background-color: var(--automation-flow-item-background, var(--background));
-    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border: 2px solid var(--spectrum-global-color-gray-200);
     border-radius: 16px;
     box-sizing: border-box;
   }
