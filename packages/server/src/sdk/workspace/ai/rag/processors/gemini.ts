@@ -128,7 +128,9 @@ const getChunkSource = (row: Record<string, unknown>): string | undefined => {
   const contentRetrievedContexts = Array.isArray(content)
     ? content
         .map(part => asRecord(part))
-        .map(partRecord => (partRecord ? getRetrievedContext(partRecord) : undefined))
+        .map(partRecord =>
+          partRecord ? getRetrievedContext(partRecord) : undefined
+        )
     : []
 
   const sourceCandidates = [

@@ -137,7 +137,9 @@ describe("GeminiRagProcessor", () => {
       },
     ])
 
-    const result = await createProcessor().search("How often are policies reviewed?")
+    const result = await createProcessor().search(
+      "How often are policies reviewed?"
+    )
 
     expect(result).toEqual([
       {
