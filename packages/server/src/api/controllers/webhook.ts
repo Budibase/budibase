@@ -40,8 +40,6 @@ type BuildSchemaWithTokenCtx = Ctx<
   { instance: string; id: string; schemaToken: string }
 >
 
-type WorkspaceDB = ReturnType<typeof context.getWorkspaceDB>
-
 export async function fetch(ctx: Ctx<void, FetchWebhooksResponse>) {
   const db = context.getWorkspaceDB()
   const response = await db.allDocs<Webhook>(
@@ -78,7 +76,7 @@ const assertSchemaWorkspace = (instance: string) => {
 const updateWebhookSchema = async (
   body: BuildWebhookSchemaRequest,
   webhook: Webhook,
-  db: WorkspaceDB
+  db: ReturnType<typeof context.getWorkspaceDB>
 ) => {
   webhook.bodySchema = toJsonSchema(body)
   if (webhook.action.type === WebhookActionType.AUTOMATION) {
