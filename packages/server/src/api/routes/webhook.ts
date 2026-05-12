@@ -8,6 +8,11 @@ builderRoutes
   .delete("/api/webhooks/:id/:rev", controller.destroy)
   .post("/api/webhooks/schema/:instance/:id", controller.buildSchema)
 
+publicRoutes.post(
+  "/api/webhooks/schema/:instance/:id/:schemaToken",
+  controller.buildSchemaWithToken
+)
+
 // this shouldn't have authorisation, right now its always public
 publicRoutes.post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 

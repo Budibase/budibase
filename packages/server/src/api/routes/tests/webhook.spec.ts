@@ -44,6 +44,7 @@ describe("/webhooks", () => {
       expect(res.body.webhook).toBeDefined()
       expect(typeof res.body.webhook._id).toEqual("string")
       expect(typeof res.body.webhook._rev).toEqual("string")
+      expect(typeof res.body.webhook.schemaToken).toEqual("string")
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -139,6 +140,53 @@ describe("/webhooks", () => {
         })
         .expect("Content-Type", /json/)
         .expect(401)
+    })
+
+    it("allows public schema builds with the webhook schema token", async () => {
+      await request
+        .post(
+          `/api/webhooks/schema/${config.getDevWorkspaceId()}/${webhook._id}/${webhook.schemaToken}`
+        )
+        .set("User-Agent", "curl/8.7.1")
+        .send({
+          tokenSchema: true,
+        })
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      const fetch = await request
+        .get(`/api/webhooks`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(fetch.body[0].bodySchema).toEqual({
+        properties: {
+          tokenSchema: { type: "boolean" },
+        },
+        type: "object",
+      })
+    })
+
+    it("rejects public schema builds with an invalid token", async () => {
+      await request
+        .post(
+          `/api/webhooks/schema/${config.getDevWorkspaceId()}/${webhook._id}/bad-token`
+        )
+        .send({
+          a: 1,
+        })
+        .expect(403)
+    })
+
+    it("rejects schema builds against production workspaces", async () => {
+      await request
+        .post(
+          `/api/webhooks/schema/${config.getProdWorkspaceId()}/${webhook._id}/${webhook.schemaToken}`
+        )
+        .send({
+          a: 1,
+        })
+        .expect(400)
     })
   })
 

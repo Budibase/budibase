@@ -1,4 +1,4 @@
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, HTTPError } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
 import {
   Automation,
@@ -28,6 +28,20 @@ const validate = require("jsonschema").validate
 
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
 
+type BuildSchemaCtx = Ctx<
+  BuildWebhookSchemaRequest,
+  BuildWebhookSchemaResponse,
+  { instance: string; id: string }
+>
+
+type BuildSchemaWithTokenCtx = Ctx<
+  BuildWebhookSchemaRequest,
+  BuildWebhookSchemaResponse,
+  { instance: string; id: string; schemaToken: string }
+>
+
+type WorkspaceDB = ReturnType<typeof context.getWorkspaceDB>
+
 export async function fetch(ctx: Ctx<void, FetchWebhooksResponse>) {
   const db = context.getWorkspaceDB()
   const response = await db.allDocs<Webhook>(
@@ -53,38 +67,72 @@ export async function destroy(ctx: Ctx<void, DeleteWebhookResponse>) {
   )
 }
 
-export async function buildSchema(
-  ctx: Ctx<BuildWebhookSchemaRequest, BuildWebhookSchemaResponse>
-) {
+const assertSchemaWorkspace = (instance: string) => {
+  if (dbCore.isDevWorkspaceID(instance)) {
+    return
+  }
+
+  throw new HTTPError("Webhook schema can only be built in development", 400)
+}
+
+const updateWebhookSchema = async (
+  body: BuildWebhookSchemaRequest,
+  webhook: Webhook,
+  db: WorkspaceDB
+) => {
+  webhook.bodySchema = toJsonSchema(body)
+  if (webhook.action.type === WebhookActionType.AUTOMATION) {
+    let automation = await db.get<Automation>(webhook.action.target)
+    const autoOutputs = automation.definition.trigger.schema.outputs
+    let properties = webhook.bodySchema?.properties
+    autoOutputs.properties = {
+      body: autoOutputs.properties.body,
+    }
+    for (let prop of Object.keys(properties || {})) {
+      if (properties?.[prop] == null) {
+        continue
+      }
+      const def = properties[prop]
+      if (typeof def === "boolean") {
+        continue
+      }
+      autoOutputs.properties[prop] = {
+        type: def.type as AutomationIOType,
+        description: AUTOMATION_DESCRIPTION,
+      }
+    }
+    await db.put(automation)
+  }
+  return await db.put(webhook)
+}
+
+export async function buildSchema(ctx: BuildSchemaCtx) {
+  assertSchemaWorkspace(ctx.params.instance)
+
   await context.doInWorkspaceContext(ctx.params.instance, async () => {
     const db = context.getWorkspaceDB()
-    const webhook = await db.get<Webhook>(ctx.params.id)
-    webhook.bodySchema = toJsonSchema(ctx.request.body)
-    // update the automation outputs
-    if (webhook.action.type === WebhookActionType.AUTOMATION) {
-      let automation = await db.get<Automation>(webhook.action.target)
-      const autoOutputs = automation.definition.trigger.schema.outputs
-      let properties = webhook.bodySchema?.properties
-      // reset webhook outputs
-      autoOutputs.properties = {
-        body: autoOutputs.properties.body,
-      }
-      for (let prop of Object.keys(properties || {})) {
-        if (properties?.[prop] == null) {
-          continue
-        }
-        const def = properties[prop]
-        if (typeof def === "boolean") {
-          continue
-        }
-        autoOutputs.properties[prop] = {
-          type: def.type as AutomationIOType,
-          description: AUTOMATION_DESCRIPTION,
-        }
-      }
-      await db.put(automation)
+    const webhook = await db.tryGet<Webhook>(ctx.params.id)
+    if (!webhook) {
+      throw new HTTPError("Webhook not found", 404)
     }
-    ctx.body = await db.put(webhook)
+    ctx.body = await updateWebhookSchema(ctx.request.body, webhook, db)
+  })
+}
+
+export async function buildSchemaWithToken(ctx: BuildSchemaWithTokenCtx) {
+  assertSchemaWorkspace(ctx.params.instance)
+
+  await context.doInWorkspaceContext(ctx.params.instance, async () => {
+    const db = context.getWorkspaceDB()
+    const webhook = await db.tryGet<Webhook>(ctx.params.id)
+    if (
+      !webhook?.schemaToken ||
+      webhook.schemaToken !== ctx.params.schemaToken
+    ) {
+      throw new HTTPError("Invalid webhook schema token", 403)
+    }
+
+    ctx.body = await updateWebhookSchema(ctx.request.body, webhook, db)
   })
 }
 

@@ -1,4 +1,4 @@
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { Webhook, WebhookActionType } from "@budibase/types"
 import { generateWebhookID } from "../../../db/utils"
 
@@ -14,6 +14,7 @@ export function newDoc(
   return {
     live: true,
     name,
+    schemaToken: utils.newid(),
     action: {
       type,
       target,
@@ -23,11 +24,13 @@ export function newDoc(
 
 export async function save(webhook: Webhook) {
   const db = context.getWorkspaceDB()
-  // check that the webhook exists
   if (webhook._id && isWebhookID(webhook._id)) {
-    await db.get(webhook._id)
+    const existing = await db.get<Webhook>(webhook._id)
+    webhook.schemaToken =
+      webhook.schemaToken || existing.schemaToken || utils.newid()
   } else {
     webhook._id = generateWebhookID()
+    webhook.schemaToken = webhook.schemaToken || utils.newid()
   }
   const response = await db.put(webhook)
   webhook._rev = response.rev
