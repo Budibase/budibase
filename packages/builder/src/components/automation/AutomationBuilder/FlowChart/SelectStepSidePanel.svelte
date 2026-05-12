@@ -550,8 +550,13 @@
                 on:keydown={e => handleActionKeydown(e, action)}
               >
                 <div class="item-body">
-                  <div class="item-icon">
-                    <Icon name={action.icon} size="M" />
+                  <div
+                    class="icon-container"
+                    style:--automation-step-icon-color={getAutomationStepIconColor(
+                      action.stepId
+                    )}
+                  >
+                    <Icon name={action.icon} size="M" color="var(--ink)" />
                   </div>
                   <div class="item-label">
                     <Body
@@ -580,6 +585,9 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
+  }
+
+  .step-panel-content {
     --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
     --automation-step-icon-flow-logic-color: var(
       --spectrum-global-color-indigo-100
@@ -590,10 +598,10 @@
     --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
   }
 
-  :global(.spectrum--dark) .container,
-  :global(.spectrum--darkest) .container,
-  :global(.spectrum--midnight) .container,
-  :global(.spectrum--nord) .container {
+  :global(.spectrum--dark) .step-panel-content,
+  :global(.spectrum--darkest) .step-panel-content,
+  :global(.spectrum--midnight) .step-panel-content,
+  :global(.spectrum--nord) .step-panel-content {
     --automation-step-icon-data-color: var(--color-blue-600);
     --automation-step-icon-flow-logic-color: var(--color-purple-600);
     --automation-step-icon-code-color: var(--color-orange-600);
@@ -668,7 +676,6 @@
     gap: var(--spacing-m);
     width: 100%;
   }
-  .item-icon,
   .external-icon {
     width: 17.5px;
     height: 17.5px;
