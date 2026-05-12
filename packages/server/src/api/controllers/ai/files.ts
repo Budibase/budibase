@@ -10,6 +10,7 @@ import {
   UpdateAgentSharePointSiteResponse,
   SharePointKnowledgeSourceSnapshot,
   FetchAgentKnowledgeResponse,
+  FetchAgentFileUrlResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
@@ -184,6 +185,19 @@ export async function deleteAgentFile(
   const { agentId, fileId } = ctx.params
   await sdk.ai.rag.deleteFileForAgent(agentId, fileId)
   ctx.body = { deleted: true }
+  ctx.status = 200
+}
+
+export async function fetchAgentFileUrl(
+  ctx: UserCtx<
+    void,
+    FetchAgentFileUrlResponse,
+    { agentId: string; fileId: string }
+  >
+) {
+  const { agentId, fileId } = ctx.params
+  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  ctx.body = { url }
   ctx.status = 200
 }
 

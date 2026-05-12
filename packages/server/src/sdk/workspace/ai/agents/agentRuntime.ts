@@ -141,7 +141,12 @@ export const prepareAgentChatRun = async ({
                 if (!source?.sourceId) {
                   continue
                 }
-                retrievedKnowledgeSourceById.set(source.sourceId, source)
+                const existing = retrievedKnowledgeSourceById.get(source.sourceId)
+                retrievedKnowledgeSourceById.set(source.sourceId, {
+                  ...existing,
+                  ...source,
+                  pageNumber: source.pageNumber || existing?.pageNumber,
+                })
               }
             }
             if (

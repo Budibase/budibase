@@ -29,6 +29,10 @@ export interface AgentFileUploadResponse {
   file: KnowledgeBaseFile
 }
 
+export interface FetchAgentFileUrlResponse {
+  url: string
+}
+
 export interface KnowledgeSourceOption {
   id: string
   name?: string

@@ -74,9 +74,53 @@
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
+  let ragSourceUrlById = $state<Record<string, string>>({})
 
   const resetPendingResponse = () => {
     isPreparingResponse = false
+  }
+
+  const openRagSource = async (
+    source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  ) => {
+    if (!source.fileId) {
+      return
+    }
+
+    const cached = ragSourceUrlById[source.fileId]
+    if (cached) {
+      const link = document.createElement("a")
+      link.href = cached
+      link.download = source.filename || "source.pdf"
+      link.target = "_blank"
+      link.rel = "noopener noreferrer"
+      link.click()
+      return
+    }
+
+    try {
+      const resolvedUrl = chat?.agentId
+        ? (await API.fetchAgentFileUrl(chat.agentId, source.fileId)).url
+        : undefined
+      if (!resolvedUrl) {
+        notifications.error("Could not resolve source file URL")
+        return
+      }
+      ragSourceUrlById = {
+        ...ragSourceUrlById,
+        [source.fileId]: resolvedUrl,
+      }
+
+      const link = document.createElement("a")
+      link.href = resolvedUrl
+      link.download = source.filename || "source.pdf"
+      link.target = "_blank"
+      link.rel = "noopener noreferrer"
+      link.click()
+    } catch (error) {
+      console.error("Failed to resolve knowledge source URL", error)
+      notifications.error("Failed to download source file")
+    }
   }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
@@ -658,9 +702,19 @@
                 <ul>
                   {#each message.metadata.ragSources as source (source.sourceId)}
                     <li class="source-item">
-                      <span class="source-name"
-                        >{source.filename || source.sourceId}</span
-                      >
+                      {#if source.fileId}
+                        <button
+                          type="button"
+                          class="source-link"
+                          onclick={() => openRagSource(source)}
+                        >
+                          Download {source.filename || source.sourceId}
+                        </button>
+                      {:else}
+                        <span class="source-name"
+                          >{source.filename || source.sourceId}</span
+                        >
+                      {/if}
                     </li>
                   {/each}
                 </ul>
@@ -1143,5 +1197,17 @@
 
   .source-name {
     font-weight: 400;
+  }
+
+  .source-link {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font-weight: 400;
+    color: var(--spectrum-global-color-blue-700);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: left;
   }
 </style>

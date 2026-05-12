@@ -8,10 +8,11 @@ import {
   LockName,
   LockType,
 } from "@budibase/types"
-import { HTTPError, locks } from "@budibase/backend-core"
+import { HTTPError, locks, objectStore } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
+import { ObjectStoreBuckets } from "../../../../constants"
 
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
@@ -183,6 +184,31 @@ export const deleteFileForAgent = async (
   await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
 }
 
+export const getFileUrlForAgent = async (
+  agentId: string,
+  fileId: string
+): Promise<string> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this agent", 404)
+  }
+
+  if (!file.objectStoreKey) {
+    throw new HTTPError("Knowledge base file is missing object key", 400)
+  }
+
+  return await objectStore.getPresignedUrl(
+    ObjectStoreBuckets.APPS,
+    file.objectStoreKey
+  )
+}
+
 function getProcessor(kb: KnowledgeBase) {
   const ProcessorClassByType = {
     [KnowledgeBaseType.GEMINI]: GeminiRagProcessor,
@@ -308,11 +334,21 @@ const toSourceMetadata = (
     }
     const file = fileBySourceId.get(chunk.source)
     const sourceId = chunk.source
-    if (!summary.has(sourceId)) {
+    const existing = summary.get(sourceId)
+    if (!existing) {
       summary.set(sourceId, {
         sourceId,
         fileId: file?._id,
         filename: file?.filename ?? chunk.source,
+        pageNumber: chunk.pageNumber,
+      })
+      continue
+    }
+
+    if (!existing.pageNumber && chunk.pageNumber) {
+      summary.set(sourceId, {
+        ...existing,
+        pageNumber: chunk.pageNumber,
       })
     }
   }
