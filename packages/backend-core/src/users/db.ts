@@ -227,7 +227,9 @@ export class UserDB {
   }
 
   static async bulkUpdate(users: User[]) {
-    return await usersCore.bulkUpdateGlobalUsers(users)
+    const response = await usersCore.bulkUpdateGlobalUsers(users)
+    await cache.user.invalidateUsers(users.map(user => user._id!))
+    return response
   }
 
   static async save(user: User, opts: SaveUserOpts = {}): Promise<User> {

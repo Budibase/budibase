@@ -20,9 +20,15 @@ import {
   UserCtx,
   WebhookChatCompleteResult,
 } from "@budibase/types"
-import { consumeStream, type StreamTextResult, type ToolSet } from "ai"
+import {
+  consumeStream,
+  type LanguageModelUsage,
+  type StreamTextResult,
+  type ToolSet,
+} from "ai"
 import sdk from "../../../sdk"
 import {
+  buildAgentMessageUsage,
   formatIncompleteToolCallError,
   prepareAgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
@@ -440,6 +446,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           const toolCallsIncomplete =
             pendingToolCalls.size > 0 || finishReason === "tool-calls"
 
+          const finishPart = part as {
+            totalUsage?: LanguageModelUsage | undefined
+          }
+          const usage = buildAgentMessageUsage({
+            inputUsage: run.contextUsage.input ?? finishPart.totalUsage,
+            outputUsage: run.contextUsage.output ?? finishPart.totalUsage,
+            maxTokens: run.contextWindowTokens,
+            systemPromptTokens: run.systemPromptTokens,
+          })
+
           return {
             ...sharedMetadata,
             ...(usedKnowledgeSources?.length
@@ -447,6 +463,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
               : {}),
             createdAt: streamStartTime,
             completedAt: Date.now(),
+            ...(usage ? { usage } : {}),
             ...(toolCallsIncomplete && {
               error: formatIncompleteToolCallError([]),
             }),

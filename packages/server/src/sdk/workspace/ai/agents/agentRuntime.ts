@@ -9,6 +9,7 @@ import {
   extractReasoningMiddleware,
   stepCountIs,
   ToolLoopAgent,
+  type LanguageModelUsage,
   type StreamTextResult,
   type ToolSet,
   wrapLanguageModel,
@@ -20,6 +21,7 @@ import {
   prepareModelMessages,
 } from "../chatConversations"
 import { updatePendingToolCalls } from "./utils"
+import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 
 interface PrepareAgentChatRunParams {
@@ -39,6 +41,12 @@ export interface AgentChatRun {
     options?: AgentChatStreamOptions
   ) => Promise<StreamTextResult<ToolSet, never>>
   toolDisplayNames: Record<string, string>
+  contextWindowTokens?: number
+  systemPromptTokens: number
+  contextUsage: {
+    input?: LanguageModelUsage
+    output?: LanguageModelUsage
+  }
 }
 
 export interface AgentChatStreamOptions {
@@ -114,16 +122,32 @@ export const prepareAgentChatRun = async ({
     providerOptions: llm.providerOptions?.(hasTools),
   })
 
+  const contextUsage: AgentChatRun["contextUsage"] = {}
+  const systemPromptTokens = estimateTokens(promptAndTools.systemPrompt || "")
+
   return {
     latestQuestion,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
     toolDisplayNames: promptAndTools.toolDisplayNames,
+    contextWindowTokens: llm.contextWindowTokens,
+    systemPromptTokens,
+    contextUsage,
     stream: async ({ onFinish, pendingToolCalls } = {}) =>
       await agentRunner.stream({
         messages: modelMessages,
-        async onStepFinish({ content, toolCalls, toolResults, response }) {
+        async onStepFinish({
+          content,
+          toolCalls,
+          toolResults,
+          response,
+          usage,
+        }) {
+          if (!contextUsage.input) {
+            contextUsage.input = usage
+          }
+          contextUsage.output = usage
           sessionLogIndexer.addRequestId(response?.id)
           if (pendingToolCalls) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
