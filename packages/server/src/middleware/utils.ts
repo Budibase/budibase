@@ -5,7 +5,7 @@ const WEBHOOK_ENDPOINTS = new RegExp(
 )
 
 const WEBHOOK_SCHEMA_ENDPOINT = new RegExp(
-  "^/api/webhooks/schema/[^/]+/[^/]+/[^/]+(/|$)"
+  "^/api/webhooks/schema/[^/]+/[^/]+/[^/]+/?$"
 )
 
 const getPath = (ctx: UserCtx): string =>

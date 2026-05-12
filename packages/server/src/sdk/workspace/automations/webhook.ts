@@ -26,11 +26,10 @@ export async function save(webhook: Webhook) {
   const db = context.getWorkspaceDB()
   if (webhook._id && isWebhookID(webhook._id)) {
     const existing = await db.get<Webhook>(webhook._id)
-    webhook.schemaToken =
-      webhook.schemaToken || existing.schemaToken || utils.newid()
+    webhook.schemaToken = existing.schemaToken || utils.newid()
   } else {
     webhook._id = generateWebhookID()
-    webhook.schemaToken = webhook.schemaToken || utils.newid()
+    webhook.schemaToken = utils.newid()
   }
   const response = await db.put(webhook)
   webhook._rev = response.rev

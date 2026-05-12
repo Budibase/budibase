@@ -47,6 +47,36 @@ describe("/webhooks", () => {
       expect(typeof res.body.webhook.schemaToken).toEqual("string")
     })
 
+    it("ignores caller-provided schema tokens", async () => {
+      const automation = await config.createAutomation()
+      const res = await request
+        .put(`/api/webhooks`)
+        .send({
+          ...basicWebhook(automation._id!),
+          schemaToken: "caller-token",
+        })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body.webhook.schemaToken).not.toEqual("caller-token")
+    })
+
+    it("preserves the existing schema token when updating a webhook", async () => {
+      const automation = await config.createAutomation()
+      const webhook = await config.createWebhook(basicWebhook(automation._id!))
+      const res = await request
+        .put(`/api/webhooks`)
+        .send({
+          ...webhook,
+          name: "updated webhook",
+          schemaToken: "caller-token",
+        })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body.webhook.schemaToken).toEqual(webhook.schemaToken)
+    })
+
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
@@ -176,6 +206,18 @@ describe("/webhooks", () => {
           a: 1,
         })
         .expect(403)
+    })
+
+    it("rejects public schema builds with trailing path segments", async () => {
+      await request
+        .post(
+          `/api/webhooks/schema/${config.getDevWorkspaceId()}/${webhook._id}/${webhook.schemaToken}/extra`
+        )
+        .set("User-Agent", "curl/8.7.1")
+        .send({
+          a: 1,
+        })
+        .expect(404)
     })
 
     it("rejects schema builds against production workspaces", async () => {
