@@ -15,7 +15,6 @@
   import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import type { AgentTool } from "./toolTypes"
-  import addToolsIcons from "assets/add-tools-icons.svg"
 
   export let open = false
   export let editingOperationId: string | undefined = undefined
@@ -60,28 +59,6 @@
     },
     {} as Record<string, AgentTool[]>
   )
-
-  const insertCurlyBindingToken = () => {
-    const currentValue = operationDraft.promptInstructions || ""
-    const caretPos = getCaretPosition?.() ?? {
-      start: currentValue.length,
-      end: currentValue.length,
-    }
-    const start = caretPos.start
-    const end = caretPos.end
-    const value = "{{"
-    if (insertAtPos) {
-      insertAtPos({
-        start,
-        end,
-        value,
-        cursor: { anchor: start + value.length },
-      })
-      return
-    }
-    operationDraft.promptInstructions =
-      currentValue.slice(0, start) + value + currentValue.slice(end)
-  }
 
   const handleToolClick = (tool: AgentTool) => {
     const binding = tool.readableBinding || tool.runtimeBinding

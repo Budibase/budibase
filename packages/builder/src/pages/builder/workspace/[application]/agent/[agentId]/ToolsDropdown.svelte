@@ -4,6 +4,7 @@
   import { ToolType } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import ToolIcon from "./ToolIcon.svelte"
+  import addToolsIcons from "assets/add-tools-icons.svg"
 
   export interface Props {
     filteredTools: AgentTool[]
@@ -52,7 +53,12 @@
   portalTarget=".tools-popover-container"
 >
   <div slot="control">
-    <Button secondary size="M" icon="plus">Add tools</Button>
+    <Button secondary size="S" icon="plus">
+      <span class="add-tools-label">
+        <span>Add tools</span>
+        <img src={addToolsIcons} alt="" />
+      </span>
+    </Button>
   </div>
 
   <div class="tools-menu">
@@ -217,5 +223,18 @@
 
   .tool-item-label {
     font-size: var(--font-size-s);
+  }
+
+  .add-tools-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .add-tools-label img {
+    width: 56px;
+    height: 24px;
+    object-fit: contain;
+    pointer-events: none;
   }
 </style>
