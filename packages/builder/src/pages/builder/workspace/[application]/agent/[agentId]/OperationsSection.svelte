@@ -155,6 +155,19 @@ Any constraints the agent must follow.
       knowledgeBases: operationDraft.knowledgeBases || [],
       knowledgeSources: operationDraft.knowledgeSources || [],
     }
+    const existingOperation = operations.find(
+      operation => operation.id === editingOperationId
+    )
+    if (existingOperation) {
+      const existingSnapshot = JSON.stringify(existingOperation)
+      const nextSnapshot = JSON.stringify(nextOperation)
+      if (existingSnapshot === nextSnapshot) {
+        if (closeAfterSave) {
+          closeOperationPanel()
+        }
+        return
+      }
+    }
 
     const existingIndex = operations.findIndex(
       operation => operation.id === editingOperationId

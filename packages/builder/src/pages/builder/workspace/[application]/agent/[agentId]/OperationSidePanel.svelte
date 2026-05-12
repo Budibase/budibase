@@ -111,8 +111,7 @@
             <Body
               size="S"
               weight="500"
-              color="var(--spectrum-global-color-gray-900)"
-              >Operation</Body
+              color="var(--spectrum-global-color-gray-900)">Operation</Body
             >
             <Toggle
               label=""
@@ -129,7 +128,7 @@
                 label="Name"
                 placeholder="Access requests"
                 bind:value={operationDraft.name}
-                on:change={onUpdated}
+                on:blur={onUpdated}
               />
             </div>
 
@@ -142,8 +141,8 @@
                   <GenerateInstructionsControl
                     triggerLabel="Help write instructions"
                     promptInstructions={operationDraft.promptInstructions || ""}
-                    promptBindings={promptBindings}
-                    bindingIcons={bindingIcons}
+                    {promptBindings}
+                    {bindingIcons}
                     onApplyInstructions={instructions => {
                       operationDraft.promptInstructions = instructions
                       onUpdated()
