@@ -151,7 +151,32 @@
       return true
     }
 
-    return Boolean(message.metadata?.ragSources?.length)
+    return Boolean(getVisibleRagSources(message).length)
+  }
+
+  const getVisibleRagSources = (message: UIMessage<AgentMessageMetadata>) => {
+    const ragSources = message.metadata?.ragSources || []
+    const uniqueByFileId = new Set<string>()
+    const visible: NonNullable<AgentMessageMetadata["ragSources"]> = []
+
+    for (const source of ragSources) {
+      const filename = source.filename?.trim()
+      if (!source.fileId || !filename) {
+        continue
+      }
+
+      if (uniqueByFileId.has(source.fileId)) {
+        continue
+      }
+
+      uniqueByFileId.add(source.fileId)
+      visible.push({
+        ...source,
+        filename,
+      })
+    }
+
+    return visible
   }
 
   const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
@@ -687,7 +712,7 @@
                 </div>
               {/if}
             {/each}
-            {#if message.metadata?.ragSources?.length}
+            {#if getVisibleRagSources(message).length}
               <div class="sources">
                 <div class="sources-header">
                   <span class="sources-icon">
@@ -700,21 +725,15 @@
                   <span class="sources-title">Sources</span>
                 </div>
                 <ul>
-                  {#each message.metadata.ragSources as source (source.sourceId)}
+                  {#each getVisibleRagSources(message) as source (source.fileId)}
                     <li class="source-item">
-                      {#if source.fileId}
-                        <button
-                          type="button"
-                          class="source-link"
-                          onclick={() => openRagSource(source)}
-                        >
-                          Download {source.filename || source.sourceId}
-                        </button>
-                      {:else}
-                        <span class="source-name"
-                          >{source.filename || source.sourceId}</span
-                        >
-                      {/if}
+                      <button
+                        type="button"
+                        class="source-link"
+                        onclick={() => openRagSource(source)}
+                      >
+                        Download {source.filename}
+                      </button>
                     </li>
                   {/each}
                 </ul>
