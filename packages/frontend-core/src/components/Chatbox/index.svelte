@@ -18,6 +18,7 @@
   import { Chat } from "@ai-sdk/svelte"
   import { formatToolName } from "../../utils/aiTools"
   import ReasoningStatus from "./ReasoningStatus.svelte"
+  import ContextUsage from "./ContextUsage.svelte"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -232,6 +233,11 @@
 
   let messages = $derived(chatInstance.messages)
   let lastMessage = $derived(messages[messages.length - 1])
+
+  let lastAssistantUsage = $derived(
+    messages.findLast(m => m.role === "assistant" && m.metadata?.usage)
+      ?.metadata?.usage
+  )
   let lastAssistantMessage = $derived(
     messages.findLast(message => message.role === "assistant")
   )
@@ -713,6 +719,9 @@
           {/if}
         </button>
       </div>
+      <div class="input-footer">
+        <ContextUsage usage={lastAssistantUsage} />
+      </div>
     </div>
   {/if}
 </div>
@@ -838,6 +847,13 @@
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
+    gap: 6px;
+  }
+
+  .input-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 4px;
   }
 
   .read-only-notice {

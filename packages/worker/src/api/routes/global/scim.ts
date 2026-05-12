@@ -1,4 +1,5 @@
 import Router from "@koa/router"
+import { auth } from "@budibase/backend-core"
 import { middleware as proMiddleware } from "@budibase/pro"
 import { Feature } from "@budibase/types"
 import * as userController from "../../controllers/global/scim/users"
@@ -10,6 +11,7 @@ const router: Router = new Router({
 
 router.use(proMiddleware.requireSCIM)
 router.use(proMiddleware.doInScimContext)
+router.use(auth.adminOnly)
 
 router.get("/users", userController.get)
 router.get("/users/:id", proMiddleware.scimUserOnly("id"), userController.find)

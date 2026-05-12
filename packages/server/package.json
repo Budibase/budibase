@@ -1,5 +1,6 @@
 {
   "name": "@budibase/server",
+  "private": true,
   "email": "hi@budibase.com",
   "version": "0.0.0",
   "description": "Budibase Web Server",
