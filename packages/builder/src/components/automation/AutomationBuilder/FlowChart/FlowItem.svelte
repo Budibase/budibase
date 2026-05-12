@@ -488,23 +488,14 @@
     border-color: var(--spectrum-semantic-positive-color-status);
     border-width: 2px;
   }
-  .block.success.selected .block-content {
-    border-width: 3px;
-  }
   .block.error .block-content {
     border-color: var(--spectrum-semantic-negative-color-status);
     border-width: 2px;
-  }
-  .block.error.selected .block-content {
-    border-width: 3px;
   }
 
   .block.warn .block-content {
     border-color: var(--spectrum-global-color-orange-500);
     border-width: 2px;
-  }
-  .block.warn.selected .block-content {
-    border-width: 3px;
   }
 
   .block-info {

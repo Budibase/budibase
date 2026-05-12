@@ -269,24 +269,14 @@
     border-color: var(--spectrum-semantic-positive-color-status);
     border-width: 2px;
   }
-  .block.success.selected {
-    border-width: 3px;
-  }
-
   .block.error {
     border-color: var(--spectrum-semantic-negative-color-status);
     border-width: 2px;
-  }
-  .block.error.selected {
-    border-width: 3px;
   }
 
   .block.warn {
     border-color: var(--spectrum-global-color-orange-500);
     border-width: 2px;
-  }
-  .block.warn.selected {
-    border-width: 3px;
   }
 
   .block.executed {
