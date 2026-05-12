@@ -45,6 +45,7 @@
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { cloneDeep } from "lodash/fp"
+  import SwitchStepPanel from "./SwitchStepPanel.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -60,7 +61,6 @@
   let confirmCascadeDialog: any
   let confirmBranchDeleteDialog: any
   let editableBranchConditionUI: any = {}
-  let editableBranchIdx: number | undefined
 
   $: memoAutomation.set($selectedAutomation.data)
   $: memoContext.set($evaluationContext)
@@ -109,7 +109,6 @@
       : undefined
   $: if (selectedBranch) {
     editableBranchConditionUI = selectedBranch.conditionUI || {}
-    editableBranchIdx = undefined
   }
 
   $: memoBlock.set(block)
@@ -294,7 +293,7 @@
   }
 
   const saveBranchCondition = async () => {
-    const targetBranchIdx = selectedBranchNode?.branchIdx ?? editableBranchIdx
+    const targetBranchIdx = selectedBranchNode?.branchIdx
     const targetBranch =
       conditionStep && isBranchStep(conditionStep)
         ? conditionStep.inputs?.branches?.[targetBranchIdx ?? -1]
@@ -394,36 +393,6 @@
     })
   }
 
-  const addSwitchCondition = async () => {
-    if (!switchStep || !switchStepRef || !$selectedAutomation.data) {
-      return
-    }
-    await automationStore.actions.addBranchCondition(
-      switchStepRef.pathTo,
-      $selectedAutomation.data
-    )
-  }
-
-  const deleteSwitchCondition = async (branchIdx: number) => {
-    if (!switchStepRef || !$selectedAutomation.data) {
-      return
-    }
-    await automationStore.actions.deleteBranchCondition(
-      switchStepRef.pathTo,
-      $selectedAutomation.data,
-      branchIdx
-    )
-  }
-
-  const editSwitchCondition = (branchIdx: number) => {
-    const branch = switchStep?.inputs?.branches?.[branchIdx]
-    if (!branch) {
-      return
-    }
-    editableBranchIdx = branchIdx
-    editableBranchConditionUI = branch.conditionUI || {}
-    branchConditionDrawer?.show()
-  }
 </script>
 
 <Modal bind:this={webhookModal}>
@@ -592,10 +561,9 @@
       <PropField label="Only run when:" fullWidth>
         <Button
           secondary
-          on:click={() => {
-            editableBranchIdx = undefined
-            editableBranchConditionUI = selectedBranch.conditionUI || {}
-            branchConditionDrawer?.show()
+            on:click={() => {
+              editableBranchConditionUI = selectedBranch.conditionUI || {}
+              branchConditionDrawer?.show()
           }}
         >
           {selectedBranch.conditionUI?.groups?.length
@@ -603,30 +571,15 @@
             : "Add condition"}
         </Button>
       </PropField>
-    {:else if switchStep}
-      <InfoDisplay
-        icon="info"
-        body="Checks each condition in order and follows the first one that matches."
+    {:else if switchStep && switchStepRef && $memoAutomation}
+      <SwitchStepPanel
+        {switchStep}
+        switchStepRef={switchStepRef}
+        automation={$memoAutomation}
+        {branchBindings}
+        {branchSchemaFields}
+        evaluationContext={$memoContext}
       />
-      <div class="conditions">
-        {#each switchStep.inputs?.branches || [] as branch, idx}
-          <div class="condition-row">
-            <Button secondary on:click={() => editSwitchCondition(idx)}>
-              {idx + 1}. {branch.conditionUI?.groups?.length
-                ? branch.name
-                : "Add condition"}
-            </Button>
-            {#if (switchStep.inputs?.branches || []).length > 2}
-              <Icon
-                name="trash"
-                hoverable
-                on:click={() => deleteSwitchCondition(idx)}
-              />
-            {/if}
-          </div>
-        {/each}
-        <Button secondary on:click={addSwitchCondition}>Add condition</Button>
-      </div>
     {:else if loopBlock || $memoBlock?.stepId === AutomationActionStepId.LOOP_V2}
       <div class="loop">
         <DetailSummary name="Loop details" padded={false} initiallyShow>
@@ -754,17 +707,10 @@
     padding: var(--spacing-l);
   }
   .config.panel .loop,
-  .config.panel .conditions,
   .config.panel .content .props {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
-  }
-  .condition-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--spacing-m);
-    align-items: center;
   }
   .config.panel :global(.spectrum-Divider) {
     flex: 0 0 auto;

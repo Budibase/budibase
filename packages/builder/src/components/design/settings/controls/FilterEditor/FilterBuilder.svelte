@@ -17,6 +17,14 @@
   export let builderType = undefined
   export let docsURL = undefined
   export let evaluationContext = {}
+  export let showGlobalHeader = true
+  export let showGroupHeader = true
+  export let showGroupActions = true
+  export let showAddFilterAction = true
+  export let showDeleteGroupAction = true
+  export let showAddGroupButton = true
+  export let groupBordered = true
+  export let groupLabel = undefined
 </script>
 
 <CoreFilterBuilder
@@ -34,5 +42,13 @@
   {builderType}
   {docsURL}
   {evaluationContext}
+  {showGlobalHeader}
+  {showGroupHeader}
+  {showGroupActions}
+  {showAddFilterAction}
+  {showDeleteGroupAction}
+  {showAddGroupButton}
+  {groupBordered}
+  {groupLabel}
   on:change
 />

@@ -40,6 +40,14 @@
   export let drawerTitle = null
   export let bindingValueType = Constants.FilterValueType.BINDING
   export let useConditionValueControls = false
+  export let showGlobalHeader = true
+  export let showGroupHeader = true
+  export let showGroupActions = true
+  export let showAddFilterAction = true
+  export let showDeleteGroupAction = true
+  export let showAddGroupButton = true
+  export let groupBordered = true
+  export let groupLabel = undefined
 
   export let bindings
   export let panel
@@ -272,7 +280,7 @@
     {#if fieldOptions?.length}
       <slot name="filtering-hero-content" />
 
-      {#if editableFilters?.groups?.length}
+      {#if showGlobalHeader && editableFilters?.groups?.length}
         <div class="global-filter-header">
           <span>{prefix}</span>
           <span class="operator-picker">
@@ -296,57 +304,68 @@
       {#if editableFilters?.groups?.length}
         <div class="filter-groups">
           {#each editableFilters?.groups as group, groupIdx}
-            <div class="group">
-              <div class="group-header">
-                <div class="group-options">
-                  <span>
-                    {getGroupPrefix(groupIdx, editableFilters.logicalOperator)}
-                  </span>
-                  <span class="operator-picker">
-                    <Select
-                      value={group?.logicalOperator}
-                      options={filterOperatorOptions}
-                      getOptionLabel={opt => opt.label}
-                      getOptionValue={opt => opt.value}
-                      on:change={e => {
-                        handleFilterChange({
-                          groupIdx,
-                          group: {
-                            logicalOperator: e.detail,
-                          },
-                        })
-                      }}
-                      placeholder={false}
-                      popoverAutoWidth
-                    />
-                  </span>
-                  <span>of the following {filterTypeLabel}s are matched:</span>
+            <div class="group" class:unbordered={!groupBordered}>
+              {#if showGroupHeader}
+                <div class="group-header">
+                  <div class="group-options">
+                    <span>
+                      {#if groupLabel}
+                        {groupLabel}
+                      {/if}
+                      {getGroupPrefix(groupIdx, editableFilters.logicalOperator)}
+                    </span>
+                    <span class="operator-picker">
+                      <Select
+                        value={group?.logicalOperator}
+                        options={filterOperatorOptions}
+                        getOptionLabel={opt => opt.label}
+                        getOptionValue={opt => opt.value}
+                        on:change={e => {
+                          handleFilterChange({
+                            groupIdx,
+                            group: {
+                              logicalOperator: e.detail,
+                            },
+                          })
+                        }}
+                        placeholder={false}
+                        popoverAutoWidth
+                      />
+                    </span>
+                    <span>of the following {filterTypeLabel}s are matched:</span>
+                  </div>
+                  {#if showGroupActions}
+                    <div class="group-actions">
+                      {#if showAddFilterAction}
+                        <Icon
+                          name="plus"
+                          hoverable
+                          hoverColor="var(--ink)"
+                          on:click={() => {
+                            handleFilterChange({
+                              groupIdx,
+                              addFilter: true,
+                            })
+                          }}
+                        />
+                      {/if}
+                      {#if showDeleteGroupAction}
+                        <Icon
+                          name="trash"
+                          hoverable
+                          hoverColor="var(--ink)"
+                          on:click={() => {
+                            handleFilterChange({
+                              groupIdx,
+                              deleteGroup: true,
+                            })
+                          }}
+                        />
+                      {/if}
+                    </div>
+                  {/if}
                 </div>
-                <div class="group-actions">
-                  <Icon
-                    name="plus"
-                    hoverable
-                    hoverColor="var(--ink)"
-                    on:click={() => {
-                      handleFilterChange({
-                        groupIdx,
-                        addFilter: true,
-                      })
-                    }}
-                  />
-                  <Icon
-                    name="trash"
-                    hoverable
-                    hoverColor="var(--ink)"
-                    on:click={() => {
-                      handleFilterChange({
-                        groupIdx,
-                        deleteGroup: true,
-                      })
-                    }}
-                  />
-                </div>
-              </div>
+              {/if}
 
               <div class="filters">
                 {#each group.filters as filter, filterIdx}
@@ -482,28 +501,30 @@
               <span>when all {filterTypeLabel}s are empty</span>
             </div>
           {/if}
-          <div class="add-group">
-            <Button
-              icon="plus-circle"
-              size="M"
-              secondary
-              on:click={() => {
-                handleFilterChange({
-                  addGroup: true,
-                })
-              }}
-            >
-              Add {filterTypeLabel} group
-            </Button>
-            {#if docsURL}
-              <a href={docsURL} target="_blank">
-                <Icon
-                  name="question"
-                  color="var(--spectrum-global-color-gray-600)"
-                />
-              </a>
-            {/if}
-          </div>
+          {#if showAddGroupButton}
+            <div class="add-group">
+              <Button
+                icon="plus-circle"
+                size="M"
+                secondary
+                on:click={() => {
+                  handleFilterChange({
+                    addGroup: true,
+                  })
+                }}
+              >
+                Add {filterTypeLabel} group
+              </Button>
+              {#if docsURL}
+                <a href={docsURL} target="_blank">
+                  <Icon
+                    name="question"
+                    color="var(--spectrum-global-color-gray-600)"
+                  />
+                </a>
+              {/if}
+            </div>
+          {/if}
         </Layout>
       </div>
     {:else}
@@ -553,6 +574,12 @@
     border: 1px solid var(--spectrum-global-color-gray-400);
     border-radius: 4px;
     padding: var(--spacing-xl);
+  }
+
+  .group.unbordered {
+    border: none;
+    border-radius: 0;
+    padding: 0;
   }
 
   .filters {
