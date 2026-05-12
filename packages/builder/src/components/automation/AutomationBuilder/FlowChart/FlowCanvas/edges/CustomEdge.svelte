@@ -49,9 +49,6 @@
   $: automation = $selectedAutomation?.data
 
   const view = getContext<Writable<DragView>>("draggableView")
-  const layoutDirection = getContext<Writable<"LR" | "TB">>(
-    "flowLayoutDirection"
-  )
 
   const deriveBlockContext = (
     edgeData: EdgeData | undefined
@@ -102,27 +99,22 @@
       ? data.block.stepId === AutomationActionStepId.LOOP_V2
       : false
   $: isSubflowEdge = data.isSubflowEdge === true
-  $: isLR = $layoutDirection !== "TB"
   $: isEmptyBranchAnchor =
     isAnchorTarget && block ? isBranchContext(block) : false
 
-  $: if (isAnchorTarget || (isLR && (isLoopTarget || isLoopSource))) {
+  $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
     labelX = isEmptyBranchAnchor
       ? (targetX ?? 0)
-      : isLR
-        ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-        : (sourceX ?? 0)
+      : Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
     labelY = isEmptyBranchAnchor
       ? (targetY ?? 0)
-      : isLR && isLoopSource
+      : isLoopSource
         ? (targetY ?? 0)
-        : isLR
-          ? (sourceY ?? 0)
-          : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
+        : (sourceY ?? 0)
   }
 
-  $: loopTargetPath = isLR && isLoopTarget ? getLoopTargetPath() : undefined
-  $: loopSourcePath = isLR && isLoopSource ? getLoopSourcePath() : undefined
+  $: loopTargetPath = isLoopTarget ? getLoopTargetPath() : undefined
+  $: loopSourcePath = isLoopSource ? getLoopSourcePath() : undefined
 
   $: edgePath =
     isAnchorTarget && !isEmptyBranchAnchor
@@ -189,20 +181,15 @@
     Math.max(min, Math.min(max, v))
 
   $: dx = Math.abs((targetX ?? 0) - (sourceX ?? 0))
-  $: dy = Math.abs((targetY ?? 0) - (sourceY ?? 0))
-  $: dzWidth = clamp(Math.round((isLR ? dx : dy) - 140), 160, 320)
+  $: dzWidth = clamp(Math.round(dx - 140), 160, 320)
   $: dzOffsetY = 0
 
   // Pre-branch label sizing
-  $: preDzWidth = clamp(Math.round((isLR ? dx : dy) - 160), 160, 300)
+  $: preDzWidth = clamp(Math.round(dx - 160), 160, 300)
   $: preDzOffsetY = 0
 
-  $: preBranchLabelX = isLR
-    ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-    : (sourceX ?? 0)
-  $: preBranchLabelY = isLR
-    ? (sourceY ?? 0)
-    : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
+  $: preBranchLabelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+  $: preBranchLabelY = sourceY ?? 0
 
   const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
     if (!ctx) {
