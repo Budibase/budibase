@@ -183,6 +183,11 @@
   }
 
   function onNodeMouseDown(e: MouseEvent) {
+    // left-click only
+    if (e.button !== 0) {
+      return
+    }
+
     if (!draggable || isTrigger || isInsideLoop) {
       e.preventDefault()
       return
