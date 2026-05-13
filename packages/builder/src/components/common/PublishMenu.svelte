@@ -112,7 +112,7 @@
   on:click={publish}
   on:keydown={e => e.key === "Enter" && publish()}
 >
-  <Icon size="M" name="arrow-circle-up" />
+  <Icon size="M" name="arrow-circle-up" weight="fill" />
   <span>Publish</span>
 </div>
 
