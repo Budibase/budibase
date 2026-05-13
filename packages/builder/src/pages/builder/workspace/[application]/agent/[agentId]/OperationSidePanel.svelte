@@ -165,7 +165,10 @@
       onDelete: async () => {},
       onSync: async () => {},
     }),
-    ...toFileTableRows(knowledgeFiles, handleDeleteFile),
+    ...toFileTableRows(
+      knowledgeFiles.filter(file => !file.source),
+      handleDeleteFile
+    ),
   ])
 
   const handleToolClick = (tool: AgentTool) => {
