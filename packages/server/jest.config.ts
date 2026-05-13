@@ -34,6 +34,7 @@ const baseConfig: Config = {
     "^@chat-adapter/discord$": "<rootDir>/__mocks__/chat-adapter-discord.ts",
     "^@chat-adapter/slack$": "<rootDir>/__mocks__/chat-adapter-slack.ts",
     "^@chat-adapter/teams$": "<rootDir>/__mocks__/chat-adapter-teams.ts",
+    "^@chat-adapter/telegram$": "<rootDir>/__mocks__/chat-adapter-telegram.ts",
     "^@chat-adapter/state-memory$":
       "<rootDir>/__mocks__/chat-adapter-state-memory.ts",
     "^@chat-adapter/state-ioredis$":
