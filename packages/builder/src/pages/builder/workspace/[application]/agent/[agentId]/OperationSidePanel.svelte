@@ -578,24 +578,6 @@
     gap: 8px;
   }
 
-  .instructions-actions > button {
-    background: transparent;
-    border: none;
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 6px;
-    border-radius: 20px;
-    cursor: pointer;
-  }
-
-  .instructions-actions > button:hover {
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-900);
-  }
-
   .instructions-editor {
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
