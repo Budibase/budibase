@@ -8,7 +8,7 @@ import sdk from "../../.."
 import { startContainer } from "../../../../integrations/tests/utils"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { getToken } from "../utils"
+import { getToken, validateConfig } from "../utils"
 
 const config = new TestConfiguration()
 
@@ -53,6 +53,32 @@ describe("oauth2 utils", () => {
   afterAll(async () => {
     restoreEnv?.()
     await blacklist.refreshBlacklist()
+  })
+
+  it("rejects a real Keycloak token endpoint when localhost is blacklisted", async () => {
+    const restoreBlacklistEnv = setCoreEnv({
+      BLACKLIST_IPS: undefined,
+      SELF_HOSTED: false,
+    })
+    await blacklist.refreshBlacklist()
+
+    try {
+      const result = await validateConfig({
+        url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+        clientId: "my-client",
+        clientSecret: "my-secret",
+        method: OAuth2CredentialsMethod.BODY,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      })
+
+      expect(result).toEqual({
+        valid: false,
+        message: "URL is blocked or could not be resolved safely.",
+      })
+    } finally {
+      restoreBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
   })
 
   describe.each(
