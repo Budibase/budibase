@@ -111,7 +111,17 @@
     return `${label}\n\n${parts.join("\n")}`
   }
 
-  const hasConfiguredConditions = (branch: Branch) => {
+  const hasNoChildren = (branch: Branch): boolean => {
+    const children = switchStep.inputs?.children?.[branch.id]
+    return !children || children.length === 0
+  }
+
+  const deleteBranch = async (branchId: string) => {
+    const updatedBranches = branches.filter(branch => branch.id !== branchId)
+    await saveSwitchStep(updatedBranches)
+  }
+
+  const _hasConfiguredConditions = (branch: Branch) => {
     const conditionUI = branch.conditionUI as SwitchConditionUI | undefined
     const groups = conditionUI?.groups || []
     return groups.some(group =>
@@ -120,9 +130,7 @@
   }
 
   const openConditionsModal = () => {
-    editableBranches = (switchStep.inputs?.branches || []).map(
-      normaliseBranchCondition
-    )
+    editableBranches = branches.map(normaliseBranchCondition)
     conditionsDrawer?.show()
   }
 
@@ -142,7 +150,10 @@
       nextChildren[branch.id] = nextChildren[branch.id] || []
       return branch
     })
-    branchStepUpdate.inputs.children = nextChildren
+    branchStepUpdate.inputs = {
+      branches: branchStepUpdate.inputs.branches,
+      ...(Object.keys(nextChildren).length ? { children: nextChildren } : {}),
+    }
 
     const updated = automationStore.actions.updateStep(
       switchStepRef.pathTo,
@@ -190,8 +201,23 @@
 
   const handleCardsFinalize = async (e: CustomEvent<{ items: Branch[] }>) => {
     draggingDisabled = true
-    branchCards = e.detail.items
-    await saveSwitchStep(branchCards)
+    const reorderedCards = e.detail.items
+    await saveConditionOrder(reorderedCards)
+  }
+
+  const saveConditionOrder = async (reorderedBranches: Branch[]) => {
+    // Swap conditions between branches to match the reordered card positions
+    // Branch at position i gets the condition from reorderedBranches[i]
+    const updatedBranches = branches.map((branch, idx) => {
+      const sourceBranch = reorderedBranches[idx]
+      if (!sourceBranch) return branch
+      return {
+        ...branch,
+        condition: cloneDeep(sourceBranch.condition),
+        conditionUI: cloneDeep(sourceBranch.conditionUI),
+      }
+    })
+    await saveSwitchStep(updatedBranches)
   }
 
   const updateBranchCondition = (branchIdx: number, conditionUI: any) => {
@@ -270,6 +296,20 @@
             on:blur={e => handleBranchNameBlur(e, branch)}
             on:keydown={handleBranchNameKeydown}
           />
+          {#if hasNoChildren(branch)}
+            <button
+              type="button"
+              class="delete-branch"
+              aria-label="Delete branch"
+              on:click={() => deleteBranch(branch.id)}
+            >
+              <Icon
+                name="trash"
+                color="var(--spectrum-global-color-gray-700)"
+                size="S"
+              />
+            </button>
+          {/if}
         </div>
         <div class="condition-summary">
           <DescriptionViewer
@@ -352,6 +392,20 @@
 
   .drag-handle:active {
     cursor: grabbing;
+  }
+
+  .delete-branch {
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  .delete-branch:hover {
+    color: var(--spectrum-global-color-red-500);
   }
 
   .branch-index {
