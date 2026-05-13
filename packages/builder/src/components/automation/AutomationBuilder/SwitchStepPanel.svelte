@@ -213,6 +213,7 @@
       if (!sourceBranch) return branch
       return {
         ...branch,
+        name: sourceBranch.name,
         condition: cloneDeep(sourceBranch.condition),
         conditionUI: cloneDeep(sourceBranch.conditionUI),
       }
