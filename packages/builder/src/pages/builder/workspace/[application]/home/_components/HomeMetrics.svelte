@@ -16,7 +16,7 @@
   export let showBudibaseAIMetric = true
 
   let githubStars: number | null = null
-  let actionsBreakdownModal: any
+  let actionsBreakdownModal: Modal
 
   $: canViewOrganisationUsers = $flattenedRoutes.some(
     (route: Route) => route.path === "/people/users"
