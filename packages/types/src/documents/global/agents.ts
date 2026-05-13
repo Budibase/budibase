@@ -45,6 +45,13 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   messagingEndpointUrl?: string
 }
 
+export interface TelegramAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  webhookSecretToken?: string
+  botUserName?: string
+  messagingEndpointUrl?: string
+}
+
 export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
@@ -86,6 +93,7 @@ export interface Agent extends Document {
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
+  telegramIntegration?: TelegramAgentIntegration
   knowledgeSources?: AgentKnowledgeSource[]
 }
 

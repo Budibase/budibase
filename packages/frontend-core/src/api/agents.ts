@@ -12,6 +12,8 @@ import {
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
+  ProvisionAgentTelegramChannelRequest,
+  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -48,6 +50,10 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ) => Promise<ProvisionAgentSlackChannelResponse>
+  provisionAgentTelegramChannel: (
+    agentId: string,
+    body?: ProvisionAgentTelegramChannelRequest
+  ) => Promise<ProvisionAgentTelegramChannelResponse>
   toggleAgentDiscordDeployment: (
     agentId: string,
     enabled: boolean
@@ -57,6 +63,10 @@ export interface AgentEndpoints {
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
   toggleAgentSlackDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentDeploymentResponse>
+  toggleAgentTelegramDeployment: (
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
@@ -167,6 +177,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  provisionAgentTelegramChannel: async (agentId: string, body) => {
+    return await API.post<
+      ProvisionAgentTelegramChannelRequest | undefined,
+      ProvisionAgentTelegramChannelResponse
+    >({
+      url: `/api/agent/${agentId}/telegram/provision`,
+      body,
+    })
+  },
+
   toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
     return await API.post<
       ToggleAgentDeploymentRequest,
@@ -193,6 +213,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       ToggleAgentDeploymentResponse
     >({
       url: `/api/agent/${agentId}/slack/toggle`,
+      body: { enabled },
+    })
+  },
+
+  toggleAgentTelegramDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
+    >({
+      url: `/api/agent/${agentId}/telegram/toggle`,
       body: { enabled },
     })
   },

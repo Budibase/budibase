@@ -1,5 +1,5 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import { AgentChannelProvider, DocumentType } from "@budibase/types"
+import { ActionType, AgentChannelProvider, DocumentType } from "@budibase/types"
 import type {
   Agent,
   ChatApp,
@@ -14,7 +14,7 @@ import TestConfiguration from "../utilities/TestConfiguration"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
-import { webhookChat } from "../../api/controllers/ai/chatConversations"
+import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV3 } from "ai/test"
 
 jest.mock("@budibase/pro", () => {
@@ -23,7 +23,11 @@ jest.mock("@budibase/pro", () => {
     ...actual,
     quotas: {
       ...actual.quotas,
-      addAction: jest.fn().mockImplementation((fn: () => Promise<any>) => fn()),
+      addAction: jest
+        .fn()
+        .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
+          fn()
+        ),
       throwIfBudibaseAICreditsExceeded: jest.fn(),
     },
     ai: {

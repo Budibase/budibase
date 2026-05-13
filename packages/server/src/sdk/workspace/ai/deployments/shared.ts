@@ -13,6 +13,7 @@ export const WEBHOOK_PATH_BY_PROVIDER: Record<AgentChannelProvider, string> = {
   [AgentChannelProvider.DISCORD]: "discord",
   [AgentChannelProvider.MSTEAMS]: "ms-teams",
   [AgentChannelProvider.SLACK]: "slack",
+  [AgentChannelProvider.TELEGRAM]: "telegram",
 }
 
 const normalizeDefaultAgent = (agents: NonNullable<ChatApp["agents"]>) => {
