@@ -74,11 +74,15 @@
         const used = quotaUsage.monthly.current[key]
         if (value.value !== 0) {
           const isAICredits = value.name === "Budibase AI Credits"
-          monthlyUsage.push({
+          const entry = {
             name: value.name,
             used: isAICredits ? Math.floor((used ?? 0) / 1000) : (used ?? 0),
             total: isAICredits ? Math.floor(value.value / 1000) : value.value,
-          })
+          }
+          if (key === "actions" && $licensing.actionsBreakdown) {
+            entry.breakdown = $licensing.actionsBreakdown
+          }
+          monthlyUsage.push(entry)
         }
       }
     }
@@ -233,7 +237,11 @@
             </Layout>
             <Layout noPadding gap="M">
               {#each monthlyUsage as usage}
-                <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
+                <Usage
+                  {usage}
+                  warnWhenFull={WARN_USAGE.includes(usage.name)}
+                  breakdown={usage.breakdown ?? null}
+                />
               {/each}
             </Layout>
           </div>
