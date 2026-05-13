@@ -557,7 +557,7 @@
     --xy-controls-button-background-color: var(
       --spectrum-global-color-gray-200
     );
-    --xy-edge-stroke: var(--spectrum-global-color-gray-400);
+    --xy-edge-stroke: var(--spectrum-global-color-gray-300);
   }
 
   :global(.spectrum--dark) .wrapper,
