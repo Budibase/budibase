@@ -34,6 +34,7 @@
   import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
   import { shouldAutoSelectAgentModel } from "./configUtils"
+  import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
 
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
@@ -136,14 +137,18 @@ Any constraints the agent must follow.
   })
 
   // Build lookup maps from readable binding to runtime binding and icon URL
-  let { readableToIcon } = $derived.by(() => {
+  let { readableToRuntimeBinding, readableToIcon } = $derived.by(() => {
+    const runtimeMap: Record<string, string> = {}
     const iconMap: Record<string, string | undefined> = {}
     for (const tool of availableTools) {
       if (tool.readableBinding) {
+        if (tool.runtimeBinding) {
+          runtimeMap[tool.readableBinding] = tool.runtimeBinding
+        }
         iconMap[tool.readableBinding] = tool.tagIconUrl
       }
     }
-    return { readableToIcon: iconMap }
+    return { readableToRuntimeBinding: runtimeMap, readableToIcon: iconMap }
   })
 
   let promptBindings: EnrichedBinding[] = $derived.by(() => {
@@ -401,9 +406,14 @@ Any constraints the agent must follow.
 
     saving = true
     try {
+      const enabledTools = getIncludedToolRuntimeBindings(
+        draft.promptInstructions,
+        readableToRuntimeBinding
+      )
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
+        enabledTools,
       })
 
       if (showNotifications) {
