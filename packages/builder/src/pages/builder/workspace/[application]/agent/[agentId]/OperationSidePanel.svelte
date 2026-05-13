@@ -360,18 +360,9 @@
             <Body
               size="S"
               weight="500"
-              color="var(--spectrum-global-color-gray-900)">Operation</Body
+              color="var(--spectrum-global-color-gray-900)"
+              >Default operation</Body
             >
-            <Toggle
-              label=""
-              text={agent?.live ? "Live" : "Stopped"}
-              value={!!agent?.live}
-              on:change={event => {
-                if (!agent) return
-                agent.live = !!event.detail
-                onUpdated()
-              }}
-            />
           </div>
         </svelte:fragment>
         <div class="operation-panel">
