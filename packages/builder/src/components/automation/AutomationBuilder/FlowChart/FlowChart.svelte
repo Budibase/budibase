@@ -458,7 +458,6 @@
     </div>
 
     <ActionButton
-      icon="play"
       quiet
       disabled={!automation?.definition?.trigger}
       on:click={() => {
