@@ -26,6 +26,7 @@
   import { EditorModes } from "@/components/common/CodeEditor"
   import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
   import KnowledgeTable from "./knowledge/KnowledgeTable.svelte"
+  import type { KnowledgeTableRow } from "./knowledge/renderers/types"
   import {
     toFileTableRows,
     toSharePointConnectionRows,
@@ -33,6 +34,8 @@
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
   import SelectSharePointSiteModal from "./knowledge/new/SelectSharePointSiteModal.svelte"
+  import DisplaySharePointSiteModal from "./knowledge/sharepoint/DisplaySharePointSiteModal.svelte"
+  import SelectSharePointFilesModal from "./knowledge/sharepoint/SelectSharePointFilesModal.svelte"
   import type { AgentTool } from "./toolTypes"
 
   let {
@@ -78,6 +81,9 @@
   )
   let panelRoot: HTMLDivElement | undefined = $state(undefined)
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
+  let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
+  let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
+  let selectedSharePointSiteId = $state("")
   let toolSearch = $state("")
   let filteredTools = $derived.by(() =>
     availableTools.filter(tool => {
@@ -191,6 +197,19 @@
         await agentsStore.fetchAgentKnowledge(agentId, operationId)
       }
     }
+  }
+
+  const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
+    if (row.kind !== "sharepoint_connection") {
+      return
+    }
+    selectedSharePointSiteId = row.siteId
+    displaySharePointSiteModal?.show()
+  }
+
+  const openSharePointSiteSelectionModal = async (siteId: string) => {
+    selectedSharePointSiteId = siteId
+    await selectSharePointFilesModal?.show()
   }
 </script>
 
@@ -338,7 +357,11 @@
                 </div>
               </div>
 
-              <KnowledgeTable loading={false} rows={knowledgeRows} />
+              <KnowledgeTable
+                loading={false}
+                rows={knowledgeRows}
+                onRowClick={handleKnowledgeRowClick}
+              />
             </div>
           </div>
 
@@ -360,6 +383,17 @@
     existingSiteIds={sharePointSources
       .map(source => source.config.site?.id || "")
       .filter(Boolean)}
+  />
+  <DisplaySharePointSiteModal
+    bind:this={displaySharePointSiteModal}
+    agentId={agentId}
+    siteId={selectedSharePointSiteId}
+    onEdit={openSharePointSiteSelectionModal}
+  />
+  <SelectSharePointFilesModal
+    bind:this={selectSharePointFilesModal}
+    agentId={agentId}
+    siteId={selectedSharePointSiteId}
   />
 {/if}
 
