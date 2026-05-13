@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AbsTooltip, ActionButton, TooltipPosition } from "@budibase/bbui"
+  import { AbsTooltip, ActionButton } from "@budibase/bbui"
   import type { KnowledgeTableRow, SharePointConnectionTableRow } from "./types"
 
   export interface Props {
@@ -37,7 +37,7 @@
 
 <div class="file-actions" class:loading={processing}>
   {#if row.kind === "sharepoint_connection"}
-    <AbsTooltip text="Sync SharePoint" noWrap position={TooltipPosition.Left}>
+    <AbsTooltip text="Sync SharePoint" noWrap>
       <ActionButton
         icon={"arrows-clockwise"}
         size="M"
@@ -47,11 +47,7 @@
         loading={syncing}
       ></ActionButton>
     </AbsTooltip>
-    <AbsTooltip
-      text="Disconnect SharePoint"
-      noWrap
-      position={TooltipPosition.Left}
-    >
+    <AbsTooltip text="Disconnect" noWrap>
       <ActionButton
         icon="trash"
         size="M"
@@ -61,7 +57,7 @@
       />
     </AbsTooltip>
   {:else if row.onDelete}
-    <AbsTooltip text="Remove file" noWrap position={TooltipPosition.Left}>
+    <AbsTooltip text="Remove" noWrap>
       <ActionButton
         icon="trash"
         size="M"
