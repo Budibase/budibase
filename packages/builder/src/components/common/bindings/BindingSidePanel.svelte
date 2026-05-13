@@ -176,8 +176,8 @@
     search = ""
   }
 
-  const stopSearching = (e: Event) => {
-    e.stopPropagation()
+  const stopSearching = (e?: Event) => {
+    e?.stopPropagation()
     searching = false
     search = ""
   }
@@ -266,54 +266,51 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <div class="binding-side-panel">
   <Layout noPadding gap="S">
-    {#if selectedCategory}
-      <div class="header">
+    <div class="header">
+      {#if selectedCategory}
         <Icon
           name="arrow-left"
           hoverable
           size="S"
-          on:click={() => (selectedCategory = null)}
+          on:click={() => {
+            selectedCategory = null
+            stopSearching()
+          }}
         />
-        {selectedCategory}
-        {#if selectedCategory === "Snippets"}
-          {#if enableSnippets}
-            <div class="add-snippet-button">
-              <Icon size="S" name="plus" hoverable on:click={createSnippet} />
-            </div>
-          {:else}
-            <div class="title">
-              <Tags>
-                <Tag icon="lock" emphasized>Premium</Tag>
-              </Tags>
-            </div>
-          {/if}
-        {/if}
-      </div>
-    {/if}
-
-    {#if !selectedCategory}
-      <div class="header">
-        {#if searching}
-          <div class="search-input">
-            <Input
-              placeholder="Search for bindings"
-              autocomplete={false}
-              bind:value={search}
-              autofocus
-            />
-          </div>
-          <Icon size="S" name="x" hoverable on:click={stopSearching} />
-        {:else}
-          <div class="title">Bindings</div>
-          <Icon
-            size="S"
-            name="magnifying-glass"
-            hoverable
-            on:click={startSearching}
+      {/if}
+      {#if searching}
+        <div class="search-input">
+          <Input
+            placeholder="Search for bindings"
+            autocomplete={false}
+            bind:value={search}
+            autofocus
           />
+        </div>
+        <Icon size="S" name="x" hoverable on:click={stopSearching} />
+      {:else}
+        <div class="title">{selectedCategory || "Bindings"}</div>
+        <Icon
+          size="S"
+          name="magnifying-glass"
+          hoverable
+          on:click={startSearching}
+        />
+      {/if}
+      {#if selectedCategory === "Snippets"}
+        {#if enableSnippets}
+          <div class="add-snippet-button">
+            <Icon size="S" name="plus" hoverable on:click={createSnippet} />
+          </div>
+        {:else}
+          <div class="title">
+            <Tags>
+              <Tag icon="lock" emphasized>Premium</Tag>
+            </Tags>
+          </div>
         {/if}
-      </div>
-    {/if}
+      {/if}
+    </div>
     {#if !selectedCategory && !search}
       <ul class="category-list">
         {#each categoryNames as categoryName}
@@ -382,7 +379,7 @@
         {/if}
       {/each}
 
-      {#if selectedCategory === "Helpers" || search}
+      {#if selectedCategory === "Helpers" || (!selectedCategory && search)}
         {#if filteredHelpers?.length}
           <div class="sub-section">
             <ul class="helpers">
@@ -405,7 +402,7 @@
         {/if}
       {/if}
 
-      {#if selectedCategory === "Snippets" || search}
+      {#if selectedCategory === "Snippets" || (!selectedCategory && search)}
         <div class="snippet-list">
           {#if enableSnippets && filteredSnippets.length}
             {#each filteredSnippets as snippet}

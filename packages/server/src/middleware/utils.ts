@@ -1,7 +1,7 @@
 import { LoginMethod, UserCtx } from "@budibase/types"
 
 const WEBHOOK_ENDPOINTS = new RegExp(
-  "^/api/webhooks/(trigger|schema|discord|ms-teams|slack)(/|$)"
+  "^/api/webhooks/(trigger|schema|discord|ms-teams|slack|telegram)(/|$)"
 )
 
 export function isWebhookEndpoint(ctx: UserCtx): boolean {

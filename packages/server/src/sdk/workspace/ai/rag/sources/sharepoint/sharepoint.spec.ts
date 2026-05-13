@@ -112,6 +112,9 @@ const makeSharePointFile = ({
   itemId,
   path,
   status = KnowledgeBaseFileStatus.READY,
+  etag,
+  lastModifiedAt,
+  remoteSize,
 }: {
   id: string
   sourceId: string
@@ -120,6 +123,9 @@ const makeSharePointFile = ({
   itemId: string
   path: string
   status?: KnowledgeBaseFileStatus
+  etag?: string
+  lastModifiedAt?: string
+  remoteSize?: number
 }): KnowledgeBaseFile =>
   ({
     _id: id,
@@ -131,6 +137,10 @@ const makeSharePointFile = ({
       driveId,
       itemId,
       path,
+      externalId: `${siteId}:${driveId}:${itemId}`,
+      ...(etag ? { etag } : {}),
+      ...(lastModifiedAt ? { lastModifiedAt } : {}),
+      ...(remoteSize !== undefined ? { remoteSize } : {}),
     },
     filename: "file.txt",
     objectStoreKey: `key-${id}`,
@@ -249,14 +259,15 @@ describe("rag/sharepoint sync deduplication", () => {
     expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
       expect.objectContaining({
         knowledgeBaseId: "kb_1",
-        source: {
+        source: expect.objectContaining({
           type: KnowledgeBaseFileSourceType.SHAREPOINT,
           knowledgeSourceId: sourceId,
           siteId,
           driveId: "drive-b",
           itemId: "item-1",
           path: "new.txt",
-        },
+          externalId: `${siteId}:drive-b:item-1`,
+        }),
         filename: "new.txt",
       })
     )
@@ -412,6 +423,14 @@ describe("rag/sharepoint sync deduplication", () => {
           }),
         } as Response,
       },
+      {
+        match: "/drives/drive-a/items/item-1/content",
+        response: {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => toArrayBuffer("legacy content"),
+        } as Response,
+      },
     ])
 
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
@@ -424,6 +443,374 @@ describe("rag/sharepoint sync deduplication", () => {
       failed: 0,
       unsupported: 0,
       totalDiscovered: 2,
+    })
+  })
+
+  it("deletes existing files removed from SharePoint", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_keep",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-keep",
+        path: "keep/file.txt",
+      }),
+      makeSharePointFile({
+        id: "existing_removed",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-removed",
+        path: "removed/file.txt",
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "drive-a" }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-keep",
+                name: "file.txt",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/item-1/content",
+        response: {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => toArrayBuffer("legacy content"),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(mockDeleteFileForAgent).toHaveBeenCalledTimes(1)
+    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+      "agent_1",
+      "existing_removed"
+    )
+    expect(result).toMatchObject({
+      synced: 0,
+      alreadySynced: 1,
+      deleted: 1,
+      failed: 0,
+      unsupported: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("re-ingests when etag changes", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_changed",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-1",
+        path: "changed.txt",
+        etag: "old-etag",
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "changed.txt",
+                eTag: "new-etag",
+                size: 123,
+                lastModifiedDateTime: "2026-01-01T00:00:00.000Z",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/item-1/content",
+        response: {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => toArrayBuffer("updated content"),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+      "agent_1",
+      "existing_changed"
+    )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: expect.objectContaining({
+          etag: "new-etag",
+          lastModifiedAt: "2026-01-01T00:00:00.000Z",
+          remoteSize: 123,
+          externalId: `${siteId}:drive-a:item-1`,
+        }),
+      })
+    )
+    expect(result).toMatchObject({
+      synced: 1,
+      deleted: 1,
+      alreadySynced: 0,
+    })
+  })
+
+  it("re-ingests when etag is unavailable and fallback metadata changes", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_changed",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-1",
+        path: "changed.txt",
+        lastModifiedAt: "2026-01-01T00:00:00.000Z",
+        remoteSize: 100,
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "changed.txt",
+                size: 150,
+                lastModifiedDateTime: "2026-01-02T00:00:00.000Z",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/item-1/content",
+        response: {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => toArrayBuffer("updated content"),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+      "agent_1",
+      "existing_changed"
+    )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
+    expect(result).toMatchObject({
+      synced: 1,
+      deleted: 1,
+      alreadySynced: 0,
+    })
+  })
+
+  it("re-ingests legacy files when remote metadata becomes available", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_legacy",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-1",
+        path: "legacy.txt",
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "legacy.txt",
+                eTag: "new-etag",
+                size: 150,
+                lastModifiedDateTime: "2026-01-02T00:00:00.000Z",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/item-1/content",
+        response: {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => toArrayBuffer("legacy content"),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+      "agent_1",
+      "existing_legacy"
+    )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
+    expect(result).toMatchObject({
+      synced: 1,
+      alreadySynced: 0,
+      deleted: 1,
+    })
+  })
+
+  it("does not re-ingest legacy files when remote metadata is unavailable", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_legacy",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-1",
+        path: "legacy.txt",
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "legacy.txt",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(mockDeleteFileForAgent).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      synced: 0,
+      alreadySynced: 1,
+      deleted: 0,
     })
   })
 
@@ -548,6 +935,71 @@ describe("rag/sharepoint sync deduplication", () => {
 
     expect(fetchMock).toHaveBeenCalled()
     expect(mockRetryKnowledgeBaseFileIngestion).not.toHaveBeenCalled()
+    expect(mockDeleteFileForAgent).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      agentId: "agent_1",
+      synced: 0,
+      alreadySynced: 1,
+      failed: 0,
+      unsupported: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("does not delete and re-ingest files owned by another knowledge source when metadata changes", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_other_source",
+        sourceId: "sharepoint_source_other",
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-1",
+        path: "changed.txt",
+        etag: "old-etag",
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "changed.txt",
+                eTag: "new-etag",
+                size: 123,
+                lastModifiedDateTime: "2026-01-01T00:00:00.000Z",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(fetchMock).toHaveBeenCalled()
     expect(mockDeleteFileForAgent).not.toHaveBeenCalled()
     expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
     expect(result).toMatchObject({

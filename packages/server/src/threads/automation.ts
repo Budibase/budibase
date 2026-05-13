@@ -11,6 +11,8 @@ import {
   processStringSync,
 } from "@budibase/string-templates"
 import {
+  ActionFailureReason,
+  ActionType,
   Automation,
   AutomationActionStepId,
   AutomationData,
@@ -584,8 +586,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            const branchResults = await quotas.addAction(() =>
-              this.executeBranchStep(ctx, step)
+            const branchResults = await quotas.addAction(
+              ActionType.AUTOMATION_STEP,
+              () => this.executeBranchStep(ctx, step)
             )
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
@@ -630,7 +633,7 @@ class Orchestrator {
             this.reportStepProgress(step, "running", undefined, ctx)
             addToContext(
               step,
-              await quotas.addAction(async () => {
+              await quotas.addAction(ActionType.AUTOMATION_STEP, async () => {
                 const response = await this.executeStep(ctx, step)
                 if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
                   ctx.state ??= {}
@@ -638,6 +641,13 @@ class Orchestrator {
                 }
 
                 events.action.automationStepExecuted({ stepId: step.stepId })
+                if (response.outputs.success === false) {
+                  events.action.automationStepFailed({
+                    stepId: step.stepId,
+                    reason: ActionFailureReason.ERROR,
+                    errorMessage: response.outputs.error as string | undefined,
+                  })
+                }
                 return response
               })
             )
@@ -697,6 +707,10 @@ class Orchestrator {
             status: AutomationStepStatus.INCORRECT_TYPE,
             iterations,
           })
+          events.action.automationStepFailed({
+            stepId: step.stepId,
+            reason: ActionFailureReason.INCORRECT_TYPE,
+          })
           return stepFailure(step, {
             status: AutomationStepStatus.INCORRECT_TYPE,
           })
@@ -723,6 +737,10 @@ class Orchestrator {
               status: AutomationStepStatus.MAX_ITERATIONS,
               iterations,
             })
+            events.action.automationStepFailed({
+              stepId: step.stepId,
+              reason: ActionFailureReason.MAX_ITERATIONS,
+            })
             return stepFailure(
               step,
               automationUtils.buildLoopOutput(
@@ -737,6 +755,10 @@ class Orchestrator {
             span.addTags({
               status: AutomationStepStatus.FAILURE_CONDITION,
               iterations,
+            })
+            events.action.automationStepFailed({
+              stepId: step.stepId,
+              reason: ActionFailureReason.FAILURE_CONDITION,
             })
             return stepFailure(
               step,
@@ -862,6 +884,10 @@ class Orchestrator {
       }
 
       span.addTags({ status: AutomationStatus.NO_CONDITION_MET })
+      events.action.automationStepFailed({
+        stepId: step.stepId,
+        reason: ActionFailureReason.NO_CONDITION_MET,
+      })
       return [stepFailure(step, { status: AutomationStatus.NO_CONDITION_MET })]
     })
   }
@@ -924,9 +950,10 @@ class Orchestrator {
           })
         )
       } catch (err: any) {
+        const errorMessage = automationUtils.getError(err)
         return stepFailure(step, {
           status: AutomationStatus.ERROR,
-          error: automationUtils.getError(err),
+          error: errorMessage,
         })
       }
 

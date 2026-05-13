@@ -39,6 +39,10 @@
     <link rel="icon" type="image/png" href="/builder/bblogo.png" />
   {/if}
 
+  <link
+    href="/builder/fonts/source-sans-3/source-sans-3.css"
+    rel="stylesheet"
+  />
   <link href="/builder/fonts/inter/inter.css" rel="stylesheet" />
   <link
     href="/builder/fonts/phosphor-icons/phosphor-icons.css"
@@ -67,15 +71,7 @@
       height: 100vh;
       width: 100vw;
       display: none;
-      font-family:
-        "Inter",
-        -apple-system,
-        BlinkMacSystemFont,
-        Segoe UI,
-        "Helvetica Neue",
-        Arial,
-        "Noto Sans",
-        sans-serif;
+      font-family: "Source Sans 3", sans-serif;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -99,13 +95,13 @@
     }
 
     /* Inject latest font CSS from bbui.css, as the real file is versioned with the client lib */
-    .spectrum {
+    #spectrum-root.spectrum {
       --font-sans:
-        "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, "Helvetica Neue",
-        Arial, "Noto Sans", sans-serif !important;
+        "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
       --font-accent:
-        "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, "Helvetica Neue",
-        Arial, "Noto Sans", sans-serif !important;
+        "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
       --spectrum-alias-body-text-font-family: var(--font-sans) !important;
       --spectrum-global-font-family-base: var(--font-sans) !important;
       --spectrum-global-font-line-height-small: 1.4 !important;

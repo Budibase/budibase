@@ -250,8 +250,7 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
-    --chat-font-sans: "Inter", sans-serif;
-    --font-sans: var(--chat-font-sans);
+    --chat-font-sans: var(--font-sans);
     --font-serif: var(--chat-font-sans);
     --font-accent: var(--chat-font-sans);
     --spectrum-alias-body-text-font-family: var(--chat-font-sans);
