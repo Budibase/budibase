@@ -194,7 +194,7 @@ Any constraints the agent must follow.
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
         promptInstructions:
-          agent.promptInstructions || DEFAULT_PROMPT_INSTRUCTIONS,
+          agent.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS,
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
       }
