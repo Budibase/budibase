@@ -49,7 +49,7 @@
             value={getPercentage(item.used)}
           />
           <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            {getPercentage(item.used).toFixed(1)}% of total actions
+            {getPercentage(item.used).toFixed(1)}% of monthly limit
           </Body>
         </div>
       {/each}
