@@ -1,6 +1,5 @@
-import { users } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
-import { Next } from "koa"
+import type { UserCtx } from "@budibase/types"
+import type { Next } from "koa"
 import { sdk } from "@budibase/pro"
 import {
   RoleAssignmentResponse,
@@ -8,27 +7,7 @@ import {
   RoleAssignRequest,
 } from "./mapping/types"
 import { syncUsersAgainstWorkspaces } from "../../../sdk/workspace/workspaces/sync"
-
-type GlobalRoleUpdate = {
-  builder?: boolean
-  admin?: boolean
-}
-
-const validateGlobalRoleUpdate = (
-  ctx: UserCtx,
-  roleUpdate: GlobalRoleUpdate
-) => {
-  if (roleUpdate.admin && !users.isAdmin(ctx.user)) {
-    ctx.throw(403, "Only global admins can update global admin permissions.")
-  }
-
-  if (roleUpdate.builder && !users.isGlobalBuilder(ctx.user)) {
-    ctx.throw(
-      403,
-      "Only global builders or admins can update global builder permissions."
-    )
-  }
-}
+import { validateGlobalRoleUpdate } from "./globalRoleValidation"
 
 async function assign(
   ctx: UserCtx<RoleAssignRequest, RoleAssignmentResponse>,

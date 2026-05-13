@@ -141,6 +141,30 @@ describe("public roles controller", () => {
       expect(next).not.toHaveBeenCalled()
     })
 
+    it("allows global builder assignments from global builders", async () => {
+      const userIds = ["user_basic"]
+      const ctx = createCtx(
+        {
+          userIds,
+          builder: true,
+        },
+        {
+          builder: {
+            global: true,
+          },
+        }
+      )
+      const next = createNext()
+
+      await controller.assign(ctx, next)
+
+      expect(assign).toHaveBeenCalledWith(userIds, {
+        builder: true,
+      })
+      expect(ctx.body).toEqual({ data: { userIds } })
+      expect(next).toHaveBeenCalled()
+    })
+
     it("allows global role assignments from users with matching permissions", async () => {
       const userIds = ["user_basic"]
       const ctx = createCtx(
@@ -220,6 +244,30 @@ describe("public roles controller", () => {
 
       expect(unAssign).not.toHaveBeenCalled()
       expect(next).not.toHaveBeenCalled()
+    })
+
+    it("allows global builder removal from global builders", async () => {
+      const userIds = ["user_basic"]
+      const ctx = createCtx(
+        {
+          userIds,
+          builder: true,
+        },
+        {
+          builder: {
+            global: true,
+          },
+        }
+      )
+      const next = createNext()
+
+      await controller.unAssign(ctx, next)
+
+      expect(unAssign).toHaveBeenCalledWith(userIds, {
+        builder: true,
+      })
+      expect(ctx.body).toEqual({ data: { userIds } })
+      expect(next).toHaveBeenCalled()
     })
 
     it("allows global role removal from global admins", async () => {
