@@ -96,7 +96,7 @@ describe("knowledgeBase uploads", () => {
     })
   })
 
-  it("marks supported images as ready without queueing ingestion", async () => {
+  it("queues supported images for ingestion", async () => {
     mockFindKnowledgeBase.mockResolvedValue({ _id: "kb_1" })
     ;(createKnowledgeBaseFile as jest.Mock).mockResolvedValue({
       _id: "kb_file_2",
@@ -117,14 +117,13 @@ describe("knowledgeBase uploads", () => {
     })
 
     expect(mockObjectStoreUpload).toHaveBeenCalled()
-    expect(mockEnqueueRagFileIngestion).not.toHaveBeenCalled()
-    expect(mockUpdateKnowledgeBaseFile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        _id: "kb_file_2",
-        status: KnowledgeBaseFileStatus.READY,
-        errorMessage: undefined,
-      })
-    )
+    expect(mockEnqueueRagFileIngestion).toHaveBeenCalledWith({
+      workspaceId: "workspace_1",
+      knowledgeBaseId: "kb_1",
+      fileId: "kb_file_2",
+      objectStoreKey: expect.any(String),
+    })
+    expect(mockUpdateKnowledgeBaseFile).not.toHaveBeenCalled()
   })
 
   it("throws when trying to requeue a non-failed file", async () => {
@@ -144,7 +143,7 @@ describe("knowledgeBase uploads", () => {
     expect(mockEnqueueRagFileIngestion).not.toHaveBeenCalled()
   })
 
-  it("marks failed image files ready on retry without queueing", async () => {
+  it("requeues failed image files on retry", async () => {
     mockGetKnowledgeBaseFileOrThrow.mockResolvedValue({
       _id: "kb_file_3",
       knowledgeBaseId: "kb_1",
@@ -157,12 +156,18 @@ describe("knowledgeBase uploads", () => {
 
     await retryKnowledgeBaseFileIngestion("kb_file_3")
 
-    expect(mockEnqueueRagFileIngestion).not.toHaveBeenCalled()
+    expect(mockEnqueueRagFileIngestion).toHaveBeenCalledWith({
+      workspaceId: "workspace_1",
+      knowledgeBaseId: "kb_1",
+      fileId: "kb_file_3",
+      objectStoreKey: "workspace_1/path/image.webp",
+    })
     expect(mockUpdateKnowledgeBaseFile).toHaveBeenCalledWith(
       expect.objectContaining({
         _id: "kb_file_3",
-        status: KnowledgeBaseFileStatus.READY,
+        status: KnowledgeBaseFileStatus.PROCESSING,
         errorMessage: undefined,
+        processedAt: undefined,
       })
     )
   })

@@ -36,7 +36,7 @@ interface RankedMatch {
 const GEMINI_RETRIEVAL_UNAVAILABLE_MESSAGE =
   "Gemini knowledge retrieval is temporarily unavailable (upstream 503). Budibase is operating normally; please retry shortly."
 const GEMINI_UPSTREAM_EVENT = "ai.gemini.upstream_unavailable"
-const MAX_IMAGE_FILES_FOR_HYBRID_SEARCH = 2
+const MAX_IMAGE_FILES_FOR_STAGE2_ANALYSIS = 5
 const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024
 const IMAGE_MIME_TYPES = new Set([
   "image/png",
@@ -86,10 +86,12 @@ const searchImageKnowledgeForAgent = async ({
   agent,
   agentId,
   question,
+  candidateSourceIds,
 }: {
   agent: Agent
   agentId: string
   question: string
+  candidateSourceIds: string[]
 }): Promise<{
   text: string
   chunks: SearchKnowledgeChunk[]
@@ -100,10 +102,11 @@ const searchImageKnowledgeForAgent = async ({
   }
 
   const files = await sdk.ai.rag.listFilesForAgent(agentId)
+  const candidateSourceIdSet = new Set(candidateSourceIds)
   const candidateImages = files
     .filter(isSupportedImageKnowledgeFile)
-    .sort((a, b) => toEpochMillis(b.createdAt) - toEpochMillis(a.createdAt))
-    .slice(0, MAX_IMAGE_FILES_FOR_HYBRID_SEARCH)
+    .filter(file => !!file.ragSourceId && candidateSourceIdSet.has(file.ragSourceId))
+    .slice(0, MAX_IMAGE_FILES_FOR_STAGE2_ANALYSIS)
 
   if (candidateImages.length === 0) {
     return { text: "", chunks: [], sources: [] }
@@ -188,6 +191,20 @@ const searchImageKnowledgeForAgent = async ({
     chunks,
     sources,
   }
+}
+
+const isGeminiModelConfig = (config: {
+  provider?: string
+  model?: string
+  liteLLMModelId?: string
+}) => {
+  const provider = (config.provider || "").toLowerCase()
+  const model = (config.model || "").toLowerCase()
+  const liteLLMModelId = (config.liteLLMModelId || "").toLowerCase()
+
+  return [provider, model, liteLLMModelId].some(value =>
+    value.includes("gemini")
+  )
 }
 
 const isGeminiRetrievalUnavailable = (error: unknown): boolean => {
@@ -488,10 +505,34 @@ export const createKnowledgeSearchTool = (
         }
       }
 
+      if (!agent.aiconfig) {
+        if (ragUnavailable && ragSources.length === 0) {
+          throw new Error(GEMINI_RETRIEVAL_UNAVAILABLE_MESSAGE)
+        }
+
+        return {
+          context: ragText,
+          sources: ragSources,
+          chunks: ragChunks,
+        }
+      }
+
+      const aiConfig = await sdk.ai.configs.find(agent.aiconfig)
+      if (!aiConfig || !isGeminiModelConfig(aiConfig)) {
+        throw new Error(
+          "Gemini is required for knowledge image analysis in this workspace."
+        )
+      }
+
+      const candidateSourceIds = ragSources
+        .map(source => source.sourceId)
+        .filter((sourceId): sourceId is string => !!sourceId)
+
       const imageResult = await searchImageKnowledgeForAgent({
         agent,
         agentId,
         question,
+        candidateSourceIds,
       })
       const allSources = [...ragSources, ...imageResult.sources]
       const allChunks = [...ragChunks, ...imageResult.chunks]

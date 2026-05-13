@@ -46,6 +46,9 @@ jest.mock("../../../../sdk", () => ({
       llm: {
         createLLM: jest.fn(),
       },
+      configs: {
+        find: jest.fn(),
+      },
     },
   },
 }))
@@ -372,7 +375,12 @@ describe("AI Tools - Knowledge files", () => {
 describe("AI Tools - Knowledge search", () => {
   beforeEach(() => {
     jest.restoreAllMocks()
+    jest.clearAllMocks()
     jest.mocked(features.isEnabled).mockResolvedValue(true)
+    jest.spyOn(sdk.ai.configs, "find").mockResolvedValue({
+      provider: "gemini",
+      model: "gemini-2.5-flash",
+    } as any)
   })
 
   it("hard-fails with a clear message when Gemini retrieval is unavailable", async () => {
@@ -403,58 +411,6 @@ describe("AI Tools - Knowledge search", () => {
     ).rejects.toThrow("Failed to map source metadata")
   })
 
-  it("returns image evidence when retrieval is unavailable", async () => {
-    jest.spyOn(sdk.ai.agents, "getOrThrow").mockResolvedValue({
-      _id: "agent_1",
-      aiconfig: "config_1",
-    } as any)
-    jest
-      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
-      .mockRejectedValue({ status: 503, message: "upstream unavailable" })
-    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
-      {
-        _id: "file_1",
-        knowledgeBaseId: "kb_1",
-        filename: "diagram.png",
-        mimetype: "image/png",
-        objectStoreKey: "obj_1",
-        ragSourceId: "source_img_1",
-        status: KnowledgeBaseFileStatus.READY,
-        uploadedBy: "user_1",
-      } satisfies KnowledgeBaseFile,
-    ])
-    jest.spyOn(sdk.ai.llm, "createLLM").mockResolvedValue({
-      chat: {} as any,
-      uploadFile: jest.fn(),
-      providerOptions: jest.fn(() => undefined),
-    })
-    jest.mocked(objectStore.getReadStream).mockResolvedValue({
-      stream: Readable.from([Buffer.from("img")]),
-    } as any)
-    jest.mocked(generateText).mockResolvedValue({
-      text: "The image shows the product color palette.",
-    } as any)
-
-    const result = (await executeSearchTool("agent_1", {
-      question: "What colors are shown?",
-    })) as any
-
-    expect(result.context).toContain("Image diagram.png")
-    expect(result.sources).toEqual([
-      {
-        sourceId: "source_img_1",
-        fileId: "file_1",
-        filename: "diagram.png",
-      },
-    ])
-    expect(result.chunks).toEqual([
-      {
-        source: "source_img_1",
-        chunkText: "The image shows the product color palette.",
-      },
-    ])
-  })
-
   it("merges rag and image evidence", async () => {
     jest.spyOn(sdk.ai.agents, "getOrThrow").mockResolvedValue({
       _id: "agent_1",
@@ -462,7 +418,10 @@ describe("AI Tools - Knowledge search", () => {
     } as any)
     jest.spyOn(sdk.ai.rag, "retrieveContextForAgent").mockResolvedValue({
       text: "RAG context",
-      sources: [{ sourceId: "source_doc_1", filename: "policy.md" }],
+      sources: [
+        { sourceId: "source_doc_1", filename: "policy.md" },
+        { sourceId: "source_img_1", filename: "diagram.png" },
+      ],
       chunks: [{ source: "source_doc_1", chunkText: "Policy summary" }],
     } as any)
     jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
@@ -495,7 +454,118 @@ describe("AI Tools - Knowledge search", () => {
 
     expect(result.context).toContain("RAG context")
     expect(result.context).toContain("Image diagram.png: Image evidence")
-    expect(result.sources).toHaveLength(2)
+    expect(result.sources).toHaveLength(3)
     expect(result.chunks).toHaveLength(2)
+  })
+
+  it("only analyzes image files returned by retrieval and caps stage 2 to 5", async () => {
+    jest.spyOn(sdk.ai.agents, "getOrThrow").mockResolvedValue({
+      _id: "agent_1",
+      aiconfig: "config_1",
+    } as any)
+    jest.spyOn(sdk.ai.rag, "retrieveContextForAgent").mockResolvedValue({
+      text: "RAG context",
+      sources: [
+        { sourceId: "source_img_1", filename: "img_1.png" },
+        { sourceId: "source_img_2", filename: "img_2.png" },
+        { sourceId: "source_img_3", filename: "img_3.png" },
+        { sourceId: "source_img_4", filename: "img_4.png" },
+        { sourceId: "source_img_5", filename: "img_5.png" },
+        { sourceId: "source_img_6", filename: "img_6.png" },
+      ],
+      chunks: [],
+    } as any)
+    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
+      {
+        _id: "file_1",
+        knowledgeBaseId: "kb_1",
+        filename: "img_1.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_1",
+        ragSourceId: "source_img_1",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+      {
+        _id: "file_2",
+        knowledgeBaseId: "kb_1",
+        filename: "img_2.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_2",
+        ragSourceId: "source_img_2",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+      {
+        _id: "file_3",
+        knowledgeBaseId: "kb_1",
+        filename: "img_3.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_3",
+        ragSourceId: "source_img_3",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+      {
+        _id: "file_4",
+        knowledgeBaseId: "kb_1",
+        filename: "img_4.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_4",
+        ragSourceId: "source_img_4",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+      {
+        _id: "file_5",
+        knowledgeBaseId: "kb_1",
+        filename: "img_5.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_5",
+        ragSourceId: "source_img_5",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+      {
+        _id: "file_6",
+        knowledgeBaseId: "kb_1",
+        filename: "img_6.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_6",
+        ragSourceId: "source_img_6",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+      {
+        _id: "file_7",
+        knowledgeBaseId: "kb_1",
+        filename: "not-returned.png",
+        mimetype: "image/png",
+        objectStoreKey: "obj_7",
+        ragSourceId: "source_img_7",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      } satisfies KnowledgeBaseFile,
+    ])
+    jest.spyOn(sdk.ai.llm, "createLLM").mockResolvedValue({
+      chat: {} as any,
+      uploadFile: jest.fn(),
+      providerOptions: jest.fn(() => undefined),
+    })
+    jest.mocked(objectStore.getReadStream).mockResolvedValue({
+      stream: Readable.from([Buffer.from("img")]),
+    } as any)
+    jest.mocked(generateText).mockResolvedValue({
+      text: "Image evidence",
+    } as any)
+
+    const result = (await executeSearchTool("agent_1", {
+      question: "Summarize",
+    })) as any
+
+    expect(result.sources).toHaveLength(11)
+    expect(jest.mocked(generateText)).toHaveBeenCalledTimes(5)
+    expect(jest.mocked(objectStore.getReadStream)).toHaveBeenCalledTimes(5)
+    expect(result.context).not.toContain("not-returned.png")
   })
 })
