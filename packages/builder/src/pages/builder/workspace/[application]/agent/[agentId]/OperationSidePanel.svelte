@@ -1,17 +1,10 @@
 <script lang="ts">
-  import { Body, Button, Input, notifications } from "@budibase/bbui"
-  import { confirm } from "@/helpers"
-  import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
-  import { bb } from "@/stores/bb"
-  import { workspaceDeploymentStore } from "@/stores/builder"
+  import { Body, Button, Input } from "@budibase/bbui"
   import type {
     Agent,
     CaretPositionFn,
     EnrichedBinding,
     InsertAtPositionFn,
-    KnowledgeBaseFile,
-    SharePointKnowledgeSourceSnapshot,
-    SyncAgentKnowledgeSourcesResponse,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import { fly } from "svelte/transition"
@@ -19,24 +12,10 @@
   import Panel from "@/components/design/Panel.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
-  import KnowledgeAddControls from "./knowledge/KnowledgeAddControls.svelte"
-  import KnowledgeTable from "./knowledge/KnowledgeTable.svelte"
-  import type { KnowledgeTableRow } from "./knowledge/renderers/types"
-  import {
-    toFileTableRows,
-    toSharePointConnectionRows,
-  } from "./knowledge/knowledgeTableRows"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
-  import SelectSharePointSiteModal from "./knowledge/new/SelectSharePointSiteModal.svelte"
-  import DisplaySharePointSiteModal from "./knowledge/sharepoint/DisplaySharePointSiteModal.svelte"
-  import SelectSharePointFilesModal from "./knowledge/sharepoint/SelectSharePointFilesModal.svelte"
   import type { AgentTool } from "./toolTypes"
-  import {
-    coalesceAgentPollRequests,
-    createKnowledgePollingController,
-  } from "./knowledge/polling"
-  import { onDestroy } from "svelte"
+  import Knowledge from "./knowledge/index.svelte"
 
   let {
     open = false,
@@ -76,10 +55,6 @@
     Object.values(bindingIcons).filter(Boolean).length
   )
   let panelRoot: HTMLDivElement | undefined = $state(undefined)
-  let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
-  let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
-  let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
-  let selectedSharePointSiteId = $state("")
   let toolSearch = $state("")
   let filteredTools = $derived.by(() =>
     availableTools.filter(tool => {
@@ -105,172 +80,6 @@
       {} as Record<string, AgentTool[]>
     )
   )
-  $effect(() => {
-    if (!(open && agentId)) return
-    agentsStore.fetchAgentKnowledge(agentId)
-  })
-  let knowledgeFiles = $derived.by(() =>
-    agentId && $agentsStore.knowledgeByAgent[agentId]
-      ? $agentsStore.knowledgeByAgent[agentId].files || []
-      : ([] as KnowledgeBaseFile[])
-  )
-  let sharePointSourceSnapshots = $derived.by(() =>
-    agentId && $agentsStore.knowledgeByAgent[agentId]
-      ? $agentsStore.knowledgeByAgent[agentId].sharePointSources ||
-        ([] as SharePointKnowledgeSourceSnapshot[])
-      : ([] as SharePointKnowledgeSourceSnapshot[])
-  )
-  let sharePointSources = $derived(
-    (agent?.knowledgeSources || []).filter(
-      source => source.type === "sharepoint"
-    )
-  )
-  const fetchKnowledge = coalesceAgentPollRequests(async (_agentId: string) => {
-    await agentsStore.fetchAgentKnowledge(_agentId)
-  })
-  const knowledgePollingController = createKnowledgePollingController({
-    intervalMs: 1000,
-    onPoll: agentId => {
-      return fetchKnowledge(agentId)
-    },
-    onError: error => {
-      console.error("Failed to poll operation knowledge files", error)
-    },
-  })
-  $effect(() => {
-    if (!open || !agentId) {
-      knowledgePollingController.stop()
-      return
-    }
-    const hasProcessingFiles = knowledgeFiles.some(
-      file => file.status === "processing"
-    )
-    const hasUnsyncedSharePointSites = sharePointSourceSnapshots.some(
-      source => !source.lastRunAt
-    )
-    knowledgePollingController.setContinuous(
-      agentId,
-      hasProcessingFiles || hasUnsyncedSharePointSites
-    )
-  })
-  onDestroy(() => {
-    knowledgePollingController.stop()
-  })
-  const handleDeleteFile = async (file: KnowledgeBaseFile) => {
-    if (!agentId || !file._id) {
-      return
-    }
-    await confirm({
-      title: "Confirm deletion",
-      body: `Are you sure you want to remove ${file.filename}? This action can't be undone.`,
-      okText: "Delete",
-      onConfirm: async () => {
-        try {
-          await agentsStore.deleteAgentFile(agentId, file._id!)
-          await agentsStore.fetchAgentKnowledge(agentId)
-          await workspaceDeploymentStore.fetch()
-          notifications.success("File removed")
-        } catch (error) {
-          console.error(error)
-          notifications.error("Failed to remove file")
-        }
-      },
-    })
-  }
-  const handleDeleteSharePointSite = async (siteId: string) => {
-    if (!agentId) {
-      return
-    }
-    const siteName =
-      sharePointSources
-        .map(source => source.config.site)
-        .find(site => site?.id === siteId)?.name || "this SharePoint site"
-
-    await confirm({
-      title: "Confirm deletion",
-      body: `Are you sure you want to remove ${siteName}? This action can't be undone.`,
-      okText: "Delete",
-      onConfirm: async () => {
-        try {
-          await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
-          await agentsStore.fetchAgentKnowledge(agentId)
-          await workspaceDeploymentStore.fetch()
-          notifications.success("SharePoint site removed")
-        } catch (error) {
-          console.error(error)
-          notifications.error("Failed to remove SharePoint site")
-        }
-      },
-    })
-  }
-
-  const showSharePointSyncResult = (
-    result: SyncAgentKnowledgeSourcesResponse
-  ) => {
-    const alreadySynced = result.alreadySynced
-    const deleted = result.deleted || 0
-    const discovered = result.totalDiscovered ?? result.synced + alreadySynced
-
-    if (result.synced === 0 && result.failed === 0) {
-      if (deleted > 0 || alreadySynced > 0) {
-        const details = [
-          alreadySynced > 0 ? `${alreadySynced} already synced` : "",
-          deleted > 0 ? `${deleted} removed by filters` : "",
-        ]
-          .filter(Boolean)
-          .join(", ")
-        notifications.info(
-          `SharePoint sync complete (0 new files${details ? `, ${details}` : ""})`
-        )
-        return
-      }
-      if (discovered === 0) {
-        notifications.info("No files found in selected SharePoint site(s)")
-        return
-      }
-    }
-
-    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""}${deleted > 0 ? `, ${deleted} removed by filters` : ""})`
-
-    if (result.failed > 0 && result.synced === 0) {
-      notifications.error(message)
-    } else if (result.failed > 0) {
-      notifications.warning(message)
-    } else {
-      notifications.success(message)
-    }
-  }
-
-  const handleSyncSharePointSite = async (sourceId: string) => {
-    if (!agentId) {
-      return
-    }
-    try {
-      const result = await agentsStore.syncAgentKnowledgeSources(
-        agentId,
-        sourceId
-      )
-      await agentsStore.fetchAgentKnowledge(agentId)
-      await workspaceDeploymentStore.fetch()
-      showSharePointSyncResult(result)
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to sync SharePoint site")
-    }
-  }
-  let knowledgeRows = $derived.by(() => [
-    ...toSharePointConnectionRows({
-      sharePointSources,
-      sharePointSourceSnapshots,
-      loadingSharePointSites: false,
-      onDelete: handleDeleteSharePointSite,
-      onSync: handleSyncSharePointSite,
-    }),
-    ...toFileTableRows(
-      knowledgeFiles.filter(file => !file.source),
-      handleDeleteFile
-    ),
-  ])
 
   const handleToolClick = (tool: AgentTool) => {
     if (!agent) {
@@ -287,41 +96,6 @@
       new Set([...(agent.enabledTools || []), tool.runtimeBinding])
     )
     onUpdated()
-  }
-
-  const handleAddFromSharePoint = async () => {
-    const sharePointConnections = $knowledgeConnectionsStore.connections.filter(
-      connection => connection.sourceType === "sharepoint"
-    )
-    if (sharePointConnections.length === 0) {
-      bb.settings("/connections/apis/new/microsoft-sharepoint")
-      return
-    }
-    await selectSharePointSiteModal?.show()
-    if (open && agentId) {
-      await agentsStore.fetchAgentKnowledge(agentId)
-    }
-  }
-
-  const refreshKnowledge = async () => {
-    if (!agentId) {
-      return
-    }
-    await agentsStore.fetchAgentKnowledge(agentId)
-    await workspaceDeploymentStore.fetch()
-  }
-
-  const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
-    if (row.kind !== "sharepoint_connection") {
-      return
-    }
-    selectedSharePointSiteId = row.siteId
-    displaySharePointSiteModal?.show()
-  }
-
-  const openSharePointSiteSelectionModal = async (siteId: string) => {
-    selectedSharePointSiteId = siteId
-    await selectSharePointFilesModal?.show()
   }
 </script>
 
@@ -448,26 +222,7 @@
               </div>
             </div>
 
-            <div class="operation-panel-section">
-              <div class="knowledge-header">
-                <Body size="S" color="var(--spectrum-global-color-gray-900)">
-                  Knowledge
-                </Body>
-                <div class="knowledge-add-control">
-                  <KnowledgeAddControls
-                    {agentId}
-                    onSharePoint={handleAddFromSharePoint}
-                    onUploaded={refreshKnowledge}
-                  />
-                </div>
-              </div>
-
-              <KnowledgeTable
-                loading={false}
-                rows={knowledgeRows}
-                onRowClick={handleKnowledgeRowClick}
-              />
-            </div>
+            <Knowledge></Knowledge>
           </div>
 
           <div class="operation-panel-footer">
@@ -481,25 +236,6 @@
       </Panel>
     </ResizablePanel>
   </div>
-  <SelectSharePointSiteModal
-    bind:this={selectSharePointSiteModal}
-    agentId={agentId || ""}
-    existingSiteIds={sharePointSources
-      .map(source => source.config.site?.id || "")
-      .filter(Boolean)}
-    onCreated={refreshKnowledge}
-  />
-  <DisplaySharePointSiteModal
-    bind:this={displaySharePointSiteModal}
-    {agentId}
-    siteId={selectedSharePointSiteId}
-    onEdit={openSharePointSiteSelectionModal}
-  />
-  <SelectSharePointFilesModal
-    bind:this={selectSharePointFilesModal}
-    {agentId}
-    siteId={selectedSharePointSiteId}
-  />
 {/if}
 
 <style>
@@ -614,17 +350,6 @@
     padding: 2px 4px;
     color: var(--spectrum-global-color-gray-900);
     background: var(--spectrum-global-color-blue-700);
-  }
-
-  .knowledge-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
-  }
-
-  .knowledge-add-control {
-    flex-shrink: 0;
   }
 
   .operation-panel-footer {
