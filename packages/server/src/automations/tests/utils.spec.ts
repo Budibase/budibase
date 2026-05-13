@@ -1,5 +1,6 @@
 import { enableCronOrEmailTrigger } from "../utils"
 import {
+  ActionType,
   Automation,
   AutomationStepType,
   AutomationTriggerStepId,
@@ -16,7 +17,7 @@ jest.mock("../../features", () => ({
 jest.mock("@budibase/pro", () => ({
   quotas: {
     addAutomation: async <T>(fn: () => Promise<T> | T) => fn(),
-    addAction: async <T>(fn: () => Promise<T> | T) => fn(),
+    addAction: async <T>(_type: ActionType, fn: () => Promise<T> | T) => fn(),
   },
 }))
 

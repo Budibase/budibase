@@ -1,5 +1,6 @@
 import { ai, quotas } from "@budibase/pro"
 import {
+  ActionType,
   Agent,
   AgentMessageMetadata,
   ChatConversationRequest,
@@ -183,7 +184,7 @@ export const prepareAgentChatRun = async ({
                 | undefined
               setUsedKnowledgeSources(output?.accepted)
             }
-            await quotas.addAction(async () => {})
+            await quotas.addAction(ActionType.AI_AGENT, async () => {})
           }
 
           if (!pendingToolCalls) {

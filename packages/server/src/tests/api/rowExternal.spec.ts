@@ -1,5 +1,5 @@
 import { quotas } from "@budibase/pro"
-import { ActionFailureReason } from "@budibase/types"
+import { ActionFailureReason, ActionType } from "@budibase/types"
 import { destroy, find, patch, save } from "../../api/controllers/row"
 
 jest.mock("@budibase/pro", () => {
@@ -8,7 +8,11 @@ jest.mock("@budibase/pro", () => {
     ...actual,
     quotas: {
       ...actual.quotas,
-      addAction: jest.fn().mockImplementation((fn: () => Promise<any>) => fn()),
+      addAction: jest
+        .fn()
+        .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
+          fn()
+        ),
       addRow: jest.fn().mockImplementation((fn: () => Promise<any>) => fn()),
       removeRow: jest.fn(),
       removeRows: jest.fn(),
