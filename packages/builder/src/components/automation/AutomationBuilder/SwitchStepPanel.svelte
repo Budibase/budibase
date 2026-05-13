@@ -10,7 +10,6 @@
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { automationStore } from "@/stores/builder"
   import { Constants, QueryUtils, Utils } from "@budibase/frontend-core"
-  import { generate } from "shortid"
   import { cloneDeep } from "lodash/fp"
   import type { EmptyFilterOption } from "@budibase/types"
   import {
@@ -141,19 +140,6 @@
     })
   }
 
-  const addBranch = () => {
-    const conditionUI = createDefaultConditionUI()
-    editableBranches = [
-      ...editableBranches,
-      {
-        id: generate(),
-        name: `Condition ${editableBranches.length + 1}`,
-        conditionUI,
-        condition: QueryUtils.buildQuery(conditionUI),
-      },
-    ]
-  }
-
   const saveConditions = async () => {
     const branchStepUpdate = cloneDeep(switchStep)
     const existingChildren = branchStepUpdate.inputs.children || {}
@@ -232,11 +218,6 @@
           />
         </div>
       {/each}
-      <div class="add-branch">
-        <Button secondary icon="plus-circle" on:click={addBranch}>
-          Add branch
-        </Button>
-      </div>
     </div>
   </DrawerContent>
 </Drawer>
@@ -259,9 +240,5 @@
 
   .conditions-header {
     color: var(--ink);
-  }
-
-  .add-branch {
-    display: flex;
   }
 </style>

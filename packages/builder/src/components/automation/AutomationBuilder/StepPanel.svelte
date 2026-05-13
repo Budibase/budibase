@@ -64,6 +64,7 @@
   let branchConditionDrawer: Drawer | undefined
   let configPanel: HTMLDivElement | undefined
   let confirmCascadeDialog: any
+  let confirmSwitchDeleteDialog: any
   let editableBranchConditionUI: any = {}
   const branchDeleteDialog = getContext<BranchDeleteDialogContext>(
     BRANCH_DELETE_DIALOG_CONTEXT
@@ -267,6 +268,46 @@
     if (childIndex !== 0) return false
     const nextSibling = children?.[1]
     return nextSibling?.stepId === AutomationActionStepId.BRANCH
+  }
+
+  const hasSwitchBranchChildren = (
+    block: AutomationStep | AutomationTrigger | undefined
+  ) => {
+    if (!block || !isBranchStep(block)) {
+      return false
+    }
+    return Object.values(block.inputs?.children || {}).some(
+      children => children.length > 0
+    )
+  }
+
+  const addSwitchBranch = async () => {
+    if (!switchStep || !switchStepRef || !$memoAutomation) {
+      return
+    }
+
+    const branchStepUpdate = cloneDeep(switchStep)
+    const branches = branchStepUpdate.inputs.branches || []
+    const newBranch: Branch = {
+      id: generate(),
+      name: `Condition ${branches.length + 1}`,
+      ...automationStore.actions.generateDefaultConditions(),
+    }
+
+    branchStepUpdate.inputs.branches = [...branches, newBranch]
+    branchStepUpdate.inputs.children = {
+      ...(branchStepUpdate.inputs.children || {}),
+      [newBranch.id]: [],
+    }
+
+    const updated = automationStore.actions.updateStep(
+      switchStepRef.pathTo,
+      $memoAutomation,
+      branchStepUpdate
+    )
+    if (updated) {
+      await automationStore.actions.save(updated)
+    }
   }
 
   const branchUpdate = async (e: CustomEvent<string>) => {
@@ -504,12 +545,26 @@
           {hasAnyLoop ? `Stop Looping` : `Loop`}
         </ActionButton>
       {/if}
+      {#if switchStep}
+        <ActionButton
+          quiet
+          noPadding
+          icon="plus-circle"
+          on:click={addSwitchBranch}
+        >
+          Add branch
+        </ActionButton>
+      {/if}
       <ActionButton
         quiet
         noPadding
         icon="trash"
         on:click={async () => {
           if (!blockRef) {
+            return
+          }
+          if (hasSwitchBranchChildren($memoBlock)) {
+            confirmSwitchDeleteDialog?.show()
             return
           }
           if (shouldCascadeDeleteInLoopV2(blockRef, $memoAutomation)) {
@@ -660,6 +715,18 @@
   Deleting this step will also delete the Branch and its lanes below it. This is
   required to avoid orphaning branches in the loop subflow. Are you sure you
   want to proceed?
+</ConfirmDialog>
+
+<ConfirmDialog
+  bind:this={confirmSwitchDeleteDialog}
+  okText="Delete"
+  title="Confirm Deletion"
+  onOk={async () => {
+    if (!blockRef) return
+    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
+  }}
+>
+  By deleting this switch, you will delete all of its branch contents.
 </ConfirmDialog>
 
 <style>
