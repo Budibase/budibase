@@ -25,3 +25,8 @@ publicRoutes.post(
   "/api/webhooks/slack/:instance/:chatAppId/:agentId",
   controller.slack
 )
+
+publicRoutes.post(
+  "/api/webhooks/telegram/:instance/:chatAppId/:agentId",
+  controller.telegram
+)

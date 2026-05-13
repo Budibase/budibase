@@ -39,7 +39,8 @@ export default function createKoaApp() {
     if (
       ctx.path.startsWith("/api/webhooks/discord/") ||
       ctx.path.startsWith("/api/webhooks/ms-teams/") ||
-      ctx.path.startsWith("/api/webhooks/slack/")
+      ctx.path.startsWith("/api/webhooks/slack/") ||
+      ctx.path.startsWith("/api/webhooks/telegram/")
     ) {
       return await next()
     }
