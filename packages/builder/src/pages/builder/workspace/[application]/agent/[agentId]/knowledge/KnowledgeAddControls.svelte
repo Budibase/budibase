@@ -13,7 +13,6 @@
 
   export interface Props {
     agentId?: string
-    operationId?: string
     isUploading?: boolean
     uploadProgress?: string
     onPendingUploadsAdded?: (
@@ -32,7 +31,6 @@
 
   let {
     agentId,
-    operationId,
     isUploading = false,
     uploadProgress = "",
     onPendingUploadsAdded,
@@ -107,7 +105,7 @@
         }
 
         try {
-          await agentsStore.uploadAgentFile(agentId, upload.file, operationId)
+          await agentsStore.uploadAgentFile(agentId, upload.file)
           successfulUploads += 1
           successfulTempIds.push(upload.tempId)
         } catch (error) {

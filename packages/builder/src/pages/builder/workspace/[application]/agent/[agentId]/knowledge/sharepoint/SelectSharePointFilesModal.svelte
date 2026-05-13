@@ -11,6 +11,7 @@
   } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
+    type AgentKnowledgeSource,
     type KnowledgeSourceEntry,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
@@ -44,9 +45,8 @@
     if (!siteId) {
       return undefined
     }
-    const operation = $selectedAgent?.operations?.[0]
-    return operation?.knowledgeSources?.find(
-      source =>
+    return $selectedAgent?.knowledgeSources?.find(
+      (source: AgentKnowledgeSource) =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
         source.config.site.id === siteId
     )

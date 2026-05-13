@@ -1,18 +1,11 @@
 <script lang="ts">
-  import {
-    Body,
-    Button,
-    Icon,
-    Input,
-    Toggle,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, Button, Input, Toggle, notifications } from "@budibase/bbui"
   import { confirm } from "@/helpers"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import type {
-    AgentOperation,
+    Agent,
     CaretPositionFn,
     EnrichedBinding,
     InsertAtPositionFn,
@@ -47,8 +40,7 @@
 
   let {
     open = false,
-    editingOperationId = undefined,
-    operationDraft = $bindable(),
+    agent = $bindable(),
     agentId = undefined,
     promptBindings = [],
     bindingIcons = {},
@@ -63,8 +55,7 @@
     onConfigureWebSearch = () => {},
   }: {
     open?: boolean
-    editingOperationId?: string
-    operationDraft: AgentOperation
+    agent?: Agent
     agentId?: string
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
@@ -116,10 +107,7 @@
   )
   $effect(() => {
     if (!(open && agentId)) return
-    const operationId = editingOperationId || operationDraft.id
-    if (operationId) {
-      agentsStore.fetchAgentKnowledge(agentId, operationId)
-    }
+    agentsStore.fetchAgentKnowledge(agentId)
   })
   let knowledgeFiles = $derived.by(() =>
     agentId && $agentsStore.knowledgeByAgent[agentId]
@@ -133,24 +121,16 @@
       : ([] as SharePointKnowledgeSourceSnapshot[])
   )
   let sharePointSources = $derived(
-    (operationDraft.knowledgeSources || []).filter(
+    (agent?.knowledgeSources || []).filter(
       source => source.type === "sharepoint"
     )
   )
   const fetchKnowledge = coalesceAgentPollRequests(async (_agentId: string) => {
-    const operationId = editingOperationId || operationDraft.id
-    if (!operationId) {
-      return
-    }
-    await agentsStore.fetchAgentKnowledge(_agentId, operationId)
+    await agentsStore.fetchAgentKnowledge(_agentId)
   })
   const knowledgePollingController = createKnowledgePollingController({
     intervalMs: 1000,
     onPoll: agentId => {
-      const operationId = editingOperationId || operationDraft.id
-      if (!operationId) {
-        return Promise.resolve()
-      }
       return fetchKnowledge(agentId)
     },
     onError: error => {
@@ -180,19 +160,14 @@
     if (!agentId || !file._id) {
       return
     }
-    const operationId = editingOperationId || operationDraft.id
-    if (!operationId) {
-      return
-    }
-
     await confirm({
       title: "Confirm deletion",
       body: `Are you sure you want to remove ${file.filename}? This action can't be undone.`,
       okText: "Delete",
       onConfirm: async () => {
         try {
-          await agentsStore.deleteAgentFile(agentId, file._id!, operationId)
-          await agentsStore.fetchAgentKnowledge(agentId, operationId)
+          await agentsStore.deleteAgentFile(agentId, file._id!)
+          await agentsStore.fetchAgentKnowledge(agentId)
           await workspaceDeploymentStore.fetch()
           notifications.success("File removed")
         } catch (error) {
@@ -206,10 +181,6 @@
     if (!agentId) {
       return
     }
-    const operationId = editingOperationId || operationDraft.id
-    if (!operationId) {
-      return
-    }
     const siteName =
       sharePointSources
         .map(source => source.config.site)
@@ -221,12 +192,8 @@
       okText: "Delete",
       onConfirm: async () => {
         try {
-          await agentsStore.disconnectAgentSharePointSite(
-            agentId,
-            siteId,
-            operationId
-          )
-          await agentsStore.fetchAgentKnowledge(agentId, operationId)
+          await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
+          await agentsStore.fetchAgentKnowledge(agentId)
           await workspaceDeploymentStore.fetch()
           notifications.success("SharePoint site removed")
         } catch (error) {
@@ -278,17 +245,12 @@
     if (!agentId) {
       return
     }
-    const operationId = editingOperationId || operationDraft.id
-    if (!operationId) {
-      return
-    }
     try {
       const result = await agentsStore.syncAgentKnowledgeSources(
         agentId,
-        sourceId,
-        operationId
+        sourceId
       )
-      await agentsStore.fetchAgentKnowledge(agentId, operationId)
+      await agentsStore.fetchAgentKnowledge(agentId)
       await workspaceDeploymentStore.fetch()
       showSharePointSyncResult(result)
     } catch (error) {
@@ -311,15 +273,18 @@
   ])
 
   const handleToolClick = (tool: AgentTool) => {
+    if (!agent) {
+      return
+    }
     const binding = tool.readableBinding || tool.runtimeBinding
     if (!binding) {
       return
     }
-    const current = operationDraft.promptInstructions || ""
+    const current = agent.promptInstructions || ""
     const insertion = `{{ ${binding} }}`
-    operationDraft.promptInstructions = `${current}${current ? "\n" : ""}${insertion}`
-    operationDraft.enabledTools = Array.from(
-      new Set([...(operationDraft.enabledTools || []), tool.runtimeBinding])
+    agent.promptInstructions = `${current}${current ? "\n" : ""}${insertion}`
+    agent.enabledTools = Array.from(
+      new Set([...(agent.enabledTools || []), tool.runtimeBinding])
     )
     onUpdated()
   }
@@ -334,10 +299,7 @@
     }
     await selectSharePointSiteModal?.show()
     if (open && agentId) {
-      const operationId = editingOperationId || operationDraft.id
-      if (operationId) {
-        await agentsStore.fetchAgentKnowledge(agentId, operationId)
-      }
+      await agentsStore.fetchAgentKnowledge(agentId)
     }
   }
 
@@ -345,11 +307,7 @@
     if (!agentId) {
       return
     }
-    const operationId = editingOperationId || operationDraft.id
-    if (!operationId) {
-      return
-    }
-    await agentsStore.fetchAgentKnowledge(agentId, operationId)
+    await agentsStore.fetchAgentKnowledge(agentId)
     await workspaceDeploymentStore.fetch()
   }
 
@@ -406,9 +364,13 @@
             >
             <Toggle
               label=""
-              text={operationDraft.live ? "Live" : "Stopped"}
-              bind:value={operationDraft.live}
-              on:change={onUpdated}
+              text={agent?.live ? "Live" : "Stopped"}
+              value={!!agent?.live}
+              on:change={event => {
+                if (!agent) return
+                agent.live = !!event.detail
+                onUpdated()
+              }}
             />
           </div>
         </svelte:fragment>
@@ -418,7 +380,11 @@
               <Input
                 label="Name"
                 placeholder="Access requests"
-                bind:value={operationDraft.name}
+                value={agent?.name || ""}
+                on:input={event => {
+                  if (!agent) return
+                  agent.name = (event.target as HTMLInputElement).value
+                }}
                 on:blur={onUpdated}
               />
             </div>
@@ -431,11 +397,12 @@
                 <div class="instructions-actions">
                   <GenerateInstructionsControl
                     triggerLabel="Help write instructions"
-                    promptInstructions={operationDraft.promptInstructions || ""}
+                    promptInstructions={agent?.promptInstructions || ""}
                     {promptBindings}
                     {bindingIcons}
                     onApplyInstructions={instructions => {
-                      operationDraft.promptInstructions = instructions
+                      if (!agent) return
+                      agent.promptInstructions = instructions
                       onUpdated()
                     }}
                   />
@@ -447,7 +414,7 @@
                   {#if toolsLoaded}
                     {#key resolvedIconCount}
                       <CodeEditor
-                        value={operationDraft.promptInstructions || ""}
+                        value={agent?.promptInstructions || ""}
                         bindings={promptBindings}
                         {bindingIcons}
                         {completions}
@@ -457,7 +424,8 @@
                         renderMarkdownDecorations={true}
                         placeholder=""
                         on:change={event => {
-                          operationDraft.promptInstructions = event.detail || ""
+                          if (!agent) return
+                          agent.promptInstructions = event.detail || ""
                         }}
                         on:blur={onUpdated}
                         bind:getCaretPosition
@@ -497,7 +465,6 @@
                 <div class="knowledge-add-control">
                   <KnowledgeAddControls
                     {agentId}
-                    operationId={editingOperationId}
                     onSharePoint={handleAddFromSharePoint}
                     onUploaded={refreshKnowledge}
                   />
@@ -513,7 +480,7 @@
           </div>
 
           <div class="operation-panel-footer">
-            {#if editingOperationId}
+            {#if agentId}
               <Button secondary quiet icon="trash" on:click={onDelete}>
                 Delete operation
               </Button>
@@ -526,7 +493,6 @@
   <SelectSharePointSiteModal
     bind:this={selectSharePointSiteModal}
     agentId={agentId || ""}
-    operationId={editingOperationId}
     existingSiteIds={sharePointSources
       .map(source => source.config.site?.id || "")
       .filter(Boolean)}
@@ -534,13 +500,13 @@
   />
   <DisplaySharePointSiteModal
     bind:this={displaySharePointSiteModal}
-    agentId={agentId}
+    {agentId}
     siteId={selectedSharePointSiteId}
     onEdit={openSharePointSiteSelectionModal}
   />
   <SelectSharePointFilesModal
     bind:this={selectSharePointFilesModal}
-    agentId={agentId}
+    {agentId}
     siteId={selectedSharePointSiteId}
   />
 {/if}

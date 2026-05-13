@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Body, Button, Icon, notifications } from "@budibase/bbui"
-  import { confirm } from "@/helpers"
-  import type { AgentOperation, EnrichedBinding } from "@budibase/types"
+  import type { Agent, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import * as routify from "@roxi/routify"
@@ -11,8 +10,7 @@
   $goto
 
   let {
-    operations = [],
-    onSaveOperations = async () => {},
+    agent = $bindable(),
     promptBindings = [],
     bindingIcons = {},
     completions = [],
@@ -20,8 +18,7 @@
     availableTools = [],
     webSearchConfigured = false,
   }: {
-    operations?: AgentOperation[]
-    onSaveOperations?: (_nextOperations: AgentOperation[]) => Promise<void>
+    agent?: Agent
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -32,92 +29,8 @@
 
   let operationPanelOpen = $state(false)
   let currentAgentId: string | undefined = $derived($selectedAgent?._id)
-  let savingDraft = $state(false)
-  let editingOperationId: string | undefined = $state(undefined)
-  const DEFAULT_OPERATION_INSTRUCTIONS = `**Agent role**
-What is this agent responsible for?
 
-**Inputs**
-What information does the agent receive?
-
-**Actions**
-- What should the agent do?
-- When should it use tools or APIs?
-
-**Output**
-- What should the response look like?
-- Include any structure, formatting, or fields required.
-
-**Rules**
-Any constraints the agent must follow.
-`
-  let operationDraft: AgentOperation = $state({
-    id: "",
-    name: "",
-    promptInstructions: DEFAULT_OPERATION_INSTRUCTIONS,
-    live: false,
-    enabledTools: [],
-    knowledgeBases: [],
-  })
-
-  const createOperationId = () => {
-    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-      return `operation_${crypto.randomUUID()}`
-    }
-    return `operation_${Date.now()}`
-  }
-
-  const getNewOperationDraft = (): AgentOperation => ({
-    id: createOperationId(),
-    name: "",
-    promptInstructions: DEFAULT_OPERATION_INSTRUCTIONS,
-    live: false,
-    enabledTools: [],
-    knowledgeBases: [],
-  })
-
-  const inferEnabledToolsFromInstructions = (
-    promptInstructions: string | undefined
-  ): string[] => {
-    if (!promptInstructions) {
-      return []
-    }
-
-    const runtimeByReadable: Record<string, string> = {}
-    const runtimeSet = new Set<string>()
-    for (const binding of promptBindings) {
-      if (binding.runtimeBinding) {
-        runtimeSet.add(binding.runtimeBinding)
-      }
-      if (binding.readableBinding && binding.runtimeBinding) {
-        runtimeByReadable[binding.readableBinding] = binding.runtimeBinding
-      }
-    }
-
-    const enabled = new Set<string>()
-    const matches = promptInstructions.matchAll(/{{\s*([^}]+?)\s*}}/g)
-    for (const match of matches) {
-      const token = match[1]?.trim()
-      if (!token) {
-        continue
-      }
-      const runtime = runtimeByReadable[token] || token
-      if (runtimeSet.has(runtime)) {
-        enabled.add(runtime)
-      }
-    }
-    return Array.from(enabled)
-  }
-
-  const openOperationPanel = (operation?: AgentOperation) => {
-    editingOperationId = operation?.id
-    operationDraft = operation
-      ? {
-          ...operation,
-          enabledTools: operation.enabledTools || [],
-          knowledgeBases: operation.knowledgeBases || [],
-        }
-      : getNewOperationDraft()
+  const openOperationPanel = () => {
     operationPanelOpen = true
   }
 
@@ -126,102 +39,17 @@ Any constraints the agent must follow.
   }
 
   const handleAddOperation = () => {
-    if (operations.length >= 1) {
-      showSingleOperationLimitInfo()
-      return
-    }
-    openOperationPanel()
+    showSingleOperationLimitInfo()
+    return
   }
 
   const closeOperationPanel = () => {
     operationPanelOpen = false
   }
 
-  const saveOperation = async ({ closeAfterSave = false } = {}) => {
-    if (savingDraft) {
-      return
-    }
-    const name = operationDraft.name.trim()
-    if (!name) {
-      return
-    }
-
-    const nextOperation: AgentOperation = {
-      ...operationDraft,
-      name,
-      id: operationDraft.id || createOperationId(),
-      enabledTools: inferEnabledToolsFromInstructions(
-        operationDraft.promptInstructions
-      ),
-      knowledgeBases: operationDraft.knowledgeBases || [],
-      knowledgeSources: operationDraft.knowledgeSources || [],
-    }
-    const effectiveOperationId = editingOperationId || operationDraft.id
-    const existingOperation = operations.find(
-      operation => operation.id === effectiveOperationId
-    )
-    if (existingOperation) {
-      const existingSnapshot = JSON.stringify(existingOperation)
-      const nextSnapshot = JSON.stringify(nextOperation)
-      if (existingSnapshot === nextSnapshot) {
-        if (closeAfterSave) {
-          closeOperationPanel()
-        }
-        return
-      }
-    }
-
-    const existingIndex = operations.findIndex(
-      operation => operation.id === effectiveOperationId
-    )
-    if (existingIndex === -1 && operations.length >= 1) {
-      showSingleOperationLimitInfo()
-      return
-    }
-
-    const nextOperations =
-      existingIndex === -1
-        ? [...operations, nextOperation]
-        : operations.map(operation =>
-            operation.id === editingOperationId ? nextOperation : operation
-          )
-
-    savingDraft = true
-    try {
-      await onSaveOperations(nextOperations)
-      editingOperationId = nextOperation.id
-      operationDraft = {
-        ...nextOperation,
-        enabledTools: nextOperation.enabledTools || [],
-        knowledgeBases: nextOperation.knowledgeBases || [],
-        knowledgeSources: nextOperation.knowledgeSources || [],
-      }
-    } finally {
-      savingDraft = false
-    }
-    if (closeAfterSave) {
-      closeOperationPanel()
-    }
-  }
-
   const deleteOperation = async () => {
-    if (!editingOperationId) {
-      return
-    }
-    await confirm({
-      title: "Delete operation?",
-      body: "This will remove the operation and its configuration.",
-      okText: "Delete",
-      onConfirm: async () => {
-        const nextOperations = operations.filter(
-          operation => operation.id !== editingOperationId
-        )
-        await onSaveOperations(nextOperations)
-        closeOperationPanel()
-      },
-    })
+    notifications.warning("Delete operation is not implemented yet.")
   }
-
 </script>
 
 <div class="operations-section">
@@ -239,53 +67,34 @@ Any constraints the agent must follow.
     </Button>
   </div>
 
-  {#if operations.length === 0}
+  <div class="operation-list">
     <button
-      class="empty-operation"
+      class="operation-row"
       type="button"
       onclick={() => openOperationPanel()}
     >
-      <span>No operations yet</span>
-      <span>Add the first request type this agent can handle.</span>
+      <span class="operation-name">Default operation</span>
+      <span class="operation-actions">
+        <Icon
+          name="dots-three"
+          size="S"
+          color="var(--spectrum-global-color-gray-600)"
+        />
+      </span>
     </button>
-  {:else}
-    <div class="operation-list">
-      {#each operations as operation (operation.id)}
-        <button
-          class="operation-row"
-          type="button"
-          onclick={() => openOperationPanel(operation)}
-        >
-          <span class="operation-name">{operation.name}</span>
-          <span class="operation-actions">
-            <span class="operation-status" class:stopped={!operation.live}>
-              <span></span>
-              {operation.live ? "Live" : "Stopped"}
-            </span>
-            <Icon
-              name="dots-three"
-              size="S"
-              color="var(--spectrum-global-color-gray-600)"
-            />
-          </span>
-        </button>
-      {/each}
-    </div>
-  {/if}
+  </div>
 </div>
 
 <OperationSidePanel
   open={operationPanelOpen}
   agentId={currentAgentId}
-  {editingOperationId}
-  bind:operationDraft
+  bind:agent
   {promptBindings}
   {bindingIcons}
   {completions}
   {toolsLoaded}
   {availableTools}
   {webSearchConfigured}
-  onUpdated={saveOperation}
   onClose={closeOperationPanel}
   onDelete={deleteOperation}
 />

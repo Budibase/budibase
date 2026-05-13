@@ -171,10 +171,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
 
   fetchAgentKnowledge = async (
-    agentId: string,
-    operationId?: string
+    agentId: string
   ): Promise<FetchAgentKnowledgeResponse> => {
-    const response = await API.fetchAgentKnowledge(agentId, operationId)
+    const response = await API.fetchAgentKnowledge(agentId)
 
     this.update(state => {
       state.knowledgeByAgent[agentId] = response
@@ -185,15 +184,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   uploadAgentFile = async (
     agentId: string,
-    file: File,
-    operationId?: string
+    file: File
   ): Promise<AgentFileUploadResponse> =>
-    await this.runAndRefreshAgents(() =>
-      API.uploadAgentFile(agentId, file, operationId)
-    )
+    await this.runAndRefreshAgents(() => API.uploadAgentFile(agentId, file))
 
-  deleteAgentFile = async (agentId: string, fileId: string, operationId?: string) =>
-    await API.deleteAgentFile(agentId, fileId, operationId)
+  deleteAgentFile = async (agentId: string, fileId: string) =>
+    await API.deleteAgentFile(agentId, fileId)
 
   fetchAgentKnowledgeSourceOptions = async (
     datasourceId: string,
@@ -207,82 +203,54 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   fetchAgentKnowledgeSourceAllEntries = async (
     agentId: string,
-    siteId: string,
-    operationId?: string
+    siteId: string
   ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-    return await API.fetchAgentKnowledgeSourceAllEntries(
-      agentId,
-      siteId,
-      operationId
-    )
+    return await API.fetchAgentKnowledgeSourceAllEntries(agentId, siteId)
   }
 
   connectAgentSharePointSite = async (
     agentId: string,
-    body: ConnectAgentSharePointSiteRequest,
-    operationId?: string
+    body: ConnectAgentSharePointSiteRequest
   ): Promise<ConnectAgentSharePointSiteResponse> => {
-    const response = await API.connectAgentSharePointSite(
-      agentId,
-      body,
-      operationId
-    )
+    const response = await API.connectAgentSharePointSite(agentId, body)
     await this.fetchAgents()
-    await this.fetchAgentKnowledge(agentId, operationId)
+    await this.fetchAgentKnowledge(agentId)
     return response
   }
 
   updateAgentSharePointSite = async (
     agentId: string,
     siteId: string,
-    body: UpdateAgentSharePointSiteRequest,
-    operationId?: string
+    body: UpdateAgentSharePointSiteRequest
   ): Promise<UpdateAgentSharePointSiteResponse> => {
-    return await API.updateAgentSharePointSite(
-      agentId,
-      siteId,
-      body,
-      operationId
-    )
+    return await API.updateAgentSharePointSite(agentId, siteId, body)
   }
 
   applyAgentSharePointSiteFilters = async (
     agentId: string,
     siteId: string,
-    body: UpdateAgentSharePointSiteRequest,
-    operationId?: string
+    body: UpdateAgentSharePointSiteRequest
   ): Promise<UpdateAgentSharePointSiteResponse> => {
-    const response = await this.updateAgentSharePointSite(
-      agentId,
-      siteId,
-      body,
-      operationId
-    )
-    await this.fetchAgentKnowledge(agentId, operationId)
+    const response = await this.updateAgentSharePointSite(agentId, siteId, body)
+    await this.fetchAgentKnowledge(agentId)
     await this.fetchAgents()
     return response
   }
 
   disconnectAgentSharePointSite = async (
     agentId: string,
-    siteId: string,
-    operationId?: string
+    siteId: string
   ): Promise<DisconnectAgentSharePointSiteResponse> => {
-    const response = await API.disconnectAgentSharePointSite(
-      agentId,
-      siteId,
-      operationId
-    )
+    const response = await API.disconnectAgentSharePointSite(agentId, siteId)
     await this.fetchAgents()
     return response
   }
 
   syncAgentKnowledgeSources = async (
     agentId: string,
-    sourceId: string,
-    operationId?: string
+    sourceId: string
   ): Promise<SyncAgentKnowledgeSourcesResponse> =>
-    await API.syncAgentKnowledgeSources(agentId, sourceId, operationId)
+    await API.syncAgentKnowledgeSources(agentId, sourceId)
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>

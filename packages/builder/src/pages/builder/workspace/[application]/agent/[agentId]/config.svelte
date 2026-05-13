@@ -5,7 +5,6 @@
     ToolType,
     WebSearchProvider,
     type Agent,
-    type AgentOperation,
     type ToolMetadata,
     type EnrichedBinding,
   } from "@budibase/types"
@@ -52,7 +51,6 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
-    operations: [] as AgentOperation[],
   })
 
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
@@ -176,7 +174,6 @@
         promptInstructions: "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
-        operations: agent.operations || [],
       }
       draftAgentId = agent._id
     }
@@ -370,11 +367,6 @@
     return undefined
   }
 
-  const saveOperations = async (nextOperations: AgentOperation[]) => {
-    draft.operations = nextOperations
-    await saveAgent({ showNotifications: true })
-  }
-
   async function saveAgent({
     showNotifications = true,
   }: {
@@ -394,7 +386,6 @@
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
-        operations: draft.operations,
       })
 
       if (showNotifications) {
@@ -488,8 +479,7 @@
 </div>
 
 <OperationsSection
-  operations={draft.operations}
-  onSaveOperations={saveOperations}
+  bind:agent={draft}
   {promptBindings}
   bindingIcons={readableToIcon}
   completions={promptCompletions}
