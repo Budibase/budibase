@@ -52,7 +52,6 @@
     onClose = () => {},
     onDelete = () => {},
     onUpdated = () => {},
-    onOpenSidePeak = () => {},
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
   }: {
@@ -69,7 +68,6 @@
     onClose?: () => void
     onDelete?: () => void
     onUpdated?: () => void
-    onOpenSidePeak?: () => void
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
   } = $props()
@@ -288,14 +286,6 @@
                       onUpdated()
                     }}
                   />
-                  <button type="button" onclick={onOpenSidePeak}>
-                    <Icon
-                      name="square-half"
-                      size="S"
-                      color="var(--spectrum-global-color-gray-700)"
-                    />
-                    <span>Open in side peak</span>
-                  </button>
                 </div>
               </div>
 
