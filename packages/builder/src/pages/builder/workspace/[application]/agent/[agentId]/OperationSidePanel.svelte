@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Button, Input } from "@budibase/bbui"
+  import { Body, Button } from "@budibase/bbui"
   import type {
     Agent,
     CaretPositionFn,
@@ -141,19 +141,6 @@
         </svelte:fragment>
         <div class="operation-panel">
           <div class="operation-panel-content">
-            <div class="operation-panel-section">
-              <Input
-                label="Name"
-                placeholder="Access requests"
-                value={agent?.name || ""}
-                on:input={event => {
-                  if (!agent) return
-                  agent.name = (event.target as HTMLInputElement).value
-                }}
-                on:blur={onUpdated}
-              />
-            </div>
-
             <div class="operation-panel-section">
               <div class="instructions-header">
                 <Body size="S" color="var(--spectrum-global-color-gray-900)">
