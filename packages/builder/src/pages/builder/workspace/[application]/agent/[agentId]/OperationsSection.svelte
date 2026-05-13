@@ -30,23 +30,19 @@
   } = $props()
 
   let operationPanelOpen = $state(false)
-  let currentAgentId: string | undefined = $derived($selectedAgent?._id)
+  let currentAgentId = $derived($selectedAgent?._id)
 
   const openOperationPanel = () => {
     operationPanelOpen = true
   }
 
-  const showSingleOperationLimitInfo = () => {
-    notifications.info("Only one operation is supported at the moment.")
+  const closeOperationPanel = () => {
+    operationPanelOpen = false
   }
 
   const handleAddOperation = () => {
-    showSingleOperationLimitInfo()
+    notifications.info("Only one operation is supported at the moment.")
     return
-  }
-
-  const closeOperationPanel = () => {
-    operationPanelOpen = false
   }
 
   const deleteOperation = async () => {
@@ -76,13 +72,12 @@
       onclick={() => openOperationPanel()}
     >
       <span class="operation-name">Default operation</span>
-      <span class="operation-actions">
-        <Icon
-          name="dots-three"
-          size="S"
-          color="var(--spectrum-global-color-gray-600)"
-        />
-      </span>
+
+      <Icon
+        name="dots-three"
+        size="S"
+        color="var(--spectrum-global-color-gray-600)"
+      />
     </button>
   </div>
 </div>
@@ -133,17 +128,12 @@
     gap: 4px;
   }
 
-  .operation-row,
-  .empty-operation {
-    width: 100%;
+  .operation-row {
     border: 1px solid var(--spectrum-global-color-gray-200);
     background: transparent;
     color: var(--spectrum-global-color-gray-900);
     border-radius: 4px;
     cursor: pointer;
-    transition:
-      background 130ms ease-out,
-      border-color 130ms ease-out;
   }
 
   .operation-row {
@@ -152,71 +142,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-m);
-    text-align: left;
   }
 
-  .operation-row:hover,
-  .empty-operation:hover {
+  .operation-row:hover {
     background: var(--spectrum-global-color-gray-100);
     border-color: var(--spectrum-global-color-gray-300);
   }
 
   .operation-name {
-    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 13px;
-  }
-
-  .operation-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    flex-shrink: 0;
-  }
-
-  .operation-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-800);
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .operation-status span {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--spectrum-global-color-green-500);
-  }
-
-  .operation-status.stopped span {
-    background: var(--spectrum-global-color-orange-500);
-  }
-
-  .empty-operation {
-    min-height: 84px;
-    padding: var(--spacing-l);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  .empty-operation span:first-child {
-    color: var(--spectrum-global-color-gray-900);
-    font-size: 14px;
-  }
-
-  .empty-operation span:last-child {
-    color: var(--spectrum-global-color-gray-700);
     font-size: 13px;
   }
 </style>
