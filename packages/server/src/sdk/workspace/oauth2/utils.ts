@@ -1,11 +1,18 @@
-import { cache, context, docIds, env, HTTPError } from "@budibase/backend-core"
 import {
-  Document,
+  cache,
+  context,
+  docIds,
+  env,
+  HTTPError,
+  utils as coreUtils,
+} from "@budibase/backend-core"
+import {
   OAuth2CredentialsMethod,
   OAuth2GrantType,
   RestAuthType,
+  type Document,
 } from "@budibase/types"
-import fetch, { RequestInit } from "node-fetch"
+import { type RequestInit } from "node-fetch"
 import { get } from "."
 import { processEnvironmentVariable } from "../../utils"
 import { getDelegatedOAuthCredential } from "../ai/knowledgeSources/sharepoint/credentials"
@@ -88,7 +95,6 @@ async function fetchToken(config: OAuth2TokenRequestConfig) {
     body: new URLSearchParams({
       grant_type: config.grantType || OAuth2GrantType.CLIENT_CREDENTIALS,
     }),
-    redirect: "follow",
   }
 
   const bodyParams = new URLSearchParams({
@@ -113,8 +119,10 @@ async function fetchToken(config: OAuth2TokenRequestConfig) {
   if (config.audience) {
     bodyParams.set("audience", config.audience)
   }
+
   fetchConfig.body = bodyParams
-  const resp = await fetch(config.url, fetchConfig)
+  const resp = await coreUtils.fetchWithBlacklist(config.url, fetchConfig)
+
   return resp
 }
 

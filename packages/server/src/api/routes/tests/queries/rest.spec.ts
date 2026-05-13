@@ -1054,7 +1054,7 @@ describe("rest", () => {
               _id: authId,
               name: "OAuth2 Auth",
               type: RestAuthType.OAUTH2,
-              url: "https://auth.example.com/token",
+              url: "https://example.com/oauth/token",
               clientId: "my-client-id",
               clientSecret: "my-client-secret",
               method: OAuth2CredentialsMethod.BODY,
@@ -1064,7 +1064,7 @@ describe("rest", () => {
         },
       })
 
-      nock("https://auth.example.com").post("/token").reply(200, {
+      nock("https://example.com").post("/oauth/token").reply(200, {
         access_token: "oauth-access-token",
         token_type: "Bearer",
         expires_in: 3600,

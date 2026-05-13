@@ -1,4 +1,9 @@
-import { cache, withEnv } from "@budibase/backend-core"
+import {
+  blacklist,
+  cache,
+  setEnv as setCoreEnv,
+  withEnv,
+} from "@budibase/backend-core"
 import { generator, utils as testUtils } from "@budibase/backend-core/tests"
 import {
   OAuth2CredentialsMethod,
@@ -13,7 +18,7 @@ import sdk from "../../.."
 import { startContainer } from "../../../../integrations/tests/utils"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { getToken, getTokenFromConfig } from "../utils"
+import { getToken, getTokenFromConfig, validateConfig } from "../utils"
 import * as sharePointCredentials from "../../ai/knowledgeSources/sharepoint/credentials"
 
 jest.mock("../../ai/knowledgeSources/sharepoint/credentials", () => ({
@@ -28,8 +33,14 @@ jest.setTimeout(90000)
 
 describe("oauth2 utils", () => {
   let keycloakUrl: string
+  let restoreEnv: (() => void) | undefined
 
   beforeAll(async () => {
+    restoreEnv = setCoreEnv({
+      BLACKLIST_IPS: "",
+      SELF_HOSTED: true,
+    })
+    await blacklist.refreshBlacklist()
     await config.init()
 
     const ports = await startContainer(
@@ -52,6 +63,37 @@ describe("oauth2 utils", () => {
     }
 
     keycloakUrl = `http://127.0.0.1:${port}`
+  })
+
+  afterAll(async () => {
+    restoreEnv?.()
+    await blacklist.refreshBlacklist()
+  })
+
+  it("rejects a real Keycloak token endpoint when localhost is blacklisted", async () => {
+    const restoreBlacklistEnv = setCoreEnv({
+      BLACKLIST_IPS: undefined,
+      SELF_HOSTED: false,
+    })
+    await blacklist.refreshBlacklist()
+
+    try {
+      const result = await validateConfig({
+        url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+        clientId: "my-client",
+        clientSecret: "my-secret",
+        method: OAuth2CredentialsMethod.BODY,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      })
+
+      expect(result).toEqual({
+        valid: false,
+        message: "URL is blocked or could not be resolved safely.",
+      })
+    } finally {
+      restoreBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
   })
 
   describe.each(
