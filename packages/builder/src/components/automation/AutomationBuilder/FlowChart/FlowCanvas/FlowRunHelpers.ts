@@ -93,7 +93,8 @@ export function isTerminalFailure(
   return (
     (result.outputs.success === false && !canContinueOnError(result)) ||
     outputStatus === AutomationStatus.STOPPED ||
-    outputStatus === AutomationStatus.STOPPED_ERROR
+    outputStatus === AutomationStatus.STOPPED_ERROR ||
+    outputStatus === AutomationStatus.NO_CONDITION_MET.toLowerCase()
   )
 }
 
@@ -108,7 +109,15 @@ export function getRunHighlight(results: unknown): RunHighlight | undefined {
   }
   const lastResult = getLastExecutedResult(runResults)
   if (isTerminalFailure(lastResult)) {
-    if (lastResult.outputs.status === AutomationStatus.STOPPED) {
+    const outputStatus =
+      "status" in lastResult.outputs &&
+      typeof lastResult.outputs.status === "string"
+        ? lastResult.outputs.status.toLowerCase()
+        : undefined
+    if (
+      outputStatus === AutomationStatus.STOPPED ||
+      outputStatus === AutomationStatus.NO_CONDITION_MET.toLowerCase()
+    ) {
       return "stopped"
     }
     return "error"

@@ -180,7 +180,8 @@
 
     if (
       outputStatus === AutomationStatus.STOPPED ||
-      outputStatus === AutomationStatus.STOPPED_ERROR
+      outputStatus === AutomationStatus.STOPPED_ERROR ||
+      outputStatus === AutomationStatus.NO_CONDITION_MET.toLowerCase()
     ) {
       return {
         message: "Stopped",
