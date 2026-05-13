@@ -1,7 +1,39 @@
-import { MonthlyQuotaName, MonthlyUsage, QuotaUsageType } from "@budibase/types"
+import {
+  ActionType,
+  MonthlyQuotaName,
+  MonthlyUsage,
+  QuotaUsageType,
+} from "@budibase/types"
 import { DBTestConfiguration } from "../../../../tests"
 import * as db from "../../../db"
+import * as dbQuotaUtils from "../../../db/quotas/utils"
 import * as quotas from "../quotas"
+
+jest.mock("../../../db/quotas/utils", () => {
+  const actual = jest.requireActual("../../../db/quotas/utils")
+  return {
+    ...actual,
+    getCurrentMonthString: jest
+      .fn()
+      .mockImplementation(actual.getCurrentMonthString),
+    // setCurrentMonth calls getCurrentMonthString directly (same-module reference),
+    // so we override it here to go through the mockable export
+    setCurrentMonth: (usage: any) => {
+      const {
+        getCurrentMonthString,
+        generateNewMonthlyQuotas,
+      } = require("../../../db/quotas/utils")
+      const currentMonth = getCurrentMonthString()
+      if (!usage.monthly) {
+        usage.monthly = {}
+      }
+      if (!usage.monthly[currentMonth]) {
+        usage.monthly[currentMonth] = generateNewMonthlyQuotas()
+      }
+      usage.monthly.current = usage.monthly[currentMonth]
+    },
+  }
+})
 
 import { sql, utils } from "@budibase/backend-core"
 
@@ -78,6 +110,139 @@ async function updateQuotas(testCase: UpdateTest) {
 describe("quotas", () => {
   beforeEach(async () => {
     config.newTenant()
+  })
+
+  describe("actions global breakdown", () => {
+    const actions = MonthlyQuotaName.ACTIONS
+
+    it("tracks breakdown by action type at the global monthly level", async () => {
+      await config.doInTenant(async () => {
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.CRUD,
+        })
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.CRUD,
+        })
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.AUTOMATION_STEP,
+        })
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.AI_AGENT,
+        })
+
+        const month = db.quotas.utils.getCurrentMonthString()
+        const doc = await db.quotas.getQuotaUsage()
+        const monthDoc = doc.monthly[month]
+
+        expect(monthDoc.actions).toBe(4)
+        expect(monthDoc.breakdown?.actions?.parent).toBe("actions")
+        expect(monthDoc.breakdown?.actions?.values[ActionType.CRUD]).toBe(2)
+        expect(
+          monthDoc.breakdown?.actions?.values[ActionType.AUTOMATION_STEP]
+        ).toBe(1)
+        expect(monthDoc.breakdown?.actions?.values[ActionType.AI_AGENT]).toBe(1)
+      })
+    })
+
+    it("breakdown does not carry over to a new month", async () => {
+      await config.doInTenant(async () => {
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.CRUD,
+        })
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.CRUD,
+        })
+
+        const getCurrentMonthStringMock =
+          dbQuotaUtils.getCurrentMonthString as jest.MockedFunction<
+            typeof dbQuotaUtils.getCurrentMonthString
+          >
+
+        const oldMonth = getCurrentMonthStringMock()
+
+        getCurrentMonthStringMock.mockReturnValue("1-2099")
+
+        try {
+          // reading quota usage triggers setCurrentMonth, which creates the new month entry
+          const doc = await db.quotas.getQuotaUsage()
+
+          expect(doc.monthly["1-2099"]).toBeDefined()
+          expect(doc.monthly["1-2099"].actions).toBe(0)
+          expect(doc.monthly["1-2099"].breakdown).toBeUndefined()
+
+          // old month data is preserved but not accessible via current
+          expect(doc.monthly[oldMonth].actions).toBe(2)
+          expect(
+            doc.monthly[oldMonth].breakdown?.actions?.values[ActionType.CRUD]
+          ).toBe(2)
+
+          // current now points to the new empty month
+          expect(doc.monthly.current).toBe(doc.monthly["1-2099"])
+        } finally {
+          const getCurrentMonthStringMock =
+            dbQuotaUtils.getCurrentMonthString as jest.MockedFunction<
+              typeof dbQuotaUtils.getCurrentMonthString
+            >
+          getCurrentMonthStringMock.mockImplementation(
+            jest.requireActual("../../../db/quotas/utils").getCurrentMonthString
+          )
+        }
+      })
+    })
+
+    it("writes a zero breakdown value instead of leaving the stale count", async () => {
+      await config.doInTenant(async () => {
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.CRUD,
+        })
+
+        // Force the breakdown counter back to 0 via a direct decrement
+        await quotas.updateUsage({
+          usageChange: -1,
+          name: actions,
+          type: QuotaUsageType.MONTHLY,
+          opts: { id: ActionType.CRUD },
+        })
+
+        const month = db.quotas.utils.getCurrentMonthString()
+        const doc = await db.quotas.getQuotaUsage()
+        const monthDoc = doc.monthly[month]
+
+        // Total is 0, breakdown must also reflect 0, not the stale 1
+        expect(monthDoc.actions).toBe(0)
+        expect(monthDoc.breakdown?.actions?.values[ActionType.CRUD]).toBe(0)
+      })
+    })
+
+    it("getCurrentUsageValues returns the per-type breakdown count", async () => {
+      await config.doInTenant(async () => {
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.CRUD,
+        })
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.CRUD,
+        })
+        await quotas.increment(actions, QuotaUsageType.MONTHLY, {
+          id: ActionType.AUTOMATION_STEP,
+        })
+
+        const crudValues = await db.quotas.getCurrentUsageValues(
+          QuotaUsageType.MONTHLY,
+          actions,
+          ActionType.CRUD
+        )
+        expect(crudValues.total).toBe(3)
+        expect(crudValues.breakdown).toBe(2)
+
+        const automationValues = await db.quotas.getCurrentUsageValues(
+          QuotaUsageType.MONTHLY,
+          actions,
+          ActionType.AUTOMATION_STEP
+        )
+        expect(automationValues.total).toBe(3)
+        expect(automationValues.breakdown).toBe(1)
+      })
+    })
   })
 
   describe("app breakdown", () => {

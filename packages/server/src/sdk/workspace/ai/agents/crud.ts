@@ -102,6 +102,34 @@ const decodeSlackIntegrationSecrets = (
   }
 }
 
+const encodeTelegramIntegrationSecrets = (
+  telegramIntegration?: Agent["telegramIntegration"]
+) => {
+  if (!telegramIntegration) {
+    return telegramIntegration
+  }
+
+  return {
+    ...telegramIntegration,
+    botToken: encodeSecret(telegramIntegration.botToken),
+    webhookSecretToken: encodeSecret(telegramIntegration.webhookSecretToken),
+  }
+}
+
+const decodeTelegramIntegrationSecrets = (
+  telegramIntegration?: Agent["telegramIntegration"]
+) => {
+  if (!telegramIntegration) {
+    return telegramIntegration
+  }
+
+  return {
+    ...telegramIntegration,
+    botToken: decodeSecret(telegramIntegration.botToken),
+    webhookSecretToken: decodeSecret(telegramIntegration.webhookSecretToken),
+  }
+}
+
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
@@ -109,6 +137,9 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   knowledgeBases: agent.knowledgeBases || [],
   discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
   slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
+  telegramIntegration: decodeTelegramIntegrationSecrets(
+    agent.telegramIntegration
+  ),
 })
 
 const mergeDiscordIntegration = ({
@@ -197,6 +228,39 @@ const mergeSlackIntegration = ({
   return merged
 }
 
+const mergeTelegramIntegration = ({
+  existing,
+  incoming,
+}: {
+  existing?: Agent["telegramIntegration"]
+  incoming?: Agent["telegramIntegration"]
+}) => {
+  if (incoming === undefined) {
+    return existing
+  }
+  if (!incoming) {
+    return incoming
+  }
+
+  const merged = {
+    ...(existing || {}),
+    ...incoming,
+  }
+
+  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
+    merged.botToken = existing.botToken
+  }
+
+  if (
+    incoming.webhookSecretToken === SECRET_MASK &&
+    existing?.webhookSecretToken
+  ) {
+    merged.webhookSecretToken = existing.webhookSecretToken
+  }
+
+  return merged
+}
+
 export async function fetch(): Promise<Agent[]> {
   const db = context.getWorkspaceDB()
   const result = await db.allDocs<Agent>(
@@ -256,6 +320,7 @@ export async function create(
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
+    telegramIntegration: request.telegramIntegration,
   }
 
   const { rev } = await db.put({
@@ -264,6 +329,9 @@ export async function create(
       agent.discordIntegration
     ),
     slackIntegration: encodeSlackIntegrationSecrets(agent.slackIntegration),
+    telegramIntegration: encodeTelegramIntegrationSecrets(
+      agent.telegramIntegration
+    ),
   })
   agent._rev = rev
   const result = withAgentDefaults(agent)
@@ -337,6 +405,10 @@ export async function update(agent: Agent): Promise<Agent> {
       existing: existing?.slackIntegration,
       incoming: agent.slackIntegration,
     }),
+    telegramIntegration: mergeTelegramIntegration({
+      existing: existing?.telegramIntegration,
+      incoming: agent.telegramIntegration,
+    }),
   }
 
   const hasBeenPublished =
@@ -351,6 +423,9 @@ export async function update(agent: Agent): Promise<Agent> {
       updated.discordIntegration
     ),
     slackIntegration: encodeSlackIntegrationSecrets(updated.slackIntegration),
+    telegramIntegration: encodeTelegramIntegrationSecrets(
+      updated.telegramIntegration
+    ),
   })
   updated._rev = rev
   const result = withAgentDefaults(updated)

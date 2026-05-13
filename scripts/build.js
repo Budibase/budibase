@@ -92,6 +92,7 @@ async function runBuild(entry, outfile, opts = {}) {
           "@chat-adapter/discord",
           "@chat-adapter/slack",
           "@chat-adapter/teams",
+          "@chat-adapter/telegram",
           "@chat-adapter/state-ioredis",
           "@chat-adapter/state-memory",
         ],

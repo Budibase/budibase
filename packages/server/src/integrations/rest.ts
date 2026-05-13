@@ -17,7 +17,7 @@ import get from "lodash/get"
 import qs from "querystring"
 import { performance } from "perf_hooks"
 import { URLSearchParams } from "url"
-import { blacklist } from "@budibase/backend-core"
+import { utils as coreUtils } from "@budibase/backend-core"
 import { handleFileResponse, handleXml } from "./utils"
 import { parse } from "content-disposition"
 import path from "path"
@@ -751,9 +751,6 @@ export class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues
     )
-    if (await blacklist.isBlacklisted(url)) {
-      throw new Error("URL is blocked or could not be resolved safely.")
-    }
 
     // Configure dispatcher for proxy and/or TLS settings
     // Use datasource config if set, otherwise fall back to environment variable
@@ -764,18 +761,38 @@ export class RestIntegration implements IntegrationBase {
 
     const globalDispatcher = getGlobalDispatcher()
     const isHttpMockingActive = globalDispatcher instanceof MockAgent
+    let hasDispatcher = false
+    let usedProxyDispatcher = false
 
-    if (!isHttpMockingActive) {
-      // Cast needed due to undici version differences between packages
-      input.dispatcher = getDispatcher({
+    const setDispatcher = (requestInput: RequestInit, requestUrl: string) => {
+      if (isHttpMockingActive) {
+        return requestInput
+      }
+
+      const dispatcher = getDispatcher({
         rejectUnauthorized,
-        url,
-      }) as unknown as typeof input.dispatcher
+        url: requestUrl,
+      }) as unknown as typeof requestInput.dispatcher
+
+      hasDispatcher = true
+      usedProxyDispatcher = dispatcher?.constructor.name === "ProxyAgent"
+
+      return {
+        ...requestInput,
+        dispatcher,
+      }
     }
 
     let response: Response
     try {
-      response = await fetch(url, input)
+      response = await coreUtils.fetchWithBlacklist<RequestInit, Response>(
+        url,
+        input,
+        {
+          fetchFn: async (requestUrl: string, requestInput: RequestInit) =>
+            fetch(requestUrl, setDispatcher(requestInput, requestUrl)),
+        }
+      )
     } catch (err) {
       const error = err as Error & {
         cause?: {
@@ -788,7 +805,8 @@ export class RestIntegration implements IntegrationBase {
         error: error.message,
         cause: error.cause?.message,
         code: error.cause?.code,
-        hasDispatcher: !!input.dispatcher,
+        hasDispatcher,
+        usedProxyDispatcher,
         isHttpsUrl: url.startsWith("https://"),
         rejectUnauthorized,
       })
@@ -802,7 +820,7 @@ export class RestIntegration implements IntegrationBase {
         )
       }
 
-      if (error.cause?.code === "ECONNREFUSED" && input.dispatcher) {
+      if (error.cause?.code === "ECONNREFUSED" && usedProxyDispatcher) {
         throw new Error(
           `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${error.message}`
         )

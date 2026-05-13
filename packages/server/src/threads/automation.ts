@@ -12,6 +12,7 @@ import {
 } from "@budibase/string-templates"
 import {
   ActionFailureReason,
+  ActionType,
   Automation,
   AutomationActionStepId,
   AutomationData,
@@ -585,8 +586,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            const branchResults = await quotas.addAction(() =>
-              this.executeBranchStep(ctx, step)
+            const branchResults = await quotas.addAction(
+              ActionType.AUTOMATION_STEP,
+              () => this.executeBranchStep(ctx, step)
             )
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
@@ -631,7 +633,7 @@ class Orchestrator {
             this.reportStepProgress(step, "running", undefined, ctx)
             addToContext(
               step,
-              await quotas.addAction(async () => {
+              await quotas.addAction(ActionType.AUTOMATION_STEP, async () => {
                 const response = await this.executeStep(ctx, step)
                 if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
                   ctx.state ??= {}
