@@ -180,7 +180,7 @@ export async function buildPromptAndTools(
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
-    promptInstructions: agent.promptInstructions,
+    promptInstructions: agent.operations?.[0]?.promptInstructions,
     includeGoal,
   })
 

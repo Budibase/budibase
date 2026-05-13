@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Body, Icon } from "@budibase/bbui"
   import type {
-    Agent,
+    AgentOperation,
     CaretPositionFn,
     EnrichedBinding,
     InsertAtPositionFn,
@@ -21,7 +21,7 @@
 
   let {
     open = false,
-    agent = $bindable(),
+    operation = $bindable(),
     promptBindings = [],
     bindingIcons = {},
     completions = [],
@@ -34,7 +34,7 @@
     onConfigureWebSearch = () => {},
   }: {
     open?: boolean
-    agent?: Agent
+    operation?: AgentOperation
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -78,7 +78,7 @@
       {} as Record<string, AgentTool[]>
     )
   )
-  let operationName = $derived(agent?.operationName?.trim())
+  let operationName = $derived(operation?.name?.trim())
   let readableToRuntimeBinding = $derived.by(() =>
     Object.fromEntries(
       promptBindings
@@ -88,7 +88,7 @@
   )
   let includedToolRuntimeBindings = $derived(
     getIncludedToolRuntimeBindings(
-      agent?.promptInstructions,
+      operation?.promptInstructions,
       readableToRuntimeBinding
     )
   )
@@ -99,10 +99,10 @@
   )
 
   const insertToolBinding = (readableBinding: string) => {
-    if (!agent) {
+    if (!operation) {
       return
     }
-    const currentValue = agent.promptInstructions || ""
+    const currentValue = operation.promptInstructions || ""
     const caretPos = getCaretPosition?.() ?? {
       start: currentValue.length,
       end: currentValue.length,
@@ -119,13 +119,13 @@
         cursor: { anchor: start + wrapped.length },
       })
     } else {
-      agent.promptInstructions =
+      operation.promptInstructions =
         currentValue.slice(0, start) + wrapped + currentValue.slice(end)
     }
   }
 
   const handleToolClick = (tool: AgentTool) => {
-    if (!agent || !tool.readableBinding) {
+    if (!operation || !tool.readableBinding) {
       return
     }
     insertToolBinding(tool.readableBinding)
@@ -147,14 +147,14 @@
     str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
   const removeToolBindingFromPrompt = (tool: AgentTool) => {
-    if (!agent || !tool.readableBinding) {
+    if (!operation || !tool.readableBinding) {
       return
     }
-    const current = agent.promptInstructions || ""
+    const current = operation.promptInstructions || ""
     const binding = escapeRegExp(tool.readableBinding)
     const regex = new RegExp(`\\{\\{\\s*${binding}\\s*\\}\\}`, "g")
     const next = current.replace(regex, "").replace(/\n{3,}/g, "\n\n")
-    agent.promptInstructions = next
+    operation.promptInstructions = next
     onUpdated()
   }
 </script>
@@ -199,12 +199,12 @@
                 <div class="instructions-actions">
                   <GenerateInstructionsControl
                     triggerLabel="Help write instructions"
-                    promptInstructions={agent?.promptInstructions || ""}
+                    promptInstructions={operation?.promptInstructions || ""}
                     {promptBindings}
                     {bindingIcons}
                     onApplyInstructions={instructions => {
-                      if (!agent) return
-                      agent.promptInstructions = instructions
+                      if (!operation) return
+                      operation.promptInstructions = instructions
                       onUpdated()
                     }}
                   />
@@ -216,7 +216,7 @@
                   {#if toolsLoaded}
                     {#key resolvedIconCount}
                       <CodeEditor
-                        value={agent?.promptInstructions || ""}
+                        value={operation?.promptInstructions || ""}
                         bindings={promptBindings}
                         {bindingIcons}
                         {completions}
@@ -226,8 +226,8 @@
                         renderMarkdownDecorations={true}
                         placeholder=""
                         on:change={event => {
-                          if (!agent) return
-                          agent.promptInstructions = event.detail || ""
+                          if (!operation) return
+                          operation.promptInstructions = event.detail || ""
                         }}
                         on:blur={onUpdated}
                         bind:getCaretPosition

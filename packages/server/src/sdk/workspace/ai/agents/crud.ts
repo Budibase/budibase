@@ -6,15 +6,19 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
-import type { Agent, Optional } from "@budibase/types"
+import type { Agent, AgentOperation, Optional } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import { assertAgentHasValidConfig } from "./utils"
 
+type DeprecatedAgent = Agent & {
+  promptInstructions?: string
+}
+
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
-const DEFAULT_OPERATION_NAME = "Main operation"
+const DEFAULT_OPERATION_NAME = "Operation"
 
 const guardName = async (name: string, id?: string) => {
   if (!name.trim()) {
@@ -132,21 +136,32 @@ const decodeTelegramIntegrationSecrets = (
   }
 }
 
-const withAgentDefaults = (agent: Agent): Agent => ({
-  ...agent,
-  operationName:
-    agent.operationName || agent.promptInstructions
-      ? agent.operationName || DEFAULT_OPERATION_NAME
-      : agent.operationName,
-  live: agent.live ?? false,
-  enabledTools: agent.enabledTools || [],
-  knowledgeBases: agent.knowledgeBases || [],
-  discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
-  slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
-  telegramIntegration: decodeTelegramIntegrationSecrets(
-    agent.telegramIntegration
-  ),
-})
+const toPrimaryOperation = (agent: {
+  operations?: AgentOperation[]
+  promptInstructions?: string
+}): AgentOperation => {
+  const existing = agent.operations?.[0]
+  return {
+    id: existing?.id || "operation_default",
+    name: existing?.name || DEFAULT_OPERATION_NAME,
+    promptInstructions:
+      existing?.promptInstructions ?? agent.promptInstructions ?? "",
+  }
+}
+
+const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
+  const operation = toPrimaryOperation(raw)
+  return {
+    ...raw,
+    live: raw.live ?? false,
+    operations: [operation],
+    discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
+    slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
+    telegramIntegration: decodeTelegramIntegrationSecrets(
+      raw.telegramIntegration
+    ),
+  }
+}
 
 const mergeDiscordIntegration = ({
   existing,
@@ -269,7 +284,7 @@ const mergeTelegramIntegration = ({
 
 export async function fetch(): Promise<Agent[]> {
   const db = context.getWorkspaceDB()
-  const result = await db.allDocs<Agent>(
+  const result = await db.allDocs<DeprecatedAgent>(
     docIds.getDocParams(DocumentType.AGENT, undefined, {
       include_docs: true,
     })
@@ -277,7 +292,7 @@ export async function fetch(): Promise<Agent[]> {
 
   return result.rows
     .map(row => row.doc)
-    .filter((doc): doc is Agent => !!doc)
+    .filter(doc => !!doc)
     .map(withAgentDefaults)
 }
 
@@ -288,7 +303,7 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
 
   const db = context.getWorkspaceDB()
 
-  const agent = await db.tryGet<Agent>(agentId)
+  const agent = await db.tryGet<DeprecatedAgent>(agentId)
   if (!agent) {
     throw new HTTPError("Agent not found", 404)
   }
@@ -307,13 +322,13 @@ export async function create(
 
   await guardName(request.name)
 
+  const primaryOperation = toPrimaryOperation(request)
   const agent: Agent = {
     _id: docIds.generateAgentID(),
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
-    promptInstructions: request.promptInstructions,
-    operationName: request.operationName,
+    operations: [primaryOperation],
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -364,14 +379,13 @@ export async function duplicate(
     name,
     description: source.description,
     aiconfig: source.aiconfig,
-    promptInstructions: source.promptInstructions,
-    operationName: source.operationName,
     goal: source.goal,
     icon: source.icon,
     iconColor: source.iconColor,
     live: source.live,
     _deleted: false,
     createdBy,
+    operations: source.operations,
     enabledTools: source.enabledTools || [],
     knowledgeBases: source.knowledgeBases || [],
   })
@@ -384,11 +398,7 @@ export async function update(agent: Agent): Promise<Agent> {
   }
 
   const db = context.getWorkspaceDB()
-  const existingRaw = await db.tryGet<Agent>(_id)
-  const existing = existingRaw ? withAgentDefaults(existingRaw) : undefined
-  if (!existing) {
-    throw new HTTPError("Agent not found", 404)
-  }
+  const existing = await getOrThrow(_id)
 
   const incomingName = agent.name ?? existing.name
   const normalizedName = helpers.normalizeForComparison(incomingName)
@@ -399,12 +409,17 @@ export async function update(agent: Agent): Promise<Agent> {
   }
 
   const now = new Date().toISOString()
+  const incomingOperation = toPrimaryOperation(agent as DeprecatedAgent)
   const updated: Agent = {
     ...existing,
     ...agent,
     updatedAt: now,
-    enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
-    knowledgeBases: agent.knowledgeBases ?? existing?.knowledgeBases ?? [],
+    operations: [
+      {
+        ...(existing.operations?.[0] || {}),
+        ...incomingOperation,
+      },
+    ],
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,

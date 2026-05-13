@@ -45,13 +45,11 @@
   const AUTO_SAVE_DEBOUNCE_MS = 800
   // Agent state
   let draftAgentId: string | undefined = $state()
-  let draft = $state({
+  let draft = $state<Agent>({
     name: "",
     description: "",
     aiconfig: "",
     goal: "",
-    operationName: "",
-    promptInstructions: "",
     icon: "",
     iconColor: "",
   })
@@ -179,10 +177,9 @@
         description: agent.description || "",
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
-        operationName: agent.operationName || "",
-        promptInstructions: agent.promptInstructions ?? "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
+        operations: agent.operations || [],
       }
       draftAgentId = agent._id
     }
@@ -386,8 +383,11 @@
 
     saving = true
     try {
+      const instructions =
+        currentAgent.operations?.map(o => o.promptInstructions).join("\n\n") ||
+        ""
       const enabledTools = getIncludedToolRuntimeBindings(
-        draft.promptInstructions,
+        instructions,
         readableToRuntimeBinding
       )
       await agentsStore.updateAgent({

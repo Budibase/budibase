@@ -108,7 +108,6 @@ export async function status() {
       icon: agent.icon,
       iconColor: agent.iconColor,
       aiconfig: agent.aiconfig,
-      promptInstructions: agent.promptInstructions,
       goal: agent.goal,
       live: agent.live,
       enabledTools: normalizeArray(agent.enabledTools || []),
@@ -148,6 +147,11 @@ export async function status() {
         : undefined,
       knowledgeSources: normalizedKnowledgeSources,
       files: normalizedFiles,
+      operations: agent.operations?.map(operation => ({
+        id: operation.id,
+        name: operation.name,
+        promptInstructions: operation.promptInstructions,
+      })),
     }
   }
 

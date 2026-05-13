@@ -311,8 +311,6 @@ export async function createAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    promptInstructions: body.promptInstructions,
-    operationName: body.operationName,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
@@ -326,6 +324,7 @@ export async function createAgent(
     telegramIntegration: body.telegramIntegration,
     knowledgeSources: undefined,
     knowledgeBases: undefined,
+    operations: undefined,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -369,8 +368,6 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    promptInstructions: body.promptInstructions,
-    operationName: body.operationName,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
@@ -381,12 +378,44 @@ export async function updateAgent(
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
+    operations: body.operations,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)
 
   ctx.body = withoutKnowledgeConfig(obfuscateAgentSecrets(agent))
   ctx.status = 200
+}
+
+export async function createAgentOperation(
+  ctx: UserCtx<{ name?: string }, UpdateAgentResponse, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const operations = agent.operations || []
+
+  if (operations.length >= 1) {
+    throw new HTTPError("Only one operation is supported at the moment", 400)
+  }
+
+  const now = Date.now()
+  const operation = {
+    id: `operation_${now}`,
+    name: ctx.request.body?.name?.trim() || "Operation",
+    live: false,
+    promptInstructions: "",
+    enabledTools: [],
+    knowledgeBases: [],
+    knowledgeSources: [],
+  }
+
+  const updated = await sdk.ai.agents.update({
+    ...agent,
+    operations: [...operations, operation],
+  })
+
+  ctx.body = withoutKnowledgeConfig(obfuscateAgentSecrets(updated))
+  ctx.status = 201
 }
 
 export async function syncAgentDiscordCommands(

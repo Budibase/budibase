@@ -14,6 +14,7 @@
   import { confirm } from "@/helpers/confirm"
   import { contextMenuStore } from "@/stores/builder"
   import OperationSidePanel from "./OperationSidePanel.svelte"
+
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
 What is this agent responsible for?
 
@@ -62,8 +63,11 @@ Any constraints the agent must follow.
   let renameModal: Modal | undefined = $state()
   let renameDraft = $state("")
   let isRenameValid = $derived(Boolean(renameDraft.trim()))
-  let operationName = $derived(agent?.operationName?.trim())
-  let hasOperation = $derived(Boolean(agent?.operationName?.trim()))
+
+  let mainOperation = $derived(agent?.operations?.[0])
+
+  let operationName = $derived(mainOperation?.name?.trim())
+  let hasOperation = $derived(Boolean(mainOperation?.name?.trim()))
 
   const openOperationPanel = () => {
     operationPanelOpen = true
@@ -74,12 +78,12 @@ Any constraints the agent must follow.
   }
 
   const openRenameModal = () => {
-    renameDraft = agent?.operationName || ""
+    renameDraft = mainOperation?.name || ""
     renameModal?.show()
   }
 
   const saveRename = () => {
-    if (!agent) {
+    if (!mainOperation) {
       return
     }
     const trimmedName = renameDraft.trim()
@@ -87,7 +91,7 @@ Any constraints the agent must follow.
       notifications.error("Operation name is required.")
       return
     }
-    agent.operationName = trimmedName
+    mainOperation.name = trimmedName
     onUpdated()
     renameModal?.hide()
   }
@@ -97,9 +101,9 @@ Any constraints the agent must follow.
       notifications.info("Only one operation is supported at the moment.")
       return
     }
-    if (agent) {
-      agent.operationName = "Main operation"
-      agent.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
+    if (mainOperation) {
+      mainOperation.name = "Main operation"
+      mainOperation.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
     }
     onUpdated()
     openOperationPanel()
@@ -110,7 +114,6 @@ Any constraints the agent must follow.
       return
     }
 
-    const safeAgent = agent
     confirm({
       title: "Confirm deletion",
       body: "Delete this operation? This will clear instructions and selected tools.",
@@ -119,9 +122,7 @@ Any constraints the agent must follow.
       onConfirm: async () => {
         try {
           await onDeleteOperation()
-          safeAgent.promptInstructions = ""
-          safeAgent.enabledTools = []
-          safeAgent.operationName = ""
+          agent.operations = []
           onUpdated()
           closeOperationPanel()
           notifications.success("Operation deleted.")
@@ -203,20 +204,22 @@ Any constraints the agent must follow.
   {/if}
 </div>
 
-<OperationSidePanel
-  open={operationPanelOpen}
-  bind:agent
-  {promptBindings}
-  {bindingIcons}
-  {completions}
-  {toolsLoaded}
-  {availableTools}
-  {webSearchConfigured}
-  {onAddApiConnection}
-  {onConfigureWebSearch}
-  {onUpdated}
-  onClose={closeOperationPanel}
-/>
+{#if mainOperation}
+  <OperationSidePanel
+    open={operationPanelOpen}
+    bind:operation={mainOperation}
+    {promptBindings}
+    {bindingIcons}
+    {completions}
+    {toolsLoaded}
+    {availableTools}
+    {webSearchConfigured}
+    {onAddApiConnection}
+    {onConfigureWebSearch}
+    {onUpdated}
+    onClose={closeOperationPanel}
+  />
+{/if}
 
 <Modal bind:this={renameModal}>
   <ModalContent
