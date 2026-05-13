@@ -21,9 +21,11 @@
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
   import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
+  import TelegramConfig from "./DeploymentChannels/TelegramConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
   import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
   import SlackLogo from "assets/slack.svg"
+  import TelegramLogo from "assets/telegram.svg"
 
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling this channel."
@@ -32,6 +34,7 @@
   let discordModal: Modal
   let MSTeamsModal: Modal
   let slackModal: Modal
+  let telegramModal: Modal
   let toggling = $state(false)
 
   const discordConfigured = $derived.by(() => {
@@ -60,6 +63,11 @@
     )
   })
 
+  const telegramConfigured = $derived.by(() => {
+    const integration = currentAgent?.telegramIntegration
+    return !!integration?.botToken?.trim()
+  })
+
   const MSTeamsEnabled = $derived(
     !!currentAgent?.MSTeamsIntegration?.messagingEndpointUrl?.trim()
   )
@@ -70,6 +78,10 @@
 
   const slackEnabled = $derived(
     !!currentAgent?.slackIntegration?.messagingEndpointUrl?.trim()
+  )
+
+  const telegramEnabled = $derived(
+    !!currentAgent?.telegramIntegration?.messagingEndpointUrl?.trim()
   )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
@@ -96,6 +108,12 @@
       details:
         "Allow this agent to respond in Slack channels, threads, and DMs",
     },
+    [AgentChannelProvider.TELEGRAM]: {
+      name: "Telegram",
+      logo: TelegramLogo,
+      details:
+        "Allow this agent to respond in Telegram private and group chats",
+    },
   }
 
   const channelStatus = $derived.by(
@@ -104,6 +122,9 @@
         [AgentChannelProvider.DISCORD]: discordEnabled ? "Enabled" : "Disabled",
         [AgentChannelProvider.MSTEAMS]: MSTeamsEnabled ? "Enabled" : "Disabled",
         [AgentChannelProvider.SLACK]: slackEnabled ? "Enabled" : "Disabled",
+        [AgentChannelProvider.TELEGRAM]: telegramEnabled
+          ? "Enabled"
+          : "Disabled",
       }) as const
   )
 
@@ -113,6 +134,7 @@
         AgentChannelProvider.DISCORD,
         AgentChannelProvider.MSTEAMS,
         AgentChannelProvider.SLACK,
+        AgentChannelProvider.TELEGRAM,
       ] as const
     ).map(provider => ({
       id: DEPLOYMENT_CHANNEL_IDS[provider],
@@ -136,6 +158,10 @@
     }
     if (provider === AgentChannelProvider.SLACK) {
       slackModal?.show()
+      return
+    }
+    if (provider === AgentChannelProvider.TELEGRAM) {
+      telegramModal?.show()
       return
     }
   }
@@ -188,6 +214,18 @@
           notifications.success("Slack channel enabled")
         } else {
           slackModal?.show()
+        }
+      } else if (provider === AgentChannelProvider.TELEGRAM) {
+        if (isChannelEnabled) {
+          await agentsStore.toggleTelegramDeployment(currentAgent._id, false)
+          channelUpdated = true
+          notifications.success("Telegram channel disabled")
+        } else if (telegramConfigured) {
+          await agentsStore.toggleTelegramDeployment(currentAgent._id, true)
+          channelUpdated = true
+          notifications.success("Telegram channel enabled")
+        } else {
+          telegramModal?.show()
         }
       }
 
@@ -360,6 +398,33 @@
       </div>
     </svelte:fragment>
     <SlackConfig agent={currentAgent} />
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={telegramModal}>
+  <ModalContent
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Telegram"
+          width="24px"
+          height="24px"
+          src={TelegramLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+            >Telegram</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
+    <TelegramConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
 
