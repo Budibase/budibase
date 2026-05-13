@@ -232,8 +232,6 @@
   }
 
   .add-tools-label img {
-    width: 56px;
-    height: 24px;
     object-fit: contain;
     pointer-events: none;
   }
