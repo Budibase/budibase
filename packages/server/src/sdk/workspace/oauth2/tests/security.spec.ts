@@ -1,78 +1,64 @@
-jest.mock("@budibase/backend-core", () => {
-  const actual = jest.requireActual("@budibase/backend-core")
-  return {
-    ...actual,
-    utils: {
-      ...actual.utils,
-      fetchWithBlacklist: jest.fn(),
-    },
-  }
-})
-
-import { utils as coreUtils } from "@budibase/backend-core"
+import { blacklist, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
-import { Response } from "node-fetch"
+import path from "path"
+import { GenericContainer, Wait } from "testcontainers"
+import { startContainer } from "../../../../integrations/tests/utils"
+import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import { validateConfig } from "../utils"
 
-const fetchWithBlacklistMock =
-  coreUtils.fetchWithBlacklist as jest.MockedFunction<
-    typeof coreUtils.fetchWithBlacklist
-  >
+const volumePath = path.resolve(__dirname, "docker-volume")
+
+jest.setTimeout(90000)
 
 describe("oauth2 security", () => {
-  const config = {
-    url: "https://auth.example.com/oauth/token",
-    clientId: "client-id",
-    clientSecret: "client-secret",
+  let keycloakUrl: string
+  let restoreEnv: (() => void) | undefined
+
+  const getConfig = () => ({
+    url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+    clientId: "my-client",
+    clientSecret: "my-secret",
     method: OAuth2CredentialsMethod.BODY,
     grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-  }
-
-  beforeEach(() => {
-    jest.clearAllMocks()
   })
 
-  it("fetches tokens through fetchWithBlacklist", async () => {
-    fetchWithBlacklistMock.mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          token_type: "Bearer",
-          access_token: "token",
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      )
+  beforeAll(async () => {
+    const ports = await startContainer(
+      new GenericContainer(KEYCLOAK_IMAGE)
+        .withName("keycloak_testcontainer")
+        .withExposedPorts(8080)
+        .withBindMounts([
+          { source: volumePath, target: "/opt/keycloak/data/import/" },
+        ])
+        .withCommand(["start-dev", "--import-realm"])
+        .withWaitStrategy(
+          Wait.forLogMessage("Listening on: http://0.0.0.0:8080")
+        )
+        .withStartupTimeout(60000)
     )
 
-    const result = await validateConfig(config)
+    const port = ports.find(x => x.container === 8080)?.host
+    if (!port) {
+      throw new Error("Keycloak port not found")
+    }
 
-    expect(result).toEqual({ valid: true })
-    expect(fetchWithBlacklistMock).toHaveBeenCalledTimes(1)
-    expect(fetchWithBlacklistMock).toHaveBeenCalledWith(
-      config.url,
-      expect.objectContaining({
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: expect.any(URLSearchParams),
-      })
-    )
+    keycloakUrl = `http://127.0.0.1:${port}`
   })
 
-  it("rejects token URLs blocked by fetchWithBlacklist", async () => {
-    fetchWithBlacklistMock.mockRejectedValue(
-      new Error("URL is blocked or could not be resolved safely.")
-    )
+  afterEach(async () => {
+    restoreEnv?.()
+    restoreEnv = undefined
+    await blacklist.refreshBlacklist()
+  })
 
-    const result = await validateConfig({
-      ...config,
-      url: "http://169.254.169.254/latest/meta-data/",
+  it("rejects a real Keycloak token endpoint when localhost is blacklisted", async () => {
+    restoreEnv = setCoreEnv({
+      BLACKLIST_IPS: undefined,
+      SELF_HOSTED: false,
     })
+    await blacklist.refreshBlacklist()
+
+    const result = await validateConfig(getConfig())
 
     expect(result).toEqual({
       valid: false,
