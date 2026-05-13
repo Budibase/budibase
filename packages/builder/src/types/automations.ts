@@ -199,6 +199,8 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedBranchNode?: SelectedBranchNode
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
+  /** Toolbar + opened the step picker (append at flow tail). */
+  actionPanelToolbarFlowEnd?: boolean
   selectedLog?: AutomationLog
   selectedLogStepData?: any
   showLogsPanel?: boolean
