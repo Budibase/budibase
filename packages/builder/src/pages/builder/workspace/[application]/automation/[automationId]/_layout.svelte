@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy } from "svelte"
+  import { onDestroy, setContext } from "svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import {
@@ -13,6 +13,8 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
+  import BranchDeleteConfirmDialog from "@/components/automation/AutomationBuilder/BranchDeleteConfirmDialog.svelte"
+  import { BRANCH_DELETE_DIALOG_CONTEXT } from "@/components/automation/AutomationBuilder/branchDeleteDialogContext"
 
   const { goto, params, url, redirect, isActive, page, layout } = routify
   $goto
@@ -26,6 +28,11 @@
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
   $: builderStore.selectResource(automationId)
+
+  let branchDeleteConfirmDialog
+  setContext(BRANCH_DELETE_DIALOG_CONTEXT, {
+    show: selection => branchDeleteConfirmDialog?.show(selection),
+  })
 
   const stopSyncing = syncURLToState({
     urlParam: "automationId",
@@ -102,6 +109,8 @@
     {/if}
   </div>
 </div>
+
+<BranchDeleteConfirmDialog bind:this={branchDeleteConfirmDialog} />
 
 <style>
   .wrapper {

@@ -44,8 +44,13 @@
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { getContext } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import SwitchStepPanel from "./SwitchStepPanel.svelte"
+  import {
+    BRANCH_DELETE_DIALOG_CONTEXT,
+    type BranchDeleteDialogContext,
+  } from "./branchDeleteDialogContext"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -59,8 +64,10 @@
   let branchConditionDrawer: Drawer | undefined
   let configPanel: HTMLDivElement | undefined
   let confirmCascadeDialog: any
-  let confirmBranchDeleteDialog: any
   let editableBranchConditionUI: any = {}
+  const branchDeleteDialog = getContext<BranchDeleteDialogContext>(
+    BRANCH_DELETE_DIALOG_CONTEXT
+  )
 
   $: memoAutomation.set($selectedAutomation.data)
   $: memoContext.set($evaluationContext)
@@ -392,7 +399,6 @@
       branchIdx: targetIdx,
     })
   }
-
 </script>
 
 <Modal bind:this={webhookModal}>
@@ -472,7 +478,7 @@
         noPadding
         icon="trash"
         on:click={() => {
-          confirmBranchDeleteDialog?.show()
+          branchDeleteDialog?.show(selectedBranchNode)
         }}
       >
         Delete
@@ -561,9 +567,9 @@
       <PropField label="Only run when:" fullWidth>
         <Button
           secondary
-            on:click={() => {
-              editableBranchConditionUI = selectedBranch.conditionUI || {}
-              branchConditionDrawer?.show()
+          on:click={() => {
+            editableBranchConditionUI = selectedBranch.conditionUI || {}
+            branchConditionDrawer?.show()
           }}
         >
           {selectedBranch.conditionUI?.groups?.length
@@ -574,7 +580,7 @@
     {:else if switchStep && switchStepRef && $memoAutomation}
       <SwitchStepPanel
         {switchStep}
-        switchStepRef={switchStepRef}
+        {switchStepRef}
         automation={$memoAutomation}
         {branchBindings}
         {branchSchemaFields}
@@ -654,22 +660,6 @@
   Deleting this step will also delete the Branch and its lanes below it. This is
   required to avoid orphaning branches in the loop subflow. Are you sure you
   want to proceed?
-</ConfirmDialog>
-
-<ConfirmDialog
-  bind:this={confirmBranchDeleteDialog}
-  okText="Delete"
-  title="Confirm Deletion"
-  onOk={async () => {
-    if (!selectedBranchPath || !$selectedAutomation.data) return
-    await automationStore.actions.deleteBranch(
-      selectedBranchPath,
-      $selectedAutomation.data
-    )
-    await automationStore.actions.selectNode()
-  }}
->
-  By deleting this branch, you will delete all of its contents.
 </ConfirmDialog>
 
 <style>

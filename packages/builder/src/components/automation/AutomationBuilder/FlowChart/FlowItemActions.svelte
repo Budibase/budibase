@@ -1,12 +1,57 @@
 <script lang="ts">
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
+  import { getContext } from "svelte"
+  import type { BranchFlowContext, FlowBlockPath } from "@/types/automations"
+  import { isBranchStep } from "@budibase/types"
+  import {
+    BRANCH_DELETE_DIALOG_CONTEXT,
+    type BranchDeleteDialogContext,
+  } from "../branchDeleteDialogContext"
 
   export let block
 
-  $: blockRef = block?.id
-    ? $selectedAutomation?.blockRefs?.[block.id]
+  const branchDeleteDialog = getContext<BranchDeleteDialogContext>(
+    BRANCH_DELETE_DIALOG_CONTEXT
+  )
+
+  $: branchContext = isBranchContext(block) ? block : undefined
+  $: branchStepRef = branchContext
+    ? $selectedAutomation?.blockRefs?.[branchContext.branchStepId]
     : undefined
+  $: branchStep = automationStore.actions.getBlockByRef(
+    $selectedAutomation?.data,
+    branchStepRef
+  )
+  $: branch =
+    branchStep && isBranchStep(branchStep) && branchContext
+      ? branchStep.inputs?.branches?.[branchContext.branchIdx]
+      : undefined
+  $: canDeleteBranch =
+    branchStep && isBranchStep(branchStep)
+      ? (branchStep.inputs?.branches?.length || 0) > 2
+      : false
+  $: branchChildren =
+    branchStep && isBranchStep(branchStep) && branch
+      ? branchStep.inputs?.children?.[branch.id] || []
+      : []
+  $: branchSelection =
+    branchContext && branch
+      ? {
+          nodeId: `branch-${branchContext.branchStepId}-${branchContext.branchIdx}-${branch.id}`,
+          stepId: branchContext.branchStepId,
+          branchIdx: branchContext.branchIdx,
+        }
+      : undefined
+  $: branchPath =
+    branchStepRef && branchSelection
+      ? (branchStepRef.pathTo.concat({
+          stepIdx: 0,
+          branchIdx: branchSelection.branchIdx,
+          branchStepId: branchSelection.stepId,
+          id: branchSelection.stepId,
+        }) as FlowBlockPath)
+      : undefined
   $: isActiveInsertionPoint =
     getActionTargetKey($automationStore.actionPanelBlock) ===
     getActionTargetKey(block)
@@ -31,6 +76,33 @@
 
     return typeof target.id === "string" ? `step:${target.id}` : undefined
   }
+
+  const isBranchContext = (value: unknown): value is BranchFlowContext => {
+    return (
+      !!value &&
+      typeof value === "object" &&
+      "branchNode" in value &&
+      value.branchNode === true
+    )
+  }
+
+  const deleteBranch = async () => {
+    if (!branchSelection) {
+      return
+    }
+    if (branchChildren.length) {
+      branchDeleteDialog?.show(branchSelection)
+      return
+    }
+    if (!branchPath || !$selectedAutomation.data) {
+      return
+    }
+    await automationStore.actions.deleteBranch(
+      branchPath,
+      $selectedAutomation.data
+    )
+    await automationStore.actions.selectNode()
+  }
 </script>
 
 <div class="action-bar" class:active-insertion-point={isActiveInsertionPoint}>
@@ -50,6 +122,19 @@
       : "var(--automation-flow-action-icon-color)"}
     hoverColor="var(--automation-flow-action-icon-hover-color)"
   />
+  {#if branchContext && canDeleteBranch}
+    <Icon
+      hoverable
+      name="trash"
+      on:click={deleteBranch}
+      tooltipType={TooltipType.Info}
+      tooltipPosition={TooltipPosition.Right}
+      tooltip={"Delete branch"}
+      size="S"
+      color="var(--automation-flow-action-icon-color)"
+      hoverColor="var(--automation-flow-action-icon-hover-color)"
+    />
+  {/if}
 </div>
 
 <style>

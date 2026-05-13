@@ -110,8 +110,7 @@ interface PlaceBranchClusterArgs {
 }
 
 const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
-  const { step, source, coords, deps, mode, parentId, visuals, loopContext } =
-    args
+  const { step, source, coords, deps, mode, parentId, visuals } = args
   const baseId = step.id
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
