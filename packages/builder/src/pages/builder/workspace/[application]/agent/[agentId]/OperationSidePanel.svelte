@@ -8,7 +8,8 @@
     notifications,
   } from "@budibase/bbui"
   import { confirm } from "@/helpers"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import type {
     AgentOperation,
     CaretPositionFn,
@@ -31,68 +32,99 @@
   } from "./knowledge/knowledgeTableRows"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
+  import SelectSharePointSiteModal from "./knowledge/new/SelectSharePointSiteModal.svelte"
   import type { AgentTool } from "./toolTypes"
 
-  export let open = false
-  export let editingOperationId: string | undefined = undefined
-  export let operationDraft: AgentOperation
-  export let agentId: string | undefined = undefined
-  export let promptBindings: EnrichedBinding[] = []
-  export let bindingIcons: Record<string, string | undefined> = {}
-  export let completions: BindingCompletion[] = []
-  export let toolsLoaded = false
-  export let availableTools: AgentTool[] = []
-  export let webSearchConfigured = false
-  export let onClose: () => void = () => {}
-  export let onDelete: () => void = () => {}
-  export let onUpdated: () => void = () => {}
-  export let onOpenSidePeak: () => void = () => {}
-  export let onAddKnowledge: () => void = () => {}
-  export let onAddApiConnection: () => void = () => {}
-  export let onConfigureWebSearch: () => void = () => {}
+  let {
+    open = false,
+    editingOperationId = undefined,
+    operationDraft = $bindable(),
+    agentId = undefined,
+    promptBindings = [],
+    bindingIcons = {},
+    completions = [],
+    toolsLoaded = false,
+    availableTools = [],
+    webSearchConfigured = false,
+    onClose = () => {},
+    onDelete = () => {},
+    onUpdated = () => {},
+    onOpenSidePeak = () => {},
+    onAddApiConnection = () => {},
+    onConfigureWebSearch = () => {},
+  }: {
+    open?: boolean
+    editingOperationId?: string
+    operationDraft: AgentOperation
+    agentId?: string
+    promptBindings?: EnrichedBinding[]
+    bindingIcons?: Record<string, string | undefined>
+    completions?: BindingCompletion[]
+    toolsLoaded?: boolean
+    availableTools?: AgentTool[]
+    webSearchConfigured?: boolean
+    onClose?: () => void
+    onDelete?: () => void
+    onUpdated?: () => void
+    onOpenSidePeak?: () => void
+    onAddApiConnection?: () => void
+    onConfigureWebSearch?: () => void
+  } = $props()
 
-  let insertAtPos: InsertAtPositionFn | undefined
-  let getCaretPosition: CaretPositionFn | undefined
-  $: resolvedIconCount = Object.values(bindingIcons).filter(Boolean).length
-  let panelRoot: HTMLDivElement | undefined
-  let toolSearch = ""
-  $: filteredTools = availableTools.filter(tool => {
-    const query = toolSearch.trim().toLowerCase()
-    if (!query) {
-      return true
-    }
-    return `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
-      .toLowerCase()
-      .includes(query)
-  })
-  $: toolSections = filteredTools.reduce(
-    (acc, tool) => {
-      const section = tool.sourceLabel || "Tools"
-      if (!acc[section]) {
-        acc[section] = []
-      }
-      acc[section].push(tool)
-      return acc
-    },
-    {} as Record<string, AgentTool[]>
+  let insertAtPos: InsertAtPositionFn | undefined = $state(undefined)
+  let getCaretPosition: CaretPositionFn | undefined = $state(undefined)
+  let resolvedIconCount = $derived(
+    Object.values(bindingIcons).filter(Boolean).length
   )
-  $: if (open && agentId) {
+  let panelRoot: HTMLDivElement | undefined = $state(undefined)
+  let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
+  let toolSearch = $state("")
+  let filteredTools = $derived.by(() =>
+    availableTools.filter(tool => {
+      const query = toolSearch.trim().toLowerCase()
+      if (!query) {
+        return true
+      }
+      return `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
+        .toLowerCase()
+        .includes(query)
+    })
+  )
+  let toolSections = $derived.by(() =>
+    filteredTools.reduce(
+      (acc, tool) => {
+        const section = tool.sourceLabel || "Tools"
+        if (!acc[section]) {
+          acc[section] = []
+        }
+        acc[section].push(tool)
+        return acc
+      },
+      {} as Record<string, AgentTool[]>
+    )
+  )
+  $effect(() => {
+    if (!(open && agentId)) return
     const operationId = editingOperationId || operationDraft.id
     if (operationId) {
       agentsStore.fetchAgentKnowledge(agentId, operationId)
     }
-  }
-  $: knowledgeFiles =
+  })
+  let knowledgeFiles = $derived.by(() =>
     agentId && $agentsStore.knowledgeByAgent[agentId]
       ? $agentsStore.knowledgeByAgent[agentId].files || []
       : ([] as KnowledgeBaseFile[])
-  $: sharePointSourceSnapshots =
+  )
+  let sharePointSourceSnapshots = $derived.by(() =>
     agentId && $agentsStore.knowledgeByAgent[agentId]
       ? $agentsStore.knowledgeByAgent[agentId].sharePointSources ||
         ([] as SharePointKnowledgeSourceSnapshot[])
       : ([] as SharePointKnowledgeSourceSnapshot[])
-  $: sharePointSources = (operationDraft.knowledgeSources || []).filter(
-    source => source.type === "sharepoint"
+  )
+  let sharePointSources = $derived(
+    (operationDraft.knowledgeSources || []).filter(
+      source => source.type === "sharepoint"
+    )
   )
   const handleDeleteFile = async (file: KnowledgeBaseFile) => {
     if (!agentId || !file._id) {
@@ -119,7 +151,7 @@
       },
     })
   }
-  $: knowledgeRows = [
+  let knowledgeRows = $derived.by(() => [
     ...toSharePointConnectionRows({
       sharePointSources,
       sharePointSourceSnapshots,
@@ -128,7 +160,7 @@
       onSync: async () => {},
     }),
     ...toFileTableRows(knowledgeFiles, handleDeleteFile),
-  ]
+  ])
 
   const handleToolClick = (tool: AgentTool) => {
     const binding = tool.readableBinding || tool.runtimeBinding
@@ -143,13 +175,30 @@
     )
     onUpdated()
   }
+
+  const handleAddFromSharePoint = async () => {
+    const sharePointConnections = $knowledgeConnectionsStore.connections.filter(
+      connection => connection.sourceType === "sharepoint"
+    )
+    if (sharePointConnections.length === 0) {
+      bb.settings("/connections/apis/new/microsoft-sharepoint")
+      return
+    }
+    await selectSharePointSiteModal?.show()
+    if (open && agentId) {
+      const operationId = editingOperationId || operationDraft.id
+      if (operationId) {
+        await agentsStore.fetchAgentKnowledge(agentId, operationId)
+      }
+    }
+  }
 </script>
 
 {#if open}
   <div
     class="operation-panel-overlay"
     role="presentation"
-    on:click={event => {
+    onclick={event => {
       const target = event.target as Node | null
       if (target && panelRoot?.contains(target)) {
         return
@@ -217,7 +266,7 @@
                       onUpdated()
                     }}
                   />
-                  <button type="button" on:click={onOpenSidePeak}>
+                  <button type="button" onclick={onOpenSidePeak}>
                     <Icon
                       name="square-half"
                       size="S"
@@ -284,7 +333,7 @@
                   <KnowledgeAddControls
                     {agentId}
                     operationId={editingOperationId}
-                    onSharePoint={onAddKnowledge}
+                    onSharePoint={handleAddFromSharePoint}
                   />
                 </div>
               </div>
@@ -304,6 +353,14 @@
       </Panel>
     </ResizablePanel>
   </div>
+  <SelectSharePointSiteModal
+    bind:this={selectSharePointSiteModal}
+    agentId={agentId || ""}
+    operationId={editingOperationId}
+    existingSiteIds={sharePointSources
+      .map(source => source.config.site?.id || "")
+      .filter(Boolean)}
+  />
 {/if}
 
 <style>

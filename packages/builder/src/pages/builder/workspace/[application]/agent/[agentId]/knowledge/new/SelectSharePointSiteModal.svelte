@@ -12,6 +12,7 @@
 
   export interface Props {
     agentId: string
+    operationId?: string
     existingSiteIds?: string[]
     onCreated?: (
       _siteId: string,
@@ -19,7 +20,7 @@
     ) => Promise<void> | void
   }
 
-  let { agentId, existingSiteIds = [], onCreated }: Props = $props()
+  let { agentId, operationId, existingSiteIds = [], onCreated }: Props = $props()
 
   let sharePointSites = $state<KnowledgeSourceOption[]>([])
   let sharePointConnectionOptions = $state<SharePointConnectionOption[]>([])
@@ -129,7 +130,7 @@
         authConfigId: selectedAuthConfigId,
         siteId: selectedSiteId,
         filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
-      })
+      }, operationId)
       await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")
       hide()

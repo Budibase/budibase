@@ -222,9 +222,6 @@ Any constraints the agent must follow.
     })
   }
 
-  const handleAddKnowledge = () => {
-    $goto("./knowledge")
-  }
 </script>
 
 <div class="operations-section">
@@ -288,7 +285,6 @@ Any constraints the agent must follow.
   {toolsLoaded}
   {availableTools}
   {webSearchConfigured}
-  onAddKnowledge={handleAddKnowledge}
   onUpdated={saveOperation}
   onClose={closeOperationPanel}
   onDelete={deleteOperation}
