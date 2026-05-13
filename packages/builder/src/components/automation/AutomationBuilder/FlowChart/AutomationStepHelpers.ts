@@ -500,6 +500,176 @@ const getNodeHeight = (node: FlowNode) => {
   return FLOW_ITEM_CARD_HEIGHT
 }
 
+interface SwitchBranchExtents {
+  above: number
+  below: number
+}
+
+const getNodeExtents = (node: FlowNode): SwitchBranchExtents => {
+  const height = getNodeHeight(node)
+  return {
+    above: height / 2,
+    below: height / 2,
+  }
+}
+
+const getSwitchBranchTargetExtents = (
+  node: FlowNode,
+  nodesById: Record<string, FlowNode>,
+  outgoingEdgesBySource: Record<string, FlowEdge[]>
+): SwitchBranchExtents => {
+  const branchEdges = (outgoingEdgesBySource[node.id] || []).filter(edge => {
+    const block = edge.data?.block
+    return isBranchFlowContext(block) && edge.source === block.branchStepId
+  })
+
+  const currentExtents = getNodeExtents(node)
+  const branchFanoutExtents = branchEdges.length
+    ? getSwitchBranchFanoutExtents(
+        branchEdges,
+        nodesById,
+        outgoingEdgesBySource
+      )
+    : currentExtents
+  const linearDescendantExtents = getLinearDescendantExtents(
+    node,
+    nodesById,
+    outgoingEdgesBySource
+  )
+
+  return {
+    above: Math.max(
+      currentExtents.above,
+      branchFanoutExtents.above,
+      linearDescendantExtents.above
+    ),
+    below: Math.max(
+      currentExtents.below,
+      branchFanoutExtents.below,
+      linearDescendantExtents.below
+    ),
+  }
+}
+
+const getLinearDescendantExtents = (
+  node: FlowNode,
+  nodesById: Record<string, FlowNode>,
+  outgoingEdgesBySource: Record<string, FlowEdge[]>
+): SwitchBranchExtents => {
+  const outgoingEdges = outgoingEdgesBySource[node.id] || []
+  const linearEdges = outgoingEdges.filter(
+    edge => !isBranchFlowContext(edge.data?.block)
+  )
+
+  if (linearEdges.length !== 1) {
+    return getNodeExtents(node)
+  }
+
+  const nextNode = nodesById[linearEdges[0].target]
+  if (!nextNode || nextNode.parentId) {
+    return getNodeExtents(node)
+  }
+
+  return getSwitchBranchTargetExtents(
+    nextNode,
+    nodesById,
+    outgoingEdgesBySource
+  )
+}
+
+const getSwitchBranchFanoutExtents = (
+  branchEdges: FlowEdge[],
+  nodesById: Record<string, FlowNode>,
+  outgoingEdgesBySource: Record<string, FlowEdge[]>
+): SwitchBranchExtents => {
+  const sortedEdges = branchEdges.slice().sort((a, b) => {
+    const aBlock = a.data?.block
+    const bBlock = b.data?.block
+    const aIdx = isBranchFlowContext(aBlock) ? aBlock.branchIdx : 0
+    const bIdx = isBranchFlowContext(bBlock) ? bBlock.branchIdx : 0
+    return aIdx - bIdx
+  })
+  const targetExtents = sortedEdges.map(edge => {
+    const targetNode = nodesById[edge.target]
+    return targetNode
+      ? getSwitchBranchTargetExtents(
+          targetNode,
+          nodesById,
+          outgoingEdgesBySource
+        )
+      : {
+          above: FLOW_ITEM_CARD_HEIGHT / 2,
+          below: FLOW_ITEM_CARD_HEIGHT / 2,
+        }
+  })
+  const centers = getSwitchBranchTargetCenters(0, targetExtents)
+
+  const extents = centers.reduce(
+    (acc, center, idx) => {
+      return {
+        top: Math.min(acc.top, center - targetExtents[idx].above),
+        bottom: Math.max(acc.bottom, center + targetExtents[idx].below),
+      }
+    },
+    { top: 0, bottom: 0 }
+  )
+
+  return {
+    above: Math.abs(extents.top),
+    below: extents.bottom,
+  }
+}
+
+const getSwitchBranchTargetCenters = (
+  switchCenterY: number,
+  targetExtents: SwitchBranchExtents[]
+) => {
+  const centers = Array(targetExtents.length).fill(0)
+
+  if (targetExtents.length % 2 === 0) {
+    const rightIdx = targetExtents.length / 2
+    const leftIdx = rightIdx - 1
+    centers[leftIdx] =
+      -(targetExtents[leftIdx].below +
+        SWITCH_BRANCH_VERTICAL_SPACING +
+        targetExtents[rightIdx].above) /
+      2
+    centers[rightIdx] =
+      (targetExtents[leftIdx].below +
+        SWITCH_BRANCH_VERTICAL_SPACING +
+        targetExtents[rightIdx].above) /
+      2
+  } else {
+    centers[Math.floor(targetExtents.length / 2)] = 0
+  }
+
+  for (
+    let idx = Math.floor((targetExtents.length - 1) / 2) - 1;
+    idx >= 0;
+    idx--
+  ) {
+    centers[idx] =
+      centers[idx + 1] -
+      targetExtents[idx + 1].above -
+      SWITCH_BRANCH_VERTICAL_SPACING -
+      targetExtents[idx].below
+  }
+
+  for (
+    let idx = Math.ceil((targetExtents.length - 1) / 2) + 1;
+    idx < targetExtents.length;
+    idx++
+  ) {
+    centers[idx] =
+      centers[idx - 1] +
+      targetExtents[idx - 1].below +
+      SWITCH_BRANCH_VERTICAL_SPACING +
+      targetExtents[idx].above
+  }
+
+  return centers.map(center => switchCenterY + center)
+}
+
 const alignSwitchBranchTargets = (graph: {
   nodes: FlowNode[]
   edges: FlowEdge[]
@@ -548,28 +718,32 @@ const alignSwitchBranchTargets = (graph: {
       return aIdx - bIdx
     })
     const switchCenterY = switchNode.position.y + FLOW_ITEM_CARD_HEIGHT / 2
-    const startY =
-      switchCenterY -
-      ((sortedEdges.length - 1) * SWITCH_BRANCH_VERTICAL_SPACING) / 2
+    const targetExtents = sortedEdges.map(edge => {
+      const targetNode = nodesById[edge.target]
+      return targetNode
+        ? getSwitchBranchTargetExtents(
+            targetNode,
+            nodesById,
+            outgoingEdgesBySource
+          )
+        : {
+            above: FLOW_ITEM_CARD_HEIGHT / 2,
+            below: FLOW_ITEM_CARD_HEIGHT / 2,
+          }
+    })
+    const targetCenters = getSwitchBranchTargetCenters(
+      switchCenterY,
+      targetExtents
+    )
 
     sortedEdges.forEach((edge, idx) => {
       const targetNode = nodesById[edge.target]
       if (!targetNode) {
         return
       }
-      const middleBranchNudge =
-        sortedEdges.length % 2 === 1 &&
-        idx === Math.floor(sortedEdges.length / 2)
-          ? 0.5
-          : 0
-
       targetNode.position = {
         ...targetNode.position,
-        y:
-          startY +
-          idx * SWITCH_BRANCH_VERTICAL_SPACING -
-          getNodeHeight(targetNode) / 2 -
-          middleBranchNudge,
+        y: targetCenters[idx] - getNodeHeight(targetNode) / 2,
       }
       alignLinearBranchDescendants(
         targetNode.id,
