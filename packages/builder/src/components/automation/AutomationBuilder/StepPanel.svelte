@@ -612,7 +612,7 @@
   {/if}
 </div>
 <Divider noMargin />
-<div class="panel config" use:resizable>
+<div class="panel config" class:switch-config={switchStep} use:resizable>
   <div class="content" bind:this={configPanel}>
     {#if selectedBranch}
       <InfoDisplay
@@ -679,16 +679,18 @@
       </Button>
     {/if}
   </div>
-  <div
-    role="separator"
-    class="divider"
-    class:disabled={false}
-    use:resizableHandle
-  ></div>
+  {#if !switchStep}
+    <div
+      role="separator"
+      class="divider"
+      class:disabled={false}
+      use:resizableHandle
+    ></div>
+  {/if}
 </div>
 
-<div class="panel data">
-  {#if !selectedBranch}
+{#if !selectedBranch && !switchStep}
+  <div class="panel data">
     <BlockData
       context={$memoContext}
       block={$memoBlock}
@@ -700,8 +702,8 @@
         }))
       }}
     />
-  {/if}
-</div>
+  </div>
+{/if}
 
 <ConfirmDialog
   bind:this={confirmCascadeDialog}
@@ -756,12 +758,24 @@
     height: 400px;
     box-sizing: border-box;
   }
+  .config.panel.switch-config {
+    height: auto;
+    max-height: none;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
   .config.panel .content {
     overflow: auto;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
     padding: var(--spacing-l);
+  }
+  .config.panel.switch-config .content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
   .config.panel .loop,
   .config.panel .content .props {

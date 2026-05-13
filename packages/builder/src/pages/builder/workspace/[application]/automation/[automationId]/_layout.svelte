@@ -118,6 +118,7 @@
     flex-direction: column;
     align-items: stretch;
     flex: 1 1 auto;
+    min-height: 0;
     --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
     --automation-step-icon-flow-logic-color: var(
       --spectrum-global-color-indigo-100
@@ -146,6 +147,7 @@
     grid-auto-flow: column dense;
     grid-template-columns: minmax(510px, 1fr) fit-content(500px);
     overflow: hidden;
+    min-height: 0;
   }
   .content {
     position: relative;
@@ -159,6 +161,7 @@
     position: relative;
     z-index: 99;
     height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: row;
     align-items: stretch;
@@ -170,9 +173,11 @@
     justify-content: flex-start;
     align-items: stretch;
     background-color: var(--background);
-    overflow: auto;
+    overflow: hidden;
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
   }
 
   .logs-panel-container {

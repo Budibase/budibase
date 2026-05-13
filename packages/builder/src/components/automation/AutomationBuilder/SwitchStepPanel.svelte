@@ -1,11 +1,6 @@
 <script lang="ts">
-  import {
-    Button,
-    DetailSummary,
-    Divider,
-    Drawer,
-    DrawerContent,
-  } from "@budibase/bbui"
+  import { Button, Drawer, DrawerContent, Icon } from "@budibase/bbui"
+  import { dndzone } from "svelte-dnd-action"
   import AutomationSwitchConditionsBuilder from "./AutomationSwitchConditionsBuilder.svelte"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { automationStore } from "@/stores/builder"
@@ -54,8 +49,11 @@
 
   let conditionsDrawer: Drawer | undefined
   let editableBranches: Branch[] = []
+  let branchCards: Branch[] = []
+  let draggingDisabled = true
 
   $: branches = switchStep.inputs?.branches || []
+  $: branchCards = branches
 
   const createDefaultConditionUI = () => {
     const defaults = automationStore.actions.generateDefaultConditions()
@@ -128,6 +126,74 @@
     conditionsDrawer?.show()
   }
 
+  const saveSwitchStep = async (updatedBranches: Branch[]) => {
+    const branchStepUpdate = cloneDeep(switchStep)
+    const existingChildren = branchStepUpdate.inputs.children || {}
+    const nextChildren = { ...existingChildren }
+    const nextBranchIds = new Set(updatedBranches.map(branch => branch.id))
+
+    Object.keys(nextChildren).forEach(branchId => {
+      if (!nextBranchIds.has(branchId)) {
+        delete nextChildren[branchId]
+      }
+    })
+
+    branchStepUpdate.inputs.branches = updatedBranches.map(branch => {
+      nextChildren[branch.id] = nextChildren[branch.id] || []
+      return branch
+    })
+    branchStepUpdate.inputs.children = nextChildren
+
+    const updated = automationStore.actions.updateStep(
+      switchStepRef.pathTo,
+      automation,
+      branchStepUpdate
+    )
+    if (updated) {
+      await automationStore.actions.save(updated)
+    }
+  }
+
+  const updateBranchName = async (branchId: string, name: string) => {
+    const nextName = name.trim()
+    const branch = branches.find(branch => branch.id === branchId)
+    if (!branch || !nextName || branch.name === nextName) {
+      return
+    }
+    await saveSwitchStep(
+      branches.map(branch =>
+        branch.id === branchId ? { ...branch, name: nextName } : branch
+      )
+    )
+  }
+
+  const handleBranchNameBlur = async (e: FocusEvent, branch: Branch) => {
+    const input = e.currentTarget as HTMLInputElement
+    const nextName = input.value.trim()
+    if (!nextName) {
+      input.value = branch.name
+      return
+    }
+    await updateBranchName(branch.id, nextName)
+  }
+
+  const handleBranchNameKeydown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      const input = e.currentTarget as HTMLInputElement
+      input.blur()
+    }
+  }
+
+  const handleCardsConsider = (e: CustomEvent<{ items: Branch[] }>) => {
+    branchCards = e.detail.items
+  }
+
+  const handleCardsFinalize = async (e: CustomEvent<{ items: Branch[] }>) => {
+    draggingDisabled = true
+    branchCards = e.detail.items
+    await saveSwitchStep(branchCards)
+  }
+
   const updateBranchCondition = (branchIdx: number, conditionUI: any) => {
     editableBranches = editableBranches.map((branch, idx) => {
       if (idx !== branchIdx) {
@@ -141,62 +207,80 @@
   }
 
   const saveConditions = async () => {
-    const branchStepUpdate = cloneDeep(switchStep)
-    const existingChildren = branchStepUpdate.inputs.children || {}
-    const nextChildren = { ...existingChildren }
-    const nextBranchIds = new Set(editableBranches.map(branch => branch.id))
-
-    Object.keys(nextChildren).forEach(branchId => {
-      if (!nextBranchIds.has(branchId)) {
-        delete nextChildren[branchId]
-      }
-    })
-
-    branchStepUpdate.inputs.branches = editableBranches.map(branch => {
-      nextChildren[branch.id] = nextChildren[branch.id] || []
-      const conditionUI = branch.conditionUI || createDefaultConditionUI()
-      const updatedConditionsUI = Utils.parseFilter(conditionUI)
-      return {
-        ...branch,
-        conditionUI: updatedConditionsUI as Branch["conditionUI"],
-        condition: QueryUtils.buildQuery(updatedConditionsUI),
-      }
-    })
-    branchStepUpdate.inputs.children = nextChildren
-
-    const updated = automationStore.actions.updateStep(
-      switchStepRef.pathTo,
-      automation,
-      branchStepUpdate
+    await saveSwitchStep(
+      editableBranches.map(branch => {
+        const conditionUI = branch.conditionUI || createDefaultConditionUI()
+        const updatedConditionsUI = Utils.parseFilter(conditionUI)
+        return {
+          ...branch,
+          conditionUI: updatedConditionsUI as Branch["conditionUI"],
+          condition: QueryUtils.buildQuery(updatedConditionsUI),
+        }
+      })
     )
-    if (updated) {
-      await automationStore.actions.save(updated)
-    }
     conditionsDrawer?.hide()
   }
 </script>
 
-<InfoDisplay
-  icon="info"
-  body="Checks each condition in order and follows the first one that matches."
-/>
-<div class="open-modal">
-  <Button secondary on:click={openConditionsModal}>Update conditions</Button>
-</div>
-{#each branches as branch, idx (branch.id)}
-  {#if idx > 0}
-    <Divider noMargin />
-  {/if}
-  <DetailSummary
-    name={`${idx + 1}. ${branch.name}`}
-    padded={false}
-    initiallyShow={hasConfiguredConditions(branch)}
+<div class="switch-step-panel">
+  <InfoDisplay
+    icon="info"
+    body="Checks each condition in order and follows the first one that matches."
+  />
+  <div class="open-modal">
+    <Button secondary on:click={openConditionsModal}>Update conditions</Button>
+  </div>
+  <div
+    class="branch-cards"
+    use:dndzone={{
+      items: branchCards,
+      flipDurationMs: 120,
+      dropTargetStyle: { outline: "none" },
+      dragDisabled: draggingDisabled,
+      dropFromOthersDisabled: true,
+    }}
+    on:consider={handleCardsConsider}
+    on:finalize={handleCardsFinalize}
   >
-    <div class="condition-summary">
-      <DescriptionViewer label="" description={getConditionSummary(branch)} />
-    </div>
-  </DetailSummary>
-{/each}
+    {#each branchCards as branch, idx (branch.id)}
+      <div class="branch-card">
+        <div class="branch-card-header">
+          <button
+            type="button"
+            class="drag-handle"
+            aria-label="Drag branch"
+            on:mousedown={() => {
+              draggingDisabled = false
+            }}
+            on:mouseup={() => {
+              draggingDisabled = true
+            }}
+          >
+            <Icon
+              name="dots-six-vertical"
+              color="var(--spectrum-global-color-gray-700)"
+              size="S"
+            />
+          </button>
+          <span class="branch-index">{idx + 1}</span>
+          <input
+            class="branch-name"
+            value={branch.name}
+            on:click={e => e.stopPropagation()}
+            on:blur={e => handleBranchNameBlur(e, branch)}
+            on:keydown={handleBranchNameKeydown}
+          />
+        </div>
+        <div class="condition-summary">
+          <DescriptionViewer
+            label=""
+            description={getConditionSummary(branch)}
+          />
+        </div>
+      </div>
+    {/each}
+  </div>
+</div>
 
 <Drawer bind:this={conditionsDrawer} title="Conditions" forceModal>
   <Button cta slot="buttons" on:click={saveConditions}>Save</Button>
@@ -223,13 +307,78 @@
 </Drawer>
 
 <style>
+  .switch-step-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
   .open-modal {
     display: flex;
     margin-bottom: var(--spacing-m);
   }
 
+  .branch-cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .branch-card {
+    border: 1px solid var(--spectrum-alias-border-color-mid);
+    border-radius: 8px;
+    background: var(--spectrum-global-color-gray-50);
+    padding: var(--spacing-s);
+  }
+
+  .branch-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  .drag-handle {
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .branch-index {
+    color: var(--spectrum-global-color-gray-700);
+    font-weight: 600;
+    min-width: 18px;
+  }
+
+  .branch-name {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 4px;
+    color: var(--ink);
+    font-weight: 600;
+    padding: var(--spacing-xs);
+  }
+
+  .branch-name:focus {
+    background: var(--spectrum-global-color-gray-75);
+    border-color: var(--spectrum-global-color-blue-500);
+    outline: none;
+  }
+
   .condition-summary {
-    padding: 0 0 var(--spacing-s);
+    padding: var(--spacing-s) 0;
   }
 
   .conditions {
