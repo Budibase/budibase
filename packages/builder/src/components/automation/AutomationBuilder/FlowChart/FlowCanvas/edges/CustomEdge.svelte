@@ -13,6 +13,7 @@
     type EdgeData,
     type BranchEdgeData,
     type FlowBlockContext,
+    type AutomationBlock,
   } from "@/types/automations"
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
@@ -137,6 +138,11 @@
         borderRadius: 12,
       })[0]
     : undefined
+  $: emptyBranchTerminalX =
+    targetX - Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 4) - 1
+  $: emptyBranchTerminalPath = isEmptyBranchAnchor
+    ? `M ${emptyBranchTerminalX},${targetY - 12} L ${emptyBranchTerminalX},${targetY + 12}`
+    : undefined
 
   $: edgePath =
     emptyBranchAnchorPath ||
@@ -170,7 +176,7 @@
     viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
       ? automationStore.actions
           .getPathSteps(blockRef.pathTo, $selectedAutomation.data)
-          .some(step => step.stepId === ActionStepID.COLLECT)
+          .some((step: AutomationBlock) => step.stepId === ActionStepID.COLLECT)
       : false
   $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
   $: isPrimaryBranchEdge = isBranchEdgeData(data) && data.isPrimaryEdge
@@ -357,6 +363,9 @@
 
 {#if !hideEdge}
   <BaseEdge path={edgePath} style={edgeStyle} />
+  {#if emptyBranchTerminalPath}
+    <path class="terminal-bar" d={emptyBranchTerminalPath} style={edgeStyle} />
+  {/if}
 {/if}
 
 <!-- Branch edge -->
@@ -392,3 +401,12 @@
     {dzOffsetY}
   />
 {/if}
+
+<style>
+  .terminal-bar {
+    fill: none;
+    stroke: var(--xy-edge-stroke);
+    stroke-width: 2;
+    pointer-events: none;
+  }
+</style>
