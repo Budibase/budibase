@@ -17,6 +17,7 @@
     toolsLoaded = false,
     availableTools = [],
     webSearchConfigured = false,
+    onUpdated,
   }: {
     agent?: Agent
     promptBindings?: EnrichedBinding[]
@@ -25,6 +26,7 @@
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
     webSearchConfigured?: boolean
+    onUpdated: () => void
   } = $props()
 
   let operationPanelOpen = $state(false)
@@ -95,6 +97,7 @@
   {toolsLoaded}
   {availableTools}
   {webSearchConfigured}
+  {onUpdated}
   onClose={closeOperationPanel}
   onDelete={deleteOperation}
 />
