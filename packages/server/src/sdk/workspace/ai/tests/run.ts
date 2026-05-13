@@ -15,6 +15,7 @@ import type {
   AgentTestSnapshot,
   ContextUser,
 } from "@budibase/types"
+import { ActionType } from "@budibase/types"
 import {
   Output,
   ToolLoopAgent,
@@ -278,7 +279,7 @@ async function runAgentForCase({
             retrievedKnowledgeSourceById.set(source.sourceId, source)
           }
         }
-        await quotas.addAction(async () => {})
+        await quotas.addAction(ActionType.AI_AGENT, async () => {})
       }
     },
     onFinish({ response }) {
