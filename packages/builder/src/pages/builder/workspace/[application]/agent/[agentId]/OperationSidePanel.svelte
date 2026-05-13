@@ -10,6 +10,7 @@
   import { confirm } from "@/helpers"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import { bb } from "@/stores/bb"
+  import { workspaceDeploymentStore } from "@/stores/builder"
   import type {
     AgentOperation,
     CaretPositionFn,
@@ -17,6 +18,7 @@
     InsertAtPositionFn,
     KnowledgeBaseFile,
     SharePointKnowledgeSourceSnapshot,
+    SyncAgentKnowledgeSourcesResponse,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import { fly } from "svelte/transition"
@@ -37,6 +39,11 @@
   import DisplaySharePointSiteModal from "./knowledge/sharepoint/DisplaySharePointSiteModal.svelte"
   import SelectSharePointFilesModal from "./knowledge/sharepoint/SelectSharePointFilesModal.svelte"
   import type { AgentTool } from "./toolTypes"
+  import {
+    coalesceAgentPollRequests,
+    createKnowledgePollingController,
+  } from "./knowledge/polling"
+  import { onDestroy } from "svelte"
 
   let {
     open = false,
@@ -130,6 +137,45 @@
       source => source.type === "sharepoint"
     )
   )
+  const fetchKnowledge = coalesceAgentPollRequests(async (_agentId: string) => {
+    const operationId = editingOperationId || operationDraft.id
+    if (!operationId) {
+      return
+    }
+    await agentsStore.fetchAgentKnowledge(_agentId, operationId)
+  })
+  const knowledgePollingController = createKnowledgePollingController({
+    intervalMs: 1000,
+    onPoll: agentId => {
+      const operationId = editingOperationId || operationDraft.id
+      if (!operationId) {
+        return Promise.resolve()
+      }
+      return fetchKnowledge(agentId)
+    },
+    onError: error => {
+      console.error("Failed to poll operation knowledge files", error)
+    },
+  })
+  $effect(() => {
+    if (!open || !agentId) {
+      knowledgePollingController.stop()
+      return
+    }
+    const hasProcessingFiles = knowledgeFiles.some(
+      file => file.status === "processing"
+    )
+    const hasUnsyncedSharePointSites = sharePointSourceSnapshots.some(
+      source => !source.lastRunAt
+    )
+    knowledgePollingController.setContinuous(
+      agentId,
+      hasProcessingFiles || hasUnsyncedSharePointSites
+    )
+  })
+  onDestroy(() => {
+    knowledgePollingController.stop()
+  })
   const handleDeleteFile = async (file: KnowledgeBaseFile) => {
     if (!agentId || !file._id) {
       return
@@ -147,6 +193,7 @@
         try {
           await agentsStore.deleteAgentFile(agentId, file._id!, operationId)
           await agentsStore.fetchAgentKnowledge(agentId, operationId)
+          await workspaceDeploymentStore.fetch()
           notifications.success("File removed")
         } catch (error) {
           console.error(error)
@@ -163,17 +210,67 @@
     if (!operationId) {
       return
     }
-    try {
-      await agentsStore.disconnectAgentSharePointSite(
-        agentId,
-        siteId,
-        operationId
-      )
-      await agentsStore.fetchAgentKnowledge(agentId, operationId)
-      notifications.success("SharePoint site removed")
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to remove SharePoint site")
+    const siteName =
+      sharePointSources
+        .map(source => source.config.site)
+        .find(site => site?.id === siteId)?.name || "this SharePoint site"
+
+    await confirm({
+      title: "Confirm deletion",
+      body: `Are you sure you want to remove ${siteName}? This action can't be undone.`,
+      okText: "Delete",
+      onConfirm: async () => {
+        try {
+          await agentsStore.disconnectAgentSharePointSite(
+            agentId,
+            siteId,
+            operationId
+          )
+          await agentsStore.fetchAgentKnowledge(agentId, operationId)
+          await workspaceDeploymentStore.fetch()
+          notifications.success("SharePoint site removed")
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to remove SharePoint site")
+        }
+      },
+    })
+  }
+
+  const showSharePointSyncResult = (
+    result: SyncAgentKnowledgeSourcesResponse
+  ) => {
+    const alreadySynced = result.alreadySynced
+    const deleted = result.deleted || 0
+    const discovered = result.totalDiscovered ?? result.synced + alreadySynced
+
+    if (result.synced === 0 && result.failed === 0) {
+      if (deleted > 0 || alreadySynced > 0) {
+        const details = [
+          alreadySynced > 0 ? `${alreadySynced} already synced` : "",
+          deleted > 0 ? `${deleted} removed by filters` : "",
+        ]
+          .filter(Boolean)
+          .join(", ")
+        notifications.info(
+          `SharePoint sync complete (0 new files${details ? `, ${details}` : ""})`
+        )
+        return
+      }
+      if (discovered === 0) {
+        notifications.info("No files found in selected SharePoint site(s)")
+        return
+      }
+    }
+
+    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""}${deleted > 0 ? `, ${deleted} removed by filters` : ""})`
+
+    if (result.failed > 0 && result.synced === 0) {
+      notifications.error(message)
+    } else if (result.failed > 0) {
+      notifications.warning(message)
+    } else {
+      notifications.success(message)
     }
   }
 
@@ -186,9 +283,14 @@
       return
     }
     try {
-      await agentsStore.syncAgentKnowledgeSources(agentId, sourceId, operationId)
+      const result = await agentsStore.syncAgentKnowledgeSources(
+        agentId,
+        sourceId,
+        operationId
+      )
       await agentsStore.fetchAgentKnowledge(agentId, operationId)
-      notifications.success("SharePoint sync started")
+      await workspaceDeploymentStore.fetch()
+      showSharePointSyncResult(result)
     } catch (error) {
       console.error(error)
       notifications.error("Failed to sync SharePoint site")
@@ -248,6 +350,7 @@
       return
     }
     await agentsStore.fetchAgentKnowledge(agentId, operationId)
+    await workspaceDeploymentStore.fetch()
   }
 
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
