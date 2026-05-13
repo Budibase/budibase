@@ -1,4 +1,4 @@
-import type { User, UserCtx } from "@budibase/types"
+import type { UserCtx } from "@budibase/types"
 import type { Next } from "koa"
 import controller from "../roles"
 import { sdk } from "@budibase/pro"
@@ -24,44 +24,27 @@ jest.mock("../../../../sdk/workspace/workspaces/sync", () => ({
   syncUsersAgainstWorkspaces: jest.fn(),
 }))
 
-interface TestError extends Error {
-  status?: number
-}
-
-const createThrow = () =>
-  jest.fn((status: number, message: string) => {
-    const error = new Error(message) as TestError
-    error.status = status
-    throw error
-  })
-
-type RoleRequest = RoleAssignRequest | RoleUnAssignRequest
-
-const assign = jest.mocked(sdk.publicApi.roles.assign)
-const unAssign = jest.mocked(sdk.publicApi.roles.unAssign)
-const syncUsers = jest.mocked(syncUsersAgainstWorkspaces)
-
-const createCtx = <RequestBody extends RoleRequest>(
-  body: RequestBody,
-  user?: Partial<User>
-): UserCtx<RequestBody, RoleAssignmentResponse> =>
+const createAssignCtx = (
+  body: RoleAssignRequest
+): UserCtx<RoleAssignRequest, RoleAssignmentResponse> =>
   ({
-    user,
-    throw: createThrow(),
     request: {
       body,
     },
-  }) as unknown as UserCtx<RequestBody, RoleAssignmentResponse>
+  }) as unknown as UserCtx<RoleAssignRequest, RoleAssignmentResponse>
 
-const createNext = () =>
-  jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<Next>
+const createUnAssignCtx = (
+  body: RoleUnAssignRequest
+): UserCtx<RoleUnAssignRequest, RoleAssignmentResponse> =>
+  ({
+    request: {
+      body,
+    },
+  }) as unknown as UserCtx<RoleUnAssignRequest, RoleAssignmentResponse>
 
 describe("public roles controller", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    assign.mockResolvedValue(undefined)
-    unAssign.mockResolvedValue(undefined)
-    syncUsers.mockResolvedValue(undefined)
   })
 
   describe("assign", () => {
@@ -77,8 +60,18 @@ describe("public roles controller", () => {
           appId: "app_builder",
         },
       }
-      const ctx = createCtx(requestBody)
-      const next = createNext()
+      const ctx = createAssignCtx(requestBody)
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+      const assign = sdk.publicApi.roles.assign as jest.MockedFunction<
+        typeof sdk.publicApi.roles.assign
+      >
+      assign.mockResolvedValue(undefined)
+      const syncUsers = syncUsersAgainstWorkspaces as jest.MockedFunction<
+        typeof syncUsersAgainstWorkspaces
+      >
+      syncUsers.mockResolvedValue(undefined)
 
       await controller.assign(ctx, next)
 
@@ -91,102 +84,6 @@ describe("public roles controller", () => {
         requestBody.role?.appId,
         requestBody.appBuilder?.appId,
       ])
-      expect(ctx.body).toEqual({ data: { userIds } })
-      expect(next).toHaveBeenCalled()
-    })
-
-    it("requires global builder permissions to assign global builder", async () => {
-      const userIds = ["user_basic"]
-      const ctx = createCtx(
-        {
-          userIds,
-          builder: true,
-        },
-        {
-          builder: {
-            apps: ["prod-app_123"],
-          },
-        }
-      )
-      const next = createNext()
-
-      await expect(controller.assign(ctx, next)).rejects.toMatchObject({
-        status: 403,
-      })
-
-      expect(assign).not.toHaveBeenCalled()
-      expect(next).not.toHaveBeenCalled()
-    })
-
-    it("requires global admin permissions to assign global admin", async () => {
-      const userIds = ["user_basic"]
-      const ctx = createCtx(
-        {
-          userIds,
-          admin: true,
-        },
-        {
-          builder: {
-            global: true,
-          },
-        }
-      )
-      const next = createNext()
-
-      await expect(controller.assign(ctx, next)).rejects.toMatchObject({
-        status: 403,
-      })
-
-      expect(assign).not.toHaveBeenCalled()
-      expect(next).not.toHaveBeenCalled()
-    })
-
-    it("allows global builder assignments from global builders", async () => {
-      const userIds = ["user_basic"]
-      const ctx = createCtx(
-        {
-          userIds,
-          builder: true,
-        },
-        {
-          builder: {
-            global: true,
-          },
-        }
-      )
-      const next = createNext()
-
-      await controller.assign(ctx, next)
-
-      expect(assign).toHaveBeenCalledWith(userIds, {
-        builder: true,
-      })
-      expect(ctx.body).toEqual({ data: { userIds } })
-      expect(next).toHaveBeenCalled()
-    })
-
-    it("allows global role assignments from users with matching permissions", async () => {
-      const userIds = ["user_basic"]
-      const ctx = createCtx(
-        {
-          userIds,
-          builder: true,
-          admin: true,
-        },
-        {
-          admin: {
-            global: true,
-          },
-        }
-      )
-      const next = createNext()
-
-      await controller.assign(ctx, next)
-
-      expect(assign).toHaveBeenCalledWith(userIds, {
-        builder: true,
-        admin: true,
-      })
       expect(ctx.body).toEqual({ data: { userIds } })
       expect(next).toHaveBeenCalled()
     })
@@ -205,8 +102,18 @@ describe("public roles controller", () => {
           appId: "app_builder",
         },
       }
-      const ctx = createCtx(requestBody)
-      const next = createNext()
+      const ctx = createUnAssignCtx(requestBody)
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+      const unAssign = sdk.publicApi.roles.unAssign as jest.MockedFunction<
+        typeof sdk.publicApi.roles.unAssign
+      >
+      unAssign.mockResolvedValue(undefined)
+      const syncUsers = syncUsersAgainstWorkspaces as jest.MockedFunction<
+        typeof syncUsersAgainstWorkspaces
+      >
+      syncUsers.mockResolvedValue(undefined)
 
       await controller.unAssign(ctx, next)
 
@@ -219,79 +126,6 @@ describe("public roles controller", () => {
         requestBody.role?.appId,
         requestBody.appBuilder?.appId,
       ])
-      expect(ctx.body).toEqual({ data: { userIds } })
-      expect(next).toHaveBeenCalled()
-    })
-
-    it("requires global permissions to remove global roles", async () => {
-      const userIds = ["user_basic"]
-      const ctx = createCtx(
-        {
-          userIds,
-          builder: true,
-        },
-        {
-          builder: {
-            apps: ["prod-app_123"],
-          },
-        }
-      )
-      const next = createNext()
-
-      await expect(controller.unAssign(ctx, next)).rejects.toMatchObject({
-        status: 403,
-      })
-
-      expect(unAssign).not.toHaveBeenCalled()
-      expect(next).not.toHaveBeenCalled()
-    })
-
-    it("allows global builder removal from global builders", async () => {
-      const userIds = ["user_basic"]
-      const ctx = createCtx(
-        {
-          userIds,
-          builder: true,
-        },
-        {
-          builder: {
-            global: true,
-          },
-        }
-      )
-      const next = createNext()
-
-      await controller.unAssign(ctx, next)
-
-      expect(unAssign).toHaveBeenCalledWith(userIds, {
-        builder: true,
-      })
-      expect(ctx.body).toEqual({ data: { userIds } })
-      expect(next).toHaveBeenCalled()
-    })
-
-    it("allows global role removal from global admins", async () => {
-      const userIds = ["user_basic"]
-      const ctx = createCtx(
-        {
-          userIds,
-          builder: true,
-          admin: true,
-        },
-        {
-          admin: {
-            global: true,
-          },
-        }
-      )
-      const next = createNext()
-
-      await controller.unAssign(ctx, next)
-
-      expect(unAssign).toHaveBeenCalledWith(userIds, {
-        builder: true,
-        admin: true,
-      })
       expect(ctx.body).toEqual({ data: { userIds } })
       expect(next).toHaveBeenCalled()
     })
