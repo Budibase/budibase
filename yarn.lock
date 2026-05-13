@@ -2393,6 +2393,13 @@
   dependencies:
     chat "4.27.0"
 
+"@chat-adapter/shared@4.28.1":
+  version "4.28.1"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/shared/-/shared-4.28.1.tgz#3baa8d93c754d5f3b21b770fa28698068211707f"
+  integrity sha512-v7AcZMrvS2gxFlRiUO1o9Nta2iipnnmV54Gie8e3nQTQvnghENfSf7j7nimA5DOUWCgj+e4DV7LE0x1pakNtkA==
+  dependencies:
+    chat "4.28.1"
+
 "@chat-adapter/slack@^4.27.0":
   version "4.27.0"
   resolved "https://registry.yarnpkg.com/@chat-adapter/slack/-/slack-4.27.0.tgz#cb6242701e98cb474a592996fd5afd96e12c883f"
@@ -2429,6 +2436,14 @@
     "@microsoft/teams.cards" "^2.0.8"
     "@microsoft/teams.graph-endpoints" "^2.0.8"
     chat "4.27.0"
+
+"@chat-adapter/telegram@^4.27.0":
+  version "4.28.1"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/telegram/-/telegram-4.28.1.tgz#628ecaa7e177f29b8996e7dc3005308a919c0d55"
+  integrity sha512-ZBw6zx36enxXGlbOoigzCsWH6slbTCOWyTGatCz7jq4DFTDpvjRgBBH760n9peFkZpXJWOAXZKJm/IW8saT5aw==
+  dependencies:
+    "@chat-adapter/shared" "4.28.1"
+    chat "4.28.1"
 
 "@codemirror/autocomplete@6.9.0":
   version "6.9.0"
@@ -9501,6 +9516,19 @@ chat@4.27.0, chat@^4.27.0:
   version "4.27.0"
   resolved "https://registry.yarnpkg.com/chat/-/chat-4.27.0.tgz#8cac41ca9dc0fe4e71ecbbe65858d9b60d8c5763"
   integrity sha512-PrL4k263DSIlckhX8eHLT84RdTSznOBxCCfaDc5JVJtWaS0lJkCNctm/g3gIrI41AcDHcpc/3WDoUHVrbh0W4w==
+  dependencies:
+    "@workflow/serde" "4.1.0-beta.2"
+    mdast-util-to-string "^4.0.0"
+    remark-gfm "^4.0.0"
+    remark-parse "^11.0.0"
+    remark-stringify "^11.0.0"
+    remend "^1.2.1"
+    unified "^11.0.5"
+
+chat@4.28.1:
+  version "4.28.1"
+  resolved "https://registry.yarnpkg.com/chat/-/chat-4.28.1.tgz#8ba5243a3a49cb13f5abb7344721e2fc535cfa67"
+  integrity sha512-oKBeLQ746rSmHWGoXmPgDOqMVdIe9cWFQBQ1G2pw0l2vV4sAsZgfEJmc1UYqSJR4kYy4PxKgRFy31pe4RJ644Q==
   dependencies:
     "@workflow/serde" "4.1.0-beta.2"
     mdast-util-to-string "^4.0.0"
