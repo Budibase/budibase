@@ -155,13 +155,52 @@
       },
     })
   }
+  const handleDeleteSharePointSite = async (siteId: string) => {
+    if (!agentId) {
+      return
+    }
+    const operationId = editingOperationId || operationDraft.id
+    if (!operationId) {
+      return
+    }
+    try {
+      await agentsStore.disconnectAgentSharePointSite(
+        agentId,
+        siteId,
+        operationId
+      )
+      await agentsStore.fetchAgentKnowledge(agentId, operationId)
+      notifications.success("SharePoint site removed")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to remove SharePoint site")
+    }
+  }
+
+  const handleSyncSharePointSite = async (sourceId: string) => {
+    if (!agentId) {
+      return
+    }
+    const operationId = editingOperationId || operationDraft.id
+    if (!operationId) {
+      return
+    }
+    try {
+      await agentsStore.syncAgentKnowledgeSources(agentId, sourceId, operationId)
+      await agentsStore.fetchAgentKnowledge(agentId, operationId)
+      notifications.success("SharePoint sync started")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to sync SharePoint site")
+    }
+  }
   let knowledgeRows = $derived.by(() => [
     ...toSharePointConnectionRows({
       sharePointSources,
       sharePointSourceSnapshots,
       loadingSharePointSites: false,
-      onDelete: async () => {},
-      onSync: async () => {},
+      onDelete: handleDeleteSharePointSite,
+      onSync: handleSyncSharePointSite,
     }),
     ...toFileTableRows(
       knowledgeFiles.filter(file => !file.source),
