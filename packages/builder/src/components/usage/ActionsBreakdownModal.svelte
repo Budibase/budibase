@@ -44,7 +44,6 @@
             <Body size="S">{item.used.toLocaleString()}</Body>
           </div>
           <ProgressBar
-            showPercentage={false}
             width={"100%"}
             duration={1}
             value={getPercentage(item.used)}
