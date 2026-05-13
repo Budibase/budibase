@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Button, Input, Toggle, notifications } from "@budibase/bbui"
+  import { Body, Button, Input, notifications } from "@budibase/bbui"
   import { confirm } from "@/helpers"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import { bb } from "@/stores/bb"
