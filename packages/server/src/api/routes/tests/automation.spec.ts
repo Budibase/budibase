@@ -37,14 +37,13 @@ import {
 const MAX_RETRIES = 4
 const hasWebhookSchemaUrl = (
   inputs: Automation["definition"]["trigger"]["inputs"]
-): inputs is Pick<WebhookTriggerInputs, "schemaUrl"> =>
-  !!(
-    inputs &&
-    typeof inputs === "object" &&
-    "schemaUrl" in inputs &&
-    typeof inputs.schemaUrl === "string"
-  )
+): inputs is Pick<WebhookTriggerInputs, "schemaUrl"> => {
+  if (!inputs || typeof inputs !== "object") {
+    return false
+  }
 
+  return "schemaUrl" in inputs && typeof inputs.schemaUrl === "string"
+}
 const getWebhookSchemaUrl = (automation: Automation): string => {
   const inputs = automation.definition.trigger.inputs
   if (hasWebhookSchemaUrl(inputs)) {

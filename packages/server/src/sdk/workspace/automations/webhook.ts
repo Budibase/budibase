@@ -25,8 +25,8 @@ export function newDoc(
 export async function save(webhook: Webhook) {
   const db = context.getWorkspaceDB()
   if (webhook._id && isWebhookID(webhook._id)) {
-    const existing = await db.get<Webhook>(webhook._id)
-    webhook.schemaToken = existing.schemaToken || utils.newid()
+    const existing = await db.tryGet<Webhook>(webhook._id)
+    webhook.schemaToken = existing?.schemaToken || utils.newid()
   } else {
     webhook._id = generateWebhookID()
     webhook.schemaToken = utils.newid()
