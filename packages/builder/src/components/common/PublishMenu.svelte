@@ -183,7 +183,7 @@
     font-size: var(--font-size-l);
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: 0.375rem;
     background: var(--spectrum-global-color-gray-800);
     border-radius: 8px;
     color: var(--spectrum-global-color-gray-50);
