@@ -200,6 +200,17 @@
     }
   }
 
+  const refreshKnowledge = async () => {
+    if (!agentId) {
+      return
+    }
+    const operationId = editingOperationId || operationDraft.id
+    if (!operationId) {
+      return
+    }
+    await agentsStore.fetchAgentKnowledge(agentId, operationId)
+  }
+
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
     if (row.kind !== "sharepoint_connection") {
       return
@@ -346,6 +357,7 @@
                     {agentId}
                     operationId={editingOperationId}
                     onSharePoint={handleAddFromSharePoint}
+                    onUploaded={refreshKnowledge}
                   />
                 </div>
               </div>
@@ -376,6 +388,7 @@
     existingSiteIds={sharePointSources
       .map(source => source.config.site?.id || "")
       .filter(Boolean)}
+    onCreated={refreshKnowledge}
   />
   <DisplaySharePointSiteModal
     bind:this={displaySharePointSiteModal}
