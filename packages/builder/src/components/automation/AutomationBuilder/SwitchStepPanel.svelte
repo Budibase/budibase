@@ -114,6 +114,14 @@
     return `${label}\n\n${parts.join("\n")}`
   }
 
+  const hasConfiguredConditions = (branch: Branch) => {
+    const conditionUI = branch.conditionUI as SwitchConditionUI | undefined
+    const groups = conditionUI?.groups || []
+    return groups.some(group =>
+      (group.filters || []).some(filter => !!filter.field)
+    )
+  }
+
   const openConditionsModal = () => {
     editableBranches = (switchStep.inputs?.branches || []).map(
       normaliseBranchCondition
@@ -193,7 +201,11 @@
   {#if idx > 0}
     <Divider noMargin />
   {/if}
-  <DetailSummary name={`${idx + 1}. ${branch.name}`} padded={false}>
+  <DetailSummary
+    name={`${idx + 1}. ${branch.name}`}
+    padded={false}
+    initiallyShow={hasConfiguredConditions(branch)}
+  >
     <div class="condition-summary">
       <DescriptionViewer label="" description={getConditionSummary(branch)} />
     </div>
