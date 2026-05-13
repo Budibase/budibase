@@ -931,16 +931,9 @@ class Orchestrator {
     step: BranchStep
   ): Promise<AutomationStepResult[]> {
     return await tracer.trace("executeBranchStep", async span => {
-      const { branches, children, evaluationOrder } = step.inputs
+      const { branches, children } = step.inputs
 
-      // Use evaluationOrder if provided, otherwise use original branch order
-      const orderedBranches = evaluationOrder
-        ? evaluationOrder
-            .map(id => branches.find(b => b.id === id))
-            .filter((b): b is NonNullable<typeof b> => !!b)
-        : branches
-
-      for (const branch of orderedBranches) {
+      for (const branch of branches) {
         if (await branchMatches(ctx, branch)) {
           span.addTags({ branchName: branch.name, branchId: branch.id })
           const selection = stepSuccess(step, {

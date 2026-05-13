@@ -348,7 +348,6 @@ function generateStepSchema(allowStepTypes: string[]) {
         children: Joi.object()
           .pattern(Joi.string(), Joi.array().items(Joi.link("#step")))
           .required(),
-        evaluationOrder: Joi.array().items(Joi.string()).optional(),
       }).required(),
       otherwise: Joi.object(),
     }),
