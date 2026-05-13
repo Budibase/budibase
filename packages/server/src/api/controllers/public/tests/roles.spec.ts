@@ -35,33 +35,33 @@ const createThrow = () =>
     throw error
   })
 
-const createAssignCtx = (
-  body: RoleAssignRequest,
-  user?: Partial<User>
-): UserCtx<RoleAssignRequest, RoleAssignmentResponse> =>
-  ({
-    user,
-    throw: createThrow(),
-    request: {
-      body,
-    },
-  }) as unknown as UserCtx<RoleAssignRequest, RoleAssignmentResponse>
+type RoleRequest = RoleAssignRequest | RoleUnAssignRequest
 
-const createUnAssignCtx = (
-  body: RoleUnAssignRequest,
+const assign = jest.mocked(sdk.publicApi.roles.assign)
+const unAssign = jest.mocked(sdk.publicApi.roles.unAssign)
+const syncUsers = jest.mocked(syncUsersAgainstWorkspaces)
+
+const createCtx = <RequestBody extends RoleRequest>(
+  body: RequestBody,
   user?: Partial<User>
-): UserCtx<RoleUnAssignRequest, RoleAssignmentResponse> =>
+): UserCtx<RequestBody, RoleAssignmentResponse> =>
   ({
     user,
     throw: createThrow(),
     request: {
       body,
     },
-  }) as unknown as UserCtx<RoleUnAssignRequest, RoleAssignmentResponse>
+  }) as unknown as UserCtx<RequestBody, RoleAssignmentResponse>
+
+const createNext = () =>
+  jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<Next>
 
 describe("public roles controller", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    assign.mockResolvedValue(undefined)
+    unAssign.mockResolvedValue(undefined)
+    syncUsers.mockResolvedValue(undefined)
   })
 
   describe("assign", () => {
@@ -77,18 +77,8 @@ describe("public roles controller", () => {
           appId: "app_builder",
         },
       }
-      const ctx = createAssignCtx(requestBody)
-      const next = jest
-        .fn()
-        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-      const assign = sdk.publicApi.roles.assign as jest.MockedFunction<
-        typeof sdk.publicApi.roles.assign
-      >
-      assign.mockResolvedValue(undefined)
-      const syncUsers = syncUsersAgainstWorkspaces as jest.MockedFunction<
-        typeof syncUsersAgainstWorkspaces
-      >
-      syncUsers.mockResolvedValue(undefined)
+      const ctx = createCtx(requestBody)
+      const next = createNext()
 
       await controller.assign(ctx, next)
 
@@ -107,7 +97,7 @@ describe("public roles controller", () => {
 
     it("requires global builder permissions to assign global builder", async () => {
       const userIds = ["user_basic"]
-      const ctx = createAssignCtx(
+      const ctx = createCtx(
         {
           userIds,
           builder: true,
@@ -118,12 +108,7 @@ describe("public roles controller", () => {
           },
         }
       )
-      const next = jest
-        .fn()
-        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-      const assign = sdk.publicApi.roles.assign as jest.MockedFunction<
-        typeof sdk.publicApi.roles.assign
-      >
+      const next = createNext()
 
       await expect(controller.assign(ctx, next)).rejects.toMatchObject({
         status: 403,
@@ -135,7 +120,7 @@ describe("public roles controller", () => {
 
     it("requires global admin permissions to assign global admin", async () => {
       const userIds = ["user_basic"]
-      const ctx = createAssignCtx(
+      const ctx = createCtx(
         {
           userIds,
           admin: true,
@@ -146,12 +131,7 @@ describe("public roles controller", () => {
           },
         }
       )
-      const next = jest
-        .fn()
-        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-      const assign = sdk.publicApi.roles.assign as jest.MockedFunction<
-        typeof sdk.publicApi.roles.assign
-      >
+      const next = createNext()
 
       await expect(controller.assign(ctx, next)).rejects.toMatchObject({
         status: 403,
@@ -163,7 +143,7 @@ describe("public roles controller", () => {
 
     it("allows global role assignments from users with matching permissions", async () => {
       const userIds = ["user_basic"]
-      const ctx = createAssignCtx(
+      const ctx = createCtx(
         {
           userIds,
           builder: true,
@@ -175,13 +155,7 @@ describe("public roles controller", () => {
           },
         }
       )
-      const next = jest
-        .fn()
-        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-      const assign = sdk.publicApi.roles.assign as jest.MockedFunction<
-        typeof sdk.publicApi.roles.assign
-      >
-      assign.mockResolvedValue(undefined)
+      const next = createNext()
 
       await controller.assign(ctx, next)
 
@@ -207,18 +181,8 @@ describe("public roles controller", () => {
           appId: "app_builder",
         },
       }
-      const ctx = createUnAssignCtx(requestBody)
-      const next = jest
-        .fn()
-        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-      const unAssign = sdk.publicApi.roles.unAssign as jest.MockedFunction<
-        typeof sdk.publicApi.roles.unAssign
-      >
-      unAssign.mockResolvedValue(undefined)
-      const syncUsers = syncUsersAgainstWorkspaces as jest.MockedFunction<
-        typeof syncUsersAgainstWorkspaces
-      >
-      syncUsers.mockResolvedValue(undefined)
+      const ctx = createCtx(requestBody)
+      const next = createNext()
 
       await controller.unAssign(ctx, next)
 
@@ -237,7 +201,7 @@ describe("public roles controller", () => {
 
     it("requires global permissions to remove global roles", async () => {
       const userIds = ["user_basic"]
-      const ctx = createUnAssignCtx(
+      const ctx = createCtx(
         {
           userIds,
           builder: true,
@@ -248,12 +212,7 @@ describe("public roles controller", () => {
           },
         }
       )
-      const next = jest
-        .fn()
-        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-      const unAssign = sdk.publicApi.roles.unAssign as jest.MockedFunction<
-        typeof sdk.publicApi.roles.unAssign
-      >
+      const next = createNext()
 
       await expect(controller.unAssign(ctx, next)).rejects.toMatchObject({
         status: 403,
@@ -265,7 +224,7 @@ describe("public roles controller", () => {
 
     it("allows global role removal from global admins", async () => {
       const userIds = ["user_basic"]
-      const ctx = createUnAssignCtx(
+      const ctx = createCtx(
         {
           userIds,
           builder: true,
@@ -277,13 +236,7 @@ describe("public roles controller", () => {
           },
         }
       )
-      const next = jest
-        .fn()
-        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-      const unAssign = sdk.publicApi.roles.unAssign as jest.MockedFunction<
-        typeof sdk.publicApi.roles.unAssign
-      >
-      unAssign.mockResolvedValue(undefined)
+      const next = createNext()
 
       await controller.unAssign(ctx, next)
 
