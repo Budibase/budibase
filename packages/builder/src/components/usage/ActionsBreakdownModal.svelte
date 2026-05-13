@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Body,
     Heading,
@@ -7,10 +7,14 @@
     ProgressBar,
   } from "@budibase/bbui"
 
-  export let usage
-  export let breakdown = []
+  interface Props {
+    usage: { name: string; used: number; total: number }
+    breakdown?: Array<{ name: string; used: number }>
+  }
 
-  const getPercentage = used => {
+  let { usage, breakdown = [] }: Props = $props()
+
+  const getPercentage = (used: number) => {
     if (!usage?.total || usage.total <= 0) {
       return 0
     }
