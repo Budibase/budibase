@@ -7,7 +7,6 @@
     AgentKnowledgeSourceType,
     KnowledgeBaseFileStatus,
     type Agent,
-    type AgentKnowledgeSource,
     type KnowledgeBaseFile,
     type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
@@ -41,8 +40,7 @@
   let activeAgentId = $derived(currentAgent?._id)
   let sharePointSources = $derived.by(() =>
     (currentAgent?.knowledgeSources || []).filter(
-      (source: AgentKnowledgeSource) =>
-        source.type === AgentKnowledgeSourceType.SHAREPOINT
+      source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
   let loading = $state(true)
@@ -76,7 +74,7 @@
   )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
-      .map((source: AgentKnowledgeSource) => source.config.site.id)
+      .map(source => source.config.site.id)
       .filter((siteId): siteId is string => !!siteId)
   )
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
@@ -334,9 +332,8 @@
     const agentId = agent._id
     const siteName =
       sharePointSources
-        .map((source: AgentKnowledgeSource) => source.config.site)
-        .find((site: { id?: string; name?: string }) => site?.id === siteId)
-        ?.name || "this SharePoint site"
+        .map(source => source.config.site)
+        .find(site => site?.id === siteId)?.name || "this SharePoint site"
 
     await confirm({
       title: "Confirm deletion",

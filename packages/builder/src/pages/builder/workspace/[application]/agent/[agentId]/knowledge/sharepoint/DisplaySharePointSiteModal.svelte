@@ -9,7 +9,6 @@
   import {
     AgentKnowledgeSourceType,
     KnowledgeBaseFileSourceType,
-    type AgentKnowledgeSource,
     type KnowledgeBaseFile,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
@@ -30,7 +29,7 @@
       return undefined
     }
     return $selectedAgent?.knowledgeSources?.find(
-      (source: AgentKnowledgeSource) =>
+      source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
         source.config.site.id === siteId
     )
