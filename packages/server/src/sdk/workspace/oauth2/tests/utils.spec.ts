@@ -1,4 +1,8 @@
-import { cache } from "@budibase/backend-core"
+import {
+  blacklist,
+  cache,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 import { generator, utils as testUtils } from "@budibase/backend-core/tests"
 import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
 import path from "path"
@@ -18,8 +22,14 @@ jest.setTimeout(90000)
 
 describe("oauth2 utils", () => {
   let keycloakUrl: string
+  let restoreEnv: (() => void) | undefined
 
   beforeAll(async () => {
+    restoreEnv = setCoreEnv({
+      BLACKLIST_IPS: "",
+      SELF_HOSTED: true,
+    })
+    await blacklist.refreshBlacklist()
     await config.init()
 
     const ports = await startContainer(
@@ -42,6 +52,11 @@ describe("oauth2 utils", () => {
     }
 
     keycloakUrl = `http://127.0.0.1:${port}`
+  })
+
+  afterAll(async () => {
+    restoreEnv?.()
+    await blacklist.refreshBlacklist()
   })
 
   describe.each(
