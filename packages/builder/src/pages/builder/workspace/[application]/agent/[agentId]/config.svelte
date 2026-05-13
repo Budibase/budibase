@@ -479,6 +479,7 @@
         <Select
           bind:value={draft.aiconfig}
           options={modelOptions}
+          size="S"
           on:change={() => scheduleSave(true)}
         />
       {/if}
