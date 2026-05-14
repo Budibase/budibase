@@ -1,12 +1,12 @@
 <script lang="ts">
   import {
     ActionButton,
-    Button,
     Icon,
     Layout,
     StatusLight,
     notifications,
   } from "@budibase/bbui"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
@@ -95,16 +95,6 @@
     }
   }
 
-  function agentToggleIconColor(disabled: boolean, live: boolean) {
-    if (disabled) return "var(--spectrum-global-color-gray-500)"
-    if (live) return ""
-    return "#fff"
-  }
-
-  let agentToggleIconColorValue = $derived(
-    agentToggleIconColor(togglingLive, currentAgent?.live === true)
-  )
-
   onDestroy(() => stopSyncing?.())
 </script>
 
@@ -169,16 +159,11 @@
           color="var(--spectrum-global-color-gray-600)"
         />
       </div>
-      <Button
-        primary={!currentAgent?.live}
-        secondary={currentAgent?.live}
-        icon={currentAgent?.live ? "stop" : "play"}
-        iconColor={agentToggleIconColorValue}
-        iconWeight="fill"
-        on:click={toggleAgentLive}
+      <LiveToggleButton
+        live={currentAgent?.live === true}
         disabled={togglingLive}
-        >{currentAgent?.live ? "Stop" : "Set live"}</Button
-      >
+        on:click={toggleAgentLive}
+      />
     </div>
   </div>
   <div class="config-page" class:full-width={activeTab === "Logs"}>
@@ -355,31 +340,6 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  .start-pause-row :global(button.spectrum-Button.new-styles) {
-    transition:
-      background 130ms ease-out,
-      color 130ms ease-out;
-  }
-  .start-pause-row
-    :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
-    background: var(--color-blue-500);
-    border-color: transparent;
-    color: #fff;
-  }
-  .start-pause-row
-    :global(
-      button.spectrum-Button--primary.new-styles:not(.is-disabled)
-        .spectrum-Button-label
-    ) {
-    color: #fff;
-  }
-  .start-pause-row
-    :global(
-      button.spectrum-Button--primary.new-styles:not(.is-disabled):hover
-    ) {
-    background: var(--color-blue-600);
   }
 
   .status-icons {

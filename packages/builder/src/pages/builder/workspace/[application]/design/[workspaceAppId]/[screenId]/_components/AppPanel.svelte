@@ -8,9 +8,10 @@
     selectedAppUrls,
     workspaceAppStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Button, Divider, Icon } from "@budibase/bbui"
+  import { ActionButton, Divider, Icon } from "@budibase/bbui"
   import {
     getNextPreviewDevice,
     getPreviewDeviceIcon,
@@ -28,17 +29,6 @@
 
   $: isLive =
     selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
-
-  const workspaceLiveIconColor = (disabled: boolean, live: boolean) => {
-    if (disabled) return "var(--spectrum-global-color-gray-500)"
-    if (live) return ""
-    return "#fff"
-  }
-
-  $: workspaceLiveIconColorValue = workspaceLiveIconColor(
-    changingStatus,
-    isLive
-  )
 
   $: deviceIcon = getPreviewDeviceIcon(currentDevice)
 
@@ -116,17 +106,11 @@
           <Divider size="S" vertical />
         </div>
         <div class="workspace-live-toggle">
-          <Button
-            primary={!isLive}
-            secondary={isLive}
-            icon={isLive ? "stop" : "play"}
-            iconColor={workspaceLiveIconColorValue}
-            iconWeight="fill"
-            on:click={handleToggleLive}
+          <LiveToggleButton
+            live={isLive}
             disabled={changingStatus}
-          >
-            {isLive ? "Stop" : "Set live"}
-          </Button>
+            on:click={handleToggleLive}
+          />
         </div>
       </div>
     </div>
@@ -178,31 +162,6 @@
     align-items: center;
     justify-content: right;
     min-width: 96px;
-  }
-
-  .workspace-live-toggle :global(button.spectrum-Button.new-styles) {
-    transition:
-      background 130ms ease-out,
-      color 130ms ease-out;
-  }
-  .workspace-live-toggle
-    :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
-    background: var(--color-blue-500);
-    border-color: transparent;
-    color: #fff;
-  }
-  .workspace-live-toggle
-    :global(
-      button.spectrum-Button--primary.new-styles:not(.is-disabled)
-        .spectrum-Button-label
-    ) {
-    color: #fff;
-  }
-  .workspace-live-toggle
-    :global(
-      button.spectrum-Button--primary.new-styles:not(.is-disabled):hover
-    ) {
-    background: var(--color-blue-600);
   }
 
   .workspace-info {

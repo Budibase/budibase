@@ -64,7 +64,7 @@
 
   const getStatusColor = (status: string) => {
     if (status === "Live") {
-      return "#8CA171"
+      return "var(--color-green-500)"
     }
     if (status === "Stopped") {
       return "var(--color-orange-400)"

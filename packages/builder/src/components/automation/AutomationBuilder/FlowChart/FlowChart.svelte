@@ -5,7 +5,6 @@
   import {
     notifications,
     Modal,
-    Button,
     ActionButton,
     Switcher,
     StatusLight,
@@ -26,6 +25,7 @@
     deploymentStore,
     contextMenuStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
@@ -116,17 +116,7 @@
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  const toggleLiveIconColor = (disabled: boolean, live: boolean) => {
-    if (disabled) return "var(--spectrum-global-color-gray-500)"
-    if (live) return ""
-    return "#fff"
-  }
-
   $: isLive = automation.publishStatus.state === PublishResourceState.PUBLISHED
-  $: toggleLiveIconColorValue = toggleLiveIconColor(
-    !automation?.definition?.trigger || changingStatus,
-    isLive
-  )
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set($selectedAutomation.data || automation)
@@ -429,17 +419,11 @@
     </ActionButton>
 
     <div class="toggle-active setting-spacing">
-      <Button
-        primary={!isLive}
-        secondary={isLive}
-        icon={isLive ? "stop" : "play"}
-        iconColor={toggleLiveIconColorValue}
-        iconWeight="fill"
+      <LiveToggleButton
+        live={isLive}
         disabled={!automation?.definition?.trigger || changingStatus}
         on:click={handleToggleLive}
-      >
-        {isLive ? "Stop" : "Set live"}
-      </Button>
+      />
     </div>
   </div>
 </div>
@@ -533,31 +517,6 @@
 
   .toggle-active :global(.spectrum-Switch) {
     margin: 0px;
-  }
-
-  .toggle-active :global(button.spectrum-Button.new-styles) {
-    transition:
-      background 130ms ease-out,
-      color 130ms ease-out;
-  }
-  .toggle-active
-    :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
-    background: var(--color-blue-500);
-    border-color: transparent;
-    color: #fff;
-  }
-  .toggle-active
-    :global(
-      button.spectrum-Button--primary.new-styles:not(.is-disabled)
-        .spectrum-Button-label
-    ) {
-    color: #fff;
-  }
-  .toggle-active
-    :global(
-      button.spectrum-Button--primary.new-styles:not(.is-disabled):hover
-    ) {
-    background: var(--color-blue-600);
   }
 
   .root :global(.main-content) {
