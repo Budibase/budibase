@@ -81,9 +81,12 @@ const updateWebhookSchema = async (
 ) => {
   webhook.bodySchema = toJsonSchema(body)
   if (webhook.action.type === WebhookActionType.AUTOMATION) {
-    let automation = await db.get<Automation>(webhook.action.target)
+    const automation = await db.tryGet<Automation>(webhook.action.target)
+    if (!automation) {
+      throw new HTTPError("Automation not found", 404)
+    }
     const autoOutputs = automation.definition.trigger.schema.outputs
-    let properties = webhook.bodySchema?.properties
+    const properties = webhook.bodySchema?.properties
     autoOutputs.properties = {
       body: autoOutputs.properties.body,
     }
