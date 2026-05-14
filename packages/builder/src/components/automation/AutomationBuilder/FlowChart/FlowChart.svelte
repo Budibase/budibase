@@ -116,7 +116,17 @@
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
+  const toggleLiveIconColor = (disabled: boolean, live: boolean) => {
+    if (disabled) return "var(--spectrum-global-color-gray-500)"
+    if (live) return ""
+    return "#fff"
+  }
+
   $: isLive = automation.publishStatus.state === PublishResourceState.PUBLISHED
+  $: toggleLiveIconColorValue = toggleLiveIconColor(
+    !automation?.definition?.trigger || changingStatus,
+    isLive
+  )
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set($selectedAutomation.data || automation)
@@ -423,7 +433,7 @@
         primary={!isLive}
         secondary={isLive}
         icon={isLive ? "stop" : "play"}
-        iconColor={isLive ? "" : "var(--bb-blue)"}
+        iconColor={toggleLiveIconColorValue}
         iconWeight="fill"
         disabled={!automation?.definition?.trigger || changingStatus}
         on:click={handleToggleLive}
@@ -523,6 +533,23 @@
 
   .toggle-active :global(.spectrum-Switch) {
     margin: 0px;
+  }
+
+  .toggle-active :global(button.spectrum-Button.new-styles) {
+    transition:
+      background 130ms ease-out,
+      color 130ms ease-out;
+  }
+  .toggle-active :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
+    background: var(--color-blue-500);
+    border-color: transparent;
+    color: #fff;
+  }
+  .toggle-active :global(button.spectrum-Button--primary.new-styles:not(.is-disabled) .spectrum-Button-label) {
+    color: #fff;
+  }
+  .toggle-active :global(button.spectrum-Button--primary.new-styles:not(.is-disabled):hover) {
+    background: var(--color-blue-600);
   }
 
   .root :global(.main-content) {
