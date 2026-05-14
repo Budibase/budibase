@@ -87,6 +87,39 @@
     }
     responseModal?.show()
   }
+
+  let evaluationModal = $state<Modal>()
+  let activeEvaluation = $state<{
+    title: string
+    items: {
+      name: string
+      message: string
+      icon: string
+      color: string
+      label: string
+    }[]
+  } | null>(null)
+
+  const openEvaluationModal = (result: AgentTestCaseResult) => {
+    const items = result.caseSnapshot.reviewers.map(reviewer => {
+      const reviewerResult = result.reviewerResults.find(
+        r => r.reviewerId === reviewer.id
+      )
+      const meta = getVerdictMeta(reviewerResult?.status)
+      return {
+        name: getReviewerLabel(reviewer.type),
+        message: reviewerResult?.message || "",
+        icon: meta.icon,
+        color: meta.color,
+        label: meta.label,
+      }
+    })
+    activeEvaluation = {
+      title: `${getConfigName(result)} — Evaluation`,
+      items,
+    }
+    evaluationModal?.show()
+  }
 </script>
 
 {#if !selectedCase}
@@ -227,6 +260,14 @@
                       </li>
                     {/each}
                   </ul>
+                  <button
+                    type="button"
+                    class="response-link"
+                    onclick={() => openEvaluationModal(result)}
+                  >
+                    <span>View full evaluation</span>
+                    <Icon name="arrow-square-out" size="XS" />
+                  </button>
                 {/if}
 
                 <div class="hairline" aria-hidden="true"></div>
@@ -283,6 +324,37 @@
     {#if activeResponse}
       <div class="response-modal-body">
         <MarkdownViewer value={activeResponse.body} />
+      </div>
+    {/if}
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={evaluationModal}>
+  <ModalContent
+    title={activeEvaluation?.title || "Evaluation"}
+    confirmText="Close"
+    showCancelButton={false}
+    showCloseIcon
+    size="L"
+  >
+    {#if activeEvaluation}
+      <div class="response-modal-body">
+        <ul class="evaluation-list" role="list">
+          {#each activeEvaluation.items as item}
+            <li class="evaluation-item">
+              <div class="evaluation-header">
+                <Icon name={item.icon} size="S" color={item.color} />
+                <span class="evaluation-name">{item.name}</span>
+                <span class="evaluation-label">{item.label}</span>
+              </div>
+              {#if item.message}
+                <p class="evaluation-message">{item.message}</p>
+              {:else}
+                <p class="evaluation-message empty">No message provided.</p>
+              {/if}
+            </li>
+          {/each}
+        </ul>
       </div>
     {/if}
   </ModalContent>
@@ -594,6 +666,11 @@
     color: var(--spectrum-global-color-gray-600);
     line-height: 1.55;
     word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .status {
@@ -726,6 +803,57 @@
   .response-modal-body::-webkit-scrollbar-thumb {
     background: var(--spectrum-global-color-gray-300);
     border-radius: 3px;
+  }
+
+  .evaluation-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .evaluation-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 10px;
+    background: var(--background-alt);
+  }
+
+  .evaluation-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .evaluation-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .evaluation-label {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+    margin-left: auto;
+  }
+
+  .evaluation-message {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--spectrum-global-color-gray-800);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .evaluation-message.empty {
+    color: var(--spectrum-global-color-gray-600);
+    font-style: italic;
   }
 
   .result-empty {
