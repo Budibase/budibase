@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify"
 import { marked, Renderer } from "marked"
 
 const defaultRenderer = new Renderer()
@@ -73,5 +74,7 @@ export const renderMarkdown = (markdown: string | undefined) => {
     return ""
   }
 
-  return marked.parse(markdown, { async: false, renderer })
+  const html = marked.parse(markdown, { async: false, renderer })
+
+  return DOMPurify.sanitize(html)
 }
