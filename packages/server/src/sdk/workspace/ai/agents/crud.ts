@@ -316,6 +316,7 @@ export async function create(
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
     knowledgeBases: request.knowledgeBases || [],
+    allowKnowledgeSourceDownload: request.allowKnowledgeSourceDownload,
     knowledgeSources: request.knowledgeSources,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
@@ -362,6 +363,7 @@ export async function duplicate(
     createdBy,
     enabledTools: source.enabledTools || [],
     knowledgeBases: source.knowledgeBases || [],
+    allowKnowledgeSourceDownload: source.allowKnowledgeSourceDownload,
   })
 }
 

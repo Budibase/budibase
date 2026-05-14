@@ -41,6 +41,7 @@
     isAgentPreviewChat?: boolean
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
+    allowKnowledgeSourceDownload?: boolean
   }
 
   let {
@@ -53,6 +54,7 @@
     isAgentPreviewChat = false,
     readOnly = false,
     readOnlyReason,
+    allowKnowledgeSourceDownload = true,
   }: Props = $props()
 
   let API = $state(
@@ -84,6 +86,10 @@
   const openRagSource = async (
     source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
   ) => {
+    if (!allowKnowledgeSourceDownload) {
+      notifications.error("Source downloads are disabled for this agent")
+      return
+    }
     if (!source.fileId) {
       return
     }
@@ -742,13 +748,17 @@
                 <ul>
                   {#each getVisibleRagSources(message) as source (source.fileId)}
                     <li class="source-item">
-                      <button
-                        type="button"
-                        class="source-link"
-                        onclick={() => openRagSource(source)}
-                      >
-                        Download {source.filename}
-                      </button>
+                      {#if allowKnowledgeSourceDownload}
+                        <button
+                          type="button"
+                          class="source-link"
+                          onclick={() => openRagSource(source)}
+                        >
+                          Download {source.filename}
+                        </button>
+                      {:else}
+                        <span class="source-name">{source.filename}</span>
+                      {/if}
                     </li>
                   {/each}
                 </ul>

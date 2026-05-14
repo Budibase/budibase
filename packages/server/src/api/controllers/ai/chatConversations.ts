@@ -552,6 +552,14 @@ export async function fetchChatAppAgentFileUrl(
     throw new HTTPError("Forbidden", 403)
   }
 
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  if (agent.allowKnowledgeSourceDownload === false) {
+    throw new HTTPError(
+      "Knowledge source downloads are disabled for this agent",
+      403
+    )
+  }
+
   const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
   ctx.body = { url }
   ctx.status = 200
