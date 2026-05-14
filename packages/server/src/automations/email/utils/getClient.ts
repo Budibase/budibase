@@ -1,3 +1,4 @@
+import { blacklist } from "@budibase/backend-core"
 import { EmailTriggerAuthType, EmailTriggerInputs } from "@budibase/types"
 import { ImapFlow } from "imapflow"
 import { getAccessToken } from "../../../sdk/workspace/oauth2"
@@ -29,6 +30,10 @@ const getAuthConfig = async (inputs: EmailTriggerInputs) => {
 export const getClient = async (inputs: EmailTriggerInputs) => {
   if (!inputs) {
     throw new Error("Email trigger inputs are required")
+  }
+
+  if (await blacklist.isBlacklisted(inputs.host)) {
+    throw new Error("IMAP host is blocked or could not be resolved safely")
   }
 
   const client = new ImapFlow({

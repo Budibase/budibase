@@ -1035,6 +1035,26 @@ describe("/automations", () => {
       )
     })
 
+    it("refuses to hydrate the stored password when connection details change", async () => {
+      const payload = buildEmailAutomation("stored-secret")
+      const { automation: createdAutomation } =
+        await config.api.automation.post(payload)
+      const trigger = ensureEmailTrigger(createdAutomation.definition.trigger)
+
+      const response = await config.api.automation.testEmailConnection({
+        ...trigger.inputs,
+        host: "attacker.example.com",
+        password: "********",
+        automationId: createdAutomation._id,
+      })
+
+      expect(response).toEqual({
+        valid: false,
+        message: "IMAP password is required when connection details change",
+      })
+      expect(testEmailConnectionMock).not.toHaveBeenCalled()
+    })
+
     it("tests OAuth2 connections without a password", async () => {
       const response = await config.api.automation.testEmailConnection({
         host: "outlook.office365.com",

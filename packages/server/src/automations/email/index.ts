@@ -11,10 +11,6 @@ export const DEFAULT_MAILBOX = "INBOX"
 export const testConnection = async (
   imapInputs: EmailTriggerInputs
 ): Promise<void> => {
-  if (!imapInputs) {
-    throw new Error("Email trigger inputs are required")
-  }
-
   let imapClient: Awaited<ReturnType<typeof getClient>> | null = null
   const mailbox = imapInputs.mailbox || DEFAULT_MAILBOX
 
@@ -24,7 +20,7 @@ export const testConnection = async (
     await imapClient.mailboxOpen(mailbox)
   } finally {
     if (imapClient) {
-      await imapClient.logout().catch(console.log)
+      await imapClient.logout().catch(console.warn)
     }
   }
 }

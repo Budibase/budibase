@@ -217,9 +217,22 @@ async function hydrateEmailConnectionPassword(
     throw new HTTPError("IMAP password is required", 400)
   }
 
+  const stored = trigger.inputs
+  const connectionMatches =
+    emailInputs.host === stored.host &&
+    emailInputs.port === stored.port &&
+    emailInputs.username === stored.username &&
+    emailInputs.secure === stored.secure
+  if (!connectionMatches) {
+    throw new HTTPError(
+      "IMAP password is required when connection details change",
+      400
+    )
+  }
+
   return {
     ...emailInputs,
-    password: trigger.inputs.password,
+    password: stored.password,
   }
 }
 

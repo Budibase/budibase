@@ -46,6 +46,7 @@
     label: config.name,
     value: config._id!,
   }))
+  $: canTestConnection = hasRequiredFields(inputData, authType)
 
   onMount(() => {
     oauth2.fetch()
@@ -56,8 +57,26 @@
     return data?.[key]
   }
 
-  const getSecureValue = (inputData: unknown) =>
-    Boolean(getInputValue(inputData, "secure"))
+  const getSecureValue = (inputData: unknown) => {
+    const secure = getInputValue(inputData, "secure")
+    return typeof secure === "boolean" ? secure : true
+  }
+
+  const hasRequiredFields = (
+    inputData: unknown,
+    authType: EmailTriggerAuthType
+  ) => {
+    const host = getInputValue(inputData, "host")
+    const port = getInputValue(inputData, "port")
+    const username = getInputValue(inputData, "username")
+    if (!host || !port || !username) {
+      return false
+    }
+    if (authType === EmailTriggerAuthType.OAUTH2) {
+      return !!getInputValue(inputData, "oauth2ConfigId")
+    }
+    return !!getInputValue(inputData, "password")
+  }
 
   const isRequired = (key: string) => {
     if (key === "password") {
@@ -116,7 +135,11 @@
   <div class="email-trigger__title">
     <div class="email-trigger__title-row">
       <Label size="L">IMAP settings</Label>
-      <Button secondary on:click={testConnection} disabled={testingConnection}>
+      <Button
+        secondary
+        on:click={testConnection}
+        disabled={testingConnection || !canTestConnection}
+      >
         Test connection
       </Button>
     </div>
