@@ -88,7 +88,9 @@ describe("automation store", () => {
   })
 
   describe("getToolbarFlowEndInsertion", () => {
-    const baseAutomation = (steps: Automation["definition"]["steps"]): Automation => ({
+    const baseAutomation = (
+      steps: Automation["definition"]["steps"]
+    ): Automation => ({
       name: "Automation",
       appId: "app",
       type: "automation",

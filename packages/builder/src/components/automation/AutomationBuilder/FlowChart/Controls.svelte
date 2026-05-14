@@ -145,10 +145,18 @@
     border-radius: 50% !important;
   }
 
-  :global(.spectrum--dark) .toolbar :global(.undo-redo .spectrum-ActionButton:hover),
-  :global(.spectrum--darkest) .toolbar :global(.undo-redo .spectrum-ActionButton:hover),
-  :global(.spectrum--midnight) .toolbar :global(.undo-redo .spectrum-ActionButton:hover),
-  :global(.spectrum--nord) .toolbar :global(.undo-redo .spectrum-ActionButton:hover) {
+  :global(.spectrum--dark)
+    .toolbar
+    :global(.undo-redo .spectrum-ActionButton:hover),
+  :global(.spectrum--darkest)
+    .toolbar
+    :global(.undo-redo .spectrum-ActionButton:hover),
+  :global(.spectrum--midnight)
+    .toolbar
+    :global(.undo-redo .spectrum-ActionButton:hover),
+  :global(.spectrum--nord)
+    .toolbar
+    :global(.undo-redo .spectrum-ActionButton:hover) {
     background: var(--spectrum-global-color-gray-300) !important;
     border-radius: 50% !important;
   }

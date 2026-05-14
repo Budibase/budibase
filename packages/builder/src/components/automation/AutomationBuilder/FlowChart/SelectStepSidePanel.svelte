@@ -71,8 +71,7 @@
       : null
   $: insideLoopV2 = toolbarEnd
     ? !!(
-        flowEnd?.insertInsideLoopV2Children ||
-        flowEnd?.anchorRef?.isLoopV2Child
+        flowEnd?.insertInsideLoopV2Children || flowEnd?.anchorRef?.isLoopV2Child
       )
     : !!block?.insertIntoLoopV2
   $: loopStepId = block?.loopStepId || block?.id
