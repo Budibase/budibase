@@ -34,7 +34,7 @@ const getSafeUrl = (url: string | null, protocols: Set<string>) => {
   }
 
   try {
-    const parsedUrl = new URL(normalizedUrl, "https://example.com")
+    const parsedUrl = new URL(normalizedUrl)
     if (!protocols.has(parsedUrl.protocol)) {
       return
     }

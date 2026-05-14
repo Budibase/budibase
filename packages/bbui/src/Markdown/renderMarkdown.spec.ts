@@ -24,4 +24,14 @@ describe("renderMarkdown", () => {
 
     expect(html).toBe("<p>link</p>\n<p>image</p>\n")
   })
+
+  it("removes relative link and image targets", () => {
+    const html = renderMarkdown(
+      "[relative](/path)\n\n[protocol-relative](//example.com/path)\n\n![image](/image.png)"
+    )
+
+    expect(html).toBe(
+      "<p>relative</p>\n<p>protocol-relative</p>\n<p>image</p>\n"
+    )
+  })
 })
