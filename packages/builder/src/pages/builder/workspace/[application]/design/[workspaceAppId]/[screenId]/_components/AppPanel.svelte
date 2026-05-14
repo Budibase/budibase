@@ -35,7 +35,10 @@
     return "#fff"
   }
 
-  $: workspaceLiveIconColorValue = workspaceLiveIconColor(changingStatus, isLive)
+  $: workspaceLiveIconColorValue = workspaceLiveIconColor(
+    changingStatus,
+    isLive
+  )
 
   $: deviceIcon = getPreviewDeviceIcon(currentDevice)
 
@@ -182,15 +185,23 @@
       background 130ms ease-out,
       color 130ms ease-out;
   }
-  .workspace-live-toggle :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
+  .workspace-live-toggle
+    :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
     background: var(--color-blue-500);
     border-color: transparent;
     color: #fff;
   }
-  .workspace-live-toggle :global(button.spectrum-Button--primary.new-styles:not(.is-disabled) .spectrum-Button-label) {
+  .workspace-live-toggle
+    :global(
+      button.spectrum-Button--primary.new-styles:not(.is-disabled)
+        .spectrum-Button-label
+    ) {
     color: #fff;
   }
-  .workspace-live-toggle :global(button.spectrum-Button--primary.new-styles:not(.is-disabled):hover) {
+  .workspace-live-toggle
+    :global(
+      button.spectrum-Button--primary.new-styles:not(.is-disabled):hover
+    ) {
     background: var(--color-blue-600);
   }
 

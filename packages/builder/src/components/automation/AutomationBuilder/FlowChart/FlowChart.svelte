@@ -540,15 +540,23 @@
       background 130ms ease-out,
       color 130ms ease-out;
   }
-  .toggle-active :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
+  .toggle-active
+    :global(button.spectrum-Button--primary.new-styles:not(.is-disabled)) {
     background: var(--color-blue-500);
     border-color: transparent;
     color: #fff;
   }
-  .toggle-active :global(button.spectrum-Button--primary.new-styles:not(.is-disabled) .spectrum-Button-label) {
+  .toggle-active
+    :global(
+      button.spectrum-Button--primary.new-styles:not(.is-disabled)
+        .spectrum-Button-label
+    ) {
     color: #fff;
   }
-  .toggle-active :global(button.spectrum-Button--primary.new-styles:not(.is-disabled):hover) {
+  .toggle-active
+    :global(
+      button.spectrum-Button--primary.new-styles:not(.is-disabled):hover
+    ) {
     background: var(--color-blue-600);
   }
 
