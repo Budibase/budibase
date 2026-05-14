@@ -14,7 +14,13 @@ import type {
   FlowBlockContext,
   FlowBlockPath,
 } from "@/types/automations"
-import { SUBFLOW, STEP, BRANCH, LOOP } from "./FlowGeometry"
+import {
+  SUBFLOW,
+  STEP,
+  BRANCH,
+  LOOP,
+  LOOP_INSERT_ACTION_OFFSET,
+} from "./FlowGeometry"
 import {
   stepNode,
   anchorNode,
@@ -382,8 +388,8 @@ export const renderLoopV2Container = (
   const internalSpacing = SUBFLOW.internalSpacing
   const childHeight = SUBFLOW.childHeight
   const lrWidth = 60
-  const lrMinExit = 16
   const horizontalStepWidth = STEP.width
+  const initialInnerX = LOOP_INSERT_ACTION_OFFSET * 2
 
   let maxFanoutWidth = horizontalStepWidth
   let hasBranchChild = false
@@ -428,7 +434,7 @@ export const renderLoopV2Container = (
   const minLinearLoopWidth = 280
   containerWidth = Math.max(
     hasBranchChild ? containerWidth : minLinearLoopWidth,
-    linearWidth + lrMinExit + 40,
+    initialInnerX + linearWidth + LOOP_INSERT_ACTION_OFFSET * 2,
     maxFanoutWidth + 80,
     hasBranchChild ? SUBFLOW.laneWidth + 80 : 0
   )
@@ -458,7 +464,7 @@ export const renderLoopV2Container = (
 
   // Render children inside the container
   const stepWidth = horizontalStepWidth
-  let innerX = 40
+  let innerX = initialInnerX
   const lrGap = 60
   let lastLinearChild: AutomationStep | undefined = undefined
 

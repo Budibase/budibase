@@ -358,7 +358,9 @@
     title="Confirm Deletion"
     onOk={async () => {
       if (!blockRef) return
-      await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
+      await automationStore.actions.deleteAutomationBlock(blockRef.pathTo, {
+        cascadeNextBranchInLoop: true,
+      })
     }}
   >
     Deleting this step will also delete the Branch and its lanes below it. This

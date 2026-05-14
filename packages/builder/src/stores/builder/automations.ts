@@ -2118,7 +2118,10 @@ const automationActions = (store: AutomationStore) => ({
    *
    * @param {Array<Object>} pathTo the path to the target node
    */
-  deleteAutomationBlock: async (pathTo: Array<BlockPath>) => {
+  deleteAutomationBlock: async (
+    pathTo: Array<BlockPath>,
+    options?: { cascadeNextBranchInLoop?: boolean }
+  ) => {
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
@@ -2145,6 +2148,7 @@ const automationActions = (store: AutomationStore) => ({
 
           children.splice(lastHop.stepIdx, 1)
           if (
+            options?.cascadeNextBranchInLoop &&
             children[lastHop.stepIdx]?.stepId === AutomationActionStepId.BRANCH
           ) {
             children.splice(lastHop.stepIdx, 1)

@@ -19,7 +19,11 @@
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "../FlowChartDnD"
-  import { FLOW_ITEM_ACTION_BAR_WIDTH } from "../FlowGeometry"
+  import {
+    BRANCH_LOOP_INSERT_ACTION_OFFSET,
+    FLOW_ITEM_ACTION_BAR_WIDTH,
+    LOOP_INSERT_ACTION_OFFSET,
+  } from "../FlowGeometry"
   import {
     isBranchStep,
     AutomationActionStepId,
@@ -109,17 +113,28 @@
     labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
     labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
   }
+  $: if (isLoopSource) {
+    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
+  }
   $: if (isLoopInsertAnchor && !isBranchSource) {
-    labelX = sourceX + FLOW_ITEM_ACTION_BAR_WIDTH + 24
+    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
     labelY = sourceY
   }
   $: if (isLoopInsertAnchor && isBranchSource) {
-    labelX = sourceX + FLOW_ITEM_ACTION_BAR_WIDTH / 2 + 24
+    labelX = sourceX + BRANCH_LOOP_INSERT_ACTION_OFFSET
     labelY = sourceY
   }
 
-  $: loopTargetPath = isLoopTarget ? getLoopEdgePath("target") : undefined
-  $: loopSourcePath = isLoopSource ? getLoopEdgePath("source") : undefined
+  $: loopTargetPath = isLoopTarget
+    ? getLoopEdgePath("target", labelX)
+    : undefined
+  $: loopSourcePath = isLoopSource
+    ? getLoopEdgePath(
+        isBranchTarget ? "branch-source" : "source",
+        isBranchTarget ? preBranchLabelX : labelX
+      )
+    : undefined
 
   $: edgePath = isAnchorTarget
     ? getStraightPath({
@@ -221,10 +236,18 @@
     flow.fitView()
   }
 
-  const getLoopEdgePath = (side: "target" | "source") => {
+  const getLoopEdgePath = (
+    side: "target" | "source" | "branch-source",
+    edgeLabelX: number
+  ) => {
     const radius = 12
     const offset = Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
-    const desiredBendX = side === "target" ? labelX + offset : labelX - offset
+    const desiredBendX =
+      side === "target"
+        ? edgeLabelX + offset
+        : side === "branch-source"
+          ? edgeLabelX + offset
+          : edgeLabelX - offset
     const bendX = Math.max(
       sourceX + radius,
       Math.min(targetX - radius, desiredBendX)
