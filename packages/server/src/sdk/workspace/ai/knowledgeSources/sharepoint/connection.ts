@@ -182,6 +182,7 @@ const fetchSharePointSitesByAppToken = async (
       if (response.status === 401) {
         errorMessage =
           "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again."
+        throw new HTTPError(errorMessage, 401)
       } else if (response.status === 403) {
         errorMessage =
           "Access denied by Microsoft Graph. Ensure SharePoint application permissions are granted."
@@ -243,8 +244,18 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
   authConfigId: string
 ): Promise<KnowledgeSourceOption[]> => {
   await readConnection(datasourceId, authConfigId)
-  const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-  return fetchSharePointSitesByAppToken(bearerToken)
+  try {
+    const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
+    return fetchSharePointSitesByAppToken(bearerToken)
+  } catch (error) {
+    if (!(error instanceof HTTPError) || error.status !== 401) {
+      throw error
+    }
+
+    await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId, datasourceId)
+    const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
+    return fetchSharePointSitesByAppToken(bearerToken)
+  }
 }
 
 interface SharePointDrive {
