@@ -354,9 +354,7 @@
       stepInserted = true
 
       // Determine presence of the block before focusing
-      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
-      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
-      await automationStore.actions.selectNode(createdBlockLoc?.id)
+      await automationStore.actions.selectNode(newBlock.id)
 
       automationStore.actions.closeActionPanel()
       onClose()

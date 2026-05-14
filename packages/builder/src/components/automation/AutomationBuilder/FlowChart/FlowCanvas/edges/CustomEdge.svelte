@@ -100,11 +100,16 @@
     data?.block && "stepId" in data.block
       ? data.block.stepId === AutomationActionStepId.LOOP_V2
       : false
+  $: isLoopInsertAnchor = data?.insertIntoLoopV2 === true && isAnchorTarget
   $: isSubflowEdge = data.isSubflowEdge === true
 
   $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
     labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
     labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
+  }
+  $: if (isLoopInsertAnchor) {
+    labelX = sourceX + FLOW_ITEM_ACTION_BAR_WIDTH + 24
+    labelY = sourceY
   }
 
   $: loopTargetPath = isLoopTarget ? getLoopEdgePath("target") : undefined

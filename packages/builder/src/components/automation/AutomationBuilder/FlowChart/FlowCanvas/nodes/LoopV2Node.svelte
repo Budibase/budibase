@@ -14,6 +14,7 @@
     ? block.inputs.children.length
     : 0
   $: viewMode = $automationStore.viewMode
+  $: handleTop = `${data.handleY}px`
   const focusNodeRequest =
     getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
       "focusNodeRequest"
@@ -43,6 +44,7 @@
   class="custom-handle"
   type="target"
   position={Position.Left}
+  style={`top: ${handleTop};`}
 />
 
 <Handle

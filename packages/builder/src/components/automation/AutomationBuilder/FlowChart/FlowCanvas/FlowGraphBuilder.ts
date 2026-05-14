@@ -426,11 +426,15 @@ export const renderLoopV2Container = (
     paddingTop + maxRowHeight + paddingBottom,
     LOOP.minHeight
   )
+  const contentHeight = containerHeight - paddingTop - paddingBottom
+  const baseY = paddingTop + Math.floor((contentHeight - childHeight) / 2)
+  const loopHandleY = baseY + childHeight / 2
 
   const loopNodeData: LoopV2NodeData = {
     block: loopStep,
     containerHeight,
     containerWidth,
+    handleY: loopHandleY,
   }
   deps.newNodes.push({
     id: baseId,
@@ -444,8 +448,6 @@ export const renderLoopV2Container = (
 
   // Render children inside the container
   const stepWidth = horizontalStepWidth
-  const contentHeight = containerHeight - paddingTop - paddingBottom
-  const baseY = paddingTop + Math.floor((contentHeight - childHeight) / 2)
   let innerX = 40
   const lrGap = 60
   let lastLinearChild: AutomationStep | undefined = undefined
@@ -528,7 +530,7 @@ export const renderLoopV2Container = (
     const lastChild = children[children.length - 1]
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
-    const exitAnchorY = baseY + childHeight / 2
+    const exitAnchorY = loopHandleY
     const exitAnchorX = containerWidth
     deps.newNodes.push(
       anchorNode(exitAnchorId, baseId, {

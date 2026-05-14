@@ -15,11 +15,11 @@
   $: automation = $selectedAutomation?.data
   $: isSubflow = !!data?.isSubflow
   $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
-  $: handleOffset = isSubflow
-    ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
-    : 0
-  $: targetHandleStyle = isSubflow ? `left: ${handleOffset - 3}px;` : undefined
-  $: sourceHandleStyle = isSubflow ? `right: ${handleOffset - 3}px;` : undefined
+  $: sourceHandleInset = Math.max(0, laneWidth - STEP.width)
+  $: targetHandleStyle = isSubflow ? "left: -3px;" : undefined
+  $: sourceHandleStyle = isSubflow
+    ? `right: ${sourceHandleInset - 3}px;`
+    : undefined
 </script>
 
 <div
@@ -59,6 +59,6 @@
   .branch-container {
     width: fit-content;
     max-width: 360px;
-    margin: 0 auto;
+    margin: 0;
   }
 </style>
