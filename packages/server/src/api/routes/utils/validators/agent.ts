@@ -39,6 +39,17 @@ const SLACK_INTEGRATION_SCHEMA = Joi.object({
   .optional()
   .allow(null)
 
+const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
+  botToken: OPTIONAL_STRING,
+  webhookSecretToken: OPTIONAL_STRING,
+  botUserName: OPTIONAL_STRING,
+  chatAppId: OPTIONAL_STRING,
+  messagingEndpointUrl: OPTIONAL_STRING,
+  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+})
+  .optional()
+  .allow(null)
+
 export function createAgentValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -53,6 +64,7 @@ export function createAgentValidator() {
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
+      telegramIntegration: TELEGRAM_INTEGRATION_SCHEMA,
     })
   )
 }
@@ -78,6 +90,7 @@ export function updateAgentValidator() {
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
+      telegramIntegration: TELEGRAM_INTEGRATION_SCHEMA,
     }).unknown(true)
   )
 }
@@ -91,6 +104,10 @@ export function provisionAgentMSTeamsChannelValidator() {
 }
 
 export function provisionAgentSlackChannelValidator() {
+  return chatAppIdBodyValidator()
+}
+
+export function provisionAgentTelegramChannelValidator() {
   return chatAppIdBodyValidator()
 }
 
@@ -121,6 +138,14 @@ export function toggleAgentMSTeamsDeploymentValidator() {
 }
 
 export function toggleAgentSlackDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
+  )
+}
+
+export function toggleAgentTelegramDeploymentValidator() {
   return auth.joiValidator.body(
     Joi.object({
       enabled: Joi.boolean().required(),

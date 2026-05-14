@@ -10,12 +10,14 @@ import {
   connectAgentSharePointSiteValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
+  provisionAgentTelegramChannelValidator,
   provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   syncAgentKnowledgeSourcesValidator,
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
+  toggleAgentTelegramDeploymentValidator,
   updateAgentSharePointSiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -55,6 +57,16 @@ builderAdminRoutes
     "/api/agent/:agentId/slack/provision",
     provisionAgentSlackChannelValidator(),
     ai.provisionAgentSlackChannel
+  )
+  .post(
+    "/api/agent/:agentId/telegram/toggle",
+    toggleAgentTelegramDeploymentValidator(),
+    ai.toggleAgentTelegramDeployment
+  )
+  .post(
+    "/api/agent/:agentId/telegram/provision",
+    provisionAgentTelegramChannelValidator(),
+    ai.provisionAgentTelegramChannel
   )
   .get("/api/agent/tools", ai.fetchTools)
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)

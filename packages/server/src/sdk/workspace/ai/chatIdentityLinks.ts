@@ -129,6 +129,9 @@ export const buildChatIdentityProviderRedirectUrl = ({
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "https://teams.microsoft.com"
   }
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return "https://web.telegram.org"
+  }
   return "https://discord.com/channels/@me"
 }
 

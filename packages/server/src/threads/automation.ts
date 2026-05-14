@@ -12,6 +12,7 @@ import {
 } from "@budibase/string-templates"
 import {
   ActionFailureReason,
+  ActionType,
   Automation,
   AutomationActionStepId,
   AutomationData,
@@ -585,8 +586,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            const branchResults = await quotas.addAction(() =>
-              this.executeBranchStep(ctx, step)
+            const branchResults = await quotas.addAction(
+              ActionType.AUTOMATION_STEP,
+              () => this.executeBranchStep(ctx, step)
             )
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
@@ -631,7 +633,7 @@ class Orchestrator {
             this.reportStepProgress(step, "running", undefined, ctx)
             addToContext(
               step,
-              await quotas.addAction(async () => {
+              await quotas.addAction(ActionType.AUTOMATION_STEP, async () => {
                 const response = await this.executeStep(ctx, step)
                 if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
                   ctx.state ??= {}
@@ -922,7 +924,8 @@ class Orchestrator {
       if (
         step.stepId !== AutomationActionStepId.EXECUTE_BASH &&
         step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
-        step.stepId !== AutomationActionStepId.EXTRACT_STATE
+        step.stepId !== AutomationActionStepId.EXTRACT_STATE &&
+        step.stepId !== AutomationActionStepId.SERVER_LOG
       ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
