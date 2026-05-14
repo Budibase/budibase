@@ -33,7 +33,6 @@
     block.type === AutomationStepType.TRIGGER &&
     !$view?.dragging &&
     !!logStepData
-
 </script>
 
 <FlowItem
