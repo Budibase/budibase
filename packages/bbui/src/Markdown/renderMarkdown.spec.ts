@@ -4,7 +4,9 @@ import { renderMarkdown } from "./renderMarkdown"
 
 describe("renderMarkdown", () => {
   it("renders standard markdown", () => {
-    expect(renderMarkdown("## Title\n\n[Docs](https://docs.budibase.com)")).toBe(
+    expect(
+      renderMarkdown("## Title\n\n[Docs](https://docs.budibase.com)")
+    ).toBe(
       '<h2 id="title">Title</h2>\n<p><a href="https://docs.budibase.com">Docs</a></p>\n'
     )
   })

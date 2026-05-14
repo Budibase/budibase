@@ -4,14 +4,30 @@ const defaultRenderer = new Renderer()
 
 const LINK_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"])
 const IMAGE_PROTOCOLS = new Set(["http:", "https:"])
-const CONTROL_OR_WHITESPACE = /[\u0000-\u001F\u007F\s]+/g
+
+const isControlOrWhitespace = (char: string) => {
+  const code = char.charCodeAt(0)
+  return code <= 31 || code === 127 || char.trim() === ""
+}
+
+const normalizeUrl = (url: string) => {
+  let normalizedUrl = ""
+
+  for (const char of url.trim()) {
+    if (!isControlOrWhitespace(char)) {
+      normalizedUrl += char
+    }
+  }
+
+  return normalizedUrl
+}
 
 const getSafeUrl = (url: string | null, protocols: Set<string>) => {
   if (!url) {
     return
   }
 
-  const normalizedUrl = url.trim().replace(CONTROL_OR_WHITESPACE, "")
+  const normalizedUrl = normalizeUrl(url)
 
   if (!normalizedUrl) {
     return
