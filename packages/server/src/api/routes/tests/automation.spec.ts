@@ -6,6 +6,7 @@ import {
   AutomationTriggerStepId,
   ConfigType,
   EmailTrigger,
+  EmailTriggerAuthType,
   EmailTriggerInputs,
   FieldType,
   FilterCondition,
@@ -21,6 +22,7 @@ import {
   BUILTIN_ACTION_DEFINITIONS,
   TRIGGER_DEFINITIONS,
 } from "../../../automations"
+import * as emailAutomation from "../../../automations/email"
 import { withEnv } from "../../../environment"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
@@ -33,7 +35,13 @@ import {
   testAutomation,
 } from "./utilities/TestFunctions"
 
+jest.mock("../../../automations/email", () => ({
+  ...jest.requireActual("../../../automations/email"),
+  testConnection: jest.fn(),
+}))
+
 const MAX_RETRIES = 4
+const testEmailConnectionMock = jest.mocked(emailAutomation.testConnection)
 const {
   basicAutomation,
   newAutomation,
@@ -844,6 +852,11 @@ describe("/automations", () => {
   })
 
   describe("email trigger secrets", () => {
+    beforeEach(() => {
+      testEmailConnectionMock.mockReset()
+      testEmailConnectionMock.mockResolvedValue()
+    })
+
     const ensureEmailTrigger = (
       trigger?: Automation["definition"]["trigger"]
     ): EmailTrigger => {
@@ -864,6 +877,26 @@ describe("/automations", () => {
           username: "dom",
           password,
           mailbox: "dom",
+        } satisfies EmailTriggerInputs,
+      }
+      return newAutomation({
+        trigger,
+        steps: [],
+      })
+    }
+
+    const buildOAuthEmailAutomation = () => {
+      const trigger: EmailTrigger = {
+        ...automationTrigger(TRIGGER_DEFINITIONS.EMAIL),
+        stepId: AutomationTriggerStepId.EMAIL,
+        inputs: {
+          host: "outlook.office365.com",
+          port: 993,
+          secure: true,
+          username: "dom@example.com",
+          authType: EmailTriggerAuthType.OAUTH2,
+          oauth2ConfigId: "oauth2_config_1",
+          mailbox: "INBOX",
         } satisfies EmailTriggerInputs,
       }
       return newAutomation({
@@ -931,6 +964,90 @@ describe("/automations", () => {
       const storedTrigger = ensureEmailTrigger(stored.definition.trigger)
       expect(storedTrigger.inputs.password).toEqual("mail-secret")
       expect(storedTrigger.inputs.mailbox).toEqual("alerts")
+    })
+
+    it("does not require a password for OAuth2 triggers", async () => {
+      const payload = buildOAuthEmailAutomation()
+      const { automation: createdAutomation, message } =
+        await config.api.automation.post(payload)
+
+      expect(message).toEqual("Automation created successfully")
+      const createdTrigger = ensureEmailTrigger(
+        createdAutomation.definition.trigger
+      )
+      expect(createdTrigger.inputs).toEqual(
+        expect.objectContaining({
+          authType: EmailTriggerAuthType.OAUTH2,
+          oauth2ConfigId: "oauth2_config_1",
+        })
+      )
+      expect(createdTrigger.inputs.password).toBeUndefined()
+
+      const stored = await fetchStoredAutomation(createdAutomation._id!)
+      const storedTrigger = ensureEmailTrigger(stored.definition.trigger)
+      expect(storedTrigger.inputs.password).toBeUndefined()
+    })
+
+    it("hydrates masked passwords when testing connections", async () => {
+      const payload = buildEmailAutomation("stored-secret")
+      const { automation: createdAutomation } =
+        await config.api.automation.post(payload)
+      const trigger = ensureEmailTrigger(createdAutomation.definition.trigger)
+
+      const response = await config.api.automation.testEmailConnection({
+        ...trigger.inputs,
+        automationId: createdAutomation._id,
+      })
+
+      expect(response).toEqual({ valid: true })
+      expect(testEmailConnectionMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          host: "imap.gmail.com",
+          username: "dom",
+          password: "stored-secret",
+        })
+      )
+    })
+
+    it("tests OAuth2 connections without a password", async () => {
+      const response = await config.api.automation.testEmailConnection({
+        host: "outlook.office365.com",
+        port: 993,
+        secure: true,
+        username: "dom@example.com",
+        authType: EmailTriggerAuthType.OAUTH2,
+        oauth2ConfigId: "oauth2_config_1",
+        password: "********",
+        mailbox: "INBOX",
+      })
+
+      expect(response).toEqual({ valid: true })
+      const [inputs] = testEmailConnectionMock.mock.calls[0]
+      expect(inputs).toEqual(
+        expect.objectContaining({
+          authType: EmailTriggerAuthType.OAUTH2,
+          oauth2ConfigId: "oauth2_config_1",
+        })
+      )
+      expect(inputs.password).toBeUndefined()
+    })
+
+    it("returns connection test failures", async () => {
+      testEmailConnectionMock.mockRejectedValue(new Error("AUTH failed"))
+
+      const response = await config.api.automation.testEmailConnection({
+        host: "imap.gmail.com",
+        port: 993,
+        secure: true,
+        username: "dom",
+        password: "wrong-password",
+        mailbox: "INBOX",
+      })
+
+      expect(response).toEqual({
+        valid: false,
+        message: "AUTH failed",
+      })
     })
   })
 })

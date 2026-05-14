@@ -4,6 +4,7 @@ import {
   Automation,
   AutomationStepType,
   AutomationTriggerStepId,
+  EmailTriggerAuthType,
   EmailTriggerInputs,
 } from "@budibase/types"
 import { automationQueue } from "../bullboard"
@@ -197,6 +198,55 @@ describe("enableCronOrEmailTrigger", () => {
     expect(result.enabled).toBe(false)
     expect(mockAdd).not.toHaveBeenCalled()
     expect(mockDoWithDB).not.toHaveBeenCalled()
+  })
+
+  it("does not queue OAuth2 email triggers without a config", async () => {
+    const automation = buildEmailAutomation({
+      host: "localhost",
+      port: 993,
+      secure: false,
+      username: "dom",
+      authType: EmailTriggerAuthType.OAUTH2,
+    })
+
+    const result = await enableCronOrEmailTrigger("app_dev_123", automation)
+
+    expect(result.enabled).toBe(false)
+    expect(mockAdd).not.toHaveBeenCalled()
+    expect(mockDoWithDB).not.toHaveBeenCalled()
+  })
+
+  it("queues OAuth2 email triggers without passwords", async () => {
+    const automation = buildEmailAutomation({
+      host: "localhost",
+      port: 993,
+      secure: false,
+      username: "dom",
+      authType: EmailTriggerAuthType.OAUTH2,
+      oauth2ConfigId: "oauth2_config_1",
+    })
+    const mockPut = jest
+      .fn()
+      .mockResolvedValue({ id: automation._id, rev: "2" })
+    mockDoWithDB.mockImplementation(async (_appId, task) => {
+      const fakeDb = { put: mockPut } as unknown as Parameters<
+        NonNullable<Parameters<typeof mockDoWithDB>[1]>
+      >[0]
+      return task(fakeDb)
+    })
+
+    const result = await enableCronOrEmailTrigger("app_dev_123", automation)
+
+    expect(result.enabled).toBe(true)
+    expect(mockAdd).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        repeat: { every: 30_000 },
+        jobId: "app_dev_123_email_mockid",
+      })
+    )
+    expect(mockDoWithDB).toHaveBeenCalledTimes(1)
+    expect(mockPut).toHaveBeenCalledWith(automation)
   })
 
   it("queues email triggers with valid inputs", async () => {

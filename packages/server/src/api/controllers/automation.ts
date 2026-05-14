@@ -16,6 +16,8 @@ import {
   CreateAutomationRequest,
   CreateAutomationResponse,
   DeleteAutomationResponse,
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
   FetchAutomationResponse,
   FindAutomationResponse,
   GetAutomationActionDefinitionsResponse,
@@ -26,13 +28,17 @@ import {
   Table,
   TestAutomationRequest,
   TestAutomationResponse,
+  TestEmailConnectionRequest,
+  TestEmailConnectionResponse,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
   UpdateAutomationRequest,
   UpdateAutomationResponse,
   UserCtx,
   Workspace,
+  isEmailTrigger,
 } from "@budibase/types"
+import { testConnection } from "../../automations/email"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import * as triggers from "../../automations/triggers"
 import {
@@ -183,6 +189,51 @@ export async function getDefinitionList(
   ctx.body = {
     trigger: triggers.TRIGGER_DEFINITIONS,
     action: await actionDefs(),
+  }
+}
+
+async function hydrateEmailConnectionPassword(
+  inputs: TestEmailConnectionRequest
+): Promise<EmailTriggerInputs> {
+  const { automationId, ...emailInputs } = inputs
+  if (emailInputs.authType === EmailTriggerAuthType.OAUTH2) {
+    delete emailInputs.password
+    return emailInputs
+  }
+
+  if (emailInputs.password !== "********") {
+    return emailInputs
+  }
+
+  if (!automationId) {
+    throw new HTTPError("IMAP password is required", 400)
+  }
+
+  const automation = await context
+    .getWorkspaceDB()
+    .tryGet<Automation>(automationId)
+  const trigger = automation?.definition.trigger
+  if (!trigger || !isEmailTrigger(trigger) || !trigger.inputs.password) {
+    throw new HTTPError("IMAP password is required", 400)
+  }
+
+  return {
+    ...emailInputs,
+    password: trigger.inputs.password,
+  }
+}
+
+export async function testEmailConnection(
+  ctx: UserCtx<TestEmailConnectionRequest, TestEmailConnectionResponse>
+) {
+  try {
+    await testConnection(await hydrateEmailConnectionPassword(ctx.request.body))
+    ctx.body = { valid: true }
+  } catch (err: any) {
+    ctx.body = {
+      valid: false,
+      message: err?.message || "Unable to connect to IMAP server",
+    }
   }
 }
 

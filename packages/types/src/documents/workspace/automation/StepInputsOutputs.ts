@@ -459,12 +459,19 @@ export type CronTriggerInputs = {
   cron: string
 }
 
+export enum EmailTriggerAuthType {
+  PASSWORD = "password",
+  OAUTH2 = "oauth2",
+}
+
 export interface EmailTriggerInputs {
   host: string
   port: number
   secure: boolean
   username: string
-  password: string
+  authType?: EmailTriggerAuthType
+  password?: string
+  oauth2ConfigId?: string
   mailbox?: string
 }
 

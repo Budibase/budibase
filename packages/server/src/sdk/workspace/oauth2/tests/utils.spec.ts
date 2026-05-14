@@ -8,7 +8,7 @@ import sdk from "../../.."
 import { startContainer } from "../../../../integrations/tests/utils"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { getToken } from "../utils"
+import { getAccessToken, getToken } from "../utils"
 
 const config = new TestConfiguration()
 
@@ -68,6 +68,26 @@ describe("oauth2 utils", () => {
       )
 
       expect(response).toEqual(expect.stringMatching(/^Bearer .+/))
+    })
+
+    it("successfully generates raw access tokens", async () => {
+      const response = await config.doInContext(
+        config.devWorkspaceId,
+        async () => {
+          const oauthConfig = await sdk.oauth2.create({
+            name: generator.guid(),
+            url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+            clientId: "my-client",
+            clientSecret: "my-secret",
+            method,
+            grantType,
+          })
+
+          return getAccessToken(oauthConfig._id)
+        }
+      )
+
+      expect(response).toEqual(expect.stringMatching(/^ey.+/))
     })
 
     it("uses cached value if available", async () => {

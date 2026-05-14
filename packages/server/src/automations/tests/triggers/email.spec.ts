@@ -1,7 +1,8 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { EmailTriggerInputs } from "@budibase/types"
+import { EmailTriggerAuthType, EmailTriggerInputs } from "@budibase/types"
+import net from "net"
 
 jest.mock("../../email/utils/fetchMessages", () => ({
   fetchMessages: jest.fn(),
@@ -54,6 +55,102 @@ describe("email trigger", () => {
 
     const repeat = messages[0].opts?.repeat
     expect(repeat).toEqual({ every: 30_000 })
+  })
+})
+
+const startOAuthImapServer = async () => {
+  const commands: string[] = []
+  const server = net.createServer(socket => {
+    socket.write("* OK Mock IMAP server ready\r\n")
+
+    let buffer = ""
+    socket.on("data", chunk => {
+      buffer += chunk.toString("utf8")
+
+      let lineBreak = buffer.indexOf("\r\n")
+      while (lineBreak !== -1) {
+        const line = buffer.slice(0, lineBreak)
+        buffer = buffer.slice(lineBreak + 2)
+        commands.push(line)
+
+        const [tag, command] = line.split(" ")
+        if (command?.toUpperCase() === "CAPABILITY") {
+          socket.write(
+            `* CAPABILITY IMAP4rev1 AUTH=XOAUTH2\r\n${tag} OK CAPABILITY completed\r\n`
+          )
+        } else if (command?.toUpperCase() === "AUTHENTICATE") {
+          socket.write(`${tag} OK AUTHENTICATE completed\r\n`)
+        } else if (command?.toUpperCase() === "LOGOUT") {
+          socket.write(`* BYE Logging out\r\n${tag} OK LOGOUT completed\r\n`)
+          socket.end()
+        } else {
+          socket.write(`${tag} OK ${command} completed\r\n`)
+        }
+
+        lineBreak = buffer.indexOf("\r\n")
+      }
+    })
+  })
+
+  await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve))
+  const address = server.address()
+  if (!address || typeof address === "string") {
+    throw new Error("Unable to start mock IMAP server")
+  }
+
+  return {
+    commands,
+    port: address.port,
+    close: () => new Promise<void>(resolve => server.close(() => resolve())),
+  }
+}
+
+describe("getClient", () => {
+  afterEach(() => {
+    jest.resetModules()
+    jest.clearAllMocks()
+  })
+
+  it("authenticates with OAuth2 access tokens", async () => {
+    jest.resetModules()
+
+    const server = await startOAuthImapServer()
+    const getAccessToken = jest.fn().mockResolvedValue("raw-access-token")
+    jest.doMock("../../../sdk/workspace/oauth2", () => ({
+      getAccessToken,
+    }))
+
+    try {
+      const { getClient } = await import("../../email/utils/getClient")
+      const client = await getClient({
+        host: "127.0.0.1",
+        port: server.port,
+        secure: false,
+        username: "dom@example.com",
+        authType: EmailTriggerAuthType.OAUTH2,
+        oauth2ConfigId: "oauth2_config_1",
+      })
+
+      await client.connect()
+      await client.logout()
+
+      const authCommand = server.commands.find(command =>
+        command.includes("AUTHENTICATE XOAUTH2")
+      )
+      if (!authCommand) {
+        throw new Error("Expected XOAUTH2 authentication command")
+      }
+
+      const encodedToken = authCommand.split(" ")[3]
+      const decodedToken = Buffer.from(encodedToken, "base64").toString("utf8")
+
+      expect(getAccessToken).toHaveBeenCalledWith("oauth2_config_1")
+      expect(decodedToken).toEqual(
+        "user=dom@example.com\u0001auth=Bearer raw-access-token\u0001\u0001"
+      )
+    } finally {
+      await server.close()
+    }
   })
 })
 

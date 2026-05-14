@@ -7,6 +7,8 @@ import {
 import { automations as sharedAutomations } from "@budibase/shared-core"
 import {
   Automation,
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
   MetadataType,
   PASSWORD_REPLACEMENT,
   RequiredKeys,
@@ -26,6 +28,10 @@ export interface PersistedAutomation extends Automation {
 }
 
 const PASSWORD_DISPLAY_MASK = "********"
+
+function getEmailTriggerAuthType(inputs?: EmailTriggerInputs) {
+  return inputs?.authType || EmailTriggerAuthType.PASSWORD
+}
 
 function getDb() {
   return context.getWorkspaceDB()
@@ -342,6 +348,15 @@ function hydrateAutomationSecrets(
     return automation
   }
 
+  if (getEmailTriggerAuthType(trigger.inputs) === EmailTriggerAuthType.OAUTH2) {
+    const hydratedAutomation = cloneDeep(automation)
+    const hydratedTrigger = hydratedAutomation.definition?.trigger
+    if (isEmailTrigger(hydratedTrigger) && hydratedTrigger.inputs) {
+      delete hydratedTrigger.inputs.password
+    }
+    return hydratedAutomation
+  }
+
   if (!isMaskedPassword(trigger.inputs.password)) {
     return automation
   }
@@ -366,7 +381,11 @@ function hydrateAutomationSecrets(
 
 function maskAutomationSecrets<T extends Automation>(automation: T): T {
   const trigger = automation.definition?.trigger
-  if (isEmailTrigger(trigger) && trigger.inputs?.password) {
+  if (
+    isEmailTrigger(trigger) &&
+    getEmailTriggerAuthType(trigger.inputs) === EmailTriggerAuthType.PASSWORD &&
+    trigger.inputs?.password
+  ) {
     trigger.inputs.password = PASSWORD_DISPLAY_MASK
   }
   return automation
