@@ -20,10 +20,6 @@ interface OAuth2LogDocument extends Document {
 
 const { DocWritethrough } = cache.docWritethrough
 
-const getTokenCacheKey = (id: string) => cache.CacheKey.OAUTH2_TOKEN(id)
-const getAccessTokenCacheKey = (id: string) =>
-  cache.CacheKey.OAUTH2_TOKEN(`${id}:accessToken`)
-
 async function fetchToken(config: {
   url: string
   clientId: string
@@ -91,7 +87,7 @@ async function fetchAndParseToken(config: {
   grantType: OAuth2GrantType
   scope?: string
   audience?: string
-}): Promise<{ value: string; accessToken: string; ttl: number }> {
+}): Promise<{ value: string; ttl: number }> {
   const resp = await fetchToken(config)
   const jsonResponse = await resp.json()
   if (!resp.ok) {
@@ -100,12 +96,12 @@ async function fetchAndParseToken(config: {
   }
   const token = `${jsonResponse.token_type} ${jsonResponse.access_token}`
   const ttl = jsonResponse.expires_in ?? -1
-  return { value: token, accessToken: jsonResponse.access_token, ttl }
+  return { value: token, ttl }
 }
 
 export async function getToken(id: string) {
   const token = await cache.withCacheWithDynamicTTL(
-    getTokenCacheKey(id),
+    cache.CacheKey.OAUTH2_TOKEN(id),
     async () => {
       const config = await get(id)
       if (!config) {
@@ -120,20 +116,8 @@ export async function getToken(id: string) {
 }
 
 export async function getAccessToken(id: string) {
-  const token = await cache.withCacheWithDynamicTTL(
-    getAccessTokenCacheKey(id),
-    async () => {
-      const config = await get(id)
-      if (!config) {
-        throw new HTTPError(`oAuth config ${id} could not be found`, 400)
-      }
-      const result = await fetchAndParseToken(config)
-      return { value: result.accessToken, ttl: result.ttl }
-    }
-  )
-
-  await trackUsage(id)
-  return token
+  const token = await getToken(id)
+  return token.replace(/^[^\s]+\s/, "")
 }
 
 export async function getTokenFromConfig(
@@ -207,8 +191,5 @@ export async function getLastUsages(ids: string[]) {
 }
 
 export async function cleanStoredToken(id: string) {
-  await Promise.all([
-    cache.destroy(getTokenCacheKey(id), { useTenancy: true }),
-    cache.destroy(getAccessTokenCacheKey(id), { useTenancy: true }),
-  ])
+  await cache.destroy(cache.CacheKey.OAUTH2_TOKEN(id), { useTenancy: true })
 }
