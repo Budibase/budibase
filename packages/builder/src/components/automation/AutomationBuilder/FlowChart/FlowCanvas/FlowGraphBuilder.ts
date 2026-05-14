@@ -5,6 +5,7 @@ import {
   type BranchStep,
   type Branch,
   type LoopV2Step,
+  type BlockPath,
   BlockRef,
 } from "@budibase/types"
 import type { AutomationBlock, LoopV2NodeData } from "@/types/automations"
@@ -13,7 +14,13 @@ import type {
   FlowBlockContext,
   FlowBlockPath,
 } from "@/types/automations"
-import { SUBFLOW, STEP, BRANCH, LOOP } from "./FlowGeometry"
+import {
+  SUBFLOW,
+  STEP,
+  BRANCH,
+  LOOP,
+  LOOP_INSERT_ACTION_OFFSET,
+} from "./FlowGeometry"
 import {
   stepNode,
   anchorNode,
@@ -220,9 +227,11 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           )
           const prevPath = resolveBlockPath(prevBlock, deps)
           deps.newEdges.push(
-            edgeAddItem(prevId, child.id, {
+            edgeLoopAddItem(prevId, child.id, {
               block: prevBlock,
-              ...(prevPath ? { pathTo: prevPath } : {}),
+              loopStepId: loopContext!.loopStepId,
+              loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+              ...(prevPath ? { pathTo: prevPath as BlockPath[] } : {}),
             })
           )
           prevId = child.id
@@ -231,6 +240,9 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         })
 
         const anchorId = `anchor-${branchNodeId}`
+        if (branchChildren.length === 0) {
+          childX = branchX + STEP.width + 40
+        }
         deps.newNodes.push(
           anchorNode(anchorId, parentId, {
             x: childX,
@@ -239,9 +251,13 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         )
         const anchorSourcePath = resolveBlockPath(prevBlock, deps)
         deps.newEdges.push(
-          edgeAddItem(prevId, anchorId, {
+          edgeLoopAddItem(prevId, anchorId, {
             block: prevBlock,
-            ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
+            loopStepId: loopContext!.loopStepId,
+            loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+            ...(anchorSourcePath
+              ? { pathTo: anchorSourcePath as BlockPath[] }
+              : {}),
           })
         )
 
@@ -372,8 +388,8 @@ export const renderLoopV2Container = (
   const internalSpacing = SUBFLOW.internalSpacing
   const childHeight = SUBFLOW.childHeight
   const lrWidth = 60
-  const lrMinExit = 16
   const horizontalStepWidth = STEP.width
+  const initialInnerX = LOOP_INSERT_ACTION_OFFSET * 2
 
   let maxFanoutWidth = horizontalStepWidth
   let hasBranchChild = false
@@ -418,7 +434,7 @@ export const renderLoopV2Container = (
   const minLinearLoopWidth = 280
   containerWidth = Math.max(
     hasBranchChild ? containerWidth : minLinearLoopWidth,
-    linearWidth + lrMinExit + 40,
+    initialInnerX + linearWidth + LOOP_INSERT_ACTION_OFFSET * 2,
     maxFanoutWidth + 80,
     hasBranchChild ? SUBFLOW.laneWidth + 80 : 0
   )
@@ -426,11 +442,15 @@ export const renderLoopV2Container = (
     paddingTop + maxRowHeight + paddingBottom,
     LOOP.minHeight
   )
+  const contentHeight = containerHeight - paddingTop - paddingBottom
+  const baseY = paddingTop + Math.floor((contentHeight - childHeight) / 2)
+  const loopHandleY = baseY + childHeight / 2
 
   const loopNodeData: LoopV2NodeData = {
     block: loopStep,
     containerHeight,
     containerWidth,
+    handleY: loopHandleY,
   }
   deps.newNodes.push({
     id: baseId,
@@ -444,9 +464,7 @@ export const renderLoopV2Container = (
 
   // Render children inside the container
   const stepWidth = horizontalStepWidth
-  const contentHeight = containerHeight - paddingTop - paddingBottom
-  const baseY = paddingTop + Math.floor((contentHeight - childHeight) / 2)
-  let innerX = 40
+  let innerX = initialInnerX
   const lrGap = 60
   let lastLinearChild: AutomationStep | undefined = undefined
 
@@ -528,7 +546,7 @@ export const renderLoopV2Container = (
     const lastChild = children[children.length - 1]
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
-    const exitAnchorY = baseY
+    const exitAnchorY = loopHandleY
     const exitAnchorX = containerWidth
     deps.newNodes.push(
       anchorNode(exitAnchorId, baseId, {

@@ -9,6 +9,7 @@ import {
   updateTestHistory,
 } from "../utils"
 import {
+  ActionType,
   Automation,
   AutomationJob,
   AutomationStepType,
@@ -36,8 +37,8 @@ jest.mock("../../features", () => ({
 
 jest.mock("@budibase/pro", () => ({
   quotas: {
-    addAutomation: jest.fn(async <T>(fn: () => Promise<T> | T) => fn()),
-    addAction: jest.fn(async <T>(fn: () => Promise<T> | T) => fn()),
+    addAutomation: async <T>(fn: () => Promise<T> | T) => fn(),
+    addAction: async <T>(_type: ActionType, fn: () => Promise<T> | T) => fn(),
   },
 }))
 

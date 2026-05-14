@@ -316,6 +316,7 @@ export interface LoopV2NodeData {
   block: LoopV2Step
   containerHeight: number
   containerWidth: number
+  handleY: number
   [key: string]: unknown
 }
 

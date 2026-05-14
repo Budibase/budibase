@@ -19,7 +19,11 @@
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "../FlowChartDnD"
-  import { FLOW_ITEM_ACTION_BAR_WIDTH } from "../FlowGeometry"
+  import {
+    BRANCH_LOOP_INSERT_ACTION_OFFSET,
+    FLOW_ITEM_ACTION_BAR_WIDTH,
+    LOOP_INSERT_ACTION_OFFSET,
+  } from "../FlowGeometry"
   import {
     isBranchStep,
     AutomationActionStepId,
@@ -100,15 +104,37 @@
     data?.block && "stepId" in data.block
       ? data.block.stepId === AutomationActionStepId.LOOP_V2
       : false
+  $: isLoopInsertAnchor = data?.insertIntoLoopV2 === true && isAnchorTarget
   $: isSubflowEdge = data.isSubflowEdge === true
+  $: isBranchSource =
+    data?.block && "branchNode" in data.block && data.block.branchNode === true
 
   $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
     labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
     labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
   }
+  $: if (isLoopSource) {
+    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
+  }
+  $: if (isLoopInsertAnchor && !isBranchSource) {
+    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
+  }
+  $: if (isLoopInsertAnchor && isBranchSource) {
+    labelX = sourceX + BRANCH_LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
+  }
 
-  $: loopTargetPath = isLoopTarget ? getLoopTargetPath() : undefined
-  $: loopSourcePath = isLoopSource ? getLoopSourcePath() : undefined
+  $: loopTargetPath = isLoopTarget
+    ? getLoopEdgePath("target", labelX)
+    : undefined
+  $: loopSourcePath = isLoopSource
+    ? getLoopEdgePath(
+        isBranchTarget ? "branch-source" : "source",
+        isBranchTarget ? preBranchLabelX : labelX
+      )
+    : undefined
 
   $: edgePath = isAnchorTarget
     ? getStraightPath({
@@ -210,44 +236,22 @@
     flow.fitView()
   }
 
-  const getLoopTargetPath = () => {
+  const getLoopEdgePath = (
+    side: "target" | "source" | "branch-source",
+    edgeLabelX: number
+  ) => {
     const radius = 12
+    const offset = Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
     const desiredBendX =
-      labelX + Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
+      side === "target"
+        ? edgeLabelX + offset
+        : side === "branch-source"
+          ? edgeLabelX + offset
+          : edgeLabelX - offset
     const bendX = Math.max(
       sourceX + radius,
       Math.min(targetX - radius, desiredBendX)
     )
-    const yDirection = targetY >= sourceY ? 1 : -1
-
-    if (Math.abs(targetY - sourceY) <= radius * 2) {
-      return [
-        `M ${sourceX},${sourceY}`,
-        `L ${bendX},${sourceY}`,
-        `L ${bendX},${targetY}`,
-        `L ${targetX},${targetY}`,
-      ].join(" ")
-    }
-
-    return [
-      `M ${sourceX},${sourceY}`,
-      `L ${bendX - radius},${sourceY}`,
-      `Q ${bendX},${sourceY} ${bendX},${sourceY + yDirection * radius}`,
-      `L ${bendX},${targetY - yDirection * radius}`,
-      `Q ${bendX},${targetY} ${bendX + radius},${targetY}`,
-      `L ${targetX},${targetY}`,
-    ].join(" ")
-  }
-
-  const getLoopSourcePath = () => {
-    const radius = 12
-    const desiredBendX =
-      labelX - Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) - radius
-    const bendX = Math.max(
-      sourceX + radius,
-      Math.min(targetX - radius, desiredBendX)
-    )
-
     const yDirection = targetY >= sourceY ? 1 : -1
 
     if (Math.abs(targetY - sourceY) <= radius * 2) {

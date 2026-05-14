@@ -37,7 +37,11 @@ import {
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
 import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
-import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
+import {
+  applyBranchLaneClearance,
+  applyLoopClearance,
+  applyPostLoopBranchClearance,
+} from "./FlowCanvas/FlowLayout"
 
 // -----------------
 // Type Guards
@@ -457,6 +461,8 @@ export const dagreLayoutAutomation = (
 
   if (compactLoops) {
     applyLoopClearance(graph)
+    applyPostLoopBranchClearance(graph)
+    applyBranchLaneClearance(graph)
   }
   return graph
 }

@@ -39,6 +39,7 @@
   let actionOrderMap: Record<string, number> = {}
   let isSelectingAction = false
   let actionSelectionLocked = false
+  type BranchPathLike = Array<{ branchIdx?: number | null }>
 
   $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
@@ -127,11 +128,17 @@
     ]
   }
 
+  const pathHasBranchHop = (path: BranchPathLike | undefined) => {
+    return path?.some(hop => Number.isInteger(hop.branchIdx)) ?? false
+  }
+
   $: blockRef = block?.id
     ? $selectedAutomation.blockRefs?.[block.id]
     : undefined
   $: targetPath =
     blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+  $: targetPathIsInsideBranch = pathHasBranchHop(targetPath)
+  $: targetIsLoopContainer = insideLoopV2 && loopStepId === block?.id
 
   $: lastStep = blockRef?.terminating
   $: pathSteps =
@@ -342,7 +349,12 @@
         action.stepId,
         action
       )
-      if (insideLoopV2 && loopStepId) {
+      if (
+        insideLoopV2 &&
+        loopStepId &&
+        !block?.branchNode &&
+        (!targetPathIsInsideBranch || targetIsLoopContainer)
+      ) {
         await automationStore.actions.addBlockToLoopChildren(
           loopStepId,
           newBlock,
@@ -354,9 +366,7 @@
       stepInserted = true
 
       // Determine presence of the block before focusing
-      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
-      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
-      await automationStore.actions.selectNode(createdBlockLoc?.id)
+      await automationStore.actions.selectNode(newBlock.id)
 
       automationStore.actions.closeActionPanel()
       onClose()

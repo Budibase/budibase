@@ -27,6 +27,12 @@ export enum MonthlyQuotaName {
   ACTIONS = "actions",
 }
 
+export enum ActionType {
+  AUTOMATION_STEP = "automationStep",
+  CRUD = "crud",
+  AI_AGENT = "aiAgent",
+}
+
 export enum ConstantQuotaName {
   AGENT_LOG_RETENTION_DAYS = "agentLogRetentionDays",
   AUTOMATION_LOG_RETENTION_DAYS = "automationLogRetentionDays",

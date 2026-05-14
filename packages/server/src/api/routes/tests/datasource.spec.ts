@@ -422,6 +422,31 @@ describe("/datasources", () => {
         "{{ env.USERNAME }}"
       )
     })
+
+    it("scrubs sensitive longform fields in get response", async () => {
+      const privateKey = [
+        "-----BEGIN PRIVATE KEY-----",
+        "secret-material",
+        "-----END PRIVATE KEY-----",
+      ].join("\n")
+      const created = await config.api.datasource.create({
+        type: "datasource",
+        name: "Snowflake longform secret",
+        source: SourceName.SNOWFLAKE,
+        config: {
+          account: "test-account",
+          username: "test-user",
+          privateKey,
+          warehouse: "test-warehouse",
+          database: "test-database",
+          schema: "test-schema",
+        },
+      })
+
+      const fetched = await config.api.datasource.get(created._id!)
+
+      expect(fetched.config!.privateKey).toBe(PASSWORD_REPLACEMENT)
+    })
   })
 
   describe("auth config password preservation", () => {

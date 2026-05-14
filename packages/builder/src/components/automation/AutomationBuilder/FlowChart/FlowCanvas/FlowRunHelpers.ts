@@ -108,7 +108,7 @@ export function getRunHighlight(results: unknown): RunHighlight | undefined {
   }
   const lastResult = getLastExecutedResult(runResults)
   if (isTerminalFailure(lastResult)) {
-    if (lastResult.outputs.status === "stopped") {
+    if (lastResult.outputs.status === AutomationStatus.STOPPED) {
       return "stopped"
     }
     return "error"
