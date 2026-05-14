@@ -115,7 +115,14 @@ describe("getClient", () => {
     jest.resetModules()
 
     const server = await startOAuthImapServer()
+    const isBlacklisted = jest.fn().mockResolvedValue(false)
     const getAccessToken = jest.fn().mockResolvedValue("raw-access-token")
+    jest.doMock("@budibase/backend-core", () => ({
+      ...jest.requireActual("@budibase/backend-core"),
+      blacklist: {
+        isBlacklisted,
+      },
+    }))
     jest.doMock("../../../sdk/workspace/oauth2", () => ({
       getAccessToken,
     }))
