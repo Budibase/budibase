@@ -1,10 +1,8 @@
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { encodeJSBinding } from "@budibase/string-templates"
 import { AutomationStatus } from "@budibase/types"
 
-function encodeJS(js: string): string {
-  return `{{ js "${Buffer.from(js, "utf-8").toString("base64")}" }}`
-}
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the server log action", () => {
   const config = new TestConfiguration()
@@ -32,7 +30,7 @@ describe("test the server log action", () => {
   it("should fail when log text JavaScript errors", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
-      .serverLog({ text: encodeJS("return kill") })
+      .serverLog({ text: encodeJSBinding("return kill") })
       .test({ fields: {} })
 
     expect(result.status).toEqual(AutomationStatus.ERROR)
@@ -45,7 +43,7 @@ describe("test the server log action", () => {
   it("should stop after a log text JavaScript error", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
-      .serverLog({ text: encodeJS("return kill") })
+      .serverLog({ text: encodeJSBinding("return kill") })
       .serverLog({ text: "This should not run" })
       .test({ fields: {} })
 
