@@ -170,6 +170,23 @@ export const createChatIdentityLinkSession = async ({
 export const getChatIdentityLinkSession = async (token: string) =>
   loadSession(token)
 
+export const prepareChatIdentityLinkSessionConfirmation = async (
+  token: string
+) => {
+  const session = await loadSession(token)
+  if (!session || session.tenantId !== context.getTenantId()) {
+    return undefined
+  }
+
+  const confirmationToken = utils.newid()
+  const nextSession: ChatIdentityLinkSession = {
+    ...session,
+    confirmationToken,
+  }
+  await storeSession(nextSession)
+  return nextSession
+}
+
 export const consumeChatIdentityLinkSession = async (token: string) => {
   const session = await loadSession(token)
   if (!session) {

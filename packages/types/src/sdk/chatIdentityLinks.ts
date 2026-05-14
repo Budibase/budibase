@@ -10,6 +10,7 @@ export interface ChatIdentityLinkSession {
   teamId?: string
   guildId?: string
   providerTenantId?: string
+  confirmationToken?: string
   createdAt: string
   expiresAt: string
 }
