@@ -13,6 +13,7 @@
     type AutomationStep,
     type AutomationTrigger,
     type BlockRef,
+    type BlockPath,
     AutomationActionStepId,
     AutomationTriggerStepId,
     isBranchStep,
@@ -50,6 +51,10 @@
   let webhookModal: Modal | undefined
   let configPanel: HTMLDivElement | undefined
   let confirmCascadeDialog: any
+
+  type DeleteFocusTarget =
+    | { type: "node"; id: string }
+    | { type: "branch"; nodeId: string; stepId: string; branchIdx: number }
 
   $: memoAutomation.set($selectedAutomation.data)
   $: memoContext.set($evaluationContext)
@@ -107,6 +112,90 @@
     if (configPanel && configPanel?.scrollTop > 0 && selectedNodeId) {
       configPanel.scrollTop = 0
     }
+  }
+
+  const getPostLoopDeleteFocusTarget = (
+    ref: BlockRef,
+    block: AutomationStep | AutomationTrigger | undefined,
+    automation: Automation | undefined,
+    pathSteps: Array<AutomationStep | AutomationTrigger>
+  ): DeleteFocusTarget | undefined => {
+    if (!block || !isLoopV2Step(block)) {
+      return
+    }
+
+    const lastHop = ref.pathTo?.at(-1) as BlockPath | undefined
+    if (!lastHop) {
+      return
+    }
+
+    if (typeof lastHop.stepIdx === "number" && lastHop.stepIdx > 0) {
+      const previousStep = pathSteps.at(-2)
+      return previousStep ? { type: "node", id: previousStep.id } : undefined
+    }
+
+    if (Number.isInteger(lastHop.branchIdx) && lastHop.branchStepId) {
+      const branchRef = blockRefs[lastHop.branchStepId]
+      const branchStep = automationStore.actions.getBlockByRef(
+        automation,
+        branchRef
+      )
+      if (!branchStep || !isBranchStep(branchStep)) {
+        return
+      }
+
+      const branchIdx = lastHop.branchIdx!
+      const branch = branchStep.inputs?.branches?.[branchIdx]
+      if (!branch) {
+        return
+      }
+
+      return {
+        type: "branch",
+        nodeId: `branch-${lastHop.branchStepId}-${branchIdx}-${branch.id}`,
+        stepId: lastHop.branchStepId,
+        branchIdx,
+      }
+    }
+
+    if (lastHop.loopStepId) {
+      return { type: "node", id: lastHop.loopStepId }
+    }
+
+    return $memoAutomation?.definition.trigger?.id
+      ? { type: "node", id: $memoAutomation.definition.trigger.id }
+      : undefined
+  }
+
+  const focusAfterDelete = async (target: DeleteFocusTarget | undefined) => {
+    if (!target) {
+      return
+    }
+
+    if (target.type === "branch") {
+      await automationStore.actions.selectBranchNode(target)
+      return
+    }
+
+    await automationStore.actions.selectNode(target.id)
+  }
+
+  const deleteSelectedBlock = async (
+    options?: Parameters<typeof automationStore.actions.deleteAutomationBlock>[1]
+  ) => {
+    if (!blockRef) {
+      return
+    }
+
+    const focusTarget = getPostLoopDeleteFocusTarget(
+      blockRef,
+      $memoBlock,
+      $memoAutomation,
+      pathSteps
+    )
+
+    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo, options)
+    await focusAfterDelete(focusTarget)
   }
 
   // When duplicating a step, especially a Loop V2 container, we need
@@ -249,7 +338,7 @@
               confirmCascadeDialog?.show()
               return
             }
-            await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
+            await deleteSelectedBlock()
           }}
         >
           Delete
@@ -357,8 +446,7 @@
     okText="Delete"
     title="Confirm Deletion"
     onOk={async () => {
-      if (!blockRef) return
-      await automationStore.actions.deleteAutomationBlock(blockRef.pathTo, {
+      await deleteSelectedBlock({
         cascadeNextBranchInLoop: true,
       })
     }}

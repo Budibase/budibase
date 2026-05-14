@@ -205,7 +205,7 @@
     }
   }
 
-  $: if (!$automationStore.selectedNodeId) {
+  $: if (!$automationStore.selectedNodeId && !$automationStore.selectedBranchNode) {
     lastVisibleSelectionCheck = undefined
   }
 
@@ -218,6 +218,17 @@
     lastVisibleSelectionCheck = $automationStore.selectedNodeId
     visibleSelectionRequest = $automationStore.selectedNodeId
     ensureSelectedNodeVisible($automationStore.selectedNodeId)
+  }
+
+  $: if (
+    $automationStore.selectedBranchNode?.nodeId &&
+    $automationStore.selectedBranchNode.nodeId !== lastVisibleSelectionCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
+    visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
+    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
   }
 
   // Check if automation has unpublished changes
