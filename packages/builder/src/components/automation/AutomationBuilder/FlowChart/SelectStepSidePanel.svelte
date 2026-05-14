@@ -342,7 +342,7 @@
         action.stepId,
         action
       )
-      if (insideLoopV2 && loopStepId) {
+      if (insideLoopV2 && loopStepId && !block?.branchNode) {
         await automationStore.actions.addBlockToLoopChildren(
           loopStepId,
           newBlock,
