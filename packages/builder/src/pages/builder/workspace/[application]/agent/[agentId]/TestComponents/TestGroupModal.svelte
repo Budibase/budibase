@@ -3,12 +3,13 @@
   import type { AgentTestGroup } from "@budibase/types"
 
   type Props = {
+    disabled?: boolean
     onSave: (
       _group: AgentTestGroup | Omit<AgentTestGroup, "id">
     ) => Promise<boolean>
   }
 
-  let { onSave }: Props = $props()
+  let { disabled = false, onSave }: Props = $props()
 
   let modal: Modal
   let loading = $state(false)
@@ -18,6 +19,8 @@
   const validate = (value: string) => value.trim().length > 0
 
   export const show = (group?: AgentTestGroup) => {
+    if (disabled) return
+
     groupId = group?.id ?? null
     name = group?.name ?? ""
     loading = false
@@ -25,7 +28,7 @@
   }
 
   const handleConfirm = async () => {
-    if (loading || !validate(name)) {
+    if (loading || disabled || !validate(name)) {
       return
     }
 
@@ -54,7 +57,7 @@
     confirmText={editing ? "Save" : "Create"}
     cancelText="Cancel"
     onConfirm={handleConfirm}
-    disabled={loading || !!error}
+    disabled={loading || disabled || !!error}
     size="M"
   >
     <Input bind:value={name} label="Name" placeholder="Test group" {error} />

@@ -276,7 +276,7 @@
     } = {}
   ) => {
     const agentId = currentAgent?._id
-    if (!agentId || saving) return false
+    if (!agentId || saving || running) return false
 
     saving = true
     try {
@@ -303,6 +303,8 @@
   }
 
   const saveCase = async (testCase: AgentTestCase) => {
+    if (running) return false
+
     const isNew = !suite.cases.some(c => c.id === testCase.id)
     const cases = isNew
       ? [...suite.cases, testCase]
@@ -334,6 +336,8 @@
   }
 
   const duplicateCase = async (caseId: string) => {
+    if (running) return
+
     const sourceCase = suite.cases.find(testCase => testCase.id === caseId)
     if (!sourceCase) return
 
@@ -365,6 +369,8 @@
   }
 
   const removeCase = async (caseId: string) => {
+    if (running) return
+
     const testCase = suite.cases.find(c => c.id === caseId)
     if (!testCase) return
 
@@ -388,6 +394,8 @@
   const saveGroup = async (
     group: AgentTestGroup | Omit<AgentTestGroup, "id">
   ) => {
+    if (running) return false
+
     const nextGroup = "id" in group ? group : { ...group, id: Helpers.uuid() }
     const isNew = !suite.groups.some(existing => existing.id === nextGroup.id)
     const groups = isNew
@@ -418,6 +426,8 @@
   }
 
   const deleteGroup = async () => {
+    if (running) return
+
     if (!selectedGroupId || suite.groups.length <= 1) {
       return
     }
@@ -561,7 +571,7 @@
     scope: RunScope
   }) => {
     const agentId = currentAgent?._id
-    if (!agentId || saving) return false
+    if (!agentId || saving || running) return false
 
     try {
       const { runId } = await API.runAgentTestSuite(agentId, body)
@@ -583,7 +593,7 @@
   }
 
   const runCase = async (caseId: string) => {
-    if (runningCaseIds.has(caseId)) return false
+    if (running) return false
     return startRun({
       body: { caseId },
       caseIds: [caseId],
@@ -593,7 +603,7 @@
 
   const runAllTests = async () => {
     const agentId = currentAgent?._id
-    if (!agentId || !selectedGroupId || saving) return false
+    if (!agentId || !selectedGroupId || saving || running) return false
 
     const groupCaseIds = suite.cases
       .filter(testCase => testCase.groupId === selectedGroupId)
@@ -678,10 +688,15 @@
     {aiConfigOptions}
     defaultAiConfigId={currentAgent?.aiconfig}
     isExisting={id => suite.cases.some(c => c.id === id)}
+    disabled={running}
     onSave={saveAndRunCase}
   />
 
-  <TestGroupModal bind:this={testGroupModal} onSave={saveGroup} />
+  <TestGroupModal
+    bind:this={testGroupModal}
+    disabled={running}
+    onSave={saveGroup}
+  />
 
   <ConfirmDialog
     bind:this={deleteGroupDialog}

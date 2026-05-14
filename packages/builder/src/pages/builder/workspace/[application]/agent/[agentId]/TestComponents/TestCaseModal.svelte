@@ -15,6 +15,7 @@
     aiConfigOptions: AIConfigOption[]
     defaultAiConfigId?: string
     isExisting: (_id: string) => boolean
+    disabled?: boolean
     onSave: (_testCase: AgentTestCase) => Promise<boolean>
   }
 
@@ -24,6 +25,7 @@
     aiConfigOptions,
     defaultAiConfigId,
     isExisting,
+    disabled = false,
     onSave,
   }: Props = $props()
 
@@ -64,6 +66,8 @@
   })
 
   export const show = (testCase: AgentTestCase) => {
+    if (disabled) return
+
     draftCase = copyCase(testCase)
     loading = false
     modal.show()
@@ -108,7 +112,7 @@
   let canRunTest = $derived(isDraftValid(draftCase))
 
   const handleConfirm = async () => {
-    if (!draftCase || loading || !canRunTest) return
+    if (!draftCase || loading || disabled || !canRunTest) return
 
     loading = true
     try {
@@ -214,7 +218,11 @@
           Cancel
         </Button>
 
-        <Button cta disabled={loading || !canRunTest} on:click={handleConfirm}>
+        <Button
+          cta
+          disabled={loading || disabled || !canRunTest}
+          on:click={handleConfirm}
+        >
           {loading ? "Running..." : "Run test"}
         </Button>
       </div>

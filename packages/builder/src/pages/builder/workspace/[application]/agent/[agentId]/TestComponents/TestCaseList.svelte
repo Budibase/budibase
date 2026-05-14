@@ -200,9 +200,7 @@
           disabled={!casesForSelectedGroup.length ||
             loading ||
             saving ||
-            casesForSelectedGroup.some(testCase =>
-              runningCaseIds.has(testCase.id)
-            )}
+            running}
           on:click={onRunAll}
         >
           Run all tests
@@ -223,7 +221,13 @@
           getOptionValue={option => option.value}
         />
       </div>
-      <Button secondary icon="plus" size="M" on:click={onAddCase}>
+      <Button
+        secondary
+        icon="plus"
+        size="M"
+        disabled={loading || saving || running}
+        on:click={onAddCase}
+      >
         Add test
       </Button>
     </div>
@@ -242,7 +246,12 @@
           <Body size="S" color="var(--spectrum-global-color-gray-400)">
             No tests yet.
           </Body>
-          <Button secondary icon="plus" on:click={onAddCase}>
+          <Button
+            secondary
+            icon="plus"
+            disabled={loading || saving || running}
+            on:click={onAddCase}
+          >
             Add first test
           </Button>
         </div>
@@ -253,7 +262,14 @@
           <Body size="S" color="var(--spectrum-global-color-gray-400)">
             {selectedGroup?.name || "This group"} has no tests yet.
           </Body>
-          <Button secondary icon="plus" on:click={onAddCase}>Add test</Button>
+          <Button
+            secondary
+            icon="plus"
+            disabled={loading || saving || running}
+            on:click={onAddCase}
+          >
+            Add test
+          </Button>
         </div>
       </div>
     {:else if !filteredCases.length}
@@ -320,7 +336,7 @@
             </button>
 
             <div class="case-cell case-cell-actions">
-              <ActionMenu align="right" roundedPopover>
+              <ActionMenu align="right" disabled={running} roundedPopover>
                 <div slot="control">
                   <Icon size="M" hoverable name="dots-three" />
                 </div>
@@ -337,7 +353,7 @@
 {#snippet caseMenuItems(caseId: string)}
   <MenuItem
     icon="play"
-    disabled={runningCaseIds.has(caseId)}
+    disabled={running}
     on:click={() => onRunCase(caseId)}
   >
     Run test
