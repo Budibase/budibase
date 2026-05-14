@@ -1063,7 +1063,6 @@ describe("/automations", () => {
         username: "dom@example.com",
         authType: EmailTriggerAuthType.OAUTH2,
         oauth2ConfigId: "oauth2_config_1",
-        password: "********",
         mailbox: "INBOX",
       })
 

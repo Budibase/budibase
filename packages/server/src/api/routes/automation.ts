@@ -13,6 +13,7 @@ import { EmailTriggerAuthType } from "@budibase/types"
 import Joi from "joi"
 
 const optionalString = Joi.string().optional().allow(null).allow("")
+const emptyString = Joi.valid(null, "").optional()
 
 const emailTriggerInputsValidator = middleware.joiValidator.body(
   Joi.object({
@@ -25,13 +26,13 @@ const emailTriggerInputsValidator = middleware.joiValidator.body(
       .default(EmailTriggerAuthType.PASSWORD),
     password: Joi.when("authType", {
       is: EmailTriggerAuthType.OAUTH2,
-      then: optionalString,
+      then: emptyString,
       otherwise: Joi.string().required(),
     }),
     oauth2ConfigId: Joi.when("authType", {
       is: EmailTriggerAuthType.OAUTH2,
       then: Joi.string().required(),
-      otherwise: optionalString,
+      otherwise: emptyString,
     }),
     mailbox: optionalString,
     automationId: optionalString,
