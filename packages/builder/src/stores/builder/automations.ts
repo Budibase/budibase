@@ -2809,7 +2809,7 @@ const automationActions = (store: AutomationStore) => ({
       )
 
       await automationStore.actions.save(updated)
-      await automationStore.actions.selectNode(targetStep.id)
+      await automationStore.actions.selectNode(loopBlock.id)
     } catch (e) {
       notifications.error("Error wrapping step in Loop")
       console.error("Error wrapping step in Loop V2", e)

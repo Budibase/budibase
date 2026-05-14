@@ -5,7 +5,6 @@
     AutomationStepType,
     type Automation,
     type AutomationLog,
-    type AutomationResults,
     type AutomationStep,
     type AutomationStepResult,
     type AutomationTrigger,
@@ -14,6 +13,7 @@
   import { getContext } from "svelte"
   import type { Writable } from "svelte/store"
   import { getLogStepData } from "./AutomationStepHelpers"
+  import { getRunResults } from "./FlowCanvas/FlowRunHelpers"
   import type { DragView } from "./FlowCanvas/FlowChartDnD"
   import FlowItem from "./FlowItem.svelte"
 
@@ -34,17 +34,6 @@
     !$view?.dragging &&
     !!logStepData
 
-  const getRunResults = (value: unknown): AutomationResults | undefined => {
-    const isRunResults =
-      !!value &&
-      typeof value === "object" &&
-      "steps" in value &&
-      Array.isArray(value.steps) &&
-      "trigger" in value &&
-      !!value.trigger
-
-    return isRunResults ? (value as AutomationResults) : undefined
-  }
 </script>
 
 <FlowItem

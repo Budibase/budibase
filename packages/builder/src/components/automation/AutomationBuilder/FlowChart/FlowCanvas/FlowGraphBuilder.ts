@@ -528,7 +528,7 @@ export const renderLoopV2Container = (
     const lastChild = children[children.length - 1]
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
-    const exitAnchorY = baseY
+    const exitAnchorY = baseY + childHeight / 2
     const exitAnchorX = containerWidth
     deps.newNodes.push(
       anchorNode(exitAnchorId, baseId, {

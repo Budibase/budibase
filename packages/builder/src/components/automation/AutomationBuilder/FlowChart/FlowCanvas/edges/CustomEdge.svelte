@@ -107,8 +107,8 @@
     labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
   }
 
-  $: loopTargetPath = isLoopTarget ? getLoopTargetPath() : undefined
-  $: loopSourcePath = isLoopSource ? getLoopSourcePath() : undefined
+  $: loopTargetPath = isLoopTarget ? getLoopEdgePath("target") : undefined
+  $: loopSourcePath = isLoopSource ? getLoopEdgePath("source") : undefined
 
   $: edgePath = isAnchorTarget
     ? getStraightPath({
@@ -210,44 +210,14 @@
     flow.fitView()
   }
 
-  const getLoopTargetPath = () => {
+  const getLoopEdgePath = (side: "target" | "source") => {
     const radius = 12
-    const desiredBendX =
-      labelX + Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
+    const offset = Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
+    const desiredBendX = side === "target" ? labelX + offset : labelX - offset
     const bendX = Math.max(
       sourceX + radius,
       Math.min(targetX - radius, desiredBendX)
     )
-    const yDirection = targetY >= sourceY ? 1 : -1
-
-    if (Math.abs(targetY - sourceY) <= radius * 2) {
-      return [
-        `M ${sourceX},${sourceY}`,
-        `L ${bendX},${sourceY}`,
-        `L ${bendX},${targetY}`,
-        `L ${targetX},${targetY}`,
-      ].join(" ")
-    }
-
-    return [
-      `M ${sourceX},${sourceY}`,
-      `L ${bendX - radius},${sourceY}`,
-      `Q ${bendX},${sourceY} ${bendX},${sourceY + yDirection * radius}`,
-      `L ${bendX},${targetY - yDirection * radius}`,
-      `Q ${bendX},${targetY} ${bendX + radius},${targetY}`,
-      `L ${targetX},${targetY}`,
-    ].join(" ")
-  }
-
-  const getLoopSourcePath = () => {
-    const radius = 12
-    const desiredBendX =
-      labelX - Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) - radius
-    const bendX = Math.max(
-      sourceX + radius,
-      Math.min(targetX - radius, desiredBendX)
-    )
-
     const yDirection = targetY >= sourceY ? 1 : -1
 
     if (Math.abs(targetY - sourceY) <= radius * 2) {
