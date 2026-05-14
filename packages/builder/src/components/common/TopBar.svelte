@@ -24,6 +24,10 @@
   let publishSuccessPopover: PopoverAPI | undefined
   let topBarEl: HTMLElement | undefined
   let topBarObserver: ResizeObserver | undefined
+  $: lastVisibleBreadcrumbIndex = breadcrumbs.reduce(
+    (lastIndex, breadcrumb, idx) => (breadcrumb.text ? idx : lastIndex),
+    -1
+  )
 
   $: if (topBarEl) {
     topBarObserver?.disconnect()
@@ -63,7 +67,12 @@
     {#each breadcrumbs as breadcrumb, idx}
       {#if breadcrumb.text}
         <div class="breadcrumb-item">
-          <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+          <a
+            href={$url(breadcrumb.url || "./")}
+            aria-current={idx === lastVisibleBreadcrumbIndex
+              ? "page"
+              : undefined}>{breadcrumb.text}</a
+          >
           {#if breadcrumb.tag}
             <div class="breadcrumb-tag-wrapper">
               <Tag emphasized>{breadcrumb.tag}</Tag>
@@ -139,7 +148,7 @@
     font-weight: 500 !important;
     color: var(--spectrum-global-color-gray-600);
   }
-  .breadcrumb-item:last-child > a {
+  .breadcrumb-item a[aria-current="page"] {
     color: var(--spectrum-global-color-gray-900);
   }
   .breadcrumbs .divider {
