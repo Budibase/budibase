@@ -1,6 +1,6 @@
 import { describe, it, vi } from "vitest"
 import { writable } from "svelte/store"
-import { automationStore } from "../automations"
+import { automationStore, isNoOpBlockMove } from "../automations"
 import { type AutomationBlockRef } from "@/types/automations"
 import { nestedLoopBranchAutomation } from "@/test/automationFixtures"
 
@@ -73,5 +73,104 @@ describe("automation store", () => {
       "branch",
       "branch-child",
     ])
+  })
+
+  it("allows moving the first branch step into another branch on the same branch block", () => {
+    const sourcePath = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        stepIdx: 0,
+        id: "source-step",
+      },
+    ]
+    const destPath = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 1,
+        branchStepId: "branch",
+        stepIdx: 0,
+        id: "branch",
+      },
+    ]
+
+    expect(isNoOpBlockMove(sourcePath, destPath)).toBe(false)
+  })
+
+  it("allows moving the first branch step into a branch with the same index on another branch block", () => {
+    const sourcePath = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "source-branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "source-branch",
+        stepIdx: 0,
+        id: "source-step",
+      },
+    ]
+    const destPath = [
+      {
+        stepIdx: 2,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "dest-branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "dest-branch",
+        stepIdx: 0,
+        id: "dest-branch",
+      },
+    ]
+
+    expect(isNoOpBlockMove(sourcePath, destPath)).toBe(false)
+  })
+
+  it("treats moving the first branch step into its own branch node as a no-op", () => {
+    const sourcePath = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        stepIdx: 0,
+        id: "source-step",
+      },
+    ]
+    const destPath = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        stepIdx: 0,
+        id: "branch",
+      },
+    ]
+
+    expect(isNoOpBlockMove(sourcePath, destPath)).toBe(true)
   })
 })

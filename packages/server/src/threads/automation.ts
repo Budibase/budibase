@@ -924,7 +924,8 @@ class Orchestrator {
       if (
         step.stepId !== AutomationActionStepId.EXECUTE_BASH &&
         step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
-        step.stepId !== AutomationActionStepId.EXTRACT_STATE
+        step.stepId !== AutomationActionStepId.EXTRACT_STATE &&
+        step.stepId !== AutomationActionStepId.SERVER_LOG
       ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the

@@ -101,6 +101,26 @@ import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
 import { contextMenuStore } from "./contextMenu"
 
+export const isNoOpBlockMove = (
+  sourcePath: BlockPath[],
+  destPath: BlockPath[]
+): boolean => {
+  const pathSource = sourcePath.at(-1)
+  const pathEnd = destPath.at(-1)
+  if (!pathSource || !pathEnd) {
+    return false
+  }
+
+  const isOwnDragzone = pathSource.id === pathEnd.id
+  const isFirstBranchStep =
+    pathEnd.branchStepId &&
+    pathEnd.branchStepId === pathSource.branchStepId &&
+    pathEnd.branchIdx === pathSource.branchIdx &&
+    pathSource.stepIdx === 0
+
+  return Boolean(isOwnDragzone || isFirstBranchStep)
+}
+
 const initialAutomationState: AutomationStoreState = {
   automations: [],
   testProgress: {},
@@ -276,26 +296,14 @@ const automationActions = (store: AutomationStore) => ({
     destPath: BlockPath[],
     automation: Automation
   ) => {
-    // The last part of the source node address, containing the id.
-    const pathSource = sourcePath.at(-1)
+    // If dragging into an area that will not affect the tree structure
+    // Ignore the drag and drop.
+    if (isNoOpBlockMove(sourcePath, destPath)) {
+      return
+    }
 
     // The last part of the destination node address, containing the id.
     const pathEnd = destPath.at(-1)
-
-    // Check if dragging a step into its own drag zone
-    const isOwnDragzone = pathSource?.id === pathEnd?.id
-
-    // Check if dragging the first branch step into the branch node drag zone
-    const isFirstBranchStep =
-      pathEnd?.branchStepId &&
-      pathEnd.branchIdx === pathSource?.branchIdx &&
-      pathSource?.stepIdx === 0
-
-    // If dragging into an area that will not affect the tree structure
-    // Ignore the drag and drop.
-    if (isOwnDragzone || isFirstBranchStep) {
-      return
-    }
 
     // Use core delete to remove and return the deleted block
     // from the automation
