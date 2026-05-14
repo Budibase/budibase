@@ -502,11 +502,17 @@
       return
     }
 
+    const enabledConditions = conditions.filter(
+      condition => !condition.disabled
+    )
+
     // Default visible to false if there is a show condition
-    let nextVisible = !conditions.find(condition => condition.action === "show")
+    let nextVisible = !enabledConditions.find(
+      condition => condition.action === "show"
+    )
 
     // Execute conditions and determine settings and visibility changes
-    const activeConditions = getActiveConditions(conditions)
+    const activeConditions = getActiveConditions(enabledConditions)
     const result = reduceConditionActions(activeConditions)
     if (result.visible != null) {
       nextVisible = result.visible

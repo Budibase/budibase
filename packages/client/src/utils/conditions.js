@@ -8,6 +8,10 @@ export const getActiveConditions = conditions => {
   }
 
   return conditions.filter(condition => {
+    if (condition.disabled) {
+      return false
+    }
+
     // Parse values into correct types
     if (condition.valueType === "number") {
       condition.referenceValue = parseFloat(condition.referenceValue)

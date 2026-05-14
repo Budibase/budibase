@@ -34,9 +34,13 @@ const evaluateButtonConditions = conditions => {
     return { visible: true, settingUpdates: {} }
   }
 
+  const enabledConditions = conditions.filter(condition => !condition.disabled)
+
   // Keep in line with Component.svelte's condition evaluation behavior.
-  let visible = !conditions.find(condition => condition.action === "show")
-  const activeConditions = getActiveConditions(conditions)
+  let visible = !enabledConditions.find(
+    condition => condition.action === "show"
+  )
+  const activeConditions = getActiveConditions(enabledConditions)
   const result = reduceConditionActions(activeConditions)
   if (result.visible != null) {
     visible = result.visible
