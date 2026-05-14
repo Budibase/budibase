@@ -181,7 +181,9 @@
   }
 
   const deleteSelectedBlock = async (
-    options?: Parameters<typeof automationStore.actions.deleteAutomationBlock>[1]
+    options?: Parameters<
+      typeof automationStore.actions.deleteAutomationBlock
+    >[1]
   ) => {
     if (!blockRef) {
       return
@@ -194,7 +196,10 @@
       pathSteps
     )
 
-    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo, options)
+    await automationStore.actions.deleteAutomationBlock(
+      blockRef.pathTo,
+      options
+    )
     await focusAfterDelete(focusTarget)
   }
 

@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
-import {
-  branchStep,
-  loopStep,
-  serverLogStep,
-} from "@/test/automationFixtures"
+import { branchStep, loopStep, serverLogStep } from "@/test/automationFixtures"
 import { renderLoopV2Container } from "./FlowGraphBuilder"
 import {
   FLOW_ITEM_ACTION_BAR_WIDTH,

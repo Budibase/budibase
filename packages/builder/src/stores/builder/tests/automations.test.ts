@@ -247,8 +247,8 @@ describe("automation store", () => {
       selectedAutomationId: automation._id!,
     }))
 
-    const pathToDelete = get(selectedAutomation).blockRefs["before-branch"]
-      .pathTo
+    const pathToDelete =
+      get(selectedAutomation).blockRefs["before-branch"].pathTo
 
     await automationStore.actions.deleteAutomationBlock(pathToDelete)
 
@@ -306,8 +306,8 @@ describe("automation store", () => {
       selectedAutomationId: automation._id!,
     }))
 
-    const pathToDelete = get(selectedAutomation).blockRefs["before-branch"]
-      .pathTo
+    const pathToDelete =
+      get(selectedAutomation).blockRefs["before-branch"].pathTo
 
     await automationStore.actions.deleteAutomationBlock(pathToDelete, {
       cascadeNextBranchInLoop: true,

@@ -205,7 +205,10 @@
     }
   }
 
-  $: if (!$automationStore.selectedNodeId && !$automationStore.selectedBranchNode) {
+  $: if (
+    !$automationStore.selectedNodeId &&
+    !$automationStore.selectedBranchNode
+  ) {
     lastVisibleSelectionCheck = undefined
   }
 
