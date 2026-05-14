@@ -5,6 +5,7 @@ import {
   type BranchStep,
   type Branch,
   type LoopV2Step,
+  type BlockPath,
   BlockRef,
 } from "@budibase/types"
 import type { AutomationBlock, LoopV2NodeData } from "@/types/automations"
@@ -220,9 +221,11 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           )
           const prevPath = resolveBlockPath(prevBlock, deps)
           deps.newEdges.push(
-            edgeAddItem(prevId, child.id, {
+            edgeLoopAddItem(prevId, child.id, {
               block: prevBlock,
-              ...(prevPath ? { pathTo: prevPath } : {}),
+              loopStepId: loopContext!.loopStepId,
+              loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+              ...(prevPath ? { pathTo: prevPath as BlockPath[] } : {}),
             })
           )
           prevId = child.id
@@ -231,6 +234,9 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         })
 
         const anchorId = `anchor-${branchNodeId}`
+        if (branchChildren.length === 0) {
+          childX = branchX + STEP.width + 40
+        }
         deps.newNodes.push(
           anchorNode(anchorId, parentId, {
             x: childX,
@@ -239,9 +245,13 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         )
         const anchorSourcePath = resolveBlockPath(prevBlock, deps)
         deps.newEdges.push(
-          edgeAddItem(prevId, anchorId, {
+          edgeLoopAddItem(prevId, anchorId, {
             block: prevBlock,
-            ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
+            loopStepId: loopContext!.loopStepId,
+            loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+            ...(anchorSourcePath
+              ? { pathTo: anchorSourcePath as BlockPath[] }
+              : {}),
           })
         )
 

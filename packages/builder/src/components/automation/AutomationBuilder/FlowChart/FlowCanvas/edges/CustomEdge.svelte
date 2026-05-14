@@ -102,13 +102,19 @@
       : false
   $: isLoopInsertAnchor = data?.insertIntoLoopV2 === true && isAnchorTarget
   $: isSubflowEdge = data.isSubflowEdge === true
+  $: isBranchSource =
+    data?.block && "branchNode" in data.block && data.block.branchNode === true
 
   $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
     labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
     labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
   }
-  $: if (isLoopInsertAnchor) {
+  $: if (isLoopInsertAnchor && !isBranchSource) {
     labelX = sourceX + FLOW_ITEM_ACTION_BAR_WIDTH + 24
+    labelY = sourceY
+  }
+  $: if (isLoopInsertAnchor && isBranchSource) {
+    labelX = sourceX + FLOW_ITEM_ACTION_BAR_WIDTH / 2 + 24
     labelY = sourceY
   }
 

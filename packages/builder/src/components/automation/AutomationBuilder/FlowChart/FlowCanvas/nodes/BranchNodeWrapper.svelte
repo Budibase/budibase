@@ -4,7 +4,7 @@
   import type { ViewMode } from "@/types/automations"
   import { type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
-  import { STEP, SUBFLOW } from "../FlowGeometry"
+  import { SUBFLOW } from "../FlowGeometry"
 
   export let data: BranchNodeData
 
@@ -15,11 +15,8 @@
   $: automation = $selectedAutomation?.data
   $: isSubflow = !!data?.isSubflow
   $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
-  $: sourceHandleInset = Math.max(0, laneWidth - STEP.width)
   $: targetHandleStyle = isSubflow ? "left: -3px;" : undefined
-  $: sourceHandleStyle = isSubflow
-    ? `right: ${sourceHandleInset - 3}px;`
-    : undefined
+  $: sourceHandleStyle = isSubflow ? "right: -3px;" : undefined
 </script>
 
 <div
@@ -53,8 +50,8 @@
     max-width: 360px;
   }
   .branch-wrapper.subflow {
-    width: var(--branch-wrapper-width);
-    max-width: var(--branch-wrapper-width);
+    width: fit-content;
+    max-width: 360px;
   }
   .branch-container {
     width: fit-content;
