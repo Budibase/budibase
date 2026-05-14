@@ -134,13 +134,13 @@
     font-size: 11px;
     line-height: 1.1;
   }
-  .breadcrumbs a {
+  .breadcrumb-item a {
     font-size: 14px;
     font-weight: 500 !important;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .breadcrumbs a:first-child {
     color: var(--spectrum-global-color-gray-600);
+  }
+  .breadcrumb-item:last-child > a {
+    color: var(--spectrum-global-color-gray-900);
   }
   .breadcrumbs .divider {
     font-size: 14px;
