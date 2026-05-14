@@ -99,6 +99,10 @@ export function determineTrigger(sessionId: string): string {
     return "Discord"
   }
 
+  if (sessionId.startsWith("telegram:")) {
+    return "Telegram"
+  }
+
   if (sessionId.startsWith("chat:") || sessionId.startsWith("chatconvo_")) {
     return "Chat"
   }
