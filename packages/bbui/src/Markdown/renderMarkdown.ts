@@ -1,80 +1,52 @@
-import DOMPurify from "dompurify"
-import { marked, Renderer } from "marked"
+import { marked } from "marked"
+import sanitizeHtml from "sanitize-html"
 
-const defaultRenderer = new Renderer()
-
-const LINK_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"])
-const IMAGE_PROTOCOLS = new Set(["http:", "https:"])
-
-const isControlOrWhitespace = (char: string) => {
-  const code = char.charCodeAt(0)
-  return code <= 31 || code === 127 || char.trim() === ""
-}
-
-const normalizeUrl = (url: string) => {
-  let normalizedUrl = ""
-
-  for (const char of url.trim()) {
-    if (!isControlOrWhitespace(char)) {
-      normalizedUrl += char
-    }
-  }
-
-  return normalizedUrl
-}
-
-const getSafeUrl = (url: string | null, protocols: Set<string>) => {
-  if (!url) {
-    return
-  }
-
-  const normalizedUrl = normalizeUrl(url)
-
-  if (!normalizedUrl) {
-    return
-  }
-
-  try {
-    const parsedUrl = new URL(normalizedUrl)
-    if (!protocols.has(parsedUrl.protocol)) {
-      return
-    }
-    return normalizedUrl
-  } catch (_err) {
-    return
-  }
-}
-
-const renderer = new Renderer()
-
-renderer.html = () => ""
-
-renderer.link = (href: string | null, title: string | null, text: string) => {
-  const safeUrl = getSafeUrl(href, LINK_PROTOCOLS)
-
-  if (!safeUrl) {
-    return text
-  }
-
-  return defaultRenderer.link(safeUrl, title, text)
-}
-
-renderer.image = (href: string | null, title: string | null, text: string) => {
-  const safeUrl = getSafeUrl(href, IMAGE_PROTOCOLS)
-
-  if (!safeUrl) {
-    return text
-  }
-
-  return defaultRenderer.image(safeUrl, title, text)
-}
+const MARKDOWN_TAGS = [
+  "a",
+  "blockquote",
+  "br",
+  "code",
+  "del",
+  "em",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "img",
+  "li",
+  "ol",
+  "p",
+  "pre",
+  "strong",
+  "table",
+  "tbody",
+  "td",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+]
 
 export const renderMarkdown = (markdown: string | undefined) => {
   if (!markdown) {
     return ""
   }
 
-  const html = marked.parse(markdown, { async: false, renderer })
+  const html = marked.parse(markdown, { async: false })
 
-  return DOMPurify.sanitize(html)
+  return sanitizeHtml(html, {
+    allowedTags: MARKDOWN_TAGS,
+    allowedAttributes: {
+      a: ["href", "title"],
+      img: ["alt", "src", "title"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: {
+      img: ["http", "https"],
+    },
+    allowProtocolRelative: false,
+  })
 }
