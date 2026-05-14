@@ -13,4 +13,5 @@ export interface Webhook extends Document {
     target: string
   }
   bodySchema?: JSONSchema7
+  schemaToken?: string
 }
