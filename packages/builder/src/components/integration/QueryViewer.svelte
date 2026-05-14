@@ -164,9 +164,10 @@
   }
 
   const handleScroll = (e: Event) => {
-    scrolling = e.currentTarget instanceof HTMLElement
-      ? e.currentTarget.scrollTop !== 0
-      : false
+    scrolling =
+      e.currentTarget instanceof HTMLElement
+        ? e.currentTarget.scrollTop !== 0
+        : false
   }
 
   const handleBindingsChange = (
@@ -232,10 +233,12 @@
                 goto(`../../${response._id}`)
               }
             }}
-            disabled={!!(loading ||
+            disabled={!!(
+              loading ||
               !newQuery.name ||
               nameError ||
-              rows.length === 0)}
+              rows.length === 0
+            )}
             overBackground
           >
             <Icon size="S" name="floppy-disk" />
