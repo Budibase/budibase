@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Icon } from "@budibase/bbui"
+  import { Body, Icon, Modal } from "@budibase/bbui"
   import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
   import { onMount } from "svelte"
   import type { Route } from "@/types/routing"
@@ -7,6 +7,8 @@
   import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import { flattenedRoutes } from "@/stores/routing"
+  import { licensing } from "@/stores/portal/licensing"
+  import { ActionsBreakdownModal } from "@/components/usage"
 
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
@@ -14,9 +16,18 @@
   export let showBudibaseAIMetric = true
 
   let githubStars: number | null = null
+  let actionsBreakdownModal: Modal
+
   $: canViewOrganisationUsers = $flattenedRoutes.some(
     (route: Route) => route.path === "/people/users"
   )
+
+  $: actionsBreakdown = $licensing.actionsBreakdown
+  $: actionsUsage = {
+    name: "Actions",
+    used: metrics?.operationsThisMonth ?? 0,
+    total: $licensing.actionsLimit ?? 0,
+  }
 
   const formatMetric = (value: number) => {
     return new Intl.NumberFormat("en").format(value)
@@ -71,9 +82,27 @@
     <Body size="XL" weight="600">
       {metrics ? formatMetric(metrics.operationsThisMonth) : "-"}
     </Body>
-    <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Actions this month
-    </Body>
+    {#if actionsBreakdown}
+      <button
+        type="button"
+        class="metric-label-link metric-label-button"
+        on:click={() => actionsBreakdownModal.show()}
+      >
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          Actions this month
+        </Body>
+        <Icon
+          name="arrow-up-right"
+          size="XS"
+          color="var(--spectrum-global-color-gray-600)"
+          weight="regular"
+        />
+      </button>
+    {:else}
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        Actions this month
+      </Body>
+    {/if}
   </div>
 
   {#if showBudibaseAIMetric}
@@ -109,6 +138,12 @@
     </a>
   </div>
 </div>
+
+{#if actionsBreakdown}
+  <Modal bind:this={actionsBreakdownModal}>
+    <ActionsBreakdownModal usage={actionsUsage} breakdown={actionsBreakdown} />
+  </Modal>
+{/if}
 
 <style>
   .metrics {

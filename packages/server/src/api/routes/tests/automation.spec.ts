@@ -15,6 +15,7 @@ import {
   RowDeletedTriggerInputs,
   SettingsConfig,
   Table,
+  WebhookTriggerInputs,
   isDidNotTriggerResponse,
   isEmailTrigger,
 } from "@budibase/types"
@@ -42,6 +43,24 @@ jest.mock("../../../automations/email", () => ({
 
 const MAX_RETRIES = 4
 const testEmailConnectionMock = jest.mocked(emailAutomation.testConnection)
+const hasWebhookSchemaUrl = (
+  inputs: Automation["definition"]["trigger"]["inputs"]
+): inputs is Pick<WebhookTriggerInputs, "schemaUrl"> => {
+  if (!inputs || typeof inputs !== "object") {
+    return false
+  }
+
+  return "schemaUrl" in inputs && typeof inputs.schemaUrl === "string"
+}
+const getWebhookSchemaUrl = (automation: Automation): string => {
+  const inputs = automation.definition.trigger.inputs
+  if (hasWebhookSchemaUrl(inputs)) {
+    return inputs.schemaUrl
+  }
+
+  throw new Error("Webhook trigger schema URL was not generated.")
+}
+
 const {
   basicAutomation,
   newAutomation,
@@ -528,12 +547,19 @@ describe("/automations", () => {
       )
       jest.clearAllMocks()
 
-      await config.api.automation.update(automation)
+      const { automation: updatedAutomation } =
+        await config.api.automation.update(automation)
 
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
       expect(events.automation.stepDeleted).not.toHaveBeenCalled()
       expect(events.automation.triggerUpdated).toHaveBeenCalledTimes(1)
+
+      expect(getWebhookSchemaUrl(updatedAutomation)).toMatch(
+        new RegExp(
+          `^api/webhooks/schema/${config.getDevWorkspaceId()}/wh_[^/]+/[^/]+$`
+        )
+      )
     })
 
     it("adds automation steps", async () => {

@@ -275,7 +275,7 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
     // but the trigger endpoint will always be used in production
     const prodAppId = dbCore.getProdWorkspaceID(appId)
     newTrigger.inputs = {
-      schemaUrl: `api/webhooks/schema/${appId}/${id}`,
+      schemaUrl: `api/webhooks/schema/${appId}/${id}/${webhook.schemaToken}`,
       triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,
     }
   }

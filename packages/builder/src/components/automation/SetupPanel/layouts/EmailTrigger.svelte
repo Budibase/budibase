@@ -56,6 +56,9 @@
     return data?.[key]
   }
 
+  const getSecureValue = (inputData: unknown) =>
+    Boolean(getInputValue(inputData, "secure"))
+
   const isRequired = (key: string) => {
     if (key === "password") {
       return authType === EmailTriggerAuthType.PASSWORD
@@ -89,17 +92,20 @@
 
     testingConnection = true
     try {
-      const result = await API.testEmailConnection({
+      const { valid, message } = await API.testEmailConnection({
         ...(inputData as EmailTriggerInputs),
+        secure: getSecureValue(inputData),
         automationId: $selectedAutomation.data?._id,
       })
-      if (result.valid) {
+      if (valid) {
         notifications.success("Connection established.")
-      } else {
-        notifications.error(result.message || "Connection failed.")
+        return
       }
-    } catch (err: any) {
-      notifications.error(`Connection failed - ${err.message}`)
+
+      notifications.error(message || "Connection failed.")
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error"
+      notifications.error(`Connection failed - ${errorMessage}`)
     } finally {
       testingConnection = false
     }
@@ -145,7 +151,7 @@
           fullWidth
         >
           <Select
-            value={Boolean(getInputValue(inputData, key))}
+            value={getSecureValue(inputData)}
             options={securityOptions}
             placeholder={false}
             getOptionLabel={getSecurityOptionLabel}
