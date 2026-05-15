@@ -1,7 +1,14 @@
 <script lang="ts">
   import { Body, Button, ButtonGroup, Input, Modal, ModalContent } from "@budibase/bbui"
+  import { z } from "zod"
 
   interface SharePointQuickSetupDetails {
+    tenantId: string
+    clientId: string
+    clientSecret: string
+  }
+
+  interface SharePointQuickSetupFormData {
     tenantId: string
     clientId: string
     clientSecret: string
@@ -20,37 +27,59 @@
   let tenantId = $state("")
   let clientId = $state("")
   let clientSecret = $state("")
-  let tenantIdError = $state<string | undefined>()
-  let clientIdError = $state<string | undefined>()
-  let clientSecretError = $state<string | undefined>()
+  let errors = $state<Record<string, string>>({})
+  let blurred = $state<Record<keyof SharePointQuickSetupFormData, boolean>>({
+    tenantId: false,
+    clientId: false,
+    clientSecret: false,
+  })
 
-  const resetErrors = () => {
-    tenantIdError = undefined
-    clientIdError = undefined
-    clientSecretError = undefined
+  const requiredString = (errorMessage: string) =>
+    z
+      .string({
+        error: issue => (issue.input === undefined ? errorMessage : undefined),
+      })
+      .trim()
+      .min(1, errorMessage)
+
+  const validator = z.object({
+    tenantId: requiredString("Tenant ID is required"),
+    clientId: requiredString("Client ID is required"),
+    clientSecret: requiredString("Client secret is required"),
+  })
+
+  const clearValidationState = () => {
+    errors = {}
+    blurred = {
+      tenantId: false,
+      clientId: false,
+      clientSecret: false,
+    }
   }
 
   const validate = () => {
-    resetErrors()
-    const tenant = tenantId.trim()
-    const client = clientId.trim()
-    const secret = clientSecret.trim()
-
-    if (!tenant) {
-      tenantIdError = "Tenant ID is required"
+    const validationResult = validator.safeParse({
+      tenantId,
+      clientId,
+      clientSecret,
+    })
+    errors = {}
+    if (!validationResult.success) {
+      const flattened = validationResult.error.flatten()
+      errors = Object.entries(flattened.fieldErrors).reduce<
+        Record<string, string>
+      >((acc, [field, fieldErrors]) => {
+        if (fieldErrors?.[0]) {
+          acc[field] = fieldErrors[0]
+        }
+        return acc
+      }, {})
     }
-    if (!client) {
-      clientIdError = "Client ID is required"
-    }
-    if (!secret) {
-      clientSecretError = "Client secret is required"
-    }
-
-    return !!tenant && !!client && !!secret
+    return validationResult
   }
 
   export function show() {
-    resetErrors()
+    clearValidationState()
     modal?.show()
   }
 
@@ -59,14 +88,22 @@
   }
 
   const handleCreate = async () => {
-    if (creating || !validate()) {
+    if (creating) {
       return
     }
-    await onCreate({
-      tenantId: tenantId.trim(),
-      clientId: clientId.trim(),
-      clientSecret: clientSecret.trim(),
-    })
+
+    blurred = {
+      tenantId: true,
+      clientId: true,
+      clientSecret: true,
+    }
+
+    const result = validate()
+    if (!result.success) {
+      return
+    }
+
+    await onCreate(result.data)
   }
 </script>
 
@@ -93,9 +130,15 @@
           value={tenantId}
           on:change={e => {
             tenantId = e.detail
+            if (blurred.tenantId) {
+              validate()
+            }
           }}
-          on:blur={validate}
-          error={tenantIdError}
+          on:blur={() => {
+            blurred.tenantId = true
+            validate()
+          }}
+          error={blurred.tenantId ? errors.tenantId : undefined}
           required
         />
         <Input
@@ -104,9 +147,15 @@
           value={clientId}
           on:change={e => {
             clientId = e.detail
+            if (blurred.clientId) {
+              validate()
+            }
           }}
-          on:blur={validate}
-          error={clientIdError}
+          on:blur={() => {
+            blurred.clientId = true
+            validate()
+          }}
+          error={blurred.clientId ? errors.clientId : undefined}
           required
         />
         <Input
@@ -116,9 +165,15 @@
           value={clientSecret}
           on:change={e => {
             clientSecret = e.detail
+            if (blurred.clientSecret) {
+              validate()
+            }
           }}
-          on:blur={validate}
-          error={clientSecretError}
+          on:blur={() => {
+            blurred.clientSecret = true
+            validate()
+          }}
+          error={blurred.clientSecret ? errors.clientSecret : undefined}
           required
         />
       </div>
