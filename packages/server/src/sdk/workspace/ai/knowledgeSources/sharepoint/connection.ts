@@ -245,7 +245,10 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
 ): Promise<KnowledgeSourceOption[]> => {
   await readConnection(datasourceId, authConfigId)
   try {
-    const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
+    const bearerToken = await getSharePointBearerToken(
+      datasourceId,
+      authConfigId
+    )
     return await fetchSharePointSitesByAppToken(bearerToken)
   } catch (error) {
     if (
@@ -257,7 +260,10 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
     }
 
     await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId, datasourceId)
-    const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
+    const bearerToken = await getSharePointBearerToken(
+      datasourceId,
+      authConfigId
+    )
     return await fetchSharePointSitesByAppToken(bearerToken)
   }
 }

@@ -609,7 +609,6 @@
     }
     return []
   }
-
 </script>
 
 <Layout noPadding>
