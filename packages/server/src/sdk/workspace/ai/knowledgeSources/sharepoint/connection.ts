@@ -246,15 +246,19 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
   await readConnection(datasourceId, authConfigId)
   try {
     const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-    return fetchSharePointSitesByAppToken(bearerToken)
+    return await fetchSharePointSitesByAppToken(bearerToken)
   } catch (error) {
-    if (!(error instanceof HTTPError) || error.status !== 401) {
+    if (
+      typeof error !== "object" ||
+      error == null ||
+      ("status" in error ? error.status : undefined) !== 401
+    ) {
       throw error
     }
 
     await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId, datasourceId)
     const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-    return fetchSharePointSitesByAppToken(bearerToken)
+    return await fetchSharePointSitesByAppToken(bearerToken)
   }
 }
 

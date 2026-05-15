@@ -101,6 +101,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
   })
 
   beforeEach(() => {
+    getTokenFromConfigMock.mockReset()
     cleanStoredTokensForAuthConfigMock.mockReset()
     mockOAuthBearerToken()
   })
@@ -242,7 +243,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
     )
   })
 
-  it("refreshes token once for 401 and then fails", async () => {
+  it("retries with refreshed token once for 401 and then fails", async () => {
     mockDatasource()
     const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
@@ -259,8 +260,8 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
         status: 401,
       })
     )
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(2)
     expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
     expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
       authConfigId,
@@ -304,6 +305,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
   })
 
   beforeEach(() => {
+    getTokenFromConfigMock.mockReset()
     cleanStoredTokensForAuthConfigMock.mockReset()
     mockOAuthBearerToken()
   })
@@ -326,38 +328,23 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
     )
   })
 
-  it("uses fresh token after a 401", async () => {
+  it("clears cached token on 401, retries once, and surfaces auth guidance", async () => {
     mockDatasource()
-    const fetchMock = jest
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        json: async () => ({}),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          value: [
-            {
-              id: "site-1",
-              displayName: "Site One",
-              webUrl: "https://contoso.sharepoint.com/sites/site-1",
-            },
-          ],
-        }),
-      } as Response)
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+    } as Response)
 
     await expect(
       fetchSharePointSitesByDatasourceAuthConfig(datasourceId, authConfigId)
-    ).resolves.toEqual([
-      {
-        id: "site-1",
-        name: "Site One",
-        webUrl: "https://contoso.sharepoint.com/sites/site-1",
-      },
-    ])
+    ).rejects.toEqual(
+      expect.objectContaining({
+        message:
+          "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again.",
+        status: 401,
+      })
+    )
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(getTokenFromConfigMock).toHaveBeenCalledTimes(2)
