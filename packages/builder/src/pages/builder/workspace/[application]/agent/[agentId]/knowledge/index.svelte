@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Body, Checkbox, Layout, notifications } from "@budibase/bbui"
-  import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
   import { getErrorMessage } from "@/helpers/errors"
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
@@ -14,7 +13,6 @@
   import { workspaceDeploymentStore } from "@/stores/builder"
   import {
     agentsStore,
-    knowledgeConnectionsStore,
     selectedAgent,
   } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
@@ -107,12 +105,6 @@
     }
     return $agentsStore.knowledgeByAgent[agentId]?.sharePointSources || []
   })
-  let hasSharePointConnection = $derived(
-    $knowledgeConnectionsStore.connections.some(
-      connection =>
-        connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
-    )
-  )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
       .map(source => source.config.site.id)
@@ -306,10 +298,6 @@
   })
 
   async function openSharePointFlow() {
-    if (!hasSharePointConnection) {
-      bb.settings("/connections/apis/new/microsoft-sharepoint")
-      return
-    }
     await openSharePointSiteModal()
   }
 

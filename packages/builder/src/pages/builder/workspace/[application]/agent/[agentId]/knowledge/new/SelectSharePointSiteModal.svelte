@@ -1,14 +1,34 @@
 <script lang="ts">
   import { notifications } from "@budibase/bbui"
-  import { type KnowledgeSourceOption } from "@budibase/types"
+  import {
+    OAuth2CredentialsMethod,
+    OAuth2GrantType,
+    RestAuthType,
+    type KnowledgeSourceOption,
+    type OAuth2RestAuthConfig,
+  } from "@budibase/types"
+  import { IntegrationTypes } from "@/constants/backend"
+  import { datasources } from "@/stores/builder/datasources"
+  import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
+  import { configFromIntegration } from "@/stores/selectors"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import type { SharePointSelectionMode } from "../renderers/types"
   import { EXCLUDE_ALL_PATTERN } from "../sharepoint/sharePointModalUtils"
+  import SharePointQuickSetupModal from "./SharePointQuickSetupModal.svelte"
   import SharePointConnectionStepModal, {
     type SharePointConnectionOption,
   } from "./SharePointConnectionStepModal.svelte"
   import SharePointSiteStepModal from "./SharePointSiteStepModal.svelte"
+
+  const SHAREPOINT_GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
+  const SHAREPOINT_SCOPE = "https://graph.microsoft.com/.default"
+
+  interface SharePointQuickSetupDetails {
+    tenantId: string
+    clientId: string
+    clientSecret: string
+  }
 
   export interface Props {
     agentId: string
@@ -29,9 +49,11 @@
   let selectedAuthConfigId = $state("")
   let siteLoadError = $state("")
   let loadingNextStep = $state(false)
+  let creatingConnection = $state(false)
   let saving = $state(false)
   let skippedConnectionStep = $state(false)
 
+  let quickSetupModal = $state<SharePointQuickSetupModal>()
   let connectionStepModal = $state<SharePointConnectionStepModal>()
   let siteStepModal = $state<SharePointSiteStepModal>()
 
@@ -66,6 +88,77 @@
       notifications.error("Failed to fetch SharePoint connections")
       sharePointConnectionOptions = []
       selectedConnectionId = ""
+    }
+  }
+
+  const createSharePointConnection = async (
+    details: SharePointQuickSetupDetails
+  ) => {
+    if (creatingConnection || !agentId) {
+      return
+    }
+
+    creatingConnection = true
+    try {
+      const restIntegration = ($integrations || []).find(
+        integration => integration.name === IntegrationTypes.REST
+      )
+      if (!restIntegration) {
+        throw new Error("REST integration unavailable")
+      }
+
+      const authConfigId = crypto.randomUUID()
+      const tokenUrl = `https://login.microsoftonline.com/${encodeURIComponent(details.tenantId)}/oauth2/v2.0/token`
+
+      const createdDatasource = await datasources.create({
+        integration: restIntegration,
+        name: "Microsoft SharePoint",
+        restTemplateId: "microsoft-sharepoint",
+        config: {
+          ...configFromIntegration(restIntegration),
+          url: SHAREPOINT_GRAPH_BASE_URL,
+          authConfigs: [
+            {
+              _id: authConfigId,
+              name: "SharePoint OAuth2",
+              type: RestAuthType.OAUTH2,
+              url: tokenUrl,
+              clientId: details.clientId,
+              clientSecret: details.clientSecret,
+              method: OAuth2CredentialsMethod.BODY,
+              grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+              scope: SHAREPOINT_SCOPE,
+            } satisfies OAuth2RestAuthConfig,
+          ],
+        },
+      })
+
+      await loadSharePointConnections()
+
+      const createdAuthConfig = (
+        (createdDatasource.config?.authConfigs || []) as OAuth2RestAuthConfig[]
+      ).find(config => config._id === authConfigId)
+
+      if (!createdDatasource._id || !createdAuthConfig?._id) {
+        throw new Error("Failed to create SharePoint connection")
+      }
+
+      selectedDatasourceId = createdDatasource._id
+      selectedAuthConfigId = createdAuthConfig._id
+      selectedConnectionId = `${createdDatasource._id}:${createdAuthConfig._id}`
+
+      quickSetupModal?.hide()
+      skippedConnectionStep = true
+      await goToSitesStep()
+    } catch (error: any) {
+      console.error(error)
+      const message =
+        error?.cause?.message ||
+        error?.message ||
+        "Failed to create SharePoint connection"
+      notifications.error(message)
+    } finally {
+      creatingConnection = false
     }
   }
 
@@ -144,6 +237,11 @@
 
   export async function show() {
     await loadSharePointConnections()
+    if (sharePointConnectionOptions.length === 0) {
+      skippedConnectionStep = true
+      quickSetupModal?.show()
+      return
+    }
     if (sharePointConnectionOptions.length === 1 && selectedConnectionId) {
       skippedConnectionStep = true
       loadingNextStep = true
@@ -163,10 +261,17 @@
   }
 
   export function hide() {
+    quickSetupModal?.hide()
     connectionStepModal?.hide()
     siteStepModal?.hide()
   }
 </script>
+
+<SharePointQuickSetupModal
+  bind:this={quickSetupModal}
+  creating={creatingConnection}
+  onCreate={createSharePointConnection}
+/>
 
 <SharePointConnectionStepModal
   bind:this={connectionStepModal}
