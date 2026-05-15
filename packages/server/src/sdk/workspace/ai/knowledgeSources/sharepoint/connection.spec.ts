@@ -259,8 +259,8 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
         status: 401,
       })
     )
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(1)
     expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
     expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
       authConfigId,
