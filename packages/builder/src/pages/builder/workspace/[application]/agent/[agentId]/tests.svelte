@@ -457,7 +457,10 @@
     }
   }
 
-  const mergeRunResults = (run: AgentTestRun) => {
+  const applyRunResults = (
+    run: AgentTestRun,
+    testSuite: AgentTestSuite
+  ): AgentTestSuite => {
     const byCaseId = new Map<string, AgentTestRun["results"]>()
     for (const result of run.results) {
       const results = byCaseId.get(result.caseId) || []
@@ -465,14 +468,30 @@
       byCaseId.set(result.caseId, results)
     }
 
-    suite = {
-      ...suite,
-      cases: suite.cases.map(testCase => {
+    return {
+      ...testSuite,
+      cases: testSuite.cases.map(testCase => {
         const results = byCaseId.get(testCase.id)
         return results
           ? { ...testCase, lastResult: results[0], lastResults: results }
           : testCase
       }),
+    }
+  }
+
+  const mergeRunResults = (run: AgentTestRun) => {
+    suite = applyRunResults(run, suite)
+  }
+
+  const refreshSuiteAfterRun = async (agentId: string, run: AgentTestRun) => {
+    try {
+      const response = await API.fetchAgentTestSuite(agentId)
+      if (currentAgent?._id !== agentId) return
+
+      suite = applyRunResults(run, response.suite)
+    } catch (error) {
+      console.error("Failed to refresh test suite after run", error)
+      mergeRunResults(run)
     }
   }
 
@@ -512,7 +531,7 @@
 
       finishActiveRun(activeRun.runId)
       if (run.status === "completed" && run.run) {
-        mergeRunResults(run.run)
+        await refreshSuiteAfterRun(agentId, run.run)
         analytics.captureEvent(Events.AGENT_TEST_RUN_COMPLETED, {
           ...getRunEventProps(run.run, activeRun),
         })

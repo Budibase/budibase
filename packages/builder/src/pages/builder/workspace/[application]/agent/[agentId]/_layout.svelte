@@ -33,6 +33,7 @@
 
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
+  let lastToolsAiConfigId = $state<string | null | undefined>(null)
   let ragEnabled = $derived($featureFlags[FeatureFlag.AI_RAG])
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
 
@@ -72,6 +73,22 @@
     if (!testsEnabled && $isActive("./tests")) {
       $goto("./config")
     }
+  })
+
+  $effect(() => {
+    if (!currentAgent?._id) {
+      return
+    }
+
+    const nextAiConfigId = currentAgent.aiconfig || undefined
+    if (nextAiConfigId === lastToolsAiConfigId) {
+      return
+    }
+
+    lastToolsAiConfigId = nextAiConfigId
+    agentsStore.fetchTools(nextAiConfigId).catch(error => {
+      console.error("Failed to load agent tools", error)
+    })
   })
 
   async function toggleAgentLive() {
