@@ -64,10 +64,7 @@
   const addReviewer = (type: ReviewerType = "llm_judge") => {
     onUpdateCase(testCase => ({
       ...testCase,
-      reviewers: [
-        ...testCase.reviewers,
-        REVIEWERS[type].create(Helpers.uuid()),
-      ],
+      reviewers: [...testCase.reviewers, createReviewer(type, Helpers.uuid())],
     }))
   }
 

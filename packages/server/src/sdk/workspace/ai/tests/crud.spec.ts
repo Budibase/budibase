@@ -100,12 +100,12 @@ describe("agent tests crud", () => {
       ).rejects.toThrow("At least one test group is required.")
     })
 
-    it("preserves existing lastResult when the case definition is unchanged", async () => {
+    it("preserves existing lastResults when the case definition is unchanged", async () => {
       const reviewers = [
         {
           id: "reviewer-1",
           type: "contains_text" as const,
-          text: "hello",
+          value: "hello",
         },
       ]
       const caseSnapshot = {
@@ -131,7 +131,7 @@ describe("agent tests crud", () => {
             name: "T1",
             input: "hello",
             reviewers,
-            lastResult: persistedResult,
+            lastResults: [persistedResult],
           },
         ],
       }
@@ -153,7 +153,7 @@ describe("agent tests crud", () => {
 
       const saved = await testsCrud.saveSuite({ agentId, request })
 
-      expect(saved.cases[0]?.lastResult).toEqual(persistedResult)
+      expect(saved.cases[0]?.lastResults).toEqual([persistedResult])
     })
 
     it("preserves existing lastResults when the case definition is unchanged", async () => {
@@ -161,7 +161,7 @@ describe("agent tests crud", () => {
         {
           id: "reviewer-1",
           type: "contains_text" as const,
-          text: "hello",
+          value: "hello",
         },
       ]
       const caseSnapshot = {
@@ -195,7 +195,6 @@ describe("agent tests crud", () => {
             input: "hello",
             aiConfigIds: ["config-1", "config-2"],
             reviewers,
-            lastResult: persistedResults[0],
             lastResults: persistedResults,
           },
         ],
@@ -223,12 +222,12 @@ describe("agent tests crud", () => {
       expect(saved.cases[0]?.lastResults).toEqual(persistedResults)
     })
 
-    it("clears the existing lastResult when the case definition changes", async () => {
+    it("clears the existing lastResults when the case definition changes", async () => {
       const reviewers = [
         {
           id: "reviewer-1",
           type: "contains_text" as const,
-          text: "hello",
+          value: "hello",
         },
       ]
       const existing: AgentTestSuite = {
@@ -243,15 +242,17 @@ describe("agent tests crud", () => {
             name: "T1",
             input: "hello",
             reviewers,
-            lastResult: makeResult("case-1", {
-              caseSnapshot: {
-                id: "case-1",
-                groupId: "default",
-                name: "T1",
-                input: "hello",
-                reviewers,
-              },
-            }),
+            lastResults: [
+              makeResult("case-1", {
+                caseSnapshot: {
+                  id: "case-1",
+                  groupId: "default",
+                  name: "T1",
+                  input: "hello",
+                  reviewers,
+                },
+              }),
+            ],
           },
         ],
       }
@@ -273,7 +274,7 @@ describe("agent tests crud", () => {
 
       const saved = await testsCrud.saveSuite({ agentId, request })
 
-      expect(saved.cases[0]?.lastResult).toBeUndefined()
+      expect(saved.cases[0]?.lastResults).toBeUndefined()
     })
 
     it("rejects cases that reference a missing group", async () => {
@@ -292,7 +293,7 @@ describe("agent tests crud", () => {
                   {
                     id: "reviewer-1",
                     type: "exact_match",
-                    text: "hello",
+                    value: "hello",
                   },
                 ],
               },
@@ -316,7 +317,7 @@ describe("agent tests crud", () => {
           name: "T1",
           input: "hello",
           reviewers: [],
-          lastResult: makeResult("case-1", { response: "old-1" }),
+          lastResults: [makeResult("case-1", { response: "old-1" })],
         },
         {
           id: "case-2",
@@ -328,7 +329,7 @@ describe("agent tests crud", () => {
       ],
     }
 
-    it("writes lastResult onto cases that ran and leaves others alone", async () => {
+    it("writes lastResults onto cases that ran and leaves others alone", async () => {
       mockDbTryGet.mockResolvedValue(structuredClone(existing))
 
       await testsCrud.persistRunResults({
@@ -337,8 +338,8 @@ describe("agent tests crud", () => {
       })
 
       const putDoc = mockDbPut.mock.calls[0][0] as AgentTestSuite
-      expect(putDoc.cases[0]?.lastResult?.response).toBe("old-1")
-      expect(putDoc.cases[1]?.lastResult?.response).toBe("new-2")
+      expect(putDoc.cases[0]?.lastResults?.[0]?.response).toBe("old-1")
+      expect(putDoc.cases[1]?.lastResults?.[0]?.response).toBe("new-2")
     })
 
     it("writes lastResults for every config result on a case", async () => {
@@ -369,7 +370,7 @@ describe("agent tests crud", () => {
           response: "new-2-b",
         }),
       ])
-      expect(putDoc.cases[1]?.lastResult?.aiConfigId).toBe("config-1")
+      expect(putDoc.cases[1]?.lastResults?.[0]?.aiConfigId).toBe("config-1")
     })
 
     it("truncates oversized responses with a marker", async () => {
@@ -382,7 +383,7 @@ describe("agent tests crud", () => {
       })
 
       const putDoc = mockDbPut.mock.calls[0][0] as AgentTestSuite
-      const saved = putDoc.cases[0]?.lastResult?.response ?? ""
+      const saved = putDoc.cases[0]?.lastResults?.[0]?.response ?? ""
       expect(saved.length).toBeLessThan(huge.length)
       expect(saved).toMatch(/\[response truncated\]$/)
     })
@@ -456,30 +457,13 @@ describe("agent tests crud", () => {
       await testsCrud.completeRun({
         agentId,
         runId: "run-1",
-        run: {
-          agentId,
-          runId: "run-1",
-          total: 1,
-          passed: 1,
-          failed: 0,
-          startedAt: "2026-01-01T00:00:00.000Z",
-          completedAt: "2026-01-01T00:00:01.000Z",
-          snapshot: {
-            agentId,
-            agentName: "Agent",
-            aiconfig: "config-1",
-            enabledTools: [],
-            knowledgeBases: [],
-          },
-          results: [makeResult("case-1")],
-        },
+        completedAt: "2026-01-01T00:00:01.000Z",
       })
 
       expect(mockDbPut).toHaveBeenCalledWith(
         expect.objectContaining({
           status: "completed",
           completedAt: "2026-01-01T00:00:01.000Z",
-          run: expect.objectContaining({ total: 1 }),
         })
       )
     })

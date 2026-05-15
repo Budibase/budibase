@@ -14,27 +14,11 @@ export const buildDefaultAgentTestGroup = (): AgentTestGroup => ({
   name: DEFAULT_AGENT_TEST_GROUP_NAME,
 })
 
-export type AgentTestReviewer =
-  | {
-      id: string
-      type: "exact_match"
-      text: string
-    }
-  | {
-      id: string
-      type: "contains_text"
-      text: string
-    }
-  | {
-      id: string
-      type: "llm_judge"
-      rubric: string
-    }
-  | {
-      id: string
-      type: "tool_used"
-      tool: string
-    }
+export interface AgentTestReviewer {
+  id: string
+  type: "exact_match" | "contains_text" | "llm_judge" | "tool_used"
+  value: string
+}
 
 export interface AgentTestReviewerResult {
   reviewerId: string
@@ -56,7 +40,6 @@ export interface AgentTestCaseDefinition {
 export type AgentTestCaseSnapshot = AgentTestCaseDefinition
 
 export interface AgentTestCase extends AgentTestCaseDefinition {
-  lastResult?: AgentTestCaseResult
   lastResults?: AgentTestCaseResult[]
 }
 
@@ -129,6 +112,5 @@ export interface AgentTestRunDocument extends Document {
   status: AgentTestRunStatus
   startedAt: string
   completedAt?: string
-  run?: AgentTestRun
   error?: string
 }

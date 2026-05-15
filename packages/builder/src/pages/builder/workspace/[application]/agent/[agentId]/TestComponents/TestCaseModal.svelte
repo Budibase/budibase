@@ -56,8 +56,6 @@
         ? [defaultAiConfigId]
         : [],
     reviewers: testCase.reviewers.map(reviewer => ({ ...reviewer })),
-    lastResult: testCase.lastResult,
-    lastResults: testCase.lastResults,
   })
 
   const normalizeCaseForSave = (testCase: AgentTestCase): AgentTestCase => ({

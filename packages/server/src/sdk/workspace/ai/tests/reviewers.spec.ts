@@ -22,7 +22,7 @@ describe("agent test reviewers", () => {
         reviewer: {
           id: "reviewer-1",
           type: "exact_match",
-          text: "Alice Smith Product manager",
+          value: "Alice Smith Product manager",
         },
         response: "Alice Smith Product manager",
         toolCalls: [],
@@ -40,7 +40,7 @@ describe("agent test reviewers", () => {
         reviewer: {
           id: "reviewer-1",
           type: "contains_text",
-          text: "Product manager",
+          value: "Product manager",
         },
         response: "Alice Smith Product manager",
         toolCalls: [],
@@ -58,7 +58,7 @@ describe("agent test reviewers", () => {
         reviewer: {
           id: "reviewer-1",
           type: "tool_used",
-          tool: "search_rows",
+          value: "search_rows",
         },
         response: "Handled it.",
         toolCalls: ["list_tables", "search_rows"],

@@ -95,7 +95,11 @@ const processJob = async (job: Job<AgentTestRunJob>) => {
         runId,
         startedAt,
       })
-      await completeRun({ agentId, runId, run: completedRun })
+      await completeRun({
+        agentId,
+        runId,
+        completedAt: completedRun.completedAt,
+      })
     } catch (error) {
       await markRunFailed({ agentId, runId, error })
       throw error

@@ -1,5 +1,5 @@
 import { auth } from "@budibase/backend-core"
-import { REVIEWERS, REVIEWER_TYPES } from "@budibase/shared-core"
+import { REVIEWER_TYPES } from "@budibase/shared-core"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -170,7 +170,7 @@ const AGENT_TEST_REVIEWER_SCHEMA = Joi.alternatives().try(
     Joi.object({
       id: Joi.string().required(),
       type: Joi.string().valid(type).required(),
-      [REVIEWERS[type].contentField]: Joi.string().trim().min(1).required(),
+      value: Joi.string().trim().min(1).required(),
     })
   )
 )
@@ -183,7 +183,6 @@ const AGENT_TEST_CASE_SCHEMA = Joi.object({
   context: Joi.string().allow("").optional(),
   aiConfigIds: Joi.array().items(Joi.string().trim().disallow("")).max(3),
   reviewers: Joi.array().items(AGENT_TEST_REVIEWER_SCHEMA).required(),
-  lastResult: Joi.any().optional().strip(),
   lastResults: Joi.any().optional().strip(),
 })
 

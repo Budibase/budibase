@@ -1,9 +1,7 @@
 import { getErrorMessage, HTTPError } from "@budibase/backend-core"
-import { ai, quotas } from "@budibase/pro"
 import { buildAgentTestCaseSnapshot, helpers } from "@budibase/shared-core"
 import type {
   Agent,
-  AgentMessageMetadata,
   AgentTestModelSnapshot,
   AgentTestCase,
   AgentTestCaseResult,
@@ -15,24 +13,17 @@ import type {
   AgentTestSnapshot,
   ContextUser,
 } from "@budibase/types"
-import { ActionType } from "@budibase/types"
 import {
   Output,
   ToolLoopAgent,
   extractReasoningMiddleware,
   jsonSchema,
   stepCountIs,
-  streamText,
   wrapLanguageModel,
   type ModelMessage,
 } from "ai"
-import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import sdk from "../../.."
-import {
-  formatIncompleteToolCallError,
-  updatePendingToolCalls,
-} from "../agents"
-import { createSessionLogIndexer } from "../agentLogs"
+import { formatIncompleteToolCallError, prepareAgentChatRun } from "../agents"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -42,11 +33,9 @@ import { fetchSuite, persistRunResults } from "./crud"
 import { v4 } from "uuid"
 
 type TestLLM = Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
-type SessionLogIndexer = ReturnType<typeof createSessionLogIndexer>
-type PromptAndTools = Awaited<
-  ReturnType<typeof sdk.ai.agents.buildPromptAndTools>
->
-type RagSource = NonNullable<AgentMessageMetadata["ragSources"]>[number]
+type SessionLogIndexer = Awaited<
+  ReturnType<typeof prepareAgentChatRun>
+>["sessionLogIndexer"]
 
 const MAX_COMPARE_CONFIGS = 3
 
@@ -54,6 +43,11 @@ interface JudgeOutput {
   passed: boolean
   reason: string
 }
+
+const isLLMJudgeReviewer = (
+  reviewer: AgentTestReviewer
+): reviewer is AgentTestReviewer & { type: "llm_judge" } =>
+  reviewer.type === "llm_judge"
 
 const judgeOutputSchema =
   helpers.structuredOutput.normalizeSchemaForStructuredOutput({
@@ -111,7 +105,7 @@ const buildResult = ({
   caseSnapshot,
   aiConfigId,
   aiConfig,
-  sessionLogIndexer,
+  requestIds,
   sessionId,
   startedAt,
   startedAtMs,
@@ -125,7 +119,7 @@ const buildResult = ({
   caseSnapshot: AgentTestCaseSnapshot
   aiConfigId: string
   aiConfig?: AgentTestModelSnapshot
-  sessionLogIndexer: SessionLogIndexer
+  requestIds: string[]
   sessionId: string
   startedAt: string
   startedAtMs: number
@@ -145,7 +139,7 @@ const buildResult = ({
   reviewerResults,
   toolCalls,
   sessionId,
-  requestIds: sessionLogIndexer.getRequestIds(),
+  requestIds,
   startedAt,
   completedAt: new Date().toISOString(),
   durationMs: Date.now() - startedAtMs,
@@ -164,7 +158,7 @@ async function runJudge({
   input: string
   context?: string
   response: string
-  reviewer: Extract<AgentTestReviewer, { type: "llm_judge" }>
+  reviewer: AgentTestReviewer & { type: "llm_judge" }
   sessionLogIndexer: SessionLogIndexer
 }): Promise<AgentTestReviewerResult> {
   const judge = new ToolLoopAgent({
@@ -186,7 +180,7 @@ async function runJudge({
       input,
       context,
       response,
-      rubric: reviewer.rubric,
+      rubric: reviewer.value,
     }),
   })
 
@@ -212,93 +206,50 @@ async function runJudge({
 
 async function runAgentForCase({
   agent,
-  promptAndTools,
-  llm,
+  user,
   messages,
+  input,
   sessionId,
-  sessionLogIndexer,
+  startedAt,
+  aiConfigId,
 }: {
   agent: Agent
-  promptAndTools: PromptAndTools
-  llm: TestLLM
+  user: ContextUser
   messages: ModelMessage[]
+  input: string
   sessionId: string
+  startedAt: string
+  aiConfigId: string
+}): Promise<{
+  response: string
+  toolCalls: string[]
   sessionLogIndexer: SessionLogIndexer
-}): Promise<{ response: string; toolCalls: string[] }> {
+}> {
   const pendingToolCalls = new Set<string>()
   const toolCalls: string[] = []
-  const tools = promptAndTools.tools
-  const retrievedKnowledgeSourceById = new Map<string, RagSource>()
 
-  if (tools.search_knowledge) {
-    tools.report_used_sources = createReportUsedSourcesTool({
-      getSourceById: sourceId => retrievedKnowledgeSourceById.get(sourceId),
-      onAcceptedSources: () => {},
-    })
-  }
+  const run = await prepareAgentChatRun({
+    agent,
+    agentId: agent._id!,
+    aiConfigId,
+    errorLabel: "agent test",
+    latestQuestion: input,
+    modelMessages: messages,
+    sessionId,
+    startedAt,
+    user,
+  })
 
-  const hasTools = Object.keys(tools).length > 0
-
-  const stream = streamText({
-    model: wrapLanguageModel({
-      model: llm.chat,
-      middleware: extractReasoningMiddleware({ tagName: "think" }),
-    }),
-    messages,
-    system: promptAndTools.systemPrompt,
-    tools: hasTools ? tools : undefined,
-    toolChoice: hasTools ? "auto" : "none",
-    stopWhen: stepCountIs(30),
-    providerOptions: llm.providerOptions?.(hasTools),
-    async onStepFinish({
-      content,
-      toolCalls: stepToolCalls,
-      toolResults,
-      response,
-    }) {
-      if (response?.id) sessionLogIndexer.addRequestId(response.id)
-      for (const toolCall of stepToolCalls) {
-        if (toolCall.toolName) toolCalls.push(toolCall.toolName)
-      }
-      updatePendingToolCalls(pendingToolCalls, stepToolCalls, toolResults)
-      for (const part of content) {
-        if (part.type === "tool-error") {
-          pendingToolCalls.delete(part.toolCallId)
-        }
-      }
-      for (const toolResult of toolResults) {
-        if (
-          toolResult.toolName === "search_knowledge" &&
-          !toolResult.preliminary
-        ) {
-          const output = toolResult.output
-          for (const source of output?.sources || []) {
-            if (!source?.sourceId) {
-              continue
-            }
-            retrievedKnowledgeSourceById.set(source.sourceId, source)
-          }
-        }
-        await quotas.addAction(ActionType.AI_AGENT, async () => {})
-      }
-    },
-    onFinish({ response }) {
-      if (response?.id) sessionLogIndexer.addRequestId(response.id)
-    },
-    onError({ error }) {
-      console.error("Agent test streaming error", {
-        agentId: agent._id,
-        sessionId,
-        error,
-      })
-    },
+  const stream = await run.stream({
+    pendingToolCalls,
+    onToolCalls: names => toolCalls.push(...names),
   })
 
   const [text, streamResponse] = await Promise.all([
     stream.text,
     stream.response,
   ])
-  if (streamResponse?.id) sessionLogIndexer.addRequestId(streamResponse.id)
+  run.sessionLogIndexer.addRequestId(streamResponse?.id)
 
   if (pendingToolCalls.size > 0) {
     throw new Error(formatIncompleteToolCallError([]))
@@ -307,33 +258,36 @@ async function runAgentForCase({
   return {
     response: text || "",
     toolCalls,
+    sessionLogIndexer: run.sessionLogIndexer,
   }
 }
 
 async function runReviewers({
   reviewers,
-  llm,
+  getLLM,
   testCase,
   response,
   toolCalls,
   sessionLogIndexer,
 }: {
   reviewers: AgentTestReviewer[]
-  llm: TestLLM
+  getLLM: () => Promise<TestLLM>
   testCase: AgentTestCase
   response: string
   toolCalls: string[]
   sessionLogIndexer: SessionLogIndexer
 }): Promise<AgentTestReviewerResult[]> {
   const results: AgentTestReviewerResult[] = []
+  let llm: TestLLM | undefined
 
   for (const reviewer of reviewers) {
-    if (reviewer.type !== "llm_judge") {
+    if (!isLLMJudgeReviewer(reviewer)) {
       results.push(evaluateReviewer({ reviewer, response, toolCalls }))
       continue
     }
 
     try {
+      llm = llm || (await getLLM())
       results.push(
         await runJudge({
           llm,
@@ -380,38 +334,27 @@ async function runCase({
   const startedAt = new Date().toISOString()
   const startedAtMs = Date.now()
   const sessionId = `test:${runId}:${testCase.id}:${aiConfigId}`
-  const sessionLogIndexer = createSessionLogIndexer({
-    agentId: agent._id!,
-    sessionId,
-    firstInput: testCase.input,
-    errorLabel: "agent test",
-    startedAt,
-  })
+  let sessionLogIndexer: SessionLogIndexer | undefined
 
   try {
-    const [promptAndTools, llm] = await Promise.all([
-      sdk.ai.agents.buildPromptAndTools(agentForRun, {
-        baseSystemPrompt: ai.agentSystemPrompt(user),
-        includeGoal: false,
-      }),
-      sdk.ai.llm.createLLM(aiConfigId, sessionId, undefined, agent._id),
-    ])
-
     const messages = buildTestMessages({ testCase })
-    const { response, toolCalls } = await runAgentForCase({
-      agent,
-      promptAndTools,
-      llm,
+    const agentRun = await runAgentForCase({
+      agent: agentForRun,
+      user,
       messages,
+      input: testCase.input,
       sessionId,
-      sessionLogIndexer,
+      startedAt,
+      aiConfigId,
     })
+    sessionLogIndexer = agentRun.sessionLogIndexer
     const reviewerResults = await runReviewers({
       reviewers: caseSnapshot.reviewers,
-      llm,
+      getLLM: () =>
+        sdk.ai.llm.createLLM(aiConfigId, sessionId, undefined, agent._id),
       testCase,
-      response,
-      toolCalls,
+      response: agentRun.response,
+      toolCalls: agentRun.toolCalls,
       sessionLogIndexer,
     })
 
@@ -428,18 +371,18 @@ async function runCase({
       caseSnapshot,
       aiConfigId,
       aiConfig,
-      sessionLogIndexer,
+      requestIds: sessionLogIndexer.getRequestIds(),
       sessionId,
       startedAt,
       startedAtMs,
-      response,
+      response: agentRun.response,
       status,
       reviewerResults,
-      toolCalls,
+      toolCalls: agentRun.toolCalls,
       error,
     })
   } catch (error) {
-    await sessionLogIndexer.index()
+    await sessionLogIndexer?.index()
 
     const message = getErrorMessage(error)
     return buildResult({
@@ -447,7 +390,7 @@ async function runCase({
       caseSnapshot,
       aiConfigId,
       aiConfig,
-      sessionLogIndexer,
+      requestIds: sessionLogIndexer?.getRequestIds() ?? [],
       sessionId,
       startedAt,
       startedAtMs,

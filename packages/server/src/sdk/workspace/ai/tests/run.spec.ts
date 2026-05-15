@@ -50,7 +50,7 @@ jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
     .mockReturnValue("Incomplete tool call"),
-  updatePendingToolCalls: jest.fn(),
+  prepareAgentChatRun: jest.fn(),
 }))
 
 jest.mock("./crud", () => ({
@@ -66,15 +66,18 @@ jest.mock("ai", () => ({
   extractReasoningMiddleware: jest.fn().mockReturnValue({}),
   jsonSchema: jest.fn((schema: unknown) => schema),
   stepCountIs: jest.fn().mockReturnValue(() => false),
-  streamText: jest.fn(),
   tool: jest.fn(definition => definition),
   wrapLanguageModel: jest.fn().mockReturnValue({}),
+}))
+
+jest.mock("uuid", () => ({
+  v4: jest.fn().mockReturnValue("run-1"),
 }))
 
 describe("agent test runner", () => {
   const sdk = jest.requireMock("../../..").default
   const ai = jest.requireMock("ai")
-  const { createSessionLogIndexer } = jest.requireMock("../agentLogs")
+  const { prepareAgentChatRun } = jest.requireMock("../agents")
   const { fetchSuite } = jest.requireMock("./crud")
   const user = {} as ContextUser
 
@@ -118,44 +121,22 @@ describe("agent test runner", () => {
     response: string
     toolCalls?: string[]
   }) => {
-    ai.streamText.mockImplementation(
-      ({
-        onStepFinish,
-        onFinish,
-      }: {
-        onStepFinish?: (result: {
-          content: unknown[]
-          toolCalls: Array<{ toolName: string; toolCallId: string }>
-          toolResults: unknown[]
-          response: { id: string }
-        }) => void
-        onFinish?: (result: { response: { id: string } }) => void
-      }) => {
-        onStepFinish?.({
-          content: [],
-          toolCalls: toolCalls.map((toolName, index) => ({
-            toolName,
-            toolCallId: `tool-call-${index + 1}`,
-          })),
-          toolResults: [],
-          response: {
-            id: "agent-request",
-          },
-        })
-        onFinish?.({
-          response: {
-            id: "agent-request",
-          },
-        })
-
-        return {
-          text: Promise.resolve(response),
-          response: Promise.resolve({
-            id: "agent-request",
-          }),
-        }
+    prepareAgentChatRun.mockImplementation(async () => {
+      const sessionLogIndexer = makeIndexer()
+      return {
+        sessionLogIndexer,
+        stream: jest.fn().mockImplementation(async ({ onToolCalls }) => {
+          sessionLogIndexer.addRequestId("agent-request")
+          onToolCalls?.(toolCalls)
+          return {
+            text: Promise.resolve(response),
+            response: Promise.resolve({
+              id: "agent-request",
+            }),
+          }
+        }),
       }
-    )
+    })
   }
 
   const mockJudgeRun = (
@@ -214,7 +195,6 @@ describe("agent test runner", () => {
       chat: {},
       providerOptions: jest.fn().mockReturnValue(undefined),
     })
-    createSessionLogIndexer.mockImplementation(makeIndexer)
   })
 
   it("passes exact and contains reviewers when the response matches", async () => {
@@ -222,12 +202,12 @@ describe("agent test runner", () => {
       {
         id: "reviewer-1",
         type: "exact_match",
-        text: "Hello there",
+        value: "Hello there",
       },
       {
         id: "reviewer-2",
         type: "contains_text",
-        text: "Hello",
+        value: "Hello",
       },
     ])
     mockAgentRun({ response: "Hello there" })
@@ -260,12 +240,12 @@ describe("agent test runner", () => {
           {
             id: "reviewer-1",
             type: "exact_match",
-            text: "Hello there",
+            value: "Hello there",
           },
           {
             id: "reviewer-2",
             type: "contains_text",
-            text: "Hello",
+            value: "Hello",
           },
         ],
       },
@@ -278,7 +258,7 @@ describe("agent test runner", () => {
       {
         id: "reviewer-1",
         type: "exact_match",
-        text: "Hello there",
+        value: "Hello there",
       },
     ])
     mockAgentRun({ response: "Hello team" })
@@ -307,7 +287,7 @@ describe("agent test runner", () => {
       {
         id: "reviewer-1",
         type: "contains_text",
-        text: "Alice",
+        value: "Alice",
       },
     ])
     mockAgentRun({ response: "Bob is the manager." })
@@ -335,7 +315,7 @@ describe("agent test runner", () => {
       {
         id: "reviewer-1",
         type: "tool_used",
-        tool: "search_rows",
+        value: "search_rows",
       },
     ])
     mockAgentRun({
@@ -366,7 +346,7 @@ describe("agent test runner", () => {
       {
         id: "reviewer-1",
         type: "tool_used",
-        tool: "search_rows",
+        value: "search_rows",
       },
     ])
     mockAgentRun({
@@ -398,17 +378,17 @@ describe("agent test runner", () => {
       {
         id: "reviewer-1",
         type: "contains_text",
-        text: "Hello",
+        value: "Hello",
       },
       {
         id: "reviewer-2",
         type: "llm_judge",
-        rubric: "The response should be direct.",
+        value: "The response should be direct.",
       },
       {
         id: "reviewer-3",
         type: "tool_used",
-        tool: "search_rows",
+        value: "search_rows",
       },
     ])
     mockAgentRun({
@@ -462,12 +442,12 @@ describe("agent test runner", () => {
     )
   })
 
-  it("adds the production knowledge source reporting tool for RAG runs", async () => {
+  it("runs the test through the production agent runtime with test messages", async () => {
     setSuite([
       {
         id: "reviewer-1",
         type: "contains_text",
-        text: "policy",
+        value: "policy",
       },
     ])
     sdk.ai.agents.getOrThrow.mockResolvedValue({
@@ -477,12 +457,6 @@ describe("agent test runner", () => {
       enabledTools: [],
       knowledgeBases: ["kb-1"],
     })
-    sdk.ai.agents.buildPromptAndTools.mockResolvedValue({
-      systemPrompt: "Use search_knowledge and report_used_sources.",
-      tools: {
-        search_knowledge: {},
-      },
-    })
     mockAgentRun({ response: "The policy is 30 days." })
 
     await runSuite({
@@ -490,9 +464,17 @@ describe("agent test runner", () => {
       user,
     })
 
-    expect(ai.streamText).toHaveBeenCalledWith(
+    expect(prepareAgentChatRun).toHaveBeenCalledWith(
       expect.objectContaining({
-        messages: [
+        agent: expect.objectContaining({
+          _id: "agent-1",
+          aiconfig: "config-1",
+          knowledgeBases: ["kb-1"],
+        }),
+        aiConfigId: "config-1",
+        errorLabel: "agent test",
+        latestQuestion: "Say hello",
+        modelMessages: [
           {
             role: "system",
             content:
@@ -503,10 +485,8 @@ describe("agent test runner", () => {
             content: "Say hello",
           },
         ],
-        tools: expect.objectContaining({
-          search_knowledge: {},
-          report_used_sources: expect.any(Object),
-        }),
+        sessionId: "test:run-1:case-1:config-1",
+        user,
       })
     )
   })
@@ -516,7 +496,7 @@ describe("agent test runner", () => {
       {
         id: "reviewer-1",
         type: "llm_judge",
-        rubric: "The response should be direct.",
+        value: "The response should be direct.",
       },
     ])
     mockAgentRun({ response: "Hello there" })

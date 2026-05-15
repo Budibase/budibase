@@ -151,7 +151,7 @@ describe("agent test run queue", () => {
     expect(completeRun).toHaveBeenCalledWith({
       agentId: "agent-1",
       runId: "run-1",
-      run: completedRun,
+      completedAt: completedRun.completedAt,
     })
   })
 

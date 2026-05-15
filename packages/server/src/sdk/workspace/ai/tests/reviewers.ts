@@ -3,7 +3,11 @@ import type {
   AgentTestReviewer,
   AgentTestReviewerResult,
 } from "@budibase/types"
-import { validateReviewer, withReviewerDefinition } from "@budibase/shared-core"
+import {
+  REVIEWERS,
+  validateReviewer,
+  type ReviewerDefinition,
+} from "@budibase/shared-core"
 
 interface AgentTestValidationFailure {
   message: string
@@ -40,22 +44,23 @@ export const evaluateReviewer = ({
   response,
   toolCalls,
 }: {
-  reviewer: Exclude<AgentTestReviewer, { type: "llm_judge" }>
+  reviewer: AgentTestReviewer
   response: string
   toolCalls: string[]
-}): AgentTestReviewerResult =>
-  withReviewerDefinition(reviewer, (def, r) => {
-    if (def.evaluate === "async") {
-      throw new Error(`${reviewer.type} cannot be evaluated synchronously`)
-    }
-    const { passed, message } = def.evaluate(r, { response, toolCalls })
-    return {
-      reviewerId: reviewer.id,
-      type: reviewer.type,
-      status: passed ? "passed" : "failed",
-      message,
-    }
-  })
+}): AgentTestReviewerResult => {
+  const def: ReviewerDefinition = REVIEWERS[reviewer.type]
+  if (def.evaluate === "async") {
+    throw new Error(`${reviewer.type} cannot be evaluated synchronously`)
+  }
+
+  const { passed, message } = def.evaluate(reviewer, { response, toolCalls })
+  return {
+    reviewerId: reviewer.id,
+    type: reviewer.type,
+    status: passed ? "passed" : "failed",
+    message,
+  }
+}
 
 export const buildErroredReviewerResults = ({
   reviewers,

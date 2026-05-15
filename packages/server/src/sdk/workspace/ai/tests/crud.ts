@@ -5,7 +5,6 @@ import type {
   AgentTestCaseResult,
   AgentTestCaseSnapshot,
   AgentTestGroup,
-  AgentTestRun,
   AgentTestRunDocument,
   AgentTestSuite,
   UpdateAgentTestSuiteRequest,
@@ -38,9 +37,6 @@ const hasSameCaseDefinition = (
     JSON.stringify(snapshot)
   )
 }
-
-const getLastResults = (testCase: AgentTestCase): AgentTestCaseResult[] =>
-  testCase.lastResults || (testCase.lastResult ? [testCase.lastResult] : [])
 
 const normalizeGroups = (
   groups: AgentTestGroup[] | undefined
@@ -127,14 +123,13 @@ export async function saveSuite({
     }
 
     const lastResults = existingCase
-      ? getLastResults(existingCase).filter(result =>
+      ? (existingCase.lastResults || []).filter(result =>
           hasSameCaseDefinition(nextCase, result.caseSnapshot)
         )
       : []
 
     if (lastResults.length) {
       nextCase.lastResults = lastResults
-      nextCase.lastResult = lastResults[0]
     }
 
     return nextCase
@@ -202,7 +197,6 @@ export async function persistRunResults({
 
     return {
       ...testCase,
-      lastResult: lastResults[0],
       lastResults,
     }
   })
@@ -252,19 +246,18 @@ export async function fetchRun({
 export async function completeRun({
   agentId,
   runId,
-  run,
+  completedAt,
 }: {
   agentId: string
   runId: string
-  run: AgentTestRun
+  completedAt: string
 }): Promise<void> {
   const existing = await fetchRun({ agentId, runId })
   const db = context.getWorkspaceDB()
   await db.put({
     ...existing,
     status: "completed",
-    completedAt: run.completedAt,
-    run,
+    completedAt,
   })
 }
 
