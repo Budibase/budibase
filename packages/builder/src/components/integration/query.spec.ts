@@ -37,6 +37,14 @@ describe("isValidEndpointUrl", () => {
     expect(isValidEndpointUrl("http://localhost:4001")).toBe(true)
   })
 
+  it("accepts a hostname without a protocol", () => {
+    expect(isValidEndpointUrl("google.com")).toBe(true)
+  })
+
+  it("accepts a hostname with a path but no protocol", () => {
+    expect(isValidEndpointUrl("api.example.com/v1/users")).toBe(true)
+  })
+
   it("rejects a relative path", () => {
     expect(isValidEndpointUrl("/api/v1/users")).toBe(false)
   })

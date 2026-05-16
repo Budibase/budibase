@@ -476,10 +476,22 @@ export function keyValueArrayToRecord(
 
 export function isValidEndpointUrl(url: string | undefined): boolean {
   if (!url || /\s/.test(url)) return false
-  if (!/^(https?:\/\/|\{\{)/.test(url)) return false
-  if (findHBSBlocks(url).length > 0) return true
+
+  if (findHBSBlocks(url).length > 0) {
+    return /^(https?:\/\/|\{\{)/.test(url)
+  }
+
+  if (url.includes("{{")) return false
+
+  if (url.startsWith("/")) return false
+
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url) && !/^https?:\/\//.test(url)) {
+    return false
+  }
+
+  const urlToValidate = /^https?:\/\//.test(url) ? url : `http://${url}`
   try {
-    new URL(url)
+    new URL(urlToValidate)
     return true
   } catch {
     return false

@@ -1325,6 +1325,22 @@ describe("API Endpoint Viewer", () => {
       })
     })
 
+    it("Save button is enabled for a hostname without a protocol", async () => {
+      const { container } = setupDOM({ datasourceId: REST_DS_ID })
+      await waitFor(() =>
+        expect(container.querySelector(".url-input")).not.toBeNull()
+      )
+      const urlInput = container.querySelector(".url-input") as HTMLInputElement
+      await fireEvent.input(urlInput, {
+        target: { value: "google.com" },
+      })
+      await waitFor(() => {
+        expect(
+          getSaveButton(container)?.classList.contains("is-disabled")
+        ).toBe(false)
+      })
+    })
+
     it("loads the stored full URL into the URL input", async () => {
       queries.store.update(s => ({ ...s, list: [CUSTOM_QUERY] }))
       const { container } = setupDOM({ queryId: QUERY_ID })
