@@ -75,7 +75,7 @@ const ConstraintMap: Record<string, ValidationConstraintOption[]> = {
     Constraints.Equal,
     Constraints.NotEqual,
   ],
-  ["boolean"]: [Constraints.Required, Constraints.Equal, Constraints.NotEqual],
+  ["boolean"]: [Constraints.Equal, Constraints.NotEqual],
   ["datetime"]: [
     Constraints.Required,
     Constraints.MaxValue,

@@ -10,6 +10,13 @@ describe("validation constraints", () => {
     expect(values).toContain("maxLength")
   })
 
+  it("does not offer required validation for boolean fields", () => {
+    const constraints = getConstraintsForType("boolean")
+    const values = constraints.map(constraint => constraint.value)
+
+    expect(values).toStrictEqual(["equal", "notEqual"])
+  })
+
   it("returns empty constraints for unknown field types", () => {
     expect(getConstraintsForType("not-a-real-type")).toStrictEqual([])
   })
