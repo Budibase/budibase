@@ -596,15 +596,6 @@
   .wrapper {
     position: relative;
     height: 100%;
-    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-flow-logic-color: var(
-      --spectrum-global-color-indigo-100
-    );
-    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
-    --automation-step-icon-trigger-color: var(--color-green-200);
-    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
-    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
     --automation-flow-item-background: var(--background);
     --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
@@ -628,13 +619,6 @@
   :global(.spectrum--darkest) .wrapper,
   :global(.spectrum--midnight) .wrapper,
   :global(.spectrum--nord) .wrapper {
-    --automation-step-icon-data-color: var(--color-blue-600);
-    --automation-step-icon-flow-logic-color: var(--color-purple-600);
-    --automation-step-icon-code-color: var(--color-orange-600);
-    --automation-step-icon-trigger-color: var(--color-green-600);
-    --automation-step-icon-email-color: var(--color-green-600);
-    --automation-step-icon-ai-color: var(--color-brand-500);
-    --automation-step-icon-apps-color: var(--color-orange-400);
     --automation-flow-item-background: var(--spectrum-global-color-gray-200);
   }
 

@@ -472,27 +472,6 @@
   .heading.panel {
     display: flex;
     flex-direction: column;
-    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-flow-logic-color: var(
-      --spectrum-global-color-indigo-100
-    );
-    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
-    --automation-step-icon-trigger-color: var(--color-green-200);
-    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
-    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
-  }
-  :global(.spectrum--dark) .heading.panel,
-  :global(.spectrum--darkest) .heading.panel,
-  :global(.spectrum--midnight) .heading.panel,
-  :global(.spectrum--nord) .heading.panel {
-    --automation-step-icon-data-color: var(--color-blue-600);
-    --automation-step-icon-flow-logic-color: var(--color-purple-600);
-    --automation-step-icon-code-color: var(--color-orange-600);
-    --automation-step-icon-trigger-color: var(--color-green-600);
-    --automation-step-icon-email-color: var(--color-green-600);
-    --automation-step-icon-ai-color: var(--color-brand-500);
-    --automation-step-icon-apps-color: var(--color-orange-400);
   }
   .panel {
     padding: var(--spacing-l);

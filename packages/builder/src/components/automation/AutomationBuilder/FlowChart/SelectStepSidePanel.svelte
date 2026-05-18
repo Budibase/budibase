@@ -598,29 +598,6 @@
   }
 
   .step-panel-content {
-    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-flow-logic-color: var(
-      --spectrum-global-color-indigo-100
-    );
-    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
-    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
-    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
-  }
-
-  :global(.spectrum--dark) .step-panel-content,
-  :global(.spectrum--darkest) .step-panel-content,
-  :global(.spectrum--midnight) .step-panel-content,
-  :global(.spectrum--nord) .step-panel-content {
-    --automation-step-icon-data-color: var(--color-blue-600);
-    --automation-step-icon-flow-logic-color: var(--color-purple-600);
-    --automation-step-icon-code-color: var(--color-orange-600);
-    --automation-step-icon-email-color: var(--color-green-600);
-    --automation-step-icon-ai-color: var(--color-brand-500);
-    --automation-step-icon-apps-color: var(--color-orange-400);
-  }
-
-  .step-panel-content {
     flex: 1 1 auto;
     overflow-y: auto;
     padding: 10px 15px 10px 15px;
