@@ -18,8 +18,7 @@
     let val
     if (isMultiSelect) {
       if (value.includes(v)) {
-        let idx = value.findIndex(i => i === v)
-        val = [...value].splice(idx, 1)
+        val = value.filter(i => i !== v)
       } else {
         val = [...value, v]
       }
