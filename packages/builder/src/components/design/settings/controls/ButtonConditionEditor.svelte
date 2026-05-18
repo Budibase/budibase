@@ -151,6 +151,14 @@
     conditions = [...conditions, duplicate]
   }
 
+  const toggleCondition = (id: string) => {
+    conditions = conditions.map(condition =>
+      condition.id === id
+        ? { ...condition, disabled: !condition.disabled }
+        : condition
+    )
+  }
+
   const handleFinalize = (e: CustomEvent) => {
     updateConditions(e)
     dragDisabled = true
@@ -377,6 +385,12 @@
                   />
                 {/if}
                 <Icon
+                  name={condition.disabled ? "eye-slash" : "eye"}
+                  hoverable
+                  size="S"
+                  on:click={() => toggleCondition(condition.id)}
+                />
+                <Icon
                   name="copy"
                   hoverable
                   size="S"
@@ -423,14 +437,14 @@
     align-items: center;
     grid-template-columns:
       auto 150px auto minmax(140px, 1fr) 120px 100px minmax(140px, 1fr)
-      auto auto;
+      auto auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
   .condition.update {
     grid-template-columns:
       auto 150px minmax(140px, 1fr) auto minmax(140px, 1fr) auto
-      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto;
+      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto auto;
   }
   .condition:hover {
     background-color: var(--spectrum-global-color-gray-100);
