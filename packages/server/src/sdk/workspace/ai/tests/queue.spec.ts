@@ -44,10 +44,12 @@ jest.mock("./crud", () => ({
   completeRun: jest.fn().mockResolvedValue(undefined),
   createRun: jest.fn(),
   failRun: jest.fn().mockResolvedValue(undefined),
+  fetchSuite: jest.fn(),
 }))
 
 jest.mock("./run", () => ({
   runSuite: jest.fn(),
+  selectCasesToRun: jest.fn(),
 }))
 
 jest.mock("uuid", () => ({
@@ -55,31 +57,42 @@ jest.mock("uuid", () => ({
 }))
 
 import { context } from "@budibase/backend-core"
-import { completeRun, createRun, failRun } from "./crud"
-import { runSuite } from "./run"
+import { completeRun, createRun, failRun, fetchSuite } from "./crud"
+import { runSuite, selectCasesToRun } from "./run"
 import { init, startRunSuite } from "./queue"
 
 describe("agent test run queue", () => {
   const user = { _id: "user_1" } as ContextUser
   const mockCreateRun = createRun as jest.Mock
+  const mockFetchSuite = fetchSuite as jest.Mock
   const mockRunSuite = runSuite as jest.Mock
+  const mockSelectCasesToRun = selectCasesToRun as jest.Mock
 
   beforeEach(() => {
     jest.clearAllMocks()
     mockAddedJobs.length = 0
     mockRunSuite.mockReset()
+    mockFetchSuite.mockResolvedValue({
+      agentId: "agent-1",
+      groups: [{ id: "default", name: "Default test group" }],
+      cases: [{ id: "case-1", groupId: "default", name: "Test", input: "" }],
+    })
+    mockSelectCasesToRun.mockReturnValue([{ id: "case-1" }])
     mockCreateRun.mockImplementation(
       async ({
         agentId,
         runId,
+        caseIds,
         startedAt,
       }: {
         agentId: string
         runId: string
+        caseIds: string[]
         startedAt: string
       }) => ({
         agentId,
         runId,
+        caseIds,
         status: "running",
         startedAt,
       })
@@ -97,6 +110,13 @@ describe("agent test run queue", () => {
       agentId: "agent-1",
       runId: "run-1",
       status: "running",
+      caseIds: ["case-1"],
+    })
+    expect(mockCreateRun).toHaveBeenCalledWith({
+      agentId: "agent-1",
+      runId: "run-1",
+      caseIds: ["case-1"],
+      startedAt: expect.any(String),
     })
     expect(mockAddedJobs[0]).toEqual({
       data: expect.objectContaining({

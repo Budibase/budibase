@@ -338,7 +338,12 @@
             <div class="case-cell case-cell-actions">
               <ActionMenu align="right" disabled={running} roundedPopover>
                 <div slot="control">
-                  <Icon size="M" hoverable name="dots-three" />
+                  <span
+                    class:action-menu-disabled={running}
+                    aria-disabled={running}
+                  >
+                    <Icon size="M" hoverable={!running} name="dots-three" />
+                  </span>
                 </div>
                 {@render caseMenuItems(testCase.id)}
               </ActionMenu>
@@ -351,11 +356,7 @@
 </div>
 
 {#snippet caseMenuItems(caseId: string)}
-  <MenuItem
-    icon="play"
-    disabled={running}
-    on:click={() => onRunCase(caseId)}
-  >
+  <MenuItem icon="play" disabled={running} on:click={() => onRunCase(caseId)}>
     Run test
   </MenuItem>
   <MenuItem icon="pencil-simple" on:click={() => onEditCase(caseId)}>
@@ -540,6 +541,12 @@
   .case-cell-actions {
     display: flex;
     justify-content: center;
+  }
+
+  .action-menu-disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    display: inline-flex;
   }
 
   .empty-state {

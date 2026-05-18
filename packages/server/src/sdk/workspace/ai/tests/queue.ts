@@ -1,8 +1,8 @@
 import type { Job } from "bull"
 import { context, getErrorMessage, queue, utils } from "@budibase/backend-core"
 import type { ContextUser } from "@budibase/types"
-import { completeRun, createRun, failRun } from "./crud"
-import { runSuite } from "./run"
+import { completeRun, createRun, failRun, fetchSuite } from "./crud"
+import { runSuite, selectCasesToRun } from "./run"
 import { v4 } from "uuid"
 
 const DEFAULT_CONCURRENCY = 2
@@ -141,7 +141,11 @@ export async function startRunSuite({
 
   const runId = v4()
   const startedAt = new Date().toISOString()
-  const run = await createRun({ agentId, runId, startedAt })
+  const suite = await fetchSuite(agentId)
+  const caseIds = selectCasesToRun({ suite, caseId, groupId }).map(
+    testCase => testCase.id
+  )
+  const run = await createRun({ agentId, runId, caseIds, startedAt })
   init()
   await getQueue().add(
     {

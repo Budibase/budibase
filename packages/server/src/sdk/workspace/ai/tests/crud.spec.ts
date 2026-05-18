@@ -1,9 +1,11 @@
 const mockDbTryGet = jest.fn()
 const mockDbPut = jest.fn()
+const mockDbAllDocs = jest.fn()
 
 const mockGetWorkspaceDB = jest.fn(() => ({
   tryGet: (...args: unknown[]) => mockDbTryGet(...args),
   put: (...args: unknown[]) => mockDbPut(...args),
+  allDocs: (...args: unknown[]) => mockDbAllDocs(...args),
 }))
 
 jest.mock("@budibase/backend-core", () => {
@@ -62,6 +64,7 @@ describe("agent tests crud", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockDbPut.mockResolvedValue({ rev: "2-newrev" })
+    mockDbAllDocs.mockResolvedValue({ rows: [] })
   })
 
   describe("fetchSuite", () => {
@@ -156,7 +159,7 @@ describe("agent tests crud", () => {
       expect(saved.cases[0]?.lastResults).toEqual([persistedResult])
     })
 
-    it("preserves existing lastResults when the case definition is unchanged", async () => {
+    it("preserves existing lastResults when multi-config case definition is unchanged", async () => {
       const reviewers = [
         {
           id: "reviewer-1",
@@ -411,6 +414,7 @@ describe("agent tests crud", () => {
       const run = await testsCrud.createRun({
         agentId,
         runId: "run-1",
+        caseIds: ["case-1"],
         startedAt: "2026-01-01T00:00:00.000Z",
       })
 
@@ -419,14 +423,62 @@ describe("agent tests crud", () => {
         _rev: "2-newrev",
         agentId,
         runId: "run-1",
+        caseIds: ["case-1"],
         status: "running",
       })
       expect(mockDbPut).toHaveBeenCalledWith(
         expect.objectContaining({
           _id: runDocId,
+          caseIds: ["case-1"],
           status: "running",
         })
       )
+    })
+
+    it("fetches the latest running test run document", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: `agenttestsuite_${agentId}_agenttestrun_old`,
+              agentId,
+              runId: "old",
+              caseIds: ["case-1"],
+              status: "running",
+              startedAt: "2026-01-01T00:00:00.000Z",
+            },
+          },
+          {
+            doc: {
+              _id: `agenttestsuite_${agentId}_agenttestrun_done`,
+              agentId,
+              runId: "done",
+              caseIds: ["case-2"],
+              status: "completed",
+              startedAt: "2026-01-01T00:00:01.000Z",
+            },
+          },
+          {
+            doc: {
+              _id: `agenttestsuite_${agentId}_agenttestrun_new`,
+              agentId,
+              runId: "new",
+              caseIds: ["case-3"],
+              status: "running",
+              startedAt: "2026-01-01T00:00:02.000Z",
+            },
+          },
+        ],
+      })
+
+      const run = await testsCrud.fetchActiveRun(agentId)
+
+      expect(run?.runId).toBe("new")
+      expect(mockDbAllDocs).toHaveBeenCalledWith({
+        startkey: `agenttestsuite_${agentId}_agenttestrun_`,
+        endkey: `agenttestsuite_${agentId}_agenttestrun_\ufff0`,
+        include_docs: true,
+      })
     })
 
     it("fetches a test run document", async () => {
@@ -469,14 +521,40 @@ describe("agent tests crud", () => {
     })
 
     it("marks a test run as errored", async () => {
-      mockDbTryGet.mockResolvedValue({
+      const existingRun = {
         _id: runDocId,
         _rev: "1-old",
         agentId,
         runId: "run-1",
+        caseIds: ["case-1"],
         status: "running",
         startedAt: "2026-01-01T00:00:00.000Z",
-      })
+      }
+      const existingSuite: AgentTestSuite = {
+        _id: `suite_${agentId}`,
+        _rev: "1-suite",
+        agentId,
+        groups,
+        cases: [
+          {
+            id: "case-1",
+            groupId: "default",
+            name: "T1",
+            input: "hello",
+            reviewers: [
+              {
+                id: "reviewer-1",
+                type: "exact_match",
+                value: "hello",
+              },
+            ],
+          },
+        ],
+      }
+      mockDbTryGet
+        .mockResolvedValueOnce(existingRun)
+        .mockResolvedValueOnce(existingSuite)
+        .mockResolvedValueOnce(existingSuite)
 
       await testsCrud.failRun({
         agentId,
@@ -484,12 +562,31 @@ describe("agent tests crud", () => {
         error: "No tests found",
       })
 
-      expect(mockDbPut).toHaveBeenCalledWith(
+      expect(mockDbPut).toHaveBeenNthCalledWith(
+        1,
         expect.objectContaining({
           status: "error",
           error: "No tests found",
         })
       )
+
+      const suitePut = mockDbPut.mock.calls[1][0] as AgentTestSuite
+      const result = suitePut.cases[0]?.lastResults?.[0]
+      expect(result).toMatchObject({
+        caseId: "case-1",
+        name: "T1",
+        response: "",
+        status: "error",
+        error: "No tests found",
+        reviewerResults: [
+          {
+            reviewerId: "reviewer-1",
+            type: "exact_match",
+            status: "error",
+            message: "No tests found",
+          },
+        ],
+      })
     })
   })
 })

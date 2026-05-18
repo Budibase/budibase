@@ -406,7 +406,7 @@ async function runCase({
   }
 }
 
-const selectCasesToRun = ({
+export const selectCasesToRun = ({
   suite,
   caseId,
   groupId,

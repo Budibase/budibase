@@ -25,9 +25,11 @@ export async function fetchAgentTestSuite(
 ) {
   const agentId = await getAgentId(ctx)
   const suite = await sdk.ai.tests.fetchSuite(agentId)
+  const activeRun = await sdk.ai.tests.fetchActiveRun(agentId)
 
   ctx.body = {
     suite,
+    activeRun,
   }
 }
 

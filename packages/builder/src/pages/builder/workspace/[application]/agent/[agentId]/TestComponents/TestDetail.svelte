@@ -15,7 +15,7 @@
   import MistralLogo from "assets/llm-icons/mistral_ai.svg"
   import OpenrouterLogo from "assets/llm-icons/openrouter.svg"
   import OpenAiLogo from "assets/llm-icons/openai.svg"
-  import { getVerdictMeta } from "./utils"
+  import { formatRunTime, getVerdictMeta } from "./utils"
 
   type Props = {
     selectedCase: AgentTestCase | null
@@ -53,6 +53,12 @@
 
   const getResultMeta = (result: AgentTestCaseResult) =>
     getVerdictMeta(result.status)
+
+  const getLatestRunAt = (results: AgentTestCaseResult[]) =>
+    results
+      .map(result => result.completedAt)
+      .sort()
+      .slice(-1)[0]
 
   const formatLatency = (ms: number): string => {
     if (!Number.isFinite(ms) || ms < 0) return "—"
@@ -185,9 +191,13 @@
 
       <section class="card">
         {#if latestResults.length}
+          {@const latestRunAt = getLatestRunAt(latestResults)}
           <div class="card-eyebrow">
             <Icon name="play-circle" size="S" />
             <span>Latest run</span>
+            {#if latestRunAt}
+              <span class="run-date">{formatRunTime(latestRunAt)}</span>
+            {/if}
             {#if latestResults.length > 1}
               <span class="eyebrow-count">{latestResults.length}</span>
             {/if}
@@ -484,6 +494,12 @@
     background: var(--spectrum-global-color-gray-200);
     border-radius: 999px;
     padding: 1px 8px;
+  }
+
+  .run-date {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .results-grid {

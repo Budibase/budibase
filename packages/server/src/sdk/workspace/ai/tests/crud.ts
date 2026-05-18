@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { constants, context, docIds, HTTPError } from "@budibase/backend-core"
 import { buildAgentTestCaseSnapshot } from "@budibase/shared-core"
 import type {
   AgentTestCase,
@@ -10,7 +10,7 @@ import type {
   UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
 import { buildDefaultAgentTestGroup } from "@budibase/types"
-import { validateTestCase } from "./reviewers"
+import { buildErroredReviewerResults, validateTestCase } from "./reviewers"
 
 const MAX_RESPONSE_CHARS = 32 * 1024
 const TRUNCATION_MARKER = "\n\n…[response truncated]"
@@ -74,6 +74,25 @@ export async function fetchSuite(agentId: string): Promise<AgentTestSuite> {
     docIds.getAgentTestSuiteID(agentId)
   )
   return normalizeSuite(suite || buildDefaultSuite(agentId))
+}
+
+export async function fetchActiveRun(
+  agentId: string
+): Promise<AgentTestRunDocument | undefined> {
+  const db = context.getWorkspaceDB()
+  const runPrefix = docIds.getAgentTestRunID(agentId, "")
+  const response = await db.allDocs<AgentTestRunDocument>({
+    startkey: runPrefix,
+    endkey: `${runPrefix}${constants.UNICODE_MAX}`,
+    include_docs: true,
+  })
+
+  return response.rows
+    .map(row => row.doc)
+    .filter(
+      (run): run is AgentTestRunDocument => !!run && run.status === "running"
+    )
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0]
 }
 
 export async function saveSuite({
@@ -204,13 +223,77 @@ export async function persistRunResults({
   await db.put({ ...suite, cases })
 }
 
+const buildRunErrorResults = ({
+  suite,
+  run,
+  error,
+  completedAt,
+}: {
+  suite: AgentTestSuite
+  run: AgentTestRunDocument
+  error: string
+  completedAt: string
+}): AgentTestCaseResult[] => {
+  const caseIds = new Set(run.caseIds || [])
+  const startedAtMs = Date.parse(run.startedAt)
+  const completedAtMs = Date.parse(completedAt)
+  const durationMs =
+    Number.isFinite(startedAtMs) && Number.isFinite(completedAtMs)
+      ? Math.max(0, completedAtMs - startedAtMs)
+      : 0
+
+  return suite.cases
+    .filter(testCase => caseIds.has(testCase.id))
+    .map(testCase => {
+      const caseSnapshot = buildAgentTestCaseSnapshot(testCase)
+      return {
+        caseId: testCase.id,
+        name: testCase.name,
+        caseSnapshot,
+        response: "",
+        status: "error",
+        reviewerResults: buildErroredReviewerResults({
+          reviewers: caseSnapshot.reviewers,
+          message: error,
+        }),
+        toolCalls: [],
+        sessionId: `test:${run.runId}:${testCase.id}:run`,
+        requestIds: [],
+        startedAt: run.startedAt,
+        completedAt,
+        durationMs,
+        error,
+      }
+    })
+}
+
+const persistRunErrorResults = async ({
+  agentId,
+  run,
+  error,
+  completedAt,
+}: {
+  agentId: string
+  run: AgentTestRunDocument
+  error: string
+  completedAt: string
+}) => {
+  if (!run.caseIds?.length) return
+
+  const suite = await fetchSuite(agentId)
+  const results = buildRunErrorResults({ suite, run, error, completedAt })
+  await persistRunResults({ agentId, results })
+}
+
 export async function createRun({
   agentId,
   runId,
+  caseIds,
   startedAt,
 }: {
   agentId: string
   runId: string
+  caseIds: string[]
   startedAt: string
 }): Promise<AgentTestRunDocument> {
   const db = context.getWorkspaceDB()
@@ -218,6 +301,7 @@ export async function createRun({
     _id: docIds.getAgentTestRunID(agentId, runId),
     agentId,
     runId,
+    caseIds,
     status: "running",
     startedAt,
   }
@@ -272,10 +356,21 @@ export async function failRun({
 }): Promise<void> {
   const existing = await fetchRun({ agentId, runId })
   const db = context.getWorkspaceDB()
+  const completedAt = new Date().toISOString()
   await db.put({
     ...existing,
     status: "error",
-    completedAt: new Date().toISOString(),
+    completedAt,
     error,
   })
+
+  try {
+    await persistRunErrorResults({ agentId, run: existing, error, completedAt })
+  } catch (updateError) {
+    console.error("Failed to persist agent test run error results", {
+      agentId,
+      runId,
+      error: updateError,
+    })
+  }
 }

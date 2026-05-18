@@ -7,6 +7,7 @@ import {
 
 export interface FetchAgentTestSuiteResponse {
   suite: AgentTestSuite
+  activeRun?: AgentTestRunDocument
 }
 
 export interface UpdateAgentTestSuiteRequest {

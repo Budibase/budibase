@@ -17,6 +17,7 @@
     AgentTestCase,
     AgentTestCaseResult,
     AgentTestGroup,
+    AgentTestRunDocument,
     AgentTestSuite,
   } from "@budibase/types"
   import TestCaseList from "./TestComponents/TestCaseList.svelte"
@@ -236,6 +237,20 @@
     preferredCaseId = null
   }
 
+  const restoreActiveRun = (run?: AgentTestRunDocument) => {
+    if (run?.status !== "running") {
+      activeRun = null
+      return
+    }
+
+    activeRun = {
+      runId: run.runId,
+      caseIds: run.caseIds ?? [],
+      pollErrorCount: 0,
+    }
+    testRunPolling.start()
+  }
+
   const loadSuite = async (agentId?: string) => {
     if (!testsEnabled) {
       $goto("../config")
@@ -251,6 +266,7 @@
     try {
       const response = await API.fetchAgentTestSuite(agentId)
       suite = response.suite
+      restoreActiveRun(response.activeRun)
       analytics.captureEvent(Events.AGENT_TESTS_VIEWED, {
         ...getSuiteEventProps(response.suite, agentId),
       })
@@ -527,6 +543,7 @@
         return
       }
 
+      await refreshSuiteAfterRun(agentId)
       analytics.captureEvent(Events.AGENT_TEST_RUN_FAILED, {
         ...getSuiteEventProps(),
         runId: run.runId,

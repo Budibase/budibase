@@ -109,6 +109,7 @@ export type AgentTestRunStatus = "running" | "completed" | "error"
 export interface AgentTestRunDocument extends Document {
   agentId: string
   runId: string
+  caseIds?: string[]
   status: AgentTestRunStatus
   startedAt: string
   completedAt?: string
