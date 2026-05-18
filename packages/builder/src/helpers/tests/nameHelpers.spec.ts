@@ -1,5 +1,7 @@
 import { cloneDeep } from "lodash"
 import {
+  getDuplicateStepName,
+  getNewStepName,
   updateBindingsInInputs,
   updateBindingsInSteps,
 } from "../automations/nameHelpers"
@@ -172,6 +174,129 @@ describe("Automation Binding Update Functions", () => {
 
     expect(result[1].inputs.text).toBe(
       "{{ steps.0.success }} and {{ stepsByName.First Step.message }}"
+    )
+  })
+})
+
+describe("getNewStepName", () => {
+  const automation = {
+    definition: {
+      steps: [
+        {
+          name: "Create row",
+          inputs: {},
+          id: "step1",
+        },
+        {
+          name: "Create row 2",
+          inputs: {},
+          id: "step2",
+        },
+        {
+          name: "Branch",
+          stepId: "BRANCH",
+          inputs: {
+            children: {
+              branch1: [
+                {
+                  name: "Create row 3",
+                  inputs: {},
+                  id: "nestedStep",
+                },
+              ],
+            },
+          },
+          id: "branchStep",
+        },
+      ],
+    },
+  }
+
+  it("increments a trailing numeric suffix when adding new steps", () => {
+    expect(getNewStepName(automation, { name: "Create row 2" })).toBe(
+      "Create row 4"
+    )
+  })
+
+  it("starts numbering when adding an unsuffixed new step", () => {
+    expect(getNewStepName(automation, { name: "Branch" })).toBe("Branch 2")
+  })
+
+  it("continues unsuffixed new step names from the highest existing suffix", () => {
+    expect(getNewStepName(automation, { name: "Create row" })).toBe(
+      "Create row 4"
+    )
+  })
+})
+
+describe("getDuplicateStepName", () => {
+  const automation = {
+    definition: {
+      steps: [
+        {
+          name: "Create row",
+          inputs: {},
+          id: "step1",
+        },
+        {
+          name: "Create row 2",
+          inputs: {},
+          id: "step2",
+        },
+        {
+          name: "Branch",
+          stepId: "BRANCH",
+          inputs: {
+            children: {
+              branch1: [
+                {
+                  name: "Create row 3",
+                  inputs: {},
+                  id: "nestedStep",
+                },
+              ],
+            },
+          },
+          id: "branchStep",
+        },
+      ],
+    },
+  }
+
+  it("starts unsuffixed duplicate names at 2", () => {
+    expect(getDuplicateStepName(undefined, { name: "Create row" })).toBe(
+      "Create row 2"
+    )
+  })
+
+  it("increments trailing numeric suffixes beyond existing matching steps", () => {
+    expect(getDuplicateStepName(automation, { name: "Create row 2" })).toBe(
+      "Create row 4"
+    )
+  })
+
+  it("supports duplicating from a display name string while avoiding collisions", () => {
+    expect(getDuplicateStepName(automation, "Create row")).toBe("Create row 4")
+  })
+
+  it("uses display step names when checking existing suffixes", () => {
+    const automationWithDisplayName = {
+      definition: {
+        stepNames: {
+          renamedStep: "Create row 2",
+        },
+        steps: [
+          {
+            name: "Renamed row step",
+            inputs: {},
+            id: "renamedStep",
+          },
+        ],
+      },
+    }
+
+    expect(getDuplicateStepName(automationWithDisplayName, "Create row")).toBe(
+      "Create row 3"
     )
   })
 })
