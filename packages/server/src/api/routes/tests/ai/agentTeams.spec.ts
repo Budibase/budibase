@@ -3,6 +3,7 @@ interface MockWebhookChatPayload {
     messages: unknown[]
     title?: string
   }
+  onAssistantStream?: (stream: AsyncIterable<unknown>) => Promise<void>
 }
 
 interface ChatMockModule {
@@ -26,18 +27,29 @@ jest.mock("../../../controllers/ai/chatConversations", () => {
   const actual = jest.requireActual("../../../controllers/ai/chatConversations")
   return {
     ...actual,
-    webhookChat: jest.fn(async ({ chat }: MockWebhookChatPayload) => ({
-      messages: [
-        ...chat.messages,
-        {
-          id: `assistant-${chat.messages.length + 1}`,
-          role: "assistant",
-          parts: [{ type: "text", text: "Mock assistant response" }],
-        },
-      ],
-      assistantText: "Mock assistant response",
-      title: chat.title || "Mock conversation",
-    })),
+    webhookChat: jest.fn(
+      async ({ chat, onAssistantStream }: MockWebhookChatPayload) => {
+        const assistantText = "Mock assistant response"
+        if (onAssistantStream) {
+          async function* fakeStream() {
+            yield assistantText
+          }
+          await onAssistantStream(fakeStream())
+        }
+        return {
+          messages: [
+            ...chat.messages,
+            {
+              id: `assistant-${chat.messages.length + 1}`,
+              role: "assistant",
+              parts: [{ type: "text", text: assistantText }],
+            },
+          ],
+          assistantText,
+          title: chat.title || "Mock conversation",
+        }
+      }
+    ),
   }
 })
 
@@ -363,7 +375,7 @@ describe("agent teams integration provisioning", () => {
       const chatOptions = getMockChatOptions()
       expect(chatOptions[chatOptions.length - 1]).toEqual(
         expect.objectContaining({
-          fallbackStreamingPlaceholderText: "Got it. I'm working on it...",
+          fallbackStreamingPlaceholderText: "Thinking...",
           streamingUpdateIntervalMs: 750,
         })
       )
@@ -381,6 +393,35 @@ describe("agent teams integration provisioning", () => {
       )
       expect(conversations[0]?.userId).toEqual(config.getUser()._id)
       expect(conversations[0]?.messages).toHaveLength(2)
+    })
+
+    it("replaces the channel working indicator with the assistant reply in team channels", async () => {
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-channel-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-ask-channel-1",
+          type: "message",
+          text: "hello in channel",
+          from: { id: "user-channel-1", name: "Teams User" },
+          conversation: {
+            id: "conversation-channel-1",
+            conversationType: "channel",
+          },
+          channelData: {
+            channel: { id: "channel-working-indicator" },
+            team: { id: "team-1" },
+            tenant: { id: "tenant-1" },
+          },
+        },
+      })
+
+      expect(response.body.messages).toEqual(["Mock assistant response"])
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
     })
 
     it("keeps the user linked for personal chat payloads that only include from.id", async () => {

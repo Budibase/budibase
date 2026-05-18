@@ -59,22 +59,12 @@ import {
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
-import crypto from "crypto"
 import emailValidator from "email-validator"
 import env from "../../../environment"
 import * as userSdk from "../../../sdk/users"
-import { isEmailConfigured } from "../../../utilities/email"
 import { checkAnyUserExists } from "../../../utilities/users"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
-
-const generatePassword = (length: number) => {
-  const array = new Uint8Array(length)
-  crypto.getRandomValues(array)
-  return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
-    .join("")
-    .slice(0, length)
-}
 
 const stripUsers = (users: (User | StrippedUser)[]): StrippedUser[] => {
   return users.map(user => ({
@@ -593,40 +583,6 @@ export const accountHolderLookup = async (
   } catch (e) {
     ctx.body = null
   }
-}
-
-/* 
-  Encapsulate the app user onboarding flows here.
-*/
-export const onboardUsers = async (
-  ctx: Ctx<InviteUsersRequest, InviteUsersResponse>
-) => {
-  if (await isEmailConfigured()) {
-    await inviteMultiple(ctx)
-    return
-  }
-
-  let createdPasswords: Record<string, string> = {}
-  const users = ctx.request.body.map<User>(invite => {
-    const password = generatePassword(12)
-    createdPasswords[invite.email] = password
-
-    return {
-      email: invite.email,
-      password,
-      forceResetPassword: true,
-      roles: invite.userInfo.apps || {},
-      admin: { global: !!invite.userInfo.admin },
-      builder: invite.userInfo.builder,
-      tenantId: tenancy.getTenantId(),
-    }
-  })
-
-  let resp = await userSdk.db.bulkCreate(users)
-  for (const user of resp.successful) {
-    user.password = createdPasswords[user.email]
-  }
-  ctx.body = { ...resp, created: true }
 }
 
 export const invite = async (

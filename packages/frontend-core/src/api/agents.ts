@@ -12,6 +12,8 @@ import {
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
+  ProvisionAgentTelegramChannelRequest,
+  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -48,6 +50,10 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ) => Promise<ProvisionAgentSlackChannelResponse>
+  provisionAgentTelegramChannel: (
+    agentId: string,
+    body?: ProvisionAgentTelegramChannelRequest
+  ) => Promise<ProvisionAgentTelegramChannelResponse>
   toggleAgentDiscordDeployment: (
     agentId: string,
     enabled: boolean
@@ -57,6 +63,10 @@ export interface AgentEndpoints {
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
   toggleAgentSlackDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentDeploymentResponse>
+  toggleAgentTelegramDeployment: (
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
@@ -70,7 +80,8 @@ export interface AgentEndpoints {
     fileId: string
   ) => Promise<{ deleted: true }>
   fetchAgentKnowledgeSourceOptions: (
-    agentId: string
+    datasourceId: string,
+    authConfigId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
   fetchAgentKnowledgeSourceAllEntries: (
     agentId: string,
@@ -166,6 +177,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  provisionAgentTelegramChannel: async (agentId: string, body) => {
+    return await API.post<
+      ProvisionAgentTelegramChannelRequest | undefined,
+      ProvisionAgentTelegramChannelResponse
+    >({
+      url: `/api/agent/${agentId}/telegram/provision`,
+      body,
+    })
+  },
+
   toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
     return await API.post<
       ToggleAgentDeploymentRequest,
@@ -196,6 +217,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  toggleAgentTelegramDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
+    >({
+      url: `/api/agent/${agentId}/telegram/toggle`,
+      body: { enabled },
+    })
+  },
+
   fetchAgentKnowledge: async (agentId: string) => {
     return await API.get<FetchAgentKnowledgeResponse>({
       url: `/api/agent/${agentId}/knowledge`,
@@ -218,9 +249,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentKnowledgeSourceOptions: async (agentId: string) => {
+  fetchAgentKnowledgeSourceOptions: async (
+    datasourceId: string,
+    authConfigId: string
+  ) => {
     return await API.get<FetchAgentKnowledgeSourceOptionsResponse>({
-      url: `/api/agent/${agentId}/knowledge-sources/options`,
+      url: `/api/knowledge-sources/${encodeURIComponent(datasourceId)}/${encodeURIComponent(authConfigId)}/options`,
     })
   },
 

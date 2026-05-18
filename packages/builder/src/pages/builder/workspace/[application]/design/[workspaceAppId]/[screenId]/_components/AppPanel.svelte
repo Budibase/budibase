@@ -8,15 +8,20 @@
     selectedAppUrls,
     workspaceAppStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Button, Divider, Icon } from "@budibase/bbui"
+  import { ActionButton, Divider, Icon } from "@budibase/bbui"
+  import {
+    getNextPreviewDevice,
+    getPreviewDeviceIcon,
+  } from "@budibase/shared-core"
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
   let changingStatus = false
 
-  $: mobile = $previewStore.previewDevice === "mobile"
+  $: currentDevice = $previewStore.previewDevice
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
 
@@ -25,12 +30,14 @@
   $: isLive =
     selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
 
+  $: deviceIcon = getPreviewDeviceIcon(currentDevice)
+
   const previewApp = () => {
     previewStore.showPreview(true)
   }
 
   const togglePreviewDevice = () => {
-    previewStore.setDevice(mobile ? "desktop" : "mobile")
+    previewStore.setDevice(getNextPreviewDevice(currentDevice))
   }
 
   const handleToggleLive = async () => {
@@ -81,7 +88,7 @@
             {#if $appStore.clientFeatures.devicePreview}
               <ActionButton
                 quiet
-                icon={mobile ? "device-mobile-camera" : "monitor"}
+                icon={deviceIcon}
                 on:click={togglePreviewDevice}
               />
             {/if}
@@ -99,17 +106,11 @@
           <Divider size="S" vertical />
         </div>
         <div class="workspace-live-toggle">
-          <Button
-            primary={!isLive}
-            secondary={isLive}
-            icon={isLive ? "stop" : "play"}
-            iconColor={isLive ? "" : "var(--bb-blue)"}
-            iconWeight="fill"
-            on:click={handleToggleLive}
+          <LiveToggleButton
+            live={isLive}
             disabled={changingStatus}
-          >
-            {isLive ? "Stop" : "Set live"}
-          </Button>
+            on:click={handleToggleLive}
+          />
         </div>
       </div>
     </div>

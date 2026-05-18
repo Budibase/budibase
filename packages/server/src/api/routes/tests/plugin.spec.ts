@@ -24,7 +24,7 @@ jest.mock("../../controllers/plugin/github", () => {
 import fs from "fs"
 import os from "os"
 import path from "path"
-import { events, objectStore, tenancy } from "@budibase/backend-core"
+import { events, objectStore, tenancy, withEnv } from "@budibase/backend-core"
 import { Plugin, PluginSource, PluginType } from "@budibase/types"
 import nock from "nock"
 import * as tar from "tar"
@@ -109,7 +109,9 @@ describe("/plugins", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    setup.afterAll()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -470,19 +472,27 @@ describe("/plugins", () => {
 
   describe("url", () => {
     it("should be able to create a plugin from a URL", async () => {
-      nock("https://www.someurl.com")
-        .get("/comment-box/comment-box-1.0.2.tar.gz")
-        .replyWithFile(
-          200,
-          "src/api/routes/tests/data/comment-box-1.0.2.tar.gz"
-        )
+      await withEnv(
+        {
+          // Set blacklist to empty to allow the request to go through, since the url is mocked in this test we don't want to perform DNS lookups.
+          BLACKLIST_IPS: "",
+        },
+        async () => {
+          nock("https://www.someurl.com")
+            .get("/comment-box/comment-box-1.0.2.tar.gz")
+            .replyWithFile(
+              200,
+              "src/api/routes/tests/data/comment-box-1.0.2.tar.gz"
+            )
 
-      const { plugin } = await config.api.plugin.create({
-        source: PluginSource.URL,
-        url: "https://www.someurl.com/comment-box/comment-box-1.0.2.tar.gz",
-      })
-      expect(plugin._id).toEqual("plg_comment-box")
-      expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+          const { plugin } = await config.api.plugin.create({
+            source: PluginSource.URL,
+            url: "https://www.someurl.com/comment-box/comment-box-1.0.2.tar.gz",
+          })
+          expect(plugin._id).toEqual("plg_comment-box")
+          expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+        }
+      )
     })
   })
 

@@ -318,12 +318,6 @@
     background: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out;
   }
-  .app.static {
-    cursor: default;
-  }
-  .app.static:hover {
-    background: var(--background);
-  }
   .app .icon-muted {
     color: var(--spectrum-global-color-gray-500);
   }

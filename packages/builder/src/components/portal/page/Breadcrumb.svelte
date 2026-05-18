@@ -7,7 +7,17 @@
 </script>
 
 <div class="crumb">
-  {#if typeof onClick !== "function"}
+  {#if $$slots.default}
+    {#if typeof onClick === "function"}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <span on:click={e => onClick(e)}>
+        <slot />
+      </span>
+    {:else}
+      <slot />
+    {/if}
+  {:else if typeof onClick !== "function"}
     <a href={url}>
       {text}
     </a>

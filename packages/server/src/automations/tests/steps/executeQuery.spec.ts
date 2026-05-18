@@ -73,6 +73,32 @@ if (descriptions.length) {
         expect(steps[0].outputs.response).toStartWith("Error:")
         expect(steps[0].outputs.success).toEqual(false)
       })
+
+      it("should stop after a failed query by default", async () => {
+        const { steps } = await createAutomationBuilder(config)
+          .onAppAction()
+          .executeQuery({ query: { queryId: "wrong_id" } })
+          .serverLog({ text: "This should not run" })
+          .test({ fields: {} })
+
+        expect(steps).toHaveLength(1)
+        expect(steps[0].outputs.success).toEqual(false)
+      })
+
+      it("should continue after a failed query when continue on error is enabled", async () => {
+        const { steps } = await createAutomationBuilder(config)
+          .onAppAction()
+          .executeQuery({
+            query: { queryId: "wrong_id" },
+            continueOnError: true,
+          })
+          .serverLog({ text: "This should run" })
+          .test({ fields: {} })
+
+        expect(steps).toHaveLength(2)
+        expect(steps[0].outputs.success).toEqual(false)
+        expect(steps[1].outputs.success).toEqual(true)
+      })
     }
   )
 }

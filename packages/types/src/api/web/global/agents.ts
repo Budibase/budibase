@@ -1,7 +1,6 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
-  AgentKnowledgeSourceFilterConfig,
   AgentKnowledgeSourceSyncRunStatus,
   ChatApp,
   ChatConversation,
@@ -38,7 +37,6 @@ export interface KnowledgeSourceOption {
 
 export interface FetchAgentKnowledgeSourceOptionsResponse {
   options: KnowledgeSourceOption[]
-  runs: KnowledgeSourceSyncRun[]
 }
 
 export interface SharePointKnowledgeSourceSnapshot {
@@ -55,7 +53,6 @@ export interface SharePointKnowledgeSourceSnapshot {
 
 export interface FetchAgentKnowledgeResponse {
   files: KnowledgeBaseFile[]
-  hasSharePointConnection: boolean
   sharePointSources: SharePointKnowledgeSourceSnapshot[]
 }
 
@@ -95,14 +92,16 @@ export interface SyncAgentKnowledgeSourcesResponse {
 
 export interface ConnectAgentSharePointSiteRequest {
   siteId: string
-  filters?: AgentKnowledgeSourceFilterConfig
+  datasourceId: string
+  authConfigId: string
+  filters?: string[]
 }
 
 export type ConnectAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
 export interface UpdateAgentSharePointSiteRequest {
-  filters?: AgentKnowledgeSourceFilterConfig
+  filters?: string[]
 }
 
 export type UpdateAgentSharePointSiteResponse =
@@ -150,6 +149,15 @@ export type ProvisionAgentSlackChannelRequest =
 export interface ProvisionAgentSlackChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
+}
+
+export type ProvisionAgentTelegramChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentTelegramChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+  warning?: string
 }
 
 export interface ToggleAgentDeploymentRequest {

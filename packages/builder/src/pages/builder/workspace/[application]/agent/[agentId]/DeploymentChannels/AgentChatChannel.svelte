@@ -241,7 +241,7 @@
 
 <div class="integration-row">
   <div class="channel-main">
-    <div class="logo-placeholder" aria-hidden="true" />
+    <div class="logo-placeholder" aria-hidden="true"></div>
     <div class="channel-details">
       <Body color={"var(--spectrum-global-color-gray-900)"} size="XS"
         >Agent Chat</Body

@@ -31,6 +31,10 @@ export interface SharePointKnowledgeBaseFileSource {
   driveId: string
   itemId: string
   path: string
+  externalId?: string
+  etag?: string
+  lastModifiedAt?: string
+  remoteSize?: number
 }
 
 export type KnowledgeBaseFileSource = SharePointKnowledgeBaseFileSource

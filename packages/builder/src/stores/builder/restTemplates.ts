@@ -1,15 +1,24 @@
 import type { RestTemplate, RestTemplateId } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import ActiveCampaignLogo from "assets/rest-template-icons/activecampaign.avif"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
+import ApolloLogo from "assets/rest-template-icons/apollo.avif"
 import AttioLogo from "assets/rest-template-icons/attio.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import ConfluenceLogo from "assets/rest-template-icons/confluence.svg"
+import CustomerIoLogo from "assets/rest-template-icons/customer-io.avif"
 import DiscordLogo from "assets/rest-template-icons/discord.svg"
+import DocuSignLogo from "assets/rest-template-icons/docusign.avif"
+import DocumensoLogo from "assets/rest-template-icons/documenso.svg"
 import FigmaLogo from "assets/rest-template-icons/figma.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
+import GongLogo from "assets/rest-template-icons/gong.avif"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import PandaDocLogo from "assets/rest-template-icons/pandadoc.avif"
+import PipedriveLogo from "assets/rest-template-icons/pipedrive.avif"
+import SalesforceLogo from "assets/rest-template-icons/salesforce.avif"
 import ServiceNowLogo from "assets/rest-template-icons/servicenow.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import SplunkLogo from "assets/rest-template-icons/splunk.svg"
@@ -1374,6 +1383,106 @@ const hubspotRestTemplateGroup: RestTemplate = {
   ],
 }
 
+const docusignRestTemplateGroup: RestTemplate = {
+  id: "docusign",
+  name: "DocuSign",
+  icon: DocuSignLogo,
+  description: "Electronic signature and agreement workflows.",
+  connectionMode: "independent",
+  operationsCount: 405,
+  templates: [
+    {
+      id: "docusign-esignature",
+      name: "eSignature",
+      description:
+        "Send, sign, manage, and track DocuSign eSignature envelopes.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/docusign/esignature/openapi.yaml",
+        },
+      ],
+      operationsCount: 405,
+    },
+  ],
+}
+
+const gongRestTemplateGroup: RestTemplate = {
+  id: "gong",
+  name: "Gong",
+  icon: GongLogo,
+  description:
+    "Revenue intelligence, conversations, calls, users, and engagement workflows.",
+  connectionMode: "independent",
+  operationsCount: 62,
+  templates: [
+    {
+      id: "gong-public-api",
+      name: "Public API",
+      description:
+        "Access Gong calls, transcripts, users, scorecards, libraries, and conversation data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/gong/public-api/openapi.yaml",
+        },
+      ],
+      operationsCount: 56,
+    },
+    {
+      id: "gong-engage",
+      name: "Engage",
+      description:
+        "Manage Gong Engage flows, folders, and engagement workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/gong/engage/openapi.yaml",
+        },
+      ],
+      operationsCount: 6,
+    },
+  ],
+}
+
+const salesforceRestTemplateGroup: RestTemplate = {
+  id: "salesforce",
+  name: "Salesforce",
+  icon: SalesforceLogo,
+  description:
+    "CRM data, sObjects, SOQL queries, composite requests, and bulk jobs.",
+  connectionMode: "shared",
+  operationsCount: 29,
+  templates: [
+    {
+      id: "salesforce-core",
+      name: "Core",
+      description:
+        "Query, describe, read, write, and compose Salesforce sObject data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/salesforce/core/openapi.yaml",
+        },
+      ],
+      operationsCount: 14,
+    },
+    {
+      id: "salesforce-bulk-api-2",
+      name: "Bulk API 2.0",
+      description:
+        "Asynchronous large-volume ingest, delete, upsert, and query jobs for Salesforce data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/salesforce/bulk-api-2/openapi.yaml",
+        },
+      ],
+      operationsCount: 15,
+    },
+  ],
+}
+
 const twilioRestTemplateGroup: RestTemplate = {
   id: "twilio",
   name: "Twilio",
@@ -1934,6 +2043,33 @@ const splunkRestTemplateGroup: RestTemplate = {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
+      id: "activecampaign",
+      name: "ActiveCampaign",
+      description: "Email marketing, CRM, and automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/activecampaign/openapi.yaml",
+        },
+      ],
+      operationsCount: 256,
+      icon: ActiveCampaignLogo,
+    },
+    {
+      id: "apollo",
+      name: "Apollo",
+      description:
+        "Sales intelligence, lead enrichment, prospecting, and engagement.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/apollo/openapi.yaml",
+        },
+      ],
+      operationsCount: 39,
+      icon: ApolloLogo,
+    },
+    {
       id: "attio",
       name: "Attio",
       description:
@@ -1975,6 +2111,19 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ConfluenceLogo,
     },
     {
+      id: "customer-io",
+      name: "Customer.io",
+      description: "Customer messaging, campaigns, broadcasts, and automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/customer-io/openapi.yaml",
+        },
+      ],
+      operationsCount: 111,
+      icon: CustomerIoLogo,
+    },
+    {
       id: "discord",
       name: "Discord",
       description: "Discord API for guilds, channels, messages, and webhooks",
@@ -1986,6 +2135,20 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 227,
       icon: DiscordLogo,
+    },
+    {
+      id: "documenso",
+      name: "Documenso",
+      description:
+        "Open source document signing, templates, recipients, fields, and e-signature workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/documenso/openapi.yaml",
+        },
+      ],
+      operationsCount: 85,
+      icon: DocumensoLogo,
     },
     {
       id: "figma",
@@ -2017,7 +2180,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "jira-cloud",
-      name: "Jira Cloud",
+      name: "Jira",
       description:
         "Build apps, script interactions with Jira, or develop any other type of integration",
       specs: [
@@ -2031,7 +2194,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "okta-management",
-      name: "Okta Management",
+      name: "Okta",
       description:
         "Configure and manage authorization servers and the security policies attached to them, enabling centralized control over API access",
       specs: [
@@ -2059,7 +2222,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "slack-web-api",
-      name: "Slack Web API",
+      name: "Slack",
       description:
         "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
       specs: [
@@ -2667,7 +2830,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "oyster-hr",
-      name: "Oyster HR",
+      name: "Oyster",
       description:
         "Oyster HR uses OAuth2 to enable customers to grant access to their data to third party applications.",
       specs: [
@@ -2691,6 +2854,34 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 22,
       icon: PeachPaymentsLogo,
+    },
+    {
+      id: "pandadoc",
+      name: "PandaDoc",
+      description:
+        "Document generation, e-signatures, templates, and workflow automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pandadoc/openapi.yaml",
+        },
+      ],
+      operationsCount: 115,
+      icon: PandaDocLogo,
+    },
+    {
+      id: "pipedrive",
+      name: "Pipedrive",
+      description:
+        "CRM deals, contacts, organizations, activities, projects, and sales workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pipedrive/openapi.yaml",
+        },
+      ],
+      operationsCount: 264,
+      icon: PipedriveLogo,
     },
     {
       id: "pinpoint",
@@ -3017,8 +3208,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       operationsCount: 80,
       icon: XLogo,
     },
+    docusignRestTemplateGroup,
+    gongRestTemplateGroup,
     hubspotRestTemplateGroup,
     microsoftSharepointRestTemplateGroup,
+    salesforceRestTemplateGroup,
     splunkRestTemplateGroup,
     twilioRestTemplateGroup,
     zendeskRestTemplateGroup,

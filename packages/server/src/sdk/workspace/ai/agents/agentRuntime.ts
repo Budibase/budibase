@@ -1,16 +1,17 @@
-import { features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
+  ActionType,
   Agent,
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
-  FeatureFlag,
 } from "@budibase/types"
 import {
   extractReasoningMiddleware,
   stepCountIs,
   ToolLoopAgent,
+  type LanguageModelUsage,
+  type ModelMessage,
   type StreamTextResult,
   type ToolSet,
   wrapLanguageModel,
@@ -18,95 +19,112 @@ import {
 import sdk from "../../.."
 import { createSessionLogIndexer } from "../agentLogs"
 import {
-  addRetrievedContextToMessages,
   findLatestUserQuestion,
   prepareModelMessages,
 } from "../chatConversations"
-import { retrieveContextForAgent } from "../rag"
 import { updatePendingToolCalls } from "./utils"
+import { estimateTokens } from "./usage"
+import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
   agentId: string
-  chat: ChatConversationRequest
+  chat?: ChatConversationRequest
+  modelMessages?: ModelMessage[]
+  latestQuestion?: string
+  aiConfigId?: string
   errorLabel: string
   sessionId: string
   user: ContextUser
+  startedAt?: string
 }
 
 export interface AgentChatRun {
   latestQuestion: string
-  ragSourcesMetadata?: AgentMessageMetadata["ragSources"]
+  getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
     options?: AgentChatStreamOptions
   ) => Promise<StreamTextResult<ToolSet, never>>
   toolDisplayNames: Record<string, string>
+  contextWindowTokens?: number
+  systemPromptTokens: number
+  contextUsage: {
+    input?: LanguageModelUsage
+    output?: LanguageModelUsage
+  }
 }
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
-  onKnowledgeFilesListed?: () => void
+  onToolCalls?: (toolNames: string[]) => void
   pendingToolCalls?: Set<string>
-}
-
-const getRetrievedAgentContext = async (
-  agent: Agent,
-  latestQuestion: string
-) => {
-  if (
-    !latestQuestion ||
-    !agent.knowledgeBases?.length ||
-    !(await features.isEnabled(FeatureFlag.AI_RAG))
-  ) {
-    return {
-      text: "",
-      sources: undefined as AgentMessageMetadata["ragSources"] | undefined,
-    }
-  }
-
-  try {
-    return await retrieveContextForAgent(agent, latestQuestion)
-  } catch (error) {
-    console.error("Failed to retrieve agent context", error)
-    return {
-      text: "",
-      sources: undefined as AgentMessageMetadata["ragSources"] | undefined,
-    }
-  }
 }
 
 export const prepareAgentChatRun = async ({
   agent,
   agentId,
   chat,
+  modelMessages: providedModelMessages,
+  latestQuestion: providedLatestQuestion,
+  aiConfigId,
   errorLabel,
   sessionId,
   user,
+  startedAt,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
-  const latestQuestion = findLatestUserQuestion(chat)
+  const latestQuestion =
+    providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
   const sessionLogIndexer = createSessionLogIndexer({
     agentId,
     sessionId,
     firstInput: latestQuestion,
     errorLabel,
+    startedAt,
   })
 
-  const [retrievedContext, promptAndTools, llm, modelMessages] =
-    await Promise.all([
-      getRetrievedAgentContext(agent, latestQuestion),
-      sdk.ai.agents.buildPromptAndTools(agent, {
-        baseSystemPrompt: ai.agentSystemPrompt(user),
-        includeGoal: false,
-      }),
-      sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agentId),
-      prepareModelMessages(chat.messages),
-    ])
+  const [promptAndTools, llm, modelMessages] = await Promise.all([
+    sdk.ai.agents.buildPromptAndTools(agent, {
+      baseSystemPrompt: ai.agentSystemPrompt(user),
+      includeGoal: false,
+    }),
+    sdk.ai.llm.createLLM(
+      aiConfigId ?? agent.aiconfig,
+      sessionId,
+      undefined,
+      agentId
+    ),
+    providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
+  ])
 
-  const trimmedRetrievedContext = retrievedContext.text.trim()
-  const ragSourcesMetadata =
-    trimmedRetrievedContext.length > 0 ? retrievedContext.sources : undefined
   const tools = promptAndTools.tools
+  const retrievedKnowledgeSourceById = new Map<
+    string,
+    NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  >()
+  const usedKnowledgeSourceById = new Map<
+    string,
+    NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  >()
+  const setUsedKnowledgeSources = (
+    accepted?: AgentMessageMetadata["ragSources"]
+  ) => {
+    usedKnowledgeSourceById.clear()
+    for (const source of accepted || []) {
+      if (!source?.sourceId) {
+        continue
+      }
+      usedKnowledgeSourceById.set(source.sourceId, source)
+    }
+  }
+  const reportUsedSourcesTool = createReportUsedSourcesTool({
+    getSourceById: sourceId => retrievedKnowledgeSourceById.get(sourceId),
+    onAcceptedSources: accepted => setUsedKnowledgeSources(accepted),
+  })
+  if (tools.search_knowledge) {
+    tools.report_used_sources = reportUsedSourcesTool
+  }
+
   const hasTools = Object.keys(tools).length > 0
   const agentRunner = new ToolLoopAgent({
     model: wrapLanguageModel({
@@ -122,35 +140,70 @@ export const prepareAgentChatRun = async ({
     providerOptions: llm.providerOptions?.(hasTools),
   })
 
+  const contextUsage: AgentChatRun["contextUsage"] = {}
+  const systemPromptTokens = estimateTokens(promptAndTools.systemPrompt || "")
+
   return {
     latestQuestion,
-    ragSourcesMetadata,
     sessionLogIndexer,
+    getUsedKnowledgeSourcesMetadata: () =>
+      Array.from(usedKnowledgeSourceById.values()),
     toolDisplayNames: promptAndTools.toolDisplayNames,
-    stream: async ({
-      onFinish,
-      onKnowledgeFilesListed,
-      pendingToolCalls,
-    } = {}) =>
+    contextWindowTokens: llm.contextWindowTokens,
+    systemPromptTokens,
+    contextUsage,
+    stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
       await agentRunner.stream({
-        messages: addRetrievedContextToMessages(
-          modelMessages,
-          trimmedRetrievedContext
-        ),
-        async onStepFinish({ content, toolCalls, toolResults, response }) {
+        messages: modelMessages,
+        async onStepFinish({
+          content,
+          toolCalls,
+          toolResults,
+          response,
+          usage,
+        }) {
+          if (!contextUsage.input) {
+            contextUsage.input = usage
+          }
+          contextUsage.output = usage
           sessionLogIndexer.addRequestId(response?.id)
+          if (onToolCalls) {
+            const toolNames = toolCalls
+              .map(toolCall => toolCall.toolName)
+              .filter(Boolean)
+            if (toolNames.length) {
+              onToolCalls(toolNames)
+            }
+          }
           if (pendingToolCalls) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
           }
 
           for (const toolResult of toolResults) {
             if (
-              toolResult.toolName === "list_knowledge_files" &&
+              toolResult.toolName === "search_knowledge" &&
               !toolResult.preliminary
             ) {
-              onKnowledgeFilesListed?.()
+              const output = toolResult.output as
+                | { sources?: AgentMessageMetadata["ragSources"] }
+                | undefined
+              for (const source of output?.sources || []) {
+                if (!source?.sourceId) {
+                  continue
+                }
+                retrievedKnowledgeSourceById.set(source.sourceId, source)
+              }
             }
-            await quotas.addAction(async () => {})
+            if (
+              toolResult.toolName === "report_used_sources" &&
+              !toolResult.preliminary
+            ) {
+              const output = toolResult.output as
+                | { accepted?: AgentMessageMetadata["ragSources"] }
+                | undefined
+              setUsedKnowledgeSources(output?.accepted)
+            }
+            await quotas.addAction(ActionType.AI_AGENT, async () => {})
           }
 
           if (!pendingToolCalls) {

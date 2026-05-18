@@ -1,10 +1,16 @@
-import { cache, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
-  Document,
+  cache,
+  context,
+  docIds,
+  HTTPError,
+  utils as coreUtils,
+} from "@budibase/backend-core"
+import {
   OAuth2CredentialsMethod,
   OAuth2GrantType,
+  type Document,
 } from "@budibase/types"
-import fetch, { RequestInit } from "node-fetch"
+import { type RequestInit } from "node-fetch"
 import { get } from "."
 import { processEnvironmentVariable } from "../../utils"
 
@@ -33,7 +39,6 @@ async function fetchToken(config: {
     body: new URLSearchParams({
       grant_type: "client_credentials",
     }),
-    redirect: "follow",
   }
 
   const bodyParams: Record<string, string> = {
@@ -60,7 +65,7 @@ async function fetchToken(config: {
   }
   fetchConfig.body = new URLSearchParams(bodyParams)
 
-  const resp = await fetch(config.url, fetchConfig)
+  const resp = await coreUtils.fetchWithBlacklist(config.url, fetchConfig)
   return resp
 }
 

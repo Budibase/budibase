@@ -273,7 +273,7 @@ export const buildPatternsFromSelection = (
   selectablePaths: string[],
   selectionNodeByPath: Map<string, SharePointEntryTreeNode>,
   includeNewFilesByDefault: boolean
-): { patterns?: string[] } => {
+): string[] | undefined => {
   const selectedWithoutRoot = selectedEntryPaths.filter(
     path => path !== SITE_ROOT_PATH
   )
@@ -288,14 +288,14 @@ export const buildPatternsFromSelection = (
     selectedWithoutRoot.length === selectableWithoutRoot.length
 
   if (includeNewFilesByDefault && isEffectivelySelectAll) {
-    return {}
+    return undefined
   }
 
   if (includeNewFilesByDefault) {
     const patterns = selectableWithoutRoot
       .filter(path => !selectedPathSet.has(path))
       .map(path => toSelectionPattern(path, selectionNodeByPath, true))
-    return patterns.length > 0 ? { patterns } : {}
+    return patterns.length > 0 ? patterns : undefined
   }
 
   const patterns = [
@@ -304,5 +304,5 @@ export const buildPatternsFromSelection = (
       toSelectionPattern(path, selectionNodeByPath, false)
     ),
   ]
-  return { patterns }
+  return patterns
 }

@@ -20,7 +20,10 @@ import { AgentChannelProvider, DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
 import { canAccessChatAppAgentForUser } from "../ai/chatApps"
-import { webhookChat } from "../ai/chatConversations"
+import {
+  webhookChat,
+  type WebhookAssistantStream,
+} from "../ai/chatConversations"
 import {
   isConversationExpired,
   pickLatestConversation,
@@ -257,6 +260,14 @@ const matchesScope = ({
     )
   }
 
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return (
+      ch?.channelId === scope.channelId &&
+      (ch?.threadId || undefined) === scope.threadId &&
+      ch?.externalUserId === scope.externalUserId
+    )
+  }
+
   return false
 }
 
@@ -349,6 +360,8 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 
 export interface HandleChatMessageParams {
   reply: (text: string) => Promise<void>
+  replyWithAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
+  beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
   chatAppId: string
@@ -373,6 +386,9 @@ const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
   }
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return "Telegram"
+  }
   return "Slack"
 }
 
@@ -383,6 +399,8 @@ const getLinkCommand = (provider: HandleChatMessageParams["provider"]) =>
 
 export const handleChatMessage = async ({
   reply,
+  replyWithAssistantStream,
+  beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
   chatAppId,
@@ -606,7 +624,14 @@ export const handleChatMessage = async ({
 
     let result: Awaited<ReturnType<typeof webhookChat>>
     try {
-      result = await webhookChat({ chat: draftChat, user: linkedUser })
+      await beforeAssistantWebhook?.()
+      result = await webhookChat({
+        chat: draftChat,
+        user: linkedUser,
+        ...(replyWithAssistantStream
+          ? { onAssistantStream: replyWithAssistantStream }
+          : {}),
+      })
     } catch (error) {
       const message =
         error instanceof HTTPError
@@ -633,6 +658,8 @@ export const handleChatMessage = async ({
       idleTimeoutMs,
     })
 
-    await reply(result.assistantText || "No response generated.")
+    if (!replyWithAssistantStream) {
+      await reply(result.assistantText || "No response generated.")
+    }
   })
 }

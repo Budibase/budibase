@@ -25,6 +25,15 @@ jest.mock("../../../../ai/tools/budibase", () => ({
       execute: jest.fn().mockResolvedValue({ agentId }),
     },
   })),
+  createKnowledgeSearchTool: jest.fn((agentId: string) => ({
+    name: "search_knowledge",
+    description: "Search knowledge",
+    sourceType: "INTERNAL_TABLE",
+    sourceLabel: "Budibase",
+    tool: {
+      execute: jest.fn().mockResolvedValue({ agentId }),
+    },
+  })),
 }))
 
 jest.mock("../../../../ai/tools/search", () => ({
@@ -49,7 +58,10 @@ jest.mock("@budibase/pro", () => ({
 }))
 
 import sdk from "../../.."
-import { createKnowledgeFilesTool } from "../../../../ai/tools/budibase"
+import {
+  createKnowledgeFilesTool,
+  createKnowledgeSearchTool,
+} from "../../../../ai/tools/budibase"
 import { buildPromptAndTools } from "./utils"
 
 describe("buildPromptAndTools", () => {
@@ -80,8 +92,14 @@ describe("buildPromptAndTools", () => {
     expect(createKnowledgeFilesTool as jest.Mock).toHaveBeenCalledWith(
       "agent_1"
     )
+    expect(createKnowledgeSearchTool as jest.Mock).toHaveBeenCalledWith(
+      "agent_1"
+    )
     expect(Reflect.get(result.tools, "list_knowledge_files")).toBeDefined()
+    expect(Reflect.get(result.tools, "search_knowledge")).toBeDefined()
     expect(result.systemPrompt).toContain("call list_knowledge_files")
+    expect(result.systemPrompt).toContain("call search_knowledge")
+    expect(result.systemPrompt).toContain("call report_used_sources")
   })
 
   it("does not add knowledge files helper when no knowledge base exists", async () => {

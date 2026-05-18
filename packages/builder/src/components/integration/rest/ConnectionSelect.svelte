@@ -40,6 +40,9 @@
   export let datasourceId: string | undefined = undefined
   export let disabled: boolean = false
   export let editText: string | undefined = "Edit"
+  export let settingsLocked: boolean = false
+
+  $: lockedMode = settingsLocked ? ("subtree" as const) : undefined
 
   const dispatch = createEventDispatcher()
 
@@ -188,7 +191,8 @@
     bb.settings(
       templateId
         ? `/connections/apis/new/${templateId}`
-        : "/connections/apis/new"
+        : "/connections/apis/new",
+      { locked: lockedMode }
     )
     menuRef?.hide()
   }
@@ -216,7 +220,9 @@
   const editConnection = (e: MouseEvent) => {
     e.stopPropagation()
     if (connection) {
-      bb.settings(`/connections/apis/${connection.sourceId}`)
+      bb.settings(`/connections/apis/${connection.sourceId}`, {
+        locked: lockedMode,
+      })
     }
   }
 
@@ -310,7 +316,9 @@
             </MenuItem>
           {/if}
         </div>
-        <Divider noMargin />
+        {#if hasSavedConnections || hasSuggestions}
+          <Divider noMargin />
+        {/if}
         {#if !searchQuery}
           {#if sortedAuthOptions.length > 0}
             <div class="auth-section-header">Saved API connections</div>
@@ -409,7 +417,7 @@
           <div class="auth-footer">
             <ActionButton
               on:click={() => {
-                bb.settings("/connections/apis/create")
+                bb.settings("/connections/apis/create", { locked: lockedMode })
                 menuRef?.hide()
               }}
             >
@@ -571,7 +579,7 @@
 
   .edit-link {
     font-size: var(--font-size-xs);
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-700);
     cursor: pointer;
     padding: 2px 6px;
     border-radius: 4px;

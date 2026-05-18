@@ -29,9 +29,11 @@ builderRoutes
     "/api/datasources/:datasourceId/schema",
     datasourceController.buildSchemaFromSource
   )
+  .put("/api/datasources/:datasourceId", datasourceController.update)
   .post("/api/datasources", datasourceValidator(), datasourceController.save)
   .delete("/api/datasources/:datasourceId/:revId", datasourceController.destroy)
 
-authorizedRoutes
-  .get("/api/datasources/:datasourceId", datasourceController.find)
-  .put("/api/datasources/:datasourceId", datasourceController.update)
+authorizedRoutes.get(
+  "/api/datasources/:datasourceId",
+  datasourceController.find
+)
