@@ -155,7 +155,7 @@
 
   function resetDependentFields() {
     if (newQuery.fields.extra) {
-      newQuery.fields.extra = {} as Query["fields"]["extra"]
+      newQuery.fields.extra = {} as QueryFields["extra"]
     }
   }
 
