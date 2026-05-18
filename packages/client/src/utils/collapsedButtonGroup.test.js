@@ -101,6 +101,22 @@ describe("resolveCollapsedButtons", () => {
     expect(enrichedHandler).toHaveBeenCalledTimes(1)
   })
 
+  it("ignores disabled show conditions when computing default visibility", async () => {
+    const resolveCollapsedButtons = await setupResolver()
+    mockEnrichProps.mockImplementation(props => ({
+      ...props,
+      _conditions: [{ action: "show", disabled: true }],
+    }))
+    mockGetActiveConditions.mockReturnValue([])
+    mockReduceConditionActions.mockReturnValue({
+      settingUpdates: {},
+      visible: null,
+    })
+
+    const result = resolveCollapsedButtons([{ text: "Visible" }], {}, vi.fn())
+    expect(result).toHaveLength(1)
+  })
+
   it("falls back to enrichButtonActions when no enriched handler exists", async () => {
     const resolveCollapsedButtons = await setupResolver()
     const enrichButtonActions = vi.fn(() => vi.fn())

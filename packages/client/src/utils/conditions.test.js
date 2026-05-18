@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
-import { enrichGridConditions } from "./conditions"
+import { enrichGridConditions, getActiveConditions } from "./conditions"
 
 describe("enrichGridConditions", () => {
   it("enriches row and current user bindings in conditions", () => {
@@ -21,5 +21,21 @@ describe("enrichGridConditions", () => {
 
     expect(condition.referenceValue).toEqual("ADMIN")
     expect(condition.newValue).toEqual("Row 1")
+  })
+})
+
+describe("getActiveConditions", () => {
+  it("ignores disabled conditions", () => {
+    const active = getActiveConditions([
+      {
+        disabled: true,
+        valueType: "string",
+        operator: "equal",
+        referenceValue: "x",
+        newValue: "x",
+      },
+    ])
+
+    expect(active).toEqual([])
   })
 })
