@@ -9,7 +9,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Backend log",
   tagline: "Console log a value in the backend",
-  icon: "activity",
+  icon: "note",
   description: "Logs the given text to the server (using console.log)",
   type: AutomationStepType.ACTION,
   internal: true,
