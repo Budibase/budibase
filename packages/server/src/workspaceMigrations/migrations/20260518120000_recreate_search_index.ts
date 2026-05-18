@@ -1,4 +1,7 @@
-import { createAllSearchIndex, createLinkView } from "../../db/views/staticViews"
+import {
+  createAllSearchIndex,
+  createLinkView,
+} from "../../db/views/staticViews"
 
 // Re-PUTs `_design/database` for every existing workspace so the row search
 // index (and link view) are rewritten with the correct, un-minified function
