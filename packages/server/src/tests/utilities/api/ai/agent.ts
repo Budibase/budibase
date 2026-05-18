@@ -22,6 +22,11 @@ import {
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  FetchAgentTestSuiteResponse,
+  RunAgentTestSuiteRequest,
+  RunAgentTestSuiteResponse,
+  UpdateAgentTestSuiteRequest,
+  UpdateAgentTestSuiteResponse,
 } from "@budibase/types"
 import { AttachedFile, Expectations, TestAPI } from "../base"
 
@@ -159,6 +164,46 @@ export class AgentAPI extends TestAPI {
           ...expectations,
           status: expectations?.status || 201,
         },
+      }
+    )
+  }
+
+  fetchTestSuite = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentTestSuiteResponse> => {
+    return await this._get<FetchAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  updateTestSuite = async (
+    agentId: string,
+    body: UpdateAgentTestSuiteRequest,
+    expectations?: Expectations
+  ): Promise<UpdateAgentTestSuiteResponse> => {
+    return await this._put<UpdateAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  runTestSuite = async (
+    agentId: string,
+    expectations?: Expectations,
+    body?: RunAgentTestSuiteRequest
+  ): Promise<RunAgentTestSuiteResponse> => {
+    return await this._post<RunAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests/run`,
+      {
+        body,
+        expectations,
       }
     )
   }

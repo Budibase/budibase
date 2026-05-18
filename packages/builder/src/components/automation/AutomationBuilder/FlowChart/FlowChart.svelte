@@ -5,7 +5,6 @@
   import {
     notifications,
     Modal,
-    Button,
     ActionButton,
     Switcher,
     StatusLight,
@@ -25,6 +24,7 @@
     deploymentStore,
     contextMenuStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
@@ -538,17 +538,11 @@
     </ActionButton>
 
     <div class="toggle-active setting-spacing">
-      <Button
-        primary={!isLive}
-        secondary={isLive}
-        icon={isLive ? "stop" : "play"}
-        iconColor={isLive ? "" : "var(--bb-blue)"}
-        iconWeight="fill"
+      <LiveToggleButton
+        live={isLive}
         disabled={!automation?.definition?.trigger || changingStatus}
         on:click={handleToggleLive}
-      >
-        {isLive ? "Stop" : "Set live"}
-      </Button>
+      />
     </div>
   </div>
 </div>
@@ -602,15 +596,6 @@
   .wrapper {
     position: relative;
     height: 100%;
-    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-flow-logic-color: var(
-      --spectrum-global-color-indigo-100
-    );
-    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
-    --automation-step-icon-trigger-color: var(--color-green-200);
-    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
-    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
     --automation-flow-item-background: var(--background);
     --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
@@ -634,13 +619,6 @@
   :global(.spectrum--darkest) .wrapper,
   :global(.spectrum--midnight) .wrapper,
   :global(.spectrum--nord) .wrapper {
-    --automation-step-icon-data-color: var(--color-blue-600);
-    --automation-step-icon-flow-logic-color: var(--color-purple-600);
-    --automation-step-icon-code-color: var(--color-orange-600);
-    --automation-step-icon-trigger-color: var(--color-green-600);
-    --automation-step-icon-email-color: var(--color-green-600);
-    --automation-step-icon-ai-color: var(--color-brand-500);
-    --automation-step-icon-apps-color: var(--color-orange-400);
     --automation-flow-item-background: var(--spectrum-global-color-gray-200);
   }
 

@@ -377,15 +377,6 @@
   .heading.panel {
     display: flex;
     flex-direction: column;
-    --automation-step-icon-flow-logic-color: var(
-      --spectrum-global-color-indigo-100
-    );
-  }
-  :global(.spectrum--dark) .heading.panel,
-  :global(.spectrum--darkest) .heading.panel,
-  :global(.spectrum--midnight) .heading.panel,
-  :global(.spectrum--nord) .heading.panel {
-    --automation-step-icon-flow-logic-color: var(--color-purple-600);
   }
   .panel {
     padding: var(--spacing-l);

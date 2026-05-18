@@ -18,6 +18,7 @@
     icon: { width: "auto", displayName: "" },
     name: {
       sortable: true,
+      color: "var(--spectrum-global-color-gray-900)",
     },
     type: {
       sortable: true,
