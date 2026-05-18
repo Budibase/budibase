@@ -15,6 +15,7 @@
   export let allowAddRows = true
   export let allowEditRows = true
   export let allowDeleteRows = true
+  export let allowRowSelection = true
   export let stripeRows = false
   export let quiet = false
   export let initialFilter = null
@@ -96,6 +97,9 @@
     autoRefreshEnabled ? autoRefresh : null,
     gridContext?.rows?.actions?.refreshData
   )
+  $: if (!allowRowSelection && !allowDeleteRows) {
+    gridContext?.selectedRows?.set?.({})
+  }
 
   /**
    *
@@ -278,6 +282,7 @@
     canAddRows={allowAddRows}
     canEditRows={allowEditRows}
     canDeleteRows={allowDeleteRows}
+    canSelectRows={allowRowSelection || allowDeleteRows}
     canEditColumns={false}
     canExpandRows={false}
     canSaveSchema={false}
