@@ -1,11 +1,5 @@
 import { context } from "@budibase/backend-core"
-import {
-  DBView,
-  DocumentType,
-  LinkDocument,
-  Row,
-  SearchIndex,
-} from "@budibase/types"
+import { DBView, DocumentType, SearchIndex } from "@budibase/types"
 import { SEPARATOR, ViewName } from "../utils"
 
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
@@ -30,23 +24,18 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 export async function createLinkView() {
   const db = context.getWorkspaceDB()
   const designDoc = await db.get<any>("_design/database")
-  const view = {
-    map: function (doc: LinkDocument) {
-      // everything in this must remain constant as its going to Pouch, no external variables
+  // Stored as a raw template literal — see comment on createAllSearchIndex.
+  const view: DBView = {
+    map: `function(doc) {
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
-        // @ts-expect-error emit is available in a CouchDB map function
-        // eslint-disable-next-line no-undef
         emit([doc1.tableId, doc1.rowId], {
           id: doc2.rowId,
           thisId: doc1.rowId,
           fieldName: doc1.fieldName,
         })
-        // if linking to same table can't emit twice
         if (doc1.tableId !== doc2.tableId) {
-          // @ts-expect-error emit is available in a CouchDB map function
-          // eslint-disable-next-line no-undef
           emit([doc2.tableId, doc2.rowId], {
             id: doc1.rowId,
             thisId: doc2.rowId,
@@ -54,7 +43,11 @@ export async function createLinkView() {
           })
         }
       }
-    }.toString(),
+    }`,
+  }
+  const existing = designDoc.views?.[ViewName.LINK]
+  if (existing?.map === view.map) {
+    return
   }
   designDoc.views = {
     ...designDoc.views,
@@ -89,53 +82,53 @@ export async function createRoutingView() {
 async function searchIndex(indexName: string, fnString: string) {
   const db = context.getWorkspaceDB()
   const designDoc = await db.get<any>("_design/database")
+  const desired = { index: fnString, analyzer: "keyword" }
+  const existing = designDoc.indexes?.[indexName]
+  if (
+    existing?.index === desired.index &&
+    existing?.analyzer === desired.analyzer
+  ) {
+    return
+  }
   designDoc.indexes = {
-    [indexName]: {
-      index: fnString,
-      analyzer: "keyword",
-    },
+    ...designDoc.indexes,
+    [indexName]: desired,
   }
   await db.put(designDoc)
 }
 
 export async function createAllSearchIndex() {
-  await searchIndex(
-    SearchIndex.ROWS,
-    function (doc: Row) {
-      function idx(input: Row, prev?: string) {
-        for (let key of Object.keys(input)) {
-          let idxKey = prev != null ? `${prev}.${key}` : key
-          idxKey = idxKey.replace(/ /g, "_")
-          if (Array.isArray(input[key])) {
-            for (let val of input[key]) {
-              if (typeof val !== "object") {
-                // @ts-expect-error index is available in a CouchDB map function
-                // eslint-disable-next-line no-undef
-                index(idxKey, val, { store: true })
-              }
+  // Stored as a raw template literal rather than `.toString()` on a real function:
+  // esbuild's --minify --keep-names wraps inner named functions with a call to a
+  // module-scope helper (`r(fn, "name")`), and that helper does not exist in
+  // CouchDB/Clouseau's JS sandbox — every doc would throw `ReferenceError`.
+  const fnString = `function(doc) {
+    function idx(input, prev) {
+      for (let key of Object.keys(input)) {
+        let idxKey = prev != null ? \`\${prev}.\${key}\` : key
+        idxKey = idxKey.replace(/ /g, "_")
+        if (Array.isArray(input[key])) {
+          for (let val of input[key]) {
+            if (typeof val !== "object") {
+              index(idxKey, val, { store: true })
             }
-          } else if (key === "_id" || key === "_rev" || input[key] == null) {
-            continue
           }
-          if (typeof input[key] === "string") {
-            // @ts-expect-error index is available in a CouchDB map function
-            // eslint-disable-next-line no-undef
-            index(idxKey, input[key].toLowerCase(), { store: true })
-          } else if (typeof input[key] !== "object") {
-            // @ts-expect-error index is available in a CouchDB map function
-            // eslint-disable-next-line no-undef
-            index(idxKey, input[key], { store: true })
-          } else {
-            idx(input[key], idxKey)
-          }
+        } else if (key === "_id" || key === "_rev" || input[key] == null) {
+          continue
+        }
+        if (typeof input[key] === "string") {
+          index(idxKey, input[key].toLowerCase(), { store: true })
+        } else if (typeof input[key] !== "object") {
+          index(idxKey, input[key], { store: true })
+        } else {
+          idx(input[key], idxKey)
         }
       }
-      if (doc._id!.startsWith("ro_")) {
-        // @ts-expect-error index is available in a CouchDB map function
-        // eslint-disable-next-line no-undef
-        index("default", doc._id)
-        idx(doc)
-      }
-    }.toString()
-  )
+    }
+    if (doc._id.startsWith("ro_")) {
+      index("default", doc._id)
+      idx(doc)
+    }
+  }`
+  await searchIndex(SearchIndex.ROWS, fnString)
 }
