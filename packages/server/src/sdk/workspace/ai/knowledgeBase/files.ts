@@ -14,6 +14,7 @@ import {
   KnowledgeBaseFileStatus,
   RequiredKeys,
   ToDocCreateMetadata,
+  WithRequired,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
 import { deleteKnowledgeBaseFileChunks } from "../rag/files"
@@ -32,7 +33,7 @@ interface CreateKnowledgeBaseFileOptions {
 
 export const createKnowledgeBaseFile = async (
   options: CreateKnowledgeBaseFileOptions
-): Promise<KnowledgeBaseFile> => {
+): Promise<WithRequired<KnowledgeBaseFile, "_id">> => {
   const db = context.getWorkspaceDB()
   const {
     id,

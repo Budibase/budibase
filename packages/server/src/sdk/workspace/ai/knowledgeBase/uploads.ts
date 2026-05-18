@@ -88,7 +88,7 @@ export const uploadKnowledgeBaseFile = async (
       await enqueueRagFileIngestion({
         workspaceId,
         knowledgeBaseId: input.knowledgeBaseId,
-        fileId: knowledgeBaseFile._id!,
+        fileId: knowledgeBaseFile._id,
         objectStoreKey,
       })
       console.log("Completed knowledge base file upload and queued ingestion", {
@@ -101,7 +101,7 @@ export const uploadKnowledgeBaseFile = async (
 
       events.ai.ragFileUploaded({
         knowledgeBaseId: input.knowledgeBaseId,
-        fileId: knowledgeBaseFile._id!,
+        fileId: knowledgeBaseFile._id,
         sourceType: input.source?.type,
       })
 
