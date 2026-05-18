@@ -8,7 +8,6 @@
   } from "@xyflow/svelte"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
-  import { type LayoutDirection } from "@budibase/types"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     ViewMode,
@@ -20,6 +19,23 @@
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "../FlowChartDnD"
+  import {
+    BRANCH_LOOP_INSERT_ACTION_OFFSET,
+    FLOW_ITEM_ACTION_BAR_WIDTH,
+    LOOP_INSERT_ACTION_OFFSET,
+  } from "../FlowGeometry"
+  import {
+    isBranchStep,
+    AutomationActionStepId,
+    type AutomationResults,
+    type BranchStep,
+  } from "@budibase/types"
+  import {
+    getRunHighlight,
+    isRunResults,
+    didStepRun,
+    isTerminalFailure,
+  } from "../FlowRunHelpers"
 
   export let data: EdgeData
   export let sourceX: number
@@ -31,9 +47,9 @@
   export let target: string
 
   let block: FlowBlockContext | undefined
+  let edgeStyle: string | undefined
   $: viewMode = $automationStore.viewMode as ViewMode
   $: block = deriveBlockContext(data)
-  $: direction = (data?.direction || "TB") as LayoutDirection
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
 
@@ -57,7 +73,7 @@
 
   /*
   Need a type guard here because there can be different properties
-  coming in here depending on if it's a branch edge or not.  
+  coming in here depending on if it's a branch edge or not.
   */
   $: isBranchEdgeData = (d: EdgeData): d is BranchEdgeData =>
     "isBranchEdge" in d && d.isBranchEdge === true
@@ -76,25 +92,75 @@
 
   $: isBranchTarget = target?.startsWith("branch-")
   $: isAnchorTarget = target?.startsWith("anchor-")
+  $: targetBlockRef = target
+    ? $selectedAutomation?.blockRefs?.[target]
+    : undefined
+  $: targetBlock = automationStore.actions.getBlockByRef(
+    automation,
+    targetBlockRef
+  )
+  $: isLoopTarget = targetBlock?.stepId === AutomationActionStepId.LOOP_V2
+  $: isLoopSource =
+    data?.block && "stepId" in data.block
+      ? data.block.stepId === AutomationActionStepId.LOOP_V2
+      : false
+  $: isLoopInsertAnchor = data?.insertIntoLoopV2 === true && isAnchorTarget
   $: isSubflowEdge = data.isSubflowEdge === true
+  $: isBranchSource =
+    data?.block && "branchNode" in data.block && data.block.branchNode === true
 
-  $: if (isAnchorTarget && direction === "LR") {
+  $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
     labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-    labelY = sourceY ?? 0
+    labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
+  }
+  $: if (isLoopSource) {
+    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
+  }
+  $: if (isLoopInsertAnchor && !isBranchSource) {
+    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
+  }
+  $: if (isLoopInsertAnchor && isBranchSource) {
+    labelX = sourceX + BRANCH_LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
   }
 
-  $: path = isAnchorTarget
+  $: loopTargetPath = isLoopTarget
+    ? getLoopEdgePath("target", labelX)
+    : undefined
+  $: loopSourcePath = isLoopSource
+    ? getLoopEdgePath(
+        isBranchTarget ? "branch-source" : "source",
+        isBranchTarget ? preBranchLabelX : labelX
+      )
+    : undefined
+
+  $: edgePath = isAnchorTarget
     ? getStraightPath({
         sourceX,
         sourceY,
         targetX: labelX,
         targetY: labelY,
-      })
-    : basePath
+      })[0]
+    : loopTargetPath || loopSourcePath || basePath[0]
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
   $: sourcePathForDrop = passedPathTo || blockRef?.pathTo
+  $: edgeHighlight = getEdgeHighlight(data)
+  $: if (edgeHighlight === "success") {
+    edgeStyle =
+      "stroke: var(--spectrum-semantic-positive-color-status); stroke-width: 2px;"
+  } else if (edgeHighlight === "error") {
+    edgeStyle =
+      "stroke: var(--spectrum-semantic-negative-color-status); stroke-width: 2px;"
+  } else if (edgeHighlight === "stopped") {
+    edgeStyle =
+      "stroke: var(--spectrum-global-color-orange-500); stroke-width: 2px;"
+  } else {
+    edgeStyle = undefined
+  }
 
   $: collectBlockExists =
     viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
@@ -129,31 +195,20 @@
     isPrimaryBranchEdge &&
     $view?.dragging
 
-  // --- Dropzone sizing & offsets for LR to reduce clutter ---
+  // --- Dropzone sizing for LR to reduce clutter ---
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v))
 
-  $: isLR = direction === "LR"
   $: dx = Math.abs((targetX ?? 0) - (sourceX ?? 0))
-  $: dzWidth = isLR ? clamp(Math.round(dx - 140), 160, 320) : 320
-  $: baseOffset = isLR ? -18 : 0
-  $: nudge = isLR ? ((Math.round(sourceX + targetX) % 3) - 1) * 6 : 0
-  $: dzOffsetY = baseOffset + nudge
+  $: dzWidth = clamp(Math.round(dx - 140), 160, 320)
+  $: dzOffsetY = 0
 
-  // Pre-branch label sizing/offset
-  $: preDzWidth = isLR ? clamp(Math.round(dx - 160), 160, 300) : 320
-  $: preDzOffsetY = isLR ? -24 + nudge : 0
+  // Pre-branch label sizing
+  $: preDzWidth = clamp(Math.round(dx - 160), 160, 300)
+  $: preDzOffsetY = 0
 
-  // For TB we keep it vertically centered under the source;
-  // for LR we center horizontally and align to the source Y.
-  $: preBranchLabelX =
-    direction === "LR"
-      ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-      : (sourceX ?? 0)
-  $: preBranchLabelY =
-    direction === "LR"
-      ? (sourceY ?? 0)
-      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
+  $: preBranchLabelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+  $: preBranchLabelY = sourceY ?? 0
 
   const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
     if (!ctx) {
@@ -180,10 +235,118 @@
     }
     flow.fitView()
   }
+
+  const getLoopEdgePath = (
+    side: "target" | "source" | "branch-source",
+    edgeLabelX: number
+  ) => {
+    const radius = 12
+    const offset = Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
+    const desiredBendX =
+      side === "target"
+        ? edgeLabelX + offset
+        : side === "branch-source"
+          ? edgeLabelX + offset
+          : edgeLabelX - offset
+    const bendX = Math.max(
+      sourceX + radius,
+      Math.min(targetX - radius, desiredBendX)
+    )
+    const yDirection = targetY >= sourceY ? 1 : -1
+
+    if (Math.abs(targetY - sourceY) <= radius * 2) {
+      return [
+        `M ${sourceX},${sourceY}`,
+        `L ${bendX},${sourceY}`,
+        `L ${bendX},${targetY}`,
+        `L ${targetX},${targetY}`,
+      ].join(" ")
+    }
+
+    return [
+      `M ${sourceX},${sourceY}`,
+      `L ${bendX - radius},${sourceY}`,
+      `Q ${bendX},${sourceY} ${bendX},${sourceY + yDirection * radius}`,
+      `L ${bendX},${targetY - yDirection * radius}`,
+      `Q ${bendX},${targetY} ${bendX + radius},${targetY}`,
+      `L ${targetX},${targetY}`,
+    ].join(" ")
+  }
+
+  const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
+    const results =
+      viewMode === ViewMode.LOGS
+        ? $automationStore.selectedLog
+        : $automationStore.testResults
+    if (!edgeData || !isRunResults(results)) {
+      return
+    }
+    const runHighlight = getRunHighlight(results)
+
+    if (isBranchEdgeData(edgeData)) {
+      return didBranchRun(edgeData.branchStepId, edgeData.branchIdx)
+        ? runHighlight
+        : undefined
+    }
+
+    if (isBranchContext(edgeData.block)) {
+      return didBranchRun(edgeData.block.branchStepId, edgeData.block.branchIdx)
+        ? runHighlight
+        : undefined
+    }
+
+    return didTargetRun(results) ? runHighlight : undefined
+  }
+
+  const didTargetRun = (results: AutomationResults) => {
+    if (target === results.trigger.id) {
+      return didStepRun(results.trigger)
+    }
+    const targetResult = results.steps.find(step => step.id === target)
+    return targetResult ? didStepRun(targetResult) : false
+  }
+
+  const didBranchRun = (branchStepId: string, branchIdx: number) => {
+    const results =
+      viewMode === ViewMode.LOGS
+        ? $automationStore.selectedLog
+        : $automationStore.testResults
+    if (!isRunResults(results)) {
+      return false
+    }
+    const branchStep = getBranchStep(branchStepId)
+    const branchId = branchStep?.inputs.branches?.[branchIdx]?.id
+    if (!branchId) {
+      return false
+    }
+    const result = results.steps.find(step => step.id === branchStepId)
+    if (isTerminalFailure(result)) {
+      return false
+    }
+    const outputs = result?.outputs
+    return (
+      !!outputs &&
+      typeof outputs === "object" &&
+      "branchId" in outputs &&
+      outputs.branchId === branchId
+    )
+  }
+
+  const getBranchStep = (branchStepId: string): BranchStep | undefined => {
+    const ref = $selectedAutomation?.blockRefs?.[branchStepId]
+    const block = automationStore.actions.getBlockByRef(automation, ref)
+    return block && isBranchStep(block) ? block : undefined
+  }
+
+  const isBranchContext = (
+    value: FlowBlockContext
+  ): value is Extract<FlowBlockContext, { branchNode: true }> => {
+    return "branchNode" in value && value.branchNode === true
+  }
 </script>
 
 {#if !hideEdge}
-  <BaseEdge path={path[0]} />
+  <BaseEdge path={edgePath} style={edgeStyle} />
 {/if}
 
 <!-- Branch edge -->
