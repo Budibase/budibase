@@ -33,7 +33,9 @@
 
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
+  let lastToolsAiConfigId = $state<string | null | undefined>(null)
   let ragEnabled = $derived($featureFlags[FeatureFlag.AI_RAG])
+  let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
 
   let activeTab = $derived.by(() => {
     if (ragEnabled && $isActive("./knowledge")) {
@@ -41,6 +43,9 @@
     }
     if ($isActive("./deployment")) {
       return "Deployment"
+    }
+    if (testsEnabled && $isActive("./tests")) {
+      return "Tests"
     }
     if ($isActive("./logs")) {
       return "Logs"
@@ -64,6 +69,26 @@
     if (!ragEnabled && $isActive("./knowledge")) {
       $goto("./config")
     }
+
+    if (!testsEnabled && $isActive("./tests")) {
+      $goto("./config")
+    }
+  })
+
+  $effect(() => {
+    if (!currentAgent?._id) {
+      return
+    }
+
+    const nextAiConfigId = currentAgent.aiconfig || undefined
+    if (nextAiConfigId === lastToolsAiConfigId) {
+      return
+    }
+
+    lastToolsAiConfigId = nextAiConfigId
+    agentsStore.fetchTools(nextAiConfigId).catch(error => {
+      console.error("Failed to load agent tools", error)
+    })
   })
 
   async function toggleAgentLive() {
@@ -131,6 +156,15 @@
       >
         Deployment
       </ActionButton>
+      {#if testsEnabled}
+        <ActionButton
+          quiet
+          selected={activeTab === "Tests"}
+          on:click={() => $goto("./tests")}
+        >
+          Tests
+        </ActionButton>
+      {/if}
       <ActionButton
         quiet
         selected={activeTab === "Logs"}
@@ -166,14 +200,17 @@
       />
     </div>
   </div>
-  <div class="config-page" class:full-width={activeTab === "Logs"}>
+  <div
+    class="config-page"
+    class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+  >
     <div
       class="config-content"
-      class:full-width={activeTab === "Logs"}
-      class:logs-tab={activeTab === "Logs"}
+      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+      class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
     >
       <div class="config-form">
-        {#if activeTab === "Logs"}
+        {#if activeTab === "Logs" || activeTab === "Tests"}
           <!-- svelte-ignore slot_element_deprecated -->
           <slot />
         {:else}
@@ -184,7 +221,7 @@
         {/if}
       </div>
     </div>
-    {#if activeTab !== "Logs"}
+    {#if activeTab !== "Logs" && activeTab !== "Tests"}
       <div class="config-preview">
         <AgentChatPanel
           agentId={currentAgent?._id}
