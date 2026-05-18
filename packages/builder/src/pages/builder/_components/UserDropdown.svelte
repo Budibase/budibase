@@ -33,9 +33,9 @@
 </script>
 
 <ActionMenu {align}>
-  {#snippet control(open)}
+  {#snippet control(menuOpen)}
     {#if $$slots.default}
-      <slot {open} />
+      <slot open={menuOpen} />
     {:else}
       <div class="user-dropdown">
         <UserAvatar size="M" user={$auth.user} showTooltip={false} />

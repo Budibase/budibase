@@ -28,8 +28,8 @@
 </script>
 
 {#if user}
-  <UserDropdown align={PopoverAlignment.RightOutside} let:open>
-    <SideNavLink text={name} {collapsed} forceActive={open}>
+  <UserDropdown align={PopoverAlignment.RightOutside} let:open={menuOpen}>
+    <SideNavLink text={name} {collapsed} forceActive={menuOpen}>
       <UserAvatar slot="icon" size="XS" {user} showTooltip={false} />
     </SideNavLink>
   </UserDropdown>
