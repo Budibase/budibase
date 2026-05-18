@@ -5,7 +5,6 @@
   import {
     notifications,
     Modal,
-    Button,
     ActionButton,
     Switcher,
     StatusLight,
@@ -25,6 +24,7 @@
     deploymentStore,
     contextMenuStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
@@ -538,17 +538,11 @@
     </ActionButton>
 
     <div class="toggle-active setting-spacing">
-      <Button
-        primary={!isLive}
-        secondary={isLive}
-        icon={isLive ? "stop" : "play"}
-        iconColor={isLive ? "" : "var(--bb-blue)"}
-        iconWeight="fill"
+      <LiveToggleButton
+        live={isLive}
         disabled={!automation?.definition?.trigger || changingStatus}
         on:click={handleToggleLive}
-      >
-        {isLive ? "Stop" : "Set live"}
-      </Button>
+      />
     </div>
   </div>
 </div>
