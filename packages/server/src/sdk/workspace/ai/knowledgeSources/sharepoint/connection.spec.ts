@@ -257,7 +257,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
       expect.objectContaining({
         message:
           "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again.",
-        status: 401,
+        status: 400,
       })
     )
     expect(fetchMock).toHaveBeenCalledTimes(2)
@@ -342,7 +342,7 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
       expect.objectContaining({
         message:
           "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again.",
-        status: 401,
+        status: 400,
       })
     )
 

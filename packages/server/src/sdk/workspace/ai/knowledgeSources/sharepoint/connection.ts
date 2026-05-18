@@ -37,6 +37,26 @@ const parseRetryAfterMs = (value: string | null): number | undefined => {
   return Math.max(0, dateMs - Date.now())
 }
 
+const getErrorStatus = (error: unknown): number | undefined => {
+  if (typeof error !== "object" || error == null || !("status" in error)) {
+    return
+  }
+
+  const status = (error as { status?: unknown }).status
+  return typeof status === "number" ? status : undefined
+}
+
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (typeof error !== "object" || error == null || !("message" in error)) {
+    return
+  }
+
+  const message = (error as { message?: unknown }).message
+  return typeof message === "string" && message.trim().length > 0
+    ? message
+    : undefined
+}
+
 const requestWithRetries = async (
   operation: string,
   request: () => Promise<Response>
@@ -251,20 +271,27 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
     )
     return await fetchSharePointSitesByAppToken(bearerToken)
   } catch (error) {
-    if (
-      typeof error !== "object" ||
-      error == null ||
-      ("status" in error ? error.status : undefined) !== 401
-    ) {
+    if (getErrorStatus(error) !== 401) {
       throw error
     }
 
     await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId, datasourceId)
-    const bearerToken = await getSharePointBearerToken(
-      datasourceId,
-      authConfigId
-    )
-    return await fetchSharePointSitesByAppToken(bearerToken)
+    try {
+      const bearerToken = await getSharePointBearerToken(
+        datasourceId,
+        authConfigId
+      )
+      return await fetchSharePointSitesByAppToken(bearerToken)
+    } catch (retryError) {
+      if (getErrorStatus(retryError) === 401) {
+        throw new HTTPError(
+          getErrorMessage(retryError) ||
+            "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again.",
+          400
+        )
+      }
+      throw retryError
+    }
   }
 }
 
