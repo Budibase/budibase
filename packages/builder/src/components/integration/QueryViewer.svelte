@@ -31,13 +31,13 @@
     Integration,
     PreviewQueryResponse,
     Query,
+    QueryFields,
     QuerySchema,
     UIInternalDatasource,
   } from "@budibase/types"
 
   type DatasourceOption = Datasource | UIInternalDatasource
-  type QueryFields = Query["fields"] & Record<string, unknown>
-  type QueryField = keyof QueryFields | "fields"
+  type QueryField = keyof QueryFields
   type QuerySchemaMap = Record<string, QuerySchema | string>
   type NestedSchemaFields = NonNullable<Query["nestedSchemaFields"]>
   type RunQueryOptions = {
@@ -83,7 +83,7 @@
     schema = newQuery.schema
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
-    ;(newQuery.fields as QueryFields)[schemaType] ??= ""
+    newQuery.fields[schemaType] ??= ""
 
     queryHash = JSON.stringify(newQuery)
   }
