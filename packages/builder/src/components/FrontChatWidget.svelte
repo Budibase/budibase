@@ -1,48 +1,36 @@
 <script>
-  import { admin } from "@/stores/portal/admin"
+  import { onMount } from "svelte"
 
-  const FRONT_CHAT_SCRIPT_ID = "bb-front-chat-script"
-  const FRONT_CHAT_CHAT_ID = "427a98ae36e3cdbcc09105d823da8f56"
+  const COMPANION_CONTAINER_ID = "companion-container"
+  const COMPANION_SCRIPT_ID = "front-companion-script"
+  const COMPANION_SRC = "https://companion.frontapp.com/assets/boot.bundle.js"
+  const COMPANION_TOKEN = "eyJjbyI6NzQ5Nzg3OCwiY2EiOjI4Mjc0NTgyfQ"
 
-  let hasInitialised = false
-  // $admin.cloud <- add to if statement later
-  $: if (true) {
-    initFrontChat()
-  }
-
-  function initFrontChat() {
-    if (hasInitialised || window.__bbFrontChatInitialised) {
-      return
+  onMount(() => {
+    let container = document.getElementById(COMPANION_CONTAINER_ID)
+    if (!container) {
+      container = document.createElement("div")
+      container.id = COMPANION_CONTAINER_ID
+      document.body.appendChild(container)
     }
+    container.style.position = "fixed"
+    container.style.right = "16px"
+    container.style.bottom = "16px"
+    container.style.zIndex = "2147483000"
+    container.style.pointerEvents = "auto"
 
-    if (typeof window.FrontChat === "function") {
-      window.FrontChat("init", {
-        chatId: FRONT_CHAT_CHAT_ID,
-        useDefaultLauncher: true,
-      })
-      hasInitialised = true
-      window.__bbFrontChatInitialised = true
-      return
-    }
-
-    const existingScript = document.getElementById(FRONT_CHAT_SCRIPT_ID)
-    if (existingScript) {
+    if (document.getElementById(COMPANION_SCRIPT_ID)) {
       return
     }
 
     const script = document.createElement("script")
-    script.id = FRONT_CHAT_SCRIPT_ID
-    script.src = "https://chat-assets.frontapp.com/v1/chat.bundle.js"
-    script.onload = () => {
-      if (typeof window.FrontChat === "function") {
-        window.FrontChat("init", {
-          chatId: FRONT_CHAT_CHAT_ID,
-          useDefaultLauncher: true,
-        })
-        hasInitialised = true
-        window.__bbFrontChatInitialised = true
-      }
-    }
-    document.head.appendChild(script)
-  }
+    script.type = "module"
+    script.id = COMPANION_SCRIPT_ID
+    script.src = COMPANION_SRC
+    script.dataset.containerId = COMPANION_CONTAINER_ID
+    script.dataset.token = COMPANION_TOKEN
+    script.dataset.autoInit = ""
+    script.dataset.layout = "widget-right"
+    document.body.appendChild(script)
+  })
 </script>
