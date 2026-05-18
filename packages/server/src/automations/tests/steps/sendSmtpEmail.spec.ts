@@ -1,6 +1,7 @@
-import { SendEmailResponse } from "@budibase/types"
+import { SendEmailResponse, SmtpEmailStepInputs } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 jest.mock("../../../utilities/workerRequests", () => ({
   sendSmtpEmail: jest.fn(),
@@ -21,9 +22,22 @@ function generateResponse(to: string, from: string): SendEmailResponse {
   }
 }
 
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+const smtpInputs = (
+  overrides: Partial<SmtpEmailStepInputs> = {}
+): SmtpEmailStepInputs => ({
+  to: "user1@example.com",
+  from: "admin@example.com",
+  subject: "hello",
+  contents: "testing",
+  cc: undefined as unknown as string,
+  bcc: undefined as unknown as string,
+  startTime: undefined as unknown as Date,
+  endTime: undefined as unknown as Date,
+  summary: undefined as unknown as string,
+  ...overrides,
+})
 
-describe("test the outgoing webhook action", () => {
+describe("SMTP email automations", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -33,6 +47,10 @@ describe("test the outgoing webhook action", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
   it("should be able to run the action", async () => {
@@ -89,6 +107,79 @@ describe("test the outgoing webhook action", () => {
         { url: "attachment1", filename: "attachment1.txt" },
         { url: "attachment2", filename: "attachment2.txt" },
       ],
+    })
+  })
+
+  it("should provide default contents when none are supplied", async () => {
+    jest
+      .spyOn(workerRequests, "sendSmtpEmail")
+      .mockImplementationOnce(async () =>
+        generateResponse("user1@example.com", "admin@example.com")
+      )
+
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(
+        smtpInputs({
+          contents: "",
+        })
+      )
+      .test({ fields: {} })
+
+    expect(steps[0].outputs.success).toEqual(true)
+    expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith({
+      to: "user1@example.com",
+      from: "admin@example.com",
+      replyTo: undefined,
+      subject: "hello",
+      contents: "<h1>No content</h1>",
+      cc: undefined,
+      bcc: undefined,
+      automation: true,
+      attachments: undefined,
+      invite: undefined,
+    })
+  })
+
+  it("should support a single attachment without an invite", async () => {
+    jest
+      .spyOn(workerRequests, "sendSmtpEmail")
+      .mockImplementationOnce(async () =>
+        generateResponse("user1@example.com", "admin@example.com")
+      )
+
+    const attachment = { url: "attachment1", filename: "attachment1.txt" }
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(
+        smtpInputs({
+          attachments: attachment,
+        } as unknown as Partial<SmtpEmailStepInputs>)
+      )
+      .test({ fields: {} })
+
+    expect(steps[0].outputs.success).toEqual(true)
+    expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: attachment,
+        invite: undefined,
+      })
+    )
+  })
+
+  it("should return an error when sending fails", async () => {
+    jest
+      .spyOn(workerRequests, "sendSmtpEmail")
+      .mockRejectedValueOnce(new Error("SMTP failed"))
+
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(smtpInputs())
+      .test({ fields: {} })
+
+    expect(steps[0].outputs).toEqual({
+      success: false,
+      response: "Error: SMTP failed",
     })
   })
 })

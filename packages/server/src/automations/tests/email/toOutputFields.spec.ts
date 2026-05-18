@@ -4,7 +4,7 @@ import {
   EMAIL_BODY_CHARACTER_LIMIT,
   EMAIL_BODY_TRUNCATION_SUFFIX,
   toOutputFields,
-} from "./toOutputFields"
+} from "../../email/utils/toOutputFields"
 
 const buildMessage = (
   raw: string,
@@ -34,9 +34,15 @@ describe("toOutputFields", () => {
 
     const result = await toOutputFields(message)
 
-    expect(result.bodyText).toEqual(body)
-    expect(result.bodyTextTruncated).toBe(false)
-    expect(result.cc).toEqual([])
+    expect(result).toEqual({
+      from: "sender@example.com",
+      to: "recipient@example.com",
+      cc: [],
+      subject: "subject",
+      sentAt: "2024-01-01T00:00:00.000Z",
+      bodyText: body,
+      bodyTextTruncated: false,
+    })
   })
 
   it("formats HTML body to readable text when plain body is empty", async () => {
@@ -117,5 +123,35 @@ describe("toOutputFields", () => {
     expect(result.cc).toEqual(["first@example.com", "second@example.com"])
     expect(result.bodyText).toEqual(body)
     expect(result.bodyTextTruncated).toBe(false)
+  })
+
+  it("falls back to unknown when sender or recipient addresses are missing", async () => {
+    const message = buildMessage("", {
+      from: [{ address: undefined }],
+      to: undefined,
+      date: undefined,
+      subject: undefined,
+    })
+
+    const result = await toOutputFields(message)
+
+    expect(result.from).toEqual("unknown")
+    expect(result.to).toEqual("unknown")
+    expect(result.subject).toBeUndefined()
+    expect(result.sentAt).toBeUndefined()
+  })
+
+  it("returns undefined body when parsing fails", async () => {
+    const message: FetchMessageObject = {
+      ...buildMessage(""),
+      source: Buffer.from([0xff, 0xfe, 0xfd]),
+    }
+    const consoleLog = jest.spyOn(console, "log").mockImplementation()
+
+    const result = await toOutputFields(message)
+
+    expect(result.bodyText).toBeUndefined()
+    expect(result.bodyTextTruncated).toBe(false)
+    consoleLog.mockRestore()
   })
 })
