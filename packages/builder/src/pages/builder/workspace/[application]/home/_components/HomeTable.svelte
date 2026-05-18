@@ -62,12 +62,15 @@
     return "-"
   }
 
-  const getStatusColor = (status: string) =>
-    status === "Live"
-      ? "#8CA171"
-      : status === "Not Deployed"
-        ? "var(--color-orange-400)"
-        : "var(--spectrum-global-color-gray-600)"
+  const getStatusColor = (status: string) => {
+    if (status === "Live") {
+      return "var(--color-green-500)"
+    }
+    if (status === "Stopped") {
+      return "var(--color-orange-400)"
+    }
+    return "var(--spectrum-global-color-gray-600)"
+  }
 
   export let highlightedRowId: string | null = null
 
