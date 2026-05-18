@@ -59,7 +59,7 @@
 
   let datasource: DatasourceOption
   let integration: Integration
-  let schemaType: QueryField
+  let schemaType: QueryField | "fields"
 
   let schema: QuerySchemaMap = {}
   let nestedSchemaFields: NestedSchemaFields = {}
