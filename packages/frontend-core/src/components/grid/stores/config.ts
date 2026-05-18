@@ -82,9 +82,8 @@ export const deriveStores = (context: StoreContext): ConfigDerivedStore => {
         config.canEditColumns = false
       }
 
-      // Determine if we can select rows. Always true in the meantime as you can
-      // use the selected rows binding regardless of readonly state.
-      config.canSelectRows = true
+      // Determine if we can select rows.
+      config.canSelectRows = $props.canSelectRows !== false
 
       return config
     }
