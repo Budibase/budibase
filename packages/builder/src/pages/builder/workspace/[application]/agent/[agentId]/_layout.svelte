@@ -1,12 +1,12 @@
 <script lang="ts">
   import {
     ActionButton,
-    Button,
     Icon,
     Layout,
     StatusLight,
     notifications,
   } from "@budibase/bbui"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
@@ -193,16 +193,11 @@
           color="var(--spectrum-global-color-gray-600)"
         />
       </div>
-      <Button
-        primary={!currentAgent?.live}
-        secondary={currentAgent?.live}
-        icon={currentAgent?.live ? "stop" : "play"}
-        iconColor={currentAgent?.live ? "" : "var(--bb-blue)"}
-        iconWeight="fill"
-        on:click={toggleAgentLive}
+      <LiveToggleButton
+        live={currentAgent?.live === true}
         disabled={togglingLive}
-        >{currentAgent?.live ? "Stop" : "Set live"}</Button
-      >
+        on:click={toggleAgentLive}
+      />
     </div>
   </div>
   <div
