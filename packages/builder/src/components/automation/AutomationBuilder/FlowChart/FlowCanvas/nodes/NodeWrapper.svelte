@@ -9,18 +9,12 @@
     type AutomationTrigger,
     type AutomationStepResult,
     type AutomationTriggerResult,
-    type LayoutDirection,
   } from "@budibase/types"
 
   export let data: StepNodeData
 
-  // Extract block and other data
   $: block = data.block
   $: viewMode = $automationStore.viewMode
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
-
-  // Get automation data from store
   $: automation = $selectedAutomation?.data
   $: isTrigger = "type" in block && block.type === "TRIGGER"
 
@@ -31,7 +25,6 @@
   function handleStepSelect(
     stepData: AutomationStepResult | AutomationTriggerResult
   ) {
-    // Show step details when a step is selected in logs mode
     if (
       stepData &&
       viewMode === ViewMode.LOGS &&
@@ -47,13 +40,13 @@
   }
 </script>
 
-<div style="position: relative;">
+<div class="step-wrapper">
   {#if !isTrigger}
     <Handle
       isConnectable={false}
       class="custom-handle"
       type="target"
-      position={isHorizontal ? Position.Left : Position.Top}
+      position={Position.Left}
     />
   {/if}
   <StepNode
@@ -69,7 +62,15 @@
       isConnectable={false}
       class="custom-handle"
       type="source"
-      position={isHorizontal ? Position.Right : Position.Bottom}
+      position={Position.Right}
     />
   </div>
 </div>
+
+<style>
+  .step-wrapper {
+    position: relative;
+    width: fit-content;
+    max-width: 360px;
+  }
+</style>
