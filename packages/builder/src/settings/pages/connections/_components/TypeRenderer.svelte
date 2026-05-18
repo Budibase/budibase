@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Tags, Tag } from "@budibase/bbui"
   import type { UIWorkspaceConnection } from "@/types"
 
   export let row: UIWorkspaceConnection
@@ -17,19 +16,21 @@
   // Legacy OAuth2 connections don't have auth array - they ARE the OAuth2 config
   $: isLegacyOAuth2 = row.source === "oauth2"
 
-  $: authTags = isLegacyOAuth2
-    ? [{ label: authTypeLabels.oauth2 }]
-    : uniqueTypes.map(type => ({
-        label: authTypeLabels[type] || type,
-      }))
+  $: authLabels = isLegacyOAuth2
+    ? [authTypeLabels.oauth2]
+    : uniqueTypes.map(type => authTypeLabels[type] || type)
+  $: authLabelText = authLabels.length > 0 ? authLabels.join(", ") : "No auth"
 </script>
 
-<Tags>
-  {#if authTags.length > 0}
-    {#each authTags as tag}
-      <Tag>{tag.label}</Tag>
-    {/each}
-  {:else}
-    <Tag>No auth</Tag>
-  {/if}
-</Tags>
+<div class="connection-auth-labels">
+  {authLabelText}
+</div>
+
+<style>
+  .connection-auth-labels {
+    margin-inline-start: auto;
+    width: max-content;
+    max-width: 100%;
+    color: var(--spectrum-global-color-gray-700);
+  }
+</style>
