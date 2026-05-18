@@ -201,6 +201,21 @@ export async function ingestGeminiFile({
 
   const payload = (await response.json()) as RagIngestResponse
   if (payload.status === "failed" && payload.error) {
+    console.error("Gemini ingest failed", { error: payload.error })
+    if (payload.error.includes("fileSearchStores")) {
+      if (payload.error.includes("403")) {
+        throw new HTTPError(
+          "Gemini file store is inaccessible (403 Forbidden). Use 'Reset store' to recreate it.",
+          403
+        )
+      }
+      if (payload.error.includes("404")) {
+        throw new HTTPError(
+          "Gemini file store was not found (404). Use 'Reset store' to recreate it.",
+          404
+        )
+      }
+    }
     throw new HTTPError(payload.error, 500)
   }
   if (!payload.file_id) {
@@ -243,6 +258,24 @@ export async function searchGeminiFileStore({
 
   const payload = (await response.json()) as RagSearchResponse
   return payload.data || []
+}
+
+export async function checkGeminiFileStoreExists(
+  vectorStoreId: string
+): Promise<boolean> {
+  const geminiApiKey = getGeminiApiKey()
+  const response = await fetch(
+    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
+    {
+      method: "GET",
+      headers: await getCommonAuthHeaders(),
+      body: JSON.stringify({
+        custom_llm_provider: "gemini",
+        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+      }),
+    }
+  )
+  return response.status !== 404
 }
 
 export async function deleteGeminiFileFromStore({

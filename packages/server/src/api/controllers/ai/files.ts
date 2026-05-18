@@ -223,6 +223,15 @@ export async function fetchAgentKnowledgeSourceAllEntries(
   ctx.status = 200
 }
 
+export async function resetAgentKnowledgeBaseStore(
+  ctx: UserCtx<void, void, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const knowledgeBase = await sdk.ai.rag.ensureKnowledgeBaseForAgent(agentId)
+  await sdk.ai.knowledgeBase.resetKnowledgeBaseStore(knowledgeBase)
+  ctx.status = 204
+}
+
 export async function syncAgentKnowledgeSource(
   ctx: UserCtx<
     SyncAgentKnowledgeSourcesRequest,
