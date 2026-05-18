@@ -1,5 +1,6 @@
 <script lang="ts">
   import { notifications } from "@budibase/bbui"
+  import { bb } from "@/stores/bb"
   import {
     OAuth2CredentialsMethod,
     OAuth2GrantType,
@@ -50,6 +51,8 @@
   let siteLoadError = $state("")
   let loadingNextStep = $state(false)
   let creatingConnection = $state(false)
+  let awaitingAdvancedSetup = $state(false)
+  let resumingFromAdvancedSetup = $state(false)
   let saving = $state(false)
   let skippedConnectionStep = $state(false)
 
@@ -89,6 +92,15 @@
       sharePointConnectionOptions = []
       selectedConnectionId = ""
     }
+  }
+
+  const handleAdvancedSetup = async () => {
+    if (creatingConnection || loadingNextStep || saving) {
+      return
+    }
+    awaitingAdvancedSetup = true
+    quickSetupModal?.hide()
+    bb.settings("/connections/apis/new/microsoft-sharepoint")
   }
 
   const createSharePointConnection = async (
@@ -211,6 +223,42 @@
     }
   }
 
+  $effect(() => {
+    const availableConnections = sharePointConnectionOptions.length
+    if (
+      !awaitingAdvancedSetup ||
+      availableConnections === 0 ||
+      resumingFromAdvancedSetup
+    ) {
+      return
+    }
+
+    const resume = async () => {
+      resumingFromAdvancedSetup = true
+      try {
+        await loadSharePointConnections()
+        if (sharePointConnectionOptions.length === 0) {
+          return
+        }
+        awaitingAdvancedSetup = false
+        if (sharePointConnectionOptions.length === 1 && selectedConnectionId) {
+          skippedConnectionStep = true
+          await goToSitesStep()
+          return
+        }
+        skippedConnectionStep = false
+        connectionStepModal?.show()
+      } finally {
+        resumingFromAdvancedSetup = false
+      }
+    }
+
+    resume().catch(error => {
+      console.error(error)
+      notifications.error("Failed to continue SharePoint setup")
+    })
+  })
+
   const handleSelect = async (mode: SharePointSelectionMode) => {
     if (!agentId || !selectedSiteId) {
       return
@@ -236,6 +284,8 @@
   }
 
   export async function show() {
+    awaitingAdvancedSetup = false
+    resumingFromAdvancedSetup = false
     await loadSharePointConnections()
     if (sharePointConnectionOptions.length === 0) {
       skippedConnectionStep = true
@@ -261,6 +311,8 @@
   }
 
   export function hide() {
+    awaitingAdvancedSetup = false
+    resumingFromAdvancedSetup = false
     quickSetupModal?.hide()
     connectionStepModal?.hide()
     siteStepModal?.hide()
@@ -271,6 +323,7 @@
   bind:this={quickSetupModal}
   creating={creatingConnection}
   onCreate={createSharePointConnection}
+  onAdvancedSetup={handleAdvancedSetup}
 />
 
 <SharePointConnectionStepModal

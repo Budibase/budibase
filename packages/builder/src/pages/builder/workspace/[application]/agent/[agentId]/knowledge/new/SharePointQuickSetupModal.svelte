@@ -19,9 +19,10 @@
     onCreate: (
       _details: SharePointQuickSetupDetails
     ) => Promise<void> | void
+    onAdvancedSetup?: () => Promise<void> | void
   }
 
-  let { creating = false, onCreate }: Props = $props()
+  let { creating = false, onCreate, onAdvancedSetup }: Props = $props()
 
   let modal = $state<Modal>()
   let tenantId = $state("")
@@ -180,6 +181,9 @@
     </div>
 
     <ButtonGroup slot="footer">
+      <Button cta secondary on:click={onAdvancedSetup} disabled={creating}>
+        Advanced setup
+      </Button>
       <Button cta primary on:click={handleCreate} disabled={creating}>
         {creating ? "Creating..." : "Create connection"}
       </Button>
