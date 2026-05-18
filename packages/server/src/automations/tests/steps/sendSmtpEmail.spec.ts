@@ -24,13 +24,14 @@ function generateResponse(to: string, from: string): SendEmailResponse {
 
 const smtpInputs = (
   overrides: Partial<SmtpEmailStepInputs> = {}
-): SmtpEmailStepInputs => ({
-  to: "user1@example.com",
-  from: "admin@example.com",
-  subject: "hello",
-  contents: "testing",
-  ...overrides,
-} as SmtpEmailStepInputs)
+): SmtpEmailStepInputs =>
+  ({
+    to: "user1@example.com",
+    from: "admin@example.com",
+    subject: "hello",
+    contents: "testing",
+    ...overrides,
+  }) as SmtpEmailStepInputs
 
 describe("SMTP email automations", () => {
   const config = new TestConfiguration()
