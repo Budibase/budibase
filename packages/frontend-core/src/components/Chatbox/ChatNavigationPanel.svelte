@@ -116,16 +116,17 @@
             </button>
 
             <ActionMenu align="right" disabled={deletingChat}>
-              <button
-                slot="control"
-                class="conversation-actions"
-                type="button"
-                aria-label={`Open actions for ${
-                  conversation.title || "Untitled Chat"
-                }`}
-              >
-                <Icon size="S" name="dots-three" />
-              </button>
+              {#snippet control()}
+                <button
+                  class="conversation-actions"
+                  type="button"
+                  aria-label={`Open actions for ${
+                    conversation.title || "Untitled Chat"
+                  }`}
+                >
+                  <Icon size="S" name="dots-three" />
+                </button>
+              {/snippet}
               <MenuItem
                 on:click={() => selectConversation(conversation._id)}
                 icon="chat-circle"

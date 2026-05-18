@@ -206,9 +206,11 @@
       {/if}
       {#if menuItems?.length && showMenu}
         <ActionMenu>
-          <div slot="control" class="control icon">
-            <Icon size="S" hoverable name="dots-three" />
-          </div>
+          {#snippet control()}
+            <div class="control icon">
+              <Icon size="S" hoverable name="dots-three" />
+            </div>
+          {/snippet}
           {#each menuItems as item}
             <MenuItem on:click={() => item.onClick(field)}>
               {item.text}

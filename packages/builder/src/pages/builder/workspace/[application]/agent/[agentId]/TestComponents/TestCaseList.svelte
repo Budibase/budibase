@@ -178,9 +178,11 @@
           disabled={!selectedGroupId || loading || saving || running}
           roundedPopover
         >
-          <div slot="control">
-            <ActionButton icon="pencil-simple">Manage</ActionButton>
-          </div>
+          {#snippet control()}
+            <div>
+              <ActionButton icon="pencil-simple">Manage</ActionButton>
+            </div>
+          {/snippet}
           <MenuItem icon="pencil-simple" on:click={onRenameGroup}>
             Rename group
           </MenuItem>
@@ -337,14 +339,16 @@
 
             <div class="case-cell case-cell-actions">
               <ActionMenu align="right" disabled={running} roundedPopover>
-                <div slot="control">
-                  <span
-                    class:action-menu-disabled={running}
-                    aria-disabled={running}
-                  >
-                    <Icon size="M" hoverable={!running} name="dots-three" />
-                  </span>
-                </div>
+                {#snippet control()}
+                  <div>
+                    <span
+                      class:action-menu-disabled={running}
+                      aria-disabled={running}
+                    >
+                      <Icon size="M" hoverable={!running} name="dots-three" />
+                    </span>
+                  </div>
+                {/snippet}
                 {@render caseMenuItems(testCase.id)}
               </ActionMenu>
             </div>

@@ -41,9 +41,11 @@
 </script>
 
 <ActionMenu align="right">
-  <div slot="control" class="control icon">
-    <Icon size="S" hoverable name="dots-three" />
-  </div>
+  {#snippet control()}
+    <div class="control icon">
+      <Icon size="S" hoverable name="dots-three" />
+    </div>
+  {/snippet}
   <MenuItem on:click={onEdit} icon="pencil">Edit</MenuItem>
   <MenuItem on:click={onDelete} icon="trash">Delete</MenuItem>
 </ActionMenu>

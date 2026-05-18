@@ -117,10 +117,12 @@
           <div class="header">
             <img class="logo" alt="logo" src={$organisation.logoUrl || Logo} />
             <ActionMenu align="right">
-              <div slot="control" class="avatar">
-                <UserAvatar size="M" user={$auth.user} showTooltip={false} />
-                <Icon size="L" name="caret-down" />
-              </div>
+              {#snippet control()}
+                <div class="avatar">
+                  <UserAvatar size="M" user={$auth.user} showTooltip={false} />
+                  <Icon size="L" name="caret-down" />
+                </div>
+              {/snippet}
               <MenuItem
                 icon="user-circle-gear"
                 on:click={() => userInfoModal.show()}

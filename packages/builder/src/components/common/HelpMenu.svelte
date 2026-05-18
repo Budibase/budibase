@@ -19,9 +19,9 @@
 </script>
 
 <ActionMenu {align}>
-  <svelte:fragment slot="control" let:open>
+  {#snippet control(open)}
     <slot {open} />
-  </svelte:fragment>
+  {/snippet}
 
   <MenuItem
     icon="book"

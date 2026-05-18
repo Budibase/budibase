@@ -45,9 +45,11 @@
 <div class="cell">
   {#if row.type !== BackupType.RESTORE}
     <ActionMenu align="right">
-      <div slot="control">
-        <Icon size="M" hoverable name="dots-three" />
-      </div>
+      {#snippet control()}
+        <div>
+          <Icon size="M" hoverable name="dots-three" />
+        </div>
+      {/snippet}
       <AbsTooltip
         position={TooltipPosition.Left}
         text="Unavailable - another user is editing this app"

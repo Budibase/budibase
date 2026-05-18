@@ -233,9 +233,11 @@
           <span class="default-toggle-label">Default</span>
         </div>
         <ActionMenu align="right">
-          <span slot="control">
-            <Icon hoverable name="dots-three" />
-          </span>
+          {#snippet control()}
+            <span>
+              <Icon hoverable name="dots-three" />
+            </span>
+          {/snippet}
           <MenuItem
             icon="pencil"
             on:click={() => editModal.show()}

@@ -60,7 +60,7 @@
       roundedPopover
       disabled={disabled || readonly}
     >
-      <svelte:fragment slot="control" let:open>
+      {#snippet control(open)}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div class="child-trigger" class:open class:is-readonly={readonly}>
@@ -72,7 +72,7 @@
               size="S"
             />{/if}
         </div>
-      </svelte:fragment>
+      {/snippet}
 
       <div class="api-menu">
         <div class="api-menu-header">

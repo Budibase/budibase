@@ -78,9 +78,9 @@
     {#if baseUrlOptions.length > 0}
       <div class="globe-icon">
         <ActionMenu align="right" {disabled}>
-          <svelte:fragment slot="control">
+          {#snippet control()}
             <Icon name="globe" size="S" hoverable={!disabled} />
-          </svelte:fragment>
+          {/snippet}
           <div class="url-menu-content">
             {#each baseUrlOptions as option}
               <MenuItem on:click={() => selectBaseUrl(option.url)}>

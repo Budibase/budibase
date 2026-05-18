@@ -691,9 +691,11 @@
           portalTarget=".workspace-home .create-popover-container"
           animate={false}
         >
-          <div slot="control" class="create-menu-control">
-            <Button size="M" icon="plus" primary>Create</Button>
-          </div>
+          {#snippet control()}
+            <div class="create-menu-control">
+              <Button size="M" icon="plus" primary>Create</Button>
+            </div>
+          {/snippet}
 
           {#if $featureFlags.AI_AGENTS}
             <MenuItem

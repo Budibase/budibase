@@ -135,7 +135,7 @@
   widthMode={fullWidthDropdown ? "fixed-to-anchor" : "no-anchor"}
   {disabled}
 >
-  <svelte:fragment slot="control" let:open>
+  {#snippet control(open)}
     <div
       class="picker-button"
       class:has-value={!!selectedQuery}
@@ -168,7 +168,7 @@
         </div>
       </ActionButton>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <div class="query-menu">
     <div class="query-menu-header">

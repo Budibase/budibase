@@ -33,7 +33,7 @@
 </script>
 
 <ActionMenu {align}>
-  <svelte:fragment slot="control" let:open>
+  {#snippet control(open)}
     {#if $$slots.default}
       <slot {open} />
     {:else}
@@ -42,7 +42,7 @@
         <Icon size="L" name="caret-down" />
       </div>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
   <MenuItem icon="user-gear" on:click={() => profileModal.show()}>
     My profile

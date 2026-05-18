@@ -51,9 +51,11 @@
   roundedPopover
   portalTarget=".tools-popover-container"
 >
-  <div slot="control">
-    <Button secondary size="M" icon="plus">Add tools</Button>
-  </div>
+  {#snippet control()}
+    <div class="tools-menu-trigger">
+      <Button secondary size="M" icon="plus">Add tools</Button>
+    </div>
+  {/snippet}
 
   <div class="tools-menu">
     <div class="tools-menu-header">
@@ -145,7 +147,8 @@
 </ActionMenu>
 
 <style>
-  :global([slot="control"] .spectrum-Button.new-styles .spectrum-Button-label) {
+  .tools-menu-trigger
+    :global(.spectrum-Button.new-styles .spectrum-Button-label) {
     font-weight: 500;
   }
 

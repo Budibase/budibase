@@ -231,7 +231,7 @@
   on:open={onMenuOpen}
   on:close={onMenuClose}
 >
-  <svelte:fragment slot="control">
+  {#snippet control()}
     <div class="workspace-menu" class:disabled={false}>
       <div
         role="button"
@@ -245,7 +245,7 @@
         <Icon size="M" name={!open ? "caret-down" : "caret-up"} />
       </div>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <div class="menu-item-header">
     <input

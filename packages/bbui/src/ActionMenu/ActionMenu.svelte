@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { setContext, getContext } from "svelte"
+  import { setContext, getContext, type Snippet } from "svelte"
   import Popover from "../Popover/Popover.svelte"
   import Menu from "../Menu/Menu.svelte"
   import type { PopoverAlignment, PopoverWidthMode } from "../constants"
@@ -13,6 +13,8 @@
   export let widthMode: PopoverWidthMode = "no-anchor"
   export let roundedPopover: boolean = false
   export let customZIndex: number | undefined = undefined
+  export let control: Snippet<[boolean]> | undefined = undefined
+  export let children: Snippet | undefined = undefined
 
   const actionMenuContext = getContext("actionMenu")
 
@@ -68,7 +70,7 @@
   on:mouseenter={openOnHover ? show : null}
   on:mouseleave={openOnHover ? queueHide : null}
 >
-  <slot name="control" {open} />
+  {@render control?.(open)}
 </div>
 <Popover
   bind:this={dropdown}
@@ -96,6 +98,6 @@
   bind:open
 >
   <Menu>
-    <slot />
+    {@render children?.()}
   </Menu>
 </Popover>

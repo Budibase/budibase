@@ -80,7 +80,7 @@
 
 {#if $authStore && !isPublicPreview}
   <ActionMenu align={compact ? "right" : "left"}>
-    <svelte:fragment slot="control">
+    {#snippet control()}
       <div class="container">
         <UserAvatar {user} size="M" showTooltip={false} />
         {#if !collapsed}
@@ -94,7 +94,7 @@
           <Icon size="S" name="caret-down" color="var(--navTextColor)" />
         {/if}
       </div>
-    </svelte:fragment>
+    {/snippet}
 
     <MenuItem icon="user-gear" on:click={() => profileModal?.show()}>
       {userMenuLabels.profile}

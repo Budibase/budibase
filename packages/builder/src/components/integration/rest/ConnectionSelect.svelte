@@ -258,7 +258,7 @@
   roundedPopover
   {disabled}
 >
-  <svelte:fragment slot="control" let:open>
+  {#snippet control(open)}
     <div
       class="picker-button"
       class:has-value={!!connection}
@@ -290,7 +290,7 @@
         </div>
       </ActionButton>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <div class="auth-menu">
     <div class="auth-menu-header">

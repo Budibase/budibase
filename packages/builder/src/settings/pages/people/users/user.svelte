@@ -305,9 +305,11 @@
       {#if userId !== $auth.user?._id && !readonly}
         <div>
           <ActionMenu align="right">
-            <span slot="control">
-              <Icon hoverable name="dots-three" />
-            </span>
+            {#snippet control()}
+              <span>
+                <Icon hoverable name="dots-three" />
+              </span>
+            {/snippet}
             {#if !isSSO}
               <MenuItem
                 on:click={resetPasswordModal.show}

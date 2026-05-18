@@ -520,7 +520,7 @@
                 on:open={() => (createMenuOpen = true)}
                 on:close={() => (createMenuOpen = false)}
               >
-                <svelte:fragment slot="control" let:open>
+                {#snippet control(open)}
                   <SideNavLink
                     icon="plus"
                     text="Create"
@@ -528,7 +528,7 @@
                     forceActive={open}
                     on:click={keepCollapsed}
                   />
-                </svelte:fragment>
+                {/snippet}
 
                 {#if $featureFlags.AI_AGENTS}
                   <MenuItem icon="sparkle" on:click={openCreateAgent}>

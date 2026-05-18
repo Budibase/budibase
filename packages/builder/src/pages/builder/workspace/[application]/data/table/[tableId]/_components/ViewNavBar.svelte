@@ -338,11 +338,13 @@
   {/if}
   {#if overflowedViews.length}
     <ActionMenu align="right" bind:this={overflowMenu}>
-      <div slot="control" let:open>
-        <ActionButton icon="caret-down" quiet selected={open || viewHidden}>
-          {overflowedViews.length} more
-        </ActionButton>
-      </div>
+      {#snippet control(open)}
+        <div>
+          <ActionButton icon="caret-down" quiet selected={open || viewHidden}>
+            {overflowedViews.length} more
+          </ActionButton>
+        </div>
+      {/snippet}
       {#each overflowedViews as view}
         <ActionMenu
           align="left-context-menu"
@@ -350,19 +352,21 @@
           animate={false}
           offset={-4}
         >
-          <div slot="control">
-            <a
-              href={$viewUrl(view.id)}
-              class="nav-overflow-item"
-              class:active={view.id === activeId}
-              on:click={overflowMenu?.hide}
-            >
-              <MenuItem icon={viewHidden ? "Checkmark" : null}>
-                {view.name}
-                <Icon slot="right" name="caret-right" />
-              </MenuItem>
-            </a>
-          </div>
+          {#snippet control()}
+            <div>
+              <a
+                href={$viewUrl(view.id)}
+                class="nav-overflow-item"
+                class:active={view.id === activeId}
+                on:click={overflowMenu?.hide}
+              >
+                <MenuItem icon={viewHidden ? "Checkmark" : null}>
+                  {view.name}
+                  <Icon slot="right" name="caret-right" />
+                </MenuItem>
+              </a>
+            </div>
+          {/snippet}
           <MenuItem icon="pencil" on:click={() => editOverflowView(view)}>
             Edit
           </MenuItem>

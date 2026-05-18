@@ -100,9 +100,11 @@
 
         <div class="settings-options">
           <ActionMenu align="left" roundedPopover>
-            <div slot="control">
-              <Button secondary size="M" icon="plus">Add agent</Button>
-            </div>
+            {#snippet control()}
+              <div>
+                <Button secondary size="M" icon="plus">Add agent</Button>
+              </div>
+            {/snippet}
             {#if liveAgents.length}
               {#each liveAgents as agent (agent._id)}
                 <MenuItem
