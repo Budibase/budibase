@@ -29,13 +29,8 @@ const smtpInputs = (
   from: "admin@example.com",
   subject: "hello",
   contents: "testing",
-  cc: undefined as unknown as string,
-  bcc: undefined as unknown as string,
-  startTime: undefined as unknown as Date,
-  endTime: undefined as unknown as Date,
-  summary: undefined as unknown as string,
   ...overrides,
-})
+} as SmtpEmailStepInputs)
 
 describe("SMTP email automations", () => {
   const config = new TestConfiguration()
