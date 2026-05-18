@@ -10,4 +10,5 @@ export enum JobQueue {
   RAG_INGESTION = "ragIngestionQueue",
   KNOWLEDGE_SOURCE_SYNC = "knowledgeSourceSyncQueue",
   AGENT_LOG_INDEXING = "agentLogIndexingQueue",
+  AGENT_TEST_RUN = "agentTestRunQueue",
 }
