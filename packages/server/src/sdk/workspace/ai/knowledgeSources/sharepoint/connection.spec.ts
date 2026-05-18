@@ -268,6 +268,50 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
       datasourceId
     )
   })
+
+  it("retries once after 401 and succeeds with refreshed token", async () => {
+    mockDatasource()
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({}),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          value: [
+            {
+              id: "site-1",
+              displayName: "Site One",
+              webUrl: "https://contoso.sharepoint.com/sites/site-1",
+            },
+          ],
+        }),
+      } as Response)
+
+    const sites = await fetchSharePointSitesByDatasourceAuthConfig(
+      datasourceId,
+      authConfigId
+    )
+
+    expect(sites).toEqual([
+      {
+        id: "site-1",
+        name: "Site One",
+        webUrl: "https://contoso.sharepoint.com/sites/site-1",
+      },
+    ])
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(2)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+      authConfigId,
+      datasourceId
+    )
+  })
 })
 
 describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
