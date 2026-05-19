@@ -107,24 +107,24 @@
   }
 
   const conditionValueTypeOptions = [
-    { label: "Binding", value: FilterValueType.BINDING },
+    { label: "Text", value: FieldType.STRING },
     { label: "Number", value: FieldType.NUMBER },
     { label: "Date", value: FieldType.DATETIME },
     { label: "Boolean", value: FieldType.BOOLEAN },
   ]
 
   const getConditionValueType = filter => {
-    if (filter.valueType === FilterValueType.BINDING) {
-      return FilterValueType.BINDING
-    }
     if (
-      [FieldType.NUMBER, FieldType.DATETIME, FieldType.BOOLEAN].includes(
-        filter.type
-      )
+      [
+        FieldType.STRING,
+        FieldType.NUMBER,
+        FieldType.DATETIME,
+        FieldType.BOOLEAN,
+      ].includes(filter.type)
     ) {
       return filter.type
     }
-    return FilterValueType.BINDING
+    return FieldType.STRING
   }
 
   const onConditionValueTypeChange = (filter, value) => {
@@ -132,11 +132,8 @@
     const updated = {
       ...filter,
       value: null,
-      valueType:
-        value === FilterValueType.BINDING
-          ? FilterValueType.BINDING
-          : FilterValueType.VALUE,
-      type: value === FilterValueType.BINDING ? FieldType.STRING : value,
+      valueType: FilterValueType.VALUE,
+      type: value,
     }
     sanitizeOperator(updated)
     sanitizeValue(updated, previousType)
@@ -274,10 +271,7 @@
         editable.groups.splice(groupIdx, 1)
       } else if (addFilter) {
         targetGroup.filters.push({
-          valueType:
-            builderType === "condition"
-              ? FilterValueType.BINDING
-              : FilterValueType.VALUE,
+          valueType: FilterValueType.VALUE,
           ...(builderType === "condition"
             ? { operator: OperatorOptions.Equals.value, type: FieldType.STRING }
             : {}),
@@ -300,10 +294,7 @@
         logicalOperator: Constants.FilterOperator.ANY,
         filters: [
           {
-            valueType:
-              builderType === "condition"
-                ? FilterValueType.BINDING
-                : FilterValueType.VALUE,
+            valueType: FilterValueType.VALUE,
             ...(builderType === "condition"
               ? {
                   operator: OperatorOptions.Equals.value,
@@ -493,6 +484,10 @@
                       {toReadable}
                       {toRuntime}
                       {evaluationContext}
+                      bindingValueType={builderType === "condition"
+                        ? FilterValueType.VALUE
+                        : FilterValueType.BINDING}
+                      useConditionValueControls={builderType === "condition"}
                       on:change={e => {
                         onFilterFieldUpdate(
                           { ...filter, ...e.detail },
@@ -630,10 +625,9 @@
   }
 
   .filter.condition-builder {
-    grid-template-columns: minmax(150px, 1fr) 170px 120px minmax(
-        200px,
-        1fr
-      ) 40px;
+    grid-template-columns:
+      minmax(150px, 1fr) 170px 120px minmax(200px, 1fr)
+      40px;
   }
 
   .filters-footer {
