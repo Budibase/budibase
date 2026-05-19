@@ -41,8 +41,7 @@ const renderLinkConfirmationPage = (
   session: ChatIdentityLinkSession,
   action: string
 ) => {
-  const externalIdentity =
-    session.externalUserName || session.externalUserId
+  const externalIdentity = session.externalUserName || session.externalUserId
   return `<!doctype html>
 <html lang="en">
   <head>
