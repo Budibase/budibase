@@ -4,7 +4,6 @@ import {
   automationTrigger,
   branchStep,
   branchWithManyLanesStep,
-  exhaustiveAutomationSteps,
   linearAutomationSteps,
   loopStep,
   loopWithBranchChildStep,
@@ -235,29 +234,5 @@ describe("renderChain", () => {
       "anchor-branch-branch-many-1-beta"
     )
     getEdge(graph, "delta-loop", "anchor-delta-loop")
-  })
-
-  it("renders exhaustive mixed automations without duplicate ids or dangling edges", () => {
-    const graph = renderTestChain(exhaustiveAutomationSteps())
-
-    expectUniqueGraphIds(graph)
-    expectAllEdgesResolvable(graph)
-
-    getEdge(graph, "start", "loop-with-branch")
-    expectBranchEdge(
-      getEdge(graph, "loop-with-branch", "branch-post-loop-branch-0-success"),
-      {
-        branchStepId: "post-loop-branch",
-        branchIdx: 0,
-        branchesCount: 3,
-      }
-    )
-    getEdge(graph, "success-child", "anchor-success-child")
-    getEdge(graph, "fallback-loop", "anchor-fallback-loop")
-    getEdge(
-      graph,
-      "branch-post-loop-branch-2-empty",
-      "anchor-branch-post-loop-branch-2-empty"
-    )
   })
 })

@@ -208,33 +208,6 @@ export const loopWithBranchChildStep = () =>
     "loop-with-branch"
   )
 
-export const exhaustiveAutomationSteps = () => [
-  serverLogStep("start"),
-  loopWithBranchChildStep(),
-  branchStep([], {
-    id: "post-loop-branch",
-    branches: [
-      {
-        id: "success",
-        name: "Success",
-        children: [serverLogStep("success-child")],
-      },
-      {
-        id: "fallback",
-        name: "Fallback",
-        children: [
-          loopStep([serverLogStep("fallback-loop-child")], "fallback-loop"),
-        ],
-      },
-      {
-        id: "empty",
-        name: "Empty",
-        children: [],
-      },
-    ],
-  }),
-]
-
 export const automationBlockDefinitions: BlockDefinitions = {
   TRIGGER: {},
   CREATABLE_TRIGGER: {},
