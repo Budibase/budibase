@@ -133,6 +133,14 @@ export const generateChatConversationID = () => {
   return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${newid()}`
 }
 
+export const getAgentTestSuiteID = (agentId: string) => {
+  return `${DocumentType.AGENT_TEST_SUITE}${SEPARATOR}${agentId}`
+}
+
+export const getAgentTestRunID = (agentId: string, runId: string) => {
+  return `${getAgentTestSuiteID(agentId)}${SEPARATOR}${DocumentType.AGENT_TEST_RUN}${SEPARATOR}${runId}`
+}
+
 export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
 }

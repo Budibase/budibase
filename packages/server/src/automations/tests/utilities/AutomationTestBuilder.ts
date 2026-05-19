@@ -126,9 +126,15 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   openai = this.step(AutomationActionStepId.OPENAI)
   collect = this.step(AutomationActionStepId.COLLECT)
   zapier = this.step(AutomationActionStepId.zapier)
+  slack = this.step(AutomationActionStepId.slack)
   triggerAutomationRun = this.step(
     AutomationActionStepId.TRIGGER_AUTOMATION_RUN
   )
+  classify = this.step(AutomationActionStepId.CLASSIFY_CONTENT)
+  promptLLM = this.step(AutomationActionStepId.PROMPT_LLM)
+  translate = this.step(AutomationActionStepId.TRANSLATE)
+  summarise = this.step(AutomationActionStepId.SUMMARISE)
+  generateText = this.step(AutomationActionStepId.GENERATE_TEXT)
   outgoingWebhook = this.step(AutomationActionStepId.OUTGOING_WEBHOOK)
   n8n = this.step(AutomationActionStepId.n8n)
   make = this.step(AutomationActionStepId.integromat)

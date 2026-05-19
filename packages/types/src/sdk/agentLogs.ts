@@ -121,4 +121,5 @@ export interface CreateSessionLogIndexerInput {
 export interface SessionLogIndexer {
   addRequestId(requestId?: string | null): void
   index(): Promise<void>
+  getRequestIds(): string[]
 }
