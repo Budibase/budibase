@@ -8,6 +8,23 @@ import { getLastSeenUid, setLastSeenUid } from "./state"
 
 export const DEFAULT_MAILBOX = "INBOX"
 
+export const testConnection = async (
+  imapInputs: EmailTriggerInputs
+): Promise<void> => {
+  let imapClient: Awaited<ReturnType<typeof getClient>> | null = null
+  const mailbox = imapInputs.mailbox || DEFAULT_MAILBOX
+
+  try {
+    imapClient = await getClient(imapInputs)
+    await imapClient.connect()
+    await imapClient.mailboxOpen(mailbox)
+  } finally {
+    if (imapClient) {
+      await imapClient.logout().catch(console.warn)
+    }
+  }
+}
+
 export const checkMail = async (
   automationId: string,
   imapInputs: EmailTriggerInputs
