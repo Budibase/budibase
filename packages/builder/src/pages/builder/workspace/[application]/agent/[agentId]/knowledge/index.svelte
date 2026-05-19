@@ -11,10 +11,7 @@
     type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
   import { workspaceDeploymentStore } from "@/stores/builder"
-  import {
-    agentsStore,
-    selectedAgent,
-  } from "@/stores/portal"
+  import { agentsStore, selectedAgent } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"

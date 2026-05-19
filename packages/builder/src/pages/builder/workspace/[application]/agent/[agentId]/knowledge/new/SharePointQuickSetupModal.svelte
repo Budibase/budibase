@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { Body, Button, ButtonGroup, Input, Modal, ModalContent } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    ButtonGroup,
+    Input,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
   import { z } from "zod"
 
   interface SharePointQuickSetupDetails {
@@ -16,9 +23,7 @@
 
   export interface Props {
     creating?: boolean
-    onCreate: (
-      _details: SharePointQuickSetupDetails
-    ) => Promise<void> | void
+    onCreate: (_details: SharePointQuickSetupDetails) => Promise<void> | void
     onAdvancedSetup?: () => Promise<void> | void
   }
 
