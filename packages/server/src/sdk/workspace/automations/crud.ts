@@ -10,7 +10,6 @@ import {
   EmailTriggerAuthType,
   EmailTriggerInputs,
   MetadataType,
-  PASSWORD_REPLACEMENT,
   RequiredKeys,
   Webhook,
   WebhookActionType,
@@ -21,13 +20,15 @@ import cloneDeep from "lodash/cloneDeep"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { deleteAutomationMailboxState } from "../../../automations/email/state"
+import {
+  isMaskedPassword,
+  PASSWORD_DISPLAY_MASK,
+} from "./utils"
 
 export interface PersistedAutomation extends Automation {
   _id: string
   _rev: string
 }
-
-const PASSWORD_DISPLAY_MASK = "********"
 
 function getEmailTriggerAuthType(inputs?: EmailTriggerInputs) {
   return inputs?.authType || EmailTriggerAuthType.PASSWORD
@@ -389,8 +390,4 @@ function maskAutomationSecrets<T extends Automation>(automation: T): T {
     trigger.inputs.password = PASSWORD_DISPLAY_MASK
   }
   return automation
-}
-
-function isMaskedPassword(value?: string) {
-  return value === PASSWORD_REPLACEMENT || value === PASSWORD_DISPLAY_MASK
 }

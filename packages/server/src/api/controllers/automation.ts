@@ -51,6 +51,7 @@ import { updateTestHistory } from "../../automations/utils"
 import { DocumentType } from "../../db/utils"
 import env from "../../environment"
 import sdk from "../../sdk"
+import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
@@ -201,19 +202,32 @@ async function hydrateEmailConnectionPassword(
     return emailInputs
   }
 
-  if (emailInputs.password !== "********") {
+  if (!isMaskedPassword(emailInputs.password)) {
     return emailInputs
   }
 
   if (!automationId) {
-    throw new HTTPError("IMAP password is required", 400)
+    throw new HTTPError(
+      "Automation ID is required to test a saved password",
+      400
+    )
   }
 
   const automation = await context
     .getWorkspaceDB()
     .tryGet<Automation>(automationId)
-  const trigger = automation?.definition.trigger
-  if (!trigger || !isEmailTrigger(trigger) || !trigger.inputs.password) {
+  if (!automation) {
+    throw new HTTPError("Automation not found", 404)
+  }
+
+  const trigger = automation.definition.trigger
+  if (!trigger) {
+    throw new HTTPError("No trigger found for automation", 400)
+  }
+  if (!isEmailTrigger(trigger)) {
+    throw new HTTPError("Automation trigger is not an email trigger", 400)
+  }
+  if (!trigger.inputs.password) {
     throw new HTTPError("IMAP password is required", 400)
   }
 
