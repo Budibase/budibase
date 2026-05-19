@@ -111,6 +111,14 @@
 
     await onCreate(result.data)
   }
+
+  const handleAdvancedSetup = async () => {
+    if (creating) {
+      return
+    }
+
+    await onAdvancedSetup?.()
+  }
 </script>
 
 <Modal bind:this={modal}>
@@ -186,7 +194,7 @@
     </div>
 
     <ButtonGroup slot="footer">
-      <Button cta secondary on:click={onAdvancedSetup} disabled={creating}>
+      <Button cta secondary on:click={handleAdvancedSetup} disabled={creating}>
         Advanced setup
       </Button>
       <Button cta primary on:click={handleCreate} disabled={creating}>
