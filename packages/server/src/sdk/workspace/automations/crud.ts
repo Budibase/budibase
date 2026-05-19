@@ -7,8 +7,9 @@ import {
 import { automations as sharedAutomations } from "@budibase/shared-core"
 import {
   Automation,
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
   MetadataType,
-  PASSWORD_REPLACEMENT,
   RequiredKeys,
   Webhook,
   WebhookActionType,
@@ -19,13 +20,16 @@ import cloneDeep from "lodash/cloneDeep"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { deleteAutomationMailboxState } from "../../../automations/email/state"
+import { isMaskedPassword, PASSWORD_DISPLAY_MASK } from "./utils"
 
 export interface PersistedAutomation extends Automation {
   _id: string
   _rev: string
 }
 
-const PASSWORD_DISPLAY_MASK = "********"
+function getEmailTriggerAuthType(inputs?: EmailTriggerInputs) {
+  return inputs?.authType || EmailTriggerAuthType.PASSWORD
+}
 
 function getDb() {
   return context.getWorkspaceDB()
@@ -341,6 +345,15 @@ function hydrateAutomationSecrets(
     return automation
   }
 
+  if (getEmailTriggerAuthType(trigger.inputs) === EmailTriggerAuthType.OAUTH2) {
+    const hydratedAutomation = cloneDeep(automation)
+    const hydratedTrigger = hydratedAutomation.definition?.trigger
+    if (isEmailTrigger(hydratedTrigger)) {
+      delete hydratedTrigger.inputs.password
+    }
+    return hydratedAutomation
+  }
+
   if (!isMaskedPassword(trigger.inputs.password)) {
     return automation
   }
@@ -365,12 +378,12 @@ function hydrateAutomationSecrets(
 
 function maskAutomationSecrets<T extends Automation>(automation: T): T {
   const trigger = automation.definition?.trigger
-  if (isEmailTrigger(trigger) && trigger.inputs?.password) {
+  if (
+    isEmailTrigger(trigger) &&
+    getEmailTriggerAuthType(trigger.inputs) === EmailTriggerAuthType.PASSWORD &&
+    trigger.inputs?.password
+  ) {
     trigger.inputs.password = PASSWORD_DISPLAY_MASK
   }
   return automation
-}
-
-function isMaskedPassword(value?: string) {
-  return value === PASSWORD_REPLACEMENT || value === PASSWORD_DISPLAY_MASK
 }
