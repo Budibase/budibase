@@ -8,9 +8,10 @@
     selectedAppUrls,
     workspaceAppStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Button, Divider, Icon } from "@budibase/bbui"
+  import { ActionButton, Divider, Icon } from "@budibase/bbui"
   import {
     getNextPreviewDevice,
     getPreviewDeviceIcon,
@@ -105,17 +106,11 @@
           <Divider size="S" vertical />
         </div>
         <div class="workspace-live-toggle">
-          <Button
-            primary={!isLive}
-            secondary={isLive}
-            icon={isLive ? "stop" : "play"}
-            iconColor={isLive ? "" : "var(--bb-blue)"}
-            iconWeight="fill"
-            on:click={handleToggleLive}
+          <LiveToggleButton
+            live={isLive}
             disabled={changingStatus}
-          >
-            {isLive ? "Stop" : "Set live"}
-          </Button>
+            on:click={handleToggleLive}
+          />
         </div>
       </div>
     </div>

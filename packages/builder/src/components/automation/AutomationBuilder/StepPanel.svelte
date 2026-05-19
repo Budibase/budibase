@@ -13,6 +13,7 @@
     type AutomationStep,
     type AutomationTrigger,
     type BlockRef,
+    type BlockPath,
     AutomationActionStepId,
     AutomationTriggerStepId,
     isBranchStep,
@@ -26,7 +27,8 @@
     selectedAutomation,
     evaluationContext,
   } from "@/stores/builder"
-  import { getNewStepName } from "@/helpers/automations/nameHelpers"
+  import { environment } from "@/stores/portal"
+  import { getDuplicateStepName } from "@/helpers/automations/nameHelpers"
   import BlockData from "../SetupPanel/BlockData.svelte"
   import BlockProperties from "../SetupPanel/BlockProperties.svelte"
   import BlockHeader from "../SetupPanel/BlockHeader.svelte"
@@ -36,24 +38,35 @@
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import BranchStepPanel from "./BranchStepPanel.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
   const memoAutomation = memo<Automation | undefined>($selectedAutomation.data)
   const memoBlock = memo<AutomationStep | AutomationTrigger | undefined>()
   const memoContext = memo({} as AutomationContext)
+  const memoEnvVariables = memo($environment.variables)
 
   let role: string | undefined
   let webhookModal: Modal | undefined
   let configPanel: HTMLDivElement | undefined
   let confirmCascadeDialog: any
 
+  type DeleteFocusTarget =
+    | { type: "node"; id: string }
+    | { type: "branch"; nodeId: string; stepId: string; branchIdx: number }
+
   $: memoAutomation.set($selectedAutomation.data)
   $: memoContext.set($evaluationContext)
+  $: memoEnvVariables.set($environment.variables)
 
   $: selectedNodeId = $automationStore.selectedNodeId
+  $: selectedBranchNode = $automationStore.selectedBranchNode
   $: blockRefs = $selectedAutomation.blockRefs
-  $: blockRef = selectedNodeId ? blockRefs[selectedNodeId] : undefined
+  $: blockRef =
+    selectedNodeId && !selectedBranchNode
+      ? blockRefs[selectedNodeId]
+      : undefined
   $: block = automationStore.actions.getBlockByRef($memoAutomation, blockRef)
 
   $: memoBlock.set(block)
@@ -99,6 +112,95 @@
     if (configPanel && configPanel?.scrollTop > 0 && selectedNodeId) {
       configPanel.scrollTop = 0
     }
+  }
+
+  const getPostLoopDeleteFocusTarget = (
+    ref: BlockRef,
+    block: AutomationStep | AutomationTrigger | undefined,
+    automation: Automation | undefined,
+    pathSteps: Array<AutomationStep | AutomationTrigger>
+  ): DeleteFocusTarget | undefined => {
+    if (!block || !isLoopV2Step(block)) {
+      return
+    }
+
+    const lastHop = ref.pathTo?.at(-1) as BlockPath | undefined
+    if (!lastHop) {
+      return
+    }
+
+    if (typeof lastHop.stepIdx === "number" && lastHop.stepIdx > 0) {
+      const previousStep = pathSteps.at(-2)
+      return previousStep ? { type: "node", id: previousStep.id } : undefined
+    }
+
+    if (Number.isInteger(lastHop.branchIdx) && lastHop.branchStepId) {
+      const branchRef = blockRefs[lastHop.branchStepId]
+      const branchStep = automationStore.actions.getBlockByRef(
+        automation,
+        branchRef
+      )
+      if (!branchStep || !isBranchStep(branchStep)) {
+        return
+      }
+
+      const branchIdx = lastHop.branchIdx!
+      const branch = branchStep.inputs?.branches?.[branchIdx]
+      if (!branch) {
+        return
+      }
+
+      return {
+        type: "branch",
+        nodeId: `branch-${lastHop.branchStepId}-${branchIdx}-${branch.id}`,
+        stepId: lastHop.branchStepId,
+        branchIdx,
+      }
+    }
+
+    if (lastHop.loopStepId) {
+      return { type: "node", id: lastHop.loopStepId }
+    }
+
+    return $memoAutomation?.definition.trigger?.id
+      ? { type: "node", id: $memoAutomation.definition.trigger.id }
+      : undefined
+  }
+
+  const focusAfterDelete = async (target: DeleteFocusTarget | undefined) => {
+    if (!target) {
+      return
+    }
+
+    if (target.type === "branch") {
+      await automationStore.actions.selectBranchNode(target)
+      return
+    }
+
+    await automationStore.actions.selectNode(target.id)
+  }
+
+  const deleteSelectedBlock = async (
+    options?: Parameters<
+      typeof automationStore.actions.deleteAutomationBlock
+    >[1]
+  ) => {
+    if (!blockRef) {
+      return
+    }
+
+    const focusTarget = getPostLoopDeleteFocusTarget(
+      blockRef,
+      $memoBlock,
+      $memoAutomation,
+      pathSteps
+    )
+
+    await automationStore.actions.deleteAutomationBlock(
+      blockRef.pathTo,
+      options
+    )
+    await focusAfterDelete(focusTarget)
   }
 
   // When duplicating a step, especially a Loop V2 container, we need
@@ -183,171 +285,182 @@
   }
 </script>
 
-<Modal bind:this={webhookModal}>
-  <CreateWebhookModal />
-</Modal>
+{#if selectedBranchNode}
+  <BranchStepPanel />
+{:else}
+  <Modal bind:this={webhookModal}>
+    <CreateWebhookModal />
+  </Modal>
 
-<div class="panel heading">
-  <div class="details">
-    <BlockHeader
-      automation={$memoAutomation}
-      block={$memoBlock}
-      on:update={e => {
-        if ($memoBlock && !isTrigger($memoBlock)) {
-          automationStore.actions.updateBlockTitle($memoBlock, e.detail)
-        }
-      }}
-    />
-    <Icon
-      name="x"
-      hoverable
-      on:click={() => {
-        automationStore.actions.selectNode()
-      }}
-    />
-  </div>
-  {#if isStep}
-    <div class="step-actions">
-      {#if $memoBlock && !isBranchStep($memoBlock) && $memoBlock.features?.[AutomationFeature.LOOPING]}
-        <ActionButton
-          quiet
-          noPadding
-          icon="arrow-clockwise"
-          on:click={async () => {
-            if (!blockRef) return
-            if (hasAnyLoop) {
-              await automationStore.actions.removeLooping(blockRef)
-            } else {
-              await automationStore.actions.wrapStepInLoopV2(blockRef)
-            }
-          }}
-          disabled={insideLoopV2 && !canStopLooping}
-        >
-          {hasAnyLoop ? `Stop Looping` : `Loop`}
-        </ActionButton>
-      {/if}
-      <ActionButton
-        quiet
-        noPadding
-        icon="trash"
-        on:click={async () => {
-          if (!blockRef) {
-            return
+  <div class="panel heading">
+    <div class="details">
+      <BlockHeader
+        automation={$memoAutomation}
+        block={$memoBlock}
+        on:update={e => {
+          if ($memoBlock && !isTrigger($memoBlock)) {
+            automationStore.actions.updateBlockTitle($memoBlock, e.detail)
           }
-          if (shouldCascadeDeleteInLoopV2(blockRef, $memoAutomation)) {
-            confirmCascadeDialog?.show()
-            return
-          }
-          await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
         }}
-      >
-        Delete
-      </ActionButton>
-      {#if $memoBlock && !isBranchStep($memoBlock) && !isLoopV2Step($memoBlock) && !blockRef?.isLoopV2Child}
+      />
+      <Icon
+        name="x"
+        hoverable
+        on:click={() => {
+          automationStore.actions.selectNode()
+        }}
+      />
+    </div>
+    {#if isStep}
+      <div class="step-actions">
+        {#if $memoBlock && !isBranchStep($memoBlock) && $memoBlock.features?.[AutomationFeature.LOOPING]}
+          <ActionButton
+            quiet
+            noPadding
+            icon="arrow-clockwise"
+            on:click={async () => {
+              if (!blockRef) return
+              if (hasAnyLoop) {
+                await automationStore.actions.removeLooping(blockRef)
+              } else {
+                await automationStore.actions.wrapStepInLoopV2(blockRef)
+              }
+            }}
+            disabled={insideLoopV2 && !canStopLooping}
+          >
+            {hasAnyLoop ? `Stop Looping` : `Loop`}
+          </ActionButton>
+        {/if}
         <ActionButton
           quiet
           noPadding
-          icon="copy"
+          icon="trash"
           on:click={async () => {
-            if (!blockRef || !$memoBlock || isTrigger($memoBlock)) {
+            if (!blockRef) {
               return
             }
-            if (isLoopV2Step($memoBlock)) {
+            if (shouldCascadeDeleteInLoopV2(blockRef, $memoAutomation)) {
+              confirmCascadeDialog?.show()
               return
             }
-            // Deep-duplicate the selected step and re-id any nested children
-            const duplicatedBlock = cloneStepWithNewIds($memoBlock)
-            const newName = getNewStepName($memoAutomation, duplicatedBlock)
-            duplicatedBlock.name = newName
-
-            await automationStore.actions.addBlockToAutomation(
-              duplicatedBlock,
-              blockRef.pathTo
-            )
+            await deleteSelectedBlock()
           }}
         >
-          Duplicate
+          Delete
         </ActionButton>
+        {#if $memoBlock && !isBranchStep($memoBlock) && !isLoopV2Step($memoBlock) && !blockRef?.isLoopV2Child}
+          <ActionButton
+            quiet
+            noPadding
+            icon="copy"
+            on:click={async () => {
+              if (!blockRef || !$memoBlock || isTrigger($memoBlock)) {
+                return
+              }
+              if (isLoopV2Step($memoBlock)) {
+                return
+              }
+              // Deep-duplicate the selected step and re-id any nested children
+              const duplicatedBlock = cloneStepWithNewIds($memoBlock)
+              const displayName =
+                $memoAutomation?.definition.stepNames?.[$memoBlock.id] ||
+                $memoBlock.name
+              duplicatedBlock.name = getDuplicateStepName(
+                $memoAutomation,
+                displayName
+              )
+
+              await automationStore.actions.addBlockToAutomation(
+                duplicatedBlock,
+                blockRef.pathTo
+              )
+              await automationStore.actions.selectNode(duplicatedBlock.id)
+            }}
+          >
+            Duplicate
+          </ActionButton>
+        {/if}
+      </div>
+    {/if}
+  </div>
+  <Divider noMargin />
+  <div class="panel config" use:resizable>
+    <div class="content" bind:this={configPanel}>
+      {#if loopBlock || $memoBlock?.stepId === AutomationActionStepId.LOOP_V2}
+        <div class="loop">
+          <DetailSummary name="Loop details" padded={false} initiallyShow>
+            <BlockProperties
+              block={loopBlock || loopV2Block || $memoBlock}
+              context={$memoContext}
+              automation={$memoAutomation}
+            />
+          </DetailSummary>
+        </div>
+        <Divider noMargin />
+      {:else if isAppAction}
+        <PropField label="Role" fullWidth>
+          <RoleSelect bind:value={role} />
+        </PropField>
       {/if}
-    </div>
-  {/if}
-</div>
-<Divider noMargin />
-<div class="panel config" use:resizable>
-  <div class="content" bind:this={configPanel}>
-    {#if loopBlock || $memoBlock?.stepId === AutomationActionStepId.LOOP_V2}
-      <div class="loop">
-        <DetailSummary name="Loop details" padded={false} initiallyShow>
+      <span class="props">
+        {#if $memoBlock?.stepId !== AutomationActionStepId.LOOP_V2}
           <BlockProperties
-            block={loopBlock || loopV2Block || $memoBlock}
+            block={$memoBlock}
             context={$memoContext}
             automation={$memoAutomation}
           />
-        </DetailSummary>
-      </div>
-      <Divider noMargin />
-    {:else if isAppAction}
-      <PropField label="Role" fullWidth>
-        <RoleSelect bind:value={role} />
-      </PropField>
-    {/if}
-    <span class="props">
-      {#if $memoBlock?.stepId !== AutomationActionStepId.LOOP_V2}
-        <BlockProperties
-          block={$memoBlock}
-          context={$memoContext}
-          automation={$memoAutomation}
-        />
+        {/if}
+      </span>
+
+      {#if block?.stepId === AutomationTriggerStepId.WEBHOOK}
+        <Button
+          secondary
+          on:click={() => {
+            if (!webhookModal) return
+            webhookModal.show()
+          }}
+        >
+          Set Up Webhook
+        </Button>
       {/if}
-    </span>
-
-    {#if block?.stepId === AutomationTriggerStepId.WEBHOOK}
-      <Button
-        secondary
-        on:click={() => {
-          if (!webhookModal) return
-          webhookModal.show()
-        }}
-      >
-        Set Up Webhook
-      </Button>
-    {/if}
+    </div>
+    <div
+      role="separator"
+      class="divider"
+      class:disabled={false}
+      use:resizableHandle
+    ></div>
   </div>
-  <div
-    role="separator"
-    class="divider"
-    class:disabled={false}
-    use:resizableHandle
-  ></div>
-</div>
 
-<div class="panel data">
-  <BlockData
-    context={$memoContext}
-    block={$memoBlock}
-    automation={$memoAutomation}
-    on:run={() => {
-      automationStore.update(state => ({
-        ...state,
-        showTestModal: true,
-      }))
+  <div class="panel data">
+    <BlockData
+      context={$memoContext}
+      block={$memoBlock}
+      automation={$memoAutomation}
+      on:run={() => {
+        automationStore.update(state => ({
+          ...state,
+          showTestModal: true,
+        }))
+      }}
+    />
+  </div>
+
+  <ConfirmDialog
+    bind:this={confirmCascadeDialog}
+    okText="Delete"
+    title="Confirm Deletion"
+    onOk={async () => {
+      await deleteSelectedBlock({
+        cascadeNextBranchInLoop: true,
+      })
     }}
-  />
-</div>
-
-<ConfirmDialog
-  bind:this={confirmCascadeDialog}
-  okText="Delete"
-  title="Confirm Deletion"
-  onOk={async () => {
-    if (!blockRef) return
-    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
-  }}
->
-  Deleting this step will also delete the Branch and its lanes below it. This is
-  required to avoid orphaning branches in the loop subflow. Are you sure you
-  want to proceed?
-</ConfirmDialog>
+  >
+    Deleting this step will also delete the Branch and its lanes below it. This
+    is required to avoid orphaning branches in the loop subflow. Are you sure
+    you want to proceed?
+  </ConfirmDialog>
+{/if}
 
 <style>
   .step-actions {

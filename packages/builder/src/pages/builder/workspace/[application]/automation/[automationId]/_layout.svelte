@@ -53,7 +53,7 @@
       <slot />
     </div>
 
-    {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
+    {#if (blockRefs[$automationStore.selectedNodeId] || $automationStore.selectedBranchNode) && $automationStore.selectedNodeId}
       <div class="step-panel-container">
         <ResizablePanel
           storageKey="automation-side-panel-width"
@@ -109,6 +109,27 @@
     flex-direction: column;
     align-items: stretch;
     flex: 1 1 auto;
+    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-flow-logic-color: var(
+      --spectrum-global-color-indigo-100
+    );
+    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
+    --automation-step-icon-trigger-color: var(--color-green-200);
+    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
+    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
+  }
+  :global(.spectrum--dark) .wrapper,
+  :global(.spectrum--darkest) .wrapper,
+  :global(.spectrum--midnight) .wrapper,
+  :global(.spectrum--nord) .wrapper {
+    --automation-step-icon-data-color: var(--color-blue-600);
+    --automation-step-icon-flow-logic-color: var(--color-purple-600);
+    --automation-step-icon-code-color: var(--color-orange-600);
+    --automation-step-icon-trigger-color: var(--color-green-600);
+    --automation-step-icon-email-color: var(--color-green-600);
+    --automation-step-icon-ai-color: var(--color-brand-500);
+    --automation-step-icon-apps-color: var(--color-orange-400);
   }
   .root {
     flex: 1 1 auto;
@@ -126,13 +147,13 @@
     overflow: auto;
   }
   .step-panel-container {
-    position: fixed;
-    right: 0;
+    position: relative;
     z-index: 99;
-    height: calc(100% - var(--top-bar-height, 51px));
+    height: 100%;
     display: flex;
     flex-direction: row;
     align-items: stretch;
+    overflow: hidden;
   }
   .step-panel {
     display: flex;
