@@ -89,13 +89,7 @@ export const API = createAPIClient({
       }
       if (!ignore) {
         const validationErrors = error?.json?.validationErrors
-        if (validationErrors && !suppressErrorNotifications) {
-          for (let field in validationErrors) {
-            notificationStore.actions.error(
-              `${field} ${validationErrors[field]}`
-            )
-          }
-        } else if (status === 401 || status === 403) {
+        if (status === 401 || status === 403) {
           sessionBannerStore.set({
             text: "Session not authenticated",
             variant: "session-not-authenticated",
@@ -106,6 +100,12 @@ export const API = createAPIClient({
           })
         } else if (suppressErrorNotifications) {
           // Errors are still logged to console
+        } else if (validationErrors) {
+          for (let field in validationErrors) {
+            notificationStore.actions.error(
+              `${field} ${validationErrors[field]}`
+            )
+          }
         } else {
           notificationStore.actions.error(message)
         }
