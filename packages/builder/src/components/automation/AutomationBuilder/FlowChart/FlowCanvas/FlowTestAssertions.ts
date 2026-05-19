@@ -51,6 +51,12 @@ export const getNodeWidth = (node: FlowNode) => {
   return STEP.width
 }
 
+const getContainedNodeWidth = (node: FlowNode) =>
+  node.type === "anchor-node" ? 0 : getNodeWidth(node)
+
+const getContainedNodeHeight = (node: FlowNode) =>
+  node.type === "anchor-node" ? 0 : getNodeHeight(node)
+
 export const expectAllEdgesResolvable = (graph: FlowGraph) => {
   const ids = new Set(graph.nodes.map(node => node.id))
 
@@ -107,11 +113,11 @@ export const expectSubflowNodesInsideParent = (graph: FlowGraph) => {
     const parent = getNode(graph, node.parentId)
     expect(node.position.x).toBeGreaterThanOrEqual(0)
     expect(node.position.y).toBeGreaterThanOrEqual(0)
-    expect(node.position.x + getNodeWidth(node)).toBeLessThanOrEqual(
-      getNodeWidth(parent) + getNodeWidth(node)
+    expect(node.position.x + getContainedNodeWidth(node)).toBeLessThanOrEqual(
+      getNodeWidth(parent)
     )
-    expect(node.position.y + getNodeHeight(node)).toBeLessThanOrEqual(
-      getNodeHeight(parent) + getNodeHeight(node)
+    expect(node.position.y + getContainedNodeHeight(node)).toBeLessThanOrEqual(
+      getNodeHeight(parent)
     )
   }
 }
