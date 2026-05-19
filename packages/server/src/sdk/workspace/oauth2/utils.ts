@@ -194,3 +194,13 @@ export async function getLastUsages(ids: string[]) {
 export async function cleanStoredToken(id: string) {
   await cache.destroy(cache.CacheKey.OAUTH2_TOKEN(id), { useTenancy: true })
 }
+
+export async function cleanStoredTokensForAuthConfig(
+  authConfigId: string,
+  datasourceId?: string
+) {
+  await cleanStoredToken(authConfigId)
+  if (datasourceId) {
+    await cleanStoredToken(`${datasourceId}:${authConfigId}`)
+  }
+}
