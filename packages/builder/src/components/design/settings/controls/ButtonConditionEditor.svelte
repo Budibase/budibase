@@ -182,6 +182,19 @@
       : String(condition.referenceValue)
   }
 
+  const normaliseBooleanReferenceValue = (
+    condition: ComponentCondition
+  ): ComponentCondition => {
+    if (condition.valueType === "boolean") {
+      if (condition.referenceValue === "True") {
+        condition.referenceValue = "true"
+      } else if (condition.referenceValue === "False") {
+        condition.referenceValue = "false"
+      }
+    }
+    return condition
+  }
+
   const onOperatorChange = (
     condition: ComponentCondition,
     newOperator: ArrayOperator | BasicOperator
@@ -261,7 +274,7 @@
         condition.valueType = "string"
         condition.type = FieldType.STRING
       }
-      return condition
+      return normaliseBooleanReferenceValue(condition)
     })
     drawer.show()
   }

@@ -83,7 +83,18 @@
     if (link.valueType === "Binding") {
       link.valueType = "string"
     }
+    normaliseBooleanReferenceValue(link)
   })
+
+  const normaliseBooleanReferenceValue = condition => {
+    if (condition.valueType === "boolean") {
+      if (condition.referenceValue === "True") {
+        condition.referenceValue = "true"
+      } else if (condition.referenceValue === "False") {
+        condition.referenceValue = "false"
+      }
+    }
+  }
 
   const makeLabel = setting => {
     const { section, label } = setting
