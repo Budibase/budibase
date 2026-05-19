@@ -1,4 +1,5 @@
 import { HTTPError, utils } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
 import type { ChatIdentityLinkSession, UserCtx } from "@budibase/types"
 import { getGlobalIDFromUserMetadataID } from "../../../db/utils"
 import sdk from "../../../sdk"
@@ -36,25 +37,12 @@ const getCurrentGlobalUserId = (ctx: UserCtx) => {
   return currentUserId
 }
 
-const escapeHtml = (value: string | undefined) =>
-  (value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-
-const getExternalIdentityLabel = (session: ChatIdentityLinkSession) => {
-  if (session.externalUserName) {
-    return session.externalUserName
-  }
-  return session.externalUserId
-}
-
 const renderLinkConfirmationPage = (
   session: ChatIdentityLinkSession,
   action: string
 ) => {
+  const externalIdentity =
+    session.externalUserName || session.externalUserId
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -63,9 +51,9 @@ const renderLinkConfirmationPage = (
     <title>Confirm chat account link</title>
   </head>
   <body>
-    <p>Confirm linking your Budibase account to ${escapeHtml(session.provider)} user ${escapeHtml(getExternalIdentityLabel(session))}.</p>
-    <form method="post" action="${escapeHtml(action)}">
-      <input type="hidden" name="confirmationToken" value="${escapeHtml(session.confirmationToken)}">
+    <p>Confirm linking your Budibase account to ${helpers.escapeHtml(session.provider)} user ${helpers.escapeHtml(externalIdentity)}.</p>
+    <form method="post" action="${helpers.escapeHtml(action)}">
+      <input type="hidden" name="confirmationToken" value="${helpers.escapeHtml(session.confirmationToken)}">
       <button type="submit">Confirm</button>
     </form>
   </body>
@@ -126,10 +114,6 @@ export async function handoffChatLinkSession(
   if (!confirmationSession) {
     throw new HTTPError("Link token is invalid or has expired", 400)
   }
-  assertSessionMatchesInstance({
-    workspaceId: confirmationSession.workspaceId,
-    instance: ctx.params.instance,
-  })
 
   ctx.type = "text/html"
   ctx.body = renderLinkConfirmationPage(
