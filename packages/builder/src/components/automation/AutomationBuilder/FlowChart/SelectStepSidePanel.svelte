@@ -24,6 +24,7 @@
   import type { BranchFlowContext, FlowBlockPath } from "@/types/automations"
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import Panel from "@/components/design/Panel.svelte"
+  import { getAutomationStepIconColor } from "./AutomationStepCategories"
 
   export let block
   export let onClose = () => {}
@@ -38,6 +39,7 @@
   let actionOrderMap: Record<string, number> = {}
   let isSelectingAction = false
   let actionSelectionLocked = false
+  type BranchPathLike = Array<{ branchIdx?: number | null }>
 
   $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
@@ -126,11 +128,17 @@
     ]
   }
 
+  const pathHasBranchHop = (path: BranchPathLike | undefined) => {
+    return path?.some(hop => Number.isInteger(hop.branchIdx)) ?? false
+  }
+
   $: blockRef = block?.id
     ? $selectedAutomation.blockRefs?.[block.id]
     : undefined
   $: targetPath =
     blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+  $: targetPathIsInsideBranch = pathHasBranchHop(targetPath)
+  $: targetIsLoopContainer = insideLoopV2 && loopStepId === block?.id
 
   $: lastStep = blockRef?.terminating
   $: pathSteps =
@@ -341,7 +349,12 @@
         action.stepId,
         action
       )
-      if (insideLoopV2 && loopStepId) {
+      if (
+        insideLoopV2 &&
+        loopStepId &&
+        !block?.branchNode &&
+        (!targetPathIsInsideBranch || targetIsLoopContainer)
+      ) {
         await automationStore.actions.addBlockToLoopChildren(
           loopStepId,
           newBlock,
@@ -353,9 +366,7 @@
       stepInserted = true
 
       // Determine presence of the block before focusing
-      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
-      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
-      await automationStore.actions.selectNode(createdBlockLoc?.id)
+      await automationStore.actions.selectNode(newBlock.id)
 
       automationStore.actions.closeActionPanel()
       onClose()
@@ -494,12 +505,13 @@
                       class="external-icon"
                     />
                   {:else}
-                    <div class="icon-container">
-                      <Icon
-                        name={action.icon}
-                        size="M"
-                        color="var(--spectrum-global-color-static-gray-50)"
-                      />
+                    <div
+                      class="icon-container"
+                      style:--automation-step-icon-color={getAutomationStepIconColor(
+                        action.stepId
+                      )}
+                    >
+                      <Icon name={action.icon} size="M" color="var(--ink)" />
                     </div>
                   {/if}
                   <Body
@@ -548,8 +560,13 @@
                 on:keydown={e => handleActionKeydown(e, action)}
               >
                 <div class="item-body">
-                  <div class="item-icon">
-                    <Icon name={action.icon} size="M" />
+                  <div
+                    class="icon-container"
+                    style:--automation-step-icon-color={getAutomationStepIconColor(
+                      action.stepId
+                    )}
+                  >
+                    <Icon name={action.icon} size="M" color="var(--ink)" />
                   </div>
                   <div class="item-label">
                     <Body
@@ -622,8 +639,8 @@
     cursor: pointer;
   }
   .icon-container {
-    background-color: #215f9e;
-    border: 0.5px solid #467db4;
+    background-color: var(--automation-step-icon-color);
+    border: 0.5px solid var(--automation-step-icon-color);
     padding: 4px;
     border-radius: 8px;
   }
@@ -646,7 +663,6 @@
     gap: var(--spacing-m);
     width: 100%;
   }
-  .item-icon,
   .external-icon {
     width: 17.5px;
     height: 17.5px;

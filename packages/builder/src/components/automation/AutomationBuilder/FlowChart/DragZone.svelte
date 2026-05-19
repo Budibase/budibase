@@ -75,7 +75,7 @@
     visibility: hidden;
   }
   .drag-zone {
-    min-height: calc(var(--spectrum-global-dimension-size-225) + 12px);
+    min-height: calc(var(--spectrum-global-dimension-size-225) + 4px);
     min-width: 100%;
     background-color: rgba(28, 168, 114, 0.2);
     border-radius: 12px;

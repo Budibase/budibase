@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "JavaScript",
   tagline: "Execute JavaScript Code",
-  icon: "brackets-angle",
+  icon: "code",
   description: "Run a piece of JavaScript code in your automation",
   type: AutomationStepType.ACTION,
   internal: true,
