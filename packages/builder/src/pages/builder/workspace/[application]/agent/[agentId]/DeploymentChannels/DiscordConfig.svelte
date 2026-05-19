@@ -197,10 +197,12 @@
       type="number"
       bind:value={draft.idleTimeoutMinutes}
     />
-    <Checkbox
-      bind:value={draft.requireUserLink}
-      text="Require users to link a Budibase account"
-    />
+    <div class="field-grid-leading">
+      <Checkbox
+        bind:value={draft.requireUserLink}
+        text="Require users to link a Budibase account"
+      />
+    </div>
   {/snippet}
 
   {#snippet response()}

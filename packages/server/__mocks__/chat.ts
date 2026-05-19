@@ -1,7 +1,7 @@
 import crypto from "crypto"
 
 type AnyFn = (...args: any[]) => any
-type MockProvider = "slack" | "teams" | "telegram"
+type MockProvider = "slack" | "teams" | "telegram" | "discord"
 type MockPostEphemeralResult = { usedFallback: boolean }
 
 interface MockCardElement {
@@ -30,6 +30,7 @@ const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
   slack: defaultPostEphemeralResult(),
   teams: defaultPostEphemeralResult(),
   telegram: defaultPostEphemeralResult(),
+  discord: defaultPostEphemeralResult(),
 }
 const mockChatOptions: ChatOptions[] = []
 
@@ -168,6 +169,7 @@ export const resetMockChatState = () => {
   mockWebhookState.slack = defaultPostEphemeralResult()
   mockWebhookState.teams = defaultPostEphemeralResult()
   mockWebhookState.telegram = defaultPostEphemeralResult()
+  mockWebhookState.discord = defaultPostEphemeralResult()
   mockChatOptions.length = 0
 }
 
