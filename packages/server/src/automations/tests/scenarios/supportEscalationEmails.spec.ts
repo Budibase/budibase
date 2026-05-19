@@ -1,5 +1,9 @@
 import { setEnv as setCoreEnv } from "@budibase/backend-core"
-import { FilterCondition, SendEmailResponse } from "@budibase/types"
+import {
+  FilterCondition,
+  SendEmailResponse,
+  SmtpEmailStepInputs,
+} from "@budibase/types"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import * as workerRequests from "../../../utilities/workerRequests"
@@ -76,12 +80,7 @@ describe("Support escalation email automations", () => {
         subject: "Urgent support ticket",
         contents:
           "<p>{{ trigger.fields.customer }} needs help: {{ trigger.fields.message }}</p>",
-        cc: undefined as unknown as string,
-        bcc: undefined as unknown as string,
-        startTime: undefined as unknown as Date,
-        endTime: undefined as unknown as Date,
-        summary: undefined as unknown as string,
-      })
+      } as SmtpEmailStepInputs)
       .serverLog({
         text: "Escalated {{ trigger.fields.customer }} to tier 2",
       })

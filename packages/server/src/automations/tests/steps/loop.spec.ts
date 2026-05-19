@@ -24,6 +24,7 @@ import {
   FieldType,
   FilterCondition,
   AutomationStepStatus,
+  AutomationStatus,
   AutomationStepResult,
   AutomationActionStepId,
 } from "@budibase/types"
@@ -211,7 +212,7 @@ describe("Loop Automations", () => {
 
     expect(results.steps[0].outputs).toEqual(
       expect.objectContaining({
-        status: "FAILURE_CONDITION_MET",
+        status: AutomationStepStatus.FAILURE_CONDITION,
         success: false,
       })
     )
@@ -715,7 +716,7 @@ describe("Loop Automations", () => {
         refValue: 1,
         result: false,
         success: true,
-        status: "stopped",
+        status: AutomationStatus.STOPPED,
       })
     })
 
@@ -1174,7 +1175,7 @@ describe("Loop Automations", () => {
       expect(logResults[0].outputs.message).toContain("Processed: process")
 
       expect(filterResults[1].outputs.result).toBe(false)
-      expect(filterResults[1].outputs.status).toBe("stopped")
+      expect(filterResults[1].outputs.status).toBe(AutomationStatus.STOPPED)
 
       expect(filterResults).toHaveLength(3)
       expect(logResults).toHaveLength(2)
