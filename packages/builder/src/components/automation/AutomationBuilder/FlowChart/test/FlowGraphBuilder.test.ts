@@ -10,12 +10,12 @@ import {
   loopWithLinearChildrenStep,
   serverLogStep,
 } from "@/test/automationFixtures"
-import { renderChain, renderLoopV2Container } from "./FlowGraphBuilder"
+import { renderChain, renderLoopV2Container } from "../FlowCanvas/FlowGraphBuilder"
 import {
   FLOW_ITEM_ACTION_BAR_WIDTH,
   LOOP_INSERT_ACTION_OFFSET,
   STEP,
-} from "./FlowGeometry"
+} from "../FlowCanvas/FlowGeometry"
 import {
   expectAllEdgesResolvable,
   expectBranchEdge,
@@ -24,7 +24,7 @@ import {
   expectUniqueGraphIds,
   getEdge,
   getNode,
-} from "./FlowTestAssertions"
+} from "../FlowCanvas/FlowTestAssertions"
 
 const createGraph = () => ({
   nodes: [] as FlowNode[],

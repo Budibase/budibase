@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { FLOW_ITEM_ACTION_BAR_WIDTH } from "./FlowGeometry"
-import { getPrimaryBranchPath } from "./FlowEdgePaths"
+import { FLOW_ITEM_ACTION_BAR_WIDTH } from "../FlowCanvas/FlowGeometry"
+import { getPrimaryBranchPath } from "../FlowCanvas/FlowEdgePaths"
 
 const expectLineSegmentsToBeOrthogonal = (path: string) => {
   const commands = [

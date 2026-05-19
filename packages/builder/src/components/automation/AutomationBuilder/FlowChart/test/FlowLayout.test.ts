@@ -4,17 +4,17 @@ import {
   applyBranchLaneClearance,
   applyLoopClearance,
   applyPostLoopBranchClearance,
-} from "./FlowLayout"
+} from "../FlowCanvas/FlowLayout"
 import {
   FLOW_ITEM_ACTION_BAR_WIDTH,
   LOOP,
   LOOP_INSERT_ACTION_OFFSET,
-} from "./FlowGeometry"
+} from "../FlowCanvas/FlowGeometry"
 import {
   expectNodeBelow,
   expectNodeRightOf,
   getNode,
-} from "./FlowTestAssertions"
+} from "../FlowCanvas/FlowTestAssertions"
 
 const cloneGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) =>
   JSON.parse(JSON.stringify(graph)) as { nodes: FlowNode[]; edges: FlowEdge[] }
