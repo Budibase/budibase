@@ -1,16 +1,16 @@
 import { DocumentSourceType, SupportedFileType } from "@budibase/types"
 import { MockLanguageModelV3 } from "ai/test"
-import sdk from "../../../sdk"
+import sdk from "../../../../sdk"
 import { PDFParse } from "pdf-parse"
 import { Readable } from "stream"
-import { run } from "./extract"
-import { fetchWithBlacklist } from "../utils"
+import { run } from "../../../steps/ai/extract"
+import { fetchWithBlacklist } from "../../../steps/utils"
 
 jest.mock("pdf-parse", () => ({
   PDFParse: jest.fn(),
 }))
 
-jest.mock("../../../sdk", () => ({
+jest.mock("../../../../sdk", () => ({
   __esModule: true,
   default: {
     ai: {
@@ -21,7 +21,7 @@ jest.mock("../../../sdk", () => ({
   },
 }))
 
-jest.mock("../utils", () => ({
+jest.mock("../../../steps/utils", () => ({
   fetchWithBlacklist: jest.fn(),
 }))
 const createExtractMockLanguageModel = (data: unknown[]) =>
