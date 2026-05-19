@@ -11,7 +11,6 @@ import type {
   Automation,
   AutomationLog,
   BlockDefinitions,
-  LayoutDirection,
   Branch,
   BranchStep,
   AutomationStep,
@@ -38,7 +37,11 @@ import {
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
 import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
-import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
+import {
+  applyBranchLaneClearance,
+  applyLoopClearance,
+  applyPostLoopBranchClearance,
+} from "./FlowCanvas/FlowLayout"
 
 // -----------------
 // Type Guards
@@ -334,7 +337,7 @@ export const buildTopLevelGraph = (
         blockHeight = loopResult.containerHeight
       } else {
         deps.newNodes.push(
-          stepNode(baseId, block, deps.direction, undefined, {
+          stepNode(baseId, block, undefined, {
             x: 0,
             y: currentY,
           })
@@ -347,7 +350,6 @@ export const buildTopLevelGraph = (
       deps.newEdges.push(
         edgeAddItem(prevId, baseId, {
           block: blocks[idx - 1],
-          direction: deps.direction,
         })
       )
     }
@@ -356,7 +358,7 @@ export const buildTopLevelGraph = (
       const terminalY = currentY + blockHeight
       const terminalId = `anchor-${baseId}`
       deps.newNodes.push(
-        anchorNode(terminalId, deps.direction, undefined, {
+        anchorNode(terminalId, undefined, {
           x: 0,
           y: terminalY,
         })
@@ -364,7 +366,6 @@ export const buildTopLevelGraph = (
       deps.newEdges.push(
         edgeAddItem(baseId, terminalId, {
           block,
-          direction: deps.direction,
         })
       )
     }
@@ -392,7 +393,6 @@ export const buildTopLevelGraph = (
 // ---------
 
 export interface DagreLayoutOptions {
-  rankdir?: LayoutDirection
   ranksep?: number
   nodesep?: number
   compactLoops?: boolean
@@ -402,14 +402,13 @@ export const dagreLayoutAutomation = (
   graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
-  const rankdir = opts?.rankdir || "TB"
   const ranksep = opts?.ranksep ?? 260
   const nodesep = opts?.nodesep ?? 220
   const compactLoops = opts?.compactLoops !== false
 
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
-  dagreGraph.setGraph({ rankdir, ranksep, nodesep })
+  dagreGraph.setGraph({ rankdir: "LR", ranksep, nodesep })
 
   const nodeById: Record<string, FlowNode> = {}
   graph.nodes.forEach(n => (nodeById[n.id] = n))
@@ -427,11 +426,8 @@ export const dagreLayoutAutomation = (
       } else if (isLoopSubflowNode(node)) {
         const w = node.data?.containerWidth
         if (w > 0) width = w
-        // In horizontal (LR) layouts Dagre must know the vertical
-        // length of the loop container so it can place rows correctly.
         const h = node?.data?.containerHeight
-        const shouldUseHeight = rankdir === "LR" || !compactLoops
-        if (shouldUseHeight && h > 0) {
+        if (h > 0) {
           height = h
         }
       }
@@ -455,13 +451,8 @@ export const dagreLayoutAutomation = (
       if (!dims) return
       const width = dims.width
       const height = dims.height
-      if (rankdir === "LR") {
-        node.targetPosition = Position.Left
-        node.sourcePosition = Position.Right
-      } else {
-        node.targetPosition = Position.Top
-        node.sourcePosition = Position.Bottom
-      }
+      node.targetPosition = Position.Left
+      node.sourcePosition = Position.Right
       node.position = {
         x: Math.round(dims.x - width / 2),
         y: Math.round(dims.y - height / 2),
@@ -469,7 +460,9 @@ export const dagreLayoutAutomation = (
     })
 
   if (compactLoops) {
-    applyLoopClearance(graph, rankdir)
+    applyLoopClearance(graph)
+    applyPostLoopBranchClearance(graph)
+    applyBranchLaneClearance(graph)
   }
   return graph
 }

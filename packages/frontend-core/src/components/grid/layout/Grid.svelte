@@ -42,6 +42,7 @@
   export let canExpandRows = true
   export let canEditRows = true
   export let canDeleteRows = true
+  export let canSelectRows = true
   export let canEditColumns = true
   export let canSaveSchema = true
   export let stripeRows = false
@@ -102,6 +103,7 @@
     canExpandRows,
     canEditRows,
     canDeleteRows,
+    canSelectRows,
     canEditColumns,
     canSaveSchema,
     stripeRows,

@@ -112,7 +112,7 @@
   on:click={publish}
   on:keydown={e => e.key === "Enter" && publish()}
 >
-  <Icon size="M" name="arrow-circle-up" />
+  <Icon size="M" name="arrow-circle-up" weight="fill" />
   <span>Publish</span>
 </div>
 
@@ -183,7 +183,7 @@
     font-size: var(--font-size-l);
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: 0.375rem;
     background: var(--spectrum-global-color-gray-800);
     border-radius: 8px;
     color: var(--spectrum-global-color-gray-50);
