@@ -224,12 +224,7 @@
   }
 
   $effect(() => {
-    const availableConnections = sharePointConnectionOptions.length
-    if (
-      !awaitingAdvancedSetup ||
-      availableConnections === 0 ||
-      resumingFromAdvancedSetup
-    ) {
+    if (!awaitingAdvancedSetup || resumingFromAdvancedSetup) {
       return
     }
 
