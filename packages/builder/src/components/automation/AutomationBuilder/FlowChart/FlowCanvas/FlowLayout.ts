@@ -62,7 +62,7 @@ const shiftNodes = (
   delta: number,
   axis: "x" | "y"
 ) => {
-  if (delta <= 0) return
+  if (delta === 0) return
   for (const id of ids) {
     const node = nodesById[id]
     if (!node || node.parentId) continue
@@ -153,9 +153,7 @@ export const applyBranchLaneClearance = (graph: {
 
     branches.sort((a, b) => a.branchIdx - b.branchIdx)
     const siblingIds = new Set(branches.map(branch => branch.nodeId))
-    let previousBottom = -Infinity
-
-    for (const branch of branches) {
+    const branchLanes = branches.map(branch => {
       const blockedIds = new Set(siblingIds)
       blockedIds.delete(branch.nodeId)
       const subtreeIds = collectSubtree(
@@ -164,16 +162,38 @@ export const applyBranchLaneClearance = (graph: {
         outgoing,
         blockedIds
       )
-      const bounds = getSubtreeBounds(subtreeIds, nodesById)
-      const delta = previousBottom + BRANCH_LANE_CLEARANCE - bounds.top
-
-      if (delta > 0) {
-        shiftNodes(subtreeIds, nodesById, delta, "y")
-        bounds.top += delta
-        bounds.bottom += delta
+      return {
+        ...branch,
+        subtreeIds,
+        bounds: getSubtreeBounds(subtreeIds, nodesById),
       }
+    })
 
-      previousBottom = Math.max(previousBottom, bounds.bottom)
+    const shiftBranchLane = (
+      lane: (typeof branchLanes)[number],
+      delta: number
+    ) => {
+      shiftNodes(lane.subtreeIds, nodesById, delta, "y")
+      lane.bounds.top += delta
+      lane.bounds.bottom += delta
+    }
+
+    const primaryIndex = Math.floor((branchLanes.length - 1) / 2)
+
+    for (let i = primaryIndex - 1; i >= 0; i--) {
+      const lane = branchLanes[i]
+      const lowerLane = branchLanes[i + 1]
+      const delta =
+        lowerLane.bounds.top - BRANCH_LANE_CLEARANCE - lane.bounds.bottom
+      shiftBranchLane(lane, delta)
+    }
+
+    for (let i = primaryIndex + 1; i < branchLanes.length; i++) {
+      const lane = branchLanes[i]
+      const upperLane = branchLanes[i - 1]
+      const delta =
+        upperLane.bounds.bottom + BRANCH_LANE_CLEARANCE - lane.bounds.top
+      shiftBranchLane(lane, delta)
     }
   }
 }

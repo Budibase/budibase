@@ -12,7 +12,7 @@ jest.mock("../../sdk/workspace/oauth2", () => {
   return {
     ...actual,
     getToken: jest.fn(),
-    cleanStoredToken: jest.fn(),
+    cleanStoredTokensForAuthConfig: jest.fn(),
   }
 })
 
@@ -489,9 +489,9 @@ describe("REST Integration", () => {
     const getTokenMock = sdk.oauth2.getToken as jest.MockedFunction<
       typeof sdk.oauth2.getToken
     >
-    const cleanStoredTokenMock = sdk.oauth2
-      .cleanStoredToken as jest.MockedFunction<
-      typeof sdk.oauth2.cleanStoredToken
+    const cleanStoredTokensForAuthConfigMock = sdk.oauth2
+      .cleanStoredTokensForAuthConfig as jest.MockedFunction<
+      typeof sdk.oauth2.cleanStoredTokensForAuthConfig
     >
     const basicAuth: BasicRestAuthConfig = {
       _id: "c59c14bd1898a43baa08da68959b24686",
@@ -514,11 +514,11 @@ describe("REST Integration", () => {
 
     beforeEach(() => {
       getTokenMock.mockReset()
-      cleanStoredTokenMock.mockReset()
+      cleanStoredTokensForAuthConfigMock.mockReset()
       getTokenMock.mockRejectedValue(
         new Error("Unexpected oauth2.getToken call")
       )
-      cleanStoredTokenMock.mockResolvedValue(undefined)
+      cleanStoredTokensForAuthConfigMock.mockResolvedValue(undefined)
       integration = new RestIntegration({
         url: "https://example.com",
         authConfigs: [basicAuth, bearerAuth],
@@ -527,7 +527,7 @@ describe("REST Integration", () => {
 
     afterEach(() => {
       getTokenMock.mockReset()
-      cleanStoredTokenMock.mockReset()
+      cleanStoredTokensForAuthConfigMock.mockReset()
     })
 
     it("adds basic auth", async () => {
@@ -675,8 +675,10 @@ describe("REST Integration", () => {
 
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
-      expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
-      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+        oauthConfig._id
+      )
       expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
 
@@ -723,8 +725,10 @@ describe("REST Integration", () => {
 
       expect(info.code).toEqual(401)
       expect(data).toEqual({})
-      expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
-      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+        oauthConfig._id
+      )
       expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
   })
