@@ -10,7 +10,10 @@ import {
   loopWithLinearChildrenStep,
   serverLogStep,
 } from "@/test/automationFixtures"
-import { renderChain, renderLoopV2Container } from "../FlowCanvas/FlowGraphBuilder"
+import {
+  renderChain,
+  renderLoopV2Container,
+} from "../FlowCanvas/FlowGraphBuilder"
 import {
   FLOW_ITEM_ACTION_BAR_WIDTH,
   LOOP_INSERT_ACTION_OFFSET,
