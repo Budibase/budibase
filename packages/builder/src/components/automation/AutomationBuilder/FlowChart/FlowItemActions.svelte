@@ -22,6 +22,9 @@
     branchStepId &&
     $selectedAutomation?.blockRefs?.[branchStepId] &&
     viewMode === ViewMode.EDITOR
+  $: isActiveInsertionPoint =
+    getActionTargetKey($automationStore.actionPanelBlock) ===
+    getActionTargetKey(block)
 
   const checkIsInsideBranchInLoop = (blockRef: BlockRef | undefined) => {
     if (!blockRef?.pathTo) return false
@@ -33,9 +36,30 @@
 
     return false
   }
+
+  const getActionTargetKey = (value: unknown) => {
+    if (!value || typeof value !== "object") {
+      return undefined
+    }
+
+    const target = value as Record<string, unknown>
+    if (target.insertIntoLoopV2) {
+      return [
+        "loop",
+        target.loopStepId || target.id,
+        target.loopChildInsertIndex,
+      ].join(":")
+    }
+
+    if (target.branchNode) {
+      return ["branch", target.branchStepId, target.branchIdx].join(":")
+    }
+
+    return typeof target.id === "string" ? `step:${target.id}` : undefined
+  }
 </script>
 
-<div class="action-bar">
+<div class="action-bar" class:active-insertion-point={isActiveInsertionPoint}>
   {#if !hideBranch && !block.branchNode && !isInsideBranchInLoop}
     <Icon
       hoverable
@@ -79,7 +103,9 @@
     tooltipPosition={TooltipPosition.Right}
     tooltip={"Add a step"}
     size="S"
-    color="var(--automation-flow-action-icon-color)"
+    color={isActiveInsertionPoint
+      ? "var(--spectrum-global-color-blue-600)"
+      : "var(--automation-flow-action-icon-color)"}
     hoverColor="var(--automation-flow-action-icon-hover-color)"
   />
 </div>
@@ -95,10 +121,13 @@
       var(--spectrum-global-color-gray-100)
     );
     border: var(--automation-flow-action-border, 0);
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 16px;
     display: flex;
+    width: fit-content;
+    box-sizing: border-box;
     gap: var(--spacing-m);
-    padding: 8px 12px;
+    justify-content: center;
+    padding: 8px;
     cursor: default;
   }
 

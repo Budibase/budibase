@@ -3,6 +3,7 @@ jest.mock("../../../oauth2", () => {
   return {
     ...actual,
     getTokenFromConfig: jest.fn(),
+    cleanStoredTokensForAuthConfig: jest.fn(),
   }
 })
 
@@ -16,6 +17,9 @@ import { type Datasource, OAuth2GrantType, RestAuthType } from "@budibase/types"
 import sdk from "../../../.."
 
 const getTokenFromConfigMock = jest.mocked(sdk.oauth2.getTokenFromConfig)
+const cleanStoredTokensForAuthConfigMock = jest.mocked(
+  sdk.oauth2.cleanStoredTokensForAuthConfig
+)
 const mockOAuthBearerToken = () =>
   getTokenFromConfigMock.mockResolvedValue("Bearer token")
 
@@ -97,6 +101,8 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
   })
 
   beforeEach(() => {
+    getTokenFromConfigMock.mockReset()
+    cleanStoredTokensForAuthConfigMock.mockReset()
     mockOAuthBearerToken()
   })
   it("uses sites search query and maps displayName with webUrl", async () => {
@@ -237,9 +243,9 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
     )
   })
 
-  it("throws authentication failed error for 401", async () => {
+  it("retries with refreshed token once for 401 and then fails", async () => {
     mockDatasource()
-    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
       status: 401,
       json: async () => ({}),
@@ -253,6 +259,57 @@ describe("fetchSharePointSitesByDatasourceAuthConfig (token-backed)", () => {
           "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again.",
         status: 400,
       })
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(2)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+      authConfigId,
+      datasourceId
+    )
+  })
+
+  it("retries once after 401 and succeeds with refreshed token", async () => {
+    mockDatasource()
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({}),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          value: [
+            {
+              id: "site-1",
+              displayName: "Site One",
+              webUrl: "https://contoso.sharepoint.com/sites/site-1",
+            },
+          ],
+        }),
+      } as Response)
+
+    const sites = await fetchSharePointSitesByDatasourceAuthConfig(
+      datasourceId,
+      authConfigId
+    )
+
+    expect(sites).toEqual([
+      {
+        id: "site-1",
+        name: "Site One",
+        webUrl: "https://contoso.sharepoint.com/sites/site-1",
+      },
+    ])
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(2)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+      authConfigId,
+      datasourceId
     )
   })
 })
@@ -292,6 +349,8 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
   })
 
   beforeEach(() => {
+    getTokenFromConfigMock.mockReset()
+    cleanStoredTokensForAuthConfigMock.mockReset()
     mockOAuthBearerToken()
   })
 
@@ -313,9 +372,9 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
     )
   })
 
-  it("uses credential guidance for client credentials 401", async () => {
+  it("clears cached token on 401, retries once, and surfaces auth guidance", async () => {
     mockDatasource()
-    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
       status: 401,
       json: async () => ({}),
@@ -327,7 +386,16 @@ describe("fetchSharePointSitesByDatasourceAuthConfig", () => {
       expect.objectContaining({
         message:
           "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again.",
+        status: 400,
       })
+    )
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(getTokenFromConfigMock).toHaveBeenCalledTimes(2)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+    expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+      authConfigId,
+      datasourceId
     )
   })
 })
