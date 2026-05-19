@@ -471,7 +471,8 @@ export interface EmailTriggerInputs {
   username: string
   authType?: EmailTriggerAuthType
   password?: string
-  oauth2ConfigId?: string
+  datasourceId?: string
+  authConfigId?: string
   mailbox?: string
 }
 

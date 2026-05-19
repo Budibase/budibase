@@ -20,10 +20,7 @@ import cloneDeep from "lodash/cloneDeep"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { deleteAutomationMailboxState } from "../../../automations/email/state"
-import {
-  isMaskedPassword,
-  PASSWORD_DISPLAY_MASK,
-} from "./utils"
+import { isMaskedPassword, PASSWORD_DISPLAY_MASK } from "./utils"
 
 export interface PersistedAutomation extends Automation {
   _id: string
@@ -351,7 +348,7 @@ function hydrateAutomationSecrets(
   if (getEmailTriggerAuthType(trigger.inputs) === EmailTriggerAuthType.OAUTH2) {
     const hydratedAutomation = cloneDeep(automation)
     const hydratedTrigger = hydratedAutomation.definition?.trigger
-    if (isEmailTrigger(hydratedTrigger) && hydratedTrigger.inputs) {
+    if (isEmailTrigger(hydratedTrigger)) {
       delete hydratedTrigger.inputs.password
     }
     return hydratedAutomation

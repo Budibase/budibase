@@ -340,7 +340,8 @@ describe("enableCronOrEmailTrigger", () => {
       secure: false,
       username: "dom",
       authType: EmailTriggerAuthType.OAUTH2,
-      oauth2ConfigId: "oauth2_config_1",
+      datasourceId: "ds_1",
+      authConfigId: "auth_1",
     })
     const mockPut = jest
       .fn()

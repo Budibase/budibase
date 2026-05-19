@@ -21,7 +21,8 @@ export const definition: AutomationTriggerDefinition = {
     username: "",
     authType: EmailTriggerAuthType.PASSWORD,
     password: "",
-    oauth2ConfigId: "",
+    datasourceId: "",
+    authConfigId: "",
     mailbox: "INBOX",
   },
   schema: {
@@ -54,10 +55,14 @@ export const definition: AutomationTriggerDefinition = {
           type: AutomationIOType.STRING,
           description: "IMAP password",
         },
-        oauth2ConfigId: {
+        datasourceId: {
           type: AutomationIOType.STRING,
           title: "OAuth2 connection",
-          description: "OAuth2 connection",
+          description: "Workspace OAuth2 connection",
+        },
+        authConfigId: {
+          type: AutomationIOType.STRING,
+          description: "OAuth2 auth config",
         },
         mailbox: {
           type: AutomationIOType.STRING,

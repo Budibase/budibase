@@ -921,7 +921,8 @@ describe("/automations", () => {
           secure: true,
           username: "dom@example.com",
           authType: EmailTriggerAuthType.OAUTH2,
-          oauth2ConfigId: "oauth2_config_1",
+          datasourceId: "ds_1",
+          authConfigId: "auth_1",
           mailbox: "INBOX",
         } satisfies EmailTriggerInputs,
       }
@@ -1004,7 +1005,8 @@ describe("/automations", () => {
       expect(createdTrigger.inputs).toEqual(
         expect.objectContaining({
           authType: EmailTriggerAuthType.OAUTH2,
-          oauth2ConfigId: "oauth2_config_1",
+          datasourceId: "ds_1",
+          authConfigId: "auth_1",
         })
       )
       expect(createdTrigger.inputs.password).toBeUndefined()
@@ -1062,7 +1064,8 @@ describe("/automations", () => {
         secure: true,
         username: "dom@example.com",
         authType: EmailTriggerAuthType.OAUTH2,
-        oauth2ConfigId: "oauth2_config_1",
+        datasourceId: "ds_1",
+        authConfigId: "auth_1",
         mailbox: "INBOX",
       })
 
@@ -1071,7 +1074,8 @@ describe("/automations", () => {
       expect(inputs).toEqual(
         expect.objectContaining({
           authType: EmailTriggerAuthType.OAUTH2,
-          oauth2ConfigId: "oauth2_config_1",
+          datasourceId: "ds_1",
+          authConfigId: "auth_1",
         })
       )
       expect(inputs.password).toBeUndefined()

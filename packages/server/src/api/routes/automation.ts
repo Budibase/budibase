@@ -29,7 +29,12 @@ const emailTriggerInputsValidator = middleware.joiValidator.body(
       then: emptyString,
       otherwise: Joi.string().required(),
     }),
-    oauth2ConfigId: Joi.when("authType", {
+    datasourceId: Joi.when("authType", {
+      is: EmailTriggerAuthType.OAUTH2,
+      then: Joi.string().required(),
+      otherwise: emptyString,
+    }),
+    authConfigId: Joi.when("authType", {
       is: EmailTriggerAuthType.OAUTH2,
       then: Joi.string().required(),
       otherwise: emptyString,

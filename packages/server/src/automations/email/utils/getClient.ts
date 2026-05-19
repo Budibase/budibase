@@ -1,16 +1,76 @@
 import { blacklist } from "@budibase/backend-core"
-import { EmailTriggerAuthType, EmailTriggerInputs } from "@budibase/types"
+import {
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
+  OAuth2RestAuthConfig,
+  RestAuthType,
+} from "@budibase/types"
 import { ImapFlow } from "imapflow"
-import { getAccessToken } from "../../../sdk/workspace/oauth2"
+import sdk from "../../../sdk"
+import {
+  getToken,
+  getTokenFromConfig,
+} from "../../../sdk/workspace/oauth2/utils"
+
+const stripBearerPrefix = (token: string) => token.slice("Bearer ".length)
+
+const getOAuth2AccessToken = async (
+  datasourceId: string,
+  authConfigId: string
+) => {
+  if (datasourceId !== authConfigId) {
+    try {
+      const datasource = await sdk.datasources.get(datasourceId)
+      const oauth2Config = datasource.config?.authConfigs?.find(
+        config =>
+          config._id === authConfigId && config.type === RestAuthType.OAUTH2
+      ) as OAuth2RestAuthConfig | undefined
+
+      if (oauth2Config) {
+        const token = await getTokenFromConfig(
+          `${datasourceId}:${authConfigId}`,
+          oauth2Config
+        )
+        return stripBearerPrefix(token)
+      }
+    } catch {
+      // Not a REST datasource — fall through to legacy OAuth2 lookup
+    }
+  }
+
+  const token = await getToken(authConfigId)
+  return stripBearerPrefix(token)
+}
+
+const resolveOAuth2Ids = (inputs: EmailTriggerInputs) => {
+  if (inputs.datasourceId && inputs.authConfigId) {
+    return {
+      datasourceId: inputs.datasourceId,
+      authConfigId: inputs.authConfigId,
+    }
+  }
+
+  const legacyId = (inputs as EmailTriggerInputs & { oauth2ConfigId?: string })
+    .oauth2ConfigId
+  if (legacyId) {
+    return { datasourceId: legacyId, authConfigId: legacyId }
+  }
+
+  return null
+}
 
 const getAuthConfig = async (inputs: EmailTriggerInputs) => {
   const authType = inputs.authType || EmailTriggerAuthType.PASSWORD
 
   if (authType === EmailTriggerAuthType.OAUTH2) {
-    if (!inputs.oauth2ConfigId) {
+    const oauth2Ids = resolveOAuth2Ids(inputs)
+    if (!oauth2Ids) {
       throw new Error("OAuth2 connection is required")
     }
-    const accessToken = await getAccessToken(inputs.oauth2ConfigId)
+    const accessToken = await getOAuth2AccessToken(
+      oauth2Ids.datasourceId,
+      oauth2Ids.authConfigId
+    )
     return {
       user: inputs.username,
       accessToken,

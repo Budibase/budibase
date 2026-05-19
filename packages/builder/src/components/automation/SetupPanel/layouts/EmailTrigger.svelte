@@ -3,14 +3,22 @@
   import { DrawerBindableInput } from "@/components/common/bindings"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import { PropField } from ".."
-  import { automationStore, oauth2, selectedAutomation } from "@/stores/builder"
+  import {
+    automationStore,
+    datasources,
+    oauth2,
+    selectedAutomation,
+  } from "@/stores/builder"
+  import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { Label, Helpers, Select, Button, notifications } from "@budibase/bbui"
   import {
     EmailTriggerAuthType,
+    RestAuthType,
     type AutomationStep,
     type AutomationTrigger,
     type BaseIOStructure,
     type EmailTriggerInputs,
+    type RestAuthConfig,
   } from "@budibase/types"
   import { onMount } from "svelte"
 
@@ -42,13 +50,27 @@
   $: authType =
     (getInputValue(inputData, "authType") as EmailTriggerAuthType) ||
     EmailTriggerAuthType.PASSWORD
-  $: oauth2Options = $oauth2.configs.map(config => ({
-    label: config.name,
-    value: config._id!,
-  }))
+  $: oauth2Options = ($workspaceConnections.list || []).flatMap(connection => {
+    if (connection.source === "oauth2") {
+      return [
+        {
+          label: connection.name,
+          value: `${connection.sourceId}:${connection.sourceId}`,
+        },
+      ]
+    }
+    return ((connection.auth || []) as RestAuthConfig[])
+      .filter(auth => auth.type === RestAuthType.OAUTH2)
+      .map(auth => ({
+        label: `${connection.name} - ${auth.name}`,
+        value: `${connection.sourceId}:${auth._id}`,
+      }))
+  })
+  $: oauth2ConnectionValue = getOAuth2ConnectionValue(inputData)
   $: canTestConnection = hasRequiredFields(inputData, authType)
 
   onMount(() => {
+    datasources.fetch()
     oauth2.fetch()
   })
 
@@ -62,6 +84,20 @@
     return typeof secure === "boolean" ? secure : true
   }
 
+  const getOAuth2ConnectionValue = (inputData: unknown) => {
+    const data = inputData as Record<string, unknown>
+    const datasourceId = data?.datasourceId
+    const authConfigId = data?.authConfigId
+    if (datasourceId && authConfigId) {
+      return `${datasourceId}:${authConfigId}`
+    }
+    const legacyId = data?.oauth2ConfigId
+    if (typeof legacyId === "string" && legacyId) {
+      return `${legacyId}:${legacyId}`
+    }
+    return undefined
+  }
+
   const hasRequiredFields = (
     inputData: unknown,
     authType: EmailTriggerAuthType
@@ -73,7 +109,10 @@
       return false
     }
     if (authType === EmailTriggerAuthType.OAUTH2) {
-      return !!getInputValue(inputData, "oauth2ConfigId")
+      const data = inputData as Record<string, unknown>
+      return (
+        (!!data?.datasourceId && !!data?.authConfigId) || !!data?.oauth2ConfigId
+      )
     }
     return !!getInputValue(inputData, "password")
   }
@@ -82,7 +121,7 @@
     if (key === "password") {
       return authType === EmailTriggerAuthType.PASSWORD
     }
-    if (key === "oauth2ConfigId") {
+    if (key === "datasourceId") {
       return authType === EmailTriggerAuthType.OAUTH2
     }
     return requiredInputs.includes(key)
@@ -104,6 +143,43 @@
     automationStore.actions.requestUpdate({ [key]: detail }, block)
   }
 
+  const handleAuthTypeChange = (detail: EmailTriggerAuthType) => {
+    if (!block) {
+      return
+    }
+    if (detail === EmailTriggerAuthType.OAUTH2) {
+      automationStore.actions.requestUpdate(
+        { authType: detail, password: "" },
+        block
+      )
+      return
+    }
+
+    automationStore.actions.requestUpdate(
+      {
+        authType: detail,
+        datasourceId: "",
+        authConfigId: "",
+      },
+      block
+    )
+  }
+
+  const handleOAuth2Change = (value: string) => {
+    if (!block) {
+      return
+    }
+    const [datasourceId, authConfigId] = value.split(":")
+    automationStore.actions.requestUpdate(
+      {
+        datasourceId,
+        authConfigId,
+        password: "",
+      },
+      block
+    )
+  }
+
   const testConnection = async () => {
     if (!inputData) {
       return
@@ -113,7 +189,6 @@
     try {
       const { valid, message } = await API.testEmailConnection({
         ...(inputData as EmailTriggerInputs),
-        secure: getSecureValue(inputData),
         automationId: $selectedAutomation.data?._id,
       })
       if (valid) {
@@ -163,7 +238,6 @@
             {key}
             updateOnChange={false}
             placeholder={schema[key].description}
-            inputType={key === "password" ? "password" : undefined}
             on:change={event => handleChange(key, event.detail)}
           />
         </PropField>
@@ -196,22 +270,24 @@
           placeholder={false}
           {getOptionLabel}
           {getOptionValue}
-          on:change={event => handleChange("authType", event.detail)}
+          on:change={event => handleAuthTypeChange(event.detail)}
         />
       </PropField>
     {/if}
-    {#if authType === EmailTriggerAuthType.OAUTH2}
+    {#if authType === EmailTriggerAuthType.OAUTH2 && schema.datasourceId}
       <PropField
-        label={getFieldLabel("oauth2ConfigId", schema.oauth2ConfigId)}
-        labelTooltip={schema.oauth2ConfigId?.description || ""}
+        label={getFieldLabel("datasourceId", schema.datasourceId)}
+        labelTooltip={schema.datasourceId?.description || ""}
         fullWidth
       >
         <Select
-          value={getInputValue(inputData, "oauth2ConfigId")}
+          value={oauth2ConnectionValue}
           options={oauth2Options}
+          placeholder="Select OAuth2 connection"
+          sort
           {getOptionLabel}
           {getOptionValue}
-          on:change={event => handleChange("oauth2ConfigId", event.detail)}
+          on:change={event => event.detail && handleOAuth2Change(event.detail)}
         />
       </PropField>
     {:else if schema.password}

@@ -1,7 +1,13 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { EmailTriggerAuthType, EmailTriggerInputs } from "@budibase/types"
+import {
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  RestAuthType,
+} from "@budibase/types"
 import net from "net"
 
 jest.mock("../../email/utils/fetchMessages", () => ({
@@ -116,15 +122,37 @@ describe("getClient", () => {
 
     const server = await startOAuthImapServer()
     const isBlacklisted = jest.fn().mockResolvedValue(false)
-    const getAccessToken = jest.fn().mockResolvedValue("raw-access-token")
+    const getTokenFromConfig = jest
+      .fn()
+      .mockResolvedValue("Bearer raw-access-token")
     jest.doMock("@budibase/backend-core", () => ({
       ...jest.requireActual("@budibase/backend-core"),
       blacklist: {
         isBlacklisted,
       },
     }))
-    jest.doMock("../../../sdk/workspace/oauth2", () => ({
-      getAccessToken,
+    jest.doMock("../../../sdk", () => ({
+      datasources: {
+        get: jest.fn().mockResolvedValue({
+          config: {
+            authConfigs: [
+              {
+                _id: "auth_1",
+                name: "OAuth2",
+                type: RestAuthType.OAUTH2,
+                url: "https://example.com/token",
+                clientId: "client",
+                clientSecret: "secret",
+                grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+                method: OAuth2CredentialsMethod.BODY,
+              },
+            ],
+          },
+        }),
+      },
+    }))
+    jest.doMock("../../../sdk/workspace/oauth2/utils", () => ({
+      getTokenFromConfig,
     }))
 
     try {
@@ -135,7 +163,8 @@ describe("getClient", () => {
         secure: false,
         username: "dom@example.com",
         authType: EmailTriggerAuthType.OAUTH2,
-        oauth2ConfigId: "oauth2_config_1",
+        datasourceId: "ds_1",
+        authConfigId: "auth_1",
       })
 
       await client.connect()
@@ -151,7 +180,10 @@ describe("getClient", () => {
       const encodedToken = authCommand.split(" ")[3]
       const decodedToken = Buffer.from(encodedToken, "base64").toString("utf8")
 
-      expect(getAccessToken).toHaveBeenCalledWith("oauth2_config_1")
+      expect(getTokenFromConfig).toHaveBeenCalledWith(
+        "ds_1:auth_1",
+        expect.objectContaining({ _id: "auth_1" })
+      )
       expect(decodedToken).toEqual(
         "user=dom@example.com\u0001auth=Bearer raw-access-token\u0001\u0001"
       )

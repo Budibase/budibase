@@ -370,7 +370,10 @@ function isValidEmailTriggerInputs(inputs: EmailTriggerInputs): boolean {
   }
 
   if (inputs.authType === EmailTriggerAuthType.OAUTH2) {
-    return !!inputs.oauth2ConfigId
+    const legacyId = (
+      inputs as EmailTriggerInputs & { oauth2ConfigId?: string }
+    ).oauth2ConfigId
+    return (!!inputs.datasourceId && !!inputs.authConfigId) || !!legacyId
   }
 
   return !!inputs.password

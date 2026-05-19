@@ -115,12 +115,6 @@ export async function getToken(id: string) {
   return token
 }
 
-export async function getAccessToken(id: string) {
-  const token = await getToken(id)
-  // getToken returns "Bearer <token>", but IMAP OAuth2 needs the raw access token.
-  return token.replace(/^[^\s]+\s/, "")
-}
-
 export async function getTokenFromConfig(
   cacheKey: string,
   config: {
