@@ -35,14 +35,16 @@ export interface ImportEndpoint {
   queryString?: string
 }
 
+export type QueryFields = RestQueryFields &
+  SQLQueryFields &
+  MongoQueryFields &
+  GoogleSheetsQueryFields
+
 export interface Query extends Document {
   datasourceId: string
   name: string
   parameters: QueryParameter[]
-  fields: RestQueryFields &
-    SQLQueryFields &
-    MongoQueryFields &
-    GoogleSheetsQueryFields
+  fields: QueryFields
   transformer: string | null
   schema: Record<string, QuerySchema | string>
   nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>

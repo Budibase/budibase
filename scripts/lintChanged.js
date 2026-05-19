@@ -69,9 +69,9 @@ const run = (bin, args) => {
 }
 
 if (mode === "fix") {
-  run("eslint", ["--fix", "--max-warnings=0", ...lintableFiles])
+  run("eslint", ["--fix", "--max-warnings=0", "--no-warn-ignored", ...lintableFiles])
   run("prettier", ["--write", ...lintableFiles])
 } else {
-  run("eslint", ["--max-warnings=0", ...lintableFiles])
+  run("eslint", ["--max-warnings=0", "--no-warn-ignored", ...lintableFiles])
   run("prettier", ["--check", ...lintableFiles])
 }

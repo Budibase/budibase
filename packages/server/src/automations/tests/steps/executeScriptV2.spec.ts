@@ -1,7 +1,7 @@
 import { Table } from "@budibase/types"
-import * as automation from "../index"
-import * as setup from "./utilities"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import * as automation from "../../index"
+import * as setup from "../utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 function encodeJS(js: string): string {
   return `{{ js "${Buffer.from(js, "utf-8").toString("base64")}" }}`

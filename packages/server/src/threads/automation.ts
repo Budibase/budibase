@@ -782,7 +782,10 @@ class Orchestrator {
             // For both legacy and new loops, we need to preserve the step index
             // so child steps don't affect the main step numbering
             const savedStepIndex = ctx._stepIndex
-            const iterationResults = await this.executeSteps(ctx, children)
+            const iterationResults = await this.executeSteps(
+              ctx,
+              cloneDeep(children)
+            )
             ctx._stepIndex = savedStepIndex
 
             // Process results based on their type
@@ -823,6 +826,16 @@ class Orchestrator {
             }
 
             if (this.stopped) {
+              const stoppedByFilter = iterationResults.some(
+                result =>
+                  result.stepId === AutomationActionStepId.FILTER &&
+                  result.outputs.status === AutomationStatus.STOPPED
+              )
+              if (stoppedByFilter) {
+                this.stopped = false
+                continue
+              }
+
               const output = automationUtils.buildLoopOutput(
                 storage,
                 undefined,
