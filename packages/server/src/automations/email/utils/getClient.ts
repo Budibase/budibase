@@ -3,6 +3,7 @@ import {
   EmailTriggerAuthType,
   EmailTriggerInputs,
   OAuth2RestAuthConfig,
+  RestAuthConfig,
   RestAuthType,
 } from "@budibase/types"
 import { ImapFlow } from "imapflow"
@@ -22,7 +23,7 @@ const getOAuth2AccessToken = async (
     try {
       const datasource = await sdk.datasources.get(datasourceId)
       const oauth2Config = datasource.config?.authConfigs?.find(
-        config =>
+        (config: RestAuthConfig) =>
           config._id === authConfigId && config.type === RestAuthType.OAUTH2
       ) as OAuth2RestAuthConfig | undefined
 
