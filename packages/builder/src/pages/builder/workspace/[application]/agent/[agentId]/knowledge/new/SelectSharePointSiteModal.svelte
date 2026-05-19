@@ -52,9 +52,10 @@
   let loadingNextStep = $state(false)
   let creatingConnection = $state(false)
   let awaitingAdvancedSetup = $state(false)
-  let resumingFromAdvancedSetup = $state(false)
   let saving = $state(false)
   let skippedConnectionStep = $state(false)
+  let resumeFromAdvancedSetupInFlight = false
+  let lastResumeConnectionSignature: string | null = null
 
   let quickSetupModal = $state<SharePointQuickSetupModal>()
   let connectionStepModal = $state<SharePointConnectionStepModal>()
@@ -98,6 +99,7 @@
     if (creatingConnection || loadingNextStep || saving) {
       return
     }
+    lastResumeConnectionSignature = null
     awaitingAdvancedSetup = true
     quickSetupModal?.hide()
     bb.settings("/connections/apis/new/microsoft-sharepoint")
@@ -224,12 +226,21 @@
   }
 
   $effect(() => {
-    if (!awaitingAdvancedSetup || resumingFromAdvancedSetup) {
+    const connectionSignature = $knowledgeConnectionsStore.connections
+      .map(connection => connection._id)
+      .join(":")
+    const shouldResume =
+      awaitingAdvancedSetup &&
+      !resumeFromAdvancedSetupInFlight &&
+      connectionSignature !== lastResumeConnectionSignature
+
+    if (!shouldResume) {
       return
     }
 
     const resume = async () => {
-      resumingFromAdvancedSetup = true
+      resumeFromAdvancedSetupInFlight = true
+      lastResumeConnectionSignature = connectionSignature
       try {
         await loadSharePointConnections()
         if (sharePointConnectionOptions.length === 0) {
@@ -244,7 +255,7 @@
         skippedConnectionStep = false
         connectionStepModal?.show()
       } finally {
-        resumingFromAdvancedSetup = false
+        resumeFromAdvancedSetupInFlight = false
       }
     }
 
@@ -280,7 +291,8 @@
 
   export async function show() {
     awaitingAdvancedSetup = false
-    resumingFromAdvancedSetup = false
+    resumeFromAdvancedSetupInFlight = false
+    lastResumeConnectionSignature = null
     await loadSharePointConnections()
     if (sharePointConnectionOptions.length === 0) {
       skippedConnectionStep = true
@@ -307,7 +319,8 @@
 
   export function hide() {
     awaitingAdvancedSetup = false
-    resumingFromAdvancedSetup = false
+    resumeFromAdvancedSetupInFlight = false
+    lastResumeConnectionSignature = null
     quickSetupModal?.hide()
     connectionStepModal?.hide()
     siteStepModal?.hide()
