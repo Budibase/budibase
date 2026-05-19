@@ -106,13 +106,54 @@
     sanitizeValue(filter, filter.type)
   }
 
+  const conditionValueTypeOptions = [
+    { label: "Binding", value: FilterValueType.BINDING },
+    { label: "Number", value: FieldType.NUMBER },
+    { label: "Date", value: FieldType.DATETIME },
+    { label: "Boolean", value: FieldType.BOOLEAN },
+  ]
+
+  const getConditionValueType = filter => {
+    if (filter.valueType === FilterValueType.BINDING) {
+      return FilterValueType.BINDING
+    }
+    if (
+      [FieldType.NUMBER, FieldType.DATETIME, FieldType.BOOLEAN].includes(
+        filter.type
+      )
+    ) {
+      return filter.type
+    }
+    return FilterValueType.BINDING
+  }
+
+  const onConditionValueTypeChange = (filter, value) => {
+    const previousType = filter.type
+    const updated = {
+      ...filter,
+      value: null,
+      valueType:
+        value === FilterValueType.BINDING
+          ? FilterValueType.BINDING
+          : FilterValueType.VALUE,
+      type: value === FilterValueType.BINDING ? FieldType.STRING : value,
+    }
+    sanitizeOperator(updated)
+    sanitizeValue(updated, previousType)
+    return updated
+  }
+
   const getSchema = filter => {
     return schemaFields.find(field => field.name === filter.field)
   }
 
   const getValidOperatorsForType = filter => {
     if (builderType === "condition") {
-      return [OperatorOptions.Equals, OperatorOptions.NotEquals]
+      return QueryUtils.getValidOperatorsForType(
+        filter?.type ? filter : { ...filter, type: FieldType.STRING },
+        filter?.field || filter?.name,
+        datasource
+      )
     }
 
     if (!filter?.field && !filter?.name) {
@@ -233,7 +274,10 @@
         editable.groups.splice(groupIdx, 1)
       } else if (addFilter) {
         targetGroup.filters.push({
-          valueType: FilterValueType.VALUE,
+          valueType:
+            builderType === "condition"
+              ? FilterValueType.BINDING
+              : FilterValueType.VALUE,
           ...(builderType === "condition"
             ? { operator: OperatorOptions.Equals.value, type: FieldType.STRING }
             : {}),
@@ -256,10 +300,14 @@
         logicalOperator: Constants.FilterOperator.ANY,
         filters: [
           {
-            valueType: FilterValueType.VALUE,
+            valueType:
+              builderType === "condition"
+                ? FilterValueType.BINDING
+                : FilterValueType.VALUE,
             ...(builderType === "condition"
               ? {
                   operator: OperatorOptions.Equals.value,
+                  type: FieldType.STRING,
                 }
               : {}),
           },
@@ -367,7 +415,10 @@
 
               <div class="filters">
                 {#each group.filters as filter, filterIdx}
-                  <div class="filter">
+                  <div
+                    class="filter"
+                    class:condition-builder={builderType === "condition"}
+                  >
                     {#if builderType === "filter"}
                       <Select
                         value={filter.field}
@@ -411,6 +462,21 @@
                       placeholder={false}
                       popoverAutoWidth
                     />
+                    {#if builderType === "condition"}
+                      <Select
+                        value={getConditionValueType(filter)}
+                        options={conditionValueTypeOptions}
+                        on:change={e => {
+                          const updated = onConditionValueTypeChange(
+                            filter,
+                            e.detail
+                          )
+                          onFilterFieldUpdate(updated, groupIdx, filterIdx)
+                        }}
+                        placeholder={false}
+                        popoverAutoWidth
+                      />
+                    {/if}
                     <FilterField
                       placeholder="Value"
                       disabled={!filter.field && builderType === "filter"}
@@ -420,9 +486,6 @@
                       {allowBindings}
                       filter={{
                         ...filter,
-                        ...(builderType === "condition"
-                          ? { type: FieldType.STRING }
-                          : {}),
                       }}
                       {schemaFields}
                       {bindings}
@@ -563,7 +626,14 @@
   .filter {
     display: grid;
     gap: var(--spacing-l);
-    grid-template-columns: minmax(150px, 1fr) 170px minmax(200px, 1fr) 40px 40px;
+    grid-template-columns: minmax(150px, 1fr) 170px minmax(200px, 1fr) 40px;
+  }
+
+  .filter.condition-builder {
+    grid-template-columns: minmax(150px, 1fr) 170px 120px minmax(
+        200px,
+        1fr
+      ) 40px;
   }
 
   .filters-footer {

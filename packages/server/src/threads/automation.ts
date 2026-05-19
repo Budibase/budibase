@@ -200,6 +200,24 @@ async function branchMatches(
   // evaluate all of the bindings.
   const evaluateBindings = (fs: Readonly<BranchSearchFilters>) => {
     const filters = cloneDeep(fs)
+    const evaluateValue = (value: any): any => {
+      if (typeof value === "string" && findHBSBlocks(value).length > 0) {
+        return processStringSync(value, ctx)
+      }
+      if (Array.isArray(value)) {
+        return value.map(evaluateValue)
+      }
+      if (value && typeof value === "object") {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, nestedValue]) => [
+            key,
+            evaluateValue(nestedValue),
+          ])
+        )
+      }
+      return value
+    }
+
     for (const filter of Object.values(filters)) {
       if (!filter) {
         continue
@@ -208,11 +226,10 @@ async function branchMatches(
       if (isLogicalFilter(filter)) {
         filter.conditions = filter.conditions.map(evaluateBindings)
       } else {
-        for (const [field, value] of Object.entries(filter)) {
+        const evaluatedFilter = filter as Record<string, any>
+        for (const [field, value] of Object.entries(evaluatedFilter)) {
           toFilter[field] = processStringSync(field, ctx)
-          if (typeof value === "string" && findHBSBlocks(value).length > 0) {
-            filter[field] = processStringSync(value, ctx)
-          }
+          evaluatedFilter[field] = evaluateValue(value)
         }
       }
     }

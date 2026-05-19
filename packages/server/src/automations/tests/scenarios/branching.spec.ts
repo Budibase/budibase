@@ -307,6 +307,102 @@ describe("Branching automations", () => {
     expect(results.steps[2].outputs.message).toContain("Special user")
   })
 
+  it("supports expanded branch condition operands", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition: {
+            $and: {
+              conditions: [
+                { string: { "{{trigger.fields.name}}": "Bud" } },
+                { fuzzy: { "{{trigger.fields.description}}": "low-code" } },
+                { oneOf: { "{{trigger.fields.status}}": ["new", "active"] } },
+                { range: { "{{trigger.fields.score}}": { low: 10 } } },
+                {
+                  range: {
+                    "{{trigger.fields.createdAt}}": {
+                      high: "2026-01-31T00:00:00.000Z",
+                    },
+                  },
+                },
+                { equal: { "{{ literal trigger.fields.enabled }}": true } },
+                { empty: { "{{trigger.fields.notes}}": null } },
+              ],
+            },
+          },
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({
+        fields: {
+          name: "Budibase",
+          description: "Build low-code tools",
+          status: "active",
+          score: 15,
+          createdAt: "2026-01-15T00:00:00.000Z",
+          enabled: true,
+          notes: "",
+        },
+      })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
+  })
+
+  it("evaluates bindings inside branch condition values", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition: {
+            $and: {
+              conditions: [
+                {
+                  range: {
+                    "{{trigger.fields.score}}": {
+                      low: "{{trigger.fields.minimumScore}}",
+                    },
+                  },
+                },
+                {
+                  oneOf: {
+                    "{{trigger.fields.status}}": [
+                      "{{trigger.fields.expectedStatus}}",
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({
+        fields: {
+          score: 12,
+          minimumScore: 10,
+          status: "active",
+          expectedStatus: "active",
+        },
+      })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
+  })
+
   it("should execute ELSE branch when no other conditions match", async () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
