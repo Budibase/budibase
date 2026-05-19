@@ -6,6 +6,13 @@ jest.mock("imapflow", () => ({
   ImapFlow: jest.fn(),
 }))
 
+jest.mock("@budibase/backend-core", () => ({
+  ...jest.requireActual("@budibase/backend-core"),
+  blacklist: {
+    isBlacklisted: jest.fn().mockResolvedValue(false),
+  },
+}))
+
 const mockImapFlow = ImapFlow as unknown as jest.Mock
 
 describe("getClient", () => {
