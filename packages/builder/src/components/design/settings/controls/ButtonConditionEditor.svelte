@@ -171,7 +171,7 @@
   const getEffectiveType = (condition: ComponentCondition): FieldType => {
     return String(condition.valueType) === "Binding"
       ? FieldType.STRING
-      : (condition.type as FieldType)
+      : condition.type
   }
 
   const getReferenceValue = (
