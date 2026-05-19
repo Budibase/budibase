@@ -143,4 +143,26 @@ describe("getClient", () => {
       logger: false,
     })
   })
+
+  it("surfaces OAuth2 token lookup failures", async () => {
+    const { getToken, getTokenFromConfig } = jest.requireMock(
+      "../../../sdk/workspace/oauth2/utils"
+    )
+    getTokenFromConfig.mockRejectedValueOnce(new Error("token failed"))
+
+    await expect(
+      getClient({
+        host: "imap.example.com",
+        port: 993,
+        secure: true,
+        username: "user@example.com",
+        authType: EmailTriggerAuthType.OAUTH2,
+        datasourceId: "ds_1",
+        authConfigId: "auth_1",
+      })
+    ).rejects.toThrow("token failed")
+
+    expect(getToken).not.toHaveBeenCalled()
+    expect(mockImapFlow).not.toHaveBeenCalled()
+  })
 })

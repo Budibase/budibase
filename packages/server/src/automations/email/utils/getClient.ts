@@ -15,32 +15,41 @@ import {
 
 const stripBearerPrefix = (token: string) => token.slice("Bearer ".length)
 
+const getLegacyOAuth2AccessToken = async (authConfigId: string) => {
+  const token = await getToken(authConfigId)
+  return stripBearerPrefix(token)
+}
+
 const getOAuth2AccessToken = async (
   datasourceId: string,
   authConfigId: string
 ) => {
   if (datasourceId !== authConfigId) {
+    let datasource: Awaited<ReturnType<typeof sdk.datasources.get>>
     try {
-      const datasource = await sdk.datasources.get(datasourceId)
-      const oauth2Config = datasource.config?.authConfigs?.find(
-        (config: RestAuthConfig) =>
-          config._id === authConfigId && config.type === RestAuthType.OAUTH2
-      ) as OAuth2RestAuthConfig | undefined
-
-      if (oauth2Config) {
-        const token = await getTokenFromConfig(
-          `${datasourceId}:${authConfigId}`,
-          oauth2Config
-        )
-        return stripBearerPrefix(token)
-      }
+      datasource = await sdk.datasources.get(datasourceId)
     } catch {
       // Not a REST datasource — fall through to legacy OAuth2 lookup
+      return getLegacyOAuth2AccessToken(authConfigId)
     }
+
+    const oauth2Config = datasource.config?.authConfigs?.find(
+      (config: RestAuthConfig) =>
+        config._id === authConfigId && config.type === RestAuthType.OAUTH2
+    ) as OAuth2RestAuthConfig | undefined
+
+    if (!oauth2Config) {
+      throw new Error("OAuth2 auth config not found")
+    }
+
+    const token = await getTokenFromConfig(
+      `${datasourceId}:${authConfigId}`,
+      oauth2Config
+    )
+    return stripBearerPrefix(token)
   }
 
-  const token = await getToken(authConfigId)
-  return stripBearerPrefix(token)
+  return getLegacyOAuth2AccessToken(authConfigId)
 }
 
 const resolveOAuth2Ids = (inputs: EmailTriggerInputs) => {
