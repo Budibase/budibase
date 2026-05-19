@@ -1,6 +1,6 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { FilterCondition } from "@budibase/types"
+import { AutomationStatus, FilterCondition } from "@budibase/types"
 import { run } from "../../steps/filter"
 
 function stringToFilterCondition(
@@ -121,7 +121,7 @@ describe("test the filter logic", () => {
         comparisonValue: expectedComparisonValue,
       }
       if (!expectedResult) {
-        expectedOutput.status = "stopped"
+        expectedOutput.status = AutomationStatus.STOPPED
       }
 
       expect(result.steps[0].outputs).toEqual(expectedOutput)

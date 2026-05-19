@@ -1,5 +1,6 @@
 import {
   AutomationActionStepId,
+  AutomationStatus,
   AutomationStepResult,
   AutomationStepStatus,
   FilterCondition,
@@ -184,7 +185,7 @@ describe("Looping automations", () => {
     expect(filterResults[0].outputs.result).toBe(true)
     expect(filterResults[1].outputs).toMatchObject({
       result: false,
-      status: "stopped",
+      status: AutomationStatus.STOPPED,
     })
     expect(filterResults).toHaveLength(3)
     expect(logResults).toHaveLength(2)
