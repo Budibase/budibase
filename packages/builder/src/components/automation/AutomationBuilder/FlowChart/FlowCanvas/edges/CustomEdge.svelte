@@ -24,6 +24,7 @@
     FLOW_ITEM_ACTION_BAR_WIDTH,
     LOOP_INSERT_ACTION_OFFSET,
   } from "../FlowGeometry"
+  import { getPrimaryBranchPath } from "../FlowEdgePaths"
   import {
     isBranchStep,
     AutomationActionStepId,
@@ -135,6 +136,16 @@
         isBranchTarget ? preBranchLabelX : labelX
       )
     : undefined
+  $: primaryBranchPath =
+    isBranchTarget && isPrimaryBranchEdge
+      ? getPrimaryBranchPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+          preBranchLabelX,
+        })
+      : undefined
 
   $: edgePath = isAnchorTarget
     ? getStraightPath({
@@ -143,7 +154,7 @@
         targetX: labelX,
         targetY: labelY,
       })[0]
-    : loopTargetPath || loopSourcePath || basePath[0]
+    : loopTargetPath || loopSourcePath || primaryBranchPath || basePath[0]
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
