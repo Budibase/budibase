@@ -10,6 +10,14 @@ import {
   LOOP,
   LOOP_INSERT_ACTION_OFFSET,
 } from "./FlowGeometry"
+import {
+  expectNodeBelow,
+  expectNodeRightOf,
+  getNode,
+} from "./FlowTestAssertions"
+
+const cloneGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) =>
+  JSON.parse(JSON.stringify(graph)) as { nodes: FlowNode[]; edges: FlowEdge[] }
 
 describe("applyLoopClearance", () => {
   it("leaves enough room for the add action bar after loop subflows", () => {
@@ -63,6 +71,52 @@ describe("applyLoopClearance", () => {
     expect(actionBarRight).toBeLessThan(delayNode.position.x)
   })
 
+  it("moves the whole subtree after a loop by the same horizontal delta", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "loop",
+          type: "loop-subflow-node",
+          data: { containerWidth: 520 },
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: "after-loop",
+          type: "step-node",
+          data: {},
+          position: { x: 300, y: 0 },
+        },
+        {
+          id: "tail",
+          type: "step-node",
+          data: {},
+          position: { x: 300, y: 340 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-loop-after-loop",
+          source: "loop",
+          target: "after-loop",
+          type: "add-item",
+        },
+        {
+          id: "edge-after-loop-tail",
+          source: "after-loop",
+          target: "tail",
+          type: "add-item",
+        },
+      ],
+    }
+
+    applyLoopClearance(graph)
+
+    expectNodeRightOf(graph, "after-loop", "loop", LOOP.clearance)
+    expect(getNode(graph, "tail").position.x).toBe(
+      getNode(graph, "after-loop").position.x
+    )
+  })
+
   it("applies clearance to a later loop after shifting it with an earlier loop", () => {
     const loopWidth = 520
     const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
@@ -109,6 +163,174 @@ describe("applyLoopClearance", () => {
     const loop2Right = loop2.position.x + loopWidth
 
     expect(afterLoop2.position.x).toBe(loop2Right + LOOP.clearance)
+  })
+
+  it("ignores loop edges inside subflow containers", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "loop",
+          type: "loop-subflow-node",
+          data: { containerWidth: 520 },
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: "inner-child",
+          parentId: "loop",
+          type: "step-node",
+          data: {},
+          position: { x: 80, y: 90 },
+        },
+        {
+          id: "inner-anchor",
+          parentId: "loop",
+          type: "anchor-node",
+          data: {},
+          position: { x: 200, y: 90 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-inner-child-inner-anchor",
+          source: "inner-child",
+          target: "inner-anchor",
+          type: "add-item",
+        },
+      ],
+    }
+
+    applyLoopClearance(graph)
+
+    expect(getNode(graph, "inner-anchor").position.x).toBe(200)
+  })
+
+  it("is deterministic for repeated runs against the same graph shape", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "loop-1",
+          type: "loop-subflow-node",
+          data: { containerWidth: 520 },
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: "loop-2",
+          type: "loop-subflow-node",
+          data: { containerWidth: 480 },
+          position: { x: 400, y: 0 },
+        },
+        {
+          id: "tail",
+          type: "step-node",
+          data: {},
+          position: { x: 800, y: 0 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-loop-1-loop-2",
+          source: "loop-1",
+          target: "loop-2",
+          type: "add-item",
+        },
+        {
+          id: "edge-loop-2-tail",
+          source: "loop-2",
+          target: "tail",
+          type: "add-item",
+        },
+      ],
+    }
+    const first = cloneGraph(graph)
+    const second = cloneGraph(graph)
+
+    applyLoopClearance(first)
+    applyLoopClearance(second)
+
+    expect(second.nodes).toEqual(first.nodes)
+  })
+})
+
+describe("applyBranchLaneClearance", () => {
+  it("shifts branch descendants with their lane and leaves sibling lanes independent", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "source",
+          type: "step-node",
+          data: {},
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: "branch-0",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 0 },
+        },
+        {
+          id: "branch-0-child",
+          type: "step-node",
+          data: {},
+          position: { x: 800, y: 0 },
+        },
+        {
+          id: "branch-1",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 20 },
+        },
+        {
+          id: "branch-1-child",
+          type: "step-node",
+          data: {},
+          position: { x: 800, y: 20 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-source-branch-0",
+          source: "source",
+          target: "branch-0",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "branch",
+            branchIdx: 0,
+          },
+        },
+        {
+          id: "edge-branch-0-child",
+          source: "branch-0",
+          target: "branch-0-child",
+          type: "add-item",
+        },
+        {
+          id: "edge-source-branch-1",
+          source: "source",
+          target: "branch-1",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "branch",
+            branchIdx: 1,
+          },
+        },
+        {
+          id: "edge-branch-1-child",
+          source: "branch-1",
+          target: "branch-1-child",
+          type: "add-item",
+        },
+      ],
+    }
+
+    applyBranchLaneClearance(graph)
+
+    expectNodeBelow(graph, "branch-1", "branch-0", 120)
+    expect(getNode(graph, "branch-1-child").position.y).toBe(
+      getNode(graph, "branch-1").position.y
+    )
+    expect(getNode(graph, "branch-0-child").position.y).toBe(0)
   })
 
   it("separates branch lanes when a lower branch contains a tall loop", () => {
@@ -242,6 +464,148 @@ describe("applyLoopClearance", () => {
     const lowerLoop = graph.nodes.find(node => node.id === "lower-loop")!
 
     expect(lowerLoop.position.y).toBeGreaterThan(upperNestedBottom)
+  })
+
+  it("ignores branch edges inside loop subflows", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "loop",
+          type: "loop-subflow-node",
+          data: { containerWidth: 700, containerHeight: 360 },
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: "subflow-branch-0",
+          parentId: "loop",
+          type: "branch-node",
+          data: {},
+          position: { x: 100, y: 0 },
+        },
+        {
+          id: "subflow-branch-1",
+          parentId: "loop",
+          type: "branch-node",
+          data: {},
+          position: { x: 100, y: 20 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-subflow-branch-0",
+          source: "loop",
+          target: "subflow-branch-0",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            isSubflowEdge: true,
+            branchStepId: "branch",
+            branchIdx: 0,
+          },
+        },
+        {
+          id: "edge-subflow-branch-1",
+          source: "loop",
+          target: "subflow-branch-1",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            isSubflowEdge: true,
+            branchStepId: "branch",
+            branchIdx: 1,
+          },
+        },
+      ],
+    }
+
+    applyBranchLaneClearance(graph)
+
+    expect(getNode(graph, "subflow-branch-1").position.y).toBe(20)
+  })
+})
+
+describe("applyPostLoopBranchClearance", () => {
+  it("shifts every branch fanout descendant below the loop container", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "loop",
+          type: "loop-subflow-node",
+          data: { containerWidth: 700, containerHeight: 360 },
+          position: { x: 0, y: 200 },
+        },
+        {
+          id: "branch-0",
+          type: "branch-node",
+          data: {},
+          position: { x: 900, y: 0 },
+        },
+        {
+          id: "branch-0-child",
+          type: "step-node",
+          data: {},
+          position: { x: 1200, y: 0 },
+        },
+        {
+          id: "branch-1",
+          type: "branch-node",
+          data: {},
+          position: { x: 900, y: 180 },
+        },
+        {
+          id: "branch-1-child",
+          type: "step-node",
+          data: {},
+          position: { x: 1200, y: 180 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-loop-branch-0",
+          source: "loop",
+          target: "branch-0",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "post-loop-branch",
+            branchIdx: 0,
+          },
+        },
+        {
+          id: "edge-branch-0-child",
+          source: "branch-0",
+          target: "branch-0-child",
+          type: "add-item",
+        },
+        {
+          id: "edge-loop-branch-1",
+          source: "loop",
+          target: "branch-1",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "post-loop-branch",
+            branchIdx: 1,
+          },
+        },
+        {
+          id: "edge-branch-1-child",
+          source: "branch-1",
+          target: "branch-1-child",
+          type: "add-item",
+        },
+      ],
+    }
+
+    applyPostLoopBranchClearance(graph)
+
+    expectNodeBelow(graph, "branch-0", "loop", 120)
+    expect(getNode(graph, "branch-0-child").position.y).toBe(
+      getNode(graph, "branch-0").position.y
+    )
+    expect(getNode(graph, "branch-1-child").position.y).toBe(
+      getNode(graph, "branch-1").position.y
+    )
   })
 
   it("moves branch fan-outs after loops below the loop container", () => {
