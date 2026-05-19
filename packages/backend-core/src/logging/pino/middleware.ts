@@ -1,11 +1,10 @@
+import { IncomingMessage } from "http"
+import pinoHttp from "pino-http"
+import type { Options } from "pino-http"
+import type { Ctx } from "@budibase/types"
+
 import env from "../../environment"
 import { logger } from "./logger"
-import { IncomingMessage } from "http"
-
-const pino = require("koa-pino-logger")
-
-import { Options } from "pino-http"
-import { Ctx } from "@budibase/types"
 
 const correlator = require("correlation-id")
 
@@ -35,7 +34,13 @@ export function pinoSettings(): Options {
 
 function getMiddleware() {
   if (env.HTTP_LOGGING) {
-    return pino(pinoSettings())
+    const middleware = pinoHttp(pinoSettings())
+
+    return async (ctx: Ctx, next: any) => {
+      middleware(ctx.req, ctx.res)
+      ctx.log = ctx.req.log
+      return next()
+    }
   } else {
     return (ctx: Ctx, next: any) => {
       return next()
