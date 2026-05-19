@@ -4,6 +4,7 @@ import {
   AutomationTriggerDefinition,
   AutomationTriggerStepId,
   AutomationEventType,
+  EmailTriggerAuthType,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
@@ -18,7 +19,10 @@ export const definition: AutomationTriggerDefinition = {
     port: 993,
     secure: true,
     username: "",
+    authType: EmailTriggerAuthType.PASSWORD,
     password: "",
+    datasourceId: "",
+    authConfigId: "",
     mailbox: "INBOX",
   },
   schema: {
@@ -40,16 +44,32 @@ export const definition: AutomationTriggerDefinition = {
           type: AutomationIOType.STRING,
           description: "IMAP username",
         },
+        authType: {
+          type: AutomationIOType.STRING,
+          title: "Authentication method",
+          description: "Authentication method",
+          enum: Object.values(EmailTriggerAuthType),
+          pretty: ["Password", "OAuth2"],
+        },
         password: {
           type: AutomationIOType.STRING,
           description: "IMAP password",
+        },
+        datasourceId: {
+          type: AutomationIOType.STRING,
+          title: "OAuth2 connection",
+          description: "Workspace OAuth2 connection",
+        },
+        authConfigId: {
+          type: AutomationIOType.STRING,
+          description: "OAuth2 auth config",
         },
         mailbox: {
           type: AutomationIOType.STRING,
           description: "Mailbox to monitor",
         },
       },
-      required: ["host", "port", "secure", "username", "password"],
+      required: ["host", "port", "secure", "username", "authType"],
     },
     outputs: {
       properties: {
