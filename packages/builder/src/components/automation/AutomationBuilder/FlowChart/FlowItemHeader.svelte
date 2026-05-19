@@ -27,12 +27,21 @@
   let typing = false
   let editing = false
   const dispatch = createEventDispatcher()
+  const minInputWidth = 10
+  const maxInputWidth = 28
 
   $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
   $: blockDefinition = $automationStore.blockDefinitions.ACTION[block.stepId]
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
+  $: inputWidth = `${Math.min(
+    Math.max(
+      (automationName || `Enter ${isBranch ? "branch" : "step"} name`).length,
+      minInputWidth
+    ),
+    maxInputWidth
+  )}ch`
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
   $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
@@ -159,6 +168,7 @@
             name="name"
             autocomplete="off"
             value={automationName}
+            style:width={inputWidth}
             on:input={e => {
               automationName = e.target.value.trim()
             }}
@@ -174,7 +184,7 @@
             on:blur={stopEditing}
           />
         {:else}
-          <div class="input-text">
+          <div class="input-text" style:width={inputWidth}>
             {automationName}
           </div>
         {/if}
@@ -297,10 +307,10 @@
     color: var(--ink);
     background-color: transparent;
     border: 1px solid transparent;
-    width: 230px;
     box-sizing: border-box;
     overflow: hidden;
     white-space: nowrap;
+    max-width: 100%;
   }
 
   .input-text {
@@ -309,6 +319,9 @@
     text-overflow: ellipsis;
     padding-left: 0px;
     border: 0px;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 100%;
   }
 
   input:focus {
