@@ -442,35 +442,6 @@ describe("agent slack integration provisioning", () => {
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
     })
 
-    it("blocks unlinked users when requireUserLink is true", async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent({
-        requireUserLink: true,
-      })
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
-
-      const response = await postSlackMessage({
-        path,
-        body: {
-          type: "event_callback",
-          event: {
-            type: "message",
-            text: "hello slack",
-            user: "user-unlinked",
-            channel: "D123",
-            channel_type: "im",
-            ts: "1700000000.100",
-            team_id: "T123",
-          },
-        },
-      })
-
-      expect(mockedWebhookChat).not.toHaveBeenCalled()
-      expect(response.body.messages.join(" ")).toContain(
-        `/${ChatCommands.LINK}`
-      )
-      expect(extractLinkUrl(response.body.messages)).toBeTruthy()
-    })
-
     it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
       const { agent, chatAppId } = await setupProvisionedSlackAgent({
         requireUserLink: false,

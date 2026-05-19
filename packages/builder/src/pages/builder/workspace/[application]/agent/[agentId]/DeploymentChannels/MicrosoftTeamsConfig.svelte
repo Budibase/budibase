@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    Body,
-    Checkbox,
-    CopyInput,
-    Input,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, Checkbox, CopyInput, Input, notifications } from "@budibase/bbui"
   import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,

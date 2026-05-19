@@ -301,7 +301,7 @@ export class Chat {
               userName: rawUser.username || rawUser.id || "",
               fullName: rawUser.username || rawUser.id || "",
             },
-            channel: createMessageCollector("teams", messages),
+            channel: createMessageCollector("discord", messages),
           })
 
           return new Response(JSON.stringify({ messages }), {

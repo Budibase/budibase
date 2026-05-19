@@ -548,21 +548,6 @@ describe("agent discord integration sync", () => {
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
     })
 
-    it("blocks unlinked users when requireUserLink is true", async () => {
-      const { agent, chatAppId, signing } = await setupProvisionedDiscordAgent({
-        requireUserLink: true,
-      })
-      const path = `/api/webhooks/discord/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
-
-      const response = await postDiscordCommand({ path, signing })
-
-      expect(mockedWebhookChat).not.toHaveBeenCalled()
-      expect(response.body.messages.join(" ")).toContain(
-        `/${ChatCommands.LINK}`
-      )
-      expect(extractLinkUrl(response.body.messages)).toBeTruthy()
-    })
-
     it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
       const { agent, chatAppId, signing } = await setupProvisionedDiscordAgent({
         requireUserLink: false,

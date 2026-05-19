@@ -429,16 +429,14 @@ const getSyntheticUserId = ({
   return `${provider}:${externalUserId}`
 }
 
-const createTransientPublicUser = async ({
+const createTransientPublicUser = ({
   userId,
   displayName,
 }: {
   userId: string
   displayName?: string
-}): Promise<ContextUser> => {
+}): ContextUser => {
   const publicRoleId = roles.BUILTIN_ROLE_IDS.PUBLIC
-  const role = await roles.getRole(publicRoleId, { defaultPublic: true })
-
   const workspaceId = context.getWorkspaceId()
 
   return {
@@ -452,7 +450,6 @@ const createTransientPublicUser = async ({
     roles: {
       ...(workspaceId && { [workspaceId]: publicRoleId }),
     },
-    ...(role && { role }),
   }
 }
 
@@ -548,8 +545,6 @@ export const handleChatMessage = async ({
     const linkingRequired = requireUserLink !== false
     let chatUser: ContextUser
     let userId: string
-    let noAccessMessage =
-      "Your linked Budibase account does not have access to this agent."
 
     if (existingLink) {
       try {
@@ -607,11 +602,10 @@ export const handleChatMessage = async ({
         channel,
         externalUserId: user.externalUserId,
       })
-      chatUser = await createTransientPublicUser({
+      chatUser = createTransientPublicUser({
         userId,
         displayName: user.displayName,
       })
-      noAccessMessage = "This agent is not available to unlinked users."
     }
 
     const hasAccess = await canAccessChatAppAgentForUser(
@@ -622,7 +616,11 @@ export const handleChatMessage = async ({
       chatAgentConfig
     )
     if (!hasAccess) {
-      await reply(noAccessMessage)
+      await reply(
+        existingLink
+          ? "Your linked Budibase account does not have access to this agent."
+          : "This agent is not available to unlinked users."
+      )
       return
     }
 
