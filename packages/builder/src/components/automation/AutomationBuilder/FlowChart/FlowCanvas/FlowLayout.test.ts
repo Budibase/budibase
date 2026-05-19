@@ -333,6 +333,95 @@ describe("applyBranchLaneClearance", () => {
     expect(getNode(graph, "branch-0-child").position.y).toBe(0)
   })
 
+  it("keeps the middle lane aligned with the source path for odd branch counts", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "source",
+          type: "step-node",
+          data: {},
+          position: { x: 0, y: 100 },
+        },
+        {
+          id: "branch-0",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 100 },
+        },
+        {
+          id: "branch-1",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 100 },
+        },
+        {
+          id: "branch-1-child",
+          type: "step-node",
+          data: {},
+          position: { x: 800, y: 100 },
+        },
+        {
+          id: "branch-2",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 100 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-source-branch-0",
+          source: "source",
+          target: "branch-0",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "branch",
+            branchIdx: 0,
+          },
+        },
+        {
+          id: "edge-source-branch-1",
+          source: "source",
+          target: "branch-1",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "branch",
+            branchIdx: 1,
+          },
+        },
+        {
+          id: "edge-branch-1-child",
+          source: "branch-1",
+          target: "branch-1-child",
+          type: "add-item",
+        },
+        {
+          id: "edge-source-branch-2",
+          source: "source",
+          target: "branch-2",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "branch",
+            branchIdx: 2,
+          },
+        },
+      ],
+    }
+
+    applyBranchLaneClearance(graph)
+
+    expect(getNode(graph, "branch-1").position.y).toBe(
+      getNode(graph, "source").position.y
+    )
+    expect(getNode(graph, "branch-1-child").position.y).toBe(
+      getNode(graph, "branch-1").position.y
+    )
+    expectNodeBelow(graph, "branch-1", "branch-0", 120)
+    expectNodeBelow(graph, "branch-2", "branch-1-child", 120)
+  })
+
   it("separates branch lanes when a lower branch contains a tall loop", () => {
     const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
       nodes: [

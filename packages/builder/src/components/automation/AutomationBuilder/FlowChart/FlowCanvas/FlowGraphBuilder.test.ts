@@ -145,6 +145,11 @@ describe("renderLoopV2Container", () => {
     const firstBranch = getNode(graph, "branch-loop-branch-0-first")
     const secondBranch = getNode(graph, "branch-loop-branch-1-second")
     const emptyBranch = getNode(graph, "branch-loop-branch-2-empty")
+    const middleBranchEdge = getEdge(
+      graph,
+      "loop-before-branch",
+      secondBranch.id
+    )
 
     expect(firstBranch.parentId).toBe("loop-with-branch")
     expect(secondBranch.parentId).toBe("loop-with-branch")
@@ -155,6 +160,11 @@ describe("renderLoopV2Container", () => {
       branchIdx: 0,
       branchesCount: 3,
       isSubflowEdge: true,
+    })
+    expect(middleBranchEdge.data).toMatchObject({
+      isPrimaryEdge: true,
+      branchIdx: 1,
+      branchesCount: 3,
     })
     expectLoopEdge(
       getEdge(
