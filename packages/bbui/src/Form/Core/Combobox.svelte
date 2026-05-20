@@ -88,7 +88,9 @@
       on:focus={() => (focus = true)}
       on:blur={() => {
         focus = false
-        dispatch("change", query)
+        if (query !== (value || "")) {
+          dispatch("change", query)
+        }
         dispatch("blur")
       }}
       on:input={onType}
