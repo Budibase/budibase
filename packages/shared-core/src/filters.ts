@@ -750,7 +750,7 @@ export function runQuery<T extends Record<string, any>>(
     if (leftDate.isValid()) {
       const rightDate = dayjs(testValue)
       if (rightDate.isValid()) {
-        return leftDate.isSame(rightDate, "minutes")
+        return leftDate.isSame(rightDate)
       }
     }
 
