@@ -48,6 +48,7 @@
   {datasource}
   {bindings}
   {panel}
+  allowBindings={true}
   {allowOnEmpty}
   {docsURL}
   {toReadable}
