@@ -16,7 +16,6 @@
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext, createEventDispatcher } from "svelte"
   import FilterField from "./FilterField.svelte"
-  import ConditionField from "./ConditionField.svelte"
   import { utils } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
@@ -35,8 +34,12 @@
   export let behaviourFilters = false
   export let allowBindings = false
   export let allowOnEmpty = true
-  export let builderType = "filter"
   export let docsURL = "https://docs.budibase.com/docs/searchfilter-data"
+  export let prefix = "Show data which matches"
+  export let filterTypeLabel = "filter"
+  export let drawerTitle = null
+  export let bindingValueType = Constants.FilterValueType.BINDING
+  export let useConditionValueControls = false
 
   export let bindings
   export let panel
@@ -57,10 +60,6 @@
       schemaFields = [...schemaFields, { name: "_id", type: "string" }]
     }
   }
-  $: prefix =
-    builderType === "filter"
-      ? "Show data which matches"
-      : "Run branch when matching"
 
   // We still may need to migrate this even though the backend does it automatically now
   // for query definitions. This is because we might be editing saved filter definitions
@@ -106,60 +105,14 @@
     sanitizeValue(filter, filter.type)
   }
 
-  const conditionValueTypeOptions = [
-    { label: "Text", value: FieldType.STRING },
-    { label: "Number", value: FieldType.NUMBER },
-    { label: "Date", value: FieldType.DATETIME },
-    { label: "Boolean", value: FieldType.BOOLEAN },
-  ]
-
-  const getConditionValueType = filter => {
-    if (
-      [
-        FieldType.STRING,
-        FieldType.NUMBER,
-        FieldType.DATETIME,
-        FieldType.BOOLEAN,
-      ].includes(filter.type)
-    ) {
-      return filter.type
-    }
-    return FieldType.STRING
-  }
-
-  const onConditionValueTypeChange = (filter, value) => {
-    const previousType = filter.type
-    const updated = {
-      ...filter,
-      value: null,
-      valueType: FilterValueType.VALUE,
-      type: value,
-    }
-    sanitizeOperator(updated)
-    sanitizeValue(updated, previousType)
-    return updated
-  }
-
   const getSchema = filter => {
     return schemaFields.find(field => field.name === filter.field)
   }
 
   const getValidOperatorsForType = filter => {
-    if (builderType === "condition") {
-      return QueryUtils.getValidOperatorsForType(
-        filter?.type ? filter : { ...filter, type: FieldType.STRING },
-        filter?.field || filter?.name,
-        datasource
-      )
-    }
-
-    if (!filter?.field && !filter?.name) {
-      return []
-    }
-
     return QueryUtils.getValidOperatorsForType(
-      filter,
-      filter.field || filter.name,
+      filter?.type ? filter : { ...filter, type: FieldType.STRING },
+      filter?.field || filter?.name,
       datasource
     )
   }
@@ -272,9 +225,6 @@
       } else if (addFilter) {
         targetGroup.filters.push({
           valueType: FilterValueType.VALUE,
-          ...(builderType === "condition"
-            ? { operator: OperatorOptions.Equals.value, type: FieldType.STRING }
-            : {}),
         })
       } else if (group) {
         editable.groups[groupIdx] = {
@@ -295,12 +245,6 @@
         filters: [
           {
             valueType: FilterValueType.VALUE,
-            ...(builderType === "condition"
-              ? {
-                  operator: OperatorOptions.Equals.value,
-                  type: FieldType.STRING,
-                }
-              : {}),
           },
         ],
       })
@@ -346,7 +290,7 @@
               popoverAutoWidth
             />
           </span>
-          <span>of the following {builderType} groups:</span>
+          <span>of the following {filterTypeLabel} groups:</span>
         </div>
       {/if}
       {#if editableFilters?.groups?.length}
@@ -376,7 +320,7 @@
                       popoverAutoWidth
                     />
                   </span>
-                  <span>of the following {builderType}s are matched:</span>
+                  <span>of the following {filterTypeLabel}s are matched:</span>
                 </div>
                 <div class="group-actions">
                   <Icon
@@ -408,9 +352,19 @@
                 {#each group.filters as filter, filterIdx}
                   <div
                     class="filter"
-                    class:condition-builder={builderType === "condition"}
+                    class:has-extra-column={!!$$slots["extra-column"]}
                   >
-                    {#if builderType === "filter"}
+                    {#if $$slots["field-column"]}
+                      <slot
+                        name="field-column"
+                        {filter}
+                        {groupIdx}
+                        {filterIdx}
+                        onUpdate={f => onFilterFieldUpdate(f, groupIdx, filterIdx)}
+                        {sanitizeOperator}
+                        {sanitizeValue}
+                      />
+                    {:else}
                       <Select
                         value={filter.field}
                         options={fieldOptions}
@@ -422,28 +376,10 @@
                         placeholder="Column"
                         popoverAutoWidth
                       />
-                    {:else}
-                      <ConditionField
-                        placeholder="Value"
-                        {filter}
-                        drawerTitle={"Edit Binding"}
-                        {bindings}
-                        {panel}
-                        {toReadable}
-                        {toRuntime}
-                        {evaluationContext}
-                        on:change={e => {
-                          const updated = {
-                            ...filter,
-                            field: e.detail.field,
-                          }
-                          onFilterFieldUpdate(updated, groupIdx, filterIdx)
-                        }}
-                      />
                     {/if}
                     <Select
-                      value={filter.operator}
-                      disabled={!filter.field && builderType === "filter"}
+                      value={filter.operator || OperatorOptions.Equals.value}
+                      disabled={!filter.field && !$$slots["field-column"]}
                       options={getValidOperatorsForType(filter)}
                       on:change={e => {
                         const updated = { ...filter, operator: e.detail }
@@ -453,27 +389,21 @@
                       placeholder={false}
                       popoverAutoWidth
                     />
-                    {#if builderType === "condition"}
-                      <Select
-                        value={getConditionValueType(filter)}
-                        options={conditionValueTypeOptions}
-                        on:change={e => {
-                          const updated = onConditionValueTypeChange(
-                            filter,
-                            e.detail
-                          )
-                          onFilterFieldUpdate(updated, groupIdx, filterIdx)
-                        }}
-                        placeholder={false}
-                        popoverAutoWidth
+                    {#if $$slots["extra-column"]}
+                      <slot
+                        name="extra-column"
+                        {filter}
+                        {groupIdx}
+                        {filterIdx}
+                        onUpdate={f => onFilterFieldUpdate(f, groupIdx, filterIdx)}
+                        {sanitizeOperator}
+                        {sanitizeValue}
                       />
                     {/if}
                     <FilterField
                       placeholder="Value"
-                      disabled={!filter.field && builderType === "filter"}
-                      drawerTitle={builderType === "condition"
-                        ? "Edit binding"
-                        : null}
+                      disabled={!filter.field && !$$slots["field-column"]}
+                      {drawerTitle}
                       {allowBindings}
                       filter={{
                         ...filter,
@@ -484,10 +414,8 @@
                       {toReadable}
                       {toRuntime}
                       {evaluationContext}
-                      bindingValueType={builderType === "condition"
-                        ? FilterValueType.VALUE
-                        : FilterValueType.BINDING}
-                      useConditionValueControls={builderType === "condition"}
+                      {bindingValueType}
+                      {useConditionValueControls}
                       on:change={e => {
                         onFilterFieldUpdate(
                           { ...filter, ...e.detail },
@@ -536,7 +464,7 @@
                   popoverAutoWidth
                 />
               </span>
-              <span>when all {builderType}s are empty</span>
+              <span>when all {filterTypeLabel}s are empty</span>
             </div>
           {/if}
           <div class="add-group">
@@ -550,7 +478,7 @@
                 })
               }}
             >
-              Add {builderType} group
+              Add {filterTypeLabel} group
             </Button>
             {#if docsURL}
               <a href={docsURL} target="_blank">
@@ -624,7 +552,7 @@
     grid-template-columns: minmax(150px, 1fr) 170px minmax(200px, 1fr) 40px;
   }
 
-  .filter.condition-builder {
+  .filter.has-extra-column {
     grid-template-columns:
       minmax(150px, 1fr) 170px 120px minmax(200px, 1fr)
       40px;
