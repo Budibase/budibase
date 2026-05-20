@@ -1,4 +1,5 @@
 import { auth } from "@budibase/backend-core"
+import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
 import { aiRagEnabled } from "../../middleware/aiRagEnabled"
 import * as ai from "../controllers/ai"
 import {
@@ -17,8 +18,10 @@ import {
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
+  runAgentTestSuiteValidator,
   toggleAgentTelegramDeploymentValidator,
   updateAgentSharePointSiteValidator,
+  updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 
@@ -72,6 +75,23 @@ builderAdminRoutes
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
+
+const aiTestBuilderAdminRoutes = endpointGroupList
+  .group(auth.builderOrAdmin)
+  .addGroupMiddleware(aiTestsEnabled)
+aiTestBuilderAdminRoutes
+  .get("/api/agent/:agentId/tests", ai.fetchAgentTestSuite)
+  .put(
+    "/api/agent/:agentId/tests",
+    updateAgentTestSuiteValidator(),
+    ai.updateAgentTestSuite
+  )
+  .post(
+    "/api/agent/:agentId/tests/run",
+    runAgentTestSuiteValidator(),
+    ai.runAgentTestSuite
+  )
+  .get("/api/agent/:agentId/tests/run/:runId", ai.fetchAgentTestRun)
 
 const aiRagBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)

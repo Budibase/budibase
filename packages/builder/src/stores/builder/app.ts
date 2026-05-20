@@ -77,6 +77,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   features: {
     componentValidation: false,
     disableUserMetadata: false,
+    suppressErrorNotifications: false,
   },
   clientLibPath: "",
   hasLock: true,

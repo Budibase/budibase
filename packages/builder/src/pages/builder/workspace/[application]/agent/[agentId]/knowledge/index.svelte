@@ -305,7 +305,7 @@
 
   async function openSharePointFlow() {
     if (!hasSharePointConnection) {
-      bb.settings("/connections/apis")
+      bb.settings("/connections/apis/new/microsoft-sharepoint")
       return
     }
     await openSharePointSiteModal()
