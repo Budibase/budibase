@@ -29,9 +29,13 @@ import {
   BranchSearchFilters,
   BranchStep,
   ContextEmitter,
+  isArraySearchOperator,
+  isBasicSearchOperator,
   isCronTrigger,
   isEmailTrigger,
   isLogicalFilter,
+  isLogicalSearchOperator,
+  isRangeSearchOperator,
   LoopV2Step,
   LoopV2StepInputs,
 } from "@budibase/types"
@@ -218,19 +222,30 @@ async function branchMatches(
       return value
     }
 
-    for (const filter of Object.values(filters)) {
-      if (!filter) {
+    for (const [operator, filter] of Object.entries(filters)) {
+      if (isLogicalSearchOperator(operator)) {
+        if (filter && isLogicalFilter(filter)) {
+          filter.conditions = filter.conditions.map(evaluateBindings)
+        }
         continue
       }
 
-      if (isLogicalFilter(filter)) {
-        filter.conditions = filter.conditions.map(evaluateBindings)
-      } else {
-        const evaluatedFilter = filter as Record<string, any>
-        for (const [field, value] of Object.entries(evaluatedFilter)) {
-          toFilter[field] = processStringSync(field, ctx)
-          evaluatedFilter[field] = evaluateValue(value)
-        }
+      if (
+        !isBasicSearchOperator(operator) &&
+        !isArraySearchOperator(operator) &&
+        !isRangeSearchOperator(operator)
+      ) {
+        continue
+      }
+
+      const evaluatedFilter = filter as Record<string, unknown> | undefined
+      if (!evaluatedFilter) {
+        continue
+      }
+
+      for (const [field, value] of Object.entries(evaluatedFilter)) {
+        toFilter[field] = processStringSync(field, ctx)
+        evaluatedFilter[field] = evaluateValue(value)
       }
     }
 

@@ -20,6 +20,7 @@ import {
   Table,
 } from "@budibase/types"
 import { events } from "@budibase/backend-core"
+import { dataFilters } from "@budibase/shared-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as automation from "../../index"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
@@ -130,6 +131,46 @@ describe("Branching automations", () => {
       "activeBranch branch taken"
     )
     expect(results.steps[1].outputs.message).toContain("Active user")
+  })
+
+  it("executes branch conditions produced by the condition builder", async () => {
+    const condition = dataFilters.buildQuery({
+      logicalOperator: "all",
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      groups: [
+        {
+          logicalOperator: "any",
+          filters: [
+            {
+              field: "{{ trigger.fields.name }}",
+              operator: "equal",
+              type: "string",
+              valueType: "Value",
+              value: "j",
+            },
+          ],
+        },
+      ],
+    })
+
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition,
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { name: "j" } })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
   })
 
   it("should handle multiple conditions with AND operator", async () => {
@@ -398,6 +439,46 @@ describe("Branching automations", () => {
           expectedStatus: "active",
         },
       })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
+  })
+
+  it("executes date branch conditions produced by the condition builder", async () => {
+    const condition = dataFilters.buildQuery({
+      logicalOperator: "all",
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      groups: [
+        {
+          logicalOperator: "any",
+          filters: [
+            {
+              field: "{{ trigger.fields.date }}",
+              operator: "rangeLow",
+              type: "datetime",
+              valueType: "Value",
+              value: "01/05/2026 10:45",
+            },
+          ],
+        },
+      ],
+    })
+
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition,
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { date: "01/05/2026 10:45" } })
 
     expect(results.steps[0].outputs.status).toContain("matched branch taken")
     expect(results.steps[1].outputs.message).toContain("Matched")
