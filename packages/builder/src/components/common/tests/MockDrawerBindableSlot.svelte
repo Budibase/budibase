@@ -33,7 +33,7 @@
   <input
     aria-label="Binding value"
     {disabled}
-    value={value}
+    {value}
     on:input={onInput}
     on:blur={onBlur}
   />

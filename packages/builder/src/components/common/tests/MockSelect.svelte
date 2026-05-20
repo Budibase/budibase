@@ -20,7 +20,12 @@
 
 <label>
   <span>{label}</span>
-  <select aria-label={label || "Select"} {disabled} {value} on:change={onChange}>
+  <select
+    aria-label={label || "Select"}
+    {disabled}
+    {value}
+    on:change={onChange}
+  >
     {#if placeholder && value == null}
       <option value="">{placeholder}</option>
     {/if}
