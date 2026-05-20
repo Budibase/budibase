@@ -150,20 +150,23 @@ export const resetKnowledgeBaseStore = async (
 
   const newGoogleFileStoreId = await createGeminiFileStore(knowledgeBase.name)
 
-  try {
-    await deleteGeminiVectorStore(knowledgeBase.config.googleFileStoreId)
-  } catch (error: any) {
-    if (error?.status !== 403 && error?.status !== 404) {
-      throw error
-    }
-  }
-
   const updated: GeminiKnowledgeBase = {
     ...knowledgeBase,
     config: { googleFileStoreId: newGoogleFileStoreId },
   }
   const { rev } = await db.put(updated)
   updated._rev = rev
+
+  await deleteGeminiVectorStore(knowledgeBase.config.googleFileStoreId).catch(
+    (error: any) => {
+      if (error?.status !== 403 && error?.status !== 404) {
+        console.error("Failed to delete old Gemini vector store", {
+          vectorStoreId: knowledgeBase.config.googleFileStoreId,
+          error,
+        })
+      }
+    }
+  )
 
   await syncKeyVectorStores()
 
@@ -178,12 +181,24 @@ export const resetKnowledgeBaseStore = async (
     file.errorMessage = undefined
     file.processedAt = undefined
     await updateKnowledgeBaseFile(file)
-    await enqueueRagFileIngestion({
-      workspaceId,
-      knowledgeBaseId,
-      fileId: file._id!,
-      objectStoreKey: file.objectStoreKey,
-    })
+    try {
+      await enqueueRagFileIngestion({
+        workspaceId,
+        knowledgeBaseId,
+        fileId: file._id!,
+        objectStoreKey: file.objectStoreKey,
+      })
+    } catch (error: any) {
+      file.status = KnowledgeBaseFileStatus.FAILED
+      file.errorMessage = error?.message || "Failed to enqueue file for processing"
+      await updateKnowledgeBaseFile(file)
+      console.error("Failed to enqueue knowledge base file during reset", {
+        workspaceId,
+        knowledgeBaseId,
+        fileId: file._id,
+        error,
+      })
+    }
   }
 }
 

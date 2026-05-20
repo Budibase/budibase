@@ -260,24 +260,6 @@ export async function searchGeminiFileStore({
   return payload.data || []
 }
 
-export async function checkGeminiFileStoreExists(
-  vectorStoreId: string
-): Promise<boolean> {
-  const geminiApiKey = getGeminiApiKey()
-  const response = await fetch(
-    `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
-    {
-      method: "GET",
-      headers: await getCommonAuthHeaders(),
-      body: JSON.stringify({
-        custom_llm_provider: "gemini",
-        ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
-      }),
-    }
-  )
-  return response.status !== 404
-}
-
 export async function deleteGeminiFileFromStore({
   vectorStoreId,
   fileId,
