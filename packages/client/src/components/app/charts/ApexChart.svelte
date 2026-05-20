@@ -11,7 +11,20 @@
   export let fullCursor = false
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
-  $: optionsCopy = cloneDeep(options)
+  let optionsCopy
+
+  $: {
+    const clonedOptions = cloneDeep(options)
+    optionsCopy = clonedOptions
+      ? {
+          ...clonedOptions,
+          chart: {
+            ...clonedOptions.chart,
+            fontFamily: clonedOptions.chart?.fontFamily || "var(--font-sans)",
+          },
+        }
+      : clonedOptions
+  }
 
   let chartElement
   let chart

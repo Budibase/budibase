@@ -1,5 +1,6 @@
 import { ai, quotas } from "@budibase/pro"
 import {
+  ActionType,
   Agent,
   AgentMessageMetadata,
   ChatConversationRequest,
@@ -9,6 +10,8 @@ import {
   extractReasoningMiddleware,
   stepCountIs,
   ToolLoopAgent,
+  type LanguageModelUsage,
+  type ModelMessage,
   type StreamTextResult,
   type ToolSet,
   wrapLanguageModel,
@@ -20,15 +23,20 @@ import {
   prepareModelMessages,
 } from "../chatConversations"
 import { updatePendingToolCalls } from "./utils"
+import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
   agentId: string
-  chat: ChatConversationRequest
+  chat?: ChatConversationRequest
+  modelMessages?: ModelMessage[]
+  latestQuestion?: string
+  aiConfigId?: string
   errorLabel: string
   sessionId: string
   user: ContextUser
+  startedAt?: string
 }
 
 export interface AgentChatRun {
@@ -39,10 +47,17 @@ export interface AgentChatRun {
     options?: AgentChatStreamOptions
   ) => Promise<StreamTextResult<ToolSet, never>>
   toolDisplayNames: Record<string, string>
+  contextWindowTokens?: number
+  systemPromptTokens: number
+  contextUsage: {
+    input?: LanguageModelUsage
+    output?: LanguageModelUsage
+  }
 }
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
+  onToolCalls?: (toolNames: string[]) => void
   pendingToolCalls?: Set<string>
 }
 
@@ -50,16 +65,22 @@ export const prepareAgentChatRun = async ({
   agent,
   agentId,
   chat,
+  modelMessages: providedModelMessages,
+  latestQuestion: providedLatestQuestion,
+  aiConfigId,
   errorLabel,
   sessionId,
   user,
+  startedAt,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
-  const latestQuestion = findLatestUserQuestion(chat)
+  const latestQuestion =
+    providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
   const sessionLogIndexer = createSessionLogIndexer({
     agentId,
     sessionId,
     firstInput: latestQuestion,
     errorLabel,
+    startedAt,
   })
 
   const [promptAndTools, llm, modelMessages] = await Promise.all([
@@ -67,8 +88,13 @@ export const prepareAgentChatRun = async ({
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
     }),
-    sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agentId),
-    prepareModelMessages(chat.messages),
+    sdk.ai.llm.createLLM(
+      aiConfigId ?? agent.aiconfig,
+      sessionId,
+      undefined,
+      agentId
+    ),
+    providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
   ])
 
   const tools = promptAndTools.tools
@@ -114,17 +140,41 @@ export const prepareAgentChatRun = async ({
     providerOptions: llm.providerOptions?.(hasTools),
   })
 
+  const contextUsage: AgentChatRun["contextUsage"] = {}
+  const systemPromptTokens = estimateTokens(promptAndTools.systemPrompt || "")
+
   return {
     latestQuestion,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
     toolDisplayNames: promptAndTools.toolDisplayNames,
-    stream: async ({ onFinish, pendingToolCalls } = {}) =>
+    contextWindowTokens: llm.contextWindowTokens,
+    systemPromptTokens,
+    contextUsage,
+    stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
       await agentRunner.stream({
         messages: modelMessages,
-        async onStepFinish({ content, toolCalls, toolResults, response }) {
+        async onStepFinish({
+          content,
+          toolCalls,
+          toolResults,
+          response,
+          usage,
+        }) {
+          if (!contextUsage.input) {
+            contextUsage.input = usage
+          }
+          contextUsage.output = usage
           sessionLogIndexer.addRequestId(response?.id)
+          if (onToolCalls) {
+            const toolNames = toolCalls
+              .map(toolCall => toolCall.toolName)
+              .filter(Boolean)
+            if (toolNames.length) {
+              onToolCalls(toolNames)
+            }
+          }
           if (pendingToolCalls) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
           }
@@ -153,7 +203,7 @@ export const prepareAgentChatRun = async ({
                 | undefined
               setUsedKnowledgeSources(output?.accepted)
             }
-            await quotas.addAction(async () => {})
+            await quotas.addAction(ActionType.AI_AGENT, async () => {})
           }
 
           if (!pendingToolCalls) {

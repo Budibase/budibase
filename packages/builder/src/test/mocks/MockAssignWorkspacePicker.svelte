@@ -1,1 +1,1 @@
-<div data-testid="assign-workspace-picker" />
+<div data-testid="assign-workspace-picker"></div>

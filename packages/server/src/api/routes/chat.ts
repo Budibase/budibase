@@ -25,6 +25,10 @@ publicRoutes.get(
   "/api/chat-links/:instance/:token/handoff",
   ai.handoffChatLinkSession
 )
+publicRoutes.post(
+  "/api/chat-links/:instance/:token/handoff",
+  ai.confirmChatLinkSession
+)
 
 userRoutes
   .get("/api/chatapps", ai.fetchChatApp)

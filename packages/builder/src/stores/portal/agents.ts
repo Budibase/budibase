@@ -13,6 +13,8 @@ import {
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
+  ProvisionAgentTelegramChannelRequest,
+  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -155,6 +157,14 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.provisionAgentSlackChannel(agentId, body)
     )
 
+  provisionTelegramChannel = async (
+    agentId: string,
+    body?: ProvisionAgentTelegramChannelRequest
+  ): Promise<ProvisionAgentTelegramChannelResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.provisionAgentTelegramChannel(agentId, body)
+    )
+
   toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
       API.toggleAgentDiscordDeployment(agentId, enabled)
@@ -168,6 +178,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   toggleSlackDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
       API.toggleAgentSlackDeployment(agentId, enabled)
+    )
+
+  toggleTelegramDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentTelegramDeployment(agentId, enabled)
     )
 
   fetchAgentKnowledge = async (
@@ -192,9 +207,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await API.deleteAgentFile(agentId, fileId)
 
   fetchAgentKnowledgeSourceOptions = async (
-    connectionId: string
+    datasourceId: string,
+    authConfigId: string
   ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
-    return await API.fetchAgentKnowledgeSourceOptions(connectionId)
+    return await API.fetchAgentKnowledgeSourceOptions(
+      datasourceId,
+      authConfigId
+    )
   }
 
   fetchAgentKnowledgeSourceAllEntries = async (

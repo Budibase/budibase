@@ -1,7 +1,7 @@
 import crypto from "crypto"
 
 type AnyFn = (...args: any[]) => any
-type MockProvider = "slack" | "teams"
+type MockProvider = "slack" | "teams" | "telegram"
 type MockPostEphemeralResult = { usedFallback: boolean }
 
 interface MockCardElement {
@@ -29,11 +29,38 @@ const defaultPostEphemeralResult = (): MockPostEphemeralResult => ({
 const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
   slack: defaultPostEphemeralResult(),
   teams: defaultPostEphemeralResult(),
+  telegram: defaultPostEphemeralResult(),
 }
 const mockChatOptions: ChatOptions[] = []
 
 const toMessageText = (value: unknown) =>
   typeof value === "string" ? value : JSON.stringify(value)
+
+const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
+  !!value &&
+  typeof value === "object" &&
+  Symbol.asyncIterator in value &&
+  typeof (value as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+
+const streamToMockText = async (stream: AsyncIterable<unknown>) => {
+  let text = ""
+  for await (const part of stream) {
+    if (typeof part === "string") {
+      text += part
+      continue
+    }
+    if (
+      typeof part === "object" &&
+      part !== null &&
+      "type" in part &&
+      (part as { type: string }).type === "text-delta" &&
+      "text" in part
+    ) {
+      text += String((part as { text: string }).text)
+    }
+  }
+  return text
+}
 
 const createSentMessage = (
   messages: string[],
@@ -50,7 +77,13 @@ const createMessageCollector = (
   messages: string[]
 ) => ({
   post: async (message: unknown) => {
-    const index = messages.push(toMessageText(message)) - 1
+    let index: number
+    if (isAsyncIterable(message)) {
+      const text = await streamToMockText(message)
+      index = messages.push(text || "[stream]") - 1
+    } else {
+      index = messages.push(toMessageText(message)) - 1
+    }
     return createSentMessage(messages, index)
   },
   postEphemeral: async (
@@ -134,6 +167,7 @@ const invokeHandlers = async (
 export const resetMockChatState = () => {
   mockWebhookState.slack = defaultPostEphemeralResult()
   mockWebhookState.teams = defaultPostEphemeralResult()
+  mockWebhookState.telegram = defaultPostEphemeralResult()
   mockChatOptions.length = 0
 }
 
@@ -167,6 +201,7 @@ export class Chat {
     discord: (request: Request) => Promise<Response>
     teams: (request: Request) => Promise<Response>
     slack: (request: Request) => Promise<Response>
+    telegram: (request: Request) => Promise<Response>
   }
 
   constructor(_options: ChatOptions) {
@@ -386,6 +421,98 @@ export class Chat {
           headers: { "content-type": "application/json" },
         })
       },
+      telegram: async request => {
+        const adapter = this.adapters?.telegram as
+          | { secretToken?: string }
+          | undefined
+        const secret = adapter?.secretToken
+        if (secret) {
+          const header = request.headers.get("x-telegram-bot-api-secret-token")
+          if (header !== secret) {
+            return new Response("Invalid secret token", { status: 401 })
+          }
+        }
+
+        const body = (await request.json()) as {
+          message?: {
+            message_id: number
+            text?: string
+            date?: number
+            message_thread_id?: number
+            chat: { id: number; type: string }
+            from?: {
+              id: number
+              username?: string
+              first_name?: string
+              last_name?: string
+            }
+            entities?: { type: string }[]
+          }
+        }
+        const msg = body.message
+        if (!msg || typeof msg.text !== "string") {
+          return new Response(JSON.stringify({ messages: [] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          })
+        }
+
+        const messages: string[] = []
+        const collector = createMessageCollector("telegram", messages)
+        const chatId = String(msg.chat.id)
+        const threadPart =
+          msg.message_thread_id != null ? String(msg.message_thread_id) : ""
+        const thread = {
+          id: `telegram:${chatId}:${threadPart}`,
+          channelId: chatId,
+          ...collector,
+          subscribe: async () => {},
+          channel: {
+            id: `telegram:${chatId}`,
+            ...collector,
+          },
+        }
+
+        const isMention = !!msg.entities?.some(
+          entity => entity.type === "mention" || entity.type === "text_mention"
+        )
+
+        const message = {
+          text: msg.text,
+          raw: msg,
+          isMention,
+          author: {
+            userId: msg.from ? String(msg.from.id) : "",
+            userName: msg.from?.username || "",
+            fullName:
+              [msg.from?.first_name, msg.from?.last_name]
+                .filter(Boolean)
+                .join(" ") ||
+              msg.from?.username ||
+              "",
+          },
+        }
+
+        const chatType = msg.chat.type
+        if (chatType === "private") {
+          if (!isMention) {
+            await invokeHandlers(this.newMessageHandlers, thread, message)
+          }
+        } else {
+          if (isMention) {
+            await invokeHandlers(this.mentionHandlers, thread, message)
+            await invokeHandlers(this.subscribedHandlers, thread, message)
+          }
+          if (msg.text.trim().startsWith("/")) {
+            await invokeHandlers(this.newMessageHandlers, thread, message)
+          }
+        }
+
+        return new Response(JSON.stringify({ messages }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      },
     }
   }
 
@@ -468,14 +595,18 @@ export interface Thread {
   channelId?: string
   channel?: {
     id?: string
-    post: (message: string | MockCardElement) => Promise<MockSentMessage>
+    post: (
+      message: string | MockCardElement | AsyncIterable<unknown>
+    ) => Promise<MockSentMessage>
     postEphemeral?: (
       user: string | { userId?: string },
       message: string | MockCardElement,
       options: { fallbackToDM: boolean }
     ) => Promise<{ usedFallback: boolean } | null>
   }
-  post: (message: string | MockCardElement) => Promise<MockSentMessage>
+  post: (
+    message: string | MockCardElement | AsyncIterable<unknown>
+  ) => Promise<MockSentMessage>
   startTyping?: () => Promise<void>
   subscribe?: () => Promise<void>
   postEphemeral?: (
@@ -494,7 +625,9 @@ export interface SlashCommandEvent {
     userName?: string
   }
   channel: {
-    post: (message: string | MockCardElement) => Promise<MockSentMessage>
+    post: (
+      message: string | MockCardElement | AsyncIterable<unknown>
+    ) => Promise<MockSentMessage>
     postEphemeral?: (
       user: string | { userId?: string },
       message: string | MockCardElement,

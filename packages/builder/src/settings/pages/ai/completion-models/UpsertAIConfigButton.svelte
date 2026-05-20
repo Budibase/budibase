@@ -24,7 +24,9 @@
   let pendingOpen = $state(false)
 
   function openConfig() {
-    bb.settings(`/connections/${row.configType}/${row._id || "new"}`)
+    bb.settings(`/connections/${row.configType}/${row._id || "new"}`, {
+      provider: row.provider,
+    })
   }
 
   function onClick() {

@@ -3,7 +3,7 @@ import { constants, env, HTTPError } from "@budibase/backend-core"
 import { licensing, quotas } from "@budibase/pro"
 import tracer from "dd-trace"
 import environment from "../../../../environment"
-import { getKeySettings } from "../configs/litellm"
+import { fetchModelMaxInputTokens, getKeySettings } from "../configs/litellm"
 import {
   AIQuotaUsageResponse,
   BUDIBASE_AI_PROVIDER_ID,
@@ -52,6 +52,7 @@ export const createLiteLLMOpenAI = async (
   }
 
   const llm = createOpenAI(clientConfig)
+  const contextWindowTokens = await fetchModelMaxInputTokens(modelId)
   return {
     chat: llm.chat(modelId),
     providerOptions: getLiteLLMProviderOptions,
@@ -65,6 +66,7 @@ export const createLiteLLMOpenAI = async (
       })
       return fileId
     },
+    contextWindowTokens,
   }
 }
 

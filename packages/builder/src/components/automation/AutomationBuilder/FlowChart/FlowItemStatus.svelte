@@ -23,7 +23,7 @@
     isBranchStep,
     isFilterStep,
   } from "@budibase/types"
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, Icon } from "@budibase/bbui"
   import Spinner from "@/components/common/Spinner.svelte"
 
   type StatusResult =
@@ -40,6 +40,9 @@
     | AutomationTriggerResult
     | null = null
   export let viewMode: ViewMode = ViewMode.EDITOR
+  export let showBlockType: boolean = true
+  export let showFlowStatus: boolean = true
+  export let iconOnly: boolean = false
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null
   $: viewMode = $automationStore.viewMode
@@ -66,7 +69,7 @@
   }
 
   $: blockResult = toStatusResult(
-    isLogsMode && logStepData
+    isLogsMode
       ? logStepData
       : progressResult
         ? progressResult
@@ -195,9 +198,10 @@
     }
 
     if (branch && isBranchStep(block)) {
-      // Do not give status markers to branch nodes that were not part of the run.
-      if (outputs && "branchId" in outputs && outputs.branchId !== branch.id)
-        return
+      const branchStatus = getBranchFlowStatus(outputs, block.inputs?.branches)
+      if (branchStatus !== undefined) {
+        return branchStatus ?? undefined
+      }
 
       // Mark branches as stopped when no branch criteria was met
       if (outputs && outputs.success == false) {
@@ -219,31 +223,88 @@
           : FlowStatusType.ERROR,
     }
   }
+
+  const getBranchFlowStatus = (
+    outputs:
+      | AutomationStepResult["outputs"]
+      | AutomationTriggerResult["outputs"],
+    branches: Branch[] | undefined
+  ): FlowItemStatus | null | undefined => {
+    if (!outputs || !branch || !branches || !("branchId" in outputs)) {
+      return
+    }
+
+    const executedBranchIdx = branches.findIndex(
+      stepBranch => stepBranch.id === outputs.branchId
+    )
+    const currentBranchIdx = branches.findIndex(
+      stepBranch => stepBranch.id === branch.id
+    )
+
+    if (executedBranchIdx === -1 || currentBranchIdx === -1) {
+      return
+    }
+
+    if (currentBranchIdx < executedBranchIdx) {
+      return {
+        message: "Skipped",
+        icon: "warning",
+        type: FlowStatusType.SKIPPED,
+      }
+    }
+
+    if (currentBranchIdx > executedBranchIdx) {
+      return null
+    }
+
+    return {
+      message: "Completed",
+      icon: "CheckmarkCircle",
+      type: FlowStatusType.SUCCESS,
+    }
+  }
 </script>
 
 <div class="flow-item-status">
   {#if blockRef || viewMode === ViewMode.LOGS}
-    {#if isTriggerBlock}
-      <span class="block-type">
-        <ActionButton size="S" active={false} icon="tree-structure">
-          Trigger
-        </ActionButton>
-      </span>
-    {:else if blockRef?.looped && viewMode === ViewMode.EDITOR}
+    {#if showBlockType && blockRef?.looped && viewMode === ViewMode.EDITOR}
       <ActionButton size="S" active={false} icon="recycle">Looping</ActionButton
       >
     {:else}
       <span></span>
     {/if}
-    {#if isRunning && !isTriggerBlock}
-      <span class="flow-blue flow-running flow-status-btn">
-        <ActionButton size="S" active={false}>
+    {#if showFlowStatus && isRunning && !isTriggerBlock}
+      {#if iconOnly}
+        <span class="flow-blue flow-status-icon" title={runningLabel}>
           <Spinner size="12" />
-          {runningLabel}
-        </ActionButton>
-      </span>
-    {:else if flowStatus && !hideStatus}
-      {#if loopInfo?.total && $automationStore.inProgressTest}
+        </span>
+      {:else}
+        <span class="flow-blue flow-running flow-status-btn">
+          <ActionButton size="S" active={false}>
+            <Spinner size="12" />
+            {runningLabel}
+          </ActionButton>
+        </span>
+      {/if}
+    {:else if showFlowStatus && flowStatus && !hideStatus}
+      {#if iconOnly}
+        {#if flowStatus.type !== FlowStatusType.SUCCESS}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <span
+            class={`flow-${flowStatus.type} flow-status-icon`}
+            title={flowStatus.message}
+            on:click={async () => await onStatusClick(flowStatus.type)}
+          >
+            <Icon
+              name={flowStatus.icon}
+              size="S"
+              weight="fill"
+              color="currentColor"
+            />
+          </span>
+        {/if}
+      {:else if loopInfo?.total && $automationStore.inProgressTest}
         <span class="flow-success flow-status-btn">
           <ActionButton
             size="S"
@@ -331,5 +392,58 @@
 
   .flow-status-btn :global(.spectrum-ActionButton i) {
     color: unset;
+  }
+
+  .flow-status-icon {
+    --flow-status-icon-size: 18px;
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--spectrum-global-color-gray-700);
+    cursor: pointer;
+  }
+
+  .flow-status-icon :global(i) {
+    font-size: var(--flow-status-icon-size);
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
+  }
+
+  .flow-status-icon :global(svg) {
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
+  }
+
+  .flow-success.flow-status-icon {
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
+    color: var(--spectrum-semantic-positive-color-status);
+  }
+
+  .flow-error.flow-status-icon {
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
+    color: var(--spectrum-semantic-negative-color-status);
+  }
+
+  .flow-warn.flow-status-icon {
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
+    position: relative;
+    background-color: transparent;
+    color: var(--spectrum-global-color-orange-500);
+  }
+
+  .flow-warn.flow-status-icon :global(i) {
+    position: relative;
+  }
+
+  .flow-skipped.flow-status-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--spectrum-global-color-gray-500);
   }
 </style>

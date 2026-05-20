@@ -6,9 +6,11 @@ import { Header, context, db, events, roles } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import {
   type Workspace,
+  AppFontFamily,
   BuiltinPermissionID,
   PermissionLevel,
   Screen,
+  Theme,
   WorkspaceApp,
 } from "@budibase/types"
 import nock from "nock"
@@ -169,6 +171,7 @@ describe("/applications", () => {
       })
       expect(newWorkspace.name).toBe(name)
       expect(newWorkspace._id).toBeDefined()
+      expect(newWorkspace.customTheme?.fontFamily).toBe(AppFontFamily.INTER)
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
       // Ensure we created a blank app without sample data
@@ -258,6 +261,7 @@ describe("/applications", () => {
         templateKey: "app/expense-approval",
       })
       expect(newApp._id).toBeDefined()
+      expect(newApp.customTheme?.fontFamily).toBe(AppFontFamily.INTER)
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.templateImported).toHaveBeenCalledTimes(1)
 
@@ -278,6 +282,7 @@ describe("/applications", () => {
         fileToImport: "src/api/routes/tests/data/old-app.txt", // export.tx was empty
       })
       expect(newApp._id).toBeDefined()
+      expect(newApp.customTheme?.fontFamily).toBeUndefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.fileImported).toHaveBeenCalledTimes(1)
 
@@ -350,6 +355,7 @@ describe("/applications", () => {
         encryptionPassword: "testtest",
       })
       expect(newApp._id).toBeDefined()
+      expect(newApp.customTheme?.fontFamily).toBeUndefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.fileImported).toHaveBeenCalledTimes(1)
 
@@ -1152,6 +1158,70 @@ describe("/applications", () => {
                   )
                 )
               )
+            }
+          )
+        })
+
+        it("should resolve theme settings for the matched workspace app", async () => {
+          const app = workspaceAppInfo[1].workspaceApp
+          await config.api.workspaceApp.update({
+            _id: app._id!,
+            _rev: app._rev!,
+            name: app.name,
+            url: app.url,
+            navigation: app.navigation,
+            disabled: app.disabled,
+            theme: Theme.NORD,
+            customTheme: {
+              fontFamily: AppFontFamily.SOURCE_SANS,
+            },
+          })
+
+          await config.withHeaders(
+            {
+              referer: `http://localhost:10000/${config.devWorkspaceId}${app.url}`,
+            },
+            async () => {
+              const res = await config.api.workspace.getAppPackage(
+                workspace.appId,
+                {
+                  headers: {
+                    [Header.TYPE]: "client",
+                  },
+                }
+              )
+
+              expect(res.application.theme).toBe(Theme.NORD)
+              expect(res.application.customTheme?.fontFamily).toBe(
+                AppFontFamily.SOURCE_SANS
+              )
+              expect(res.application.customTheme).toEqual({
+                ...workspace.customTheme,
+                fontFamily: AppFontFamily.SOURCE_SANS,
+              })
+            }
+          )
+        })
+
+        it("should fall back to workspace theme settings", async () => {
+          const app = workspaceAppInfo[1].workspaceApp
+
+          await config.withHeaders(
+            {
+              referer: `http://localhost:10000/${config.devWorkspaceId}${app.url}`,
+            },
+            async () => {
+              const res = await config.api.workspace.getAppPackage(
+                workspace.appId,
+                {
+                  headers: {
+                    [Header.TYPE]: "client",
+                  },
+                }
+              )
+
+              expect(res.application.theme).toBe(workspace.theme)
+              expect(res.application.customTheme).toEqual(workspace.customTheme)
             }
           )
         })

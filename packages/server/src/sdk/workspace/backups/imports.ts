@@ -319,11 +319,19 @@ export const importApp: ImportWorkspaceFn = async (
           objectStoreProdAppId
         ),
         async file => {
+          if (!file.Key) {
+            return
+          }
+          const prefix = `${objectStoreProdAppId}/`
+          if (!file.Key.startsWith(prefix)) {
+            return
+          }
+          const relativePath = file.Key.slice(prefix.length)
+          // never delete attachment files - they are referenced by prod rows
+          // which are not included in the export and cannot be re-uploaded
           if (
-            file.Key &&
-            !uploadedFiles.includes(
-              file.Key.replace(new RegExp(`^${objectStoreProdAppId}/`), "")
-            )
+            !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
+            !uploadedFiles.includes(relativePath)
           ) {
             filesToDelete.push(file.Key)
           }

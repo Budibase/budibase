@@ -132,6 +132,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       name: workspaceApp.name,
       url: workspaceApp.url,
       navigation: workspaceApp.navigation,
+      theme: workspaceApp.theme,
+      customTheme: workspaceApp.customTheme,
       disabled: workspaceApp.disabled,
     }
 

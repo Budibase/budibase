@@ -5,6 +5,7 @@ import {
   Automation,
   AutomationJob,
   CronTriggerInputs,
+  EmailTriggerAuthType,
   EmailTriggerInputs,
   isCronTrigger,
   isEmailTrigger,
@@ -367,13 +368,18 @@ export async function enableCronOrEmailTrigger(
 }
 
 function isValidEmailTriggerInputs(inputs: EmailTriggerInputs): boolean {
-  return !!(
-    inputs &&
-    inputs.host &&
-    inputs.port &&
-    inputs.username &&
-    inputs.password
-  )
+  if (!inputs || !inputs.host || !inputs.port || !inputs.username) {
+    return false
+  }
+
+  if (inputs.authType === EmailTriggerAuthType.OAUTH2) {
+    const legacyId = (
+      inputs as EmailTriggerInputs & { oauth2ConfigId?: string }
+    ).oauth2ConfigId
+    return (!!inputs.datasourceId && !!inputs.authConfigId) || !!legacyId
+  }
+
+  return !!inputs.password
 }
 
 /**

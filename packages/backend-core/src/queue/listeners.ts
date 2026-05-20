@@ -94,6 +94,7 @@ enum QueueEventType {
   RAG_INGESTION_PROCESSOR = "rag-ingestion-processor",
   AGENT_LOG_INDEXING_PROCESSOR = "agent-log-indexing-processor",
   ESCALATION_PROCESSOR = "escalation-processor",
+  AGENT_TEST_RUN_PROCESSOR = "agent-test-run-processor",
   KNOWLEDGE_SOURCE_SYNC_PROCESSOR = "knowledge-source-sync-processor",
 }
 
@@ -110,6 +111,7 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.RAG_INGESTION]: QueueEventType.RAG_INGESTION_PROCESSOR,
   [JobQueue.AGENT_LOG_INDEXING]: QueueEventType.AGENT_LOG_INDEXING_PROCESSOR,
   [JobQueue.ESCALATION]: QueueEventType.ESCALATION_PROCESSOR,
+  [JobQueue.AGENT_TEST_RUN]: QueueEventType.AGENT_TEST_RUN_PROCESSOR,
   [JobQueue.KNOWLEDGE_SOURCE_SYNC]:
     QueueEventType.KNOWLEDGE_SOURCE_SYNC_PROCESSOR,
 }

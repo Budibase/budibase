@@ -45,6 +45,13 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   messagingEndpointUrl?: string
 }
 
+export interface TelegramAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  webhookSecretToken?: string
+  botUserName?: string
+  messagingEndpointUrl?: string
+}
+
 export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
@@ -57,7 +64,8 @@ export interface AgentSharePointKnowledgeSource {
   id: string
   type: AgentKnowledgeSourceType.SHAREPOINT
   config: {
-    connectionId: string
+    datasourceId: string
+    authConfigId: string
     site: {
       id: string
       name?: string
@@ -85,6 +93,7 @@ export interface Agent extends Document {
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
+  telegramIntegration?: TelegramAgentIntegration
   knowledgeSources?: AgentKnowledgeSource[]
 }
 
@@ -94,12 +103,30 @@ export interface AgentMessageRagSource {
   filename?: string
 }
 
+export type AgentMessageUsageSegmentType =
+  | "system"
+  | "input"
+  | "cachedInput"
+  | "output"
+  | "reasoning"
+
+export interface AgentMessageUsageSegment {
+  type: AgentMessageUsageSegmentType
+  tokens: number
+}
+
+export interface AgentMessageUsage {
+  maxTokens?: number
+  segments: AgentMessageUsageSegment[]
+}
+
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>
   createdAt?: number
   completedAt?: number
   error?: string
+  usage?: AgentMessageUsage
 }
 
 export interface AgentChat extends Document {

@@ -8,7 +8,7 @@ interface MockWebhookChatPayload {
 interface ChatMockModule {
   resetMockChatState: () => void
   setMockPostEphemeralResult: (
-    provider: "slack" | "teams",
+    provider: "slack" | "teams" | "telegram",
     result: { usedFallback: boolean }
   ) => void
 }
@@ -65,6 +65,9 @@ const extractLinkUrl = (messages: string[]) => {
     .filter(url => url.includes("/api/chat-links/"))
   return urls[0]
 }
+
+const extractConfirmationToken = (html: string) =>
+  html.match(/name="confirmationToken" value="([^"]+)"/)?.[1]
 
 const secretMatch = (plain: string, encoded: string) => {
   if (!encoded.startsWith(SECRET_ENCODING_PREFIX)) {
@@ -356,7 +359,34 @@ describe("agent slack integration provisioning", () => {
         .set(config.defaultHeaders({}, true))
         .expect(200)
       expect(authHandoff.type).toEqual("text/html")
-      expect(authHandoff.text).toContain("Authentication succeeded.")
+      expect(authHandoff.text).toContain("Confirm chat account link")
+      const confirmationToken = extractConfirmationToken(authHandoff.text)
+      expect(confirmationToken).toBeTruthy()
+
+      await config.doInTenant(async () => {
+        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "user-1",
+          teamId: "T123",
+        })
+        expect(link).toBeUndefined()
+      })
+
+      await config
+        .getRequest()!
+        .post(handoffPath)
+        .set(config.defaultHeaders({}, true))
+        .send({})
+        .expect(400)
+
+      const confirmHandoff = await config
+        .getRequest()!
+        .post(handoffPath)
+        .set(config.defaultHeaders({}, true))
+        .send({ confirmationToken })
+        .expect(200)
+      expect(confirmHandoff.type).toEqual("text/html")
+      expect(confirmHandoff.text).toContain("Authentication succeeded.")
 
       await config.doInTenant(async () => {
         const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({

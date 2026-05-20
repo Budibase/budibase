@@ -1,6 +1,7 @@
 import { BulkUserCreated, User, UserGroup, UserStatus } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import * as accounts from "../../accounts"
+import * as cache from "../../cache"
 import { getGlobalDB } from "../../context"
 import { withEnv } from "../../environment"
 import { UserDB } from "../db"
@@ -40,6 +41,33 @@ describe("UserDB", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     groups.getDefaultGroup.mockResolvedValue(undefined)
+  })
+
+  describe("bulkUpdate", () => {
+    it("invalidates cached user data for updated users", async () => {
+      await config.doInTenant(async () => {
+        const user = await db.save(
+          structures.users.user({
+            email: generator.email({}),
+            firstName: "Original",
+            tenantId: config.getTenantId(),
+          })
+        )
+
+        await cache.user.getUser({
+          userId: user._id!,
+          tenantId: config.getTenantId(),
+        })
+
+        await db.bulkUpdate([{ ...user, firstName: "Updated" }])
+
+        const refreshedUser = await cache.user.getUser({
+          userId: user._id!,
+          tenantId: config.getTenantId(),
+        })
+        expect(refreshedUser.firstName).toBe("Updated")
+      })
+    })
   })
 
   describe("save", () => {

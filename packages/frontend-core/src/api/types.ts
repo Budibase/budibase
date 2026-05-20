@@ -35,6 +35,7 @@ import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
+import { AgentTestEndpoints } from "./agentTests"
 import { AgentLogEndpoints } from "./agentLogs"
 import { ChatAppEndpoints } from "./chatApps"
 import { ChatLinksEndpoints } from "./chatLinks"
@@ -120,6 +121,7 @@ export type APIError = {
 export type APIClient = BaseAPIClient &
   AIEndpoints &
   AgentEndpoints &
+  AgentTestEndpoints &
   AgentLogEndpoints &
   ChatAppEndpoints &
   ChatLinksEndpoints &
