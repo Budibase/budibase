@@ -16,8 +16,11 @@ jest.mock("@budibase/backend-core", () => {
 import {
   ActionFailureReason,
   AutomationStatus,
+  BasicOperator,
   EmptyFilterOption,
+  FieldType,
   Table,
+  UILogicalOperator,
 } from "@budibase/types"
 import { events } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
@@ -135,16 +138,16 @@ describe("Branching automations", () => {
 
   it("executes branch conditions produced by the condition builder", async () => {
     const condition = dataFilters.buildQuery({
-      logicalOperator: "all",
+      logicalOperator: UILogicalOperator.ALL,
       onEmptyFilter: EmptyFilterOption.RETURN_NONE,
       groups: [
         {
-          logicalOperator: "any",
+          logicalOperator: UILogicalOperator.ANY,
           filters: [
             {
               field: "{{ trigger.fields.name }}",
-              operator: "equal",
-              type: "string",
+              operator: BasicOperator.EQUAL,
+              type: FieldType.STRING,
               valueType: "Value",
               value: "j",
             },
@@ -175,16 +178,16 @@ describe("Branching automations", () => {
 
   it("executes number branch conditions produced by the condition builder", async () => {
     const condition = dataFilters.buildQuery({
-      logicalOperator: "all",
+      logicalOperator: UILogicalOperator.ALL,
       onEmptyFilter: EmptyFilterOption.RETURN_NONE,
       groups: [
         {
-          logicalOperator: "any",
+          logicalOperator: UILogicalOperator.ANY,
           filters: [
             {
               field: "{{ trigger.fields.age }}",
-              operator: "equal",
-              type: "number",
+              operator: BasicOperator.EQUAL,
+              type: FieldType.NUMBER,
               valueType: "Value",
               value: "40",
             },
@@ -486,16 +489,16 @@ describe("Branching automations", () => {
 
   it("executes date branch conditions produced by the condition builder", async () => {
     const condition = dataFilters.buildQuery({
-      logicalOperator: "all",
+      logicalOperator: UILogicalOperator.ALL,
       onEmptyFilter: EmptyFilterOption.RETURN_NONE,
       groups: [
         {
-          logicalOperator: "any",
+          logicalOperator: UILogicalOperator.ANY,
           filters: [
             {
               field: "{{ trigger.fields.date }}",
               operator: "rangeLow",
-              type: "datetime",
+              type: FieldType.DATETIME,
               valueType: "Value",
               value: "01/05/2026 10:45",
             },
