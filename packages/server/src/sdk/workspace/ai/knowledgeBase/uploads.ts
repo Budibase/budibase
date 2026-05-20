@@ -164,6 +164,7 @@ export const resetKnowledgeBaseStore = async (
           vectorStoreId: knowledgeBase.config.googleFileStoreId,
           error,
         })
+        throw error
       }
     }
   )
@@ -190,7 +191,8 @@ export const resetKnowledgeBaseStore = async (
       })
     } catch (error: any) {
       file.status = KnowledgeBaseFileStatus.FAILED
-      file.errorMessage = error?.message || "Failed to enqueue file for processing"
+      file.errorMessage =
+        error?.message || "Failed to enqueue file for processing"
       await updateKnowledgeBaseFile(file)
       console.error("Failed to enqueue knowledge base file during reset", {
         workspaceId,
