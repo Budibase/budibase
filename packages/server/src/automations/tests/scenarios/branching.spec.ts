@@ -173,6 +173,46 @@ describe("Branching automations", () => {
     expect(results.steps[1].outputs.message).toContain("Matched")
   })
 
+  it("executes number branch conditions produced by the condition builder", async () => {
+    const condition = dataFilters.buildQuery({
+      logicalOperator: "all",
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      groups: [
+        {
+          logicalOperator: "any",
+          filters: [
+            {
+              field: "{{ trigger.fields.age }}",
+              operator: "equal",
+              type: "number",
+              valueType: "Value",
+              value: "40",
+            },
+          ],
+        },
+      ],
+    })
+
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition,
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { age: "40" } })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
+  })
+
   it("should handle multiple conditions with AND operator", async () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()

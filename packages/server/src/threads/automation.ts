@@ -221,6 +221,25 @@ async function branchMatches(
       }
       return value
     }
+    const coerceFieldValue = (fieldValue: any, conditionValue: any): any => {
+      const reference = Array.isArray(conditionValue)
+        ? conditionValue.find(value => value != null)
+        : conditionValue
+
+      if (typeof fieldValue === "string" && typeof reference === "number") {
+        const parsed = Number(fieldValue)
+        return Number.isNaN(parsed) ? fieldValue : parsed
+      }
+      if (typeof fieldValue === "string" && typeof reference === "boolean") {
+        if (fieldValue === "true") {
+          return true
+        }
+        if (fieldValue === "false") {
+          return false
+        }
+      }
+      return fieldValue
+    }
 
     for (const [operator, filter] of Object.entries(filters)) {
       if (isLogicalSearchOperator(operator)) {
@@ -244,8 +263,12 @@ async function branchMatches(
       }
 
       for (const [field, value] of Object.entries(evaluatedFilter)) {
-        toFilter[field] = processStringSync(field, ctx)
-        evaluatedFilter[field] = evaluateValue(value)
+        const evaluatedValue = evaluateValue(value)
+        toFilter[field] = coerceFieldValue(
+          processStringSync(field, ctx),
+          evaluatedValue
+        )
+        evaluatedFilter[field] = evaluatedValue
       }
     }
 
