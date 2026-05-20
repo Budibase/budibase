@@ -1,11 +1,9 @@
 <script>
-  import {
-    FieldType,
-  } from "@budibase/types"
-  import { Constants } from "@budibase/frontend-core"
-  import CoreFilterBuilder from "./CoreFilterBuilder.svelte"
-  import ConditionField from "./ConditionField.svelte"
   import { Select } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
+  import { Constants, CoreFilterBuilder } from "@budibase/frontend-core"
+  import ConditionField from "./ConditionField.svelte"
+  import ConditionValueControl from "./ConditionValueControl.svelte"
 
   const { FilterValueType } = Constants
 
@@ -39,6 +37,16 @@
       return filter.type
     }
     return FieldType.STRING
+  }
+
+  const updateConditionValue = (filter, value, onUpdate) => {
+    const updated = {
+      ...filter,
+      type: filter.type || FieldType.STRING,
+      value,
+      valueType: FilterValueType.VALUE,
+    }
+    onUpdate(updated)
   }
 </script>
 
@@ -106,4 +114,17 @@
       popoverAutoWidth
     />
   </div>
+  <svelte:fragment slot="value-column" let:filter let:onUpdate>
+    <ConditionValueControl
+      showTypeSelect={false}
+      disabled={filter.noValue}
+      {bindings}
+      valueType={filter.type}
+      value={filter.value}
+      {panel}
+      context={evaluationContext}
+      on:change={e => updateConditionValue(filter, e.detail.value, onUpdate)}
+      on:blur={e => updateConditionValue(filter, e.detail.value, onUpdate)}
+    />
+  </svelte:fragment>
 </CoreFilterBuilder>

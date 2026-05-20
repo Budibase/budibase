@@ -7,7 +7,7 @@
     DrawerContent,
     Icon,
   } from "@budibase/bbui"
-  import { ConditionBuilder } from "@budibase/frontend-core"
+  import ConditionBuilder from "@/components/common/ConditionBuilder.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"

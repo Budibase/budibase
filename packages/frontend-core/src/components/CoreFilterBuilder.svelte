@@ -360,7 +360,8 @@
                         {filter}
                         {groupIdx}
                         {filterIdx}
-                        onUpdate={f => onFilterFieldUpdate(f, groupIdx, filterIdx)}
+                        onUpdate={f =>
+                          onFilterFieldUpdate(f, groupIdx, filterIdx)}
                         {sanitizeOperator}
                         {sanitizeValue}
                       />
@@ -395,35 +396,49 @@
                         {filter}
                         {groupIdx}
                         {filterIdx}
-                        onUpdate={f => onFilterFieldUpdate(f, groupIdx, filterIdx)}
+                        onUpdate={f =>
+                          onFilterFieldUpdate(f, groupIdx, filterIdx)}
                         {sanitizeOperator}
                         {sanitizeValue}
                       />
                     {/if}
-                    <FilterField
-                      placeholder="Value"
-                      disabled={!filter.field && !$$slots["field-column"]}
-                      {drawerTitle}
-                      {allowBindings}
-                      filter={{
-                        ...filter,
-                      }}
-                      {schemaFields}
-                      {bindings}
-                      {panel}
-                      {toReadable}
-                      {toRuntime}
-                      {evaluationContext}
-                      {bindingValueType}
-                      {useConditionValueControls}
-                      on:change={e => {
-                        onFilterFieldUpdate(
-                          { ...filter, ...e.detail },
-                          groupIdx,
-                          filterIdx
-                        )
-                      }}
-                    />
+                    {#if $$slots["value-column"]}
+                      <slot
+                        name="value-column"
+                        {filter}
+                        {groupIdx}
+                        {filterIdx}
+                        onUpdate={f =>
+                          onFilterFieldUpdate(f, groupIdx, filterIdx)}
+                        {sanitizeOperator}
+                        {sanitizeValue}
+                      />
+                    {:else}
+                      <FilterField
+                        placeholder="Value"
+                        disabled={!filter.field && !$$slots["field-column"]}
+                        {drawerTitle}
+                        {allowBindings}
+                        filter={{
+                          ...filter,
+                        }}
+                        {schemaFields}
+                        {bindings}
+                        {panel}
+                        {toReadable}
+                        {toRuntime}
+                        {evaluationContext}
+                        {bindingValueType}
+                        {useConditionValueControls}
+                        on:change={e => {
+                          onFilterFieldUpdate(
+                            { ...filter, ...e.detail },
+                            groupIdx,
+                            filterIdx
+                          )
+                        }}
+                      />
+                    {/if}
 
                     <ActionButton
                       size="M"
