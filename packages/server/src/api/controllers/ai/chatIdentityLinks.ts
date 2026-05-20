@@ -1,5 +1,6 @@
-import { HTTPError, utils } from "@budibase/backend-core"
-import type { UserCtx } from "@budibase/types"
+import { context, HTTPError, utils } from "@budibase/backend-core"
+import { WebClient } from "@slack/web-api"
+import type { ChatIdentityLinkProvider, UserCtx } from "@budibase/types"
 import { getGlobalIDFromUserMetadataID } from "../../../db/utils"
 import sdk from "../../../sdk"
 
@@ -107,4 +108,55 @@ export async function handoffChatLinkSession(
 
   ctx.type = "text/html"
   ctx.body = renderLinkSuccessPage()
+}
+
+export async function listChatIdentityLinks(ctx: UserCtx) {
+  const provider = ctx.query.provider as ChatIdentityLinkProvider | undefined
+  ctx.body = await sdk.ai.chatIdentityLinks.listChatIdentityLinks(provider)
+}
+
+export async function listSlackChannels(ctx: UserCtx) {
+  const appId = ctx.appId
+  if (!appId) {
+    ctx.throw(400, "appId is required")
+  }
+
+  const agentId = ctx.query.agentId as string | undefined
+  if (!agentId) {
+    ctx.throw(400, "agentId is required")
+  }
+
+  const botToken = await context.doInWorkspaceContext(appId, async () => {
+    const agents = await sdk.ai.agents.fetch()
+    const agent = agents.find(
+      a => a._id === agentId && a.slackIntegration?.botToken
+    )
+    if (!agent?.slackIntegration?.botToken) {
+      return undefined
+    }
+    return sdk.ai.deployments.slack.validateSlackIntegration(agent).botToken
+  })
+
+  if (!botToken) {
+    ctx.body = []
+    return
+  }
+
+  const client = new WebClient(botToken)
+  const result = await client.conversations.list({
+    types: "public_channel,private_channel,mpim",
+    exclude_archived: true,
+    limit: 200,
+  })
+
+  const all = result.channels ?? []
+
+  ctx.body = all
+    .filter(c => c.is_member)
+    .map(c => ({
+      id: c.id,
+      name: c.is_mpim
+        ? `Group DM: ${c.purpose?.value?.replace("Group messaging with: ", "") ?? c.name}`
+        : c.name,
+    }))
 }

@@ -268,7 +268,9 @@ export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
   const agents = await sdk.ai.agents.fetch()
-  ctx.body = { agents: agents.map(obfuscateAgentSecrets) }
+  ctx.body = {
+    agents: agents.map(a => withoutKnowledgeConfig(obfuscateAgentSecrets(a))),
+  }
 }
 
 export async function createAgent(

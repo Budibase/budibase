@@ -14,8 +14,9 @@ import {
   type ChatIdentityProviderRedirectInput,
   type CreateChatIdentityLinkSessionInput,
   type UpsertChatIdentityLinkInput,
+  DocumentType,
+  UNICODE_MAX,
 } from "@budibase/types"
-import { DocumentType } from "@budibase/types"
 
 const CHAT_LINK_SESSION_CACHE_KEY_PREFIX = "chatIdentityLinkSession"
 const CHAT_LINK_SESSION_TTL_SECONDS = 10 * 60
@@ -244,4 +245,36 @@ export const upsertChatIdentityLink = async ({
     ...next,
     _rev: response.rev,
   }
+}
+
+export const getChatIdentityLinkByGlobalUserId = async ({
+  globalUserId,
+  provider,
+}: {
+  globalUserId: string
+  provider: ChatIdentityLinkProvider
+}): Promise<ChatIdentityLink | undefined> => {
+  const links = await listChatIdentityLinks(provider)
+  return links.find(l => l.globalUserId === globalUserId)
+}
+
+export const listChatIdentityLinks = async (
+  provider?: ChatIdentityLinkProvider
+): Promise<ChatIdentityLink[]> => {
+  const tenantId = context.getTenantId()
+  const db = tenancy.getGlobalDB()
+
+  const prefix = provider
+    ? `${DocumentType.CHAT_IDENTITY_LINK}_${encodeURIComponent(tenantId)}_${provider}_`
+    : `${DocumentType.CHAT_IDENTITY_LINK}_${encodeURIComponent(tenantId)}_`
+
+  const response = await db.allDocs<ChatIdentityLink>({
+    startkey: prefix,
+    endkey: `${prefix}${UNICODE_MAX}`,
+    include_docs: true,
+  })
+
+  return response.rows
+    .map(row => row.doc)
+    .filter((doc): doc is ChatIdentityLink => doc != null)
 }

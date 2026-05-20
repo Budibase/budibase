@@ -37,6 +37,7 @@ import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
 import { AgentLogEndpoints } from "./agentLogs"
 import { ChatAppEndpoints } from "./chatApps"
+import { ChatLinksEndpoints } from "./chatLinks"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
@@ -121,6 +122,7 @@ export type APIClient = BaseAPIClient &
   AgentEndpoints &
   AgentLogEndpoints &
   ChatAppEndpoints &
+  ChatLinksEndpoints &
   AnalyticsEndpoints &
   AppEndpoints &
   AttachmentEndpoints &
