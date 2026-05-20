@@ -487,6 +487,35 @@ describe("Branching automations", () => {
     expect(results.steps[1].outputs.message).toContain("Matched")
   })
 
+  it("does not coerce empty string branch condition fields to zero", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition: {
+            equal: {
+              "{{trigger.fields.score}}": 0,
+            },
+          },
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({
+        fields: {
+          score: "",
+        },
+      })
+
+    expect(results.steps[0].outputs.status).toContain("fallback branch taken")
+    expect(results.steps[1].outputs.message).toContain("Fallback")
+  })
+
   it("executes date branch conditions produced by the condition builder", async () => {
     const condition = dataFilters.buildQuery({
       logicalOperator: UILogicalOperator.ALL,

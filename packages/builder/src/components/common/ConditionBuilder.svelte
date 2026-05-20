@@ -102,7 +102,7 @@
         const previousType = filter.type
         const updated = {
           ...filter,
-          value: null,
+          value: e.detail === FieldType.BOOLEAN ? "true" : null,
           valueType: FilterValueType.VALUE,
           type: e.detail,
         }

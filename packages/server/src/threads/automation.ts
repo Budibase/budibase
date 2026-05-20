@@ -227,6 +227,9 @@ async function branchMatches(
         : conditionValue
 
       if (typeof fieldValue === "string" && typeof reference === "number") {
+        if (fieldValue.trim() === "") {
+          return fieldValue
+        }
         const parsed = Number(fieldValue)
         return Number.isNaN(parsed) ? fieldValue : parsed
       }
