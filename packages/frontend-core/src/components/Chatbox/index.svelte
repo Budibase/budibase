@@ -77,8 +77,6 @@
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
-  let ragSourceUrlById = $state<Record<string, string>>({})
-
   const resetPendingResponse = () => {
     isPreparingResponse = false
   }
@@ -91,17 +89,6 @@
       return
     }
     if (!source.fileId) {
-      return
-    }
-
-    const cached = ragSourceUrlById[source.fileId]
-    if (cached) {
-      const link = document.createElement("a")
-      link.href = cached
-      link.download = source.filename || "source.pdf"
-      link.target = "_blank"
-      link.rel = "noopener noreferrer"
-      link.click()
       return
     }
 
@@ -121,10 +108,6 @@
       if (!resolvedUrl) {
         notifications.error("Could not resolve source file URL")
         return
-      }
-      ragSourceUrlById = {
-        ...ragSourceUrlById,
-        [source.fileId]: resolvedUrl,
       }
 
       const link = document.createElement("a")
