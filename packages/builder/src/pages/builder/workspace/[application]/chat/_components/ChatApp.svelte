@@ -135,8 +135,8 @@
         isDefault: agent.isDefault,
         icon: getAgentIcon(agent.agentId),
         iconColor: getAgentIconColor(agent.agentId, index),
-        allowKnowledgeSourceDownload:
-          getAgent(agent.agentId)?.allowKnowledgeSourceDownload,
+        allowKnowledgeSourceDownload: getAgent(agent.agentId)
+          ?.allowKnowledgeSourceDownload,
       }))
       .filter(agent => Boolean(agent.name))
 

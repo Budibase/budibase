@@ -377,7 +377,8 @@ export async function updateAgent(
     publishedAt: undefined,
     enabledTools: body.enabledTools,
     allowKnowledgeSourceDownload:
-      body.allowKnowledgeSourceDownload ?? existing.allowKnowledgeSourceDownload,
+      body.allowKnowledgeSourceDownload ??
+      existing.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
