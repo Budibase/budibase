@@ -692,7 +692,7 @@
                   : createUserModal.show}
                 cta
               >
-                Add users
+                Invite users
               </Button>
             {/if}
             {#if isWorkspaceOnly}
