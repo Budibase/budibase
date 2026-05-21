@@ -1,7 +1,8 @@
-import { describe, it, vi } from "vitest"
+import { describe, it, vi, expect } from "vitest"
 import { get, writable } from "svelte/store"
 import {
   automationStore,
+  getToolbarFlowEndInsertion,
   isNoOpBlockMove,
   selectedAutomation,
 } from "../automations"
@@ -13,7 +14,14 @@ import {
   nestedLoopBranchAutomation,
   serverLogStep,
 } from "@/test/automationFixtures"
-import { isBranchStep, isLoopV2Step, type Automation } from "@budibase/types"
+import {
+  AutomationActionStepId,
+  AutomationStepType,
+  isBranchStep,
+  isLoopV2Step,
+  type Automation,
+  type BranchStep,
+} from "@budibase/types"
 
 vi.mock("@/stores/builder", () => {
   return {
@@ -367,5 +375,135 @@ describe("automation store", () => {
     ])
 
     save.mockRestore()
+  })
+
+  describe("getToolbarFlowEndInsertion", () => {
+    const baseAutomation = (
+      steps: Automation["definition"]["steps"]
+    ): Automation => ({
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps,
+      },
+    })
+
+    it("uses trigger path when there are no steps", () => {
+      const automation = baseAutomation([])
+      const blockRefs: Record<string, TestBlockRef> = {}
+      automationStore.actions.traverse(blockRefs, automation)
+
+      const result = getToolbarFlowEndInsertion(automation, blockRefs)
+      expect(result.targetPath).toEqual(blockRefs.trigger.pathTo)
+      expect(result.anchorRef).toBeUndefined()
+    })
+
+    it("targets the last top-level step on a linear chain", () => {
+      const a = serverLogStep("a")
+      const b = serverLogStep("b")
+      const automation = baseAutomation([a, b])
+      const blockRefs: Record<string, TestBlockRef> = {}
+      automationStore.actions.traverse(blockRefs, automation)
+
+      const result = getToolbarFlowEndInsertion(automation, blockRefs)
+      expect(result.targetPath).toEqual(blockRefs.b.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.b)
+    })
+
+    it("targets the top-level Loop V2 step rather than a branch inside it", () => {
+      const { automation } = nestedLoopBranchAutomation()
+      const blockRefs: Record<string, TestBlockRef> = {}
+      automationStore.actions.traverse(blockRefs, automation)
+
+      const result = getToolbarFlowEndInsertion(automation, blockRefs)
+      expect(result.targetPath).toEqual(blockRefs.loop.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.loop)
+    })
+
+    it("targets the Loop V2 step when it is the flow tail", () => {
+      const tail = serverLogStep("branch-child")
+      const branch = branchStep([])
+      branch.inputs = {
+        ...branch.inputs,
+        children: {
+          matched: [],
+          fallback: [tail],
+        },
+      }
+      const loop = loopStep([branch])
+      const automation = baseAutomation([loop])
+      const blockRefs: Record<string, TestBlockRef> = {}
+      automationStore.actions.traverse(blockRefs, automation)
+
+      const result = getToolbarFlowEndInsertion(automation, blockRefs)
+      expect(result.targetPath).toEqual(blockRefs.loop.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.loop)
+    })
+
+    it("appends into an empty last branch with branchIdx and stepIdx -1", () => {
+      const branch = branchStep([])
+      const automation = baseAutomation([branch])
+      const blockRefs: Record<string, TestBlockRef> = {}
+      automationStore.actions.traverse(blockRefs, automation)
+
+      const result = getToolbarFlowEndInsertion(automation, blockRefs)
+      expect(result.anchorRef).toBeUndefined()
+      expect(result.insertInsideLoopV2Children).toBeFalsy()
+      expect(result.targetPath).toEqual([
+        ...blockRefs.branch.pathTo,
+        {
+          branchIdx: 1,
+          branchStepId: "branch",
+          stepIdx: -1,
+        },
+      ])
+    })
+
+    it("prefers the last branch when an earlier branch has steps", () => {
+      const tail = serverLogStep("tail")
+      const customBranch: BranchStep = {
+        id: "branch",
+        stepId: AutomationActionStepId.BRANCH,
+        type: AutomationStepType.LOGIC,
+        name: "Branch",
+        tagline: "",
+        icon: "",
+        description: "",
+        inputs: {
+          branches: [
+            { id: "first", name: "First", condition: {} },
+            { id: "second", name: "Second", condition: {} },
+          ],
+          children: {
+            first: [serverLogStep("only-first")],
+            second: [tail],
+          },
+        },
+        schema: {
+          inputs: { required: [], properties: {} },
+          outputs: { required: [], properties: {} },
+        },
+      }
+      const automation = baseAutomation([customBranch])
+      const blockRefs: Record<string, TestBlockRef> = {}
+      automationStore.actions.traverse(blockRefs, automation)
+
+      const result = getToolbarFlowEndInsertion(automation, blockRefs)
+      expect(result.targetPath).toEqual(blockRefs.tail.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.tail)
+    })
+
+    it("targets an empty Loop V2 step rather than its body", () => {
+      const loop = loopStep([])
+      const automation = baseAutomation([loop])
+      const blockRefs: Record<string, TestBlockRef> = {}
+      automationStore.actions.traverse(blockRefs, automation)
+
+      const result = getToolbarFlowEndInsertion(automation, blockRefs)
+      expect(result.targetPath).toEqual(blockRefs.loop.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.loop)
+    })
   })
 })
