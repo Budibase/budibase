@@ -62,9 +62,7 @@ export const getLoopEdgePath = ({
   const actionBarHalfWidth = FLOW_ITEM_ACTION_BAR_WIDTH / 2
   const actionBarLeft = labelX - actionBarHalfWidth
   const actionBarRight = labelX + actionBarHalfWidth
-  const offset = actionBarHalfWidth + radius
-  const desiredBendX =
-    side === "target" ? labelX + offset : actionBarRight + radius
+  const desiredBendX = actionBarRight + radius
   const bendX = Math.max(
     sourceX + radius,
     Math.min(targetX - radius, desiredBendX)

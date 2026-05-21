@@ -4,7 +4,7 @@
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
-  import { isBranchStep, isLoopV2Step } from "@budibase/types"
+  import { isBranchStep } from "@budibase/types"
   import type { HistoryStore } from "@/stores/builder/history"
   import type { Automation } from "@budibase/types"
 
@@ -54,23 +54,6 @@
           pathTo: targetPath,
           branchIdx: targetBranchIdx,
           branchStepId: targetHop.branchStepId,
-        })
-        return
-      }
-    }
-
-    if (targetHop?.loopStepId) {
-      const loopRef = refs[targetHop.loopStepId]
-      const loopStep = automationStore.actions.getBlockByRef(
-        automation,
-        loopRef
-      )
-      if (loopRef && loopStep && isLoopV2Step(loopStep)) {
-        automationStore.actions.openActionPanelToolbarFlowEnd({
-          ...loopRef,
-          insertIntoLoopV2: true,
-          loopStepId: targetHop.loopStepId,
-          loopChildInsertIndex: 0,
         })
         return
       }
