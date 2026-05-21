@@ -412,25 +412,17 @@ describe("automation store", () => {
       expect(result.anchorRef).toEqual(blockRefs.b)
     })
 
-    it("walks to the empty last branch when that branch is last in definition order", () => {
+    it("targets the top-level Loop V2 step rather than a branch inside it", () => {
       const { automation } = nestedLoopBranchAutomation()
       const blockRefs: Record<string, TestBlockRef> = {}
       automationStore.actions.traverse(blockRefs, automation)
 
       const result = getToolbarFlowEndInsertion(automation, blockRefs)
-      expect(result.anchorRef).toBeUndefined()
-      expect(result.insertInsideLoopV2Children).toBe(true)
-      expect(result.targetPath).toEqual([
-        ...blockRefs.branch.pathTo,
-        {
-          branchIdx: 1,
-          branchStepId: "branch",
-          stepIdx: -1,
-        },
-      ])
+      expect(result.targetPath).toEqual(blockRefs.loop.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.loop)
     })
 
-    it("when the last branch holds the tail inside a loop, uses that step pathTo", () => {
+    it("targets the Loop V2 step when it is the flow tail", () => {
       const tail = serverLogStep("branch-child")
       const branch = branchStep([])
       branch.inputs = {
@@ -446,8 +438,8 @@ describe("automation store", () => {
       automationStore.actions.traverse(blockRefs, automation)
 
       const result = getToolbarFlowEndInsertion(automation, blockRefs)
-      expect(result.targetPath).toEqual(blockRefs["branch-child"].pathTo)
-      expect(result.anchorRef).toEqual(blockRefs["branch-child"])
+      expect(result.targetPath).toEqual(blockRefs.loop.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.loop)
     })
 
     it("appends into an empty last branch with branchIdx and stepIdx -1", () => {
@@ -503,23 +495,15 @@ describe("automation store", () => {
       expect(result.anchorRef).toEqual(blockRefs.tail)
     })
 
-    it("targets empty Loop V2 body with an extra hop and flags loop context", () => {
+    it("targets an empty Loop V2 step rather than its body", () => {
       const loop = loopStep([])
       const automation = baseAutomation([loop])
       const blockRefs: Record<string, TestBlockRef> = {}
       automationStore.actions.traverse(blockRefs, automation)
 
       const result = getToolbarFlowEndInsertion(automation, blockRefs)
-      expect(result.anchorRef).toBeUndefined()
-      expect(result.insertInsideLoopV2Children).toBe(true)
-      expect(result.targetPath).toEqual([
-        ...blockRefs.loop.pathTo,
-        {
-          stepIdx: -1,
-          loopStepId: "loop",
-          id: "loop",
-        },
-      ])
+      expect(result.targetPath).toEqual(blockRefs.loop.pathTo)
+      expect(result.anchorRef).toEqual(blockRefs.loop)
     })
   })
 })

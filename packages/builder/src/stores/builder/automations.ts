@@ -203,25 +203,13 @@ export const getToolbarFlowEndInsertion = (
       continue
     }
     if (isLoopV2Step(cursor)) {
-      const kids = (cursor.inputs?.children ?? []) as AutomationStep[]
       const p = blockRefs[cursor.id]?.pathTo
-      if (!kids.length) {
-        return p?.length
-          ? {
-              targetPath: [
-                ...p,
-                {
-                  stepIdx: -1,
-                  loopStepId: cursor.id,
-                  id: cursor.id,
-                },
-              ],
-              insertInsideLoopV2Children: true,
-            }
-          : fallback()
-      }
-      cursor = kids[kids.length - 1]
-      continue
+      return p?.length
+        ? {
+            targetPath: p,
+            anchorRef: blockRefs[cursor.id],
+          }
+        : fallback()
     }
     break
   }

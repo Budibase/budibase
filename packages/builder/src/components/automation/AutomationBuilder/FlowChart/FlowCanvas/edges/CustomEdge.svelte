@@ -21,10 +21,9 @@
   import type { DragView } from "../FlowChartDnD"
   import {
     BRANCH_LOOP_INSERT_ACTION_OFFSET,
-    FLOW_ITEM_ACTION_BAR_WIDTH,
     LOOP_INSERT_ACTION_OFFSET,
   } from "../FlowGeometry"
-  import { getPrimaryBranchPath } from "../FlowEdgePaths"
+  import { getLoopEdgePath, getPrimaryBranchPath } from "../FlowEdgePaths"
   import {
     isBranchStep,
     AutomationActionStepId,
@@ -128,13 +127,24 @@
   }
 
   $: loopTargetPath = isLoopTarget
-    ? getLoopEdgePath("target", labelX)
+    ? getLoopEdgePath({
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        labelX,
+        side: "target",
+      })
     : undefined
   $: loopSourcePath = isLoopSource
-    ? getLoopEdgePath(
-        isBranchTarget ? "branch-source" : "source",
-        isBranchTarget ? preBranchLabelX : labelX
-      )
+    ? getLoopEdgePath({
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        labelX: isBranchTarget ? preBranchLabelX : labelX,
+        side: isBranchTarget ? "branch-source" : "source",
+      })
     : undefined
   $: primaryBranchPath =
     isBranchTarget && isPrimaryBranchEdge
@@ -245,43 +255,6 @@
       automationStore.actions.branchAutomation(targetRef.pathTo, automation)
     }
     flow.fitView()
-  }
-
-  const getLoopEdgePath = (
-    side: "target" | "source" | "branch-source",
-    edgeLabelX: number
-  ) => {
-    const radius = 12
-    const offset = Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
-    const desiredBendX =
-      side === "target"
-        ? edgeLabelX + offset
-        : side === "branch-source"
-          ? edgeLabelX + offset
-          : edgeLabelX - offset
-    const bendX = Math.max(
-      sourceX + radius,
-      Math.min(targetX - radius, desiredBendX)
-    )
-    const yDirection = targetY >= sourceY ? 1 : -1
-
-    if (Math.abs(targetY - sourceY) <= radius * 2) {
-      return [
-        `M ${sourceX},${sourceY}`,
-        `L ${bendX},${sourceY}`,
-        `L ${bendX},${targetY}`,
-        `L ${targetX},${targetY}`,
-      ].join(" ")
-    }
-
-    return [
-      `M ${sourceX},${sourceY}`,
-      `L ${bendX - radius},${sourceY}`,
-      `Q ${bendX},${sourceY} ${bendX},${sourceY + yDirection * radius}`,
-      `L ${bendX},${targetY - yDirection * radius}`,
-      `Q ${bendX},${targetY} ${bendX + radius},${targetY}`,
-      `L ${targetX},${targetY}`,
-    ].join(" ")
   }
 
   const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
