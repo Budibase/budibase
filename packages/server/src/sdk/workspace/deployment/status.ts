@@ -122,6 +122,7 @@ export async function status() {
               agent.discordIntegration.interactionsEndpointUrl,
             chatAppId: agent.discordIntegration.chatAppId,
             idleTimeoutMinutes: agent.discordIntegration.idleTimeoutMinutes,
+            requireUserLink: agent.discordIntegration.requireUserLink,
           }
         : undefined,
       MSTeamsIntegration: agent.MSTeamsIntegration
@@ -132,6 +133,7 @@ export async function status() {
             messagingEndpointUrl: agent.MSTeamsIntegration.messagingEndpointUrl,
             chatAppId: agent.MSTeamsIntegration.chatAppId,
             idleTimeoutMinutes: agent.MSTeamsIntegration.idleTimeoutMinutes,
+            requireUserLink: agent.MSTeamsIntegration.requireUserLink,
           }
         : undefined,
       slackIntegration: agent.slackIntegration
@@ -141,6 +143,7 @@ export async function status() {
             messagingEndpointUrl: agent.slackIntegration.messagingEndpointUrl,
             chatAppId: agent.slackIntegration.chatAppId,
             idleTimeoutMinutes: agent.slackIntegration.idleTimeoutMinutes,
+            requireUserLink: agent.slackIntegration.requireUserLink,
           }
         : undefined,
       knowledgeSources: normalizedKnowledgeSources,
