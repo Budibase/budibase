@@ -27,7 +27,10 @@
   import {
     isBranchStep,
     AutomationActionStepId,
+    AutomationStatus,
     type AutomationResults,
+    type AutomationStepResult,
+    type AutomationTriggerResult,
     type BranchStep,
   } from "@budibase/types"
   import {
@@ -35,6 +38,7 @@
     isRunResults,
     didStepRun,
     isTerminalFailure,
+    type RunHighlight,
   } from "../FlowRunHelpers"
 
   export let data: EdgeData
@@ -258,6 +262,13 @@
   }
 
   const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
+    if (viewMode !== ViewMode.LOGS) {
+      const progressHighlight = getProgressEdgeHighlight(edgeData)
+      if (progressHighlight) {
+        return progressHighlight
+      }
+    }
+
     const results =
       viewMode === ViewMode.LOGS
         ? $automationStore.selectedLog
@@ -280,6 +291,29 @@
     }
 
     return didTargetRun(results) ? runHighlight : undefined
+  }
+
+  const getProgressEdgeHighlight = (
+    edgeData: EdgeData | undefined
+  ): RunHighlight | undefined => {
+    if (!edgeData) {
+      return
+    }
+
+    if (isBranchEdgeData(edgeData)) {
+      return didProgressBranchRun(edgeData.branchStepId, edgeData.branchIdx)
+    }
+
+    const progress = getProgressResult(target)
+    if (!progress || !didStepRun(progress)) {
+      return
+    }
+    if (isTerminalFailure(progress)) {
+      return progress.outputs.status === AutomationStatus.STOPPED
+        ? "stopped"
+        : "error"
+    }
+    return "success"
   }
 
   const didTargetRun = (results: AutomationResults) => {
@@ -314,6 +348,49 @@
       "branchId" in outputs &&
       outputs.branchId === branchId
     )
+  }
+
+  const didProgressBranchRun = (
+    branchStepId: string,
+    branchIdx: number
+  ): RunHighlight | undefined => {
+    const result = getProgressResult(branchStepId)
+    if (!result || !didStepRun(result)) {
+      return
+    }
+    const branchStep = getBranchStep(branchStepId)
+    const branchId = branchStep?.inputs.branches?.[branchIdx]?.id
+    const outputs = result.outputs
+    const ranBranch =
+      !!outputs &&
+      typeof outputs === "object" &&
+      "branchId" in outputs &&
+      outputs.branchId === branchId
+    if (!ranBranch) {
+      return
+    }
+    if (isTerminalFailure(result)) {
+      return result.outputs.status === AutomationStatus.STOPPED
+        ? "stopped"
+        : "error"
+    }
+    return "success"
+  }
+
+  const getProgressResult = (
+    blockId: string
+  ): AutomationStepResult | AutomationTriggerResult | undefined => {
+    const result = $automationStore.testProgress?.[blockId]?.result
+    if (
+      !result ||
+      isRunResults(result) ||
+      !("outputs" in result) ||
+      !("id" in result) ||
+      !("stepId" in result)
+    ) {
+      return
+    }
+    return result
   }
 
   const getBranchStep = (branchStepId: string): BranchStep | undefined => {
