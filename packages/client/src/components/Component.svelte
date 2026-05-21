@@ -83,6 +83,7 @@
 
   // Conditional UI expressions, enriched and ready to evaluate
   let conditions
+  let conditionsKey
 
   // Latest timestamp that we started a props update.
   // Due to enrichment now being async, we need to avoid overwriting newer
@@ -174,6 +175,20 @@
   // Evaluate conditional UI settings and store any component setting changes
   // which need to be made
   $: evaluateConditions(conditions)
+
+  // Ensure condition updates always trigger re-enrichment/re-evaluation,
+  // even when only condition metadata changes (e.g. toggling disabled).
+  $: if (dynamicSettings && settingsDefinitionMap) {
+    const nextConditionsKey = JSON.stringify(instance?._conditions || [])
+    if (nextConditionsKey !== conditionsKey) {
+      conditionsKey = nextConditionsKey
+      dynamicSettings = {
+        ...dynamicSettings,
+        _conditions: instance?._conditions,
+      }
+      enrichComponentSettings(get(context), settingsDefinitionMap)
+    }
+  }
 
   // Determine and apply settings to the component
   $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
@@ -499,6 +514,8 @@
   // or visibility changes required
   const evaluateConditions = conditions => {
     if (!conditions?.length) {
+      conditionalSettings = {}
+      visible = true
       return
     }
 
