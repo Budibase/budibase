@@ -387,6 +387,7 @@
   }
 
   .flow-status-icon {
+    --flow-status-icon-size: 18px;
     width: 26px;
     height: 26px;
     box-sizing: border-box;
@@ -398,31 +399,31 @@
   }
 
   .flow-status-icon :global(i) {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: var(--flow-status-icon-size);
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
   }
 
   .flow-status-icon :global(svg) {
-    width: 18px;
-    height: 18px;
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
   }
 
   .flow-success.flow-status-icon {
-    width: 18px;
-    height: 18px;
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
     color: var(--spectrum-semantic-positive-color-status);
   }
 
   .flow-error.flow-status-icon {
-    width: 18px;
-    height: 18px;
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
     color: var(--spectrum-semantic-negative-color-status);
   }
 
   .flow-warn.flow-status-icon {
-    width: 18px;
-    height: 18px;
+    width: var(--flow-status-icon-size);
+    height: var(--flow-status-icon-size);
     position: relative;
     background-color: transparent;
     color: var(--spectrum-global-color-orange-500);

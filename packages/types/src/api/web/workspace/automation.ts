@@ -9,6 +9,7 @@ import {
   AutomationTriggerDefinition,
   AutomationTriggerStepId,
   DidNotTriggerResponse,
+  EmailTriggerInputs,
   Row,
 } from "../../../documents"
 import { DocumentDestroyResponse } from "@budibase/nano"
@@ -62,6 +63,14 @@ export interface ClearAutomationLogRequest {
 }
 export interface ClearAutomationLogResponse {
   message: string
+}
+
+export interface TestEmailConnectionRequest extends EmailTriggerInputs {
+  automationId?: string
+}
+export interface TestEmailConnectionResponse {
+  valid: boolean
+  message?: string
 }
 
 export interface TriggerAutomationRequest {

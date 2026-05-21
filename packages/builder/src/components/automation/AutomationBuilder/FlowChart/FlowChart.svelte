@@ -5,7 +5,6 @@
   import {
     notifications,
     Modal,
-    Button,
     ActionButton,
     Switcher,
     StatusLight,
@@ -25,6 +24,7 @@
     deploymentStore,
     contextMenuStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
@@ -205,7 +205,10 @@
     }
   }
 
-  $: if (!$automationStore.selectedNodeId) {
+  $: if (
+    !$automationStore.selectedNodeId &&
+    !$automationStore.selectedBranchNode
+  ) {
     lastVisibleSelectionCheck = undefined
   }
 
@@ -218,6 +221,17 @@
     lastVisibleSelectionCheck = $automationStore.selectedNodeId
     visibleSelectionRequest = $automationStore.selectedNodeId
     ensureSelectedNodeVisible($automationStore.selectedNodeId)
+  }
+
+  $: if (
+    $automationStore.selectedBranchNode?.nodeId &&
+    $automationStore.selectedBranchNode.nodeId !== lastVisibleSelectionCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
+    visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
+    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
   }
 
   // Check if automation has unpublished changes
@@ -276,13 +290,50 @@
     }
 
     const paneRect = paneEl.getBoundingClientRect()
-    const x = paneRect.width / 2 - targetNode.position.x - nodeWidth / 2
-    const y = paneRect.height / 2 - targetNode.position.y - nodeHeight / 2
+    const position = getAbsoluteNodePosition(targetNode)
+    const x =
+      paneRect.width / 2 - position.x * safeZoom - (nodeWidth / 2) * safeZoom
+    const y =
+      paneRect.height / 2 - position.y * safeZoom - (nodeHeight / 2) * safeZoom
 
     setViewport(
       { x, y, zoom: safeZoom },
       { duration: VIEWPORT_ANIMATION_DURATION }
     )
+  }
+
+  const getAbsoluteNodePosition = (node: FlowNode) => {
+    const position = { ...node.position }
+    let parentId = node.parentId
+    while (parentId) {
+      const parent = get(nodes).find(n => n.id === parentId)
+      if (!parent) {
+        break
+      }
+      position.x += parent.position.x
+      position.y += parent.position.y
+      parentId = parent.parentId
+    }
+    return position
+  }
+
+  const getNodeDimensions = (node: FlowNode) => {
+    const data = node.data as Record<string, unknown> | undefined
+    return {
+      width:
+        node.width ||
+        (typeof data?.laneWidth === "number" ? data.laneWidth : undefined) ||
+        (typeof data?.containerWidth === "number"
+          ? data.containerWidth
+          : undefined) ||
+        DEFAULT_NODE_WIDTH,
+      height:
+        node.height ||
+        (typeof data?.containerHeight === "number"
+          ? data.containerHeight
+          : undefined) ||
+        DEFAULT_NODE_HEIGHT,
+    }
   }
 
   const ensureSelectedNodeVisible = async (nodeId: string) => {
@@ -298,32 +349,51 @@
     }
 
     const paneRect = paneEl.getBoundingClientRect()
-    const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
+    const { width: nodeWidth, height: nodeHeight } =
+      getNodeDimensions(targetNode)
+    const position = getAbsoluteNodePosition(targetNode)
     const margin = 24
     const nodeRight =
-      targetNode.position.x * currentViewport.zoom +
+      position.x * currentViewport.zoom +
       currentViewport.x +
       nodeWidth * currentViewport.zoom
-    const nodeLeft =
-      targetNode.position.x * currentViewport.zoom + currentViewport.x
+    const nodeLeft = position.x * currentViewport.zoom + currentViewport.x
+    const nodeBottom =
+      position.y * currentViewport.zoom +
+      currentViewport.y +
+      nodeHeight * currentViewport.zoom
+    const nodeTop = position.y * currentViewport.zoom + currentViewport.y
     const xOverflow = nodeRight + margin - paneRect.width
     const xUnderflow = margin - nodeLeft
+    const yOverflow = nodeBottom + margin - paneRect.height
+    const yUnderflow = margin - nodeTop
 
-    if (xOverflow <= 0 && xUnderflow <= 0) {
+    if (
+      xOverflow <= 0 &&
+      xUnderflow <= 0 &&
+      yOverflow <= 0 &&
+      yUnderflow <= 0
+    ) {
       return
     }
 
     let nextX = currentViewport.x
+    let nextY = currentViewport.y
     if (xOverflow > 0) {
       nextX -= xOverflow
     } else if (xUnderflow > 0) {
       nextX += xUnderflow
     }
+    if (yOverflow > 0) {
+      nextY -= yOverflow
+    } else if (yUnderflow > 0) {
+      nextY += yUnderflow
+    }
 
     setViewport(
       {
         x: nextX,
-        y: currentViewport.y,
+        y: nextY,
         zoom: currentViewport.zoom,
       },
       { duration: VIEWPORT_ANIMATION_DURATION }
@@ -468,17 +538,11 @@
     </ActionButton>
 
     <div class="toggle-active setting-spacing">
-      <Button
-        primary={!isLive}
-        secondary={isLive}
-        icon={isLive ? "stop" : "play"}
-        iconColor={isLive ? "" : "var(--bb-blue)"}
-        iconWeight="fill"
+      <LiveToggleButton
+        live={isLive}
         disabled={!automation?.definition?.trigger || changingStatus}
         on:click={handleToggleLive}
-      >
-        {isLive ? "Stop" : "Set live"}
-      </Button>
+      />
     </div>
   </div>
 </div>
@@ -532,15 +596,6 @@
   .wrapper {
     position: relative;
     height: 100%;
-    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-flow-logic-color: var(
-      --spectrum-global-color-indigo-100
-    );
-    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
-    --automation-step-icon-trigger-color: var(--color-green-200);
-    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
-    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
     --automation-flow-item-background: var(--background);
     --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
@@ -564,13 +619,6 @@
   :global(.spectrum--darkest) .wrapper,
   :global(.spectrum--midnight) .wrapper,
   :global(.spectrum--nord) .wrapper {
-    --automation-step-icon-data-color: var(--color-blue-600);
-    --automation-step-icon-flow-logic-color: var(--color-purple-600);
-    --automation-step-icon-code-color: var(--color-orange-600);
-    --automation-step-icon-trigger-color: var(--color-green-600);
-    --automation-step-icon-email-color: var(--color-green-600);
-    --automation-step-icon-ai-color: var(--color-brand-500);
-    --automation-step-icon-apps-color: var(--color-orange-400);
     --automation-flow-item-background: var(--spectrum-global-color-gray-200);
   }
 

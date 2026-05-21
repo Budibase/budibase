@@ -90,6 +90,7 @@
 
 <style>
   button {
+    position: relative;
     transition:
       filter 130ms ease-out,
       background 130ms ease-out,
@@ -181,13 +182,14 @@
   .tooltip {
     position: absolute;
     pointer-events: none;
-    left: 50%;
+    inset-inline-end: 0;
     top: calc(100% + 4px);
-    width: 100vw;
+    width: max-content;
     max-width: 150px;
-    transform: translateX(-50%);
+    min-width: 0;
     text-align: center;
     z-index: 1;
+    box-sizing: border-box;
   }
   .accent.is-selected,
   .accent:active {

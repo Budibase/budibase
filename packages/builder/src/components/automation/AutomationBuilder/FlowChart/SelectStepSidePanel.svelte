@@ -39,6 +39,7 @@
   let actionOrderMap: Record<string, number> = {}
   let isSelectingAction = false
   let actionSelectionLocked = false
+  type BranchPathLike = Array<{ branchIdx?: number | null }>
 
   $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
@@ -139,6 +140,10 @@
     ]
   }
 
+  const pathHasBranchHop = (path: BranchPathLike | undefined) => {
+    return path?.some(hop => Number.isInteger(hop.branchIdx)) ?? false
+  }
+
   $: blockRef = block?.id
     ? $selectedAutomation.blockRefs?.[block.id]
     : undefined
@@ -146,6 +151,8 @@
     toolbarEnd && flowEnd?.targetPath?.length
       ? flowEnd.targetPath
       : blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+  $: targetPathIsInsideBranch = pathHasBranchHop(targetPath)
+  $: targetIsLoopContainer = insideLoopV2 && loopStepId === block?.id
 
   $: lastStep = toolbarEnd
     ? flowEnd?.anchorRef?.terminating
@@ -358,7 +365,13 @@
         action.stepId,
         action
       )
-      if (insideLoopV2 && loopStepId && !toolbarEnd) {
+      if (
+        insideLoopV2 &&
+        loopStepId &&
+        !toolbarEnd &&
+        !block?.branchNode &&
+        (!targetPathIsInsideBranch || targetIsLoopContainer)
+      ) {
         await automationStore.actions.addBlockToLoopChildren(
           loopStepId,
           newBlock,
@@ -370,9 +383,7 @@
       stepInserted = true
 
       // Determine presence of the block before focusing
-      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
-      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
-      await automationStore.actions.selectNode(createdBlockLoc?.id)
+      await automationStore.actions.selectNode(newBlock.id)
 
       automationStore.actions.closeActionPanel()
       onClose()
@@ -609,29 +620,6 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-  }
-
-  .step-panel-content {
-    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-flow-logic-color: var(
-      --spectrum-global-color-indigo-100
-    );
-    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
-    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
-    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
-    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
-  }
-
-  :global(.spectrum--dark) .step-panel-content,
-  :global(.spectrum--darkest) .step-panel-content,
-  :global(.spectrum--midnight) .step-panel-content,
-  :global(.spectrum--nord) .step-panel-content {
-    --automation-step-icon-data-color: var(--color-blue-600);
-    --automation-step-icon-flow-logic-color: var(--color-purple-600);
-    --automation-step-icon-code-color: var(--color-orange-600);
-    --automation-step-icon-email-color: var(--color-green-600);
-    --automation-step-icon-ai-color: var(--color-brand-500);
-    --automation-step-icon-apps-color: var(--color-orange-400);
   }
 
   .step-panel-content {

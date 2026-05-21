@@ -1,10 +1,10 @@
 <script lang="ts">
+  import { selectedAutomation } from "@/stores/builder"
+  import { isNoOpBlockMove } from "@/stores/builder/automations"
   import { getContext, onDestroy, onMount } from "svelte"
   import { type Writable } from "svelte/store"
   import { generate } from "shortid"
-  import { selectedAutomation } from "@/stores/builder"
   import type { DragView } from "./FlowCanvas/FlowChartDnD"
-  import type { BlockPath } from "@budibase/types"
 
   export let path: any
   export let variant = "inline"
@@ -20,49 +20,7 @@
   $: sourcePath = $view?.moveStep?.id
     ? $selectedAutomation?.blockRefs?.[$view.moveStep.id]?.pathTo
     : undefined
-  $: validDropZone = !isNoOpMove(sourcePath, path)
-
-  const sameContainer = (sourcePath: BlockPath[], destPath: BlockPath[]) => {
-    const sourceContainer = sourcePath.slice(0, -1)
-    const destContainer = destPath.slice(0, -1)
-    if (JSON.stringify(sourceContainer) !== JSON.stringify(destContainer)) {
-      return false
-    }
-
-    const sourceEnd = sourcePath.at(-1)
-    const destEnd = destPath.at(-1)
-    return (
-      sourceEnd?.branchIdx === destEnd?.branchIdx &&
-      sourceEnd?.branchStepId === destEnd?.branchStepId &&
-      sourceEnd?.loopStepId === destEnd?.loopStepId
-    )
-  }
-
-  const isNoOpMove = (
-    sourcePath: BlockPath[] | undefined,
-    destPath: BlockPath[] | undefined
-  ) => {
-    if (!sourcePath || !destPath) {
-      return false
-    }
-
-    const sourceEnd = sourcePath.at(-1)
-    const destEnd = destPath.at(-1)
-    if (!sourceEnd || !destEnd) {
-      return false
-    }
-
-    const isOwnDragZone = sourceEnd.id === destEnd.id
-    const isFirstBranchStep =
-      destEnd.branchStepId &&
-      destEnd.branchIdx === sourceEnd.branchIdx &&
-      sourceEnd.stepIdx === 0
-    const isPreviousSibling =
-      sameContainer(sourcePath, destPath) &&
-      destEnd.stepIdx === sourceEnd.stepIdx - 1
-
-    return isOwnDragZone || isFirstBranchStep || isPreviousSibling
-  }
+  $: isNoOpDrop = sourcePath && path ? isNoOpBlockMove(sourcePath, path) : false
 
   onMount(() => {
     // Always return up-to-date values
@@ -73,7 +31,9 @@
           ...(state.dropzones || {}),
           [dzid]: {
             get dims() {
-              return dropEle ? dropEle.getBoundingClientRect() : new DOMRect()
+              return dropEle && !isNoOpDrop
+                ? dropEle.getBoundingClientRect()
+                : new DOMRect()
             },
             path,
           },
@@ -91,26 +51,28 @@
   })
 </script>
 
-{#if validDropZone}
-  <div
-    id={`dz-${dzid}`}
-    bind:this={dropEle}
-    class="drag-zone"
-    class:edge={variant === "edge"}
-    class:drag-over={$view?.droptarget === dzid}
-    style={variant === "edge" && (width || height)
-      ? `width: ${width ? Math.round(width) + "px" : "auto"}; height: ${
-          height ? Math.round(height) + "px" : "auto"
-        };`
-      : undefined}
-  >
-    <span class="move-to">Move to</span>
-  </div>
-{/if}
+<div
+  id={`dz-${dzid}`}
+  bind:this={dropEle}
+  class="drag-zone"
+  class:edge={variant === "edge"}
+  class:drag-over={$view?.droptarget === dzid}
+  class:hidden={isNoOpDrop}
+  style={variant === "edge" && (width || height)
+    ? `width: ${width ? Math.round(width) + "px" : "auto"}; height: ${
+        height ? Math.round(height) + "px" : "auto"
+      };`
+    : undefined}
+>
+  <span class="move-to">Move to</span>
+</div>
 
 <style>
   .drag-zone.drag-over {
     background-color: #1ca872b8;
+  }
+  .drag-zone.hidden {
+    visibility: hidden;
   }
   .drag-zone {
     min-height: calc(var(--spectrum-global-dimension-size-225) + 4px);
