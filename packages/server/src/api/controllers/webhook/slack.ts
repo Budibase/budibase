@@ -1,4 +1,5 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { configs, context, HTTPError } from "@budibase/backend-core"
+import { WebClient } from "@slack/web-api"
 import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
@@ -9,8 +10,15 @@ import {
   type Ctx,
   type SlackConversationScope,
 } from "@budibase/types"
-import { Chat, type Message, type SlashCommandEvent, type Thread } from "chat"
+import {
+  Chat,
+  type ActionEvent,
+  type Message,
+  type SlashCommandEvent,
+  type Thread,
+} from "chat"
 import sdk from "../../../sdk"
+import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -252,7 +260,8 @@ export async function slackWebhook(
         `/${ChatCommands.LINK}`,
         async (event: SlashCommandEvent) => {
           const raw = event.raw as Record<string, string | undefined>
-          if (!raw.channel_id || !event.user.userId) {
+          const channelId = raw.channel_id
+          if (!channelId || !event.user.userId) {
             await event.channel.post("Missing Slack command metadata.")
             return
           }
@@ -262,10 +271,83 @@ export async function slackWebhook(
             author: event.user,
             command: ChatCommands.LINK,
             content: event.text,
-            channelId: raw.channel_id,
+            channelId,
             externalUserId: event.user.userId,
             teamId: raw.team_id,
           })
+        }
+      )
+      // Make these a set? "escalation_approve", "escalation_reject"
+      // Could these be collated and fetched?
+      // Can this be wrapped or seed from a global action list
+      chat.onAction(
+        ["escalation_approve", "escalation_reject"],
+        async (event: ActionEvent) => {
+          console.log("DEAN - ACTION RESP", {
+            actionId: event.actionId,
+            value: event.value,
+            user: event.user,
+            messageId: event.messageId,
+            threadId: event.threadId,
+            channel: (event.raw as any)?.channel,
+          })
+          let parsed: {
+            escalationId: string
+            notificationDocId: string
+            appId: string
+          }
+          try {
+            parsed = JSON.parse(event.value ?? "")
+          } catch {
+            console.error(
+              "Escalation action: invalid button value",
+              event.value
+            )
+            return
+          }
+          const { escalationId, notificationDocId, appId } = parsed
+
+          const slackResponse = {
+            actionId: event.actionId,
+            user: event.user,
+            messageId: event.messageId,
+            threadId: event.threadId,
+            channel: (event.raw as any)?.channel,
+          }
+
+          try {
+            const result = await context.doInContext(appId, async () => {
+              // We can respond with closed or
+              return sdk.escalations.respond(
+                escalationId,
+                notificationDocId,
+                slackResponse,
+                (id, response) => escalationProcessor.resolve(id, response)
+              )
+            })
+            // DEAN!
+            // Can this response be wayyyyyy more complex right?
+            // Could say (4/5) people confirmed, please respond by Wednesday
+            // ALLLLSO, do we send a follow-up when its resolved??
+
+            if (event.thread) {
+              const msg =
+                result.status === "closed"
+                  ? "Escalation already closed."
+                  : "Response recorded."
+              await event.thread.post(msg)
+            }
+          } catch (error) {
+            console.error("Escalation action: failed to record response", {
+              escalationId,
+              notificationDocId,
+              appId,
+              message: error instanceof Error ? error.message : String(error),
+            })
+            if (event.thread) {
+              await event.thread.post("Failed to record response.")
+            }
+          }
         }
       )
 
