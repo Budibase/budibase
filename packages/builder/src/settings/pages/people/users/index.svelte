@@ -304,9 +304,6 @@
   }
 
   async function createUserFlow() {
-    if (!isWorkspaceOnly) {
-      return
-    }
     let usersForInvite = userData?.users ?? []
     let assignedExistingUsers = false
     if (isWorkspaceOnly) {
@@ -474,7 +471,7 @@
   }
 
   async function chooseCreationType(onboardingType: string) {
-    if (onboardingType === OnboardingType.EMAIL && isWorkspaceOnly) {
+    if (onboardingType === OnboardingType.EMAIL) {
       await createUserFlow()
     } else {
       await createUsers()
@@ -648,6 +645,16 @@
               >
                 <Icon name={"upload-simple"} size="M" />
               </ActionButton>
+              <Button
+                size="M"
+                disabled={readonly}
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : createUserModal.show}
+                cta
+              >
+                Add users
+              </Button>
             {/if}
             {#if isWorkspaceOnly}
               <Button
@@ -697,21 +704,23 @@
   </div>
 </div>
 
-{#if isWorkspaceOnly}
-  <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
-    <AddUserModal
-      {showOnboardingTypeModal}
-      workspaceOnly={isWorkspaceOnly}
-      useWorkspaceInviteModal={isWorkspaceOnly}
-      assignToWorkspace={isWorkspaceOnly}
-      inviteTitle="Invite users to workspace"
-    />
-  </Modal>
+<Modal bind:this={createUserModal} closeOnOutsideClick={false}>
+  <AddUserModal
+    {showOnboardingTypeModal}
+    workspaceOnly={isWorkspaceOnly}
+    useWorkspaceInviteModal={true}
+    assignToWorkspace={isWorkspaceOnly}
+    inviteTitle={isWorkspaceOnly
+      ? "Invite users to workspace"
+      : "Invite user to organisation"}
+    showGroupSelect={!isWorkspaceOnly}
+    showInviteIcon={isWorkspaceOnly}
+  />
+</Modal>
 
-  <Modal bind:this={inviteConfirmationModal}>
-    <InvitedModal {inviteUsersResponse} />
-  </Modal>
-{/if}
+<Modal bind:this={inviteConfirmationModal}>
+  <InvitedModal {inviteUsersResponse} />
+</Modal>
 
 <Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal
