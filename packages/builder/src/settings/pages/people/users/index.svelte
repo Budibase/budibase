@@ -55,6 +55,7 @@
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
+    assignExistingUsersToGroups,
     buildWorkspaceInvitePayload,
     dedupeUsersByEmail,
     getEffectiveGroupIds,
@@ -289,8 +290,9 @@
     addUsersData: UserData,
     onboardingType?: string
   ) => {
-    // no-op if users already exist
-    userData = await removingDuplicities(addUsersData)
+    userData = isWorkspaceOnly
+      ? await removingDuplicities(addUsersData)
+      : dedupeUsersByEmail(addUsersData)
     if (!userData?.users?.length) {
       return
     }
@@ -323,6 +325,20 @@
         notifications.error("Error adding some users to workspace")
       }
       if (!usersForInvite.length) {
+        await refreshUserList()
+        return
+      }
+    } else {
+      const result = await assignExistingUsersToGroups(userData)
+      usersForInvite = result.newUsers
+      if (result.assignedCount && !usersForInvite.length) {
+        notifications.success("Users added to groups")
+      }
+      if (result.failedCount) {
+        notifications.error("Error adding some users to groups")
+      }
+      if (!usersForInvite.length) {
+        await groups.init()
         await refreshUserList()
         return
       }
@@ -393,11 +409,17 @@
       users.push(newUser)
     }
 
-    userData = await removingDuplicities({
-      groups,
-      users,
-      assignToWorkspace: isWorkspaceOnly,
-    })
+    userData = isWorkspaceOnly
+      ? await removingDuplicities({
+          groups,
+          users,
+          assignToWorkspace: isWorkspaceOnly,
+        })
+      : dedupeUsersByEmail({
+          groups,
+          users,
+          assignToWorkspace: isWorkspaceOnly,
+        })
     if (!userData.users.length) return
 
     return createUsers()
@@ -406,7 +428,9 @@
   async function createUsers() {
     try {
       addedToWorkspaceEmails = []
-      let usersForCreation = await removingDuplicities(userData)
+      let usersForCreation = isWorkspaceOnly
+        ? await removingDuplicities(userData)
+        : dedupeUsersByEmail(userData)
 
       if (isWorkspaceOnly) {
         const result = await assignExistingUsersToWorkspace(
@@ -424,6 +448,21 @@
           notifications.error("Error adding some users to workspace")
         }
         if (!usersForCreation.users.length) {
+          await refreshUserList()
+          return
+        }
+      } else {
+        const result = await assignExistingUsersToGroups(usersForCreation)
+        usersForCreation = { ...usersForCreation, users: result.newUsers }
+
+        if (result.assignedCount && !usersForCreation.users.length) {
+          notifications.success("Users added to groups")
+        }
+        if (result.failedCount) {
+          notifications.error("Error adding some users to groups")
+        }
+        if (!usersForCreation.users.length) {
+          await groups.init()
           await refreshUserList()
           return
         }
