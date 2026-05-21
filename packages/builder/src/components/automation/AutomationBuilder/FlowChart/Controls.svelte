@@ -4,6 +4,7 @@
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
+  import { isBranchStep, isLoopV2Step } from "@budibase/types"
   import type { HistoryStore } from "@/stores/builder/history"
   import type { Automation } from "@budibase/types"
 
@@ -19,6 +20,60 @@
     const refs = $selectedAutomation?.blockRefs
     if (!automation || !refs) {
       return
+    }
+
+    const flowEnd = automationStore.actions.getToolbarFlowEndInsertion(
+      automation,
+      refs
+    )
+    const targetPath = flowEnd.targetPath
+    const targetHop = targetPath.at(-1)
+    const anchorRef = flowEnd.anchorRef
+
+    if (anchorRef) {
+      const anchorBlock = automationStore.actions.getBlockByRef(
+        automation,
+        anchorRef
+      )
+      automationStore.actions.openActionPanelToolbarFlowEnd(
+        anchorBlock || anchorRef
+      )
+      return
+    }
+
+    const targetBranchIdx = targetHop?.branchIdx
+    if (typeof targetBranchIdx === "number" && targetHop?.branchStepId) {
+      const branchRef = refs[targetHop.branchStepId]
+      const branchStep = automationStore.actions.getBlockByRef(
+        automation,
+        branchRef
+      )
+      if (branchStep && isBranchStep(branchStep)) {
+        automationStore.actions.openActionPanelToolbarFlowEnd({
+          branchNode: true,
+          pathTo: targetPath,
+          branchIdx: targetBranchIdx,
+          branchStepId: targetHop.branchStepId,
+        })
+        return
+      }
+    }
+
+    if (targetHop?.loopStepId) {
+      const loopRef = refs[targetHop.loopStepId]
+      const loopStep = automationStore.actions.getBlockByRef(
+        automation,
+        loopRef
+      )
+      if (loopRef && loopStep && isLoopV2Step(loopStep)) {
+        automationStore.actions.openActionPanelToolbarFlowEnd({
+          ...loopRef,
+          insertIntoLoopV2: true,
+          loopStepId: targetHop.loopStepId,
+          loopChildInsertIndex: 0,
+        })
+        return
+      }
     }
 
     const triggerId = automation.definition.trigger.id

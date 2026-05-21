@@ -515,9 +515,8 @@ describe("automation store", () => {
       expect(result.targetPath).toEqual([
         ...blockRefs.loop.pathTo,
         {
-          branchIdx: 0,
-          branchStepId: "loop",
           stepIdx: -1,
+          loopStepId: "loop",
           id: "loop",
         },
       ])

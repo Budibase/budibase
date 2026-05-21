@@ -29,7 +29,6 @@ import {
   RowTriggers,
   SelectedAutomationState,
   ViewMode,
-  type BranchPathEntry,
   type FlowBlockPath,
   type FormUpdate,
   type StepInputs,
@@ -212,11 +211,10 @@ export const getToolbarFlowEndInsertion = (
               targetPath: [
                 ...p,
                 {
-                  branchIdx: 0,
-                  branchStepId: cursor.id,
                   stepIdx: -1,
+                  loopStepId: cursor.id,
                   id: cursor.id,
-                } satisfies BranchPathEntry,
+                },
               ],
               insertInsideLoopV2Children: true,
             }
@@ -2934,7 +2932,7 @@ const automationActions = (store: AutomationStore) => ({
     }))
   },
 
-  openActionPanel: (block: BlockRef) => {
+  openActionPanel: (block: AutomationStoreState["actionPanelBlock"]) => {
     contextMenuStore.close()
     store.update(state => ({
       ...state,
@@ -2944,7 +2942,9 @@ const automationActions = (store: AutomationStore) => ({
       selectedBranchNode: undefined,
     }))
   },
-  openActionPanelToolbarFlowEnd: (block: BlockRef) => {
+  openActionPanelToolbarFlowEnd: (
+    block: AutomationStoreState["actionPanelBlock"]
+  ) => {
     contextMenuStore.close()
     store.update(state => ({
       ...state,

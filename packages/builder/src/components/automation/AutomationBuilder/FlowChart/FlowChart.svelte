@@ -13,6 +13,7 @@
   import {
     PublishResourceState,
     AutomationStatus,
+    isBranchStep,
     type UIAutomation,
     type BlockRef,
   } from "@budibase/types"
@@ -65,6 +66,8 @@
   const VIEWPORT_ANIMATION_DURATION = 180
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 2.5
+  const ACTION_PANEL_DEFAULT_WIDTH = 480
+  const ACTION_PANEL_STORAGE_KEY = "automation-side-panel-width"
 
   const memoAutomation = memo(automation)
 
@@ -89,6 +92,7 @@
   let preserveViewport = false
   let visibleSelectionRequest: string | undefined
   let lastVisibleSelectionCheck: string | undefined
+  let lastVisibleActionTargetCheck: string | undefined
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
   let flowViewport = writable<Viewport>({ x: 0, y: 0, zoom: 1 })
@@ -234,6 +238,23 @@
     ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
   }
 
+  $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
+    $automationStore.actionPanelBlock
+  )
+
+  $: if (
+    actionPanelTargetNodeId &&
+    actionPanelTargetNodeId !== lastVisibleActionTargetCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleActionTargetCheck = actionPanelTargetNodeId
+    visibleSelectionRequest = actionPanelTargetNodeId
+    ensureSelectedNodeVisible(actionPanelTargetNodeId, {
+      rightInset: getActionPanelWidth(),
+    })
+  }
+
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
     $workspaceDeploymentStore.automations[automation._id!]
@@ -336,7 +357,57 @@
     }
   }
 
-  const ensureSelectedNodeVisible = async (nodeId: string) => {
+  const getActionPanelTargetNodeId = (target: unknown) => {
+    if (!target || typeof target !== "object") {
+      lastVisibleActionTargetCheck = undefined
+      return undefined
+    }
+
+    const block = target as Record<string, unknown>
+    if (block.branchNode) {
+      const branchStepId =
+        typeof block.branchStepId === "string" ? block.branchStepId : undefined
+      const branchIdx =
+        typeof block.branchIdx === "number" ? block.branchIdx : undefined
+      if (!branchStepId || branchIdx == null) {
+        return undefined
+      }
+
+      const branchStep = automationStore.actions.getBlockByRef(
+        $selectedAutomation.data,
+        $selectedAutomation.blockRefs?.[branchStepId]
+      )
+      if (!branchStep || !isBranchStep(branchStep)) {
+        return undefined
+      }
+
+      const branchId = branchStep.inputs.branches?.[branchIdx]?.id
+      return branchId
+        ? `branch-${branchStepId}-${branchIdx}-${branchId}`
+        : undefined
+    }
+
+    if (typeof block.id === "string") {
+      const anchorNodeId = `anchor-${block.id}`
+      return get(nodes).some(node => node.id === anchorNodeId)
+        ? anchorNodeId
+        : block.id
+    }
+
+    return undefined
+  }
+
+  const getActionPanelWidth = () => {
+    const storedWidth = Number(localStorage?.getItem(ACTION_PANEL_STORAGE_KEY))
+    return Number.isFinite(storedWidth) && storedWidth > 0
+      ? storedWidth
+      : ACTION_PANEL_DEFAULT_WIDTH
+  }
+
+  const ensureSelectedNodeVisible = async (
+    nodeId: string,
+    options: { rightInset?: number } = {}
+  ) => {
     await tick()
     if (visibleSelectionRequest !== nodeId || !paneEl) {
       return
@@ -353,6 +424,8 @@
       getNodeDimensions(targetNode)
     const position = getAbsoluteNodePosition(targetNode)
     const margin = 24
+    const rightInset = options.rightInset ?? 0
+    const visiblePaneWidth = Math.max(paneRect.width - rightInset, 0)
     const nodeRight =
       position.x * currentViewport.zoom +
       currentViewport.x +
@@ -363,7 +436,7 @@
       currentViewport.y +
       nodeHeight * currentViewport.zoom
     const nodeTop = position.y * currentViewport.zoom + currentViewport.y
-    const xOverflow = nodeRight + margin - paneRect.width
+    const xOverflow = nodeRight + margin - visiblePaneWidth
     const xUnderflow = margin - nodeLeft
     const yOverflow = nodeBottom + margin - paneRect.height
     const yUnderflow = margin - nodeTop
