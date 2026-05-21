@@ -6,6 +6,7 @@ import {
   HTTPError,
   logging,
   redis,
+  roles,
 } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { RedisClient } from "@budibase/backend-core"
@@ -377,6 +378,7 @@ export interface HandleChatMessageParams {
   channel: ChatConversationChannel
   scope: ConversationScope
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }
 
 const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
@@ -397,6 +399,60 @@ const getLinkCommand = (provider: HandleChatMessageParams["provider"]) =>
     ? `${ChatCommands.LINK} or /${ChatCommands.LINK}`
     : `/${ChatCommands.LINK}`
 
+const getSyntheticUserId = ({
+  provider,
+  channel,
+  externalUserId,
+}: {
+  provider: AgentChannelProvider
+  channel: ChatConversationChannel
+  externalUserId: string
+}) => {
+  if (provider === AgentChannelProvider.SLACK) {
+    return channel.teamId
+      ? `slack:${channel.teamId}:${externalUserId}`
+      : `slack:${externalUserId}`
+  }
+
+  if (provider === AgentChannelProvider.MSTEAMS) {
+    return channel.tenantId
+      ? `msteams:${channel.tenantId}:${externalUserId}`
+      : `msteams:${externalUserId}`
+  }
+
+  if (provider === AgentChannelProvider.DISCORD) {
+    return channel.guildId
+      ? `discord:${channel.guildId}:${externalUserId}`
+      : `discord:${externalUserId}`
+  }
+
+  return `${provider}:${externalUserId}`
+}
+
+const createTransientPublicUser = ({
+  userId,
+  displayName,
+}: {
+  userId: string
+  displayName?: string
+}): ContextUser => {
+  const publicRoleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+  const workspaceId = context.getWorkspaceId()
+
+  return {
+    _id: userId,
+    globalId: userId,
+    userId,
+    tenantId: context.getTenantId(),
+    email: `${encodeURIComponent(userId)}@chat.budibase.local`,
+    firstName: displayName,
+    roleId: publicRoleId,
+    roles: {
+      ...(workspaceId && { [workspaceId]: publicRoleId }),
+    },
+  }
+}
+
 export const handleChatMessage = async ({
   reply,
   replyWithAssistantStream,
@@ -413,6 +469,7 @@ export const handleChatMessage = async ({
   channel,
   scope,
   idleTimeoutMinutes,
+  requireUserLink,
 }: HandleChatMessageParams): Promise<void> => {
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
@@ -485,7 +542,34 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (!existingLink) {
+    const linkingRequired = requireUserLink !== false
+    let chatUser: ContextUser
+    let userId: string
+
+    if (existingLink) {
+      try {
+        chatUser = await getGlobalUser(existingLink.globalUserId)
+      } catch (error) {
+        console.error("Failed to resolve linked chat identity user", error)
+        await reply(
+          `Your ${providerDisplayName(provider)} account link is stale. Run ${getLinkCommand(
+            provider
+          )} to reconnect it.`
+        )
+        return
+      }
+
+      const linkedUserId = chatUser._id
+      if (!linkedUserId) {
+        await reply(
+          `Your ${providerDisplayName(provider)} account link is invalid. Run ${getLinkCommand(
+            provider
+          )} to reconnect it.`
+        )
+        return
+      }
+      userId = linkedUserId
+    } else if (linkingRequired) {
       if (provider === AgentChannelProvider.MSTEAMS) {
         const providerScopeKey = channel.tenantId || channel.teamId
         const linkIdTried = `${DocumentType.CHAT_IDENTITY_LINK}_${encodeURIComponent(
@@ -512,46 +596,33 @@ export const handleChatMessage = async ({
       })
       await replyLinkPrompt(prompt)
       return
-    }
-
-    let linkedUser: ContextUser
-    try {
-      linkedUser = await getGlobalUser(existingLink.globalUserId)
-    } catch (error) {
-      console.error("Failed to resolve linked chat identity user", error)
-      await reply(
-        `Your ${providerDisplayName(provider)} account link is stale. Run ${getLinkCommand(
-          provider
-        )} to reconnect it.`
-      )
-      return
-    }
-
-    const linkedUserId = linkedUser._id
-    if (!linkedUserId) {
-      await reply(
-        `Your ${providerDisplayName(provider)} account link is invalid. Run ${getLinkCommand(
-          provider
-        )} to reconnect it.`
-      )
-      return
+    } else {
+      userId = getSyntheticUserId({
+        provider,
+        channel,
+        externalUserId: user.externalUserId,
+      })
+      chatUser = createTransientPublicUser({
+        userId,
+        displayName: user.displayName,
+      })
     }
 
     const hasAccess = await canAccessChatAppAgentForUser(
       {
-        user: linkedUser,
-        roleId: linkedUser.roleId ?? undefined,
+        user: chatUser,
+        roleId: chatUser.roleId ?? undefined,
       },
       chatAgentConfig
     )
     if (!hasAccess) {
       await reply(
-        "Your linked Budibase account does not have access to this agent."
+        existingLink
+          ? "Your linked Budibase account does not have access to this agent."
+          : "This agent is not available to unlinked users."
       )
       return
     }
-
-    const userId = linkedUserId
 
     if (command === ChatCommands.NEW && !content) {
       const chatId = docIds.generateChatConversationID()
@@ -627,7 +698,7 @@ export const handleChatMessage = async ({
       await beforeAssistantWebhook?.()
       result = await webhookChat({
         chat: draftChat,
-        user: linkedUser,
+        user: chatUser,
         ...(replyWithAssistantStream
           ? { onAssistantStream: replyWithAssistantStream }
           : {}),
