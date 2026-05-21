@@ -69,7 +69,7 @@
 
 <div class="controls">
   <div class="toolbar">
-    <UndoRedoControl store={historyStore} showButtonGroup />
+    <UndoRedoControl store={historyStore} showButtonGroup showTooltips />
     <span class="fit-view-wrap">
       <Icon
         name="arrows-out"
