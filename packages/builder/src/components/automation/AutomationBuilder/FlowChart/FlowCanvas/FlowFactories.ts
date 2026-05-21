@@ -9,21 +9,15 @@ import type {
   AutomationBlock,
 } from "@/types/automations"
 import type { Node as FlowNode, Edge as FlowEdge } from "@xyflow/svelte"
-import type {
-  BlockPath,
-  Branch,
-  BranchStep,
-  LayoutDirection,
-} from "@budibase/types"
+import type { BlockPath, Branch, BranchStep } from "@budibase/types"
 
 export const stepNode = (
   id: string,
   block: AutomationBlock,
-  direction?: LayoutDirection,
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
-  const data: StepNodeData = { block, direction }
+  const data: StepNodeData = { block }
   const node: FlowNode = {
     id,
     type: "step-node",
@@ -42,7 +36,6 @@ export const branchNode = (
   step: BranchStep,
   branch: Branch,
   branchIdx: number,
-  direction?: LayoutDirection,
   parentId?: string,
   laneWidth?: number,
   position: { x: number; y: number } = { x: 0, y: 0 }
@@ -51,7 +44,6 @@ export const branchNode = (
     block: step,
     branch,
     branchIdx,
-    direction,
     ...(parentId ? { isSubflow: true } : {}),
     ...(laneWidth ? { laneWidth } : {}),
   }
@@ -71,11 +63,10 @@ export const branchNode = (
 
 export const anchorNode = (
   id: string,
-  direction?: LayoutDirection,
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
-  const data: AnchorNodeData = { direction }
+  const data: AnchorNodeData = {}
   const node: FlowNode = { id, type: "anchor-node", data, position }
   if (parentId) {
     node.parentId = parentId
@@ -89,13 +80,11 @@ export const edgeAddItem = (
   target: string,
   ctx: {
     block: FlowBlockContext
-    direction?: LayoutDirection
     pathTo?: FlowBlockPath
   }
 ): FlowEdge => {
   const data: BaseEdgeData = {
     block: ctx.block,
-    direction: ctx.direction,
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
   }
   return {
@@ -112,7 +101,6 @@ export const edgeBranchAddItem = (
   target: string,
   ctx: {
     block: FlowBlockContext
-    direction?: LayoutDirection
     branchStepId: string
     branchIdx: number
     branchesCount: number
@@ -130,7 +118,6 @@ export const edgeBranchAddItem = (
     branchIdx: ctx.branchIdx,
     branchesCount: ctx.branchesCount,
     block: ctx.block,
-    direction: ctx.direction,
     ...(ctx.isSubflowEdge ? { isSubflowEdge: true } : {}),
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
     ...(ctx.loopStepId ? { loopStepId: ctx.loopStepId } : {}),
@@ -152,7 +139,6 @@ export const edgeLoopAddItem = (
   target: string,
   ctx: {
     block: FlowBlockContext
-    direction?: LayoutDirection
     loopStepId: string
     loopChildInsertIndex: number
     pathTo?: BlockPath[]
@@ -160,7 +146,6 @@ export const edgeLoopAddItem = (
 ): FlowEdge => {
   const data: LoopEdgeData = {
     block: ctx.block,
-    direction: ctx.direction,
     loopStepId: ctx.loopStepId,
     loopChildInsertIndex: ctx.loopChildInsertIndex,
     insertIntoLoopV2: true,
