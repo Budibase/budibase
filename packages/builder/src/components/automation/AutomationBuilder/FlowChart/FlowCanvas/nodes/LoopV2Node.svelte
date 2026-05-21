@@ -139,10 +139,18 @@
   }
 
   :global(.svelte-flow__node-loop-subflow-node) {
-    background: rgba(255, 255, 255, 0.01) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.45) !important;
+    border: 1.5px solid var(--spectrum-global-color-gray-300) !important;
     border-radius: 16px !important;
     transition: all 0.2s ease !important;
+  }
+
+  :global(.spectrum--dark) :global(.svelte-flow__node-loop-subflow-node),
+  :global(.spectrum--darkest) :global(.svelte-flow__node-loop-subflow-node),
+  :global(.spectrum--midnight) :global(.svelte-flow__node-loop-subflow-node),
+  :global(.spectrum--nord) :global(.svelte-flow__node-loop-subflow-node) {
+    background: rgba(255, 255, 255, 0.01) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
   }
 
   :global(.svelte-flow__node-loop-subflow-node:has(.loop-container.selected)) {
@@ -150,6 +158,16 @@
   }
 
   :global(.svelte-flow__node-loop-subflow-node:hover) {
+    border-color: var(--spectrum-global-color-gray-400) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  :global(.spectrum--dark) :global(.svelte-flow__node-loop-subflow-node:hover),
+  :global(.spectrum--darkest)
+    :global(.svelte-flow__node-loop-subflow-node:hover),
+  :global(.spectrum--midnight)
+    :global(.svelte-flow__node-loop-subflow-node:hover),
+  :global(.spectrum--nord) :global(.svelte-flow__node-loop-subflow-node:hover) {
     border-color: rgba(255, 255, 255, 0.15) !important;
     background: rgba(255, 255, 255, 0.02) !important;
   }
