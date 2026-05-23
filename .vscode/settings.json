@@ -33,19 +33,5 @@
     "typescript",
     "svelte"
   ],
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "workbench.colorCustomizations": {
-    "terminal.background": "#00000000",
-    "activityBar.background": "#411F4F",
-    "titleBar.activeBackground": "#5B2B6F",
-    "titleBar.activeForeground": "#FDFBFD",
-    "titleBar.inactiveBackground": "#411F4F",
-    "titleBar.inactiveForeground": "#FDFBFD",
-    "statusBar.background": "#411F4F",
-    "statusBar.foreground": "#FDFBFD",
-    "statusBar.debuggingBackground": "#411F4F",
-    "statusBar.debuggingForeground": "#FDFBFD",
-    "statusBar.noFolderBackground": "#411F4F",
-    "statusBar.noFolderForeground": "#FDFBFD"
-  }
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
