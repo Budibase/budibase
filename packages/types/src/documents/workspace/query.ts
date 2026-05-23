@@ -96,6 +96,8 @@ export interface RestQueryFields {
 }
 export interface SQLQueryFields {
   sql?: string
+  pagination?: PaginationConfig
+  paginationValues?: PaginationValues
 }
 
 export interface MongoQueryFields {
@@ -123,11 +125,16 @@ export interface GoogleSheetsQueryFields {
 }
 
 export interface PaginationConfig {
+  // REST query pagination
   type?: string
   location?: string
   pageParam?: string
   sizeParam?: string
   responseParam?: string
+  // SQL query pagination
+  enabled?: boolean
+  offsetBinding?: string
+  limitBinding?: string
 }
 
 export interface PaginationValues {
