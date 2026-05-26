@@ -9,11 +9,13 @@
     Body,
     Input,
     DatePicker,
+    Label,
   } from "@budibase/bbui"
+  import type { Component, EnrichedBinding } from "@budibase/types"
   import { isJSBinding } from "@budibase/string-templates"
+  import { generate } from "shortid"
   import { selectedScreen, selectedComponent } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"
-  import type { Component, EnrichedBinding } from "@budibase/types"
   import {
     getSchemaForDatasource,
     getDatasourceForProvider,
@@ -30,7 +32,6 @@
     ValidationEditorRule,
     ValidationValue,
   } from "./types"
-  import { generate } from "shortid"
 
   type InputValue = string | number | null | undefined
 
@@ -322,72 +323,82 @@
                   </button>
                 </svelte:fragment>
 
-                <div class="rule-row">
+                <div class="rule-row" class:rule-row--no-value={valueDisabled}>
                   <Select
+                    label="Constraint"
                     bind:value={rule.constraint}
                     options={constraintOptions}
                     placeholder="Constraint"
                   />
                   <Select
+                    label="Value type"
                     disabled={valueDisabled}
-                    placeholder="Type"
+                    placeholder={false}
                     bind:value={rule.valueType}
                     options={["Binding", "Value"]}
                   />
 
-                  {#if rule.valueType === "Binding"}
-                    <DrawerBindableInput
-                      placeholder="Constraint value"
-                      value={rule.value}
-                      {bindings}
-                      disabled={valueDisabled}
-                      on:change={e => (rule.value = e.detail)}
-                    />
-                  {:else if rule.type !== "array" && rule.constraint && stringConstraints.includes(rule.constraint)}
-                    <Input
-                      disabled={valueDisabled}
-                      value={inputValue(rule.value)}
-                      on:change={e => updateRuleValue(rule, e)}
-                      placeholder="Constraint value"
-                    />
-                  {:else if rule.type && ["string", "number", "options", "longform"].includes(rule.type)}
-                    <Input
-                      disabled={valueDisabled}
-                      value={inputValue(rule.value)}
-                      on:change={e => updateRuleValue(rule, e)}
-                      placeholder="Constraint value"
-                    />
-                  {:else if rule.type === "array"}
-                    <Select
-                      disabled={valueDisabled}
-                      options={dataSourceSchema?.schema?.[field]?.constraints
-                        ?.inclusion || []}
-                      getOptionLabel={x => x}
-                      getOptionValue={x => x}
-                      value={rule.value}
-                      on:change={e => {
-                        rule.value = e.detail
-                      }}
-                    />
-                  {:else if rule.type === "boolean"}
-                    <Select
-                      disabled={valueDisabled}
-                      options={[
-                        { label: "True", value: "true" },
-                        { label: "False", value: "false" },
-                      ]}
-                      bind:value={rule.value}
-                    />
-                  {:else if rule.type === "datetime"}
-                    <DatePicker
-                      enableTime={false}
-                      disabled={valueDisabled}
-                      bind:value={rule.value}
-                    />
-                  {:else}
-                    <DrawerBindableInput disabled />
+                  {#if !valueDisabled}
+                    {#if rule.valueType === "Binding"}
+                      <DrawerBindableInput
+                        label="Value"
+                        title="Value"
+                        placeholder="Constraint value"
+                        value={rule.value}
+                        {bindings}
+                        on:change={e => (rule.value = e.detail)}
+                      />
+                    {:else if rule.type !== "array" && rule.constraint && stringConstraints.includes(rule.constraint)}
+                      <Input
+                        label="Value"
+                        value={inputValue(rule.value)}
+                        on:change={e => updateRuleValue(rule, e)}
+                        placeholder="Constraint value"
+                      />
+                    {:else if rule.type && ["string", "number", "options", "longform"].includes(rule.type)}
+                      <Input
+                        label="Value"
+                        value={inputValue(rule.value)}
+                        on:change={e => updateRuleValue(rule, e)}
+                        placeholder="Constraint value"
+                      />
+                    {:else if rule.type === "array"}
+                      <Select
+                        label="Value"
+                        options={dataSourceSchema?.schema?.[field]?.constraints
+                          ?.inclusion || []}
+                        getOptionLabel={x => x}
+                        getOptionValue={x => x}
+                        value={rule.value}
+                        on:change={e => {
+                          rule.value = e.detail
+                        }}
+                      />
+                    {:else if rule.type === "boolean"}
+                      <Select
+                        label="Value"
+                        options={[
+                          { label: "True", value: "true" },
+                          { label: "False", value: "false" },
+                        ]}
+                        bind:value={rule.value}
+                      />
+                    {:else if rule.type === "datetime"}
+                      <DatePicker
+                        label="Value"
+                        enableTime={false}
+                        bind:value={rule.value}
+                      />
+                    {:else}
+                      <Layout noPadding gap="XS">
+                        <Label>Value</Label>
+                        <DrawerBindableInput disabled />
+                      </Layout>
+                    {/if}
                   {/if}
                   <DrawerBindableInput
+                    label="Error message"
+                    title="Error message"
                     placeholder={defaultErrorForConstraint(
                       rule.constraint,
                       rule.value
@@ -428,10 +439,16 @@
   .rule-row {
     display: grid;
     grid-template-columns:
-      minmax(170px, 210px) minmax(110px, 130px) minmax(180px, 1fr)
+      minmax(170px, 210px) minmax(130px, 160px) minmax(180px, 1fr)
       minmax(220px, 1.3fr);
     gap: var(--spacing-m);
     align-items: center;
+  }
+  .rule-row--no-value {
+    grid-template-columns: minmax(170px, 210px) minmax(130px, 160px) minmax(
+        220px,
+        1.3fr
+      );
   }
   .icon-button {
     display: flex;
