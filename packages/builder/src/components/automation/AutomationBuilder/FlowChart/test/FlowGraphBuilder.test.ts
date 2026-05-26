@@ -39,7 +39,6 @@ const createDeps = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => ({
   blockRefs: {},
   newNodes: graph.nodes,
   newEdges: graph.edges,
-  layoutDirection: "LR" as const,
 })
 
 const renderTestChain = (
@@ -58,7 +57,6 @@ const renderTestChain = (
     blockRefs: {},
     newNodes: graph.nodes,
     newEdges: graph.edges,
-    layoutDirection: "LR",
   })
   return graph
 }

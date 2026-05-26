@@ -156,7 +156,6 @@
       blockRefs,
       newNodes,
       newEdges,
-      layoutDirection: "LR",
     }
 
     // Build graph via helpers

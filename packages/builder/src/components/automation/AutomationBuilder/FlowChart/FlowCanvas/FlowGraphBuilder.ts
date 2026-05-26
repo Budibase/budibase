@@ -20,7 +20,6 @@ import {
   BRANCH,
   LOOP,
   LOOP_INSERT_ACTION_OFFSET,
-  type FlowLayoutDirection,
 } from "./FlowGeometry"
 import {
   stepNode,
@@ -35,7 +34,6 @@ export interface GraphBuildDeps {
   blockRefs: Record<string, BlockRef>
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
-  layoutDirection: FlowLayoutDirection
 }
 
 enum BranchMode {
@@ -119,8 +117,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
   const switchNodeId = baseId
-
-  const isLR = deps.layoutDirection !== "TB"
 
   const centers = computeLaneCenters(branches.length, mode, {
     laneWidth: visuals.laneWidth,
@@ -219,7 +215,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         childrenMap?.[branch.id] || []
       )
 
-      if (isLR && mode === BranchMode.SUBFLOW) {
+      if (mode === BranchMode.SUBFLOW) {
         // Horizontal layout
         const branchX = coords.x ?? 40
         const branchY = stackStartY + bIdx * (BRANCH.height + visuals.gap)
@@ -446,9 +442,6 @@ export const renderLoopV2Container = (
   const children: AutomationStep[] = filterLegacyLoops(
     loopStep.inputs?.children || []
   )
-  // Follow the global layout inside the loop container
-  const isLR = deps.layoutDirection !== "TB"
-
   // Pre-compute container dimensions
   let containerWidth = 400
   const paddingTop = SUBFLOW.paddingTop
@@ -456,12 +449,11 @@ export const renderLoopV2Container = (
   const internalSpacing = SUBFLOW.internalSpacing
   const childHeight = SUBFLOW.childHeight
   const lrWidth = 60
-  const lrGapForWidth = isLR ? lrWidth : 0
+  const lrGapForWidth = lrWidth
   const horizontalStepWidth = STEP.width
-  const initialInnerX = isLR ? LOOP_INSERT_ACTION_OFFSET * 2 : 40
+  const initialInnerX = LOOP_INSERT_ACTION_OFFSET * 2
 
-  let dynamicHeight = paddingTop
-  let maxFanoutWidth = isLR ? horizontalStepWidth : SUBFLOW.stepWidth
+  let maxFanoutWidth = horizontalStepWidth
   let hasBranchChild = false
   let linearWidth = 0
   let maxRowHeight = childHeight
@@ -481,52 +473,37 @@ export const renderLoopV2Container = (
         const len = filterLegacyLoops(childrenMap?.[br.id] || []).length
         return Math.max(acc, len)
       }, 0)
-      if (isLR) {
-        const totalBranchesHeight =
-          branches.length * BRANCH.height +
-          Math.max(0, branches.length - 1) * SUBFLOW.laneGap
-        maxRowHeight = Math.max(
-          maxRowHeight,
-          totalBranchesHeight + internalSpacing * 2
-        )
+      const totalBranchesHeight =
+        branches.length * BRANCH.height +
+        Math.max(0, branches.length - 1) * SUBFLOW.laneGap
+      maxRowHeight = Math.max(
+        maxRowHeight,
+        totalBranchesHeight + internalSpacing * 2
+      )
 
-        const maxChildrenWidth =
-          maxLaneChildren * (SUBFLOW.stepWidth + internalSpacing)
-        const branchLaneWidth =
-          SUBFLOW.laneWidth + maxChildrenWidth + internalSpacing
-        linearWidth += branchLaneWidth + internalSpacing + lrGapForWidth
-      } else {
-        dynamicHeight +=
-          BRANCH.height +
-          internalSpacing +
-          maxLaneChildren * (childHeight + internalSpacing)
-      }
+      const maxChildrenWidth =
+        maxLaneChildren * (SUBFLOW.stepWidth + internalSpacing)
+      const branchLaneWidth =
+        SUBFLOW.laneWidth + maxChildrenWidth + internalSpacing
+      linearWidth += branchLaneWidth + internalSpacing + lrGapForWidth
     } else {
-      if (isLR) {
-        linearWidth += horizontalStepWidth + internalSpacing + lrGapForWidth
-      } else {
-        dynamicHeight += childHeight + internalSpacing
-      }
+      linearWidth += horizontalStepWidth + internalSpacing + lrGapForWidth
     }
   }
-  if (isLR && linearWidth > 0) {
+  if (linearWidth > 0) {
     linearWidth -= lrGapForWidth
   }
-  dynamicHeight += paddingBottom
-  if (isLR) {
-    const minLinearLoopWidth = 280
-    containerWidth = Math.max(
-      hasBranchChild ? containerWidth : minLinearLoopWidth,
-      initialInnerX + linearWidth + LOOP_INSERT_ACTION_OFFSET * 2,
-      maxFanoutWidth + 80,
-      hasBranchChild ? SUBFLOW.laneWidth + 80 : 0
-    )
-  } else {
-    containerWidth = Math.max(containerWidth, maxFanoutWidth + 80)
-  }
-  const containerHeight = isLR
-    ? Math.max(paddingTop + maxRowHeight + paddingBottom, LOOP.minHeight)
-    : Math.max(dynamicHeight, LOOP.minHeight)
+  const minLinearLoopWidth = 280
+  containerWidth = Math.max(
+    hasBranchChild ? containerWidth : minLinearLoopWidth,
+    initialInnerX + linearWidth + LOOP_INSERT_ACTION_OFFSET * 2,
+    maxFanoutWidth + 80,
+    hasBranchChild ? SUBFLOW.laneWidth + 80 : 0
+  )
+  const containerHeight = Math.max(
+    paddingTop + maxRowHeight + paddingBottom,
+    LOOP.minHeight
+  )
 
   const loopNodeData: LoopV2NodeData = {
     block: loopStep,
@@ -545,23 +522,19 @@ export const renderLoopV2Container = (
   })
 
   // Render children inside the container
-  const stepWidth = isLR ? horizontalStepWidth : SUBFLOW.stepWidth
-  const baseX = Math.max(0, Math.floor((containerWidth - stepWidth) / 2))
+  const stepWidth = horizontalStepWidth
   const contentHeight = containerHeight - paddingTop - paddingBottom
-  const baseY = isLR
-    ? paddingTop + Math.floor((contentHeight - childHeight) / 2)
-    : Math.max(paddingTop, Math.floor((containerHeight - childHeight) / 2))
-  const loopHandleY = isLR ? baseY + childHeight / 2 : baseY
+  const baseY = paddingTop + Math.floor((contentHeight - childHeight) / 2)
+  const loopHandleY = baseY + childHeight / 2
   loopNodeData.handleY = loopHandleY
-  let innerY = paddingTop
   let innerX = initialInnerX
-  const lrGap = isLR ? 60 : 0
+  const lrGap = 60
   let lastLinearChild: AutomationStep | undefined = undefined
 
   children.forEach((child, cIdx) => {
     const isBranch = child.stepId === AutomationActionStepId.BRANCH
     if (!isBranch) {
-      const nodePos = isLR ? { x: innerX, y: baseY } : { x: baseX, y: innerY }
+      const nodePos = { x: innerX, y: baseY }
       deps.newNodes.push(stepNode(child.id, child, baseId, nodePos))
       if (lastLinearChild) {
         const prevRef = deps.blockRefs?.[lastLinearChild.id]
@@ -575,11 +548,7 @@ export const renderLoopV2Container = (
         )
       }
       lastLinearChild = child
-      if (isLR) {
-        innerX += stepWidth + internalSpacing + lrGap
-      } else {
-        innerY += childHeight + internalSpacing
-      }
+      innerX += stepWidth + internalSpacing + lrGap
       return
     }
 
@@ -599,10 +568,10 @@ export const renderLoopV2Container = (
           block: child,
           pathTo: resolveBlockPath(child, deps),
         }
-    const branchResult = placeBranchCluster({
+    placeBranchCluster({
       step: child,
       source,
-      coords: isLR ? { x: innerX, y: baseY + childHeight / 2 } : { y: innerY },
+      coords: { x: innerX, y: baseY + childHeight / 2 },
       deps,
       mode: BranchMode.SUBFLOW,
       parentId: baseId,
@@ -617,25 +586,21 @@ export const renderLoopV2Container = (
     })
 
     lastLinearChild = undefined
-    if (isLR) {
-      // Advance horizontal cursor to clear the full branch cluster width
-      const brs: Branch[] = (child as BranchStep)?.inputs?.branches || []
-      const childrenMap: Record<string, AutomationStep[]> =
-        (child as BranchStep)?.inputs?.children || {}
+    // Advance horizontal cursor to clear the full branch cluster width
+    const brs: Branch[] = (child as BranchStep)?.inputs?.branches || []
+    const childrenMap: Record<string, AutomationStep[]> =
+      (child as BranchStep)?.inputs?.children || {}
 
-      const maxChildrenInBranch = brs.reduce((acc, br) => {
-        const len = filterLegacyLoops(childrenMap?.[br.id] || []).length
-        return Math.max(acc, len)
-      }, 0)
-      const maxChildrenWidth =
-        maxChildrenInBranch * (SUBFLOW.stepWidth + internalSpacing)
-      const branchLaneWidth =
-        SUBFLOW.laneWidth + maxChildrenWidth + internalSpacing
+    const maxChildrenInBranch = brs.reduce((acc, br) => {
+      const len = filterLegacyLoops(childrenMap?.[br.id] || []).length
+      return Math.max(acc, len)
+    }, 0)
+    const maxChildrenWidth =
+      maxChildrenInBranch * (SUBFLOW.stepWidth + internalSpacing)
+    const branchLaneWidth =
+      SUBFLOW.laneWidth + maxChildrenWidth + internalSpacing
 
-      innerX += branchLaneWidth + internalSpacing + lrGap
-    } else {
-      innerY = branchResult.bottomY
-    }
+    innerX += branchLaneWidth + internalSpacing + lrGap
   })
 
   // Add exit anchor only when last child is non-branch
@@ -646,9 +611,8 @@ export const renderLoopV2Container = (
     const lastChild = children[children.length - 1]
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
-    // Place exit anchor at container end according to layout
-    const exitAnchorY = isLR ? loopHandleY : innerY
-    const exitAnchorX = isLR ? containerWidth : baseX
+    const exitAnchorY = loopHandleY
+    const exitAnchorX = containerWidth
     deps.newNodes.push(
       anchorNode(exitAnchorId, baseId, {
         x: exitAnchorX,
