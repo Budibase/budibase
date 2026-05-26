@@ -410,7 +410,7 @@
     color: var(--spectrum-global-color-static-red-600);
   }
   .issue.warn .icon {
-    color: var(--spectrum-global-color-static-yellow-600);
+    color: var(--spectrum-global-color-orange-500);
   }
   .issues :global(hr.spectrum-Divider:last-child) {
     display: none;

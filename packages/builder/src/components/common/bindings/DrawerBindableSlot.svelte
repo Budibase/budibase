@@ -100,7 +100,9 @@
   }
 
   const isValidBoolean = value => {
-    return value === "false" || value === "true" || value == ""
+    return (
+      value == null || value === "false" || value === "true" || value === ""
+    )
   }
 
   const validationMap = {
@@ -131,6 +133,9 @@
     if (type === "json" && !isJSBinding(value)) {
       return "json-slot-icon"
     }
+    if (type === "date" || type === "datetime") {
+      return "date-slot-icon"
+    }
     if (
       ![
         "string",
@@ -150,7 +155,12 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="control" class:disabled>
+<div
+  class="control"
+  class:disabled
+  class:date-slot={type === "date" || type === "datetime"}
+  class:boolean-slot={type === "boolean"}
+>
   {#if !isValid(value) && !showComponent}
     <Input
       {label}
@@ -212,11 +222,17 @@
     position: relative;
   }
 
-  .slot-icon {
+  .slot-icon,
+  .date-slot-icon {
     right: 34px !important;
     border-right: 1px solid var(--spectrum-alias-border-color);
     border-top-right-radius: 0px !important;
     border-bottom-right-radius: 0px !important;
+  }
+
+  .control.boolean-slot {
+    border: 1px solid var(--spectrum-alias-border-color);
+    border-radius: 4px;
   }
 
   .icon.close {
@@ -264,5 +280,36 @@
 
   .control:not(.disabled) :global(.spectrum-Textfield-input) {
     padding-right: 40px;
+  }
+
+  .control.date-slot:not(.disabled)
+    :global(.spectrum-Datepicker .spectrum-Textfield-input) {
+    padding-right: 40px;
+  }
+
+  .control.date-slot :global(.spectrum-Datepicker) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px 34px;
+    min-inline-size: 0;
+    min-width: 0;
+  }
+
+  .control.date-slot :global(.spectrum-Datepicker .spectrum-Textfield) {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .control.date-slot :global(.spectrum-Datepicker .spectrum-InputGroup-button) {
+    grid-column: 3;
+    grid-row: 1;
+    inline-size: 34px;
+    width: 34px;
+    min-inline-size: 34px;
+    min-width: 34px;
+  }
+
+  .date-slot-icon {
+    right: 34px !important;
   }
 </style>

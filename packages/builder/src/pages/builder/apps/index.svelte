@@ -6,7 +6,6 @@
     auth,
     clientAppsStore,
     clientChatAppsStore,
-    featureFlags,
     licensing,
     organisation,
     translations,
@@ -47,7 +46,6 @@
 
   $: userApps = $clientAppsStore.apps
   $: liveChatApps = $clientChatAppsStore.chatApps
-  $: chatFeatureEnabled = $featureFlags.AI_AGENTS
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
@@ -73,9 +71,7 @@
       notifications.error("Error loading apps")
     }
 
-    if (chatFeatureEnabled) {
-      await clientChatAppsStore.load()
-    }
+    await clientChatAppsStore.load()
 
     loaded = true
   })
@@ -200,7 +196,7 @@
                 </Layout>
               </div>
             {/if}
-            {#if chatFeatureEnabled && liveChatApps.length}
+            {#if liveChatApps.length}
               <Heading size="S">Chat</Heading>
               <div class="group">
                 <Layout gap="S" noPadding>
@@ -237,7 +233,7 @@
                 </Layout>
               </div>
             {/if}
-            {#if !userApps.length && (!chatFeatureEnabled || !liveChatApps.length)}
+            {#if !userApps.length && !liveChatApps.length}
               <Layout gap="XS" noPadding>
                 <Heading size="S">{portalLabels.noAppsHeading}</Heading>
                 <Body size="S">{portalLabels.noAppsDescription}</Body>
