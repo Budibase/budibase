@@ -770,12 +770,7 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
     width: 100%;
   }
 
-  .root :global(.svelte-flow__node-sticky-note) {
-    z-index: 100;
-  }
-
   .root :global(.svelte-flow__edgelabel-renderer) {
-    z-index: 4;
     pointer-events: none;
   }
 
