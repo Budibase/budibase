@@ -62,7 +62,19 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
-  $: insideLoopV2 = block?.insertIntoLoopV2
+  $: toolbarEnd = $automationStore.actionPanelToolbarFlowEnd
+  $: flowEnd =
+    toolbarEnd && $selectedAutomation?.data && $selectedAutomation?.blockRefs
+      ? automationStore.actions.getToolbarFlowEndInsertion(
+          $selectedAutomation.data,
+          $selectedAutomation.blockRefs
+        )
+      : null
+  $: insideLoopV2 = toolbarEnd
+    ? !!(
+        flowEnd?.insertInsideLoopV2Children || flowEnd?.anchorRef?.isLoopV2Child
+      )
+    : !!block?.insertIntoLoopV2
   $: loopStepId = block?.loopStepId || block?.id
   $: loopChildInsertIndex =
     typeof block?.loopChildInsertIndex === "number"
@@ -136,11 +148,15 @@
     ? $selectedAutomation.blockRefs?.[block.id]
     : undefined
   $: targetPath =
-    blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+    toolbarEnd && flowEnd?.targetPath?.length
+      ? flowEnd.targetPath
+      : blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
   $: targetPathIsInsideBranch = pathHasBranchHop(targetPath)
   $: targetIsLoopContainer = insideLoopV2 && loopStepId === block?.id
 
-  $: lastStep = blockRef?.terminating
+  $: lastStep = toolbarEnd
+    ? flowEnd?.anchorRef?.terminating
+    : blockRef?.terminating
   $: pathSteps =
     targetPath && $selectedAutomation?.data
       ? automationStore.actions.getPathSteps(
@@ -352,6 +368,7 @@
       if (
         insideLoopV2 &&
         loopStepId &&
+        !toolbarEnd &&
         !block?.branchNode &&
         (!targetPathIsInsideBranch || targetIsLoopContainer)
       ) {
@@ -511,7 +528,11 @@
                         action.stepId
                       )}
                     >
-                      <Icon name={action.icon} size="M" color="var(--ink)" />
+                      <Icon
+                        name={action.icon}
+                        size="M"
+                        color="var(--spectrum-global-color-gray-900)"
+                      />
                     </div>
                   {/if}
                   <Body
@@ -566,7 +587,11 @@
                       action.stepId
                     )}
                   >
-                    <Icon name={action.icon} size="M" color="var(--ink)" />
+                    <Icon
+                      name={action.icon}
+                      size="M"
+                      color="var(--spectrum-global-color-gray-900)"
+                    />
                   </div>
                   <div class="item-label">
                     <Body

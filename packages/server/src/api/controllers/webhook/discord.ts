@@ -80,6 +80,7 @@ export async function discordWebhook(
         applicationId,
         idleTimeoutMinutes,
         channelEnabled,
+        requireUserLink,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         const integration =
@@ -95,6 +96,7 @@ export async function discordWebhook(
           ...integration,
           publicKey: pk,
           idleTimeoutMinutes: agent.discordIntegration?.idleTimeoutMinutes,
+          requireUserLink: agent.discordIntegration?.requireUserLink,
           channelEnabled:
             !!agent.discordIntegration?.interactionsEndpointUrl?.trim(),
         }
@@ -188,6 +190,7 @@ export async function discordWebhook(
               channel,
               scope,
               idleTimeoutMinutes,
+              requireUserLink,
             })
           } catch (error) {
             console.error("Discord webhook processing failed", error)
