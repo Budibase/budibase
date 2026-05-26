@@ -13,7 +13,6 @@
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
   import NewPill from "@/components/common/NewPill.svelte"
-  import { featureFlags } from "@/stores/portal"
 
   $goto
 
@@ -37,9 +36,7 @@
     $selectedScreen,
     $selectedComponent
   )
-  $: structure = getComponentStructure({
-    chatbox: $featureFlags.AI_AGENTS && $featureFlags.AI_AGENTS,
-  })
+  $: structure = getComponentStructure()
   $: enrichedStructure = enrichStructure(
     structure,
     $componentStore.components,
