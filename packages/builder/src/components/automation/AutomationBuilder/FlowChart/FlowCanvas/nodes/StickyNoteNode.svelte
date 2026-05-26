@@ -40,21 +40,29 @@
   }
 
   const saveTitle = async () => {
-    editTitle = false
     if (titleValue !== note.title) {
-      await automationStore.actions.updateStickyNote(note.id, {
-        title: titleValue,
-      })
+      try {
+        await automationStore.actions.updateStickyNote(note.id, {
+          title: titleValue,
+        })
+      } catch {
+        titleValue = note.title
+      }
     }
+    editTitle = false
   }
 
   const saveText = async () => {
-    editText = false
     if (textValue !== note.text) {
-      await automationStore.actions.updateStickyNote(note.id, {
-        text: textValue,
-      })
+      try {
+        await automationStore.actions.updateStickyNote(note.id, {
+          text: textValue,
+        })
+      } catch {
+        textValue = note.text
+      }
     }
+    editText = false
   }
 
   afterUpdate(() => {
@@ -70,6 +78,7 @@
         textTextarea.value.length,
         textTextarea.value.length
       )
+      autoResizeTextarea()
     }
   })
 
@@ -154,6 +163,14 @@
     document.addEventListener("pointerup", onUp)
   }
 
+  const MAX_TEXT_LENGTH = 5000
+
+  const autoResizeTextarea = () => {
+    if (!textTextarea) return
+    textTextarea.style.height = "auto"
+    textTextarea.style.height = textTextarea.scrollHeight + "px"
+  }
+
   const remove = async () => {
     await automationStore.actions.removeStickyNote(note.id)
   }
@@ -167,7 +184,7 @@
     on:dblclick|stopPropagation
     role="button"
     tabindex="-1"
-    style="width: {noteWidth}px; height: {noteHeight}px;"
+    style="width: {noteWidth}px; min-height: {noteHeight}px;"
   >
     <div class="drag-grip" on:pointerdown|stopPropagation={startDrag}>
       <Icon name="dots-six-vertical" size="S" />
@@ -179,6 +196,7 @@
           bind:this={titleInput}
           bind:value={titleValue}
           class="title-input"
+          maxlength={MAX_TEXT_LENGTH}
           on:blur={saveTitle}
           on:keydown={e => {
             if (e.key === "Enter") saveTitle()
@@ -207,7 +225,9 @@
           bind:this={textTextarea}
           bind:value={textValue}
           class="text-input"
+          maxlength={MAX_TEXT_LENGTH}
           on:blur={saveText}
+          on:input={autoResizeTextarea}
           on:keydown={e => {
             if (e.key === "Escape") saveText()
           }}
