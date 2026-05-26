@@ -28,14 +28,14 @@
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
-import { ActionStepID } from "@/constants/backend/automations"
-import { stickyNoteNode } from "./FlowCanvas/FlowFactories"
-import {
-  getBlocks as getBlocksHelper,
-  buildTopLevelGraph,
-  dagreLayoutAutomation,
-  type GraphBuildDeps,
-} from "./AutomationStepHelpers"
+  import { ActionStepID } from "@/constants/backend/automations"
+  import { stickyNoteNode } from "./FlowCanvas/FlowFactories"
+  import {
+    getBlocks as getBlocksHelper,
+    buildTopLevelGraph,
+    dagreLayoutAutomation,
+    type GraphBuildDeps,
+  } from "./AutomationStepHelpers"
   import {
     NODE_SPACING,
     DEFAULT_NODE_WIDTH,
@@ -47,9 +47,9 @@ import {
   import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
   import CustomEdge from "./FlowCanvas/edges/CustomEdge.svelte"
   import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
-import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
-import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
-import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
+  import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
+  import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
+  import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
 
   import {
     SvelteFlow,
@@ -179,9 +179,7 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
     const automationData = $selectedAutomation?.data
     if (automationData?.uiTree?.stickyNotes) {
       for (const note of automationData.uiTree.stickyNotes) {
-        laidOut.nodes.push(
-          stickyNoteNode(note, { x: note.x, y: note.y })
-        )
+        laidOut.nodes.push(stickyNoteNode(note, { x: note.x, y: note.y }))
       }
     }
 
@@ -553,8 +551,7 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
     const toolbarTopFlowY =
       (rect.height - toolbarHeight - viewport.y) / viewport.zoom
     const flowY = toolbarTopFlowY - noteHeight - margin
-    const flowX =
-      (rect.width / 2 - viewport.x) / viewport.zoom
+    const flowX = (rect.width / 2 - viewport.x) / viewport.zoom
     automationStore.actions.addStickyNote({ x: flowX, y: flowY })
   }
 
@@ -692,7 +689,10 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
         onMove={handleMove}
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
-        <FlowControls historyStore={automationHistoryStore} on:addnote={handleAddNote} />
+        <FlowControls
+          historyStore={automationHistoryStore}
+          on:addnote={handleAddNote}
+        />
       </SvelteFlow>
     </div>
   </div>
