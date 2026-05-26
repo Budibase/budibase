@@ -41,9 +41,7 @@ import {
   AutomationStepDefinition,
   AutomationStepInputs,
   AutomationStepOutputs,
-  FeatureFlag,
 } from "@budibase/types"
-import { features } from "@budibase/backend-core"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
 
@@ -152,9 +150,7 @@ export async function getActionDefinitions(): Promise<
     }
   }
 
-  if (await features.isEnabled(FeatureFlag.AI_AGENTS)) {
-    actionDefinitions["AGENT"] = automations.steps.agent.definition
-  }
+  actionDefinitions["AGENT"] = automations.steps.agent.definition
 
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)

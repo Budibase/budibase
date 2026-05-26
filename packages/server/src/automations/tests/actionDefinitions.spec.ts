@@ -1,20 +1,8 @@
-import { FeatureFlag, PluginType } from "@budibase/types"
+import { PluginType } from "@budibase/types"
 import env, { setEnv } from "../../environment"
-import { features } from "@budibase/backend-core"
 import sdk from "../../sdk"
 import { getAction, getActionDefinitions } from "../actions"
 import { getAutomationPlugin } from "../../utilities/fileSystem"
-
-jest.mock("@budibase/backend-core", () => {
-  const actual = jest.requireActual("@budibase/backend-core")
-  return {
-    ...actual,
-    features: {
-      ...actual.features,
-      isEnabled: jest.fn(),
-    },
-  }
-})
 
 jest.mock("../../sdk", () => ({
   plugins: {
@@ -26,7 +14,6 @@ jest.mock("../../utilities/fileSystem", () => ({
   getAutomationPlugin: jest.fn(),
 }))
 
-const mockIsEnabled = features.isEnabled as jest.Mock
 const mockPluginFetch = sdk.plugins.fetch as jest.Mock
 const mockGetAutomationPlugin = getAutomationPlugin as jest.Mock
 
@@ -37,7 +24,6 @@ describe("getActionDefinitions", () => {
 
   it("marks OpenAI as deprecated for self-hosted environments", async () => {
     const restoreEnv = setEnv({ SELF_HOSTED: "1" })
-    mockIsEnabled.mockResolvedValue(false)
     mockPluginFetch.mockResolvedValue([])
 
     try {
@@ -50,11 +36,8 @@ describe("getActionDefinitions", () => {
     }
   })
 
-  it("includes the agent action when the feature flag is enabled", async () => {
+  it("includes the agent action", async () => {
     const restoreEnv = setEnv({ SELF_HOSTED: undefined })
-    mockIsEnabled.mockImplementation(
-      async flag => flag === FeatureFlag.AI_AGENTS
-    )
 
     try {
       const definitions = await getActionDefinitions()
@@ -68,7 +51,6 @@ describe("getActionDefinitions", () => {
 
   it("adds self-hosted automation plugin definitions as custom actions", async () => {
     const restoreEnv = setEnv({ SELF_HOSTED: "1" })
-    mockIsEnabled.mockResolvedValue(false)
     mockPluginFetch.mockResolvedValue([
       {
         schema: {
@@ -95,7 +77,6 @@ describe("getActionDefinitions", () => {
 
   it("does not mutate builtin definitions between calls", async () => {
     const restoreEnv = setEnv({ SELF_HOSTED: "1" })
-    mockIsEnabled.mockResolvedValue(false)
     mockPluginFetch.mockResolvedValue([])
 
     try {
