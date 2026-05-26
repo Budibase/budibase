@@ -21,7 +21,6 @@ import {
 } from "../FlowCanvas/FlowGeometry"
 import {
   expectAllEdgesResolvable,
-  expectBranchEdge,
   expectLoopEdge,
   expectSubflowNodesInsideParent,
   expectUniqueGraphIds,
@@ -144,35 +143,23 @@ describe("renderLoopV2Container", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    const firstBranch = getNode(graph, "branch-loop-branch-0-first")
-    const secondBranch = getNode(graph, "branch-loop-branch-1-second")
-    const emptyBranch = getNode(graph, "branch-loop-branch-2-empty")
-    const middleBranchEdge = getEdge(
-      graph,
-      "loop-before-branch",
-      secondBranch.id
-    )
+    const switchNode = getNode(graph, "loop-branch")
 
-    expect(firstBranch.parentId).toBe("loop-with-branch")
-    expect(secondBranch.parentId).toBe("loop-with-branch")
-    expect(emptyBranch.parentId).toBe("loop-with-branch")
+    expect(switchNode.parentId).toBe("loop-with-branch")
 
-    expectBranchEdge(getEdge(graph, "loop-before-branch", firstBranch.id), {
-      branchStepId: "loop-branch",
-      branchIdx: 0,
-      branchesCount: 3,
-      isSubflowEdge: true,
+    expectLoopEdge(getEdge(graph, "loop-before-branch", switchNode.id), {
+      loopStepId: "loop-with-branch",
+      loopChildInsertIndex: 1,
     })
-    expect(middleBranchEdge.data).toMatchObject({
-      isPrimaryEdge: true,
-      branchIdx: 1,
-      branchesCount: 3,
+    expectLoopEdge(getEdge(graph, "loop-branch", "loop-branch-first-child"), {
+      loopStepId: "loop-with-branch",
+      loopChildInsertIndex: 1,
     })
     expectLoopEdge(
       getEdge(
         graph,
         "loop-branch-second-child-2",
-        "anchor-branch-loop-branch-1-second"
+        "anchor-loop-branch-1-second"
       ),
       {
         loopStepId: "loop-with-branch",
@@ -218,25 +205,13 @@ describe("renderChain", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    expectBranchEdge(getEdge(graph, "trigger", "branch-branch-many-0-alpha"), {
-      branchStepId: "branch-many",
-      branchIdx: 0,
-      branchesCount: 4,
-    })
-    expectBranchEdge(getEdge(graph, "trigger", "branch-branch-many-3-delta"), {
-      branchStepId: "branch-many",
-      branchIdx: 3,
-      branchesCount: 4,
-    })
+    getEdge(graph, "trigger", "branch-many")
 
+    getEdge(graph, "branch-many", "alpha-1")
     getEdge(graph, "alpha-1", "alpha-2")
-    getNode(graph, "anchor-alpha-2")
-    getEdge(
-      graph,
-      "branch-branch-many-1-beta",
-      "anchor-branch-branch-many-1-beta"
-    )
-    getEdge(graph, "delta-loop", "anchor-delta-loop")
+    getNode(graph, "anchor-branch-many-0-alpha")
+    getEdge(graph, "branch-many", "anchor-branch-many-1-beta")
+    getEdge(graph, "delta-loop", "anchor-branch-many-3-delta")
   })
 
   it("renders a terminal action bar edge after a branch leaf loop fixture", () => {
@@ -245,13 +220,13 @@ describe("renderChain", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    const edge = getEdge(graph, "delta-loop", "anchor-delta-loop")
+    const edge = getEdge(graph, "delta-loop", "anchor-branch-many-3-delta")
     expect(edge.data).toMatchObject({
       block: expect.objectContaining({
         id: "delta-loop",
         stepId: "LOOP_V2",
       }),
     })
-    getNode(graph, "anchor-delta-loop")
+    getNode(graph, "anchor-branch-many-3-delta")
   })
 })

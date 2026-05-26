@@ -5,6 +5,7 @@ import {
   type BranchStep,
   type Branch,
   type LoopV2Step,
+  type BlockPath,
   BlockRef,
 } from "@budibase/types"
 import type { AutomationBlock, LoopV2NodeData } from "@/types/automations"
@@ -141,10 +142,17 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
     })
   )
   deps.newEdges.push(
-    edgeAddItem(source.id, switchNodeId, {
-      block: source.block,
-      ...(source.pathTo ? { pathTo: source.pathTo } : {}),
-    })
+    loopContext
+      ? edgeLoopAddItem(source.id, switchNodeId, {
+          block: source.block,
+          loopStepId: loopContext.loopStepId,
+          loopChildInsertIndex: loopContext.loopChildInsertIndex,
+          ...(source.pathTo ? { pathTo: source.pathTo as BlockPath[] } : {}),
+        })
+      : edgeAddItem(source.id, switchNodeId, {
+          block: source.block,
+          ...(source.pathTo ? { pathTo: source.pathTo } : {}),
+        })
   )
 
   const branchStartY =
@@ -227,10 +235,17 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           )
           const prevPath = resolveBlockPath(prevBlock, deps)
           deps.newEdges.push(
-            edgeAddItem(prevId, child.id, {
-              block: prevBlock,
-              ...(prevPath ? { pathTo: prevPath } : {}),
-            })
+            loopContext
+              ? edgeLoopAddItem(prevId, child.id, {
+                  block: prevBlock,
+                  loopStepId: loopContext.loopStepId,
+                  loopChildInsertIndex: loopContext.loopChildInsertIndex,
+                  ...(prevPath ? { pathTo: prevPath as BlockPath[] } : {}),
+                })
+              : edgeAddItem(prevId, child.id, {
+                  block: prevBlock,
+                  ...(prevPath ? { pathTo: prevPath } : {}),
+                })
           )
           prevId = child.id
           prevBlock = child
@@ -246,10 +261,19 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         )
         const anchorSourcePath = resolveBlockPath(prevBlock, deps)
         deps.newEdges.push(
-          edgeAddItem(prevId, anchorId, {
-            block: prevBlock,
-            ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
-          })
+          loopContext
+            ? edgeLoopAddItem(prevId, anchorId, {
+                block: prevBlock,
+                loopStepId: loopContext.loopStepId,
+                loopChildInsertIndex: loopContext.loopChildInsertIndex,
+                ...(anchorSourcePath
+                  ? { pathTo: anchorSourcePath as BlockPath[] }
+                  : {}),
+              })
+            : edgeAddItem(prevId, anchorId, {
+                block: prevBlock,
+                ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
+              })
         )
 
         clusterBottomY = Math.max(
