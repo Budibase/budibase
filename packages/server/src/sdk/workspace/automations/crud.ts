@@ -159,7 +159,7 @@ export async function update(automation: Automation) {
     oldAuto: oldAutomation,
     newAuto: automation,
   })
-  
+
   // Retry once against the latest rev if CouchDB reports a
   // conflict.
   let response: { rev: string; id: string }
