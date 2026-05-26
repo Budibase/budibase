@@ -160,19 +160,17 @@ export async function update(automation: Automation) {
     newAuto: automation,
   })
 
-  // Retry once against the latest rev if CouchDB reports a
-  // conflict.
   let response: { rev: string; id: string }
   try {
     response = await db.put(automation)
   } catch (err: any) {
-    // Surface a 409 on True concurrent updates.
-    if (err?.statusCode !== 409 && err?.status !== 409) {
-      throw err
+    if (err?.statusCode === 409 || err?.status === 409) {
+      throw new HTTPError(
+        "This automation was modified by another user. Refresh and try again.",
+        409
+      )
     }
-    const latest = await db.get<Automation>(automation._id)
-    automation._rev = latest._rev
-    response = await db.put(automation)
+    throw err
   }
   automation._rev = response.rev
 
