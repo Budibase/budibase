@@ -549,10 +549,12 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
     const rect = paneEl.getBoundingClientRect()
     const toolbarHeight = 80
     const noteHeight = 140
-    const screenX = rect.width / 2
-    const screenY = rect.height - toolbarHeight - noteHeight / 2 - 20
-    const flowX = (screenX - viewport.x) / viewport.zoom
-    const flowY = (screenY - viewport.y) / viewport.zoom
+    const margin = 40
+    const toolbarTopFlowY =
+      (rect.height - toolbarHeight - viewport.y) / viewport.zoom
+    const flowY = toolbarTopFlowY - noteHeight - margin
+    const flowX =
+      (rect.width / 2 - viewport.x) / viewport.zoom
     automationStore.actions.addStickyNote({ x: flowX, y: flowY })
   }
 
