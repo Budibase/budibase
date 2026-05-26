@@ -10,6 +10,7 @@
     Input,
     DatePicker,
   } from "@budibase/bbui"
+  import { isJSBinding } from "@budibase/string-templates"
   import { selectedScreen, selectedComponent } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"
   import type { Component, EnrichedBinding } from "@budibase/types"
@@ -264,6 +265,9 @@
     }
     if (Array.isArray(rule.value)) {
       return rule.value.length ? rule.value.join(", ") : ""
+    }
+    if (isJSBinding(rule.value)) {
+      return "(JavaScript function)"
     }
     return String(rule.value)
   }
