@@ -42,6 +42,10 @@ const Constraints = {
     label: "Must not match regex",
     value: "notRegex",
   },
+  Url: {
+    label: "Must be a valid URL",
+    value: "url",
+  },
   Contains: {
     label: "Must contain",
     value: "contains",
@@ -60,16 +64,20 @@ const Constraints = {
   },
 }
 
+const stringConstraints = [
+  Constraints.Required,
+  Constraints.MinLength,
+  Constraints.MaxLength,
+  Constraints.Equal,
+  Constraints.NotEqual,
+  Constraints.Regex,
+  Constraints.NotRegex,
+  Constraints.Url,
+]
+
 const ConstraintMap: Record<string, ValidationConstraintOption[]> = {
-  ["string"]: [
-    Constraints.Required,
-    Constraints.MinLength,
-    Constraints.MaxLength,
-    Constraints.Equal,
-    Constraints.NotEqual,
-    Constraints.Regex,
-    Constraints.NotRegex,
-  ],
+  ["string"]: stringConstraints,
+  ["url"]: stringConstraints,
   ["number"]: [
     Constraints.Required,
     Constraints.MaxValue,

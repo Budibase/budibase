@@ -13,6 +13,16 @@ describe("validation constraints", () => {
   it("returns empty constraints for unknown field types", () => {
     expect(getConstraintsForType("not-a-real-type")).toStrictEqual([])
   })
+
+  it("includes a URL rule for text and URL fields", () => {
+    const stringConstraints = getConstraintsForType("string")
+    const urlConstraints = getConstraintsForType("url")
+
+    expect(stringConstraints.map(constraint => constraint.value)).toContain(
+      "url"
+    )
+    expect(urlConstraints.map(constraint => constraint.value)).toContain("url")
+  })
 })
 
 describe("defaultErrorForConstraint", () => {
@@ -20,6 +30,10 @@ describe("defaultErrorForConstraint", () => {
 
   it("returns a fixed message for required", () => {
     expect(defaultErrorForConstraint("required", null)).toBe("Required")
+  })
+
+  it("returns a fixed message for url", () => {
+    expect(defaultErrorForConstraint("url", null)).toBe("Must be a valid URL")
   })
 
   it("includes the value for minLength when set", () => {

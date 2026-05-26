@@ -100,8 +100,9 @@
   $: dataSourceSchema = getDataSourceSchema($selectedScreen, $selectedComponent)
   $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
-  $: fieldType = type?.split("/")[1] || "string"
-  $: constraintOptions = getConstraintsForType(fieldType)
+  $: validationType = type?.split("/")[1] || "string"
+  $: fieldType = validationType === "url" ? "string" : validationType
+  $: constraintOptions = getConstraintsForType(validationType)
 
   const getDataSourceSchema = (
     asset: ScreenAsset | null | undefined,
@@ -240,7 +241,7 @@
   }
 
   const supportsConstraintValue = (constraint?: string): boolean => {
-    return constraint !== "required"
+    return !["required", "url"].includes(constraint || "")
   }
 
   const toggleRule = (id: string): void => {

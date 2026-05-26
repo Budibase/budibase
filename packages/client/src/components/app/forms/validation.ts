@@ -334,6 +334,22 @@ const notRegexHandler = (value: any, rule: UIFieldValidationRule) => {
   return !regexHandler(value, rule)
 }
 
+const urlHandler = (value: unknown) => {
+  if (value == null) {
+    return true
+  }
+  if (typeof value !== "string") {
+    return false
+  }
+
+  try {
+    const url = new URL(value)
+    return ["http:", "https:"].includes(url.protocol)
+  } catch {
+    return false
+  }
+}
+
 // Evaluates a contains constraint
 const containsHandler = (value: any, rule: UIFieldValidationRule) => {
   const expectedValue = parseType(rule.value, "string")
@@ -372,6 +388,7 @@ const handlerMap = {
   notEqual: notEqualHandler,
   regex: regexHandler,
   notRegex: notRegexHandler,
+  url: urlHandler,
   contains: containsHandler,
   notContains: notContainsHandler,
   json: jsonHandler,
