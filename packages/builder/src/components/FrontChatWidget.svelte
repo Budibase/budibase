@@ -1,4 +1,6 @@
 <script>
+  import { featureFlags } from "@/stores/portal"
+  import { FeatureFlag } from "@budibase/types"
   import { onMount } from "svelte"
 
   const COMPANION_CONTAINER_ID = "companion-container"
@@ -7,6 +9,10 @@
   const COMPANION_TOKEN = "eyJjbyI6NzQ5Nzg3OCwiY2EiOjI4Mjc0NTgyfQ"
 
   onMount(() => {
+    if (!$featureFlags[FeatureFlag.FRONT_COMPANION]) {
+      return
+    }
+
     let container = document.getElementById(COMPANION_CONTAINER_ID)
     if (!container) {
       container = document.createElement("div")
