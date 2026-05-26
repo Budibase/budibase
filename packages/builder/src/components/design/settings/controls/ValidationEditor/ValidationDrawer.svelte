@@ -383,11 +383,13 @@
                         bind:value={rule.value}
                       />
                     {:else if rule.type === "datetime"}
-                      <DatePicker
-                        label="Value"
-                        enableTime={false}
-                        bind:value={rule.value}
-                      />
+                      <Layout noPadding gap="XS">
+                        <Label>Value</Label>
+                        <DatePicker
+                          enableTime={false}
+                          bind:value={rule.value}
+                        />
+                      </Layout>
                     {:else}
                       <Layout noPadding gap="XS">
                         <Label>Value</Label>
