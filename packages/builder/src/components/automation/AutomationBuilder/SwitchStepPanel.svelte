@@ -16,7 +16,8 @@
     BasicOperator,
     UILogicalOperator,
   } from "@budibase/types"
-  import { type AutomationContext } from "@/stores/builder/automations"
+  import { isJSBinding } from "@budibase/string-templates"
+  import type { AutomationContext } from "@/stores/builder/automations"
   import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
 
   type SwitchConditionUI = Omit<
@@ -87,6 +88,13 @@
     }
   }
 
+  const formatConditionValue = (value: unknown) => {
+    if (isJSBinding(value)) {
+      return "(JavaScript function)"
+    }
+    return `"${value ?? ""}"`
+  }
+
   const getConditionSummary = (branch: Branch): string => {
     const conditionUI = branch.conditionUI as SwitchConditionUI | undefined
     const groups = conditionUI?.groups || []
@@ -101,8 +109,9 @@
           continue
         }
         const op = filter.operator === BasicOperator.EQUAL ? "is" : "is not"
-        const val = filter.value ?? ""
-        parts.push(`- ${filter.field} ${op} "${val}"`)
+        parts.push(
+          `- ${filter.field} ${op} ${formatConditionValue(filter.value)}`
+        )
       }
     }
     if (!parts.length) {

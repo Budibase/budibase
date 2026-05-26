@@ -37,11 +37,7 @@ import {
   renderBranches,
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
-import {
-  ANCHOR,
-  BRANCH,
-  STEP,
-} from "./FlowCanvas/FlowGeometry"
+import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
 import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
 
 const FLOW_ITEM_CARD_HEIGHT = 60
@@ -625,10 +621,11 @@ const getSwitchBranchTargetCenters = (
     const rightIdx = targetExtents.length / 2
     const leftIdx = rightIdx - 1
     centers[leftIdx] =
-      -(targetExtents[leftIdx].below +
+      -(
+        targetExtents[leftIdx].below +
         SWITCH_BRANCH_VERTICAL_SPACING +
-        targetExtents[rightIdx].above) /
-      2
+        targetExtents[rightIdx].above
+      ) / 2
     centers[rightIdx] =
       (targetExtents[leftIdx].below +
         SWITCH_BRANCH_VERTICAL_SPACING +

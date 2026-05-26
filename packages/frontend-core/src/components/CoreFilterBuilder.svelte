@@ -312,7 +312,10 @@
                       {#if groupLabel}
                         {groupLabel}
                       {/if}
-                      {getGroupPrefix(groupIdx, editableFilters.logicalOperator)}
+                      {getGroupPrefix(
+                        groupIdx,
+                        editableFilters.logicalOperator
+                      )}
                     </span>
                     <span class="operator-picker">
                       <Select
@@ -332,7 +335,8 @@
                         popoverAutoWidth
                       />
                     </span>
-                    <span>of the following {filterTypeLabel}s are matched:</span>
+                    <span>of the following {filterTypeLabel}s are matched:</span
+                    >
                   </div>
                   {#if showGroupActions}
                     <div class="group-actions">

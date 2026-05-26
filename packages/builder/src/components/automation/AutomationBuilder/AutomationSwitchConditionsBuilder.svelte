@@ -11,7 +11,11 @@
 
   export let filters: any = undefined
   export let bindings: EnrichedBinding[] = []
-  export let schemaFields: Array<{ name: string; displayName: string; type: string }> = []
+  export let schemaFields: Array<{
+    name: string
+    displayName: string
+    type: string
+  }> = []
   export let evaluationContext: any = {}
   export let showDeleteGroupAction = true
   export let groupLabel: string | undefined = undefined
