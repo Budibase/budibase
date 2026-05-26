@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { automationStore, selectedAutomation } from "@/stores/builder"
+  import { automationStore } from "@/stores/builder"
   import { Icon } from "@budibase/bbui"
   import { ViewMode, type StickyNoteNodeData } from "@/types/automations"
-  import { get } from "svelte/store"
   import { afterUpdate } from "svelte"
   import { useSvelteFlow } from "@xyflow/svelte"
 
@@ -17,12 +16,17 @@
   let editText = false
   let titleValue = ""
   let textValue = ""
+  let lastTextValue = ""
   let titleInput: HTMLInputElement
   let textTextarea: HTMLTextAreaElement
 
-  $: if (note) {
+  $: if (note && !editTitle) {
     titleValue = note.title
+  }
+
+  $: if (note && !editText) {
     textValue = note.text
+    lastTextValue = note.text
   }
 
   const startEditTitle = (e: Event) => {
@@ -33,10 +37,11 @@
   }
 
   const startEditText = (e: Event) => {
-    if (!isEditor) return
+    if (!isEditor || editText) return
     e.preventDefault()
     editText = true
     textValue = note.text
+    lastTextValue = note.text
   }
 
   const saveTitle = async () => {
@@ -53,16 +58,26 @@
   }
 
   const saveText = async () => {
-    if (textValue !== note.text) {
+    if (textValue !== note.text || noteHeight !== note.height) {
       try {
         await automationStore.actions.updateStickyNote(note.id, {
           text: textValue,
+          height: noteHeight,
         })
       } catch {
         textValue = note.text
       }
     }
     editText = false
+  }
+
+  const saveActiveEdits = async () => {
+    if (editTitle) {
+      await saveTitle()
+    }
+    if (editText) {
+      await saveText()
+    }
   }
 
   afterUpdate(() => {
@@ -78,41 +93,44 @@
         textTextarea.value.length,
         textTextarea.value.length
       )
-      autoResizeTextarea()
     }
   })
 
   let noteWidth = 220
   let noteHeight = 140
   let resizing = false
+  const MIN_NOTE_HEIGHT = 140
+  const MIN_NOTE_WIDTH = 160
+  const MAX_NOTE_WIDTH = 300
+  const MAX_NOTE_HEIGHT = 400
 
-  $: if (note?.width) noteWidth = note.width
-  $: if (note?.height) noteHeight = note.height
+  $: if (note?.width) noteWidth = Math.min(note.width, MAX_NOTE_WIDTH)
+  $: if (note?.height) noteHeight = Math.min(note.height, MAX_NOTE_HEIGHT)
+  $: noteDisplayHeight = Math.min(noteHeight, MAX_NOTE_HEIGHT)
 
   const startResize = (e: PointerEvent) => {
     e.preventDefault()
     e.stopPropagation()
     resizing = true
     const startX = e.clientX
-    const startY = e.clientY
     const startW = noteWidth
-    const startH = noteHeight
 
     const onMove = (ev: PointerEvent) => {
       if (!resizing) return
-      const newW = Math.min(600, Math.max(160, startW + ev.clientX - startX))
-      const newH = Math.min(800, Math.max(100, startH + ev.clientY - startY))
+      const newW = Math.min(
+        MAX_NOTE_WIDTH,
+        Math.max(MIN_NOTE_WIDTH, startW + ev.clientX - startX)
+      )
       noteWidth = newW
-      noteHeight = newH
     }
 
-    const onUp = () => {
+    const onUp = async () => {
       resizing = false
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
+      await saveActiveEdits()
       automationStore.actions.updateStickyNote(note.id, {
         width: noteWidth,
-        height: noteHeight,
       })
     }
 
@@ -146,10 +164,11 @@
       })
     }
 
-    const onUp = () => {
+    const onUp = async () => {
       dragging = false
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
+      await saveActiveEdits()
       const updatedNode = flow.getNodes().find(n => n.id === note.id)
       if (updatedNode) {
         automationStore.actions.updateStickyNotePosition(
@@ -163,12 +182,41 @@
     document.addEventListener("pointerup", onUp)
   }
 
-  const MAX_TEXT_LENGTH = 5000
+  const MAX_TITLE_LENGTH = 120
+  const MAX_NOTE_TEXT_LENGTH = 500
 
-  const autoResizeTextarea = () => {
-    if (!textTextarea) return
-    textTextarea.style.height = "auto"
-    textTextarea.style.height = textTextarea.scrollHeight + "px"
+  const handleTextInput = (e: Event) => {
+    const target = e.currentTarget as HTMLTextAreaElement
+    const nextValue = target.value
+    const bodyHeight = target.clientHeight
+    const chromeHeight = noteHeight - bodyHeight
+
+    const currentHeight = target.style.height
+    const currentMinHeight = target.style.minHeight
+    const currentMaxHeight = target.style.maxHeight
+
+    target.style.height = "0px"
+    target.style.minHeight = "0px"
+    target.style.maxHeight = "none"
+    const textHeight = target.scrollHeight
+    target.style.height = currentHeight
+    target.style.minHeight = currentMinHeight
+    target.style.maxHeight = currentMaxHeight
+
+    const nextHeight = Math.min(
+      MAX_NOTE_HEIGHT,
+      Math.max(MIN_NOTE_HEIGHT, chromeHeight + textHeight)
+    )
+
+    if (chromeHeight + textHeight > MAX_NOTE_HEIGHT) {
+      target.value = lastTextValue
+      textValue = lastTextValue
+      return
+    }
+
+    noteHeight = nextHeight
+    textValue = nextValue
+    lastTextValue = nextValue
   }
 
   const remove = async () => {
@@ -184,7 +232,7 @@
     on:dblclick|stopPropagation
     role="button"
     tabindex="-1"
-    style="width: {noteWidth}px; min-height: {noteHeight}px;"
+    style="width: {noteWidth}px; max-width: {MAX_NOTE_WIDTH}px; height: {noteDisplayHeight}px; max-height: {MAX_NOTE_HEIGHT}px;"
   >
     <div class="drag-grip" on:pointerdown|stopPropagation={startDrag}>
       <Icon name="dots-six-vertical" size="S" />
@@ -196,7 +244,7 @@
           bind:this={titleInput}
           bind:value={titleValue}
           class="title-input"
-          maxlength={MAX_TEXT_LENGTH}
+          maxlength={MAX_TITLE_LENGTH}
           on:blur={saveTitle}
           on:keydown={e => {
             if (e.key === "Enter") saveTitle()
@@ -215,31 +263,31 @@
       {/if}
       {#if isEditor}
         <div class="delete-btn" on:click|stopPropagation={remove}>
-          <Icon name="x" size="S" hoverable />
+          <Icon name="trash" size="S" hoverable />
         </div>
       {/if}
     </div>
-    <div class="note-body">
+    <div
+      class="note-body"
+      class:editable={isEditor}
+      on:mousedown|stopPropagation={startEditText}
+      on:click|stopPropagation
+    >
       {#if editText}
         <textarea
           bind:this={textTextarea}
-          bind:value={textValue}
+          value={textValue}
           class="text-input"
-          maxlength={MAX_TEXT_LENGTH}
+          maxlength={MAX_NOTE_TEXT_LENGTH}
           on:blur={saveText}
-          on:input={autoResizeTextarea}
+          on:input={handleTextInput}
           on:keydown={e => {
             if (e.key === "Escape") saveText()
           }}
           on:wheel|stopPropagation
         />
       {:else}
-        <span
-          class="note-text"
-          class:editable={isEditor}
-          on:mousedown|stopPropagation={startEditText}
-          on:click|stopPropagation
-        >
+        <span class="note-text">
           {note.text}
         </span>
       {/if}
@@ -250,7 +298,10 @@
 <style>
   .sticky-note {
     width: 220px;
+    height: 140px;
     min-height: 140px;
+    max-width: 300px;
+    max-height: 400px;
     background: #fef9c3;
     border: 2px solid #e6d87a;
     border-radius: 4px;
@@ -294,6 +345,7 @@
   .title-text {
     font-weight: 600;
     font-size: 14px;
+    line-height: 1.4;
     color: var(--spectrum-global-color-gray-900);
     flex: 1;
     min-width: 0;
@@ -312,11 +364,13 @@
   .title-input {
     font-weight: 600;
     font-size: 14px;
+    line-height: 1.4;
     font-family: inherit;
     border: none;
     background: rgba(255, 255, 255, 0);
     border-radius: 2px;
     padding: 2px 4px;
+    margin: 0;
     flex: 1;
     min-width: 0;
     outline: none;
@@ -339,11 +393,18 @@
   }
 
   .note-body {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 80px;
+    overflow: hidden;
+    display: flex;
   }
 
   .note-text {
+    display: block;
+    flex: 1;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
     font-size: 13px;
     color: var(--spectrum-global-color-gray-800);
     white-space: pre-wrap;
@@ -355,24 +416,32 @@
     resize: none;
   }
 
-  .note-text.editable {
+  .note-body.editable,
+  .note-body.editable .note-text {
     cursor: text;
   }
 
   .text-input {
+    display: block;
+    flex: 1;
     width: 100%;
-    min-height: 80px;
+    height: 100%;
+    max-height: 100%;
+    min-height: 100%;
     font-size: 13px;
     border: none;
     background: rgba(255, 255, 255, 0);
     border-radius: 2px;
     padding: 4px;
+    margin: 0;
     resize: none;
     outline: none;
-    font-family: var(--font-sans);
+    font-family: inherit;
     line-height: 1.4;
-    color: var(--spectrum-global-color-gray-900);
+    overflow-wrap: break-word;
+    color: var(--spectrum-global-color-gray-800);
     box-sizing: border-box;
+    overflow: hidden;
   }
 
   :global(.spectrum--dark) .text-input {
@@ -428,27 +497,27 @@
 
   .resize-grip {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 14px;
-    height: 14px;
-    cursor: nwse-resize;
+    top: 0;
+    right: -4px;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
     opacity: 0;
     transition: opacity 0.15s;
+    z-index: 2;
   }
 
   .resize-grip::after {
     content: "";
     position: absolute;
-    bottom: 3px;
+    top: 0;
     right: 3px;
-    width: 8px;
-    height: 8px;
+    width: 0;
+    height: 100%;
     border-right: 2px solid var(--spectrum-global-color-gray-500);
-    border-bottom: 2px solid var(--spectrum-global-color-gray-500);
   }
 
-  .sticky-note:hover .resize-grip,
+  .resize-grip:hover,
   .sticky-note.resizing .resize-grip {
     opacity: 1;
   }
