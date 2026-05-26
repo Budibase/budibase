@@ -4,6 +4,7 @@
   import { ViewMode, type StickyNoteNodeData } from "@/types/automations"
   import { get } from "svelte/store"
   import { afterUpdate } from "svelte"
+  import { useSvelteFlow } from "@xyflow/svelte"
 
   export let data: StickyNoteNodeData | undefined = undefined
   export let selected: boolean = false
@@ -110,6 +111,49 @@
     document.addEventListener("pointerup", onUp)
   }
 
+  const flow = useSvelteFlow()
+
+  let dragging = false
+
+  const startDrag = (e: PointerEvent) => {
+    if (!isEditor) return
+    e.preventDefault()
+    e.stopPropagation()
+    dragging = true
+    const nodes = flow.getNodes()
+    const node = nodes.find(n => n.id === note.id)
+    if (!node) return
+    const startPos = { ...node.position }
+    const startX = e.clientX
+    const startY = e.clientY
+
+    const onMove = (ev: PointerEvent) => {
+      if (!dragging) return
+      const zoom = flow.getViewport()?.zoom || 1
+      const dx = (ev.clientX - startX) / zoom
+      const dy = (ev.clientY - startY) / zoom
+      flow.updateNode(note.id, {
+        position: { x: startPos.x + dx, y: startPos.y + dy },
+      })
+    }
+
+    const onUp = () => {
+      dragging = false
+      document.removeEventListener("pointermove", onMove)
+      document.removeEventListener("pointerup", onUp)
+      const updatedNode = flow.getNodes().find(n => n.id === note.id)
+      if (updatedNode) {
+        automationStore.actions.updateStickyNotePosition(
+          note.id,
+          updatedNode.position
+        )
+      }
+    }
+
+    document.addEventListener("pointermove", onMove)
+    document.addEventListener("pointerup", onUp)
+  }
+
   const remove = async () => {
     await automationStore.actions.removeStickyNote(note.id)
   }
@@ -120,11 +164,14 @@
     class="sticky-note"
     class:selected
     class:resizing
-    on:dblclick={() => {}}
+    on:dblclick|stopPropagation
     role="button"
     tabindex="-1"
     style="width: {noteWidth}px; height: {noteHeight}px;"
   >
+    <div class="drag-grip" on:pointerdown|stopPropagation={startDrag}>
+      <Icon name="dots-six-vertical" size="S" />
+    </div>
     <div class="resize-grip" on:pointerdown|stopPropagation={startResize} />
     <div class="note-header">
       {#if editTitle}
@@ -136,6 +183,7 @@
           on:keydown={e => {
             if (e.key === "Enter") saveTitle()
           }}
+          on:wheel|stopPropagation
         />
       {:else}
         <span
@@ -163,6 +211,7 @@
           on:keydown={e => {
             if (e.key === "Escape") saveText()
           }}
+          on:wheel|stopPropagation
         />
       {:else}
         <span
@@ -308,6 +357,53 @@
 
   :global(.spectrum--dark) .text-input {
     background: rgba(255, 255, 255, 0.1);
+  }
+
+  .drag-grip {
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -2px;
+    left: -20px;
+    width: 19px;
+    height: 40px;
+    border-radius: 6px 0 0 6px;
+    background: #fef9c3;
+    border: 2px solid #e6d87a;
+    border-right: none;
+    color: rgba(0, 0, 0, 0.4);
+    transition:
+      color 0.15s,
+      background 0.15s;
+    z-index: 1;
+  }
+
+  .drag-grip:hover {
+    color: rgba(0, 0, 0, 0.7);
+    background: #f5efb0;
+  }
+
+  .drag-grip:active {
+    cursor: grabbing;
+  }
+
+  :global(.spectrum--dark) .drag-grip,
+  :global(.spectrum--darkest) .drag-grip,
+  :global(.spectrum--midnight) .drag-grip,
+  :global(.spectrum--nord) .drag-grip {
+    background: #3d3522;
+    border-color: #5c512d;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  :global(.spectrum--dark) .drag-grip:hover,
+  :global(.spectrum--darkest) .drag-grip:hover,
+  :global(.spectrum--midnight) .drag-grip:hover,
+  :global(.spectrum--nord) .drag-grip:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: #4d3f28;
   }
 
   .resize-grip {

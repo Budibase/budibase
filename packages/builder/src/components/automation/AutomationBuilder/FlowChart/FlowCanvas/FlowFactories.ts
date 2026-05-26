@@ -95,7 +95,7 @@ export const stickyNoteNode = (
     type: "sticky-note",
     data,
     position,
-    draggable: true,
+    draggable: false,
     selectable: false,
   }
 }
