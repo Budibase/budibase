@@ -61,6 +61,7 @@ export function getComponentStructure() {
         "formstep",
         "fieldgroup",
         "stringfield",
+        "websiteurlfield",
         "numberfield",
         "bigintfield",
         "passwordfield",
