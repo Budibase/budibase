@@ -29,6 +29,7 @@ import {
   RowTriggers,
   SelectedAutomationState,
   ViewMode,
+  type FlowBlockPath,
   type FormUpdate,
   type StepInputs,
 } from "@/types/automations"
@@ -154,6 +155,67 @@ const initialAutomationState: AutomationStoreState = {
   },
   selectedAutomationId: null,
   viewMode: ViewMode.EDITOR,
+  actionPanelToolbarFlowEnd: false,
+}
+
+export type ToolbarFlowEndInsertion = {
+  targetPath: FlowBlockPath
+  anchorRef?: BlockRef
+  insertInsideLoopV2Children?: boolean
+}
+
+/** Toolbar + insert path: main chain tail, last branch, then Loop V2 children. */
+export const getToolbarFlowEndInsertion = (
+  automation: Automation | undefined | null,
+  blockRefs: Record<string, BlockRef>
+): ToolbarFlowEndInsertion => {
+  if (!automation?.definition?.trigger) return { targetPath: [] }
+
+  const tid = automation.definition.trigger.id
+  const fallback = (): ToolbarFlowEndInsertion => ({
+    targetPath: blockRefs[tid]?.pathTo ?? [{ stepIdx: 0, id: tid }],
+  })
+
+  const steps = automation.definition.steps ?? []
+  if (!steps.length) return fallback()
+
+  let cursor: AutomationStep = steps[steps.length - 1]
+  for (;;) {
+    if (isBranchStep(cursor)) {
+      const branches = cursor.inputs?.branches ?? []
+      if (!branches.length) {
+        const r = blockRefs[cursor.id]
+        return r?.pathTo ? { targetPath: r.pathTo, anchorRef: r } : fallback()
+      }
+      const bi = branches.length - 1
+      const kids = cursor.inputs?.children?.[branches[bi].id] ?? []
+      const host = blockRefs[cursor.id]
+      if (!kids.length) {
+        return {
+          targetPath: [
+            ...(host?.pathTo ?? []),
+            { branchIdx: bi, branchStepId: cursor.id, stepIdx: -1 },
+          ],
+          insertInsideLoopV2Children: Boolean(host?.isLoopV2Child),
+        }
+      }
+      cursor = kids[kids.length - 1]
+      continue
+    }
+    if (isLoopV2Step(cursor)) {
+      const p = blockRefs[cursor.id]?.pathTo
+      return p?.length
+        ? {
+            targetPath: p,
+            anchorRef: blockRefs[cursor.id],
+          }
+        : fallback()
+    }
+    break
+  }
+
+  const r = blockRefs[cursor.id]
+  return r?.pathTo?.length ? { targetPath: r.pathTo, anchorRef: r } : fallback()
 }
 
 let testStatusTimer: NodeJS.Timeout | undefined
@@ -891,6 +953,8 @@ const automationActions = (store: AutomationStore) => ({
     })
     return blockRefs
   },
+
+  getToolbarFlowEndInsertion,
 
   getAvailableBindings: (
     block: any,
@@ -2835,6 +2899,7 @@ const automationActions = (store: AutomationStore) => ({
         selectedBranchNode: undefined,
         selectedNodeMode: mode ?? DataMode.INPUT,
         actionPanelBlock: undefined,
+        actionPanelToolbarFlowEnd: false,
       }
     })
   },
@@ -2851,14 +2916,28 @@ const automationActions = (store: AutomationStore) => ({
       selectedBranchNode: selection,
       selectedNodeMode: DataMode.INPUT,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
-  openActionPanel: (block: BlockRef) => {
+  openActionPanel: (block: AutomationStoreState["actionPanelBlock"]) => {
     contextMenuStore.close()
     store.update(state => ({
       ...state,
       actionPanelBlock: block,
+      actionPanelToolbarFlowEnd: false,
+      selectedNodeId: undefined,
+      selectedBranchNode: undefined,
+    }))
+  },
+  openActionPanelToolbarFlowEnd: (
+    block: AutomationStoreState["actionPanelBlock"]
+  ) => {
+    contextMenuStore.close()
+    store.update(state => ({
+      ...state,
+      actionPanelBlock: block,
+      actionPanelToolbarFlowEnd: true,
       selectedNodeId: undefined,
       selectedBranchNode: undefined,
     }))
@@ -2867,6 +2946,7 @@ const automationActions = (store: AutomationStore) => ({
     store.update(state => ({
       ...state,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
@@ -2883,6 +2963,7 @@ const automationActions = (store: AutomationStore) => ({
       selectedNodeId: undefined,
       selectedBranchNode: undefined,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
@@ -2903,6 +2984,7 @@ const automationActions = (store: AutomationStore) => ({
       selectedNodeId: undefined,
       selectedBranchNode: undefined,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
       showLogDetailsPanel: false,
     }))
   },

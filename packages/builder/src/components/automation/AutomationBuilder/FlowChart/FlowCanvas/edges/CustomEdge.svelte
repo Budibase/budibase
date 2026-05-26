@@ -21,13 +21,16 @@
   import type { DragView } from "../FlowChartDnD"
   import {
     BRANCH_LOOP_INSERT_ACTION_OFFSET,
-    FLOW_ITEM_ACTION_BAR_WIDTH,
     LOOP_INSERT_ACTION_OFFSET,
   } from "../FlowGeometry"
+  import { getLoopEdgePath, getPrimaryBranchPath } from "../FlowEdgePaths"
   import {
     isBranchStep,
     AutomationActionStepId,
+    AutomationStatus,
     type AutomationResults,
+    type AutomationStepResult,
+    type AutomationTriggerResult,
     type BranchStep,
   } from "@budibase/types"
   import {
@@ -35,6 +38,7 @@
     isRunResults,
     didStepRun,
     isTerminalFailure,
+    type RunHighlight,
   } from "../FlowRunHelpers"
 
   export let data: EdgeData
@@ -127,14 +131,35 @@
   }
 
   $: loopTargetPath = isLoopTarget
-    ? getLoopEdgePath("target", labelX)
+    ? getLoopEdgePath({
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        labelX,
+        side: "target",
+      })
     : undefined
   $: loopSourcePath = isLoopSource
-    ? getLoopEdgePath(
-        isBranchTarget ? "branch-source" : "source",
-        isBranchTarget ? preBranchLabelX : labelX
-      )
+    ? getLoopEdgePath({
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        labelX: isBranchTarget ? preBranchLabelX : labelX,
+        side: isBranchTarget ? "branch-source" : "source",
+      })
     : undefined
+  $: primaryBranchPath =
+    isBranchTarget && isPrimaryBranchEdge
+      ? getPrimaryBranchPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+          preBranchLabelX,
+        })
+      : undefined
 
   $: edgePath = isAnchorTarget
     ? getStraightPath({
@@ -143,7 +168,7 @@
         targetX: labelX,
         targetY: labelY,
       })[0]
-    : loopTargetPath || loopSourcePath || basePath[0]
+    : loopTargetPath || loopSourcePath || primaryBranchPath || basePath[0]
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
@@ -236,44 +261,14 @@
     flow.fitView()
   }
 
-  const getLoopEdgePath = (
-    side: "target" | "source" | "branch-source",
-    edgeLabelX: number
-  ) => {
-    const radius = 12
-    const offset = Math.round(FLOW_ITEM_ACTION_BAR_WIDTH / 2) + radius
-    const desiredBendX =
-      side === "target"
-        ? edgeLabelX + offset
-        : side === "branch-source"
-          ? edgeLabelX + offset
-          : edgeLabelX - offset
-    const bendX = Math.max(
-      sourceX + radius,
-      Math.min(targetX - radius, desiredBendX)
-    )
-    const yDirection = targetY >= sourceY ? 1 : -1
-
-    if (Math.abs(targetY - sourceY) <= radius * 2) {
-      return [
-        `M ${sourceX},${sourceY}`,
-        `L ${bendX},${sourceY}`,
-        `L ${bendX},${targetY}`,
-        `L ${targetX},${targetY}`,
-      ].join(" ")
+  const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
+    if (viewMode !== ViewMode.LOGS) {
+      const progressHighlight = getProgressEdgeHighlight(edgeData)
+      if (progressHighlight) {
+        return progressHighlight
+      }
     }
 
-    return [
-      `M ${sourceX},${sourceY}`,
-      `L ${bendX - radius},${sourceY}`,
-      `Q ${bendX},${sourceY} ${bendX},${sourceY + yDirection * radius}`,
-      `L ${bendX},${targetY - yDirection * radius}`,
-      `Q ${bendX},${targetY} ${bendX + radius},${targetY}`,
-      `L ${targetX},${targetY}`,
-    ].join(" ")
-  }
-
-  const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
     const results =
       viewMode === ViewMode.LOGS
         ? $automationStore.selectedLog
@@ -296,6 +291,29 @@
     }
 
     return didTargetRun(results) ? runHighlight : undefined
+  }
+
+  const getProgressEdgeHighlight = (
+    edgeData: EdgeData | undefined
+  ): RunHighlight | undefined => {
+    if (!edgeData) {
+      return
+    }
+
+    if (isBranchEdgeData(edgeData)) {
+      return didProgressBranchRun(edgeData.branchStepId, edgeData.branchIdx)
+    }
+
+    const progress = getProgressResult(target)
+    if (!progress || !didStepRun(progress)) {
+      return
+    }
+    if (isTerminalFailure(progress)) {
+      return progress.outputs.status === AutomationStatus.STOPPED
+        ? "stopped"
+        : "error"
+    }
+    return "success"
   }
 
   const didTargetRun = (results: AutomationResults) => {
@@ -330,6 +348,49 @@
       "branchId" in outputs &&
       outputs.branchId === branchId
     )
+  }
+
+  const didProgressBranchRun = (
+    branchStepId: string,
+    branchIdx: number
+  ): RunHighlight | undefined => {
+    const result = getProgressResult(branchStepId)
+    if (!result || !didStepRun(result)) {
+      return
+    }
+    const branchStep = getBranchStep(branchStepId)
+    const branchId = branchStep?.inputs.branches?.[branchIdx]?.id
+    const outputs = result.outputs
+    const ranBranch =
+      !!outputs &&
+      typeof outputs === "object" &&
+      "branchId" in outputs &&
+      outputs.branchId === branchId
+    if (!ranBranch) {
+      return
+    }
+    if (isTerminalFailure(result)) {
+      return result.outputs.status === AutomationStatus.STOPPED
+        ? "stopped"
+        : "error"
+    }
+    return "success"
+  }
+
+  const getProgressResult = (
+    blockId: string
+  ): AutomationStepResult | AutomationTriggerResult | undefined => {
+    const result = $automationStore.testProgress?.[blockId]?.result
+    if (
+      !result ||
+      isRunResults(result) ||
+      !("outputs" in result) ||
+      !("id" in result) ||
+      !("stepId" in result)
+    ) {
+      return
+    }
+    return result
   }
 
   const getBranchStep = (branchStepId: string): BranchStep | undefined => {
