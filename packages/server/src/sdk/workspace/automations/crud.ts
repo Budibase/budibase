@@ -159,7 +159,21 @@ export async function update(automation: Automation) {
     oldAuto: oldAutomation,
     newAuto: automation,
   })
-  const response = await db.put(automation)
+  
+  // Retry once against the latest rev if CouchDB reports a
+  // conflict.
+  let response: { rev: string; id: string }
+  try {
+    response = await db.put(automation)
+  } catch (err: any) {
+    // Surface a 409 on True concurrent updates.
+    if (err?.statusCode !== 409 && err?.status !== 409) {
+      throw err
+    }
+    const latest = await db.get<Automation>(automation._id)
+    automation._rev = latest._rev
+    response = await db.put(automation)
+  }
   automation._rev = response.rev
 
   const oldAutoTrigger =
