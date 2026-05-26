@@ -16,7 +16,6 @@ interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]
   automations: UIAutomation[]
   agents: Agent[]
-  agentsEnabled: boolean
   getFavourite: (
     resourceType: WorkspaceResource,
     resourceId: string
@@ -176,7 +175,6 @@ export const buildHomeRows = ({
   apps,
   automations,
   agents,
-  agentsEnabled,
   getFavourite,
 }: BuildHomeRowsParams): HomeRow[] => {
   const appRows: HomeRow[] = apps.map(app => {
@@ -215,24 +213,22 @@ export const buildHomeRows = ({
     }
   })
 
-  const agentRows: HomeRow[] = agentsEnabled
-    ? agents.map(agent => {
-        const id = agent._id as string
-        return {
-          _id: id,
-          id,
-          name: agent.name,
-          type: "agent",
-          live: agent.live === true,
-          updatedAt: agent.updatedAt,
-          createdAt: agent.createdAt ? String(agent.createdAt) : undefined,
-          resource: agent,
-          favourite: getFavourite(WorkspaceResource.AGENT, id),
-          icon: getRowIcon("agent"),
-          iconColor: getRowIconColor("agent"),
-        }
-      })
-    : []
+  const agentRows: HomeRow[] = agents.map(agent => {
+    const id = agent._id as string
+    return {
+      _id: id,
+      id,
+      name: agent.name,
+      type: "agent",
+      live: agent.live === true,
+      updatedAt: agent.updatedAt,
+      createdAt: agent.createdAt ? String(agent.createdAt) : undefined,
+      resource: agent,
+      favourite: getFavourite(WorkspaceResource.AGENT, id),
+      icon: getRowIcon("agent"),
+      iconColor: getRowIconColor("agent"),
+    }
+  })
 
   return [...appRows, ...automationRows, ...agentRows]
 }

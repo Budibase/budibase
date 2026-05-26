@@ -145,7 +145,12 @@ export type BranchPathEntry = Partial<BlockPath> & {
   stepIdx?: number
 }
 
-export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
+export type LoopPathEntry = Partial<BlockPath> & {
+  loopStepId: string
+  stepIdx: number
+}
+
+export type FlowBlockPath = Array<BlockPath | BranchPathEntry | LoopPathEntry>
 
 export interface BranchFlowContext {
   branchNode: true
@@ -198,7 +203,9 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedNodeId?: string
   selectedBranchNode?: SelectedBranchNode
   selectedNodeMode?: DataMode
-  actionPanelBlock?: BlockRef
+  actionPanelBlock?: BlockRef | FlowBlockContext
+  /** Toolbar + opened the step picker (append at flow tail). */
+  actionPanelToolbarFlowEnd?: boolean
   selectedLog?: AutomationLog
   selectedLogStepData?: any
   showLogsPanel?: boolean

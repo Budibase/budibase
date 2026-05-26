@@ -6,6 +6,7 @@ import {
   applyPostLoopBranchClearance,
 } from "../FlowCanvas/FlowLayout"
 import {
+  BRANCH,
   FLOW_ITEM_ACTION_BAR_WIDTH,
   LOOP,
   LOOP_INSERT_ACTION_OFFSET,
@@ -553,6 +554,158 @@ describe("applyBranchLaneClearance", () => {
     const lowerLoop = graph.nodes.find(node => node.id === "lower-loop")!
 
     expect(lowerLoop.position.y).toBeGreaterThan(upperNestedBottom)
+  })
+
+  it("rechecks parent branch lanes after nested branch lanes expand", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "source",
+          type: "step-node",
+          data: {},
+          position: { x: 0, y: 240 },
+        },
+        {
+          id: "parent-0",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 180 },
+        },
+        {
+          id: "upper-action",
+          type: "step-node",
+          data: {},
+          position: { x: 760, y: 180 },
+        },
+        {
+          id: "nested-upper-0",
+          type: "branch-node",
+          data: {},
+          position: { x: 1120, y: 180 },
+        },
+        {
+          id: "nested-upper-1",
+          type: "branch-node",
+          data: {},
+          position: { x: 1120, y: 210 },
+        },
+        {
+          id: "nested-upper-1-action",
+          type: "step-node",
+          data: {},
+          position: { x: 1480, y: 210 },
+        },
+        {
+          id: "nested-upper-2",
+          type: "branch-node",
+          data: {},
+          position: { x: 1120, y: 240 },
+        },
+        {
+          id: "parent-1",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 320 },
+        },
+        {
+          id: "lower-action",
+          type: "step-node",
+          data: {},
+          position: { x: 760, y: 320 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-source-parent-0",
+          source: "source",
+          target: "parent-0",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "parent",
+            branchIdx: 0,
+          },
+        },
+        {
+          id: "edge-parent-0-upper-action",
+          source: "parent-0",
+          target: "upper-action",
+          type: "add-item",
+        },
+        {
+          id: "edge-upper-action-nested-upper-0",
+          source: "upper-action",
+          target: "nested-upper-0",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "nested-upper",
+            branchIdx: 0,
+          },
+        },
+        {
+          id: "edge-upper-action-nested-upper-1",
+          source: "upper-action",
+          target: "nested-upper-1",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "nested-upper",
+            branchIdx: 1,
+          },
+        },
+        {
+          id: "edge-nested-upper-1-action",
+          source: "nested-upper-1",
+          target: "nested-upper-1-action",
+          type: "add-item",
+        },
+        {
+          id: "edge-upper-action-nested-upper-2",
+          source: "upper-action",
+          target: "nested-upper-2",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "nested-upper",
+            branchIdx: 2,
+          },
+        },
+        {
+          id: "edge-source-parent-1",
+          source: "source",
+          target: "parent-1",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "parent",
+            branchIdx: 1,
+          },
+        },
+        {
+          id: "edge-parent-1-lower-action",
+          source: "parent-1",
+          target: "lower-action",
+          type: "add-item",
+        },
+      ],
+    }
+
+    applyBranchLaneClearance(graph)
+
+    const upperLaneBottom =
+      Math.max(
+        getNode(graph, "parent-0").position.y,
+        getNode(graph, "upper-action").position.y,
+        getNode(graph, "nested-upper-0").position.y,
+        getNode(graph, "nested-upper-1").position.y,
+        getNode(graph, "nested-upper-1-action").position.y,
+        getNode(graph, "nested-upper-2").position.y
+      ) + BRANCH.height
+
+    expect(getNode(graph, "parent-1").position.y).toBeGreaterThanOrEqual(
+      upperLaneBottom + 120
+    )
   })
 
   it("ignores branch edges inside loop subflows", () => {
