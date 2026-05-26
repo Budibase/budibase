@@ -29,6 +29,12 @@ export interface WorkspaceCreatedUser {
   email: string
 }
 
+export interface ExistingGroupAssignmentResult {
+  newUsers: UserInfo[]
+  assignedCount: number
+  failedCount: number
+}
+
 export interface InvitePayloadUser {
   email: string
   builder: boolean
@@ -298,6 +304,47 @@ export const assignExistingUsersToWorkspace = async (
     failedCount: assignmentResults.filter(
       result => result.status === "rejected"
     ).length,
+  }
+}
+
+export const assignExistingUsersToGroups = async (
+  userData: UserData
+): Promise<ExistingGroupAssignmentResult> => {
+  const dedupedUserData = dedupeUsersByEmail(userData)
+  const existingUsers = (await users.fetch()) || []
+  const existingByEmail = new Map(
+    existingUsers.map(user => [user.email.toLowerCase(), user])
+  )
+  const selectedGroupIds = dedupedUserData.groups || []
+  const newUsers: UserInfo[] = []
+  const assignments: Promise<void>[] = []
+
+  for (const user of dedupedUserData.users) {
+    const existingUser = existingByEmail.get(user.email.toLowerCase())
+    if (!existingUser) {
+      newUsers.push(user)
+      continue
+    }
+    if (!existingUser._id || !selectedGroupIds.length) {
+      continue
+    }
+    const currentGroupIds = existingUser.userGroups || []
+    const groupIdsToAdd = selectedGroupIds.filter(
+      groupId => !currentGroupIds.includes(groupId)
+    )
+    assignments.push(
+      ...groupIdsToAdd.map(groupId =>
+        groupStore.addUser(groupId, existingUser._id!)
+      )
+    )
+  }
+
+  const results = await Promise.allSettled(assignments)
+  return {
+    newUsers,
+    assignedCount: results.filter(result => result.status === "fulfilled")
+      .length,
+    failedCount: results.filter(result => result.status === "rejected").length,
   }
 }
 
