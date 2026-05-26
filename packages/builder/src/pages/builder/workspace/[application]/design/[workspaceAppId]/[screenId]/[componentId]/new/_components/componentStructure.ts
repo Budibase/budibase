@@ -62,6 +62,7 @@ export function getComponentStructure() {
         "fieldgroup",
         "stringfield",
         "websiteurlfield",
+        "emailfield",
         "numberfield",
         "bigintfield",
         "passwordfield",
