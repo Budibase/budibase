@@ -16,6 +16,8 @@ describe("validation constraints", () => {
 })
 
 describe("defaultErrorForConstraint", () => {
+  const jsBinding = '{{ js "cmV0dXJuICdoZWxsbyB3b3JsZCc=" }}'
+
   it("returns a fixed message for required", () => {
     expect(defaultErrorForConstraint("required", null)).toBe("Required")
   })
@@ -30,6 +32,24 @@ describe("defaultErrorForConstraint", () => {
     expect(defaultErrorForConstraint("minLength", null)).toBe("Too short")
     expect(defaultErrorForConstraint("minLength", "")).toBe("Too short")
   })
+
+  it.each([
+    ["minLength", "Too short"],
+    ["maxLength", "Too long"],
+    ["minValue", "Value too low"],
+    ["maxValue", "Value too high"],
+    ["equal", "Invalid value"],
+    ["notEqual", "Invalid value"],
+    ["contains", "Missing required content"],
+    ["notContains", "Invalid content"],
+    ["maxFileSize", "File too large"],
+    ["maxUploadSize", "Upload too large"],
+  ])(
+    "does not include JavaScript binding values for %s",
+    (constraint, message) => {
+      expect(defaultErrorForConstraint(constraint, jsBinding)).toBe(message)
+    }
+  )
 
   it("returns a generic message for unknown constraints", () => {
     expect(defaultErrorForConstraint("not-a-real-constraint", null)).toBe(

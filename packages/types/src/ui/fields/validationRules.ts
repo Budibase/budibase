@@ -27,7 +27,11 @@ export type FieldValidationRuleType =
   | "maxUploadSize"
 
 const hasValidationValue = (value: unknown): boolean => {
-  return value != null && value !== ""
+  return value != null && value !== "" && !isJSBindingValue(value)
+}
+
+const isJSBindingValue = (value: unknown): boolean => {
+  return typeof value === "string" && value.trim().startsWith("{{ js ")
 }
 
 export const defaultErrorForConstraint = (

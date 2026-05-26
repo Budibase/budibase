@@ -5,6 +5,8 @@ import { FieldType } from "@budibase/types"
 import { createValidatorFromConstraints } from "./validation"
 
 describe("createValidatorFromConstraints", () => {
+  const jsBinding = '{{ js "cmV0dXJuICdoZWxsbyB3b3JsZCc=" }}'
+
   it("uses a default error for custom rules without an error", () => {
     const validate = createValidatorFromConstraints(
       null,
@@ -38,5 +40,22 @@ describe("createValidatorFromConstraints", () => {
     )
 
     expect(validate("short")).toBe("Use a longer name")
+  })
+
+  it("does not include JavaScript binding values in fallback errors", () => {
+    const validate = createValidatorFromConstraints(
+      null,
+      [
+        {
+          type: FieldType.STRING,
+          constraint: "equal",
+          value: jsBinding,
+        },
+      ],
+      "name",
+      undefined
+    )
+
+    expect(validate("different value")).toBe("Invalid value")
   })
 })
