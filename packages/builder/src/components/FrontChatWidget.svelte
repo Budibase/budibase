@@ -7,8 +7,9 @@
   const COMPANION_SCRIPT_ID = "front-companion-script"
   const COMPANION_SRC = "https://companion.frontapp.com/assets/boot.bundle.js"
   const COMPANION_TOKEN = "eyJjbyI6NzQ5Nzg3OCwiY2EiOjI4Mjc0NTgyfQ"
+  let mounted = false
 
-  onMount(() => {
+  function initCompanion() {
     if (!$featureFlags[FeatureFlag.FRONT_COMPANION]) {
       return
     }
@@ -38,5 +39,14 @@
     script.dataset.autoInit = ""
     script.dataset.layout = "widget-right"
     document.body.appendChild(script)
+  }
+
+  $: if (mounted && $featureFlags[FeatureFlag.FRONT_COMPANION]) {
+    initCompanion()
+  }
+
+  onMount(() => {
+    mounted = true
+    initCompanion()
   })
 </script>
