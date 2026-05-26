@@ -12,12 +12,8 @@
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let align:
-    | "left"
-    | "right"
-    | "center"
-    | "justify"
-    | undefined = undefined
+  export let align: "left" | "right" | "center" | "justify" | undefined =
+    undefined
   export let autofocus: boolean | null = false
   export let autocomplete: FullAutoFill | boolean | null | undefined = undefined
 
