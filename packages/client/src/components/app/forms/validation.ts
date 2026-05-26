@@ -350,6 +350,16 @@ const urlHandler = (value: unknown) => {
   }
 }
 
+const emailHandler = (value: unknown) => {
+  if (value == null) {
+    return true
+  }
+  if (typeof value !== "string") {
+    return false
+  }
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 // Evaluates a contains constraint
 const containsHandler = (value: any, rule: UIFieldValidationRule) => {
   const expectedValue = parseType(rule.value, "string")
@@ -389,6 +399,7 @@ const handlerMap = {
   regex: regexHandler,
   notRegex: notRegexHandler,
   url: urlHandler,
+  email: emailHandler,
   contains: containsHandler,
   notContains: notContainsHandler,
   json: jsonHandler,

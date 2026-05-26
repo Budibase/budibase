@@ -46,6 +46,10 @@ const Constraints = {
     label: "Must be a valid URL",
     value: "url",
   },
+  Email: {
+    label: "Must be a valid email address",
+    value: "email",
+  },
   Contains: {
     label: "Must contain",
     value: "contains",
@@ -73,11 +77,13 @@ const stringConstraints = [
   Constraints.Regex,
   Constraints.NotRegex,
   Constraints.Url,
+  Constraints.Email,
 ]
 
 const ConstraintMap: Record<string, ValidationConstraintOption[]> = {
   ["string"]: stringConstraints,
   ["url"]: stringConstraints,
+  ["email"]: stringConstraints,
   ["number"]: [
     Constraints.Required,
     Constraints.MaxValue,

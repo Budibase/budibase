@@ -101,7 +101,9 @@
   $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: validationType = type?.split("/")[1] || "string"
-  $: fieldType = validationType === "url" ? "string" : validationType
+  $: fieldType = ["url", "email"].includes(validationType)
+    ? "string"
+    : validationType
   $: constraintOptions = getConstraintsForType(validationType)
 
   const getDataSourceSchema = (
@@ -241,7 +243,7 @@
   }
 
   const supportsConstraintValue = (constraint?: string): boolean => {
-    return !["required", "url"].includes(constraint || "")
+    return !["required", "url", "email"].includes(constraint || "")
   }
 
   const toggleRule = (id: string): void => {

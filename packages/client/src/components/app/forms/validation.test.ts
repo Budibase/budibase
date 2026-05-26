@@ -47,4 +47,48 @@ describe("form validation", () => {
     expect(validator("")).toBeNull()
     expect(validator(null)).toBeNull()
   })
+
+  it("accepts valid email addresses", () => {
+    const rules: UIFieldValidationRule[] = [
+      {
+        type: FieldType.STRING,
+        constraint: "email",
+        error: "Invalid email address",
+      },
+    ]
+
+    const validator = createValidatorFromConstraints(
+      null,
+      rules,
+      "email",
+      undefined
+    )
+
+    expect(validator("user@example.com")).toBeNull()
+    expect(validator("user.name+tag@example.co.uk")).toBeNull()
+  })
+
+  it("rejects invalid email addresses while leaving empty values to other rules", () => {
+    const rules: UIFieldValidationRule[] = [
+      {
+        type: FieldType.STRING,
+        constraint: "email",
+        error: "Invalid email address",
+      },
+    ]
+
+    const validator = createValidatorFromConstraints(
+      null,
+      rules,
+      "email",
+      undefined
+    )
+
+    expect(validator("example.com")).toBe("Invalid email address")
+    expect(validator("user@example")).toBe("Invalid email address")
+    expect(validator("user name@example.com")).toBe("Invalid email address")
+    expect(validator("@example.com")).toBe("Invalid email address")
+    expect(validator("")).toBeNull()
+    expect(validator(null)).toBeNull()
+  })
 })

@@ -23,6 +23,18 @@ describe("validation constraints", () => {
     )
     expect(urlConstraints.map(constraint => constraint.value)).toContain("url")
   })
+
+  it("includes an email rule for text and email fields", () => {
+    const stringConstraints = getConstraintsForType("string")
+    const emailConstraints = getConstraintsForType("email")
+
+    expect(stringConstraints.map(constraint => constraint.value)).toContain(
+      "email"
+    )
+    expect(emailConstraints.map(constraint => constraint.value)).toContain(
+      "email"
+    )
+  })
 })
 
 describe("defaultErrorForConstraint", () => {
@@ -34,6 +46,12 @@ describe("defaultErrorForConstraint", () => {
 
   it("returns a fixed message for url", () => {
     expect(defaultErrorForConstraint("url", null)).toBe("Must be a valid URL")
+  })
+
+  it("returns a fixed message for email", () => {
+    expect(defaultErrorForConstraint("email", null)).toBe(
+      "Must be a valid email address"
+    )
   })
 
   it("includes the value for minLength when set", () => {
