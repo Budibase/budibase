@@ -2649,7 +2649,7 @@ const automationActions = (store: AutomationStore) => ({
     })
   },
 
-  addStickyNote: async () => {
+  addStickyNote: async (position?: { x: number; y: number }) => {
     const auto = get(selectedAutomation)?.data
     if (!auto) return
 
@@ -2658,8 +2658,8 @@ const automationActions = (store: AutomationStore) => ({
       id: generate(),
       title: "Note",
       text: "Add your note here",
-      x: 100 + notes.length * 30,
-      y: 100 + notes.length * 30,
+      x: position?.x ?? 100 + notes.length * 30,
+      y: position?.y ?? 100 + notes.length * 30,
     }
 
     const updated = cloneDeep(auto)

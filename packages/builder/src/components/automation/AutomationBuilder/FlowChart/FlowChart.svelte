@@ -540,6 +540,22 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
     closeContextMenuOnCanvasInteraction()
   }
 
+  const handleAddNote = () => {
+    const viewport = getViewport()
+    if (!paneEl || !viewport) {
+      automationStore.actions.addStickyNote()
+      return
+    }
+    const rect = paneEl.getBoundingClientRect()
+    const toolbarHeight = 80
+    const noteHeight = 140
+    const screenX = rect.width / 2
+    const screenY = rect.height - toolbarHeight - noteHeight / 2 - 20
+    const flowX = (screenX - viewport.x) / viewport.zoom
+    const flowY = (screenY - viewport.y) / viewport.zoom
+    automationStore.actions.addStickyNote({ x: flowX, y: flowY })
+  }
+
   const handleNodeDragStop = (event: any) => {
     const node = event?.detail?.targetNode
     if (node?.type === "sticky-note" && node?.data?.note?.id) {
@@ -674,7 +690,7 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
         onMove={handleMove}
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
-        <FlowControls historyStore={automationHistoryStore} />
+        <FlowControls historyStore={automationHistoryStore} on:addnote={handleAddNote} />
       </SvelteFlow>
     </div>
   </div>
@@ -750,6 +766,10 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
   .root {
     height: 100%;
     width: 100%;
+  }
+
+  .root :global(.svelte-flow__node-sticky-note) {
+    z-index: 100;
   }
 
   .root :global(.svelte-flow__edgelabel-renderer) {

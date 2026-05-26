@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte"
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
   import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
@@ -7,6 +8,8 @@
   import { isBranchStep } from "@budibase/types"
   import type { HistoryStore } from "@/stores/builder/history"
   import type { Automation } from "@budibase/types"
+
+  const dispatch = createEventDispatcher()
 
   export let historyStore: HistoryStore<Automation>
 
@@ -92,7 +95,7 @@
           tooltipPosition={TooltipPosition.Top}
           color="var(--spectrum-alias-text-color)"
           hoverColor="var(--spectrum-alias-text-color-hover)"
-          on:click={() => automationStore.actions.addStickyNote()}
+          on:click={() => dispatch("addnote")}
         />
       </span>
     {/if}
