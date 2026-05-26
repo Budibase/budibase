@@ -49,27 +49,6 @@ interface LaneVisuals {
   laneWidth: number
   gap: number
   laneYSpacing: number
-  anchorWidth: number
-  containerWidth?: number
-}
-
-const computeLaneCenters = (
-  count: number,
-  mode: BranchMode,
-  opts: { laneWidth?: number; gap?: number; containerWidth?: number }
-) => {
-  if (count <= 0) return []
-  if (mode === BranchMode.TOPLEVEL) {
-    // let Dagre position top-level branches; return zeros
-    return Array.from({ length: count }, () => 0)
-  }
-  const laneWidth = opts.laneWidth || STEP.width
-  const gap = opts.gap || 40
-  const totalWidth = count * laneWidth + Math.max(0, count - 1) * gap
-  const left = Math.round(((opts.containerWidth || 0) - totalWidth) / 2)
-  return Array.from({ length: count }, (_, i) =>
-    Math.round(left + laneWidth / 2 + i * (laneWidth + gap))
-  )
 }
 
 const resolveBlockPath = (
@@ -117,12 +96,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
   const switchNodeId = baseId
-
-  const centers = computeLaneCenters(branches.length, mode, {
-    laneWidth: visuals.laneWidth,
-    gap: visuals.gap,
-    containerWidth: visuals.containerWidth,
-  })
 
   let clusterBottomY =
     coords.y +
@@ -278,53 +251,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           clusterBottomY,
           stackStartY + totalBranchesHeight + visuals.laneYSpacing
         )
-      } else {
-        // Vertical layout
-        const left = Math.round(centers[bIdx] - visuals.laneWidth / 2)
-        const childLeft = Math.round(
-          left + (visuals.laneWidth - visuals.anchorWidth) / 2
-        )
-        let laneY = branchStartY
-        let prevId: string = switchNodeId
-        let prevBlock: FlowBlockContext = branchBlockRef
-
-        branchChildren.forEach(child => {
-          deps.newNodes.push(
-            stepNode(child.id, child, parentId, {
-              x: childLeft,
-              y: laneY,
-            })
-          )
-          const prevPath = resolveBlockPath(prevBlock, deps)
-          deps.newEdges.push(
-            edgeAddItem(prevId, child.id, {
-              block: prevBlock,
-              ...(prevPath ? { pathTo: prevPath } : {}),
-            })
-          )
-          prevId = child.id
-          prevBlock = child
-          laneY += SUBFLOW.childHeight + SUBFLOW.internalSpacing
-        })
-
-        const anchorId = `anchor-${baseId}-${bIdx}-${branch.id}`
-        const anchorY = laneY
-        deps.newNodes.push(
-          anchorNode(anchorId, parentId, {
-            x: childLeft,
-            y: anchorY,
-          })
-        )
-        const anchorSourcePath = resolveBlockPath(prevBlock, deps)
-        deps.newEdges.push(
-          edgeAddItem(prevId, anchorId, {
-            block: prevBlock,
-            ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
-          })
-        )
-        const spacing =
-          mode === BranchMode.SUBFLOW ? visuals.laneYSpacing : deps.ySpacing
-        clusterBottomY = Math.max(clusterBottomY, anchorY + spacing)
       }
     }
   })
@@ -426,7 +352,6 @@ export const renderBranches = (
       laneWidth: STEP.width,
       gap: deps.xSpacing,
       laneYSpacing: deps.ySpacing,
-      anchorWidth: STEP.width,
     },
   })
   return result.bottomY
@@ -579,8 +504,6 @@ export const renderLoopV2Container = (
         laneWidth: SUBFLOW.laneWidth,
         gap: SUBFLOW.laneGap,
         laneYSpacing: SUBFLOW.ySpacing,
-        anchorWidth: STEP.width,
-        containerWidth,
       },
       loopContext,
     })
