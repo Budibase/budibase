@@ -2672,7 +2672,7 @@ const automationActions = (store: AutomationStore) => ({
 
   updateStickyNote: async (
     noteId: string,
-    updates: { title?: string; text?: string }
+    updates: { title?: string; text?: string; width?: number; height?: number }
   ) => {
     const auto = get(selectedAutomation)?.data
     if (!auto?.uiTree?.stickyNotes) return

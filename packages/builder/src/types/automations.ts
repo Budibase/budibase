@@ -337,6 +337,8 @@ export interface StickyNote {
   text: string
   x: number
   y: number
+  width?: number
+  height?: number
 }
 
 export interface StickyNoteNodeData {
