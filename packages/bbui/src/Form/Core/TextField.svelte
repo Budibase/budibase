@@ -8,11 +8,16 @@
   export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
-  export let id = null
+  export let id: string | null = null
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let align: "left" | "right" | "center" | undefined = undefined
+  export let align:
+    | "left"
+    | "right"
+    | "center"
+    | "justify"
+    | undefined = undefined
   export let autofocus: boolean | null = false
   export let autocomplete: FullAutoFill | boolean | null | undefined = undefined
 
@@ -66,6 +71,9 @@
   const getInputMode = (type: string) => {
     if (type === "bigint") {
       return "numeric"
+    }
+    if (type === "url") {
+      return "url"
     }
     return type === "number" ? "decimal" : "text"
   }
