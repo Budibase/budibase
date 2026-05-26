@@ -1202,7 +1202,7 @@ const automationActions = (store: AutomationStore) => ({
     if (pathSteps.length > 0) {
       const previousStep = pathSteps[pathSteps.length - 1]
       const previousStepIndex = pathSteps.length - 1
-      const previousSchema =
+      const previousSchema: AutomationIOProps =
         cloneDeep(previousStep?.schema?.outputs?.properties) ?? {}
 
       const isCodeStep =
@@ -2687,12 +2687,8 @@ const automationActions = (store: AutomationStore) => ({
     }
   ),
 
-  save: Utils.sequential(async (automation: Automation) => {
-    // Re-read the latest automation from the store to get the current _rev,
-    // preventing 409 conflicts from stale revisions.
-    const latest = get(selectedAutomation)?.data
-    const toSave = latest ? { ...automation, _rev: latest._rev } : automation
-    const response = await API.updateAutomation(toSave)
+  save: async (automation: Automation) => {
+    const response = await API.updateAutomation(automation)
 
     // Mark automation as having unpublished changes
     if (response.automation._id) {
@@ -2705,7 +2701,7 @@ const automationActions = (store: AutomationStore) => ({
     store.actions.select(response.automation._id!)
     store.actions.clearRunResults()
     return response.automation
-  }),
+  },
 
   clearRunResults: () => {
     store.update(state => {

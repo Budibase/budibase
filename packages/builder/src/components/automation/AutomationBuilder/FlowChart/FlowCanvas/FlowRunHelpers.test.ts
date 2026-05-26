@@ -3,22 +3,23 @@ import {
   AutomationActionStepId,
   AutomationStatus,
   AutomationTriggerStepId,
-  type AutomationResults,
 } from "@budibase/types"
 import { getRunHighlight } from "./FlowRunHelpers"
 
 describe("FlowRunHelpers", () => {
   it("treats unmatched switch conditions as a stopped warning highlight", () => {
+    const triggerResult = {
+      id: "trigger",
+      stepId: AutomationTriggerStepId.APP,
+      outputs: {
+        success: true,
+      },
+    }
     const results = {
       status: AutomationStatus.NO_CONDITION_MET,
-      trigger: {
-        id: "trigger",
-        stepId: AutomationTriggerStepId.APP,
-        outputs: {
-          success: true,
-        },
-      },
+      trigger: triggerResult,
       steps: [
+        triggerResult,
         {
           id: "switch",
           stepId: AutomationActionStepId.BRANCH,
@@ -29,7 +30,7 @@ describe("FlowRunHelpers", () => {
           },
         },
       ],
-    } as AutomationResults
+    }
 
     expect(getRunHighlight(results)).toBe("stopped")
   })

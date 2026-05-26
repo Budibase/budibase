@@ -1,4 +1,5 @@
 export const NODE_SPACING = 100
+export type FlowLayoutDirection = "LR" | "TB"
 export const FLOW_ITEM_ACTION_BAR_WIDTH = 72
 export const LOOP_INSERT_ACTION_OFFSET = FLOW_ITEM_ACTION_BAR_WIDTH + 56
 export const BRANCH_LOOP_INSERT_ACTION_OFFSET = FLOW_ITEM_ACTION_BAR_WIDTH + 112
