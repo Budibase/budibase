@@ -330,15 +330,14 @@
                     options={constraintOptions}
                     placeholder="Constraint"
                   />
-                  <Select
-                    label="Value type"
-                    disabled={valueDisabled}
-                    placeholder={false}
-                    bind:value={rule.valueType}
-                    options={["Binding", "Value"]}
-                  />
-
                   {#if !valueDisabled}
+                    <Select
+                      label="Value type"
+                      placeholder={false}
+                      bind:value={rule.valueType}
+                      options={["Binding", "Value"]}
+                    />
+
                     {#if rule.valueType === "Binding"}
                       <DrawerBindableInput
                         label="Value"
@@ -445,10 +444,7 @@
     align-items: center;
   }
   .rule-row--no-value {
-    grid-template-columns: minmax(170px, 210px) minmax(130px, 160px) minmax(
-        220px,
-        1.3fr
-      );
+    grid-template-columns: minmax(170px, 210px) minmax(220px, 1.3fr);
   }
   .icon-button {
     display: flex;
