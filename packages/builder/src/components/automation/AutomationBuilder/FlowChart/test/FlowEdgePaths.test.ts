@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { FLOW_ITEM_ACTION_BAR_WIDTH } from "../FlowCanvas/FlowGeometry"
-import { getPrimaryBranchPath } from "../FlowCanvas/FlowEdgePaths"
+import {
+  getLoopEdgePath,
+  getPrimaryBranchPath,
+} from "../FlowCanvas/FlowEdgePaths"
 
 const expectLineSegmentsToBeOrthogonal = (path: string) => {
   const commands = [
@@ -220,5 +223,50 @@ describe("getPrimaryBranchPath", () => {
 
     // Q: quadratic Bézier curve.
     expect(branchPath.some(command => command.type === "Q")).toBe(true)
+  })
+})
+
+describe("getLoopEdgePath", () => {
+  it("routes loop source edges through the action bar", () => {
+    const sourceX = 570
+    const sourceY = 206
+    const targetX = 824
+    const targetY = 177
+    const labelX = 698
+    const actionBarHalfWidth = FLOW_ITEM_ACTION_BAR_WIDTH / 2
+
+    const path = getLoopEdgePath({
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      labelX,
+      side: "source",
+    })
+    const [sourcePath, targetPath] = getContinuousPathCommands(path)
+
+    expect(sourcePath.at(-1)).toMatchObject({
+      type: "L",
+      x: labelX - actionBarHalfWidth,
+      y: sourceY,
+    })
+    expect(targetPath[0]).toMatchObject({
+      type: "M",
+      x: labelX + actionBarHalfWidth,
+      y: sourceY,
+    })
+  })
+
+  it("keeps loop source edges orthogonal", () => {
+    const path = getLoopEdgePath({
+      sourceX: 570,
+      sourceY: 206,
+      targetX: 824,
+      targetY: 177,
+      labelX: 698,
+      side: "source",
+    })
+
+    expectLineSegmentsToBeOrthogonal(path)
   })
 })
