@@ -1,6 +1,5 @@
 import { auth } from "@budibase/backend-core"
 import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
-import { aiRagEnabled } from "../../middleware/aiRagEnabled"
 import * as ai from "../controllers/ai"
 import {
   builderAdminRoutes,
@@ -93,11 +92,7 @@ aiTestBuilderAdminRoutes
   )
   .get("/api/agent/:agentId/tests/run/:runId", ai.fetchAgentTestRun)
 
-const aiRagBuilderAdminRoutes = endpointGroupList
-  .group(auth.builderOrAdmin)
-  .addGroupMiddleware(aiRagEnabled)
-
-aiRagBuilderAdminRoutes
+builderAdminRoutes
   .get(
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
