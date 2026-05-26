@@ -6,7 +6,11 @@ import { get } from "svelte/store"
 export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
   async determineFeatureFlags() {
     const definition = await this.getDefinition()
-    const supportsPagination = !!definition?.fields?.pagination?.enabled
+    const supportsPagination =
+      (!!definition?.fields?.pagination?.type &&
+        !!definition?.fields?.pagination?.location &&
+        !!definition?.fields?.pagination?.pageParam) ||
+      !!definition?.fields?.pagination?.enabled
     return { supportsPagination }
   }
 
@@ -53,7 +57,8 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
     if (paginate && supportsPagination) {
       // For SQL queries (pagination.enabled), use page-based pagination
       // For REST queries, use the configured type (page or cursor)
-      const isPageBased = !paginationType || paginationType === "page"
+      const isPageBased =
+        paginationType === "page" || definition?.fields?.pagination?.enabled
       const requestCursor = isPageBased ? parseInt(cursor || "1") : cursor
       queryPayload.pagination = { page: requestCursor, limit }
     }
@@ -67,7 +72,9 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
       let nextCursor = null
       let hasNextPage = false
       if (paginate && supportsPagination) {
-        const isPageBased = !paginationType || paginationType === "page"
+        const isPageBased =
+          paginationType === "page" || definition?.fields?.pagination?.enabled
+
         if (isPageBased) {
           // For "page number" pagination, increment the existing page number
           nextCursor = queryPayload.pagination!.page! + 1

@@ -97,7 +97,6 @@ export interface RestQueryFields {
 export interface SQLQueryFields {
   sql?: string
   pagination?: PaginationConfig
-  paginationValues?: PaginationValues
 }
 
 export interface MongoQueryFields {

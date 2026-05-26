@@ -151,7 +151,10 @@ class QueryRunner {
     ) {
       // Add pagination bindings to context using the configured binding names
       const { offsetBinding, limitBinding } = fieldsClone.pagination
-      const paginationCopy = { ...paginationEnrichedContext }
+      const paginationCopy = { ...paginationEnrichedContext } as Record<
+        string,
+        any
+      >
 
       // For SQL queries, pagination object contains { page/offset, limit }
       if (this.pagination.limit && limitBinding) {

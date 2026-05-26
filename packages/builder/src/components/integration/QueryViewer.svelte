@@ -34,6 +34,7 @@
     Query,
     QueryFields,
     QuerySchema,
+    PaginationConfig,
     UIInternalDatasource,
   } from "@budibase/types"
 
@@ -66,7 +67,7 @@
   let nestedSchemaFields: NestedSchemaFields = {}
   let rows: PreviewQueryResponse["rows"] = []
 
-  let pagination: any = undefined
+  let pagination: PaginationConfig | undefined = undefined
 
   const parseQuery = (query: Query) => {
     modified = false
