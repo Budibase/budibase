@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { marked } from "marked"
+  import { renderMarkdown } from "./renderMarkdown"
 
   export let value: string | undefined = undefined
   export let height: string | undefined = undefined
@@ -19,7 +19,7 @@
       ref.innerHTML = ""
       return
     }
-    ref.innerHTML = marked.parse(markdown, { async: false })
+    ref.innerHTML = renderMarkdown(markdown)
   }
 </script>
 

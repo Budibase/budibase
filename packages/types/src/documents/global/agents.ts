@@ -22,6 +22,7 @@ export interface ToolMetadata {
 interface ChatAgentIntegration {
   chatAppId?: string
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }
 
 export interface DiscordAgentIntegration extends ChatAgentIntegration {
@@ -42,6 +43,13 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
 export interface SlackAgentIntegration extends ChatAgentIntegration {
   botToken?: string
   signingSecret?: string
+  messagingEndpointUrl?: string
+}
+
+export interface TelegramAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  webhookSecretToken?: string
+  botUserName?: string
   messagingEndpointUrl?: string
 }
 
@@ -86,6 +94,7 @@ export interface Agent extends Document {
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
+  telegramIntegration?: TelegramAgentIntegration
   knowledgeSources?: AgentKnowledgeSource[]
 }
 

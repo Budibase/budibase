@@ -109,6 +109,5 @@ export async function remove(configId: string, _rev: string): Promise<void> {
 }
 
 async function cleanCache(configId: string) {
-  const cacheKey = cache.CacheKey.OAUTH2_TOKEN(configId)
-  await cache.destroy(cacheKey)
+  await cache.destroy(cache.CacheKey.OAUTH2_TOKEN(configId))
 }

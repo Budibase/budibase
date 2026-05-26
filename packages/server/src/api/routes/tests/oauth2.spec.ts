@@ -455,7 +455,10 @@ describe("/oauth2", () => {
     })
 
     it("can validate configuration without scope", async () => {
-      const oauth2Config = makeOAuth2Config({ scope: undefined })
+      const oauth2Config = makeOAuth2Config({
+        url: "http://8.8.8.8/oauth/token",
+        scope: undefined,
+      })
 
       nockTokenCredentials(
         {
@@ -484,7 +487,10 @@ describe("/oauth2", () => {
 
     it("can validate configuration with scope", async () => {
       const scope = "read:users write:users"
-      const oauth2Config = makeOAuth2Config({ scope })
+      const oauth2Config = makeOAuth2Config({
+        url: "http://8.8.8.8/oauth/token",
+        scope,
+      })
 
       nockTokenCredentials(
         {

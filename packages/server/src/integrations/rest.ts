@@ -829,7 +829,7 @@ export class RestIntegration implements IntegrationBase {
     }
     if (response.status === 401 && retry401) {
       if (authConfigType === RestAuthType.OAUTH2 && authConfigId) {
-        await sdk.oauth2.cleanStoredToken(authConfigId)
+        await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId)
         return await this._req(query, false)
       }
     }
