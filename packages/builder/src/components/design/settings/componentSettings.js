@@ -101,6 +101,7 @@ const componentMap = {
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
+  "validation/url": ValidationEditor,
   "validation/array": ValidationEditor,
   "validation/number": ValidationEditor,
   "validation/boolean": ValidationEditor,

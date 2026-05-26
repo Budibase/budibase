@@ -101,8 +101,9 @@
   $: dataSourceSchema = getDataSourceSchema($selectedScreen, $selectedComponent)
   $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
-  $: fieldType = type?.split("/")[1] || "string"
-  $: constraintOptions = getConstraintsForType(fieldType)
+  $: validationType = type?.split("/")[1] || "string"
+  $: fieldType = validationType === "url" ? "string" : validationType
+  $: constraintOptions = getConstraintsForType(validationType)
 
   const getDataSourceSchema = (
     asset: ScreenAsset | null | undefined,
@@ -237,6 +238,10 @@
     expandedRules.add(newRule.id)
   }
 
+  const supportsConstraintValue = (constraint?: string): boolean => {
+    return !["required", "url"].includes(constraint || "")
+  }
+
   const toggleRule = (id: string): void => {
     const nextExpandedRules = new SvelteSet(expandedRules)
     if (nextExpandedRules.has(id)) {
@@ -253,7 +258,7 @@
   }
 
   const valueSummary = (rule: ValidationEditorRule): string => {
-    if (rule.constraint === "required") {
+    if (!supportsConstraintValue(rule.constraint)) {
       return ""
     }
     if (rule.value == null || rule.value === "") {
@@ -290,7 +295,7 @@
         {#if rules?.length}
           <div class="rules">
             {#each rules as rule (rule.id)}
-              {@const valueDisabled = rule.constraint === "required"}
+              {@const valueDisabled = !supportsConstraintValue(rule.constraint)}
               {@const isExpanded = expandedRules.has(rule.id)}
               <ValidationRuleCard
                 title={constraintLabel(rule.constraint)}

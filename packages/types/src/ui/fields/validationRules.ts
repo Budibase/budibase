@@ -20,6 +20,7 @@ export type FieldValidationRuleType =
   | "notEqual"
   | "regex"
   | "notRegex"
+  | "url"
   | "contains"
   | "notContains"
   | "json"
@@ -42,6 +43,8 @@ export const defaultErrorForConstraint = (
   switch (constraint) {
     case "required":
       return "Required"
+    case "url":
+      return "Must be a valid URL"
     case "minLength":
       return hasValidationValue(value)
         ? `Must be at least ${value} characters`
