@@ -12,6 +12,7 @@
     Divider,
     Button,
     ActionButton,
+    Checkbox,
   } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -33,6 +34,7 @@
     Query,
     QueryFields,
     QuerySchema,
+    PaginationConfig,
     UIInternalDatasource,
   } from "@budibase/types"
 
@@ -65,6 +67,8 @@
   let nestedSchemaFields: NestedSchemaFields = {}
   let rows: PreviewQueryResponse["rows"] = []
 
+  let pagination: PaginationConfig | undefined = undefined
+
   const parseQuery = (query: Query) => {
     modified = false
 
@@ -84,6 +88,20 @@
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
+
+    // Initialize pagination for SQL Read queries
+    if (newQuery.queryVerb === "read" && schemaType === "sql") {
+      if (!newQuery.fields.pagination) {
+        newQuery.fields.pagination = {
+          enabled: false,
+          offsetBinding: "offset",
+          limitBinding: "limit",
+        }
+      }
+      pagination = newQuery.fields.pagination
+    } else {
+      pagination = undefined
+    }
 
     queryHash = JSON.stringify(newQuery)
   }
@@ -185,6 +203,26 @@
     if (newSchema) {
       schema = newSchema
     }
+  }
+
+  const setPaginationField = (field: string, value: unknown) => {
+    if (!newQuery.fields.pagination) {
+      newQuery.fields.pagination = {
+        enabled: false,
+        offsetBinding: "offset",
+        limitBinding: "limit",
+      }
+    }
+    const newPagination = {
+      ...newQuery.fields.pagination,
+      [field]: value,
+    }
+    // Reassign the parent fields object to trigger Svelte reactivity
+    newQuery.fields = {
+      ...newQuery.fields,
+      pagination: newPagination,
+    }
+    pagination = newQuery.fields.pagination
   }
 
   async function handleKeyDown(evt: KeyboardEvent) {
@@ -333,6 +371,44 @@
             on:change={handleBindingsChange}
           />
         {/key}
+
+        {#if pagination && newQuery.queryVerb === "read"}
+          <Divider />
+          <div class="heading">
+            <Heading weight="heavy" size="XS">Pagination</Heading>
+          </div>
+          <div class="copy">
+            <Body size="S">
+              Enable pagination to support limit and offset parameters in this
+              query.
+            </Body>
+          </div>
+          <div class="pagination">
+            {#key pagination.enabled}
+              <Checkbox
+                text="Enable pagination"
+                bind:value={pagination.enabled}
+                on:change={e => setPaginationField("enabled", e.detail)}
+              />
+            {/key}
+            {#if pagination.enabled}
+              <div class="pagination-inputs">
+                <Input
+                  label="Offset binding name"
+                  placeholder="e.g., offset"
+                  value={pagination.offsetBinding}
+                  on:change={e => setPaginationField("offsetBinding", e.detail)}
+                />
+                <Input
+                  label="Limit binding name"
+                  placeholder="e.g., limit"
+                  value={pagination.limitBinding}
+                  on:change={e => setPaginationField("limitBinding", e.detail)}
+                />
+              </div>
+            {/if}
+          </div>
+        {/if}
 
         <Divider />
         <div class="heading">
@@ -500,5 +576,17 @@
 
   .showSidePanel {
     width: 450px;
+  }
+
+  .pagination {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+
+  .pagination-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-m);
   }
 </style>
