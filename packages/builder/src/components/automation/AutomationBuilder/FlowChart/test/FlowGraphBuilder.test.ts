@@ -238,4 +238,20 @@ describe("renderChain", () => {
     )
     getEdge(graph, "delta-loop", "anchor-delta-loop")
   })
+
+  it("renders a terminal action bar edge after a branch leaf loop fixture", () => {
+    const graph = renderTestChain([branchWithManyLanesStep()])
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+
+    const edge = getEdge(graph, "delta-loop", "anchor-delta-loop")
+    expect(edge.data).toMatchObject({
+      block: expect.objectContaining({
+        id: "delta-loop",
+        stepId: "LOOP_V2",
+      }),
+    })
+    getNode(graph, "anchor-delta-loop")
+  })
 })

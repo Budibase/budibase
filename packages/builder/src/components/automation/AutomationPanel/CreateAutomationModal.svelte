@@ -79,7 +79,11 @@
           on:click={() => selectTrigger(trigger)}
         >
           <div class="icon-container">
-            <Icon name={trigger.icon} size="M" color="var(--ink)" />
+            <Icon
+              name={trigger.icon}
+              size="M"
+              color="var(--spectrum-global-color-gray-900)"
+            />
           </div>
           <Body size="S">{trigger.name}</Body>
         </div>
