@@ -88,12 +88,14 @@ const createSlackInputHandler = ({
   agentId,
   channelEnabled,
   idleTimeoutMinutes,
+  requireUserLink,
 }: {
   workspaceId: string
   chatAppId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }) => {
   return async ({
     target,
@@ -158,6 +160,7 @@ const createSlackInputHandler = ({
         channel,
         scope,
         idleTimeoutMinutes,
+        requireUserLink,
       })
     } catch (error) {
       console.error("Slack webhook processing failed", error)
@@ -210,17 +213,21 @@ export async function slackWebhook(
     ctx,
     providerName: "Slack",
     createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
-      const { integration, idleTimeoutMinutes, channelEnabled } =
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          const agent = await sdk.ai.agents.getOrThrow(agentId)
-          return {
-            integration:
-              sdk.ai.deployments.slack.validateSlackIntegration(agent),
-            idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
-            channelEnabled:
-              !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
-          }
-        })
+      const {
+        integration,
+        idleTimeoutMinutes,
+        channelEnabled,
+        requireUserLink,
+      } = await context.doInWorkspaceContext(workspaceId, async () => {
+        const agent = await sdk.ai.agents.getOrThrow(agentId)
+        return {
+          integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
+          idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
+          requireUserLink: agent.slackIntegration?.requireUserLink,
+          channelEnabled:
+            !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
+        }
+      })
 
       const state = await getSlackState()
       if (!state) {
@@ -245,6 +252,7 @@ export async function slackWebhook(
         agentId,
         channelEnabled,
         idleTimeoutMinutes,
+        requireUserLink,
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 

@@ -66,10 +66,11 @@
   $: testStatusResult =
     viewMode === ViewMode.LOGS
       ? undefined
-      : (automationStore.actions.processBlockResults(
-          $automationStore.testResults,
-          block
-        ) as FlowItemStatusResult)
+      : (($automationStore.testProgress?.[block.id]?.result ||
+          automationStore.actions.processBlockResults(
+            $automationStore.testResults,
+            block
+          )) as FlowItemStatusResult)
   $: resolvedStatusResult = statusResult ?? testStatusResult
   $: resolvedRunResults =
     runResults ||

@@ -114,11 +114,18 @@
       <div
         class="icon-container"
         class:compact
-        style:--automation-step-icon-color={isTrigger
+        style:--automation-step-icon-color={block.type ===
+        AutomationStepType.TRIGGER
           ? "var(--automation-step-icon-trigger-color)"
-          : getAutomationStepIconColor(block.stepId)}
+          : isActionStep(block) && block.stepId in externalActions
+            ? "var(--spectrum-global-color-gray-200)"
+            : getAutomationStepIconColor(block.stepId)}
       >
-        <Icon name={block.icon} size="M" color="var(--ink)" />
+        <Icon
+          name={block.icon}
+          size="M"
+          color="var(--spectrum-global-color-gray-900)"
+        />
       </div>
     {/if}
     <div class="heading" class:compact>
@@ -207,7 +214,7 @@
     text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     line-height: 1.2;
     text-overflow: ellipsis;
@@ -241,7 +248,7 @@
     align-items: center;
     width: max-content;
     flex: 0 0 auto;
-    gap: 8px;
+    gap: 10px;
     height: 100%;
     padding: 13px;
     box-sizing: border-box;

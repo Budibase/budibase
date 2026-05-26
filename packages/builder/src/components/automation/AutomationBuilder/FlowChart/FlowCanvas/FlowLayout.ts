@@ -73,6 +73,19 @@ const shiftNodes = (
   }
 }
 
+const positionsChanged = (
+  before: Record<string, { x: number; y: number }>,
+  nodesById: Record<string, FlowNode>
+) => {
+  return Object.entries(before).some(([id, position]) => {
+    const node = nodesById[id]
+    return (
+      !!node &&
+      (node.position.x !== position.x || node.position.y !== position.y)
+    )
+  })
+}
+
 const getSubtreeBounds = (
   ids: Set<string>,
   nodesById: Record<string, FlowNode>
@@ -146,54 +159,65 @@ export const applyBranchLaneClearance = (graph: {
     })
   }
 
-  for (const branches of Object.values(branchGroups)) {
-    if (branches.length < 2) {
-      continue
-    }
+  const groups = Object.values(branchGroups)
+    .filter(branches => branches.length >= 2)
+    .map(branches => branches.sort((a, b) => a.branchIdx - b.branchIdx))
 
-    branches.sort((a, b) => a.branchIdx - b.branchIdx)
-    const siblingIds = new Set(branches.map(branch => branch.nodeId))
-    const branchLanes = branches.map(branch => {
-      const blockedIds = new Set(siblingIds)
-      blockedIds.delete(branch.nodeId)
-      const subtreeIds = collectSubtree(
-        branch.nodeId,
-        nodesById,
-        outgoing,
-        blockedIds
-      )
-      return {
-        ...branch,
-        subtreeIds,
-        bounds: getSubtreeBounds(subtreeIds, nodesById),
+  const applyClearancePass = () => {
+    for (const branches of groups) {
+      const siblingIds = new Set(branches.map(branch => branch.nodeId))
+      const branchLanes = branches.map(branch => {
+        const blockedIds = new Set(siblingIds)
+        blockedIds.delete(branch.nodeId)
+        const subtreeIds = collectSubtree(
+          branch.nodeId,
+          nodesById,
+          outgoing,
+          blockedIds
+        )
+        return {
+          ...branch,
+          subtreeIds,
+          bounds: getSubtreeBounds(subtreeIds, nodesById),
+        }
+      })
+
+      const shiftBranchLane = (
+        lane: (typeof branchLanes)[number],
+        delta: number
+      ) => {
+        shiftNodes(lane.subtreeIds, nodesById, delta, "y")
+        lane.bounds.top += delta
+        lane.bounds.bottom += delta
       }
-    })
 
-    const shiftBranchLane = (
-      lane: (typeof branchLanes)[number],
-      delta: number
-    ) => {
-      shiftNodes(lane.subtreeIds, nodesById, delta, "y")
-      lane.bounds.top += delta
-      lane.bounds.bottom += delta
+      const primaryIndex = Math.floor((branchLanes.length - 1) / 2)
+
+      for (let i = primaryIndex - 1; i >= 0; i--) {
+        const lane = branchLanes[i]
+        const lowerLane = branchLanes[i + 1]
+        const delta =
+          lowerLane.bounds.top - BRANCH_LANE_CLEARANCE - lane.bounds.bottom
+        shiftBranchLane(lane, delta)
+      }
+
+      for (let i = primaryIndex + 1; i < branchLanes.length; i++) {
+        const lane = branchLanes[i]
+        const upperLane = branchLanes[i - 1]
+        const delta =
+          upperLane.bounds.bottom + BRANCH_LANE_CLEARANCE - lane.bounds.top
+        shiftBranchLane(lane, delta)
+      }
     }
+  }
 
-    const primaryIndex = Math.floor((branchLanes.length - 1) / 2)
-
-    for (let i = primaryIndex - 1; i >= 0; i--) {
-      const lane = branchLanes[i]
-      const lowerLane = branchLanes[i + 1]
-      const delta =
-        lowerLane.bounds.top - BRANCH_LANE_CLEARANCE - lane.bounds.bottom
-      shiftBranchLane(lane, delta)
-    }
-
-    for (let i = primaryIndex + 1; i < branchLanes.length; i++) {
-      const lane = branchLanes[i]
-      const upperLane = branchLanes[i - 1]
-      const delta =
-        upperLane.bounds.bottom + BRANCH_LANE_CLEARANCE - lane.bounds.top
-      shiftBranchLane(lane, delta)
+  for (let i = 0; i < groups.length; i++) {
+    const before = Object.fromEntries(
+      graph.nodes.map(node => [node.id, { ...node.position }])
+    )
+    applyClearancePass()
+    if (!positionsChanged(before, nodesById)) {
+      break
     }
   }
 }
