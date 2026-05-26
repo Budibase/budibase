@@ -70,6 +70,21 @@
 <div class="controls">
   <div class="toolbar">
     <UndoRedoControl store={historyStore} showButtonGroup showTooltips />
+    {#if $automationStore.viewMode === ViewMode.EDITOR}
+      <span class="icon-btn-wrap">
+        <Icon
+          name="chat"
+          size="L"
+          hoverable
+          tooltip="Add a note"
+          tooltipType={TooltipType.Info}
+          tooltipPosition={TooltipPosition.Top}
+          color="var(--spectrum-alias-text-color)"
+          hoverColor="var(--spectrum-alias-text-color-hover)"
+          on:click={() => automationStore.actions.addStickyNote()}
+        />
+      </span>
+    {/if}
     <span class="fit-view-wrap">
       <Icon
         name="arrows-out"
@@ -94,19 +109,6 @@
           color="var(--spectrum-alias-text-color)"
           hoverColor="var(--spectrum-alias-text-color-hover)"
           on:click={openAddStepPanel}
-        />
-      </span>
-      <span class="comment-wrap">
-        <Icon
-          name="chat"
-          size="L"
-          hoverable
-          tooltip="Add a note"
-          tooltipType={TooltipType.Info}
-          tooltipPosition={TooltipPosition.Top}
-          color="var(--spectrum-alias-text-color)"
-          hoverColor="var(--spectrum-alias-text-color-hover)"
-          on:click={() => automationStore.actions.addStickyNote()}
         />
       </span>
     {/if}
@@ -253,22 +255,24 @@
     border-radius: 50%;
   }
 
-  .comment-wrap {
+  .icon-btn-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--automation-step-icon-code-color);
   }
 
-  .comment-wrap:hover {
-    background: color-mix(
-      in srgb,
-      var(--automation-step-icon-code-color) 88%,
-      black
-    );
+  .icon-btn-wrap:hover {
+    background: var(--spectrum-global-color-gray-200);
     border-radius: 50%;
+  }
+
+  :global(.spectrum--dark) .icon-btn-wrap:hover,
+  :global(.spectrum--darkest) .icon-btn-wrap:hover,
+  :global(.spectrum--midnight) .icon-btn-wrap:hover,
+  :global(.spectrum--nord) .icon-btn-wrap:hover {
+    background: var(--spectrum-global-color-gray-300);
   }
 </style>
