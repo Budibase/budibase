@@ -72,8 +72,12 @@
     rules: ValidationEditorRule[]
   ): Set<string> => {
     const expanded = new Set<string>()
-    if (rules?.length === 1 && rules[0]?.id) {
-      expanded.add(rules[0].id)
+    if (rules?.length <= 2) {
+      rules.forEach(rule => {
+        if (rule?.id) {
+          expanded.add(rule.id)
+        }
+      })
     }
     return expanded
   }
