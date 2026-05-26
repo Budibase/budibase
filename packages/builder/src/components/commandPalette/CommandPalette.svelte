@@ -129,14 +129,10 @@
         name: "Automations",
         url: "/builder/workspace/:application/home?type=automation",
       },
-      ...($featureFlags.AI_AGENTS
-        ? [
-            {
-              name: "Agents",
-              url: "/builder/workspace/:application/home?type=agent",
-            },
-          ]
-        : []),
+      {
+        name: "Agents",
+        url: "/builder/workspace/:application/home?type=agent",
+      },
     ]
     return routes.map(route => ({
       type: "Navigate",

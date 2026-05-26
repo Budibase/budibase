@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { selectedAutomation } from "@/stores/builder"
+  import { isNoOpBlockMove } from "@/stores/builder/automations"
   import { getContext, onDestroy, onMount } from "svelte"
   import { type Writable } from "svelte/store"
   import { generate } from "shortid"
@@ -15,6 +17,11 @@
 
   const view = getContext<Writable<DragView>>("draggableView")
 
+  $: sourcePath = $view?.moveStep?.id
+    ? $selectedAutomation?.blockRefs?.[$view.moveStep.id]?.pathTo
+    : undefined
+  $: isNoOpDrop = sourcePath && path ? isNoOpBlockMove(sourcePath, path) : false
+
   onMount(() => {
     // Always return up-to-date values
     view.update((state: DragView) => {
@@ -24,7 +31,9 @@
           ...(state.dropzones || {}),
           [dzid]: {
             get dims() {
-              return dropEle ? dropEle.getBoundingClientRect() : new DOMRect()
+              return dropEle && !isNoOpDrop
+                ? dropEle.getBoundingClientRect()
+                : new DOMRect()
             },
             path,
           },
@@ -48,6 +57,7 @@
   class="drag-zone"
   class:edge={variant === "edge"}
   class:drag-over={$view?.droptarget === dzid}
+  class:hidden={isNoOpDrop}
   style={variant === "edge" && (width || height)
     ? `width: ${width ? Math.round(width) + "px" : "auto"}; height: ${
         height ? Math.round(height) + "px" : "auto"
@@ -61,8 +71,11 @@
   .drag-zone.drag-over {
     background-color: #1ca872b8;
   }
+  .drag-zone.hidden {
+    visibility: hidden;
+  }
   .drag-zone {
-    min-height: calc(var(--spectrum-global-dimension-size-225) + 12px);
+    min-height: calc(var(--spectrum-global-dimension-size-225) + 4px);
     min-width: 100%;
     background-color: rgba(28, 168, 114, 0.2);
     border-radius: 12px;

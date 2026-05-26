@@ -1,5 +1,6 @@
 import { HTTPError, utils } from "@budibase/backend-core"
-import type { UserCtx } from "@budibase/types"
+import { helpers } from "@budibase/shared-core"
+import type { ChatIdentityLinkSession, UserCtx } from "@budibase/types"
 import { getGlobalIDFromUserMetadataID } from "../../../db/utils"
 import sdk from "../../../sdk"
 
@@ -34,6 +35,28 @@ const getCurrentGlobalUserId = (ctx: UserCtx) => {
     throw new HTTPError("Unable to resolve current user", 400)
   }
   return currentUserId
+}
+
+const renderLinkConfirmationPage = (
+  session: ChatIdentityLinkSession,
+  action: string
+) => {
+  const externalIdentity = session.externalUserName || session.externalUserId
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirm chat account link</title>
+  </head>
+  <body>
+    <p>Confirm linking your Budibase account to ${helpers.escapeHtml(session.provider)} user ${helpers.escapeHtml(externalIdentity)}.</p>
+    <form method="post" action="${helpers.escapeHtml(action)}">
+      <input type="hidden" name="confirmationToken" value="${helpers.escapeHtml(session.confirmationToken)}">
+      <button type="submit">Confirm</button>
+    </form>
+  </body>
+</html>`
 }
 
 const renderLinkSuccessPage = () => {
@@ -81,6 +104,50 @@ export async function handoffChatLinkSession(
     )
     ctx.redirect(BUILDER_LOGIN_PATH)
     return
+  }
+
+  const confirmationSession =
+    await sdk.ai.chatIdentityLinks.prepareChatIdentityLinkSessionConfirmation(
+      token
+    )
+  if (!confirmationSession) {
+    throw new HTTPError("Link token is invalid or has expired", 400)
+  }
+
+  ctx.type = "text/html"
+  ctx.body = renderLinkConfirmationPage(
+    confirmationSession,
+    `/api/chat-links/${ctx.params.instance}/${token}/handoff`
+  )
+}
+
+export async function confirmChatLinkSession(
+  ctx: UserCtx<
+    { confirmationToken?: string },
+    string,
+    { instance: string; token: string }
+  >
+) {
+  const token = resolveToken(ctx.params.token)
+  const session =
+    await sdk.ai.chatIdentityLinks.getChatIdentityLinkSession(token)
+  if (!session) {
+    throw new HTTPError("Link token is invalid or has expired", 400)
+  }
+  assertSessionMatchesInstance({
+    workspaceId: session.workspaceId,
+    instance: ctx.params.instance,
+  })
+
+  if (!ctx.isAuthenticated) {
+    throw new HTTPError("Authentication is required to link chat identity", 401)
+  }
+
+  if (
+    !session.confirmationToken ||
+    ctx.request.body?.confirmationToken !== session.confirmationToken
+  ) {
+    throw new HTTPError("Link confirmation is invalid or has expired", 400)
   }
 
   const currentGlobalUserId = getCurrentGlobalUserId(ctx)

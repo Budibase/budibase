@@ -23,6 +23,7 @@
     Icon,
     Layout,
     Modal,
+    Toggle,
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
@@ -42,6 +43,8 @@
   $: appRecaptchaEnabled = $recaptchaStore.enabled
   $: hasOnlyOneWorkspace = $appsStore.apps.length <= 1
   $: disableDeleteWorkspace = !$isOnlyUser || hasOnlyOneWorkspace
+  $: suppressErrorNotifications =
+    !!$appStore.features?.suppressErrorNotifications
   $: deleteWorkspaceTooltip = hasOnlyOneWorkspace
     ? "At least one workspace is required."
     : !$isOnlyUser
@@ -60,6 +63,24 @@
       notifications.success(`Recaptcha ${newState ? "enabled" : "disabled"}`)
     } catch (err: any) {
       notifications.error(`Failed to set recaptcha state: ${err.message}`)
+    }
+  }
+
+  const updateSuppressErrorNotifications = async () => {
+    try {
+      const newState = !suppressErrorNotifications
+      await appStore.updateApp({
+        features: {
+          suppressErrorNotifications: newState,
+        },
+      })
+      notifications.success(
+        `Frontend error notifications ${newState ? "disabled" : "enabled"}`
+      )
+    } catch (err: any) {
+      notifications.error(
+        `Failed to update notification setting: ${err.message}`
+      )
     }
   }
 </script>
@@ -216,6 +237,21 @@
       Copy resources
     </Button>
     <CloneResourcesModal bind:this={cloneResourcesModal} />
+  </div>
+  <Divider noMargin />
+  <Layout noPadding gap="XS">
+    <Heading size="S">Notifications</Heading>
+    <Body size="S">
+      Suppress runtime frontend error notifications in published apps. Errors
+      are still logged to browser console.
+    </Body>
+  </Layout>
+  <div class="row">
+    <Toggle
+      text="Suppress frontend error notifications"
+      value={suppressErrorNotifications}
+      on:change={updateSuppressErrorNotifications}
+    />
   </div>
   <Divider noMargin />
   <Layout noPadding gap="XS">

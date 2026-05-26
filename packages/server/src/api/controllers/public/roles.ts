@@ -1,5 +1,5 @@
-import { UserCtx } from "@budibase/types"
-import { Next } from "koa"
+import type { UserCtx } from "@budibase/types"
+import type { Next } from "koa"
 import { sdk } from "@budibase/pro"
 import {
   RoleAssignmentResponse,
@@ -7,12 +7,14 @@ import {
   RoleAssignRequest,
 } from "./mapping/types"
 import { syncUsersAgainstWorkspaces } from "../../../sdk/workspace/workspaces/sync"
+import { validateGlobalRoleUpdate } from "./globalRoleValidation"
 
 async function assign(
   ctx: UserCtx<RoleAssignRequest, RoleAssignmentResponse>,
   next: Next
 ) {
   const { userIds, ...assignmentProps } = ctx.request.body
+  validateGlobalRoleUpdate(ctx, assignmentProps)
   await sdk.publicApi.roles.assign(userIds, assignmentProps)
   const workspaceIds = [
     assignmentProps.role?.appId,
@@ -28,6 +30,7 @@ async function unAssign(
   next: Next
 ) {
   const { userIds, ...unAssignmentProps } = ctx.request.body
+  validateGlobalRoleUpdate(ctx, unAssignmentProps)
   await sdk.publicApi.roles.unAssign(userIds, unAssignmentProps)
   const workspaceIds = [
     unAssignmentProps.role?.appId,
