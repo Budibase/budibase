@@ -70,21 +70,6 @@
 <div class="controls">
   <div class="toolbar">
     <UndoRedoControl store={historyStore} showButtonGroup showTooltips />
-    {#if $automationStore.viewMode === ViewMode.EDITOR}
-      <span class="icon-btn-wrap">
-        <Icon
-          name="chat"
-          size="L"
-          hoverable
-          tooltip="Add a note"
-          tooltipType={TooltipType.Info}
-          tooltipPosition={TooltipPosition.Top}
-          color="var(--spectrum-alias-text-color)"
-          hoverColor="var(--spectrum-alias-text-color-hover)"
-          on:click={() => automationStore.actions.addStickyNote()}
-        />
-      </span>
-    {/if}
     <span class="fit-view-wrap">
       <Icon
         name="arrows-out"
@@ -97,6 +82,20 @@
         on:click={() => flow.fitView()}
       />
     </span>
+    {#if $automationStore.viewMode === ViewMode.EDITOR}
+      <span class="icon-btn-wrap">
+        <Icon
+          name="chat"
+          size="L"
+          hoverable
+          tooltip="Add a note"
+          tooltipPosition={TooltipPosition.Top}
+          color="var(--spectrum-alias-text-color)"
+          hoverColor="var(--spectrum-alias-text-color-hover)"
+          on:click={() => automationStore.actions.addStickyNote()}
+        />
+      </span>
+    {/if}
     {#if $automationStore.viewMode === ViewMode.EDITOR}
       <span class="add-step-wrap">
         <Icon
