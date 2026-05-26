@@ -28,13 +28,14 @@
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
-  import { ActionStepID } from "@/constants/backend/automations"
-  import {
-    getBlocks as getBlocksHelper,
-    buildTopLevelGraph,
-    dagreLayoutAutomation,
-    type GraphBuildDeps,
-  } from "./AutomationStepHelpers"
+import { ActionStepID } from "@/constants/backend/automations"
+import { stickyNoteNode } from "./FlowCanvas/FlowFactories"
+import {
+  getBlocks as getBlocksHelper,
+  buildTopLevelGraph,
+  dagreLayoutAutomation,
+  type GraphBuildDeps,
+} from "./AutomationStepHelpers"
   import {
     NODE_SPACING,
     DEFAULT_NODE_WIDTH,
@@ -46,8 +47,9 @@
   import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
   import CustomEdge from "./FlowCanvas/edges/CustomEdge.svelte"
   import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
-  import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
-  import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
+import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
+import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
+import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
 
   import {
     SvelteFlow,
@@ -76,6 +78,7 @@
     "branch-node": BranchNodeWrapper as any,
     "anchor-node": AnchorNode as any,
     "loop-subflow-node": LoopV2Node as any,
+    "sticky-note": StickyNoteNode as any,
   }
   const edgeTypes: EdgeTypes = {
     "add-item": CustomEdge as any,
@@ -171,6 +174,17 @@
     )
 
     const selectable = viewMode === ViewMode.EDITOR
+
+    // Add sticky note nodes from uiTree
+    const automationData = $selectedAutomation?.data
+    if (automationData?.uiTree?.stickyNotes) {
+      for (const note of automationData.uiTree.stickyNotes) {
+        laidOut.nodes.push(
+          stickyNoteNode(note, { x: note.x, y: note.y })
+        )
+      }
+    }
+
     nodes.set(
       laidOut.nodes.map(node => ({
         ...node,
@@ -526,6 +540,16 @@
     closeContextMenuOnCanvasInteraction()
   }
 
+  const handleNodeDragStop = (event: any) => {
+    const node = event?.detail?.targetNode
+    if (node?.type === "sticky-note" && node?.data?.note?.id) {
+      automationStore.actions.updateStickyNotePosition(node.data.note.id, {
+        x: node.position.x,
+        y: node.position.y,
+      })
+    }
+  }
+
   const handleCanvasPointerMove = (e: PointerEvent) => {
     dnd.handlePointerMove(e)
     if (e.buttons > 0) {
@@ -639,8 +663,9 @@
         {edgeTypes}
         viewport={flowViewport}
         colorMode="system"
-        nodesDraggable={false}
+        nodesDraggable={true}
         elementsSelectable={viewMode === ViewMode.EDITOR}
+        on:nodeDragStop={handleNodeDragStop}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
         deleteKey={null}

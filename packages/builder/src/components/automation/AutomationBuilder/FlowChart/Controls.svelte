@@ -96,6 +96,19 @@
           on:click={openAddStepPanel}
         />
       </span>
+      <span class="comment-wrap">
+        <Icon
+          name="chat"
+          size="L"
+          hoverable
+          tooltip="Add a note"
+          tooltipType={TooltipType.Info}
+          tooltipPosition={TooltipPosition.Top}
+          color="var(--spectrum-alias-text-color)"
+          hoverColor="var(--spectrum-alias-text-color-hover)"
+          on:click={() => automationStore.actions.addStickyNote()}
+        />
+      </span>
     {/if}
   </div>
 </div>
@@ -235,6 +248,25 @@
     background: color-mix(
       in srgb,
       var(--automation-step-icon-data-color) 88%,
+      black
+    );
+    border-radius: 50%;
+  }
+
+  .comment-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--automation-step-icon-code-color);
+  }
+
+  .comment-wrap:hover {
+    background: color-mix(
+      in srgb,
+      var(--automation-step-icon-code-color) 88%,
       black
     );
     border-radius: 50%;

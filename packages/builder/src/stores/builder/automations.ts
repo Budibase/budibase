@@ -2649,6 +2649,75 @@ const automationActions = (store: AutomationStore) => ({
     })
   },
 
+  addStickyNote: async () => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto) return
+
+    const notes = auto.uiTree?.stickyNotes || []
+    const newNote = {
+      id: generate(),
+      title: "Note",
+      text: "Add your note here",
+      x: 100 + notes.length * 30,
+      y: 100 + notes.length * 30,
+    }
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...(updated.uiTree || {}),
+      stickyNotes: [...notes, newNote],
+    }
+    await automationStore.actions.save(updated)
+  },
+
+  updateStickyNote: async (
+    noteId: string,
+    updates: { title?: string; text?: string }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: any) =>
+        n.id === noteId ? { ...n, ...updates } : n
+      ),
+    }
+    await automationStore.actions.save(updated)
+  },
+
+  updateStickyNotePosition: async (
+    noteId: string,
+    position: { x: number; y: number }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: any) =>
+        n.id === noteId ? { ...n, x: position.x, y: position.y } : n
+      ),
+    }
+    await automationStore.actions.save(updated)
+  },
+
+  removeStickyNote: async (noteId: string) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.filter(
+        (n: any) => n.id !== noteId
+      ),
+    }
+    await automationStore.actions.save(updated)
+  },
+
   delete: async (automation: Automation) => {
     const isRowAction = sdk.automations.isRowAction(automation)
     if (isRowAction) {

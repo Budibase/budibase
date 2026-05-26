@@ -331,6 +331,19 @@ export interface AnchorNodeData {
   [key: string]: unknown
 }
 
+export interface StickyNote {
+  id: string
+  title: string
+  text: string
+  x: number
+  y: number
+}
+
+export interface StickyNoteNodeData {
+  note: StickyNote
+  [key: string]: unknown
+}
+
 /**
  * SvelteFlow Edge Data Types
  */

@@ -6,6 +6,8 @@ import type {
   FlowBlockPath,
   LoopEdgeData,
   StepNodeData,
+  StickyNoteNodeData,
+  StickyNote,
   AutomationBlock,
 } from "@/types/automations"
 import type { Node as FlowNode, Edge as FlowEdge } from "@xyflow/svelte"
@@ -23,6 +25,7 @@ export const stepNode = (
     type: "step-node",
     data,
     position,
+    draggable: false,
   }
   if (parentId) {
     node.parentId = parentId
@@ -52,6 +55,7 @@ export const branchNode = (
     type: "branch-node",
     data,
     position,
+    draggable: false,
   }
   if (parentId) {
     node.parentId = parentId
@@ -67,12 +71,27 @@ export const anchorNode = (
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
   const data: AnchorNodeData = {}
-  const node: FlowNode = { id, type: "anchor-node", data, position }
+  const node: FlowNode = { id, type: "anchor-node", data, position, draggable: false }
   if (parentId) {
     node.parentId = parentId
     node.extent = "parent"
   }
   return node
+}
+
+export const stickyNoteNode = (
+  note: StickyNote,
+  position: { x: number; y: number } = { x: note.x, y: note.y }
+): FlowNode => {
+  const data: StickyNoteNodeData = { note }
+  return {
+    id: note.id,
+    type: "sticky-note",
+    data,
+    position,
+    draggable: true,
+    selectable: false,
+  }
 }
 
 export const edgeAddItem = (
