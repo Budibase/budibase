@@ -19,6 +19,7 @@ import {
   STEP,
   BRANCH,
   LOOP,
+  LOOP_INSERT_ACTION_OFFSET,
   type FlowLayoutDirection,
 } from "./FlowGeometry"
 import {
@@ -111,14 +112,15 @@ interface PlaceBranchClusterArgs {
 }
 
 const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
-  const { step, source, coords, deps, mode, parentId, visuals } = args
+  const { step, source, coords, deps, mode, parentId, visuals, loopContext } =
+    args
   const baseId = step.id
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
   const switchNodeId = baseId
 
-  const isLR = deps.layoutDirection === "LR"
+  const isLR = deps.layoutDirection !== "TB"
 
   const centers = computeLaneCenters(branches.length, mode, {
     laneWidth: visuals.laneWidth,
@@ -445,7 +447,7 @@ export const renderLoopV2Container = (
     loopStep.inputs?.children || []
   )
   // Follow the global layout inside the loop container
-  const isLR = deps.layoutDirection === "LR"
+  const isLR = deps.layoutDirection !== "TB"
 
   // Pre-compute container dimensions
   let containerWidth = 400
@@ -455,8 +457,8 @@ export const renderLoopV2Container = (
   const childHeight = SUBFLOW.childHeight
   const lrWidth = 60
   const lrGapForWidth = isLR ? lrWidth : 0
-  const lrMinExit = 16
   const horizontalStepWidth = STEP.width
+  const initialInnerX = isLR ? LOOP_INSERT_ACTION_OFFSET * 2 : 40
 
   let dynamicHeight = paddingTop
   let maxFanoutWidth = isLR ? horizontalStepWidth : SUBFLOW.stepWidth
@@ -515,7 +517,7 @@ export const renderLoopV2Container = (
     const minLinearLoopWidth = 280
     containerWidth = Math.max(
       hasBranchChild ? containerWidth : minLinearLoopWidth,
-      linearWidth + lrMinExit + 40,
+      initialInnerX + linearWidth + LOOP_INSERT_ACTION_OFFSET * 2,
       maxFanoutWidth + 80,
       hasBranchChild ? SUBFLOW.laneWidth + 80 : 0
     )
@@ -548,8 +550,10 @@ export const renderLoopV2Container = (
   const baseY = isLR
     ? paddingTop + Math.floor((contentHeight - childHeight) / 2)
     : Math.max(paddingTop, Math.floor((containerHeight - childHeight) / 2))
+  const loopHandleY = isLR ? baseY + childHeight / 2 : baseY
+  loopNodeData.handleY = loopHandleY
   let innerY = paddingTop
-  let innerX = 40
+  let innerX = initialInnerX
   const lrGap = isLR ? 60 : 0
   let lastLinearChild: AutomationStep | undefined = undefined
 
@@ -642,7 +646,7 @@ export const renderLoopV2Container = (
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
     // Place exit anchor at container end according to layout
-    const exitAnchorY = isLR ? baseY : innerY
+    const exitAnchorY = isLR ? loopHandleY : innerY
     const exitAnchorX = isLR ? containerWidth : baseX
     deps.newNodes.push(
       anchorNode(exitAnchorId, baseId, {
