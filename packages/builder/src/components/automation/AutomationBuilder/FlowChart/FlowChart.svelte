@@ -665,7 +665,7 @@ import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
         colorMode="system"
         nodesDraggable={true}
         elementsSelectable={viewMode === ViewMode.EDITOR}
-        on:nodeDragStop={handleNodeDragStop}
+        on:nodedragstop={handleNodeDragStop}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
         deleteKey={null}
