@@ -137,13 +137,6 @@
       </ActionButton>
       <ActionButton
         quiet
-        selected={activeTab === "Knowledge"}
-        on:click={() => $goto("./knowledge")}
-      >
-        Knowledge
-      </ActionButton>
-      <ActionButton
-        quiet
         selected={activeTab === "Deployment"}
         on:click={() => $goto("./deployment")}
       >
