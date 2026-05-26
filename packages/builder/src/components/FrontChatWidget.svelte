@@ -1,7 +1,7 @@
 <script>
   import { featureFlags } from "@/stores/portal"
   import { FeatureFlag } from "@budibase/types"
-  import { onMount } from "svelte"
+  import { onDestroy, onMount } from "svelte"
 
   const COMPANION_CONTAINER_ID = "companion-container"
   const COMPANION_SCRIPT_ID = "front-companion-script"
@@ -41,12 +41,25 @@
     document.body.appendChild(script)
   }
 
-  $: if (mounted && $featureFlags[FeatureFlag.FRONT_COMPANION]) {
-    initCompanion()
+  function teardownCompanion() {
+    document.getElementById(COMPANION_SCRIPT_ID)?.remove()
+    document.getElementById(COMPANION_CONTAINER_ID)?.remove()
+  }
+
+  $: if (mounted) {
+    if ($featureFlags[FeatureFlag.FRONT_COMPANION]) {
+      initCompanion()
+    } else {
+      teardownCompanion()
+    }
   }
 
   onMount(() => {
     mounted = true
     initCompanion()
+  })
+
+  onDestroy(() => {
+    teardownCompanion()
   })
 </script>
