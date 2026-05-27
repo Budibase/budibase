@@ -2661,7 +2661,7 @@ const automationActions = (store: AutomationStore) => ({
     const newNote = {
       id: generate(),
       title: "Note",
-      text: "Add your note here",
+      text: "",
       x: position?.x ?? 100 + notes.length * 30,
       y: position?.y ?? 100 + notes.length * 30,
     }

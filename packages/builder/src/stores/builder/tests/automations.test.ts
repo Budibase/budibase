@@ -420,7 +420,7 @@ describe("automation store", () => {
     expect(savedAutomation?.uiTree?.stickyNotes?.[0]).toEqual(
       expect.objectContaining({
         title: "Note",
-        text: "Add your note here",
+        text: "",
         x: 120,
         y: 160,
       })
