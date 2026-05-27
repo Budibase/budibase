@@ -458,7 +458,6 @@
           on:keydown={e => {
             if (e.key === "Enter") saveTitle()
           }}
-          on:wheel|stopPropagation
         />
         {#if isEditor}
           <div class="delete-btn" on:click|stopPropagation={remove}>
@@ -488,7 +487,6 @@
           on:keydown={e => {
             if (e.key === "Escape") saveText()
           }}
-          on:wheel|stopPropagation
         />
       </div>
     </div>
