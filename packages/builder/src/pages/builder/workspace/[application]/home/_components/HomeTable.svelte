@@ -23,7 +23,6 @@
   export let searchTerm = ""
   export let sortColumn: HomeSortColumn
   export let sortOrder: HomeSortOrder
-  export let agentsEnabled = false
 
   const dispatch = createEventDispatcher<{
     openRow: HomeRow
@@ -236,7 +235,6 @@
             {typeFilter}
             {searchTerm}
             {allRowsCount}
-            {agentsEnabled}
             filteredRowsCount={rows.length}
             on:clearSearch={() => dispatch("clearSearch")}
             on:resetFilters={() => dispatch("resetFilters")}

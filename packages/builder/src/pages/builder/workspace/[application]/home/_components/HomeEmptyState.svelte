@@ -8,7 +8,6 @@
   export let filteredRowsCount = 0
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""
-  export let agentsEnabled = false
 
   const dispatch = createEventDispatcher<{
     clearSearch: void
@@ -119,39 +118,30 @@
           </svg>
         </div>
 
-        {#if agentsEnabled}
-          <div class="welcome-text">
-            <div class="welcome-heading">Build your first AI agent</div>
-            <Body size="S" color="var(--spectrum-global-color-gray-600)">
-              Create an agent that answers questions, updates systems, and
-              automates work across your tools.
-            </Body>
-          </div>
+        <div class="welcome-text">
+          <div class="welcome-heading">Build your first AI agent</div>
+          <Body size="S" color="var(--spectrum-global-color-gray-600)">
+            Create an agent that answers questions, updates systems, and
+            automates work across your tools.
+          </Body>
+        </div>
 
-          <button
-            type="button"
-            class="spotlight-btn"
-            on:click={() => dispatch("createAgent")}
-          >
-            <div class="spotlight-btn-icon">
-              <Icon name={agentIcon} size="S" color="white" weight="fill" />
-            </div>
-            <span>Create an agent</span>
-          </button>
+        <button
+          type="button"
+          class="spotlight-btn"
+          on:click={() => dispatch("createAgent")}
+        >
+          <div class="spotlight-btn-icon">
+            <Icon name={agentIcon} size="S" color="white" weight="fill" />
+          </div>
+          <span>Create an agent</span>
+        </button>
 
-          <div class="divider">
-            <div class="divider-line"></div>
-            <span class="divider-label">or start with an</span>
-            <div class="divider-line"></div>
-          </div>
-        {:else}
-          <div class="welcome-text">
-            <div class="welcome-heading">Start building</div>
-            <Body size="S" color="var(--spectrum-global-color-gray-600)">
-              Create your first automation or app to get going.
-            </Body>
-          </div>
-        {/if}
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-label">or start with an</span>
+          <div class="divider-line"></div>
+        </div>
 
         <div class="secondary-pills">
           <button
