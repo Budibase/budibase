@@ -2,7 +2,7 @@
   import { automationStore } from "@/stores/builder"
   import { Icon } from "@budibase/bbui"
   import { ViewMode, type StickyNoteNodeData } from "@/types/automations"
-  import { useSvelteFlow } from "@xyflow/svelte"
+  import { useSvelteFlow, useStore } from "@xyflow/svelte"
   import { onDestroy } from "svelte"
 
   export let data: StickyNoteNodeData | undefined = undefined
@@ -335,6 +335,7 @@
   }
 
   const flow = useSvelteFlow()
+  const { domNode } = useStore()
 
   let dragging = false
 
@@ -367,17 +368,90 @@
     const startPos = { ...currentPosition }
     const startX = e.clientX
     const startY = e.clientY
+    const startViewport = flow.getViewport()
+
+    let lastMouseX = startX
+    let lastMouseY = startY
+    let scrollInterval: NodeJS.Timeout | undefined
+    let scrollZones: {
+      top: boolean
+      bottom: boolean
+      left: boolean
+      right: boolean
+    } | null = null
+
+    const updateDragPosition = () => {
+      const currentViewport = flow.getViewport()
+      if (!currentViewport) return
+      const zoom = currentViewport.zoom || 1
+      const dx = (lastMouseX - startX) / zoom
+      const dy = (lastMouseY - startY) / zoom
+      const vpDx = (currentViewport.x - startViewport.x) / zoom
+      const vpDy = (currentViewport.y - startViewport.y) / zoom
+      dragPosition = {
+        x: startPos.x + dx - vpDx,
+        y: startPos.y + dy - vpDy,
+      }
+    }
+
+    const clearScroll = () => {
+      if (scrollInterval) {
+        clearInterval(scrollInterval)
+        scrollInterval = undefined
+        scrollZones = null
+      }
+    }
 
     const onMove = (ev: PointerEvent) => {
       if (!dragging) return
-      const zoom = flow.getViewport()?.zoom || 1
-      const dx = (ev.clientX - startX) / zoom
-      const dy = (ev.clientY - startY) / zoom
-      dragPosition = { x: startPos.x + dx, y: startPos.y + dy }
+      lastMouseX = ev.clientX
+      lastMouseY = ev.clientY
+      updateDragPosition()
+
+      const flowContainer = $domNode
+      if (!flowContainer) return
+      const rect = flowContainer.getBoundingClientRect()
+      const localX = ev.clientX - rect.left
+      const localY = ev.clientY - rect.top
+      const buffer = 100
+      const zonesState = {
+        top: localY < buffer,
+        bottom: localY > rect.height - noteHeight - buffer,
+        left: localX < buffer,
+        right: localX > rect.width - noteWidth - buffer,
+      }
+      const anyActive = Object.values(zonesState).some(Boolean)
+
+      if (anyActive) {
+        if (!scrollInterval) {
+          scrollZones = zonesState
+          scrollInterval = setInterval(() => {
+            const active = scrollZones || zonesState
+            const bump = 30
+            const xInterval = active.right ? -bump : active.left ? bump : 0
+            const yInterval = active.bottom ? -bump : active.top ? bump : 0
+
+            const current = flow.getViewport()
+            if (current) {
+              flow.setViewport({
+                x: (current.x || 0) + xInterval,
+                y: (current.y || 0) + yInterval,
+                zoom: current.zoom,
+              })
+            }
+            updateDragPosition()
+          }, 30)
+        } else {
+          scrollZones = zonesState
+        }
+      } else {
+        clearScroll()
+      }
     }
 
     const onUp = async () => {
       dragging = false
+      clearScroll()
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
       const draggedPosition = dragPosition || startPos

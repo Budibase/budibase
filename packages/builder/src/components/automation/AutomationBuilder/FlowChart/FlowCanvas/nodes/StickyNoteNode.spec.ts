@@ -34,13 +34,33 @@ vi.mock("@budibase/bbui", () => ({
   Icon: MockIcon,
 }))
 
-vi.mock("@xyflow/svelte", () => ({
-  useSvelteFlow: () => ({
-    getNodes: () => mocks.flowNodes,
-    getViewport: () => ({ zoom: 1 }),
-    updateNode: mocks.updateNode,
-  }),
-}))
+vi.mock("@xyflow/svelte", () => {
+  const store = (initial: unknown) => {
+    let value = initial
+    return {
+      subscribe: (run: (v: unknown) => void) => {
+        run(value)
+        return () => {}
+      },
+      set: (v: unknown) => {
+        value = v
+      },
+    }
+  }
+
+  return {
+    useSvelteFlow: () => ({
+      getNodes: () => mocks.flowNodes,
+      getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
+      setViewport: vi.fn(),
+      updateNode: mocks.updateNode,
+      screenToFlowPosition: (pos: { x: number; y: number }) => pos,
+    }),
+    useStore: () => ({
+      domNode: store(null),
+    }),
+  }
+})
 
 import StickyNoteNode from "./StickyNoteNode.svelte"
 
