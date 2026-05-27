@@ -355,7 +355,9 @@ describe("StickyNoteNode", () => {
       },
     })
 
-    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+    const textarea = container.querySelector(
+      ".text-input"
+    ) as HTMLTextAreaElement
     const note = container.querySelector(".sticky-note") as HTMLElement
     const clearSelection = vi.fn(() => {
       textarea.setSelectionRange(0, 0)
@@ -429,7 +431,9 @@ describe("StickyNoteNode", () => {
       },
     })
 
-    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+    const textarea = container.querySelector(
+      ".text-input"
+    ) as HTMLTextAreaElement
     const canvasClick = vi.fn()
 
     document.body.addEventListener("click", canvasClick)
@@ -480,7 +484,9 @@ describe("StickyNoteNode", () => {
     })
 
     const title = container.querySelector(".title-input") as HTMLInputElement
-    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+    const textarea = container.querySelector(
+      ".text-input"
+    ) as HTMLTextAreaElement
 
     textarea.setSelectionRange(4, 8)
     textarea.dispatchEvent(new Event("select", { bubbles: true }))
@@ -539,7 +545,9 @@ describe("StickyNoteNode", () => {
     })
 
     const title = container.querySelector(".title-input") as HTMLInputElement
-    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+    const textarea = container.querySelector(
+      ".text-input"
+    ) as HTMLTextAreaElement
 
     title.setSelectionRange(0, 4)
     await fireEvent.select(title)
@@ -635,7 +643,9 @@ describe("StickyNoteNode", () => {
       },
     })
 
-    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+    const textarea = container.querySelector(
+      ".text-input"
+    ) as HTMLTextAreaElement
 
     dispatchPointerEvent(textarea, "pointerdown", {
       clientX: 70,
