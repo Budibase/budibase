@@ -1,9 +1,10 @@
 import { objectStore } from "@budibase/backend-core"
 import fs from "fs"
-import { join } from "path"
+import { dirname, join } from "path"
 import { TEMP_DIR, MINIO_DIR } from "./utils"
 import { progressBar } from "../utils"
 import * as stream from "node:stream"
+import { pipeline } from "stream/promises"
 
 const {
   ObjectStoreBuckets,
@@ -17,7 +18,7 @@ const bucketList = Object.values(ObjectStoreBuckets)
 
 export async function exportObjects() {
   const path = join(TEMP_DIR, MINIO_DIR)
-  fs.mkdirSync(path)
+  fs.mkdirSync(path, { recursive: true })
   let fullList: any[] = []
   let errorCount = 0
   for (let bucket of bucketList) {
@@ -46,16 +47,12 @@ export async function exportObjects() {
     const filename = object.Key
     const data = await retrieve(object.bucket, filename)
     const possiblePath = filename.split("/")
-    if (possiblePath.length > 1) {
-      const dirs = possiblePath.slice(0, possiblePath.length - 1)
-      fs.mkdirSync(join(path, object.bucket, ...dirs), { recursive: true })
-    }
+    const destination = join(path, object.bucket, ...possiblePath)
+    fs.mkdirSync(dirname(destination), { recursive: true })
     if (data instanceof stream.Readable) {
-      data.pipe(
-        fs.createWriteStream(join(path, object.bucket, ...possiblePath))
-      )
+      await pipeline(data, fs.createWriteStream(destination))
     } else {
-      fs.writeFileSync(join(path, object.bucket, ...possiblePath), data)
+      fs.writeFileSync(destination, data)
     }
     bar.update(++count)
   }
