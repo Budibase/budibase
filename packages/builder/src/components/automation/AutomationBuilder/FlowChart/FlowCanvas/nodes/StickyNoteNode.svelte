@@ -3,6 +3,7 @@
   import { Icon } from "@budibase/bbui"
   import { ViewMode, type StickyNoteNodeData } from "@/types/automations"
   import { useSvelteFlow } from "@xyflow/svelte"
+  import { onDestroy } from "svelte"
 
   export let data: StickyNoteNodeData | undefined = undefined
   export let positionAbsoluteX = 0
@@ -31,6 +32,8 @@
   let titleValue = ""
   let textValue = ""
   let lastTextValue = ""
+  let titleInput: HTMLInputElement
+  let textInput: HTMLTextAreaElement
 
   $: if (note && !editTitle) {
     titleValue = note.title
@@ -55,6 +58,140 @@
     textValue = note.text
     lastTextValue = note.text
   }
+
+  let selectingText = false
+  const SELECTING_TEXT_CLASS = "sticky-note-selecting-text"
+  let activeSelectionInput: HTMLInputElement | HTMLTextAreaElement | null = null
+  let lastTextSelection: {
+    start: number
+    end: number
+    direction: "forward" | "backward" | "none"
+  } | null = null
+
+  const recordTextSelection = (
+    input: HTMLInputElement | HTMLTextAreaElement
+  ) => {
+    const start = input.selectionStart ?? 0
+    const end = input.selectionEnd ?? 0
+    if (start === end) return
+    lastTextSelection = {
+      start,
+      end,
+      direction: input.selectionDirection || "none",
+    }
+  }
+
+  const restoreTextSelection = () => {
+    if (!selectingText || !activeSelectionInput || !lastTextSelection) return
+    const start = activeSelectionInput.selectionStart ?? 0
+    const end = activeSelectionInput.selectionEnd ?? 0
+    if (start !== end) {
+      recordTextSelection(activeSelectionInput)
+      return
+    }
+    activeSelectionInput.focus()
+    activeSelectionInput.setSelectionRange(
+      lastTextSelection.start,
+      lastTextSelection.end,
+      lastTextSelection.direction
+    )
+  }
+
+  const scheduleSelectionRestore = () => {
+    requestAnimationFrame(restoreTextSelection)
+  }
+
+  const stopCanvasInteraction = (e: Event) => {
+    if (!selectingText) return
+    if (activeSelectionInput) {
+      recordTextSelection(activeSelectionInput)
+    }
+    e.stopPropagation()
+    e.stopImmediatePropagation()
+    scheduleSelectionRestore()
+  }
+
+  const stopTextSelectionGuard = () => {
+    selectingText = false
+    activeSelectionInput = null
+    lastTextSelection = null
+    document.body.classList.remove(SELECTING_TEXT_CLASS)
+    document.removeEventListener("mousemove", stopCanvasInteraction, true)
+    document.removeEventListener("pointermove", stopCanvasInteraction, true)
+    document.removeEventListener("mouseup", handleTextSelectionEnd, true)
+    document.removeEventListener("pointerup", handleTextSelectionEnd, true)
+  }
+
+  const handleTextSelectionEnd = (e: Event) => {
+    stopTextSelectionGuard()
+    e.stopPropagation()
+    e.stopImmediatePropagation()
+  }
+
+  const startTextSelectionGuard = (
+    input: HTMLInputElement | HTMLTextAreaElement
+  ) => {
+    if (selectingText) return
+    selectingText = true
+    activeSelectionInput = input
+    document.body.classList.add(SELECTING_TEXT_CLASS)
+    document.addEventListener("mousemove", stopCanvasInteraction, true)
+    document.addEventListener("pointermove", stopCanvasInteraction, true)
+    document.addEventListener("mouseup", handleTextSelectionEnd, true)
+    document.addEventListener("pointerup", handleTextSelectionEnd, true)
+  }
+
+  const startTitleSelection = () => {
+    startEditTitle()
+    startTextSelectionGuard(titleInput)
+  }
+
+  const startTextSelection = () => {
+    startEditText()
+    startTextSelectionGuard(textInput)
+  }
+
+  const handleTextSelect = (e: Event) => {
+    recordTextSelection(e.currentTarget as HTMLInputElement | HTMLTextAreaElement)
+  }
+
+  const handleTitleBlur = () => {
+    if (selectingText) {
+      scheduleSelectionRestore()
+      return
+    }
+    saveTitle()
+  }
+
+  const handleTextBlur = () => {
+    if (selectingText) {
+      scheduleSelectionRestore()
+      return
+    }
+    saveText()
+  }
+
+  const handleTitlePointerDown = (e: PointerEvent) => {
+    e.stopPropagation()
+    startTitleSelection()
+  }
+
+  const handleTextPointerDown = (e: PointerEvent) => {
+    e.stopPropagation()
+    startTextSelection()
+  }
+
+  const handleTitleMouseDown = (e: MouseEvent) => {
+    e.stopPropagation()
+    startTitleSelection()
+  }
+
+  const handleTextMouseDown = (e: MouseEvent) => {
+    e.stopPropagation()
+    startTextSelection()
+  }
+
+  onDestroy(stopTextSelectionGuard)
 
   const saveTitle = async (updates?: {
     position?: NotePosition
@@ -242,12 +379,13 @@
 
 {#if note.id}
   <div
-    class="sticky-note-portal"
+    class="sticky-note-portal selectable-text nodrag nopan"
     style:transform={`translate(${currentPosition.x}px, ${currentPosition.y}px)`}
   >
     <div
       class="sticky-note"
       class:resizing
+      class:selecting-text={selectingText}
       on:dblclick|stopPropagation
       role="button"
       tabindex="-1"
@@ -259,15 +397,18 @@
       <div class="resize-grip" on:pointerdown|stopPropagation={startResize} />
       <div class="note-header">
         <input
+          bind:this={titleInput}
           bind:value={titleValue}
           class="title-input"
           class:editable={isEditor}
           maxlength={MAX_TITLE_LENGTH}
           readonly={!isEditor}
           on:focus={startEditTitle}
-          on:mousedown|stopPropagation={startEditTitle}
+          on:pointerdown={handleTitlePointerDown}
+          on:mousedown={handleTitleMouseDown}
+          on:select={handleTextSelect}
           on:click|stopPropagation
-          on:blur={() => saveTitle()}
+          on:blur={handleTitleBlur}
           on:keydown={e => {
             if (e.key === "Enter") saveTitle()
           }}
@@ -286,13 +427,17 @@
         on:click|stopPropagation
       >
         <textarea
+          bind:this={textInput}
           value={textValue}
-          class="text-input"
+          class="text-input selectable-text nodrag nopan"
           class:editable={isEditor}
           maxlength={MAX_NOTE_TEXT_LENGTH}
           readonly={!isEditor}
           on:focus={startEditText}
-          on:blur={() => saveText()}
+          on:pointerdown={handleTextPointerDown}
+          on:mousedown={handleTextMouseDown}
+          on:select={handleTextSelect}
+          on:blur={handleTextBlur}
           on:input={handleTextInput}
           on:keydown={e => {
             if (e.key === "Escape") saveText()
@@ -305,6 +450,16 @@
 {/if}
 
 <style>
+  .selectable-text {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  :global(body.sticky-note-selecting-text .svelte-flow__pane),
+  :global(body.sticky-note-selecting-text .svelte-flow__zoom) {
+    cursor: text !important;
+  }
+
   .sticky-note-portal {
     position: absolute;
     left: 0;
@@ -440,6 +595,11 @@
       color 0.15s,
       background 0.15s;
     z-index: 1;
+  }
+
+  .sticky-note.selecting-text .drag-grip {
+    pointer-events: none;
+    cursor: text;
   }
 
   .drag-grip:hover {

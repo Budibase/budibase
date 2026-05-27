@@ -322,4 +322,124 @@ describe("StickyNoteNode", () => {
     })
     expect(mocks.updateStickyNotePosition).not.toHaveBeenCalled()
   })
+
+  it("allows text selection even when the mouse leaves the card boundary", async () => {
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+    const note = container.querySelector(".sticky-note") as HTMLElement
+    const clearSelection = vi.fn(() => {
+      textarea.setSelectionRange(0, 0)
+    })
+    const canvasPointerDown = vi.fn()
+    const textMouseDown = new MouseEvent("mousedown", {
+      bubbles: true,
+      cancelable: true,
+    })
+
+    document.body.addEventListener("pointerdown", canvasPointerDown)
+    document.body.addEventListener("pointermove", clearSelection)
+
+    textarea.setSelectionRange(4, 8)
+    textarea.dispatchEvent(new Event("select", { bubbles: true }))
+    dispatchPointerEvent(textarea, "pointerdown", {
+      clientX: 100,
+      clientY: 40,
+    })
+    await waitFor(() => {
+      expect(document.body).toHaveClass("sticky-note-selecting-text")
+      expect(note).toHaveClass("selecting-text")
+    })
+    textarea.dispatchEvent(textMouseDown)
+    dispatchPointerEvent(document.body, "pointermove", {
+      clientX: -10,
+      clientY: 40,
+    })
+    textarea.setSelectionRange(8, 8)
+
+    expect(textMouseDown.defaultPrevented).toBe(false)
+    expect(canvasPointerDown).not.toHaveBeenCalled()
+    expect(clearSelection).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(textarea.selectionStart).toBe(4)
+      expect(textarea.selectionEnd).toBe(8)
+    })
+
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: -10,
+      clientY: 40,
+    })
+    dispatchPointerEvent(document.body, "pointermove", {
+      clientX: -20,
+      clientY: 40,
+    })
+
+    expect(clearSelection).toHaveBeenCalledTimes(1)
+    await waitFor(() => {
+      expect(document.body).not.toHaveClass("sticky-note-selecting-text")
+      expect(note).not.toHaveClass("selecting-text")
+    })
+
+    document.body.removeEventListener("pointerdown", canvasPointerDown)
+    document.body.removeEventListener("pointermove", clearSelection)
+  })
+
+  it("allows selected text to be deselected with a single click after selection ends", async () => {
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+    const canvasClick = vi.fn()
+
+    document.body.addEventListener("click", canvasClick)
+
+    textarea.setSelectionRange(4, 8)
+    textarea.dispatchEvent(new Event("select", { bubbles: true }))
+    dispatchPointerEvent(textarea, "pointerdown", {
+      clientX: 100,
+      clientY: 40,
+    })
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: 100,
+      clientY: 40,
+    })
+
+    await waitFor(() => {
+      expect(document.body).not.toHaveClass("sticky-note-selecting-text")
+    })
+
+    textarea.setSelectionRange(8, 8)
+    await fireEvent.click(document.body)
+
+    expect(canvasClick).toHaveBeenCalledTimes(1)
+    expect(textarea.selectionStart).toBe(8)
+    expect(textarea.selectionEnd).toBe(8)
+
+    document.body.removeEventListener("click", canvasClick)
+  })
 })
