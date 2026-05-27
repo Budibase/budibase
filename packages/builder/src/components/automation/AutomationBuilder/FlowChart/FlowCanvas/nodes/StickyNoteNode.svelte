@@ -173,7 +173,11 @@
 
   const handleTextSelect = (e: Event) => {
     const input = e.currentTarget as HTMLInputElement | HTMLTextAreaElement
-    if (selectingText && activeSelectionInput && input !== activeSelectionInput) {
+    if (
+      selectingText &&
+      activeSelectionInput &&
+      input !== activeSelectionInput
+    ) {
       return
     }
     recordTextSelection(input)
@@ -371,6 +375,14 @@
     document.addEventListener("pointerup", onUp)
   }
 
+  const startCardDrag = (e: PointerEvent) => {
+    const target = e.target as HTMLElement
+    if (target.closest("input, textarea, button, .delete-btn, .resize-grip")) {
+      return
+    }
+    startDrag(e)
+  }
+
   const MAX_TITLE_LENGTH = 120
   const MAX_NOTE_TEXT_LENGTH = 500
 
@@ -423,13 +435,11 @@
       class:resizing
       class:selecting-text={selectingText}
       on:dblclick|stopPropagation
+      on:pointerdown={startCardDrag}
       role="button"
       tabindex="-1"
       style="width: {noteWidth}px; max-width: {MAX_NOTE_WIDTH}px; height: {noteDisplayHeight}px; max-height: {MAX_NOTE_HEIGHT}px;"
     >
-      <div class="drag-grip" on:pointerdown|stopPropagation={startDrag}>
-        <Icon name="dots-six-vertical" size="S" />
-      </div>
       <div class="resize-grip" on:pointerdown|stopPropagation={startResize} />
       <div class="note-header">
         <input
@@ -514,12 +524,12 @@
     background: #fef9c3;
     border: 2px solid #e6d87a;
     border-radius: 4px;
-    padding: 12px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     font-family: var(--font-sans);
-    cursor: default;
+    cursor: move;
     position: relative;
     box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.08);
   }
@@ -610,58 +620,6 @@
 
   :global(.spectrum--dark) .text-input:focus {
     background: rgba(255, 255, 255, 0.1);
-  }
-
-  .drag-grip {
-    cursor: grab;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: -2px;
-    left: -20px;
-    width: 19px;
-    height: 40px;
-    border-radius: 6px 0 0 6px;
-    background: #fef9c3;
-    border: 2px solid #e6d87a;
-    border-right: none;
-    color: rgba(0, 0, 0, 0.4);
-    transition:
-      color 0.15s,
-      background 0.15s;
-    z-index: 1;
-  }
-
-  .sticky-note.selecting-text .drag-grip {
-    pointer-events: none;
-    cursor: text;
-  }
-
-  .drag-grip:hover {
-    color: rgba(0, 0, 0, 0.7);
-    background: #f5efb0;
-  }
-
-  .drag-grip:active {
-    cursor: grabbing;
-  }
-
-  :global(.spectrum--dark) .drag-grip,
-  :global(.spectrum--darkest) .drag-grip,
-  :global(.spectrum--midnight) .drag-grip,
-  :global(.spectrum--nord) .drag-grip {
-    background: #3d3522;
-    border-color: #5c512d;
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  :global(.spectrum--dark) .drag-grip:hover,
-  :global(.spectrum--darkest) .drag-grip:hover,
-  :global(.spectrum--midnight) .drag-grip:hover,
-  :global(.spectrum--nord) .drag-grip:hover {
-    color: rgba(255, 255, 255, 0.7);
-    background: #4d3f28;
   }
 
   .resize-grip {

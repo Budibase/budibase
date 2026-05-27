@@ -204,8 +204,8 @@ describe("StickyNoteNode", () => {
       target: { value: "Updated text" },
     })
 
-    const dragGrip = container.querySelector(".drag-grip") as HTMLElement
-    dispatchPointerEvent(dragGrip, "pointerdown", {
+    const note = container.querySelector(".sticky-note") as HTMLElement
+    dispatchPointerEvent(note, "pointerdown", {
       clientX: 10,
       clientY: 20,
     })
@@ -254,9 +254,9 @@ describe("StickyNoteNode", () => {
     })
 
     const portal = container.querySelector(".sticky-note-portal") as HTMLElement
-    const dragGrip = container.querySelector(".drag-grip") as HTMLElement
+    const note = container.querySelector(".sticky-note") as HTMLElement
 
-    dispatchPointerEvent(dragGrip, "pointerdown", {
+    dispatchPointerEvent(note, "pointerdown", {
       clientX: 10,
       clientY: 20,
     })
