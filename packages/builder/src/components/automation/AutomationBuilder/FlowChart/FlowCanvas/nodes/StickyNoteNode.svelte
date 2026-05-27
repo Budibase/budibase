@@ -28,6 +28,8 @@
     lastTextValue = note.text
   }
 
+  type NotePosition = { x: number; y: number }
+
   const focusTitleInput = async (selectText: boolean) => {
     await tick()
     titleInput?.focus()
@@ -67,40 +69,50 @@
     await focusTextInput()
   }
 
-  const saveTitle = async () => {
+  const saveTitle = async (position?: NotePosition) => {
     if (titleValue !== note.title) {
       try {
         await automationStore.actions.updateStickyNote(note.id, {
           title: titleValue,
+          ...position,
         })
+        editTitle = false
+        return true
       } catch {
         titleValue = note.title
       }
     }
     editTitle = false
+    return false
   }
 
-  const saveText = async () => {
+  const saveText = async (position?: NotePosition) => {
     if (textValue !== note.text || noteHeight !== note.height) {
       try {
         await automationStore.actions.updateStickyNote(note.id, {
           text: textValue,
           height: noteHeight,
+          ...position,
         })
+        editText = false
+        return true
       } catch {
         textValue = note.text
       }
     }
     editText = false
+    return false
   }
 
-  const saveActiveEdits = async () => {
+  const saveActiveEdits = async (position?: NotePosition) => {
+    let saved = false
     if (editTitle) {
-      await saveTitle()
+      saved = (await saveTitle(position)) || saved
     }
     if (editText) {
-      await saveText()
+      saved = (await saveText(position)) || saved
     }
+    return saved
   }
 
   let noteWidth = 220
@@ -177,12 +189,16 @@
       document.removeEventListener("pointerup", onUp)
       const draggedPosition = flow.getNodes().find(n => n.id === note.id)
         ?.position
-      await saveActiveEdits()
+      const savedEdits = await saveActiveEdits(draggedPosition)
       if (draggedPosition) {
-        automationStore.actions.updateStickyNotePosition(
-          note.id,
-          draggedPosition
-        )
+        if (savedEdits) {
+          flow.updateNode(note.id, { position: draggedPosition })
+        } else {
+          automationStore.actions.updateStickyNotePosition(
+            note.id,
+            draggedPosition
+          )
+        }
       }
     }
 
@@ -252,7 +268,7 @@
           bind:value={titleValue}
           class="title-input"
           maxlength={MAX_TITLE_LENGTH}
-          on:blur={saveTitle}
+          on:blur={() => saveTitle()}
           on:keydown={e => {
             if (e.key === "Enter") saveTitle()
           }}
@@ -286,7 +302,7 @@
           value={textValue}
           class="text-input"
           maxlength={MAX_NOTE_TEXT_LENGTH}
-          on:blur={saveText}
+          on:blur={() => saveText()}
           on:input={handleTextInput}
           on:keydown={e => {
             if (e.key === "Escape") saveText()

@@ -121,7 +121,7 @@ describe("StickyNoteNode", () => {
     })
   })
 
-  it("saves the dragged position after saving active text edits", async () => {
+  it("saves active text edits with the dragged position", async () => {
     mocks.flowNodes = [
       {
         id: "note-1",
@@ -172,11 +172,10 @@ describe("StickyNoteNode", () => {
       expect(mocks.updateStickyNote).toHaveBeenCalledWith("note-1", {
         text: "Updated text",
         height: 140,
-      })
-      expect(mocks.updateStickyNotePosition).toHaveBeenCalledWith("note-1", {
         x: 60,
         y: 70,
       })
+      expect(mocks.updateStickyNotePosition).not.toHaveBeenCalled()
     })
   })
 })
