@@ -7,9 +7,10 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
   async determineFeatureFlags() {
     const definition = await this.getDefinition()
     const supportsPagination =
-      !!definition?.fields?.pagination?.type &&
-      !!definition?.fields?.pagination?.location &&
-      !!definition?.fields?.pagination?.pageParam
+      (!!definition?.fields?.pagination?.type &&
+        !!definition?.fields?.pagination?.location &&
+        !!definition?.fields?.pagination?.pageParam) ||
+      !!definition?.fields?.pagination?.enabled
     return { supportsPagination }
   }
 
@@ -41,7 +42,7 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
     const { datasource, limit, paginate } = this.options
     const { supportsPagination } = this.features
     const { cursor, definition } = get(this.store)
-    const type = definition?.fields?.pagination?.type
+    const paginationType = definition?.fields?.pagination?.type
 
     // Set the default query params
     const parameters = Helpers.cloneDeep(datasource.queryParams || {})
@@ -54,7 +55,11 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
     // Add pagination to query if supported
     const queryPayload: ExecuteQueryRequest = { parameters }
     if (paginate && supportsPagination) {
-      const requestCursor = type === "page" ? parseInt(cursor || "1") : cursor
+      // For SQL queries (pagination.enabled), use page-based pagination
+      // For REST queries, use the configured type (page or cursor)
+      const isPageBased =
+        paginationType === "page" || definition?.fields?.pagination?.enabled
+      const requestCursor = isPageBased ? parseInt(cursor || "1") : cursor
       queryPayload.pagination = { page: requestCursor, limit }
     }
 
@@ -67,7 +72,10 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
       let nextCursor = null
       let hasNextPage = false
       if (paginate && supportsPagination) {
-        if (type === "page") {
+        const isPageBased =
+          paginationType === "page" || definition?.fields?.pagination?.enabled
+
+        if (isPageBased) {
           // For "page number" pagination, increment the existing page number
           nextCursor = queryPayload.pagination!.page! + 1
           hasNextPage = data?.length === limit && limit > 0

@@ -7,6 +7,7 @@ import {
   KnowledgeBaseType,
   LockName,
   LockType,
+  type WithRequired,
 } from "@budibase/types"
 import { HTTPError, locks } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
@@ -183,7 +184,17 @@ export const deleteFileForAgent = async (
   await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
 }
 
-function getProcessor(kb: KnowledgeBase) {
+const assertKnowledgeBaseHasId: (
+  knowledgeBase: KnowledgeBase
+) => asserts knowledgeBase is WithRequired<KnowledgeBase, "_id"> = (
+  knowledgeBase: KnowledgeBase
+) => {
+  if (!knowledgeBase._id) {
+    throw new Error("Knowledge base id not set")
+  }
+}
+
+function getProcessor(kb: WithRequired<KnowledgeBase, "_id">) {
   const ProcessorClassByType = {
     [KnowledgeBaseType.GEMINI]: GeminiRagProcessor,
   }
@@ -201,13 +212,17 @@ export const ingestKnowledgeBaseFile = async (
   knowledgeBaseFile: KnowledgeBaseFile,
   fileBuffer: Buffer
 ): Promise<void> => {
-  const knowledgeBaseId = knowledgeBase._id
-  if (!knowledgeBaseId) {
-    throw new Error("Knowledge base id not set")
+  assertKnowledgeBaseHasId(knowledgeBase)
+  const knowledgeBaseFileId = knowledgeBaseFile._id
+  if (!knowledgeBaseFileId) {
+    throw new Error("Knowledge base file id not set")
   }
 
   const processor = getProcessor(knowledgeBase)
-  await processor.ingestKnowledgeBaseFile(knowledgeBaseFile, fileBuffer)
+  await processor.ingestKnowledgeBaseFile(
+    { ...knowledgeBaseFile, _id: knowledgeBaseFileId },
+    fileBuffer
+  )
 }
 
 interface RetrievedContextResult {
@@ -251,6 +266,7 @@ export const retrieveContextForAgent = async (
 
     const readyFileSourceIds = new Set(readyFileSources)
     const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
+    assertKnowledgeBaseHasId(knowledgeBase)
     const processor = getProcessor(knowledgeBase)
     const returned = await processor.search(question)
 
@@ -326,6 +342,7 @@ export const deleteKnowledgeBaseFileChunks = async (
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
+  assertKnowledgeBaseHasId(knowledgeBase)
 
   const processor = getProcessor(knowledgeBase)
   await processor.deleteFiles(sourceIds)
