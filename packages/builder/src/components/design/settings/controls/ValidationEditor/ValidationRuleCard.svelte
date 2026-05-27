@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { slide } from "svelte/transition"
   import { Icon } from "@budibase/bbui"
 
@@ -7,8 +6,7 @@
   export let summary: string = ""
   export let error: string | undefined = ""
   export let expanded: boolean = false
-
-  const dispatch = createEventDispatcher<{ toggle: void }>()
+  export let onToggle: (() => void) | undefined = undefined
 </script>
 
 <div class="rule-card" class:rule-card--expanded={expanded}>
@@ -17,7 +15,7 @@
       class="rule-card__summary"
       type="button"
       aria-expanded={expanded}
-      on:click={() => dispatch("toggle")}
+      on:click={() => onToggle?.()}
     >
       <span class="rule-card__caret" class:rule-card__caret--open={expanded}>
         <Icon name="caret-right" size="S" />

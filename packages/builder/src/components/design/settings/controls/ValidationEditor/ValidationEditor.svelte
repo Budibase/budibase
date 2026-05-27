@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { Button, ActionButton, Drawer, Heading } from "@budibase/bbui"
+  import { Button, ActionButton, Drawer, Heading, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { cloneDeep } from "lodash/fp"
   import type { Component, EnrichedBinding } from "@budibase/types"
+  import { FIELDS } from "@/constants/backend"
   import ValidationDrawer from "./ValidationDrawer.svelte"
   import type { ValidationEditorRule } from "./types"
 
@@ -12,6 +14,11 @@
   interface DrawerHandle {
     show: () => void
     hide: () => void
+  }
+
+  interface FieldDefinition {
+    type: string
+    icon?: string
   }
 
   export let value: ValidationEditorRule[] = []
@@ -26,6 +33,10 @@
   $: active = getActive(value)
 
   $: text = getText(value)
+
+  $: fieldType = type?.split("/")[1]
+
+  $: fieldDefinition = getFieldDefinition(fieldType)
 
   const sanitiseRules = (
     rules: ValidationEditorRule[]
@@ -44,8 +55,16 @@
   }
 
   const handleShow = (): void => {
-    workingValue = JSON.parse(JSON.stringify(value || []))
+    workingValue = cloneDeep(value || [])
     drawerContentKey += 1
+  }
+
+  const getFieldDefinition = (
+    fieldType: string | undefined
+  ): FieldDefinition | undefined => {
+    return Object.values(FIELDS as Record<string, FieldDefinition>).find(
+      field => field.type === fieldType
+    )
   }
 
   const save = (): void => {
@@ -82,7 +101,17 @@
   on:drawerShow={handleShow}
 >
   <svelte:fragment slot="title">
-    <Heading size="S" noPadding>Validation Rules</Heading>
+    <div class="drawer-title">
+      <Heading size="S" noPadding>Validation Rules</Heading>
+      {#if componentInstance?.field}
+        <div class="field-context">
+          {#if fieldDefinition?.icon}
+            <Icon name={fieldDefinition.icon} size="S" />
+          {/if}
+          <span>{componentInstance.field}</span>
+        </div>
+      {/if}
+    </div>
   </svelte:fragment>
   <Button cta slot="buttons" on:click={save}>Save</Button>
   <svelte:fragment slot="body">
@@ -100,5 +129,24 @@
 <style>
   .validation-editor :global(.spectrum-ActionButton) {
     width: 100%;
+  }
+  .drawer-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    min-width: 0;
+  }
+  .field-context {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-width: 0;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 13px;
+  }
+  .field-context span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>

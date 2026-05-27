@@ -14,6 +14,7 @@
   import type { Component, EnrichedBinding } from "@budibase/types"
   import { isJSBinding } from "@budibase/string-templates"
   import { generate } from "shortid"
+  import { SvelteSet } from "svelte/reactivity"
   import { selectedScreen, selectedComponent } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"
   import {
@@ -48,8 +49,8 @@
     presence?: boolean | { allowEmpty?: boolean }
     length?: { minimum?: ValidationValue; maximum?: ValidationValue }
     numericality?: {
-      greaterThanOrEqualTo?: ValidationValue
-      lessThanOrEqualTo?: ValidationValue
+      greaterThanOrEqualTo?: number
+      lessThanOrEqualTo?: number
     }
     inclusion?: string[]
   }
@@ -72,8 +73,8 @@
 
   const getInitialExpandedRules = (
     rules: ValidationEditorRule[]
-  ): Set<string> => {
-    const expanded = new Set<string>()
+  ): SvelteSet<string> => {
+    const expanded = new SvelteSet<string>()
     if (rules?.length <= 2) {
       rules.forEach(rule => {
         if (rule?.id) {
@@ -84,7 +85,7 @@
     return expanded
   }
 
-  let expandedRules: Set<string> = getInitialExpandedRules(rules)
+  let expandedRules = getInitialExpandedRules(rules)
 
   const resolveDatasource = (
     selectedScreen: ScreenAsset,
@@ -219,13 +220,11 @@
       },
     ]
     expandedRules.add(id)
-    expandedRules = expandedRules
   }
 
   const removeRule = (id: string): void => {
     rules = rules.filter(link => link.id !== id)
     expandedRules.delete(id)
-    expandedRules = expandedRules
   }
 
   const duplicateRule = (id: string): void => {
@@ -236,11 +235,6 @@
     const newRule = { ...existingRule, id: generate() }
     rules = [...rules, newRule]
     expandedRules.add(newRule.id)
-    expandedRules = expandedRules
-  }
-
-  const supportsConstraintValue = (constraint?: string): boolean => {
-    return constraint !== "required"
   }
 
   const toggleRule = (id: string): void => {
@@ -249,7 +243,6 @@
     } else {
       expandedRules.add(id)
     }
-    expandedRules = expandedRules
   }
 
   const constraintLabel = (constraint?: string): string => {
@@ -258,7 +251,7 @@
   }
 
   const valueSummary = (rule: ValidationEditorRule): string => {
-    if (!supportsConstraintValue(rule.constraint)) {
+    if (rule.constraint === "required") {
       return ""
     }
     if (rule.value == null || rule.value === "") {
@@ -295,14 +288,14 @@
         {#if rules?.length}
           <div class="rules">
             {#each rules as rule (rule.id)}
-              {@const valueDisabled = !supportsConstraintValue(rule.constraint)}
+              {@const valueDisabled = rule.constraint === "required"}
               {@const isExpanded = expandedRules.has(rule.id)}
               <ValidationRuleCard
                 title={constraintLabel(rule.constraint)}
                 summary={valueSummary(rule)}
                 error={rule.error}
                 expanded={isExpanded}
-                on:toggle={() => toggleRule(rule.id)}
+                onToggle={() => toggleRule(rule.id)}
               >
                 <svelte:fragment slot="actions">
                   <button
@@ -402,7 +395,8 @@
                     title="Error message"
                     placeholder={defaultErrorForConstraint(
                       rule.constraint,
-                      rule.value
+                      rule.value,
+                      rule.type
                     )}
                     value={rule.error}
                     {bindings}
