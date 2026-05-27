@@ -70,11 +70,7 @@ export const createHistoryStore = <T extends Document, SaveOptions = void>({
 
   // Wrapped versions of essential functions which we call ourselves when using
   // undo and redo
-  let saveFn: (
-    doc: T,
-    opts?: SaveOptions,
-    operationId?: number
-  ) => Promise<T>
+  let saveFn: (doc: T, opts?: SaveOptions, operationId?: number) => Promise<T>
   let deleteFn: (doc: T, operationId?: number) => Promise<void>
 
   /**

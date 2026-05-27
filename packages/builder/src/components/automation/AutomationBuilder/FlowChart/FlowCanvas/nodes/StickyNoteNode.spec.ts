@@ -179,6 +179,61 @@ describe("StickyNoteNode", () => {
     })
   })
 
+  it("keeps the dropped position visible while saving the drag", async () => {
+    let resolveSave: () => void
+    mocks.updateStickyNotePosition.mockImplementation(
+      () =>
+        new Promise<void>(resolve => {
+          resolveSave = resolve
+        })
+    )
+
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const portal = container.querySelector(".sticky-note-portal") as HTMLElement
+    const dragGrip = container.querySelector(".drag-grip") as HTMLElement
+
+    dispatchPointerEvent(dragGrip, "pointerdown", {
+      clientX: 10,
+      clientY: 20,
+    })
+    dispatchPointerEvent(document, "pointermove", {
+      clientX: 70,
+      clientY: 90,
+    })
+    dispatchPointerEvent(document, "pointerup", {
+      clientX: 70,
+      clientY: 90,
+    })
+
+    await waitFor(() => {
+      expect(portal).toHaveStyle("transform: translate(60px, 70px)")
+    })
+
+    resolveSave!()
+
+    await waitFor(() => {
+      expect(mocks.updateStickyNotePosition).toHaveBeenCalledWith("note-1", {
+        x: 60,
+        y: 70,
+      })
+      expect(portal).toHaveStyle("transform: translate(60px, 70px)")
+    })
+  })
+
   it("saves active text edits with the resized width", async () => {
     mocks.flowNodes = [
       {

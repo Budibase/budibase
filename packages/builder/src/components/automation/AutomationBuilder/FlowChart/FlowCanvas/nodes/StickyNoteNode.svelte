@@ -6,10 +6,26 @@
   import { useSvelteFlow } from "@xyflow/svelte"
 
   export let data: StickyNoteNodeData | undefined = undefined
+  export let positionAbsoluteX = 0
+  export let positionAbsoluteY = 0
 
   $: note = data?.note || { id: "", title: "", text: "", x: 0, y: 0 }
   $: viewMode = $automationStore.viewMode
   $: isEditor = viewMode === ViewMode.EDITOR
+  let dragPosition: NotePosition | null = null
+  let pendingPosition: NotePosition | null = null
+  $: currentPosition = dragPosition ||
+    pendingPosition || {
+      x: positionAbsoluteX,
+      y: positionAbsoluteY,
+    }
+  $: if (
+    pendingPosition &&
+    pendingPosition.x === positionAbsoluteX &&
+    pendingPosition.y === positionAbsoluteY
+  ) {
+    pendingPosition = null
+  }
 
   let editTitle = false
   let editText = false
@@ -179,10 +195,7 @@
     e.preventDefault()
     e.stopPropagation()
     dragging = true
-    const nodes = flow.getNodes()
-    const node = nodes.find(n => n.id === note.id)
-    if (!node) return
-    const startPos = { ...node.position }
+    const startPos = { ...currentPosition }
     const startX = e.clientX
     const startY = e.clientY
 
@@ -191,28 +204,23 @@
       const zoom = flow.getViewport()?.zoom || 1
       const dx = (ev.clientX - startX) / zoom
       const dy = (ev.clientY - startY) / zoom
-      flow.updateNode(note.id, {
-        position: { x: startPos.x + dx, y: startPos.y + dy },
-      })
+      dragPosition = { x: startPos.x + dx, y: startPos.y + dy }
     }
 
     const onUp = async () => {
       dragging = false
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
-      const draggedPosition = flow.getNodes().find(n => n.id === note.id)
-        ?.position
+      const draggedPosition = dragPosition || startPos
+      pendingPosition = draggedPosition
       const savedEdits = await saveActiveEdits({ position: draggedPosition })
-      if (draggedPosition) {
-        if (savedEdits) {
-          flow.updateNode(note.id, { position: draggedPosition })
-        } else {
-          automationStore.actions.updateStickyNotePosition(
-            note.id,
-            draggedPosition
-          )
-        }
+      if (!savedEdits) {
+        await automationStore.actions.updateStickyNotePosition(
+          note.id,
+          draggedPosition
+        )
       }
+      dragPosition = null
     }
 
     document.addEventListener("pointermove", onMove)
@@ -263,75 +271,89 @@
 
 {#if note.id}
   <div
-    class="sticky-note"
-    class:resizing
-    on:dblclick|stopPropagation
-    role="button"
-    tabindex="-1"
-    style="width: {noteWidth}px; max-width: {MAX_NOTE_WIDTH}px; height: {noteDisplayHeight}px; max-height: {MAX_NOTE_HEIGHT}px;"
+    class="sticky-note-portal"
+    style:transform={`translate(${currentPosition.x}px, ${currentPosition.y}px)`}
   >
-    <div class="drag-grip" on:pointerdown|stopPropagation={startDrag}>
-      <Icon name="dots-six-vertical" size="S" />
-    </div>
-    <div class="resize-grip" on:pointerdown|stopPropagation={startResize} />
-    <div class="note-header">
-      {#if editTitle}
-        <input
-          bind:this={titleInput}
-          bind:value={titleValue}
-          class="title-input"
-          maxlength={MAX_TITLE_LENGTH}
-          on:blur={() => saveTitle()}
-          on:keydown={e => {
-            if (e.key === "Enter") saveTitle()
-          }}
-          on:wheel|stopPropagation
-        />
-      {:else}
-        <span
-          class="title-text"
-          class:editable={isEditor}
-          on:mousedown|stopPropagation={startEditTitle}
-          on:click|stopPropagation
-        >
-          {note.title}
-        </span>
-      {/if}
-      {#if isEditor}
-        <div class="delete-btn" on:click|stopPropagation={remove}>
-          <Icon name="trash" size="S" hoverable />
-        </div>
-      {/if}
-    </div>
     <div
-      class="note-body"
-      class:editable={isEditor}
-      on:mousedown|stopPropagation={startEditText}
-      on:click|stopPropagation
+      class="sticky-note"
+      class:resizing
+      on:dblclick|stopPropagation
+      role="button"
+      tabindex="-1"
+      style="width: {noteWidth}px; max-width: {MAX_NOTE_WIDTH}px; height: {noteDisplayHeight}px; max-height: {MAX_NOTE_HEIGHT}px;"
     >
-      {#if editText}
-        <textarea
-          bind:this={textTextarea}
-          value={textValue}
-          class="text-input"
-          maxlength={MAX_NOTE_TEXT_LENGTH}
-          on:blur={() => saveText()}
-          on:input={handleTextInput}
-          on:keydown={e => {
-            if (e.key === "Escape") saveText()
-          }}
-          on:wheel|stopPropagation
-        />
-      {:else}
-        <span class="note-text">
-          {note.text}
-        </span>
-      {/if}
+      <div class="drag-grip" on:pointerdown|stopPropagation={startDrag}>
+        <Icon name="dots-six-vertical" size="S" />
+      </div>
+      <div class="resize-grip" on:pointerdown|stopPropagation={startResize} />
+      <div class="note-header">
+        {#if editTitle}
+          <input
+            bind:this={titleInput}
+            bind:value={titleValue}
+            class="title-input"
+            maxlength={MAX_TITLE_LENGTH}
+            on:blur={() => saveTitle()}
+            on:keydown={e => {
+              if (e.key === "Enter") saveTitle()
+            }}
+            on:wheel|stopPropagation
+          />
+        {:else}
+          <span
+            class="title-text"
+            class:editable={isEditor}
+            on:mousedown|stopPropagation={startEditTitle}
+            on:click|stopPropagation
+          >
+            {note.title}
+          </span>
+        {/if}
+        {#if isEditor}
+          <div class="delete-btn" on:click|stopPropagation={remove}>
+            <Icon name="trash" size="S" hoverable />
+          </div>
+        {/if}
+      </div>
+      <div
+        class="note-body"
+        class:editable={isEditor}
+        on:mousedown|stopPropagation={startEditText}
+        on:click|stopPropagation
+      >
+        {#if editText}
+          <textarea
+            bind:this={textTextarea}
+            value={textValue}
+            class="text-input"
+            maxlength={MAX_NOTE_TEXT_LENGTH}
+            on:blur={() => saveText()}
+            on:input={handleTextInput}
+            on:keydown={e => {
+              if (e.key === "Escape") saveText()
+            }}
+            on:wheel|stopPropagation
+          />
+        {:else}
+          <span class="note-text">
+            {note.text}
+          </span>
+        {/if}
+      </div>
     </div>
   </div>
 {/if}
 
 <style>
+  .sticky-note-portal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: top left;
+    pointer-events: all;
+    z-index: 1002;
+  }
+
   .sticky-note {
     width: 220px;
     height: 140px;

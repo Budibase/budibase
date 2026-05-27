@@ -2629,10 +2629,7 @@ const automationActions = (store: AutomationStore) => ({
     }
   ),
 
-  save: async (
-    automation: Automation,
-    opts: AutomationSaveOptions = {}
-  ) => {
+  save: async (automation: Automation, opts: AutomationSaveOptions = {}) => {
     const response = await API.updateAutomation(automation)
 
     // Mark automation as having unpublished changes

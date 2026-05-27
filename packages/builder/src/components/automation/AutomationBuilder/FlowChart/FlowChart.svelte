@@ -29,7 +29,6 @@
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
-  import { stickyNoteNode } from "./FlowCanvas/FlowFactories"
   import {
     getBlocks as getBlocksHelper,
     buildTopLevelGraph,
@@ -53,6 +52,7 @@
 
   import {
     SvelteFlow,
+    useStore,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -78,7 +78,6 @@
     "branch-node": BranchNodeWrapper as any,
     "anchor-node": AnchorNode as any,
     "loop-subflow-node": LoopV2Node as any,
-    "sticky-note": StickyNoteNode as any,
   }
   const edgeTypes: EdgeTypes = {
     "add-item": CustomEdge as any,
@@ -107,6 +106,11 @@
   } | null>(null)
 
   const { getViewport, setViewport } = useSvelteFlow()
+  const { viewport } = useStore()
+  $: stickyNotes = $selectedAutomation?.data?.uiTree?.stickyNotes || []
+  $: stickyNoteLayerTransform = `translate(${$viewport.x}px, ${
+    $viewport.y
+  }px) scale(${$viewport.zoom})`
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -174,14 +178,6 @@
     )
 
     const selectable = viewMode === ViewMode.EDITOR
-
-    // Add sticky note nodes from uiTree
-    const automationData = $selectedAutomation?.data
-    if (automationData?.uiTree?.stickyNotes) {
-      for (const note of automationData.uiTree.stickyNotes) {
-        laidOut.nodes.push(stickyNoteNode(note, { x: note.x, y: note.y }))
-      }
-    }
 
     nodes.set(
       laidOut.nodes.map(node => ({
@@ -555,16 +551,6 @@
     automationStore.actions.addStickyNote({ x: flowX, y: flowY })
   }
 
-  const handleNodeDragStop = (event: any) => {
-    const node = event?.detail?.targetNode
-    if (node?.type === "sticky-note" && node?.data?.note?.id) {
-      automationStore.actions.updateStickyNotePosition(node.data.note.id, {
-        x: node.position.x,
-        y: node.position.y,
-      })
-    }
-  }
-
   const handleCanvasPointerMove = (e: PointerEvent) => {
     dnd.handlePointerMove(e)
     if (e.buttons > 0) {
@@ -680,7 +666,6 @@
         colorMode="system"
         nodesDraggable={true}
         elementsSelectable={viewMode === ViewMode.EDITOR}
-        on:nodedragstop={handleNodeDragStop}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
         deleteKey={null}
@@ -693,6 +678,18 @@
           historyStore={automationHistoryStore}
           on:addnote={handleAddNote}
         />
+        <div
+          class="sticky-note-layer"
+          style:transform={stickyNoteLayerTransform}
+        >
+          {#each stickyNotes as note (note.id)}
+            <StickyNoteNode
+              data={{ note }}
+              positionAbsoluteX={note.x}
+              positionAbsoluteY={note.y}
+            />
+          {/each}
+        </div>
       </SvelteFlow>
     </div>
   </div>
@@ -768,6 +765,15 @@
   .root {
     height: 100%;
     width: 100%;
+  }
+
+  .sticky-note-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: top left;
+    pointer-events: none;
+    z-index: 1002;
   }
 
   .root :global(.svelte-flow__edgelabel-renderer) {
