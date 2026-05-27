@@ -147,7 +147,8 @@ const evaluateRule = (rule: UIFieldValidationRule, value: any) => {
   const pass = handler(value, rule)
   return pass
     ? null
-    : rule.error || defaultErrorForConstraint(rule.constraint, rule.value)
+    : rule.error ||
+        defaultErrorForConstraint(rule.constraint, rule.value, rule.type)
 }
 
 /**
