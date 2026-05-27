@@ -8,6 +8,7 @@
     Layout,
     Select,
     Icon,
+    Toggle,
     DatePicker,
   } from "@budibase/bbui"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
@@ -153,10 +154,10 @@
     conditions = [...conditions, duplicate]
   }
 
-  const toggleCondition = (id: string) => {
+  const toggleCondition = (id: string, enabled: boolean) => {
     conditions = conditions.map(condition =>
       condition.id === id
-        ? { ...condition, disabled: !condition.disabled }
+        ? { ...condition, disabled: !enabled }
         : condition
     )
   }
@@ -447,11 +448,10 @@
                     />
                   </DrawerBindableSlot>
                 {/if}
-                <Icon
-                  name={condition.disabled ? "eye-slash" : "eye"}
-                  hoverable
-                  size="S"
-                  on:click={() => toggleCondition(condition.id)}
+                <Toggle
+                  text=""
+                  value={!condition.disabled}
+                  on:change={e => toggleCondition(condition.id, e.detail)}
                 />
                 <Icon
                   name="copy"

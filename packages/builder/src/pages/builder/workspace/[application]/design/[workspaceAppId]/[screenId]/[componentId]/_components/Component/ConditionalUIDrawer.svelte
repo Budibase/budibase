@@ -3,6 +3,7 @@
     Button,
     Body,
     Icon,
+    Toggle,
     DrawerContent,
     Layout,
     Select,
@@ -131,10 +132,10 @@
     conditions = [...conditions, duplicate]
   }
 
-  const toggleCondition = id => {
+  const toggleCondition = (id, enabled) => {
     conditions = conditions.map(condition =>
       condition.id === id
-        ? { ...condition, disabled: !condition.disabled }
+        ? { ...condition, disabled: !enabled }
         : condition
     )
   }
@@ -343,11 +344,10 @@
                   />
                 </DrawerBindableSlot>
               {/if}
-              <Icon
-                name={condition.disabled ? "eye-slash" : "eye"}
-                hoverable
-                size="S"
-                on:click={() => toggleCondition(condition.id)}
+              <Toggle
+                text=""
+                value={!condition.disabled}
+                on:change={e => toggleCondition(condition.id, e.detail)}
               />
               <Icon
                 name="copy"
