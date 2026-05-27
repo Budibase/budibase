@@ -5,8 +5,13 @@
   import ValidationRuleCard from "./ValidationRuleCard.svelte"
   import type { SchemaValidationRule } from "./types"
 
-  export let constraintOptions: ValidationConstraintOption[] = []
-  export let rules: SchemaValidationRule[] = []
+  let {
+    constraintOptions = [],
+    rules = [],
+  }: {
+    constraintOptions?: ValidationConstraintOption[]
+    rules?: SchemaValidationRule[]
+  } = $props()
 
   let expanded = new SvelteSet<string>()
 

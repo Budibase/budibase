@@ -238,11 +238,13 @@
   }
 
   const toggleRule = (id: string): void => {
-    if (expandedRules.has(id)) {
-      expandedRules.delete(id)
+    const nextExpandedRules = new SvelteSet(expandedRules)
+    if (nextExpandedRules.has(id)) {
+      nextExpandedRules.delete(id)
     } else {
-      expandedRules.add(id)
+      nextExpandedRules.add(id)
     }
+    expandedRules = nextExpandedRules
   }
 
   const constraintLabel = (constraint?: string): string => {
@@ -297,12 +299,12 @@
                 expanded={isExpanded}
                 onToggle={() => toggleRule(rule.id)}
               >
-                <svelte:fragment slot="actions">
+                {#snippet actions()}
                   <button
                     type="button"
                     class="icon-button"
                     aria-label="Duplicate rule"
-                    on:click={() => duplicateRule(rule.id)}
+                    onclick={() => duplicateRule(rule.id)}
                   >
                     <Icon name="copy" hoverable size="S" />
                   </button>
@@ -310,11 +312,11 @@
                     type="button"
                     class="icon-button"
                     aria-label="Remove rule"
-                    on:click={() => removeRule(rule.id)}
+                    onclick={() => removeRule(rule.id)}
                   >
                     <Icon name="x" hoverable size="S" />
                   </button>
-                </svelte:fragment>
+                {/snippet}
 
                 <div class="rule-row" class:rule-row--no-value={valueDisabled}>
                   <Select
