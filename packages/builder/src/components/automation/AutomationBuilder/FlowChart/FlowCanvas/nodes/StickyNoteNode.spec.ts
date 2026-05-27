@@ -121,6 +121,40 @@ describe("StickyNoteNode", () => {
     })
   })
 
+  it("allows native text selection to start on mouse down", () => {
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const title = container.querySelector(".title-input") as HTMLInputElement
+    const text = container.querySelector(".text-input") as HTMLTextAreaElement
+    const titleMouseDown = new MouseEvent("mousedown", {
+      bubbles: true,
+      cancelable: true,
+    })
+    const textMouseDown = new MouseEvent("mousedown", {
+      bubbles: true,
+      cancelable: true,
+    })
+
+    title.dispatchEvent(titleMouseDown)
+    text.dispatchEvent(textMouseDown)
+
+    expect(titleMouseDown.defaultPrevented).toBe(false)
+    expect(textMouseDown.defaultPrevented).toBe(false)
+  })
+
   it("saves active text edits with the dragged position", async () => {
     mocks.flowNodes = [
       {

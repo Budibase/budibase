@@ -2,7 +2,6 @@
   import { automationStore } from "@/stores/builder"
   import { Icon } from "@budibase/bbui"
   import { ViewMode, type StickyNoteNodeData } from "@/types/automations"
-  import { tick } from "svelte"
   import { useSvelteFlow } from "@xyflow/svelte"
 
   export let data: StickyNoteNodeData | undefined = undefined
@@ -32,8 +31,6 @@
   let titleValue = ""
   let textValue = ""
   let lastTextValue = ""
-  let titleInput: HTMLInputElement
-  let textTextarea: HTMLTextAreaElement
 
   $: if (note && !editTitle) {
     titleValue = note.title
@@ -46,43 +43,17 @@
 
   type NotePosition = { x: number; y: number }
 
-  const focusTitleInput = async (selectText: boolean) => {
-    await tick()
-    titleInput?.focus()
-    if (selectText) {
-      titleInput?.select()
-    } else {
-      titleInput?.setSelectionRange(
-        titleInput.value.length,
-        titleInput.value.length
-      )
-    }
-  }
-
-  const focusTextInput = async () => {
-    await tick()
-    textTextarea?.focus()
-    textTextarea?.setSelectionRange(
-      textTextarea.value.length,
-      textTextarea.value.length
-    )
-  }
-
-  const startEditTitle = async (e: MouseEvent) => {
-    if (!isEditor) return
-    e.preventDefault()
+  const startEditTitle = () => {
+    if (!isEditor || editTitle) return
     editTitle = true
     titleValue = note.title
-    await focusTitleInput(e.detail > 1)
   }
 
-  const startEditText = async (e: Event) => {
+  const startEditText = () => {
     if (!isEditor || editText) return
-    e.preventDefault()
     editText = true
     textValue = note.text
     lastTextValue = note.text
-    await focusTextInput()
   }
 
   const saveTitle = async (updates?: {
@@ -287,28 +258,21 @@
       </div>
       <div class="resize-grip" on:pointerdown|stopPropagation={startResize} />
       <div class="note-header">
-        {#if editTitle}
-          <input
-            bind:this={titleInput}
-            bind:value={titleValue}
-            class="title-input"
-            maxlength={MAX_TITLE_LENGTH}
-            on:blur={() => saveTitle()}
-            on:keydown={e => {
-              if (e.key === "Enter") saveTitle()
-            }}
-            on:wheel|stopPropagation
-          />
-        {:else}
-          <span
-            class="title-text"
-            class:editable={isEditor}
-            on:mousedown|stopPropagation={startEditTitle}
-            on:click|stopPropagation
-          >
-            {note.title}
-          </span>
-        {/if}
+        <input
+          bind:value={titleValue}
+          class="title-input"
+          class:editable={isEditor}
+          maxlength={MAX_TITLE_LENGTH}
+          readonly={!isEditor}
+          on:focus={startEditTitle}
+          on:mousedown|stopPropagation={startEditTitle}
+          on:click|stopPropagation
+          on:blur={() => saveTitle()}
+          on:keydown={e => {
+            if (e.key === "Enter") saveTitle()
+          }}
+          on:wheel|stopPropagation
+        />
         {#if isEditor}
           <div class="delete-btn" on:click|stopPropagation={remove}>
             <Icon name="trash" size="S" hoverable />
@@ -321,24 +285,20 @@
         on:mousedown|stopPropagation={startEditText}
         on:click|stopPropagation
       >
-        {#if editText}
-          <textarea
-            bind:this={textTextarea}
-            value={textValue}
-            class="text-input"
-            maxlength={MAX_NOTE_TEXT_LENGTH}
-            on:blur={() => saveText()}
-            on:input={handleTextInput}
-            on:keydown={e => {
-              if (e.key === "Escape") saveText()
-            }}
-            on:wheel|stopPropagation
-          />
-        {:else}
-          <span class="note-text">
-            {note.text}
-          </span>
-        {/if}
+        <textarea
+          value={textValue}
+          class="text-input"
+          class:editable={isEditor}
+          maxlength={MAX_NOTE_TEXT_LENGTH}
+          readonly={!isEditor}
+          on:focus={startEditText}
+          on:blur={() => saveText()}
+          on:input={handleTextInput}
+          on:keydown={e => {
+            if (e.key === "Escape") saveText()
+          }}
+          on:wheel|stopPropagation
+        />
       </div>
     </div>
   </div>
@@ -388,25 +348,6 @@
     gap: 8px;
   }
 
-  .title-text {
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 1.4;
-    color: var(--spectrum-global-color-gray-900);
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: default;
-    user-select: none;
-    padding: 2px 4px;
-  }
-
-  .title-text.editable {
-    cursor: text;
-  }
-
   .title-input {
     font-weight: 600;
     font-size: 14px;
@@ -423,7 +364,11 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  :global(.spectrum--dark) .title-input {
+  .title-input.editable {
+    cursor: text;
+  }
+
+  :global(.spectrum--dark) .title-input:focus {
     background: rgba(255, 255, 255, 0.1);
   }
 
@@ -443,28 +388,6 @@
     min-height: 80px;
     overflow: hidden;
     display: flex;
-  }
-
-  .note-text {
-    display: block;
-    flex: 1;
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-800);
-    white-space: pre-wrap;
-    word-break: break-word;
-    line-height: 1.4;
-    cursor: default;
-    user-select: none;
-    padding: 4px;
-    resize: none;
-  }
-
-  .note-body.editable,
-  .note-body.editable .note-text {
-    cursor: text;
   }
 
   .text-input {
@@ -490,7 +413,11 @@
     overflow: hidden;
   }
 
-  :global(.spectrum--dark) .text-input {
+  .text-input.editable {
+    cursor: text;
+  }
+
+  :global(.spectrum--dark) .text-input:focus {
     background: rgba(255, 255, 255, 0.1);
   }
 
