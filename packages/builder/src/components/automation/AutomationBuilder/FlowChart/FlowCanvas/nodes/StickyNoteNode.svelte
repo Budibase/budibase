@@ -290,13 +290,13 @@
     return saved
   }
 
-  let noteWidth = 220
-  let noteHeight = 140
-  let resizing = false
-  const MIN_NOTE_HEIGHT = 140
   const MIN_NOTE_WIDTH = 160
+  const MIN_NOTE_HEIGHT = 140
   const MAX_NOTE_WIDTH = 300
   const MAX_NOTE_HEIGHT = 400
+  let noteWidth = MIN_NOTE_WIDTH
+  let noteHeight = MIN_NOTE_HEIGHT
+  let resizing = false
 
   $: if (note?.width) noteWidth = Math.min(note.width, MAX_NOTE_WIDTH)
   $: if (note?.height) noteHeight = Math.min(note.height, MAX_NOTE_HEIGHT)
