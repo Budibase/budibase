@@ -52,7 +52,8 @@ vi.mock("@xyflow/svelte", () => {
     useSvelteFlow: () => ({
       getNodes: () => mocks.flowNodes,
       getNodesBounds: (nodes: any[]) => {
-        if (!nodes || nodes.length === 0) return { x: 0, y: 0, width: 0, height: 0 }
+        if (!nodes || nodes.length === 0)
+          return { x: 0, y: 0, width: 0, height: 0 }
         return { x: 0, y: 0, width: 500, height: 500 }
       },
       getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
@@ -254,9 +255,7 @@ describe("StickyNoteNode", () => {
   })
 
   it("keeps the dropped position visible while saving the drag", async () => {
-    mocks.flowNodes = [
-      { id: "block-1", position: { x: 0, y: 0 } },
-    ]
+    mocks.flowNodes = [{ id: "block-1", position: { x: 0, y: 0 } }]
     let resolveSave: () => void
     mocks.updateStickyNotePosition.mockImplementation(
       () =>

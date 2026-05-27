@@ -372,7 +372,7 @@
 
     let lastMouseX = startX
     let lastMouseY = startY
-    let scrollInterval: NodeJS.Timeout | undefined
+    let scrollInterval: ReturnType<typeof setTimeout> | undefined
     let scrollZones: {
       top: boolean
       bottom: boolean
@@ -468,10 +468,8 @@
             updateDragPosition()
 
             if (prevPos && dragPosition) {
-              const revertedX =
-                xInterval !== 0 && prevPos.x === dragPosition.x
-              const revertedY =
-                yInterval !== 0 && prevPos.y === dragPosition.y
+              const revertedX = xInterval !== 0 && prevPos.x === dragPosition.x
+              const revertedY = yInterval !== 0 && prevPos.y === dragPosition.y
               if (revertedX || revertedY) {
                 const vp = flow.getViewport()
                 if (revertedX) vp.x = current.x
