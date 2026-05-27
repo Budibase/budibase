@@ -7,11 +7,12 @@
   import { ViewMode } from "@/types/automations"
   import { isBranchStep } from "@budibase/types"
   import type { HistoryStore } from "@/stores/builder/history"
+  import type { AutomationSaveOptions } from "@/stores/builder/automations"
   import type { Automation } from "@budibase/types"
 
   const dispatch = createEventDispatcher()
 
-  export let historyStore: HistoryStore<Automation>
+  export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
 
   const flow = useSvelteFlow()
 

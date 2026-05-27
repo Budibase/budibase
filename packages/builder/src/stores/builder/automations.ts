@@ -102,6 +102,10 @@ import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
 import { contextMenuStore } from "./contextMenu"
 
+export interface AutomationSaveOptions {
+  skipUnpublishedChanges?: boolean
+}
+
 const sameMoveContainer = (
   sourcePath: BlockPath[],
   destPath: BlockPath[]
@@ -2625,11 +2629,14 @@ const automationActions = (store: AutomationStore) => ({
     }
   ),
 
-  save: async (automation: Automation) => {
+  save: async (
+    automation: Automation,
+    opts: AutomationSaveOptions = {}
+  ) => {
     const response = await API.updateAutomation(automation)
 
     // Mark automation as having unpublished changes
-    if (response.automation._id) {
+    if (!opts.skipUnpublishedChanges && response.automation._id) {
       workspaceDeploymentStore.setAutomationUnpublishedChanges(
         response.automation._id
       )
@@ -2667,7 +2674,9 @@ const automationActions = (store: AutomationStore) => ({
       ...(updated.uiTree || {}),
       stickyNotes: [...notes, newNote],
     }
-    await automationStore.actions.save(updated)
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
   },
 
   updateStickyNote: async (
@@ -2684,7 +2693,9 @@ const automationActions = (store: AutomationStore) => ({
         n.id === noteId ? { ...n, ...updates } : n
       ),
     }
-    await automationStore.actions.save(updated)
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
   },
 
   updateStickyNotePosition: async (
@@ -2701,7 +2712,9 @@ const automationActions = (store: AutomationStore) => ({
         n.id === noteId ? { ...n, x: position.x, y: position.y } : n
       ),
     }
-    await automationStore.actions.save(updated)
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
   },
 
   removeStickyNote: async (noteId: string) => {
@@ -2715,7 +2728,9 @@ const automationActions = (store: AutomationStore) => ({
         (n: any) => n.id !== noteId
       ),
     }
-    await automationStore.actions.save(updated)
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
   },
 
   delete: async (automation: Automation) => {
@@ -3146,7 +3161,7 @@ class AutomationStore extends DerivedBudiStore<
   AutomationStoreState,
   DerivedAutomationStoreState
 > {
-  history: HistoryStore<Automation>
+  history: HistoryStore<Automation, AutomationSaveOptions>
   actions: ReturnType<typeof automationActions>
   selected: SelectedAutomationStore
 
@@ -3171,7 +3186,7 @@ class AutomationStore extends DerivedBudiStore<
 
     super(initialAutomationState, makeDerivedStore)
     this.actions = automationActions(this)
-    this.history = createHistoryStore({
+    this.history = createHistoryStore<Automation, AutomationSaveOptions>({
       getDoc: this.actions.getDefinition.bind(this),
       selectDoc: this.actions.select.bind(this),
     })
