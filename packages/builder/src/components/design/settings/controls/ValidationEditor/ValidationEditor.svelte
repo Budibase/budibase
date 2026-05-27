@@ -17,6 +17,7 @@
   }
 
   interface FieldDefinition {
+    name?: string
     type: string
     icon?: string
   }
@@ -25,7 +26,10 @@
   export let bindings: EnrichedBinding[] = []
   export let componentInstance: FieldComponent | undefined = undefined
   export let type: string | undefined = undefined
-  const dispatch = createEventDispatcher<{ change: ValidationEditorRule[] }>()
+  const dispatch = createEventDispatcher<{
+    change: ValidationEditorRule[]
+    drawerShow: unknown
+  }>()
   let drawer: DrawerHandle
   let drawerContentKey: number = 0
   let workingValue: ValidationEditorRule[] = []
@@ -37,6 +41,8 @@
   $: fieldType = type?.split("/")[1]
 
   $: fieldDefinition = getFieldDefinition(fieldType)
+
+  $: fieldTypeLabel = fieldDefinition?.name || fieldType
 
   const sanitiseRules = (
     rules: ValidationEditorRule[]
@@ -54,9 +60,10 @@
     })
   }
 
-  const handleShow = (): void => {
+  const handleShow = (event: CustomEvent<unknown>): void => {
     workingValue = cloneDeep(value || [])
     drawerContentKey += 1
+    dispatch("drawerShow", event.detail)
   }
 
   const getFieldDefinition = (
@@ -93,13 +100,7 @@
   <ActionButton {active} on:click={drawer.show}>{text}</ActionButton>
 </div>
 
-<Drawer
-  bind:this={drawer}
-  forceModal
-  on:drawerHide
-  on:drawerShow
-  on:drawerShow={handleShow}
->
+<Drawer bind:this={drawer} forceModal on:drawerHide on:drawerShow={handleShow}>
   <svelte:fragment slot="title">
     <div class="drawer-title">
       <Heading size="S" noPadding>Validation Rules</Heading>
@@ -108,7 +109,10 @@
           {#if fieldDefinition?.icon}
             <Icon name={fieldDefinition.icon} size="S" />
           {/if}
-          <span>{componentInstance.field}</span>
+          <span class="field-context__name">{componentInstance.field}</span>
+          {#if fieldTypeLabel}
+            <span class="field-context__type">{fieldTypeLabel}</span>
+          {/if}
         </div>
       {/if}
     </div>
@@ -132,8 +136,9 @@
   }
   .drawer-title {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
     min-width: 0;
   }
   .field-context {
@@ -144,9 +149,16 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: 13px;
   }
-  .field-context span {
+  .field-context__name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .field-context__type {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .field-context__type::before {
+    content: "·";
+    margin-right: var(--spacing-xs);
   }
 </style>
