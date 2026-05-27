@@ -168,12 +168,13 @@
       dragging = false
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
+      const draggedPosition = flow.getNodes().find(n => n.id === note.id)
+        ?.position
       await saveActiveEdits()
-      const updatedNode = flow.getNodes().find(n => n.id === note.id)
-      if (updatedNode) {
+      if (draggedPosition) {
         automationStore.actions.updateStickyNotePosition(
           note.id,
-          updatedNode.position
+          draggedPosition
         )
       }
     }

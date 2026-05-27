@@ -1,9 +1,19 @@
 import { fireEvent, render, waitFor } from "@testing-library/svelte"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import MockIcon from "@/test/mocks/MockIcon.svelte"
 
 const mocks = vi.hoisted(() => ({
   updateStickyNote: vi.fn(),
+  updateStickyNotePosition: vi.fn(),
+  flowNodes: [] as Array<{ id: string; position: { x: number; y: number } }>,
+  updateNode: vi.fn(
+    (id: string, updates: { position?: { x: number; y: number } }) => {
+      const node = mocks.flowNodes.find(n => n.id === id)
+      if (node && updates.position) {
+        node.position = updates.position
+      }
+    }
+  ),
 }))
 
 vi.mock("@/stores/builder", () => ({
@@ -14,7 +24,7 @@ vi.mock("@/stores/builder", () => ({
     },
     actions: {
       updateStickyNote: mocks.updateStickyNote,
-      updateStickyNotePosition: vi.fn(),
+      updateStickyNotePosition: mocks.updateStickyNotePosition,
       removeStickyNote: vi.fn(),
     },
   },
@@ -26,9 +36,9 @@ vi.mock("@budibase/bbui", () => ({
 
 vi.mock("@xyflow/svelte", () => ({
   useSvelteFlow: () => ({
-    getNodes: () => [],
+    getNodes: () => mocks.flowNodes,
     getViewport: () => ({ zoom: 1 }),
-    updateNode: vi.fn(),
+    updateNode: mocks.updateNode,
   }),
 }))
 
@@ -51,7 +61,25 @@ const setTextareaSize = (
   })
 }
 
+const dispatchPointerEvent = (
+  target: EventTarget,
+  type: string,
+  position: { clientX: number; clientY: number }
+) => {
+  const event = new Event(type, { bubbles: true })
+  Object.defineProperty(event, "clientX", { value: position.clientX })
+  Object.defineProperty(event, "clientY", { value: position.clientY })
+  target.dispatchEvent(event)
+}
+
 describe("StickyNoteNode", () => {
+  beforeEach(() => {
+    mocks.updateStickyNote.mockReset()
+    mocks.updateStickyNotePosition.mockReset()
+    mocks.updateNode.mockClear()
+    mocks.flowNodes = []
+  })
+
   it("shrinks the note height when text no longer needs the expanded height", async () => {
     const { container } = render(StickyNoteNode, {
       props: {
@@ -90,6 +118,65 @@ describe("StickyNoteNode", () => {
 
     await waitFor(() => {
       expect(note).toHaveStyle("height: 140px")
+    })
+  })
+
+  it("saves the dragged position after saving active text edits", async () => {
+    mocks.flowNodes = [
+      {
+        id: "note-1",
+        position: { x: 0, y: 0 },
+      },
+    ]
+    mocks.updateStickyNote.mockImplementation(async () => {
+      mocks.flowNodes[0].position = { x: 0, y: 0 }
+    })
+
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const noteBody = container.querySelector(".note-body") as HTMLElement
+    await fireEvent.mouseDown(noteBody)
+    const textarea = container.querySelector("textarea") as HTMLTextAreaElement
+    await fireEvent.input(textarea, {
+      target: { value: "Updated text" },
+    })
+
+    const dragGrip = container.querySelector(".drag-grip") as HTMLElement
+    dispatchPointerEvent(dragGrip, "pointerdown", {
+      clientX: 10,
+      clientY: 20,
+    })
+    dispatchPointerEvent(document, "pointermove", {
+      clientX: 70,
+      clientY: 90,
+    })
+    dispatchPointerEvent(document, "pointerup", {
+      clientX: 70,
+      clientY: 90,
+    })
+
+    await waitFor(() => {
+      expect(mocks.updateStickyNote).toHaveBeenCalledWith("note-1", {
+        text: "Updated text",
+        height: 140,
+      })
+      expect(mocks.updateStickyNotePosition).toHaveBeenCalledWith("note-1", {
+        x: 60,
+        y: 70,
+      })
     })
   })
 })
