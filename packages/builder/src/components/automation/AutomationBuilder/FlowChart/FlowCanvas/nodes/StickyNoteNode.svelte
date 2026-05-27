@@ -198,24 +198,32 @@
   const handleTitlePointerDown = (e: PointerEvent) => {
     e.stopPropagation()
     clearStoredSelectionFromOtherInput(titleInput)
-    startTitleSelection()
+    startEditTitle()
   }
 
   const handleTextPointerDown = (e: PointerEvent) => {
     e.stopPropagation()
     clearStoredSelectionFromOtherInput(textInput)
-    startTextSelection()
+    startEditText()
   }
 
   const handleTitleMouseDown = (e: MouseEvent) => {
     e.stopPropagation()
     clearStoredSelectionFromOtherInput(titleInput)
+    if (e.detail > 1) {
+      startEditTitle()
+      return
+    }
     startTitleSelection()
   }
 
   const handleTextMouseDown = (e: MouseEvent) => {
     e.stopPropagation()
     clearStoredSelectionFromOtherInput(textInput)
+    if (e.detail > 1) {
+      startEditText()
+      return
+    }
     startTextSelection()
   }
 

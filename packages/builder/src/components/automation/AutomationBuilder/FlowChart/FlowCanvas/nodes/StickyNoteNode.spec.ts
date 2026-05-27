@@ -72,6 +72,21 @@ const dispatchPointerEvent = (
   target.dispatchEvent(event)
 }
 
+const dispatchMouseDown = (
+  target: EventTarget,
+  position: { clientX: number; clientY: number; detail?: number }
+) => {
+  target.dispatchEvent(
+    new MouseEvent("mousedown", {
+      bubbles: true,
+      cancelable: true,
+      clientX: position.clientX,
+      clientY: position.clientY,
+      detail: position.detail || 1,
+    })
+  )
+}
+
 describe("StickyNoteNode", () => {
   beforeEach(() => {
     mocks.updateStickyNote.mockReset()
@@ -146,6 +161,7 @@ describe("StickyNoteNode", () => {
     const textMouseDown = new MouseEvent("mousedown", {
       bubbles: true,
       cancelable: true,
+      detail: 1,
     })
 
     title.dispatchEvent(titleMouseDown)
@@ -359,11 +375,11 @@ describe("StickyNoteNode", () => {
       clientX: 100,
       clientY: 40,
     })
+    textarea.dispatchEvent(textMouseDown)
     await waitFor(() => {
       expect(document.body).toHaveClass("sticky-note-selecting-text")
       expect(note).toHaveClass("selecting-text")
     })
-    textarea.dispatchEvent(textMouseDown)
     dispatchPointerEvent(document.body, "pointermove", {
       clientX: -10,
       clientY: 40,
@@ -424,6 +440,10 @@ describe("StickyNoteNode", () => {
       clientX: 100,
       clientY: 40,
     })
+    dispatchMouseDown(textarea, {
+      clientX: 100,
+      clientY: 40,
+    })
     dispatchPointerEvent(document.body, "pointerup", {
       clientX: 100,
       clientY: 40,
@@ -468,6 +488,10 @@ describe("StickyNoteNode", () => {
       clientX: 100,
       clientY: 40,
     })
+    dispatchMouseDown(textarea, {
+      clientX: 100,
+      clientY: 40,
+    })
     dispatchPointerEvent(document.body, "pointerup", {
       clientX: 100,
       clientY: 40,
@@ -478,6 +502,10 @@ describe("StickyNoteNode", () => {
     })
 
     dispatchPointerEvent(title, "pointerdown", {
+      clientX: 70,
+      clientY: 40,
+    })
+    dispatchMouseDown(title, {
       clientX: 70,
       clientY: 40,
     })
@@ -519,6 +547,10 @@ describe("StickyNoteNode", () => {
       clientX: 70,
       clientY: 40,
     })
+    dispatchMouseDown(title, {
+      clientX: 70,
+      clientY: 40,
+    })
     dispatchPointerEvent(document.body, "pointerup", {
       clientX: 70,
       clientY: 40,
@@ -529,6 +561,10 @@ describe("StickyNoteNode", () => {
     })
 
     dispatchPointerEvent(textarea, "pointerdown", {
+      clientX: 70,
+      clientY: 80,
+    })
+    dispatchMouseDown(textarea, {
       clientX: 70,
       clientY: 80,
     })
@@ -543,5 +579,81 @@ describe("StickyNoteNode", () => {
       expect(textarea.selectionStart).toBe(4)
       expect(textarea.selectionEnd).toBe(4)
     })
+  })
+
+  it("allows double clicking the title to select a word", async () => {
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const title = container.querySelector(".title-input") as HTMLInputElement
+
+    dispatchPointerEvent(title, "pointerdown", {
+      clientX: 70,
+      clientY: 40,
+    })
+    dispatchMouseDown(title, {
+      clientX: 70,
+      clientY: 40,
+      detail: 2,
+    })
+    title.setSelectionRange(0, 4)
+    await fireEvent.select(title)
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: 70,
+      clientY: 40,
+    })
+
+    expect(title.selectionStart).toBe(0)
+    expect(title.selectionEnd).toBe(4)
+  })
+
+  it("allows double clicking the description to select a word", async () => {
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+
+    dispatchPointerEvent(textarea, "pointerdown", {
+      clientX: 70,
+      clientY: 80,
+    })
+    dispatchMouseDown(textarea, {
+      clientX: 70,
+      clientY: 80,
+      detail: 2,
+    })
+    textarea.setSelectionRange(0, 4)
+    await fireEvent.select(textarea)
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: 70,
+      clientY: 80,
+    })
+
+    expect(textarea.selectionStart).toBe(0)
+    expect(textarea.selectionEnd).toBe(4)
   })
 })
