@@ -354,7 +354,7 @@ describe("StickyNoteNode", () => {
     document.body.addEventListener("pointermove", clearSelection)
 
     textarea.setSelectionRange(4, 8)
-    textarea.dispatchEvent(new Event("select", { bubbles: true }))
+    await fireEvent.select(textarea)
     dispatchPointerEvent(textarea, "pointerdown", {
       clientX: 100,
       clientY: 40,
@@ -441,5 +441,107 @@ describe("StickyNoteNode", () => {
     expect(textarea.selectionEnd).toBe(8)
 
     document.body.removeEventListener("click", canvasClick)
+  })
+
+  it("does not select the title text when clicking the title after selecting note text", async () => {
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const title = container.querySelector(".title-input") as HTMLInputElement
+    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+
+    textarea.setSelectionRange(4, 8)
+    textarea.dispatchEvent(new Event("select", { bubbles: true }))
+    dispatchPointerEvent(textarea, "pointerdown", {
+      clientX: 100,
+      clientY: 40,
+    })
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: 100,
+      clientY: 40,
+    })
+
+    await waitFor(() => {
+      expect(document.body).not.toHaveClass("sticky-note-selecting-text")
+    })
+
+    dispatchPointerEvent(title, "pointerdown", {
+      clientX: 70,
+      clientY: 40,
+    })
+    title.setSelectionRange(0, 4)
+    await fireEvent.select(title)
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: 70,
+      clientY: 40,
+    })
+
+    await waitFor(() => {
+      expect(title.selectionStart).toBe(4)
+      expect(title.selectionEnd).toBe(4)
+    })
+  })
+
+  it("does not select description text when clicking it after selecting title text", async () => {
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const title = container.querySelector(".title-input") as HTMLInputElement
+    const textarea = container.querySelector(".text-input") as HTMLTextAreaElement
+
+    title.setSelectionRange(0, 4)
+    await fireEvent.select(title)
+    dispatchPointerEvent(title, "pointerdown", {
+      clientX: 70,
+      clientY: 40,
+    })
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: 70,
+      clientY: 40,
+    })
+
+    await waitFor(() => {
+      expect(document.body).not.toHaveClass("sticky-note-selecting-text")
+    })
+
+    dispatchPointerEvent(textarea, "pointerdown", {
+      clientX: 70,
+      clientY: 80,
+    })
+    textarea.setSelectionRange(0, 4)
+    await fireEvent.select(textarea)
+    dispatchPointerEvent(document.body, "pointerup", {
+      clientX: 70,
+      clientY: 80,
+    })
+
+    await waitFor(() => {
+      expect(textarea.selectionStart).toBe(4)
+      expect(textarea.selectionEnd).toBe(4)
+    })
   })
 })

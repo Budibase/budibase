@@ -62,6 +62,7 @@
   let selectingText = false
   const SELECTING_TEXT_CLASS = "sticky-note-selecting-text"
   let activeSelectionInput: HTMLInputElement | HTMLTextAreaElement | null = null
+  let movedDuringTextSelection = false
   let lastTextSelection: {
     start: number
     end: number
@@ -103,6 +104,7 @@
 
   const stopCanvasInteraction = (e: Event) => {
     if (!selectingText) return
+    movedDuringTextSelection = true
     if (activeSelectionInput) {
       recordTextSelection(activeSelectionInput)
     }
@@ -114,6 +116,7 @@
   const stopTextSelectionGuard = () => {
     selectingText = false
     activeSelectionInput = null
+    movedDuringTextSelection = false
     lastTextSelection = null
     document.body.classList.remove(SELECTING_TEXT_CLASS)
     document.removeEventListener("mousemove", stopCanvasInteraction, true)
@@ -122,7 +125,23 @@
     document.removeEventListener("pointerup", handleTextSelectionEnd, true)
   }
 
+  const clearStoredTextSelection = () => {
+    activeSelectionInput = null
+    lastTextSelection = null
+  }
+
+  const clearStoredSelectionFromOtherInput = (
+    input: HTMLInputElement | HTMLTextAreaElement
+  ) => {
+    if (activeSelectionInput === input) return
+    clearStoredTextSelection()
+  }
+
   const handleTextSelectionEnd = (e: Event) => {
+    if (!movedDuringTextSelection && activeSelectionInput) {
+      const caret = activeSelectionInput.selectionEnd ?? 0
+      activeSelectionInput.setSelectionRange(caret, caret)
+    }
     stopTextSelectionGuard()
     e.stopPropagation()
     e.stopImmediatePropagation()
@@ -133,6 +152,7 @@
   ) => {
     if (selectingText) return
     selectingText = true
+    movedDuringTextSelection = false
     activeSelectionInput = input
     document.body.classList.add(SELECTING_TEXT_CLASS)
     document.addEventListener("mousemove", stopCanvasInteraction, true)
@@ -152,7 +172,11 @@
   }
 
   const handleTextSelect = (e: Event) => {
-    recordTextSelection(e.currentTarget as HTMLInputElement | HTMLTextAreaElement)
+    const input = e.currentTarget as HTMLInputElement | HTMLTextAreaElement
+    if (selectingText && activeSelectionInput && input !== activeSelectionInput) {
+      return
+    }
+    recordTextSelection(input)
   }
 
   const handleTitleBlur = () => {
@@ -173,21 +197,25 @@
 
   const handleTitlePointerDown = (e: PointerEvent) => {
     e.stopPropagation()
+    clearStoredSelectionFromOtherInput(titleInput)
     startTitleSelection()
   }
 
   const handleTextPointerDown = (e: PointerEvent) => {
     e.stopPropagation()
+    clearStoredSelectionFromOtherInput(textInput)
     startTextSelection()
   }
 
   const handleTitleMouseDown = (e: MouseEvent) => {
     e.stopPropagation()
+    clearStoredSelectionFromOtherInput(titleInput)
     startTitleSelection()
   }
 
   const handleTextMouseDown = (e: MouseEvent) => {
     e.stopPropagation()
+    clearStoredSelectionFromOtherInput(textInput)
     startTextSelection()
   }
 
