@@ -69,12 +69,16 @@
     await focusTextInput()
   }
 
-  const saveTitle = async (position?: NotePosition) => {
+  const saveTitle = async (updates?: {
+    position?: NotePosition
+    width?: number
+  }) => {
     if (titleValue !== note.title) {
       try {
         await automationStore.actions.updateStickyNote(note.id, {
           title: titleValue,
-          ...position,
+          ...updates?.position,
+          ...(updates?.width ? { width: updates.width } : {}),
         })
         editTitle = false
         return true
@@ -86,13 +90,17 @@
     return false
   }
 
-  const saveText = async (position?: NotePosition) => {
+  const saveText = async (updates?: {
+    position?: NotePosition
+    width?: number
+  }) => {
     if (textValue !== note.text || noteHeight !== note.height) {
       try {
         await automationStore.actions.updateStickyNote(note.id, {
           text: textValue,
           height: noteHeight,
-          ...position,
+          ...updates?.position,
+          ...(updates?.width ? { width: updates.width } : {}),
         })
         editText = false
         return true
@@ -104,13 +112,16 @@
     return false
   }
 
-  const saveActiveEdits = async (position?: NotePosition) => {
+  const saveActiveEdits = async (updates?: {
+    position?: NotePosition
+    width?: number
+  }) => {
     let saved = false
     if (editTitle) {
-      saved = (await saveTitle(position)) || saved
+      saved = (await saveTitle(updates)) || saved
     }
     if (editText) {
-      saved = (await saveText(position)) || saved
+      saved = (await saveText(updates)) || saved
     }
     return saved
   }
@@ -147,10 +158,12 @@
       resizing = false
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
-      await saveActiveEdits()
-      automationStore.actions.updateStickyNote(note.id, {
-        width: noteWidth,
-      })
+      const savedEdits = await saveActiveEdits({ width: noteWidth })
+      if (!savedEdits) {
+        automationStore.actions.updateStickyNote(note.id, {
+          width: noteWidth,
+        })
+      }
     }
 
     document.addEventListener("pointermove", onMove)
@@ -189,7 +202,7 @@
       document.removeEventListener("pointerup", onUp)
       const draggedPosition = flow.getNodes().find(n => n.id === note.id)
         ?.position
-      const savedEdits = await saveActiveEdits(draggedPosition)
+      const savedEdits = await saveActiveEdits({ position: draggedPosition })
       if (draggedPosition) {
         if (savedEdits) {
           flow.updateNode(note.id, { position: draggedPosition })

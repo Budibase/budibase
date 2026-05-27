@@ -178,4 +178,59 @@ describe("StickyNoteNode", () => {
       expect(mocks.updateStickyNotePosition).not.toHaveBeenCalled()
     })
   })
+
+  it("saves active text edits with the resized width", async () => {
+    mocks.flowNodes = [
+      {
+        id: "note-1",
+        position: { x: 0, y: 0 },
+      },
+    ]
+
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            width: 220,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const noteBody = container.querySelector(".note-body") as HTMLElement
+    await fireEvent.mouseDown(noteBody)
+    const textarea = container.querySelector("textarea") as HTMLTextAreaElement
+    await fireEvent.input(textarea, {
+      target: { value: "Updated text" },
+    })
+
+    const resizeGrip = container.querySelector(".resize-grip") as HTMLElement
+    dispatchPointerEvent(resizeGrip, "pointerdown", {
+      clientX: 100,
+      clientY: 20,
+    })
+    dispatchPointerEvent(document, "pointermove", {
+      clientX: 160,
+      clientY: 20,
+    })
+    dispatchPointerEvent(document, "pointerup", {
+      clientX: 160,
+      clientY: 20,
+    })
+
+    await waitFor(() => {
+      expect(mocks.updateStickyNote).toHaveBeenCalledWith("note-1", {
+        text: "Updated text",
+        width: 280,
+        height: 140,
+      })
+    })
+    expect(mocks.updateStickyNotePosition).not.toHaveBeenCalled()
+  })
 })
