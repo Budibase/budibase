@@ -290,7 +290,7 @@
       <Layout noPadding gap="S">
         <div class="section-header">
           <Heading size="XS">Custom validation rules</Heading>
-          <Button secondary icon="plus" on:click={addRule}>Add Rule</Button>
+          <Button secondary icon="plus" on:click={addRule}>Add rule</Button>
         </div>
         {#if rules?.length}
           <div class="rules">
