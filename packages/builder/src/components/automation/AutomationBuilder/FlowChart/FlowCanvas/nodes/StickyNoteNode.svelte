@@ -388,9 +388,29 @@
       const dy = (lastMouseY - startY) / zoom
       const vpDx = (currentViewport.x - startViewport.x) / zoom
       const vpDy = (currentViewport.y - startViewport.y) / zoom
+      let x = startPos.x + dx - vpDx
+      let y = startPos.y + dy - vpDy
+
+      const nodeBounds = flow.getNodesBounds(flow.getNodes())
+      const minX = nodeBounds.x - MAX_NOTE_WIDTH
+      const maxX = nodeBounds.x + nodeBounds.width
+      const minY = nodeBounds.y - MAX_NOTE_HEIGHT
+      const maxY = nodeBounds.y + nodeBounds.height
+
+      if (minX > maxX) {
+        x = nodeBounds.x + nodeBounds.width / 2 - noteWidth / 2
+      } else {
+        x = Math.min(maxX, Math.max(minX, x))
+      }
+      if (minY > maxY) {
+        y = nodeBounds.y + nodeBounds.height / 2 - noteHeight / 2
+      } else {
+        y = Math.min(maxY, Math.max(minY, y))
+      }
+
       dragPosition = {
-        x: startPos.x + dx - vpDx,
-        y: startPos.y + dy - vpDy,
+        x,
+        y,
       }
     }
 
@@ -432,14 +452,34 @@
             const yInterval = active.bottom ? -bump : active.top ? bump : 0
 
             const current = flow.getViewport()
-            if (current) {
-              flow.setViewport({
-                x: (current.x || 0) + xInterval,
-                y: (current.y || 0) + yInterval,
-                zoom: current.zoom,
-              })
-            }
+            if (!current) return
+            const zoom = current.zoom
+
+            const tentativeX = (current.x || 0) + xInterval
+            const tentativeY = (current.y || 0) + yInterval
+
+            flow.setViewport({
+              x: tentativeX,
+              y: tentativeY,
+              zoom,
+            })
+
+            const prevPos = dragPosition ? { ...dragPosition } : null
             updateDragPosition()
+
+            if (prevPos && dragPosition) {
+              const revertedX =
+                xInterval !== 0 && prevPos.x === dragPosition.x
+              const revertedY =
+                yInterval !== 0 && prevPos.y === dragPosition.y
+              if (revertedX || revertedY) {
+                const vp = flow.getViewport()
+                if (revertedX) vp.x = current.x
+                if (revertedY) vp.y = current.y
+                flow.setViewport(vp)
+                updateDragPosition()
+              }
+            }
           }, 30)
         } else {
           scrollZones = zonesState
