@@ -6,7 +6,6 @@
   import { useSvelteFlow } from "@xyflow/svelte"
 
   export let data: StickyNoteNodeData | undefined = undefined
-  export let selected: boolean = false
 
   $: note = data?.note || { id: "", title: "", text: "", x: 0, y: 0 }
   $: viewMode = $automationStore.viewMode
@@ -236,7 +235,6 @@
 {#if note.id}
   <div
     class="sticky-note"
-    class:selected
     class:resizing
     on:dblclick|stopPropagation
     role="button"
@@ -322,18 +320,6 @@
     cursor: default;
     position: relative;
     box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.08);
-  }
-
-  .sticky-note.selected {
-    border-color: var(--spectrum-global-color-blue-600);
-    box-shadow:
-      0 0 0 3px
-        color-mix(
-          in srgb,
-          var(--spectrum-global-color-blue-600) 20%,
-          transparent
-        ),
-      2px 3px 8px rgba(0, 0, 0, 0.08);
   }
 
   :global(.spectrum--dark) .sticky-note,
