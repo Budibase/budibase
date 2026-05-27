@@ -338,6 +338,27 @@
 
   let dragging = false
 
+  const handleWheel = (e: WheelEvent) => {
+    const vp = flow.getViewport()
+    if (!vp) return
+
+    const delta =
+      -e.deltaY * (e.deltaMode === 1 ? 0.05 : e.deltaMode ? 1 : 0.002)
+    const newZoom = vp.zoom * Math.pow(2, delta)
+    const clampedZoom = Math.min(2.5, Math.max(0.5, newZoom))
+
+    const flowPos = flow.screenToFlowPosition(
+      { x: e.clientX, y: e.clientY },
+      { snapToGrid: false }
+    )
+
+    flow.setViewport({
+      x: vp.x + flowPos.x * (vp.zoom - clampedZoom),
+      y: vp.y + flowPos.y * (vp.zoom - clampedZoom),
+      zoom: clampedZoom,
+    })
+  }
+
   const startDrag = (e: PointerEvent) => {
     if (!isEditor) return
     e.preventDefault()
@@ -435,6 +456,7 @@
       class:resizing
       class:selecting-text={selectingText}
       on:dblclick|stopPropagation
+      on:wheel|preventDefault={handleWheel}
       on:pointerdown={startCardDrag}
       role="button"
       tabindex="-1"
