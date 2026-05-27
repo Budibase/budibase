@@ -2,7 +2,7 @@
   import { automationStore } from "@/stores/builder"
   import { Icon } from "@budibase/bbui"
   import { ViewMode, type StickyNoteNodeData } from "@/types/automations"
-  import { afterUpdate } from "svelte"
+  import { tick } from "svelte"
   import { useSvelteFlow } from "@xyflow/svelte"
 
   export let data: StickyNoteNodeData | undefined = undefined
@@ -29,19 +29,43 @@
     lastTextValue = note.text
   }
 
-  const startEditTitle = (e: Event) => {
+  const focusTitleInput = async (selectText: boolean) => {
+    await tick()
+    titleInput?.focus()
+    if (selectText) {
+      titleInput?.select()
+    } else {
+      titleInput?.setSelectionRange(
+        titleInput.value.length,
+        titleInput.value.length
+      )
+    }
+  }
+
+  const focusTextInput = async () => {
+    await tick()
+    textTextarea?.focus()
+    textTextarea?.setSelectionRange(
+      textTextarea.value.length,
+      textTextarea.value.length
+    )
+  }
+
+  const startEditTitle = async (e: MouseEvent) => {
     if (!isEditor) return
     e.preventDefault()
     editTitle = true
     titleValue = note.title
+    await focusTitleInput(e.detail > 1)
   }
 
-  const startEditText = (e: Event) => {
+  const startEditText = async (e: Event) => {
     if (!isEditor || editText) return
     e.preventDefault()
     editText = true
     textValue = note.text
     lastTextValue = note.text
+    await focusTextInput()
   }
 
   const saveTitle = async () => {
@@ -79,22 +103,6 @@
       await saveText()
     }
   }
-
-  afterUpdate(() => {
-    if (editTitle && titleInput) {
-      titleInput.focus()
-      titleInput.setSelectionRange(
-        titleInput.value.length,
-        titleInput.value.length
-      )
-    } else if (editText && textTextarea) {
-      textTextarea.focus()
-      textTextarea.setSelectionRange(
-        textTextarea.value.length,
-        textTextarea.value.length
-      )
-    }
-  })
 
   let noteWidth = 220
   let noteHeight = 140
