@@ -21,10 +21,7 @@ describe("validation constraints", () => {
     ["attachment", ["required", "maxFileSize", "maxUploadSize"]],
     ["attachment_single", ["required", "maxUploadSize"]],
     ["signature_single", ["required"]],
-    [
-      "link",
-      ["required", "contains", "notContains", "minLength", "maxLength"],
-    ],
+    ["link", ["required", "contains", "notContains", "minLength", "maxLength"]],
     [
       "array",
       ["required", "minLength", "maxLength", "contains", "notContains"],
