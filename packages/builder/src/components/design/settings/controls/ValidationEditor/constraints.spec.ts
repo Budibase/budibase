@@ -2,12 +2,38 @@ import { describe, expect, it } from "vitest"
 import { defaultErrorForConstraint, getConstraintsForType } from "./constraints"
 
 describe("validation constraints", () => {
-  it("includes min and max length for string fields", () => {
-    const constraints = getConstraintsForType("string")
+  it.each([
+    [
+      "string",
+      [
+        "required",
+        "minLength",
+        "maxLength",
+        "equal",
+        "notEqual",
+        "regex",
+        "notRegex",
+      ],
+    ],
+    ["number", ["required", "maxValue", "minValue", "equal", "notEqual"]],
+    ["boolean", ["required", "equal", "notEqual"]],
+    ["datetime", ["required", "maxValue", "minValue", "equal", "notEqual"]],
+    ["attachment", ["required", "maxFileSize", "maxUploadSize"]],
+    ["attachment_single", ["required", "maxUploadSize"]],
+    ["signature_single", ["required"]],
+    [
+      "link",
+      ["required", "contains", "notContains", "minLength", "maxLength"],
+    ],
+    [
+      "array",
+      ["required", "minLength", "maxLength", "contains", "notContains"],
+    ],
+  ])("returns constraints for %s fields", (fieldType, expected) => {
+    const constraints = getConstraintsForType(fieldType)
     const values = constraints.map(constraint => constraint.value)
 
-    expect(values).toContain("minLength")
-    expect(values).toContain("maxLength")
+    expect(values).toStrictEqual(expected)
   })
 
   it("returns empty constraints for unknown field types", () => {
@@ -22,9 +48,31 @@ describe("defaultErrorForConstraint", () => {
     expect(defaultErrorForConstraint("required", null)).toBe("Required")
   })
 
-  it("includes the value for minLength when set", () => {
-    expect(defaultErrorForConstraint("minLength", 5)).toBe(
-      "Must be at least 5 characters"
+  it.each([
+    ["minLength", 5, "Must be at least 5 characters"],
+    ["maxLength", 10, "Must be at most 10 characters"],
+    ["minValue", 5, "Must be at least 5"],
+    ["maxValue", 10, "Must be at most 10"],
+    ["equal", "active", "Must equal active"],
+    ["notEqual", "inactive", "Must not equal inactive"],
+    ["regex", "^[a-z]+$", "Invalid format"],
+    ["notRegex", "^[0-9]+$", "Invalid format"],
+    ["contains", "admin", 'Must contain "admin"'],
+    ["notContains", "guest", 'Must not contain "guest"'],
+    ["maxFileSize", 5, "Files must be smaller than 5 MB"],
+    ["maxUploadSize", 20, "Total upload size must be at most 20 MB"],
+    ["inclusion", ["one", "two"], "Invalid value"],
+    ["json", null, "Invalid value"],
+  ])("returns the default error for %s", (constraint, value, message) => {
+    expect(defaultErrorForConstraint(constraint, value)).toBe(message)
+  })
+
+  it.each([
+    ["minValue", "2020-10-01", "Must be no earlier than 2020-10-01"],
+    ["maxValue", "2020-10-01", "Must be no later than 2020-10-01"],
+  ])("returns date-specific errors for %s", (constraint, value, message) => {
+    expect(defaultErrorForConstraint(constraint, value, "datetime")).toBe(
+      message
     )
   })
 
@@ -40,6 +88,8 @@ describe("defaultErrorForConstraint", () => {
     ["maxValue", "Value too high"],
     ["equal", "Invalid value"],
     ["notEqual", "Invalid value"],
+    ["regex", "Invalid format"],
+    ["notRegex", "Invalid format"],
     ["contains", "Missing required content"],
     ["notContains", "Invalid content"],
     ["maxFileSize", "File too large"],
