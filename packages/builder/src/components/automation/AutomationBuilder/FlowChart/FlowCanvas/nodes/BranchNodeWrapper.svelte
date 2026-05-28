@@ -72,6 +72,7 @@
   class:error={branchError}
   class:success={branchSuccess}
   class:warn={branchStopped}
+  class:logs={viewMode === ViewMode.LOGS}
   style:--branch-wrapper-width={`${laneWidth}px`}
 >
   <Handle
@@ -116,5 +117,9 @@
   }
   .branch-wrapper.warn :global(.custom-handle) {
     background-color: var(--spectrum-global-color-orange-500);
+  }
+  .branch-wrapper.logs :global(.svelte-flow__handle-left.custom-handle),
+  .branch-wrapper.logs :global(.svelte-flow__handle-right.custom-handle) {
+    top: 31px;
   }
 </style>

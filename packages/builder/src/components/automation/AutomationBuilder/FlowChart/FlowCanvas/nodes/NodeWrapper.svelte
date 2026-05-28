@@ -71,6 +71,7 @@
   class:error={handleError}
   class:success={handleSuccess}
   class:warn={handleStopped}
+  class:logs={viewMode === ViewMode.LOGS}
 >
   {#if !isTrigger}
     <Handle
@@ -112,5 +113,9 @@
   }
   .step-wrapper.warn :global(.custom-handle) {
     background-color: var(--spectrum-global-color-orange-500);
+  }
+  .step-wrapper.logs :global(.svelte-flow__handle-left.custom-handle),
+  .step-wrapper.logs :global(.svelte-flow__handle-right.custom-handle) {
+    top: 31px;
   }
 </style>
