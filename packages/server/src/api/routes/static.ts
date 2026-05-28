@@ -47,5 +47,10 @@ router
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.getSignedUploadURL
   )
+  .delete(
+    "/api/attachments/temp",
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    controller.deleteTemporaryAttachment
+  )
 
 export default router

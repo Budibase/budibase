@@ -28,6 +28,7 @@ jest.mock("@budibase/backend-core", () => {
     objectStore: {
       ...actual.objectStore,
       upload: jest.fn(),
+      deleteFile: jest.fn(),
     },
   }
 })
@@ -36,6 +37,9 @@ import extract from "extract-zip"
 
 const mockedUpload = objectStore.upload as jest.MockedFunction<
   typeof objectStore.upload
+>
+const mockedDeleteFile = objectStore.deleteFile as jest.MockedFunction<
+  typeof objectStore.deleteFile
 >
 const mockedExtract = extract as jest.MockedFunction<typeof extract>
 
@@ -99,6 +103,49 @@ describe("/static", () => {
         .expect(200)
 
       expect(res.body.appId).toBe(config.devWorkspaceId)
+    })
+
+    describe("deleteTemporaryAttachment", () => {
+      it("should delete temporary attachment keys for the current workspace", async () => {
+        await request
+          .delete("/api/attachments/temp")
+          .send({
+            key: "app_prod_test123/4ed4c9bd-32f1-4f8e-a89d-e6f49de3f95f.pdf",
+          })
+          .set(config.defaultHeaders())
+          .expect(204)
+
+        expect(mockedDeleteFile).toHaveBeenCalledWith(
+          "tmp-file-attachments",
+          "app_prod_test123/4ed4c9bd-32f1-4f8e-a89d-e6f49de3f95f.pdf"
+        )
+      })
+
+      it("should require a key", async () => {
+        const res = await request
+          .delete("/api/attachments/temp")
+          .send({})
+          .set(config.defaultHeaders())
+          .expect(400)
+
+        expect(res.body.message).toEqual(
+          "A temporary attachment key is required"
+        )
+      })
+
+      it("should reject keys outside the current workspace", async () => {
+        const res = await request
+          .delete("/api/attachments/temp")
+          .send({
+            key: "another_workspace/file.pdf",
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+
+        expect(res.body.message).toEqual(
+          "The temporary attachment key is not valid for this app"
+        )
+      })
     })
   })
 

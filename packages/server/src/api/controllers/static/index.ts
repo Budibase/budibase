@@ -644,6 +644,21 @@ export const getSignedUploadURL = async function (
   ctx.body = { signedUrl, publicUrl }
 }
 
+export const deleteTemporaryAttachment = async function (ctx: Ctx) {
+  const key = ctx.request.body?.key
+  if (!key || typeof key !== "string") {
+    ctx.throw(400, "A temporary attachment key is required")
+  }
+
+  const workspacePrefix = `${context.getProdWorkspaceId()}/`
+  if (!key.startsWith(workspacePrefix)) {
+    ctx.throw(403, "The temporary attachment key is not valid for this app")
+  }
+
+  await objectStore.deleteFile(ObjectStoreBuckets.TEMP, key)
+  ctx.status = 204
+}
+
 export async function servePwaManifest(ctx: UserCtx<void, any>) {
   const appId = context.getWorkspaceId()
   if (!appId) {
