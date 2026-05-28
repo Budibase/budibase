@@ -1,7 +1,7 @@
 import fs from "fs"
 import { Readable } from "stream"
 
-jest.mock("@budibase/backend-core/utils", () => ({
+jest.mock("@budibase/backend-core/src/utils/outboundFetch", () => ({
   fetchWithBlacklist: jest.fn(),
 }))
 
@@ -18,26 +18,20 @@ jest.mock("@budibase/backend-core", () => ({
   },
 }))
 
-import * as coreUtils from "@budibase/backend-core/utils"
+import { fetchWithBlacklist } from "@budibase/backend-core/src/utils/outboundFetch"
 import { uploadUrl } from "../fileUtils"
 
 describe("fileUtils.uploadUrl", () => {
   it("uses fetchWithBlacklist for remote URL downloads", async () => {
     const body = Readable.from([Buffer.from("hello")])
-    ;(
-      coreUtils.fetchWithBlacklist as jest.MockedFunction<
-        typeof coreUtils.fetchWithBlacklist
-      >
-    ).mockResolvedValue({
+    ;(fetchWithBlacklist as jest.MockedFunction<typeof fetchWithBlacklist>).mockResolvedValue({
       url: "https://example.com/test.jpg",
       body,
     } as Response)
 
     const result = await uploadUrl("https://example.com/test.jpg")
 
-    expect(coreUtils.fetchWithBlacklist).toHaveBeenCalledWith(
-      "https://example.com/test.jpg"
-    )
+    expect(fetchWithBlacklist).toHaveBeenCalledWith("https://example.com/test.jpg")
     expect(result?.url).toContain("app_test/attachments/")
   })
 })
