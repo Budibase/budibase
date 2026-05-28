@@ -392,10 +392,10 @@
       let y = startPos.y + dy - vpDy
 
       const nodeBounds = flow.getNodesBounds(flow.getNodes())
-      const minX = nodeBounds.x - MAX_NOTE_WIDTH
+      const minX = nodeBounds.x - noteWidth - MAX_NOTE_WIDTH
       const maxX = nodeBounds.x + nodeBounds.width
-      const minY = nodeBounds.y - MAX_NOTE_HEIGHT
-      const maxY = nodeBounds.y + nodeBounds.height
+      const minY = nodeBounds.y - noteDisplayHeight - MAX_NOTE_HEIGHT
+      const maxY = nodeBounds.y + nodeBounds.height + MAX_NOTE_HEIGHT
 
       if (minX > maxX) {
         x = nodeBounds.x + nodeBounds.width / 2 - noteWidth / 2
