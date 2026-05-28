@@ -36,16 +36,18 @@
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
+  $: hasBranchResultValue = hasBranchResult(branchResult)
   $: branchExecuted =
-    branchIdx !== undefined && hasBranchResult(branchResult)
+    branchIdx !== undefined && hasBranchResultValue
       ? branchResult.outputs.branchId ===
         stepBlock.inputs.branches?.[branchIdx]?.id
       : false
   $: branchStepFailed = isTerminalFailure(branchResult)
+  $: branchStepFailure =
+    branchStepFailed && (branchExecuted || !hasBranchResultValue)
   $: branchError =
-    branchStepFailed &&
     runHighlight !== "stopped" &&
-    (branchExecuted || !hasBranchResult(branchResult))
+    (branchStepFailure || (branchExecuted && runHighlight === "error"))
   $: branchSuccess =
     !branchError && branchExecuted && runHighlight === "success"
   $: branchStopped =

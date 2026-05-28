@@ -56,8 +56,9 @@
           $automationStore.testResults,
           step
         )
+  $: hasBranchResultValue = hasBranchResult(branchResult)
   $: branchExecuted =
-    branch && hasBranchResult(branchResult)
+    branch && hasBranchResultValue
       ? branchResult.outputs.branchId === branch.id
       : false
   $: runHighlight = getRunHighlight(
@@ -66,11 +67,15 @@
       : $automationStore.testResults
   )
   $: branchStepFailed = isTerminalFailure(branchResult)
+  $: branchStepFailure =
+    branchStepFailed && (branchExecuted || !hasBranchResultValue)
   $: branchSuccess =
-    branchExecuted && runHighlight === "success" && !branchStepFailed
+    branchExecuted && runHighlight === "success" && !branchStepFailure
   $: branchFailed =
-    (branchExecuted && runHighlight === "error") || branchStepFailed
-  $: branchStopped = branchExecuted && runHighlight === "stopped"
+    runHighlight !== "stopped" &&
+    (branchStepFailure || (branchExecuted && runHighlight === "error"))
+  $: branchStopped =
+    !branchFailed && branchExecuted && runHighlight === "stopped"
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
