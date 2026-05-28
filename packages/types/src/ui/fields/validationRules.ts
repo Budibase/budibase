@@ -38,7 +38,8 @@ const isJSBindingValue = (value: unknown): boolean => {
 
 export const defaultErrorForConstraint = (
   constraint: string | undefined,
-  value: unknown
+  value: unknown,
+  type?: string | FieldType
 ): string => {
   switch (constraint) {
     case "required":
@@ -56,10 +57,20 @@ export const defaultErrorForConstraint = (
         ? `Must be at most ${value} characters`
         : "Too long"
     case "minValue":
+      if (type === FieldType.DATETIME) {
+        return hasValidationValue(value)
+          ? `Must be no earlier than ${value}`
+          : "Value too low"
+      }
       return hasValidationValue(value)
         ? `Must be at least ${value}`
         : "Value too low"
     case "maxValue":
+      if (type === FieldType.DATETIME) {
+        return hasValidationValue(value)
+          ? `Must be no later than ${value}`
+          : "Value too high"
+      }
       return hasValidationValue(value)
         ? `Must be at most ${value}`
         : "Value too high"

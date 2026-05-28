@@ -646,16 +646,16 @@
       newError.subtype = `Auto Column requires a type.`
     }
 
-    if (
-      fieldInfo.type === FieldType.LINK &&
-      fieldInfo.fieldName &&
-      fieldInfo.tableId
-    ) {
-      const relatedTable = $tables.list.find(
-        tbl => tbl._id === fieldInfo.tableId
-      )
-      if (inUse(relatedTable, fieldInfo.fieldName) && !originalName) {
-        newError.relatedName = `Column name already in use in table ${relatedTable?.name}`
+    if (fieldInfo.type === FieldType.LINK && fieldInfo.fieldName) {
+      if (!fieldInfo.fieldName.match(ValidColumnNameRegex)) {
+        newError.relatedName = `Illegal character; must be alpha-numeric.`
+      } else if (fieldInfo.tableId) {
+        const relatedTable = $tables.list.find(
+          tbl => tbl._id === fieldInfo.tableId
+        )
+        if (inUse(relatedTable, fieldInfo.fieldName) && !originalName) {
+          newError.relatedName = `Column name already in use in table ${relatedTable?.name}`
+        }
       }
     }
     return newError

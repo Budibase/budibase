@@ -58,4 +58,38 @@ describe("createValidatorFromConstraints", () => {
 
     expect(validate("different value")).toBe("Invalid value")
   })
+
+  it("uses date-specific minimum fallback errors for datetime rules", () => {
+    const validate = createValidatorFromConstraints(
+      null,
+      [
+        {
+          type: FieldType.DATETIME,
+          constraint: "minValue",
+          value: "2020-10-01",
+        },
+      ],
+      "paidAt",
+      undefined
+    )
+
+    expect(validate("2020-09-30")).toBe("Must be no earlier than 2020-10-01")
+  })
+
+  it("uses date-specific maximum fallback errors for datetime rules", () => {
+    const validate = createValidatorFromConstraints(
+      null,
+      [
+        {
+          type: FieldType.DATETIME,
+          constraint: "maxValue",
+          value: "2020-10-01",
+        },
+      ],
+      "paidAt",
+      undefined
+    )
+
+    expect(validate("2020-10-02")).toBe("Must be no later than 2020-10-01")
+  })
 })

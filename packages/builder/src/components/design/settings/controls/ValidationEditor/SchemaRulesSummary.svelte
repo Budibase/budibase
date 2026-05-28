@@ -1,13 +1,19 @@
 <script lang="ts">
   import { Body } from "@budibase/bbui"
+  import { SvelteSet } from "svelte/reactivity"
   import type { ValidationConstraintOption } from "./constraints"
   import ValidationRuleCard from "./ValidationRuleCard.svelte"
   import type { SchemaValidationRule } from "./types"
 
-  export let constraintOptions: ValidationConstraintOption[] = []
-  export let rules: SchemaValidationRule[] = []
+  let {
+    constraintOptions = [],
+    rules = [],
+  }: {
+    constraintOptions?: ValidationConstraintOption[]
+    rules?: SchemaValidationRule[]
+  } = $props()
 
-  let expanded: Set<string> = new Set()
+  let expanded = new SvelteSet<string>()
 
   const getRuleId = (rule: SchemaValidationRule, index: number): string =>
     `${rule.constraint}-${index}`
@@ -18,7 +24,6 @@
     } else {
       expanded.add(id)
     }
-    expanded = expanded
   }
 
   const constraintLabel = (constraint?: string): string => {
@@ -48,7 +53,7 @@
         {summary}
         error={rule.error}
         expanded={isExpanded}
-        on:toggle={() => toggle(id)}
+        onToggle={() => toggle(id)}
       >
         <div class="schema-details" class:schema-details--no-value={!summary}>
           <div class="detail">

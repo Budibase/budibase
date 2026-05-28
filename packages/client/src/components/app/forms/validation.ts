@@ -147,7 +147,8 @@ const evaluateRule = (rule: UIFieldValidationRule, value: unknown) => {
   const pass = handler(value, rule)
   return pass
     ? null
-    : rule.error || defaultErrorForConstraint(rule.constraint, rule.value)
+    : rule.error ||
+        defaultErrorForConstraint(rule.constraint, rule.value, rule.type)
 }
 
 /**
@@ -168,7 +169,7 @@ const parseType = (value: unknown, type: `${FieldType}`) => {
     if (typeof value === "string" || Array.isArray(value)) {
       return value
     }
-    if (value.length === 0) {
+    if ((value as { length: number }).length === 0) {
       return null
     }
     return `${value}`
@@ -176,10 +177,10 @@ const parseType = (value: unknown, type: `${FieldType}`) => {
 
   // Parse as number
   if (type === FieldType.NUMBER) {
-    if (isNaN(value)) {
+    if (isNaN(value as number)) {
       return null
     }
-    return parseFloat(value)
+    return parseFloat(value as string)
   }
 
   // Parse as date
@@ -187,7 +188,9 @@ const parseType = (value: unknown, type: `${FieldType}`) => {
     if (value instanceof Date) {
       return value.getTime()
     }
-    const time = isNaN(value) ? Date.parse(value) : new Date(value).getTime()
+    const time = isNaN(value as number)
+      ? Date.parse(value as string)
+      : new Date(value as string | number | Date).getTime()
     return isNaN(time) ? null : time
   }
 
@@ -212,7 +215,7 @@ const parseType = (value: unknown, type: `${FieldType}`) => {
     type === FieldType.ATTACHMENT_SINGLE ||
     type === FieldType.SIGNATURE_SINGLE
   ) {
-    if (!value?.key) {
+    if (!(value as { key?: unknown } | null | undefined)?.key) {
       return null
     }
     return value
@@ -251,32 +254,48 @@ const requiredHandler = (value: unknown) => {
 
 // Evaluates a min length constraint
 const minLengthHandler = (value: unknown, rule: UIFieldValidationRule) => {
-  const limit = parseType(rule.value, "number")
-  return value == null || value.length >= limit
+  const limit = parseType(rule.value, "number") as number
+  return value == null || (value as { length: number }).length >= limit
 }
 
 // Evaluates a max length constraint
 const maxLengthHandler = (value: unknown, rule: UIFieldValidationRule) => {
-  const limit = parseType(rule.value, "number")
-  return value == null || value.length <= limit
+  const limit = parseType(rule.value, "number") as number
+  return value == null || (value as { length: number }).length <= limit
 }
 
 // Evaluates a max file size (MB) constraint
 const maxFileSizeHandler = (value: unknown, rule: UIFieldValidationRule) => {
-  const limit = parseType(rule.value, "number")
+  const limit = parseType(rule.value, "number") as number
   const check = (attachment: { size: number }) =>
     attachment.size / 1000000 > limit
-  return value == null || !(value?.key ? check(value) : value.some(check))
+  const attachments = value as {
+    key?: unknown
+    size: number
+    some: (predicate: (attachment: { size: number }) => boolean) => boolean
+  }
+  return (
+    value == null ||
+    !(attachments?.key ? check(attachments) : attachments.some(check))
+  )
 }
 
 // Evaluates a max total upload size (MB) constraint
 const maxUploadSizeHandler = (value: unknown, rule: UIFieldValidationRule) => {
-  const limit: number = parseType(rule.value, "number")
+  const limit = parseType(rule.value, "number") as number
+  const attachments = value as {
+    key?: unknown
+    size: number
+    reduce: (
+      callback: (acc: number, currentItem: { size: number }) => number,
+      initialValue: number
+    ) => number
+  }
   return (
     value == null ||
-    (value?.key
-      ? value.size / 1000000 <= limit
-      : value.reduce(
+    (attachments?.key
+      ? attachments.size / 1000000 <= limit
+      : attachments.reduce(
           (acc: number, currentItem: { size: number }) =>
             acc + currentItem.size,
           0
@@ -289,15 +308,15 @@ const maxUploadSizeHandler = (value: unknown, rule: UIFieldValidationRule) => {
 // Evaluates a min value constraint
 const minValueHandler = (value: unknown, rule: UIFieldValidationRule) => {
   // Use same type as the value so that things can be compared
-  const limit = parseType(rule.value, rule.type)
-  return value == null || value >= limit
+  const limit = parseType(rule.value, rule.type) as number
+  return value == null || (value as number) >= limit
 }
 
 // Evaluates a max value constraint
 const maxValueHandler = (value: unknown, rule: UIFieldValidationRule) => {
   // Use same type as the value so that things can be compared
-  const limit = parseType(rule.value, rule.type)
-  return value == null || value <= limit
+  const limit = parseType(rule.value, rule.type) as number
+  return value == null || (value as number) <= limit
 }
 
 // Evaluates an inclusion constraint

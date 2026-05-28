@@ -1,14 +1,25 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
+  import type { Snippet } from "svelte"
   import { slide } from "svelte/transition"
   import { Icon } from "@budibase/bbui"
 
-  export let title: string = "Validation rule"
-  export let summary: string = ""
-  export let error: string | undefined = ""
-  export let expanded: boolean = false
-
-  const dispatch = createEventDispatcher<{ toggle: void }>()
+  let {
+    title = "Validation rule",
+    summary = "",
+    error = "",
+    expanded = false,
+    onToggle,
+    actions,
+    children,
+  }: {
+    title?: string
+    summary?: string
+    error?: string
+    expanded?: boolean
+    onToggle?: () => void
+    actions?: Snippet
+    children?: Snippet
+  } = $props()
 </script>
 
 <div class="rule-card" class:rule-card--expanded={expanded}>
@@ -17,7 +28,7 @@
       class="rule-card__summary"
       type="button"
       aria-expanded={expanded}
-      on:click={() => dispatch("toggle")}
+      onclick={() => onToggle?.()}
     >
       <span class="rule-card__caret" class:rule-card__caret--open={expanded}>
         <Icon name="caret-right" size="S" />
@@ -30,16 +41,16 @@
         <span class="rule-card__error">"{error}"</span>
       {/if}
     </button>
-    {#if $$slots.actions}
+    {#if actions}
       <div class="rule-card__actions">
-        <slot name="actions" />
+        {@render actions()}
       </div>
     {/if}
   </div>
 
   {#if expanded}
     <div class="rule-card__details" transition:slide|local={{ duration: 180 }}>
-      <slot />
+      {@render children?.()}
     </div>
   {/if}
 </div>

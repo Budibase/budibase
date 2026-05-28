@@ -14,6 +14,7 @@
   import type { Component, EnrichedBinding } from "@budibase/types"
   import { isJSBinding } from "@budibase/string-templates"
   import { generate } from "shortid"
+  import { SvelteSet } from "svelte/reactivity"
   import { selectedScreen, selectedComponent } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"
   import {
@@ -48,8 +49,8 @@
     presence?: boolean | { allowEmpty?: boolean }
     length?: { minimum?: ValidationValue; maximum?: ValidationValue }
     numericality?: {
-      greaterThanOrEqualTo?: ValidationValue
-      lessThanOrEqualTo?: ValidationValue
+      greaterThanOrEqualTo?: number
+      lessThanOrEqualTo?: number
     }
     inclusion?: string[]
   }
@@ -72,8 +73,8 @@
 
   const getInitialExpandedRules = (
     rules: ValidationEditorRule[]
-  ): Set<string> => {
-    const expanded = new Set<string>()
+  ): SvelteSet<string> => {
+    const expanded = new SvelteSet<string>()
     if (rules?.length <= 2) {
       rules.forEach(rule => {
         if (rule?.id) {
@@ -84,7 +85,7 @@
     return expanded
   }
 
-  let expandedRules: Set<string> = getInitialExpandedRules(rules)
+  let expandedRules = getInitialExpandedRules(rules)
 
   const resolveDatasource = (
     selectedScreen: ScreenAsset,
@@ -222,13 +223,11 @@
       },
     ]
     expandedRules.add(id)
-    expandedRules = expandedRules
   }
 
   const removeRule = (id: string): void => {
     rules = rules.filter(link => link.id !== id)
     expandedRules.delete(id)
-    expandedRules = expandedRules
   }
 
   const duplicateRule = (id: string): void => {
@@ -239,7 +238,6 @@
     const newRule = { ...existingRule, id: generate() }
     rules = [...rules, newRule]
     expandedRules.add(newRule.id)
-    expandedRules = expandedRules
   }
 
   const supportsConstraintValue = (constraint?: string): boolean => {
@@ -247,12 +245,13 @@
   }
 
   const toggleRule = (id: string): void => {
-    if (expandedRules.has(id)) {
-      expandedRules.delete(id)
+    const nextExpandedRules = new SvelteSet(expandedRules)
+    if (nextExpandedRules.has(id)) {
+      nextExpandedRules.delete(id)
     } else {
-      expandedRules.add(id)
+      nextExpandedRules.add(id)
     }
-    expandedRules = expandedRules
+    expandedRules = nextExpandedRules
   }
 
   const constraintLabel = (constraint?: string): string => {
@@ -293,7 +292,7 @@
       <Layout noPadding gap="S">
         <div class="section-header">
           <Heading size="XS">Custom validation rules</Heading>
-          <Button secondary icon="plus" on:click={addRule}>Add Rule</Button>
+          <Button secondary icon="plus" on:click={addRule}>Add rule</Button>
         </div>
         {#if rules?.length}
           <div class="rules">
@@ -305,14 +304,14 @@
                 summary={valueSummary(rule)}
                 error={rule.error}
                 expanded={isExpanded}
-                on:toggle={() => toggleRule(rule.id)}
+                onToggle={() => toggleRule(rule.id)}
               >
-                <svelte:fragment slot="actions">
+                {#snippet actions()}
                   <button
                     type="button"
                     class="icon-button"
                     aria-label="Duplicate rule"
-                    on:click={() => duplicateRule(rule.id)}
+                    onclick={() => duplicateRule(rule.id)}
                   >
                     <Icon name="copy" hoverable size="S" />
                   </button>
@@ -320,11 +319,11 @@
                     type="button"
                     class="icon-button"
                     aria-label="Remove rule"
-                    on:click={() => removeRule(rule.id)}
+                    onclick={() => removeRule(rule.id)}
                   >
                     <Icon name="x" hoverable size="S" />
                   </button>
-                </svelte:fragment>
+                {/snippet}
 
                 <div class="rule-row" class:rule-row--no-value={valueDisabled}>
                   <Select
@@ -405,7 +404,8 @@
                     title="Error message"
                     placeholder={defaultErrorForConstraint(
                       rule.constraint,
-                      rule.value
+                      rule.value,
+                      rule.type
                     )}
                     value={rule.error}
                     {bindings}
