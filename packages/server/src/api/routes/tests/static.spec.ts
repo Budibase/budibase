@@ -1,5 +1,5 @@
 import { constants, objectStore, roles } from "@budibase/backend-core"
-import { Datasource, SourceName } from "@budibase/types"
+import { BuiltinPermissionID, Datasource, SourceName } from "@budibase/types"
 import fsp from "fs/promises"
 import path from "path"
 import { tmpdir } from "os"
@@ -169,6 +169,25 @@ describe("/static", () => {
           })
           .expect("Content-Type", /json/)
           .expect(401)
+      })
+
+      it("should deny app users without write permissions", async () => {
+        const readOnlyRole = await config.api.roles.save({
+          name: "s3_signed_url_read_only",
+          permissionId: BuiltinPermissionID.READ_ONLY,
+          inherits: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        })
+        await config.loginAsRole(readOnlyRole._id!, async () => {
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "bar",
+            })
+            .set(config.defaultHeaders())
+            .expect("Content-Type", /json/)
+            .expect(403)
+        })
       })
 
       it("should require a bucket parameter", async () => {
