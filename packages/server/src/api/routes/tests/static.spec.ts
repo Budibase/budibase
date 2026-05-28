@@ -1,4 +1,4 @@
-import { constants, objectStore } from "@budibase/backend-core"
+import { constants, objectStore, roles } from "@budibase/backend-core"
 import { Datasource, SourceName } from "@budibase/types"
 import fsp from "fs/promises"
 import path from "path"
@@ -194,6 +194,25 @@ describe("/static", () => {
           .expect("Content-Type", /json/)
           .expect(400)
         expect(res.body.message).toEqual("bucket and key values are required")
+      })
+
+      it("should allow non-creator app users to generate a signed upload URL", async () => {
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const res = await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "bar",
+            })
+            .set(config.defaultHeaders())
+            .expect("Content-Type", /json/)
+            .expect(200)
+
+          expect(res.body.signedUrl).toBeDefined()
+          expect(res.body.publicUrl).toEqual(
+            "https://foo.s3.eu-west-1.amazonaws.com/bar"
+          )
+        })
       })
     })
   })
