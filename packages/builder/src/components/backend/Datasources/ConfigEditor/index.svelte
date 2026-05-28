@@ -6,18 +6,25 @@
   import { get } from "svelte/store"
   import type { UIIntegration } from "@budibase/types"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
 
   export let integration: UIIntegration
   export let config: Record<string, any>
   export let onSubmit: (_value: {
     config: Record<string, any>
     name: string
+    playbookId?: string
   }) => Promise<void> | void = () => {}
   export let showNameField: boolean = false
   export let nameFieldValue: string = ""
+  export let showPlaybookField: boolean = false
+  export let playbookIdValue: string = ""
+
+  let playbookId = ""
 
   $: configStore = createValidatedConfigStore(integration, config)
   $: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
+  $: playbookId = playbookIdValue || ""
 
   const handleConfirm = async () => {
     configStore.markAllFieldsActive()
@@ -29,6 +36,7 @@
       return onSubmit({
         config,
         name,
+        playbookId: playbookId || undefined,
       })
     }
 
@@ -66,6 +74,10 @@
       on:blur={nameStore.markActive}
       on:change={e => nameStore.updateValue(e.detail)}
     />
+  {/if}
+
+  {#if showPlaybookField}
+    <PlaybookSelect bind:value={playbookId} />
   {/if}
 
   {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}

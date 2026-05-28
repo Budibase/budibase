@@ -135,6 +135,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       theme: workspaceApp.theme,
       customTheme: workspaceApp.customTheme,
       disabled: workspaceApp.disabled,
+      playbookId: workspaceApp.playbookId,
     }
 
     const updatedWorkspaceApp = await API.workspaceApp.update(safeWorkspaceApp)
