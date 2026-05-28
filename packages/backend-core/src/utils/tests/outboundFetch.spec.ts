@@ -1,6 +1,7 @@
 import fetch, { Headers } from "node-fetch"
-import { isBlacklisted } from "../../blacklist"
+import { isBlacklisted, resolveAddress } from "../../blacklist"
 import { fetchWithBlacklist } from "../outboundFetch"
+import { generator } from "@budibase/backend-core/tests"
 
 // Expose the real Headers class so the redirect header-stripping logic works
 jest.mock("node-fetch", () => {
@@ -10,6 +11,7 @@ jest.mock("node-fetch", () => {
 
 jest.mock("../../blacklist", () => ({
   isBlacklisted: jest.fn(),
+  resolveAddress: jest.fn(),
 }))
 
 describe("outboundFetch", () => {
@@ -17,9 +19,13 @@ describe("outboundFetch", () => {
   const isBlacklistedMock = isBlacklisted as jest.MockedFunction<
     typeof isBlacklisted
   >
+  const resolveAddressMock = resolveAddress as jest.MockedFunction<
+    typeof resolveAddress
+  >
 
   beforeEach(() => {
     jest.clearAllMocks()
+    resolveAddressMock.mockResolvedValue([generator.ip()])
   })
 
   // ─── URL validation ───────────────────────────────────────────────────────

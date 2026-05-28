@@ -31,7 +31,7 @@ describe("automation step outbound blacklist", () => {
       })
       expect(outgoingResult.success).toBe(false)
       expect(String(outgoingResult.response)).toContain(
-        "Cannot connect to URL."
+        "URL is blocked or could not be resolved safely."
       )
 
       const zapierResult = await zapier({
@@ -41,7 +41,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(zapierResult.success).toBe(false)
-      expect(zapierResult.response).toBe("Cannot connect to URL.")
+      expect(zapierResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const n8nResult = await n8n({
         inputs: {
@@ -52,7 +54,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(n8nResult.success).toBe(false)
-      expect(n8nResult.response).toBe("Cannot connect to URL.")
+      expect(n8nResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const slackResult = await slack({
         inputs: {
@@ -61,7 +65,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(slackResult.success).toBe(false)
-      expect(slackResult.response).toBe("Cannot connect to URL.")
+      expect(slackResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const discordResult = await discord({
         inputs: {
@@ -70,7 +76,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(discordResult.success).toBe(false)
-      expect(discordResult.response).toBe("Cannot connect to URL.")
+      expect(discordResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const makeResult = await make({
         inputs: {
@@ -79,7 +87,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(makeResult.success).toBe(false)
-      expect(makeResult.response).toBe("Cannot connect to URL.")
+      expect(makeResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
     } finally {
       restoreCoreEnv()
       await blacklist.refreshBlacklist()
@@ -117,7 +127,7 @@ describe("automation step outbound blacklist", () => {
       })
       expect(outgoingResult.success).toBe(false)
       expect(String(outgoingResult.response)).toContain(
-        "Cannot connect to URL."
+        "URL is blocked or could not be resolved safely."
       )
 
       const zapierResult = await zapier({
@@ -127,7 +137,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(zapierResult.success).toBe(false)
-      expect(zapierResult.response).toBe("Cannot connect to URL.")
+      expect(zapierResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const n8nResult = await n8n({
         inputs: {
@@ -138,7 +150,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(n8nResult.success).toBe(false)
-      expect(n8nResult.response).toBe("Cannot connect to URL.")
+      expect(n8nResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const slackResult = await slack({
         inputs: {
@@ -147,7 +161,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(slackResult.success).toBe(false)
-      expect(slackResult.response).toBe("Cannot connect to URL.")
+      expect(slackResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const discordResult = await discord({
         inputs: {
@@ -156,7 +172,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(discordResult.success).toBe(false)
-      expect(discordResult.response).toBe("Cannot connect to URL.")
+      expect(discordResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
 
       const makeResult = await make({
         inputs: {
@@ -165,15 +183,17 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(makeResult.success).toBe(false)
-      expect(makeResult.response).toBe("Cannot connect to URL.")
+      expect(makeResult.response).toBe(
+        "URL is blocked or could not be resolved safely."
+      )
     } finally {
       restoreCoreEnv()
       await blacklist.refreshBlacklist()
     }
   })
 
-  it("should allow localhost requests in local development", async () => {
-    const restoreCoreEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
+  it("should allow localhost requests if BLACKLIST_IPS is overriden and empty", async () => {
+    const restoreCoreEnv = setCoreEnv({ BLACKLIST_IPS: "" })
     const restoreServerEnv = setServerEnv({
       NODE_ENV: "development",
       JEST_WORKER_ID: "null",
