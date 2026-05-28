@@ -7,13 +7,13 @@ import {
   FetchPlaybooksResponse,
   ImportPlaybookRequest,
   ImportPlaybookResponse,
+  KoaFile,
   Playbook,
   PlaybookResponse,
   UpdatePlaybookRequest,
   UpdatePlaybookResponse,
   WithoutDocMetadata,
 } from "@budibase/types"
-import type { File, Files } from "formidable"
 import sdk from "../../sdk"
 
 const toPlaybookResponse = (playbook: Playbook): PlaybookResponse => ({
@@ -100,9 +100,9 @@ export async function exportBundle(
   })
 }
 
-type PlaybookImportFiles = Files & {
-  file?: File | File[]
-  playbookExport?: File | File[]
+type PlaybookImportFiles = {
+  file?: KoaFile | KoaFile[]
+  playbookExport?: KoaFile | KoaFile[]
 }
 
 export async function importBundle(
