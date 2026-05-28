@@ -170,6 +170,57 @@ const isPlainRecord = (value: unknown): value is Record<string, JSONValue> => {
   return Object.prototype.toString.call(value) === "[object Object]"
 }
 
+const escapeControlCharsInJsonStrings = (value: string): string => {
+  let result = ""
+  let inString = false
+  let escaped = false
+
+  for (const char of value) {
+    if (!inString) {
+      if (char === '"') {
+        inString = true
+      }
+      result += char
+      continue
+    }
+
+    if (escaped) {
+      result += char
+      escaped = false
+      continue
+    }
+
+    if (char === "\\") {
+      result += char
+      escaped = true
+      continue
+    }
+
+    if (char === '"') {
+      inString = false
+      result += char
+      continue
+    }
+
+    if (char === "\n") {
+      result += "\\n"
+      continue
+    }
+    if (char === "\r") {
+      result += "\\r"
+      continue
+    }
+    if (char === "\t") {
+      result += "\\t"
+      continue
+    }
+
+    result += char
+  }
+
+  return result
+}
+
 const normaliseBody = (raw: unknown): NormalisedBody => {
   if (raw == null) {
     return { bodyString: "", bodyObject: {}, jsonValue: undefined }
@@ -191,6 +242,26 @@ const normaliseBody = (raw: unknown): NormalisedBody => {
         jsonValue: parsed,
       }
     } catch (err) {
+      const sanitised = escapeControlCharsInJsonStrings(raw)
+      if (sanitised !== raw) {
+        try {
+          const parsed = JSON.parse(sanitised) as JSONValue
+          if (isPlainRecord(parsed)) {
+            return {
+              bodyString: sanitised,
+              bodyObject: parsed,
+              jsonValue: parsed,
+            }
+          }
+          return {
+            bodyString: sanitised,
+            bodyObject: {},
+            jsonValue: parsed,
+          }
+        } catch (_ignored) {
+          // keep original parse error for existing behaviour
+        }
+      }
       return {
         bodyString: raw,
         bodyObject: {},

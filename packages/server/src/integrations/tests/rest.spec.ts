@@ -406,6 +406,22 @@ describe("REST Integration", () => {
       )
     })
 
+    it("should escape literal newline characters in JSON string values", () => {
+      const output = integration.addBody(
+        "json",
+        `{ "message": "Hello,\nI'd like to enquire....\r\nThanks." }`,
+        {}
+      )
+      expect(output.body).toEqual(
+        JSON.stringify({
+          message: "Hello,\nI'd like to enquire....\r\nThanks.",
+        })
+      )
+      expect((output.headers! as any)["Content-Type"]).toEqual(
+        "application/json"
+      )
+    })
+
     it("should allow raw XML", () => {
       const output = integration.addBody("xml", "<a>1</a><b>2</b>", {})
       const body = output.body?.toString()
