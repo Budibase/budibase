@@ -239,7 +239,26 @@
     startTextSelection()
   }
 
-  onDestroy(stopTextSelectionGuard)
+  type InteractionCleanup = () => void
+
+  let activeResizeCleanup: InteractionCleanup | null = null
+  let activeDragCleanup: InteractionCleanup | null = null
+
+  const clearActiveResizeInteraction = () => {
+    activeResizeCleanup?.()
+    activeResizeCleanup = null
+  }
+
+  const clearActiveDragInteraction = () => {
+    activeDragCleanup?.()
+    activeDragCleanup = null
+  }
+
+  onDestroy(() => {
+    stopTextSelectionGuard()
+    clearActiveResizeInteraction()
+    clearActiveDragInteraction()
+  })
 
   const saveTitle = async (updates?: {
     position?: NotePosition
@@ -313,6 +332,7 @@
   const startResize = (e: PointerEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    clearActiveResizeInteraction()
     resizing = true
     const startX = e.clientX
     const startW = noteWidth
@@ -326,10 +346,17 @@
       noteWidth = newW
     }
 
-    const onUp = async () => {
+    const cleanupResize = () => {
       resizing = false
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
+      if (activeResizeCleanup === cleanupResize) {
+        activeResizeCleanup = null
+      }
+    }
+
+    const onUp = async () => {
+      cleanupResize()
       const savedEdits = await saveActiveEdits({ width: noteWidth })
       if (!savedEdits) {
         automationStore.actions.updateStickyNote(note.id, {
@@ -340,6 +367,7 @@
 
     document.addEventListener("pointermove", onMove)
     document.addEventListener("pointerup", onUp)
+    activeResizeCleanup = cleanupResize
   }
 
   const flow = useSvelteFlow()
@@ -372,6 +400,7 @@
     if (!isEditor) return
     e.preventDefault()
     e.stopPropagation()
+    clearActiveDragInteraction()
     dragging = true
     const startPos = { ...currentPosition }
     const startX = e.clientX
@@ -499,11 +528,18 @@
       }
     }
 
-    const onUp = async () => {
+    const cleanupDrag = () => {
       dragging = false
       clearScroll()
       document.removeEventListener("pointermove", onMove)
       document.removeEventListener("pointerup", onUp)
+      if (activeDragCleanup === cleanupDrag) {
+        activeDragCleanup = null
+      }
+    }
+
+    const onUp = async () => {
+      cleanupDrag()
       const draggedPosition = dragPosition || startPos
       pendingPosition = draggedPosition
       const savedEdits = await saveActiveEdits({ position: draggedPosition })
@@ -518,6 +554,7 @@
 
     document.addEventListener("pointermove", onMove)
     document.addEventListener("pointerup", onUp)
+    activeDragCleanup = cleanupDrag
   }
 
   const startCardDrag = (e: PointerEvent) => {
