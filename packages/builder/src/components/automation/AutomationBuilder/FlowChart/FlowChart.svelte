@@ -40,6 +40,12 @@
     DEFAULT_NODE_WIDTH,
     DEFAULT_NODE_HEIGHT,
   } from "./FlowCanvas/FlowGeometry"
+  import {
+    MIN_STICKY_NOTE_WIDTH,
+    MIN_STICKY_NOTE_HEIGHT,
+    clampStickyNoteToGraphBounds,
+    clampStickyNoteToViewportBounds,
+  } from "./FlowCanvas/StickyNoteBounds"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
@@ -48,9 +54,11 @@
   import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
   import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
   import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
+  import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
 
   import {
     SvelteFlow,
+    useStore,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -85,6 +93,7 @@
   let blockRefs: Record<string, BlockRef> = {}
   let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
+  let flowControlsEl: HTMLDivElement | null = null
   let paneResizeObserver: ResizeObserver | undefined
   let changingStatus = false
 
@@ -103,7 +112,15 @@
     ensureVisible?: boolean
   } | null>(null)
 
-  const { getViewport, setViewport } = useSvelteFlow()
+  const { getViewport, setViewport, getNodes, getNodesBounds } = useSvelteFlow()
+  const { viewport } = useStore()
+  $: stickyNotes = $selectedAutomation?.data?.uiTree?.stickyNotes || []
+  $: stickyNoteLayerTransform = `translate(${$viewport.x}px, ${
+    $viewport.y
+  }px) scale(${$viewport.zoom})`
+  $: stickyNoteAddPosition =
+    paneEl && $nodes ? getStickyNoteAddPosition($viewport) : undefined
+  $: canAddStickyNote = !!stickyNoteAddPosition
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -171,6 +188,7 @@
     )
 
     const selectable = viewMode === ViewMode.EDITOR
+
     nodes.set(
       laidOut.nodes.map(node => ({
         ...node,
@@ -526,6 +544,52 @@
     closeContextMenuOnCanvasInteraction()
   }
 
+  const getStickyNoteAddPosition = (viewport: Viewport | undefined) => {
+    if (!paneEl || !viewport) {
+      return undefined
+    }
+    const rect = paneEl.getBoundingClientRect()
+    const toolbarRect = flowControlsEl?.getBoundingClientRect()
+    const toolbarTop = toolbarRect ? toolbarRect.top - rect.top : rect.height
+    const margin = 40
+    const toolbarTopFlowY = (toolbarTop - viewport.y) / viewport.zoom
+    const position = {
+      x: (rect.width / 2 - viewport.x) / viewport.zoom,
+      y: toolbarTopFlowY - MIN_STICKY_NOTE_HEIGHT - margin,
+    }
+    const flowNodes = getNodes()
+    const graphPosition = flowNodes.length
+      ? clampStickyNoteToGraphBounds(position, getNodesBounds(flowNodes), {
+          width: MIN_STICKY_NOTE_WIDTH,
+          height: MIN_STICKY_NOTE_HEIGHT,
+        })
+      : position
+
+    const viewportPosition = clampStickyNoteToViewportBounds(
+      graphPosition,
+      viewport,
+      { width: rect.width, height: rect.height },
+      {
+        width: MIN_STICKY_NOTE_WIDTH,
+        height: MIN_STICKY_NOTE_HEIGHT,
+      }
+    )
+
+    return graphPosition.x === viewportPosition.x &&
+      graphPosition.y === viewportPosition.y
+      ? graphPosition
+      : undefined
+  }
+
+  const handleAddNote = () => {
+    const position = getStickyNoteAddPosition(getViewport())
+    if (!position) {
+      return
+    }
+
+    automationStore.actions.addStickyNote(position)
+  }
+
   const handleCanvasPointerMove = (e: PointerEvent) => {
     dnd.handlePointerMove(e)
     if (e.buttons > 0) {
@@ -639,7 +703,7 @@
         {edgeTypes}
         viewport={flowViewport}
         colorMode="system"
-        nodesDraggable={false}
+        nodesDraggable={true}
         elementsSelectable={viewMode === ViewMode.EDITOR}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
@@ -649,7 +713,24 @@
         onMove={handleMove}
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
-        <FlowControls historyStore={automationHistoryStore} />
+        <FlowControls
+          bind:controlsEl={flowControlsEl}
+          historyStore={automationHistoryStore}
+          canAddNote={canAddStickyNote}
+          on:addnote={handleAddNote}
+        />
+        <div
+          class="sticky-note-layer"
+          style:transform={stickyNoteLayerTransform}
+        >
+          {#each stickyNotes as note (note.id)}
+            <StickyNoteNode
+              data={{ note }}
+              positionAbsoluteX={note.x}
+              positionAbsoluteY={note.y}
+            />
+          {/each}
+        </div>
       </SvelteFlow>
     </div>
   </div>
@@ -725,6 +806,15 @@
   .root {
     height: 100%;
     width: 100%;
+  }
+
+  .sticky-note-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: top left;
+    pointer-events: none;
+    z-index: 1002;
   }
 
   .root :global(.svelte-flow__edgelabel-renderer) {
