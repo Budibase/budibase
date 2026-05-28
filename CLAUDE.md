@@ -146,7 +146,7 @@ Run this goal when asked: "Execute P0 Batch Goal".
 
 ### Objective
 
-Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, then stop and summarize.
+Process exactly 1 issue: the top-priority eligible `Backlog` issue from Project 20 View 1 P0 slice, then stop and summarize.
 
 ### Inputs
 
@@ -155,18 +155,20 @@ Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, t
 - Slice: `P0`
 - Canonical view URL: `https://github.com/orgs/Budibase/projects/20/views/1?filterQuery=&sliceBy%5Bvalue%5D=P0`
 - Assignee: `adrinr`
-- Max issues: `2`
+- Max issues: `1`
+- Issue override (optional): `<owner/repo#number>` or full GitHub issue URL
 
 ### Deterministic Selection Rules
 
-1. Read items in project priority order.
-2. Keep only items with:
+1. If `Issue override` is provided, process that issue only and skip board selection.
+2. If no override is provided, read items in project priority order.
+3. Keep only items with:
    - `Status = Backlog`
    - `Priority = P0`
    - `content is Issue` (not PR/draft)
-3. Exclude issues already in progress with open linked PRs.
-4. Prefer issues with no active linked PR.
-5. Select first 2 eligible issues.
+4. Exclude issues already in progress with open linked PRs.
+5. Prefer issues with no active linked PR.
+6. Select the first eligible issue only.
 
 ### Per-Issue Workflow
 
@@ -196,8 +198,8 @@ If missing info blocks progress:
 
 ### Stop Conditions
 
-- 2 issues processed, or
-- no more eligible issues.
+- 1 issue processed, or
+- no eligible issue is available.
 
 ### Final Output Format
 
@@ -220,6 +222,12 @@ Recommended starter prompt:
 
 ```md
 /goal Execute P0 Batch Goal from CLAUDE.md.
+```
+
+Starter prompt with explicit issue override:
+
+```md
+/goal Execute P0 Batch Goal from CLAUDE.md for `Budibase/vulns#73`, then stop and summarize.
 ```
 
 Notes:
