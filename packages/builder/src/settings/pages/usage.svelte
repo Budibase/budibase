@@ -32,6 +32,10 @@
 
   $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
   $: manageUrl = accountPortalBillingUrl($admin.accountPortalUrl)
+  $: purchaseCreditsUrl = accountPortalBillingUrl($admin.accountPortalUrl, {
+    tenantId: $auth.tenantId,
+    purchasePrepaidAiCredits: true,
+  })
 
   const WARN_USAGE = ["Queries", "Automations", "Rows", "Users"]
   const oneDayInSeconds = 86400
@@ -78,6 +82,7 @@
             name: value.name,
             used: isAICredits ? Math.floor((used ?? 0) / 1000) : (used ?? 0),
             total: isAICredits ? Math.floor(value.value / 1000) : value.value,
+            quotaKey: key,
           }
           if (key === "actions" && $licensing.actionsBreakdown) {
             entry.breakdown = $licensing.actionsBreakdown
@@ -241,6 +246,13 @@
                   {usage}
                   warnWhenFull={WARN_USAGE.includes(usage.name)}
                   breakdown={usage.breakdown ?? null}
+                  showPurchaseCreditsLink={usage.quotaKey ===
+                    "budibaseAICredits" &&
+                    $admin.cloud &&
+                    accountPortalAccess &&
+                    !usesInvoicing &&
+                    !!license?.billing?.subscription}
+                  {purchaseCreditsUrl}
                 />
               {/each}
             </Layout>
