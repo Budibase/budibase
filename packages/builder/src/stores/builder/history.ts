@@ -254,11 +254,7 @@ export const createHistoryStore = <T extends Document, SaveOptions = void>({
         // doc again without conflicts
         let doc = jsonpatch.deepClone(operation.doc)
         delete doc._rev
-        const created = await saveFn(
-          doc,
-          operation.saveOptions,
-          operation.id
-        )
+        const created = await saveFn(doc, operation.saveOptions, operation.id)
         selectDoc?.(created?._id || doc._id)
       }
 
@@ -322,11 +318,7 @@ export const createHistoryStore = <T extends Document, SaveOptions = void>({
         // doc again without conflicts
         let doc = jsonpatch.deepClone(operation.doc)
         delete doc._rev
-        const created = await saveFn(
-          doc,
-          operation.saveOptions,
-          operation.id
-        )
+        const created = await saveFn(doc, operation.saveOptions, operation.id)
         selectDoc?.(created?._id || doc._id)
       }
 
