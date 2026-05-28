@@ -1,4 +1,10 @@
-import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  events,
+  HTTPError,
+  locks,
+} from "@budibase/backend-core"
 import { matchesConfiguredPatterns } from "@budibase/shared-core"
 import {
   type Agent,
@@ -463,7 +469,6 @@ const runSharePointSourcesForAgent = async (
   }
 
   const discoveredExternalIds = new Set<string>()
-  let discoveryCompleted = false
 
   try {
     const driveIds = await listSharePointDrives(bearerToken, siteId)
@@ -622,8 +627,6 @@ const runSharePointSourcesForAgent = async (
       }
     }
 
-    discoveryCompleted = true
-
     const staleFileIds = existingSourceFiles
       .map(file => file._id)
       .filter((fileId): fileId is string => !!fileId)
@@ -660,10 +663,28 @@ const runSharePointSourcesForAgent = async (
       skipped,
       totalDiscovered,
     })
+    const runStatus = getSharePointSyncRunStatus(synced, failed)
+    events.ai.ragFileSharePointSync({
+      agentId,
+      siteId,
+      sourceId,
+      synced,
+      failed,
+      skipped,
+      alreadySynced,
+      retried,
+      unsupported,
+      filteredOut,
+      deleted,
+      deleteFailed,
+      totalDiscovered,
+      status: runStatus,
+    })
     console.log("Completed SharePoint site sync for agent", {
       agentId,
       siteId,
-      discoveryCompleted,
+      sourceId,
+      status: runStatus,
       synced,
       deleted,
       deleteFailed,
