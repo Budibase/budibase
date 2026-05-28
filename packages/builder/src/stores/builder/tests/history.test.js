@@ -108,7 +108,7 @@ describe("admin store", () => {
 
     it("clones the new doc", ctx => {
       expect(ctx.saveFn).toHaveBeenCalledTimes(1)
-      expect(ctx.saveFn).toHaveBeenCalledWith(ctx.doc)
+      expect(ctx.saveFn).toHaveBeenCalledWith(ctx.doc, null)
       expect(jsonpatch.deepClone).toHaveBeenCalledTimes(1)
       expect(jsonpatch.deepClone).toHaveBeenCalledWith("fn")
     })
@@ -268,7 +268,7 @@ describe("admin store", () => {
 
     it("calls the wrappedSaveFn", ctx => {
       expect(jsonpatch.deepClone).toHaveBeenCalledWith(ctx.newDoc)
-      expect(ctx.saveFn).toHaveBeenCalledWith(ctx.history[0].doc)
+      expect(ctx.saveFn).toHaveBeenCalledWith(ctx.history[0].doc, undefined)
     })
 
     it("calls selectDoc", ctx => {
