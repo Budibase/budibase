@@ -16,10 +16,36 @@ const {
 
 const bucketList = Object.values(ObjectStoreBuckets)
 
+type BackupObject = {
+  bucket: string
+  Key: string
+}
+
+async function listBucketObjects(
+  client: ReturnType<typeof ObjectStore>,
+  bucket: string
+) {
+  const objects: BackupObject[] = []
+  let continuationToken: string | undefined
+  do {
+    const list = await client.listObjectsV2({
+      Bucket: bucket,
+      ContinuationToken: continuationToken,
+    })
+    objects.push(
+      ...(list.Contents?.filter(
+        (object): object is typeof object & { Key: string } => !!object.Key
+      ).map(object => ({ ...object, bucket, Key: object.Key })) || [])
+    )
+    continuationToken = list.NextContinuationToken
+  } while (continuationToken)
+  return objects
+}
+
 export async function exportObjects() {
   const path = join(TEMP_DIR, MINIO_DIR)
   fs.mkdirSync(path, { recursive: true })
-  let fullList: any[] = []
+  let fullList: BackupObject[] = []
   let errorCount = 0
   for (let bucket of bucketList) {
     const client = ObjectStore()
@@ -31,12 +57,7 @@ export async function exportObjects() {
       errorCount++
       continue
     }
-    const list = await client.listObjectsV2({
-      Bucket: bucket,
-    })
-    fullList = fullList.concat(
-      list.Contents?.map(el => ({ ...el, bucket })) || []
-    )
+    fullList = fullList.concat(await listBucketObjects(client, bucket))
   }
   if (errorCount === bucketList.length) {
     throw new Error("Unable to access MinIO/S3 - check environment config.")
