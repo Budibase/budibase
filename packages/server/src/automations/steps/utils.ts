@@ -4,6 +4,7 @@ import http from "http"
 import https from "https"
 import fetch, { Headers, RequestInit, Response } from "node-fetch"
 import environment from "../../environment"
+import { LookupFunction } from "net"
 
 export function hasNullFilters(filters: any[] = []) {
   return (
@@ -101,7 +102,7 @@ interface RedirectSafeRequest extends RequestInit {
 
 function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
   const protocol = new URL(url).protocol
-  const lookup: http.LookupFunction = (_hostname, _options, callback) => {
+  const lookup: LookupFunction = (_hostname, _options, callback) => {
     callback(null, ip, ip.includes(":") ? 6 : 4)
   }
   return protocol === "https:"

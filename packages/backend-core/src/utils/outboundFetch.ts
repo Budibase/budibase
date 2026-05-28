@@ -2,6 +2,7 @@ import http from "http"
 import https from "https"
 import { isBlacklisted, resolveAddress } from "../blacklist"
 import fetch, { Headers, RequestInit, Response } from "node-fetch"
+import type { LookupFunction } from "net"
 
 const MAX_REDIRECTS = 5
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:"])
@@ -54,7 +55,7 @@ async function resolvePinnedIp(url: string): Promise<string> {
 
 function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
   const protocol = new URL(url).protocol
-  const lookup: http.LookupFunction = (_hostname, _options, callback) => {
+  const lookup: LookupFunction = (_hostname, _options, callback) => {
     callback(null, ip, ip.includes(":") ? 6 : 4)
   }
   return protocol === "https:"
