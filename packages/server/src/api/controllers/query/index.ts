@@ -41,6 +41,10 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
+import {
+  resolvePlaybookId,
+  resolveUpdatedPlaybookId,
+} from "../../../utilities/playbooks"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
 
@@ -179,6 +183,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
 
   let eventFn
   if (!query._id && !query._rev) {
+    query.playbookId = await resolvePlaybookId(query.playbookId)
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
     query.nullDefaultSupport = true
@@ -190,6 +195,10 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
+    query.playbookId = await resolveUpdatedPlaybookId(
+      query.playbookId,
+      existingQuery.playbookId
+    )
     eventFn = () => events.query.updated(datasource, query)
   }
   const response = await db.put(query)

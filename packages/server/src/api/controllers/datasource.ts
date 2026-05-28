@@ -35,6 +35,10 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
+import {
+  resolvePlaybookId,
+  resolveUpdatedPlaybookId,
+} from "../../utilities/playbooks"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -227,6 +231,10 @@ export async function update(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
+  datasource.playbookId = await resolveUpdatedPlaybookId(
+    ctx.request.body.playbookId,
+    baseDatasource.playbookId
+  )
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -277,6 +285,7 @@ export async function save(
     fetchSchema,
     tablesFilter,
   } = ctx.request.body
+  datasourceData.playbookId = await resolvePlaybookId(datasourceData.playbookId)
   const { datasource, errors } = await sdk.datasources.save(datasourceData, {
     fetchSchema,
     tablesFilter,

@@ -13,6 +13,10 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
+import {
+  resolvePlaybookId,
+  resolveUpdatedPlaybookId,
+} from "../../utilities/playbooks"
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -29,6 +33,7 @@ function toWorkspaceAppResponse(
     createdAt: workspaceApp.createdAt as string,
     updatedAt: workspaceApp.updatedAt!,
     disabled: workspaceApp.disabled,
+    playbookId: workspaceApp.playbookId,
   }
 }
 
@@ -71,10 +76,12 @@ export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
+  const playbookId = await resolvePlaybookId(body.playbookId)
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
     disabled: body.disabled,
+    playbookId,
     navigation: defaultAppNavigator(body.name),
     customTheme: {
       fontFamily: DefaultNewAppFontFamily,
@@ -98,7 +105,27 @@ export async function edit(
     ctx.throw(400, "Path and body ids do not match")
   }
 
-  const workspaceApp = await sdk.workspaceApps.update(body)
+  const existingWorkspaceApp = await sdk.workspaceApps.get(body._id)
+  if (!existingWorkspaceApp) {
+    ctx.throw(404)
+  }
+
+  const playbookId = await resolveUpdatedPlaybookId(
+    body.playbookId,
+    existingWorkspaceApp.playbookId
+  )
+
+  const workspaceApp = await sdk.workspaceApps.update({
+    _id: body._id,
+    _rev: body._rev,
+    name: body.name,
+    url: body.url,
+    navigation: body.navigation,
+    theme: body.theme,
+    customTheme: body.customTheme,
+    disabled: body.disabled,
+    playbookId,
+  })
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }

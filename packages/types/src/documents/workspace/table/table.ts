@@ -12,6 +12,7 @@ export enum TableSourceType {
 
 export interface Table extends Document {
   type: "table"
+  playbookId?: string
   sourceType: TableSourceType
   views?: { [key: string]: View | ViewV2 }
   name: string

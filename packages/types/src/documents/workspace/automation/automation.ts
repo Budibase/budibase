@@ -151,6 +151,7 @@ export interface Automation extends Document {
   uiTree?: any
   appId: string
   live?: boolean
+  playbookId?: string
   name: string
   internal?: boolean
   type?: string

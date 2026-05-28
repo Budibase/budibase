@@ -53,6 +53,10 @@ import env from "../../environment"
 import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
+import {
+  resolvePlaybookId,
+  resolveUpdatedPlaybookId,
+} from "../../utilities/playbooks"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -66,13 +70,15 @@ export async function create(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
-  automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
     await update(ctx)
     return
   }
+
+  automation.playbookId = await resolvePlaybookId(automation.playbookId)
+  automation.appId = ctx.appId
 
   let createdAutomation: Automation
 
@@ -114,6 +120,12 @@ export async function update(
     await create(ctx)
     return
   }
+
+  const existingAutomation = await sdk.automations.get(automation._id)
+  automation.playbookId = await resolveUpdatedPlaybookId(
+    automation.playbookId,
+    existingAutomation.playbookId
+  )
 
   const updatedAutomation = await sdk.automations.update(automation)
 

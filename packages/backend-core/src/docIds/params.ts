@@ -185,3 +185,10 @@ export const getWorkspaceFavouriteParams = (
     otherProps
   )
 }
+
+export const getPlaybookParams = (
+  playbookId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) => {
+  return getDocParams(DocumentType.PLAYBOOK, playbookId, otherProps)
+}

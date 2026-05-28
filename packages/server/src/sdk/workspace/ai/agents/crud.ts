@@ -142,6 +142,32 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   ),
 })
 
+export const sanitiseAgentForExport = (agent: Agent): Agent => {
+  const sanitised = structuredClone(withAgentDefaults(agent))
+  sanitised.live = false
+
+  if (sanitised.discordIntegration) {
+    delete sanitised.discordIntegration.publicKey
+    delete sanitised.discordIntegration.botToken
+  }
+
+  if (sanitised.slackIntegration) {
+    delete sanitised.slackIntegration.botToken
+    delete sanitised.slackIntegration.signingSecret
+  }
+
+  if (sanitised.MSTeamsIntegration) {
+    delete sanitised.MSTeamsIntegration.appPassword
+  }
+
+  if (sanitised.telegramIntegration) {
+    delete sanitised.telegramIntegration.botToken
+    delete sanitised.telegramIntegration.webhookSecretToken
+  }
+
+  return sanitised
+}
+
 const mergeDiscordIntegration = ({
   existing,
   incoming,
@@ -306,6 +332,7 @@ export async function create(
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
+    playbookId: request.playbookId,
     promptInstructions: request.promptInstructions,
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
@@ -353,6 +380,7 @@ export async function duplicate(
     name,
     description: source.description,
     aiconfig: source.aiconfig,
+    playbookId: source.playbookId,
     promptInstructions: source.promptInstructions,
     goal: source.goal,
     icon: source.icon,

@@ -1,4 +1,10 @@
-import { db, events, objectStore } from "@budibase/backend-core"
+import {
+  context,
+  db,
+  events,
+  features,
+  objectStore,
+} from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
@@ -6,6 +12,7 @@ import {
   Automation,
   Datasource,
   FieldType,
+  FeatureFlag,
   Query,
   RelationshipType,
   ResourceType,
@@ -21,6 +28,7 @@ import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { generateRowActionsID } from "../../../db/utils"
 import {
+  basicDatasource,
   basicQuery,
   basicScreen,
   basicTable,
@@ -31,6 +39,13 @@ import { ObjectStoreBuckets } from "../../../constants"
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
+  const withPlaybooksEnabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PLAYBOOKS]: true },
+      f
+    )
+  }
 
   beforeAll(async () => {
     await config.init()
@@ -257,6 +272,154 @@ describe("/api/resources/usage", () => {
           },
         ],
       })
+    })
+
+    it("should include direct playbook members and transitive dependencies", async () => {
+      await withPlaybooksEnabled(async () => {
+        const { playbook } = await config.api.playbook.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          playbookId: playbook._id,
+        })
+        const query = await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          playbookId: playbook._id,
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          playbookId: playbook._id,
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Operations app",
+          url: "/operations-app",
+          playbookId: playbook._id,
+        })
+        const screen = await config.api.screen.save({
+          ...createQueryScreen(datasource._id!, query),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        const automation = await config.createAutomation()
+        await config.api.automation.update({
+          ...automation,
+          playbookId: playbook._id,
+        })
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          playbookId: playbook._id,
+        })
+
+        const result = await config.api.resource.getResourceDependencies()
+
+        expect(result.body.resources[playbook._id!]).toEqual({
+          dependencies: [
+            {
+              id: datasource._id,
+              name: datasource.name,
+              type: ResourceType.DATASOURCE,
+            },
+            {
+              id: table._id,
+              name: table.name,
+              type: ResourceType.TABLE,
+            },
+            {
+              id: query._id,
+              name: query.name,
+              type: ResourceType.QUERY,
+            },
+            {
+              id: automation._id,
+              name: automation.name,
+              type: ResourceType.AUTOMATION,
+            },
+            {
+              id: agent._id,
+              name: agent.name,
+              type: ResourceType.AGENT,
+            },
+            {
+              id: workspaceApp._id,
+              name: workspaceApp.name,
+              type: ResourceType.WORKSPACE_APP,
+            },
+            {
+              id: screen._id,
+              name: screen.name,
+              type: ResourceType.SCREEN,
+            },
+          ],
+        })
+      })
+    })
+
+    it("should include repaired app screens for playbook apps", async () => {
+      await withPlaybooksEnabled(async () => {
+        const { playbook } = await config.api.playbook.create({
+          name: "Operations",
+        })
+        const defaultWorkspaceApp = await config.api.workspaceApp.find(
+          config.getDefaultWorkspaceAppId()
+        )
+        const { workspaceApp } = await config.api.workspaceApp.update({
+          _id: defaultWorkspaceApp._id,
+          _rev: defaultWorkspaceApp._rev,
+          name: defaultWorkspaceApp.name,
+          url: defaultWorkspaceApp.url,
+          disabled: defaultWorkspaceApp.disabled,
+          navigation: defaultWorkspaceApp.navigation,
+          playbookId: playbook._id,
+        })
+        const screen = await config.api.screen.save({
+          ...basicScreen("/operations"),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const workspaceDb = context.getWorkspaceDB()
+          await workspaceDb.put({
+            ...screen,
+            workspaceAppId: undefined,
+          })
+        })
+
+        const result = await config.api.resource.getResourceDependencies()
+
+        expect(result.body.resources[playbook._id!].dependencies).toEqual(
+          expect.arrayContaining([
+            {
+              id: workspaceApp._id,
+              name: workspaceApp.name,
+              type: ResourceType.WORKSPACE_APP,
+            },
+            {
+              id: screen._id,
+              name: screen.name,
+              type: ResourceType.SCREEN,
+            },
+          ])
+        )
+      })
+    })
+
+    it("should not include playbook resources when the feature flag is disabled", async () => {
+      const { playbook } = await withPlaybooksEnabled(async () => {
+        const { playbook } = await config.api.playbook.create({
+          name: "Operations",
+        })
+        await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          playbookId: playbook._id,
+        })
+        return { playbook }
+      })
+
+      const result = await config.api.resource.getResourceDependencies()
+
+      expect(result.body.resources[playbook._id]).toBeUndefined()
     })
   })
 
@@ -605,6 +768,61 @@ describe("/api/resources/usage", () => {
         apps: [app1.app, app2.app],
         screens: [...app1.screens, ...app2.screens],
         tables: [table],
+      })
+    })
+
+    it("strips playbook assignments when duplicating with playbooks disabled", async () => {
+      const { datasource } = await withPlaybooksEnabled(async () => {
+        const { playbook } = await config.api.playbook.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          playbookId: playbook._id,
+        })
+        return { datasource }
+      })
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      await duplicateResources([datasource._id!], newWorkspace.appId)
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const copiedDatasource = await config.api.datasource.get(
+            datasource._id!
+          )
+          expect(copiedDatasource.playbookId).toBeUndefined()
+        }
+      )
+    })
+
+    it("strips dangling playbook assignments when the playbook is not duplicated", async () => {
+      await withPlaybooksEnabled(async () => {
+        const { playbook } = await config.api.playbook.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          playbookId: playbook._id,
+        })
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        await duplicateResources([datasource._id!], newWorkspace.appId)
+
+        await config.withHeaders(
+          { [Header.APP_ID]: newWorkspace.appId },
+          async () => {
+            const copiedDatasource = await config.api.datasource.get(
+              datasource._id!
+            )
+            expect(copiedDatasource.playbookId).toBeUndefined()
+          }
+        )
       })
     })
 

@@ -62,6 +62,7 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
     theme: workspaceApp.theme,
     customTheme: workspaceApp.customTheme,
     isDefault: false,
+    playbookId: workspaceApp.playbookId,
   }
 
   return sdk.workspaceApps.create(duplicatedAppData)
@@ -152,6 +153,7 @@ export async function update(
       ? workspaceApp.customTheme
       : persisted.customTheme,
     disabled: workspaceApp.disabled,
+    playbookId: workspaceApp.playbookId,
 
     // Immutable properties
     createdAt: persisted.createdAt,
