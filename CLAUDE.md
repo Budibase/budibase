@@ -141,12 +141,15 @@ Docker is installed and configured with `fuse-overlayfs` storage driver and `ipt
 ## P0 Batch Goal (Self-Sufficient Runbook)
 
 ### Trigger
+
 Run this goal when asked: "Execute P0 Batch Goal".
 
 ### Objective
+
 Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, then stop and summarize.
 
 ### Inputs
+
 - Project: `Budibase` Project `20`
 - View: `1`
 - Slice: `P0`
@@ -154,6 +157,7 @@ Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, t
 - Max issues: `2`
 
 ### Deterministic Selection Rules
+
 1. Read items in project priority order.
 2. Keep only items with:
    - `Status = Backlog`
@@ -164,6 +168,7 @@ Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, t
 5. Select first 2 eligible issues.
 
 ### Per-Issue Workflow
+
 1. Assign issue to `adrinr` immediately.
 2. Read issue body, labels, linked advisory/context, and acceptance criteria.
 3. Create a **new dedicated branch** from latest `origin/master` before making any code changes.
@@ -182,17 +187,41 @@ Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, t
     - Addresses (issue link)
 
 ### Blocked-Issue Rule
+
 If missing info blocks progress:
+
 - Leave one concise comment with exactly what’s needed.
 - Skip to next eligible issue.
 
 ### Stop Conditions
+
 - 2 issues processed, or
 - no more eligible issues.
 
 ### Final Output Format
+
 - Processed issues: `<issue links/titles>`
 - PRs opened: `<PR links>`
 - Skipped: `<issue + reason>`
 - Blockers/comments left: `<issue + comment summary>`
 - Next suggested batch: `<up to 2 remaining issue links>`
+
+### Team Usage in Codex (`/goal` + runbook)
+
+Use both runtime goal tracking and this runbook together:
+
+1. Start a Codex session in the repository root.
+2. Send a `/goal` message with the objective.
+3. In the same message (or next message), explicitly instruct:
+   `Execute P0 Batch Goal from CLAUDE.md`.
+
+Recommended starter prompt:
+
+```md
+/goal Execute P0 Batch Goal from CLAUDE.md.
+```
+
+Notes:
+
+- `CLAUDE.md` guidance does not itself create a runtime `/goal`; it standardizes behavior once invoked.
+- `/goal` provides tracked goal state; the runbook provides deterministic execution steps.
