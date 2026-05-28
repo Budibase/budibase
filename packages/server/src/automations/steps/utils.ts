@@ -1,10 +1,6 @@
-import { blacklist } from "@budibase/backend-core"
+import { utils } from "@budibase/backend-core"
 import { ContextEmitter } from "@budibase/types"
-import http from "http"
-import https from "https"
-import fetch, { Headers, RequestInit, Response } from "node-fetch"
-import environment from "../../environment"
-import { LookupFunction } from "net"
+import { RequestInit, Response } from "node-fetch"
 
 export function hasNullFilters(filters: any[] = []) {
   return (
@@ -29,127 +25,11 @@ export async function getFetchResponse(fetched: Response) {
   return { status, message }
 }
 
-export async function throwIfBlacklisted(url: string) {
-  const disableBlacklistForLocalDevelopment =
-    environment.isDev() && !environment.isTest()
-  if (
-    !disableBlacklistForLocalDevelopment &&
-    (await blacklist.isBlacklisted(url))
-  ) {
-    throw new Error("Cannot connect to URL.")
-  }
-}
-
-function isRedirect(status: number) {
-  return [301, 302, 303, 307, 308].includes(status)
-}
-
-const SENSITIVE_REDIRECT_HEADERS = [
-  "authorization",
-  "cookie",
-  "cookie2",
-  "proxy-authorization",
-]
-
-function shouldStripSensitiveHeadersForRedirect(
-  currentUrl: string,
-  redirectUrl: string
-) {
-  return new URL(currentUrl).origin !== new URL(redirectUrl).origin
-}
-
-function stripSensitiveHeadersForRedirect(
-  request: RedirectSafeRequest
-): RedirectSafeRequest {
-  if (!request.headers) {
-    return request
-  }
-
-  const headers = new Headers(request.headers)
-  SENSITIVE_REDIRECT_HEADERS.forEach(header => {
-    headers.delete(header)
-  })
-  return {
-    ...request,
-    headers,
-  }
-}
-
-function nextRequestForRedirect(
-  request: RedirectSafeRequest,
-  responseStatus: number
-): RedirectSafeRequest {
-  const method = request.method?.toUpperCase() || "GET"
-  const shouldChangeToGet =
-    responseStatus === 303 ||
-    ((responseStatus === 301 || responseStatus === 302) && method === "POST")
-
-  if (!shouldChangeToGet) {
-    return request
-  }
-
-  return {
-    ...request,
-    body: undefined,
-    method: "GET",
-    redirect: "manual",
-  }
-}
-
-interface RedirectSafeRequest extends RequestInit {
-  redirect: "manual"
-}
-
-function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
-  const protocol = new URL(url).protocol
-  const lookup: LookupFunction = (_hostname, _options, callback) => {
-    callback(null, ip, ip.includes(":") ? 6 : 4)
-  }
-  return protocol === "https:"
-    ? new https.Agent({ lookup })
-    : new http.Agent({ lookup })
-}
-
 export async function fetchWithBlacklist(
   url: string,
   request: RequestInit = {}
 ): Promise<Response> {
-  const maxRedirects = 5
-  let nextUrl = url
-  let nextRequest: RedirectSafeRequest = {
-    ...request,
-    redirect: "manual",
-  }
-
-  for (let redirects = 0; redirects <= maxRedirects; redirects++) {
-    await throwIfBlacklisted(nextUrl)
-    const [pinnedIp] = await blacklist.resolveAddress(nextUrl)
-    const response = await fetch(nextUrl, {
-      ...nextRequest,
-      agent: makePinnedAgent(nextUrl, pinnedIp),
-    })
-    if (!isRedirect(response.status)) {
-      return response
-    }
-
-    if (redirects === maxRedirects) {
-      break
-    }
-
-    const location = response.headers.get("location")
-    if (!location) {
-      return response
-    }
-
-    const redirectUrl = new URL(location, nextUrl).toString()
-    nextRequest = nextRequestForRedirect(nextRequest, response.status)
-    if (shouldStripSensitiveHeadersForRedirect(nextUrl, redirectUrl)) {
-      nextRequest = stripSensitiveHeadersForRedirect(nextRequest)
-    }
-    nextUrl = redirectUrl
-  }
-
-  throw new Error("Maximum redirect reached.")
+  return utils.fetchWithBlacklist(url, request)
 }
 
 // need to make sure all ctx structures have the
