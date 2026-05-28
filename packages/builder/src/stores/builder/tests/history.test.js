@@ -132,6 +132,7 @@ describe("admin store", () => {
             backwardsPatch: ctx.backwardsPatch,
             forwardPatch: ctx.forwardPatch,
             doc: ctx.newDoc,
+            saveOptions: null,
             id: 1234,
           },
         ],
@@ -218,8 +219,13 @@ describe("admin store", () => {
 
   describe("undo", () => {
     beforeEach(async ctx => {
+      ctx.saveOptions = { skipUnpublishedChanges: true }
       ctx.history = [
-        { type: Operations.Delete, doc: { _id: 1236, _rev: "rev" } },
+        {
+          type: Operations.Delete,
+          doc: { _id: 1236, _rev: "rev" },
+          saveOptions: ctx.saveOptions,
+        },
       ]
       ctx.derivedReturn = {
         subscribe: vi.fn(),
@@ -268,7 +274,10 @@ describe("admin store", () => {
 
     it("calls the wrappedSaveFn", ctx => {
       expect(jsonpatch.deepClone).toHaveBeenCalledWith(ctx.newDoc)
-      expect(ctx.saveFn).toHaveBeenCalledWith(ctx.history[0].doc, undefined)
+      expect(ctx.saveFn).toHaveBeenCalledWith(
+        ctx.history[0].doc,
+        ctx.saveOptions
+      )
     })
 
     it("calls selectDoc", ctx => {
@@ -342,6 +351,43 @@ describe("admin store", () => {
     it("calls the afterAction", ctx => {
       expect(ctx.afterAction).toHaveBeenCalledTimes(1)
       expect(ctx.afterAction).toHaveBeenCalledWith(ctx.history[0])
+    })
+  })
+
+  describe("redo with save options", () => {
+    beforeEach(async ctx => {
+      ctx.saveOptions = { skipUnpublishedChanges: true }
+      ctx.history = [
+        {
+          type: Operations.Add,
+          doc: { _id: 1236, _rev: "rev" },
+          saveOptions: ctx.saveOptions,
+        },
+      ]
+      ctx.derivedReturn = {
+        subscribe: vi.fn(),
+        canRedo: true,
+        history: ctx.history,
+        position: 0,
+        loading: false,
+      }
+      get.mockReturnValue(ctx.derivedReturn)
+
+      jsonpatch.deepClone.mockReturnValueOnce(ctx.history[0].doc)
+
+      ctx.newDoc = { _id: 1337 }
+      ctx.saveFn = vi.fn().mockResolvedValue(ctx.newDoc)
+      jsonpatch.deepClone.mockReturnValueOnce(ctx.newDoc)
+
+      ctx.returnedStore.wrapSaveDoc(ctx.saveFn)
+      await ctx.returnedStore.redo()
+    })
+
+    it("passes the saved options to the wrappedSaveFn", ctx => {
+      expect(ctx.saveFn).toHaveBeenCalledWith(
+        ctx.history[0].doc,
+        ctx.saveOptions
+      )
     })
   })
 })
