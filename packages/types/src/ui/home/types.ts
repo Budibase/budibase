@@ -14,6 +14,9 @@ interface HomeRowBase {
   id: string
   name: string
   type: HomeRowType
+  playbookId?: string
+  playbookName?: string
+  playbookColor?: string
   updatedAt?: string
   createdAt?: string
   favourite: WorkspaceFavourite
