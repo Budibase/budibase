@@ -192,7 +192,7 @@ describe("automation step outbound blacklist", () => {
     }
   })
 
-  it("should allow localhost requests if BLACKLIST_IPS is overriden and empty", async () => {
+  it("should allow localhost requests if BLACKLIST_IPS is overridden and empty", async () => {
     const restoreCoreEnv = setCoreEnv({ BLACKLIST_IPS: "" })
     const restoreServerEnv = setServerEnv({
       NODE_ENV: "development",
