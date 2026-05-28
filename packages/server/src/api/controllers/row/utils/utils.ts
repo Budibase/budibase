@@ -53,6 +53,13 @@ export async function processRelationshipFields(
       // process additional types
       relatedRow = processDates(linkedTable, relatedRow)
       relatedRow = await processFormulas(linkedTable, relatedRow)
+      if (
+        linkedTable.primaryDisplay &&
+        relatedRow.primaryDisplay == null &&
+        relatedRow[linkedTable.primaryDisplay] != null
+      ) {
+        relatedRow.primaryDisplay = relatedRow[linkedTable.primaryDisplay]
+      }
       row[relationship.column][key] = relatedRow
     }
   }

@@ -1,15 +1,88 @@
 import { context } from "@budibase/backend-core"
-import { FieldType, FormulaType, Row, Table, ViewV2 } from "@budibase/types"
+import {
+  FieldType,
+  FormulaType,
+  IncludeRelationship,
+  Operation,
+  Row,
+  Table,
+  ViewV2,
+} from "@budibase/types"
 import { cloneDeep, merge } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import * as linkRows from "../../../db/linkedRows"
 import { getRowParams } from "../../../db/utils"
+import { handleRequest } from "../row/external"
+import { breakRowIdField, isExternalTableID } from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import {
   outputProcessing,
   processAIColumns,
   processFormulas,
 } from "../../../utilities/rowProcessor"
+
+async function withLinkPrimaryDisplay<T extends Row | Row[]>(source: Table | ViewV2, rows: T) {
+  const baseRows = Array.isArray(rows) ? rows : [rows]
+  const squashedRows = await linkRows.squashLinks(source, cloneDeep(baseRows))
+
+  return baseRows.map((row, index) => {
+    const squashedRow = squashedRows[index]
+    for (const [columnName, schema] of Object.entries(source.schema || {})) {
+      if (schema.type !== FieldType.LINK) {
+        continue
+      }
+      const linkRows = row[columnName]
+      const squashedLinks = squashedRow?.[columnName]
+      if (!Array.isArray(linkRows) || !Array.isArray(squashedLinks)) {
+        continue
+      }
+      const displayById = new Map(
+        squashedLinks
+          .filter(link => link?._id != null)
+          .map(link => [link._id, link.primaryDisplay])
+      )
+      row[columnName] = linkRows.map((link: Row, linkIndex: number) => ({
+        ...link,
+        // Some SQL relationship enrichments do not carry _id on related rows.
+        // Fall back to positional matching so static formulas can still access
+        // {{ relation.0.primaryDisplay }} like live evaluation does.
+        primaryDisplay:
+          link.primaryDisplay ??
+          displayById.get(link._id) ??
+          squashedLinks[linkIndex]?.primaryDisplay,
+      }))
+    }
+    return row
+  }) as T extends Row[] ? Row[] : Row
+}
+
+function normaliseLinkBindingContext(
+  table: Table,
+  row: Row,
+  contextRow: Row
+): Row {
+  const normalised = cloneDeep(contextRow)
+  for (const [columnName, schema] of Object.entries(table.schema)) {
+    if (schema.type !== FieldType.LINK) {
+      continue
+    }
+    const contextLinks = normalised[columnName]
+    if (Array.isArray(contextLinks) && contextLinks.length > 0) {
+      normalised[columnName] = contextLinks.map(link =>
+        typeof link === "object" && link != null ? link : { _id: link }
+      )
+      continue
+    }
+
+    const rawLinks = row[columnName]
+    if (Array.isArray(rawLinks) && rawLinks.length > 0) {
+      normalised[columnName] = rawLinks.map(link =>
+        typeof link === "object" && link != null ? link : { _id: link }
+      )
+    }
+  }
+  return normalised
+}
 
 function mergeRows(row1: Row, row2: Row) {
   const merged = merge(row1, row2)
@@ -94,6 +167,56 @@ export async function updateRelatedFormula(
 }
 
 export async function updateAllFormulasInTable(table: Table) {
+  if (isExternalTableID(table._id!)) {
+    const response = await handleRequest(Operation.READ, table, {
+      includeSqlRelationships: IncludeRelationship.INCLUDE,
+    })
+    const rows = response.rows || []
+    if (!rows.length) {
+      return
+    }
+
+    const enrichedRows = await outputProcessing(table, cloneDeep(rows), {
+      squash: true,
+      preserveLinks: true,
+    })
+
+    for (let row of rows) {
+      const enrichedRow = enrichedRows.find(
+        (enriched: Row) => enriched._id === row._id
+      )
+      if (!enrichedRow) {
+        continue
+      }
+
+      const contextRow = normaliseLinkBindingContext(table, row, enrichedRow)
+      const processed = await processFormulas(table, cloneDeep(row), {
+        dynamic: false,
+        contextRows: [contextRow],
+      })
+
+      if (isEqual(processed, row)) {
+        continue
+      }
+
+      const formulaOnly: Row = { _id: row._id }
+      for (const [columnName, schema] of Object.entries(table.schema)) {
+        if (
+          schema.type === FieldType.FORMULA &&
+          schema.formulaType === FormulaType.STATIC
+        ) {
+          formulaOnly[columnName] = processed[columnName]
+        }
+      }
+
+      await handleRequest(Operation.UPDATE, table, {
+        id: breakRowIdField(row._id!),
+        row: formulaOnly,
+      })
+    }
+    return
+  }
+
   const db = context.getWorkspaceDB()
   // start by getting the raw rows (which will be written back to DB after update)
   let rows = (
@@ -102,11 +225,17 @@ export async function updateAllFormulasInTable(table: Table) {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc!)
+  ).rows.map(row => {
+    const doc = row.doc!
+    if (!doc.tableId) {
+      doc.tableId = table._id!
+    }
+    return doc
+  })
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
   let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
-    squash: false,
+    squash: true,
   })
   const updatedRows = []
   for (let row of rows) {
@@ -115,9 +244,10 @@ export async function updateAllFormulasInTable(table: Table) {
       (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
+      const contextRow = normaliseLinkBindingContext(table, row, enrichedRow)
       let processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
-        contextRows: [enrichedRow],
+        contextRows: [contextRow],
       })
       // values have changed, need to add to bulk docs to update
       if (!isEqual(processed, row)) {
@@ -150,6 +280,7 @@ export async function finaliseRow(
   let enrichedRow = await outputProcessing(source, cloneDeep(row), {
     squash: false,
   })
+  enrichedRow = await withLinkPrimaryDisplay(source, enrichedRow)
   // use enriched row to generate formulas for saving, specifically only use as context
   row = await processFormulas(table, row, {
     dynamic: false,

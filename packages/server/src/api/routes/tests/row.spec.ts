@@ -4093,6 +4093,15 @@ if (descriptions.length) {
             const { rows } = await config.api.row.search(table._id!)
             expect(rows[0].formula).toBe(1)
           })
+
+        it("should support relationship primaryDisplay in static formulas after column update", async () => {
+          await updateFormulaColumn("JOB ID: {{ links.0.primaryDisplay }}", {
+            formulaType: FormulaType.STATIC,
+          })
+          const { rows } = await config.api.row.search(table._id!)
+          expect(rows[0].formula).toBe(`JOB ID: ${relatedRow.name}`)
+        })
+
       })
 
       describe("Formula JS protection", () => {

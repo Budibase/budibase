@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
+import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
 import {
   foreignKeyStructure,
   hasTypeChanged,
@@ -285,6 +286,8 @@ export async function save(
   if (updatedDatasource.isSQL) {
     tableToSave.sql = true
   }
+
+  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: false })
 
   return { datasource: updatedDatasource, table: tableToSave, oldTable }
 }

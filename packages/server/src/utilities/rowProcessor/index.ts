@@ -485,6 +485,14 @@ export async function coreOutputProcessing(
 
   // process formulas after the complex types had been processed
   rows = await processFormulas(table, rows, { dynamic: true })
+  // External rows don't always persist static formula values in the same way
+  // as internal rows, so evaluate static formulas during output as well.
+  if (isExternalTableID(table._id!)) {
+    rows = await processFormulas(table, rows, {
+      dynamic: false,
+      contextRows: rows,
+    })
+  }
 
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
