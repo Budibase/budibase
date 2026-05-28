@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte"
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
   import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
@@ -6,9 +7,14 @@
   import { ViewMode } from "@/types/automations"
   import { isBranchStep } from "@budibase/types"
   import type { HistoryStore } from "@/stores/builder/history"
+  import type { AutomationSaveOptions } from "@/stores/builder/automations"
   import type { Automation } from "@budibase/types"
 
-  export let historyStore: HistoryStore<Automation>
+  const dispatch = createEventDispatcher()
+
+  export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
+  export let canAddNote = true
+  export let controlsEl: HTMLDivElement | null = null
 
   const flow = useSvelteFlow()
 
@@ -67,7 +73,7 @@
   }
 </script>
 
-<div class="controls">
+<div class="controls" bind:this={controlsEl}>
   <div class="toolbar">
     <UndoRedoControl store={historyStore} showButtonGroup showTooltips />
     <span class="fit-view-wrap">
@@ -82,6 +88,26 @@
         on:click={() => flow.fitView()}
       />
     </span>
+    {#if $automationStore.viewMode === ViewMode.EDITOR}
+      <span class="icon-btn-wrap" class:disabled={!canAddNote}>
+        <Icon
+          name="chat"
+          size="L"
+          hoverable={canAddNote}
+          tooltip={canAddNote ? "Add a note" : "Move closer to add a note"}
+          tooltipPosition={TooltipPosition.Top}
+          color={canAddNote
+            ? "var(--spectrum-alias-text-color)"
+            : "var(--spectrum-alias-text-color-disabled)"}
+          hoverColor="var(--spectrum-alias-text-color-hover)"
+          on:click={() => {
+            if (canAddNote) {
+              dispatch("addnote")
+            }
+          }}
+        />
+      </span>
+    {/if}
     {#if $automationStore.viewMode === ViewMode.EDITOR}
       <span class="add-step-wrap">
         <Icon
@@ -213,6 +239,10 @@
     border-radius: 50%;
   }
 
+  .icon-btn-wrap.disabled :global(i.ph) {
+    color: var(--spectrum-alias-text-color-disabled) !important;
+  }
+
   :global(.spectrum--dark) .fit-view-wrap:hover,
   :global(.spectrum--darkest) .fit-view-wrap:hover,
   :global(.spectrum--midnight) .fit-view-wrap:hover,
@@ -238,5 +268,26 @@
       black
     );
     border-radius: 50%;
+  }
+
+  .icon-btn-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .icon-btn-wrap:hover {
+    background: var(--spectrum-global-color-gray-200);
+    border-radius: 50%;
+  }
+
+  :global(.spectrum--dark) .icon-btn-wrap:hover,
+  :global(.spectrum--darkest) .icon-btn-wrap:hover,
+  :global(.spectrum--midnight) .icon-btn-wrap:hover,
+  :global(.spectrum--nord) .icon-btn-wrap:hover {
+    background: var(--spectrum-global-color-gray-300);
   }
 </style>
