@@ -114,14 +114,11 @@
             >
               {#if isConditionsTab}
                 <span class="conditions-tab-label">
+                  {capitalise(tab)}
                   <span
                     class="conditions-tab-dot"
                     style={`background-color: ${conditionsStatusColor};`}
                   />
-                  {capitalise(tab)}
-                  {#if disabledConditionCount > 0}
-                    <span>{disabledConditionCount}</span>
-                  {/if}
                 </span>
               {:else}
                 {capitalise(tab)}
