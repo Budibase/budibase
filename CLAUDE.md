@@ -153,6 +153,7 @@ Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, t
 - Project: `Budibase` Project `20`
 - View: `1`
 - Slice: `P0`
+- Canonical view URL: `https://github.com/orgs/Budibase/projects/20/views/1?filterQuery=&sliceBy%5Bvalue%5D=P0`
 - Assignee: `adrinr`
 - Max issues: `2`
 
