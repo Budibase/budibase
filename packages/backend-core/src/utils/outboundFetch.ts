@@ -193,10 +193,12 @@ export async function fetchWithBlacklist<
       })
     } catch (error) {
       const hostname = parseUrl(nextUrl).hostname
-      const reason =
-        error instanceof Error ? error.message : "unknown network error"
+      if (error instanceof Error) {
+        error.message = `Failed to connect to resolved IP for ${hostname}: ${error.message}`
+        throw error
+      }
       throw new Error(
-        `Failed to connect to resolved IP for ${hostname}: ${reason}`
+        `Failed to connect to resolved IP for ${hostname}: unknown network error`
       )
     }
     if (!isRedirect(response.status)) {
