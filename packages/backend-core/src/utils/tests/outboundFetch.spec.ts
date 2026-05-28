@@ -124,6 +124,34 @@ describe("outboundFetch", () => {
     expect(resume).toHaveBeenCalledTimes(1)
   })
 
+  it("returns redirect response without location when explicitly enabled", async () => {
+    isBlacklistedMock.mockResolvedValue(false)
+    const response = {
+      status: 302,
+      headers: { get: jest.fn().mockReturnValue(null) },
+      body: { resume: jest.fn() },
+    } as any
+    fetchMock.mockResolvedValue(response)
+
+    const result = await fetchWithBlacklist(
+      "https://example.com/start",
+      {},
+      { returnRedirectWithoutLocation: true }
+    )
+
+    expect(result).toBe(response)
+  })
+
+  it("validates resolved addresses before pinning", async () => {
+    resolveAddressMock.mockResolvedValue(["203.0.113.10", "127.0.0.1"])
+    isBlacklistedMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+
+    await expect(
+      fetchWithBlacklist("https://example.com/start")
+    ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it.each([301, 302, 303, 307, 308])(
     "treats %d as a redirect status",
     async status => {
