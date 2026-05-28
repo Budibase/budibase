@@ -1,15 +1,19 @@
 <script lang="ts">
   import BranchNode from "./BranchNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
-  import type { ViewMode } from "@/types/automations"
+  import { ViewMode } from "@/types/automations"
   import { type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
+  import { type BranchStep } from "@budibase/types"
   import { SUBFLOW } from "../FlowGeometry"
+  import { getLogStepData } from "../../AutomationStepHelpers"
+  import { getRunHighlight, isTerminalFailure } from "../FlowRunHelpers"
 
   export let data: BranchNodeData
 
   // unwrap data passed from SvelteFlow
   $: block = data.block
+  $: stepBlock = block as BranchStep
   $: branchIdx = data.branchIdx
   $: viewMode = $automationStore.viewMode as ViewMode
   $: automation = $selectedAutomation?.data
@@ -17,11 +21,34 @@
   $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
   $: targetHandleStyle = isSubflow ? "left: -3px;" : undefined
   $: sourceHandleStyle = isSubflow ? "right: -3px;" : undefined
+  $: logData = $automationStore.selectedLog
+  $: logStepData =
+    viewMode === ViewMode.LOGS ? getLogStepData(stepBlock, logData) : null
+  $: branchResult =
+    viewMode === ViewMode.LOGS
+      ? logStepData
+      : automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          stepBlock
+        )
+  $: branchError = isTerminalFailure(branchResult)
+  $: runHighlight = getRunHighlight(
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
+  )
+  $: branchSuccess =
+    !branchError && runHighlight === "success" && !!branchResult
+  $: branchStopped =
+    !branchError && runHighlight === "stopped" && !!branchResult
 </script>
 
 <div
   class="branch-wrapper"
   class:subflow={isSubflow}
+  class:error={branchError}
+  class:success={branchSuccess}
+  class:warn={branchStopped}
   style:--branch-wrapper-width={`${laneWidth}px`}
 >
   <Handle
@@ -57,5 +84,14 @@
     width: fit-content;
     max-width: 360px;
     margin: 0;
+  }
+  .branch-wrapper.error :global(.custom-handle) {
+    background-color: var(--spectrum-semantic-negative-color-status);
+  }
+  .branch-wrapper.success :global(.custom-handle) {
+    background-color: var(--spectrum-semantic-positive-color-status);
+  }
+  .branch-wrapper.warn :global(.custom-handle) {
+    background-color: var(--spectrum-global-color-orange-500);
   }
 </style>

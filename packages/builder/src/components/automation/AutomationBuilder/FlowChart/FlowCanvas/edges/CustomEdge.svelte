@@ -158,6 +158,7 @@
           targetX,
           targetY,
           preBranchLabelX,
+          reserveActionBarGap: viewMode === ViewMode.EDITOR,
         })
       : undefined
 
@@ -279,12 +280,18 @@
     const runHighlight = getRunHighlight(results)
 
     if (isBranchEdgeData(edgeData)) {
+      if (didBranchStepFail(edgeData.branchStepId)) {
+        return runHighlight
+      }
       return didBranchRun(edgeData.branchStepId, edgeData.branchIdx)
         ? runHighlight
         : undefined
     }
 
     if (isBranchContext(edgeData.block)) {
+      if (didBranchStepFail(edgeData.block.branchStepId)) {
+        return runHighlight
+      }
       return didBranchRun(edgeData.block.branchStepId, edgeData.block.branchIdx)
         ? runHighlight
         : undefined
@@ -347,6 +354,19 @@
       typeof outputs === "object" &&
       "branchId" in outputs &&
       outputs.branchId === branchId
+    )
+  }
+
+  const didBranchStepFail = (branchStepId: string) => {
+    const results =
+      viewMode === ViewMode.LOGS
+        ? $automationStore.selectedLog
+        : $automationStore.testResults
+    if (!isRunResults(results)) {
+      return false
+    }
+    return isTerminalFailure(
+      results.steps.find(step => step.id === branchStepId)
     )
   }
 

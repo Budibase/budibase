@@ -12,7 +12,7 @@
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
   import { type Automation, type Branch } from "@budibase/types"
-  import { getRunHighlight } from "../FlowRunHelpers"
+  import { getRunHighlight, isTerminalFailure } from "../FlowRunHelpers"
   import { type DragView } from "../FlowChartDnD"
 
   type BranchResult = {
@@ -65,8 +65,11 @@
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
-  $: branchSuccess = branchExecuted && runHighlight === "success"
-  $: branchFailed = branchExecuted && runHighlight === "error"
+  $: branchStepFailed = isTerminalFailure(branchResult)
+  $: branchSuccess =
+    branchExecuted && runHighlight === "success" && !branchStepFailed
+  $: branchFailed =
+    (branchExecuted && runHighlight === "error") || branchStepFailed
   $: branchStopped = branchExecuted && runHighlight === "stopped"
 
   const createBranchNodeId = (idx: number, branchId: string) => {
@@ -271,7 +274,7 @@
     border-color: var(--spectrum-global-color-orange-500);
   }
 
-  .block.executed {
+  .block.executed:not(.error):not(.warn) {
     border-color: var(--spectrum-semantic-positive-color-status);
   }
   .block.selected:not(.success):not(.error):not(.warn):not(.executed) {
