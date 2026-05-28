@@ -60,8 +60,10 @@ export interface AppNavigation {
   navBackground?: string
   navTextColor?: string
   navLinkHoverTextColor?: string
+  navLinkHoverIconColor?: string
   navLinkHoverBackground?: string
   navLinkActiveTextColor?: string
+  navLinkActiveIconColor?: string
   navLinkActiveBackground?: string
   banner?: AppBanner
   links?: AppNavigationLink[]
