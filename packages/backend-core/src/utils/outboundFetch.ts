@@ -55,7 +55,12 @@ async function resolveSafePinnedIp(url: string): Promise<string> {
 function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
   const protocol = new URL(url).protocol
   const lookup: LookupFunction = (_hostname, _options, callback) => {
-    callback(null, ip, ip.includes(":") ? 6 : 4)
+    const family = ip.includes(":") ? 6 : 4
+    if (typeof _options === "object" && _options?.all) {
+      callback(null, [{ address: ip, family }])
+      return
+    }
+    callback(null, ip, family)
   }
   return protocol === "https:"
     ? new https.Agent({ lookup })
@@ -180,10 +185,20 @@ export async function fetchWithBlacklist<
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
     const pinnedIp = await resolveSafePinnedIp(nextUrl)
-    const response = await fetchFn(nextUrl, {
-      ...nextRequest,
-      agent: makePinnedAgent(nextUrl, pinnedIp),
-    })
+    let response: TResponse
+    try {
+      response = await fetchFn(nextUrl, {
+        ...nextRequest,
+        agent: makePinnedAgent(nextUrl, pinnedIp),
+      })
+    } catch (error) {
+      const hostname = parseUrl(nextUrl).hostname
+      const reason =
+        error instanceof Error ? error.message : "unknown network error"
+      throw new Error(
+        `Failed to connect to resolved IP for ${hostname}: ${reason}`
+      )
+    }
     if (!isRedirect(response.status)) {
       return response
     }
