@@ -138,45 +138,58 @@ Docker is installed and configured with `fuse-overlayfs` storage driver and `ipt
 - The `postinstall` hook runs `husky install` for git hooks. Pre-push hook requires `git-lfs`.
 - Build is required before `yarn dev` for the first time: `yarn build`. Subsequent runs use nodemon for hot-reload of server/worker, but changes to shared packages (types, shared-core, backend-core) may require a rebuild.
 
-## P0 Batch Goal
+## P0 Batch Goal (Self-Sufficient Runbook)
 
-Use this goal when processing urgent Project 20 work in Codex.
+### Trigger
+Run this goal when asked: "Execute P0 Batch Goal".
 
-### Goal
+### Objective
+Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, then stop and summarize.
 
-Process at most 2 issues from Budibase GitHub Project 20, View 1 (P0 slice), then stop and summarize:
-[Project 20 View 1 P0 slice](https://github.com/orgs/Budibase/projects/20/views/1?filterQuery=&sliceBy%5Bvalue%5D=P0)
+### Inputs
+- Project: `Budibase` Project `20`
+- View: `1`
+- Slice: `P0`
+- Assignee: `adrinr`
+- Max issues: `2`
 
-### Execution Rules
+### Deterministic Selection Rules
+1. Read items in project priority order.
+2. Keep only items with:
+   - `Status = Backlog`
+   - `Priority = P0`
+   - `content is Issue` (not PR/draft)
+3. Exclude issues already in progress with open linked PRs.
+4. Prefer issues with no active linked PR.
+5. Select first 2 eligible issues.
 
-- Items are in priority order; always pick from the top.
-- Only pick `Backlog` issues from Project 20, View 1, P0 slice.
-- Include issues from any repository on this board (including `Budibase/vulns`).
-- Assign each picked issue to `adrinr` immediately.
-- Maximum issues to process this run: 2.
-- Prefer issues with no active linked PR first.
-- Skip issues already in progress with open PRs.
-- If blocked on missing info, leave one concise comment on the issue with exactly what is needed, then continue.
-- Prefer using the GitHub plugin/integration path when possible (fallback to CLI only if needed).
-- Run `yarn lint:fix` before every commit.
+### Per-Issue Workflow
+1. Assign issue to `adrinr` immediately.
+2. Read issue body, labels, linked advisory/context, and acceptance criteria.
+3. Reproduce or infer root cause from code.
+4. Create dedicated branch from latest `origin/master`.
+5. Implement minimal correct fix.
+6. Add/update tests as appropriate.
+7. Run narrowest relevant test suite.
+8. Run `yarn lint:fix` before commit.
+9. Commit with clear message.
+10. Push branch.
+11. Open **draft PR** using repo template with:
+    - Summary
+    - Risk
+    - Test evidence
+    - Addresses (issue link)
 
-### For Each Selected Issue
+### Blocked-Issue Rule
+If missing info blocks progress:
+- Leave one concise comment with exactly what’s needed.
+- Skip to next eligible issue.
 
-1. Read issue details, acceptance criteria, linked context, and labels.
-2. Reproduce or infer root cause from the codebase.
-3. Implement a minimal, correct fix on a dedicated branch.
-4. Add/update tests where appropriate.
-5. Run the narrowest relevant test suite.
-6. Run `yarn lint:fix`.
-7. Commit with a clear message.
-8. Push and open a draft PR using the repository PR template, including:
-   - Summary
-   - Risk
-   - Test evidence
-   - Issue link in "Addresses" when applicable
+### Stop Conditions
+- 2 issues processed, or
+- no more eligible issues.
 
-### Output Format
-
+### Final Output Format
 - Processed issues: `<issue links/titles>`
 - PRs opened: `<PR links>`
 - Skipped: `<issue + reason>`
