@@ -13,6 +13,7 @@
   const dispatch = createEventDispatcher()
 
   export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
+  export let canAddNote = true
 
   const flow = useSvelteFlow()
 
@@ -87,16 +88,22 @@
       />
     </span>
     {#if $automationStore.viewMode === ViewMode.EDITOR}
-      <span class="icon-btn-wrap">
+      <span class="icon-btn-wrap" class:disabled={!canAddNote}>
         <Icon
           name="chat"
           size="L"
-          hoverable
-          tooltip="Add a note"
+          hoverable={canAddNote}
+          tooltip={canAddNote ? "Add a note" : "Move closer to add a note"}
           tooltipPosition={TooltipPosition.Top}
-          color="var(--spectrum-alias-text-color)"
+          color={canAddNote
+            ? "var(--spectrum-alias-text-color)"
+            : "var(--spectrum-alias-text-color-disabled)"}
           hoverColor="var(--spectrum-alias-text-color-hover)"
-          on:click={() => dispatch("addnote")}
+          on:click={() => {
+            if (canAddNote) {
+              dispatch("addnote")
+            }
+          }}
         />
       </span>
     {/if}
@@ -229,6 +236,10 @@
   .fit-view-wrap:hover {
     background: var(--spectrum-global-color-gray-200);
     border-radius: 50%;
+  }
+
+  .icon-btn-wrap.disabled :global(i.ph) {
+    color: var(--spectrum-alias-text-color-disabled) !important;
   }
 
   :global(.spectrum--dark) .fit-view-wrap:hover,

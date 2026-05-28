@@ -117,6 +117,9 @@
   $: stickyNoteLayerTransform = `translate(${$viewport.x}px, ${
     $viewport.y
   }px) scale(${$viewport.zoom})`
+  $: stickyNoteAddPosition =
+    paneEl && $nodes ? getStickyNoteAddPosition($viewport) : undefined
+  $: canAddStickyNote = !!stickyNoteAddPosition
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -540,11 +543,9 @@
     closeContextMenuOnCanvasInteraction()
   }
 
-  const handleAddNote = () => {
-    const viewport = getViewport()
+  const getStickyNoteAddPosition = (viewport: Viewport | undefined) => {
     if (!paneEl || !viewport) {
-      automationStore.actions.addStickyNote()
-      return
+      return undefined
     }
     const rect = paneEl.getBoundingClientRect()
     const toolbarHeight = 80
@@ -563,17 +564,29 @@
         })
       : position
 
-    automationStore.actions.addStickyNote(
-      clampStickyNoteToViewportBounds(
-        graphPosition,
-        viewport,
-        { width: rect.width, height: rect.height },
-        {
-          width: MIN_STICKY_NOTE_WIDTH,
-          height: MIN_STICKY_NOTE_HEIGHT,
-        }
-      )
+    const viewportPosition = clampStickyNoteToViewportBounds(
+      graphPosition,
+      viewport,
+      { width: rect.width, height: rect.height },
+      {
+        width: MIN_STICKY_NOTE_WIDTH,
+        height: MIN_STICKY_NOTE_HEIGHT,
+      }
     )
+
+    return graphPosition.x === viewportPosition.x &&
+      graphPosition.y === viewportPosition.y
+      ? graphPosition
+      : undefined
+  }
+
+  const handleAddNote = () => {
+    const position = getStickyNoteAddPosition(getViewport())
+    if (!position) {
+      return
+    }
+
+    automationStore.actions.addStickyNote(position)
   }
 
   const handleCanvasPointerMove = (e: PointerEvent) => {
@@ -701,6 +714,7 @@
       >
         <FlowControls
           historyStore={automationHistoryStore}
+          canAddNote={canAddStickyNote}
           on:addnote={handleAddNote}
         />
         <div
