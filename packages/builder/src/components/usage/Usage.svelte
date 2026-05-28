@@ -101,7 +101,10 @@
     {/if}
     {#if showPurchaseCreditsLink && purchaseCreditsUrl}
       <div class="purchase-credits-action">
-        <Button primary on:click={() => (window.location.href = purchaseCreditsUrl)}>
+        <Button
+          primary
+          on:click={() => (window.location.href = purchaseCreditsUrl)}
+        >
           Purchase credits
         </Button>
       </div>
