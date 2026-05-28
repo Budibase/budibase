@@ -166,15 +166,16 @@ Process up to 2 top-priority `Backlog` issues from Project 20 View 1 P0 slice, t
 ### Per-Issue Workflow
 1. Assign issue to `adrinr` immediately.
 2. Read issue body, labels, linked advisory/context, and acceptance criteria.
-3. Reproduce or infer root cause from code.
-4. Create dedicated branch from latest `origin/master`.
-5. Implement minimal correct fix.
-6. Add/update tests as appropriate.
-7. Run narrowest relevant test suite.
-8. Run `yarn lint:fix` before commit.
-9. Commit with clear message.
-10. Push branch.
-11. Open **draft PR** using repo template with:
+3. Create a **new dedicated branch** from latest `origin/master` before making any code changes.
+4. Prefer creating a **git worktree** per issue and do all work inside that worktree/branch isolation.
+5. Reproduce or infer root cause from code.
+6. Implement minimal correct fix.
+7. Add/update tests as appropriate.
+8. Run narrowest relevant test suite.
+9. Run `yarn lint:fix` before commit.
+10. Commit with clear message.
+11. Push branch.
+12. Open **draft PR** using repo template with:
     - Summary
     - Risk
     - Test evidence
