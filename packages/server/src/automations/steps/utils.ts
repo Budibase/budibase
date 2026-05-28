@@ -1,5 +1,7 @@
 import { blacklist } from "@budibase/backend-core"
 import { ContextEmitter } from "@budibase/types"
+import http from "http"
+import https from "https"
 import fetch, { Headers, RequestInit, Response } from "node-fetch"
 import environment from "../../environment"
 
@@ -97,6 +99,16 @@ interface RedirectSafeRequest extends RequestInit {
   redirect: "manual"
 }
 
+function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
+  const protocol = new URL(url).protocol
+  const lookup: http.LookupFunction = (_hostname, _options, callback) => {
+    callback(null, ip, ip.includes(":") ? 6 : 4)
+  }
+  return protocol === "https:"
+    ? new https.Agent({ lookup })
+    : new http.Agent({ lookup })
+}
+
 export async function fetchWithBlacklist(
   url: string,
   request: RequestInit = {}
@@ -110,7 +122,11 @@ export async function fetchWithBlacklist(
 
   for (let redirects = 0; redirects <= maxRedirects; redirects++) {
     await throwIfBlacklisted(nextUrl)
-    const response = await fetch(nextUrl, nextRequest)
+    const [pinnedIp] = await blacklist.resolveAddress(nextUrl)
+    const response = await fetch(nextUrl, {
+      ...nextRequest,
+      agent: makePinnedAgent(nextUrl, pinnedIp),
+    })
     if (!isRedirect(response.status)) {
       return response
     }

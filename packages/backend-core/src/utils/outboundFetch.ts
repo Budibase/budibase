@@ -1,4 +1,6 @@
-import { isBlacklisted } from "../blacklist"
+import http from "http"
+import https from "https"
+import { isBlacklisted, resolveAddress } from "../blacklist"
 import fetch, { Headers, RequestInit, Response } from "node-fetch"
 
 const MAX_REDIRECTS = 5
@@ -38,6 +40,26 @@ async function throwIfUnsafe(url: string): Promise<void> {
   if (await isBlacklisted(parsed.hostname)) {
     throw new Error("URL is blocked or could not be resolved safely.")
   }
+}
+
+async function resolvePinnedIp(url: string): Promise<string> {
+  const parsed = parseUrl(url)
+  const addresses = await resolveAddress(parsed.hostname)
+  const [safeAddress] = addresses
+  if (!safeAddress) {
+    throw new Error("URL is blocked or could not be resolved safely.")
+  }
+  return safeAddress
+}
+
+function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
+  const protocol = new URL(url).protocol
+  const lookup: http.LookupFunction = (_hostname, _options, callback) => {
+    callback(null, ip, ip.includes(":") ? 6 : 4)
+  }
+  return protocol === "https:"
+    ? new https.Agent({ lookup })
+    : new http.Agent({ lookup })
 }
 
 function nextRequestForRedirect<TRequest extends FetchRequest>(
@@ -87,6 +109,7 @@ interface FetchRequest {
   body?: unknown
   headers?: unknown
   redirect?: unknown
+  agent?: unknown
 }
 
 interface FetchResponse {
@@ -155,7 +178,11 @@ export async function fetchWithBlacklist<
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
     await throwIfUnsafe(nextUrl)
-    const response = await fetchFn(nextUrl, nextRequest)
+    const pinnedIp = await resolvePinnedIp(nextUrl)
+    const response = await fetchFn(nextUrl, {
+      ...nextRequest,
+      agent: makePinnedAgent(nextUrl, pinnedIp),
+    })
     if (!isRedirect(response.status)) {
       return response
     }
