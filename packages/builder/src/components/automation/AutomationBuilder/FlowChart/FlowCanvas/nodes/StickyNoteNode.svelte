@@ -408,6 +408,25 @@
         y = Math.min(maxY, Math.max(minY, y))
       }
 
+      const flowContainer = $domNode
+      if (flowContainer) {
+        const rect = flowContainer.getBoundingClientRect()
+        const minVisibleX = -currentViewport.x / zoom
+        const maxVisibleX = (rect.width - currentViewport.x) / zoom - noteWidth
+        const minVisibleY = -currentViewport.y / zoom
+        const maxVisibleY =
+          (rect.height - currentViewport.y) / zoom - noteDisplayHeight
+
+        x =
+          minVisibleX > maxVisibleX
+            ? minVisibleX
+            : Math.min(maxVisibleX, Math.max(minVisibleX, x))
+        y =
+          minVisibleY > maxVisibleY
+            ? minVisibleY
+            : Math.min(maxVisibleY, Math.max(minVisibleY, y))
+      }
+
       dragPosition = {
         x,
         y,

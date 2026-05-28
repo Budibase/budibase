@@ -6,6 +6,11 @@ const mocks = vi.hoisted(() => ({
   updateStickyNote: vi.fn(),
   updateStickyNotePosition: vi.fn(),
   flowNodes: [] as Array<{ id: string; position: { x: number; y: number } }>,
+  viewport: { x: 0, y: 0, zoom: 1 },
+  domNode: null as HTMLElement | null,
+  setViewport: vi.fn((viewport: { x: number; y: number; zoom: number }) => {
+    mocks.viewport = viewport
+  }),
   updateNode: vi.fn(
     (id: string, updates: { position?: { x: number; y: number } }) => {
       const node = mocks.flowNodes.find(n => n.id === id)
@@ -56,13 +61,13 @@ vi.mock("@xyflow/svelte", () => {
           return { x: 0, y: 0, width: 0, height: 0 }
         return { x: 0, y: 0, width: 500, height: 500 }
       },
-      getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
-      setViewport: vi.fn(),
+      getViewport: () => mocks.viewport,
+      setViewport: mocks.setViewport,
       updateNode: mocks.updateNode,
       screenToFlowPosition: (pos: { x: number; y: number }) => pos,
     }),
     useStore: () => ({
-      domNode: store(null),
+      domNode: store(mocks.domNode),
     }),
   }
 })
@@ -116,8 +121,11 @@ describe("StickyNoteNode", () => {
   beforeEach(() => {
     mocks.updateStickyNote.mockReset()
     mocks.updateStickyNotePosition.mockReset()
+    mocks.setViewport.mockClear()
     mocks.updateNode.mockClear()
     mocks.flowNodes = []
+    mocks.viewport = { x: 0, y: 0, zoom: 1 }
+    mocks.domNode = null
   })
 
   it("shrinks the note height when text no longer needs the expanded height", async () => {
@@ -307,6 +315,58 @@ describe("StickyNoteNode", () => {
         y: 70,
       })
       expect(portal).toHaveStyle("transform: translate(60px, 70px)")
+    })
+  })
+
+  it("stays fully inside the viewport while dragging", async () => {
+    mocks.flowNodes = [{ id: "block-1", position: { x: 0, y: 0 } }]
+    mocks.viewport = { x: 100, y: 0, zoom: 1 }
+    mocks.domNode = document.createElement("div")
+    mocks.domNode.getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top: 0,
+        width: 300,
+        height: 240,
+        right: 300,
+        bottom: 240,
+      }) as DOMRect
+
+    const { container } = render(StickyNoteNode, {
+      props: {
+        data: {
+          note: {
+            id: "note-1",
+            title: "Note",
+            text: "Line one",
+            x: 0,
+            y: 0,
+            height: 140,
+          },
+        },
+      },
+    })
+
+    const note = container.querySelector(".sticky-note") as HTMLElement
+
+    dispatchPointerEvent(note, "pointerdown", {
+      clientX: 10,
+      clientY: 20,
+    })
+    dispatchPointerEvent(document, "pointermove", {
+      clientX: 500,
+      clientY: 90,
+    })
+    dispatchPointerEvent(document, "pointerup", {
+      clientX: 500,
+      clientY: 90,
+    })
+
+    await waitFor(() => {
+      expect(mocks.updateStickyNotePosition).toHaveBeenCalledWith("note-1", {
+        x: 40,
+        y: 70,
+      })
     })
   })
 
