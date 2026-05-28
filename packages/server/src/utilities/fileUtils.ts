@@ -1,11 +1,11 @@
 import fs from "fs"
-import fetch from "node-fetch"
 import path from "path"
 import { pipeline } from "stream"
 import { promisify } from "util"
 import * as uuid from "uuid"
 
 import { context, objectStore } from "@budibase/backend-core"
+import * as coreUtils from "@budibase/backend-core/utils"
 import { Upload } from "@budibase/types"
 import { ObjectStoreBuckets } from "../constants"
 
@@ -20,7 +20,7 @@ function getTmpPath() {
 
 export async function uploadUrl(url: string): Promise<Upload | undefined> {
   try {
-    const res = await fetch(url)
+    const res = await coreUtils.fetchWithBlacklist<RequestInit, Response>(url)
 
     const extension = [...res.url.split(".")].pop()!.split("?")[0]
 
