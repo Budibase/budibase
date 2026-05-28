@@ -36,21 +36,20 @@ function isRedirect(status: number): boolean {
   return [301, 302, 303, 307, 308].includes(status)
 }
 
-async function throwIfUnsafe(url: string): Promise<void> {
-  const parsed = parseUrl(url)
-  if (await isBlacklisted(parsed.hostname)) {
-    throw new Error("URL is blocked or could not be resolved safely.")
-  }
-}
-
-async function resolvePinnedIp(url: string): Promise<string> {
+async function resolveSafePinnedIp(url: string): Promise<string> {
   const parsed = parseUrl(url)
   const addresses = await resolveAddress(parsed.hostname)
-  const [safeAddress] = addresses
-  if (!safeAddress) {
+  if (addresses.length === 0) {
     throw new Error("URL is blocked or could not be resolved safely.")
   }
-  return safeAddress
+
+  for (const address of addresses) {
+    if (await isBlacklisted(address)) {
+      throw new Error("URL is blocked or could not be resolved safely.")
+    }
+  }
+
+  return addresses[0]
 }
 
 function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
@@ -126,6 +125,7 @@ interface FetchWithBlacklistOptions<
   TResponse extends FetchResponse,
 > {
   followRedirects?: boolean
+  returnRedirectWithoutLocation?: boolean
   fetchFn?: (
     url: string,
     request: RedirectSafeRequest<TRequest>
@@ -165,6 +165,7 @@ export async function fetchWithBlacklist<
   request: TRequest = {} as TRequest,
   {
     followRedirects = true,
+    returnRedirectWithoutLocation = false,
     fetchFn = fetch as unknown as (
       url: string,
       request: RedirectSafeRequest<TRequest>
@@ -178,8 +179,7 @@ export async function fetchWithBlacklist<
   }
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
-    await throwIfUnsafe(nextUrl)
-    const pinnedIp = await resolvePinnedIp(nextUrl)
+    const pinnedIp = await resolveSafePinnedIp(nextUrl)
     const response = await fetchFn(nextUrl, {
       ...nextRequest,
       agent: makePinnedAgent(nextUrl, pinnedIp),
@@ -200,6 +200,9 @@ export async function fetchWithBlacklist<
 
     const location = response.headers.get("location")
     if (!location) {
+      if (returnRedirectWithoutLocation) {
+        return response
+      }
       throw new Error("Maximum redirect reached.")
     }
 

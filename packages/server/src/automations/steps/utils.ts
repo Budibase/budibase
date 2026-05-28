@@ -29,7 +29,9 @@ export async function fetchWithBlacklist(
   url: string,
   request: RequestInit = {}
 ): Promise<Response> {
-  return utils.fetchWithBlacklist(url, request)
+  return utils.fetchWithBlacklist(url, request, {
+    returnRedirectWithoutLocation: true,
+  })
 }
 
 // need to make sure all ctx structures have the
