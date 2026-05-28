@@ -93,6 +93,7 @@
   let blockRefs: Record<string, BlockRef> = {}
   let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
+  let flowControlsEl: HTMLDivElement | null = null
   let paneResizeObserver: ResizeObserver | undefined
   let changingStatus = false
 
@@ -548,10 +549,10 @@
       return undefined
     }
     const rect = paneEl.getBoundingClientRect()
-    const toolbarHeight = 80
+    const toolbarRect = flowControlsEl?.getBoundingClientRect()
+    const toolbarTop = toolbarRect ? toolbarRect.top - rect.top : rect.height
     const margin = 40
-    const toolbarTopFlowY =
-      (rect.height - toolbarHeight - viewport.y) / viewport.zoom
+    const toolbarTopFlowY = (toolbarTop - viewport.y) / viewport.zoom
     const position = {
       x: (rect.width / 2 - viewport.x) / viewport.zoom,
       y: toolbarTopFlowY - MIN_STICKY_NOTE_HEIGHT - margin,
@@ -713,6 +714,7 @@
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
         <FlowControls
+          bind:controlsEl={flowControlsEl}
           historyStore={automationHistoryStore}
           canAddNote={canAddStickyNote}
           on:addnote={handleAddNote}
@@ -816,6 +818,7 @@
   }
 
   .root :global(.svelte-flow__edgelabel-renderer) {
+    z-index: 4;
     pointer-events: none;
   }
 

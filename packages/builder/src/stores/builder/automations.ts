@@ -32,6 +32,7 @@ import {
   type FlowBlockPath,
   type FormUpdate,
   type StepInputs,
+  type StickyNote,
 } from "@/types/automations"
 import {
   AutomationTestProgressEvent,
@@ -2693,7 +2694,7 @@ const automationActions = (store: AutomationStore) => ({
     const updated = cloneDeep(auto)
     updated.uiTree = {
       ...updated.uiTree,
-      stickyNotes: updated.uiTree.stickyNotes.map((n: any) =>
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
         n.id === noteId ? { ...n, ...updates } : n
       ),
     }
@@ -2712,7 +2713,7 @@ const automationActions = (store: AutomationStore) => ({
     const updated = cloneDeep(auto)
     updated.uiTree = {
       ...updated.uiTree,
-      stickyNotes: updated.uiTree.stickyNotes.map((n: any) =>
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
         n.id === noteId ? { ...n, x: position.x, y: position.y } : n
       ),
     }
@@ -2729,7 +2730,7 @@ const automationActions = (store: AutomationStore) => ({
     updated.uiTree = {
       ...updated.uiTree,
       stickyNotes: updated.uiTree.stickyNotes.filter(
-        (n: any) => n.id !== noteId
+        (n: StickyNote) => n.id !== noteId
       ),
     }
     await automationStore.actions.save(updated, {

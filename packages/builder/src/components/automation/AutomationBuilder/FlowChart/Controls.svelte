@@ -14,6 +14,7 @@
 
   export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
   export let canAddNote = true
+  export let controlsEl: HTMLDivElement | null = null
 
   const flow = useSvelteFlow()
 
@@ -72,7 +73,7 @@
   }
 </script>
 
-<div class="controls">
+<div class="controls" bind:this={controlsEl}>
   <div class="toolbar">
     <UndoRedoControl store={historyStore} showButtonGroup showTooltips />
     <span class="fit-view-wrap">
