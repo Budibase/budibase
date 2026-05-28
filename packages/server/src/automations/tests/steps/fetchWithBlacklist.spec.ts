@@ -1,13 +1,9 @@
 import nock from "nock"
-import { utils } from "@budibase/backend-core"
 import { fetchWithBlacklist } from "../../steps/utils"
 
 describe("fetchWithBlacklist redirects", () => {
-  const fetchWithBlacklistSpy = jest.spyOn(utils, "fetchWithBlacklist")
-
   beforeEach(() => {
     nock.cleanAll()
-    fetchWithBlacklistSpy.mockClear()
   })
 
   afterEach(() => {
@@ -75,18 +71,11 @@ describe("fetchWithBlacklist redirects", () => {
     expect(nock.isDone()).toEqual(true)
   })
 
-  it("passes returnRedirectWithoutLocation to backend-core helper", async () => {
-    fetchWithBlacklistSpy.mockResolvedValueOnce({
-      status: 302,
-      json: async () => ({}),
-    } as any)
-
-    await fetchWithBlacklist("http://8.8.8.8/start")
-
-    expect(fetchWithBlacklistSpy).toHaveBeenCalledWith(
-      "http://8.8.8.8/start",
-      {},
-      { returnRedirectWithoutLocation: true }
-    )
+  it("returns redirect response when location header is missing", async () => {
+    nock("http://8.8.8.8").get("/start").reply(302, { ok: false })
+    const response = await fetchWithBlacklist("http://8.8.8.8/start")
+    expect(response.status).toEqual(302)
+    expect(await response.json()).toEqual({ ok: false })
+    expect(nock.isDone()).toEqual(true)
   })
 })
