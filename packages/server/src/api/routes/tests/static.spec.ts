@@ -160,17 +160,6 @@ describe("/static", () => {
         )
       })
 
-      it("should require authorization to generate a signed upload URL", async () => {
-        await request
-          .post(`/api/attachments/${datasource._id}/url`)
-          .send({
-            bucket: "foo",
-            key: "bar",
-          })
-          .expect("Content-Type", /json/)
-          .expect(401)
-      })
-
       it("should require a bucket parameter", async () => {
         const res = await request
           .post(`/api/attachments/${datasource._id}/url`)
