@@ -4,8 +4,7 @@ import { pipeline } from "stream"
 import { promisify } from "util"
 import * as uuid from "uuid"
 
-import { context, objectStore } from "@budibase/backend-core"
-import { fetchWithBlacklist } from "@budibase/backend-core/src/utils/outboundFetch"
+import { context, objectStore, utils } from "@budibase/backend-core"
 import { Upload } from "@budibase/types"
 import { ObjectStoreBuckets } from "../constants"
 
@@ -20,8 +19,7 @@ function getTmpPath() {
 
 export async function uploadUrl(url: string): Promise<Upload | undefined> {
   try {
-    const res = await fetchWithBlacklist<RequestInit, Response>(url)
-
+    const res = await utils.fetchWithBlacklist(url)
     const extension = [...res.url.split(".")].pop()!.split("?")[0]
 
     const destination = path.resolve(getTmpPath(), `${uuid.v4()}${extension}`)
