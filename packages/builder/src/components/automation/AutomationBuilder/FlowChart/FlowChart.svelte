@@ -40,6 +40,12 @@
     DEFAULT_NODE_WIDTH,
     DEFAULT_NODE_HEIGHT,
   } from "./FlowCanvas/FlowGeometry"
+  import {
+    MIN_STICKY_NOTE_WIDTH,
+    MIN_STICKY_NOTE_HEIGHT,
+    clampStickyNoteToGraphBounds,
+    clampStickyNoteToViewportBounds,
+  } from "./FlowCanvas/StickyNoteBounds"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
@@ -105,7 +111,7 @@
     ensureVisible?: boolean
   } | null>(null)
 
-  const { getViewport, setViewport } = useSvelteFlow()
+  const { getViewport, setViewport, getNodes, getNodesBounds } = useSvelteFlow()
   const { viewport } = useStore()
   $: stickyNotes = $selectedAutomation?.data?.uiTree?.stickyNotes || []
   $: stickyNoteLayerTransform = `translate(${$viewport.x}px, ${
@@ -542,13 +548,32 @@
     }
     const rect = paneEl.getBoundingClientRect()
     const toolbarHeight = 80
-    const noteHeight = 140
     const margin = 40
     const toolbarTopFlowY =
       (rect.height - toolbarHeight - viewport.y) / viewport.zoom
-    const flowY = toolbarTopFlowY - noteHeight - margin
-    const flowX = (rect.width / 2 - viewport.x) / viewport.zoom
-    automationStore.actions.addStickyNote({ x: flowX, y: flowY })
+    const position = {
+      x: (rect.width / 2 - viewport.x) / viewport.zoom,
+      y: toolbarTopFlowY - MIN_STICKY_NOTE_HEIGHT - margin,
+    }
+    const flowNodes = getNodes()
+    const graphPosition = flowNodes.length
+      ? clampStickyNoteToGraphBounds(position, getNodesBounds(flowNodes), {
+          width: MIN_STICKY_NOTE_WIDTH,
+          height: MIN_STICKY_NOTE_HEIGHT,
+        })
+      : position
+
+    automationStore.actions.addStickyNote(
+      clampStickyNoteToViewportBounds(
+        graphPosition,
+        viewport,
+        { width: rect.width, height: rect.height },
+        {
+          width: MIN_STICKY_NOTE_WIDTH,
+          height: MIN_STICKY_NOTE_HEIGHT,
+        }
+      )
+    )
   }
 
   const handleCanvasPointerMove = (e: PointerEvent) => {

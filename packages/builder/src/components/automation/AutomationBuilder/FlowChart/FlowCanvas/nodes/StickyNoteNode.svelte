@@ -4,6 +4,14 @@
   import { ViewMode, type StickyNoteNodeData } from "@/types/automations"
   import { useSvelteFlow, useStore } from "@xyflow/svelte"
   import { onDestroy } from "svelte"
+  import {
+    MIN_STICKY_NOTE_WIDTH,
+    MIN_STICKY_NOTE_HEIGHT,
+    MAX_STICKY_NOTE_WIDTH,
+    MAX_STICKY_NOTE_HEIGHT,
+    clampStickyNoteToGraphBounds,
+    clampStickyNoteToViewportBounds,
+  } from "../StickyNoteBounds"
 
   export let data: StickyNoteNodeData | undefined = undefined
   export let positionAbsoluteX = 0
@@ -290,10 +298,10 @@
     return saved
   }
 
-  const MIN_NOTE_WIDTH = 160
-  const MIN_NOTE_HEIGHT = 140
-  const MAX_NOTE_WIDTH = 300
-  const MAX_NOTE_HEIGHT = 400
+  const MIN_NOTE_WIDTH = MIN_STICKY_NOTE_WIDTH
+  const MIN_NOTE_HEIGHT = MIN_STICKY_NOTE_HEIGHT
+  const MAX_NOTE_WIDTH = MAX_STICKY_NOTE_WIDTH
+  const MAX_NOTE_HEIGHT = MAX_STICKY_NOTE_HEIGHT
   let noteWidth = MIN_NOTE_WIDTH
   let noteHeight = MIN_NOTE_HEIGHT
   let resizing = false
@@ -391,40 +399,25 @@
       let x = startPos.x + dx - vpDx
       let y = startPos.y + dy - vpDy
 
-      const nodeBounds = flow.getNodesBounds(flow.getNodes())
-      const minX = nodeBounds.x - noteWidth - MAX_NOTE_WIDTH
-      const maxX = nodeBounds.x + nodeBounds.width
-      const minY = nodeBounds.y - noteDisplayHeight - MAX_NOTE_HEIGHT
-      const maxY = nodeBounds.y + nodeBounds.height + MAX_NOTE_HEIGHT
-
-      if (minX > maxX) {
-        x = nodeBounds.x + nodeBounds.width / 2 - noteWidth / 2
-      } else {
-        x = Math.min(maxX, Math.max(minX, x))
-      }
-      if (minY > maxY) {
-        y = nodeBounds.y + nodeBounds.height / 2 - noteHeight / 2
-      } else {
-        y = Math.min(maxY, Math.max(minY, y))
-      }
+      const graphPosition = clampStickyNoteToGraphBounds(
+        { x, y },
+        flow.getNodesBounds(flow.getNodes()),
+        { width: noteWidth, height: noteDisplayHeight }
+      )
+      x = graphPosition.x
+      y = graphPosition.y
 
       const flowContainer = $domNode
       if (flowContainer) {
         const rect = flowContainer.getBoundingClientRect()
-        const minVisibleX = -currentViewport.x / zoom
-        const maxVisibleX = (rect.width - currentViewport.x) / zoom - noteWidth
-        const minVisibleY = -currentViewport.y / zoom
-        const maxVisibleY =
-          (rect.height - currentViewport.y) / zoom - noteDisplayHeight
-
-        x =
-          minVisibleX > maxVisibleX
-            ? minVisibleX
-            : Math.min(maxVisibleX, Math.max(minVisibleX, x))
-        y =
-          minVisibleY > maxVisibleY
-            ? minVisibleY
-            : Math.min(maxVisibleY, Math.max(minVisibleY, y))
+        const viewportPosition = clampStickyNoteToViewportBounds(
+          { x, y },
+          currentViewport,
+          rect,
+          { width: noteWidth, height: noteDisplayHeight }
+        )
+        x = viewportPosition.x
+        y = viewportPosition.y
       }
 
       dragPosition = {
