@@ -154,7 +154,7 @@ Process exactly 1 issue: the top-priority eligible `Backlog` issue from Project 
 - View: `1`
 - Slice: `P0`
 - Canonical view URL: `https://github.com/orgs/Budibase/projects/20/views/1?filterQuery=&sliceBy%5Bvalue%5D=P0`
-- Assignee: `adrinr`
+- Assignee: current local GitHub user (`gh auth status` / `@me`)
 - Max issues: `1`
 - Issue override (optional): `<owner/repo#number>` or full GitHub issue URL
 
@@ -172,7 +172,7 @@ Process exactly 1 issue: the top-priority eligible `Backlog` issue from Project 
 
 ### Per-Issue Workflow
 
-1. Assign issue to `adrinr` immediately.
+1. Assign issue to the current local GitHub user immediately.
 2. Read issue body, labels, linked advisory/context, and acceptance criteria.
 3. Create a **new dedicated branch** from latest `origin/master` before making any code changes.
 4. Prefer creating a **git worktree** per issue and do all work inside that worktree/branch isolation.
