@@ -31,16 +31,39 @@
           $automationStore.testResults,
           stepBlock
         )
-  $: branchError = isTerminalFailure(branchResult)
   $: runHighlight = getRunHighlight(
     viewMode === ViewMode.LOGS
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
+  $: branchExecuted =
+    branchIdx !== undefined && hasBranchResult(branchResult)
+      ? branchResult.outputs.branchId ===
+        stepBlock.inputs.branches?.[branchIdx]?.id
+      : false
+  $: branchStepFailed = isTerminalFailure(branchResult)
+  $: branchError =
+    branchStepFailed &&
+    runHighlight !== "stopped" &&
+    (branchExecuted || !hasBranchResult(branchResult))
   $: branchSuccess =
-    !branchError && runHighlight === "success" && !!branchResult
+    !branchError && branchExecuted && runHighlight === "success"
   $: branchStopped =
-    !branchError && runHighlight === "stopped" && !!branchResult
+    !branchError && branchExecuted && runHighlight === "stopped"
+
+  type BranchResult = {
+    outputs: {
+      branchId?: string
+    }
+  }
+
+  const hasBranchResult = (value: unknown): value is BranchResult => {
+    if (!value || typeof value !== "object" || !("outputs" in value)) {
+      return false
+    }
+    const outputs = value.outputs
+    return !!outputs && typeof outputs === "object" && "branchId" in outputs
+  }
 </script>
 
 <div

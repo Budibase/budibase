@@ -280,7 +280,10 @@
     const runHighlight = getRunHighlight(results)
 
     if (isBranchEdgeData(edgeData)) {
-      if (didBranchStepFail(edgeData.branchStepId)) {
+      if (
+        runHighlight !== "stopped" &&
+        didBranchStepFail(edgeData.branchStepId)
+      ) {
         return runHighlight
       }
       return didBranchRun(edgeData.branchStepId, edgeData.branchIdx)
@@ -289,7 +292,10 @@
     }
 
     if (isBranchContext(edgeData.block)) {
-      if (didBranchStepFail(edgeData.block.branchStepId)) {
+      if (
+        runHighlight !== "stopped" &&
+        didBranchStepFail(edgeData.block.branchStepId)
+      ) {
         return runHighlight
       }
       return didBranchRun(edgeData.block.branchStepId, edgeData.block.branchIdx)

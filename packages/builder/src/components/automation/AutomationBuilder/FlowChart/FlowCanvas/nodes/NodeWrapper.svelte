@@ -42,11 +42,11 @@
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
-  $: handleError = isTerminalFailure(result)
+  $: handleStopped =
+    !!result && didStepRun(result) && runHighlight === "stopped"
+  $: handleError = isTerminalFailure(result) && !handleStopped
   $: handleSuccess =
     !handleError && !!result && didStepRun(result) && runHighlight === "success"
-  $: handleStopped =
-    !handleError && !!result && didStepRun(result) && runHighlight === "stopped"
 
   function handleStepSelect(
     stepData: AutomationStepResult | AutomationTriggerResult
