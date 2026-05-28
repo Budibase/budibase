@@ -178,9 +178,9 @@ services:
       couchdb: "http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}"
     # -- The time in seconds to wait before sending SIGKILL after SIGTERM.
     # Must be greater than preStopDelaySeconds to allow graceful shutdown.
-    terminationGracePeriodSeconds: 75
+    terminationGracePeriodSeconds: 70
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 40
+    preStopDelaySeconds: 45
     # -- Pod readiness gates for the proxy pods. Useful for ALB target group
     # health tracking with the AWS Load Balancer Controller.
     # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
@@ -204,9 +204,11 @@ services:
         port: 10000
         scheme: HTTP
       # @ignore
-      failureThreshold: 40
+      failureThreshold: 24
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for proxy pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -275,12 +277,12 @@ services:
     # -- The amount of time to wait between requesting a shutdown and killing the
     # container. This is used to give the apps service time to finish processing
     # any requests before shutting down. You shouldn't need to change this.
-    terminationGracePeriodSeconds: 75
+    terminationGracePeriodSeconds: 70
     # -- Seconds to wait after pod is Ready before adding to endpoints.
     # Ensures pods are stable before receiving traffic.
     minReadySeconds: 10
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 40
+    preStopDelaySeconds: 45
     # -- Pod readiness gates for the apps pods. Useful for ALB target group
     # health tracking with the AWS Load Balancer Controller.
     # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
@@ -310,9 +312,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 30
+      failureThreshold: 24
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for apps pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -383,9 +387,9 @@ services:
     # the container. This is used to give the automation worker service time to
     # finish processing any requests before shutting down. You shouldn't need to
     # change this.
-    terminationGracePeriodSeconds: 75
+    terminationGracePeriodSeconds: 70
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 40
+    preStopDelaySeconds: 45
     # -- Pod readiness gates for the automation worker pods. Useful for ALB
     # target group health tracking with the AWS Load Balancer Controller.
     # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
@@ -416,9 +420,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 30
+      failureThreshold: 12
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 30
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for automation worker pods. You shouldn't
     # need to change this, but if you want to you can find more information
     # here:
@@ -490,12 +496,12 @@ services:
     # the container. This is used to give the worker service time to finish
     # processing any requests before shutting down. You shouldn't need to change
     # this.
-    terminationGracePeriodSeconds: 75
+    terminationGracePeriodSeconds: 70
     # -- Seconds to wait after pod is Ready before adding to endpoints.
     # Ensures pods are stable before receiving traffic.
     minReadySeconds: 10
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 40
+    preStopDelaySeconds: 45
     # -- Pod readiness gates for the worker pods. Useful for ALB target group
     # health tracking with the AWS Load Balancer Controller.
     # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
@@ -525,9 +531,11 @@ services:
         port: 4003
         scheme: HTTP
       # @ignore
-      failureThreshold: 40
+      failureThreshold: 24
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -658,9 +666,9 @@ services:
     # -- Number of litellm replicas.
     replicaCount: 2
     # -- The time in seconds to wait before sending SIGKILL after SIGTERM.
-    terminationGracePeriodSeconds: 75
+    terminationGracePeriodSeconds: 70
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 40
+    preStopDelaySeconds: 45
     # -- Pod readiness gates for the litellm pods. Useful for ALB target group
     # health tracking with the AWS Load Balancer Controller.
     # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
@@ -669,6 +677,19 @@ services:
     # Requires podDisruptionBudget.enabled to be true.
     # Set minAvailable to override the global podDisruptionBudget.minAvailable for this service.
     pdb: {}
+    # -- Startup probe configuration for litellm pods. Uses a TCP socket check
+    # because litellm doesn't expose a dedicated /health endpoint on startup.
+    # @default -- TCP socket check on the litellm port.
+    startupProbe:
+      # @ignore
+      tcpSocket:
+        port: 4000
+      # @ignore
+      failureThreshold: 24
+      # @ignore
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Resources for litellm pods.
     resources: {}
     # -- Extra environment variables for the litellm container.

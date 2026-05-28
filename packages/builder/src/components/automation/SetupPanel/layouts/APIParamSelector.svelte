@@ -51,6 +51,7 @@
         {#each parameters as field}
           <PropField label={field.name} fullWidth>
             <DrawerBindableInput
+              title={field.name}
               placeholder={getFieldDefault(field.name)}
               {context}
               panel={AutomationBindingPanel}
