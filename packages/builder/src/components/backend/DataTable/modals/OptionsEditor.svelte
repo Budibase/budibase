@@ -2,7 +2,7 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { Icon, Input, Popover } from "@budibase/bbui"
-  import { tick } from "svelte"
+  import { tick, onMount } from "svelte"
   import { Constants } from "@budibase/frontend-core"
   import { getSequentialName } from "@/helpers/duplicate"
   import { derived, writable } from "svelte/store"
@@ -14,6 +14,39 @@
   const flipDurationMs = 130
   const { OptionColours } = Constants
   const getDefaultColor = idx => OptionColours[idx % OptionColours.length]
+
+  const SAVED_COLORS_KEY = "budibase-saved-option-colors"
+  const MAX_SAVED_COLORS = 8
+
+  let savedColors = []
+
+  onMount(() => {
+    const stored = localStorage.getItem(SAVED_COLORS_KEY)
+    if (stored) {
+      try {
+        savedColors = JSON.parse(stored)
+      } catch (e) {
+        savedColors = []
+      }
+    }
+  })
+
+  const saveCustomColor = color => {
+    if (!color || savedColors.includes(color) || OptionColours.includes(color))
+      return
+    if (savedColors.length >= MAX_SAVED_COLORS) {
+      // Remove oldest and add new
+      savedColors = [...savedColors.slice(1), color]
+    } else {
+      savedColors = [...savedColors, color]
+    }
+    localStorage.setItem(SAVED_COLORS_KEY, JSON.stringify(savedColors))
+  }
+
+  const removeSavedColor = color => {
+    savedColors = savedColors.filter(c => c !== color)
+    localStorage.setItem(SAVED_COLORS_KEY, JSON.stringify(savedColors))
+  }
   const options = writable(
     constraints.inclusion.map((value, idx) => ({
       id: Math.random(),
@@ -94,6 +127,11 @@
     })
   }
 
+  const handleSaveCustomColor = (id, color) => {
+    if (!isCustomColor(color)) return
+    saveCustomColor(color)
+  }
+
   const isCustomColor = color => {
     return color && !OptionColours.includes(color)
   }
@@ -153,6 +191,30 @@
                     ></div>
                   {/each}
                 </div>
+                {#if savedColors.length > 0}
+                  <div class="saved-colors">
+                    <div class="custom-color-label">Saved</div>
+                    <div class="saved-colors-grid">
+                      {#each savedColors as saved}
+                        <div class="saved-circle-wrapper">
+                          <div
+                            on:click={() => handleColorChange(option.id, saved)}
+                            style="--color:{saved};"
+                            class="circle"
+                            class:selected={saved === option.color}
+                          ></div>
+                          <div
+                            class="remove-saved"
+                            on:click|stopPropagation={() =>
+                              removeSavedColor(saved)}
+                          >
+                            <Icon hoverable name="x" size="XS" />
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
                 <div class="custom-color">
                   <div class="custom-color-label">Custom</div>
                   <div class="custom-color-input">
@@ -173,6 +235,25 @@
                       on:change={e =>
                         handleCustomColorInput(option.id, e.detail)}
                     />
+                    {#if isCustomColor(option.color)}
+                      <div
+                        class="save-color-btn"
+                        class:disabled={savedColors.length >=
+                          MAX_SAVED_COLORS ||
+                          savedColors.includes(option.color)}
+                        title={savedColors.includes(option.color)
+                          ? "Already saved"
+                          : savedColors.length >= MAX_SAVED_COLORS
+                            ? "Max saved colors reached"
+                            : "Save to palette"}
+                        on:click={() =>
+                          !savedColors.includes(option.color) &&
+                          savedColors.length < MAX_SAVED_COLORS &&
+                          handleSaveCustomColor(option.id, option.color)}
+                      >
+                        <Icon name="plus" size="S" />
+                      </div>
+                    {/if}
                   </div>
                 </div>
               </div>
@@ -297,6 +378,52 @@
     cursor: pointer;
     background: none;
     flex-shrink: 0;
+  }
+  .save-color-btn {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      background-color 130ms ease-out,
+      border-color 130ms ease-out,
+      opacity 130ms ease-out;
+  }
+  .save-color-btn:not(.disabled):hover {
+    background-color: var(--spectrum-global-color-gray-200);
+    border-color: var(--spectrum-global-color-blue-500);
+  }
+  .save-color-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .saved-colors {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    padding-top: var(--spacing-m);
+  }
+  .saved-colors-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: var(--spacing-xl);
+    justify-items: center;
+    margin-top: var(--spacing-s);
+  }
+  .saved-circle-wrapper {
+    position: relative;
+    display: inline-flex;
+  }
+  .saved-circle-wrapper .remove-saved {
+    display: none;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+  }
+  .saved-circle-wrapper:hover .remove-saved {
+    display: block;
   }
   .native-color-input::-webkit-color-swatch-wrapper {
     padding: 0;
