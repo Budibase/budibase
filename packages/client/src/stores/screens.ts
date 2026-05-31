@@ -147,6 +147,9 @@ const createScreenStore = () => {
           navigation: "None",
           pageWidth: activeScreen?.width || "Large",
           embedded: $appStore.embedded,
+          screenBackground: activeScreen?.screenBackground,
+          screenGradient: activeScreen?.screenGradient,
+          screenCustomCss: activeScreen?.screenCustomCss,
         }
         if (activeScreen?.showNavigation) {
           const navigationSettings = {
