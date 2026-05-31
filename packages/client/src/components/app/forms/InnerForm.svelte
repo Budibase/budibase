@@ -461,17 +461,31 @@
     type,
     fields,
     fieldValues,
+    // Legacy single-field format - coerce for backwards compatibility
+    field,
+    value,
   }: {
     type: "set" | "reset"
     fields?: string[]
     fieldValues?: Record<string, any>
+    field?: string
+    value?: any
   }) => {
-    if (type === "set" && fieldValues && Object.keys(fieldValues).length > 0) {
-      Object.entries(fieldValues).forEach(([fieldName, fieldValue]) => {
+    // Coerce legacy single-field format into the new multi-field format
+    const resolvedFields = fields ?? (field ? [field] : [])
+    const resolvedFieldValues =
+      fieldValues ?? (field !== undefined ? { [field]: value } : {})
+
+    if (type === "set" && Object.keys(resolvedFieldValues).length > 0) {
+      Object.entries(resolvedFieldValues).forEach(([fieldName, fieldValue]) => {
         formApi.setFieldValue(fieldName, fieldValue)
       })
-    } else if (type === "reset" && Array.isArray(fields) && fields.length > 0) {
-      fields.forEach(fieldName => {
+    } else if (
+      type === "reset" &&
+      Array.isArray(resolvedFields) &&
+      resolvedFields.length > 0
+    ) {
+      resolvedFields.forEach(fieldName => {
         formApi.resetField(fieldName)
       })
     }
