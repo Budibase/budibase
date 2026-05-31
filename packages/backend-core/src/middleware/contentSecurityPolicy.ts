@@ -131,36 +131,59 @@ export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
     }
   }
 
-  // Add custom app CSP whitelist
+  // Apply per-workspace CSP based on the workspace metadata. This covers the
+  // licensed custom app script whitelist as well as the embed origin allowlist.
+  const isEmbed = ctx.request?.get("x-budibase-embed")?.toLowerCase() === "true"
   const licensed = ctx.user?.license?.features.includes(
     Feature.CUSTOM_APP_SCRIPTS
   )
-  if (licensed && ctx.appId) {
+
+  // Default embeds to a wildcard allowlist so existing implementations keep
+  // working. The per-workspace allowlist below narrows this when configured,
+  // and this default holds even if the workspace metadata lookup fails.
+  if (isEmbed) {
+    directives["frame-ancestors"] = ["*"]
+  }
+
+  if (ctx.appId && (isEmbed || licensed)) {
     try {
       const appMetadata = await workspace.getWorkspaceMetadata(ctx.appId)
       if ("name" in appMetadata) {
-        for (let script of appMetadata.scripts || []) {
-          const inclusions = (script.cspWhitelist || "")
-            .split("\n")
-            .filter(domain => CSPDomainRegex.test(domain))
+        if (licensed) {
+          for (let script of appMetadata.scripts || []) {
+            const inclusions = (script.cspWhitelist || "")
+              .split("\n")
+              .filter(domain => CSPDomainRegex.test(domain))
 
-          // Apply app whitelist to all relevant directives
-          const directivesToUpdate = [
-            "default-src",
-            "script-src",
-            "connect-src",
-            "media-src",
-            "img-src",
-            "font-src",
-            "frame-src",
-          ]
-
-          for (const directive of directivesToUpdate) {
-            directives[directive] = [
-              ...(directives[directive] || []),
-              ...inclusions,
+            // Apply app whitelist to all relevant directives
+            const directivesToUpdate = [
+              "default-src",
+              "script-src",
+              "connect-src",
+              "media-src",
+              "img-src",
+              "font-src",
+              "frame-src",
             ]
+
+            for (const directive of directivesToUpdate) {
+              directives[directive] = [
+                ...(directives[directive] || []),
+                ...inclusions,
+              ]
+            }
           }
+        }
+
+        // Restrict who can embed this workspace's apps in an iframe. An empty
+        // allowlist keeps the previous behaviour of allowing any origin.
+        if (isEmbed) {
+          const allowedOrigins = (appMetadata.embedAllowedOrigins || [])
+            .map(origin => origin.trim())
+            .filter(origin => CSPDomainRegex.test(origin))
+          directives["frame-ancestors"] = allowedOrigins.length
+            ? allowedOrigins
+            : ["*"]
         }
       }
     } catch (err) {
