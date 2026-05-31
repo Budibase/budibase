@@ -95,7 +95,10 @@ describe("embedSSO sdk", () => {
         email: "user@example.com",
       } as any)
 
-      const token = jwt.sign({ userdata: { email: "user@example.com" } }, SECRET)
+      const token = jwt.sign(
+        { userdata: { email: "user@example.com" } },
+        SECRET
+      )
       const ctx = { secure: false, cookies: { set: jest.fn() } }
 
       const result = await authenticateEmbedUser(
