@@ -161,6 +161,28 @@ describe("embedSSO sdk", () => {
       )
       expect(result.key).toBe(existing.key)
     })
+
+    it("rejects reusing the stored key when the algorithm changed", () => {
+      const existing = encodeConfigForStorage(hmacConfig({ key: "original" }))
+      expect(() =>
+        encodeConfigForStorage(
+          hmacConfig({ algorithm: "ES256", key: PASSWORD_REPLACEMENT }),
+          existing
+        )
+      ).toThrow(
+        "A new verification key is required when changing the embed SSO algorithm"
+      )
+    })
+
+    it("allows changing the algorithm together with a new key", () => {
+      const existing = encodeConfigForStorage(hmacConfig({ key: "original" }))
+      const result = encodeConfigForStorage(
+        hmacConfig({ algorithm: "ES256", key: "-----BEGIN PUBLIC KEY-----" }),
+        existing
+      )
+      expect(result.algorithm).toBe("ES256")
+      expect(result.key).toContain("bbembed_enc::")
+    })
   })
 
   describe("maskConfigForBuilder", () => {

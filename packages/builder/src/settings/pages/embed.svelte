@@ -44,12 +44,15 @@
   let ssoEmailClaim = ""
   // whether a key is already stored (server returns it masked)
   let ssoKeySet = false
+  // the algorithm the stored key was created for
+  let originalAlgorithm = "ES256"
 
   onMount(() => {
     const config = $appStore.embedSSO
     if (config) {
       ssoEnabled = config.enabled
       ssoAlgorithm = config.algorithm || "ES256"
+      originalAlgorithm = ssoAlgorithm
       ssoIssuer = config.issuer || ""
       ssoEmailClaim = config.emailClaim || ""
       ssoKeySet = !!config.key
@@ -57,17 +60,35 @@
   })
 
   $: isSecretAlgorithm = ssoAlgorithm === "HS256"
+  // the stored key is tied to its algorithm, so it can only be reused while the
+  // algorithm is unchanged - otherwise a new key must be entered
+  $: canReuseStoredKey = ssoKeySet && ssoAlgorithm === originalAlgorithm
+
+  const onSSOToggle = () => {
+    // persist immediately when disabling; enabling reveals the fields and waits
+    // for an explicit save once a key has been provided
+    if (!ssoEnabled) {
+      saveSSO()
+    }
+  }
 
   const saveSSO = async () => {
+    if (ssoEnabled && !ssoKey && !canReuseStoredKey) {
+      notifications.error(
+        "Please provide a verification key for the selected algorithm"
+      )
+      return
+    }
     try {
       const config = {
         enabled: ssoEnabled,
         algorithm: ssoAlgorithm,
-        key: ssoKey || (ssoKeySet ? PASSWORD_REPLACEMENT : ""),
+        key: ssoKey || (canReuseStoredKey ? PASSWORD_REPLACEMENT : ""),
         issuer: ssoIssuer || undefined,
         emailClaim: ssoEmailClaim || undefined,
       }
       await appStore.updateApp({ embedSSO: config })
+      originalAlgorithm = ssoAlgorithm
       if (ssoKey) {
         ssoKeySet = true
         ssoKey = ""
@@ -151,7 +172,7 @@
         to an existing Budibase user.
       </span>
     </div>
-    <Toggle text="Enable" bind:value={ssoEnabled} on:change={saveSSO} />
+    <Toggle text="Enable" bind:value={ssoEnabled} on:change={onSSOToggle} />
     {#if ssoEnabled}
       <Select
         label="Verification algorithm"
@@ -163,12 +184,17 @@
       <TextArea
         label={isSecretAlgorithm ? "Shared secret" : "Public key (PEM)"}
         bind:value={ssoKey}
-        placeholder={ssoKeySet
+        placeholder={canReuseStoredKey
           ? "A key is set — enter a new value to replace it"
           : isSecretAlgorithm
             ? "Shared HMAC secret"
             : "-----BEGIN PUBLIC KEY-----"}
-        helpText="Used to verify the signature of the incoming token."
+        helpText={ssoKeySet && !canReuseStoredKey
+          ? `Enter a new key for ${ssoAlgorithm} — the stored key cannot be reused after changing the algorithm.`
+          : "Used to verify the signature of the incoming token."}
+        error={ssoKeySet && !canReuseStoredKey
+          ? "A new key is required for the selected algorithm"
+          : undefined}
       />
       <Input
         label="Issuer (optional)"

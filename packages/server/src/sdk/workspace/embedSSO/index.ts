@@ -2,6 +2,7 @@ import {
   constants,
   encryption,
   env as coreEnv,
+  HTTPError,
   sessions,
   tenancy,
   users,
@@ -37,6 +38,14 @@ export function encodeConfigForStorage(
 ): EmbedSSOConfig {
   let key = incoming.key
   if (key === PASSWORD_REPLACEMENT) {
+    // the stored key is tied to its algorithm (shared secret vs EC/RSA public
+    // key), so it cannot be reused if the algorithm has changed
+    if (existing && existing.algorithm !== incoming.algorithm) {
+      throw new HTTPError(
+        "A new verification key is required when changing the embed SSO algorithm",
+        400
+      )
+    }
     key = existing?.key || ""
   } else {
     key = encodeSecret(key)
