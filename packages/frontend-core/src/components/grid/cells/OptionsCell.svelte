@@ -3,6 +3,7 @@
   import { onMount } from "svelte"
   import GridPopover from "../overlays/GridPopover.svelte"
   import { OptionColours } from "../../../constants"
+  import { getContrastTextColor } from "../../../utils"
 
   export let value
   export let schema
@@ -104,7 +105,10 @@
     {#each values as val}
       {@const color = optionColors[val] || getOptionColor(val)}
       {#if color}
-        <div class="badge text" style="--color: {color}">
+        <div
+          class="badge text"
+          style="--color: {color}; color: {getContrastTextColor(color)}"
+        >
           <span>
             {val}
           </span>
@@ -136,7 +140,10 @@
           class:focused={focusedOptionIdx === idx}
           on:mouseenter={() => (focusedOptionIdx = idx)}
         >
-          <div class="badge text" style="--color: {color}">
+          <div
+            class="badge text"
+            style="--color: {color}; color: {getContrastTextColor(color)}"
+          >
             <span>
               {option}
             </span>
