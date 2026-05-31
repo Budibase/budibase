@@ -206,18 +206,31 @@ export function setCookie(
   ctx: Ctx,
   value: any,
   name = "builder",
-  opts: { sign: boolean; httpOnly?: boolean } = { sign: true }
+  opts: {
+    sign: boolean
+    httpOnly?: boolean
+    sameSite?: "lax" | "strict" | "none"
+    secure?: boolean
+  } = { sign: true }
 ) {
   if (value && opts && opts.sign) {
     value = jwt.sign(value, env.JWT_SECRET as Secret)
   }
 
+  // SameSite=None cookies (required for cross-origin iframe embedding) must be
+  // marked Secure to be accepted by the browser.
+  const secure = opts.secure ?? (opts.sameSite === "none" ? true : ctx.secure)
+
   const config: SetOption = {
     expires: MAX_VALID_DATE,
     path: "/",
     httpOnly: opts.httpOnly ?? false,
-    secure: ctx.secure,
+    secure,
     overwrite: true,
+  }
+
+  if (opts.sameSite) {
+    config.sameSite = opts.sameSite
   }
 
   if (env.COOKIE_DOMAIN) {
