@@ -217,9 +217,21 @@ export function setCookie(
     value = jwt.sign(value, env.JWT_SECRET as Secret)
   }
 
-  // SameSite=None cookies (required for cross-origin iframe embedding) must be
-  // marked Secure to be accepted by the browser.
-  const secure = opts.sameSite === "none" ? true : (opts.secure ?? ctx.secure)
+  // SameSite=None is required for cross-origin iframe embedding, but browsers
+  // only accept it alongside Secure, which in turn requires an HTTPS
+  // connection. When the connection isn't secure (e.g. local http dev) we can't
+  // send a Secure cookie, so fall back to Lax - which still works for same-site
+  // embedding. Over HTTPS this keeps the proper SameSite=None; Secure.
+  let sameSite = opts.sameSite
+  let secure = opts.secure ?? ctx.secure
+  if (sameSite === "none") {
+    if (secure) {
+      // honour an explicitly requested secure flag over a secure connection
+      secure = true
+    } else {
+      sameSite = "lax"
+    }
+  }
 
   const config: SetOption = {
     expires: MAX_VALID_DATE,
@@ -229,8 +241,8 @@ export function setCookie(
     overwrite: true,
   }
 
-  if (opts.sameSite) {
-    config.sameSite = opts.sameSite
+  if (sameSite) {
+    config.sameSite = sameSite
   }
 
   if (env.COOKIE_DOMAIN) {

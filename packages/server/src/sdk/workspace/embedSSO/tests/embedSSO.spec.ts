@@ -89,6 +89,27 @@ describe("embedSSO sdk", () => {
       expect(options.secure).toBe(true)
     })
 
+    it("falls back to a Lax cookie over an insecure connection", async () => {
+      getGlobalUserByEmail.mockResolvedValue({
+        _id: "us_123",
+        email: "user@example.com",
+      } as any)
+
+      const token = jwt.sign({ userdata: { email: "user@example.com" } }, SECRET)
+      const ctx = { secure: false, cookies: { set: jest.fn() } }
+
+      const result = await authenticateEmbedUser(
+        ctx as any,
+        hmacConfig(),
+        token
+      )
+
+      expect(result).toBe(true)
+      const [, , options] = ctx.cookies.set.mock.calls[0]
+      expect(options.sameSite).toBe("lax")
+      expect(options.secure).toBe(false)
+    })
+
     it("rejects a token signed with the wrong secret", async () => {
       const token = jwt.sign(
         { userdata: { email: "user@example.com" } },
