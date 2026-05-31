@@ -219,7 +219,7 @@ export function setCookie(
 
   // SameSite=None cookies (required for cross-origin iframe embedding) must be
   // marked Secure to be accepted by the browser.
-  const secure = opts.secure ?? (opts.sameSite === "none" ? true : ctx.secure)
+  const secure = opts.sameSite === "none" ? true : (opts.secure ?? ctx.secure)
 
   const config: SetOption = {
     expires: MAX_VALID_DATE,
