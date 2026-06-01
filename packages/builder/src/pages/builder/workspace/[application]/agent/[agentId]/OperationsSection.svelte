@@ -98,6 +98,7 @@ Any constraints the agent must follow.
           await onDeleteOperation()
           safeAgent.promptInstructions = ""
           safeAgent.enabledTools = []
+          safeAgent.operationName = ""
           onUpdated()
           closeOperationPanel()
           notifications.success("Operation deleted.")
