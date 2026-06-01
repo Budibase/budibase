@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
-import { enrichGridConditions, getActiveConditions } from "./conditions"
+import {
+  enrichGridConditions,
+  getEvaluatableConditions,
+  getActiveConditions,
+  shouldHonorDisabledConditions,
+} from "./conditions"
 
 describe("enrichGridConditions", () => {
   it("enriches row and current user bindings in conditions", () => {
@@ -37,5 +42,46 @@ describe("getActiveConditions", () => {
     ])
 
     expect(active).toEqual([])
+  })
+
+  it("ignores disabled flag when disabled handling is turned off", () => {
+    const active = getActiveConditions(
+      [
+        {
+          disabled: true,
+          valueType: "string",
+          operator: "equal",
+          referenceValue: "x",
+          newValue: "x",
+        },
+      ],
+      { honorDisabledConditions: false }
+    )
+
+    expect(active).toHaveLength(1)
+  })
+})
+
+describe("disabled condition helpers", () => {
+  it("derives whether disabled conditions should be honored", () => {
+    expect(
+      shouldHonorDisabledConditions({ inBuilder: true, isDevApp: false })
+    ).toEqual(true)
+    expect(
+      shouldHonorDisabledConditions({ inBuilder: false, isDevApp: true })
+    ).toEqual(true)
+    expect(
+      shouldHonorDisabledConditions({ inBuilder: false, isDevApp: false })
+    ).toEqual(false)
+  })
+
+  it("returns evaluatable conditions based on disabled handling mode", () => {
+    const conditions = [{ disabled: true }, { disabled: false }]
+    expect(
+      getEvaluatableConditions(conditions, { honorDisabledConditions: true })
+    ).toEqual([{ disabled: false }])
+    expect(
+      getEvaluatableConditions(conditions, { honorDisabledConditions: false })
+    ).toEqual(conditions)
   })
 })

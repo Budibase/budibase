@@ -2,16 +2,37 @@ import { QueryUtils } from "@budibase/frontend-core"
 import { EmptyFilterOption } from "@budibase/types"
 import { processStringSync } from "@budibase/string-templates"
 
-export const getActiveConditions = conditions => {
+export const shouldHonorDisabledConditions = ({
+  inBuilder = false,
+  isDevApp = false,
+} = {}) => inBuilder || isDevApp
+
+export const getEvaluatableConditions = (
+  conditions,
+  { honorDisabledConditions = true } = {}
+) => {
   if (!conditions?.length) {
     return []
   }
 
-  return conditions.filter(condition => {
-    if (condition.disabled) {
-      return false
-    }
+  if (!honorDisabledConditions) {
+    return conditions
+  }
 
+  return conditions.filter(condition => !condition.disabled)
+}
+
+export const getActiveConditions = (
+  conditions,
+  { honorDisabledConditions = true } = {}
+) => {
+  if (!conditions?.length) {
+    return []
+  }
+
+  return getEvaluatableConditions(conditions, {
+    honorDisabledConditions,
+  }).filter(condition => {
     // Parse values into correct types
     if (condition.valueType === "number") {
       condition.referenceValue = parseFloat(condition.referenceValue)
