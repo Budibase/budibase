@@ -282,6 +282,11 @@
                   }
                 }}
               />
+              <Toggle
+                text=""
+                value={!condition.disabled}
+                on:change={e => toggleCondition(condition.id, e.detail)}
+              />
               <Icon
                 name="copy"
                 hoverable
