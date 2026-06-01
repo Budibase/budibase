@@ -17,6 +17,9 @@
   })
 
   const startEditing = () => {
+    if (editing) {
+      return
+    }
     editing = true
     draft = value
   }
