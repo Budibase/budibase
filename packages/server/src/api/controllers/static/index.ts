@@ -278,12 +278,7 @@ export async function processPWAZip(ctx: UserCtx) {
         }
       }
 
-      if (
-        !icon.src ||
-        !icon.sizes ||
-        !resolvedSrc ||
-        !validIconFile
-      ) {
+      if (!icon.src || !icon.sizes || !resolvedSrc || !validIconFile) {
         continue
       }
 
