@@ -7,9 +7,12 @@
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
   import {
+    getEvaluatableConditions,
     getActiveConditions,
     reduceConditionActions,
+    shouldHonorDisabledConditions,
   } from "@/utils/conditions"
+  import { appStore } from "@/stores/app"
   import { authStore } from "@/stores/auth"
   import { currentRole } from "@/stores/derived/currentRole.js"
 
@@ -198,14 +201,23 @@
 
   function evaluateNavItemConditions(conditions = []) {
     if (!conditions?.length) return true
+    const honorDisabledConditions = shouldHonorDisabledConditions({
+      inBuilder: $builderStore.inBuilder,
+      isDevApp: $appStore.isDevApp,
+    })
+    const evaluatableConditions = getEvaluatableConditions(conditions, {
+      honorDisabledConditions,
+    })
 
     // Get only the active (matching) conditions
-    const activeConditions = getActiveConditions(conditions)
+    const activeConditions = getActiveConditions(evaluatableConditions, {
+      honorDisabledConditions,
+    })
     const { visible } = reduceConditionActions(activeConditions)
 
     if (visible == null) {
       // If any show condition exists, default to hidden unless one matches
-      const hasShow = conditions.some(cond => cond.action === "show")
+      const hasShow = evaluatableConditions.some(cond => cond.action === "show")
       return hasShow ? false : true
     }
     return visible

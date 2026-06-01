@@ -23,8 +23,10 @@
   } from "@/stores"
   import { Helpers } from "@budibase/bbui"
   import {
+    getEvaluatableConditions,
     getActiveConditions,
     reduceConditionActions,
+    shouldHonorDisabledConditions,
   } from "@/utils/conditions"
   import EmptyPlaceholder from "@/components/app/EmptyPlaceholder.svelte"
   import ScreenPlaceholder from "@/components/app/ScreenPlaceholder.svelte"
@@ -518,18 +520,23 @@
       visible = true
       return
     }
-
-    const enabledConditions = conditions.filter(
-      condition => !condition.disabled
-    )
+    const honorDisabledConditions = shouldHonorDisabledConditions({
+      inBuilder: $builderStore.inBuilder,
+      isDevApp: $appStore.isDevApp,
+    })
+    const evaluatableConditions = getEvaluatableConditions(conditions, {
+      honorDisabledConditions,
+    })
 
     // Default visible to false if there is a show condition
-    let nextVisible = !enabledConditions.find(
+    let nextVisible = !evaluatableConditions.find(
       condition => condition.action === "show"
     )
 
     // Execute conditions and determine settings and visibility changes
-    const activeConditions = getActiveConditions(enabledConditions)
+    const activeConditions = getActiveConditions(evaluatableConditions, {
+      honorDisabledConditions,
+    })
     const result = reduceConditionActions(activeConditions)
     if (result.visible != null) {
       nextVisible = result.visible
