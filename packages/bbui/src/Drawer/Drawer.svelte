@@ -299,16 +299,17 @@
     gap: var(--spacing-xl);
   }
   .text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    gap: var(--spacing-xs);
+    flex: 1 1 auto;
+    min-width: 0;
     font-weight: 500;
     color: var(--spectrum-global-color-gray-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .buttons {
     display: flex;
+    flex: 0 0 auto;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
