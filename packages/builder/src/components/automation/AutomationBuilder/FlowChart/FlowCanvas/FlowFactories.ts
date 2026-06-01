@@ -23,6 +23,7 @@ export const stepNode = (
     type: "step-node",
     data,
     position,
+    draggable: false,
   }
   if (parentId) {
     node.parentId = parentId
@@ -52,6 +53,7 @@ export const branchNode = (
     type: "branch-node",
     data,
     position,
+    draggable: false,
   }
   if (parentId) {
     node.parentId = parentId
@@ -67,7 +69,13 @@ export const anchorNode = (
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
   const data: AnchorNodeData = {}
-  const node: FlowNode = { id, type: "anchor-node", data, position }
+  const node: FlowNode = {
+    id,
+    type: "anchor-node",
+    data,
+    position,
+    draggable: false,
+  }
   if (parentId) {
     node.parentId = parentId
     node.extent = "parent"

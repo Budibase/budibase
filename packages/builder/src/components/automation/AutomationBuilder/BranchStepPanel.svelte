@@ -7,7 +7,7 @@
     DrawerContent,
     Icon,
   } from "@budibase/bbui"
-  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+  import ConditionBuilder from "@/components/common/ConditionBuilder.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
@@ -255,7 +255,7 @@
 <Drawer bind:this={branchConditionDrawer} title="Branch condition" forceModal>
   <Button cta slot="buttons" on:click={saveBranchCondition}>Save</Button>
   <DrawerContent slot="body">
-    <FilterBuilder
+    <ConditionBuilder
       filters={editableBranchConditionUI}
       bindings={branchBindings}
       schemaFields={branchSchemaFields}
@@ -265,7 +265,6 @@
         editableBranchConditionUI = e.detail
       }}
       allowOnEmpty={false}
-      builderType={"condition"}
       docsURL={null}
       evaluationContext={$memoContext}
     />

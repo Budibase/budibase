@@ -16,7 +16,10 @@
     }
 
     const [hour, minute] = e.target.value.split(":").map(x => parseInt(x))
-    dispatch("change", (value || dayjs()).hour(hour).minute(minute))
+    dispatch(
+      "change",
+      (value || dayjs()).hour(hour).minute(minute).second(0).millisecond(0)
+    )
   }
 </script>
 

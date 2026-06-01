@@ -42,6 +42,12 @@ export enum Event {
   AI_AGENT_CREATED = "ai:agent:created",
   AI_AGENT_UPDATED = "ai:agent:updated",
   AI_AGENT_DELETED = "ai:agent:deleted",
+  RAG_FILE_UPLOADED = "rag:file:uploaded",
+  RAG_FILE_DELETED = "rag:file:deleted",
+  RAG_FILE_SHAREPOINT_CONNECTED = "rag:file:sharepoint:connected",
+  RAG_FILE_SHAREPOINT_DISCONNECTED = "rag:file:sharepoint:disconnected",
+  RAG_FILE_SHAREPOINT_SYNC = "rag:file:sharepoint:sync",
+  RAG_FILE_PROCESSED = "rag:file:processed",
 
   // AUTH
   AUTH_SSO_CREATED = "auth:sso:created",
@@ -293,6 +299,12 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.AI_AGENT_CREATED]: `AI agent "{{ name }}" created`,
   [Event.AI_AGENT_UPDATED]: `AI agent "{{ name }}" updated`,
   [Event.AI_AGENT_DELETED]: `AI agent "{{ name }}" deleted`,
+  [Event.RAG_FILE_UPLOADED]: undefined,
+  [Event.RAG_FILE_DELETED]: undefined,
+  [Event.RAG_FILE_SHAREPOINT_CONNECTED]: undefined,
+  [Event.RAG_FILE_SHAREPOINT_DISCONNECTED]: undefined,
+  [Event.RAG_FILE_SHAREPOINT_SYNC]: undefined,
+  [Event.RAG_FILE_PROCESSED]: undefined,
 
   // AUTH
   [Event.AUTH_SSO_CREATED]: `SSO configuration created`,
