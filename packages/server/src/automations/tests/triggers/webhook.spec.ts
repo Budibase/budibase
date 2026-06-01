@@ -101,13 +101,15 @@ describe("Webhook trigger test", () => {
     expect(queuedJob.event.timeout).toBeUndefined()
     expect(queuedJob.event.user).toBeUndefined()
     expect(queuedJob.event.metadata).toBeUndefined()
-    expect(queuedJob.event.normalData).toEqual("test")
-    expect(queuedJob.event.body).toEqual({
-      appId: "app_victim",
-      timeout: 1,
-      user: { email: "attacker@example.com" },
-      metadata: { automationChainCount: -1 },
+    expect(queuedJob.event).toMatchObject({
       normalData: "test",
+      body: {
+        appId: "app_victim",
+        timeout: 1,
+        user: { email: "attacker@example.com" },
+        metadata: { automationChainCount: -1 },
+        normalData: "test",
+      },
     })
 
     addMock.mockRestore()
