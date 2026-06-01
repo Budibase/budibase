@@ -15,7 +15,14 @@ jest.mock("../../knowledgeBase", () => ({
     mockUpdateKnowledgeBaseFile(...args),
 }))
 
-import { KnowledgeBaseType, type KnowledgeBase } from "@budibase/types"
+import {
+  KnowledgeBaseFileStatus,
+  KnowledgeBaseType,
+  type KnowledgeBase,
+  type KnowledgeBaseFile,
+  type WithRequired,
+} from "@budibase/types"
+import * as XLSX from "xlsx"
 import { GeminiRagProcessor } from "./gemini"
 
 const knowledgeBase = {
@@ -26,6 +33,19 @@ const knowledgeBase = {
     googleFileStoreId: "store_1",
   },
 } satisfies KnowledgeBase
+
+const buildWorkbookBuffer = (
+  rows: Array<Array<string | number>>,
+  sheetName = "Plans"
+) => {
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet(rows),
+    sheetName
+  )
+  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
+}
 
 describe("GeminiRagProcessor", () => {
   beforeEach(() => {
@@ -202,5 +222,47 @@ describe("GeminiRagProcessor", () => {
         chunkText: "Policies are reviewed quarterly.",
       },
     ])
+  })
+
+  it("normalizes spreadsheet uploads into plain text before ingestion", async () => {
+    mockIngestGeminiFile.mockResolvedValue({ fileId: "gemini-file-1" })
+
+    const processor = new GeminiRagProcessor(knowledgeBase)
+
+    const file = {
+      _id: "file_1",
+      knowledgeBaseId: "kb_1",
+      filename: "pricing.xlsx",
+      mimetype:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      objectStoreKey: "uploads/pricing.xlsx",
+      ragSourceId: "",
+      status: KnowledgeBaseFileStatus.PROCESSING,
+      uploadedBy: "user_1",
+    } satisfies WithRequired<KnowledgeBaseFile, "_id">
+
+    await processor.ingestKnowledgeBaseFile(
+      file,
+      buildWorkbookBuffer([
+        ["Plan", "Price"],
+        ["Pro", 49],
+      ])
+    )
+
+    expect(mockIngestGeminiFile).toHaveBeenCalledTimes(1)
+    const ingestPayload = mockIngestGeminiFile.mock.calls[0][0]
+    expect(ingestPayload.vectorStoreId).toBe("store_1")
+    expect(ingestPayload.filename).toBe("pricing.xlsx")
+    expect(ingestPayload.mimetype).toBe("text/plain")
+    expect(ingestPayload.buffer.toString("utf8")).toContain(
+      "Columns: Plan | Price"
+    )
+    expect(ingestPayload.buffer.toString("utf8")).toContain("Plan: Pro")
+    expect(mockUpdateKnowledgeBaseFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: KnowledgeBaseFileStatus.READY,
+        ragSourceId: "gemini-file-1",
+      })
+    )
   })
 })
