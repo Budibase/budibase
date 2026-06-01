@@ -130,7 +130,7 @@ Any constraints the agent must follow.
         type="button"
         onclick={() => openOperationPanel()}
       >
-        <span class="operation-name">Default operation</span>
+        <span class="operation-name">Main operation</span>
 
         <Icon
           name="dots-three"

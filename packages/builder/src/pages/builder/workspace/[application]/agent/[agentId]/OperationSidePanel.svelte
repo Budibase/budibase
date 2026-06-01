@@ -134,8 +134,7 @@
             <Body
               size="S"
               weight="500"
-              color="var(--spectrum-global-color-gray-900)"
-              >Default operation</Body
+              color="var(--spectrum-global-color-gray-900)">Main operation</Body
             >
           </div>
         </svelte:fragment>
