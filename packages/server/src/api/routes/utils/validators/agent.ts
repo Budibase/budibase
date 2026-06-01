@@ -83,6 +83,7 @@ export function updateAgentValidator() {
       description: OPTIONAL_STRING,
       aiconfig: OPTIONAL_AICONFIG,
       promptInstructions: OPTIONAL_STRING,
+      operationName: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
