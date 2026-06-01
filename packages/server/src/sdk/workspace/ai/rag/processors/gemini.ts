@@ -12,6 +12,7 @@ import {
   searchGeminiFileStore,
 } from "../../knowledgeBase/geminiFileStore"
 import { updateKnowledgeBaseFile } from "../../knowledgeBase"
+import { buildSpreadsheetIngestVariants } from "./spreadsheetTransforms"
 
 export class GeminiRagProcessor implements RagProcessor {
   private knowledgeBase: GeminiKnowledgeBase
@@ -42,15 +43,46 @@ export class GeminiRagProcessor implements RagProcessor {
     })
 
     try {
-      const ingested = await ingestGeminiFile({
-        vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+      const variants = buildSpreadsheetIngestVariants({
         filename: input.filename,
         mimetype: input.mimetype,
         buffer: fileBuffer,
       })
+      const ingestedFileIds: string[] = []
+
+      try {
+        for (const variant of variants) {
+          const ingested = await ingestGeminiFile({
+            vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+            filename: variant.filename,
+            mimetype: variant.mimetype,
+            buffer: variant.buffer,
+          })
+          ingestedFileIds.push(ingested.fileId)
+          console.log("Completed Gemini RAG file variant ingestion", {
+            knowledgeBaseId,
+            vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+            fileId: input._id,
+            filename: input.filename,
+            strategy: variant.strategy,
+            ragSourceId: ingested.fileId,
+          })
+        }
+      } catch (error) {
+        await Promise.allSettled(
+          ingestedFileIds.map(fileId =>
+            deleteGeminiFileFromStore({
+              vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+              fileId,
+            })
+          )
+        )
+        throw error
+      }
 
       input.status = KnowledgeBaseFileStatus.READY
-      input.ragSourceId = ingested.fileId
+      input.ragSourceId = ingestedFileIds[0]
+      input.ragSourceIds = ingestedFileIds
       input.processedAt = new Date().toISOString()
       input.errorMessage = undefined
       await updateKnowledgeBaseFile(input)
@@ -59,6 +91,7 @@ export class GeminiRagProcessor implements RagProcessor {
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
         fileId: input._id,
         ragSourceId: input.ragSourceId,
+        ragSourceIds: input.ragSourceIds,
         durationMs: Date.now() - startedAtMs,
       })
     } catch (error) {

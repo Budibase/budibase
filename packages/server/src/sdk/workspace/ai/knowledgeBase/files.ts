@@ -17,6 +17,9 @@ import {
 import { ObjectStoreBuckets } from "../../../../constants"
 import { deleteKnowledgeBaseFileChunks } from "../rag/files"
 
+const getKnowledgeBaseFileSourceIds = (file: KnowledgeBaseFile) =>
+  Array.from(new Set([file.ragSourceId, ...(file.ragSourceIds || [])].filter(Boolean)))
+
 interface CreateKnowledgeBaseFileOptions {
   id: string
   knowledgeBaseId: string
@@ -58,6 +61,7 @@ export const createKnowledgeBaseFile = async (
     size,
     objectStoreKey,
     ragSourceId: ragSourceId || _id,
+    ragSourceIds: [ragSourceId || _id],
     status: KnowledgeBaseFileStatus.PROCESSING,
     uploadedBy,
     errorMessage: undefined,
@@ -131,7 +135,10 @@ export const removeKnowledgeBaseFile = async (
   }
 
   if (!isFileInProduction) {
-    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
+    await deleteKnowledgeBaseFileChunks(
+      knowledgeBase,
+      getKnowledgeBaseFileSourceIds(file)
+    )
   }
 
   if (file.objectStoreKey) {

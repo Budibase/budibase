@@ -1,5 +1,5 @@
 import {
-  AgentMessageRagSource,
+  type AgentMessageRagSource,
   type Agent,
   type KnowledgeBase,
   type KnowledgeBaseFile,
@@ -10,8 +10,16 @@ import {
 } from "@budibase/types"
 import { HTTPError, locks } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
-import { RetrievedContextChunk } from "./processors"
+import type { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
+
+const getKnowledgeBaseFileSourceIds = (file: KnowledgeBaseFile) =>
+  Array.from(
+    new Set([file.ragSourceId, ...(file.ragSourceIds || [])].filter(Boolean))
+  )
+
+const getPrimaryKnowledgeBaseFileSourceId = (file: KnowledgeBaseFile) =>
+  getKnowledgeBaseFileSourceIds(file)[0]
 
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
@@ -57,7 +65,8 @@ const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
   const ambiguousFilenames = new Set<string>()
 
   for (const file of readyFiles) {
-    if (!file.ragSourceId) {
+    const primarySourceId = getPrimaryKnowledgeBaseFileSourceId(file)
+    if (!primarySourceId) {
       continue
     }
 
@@ -67,16 +76,60 @@ const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
     }
 
     const existingSourceId = sourceIdByFilename.get(normalizedFilename)
-    if (existingSourceId && existingSourceId !== file.ragSourceId) {
+    if (existingSourceId && existingSourceId !== primarySourceId) {
       sourceIdByFilename.delete(normalizedFilename)
       ambiguousFilenames.add(normalizedFilename)
       continue
     }
 
-    sourceIdByFilename.set(normalizedFilename, file.ragSourceId)
+    sourceIdByFilename.set(normalizedFilename, primarySourceId)
   }
 
   return sourceIdByFilename
+}
+
+const getCanonicalSourceIdByKnownSourceId = (
+  readyFiles: KnowledgeBaseFile[]
+) => {
+  const canonicalSourceIdByKnownSourceId = new Map<string, string>()
+
+  for (const file of readyFiles) {
+    const primarySourceId = getPrimaryKnowledgeBaseFileSourceId(file)
+    if (!primarySourceId) {
+      continue
+    }
+
+    for (const sourceId of getKnowledgeBaseFileSourceIds(file)) {
+      canonicalSourceIdByKnownSourceId.set(sourceId, primarySourceId)
+    }
+  }
+
+  return canonicalSourceIdByKnownSourceId
+}
+
+const dedupeRetrievedChunks = (chunks: RetrievedContextChunk[]) => {
+  const seen = new Set<string>()
+  const deduped: RetrievedContextChunk[] = []
+
+  for (const chunk of chunks) {
+    const normalizedText = chunk.chunkText.trim().replace(/\s+/g, " ")
+    if (!normalizedText) {
+      continue
+    }
+
+    const key = `${chunk.source || ""}::${normalizedText}`
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    deduped.push({
+      ...chunk,
+      chunkText: chunk.chunkText.trim(),
+    })
+  }
+
+  return deduped
 }
 
 export const ensureKnowledgeBaseForAgent = async (
@@ -241,15 +294,13 @@ export const retrieveContextForAgent = async (
     const readyFiles = knowledgeBaseFiles.filter(
       file => file.status === KnowledgeBaseFileStatus.READY
     )
-    const readyFileSources = readyFiles
-      .map(file => file.ragSourceId)
-      .filter((id): id is string => !!id)
 
     if (readyFiles.length === 0) {
       continue
     }
 
-    const readyFileSourceIds = new Set(readyFileSources)
+    const canonicalSourceIdByKnownSourceId =
+      getCanonicalSourceIdByKnownSourceId(readyFiles)
     const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
     const processor = getProcessor(knowledgeBase)
     const returned = await processor.search(question)
@@ -260,8 +311,14 @@ export const retrieveContextForAgent = async (
         continue
       }
 
-      if (readyFileSourceIds.has(chunk.source)) {
-        chunks.push(chunk)
+      const canonicalSourceId = canonicalSourceIdByKnownSourceId.get(
+        chunk.source
+      )
+      if (canonicalSourceId) {
+        chunks.push({
+          ...chunk,
+          source: canonicalSourceId,
+        })
         continue
       }
 
@@ -283,10 +340,15 @@ export const retrieveContextForAgent = async (
     return { text: "", chunks: [], sources: [] }
   }
 
+  const dedupedChunks = dedupeRetrievedChunks(chunks)
+  if (dedupedChunks.length === 0) {
+    return { text: "", chunks: [], sources: [] }
+  }
+
   return {
-    text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
-    chunks,
-    sources: toSourceMetadata(chunks, files),
+    text: dedupedChunks.map(chunk => chunk.chunkText).join("\n\n"),
+    chunks: dedupedChunks,
+    sources: toSourceMetadata(dedupedChunks, files),
   }
 }
 
@@ -297,9 +359,12 @@ const toSourceMetadata = (
   const readyFiles = files.filter(
     file => file.status === KnowledgeBaseFileStatus.READY
   )
-  const fileBySourceId = new Map(
-    readyFiles.map(file => [file.ragSourceId, file])
-  )
+  const fileBySourceId = new Map<string, KnowledgeBaseFile>()
+  for (const file of readyFiles) {
+    for (const sourceId of getKnowledgeBaseFileSourceIds(file)) {
+      fileBySourceId.set(sourceId, file)
+    }
+  }
   const summary = new Map<string, AgentMessageRagSource>()
 
   for (const chunk of chunks) {

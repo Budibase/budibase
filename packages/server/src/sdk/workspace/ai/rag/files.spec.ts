@@ -703,5 +703,59 @@ describe("rag files", () => {
         sources: [],
       })
     })
+
+    it("maps variant source ids back to the primary file source and dedupes repeated chunks", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "policy.xlsx",
+          objectStoreKey: "obj",
+          ragSourceId: "source-native",
+          ragSourceIds: ["source-native", "source-row", "source-markdown"],
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+      mockProcessorSearch.mockResolvedValue([
+        {
+          source: "source-native",
+          chunkText: "Policy row one",
+        },
+        {
+          source: "source-row",
+          chunkText: "Policy row one",
+        },
+        {
+          source: "source-markdown",
+          chunkText: "Policy row two",
+        },
+      ])
+
+      const result = await retrieveContextForAgent(
+        defaultAgent,
+        "What is in the spreadsheet?"
+      )
+
+      expect(result.text).toBe("Policy row one\n\nPolicy row two")
+      expect(result.chunks).toEqual([
+        {
+          source: "source-native",
+          chunkText: "Policy row one",
+        },
+        {
+          source: "source-native",
+          chunkText: "Policy row two",
+        },
+      ])
+      expect(result.sources).toEqual([
+        {
+          sourceId: "source-native",
+          fileId: "file_1",
+          filename: "policy.xlsx",
+        },
+      ])
+    })
   })
 })
