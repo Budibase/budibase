@@ -1,6 +1,10 @@
 import { getSettingsDefinition } from "@budibase/frontend-core"
 import { enrichProps } from "@/utils/componentProps"
-import { getActiveConditions, reduceConditionActions } from "@/utils/conditions"
+import {
+  getEvaluatableConditions,
+  getActiveConditions,
+  reduceConditionActions,
+} from "@/utils/conditions"
 import { componentStore } from "@/stores/components"
 
 let buttonSettingsDefinitionMap
@@ -29,18 +33,25 @@ const getButtonSettingsDefinitionMap = () => {
   return buttonSettingsDefinitionMap
 }
 
-const evaluateButtonConditions = conditions => {
+const evaluateButtonConditions = (
+  conditions,
+  honorDisabledConditions = true
+) => {
   if (!conditions?.length) {
     return { visible: true, settingUpdates: {} }
   }
 
-  const enabledConditions = conditions.filter(condition => !condition.disabled)
+  const evaluatableConditions = getEvaluatableConditions(conditions, {
+    honorDisabledConditions,
+  })
 
   // Keep in line with Component.svelte's condition evaluation behavior.
-  let visible = !enabledConditions.find(
+  let visible = !evaluatableConditions.find(
     condition => condition.action === "show"
   )
-  const activeConditions = getActiveConditions(enabledConditions)
+  const activeConditions = getActiveConditions(evaluatableConditions, {
+    honorDisabledConditions,
+  })
   const result = reduceConditionActions(activeConditions)
   if (result.visible != null) {
     visible = result.visible
@@ -53,7 +64,8 @@ const buildCollapsedButton = (
   button,
   context,
   enrichButtonActions,
-  settingsDefinitionMap
+  settingsDefinitionMap,
+  honorDisabledConditions
 ) => {
   const rawConditions = button?._conditions || button?.conditions
   // Enrich bindings so dynamic text/actions/conditions resolve in collapsed mode.
@@ -66,7 +78,8 @@ const buildCollapsedButton = (
     settingsDefinitionMap
   )
   const { visible, settingUpdates } = evaluateButtonConditions(
-    enriched._conditions
+    enriched._conditions,
+    honorDisabledConditions
   )
 
   if (!visible) {
@@ -96,7 +109,8 @@ const buildCollapsedButton = (
 export const resolveCollapsedButtons = (
   buttons,
   context,
-  enrichButtonActions
+  enrichButtonActions,
+  honorDisabledConditions = true
 ) => {
   if (!buttons?.length) {
     return []
@@ -110,7 +124,8 @@ export const resolveCollapsedButtons = (
         button,
         context,
         enrichButtonActions,
-        settingsDefinitionMap
+        settingsDefinitionMap,
+        honorDisabledConditions
       )
     )
     .filter(Boolean)
