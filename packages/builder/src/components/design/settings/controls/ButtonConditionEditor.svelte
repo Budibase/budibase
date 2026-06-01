@@ -156,9 +156,7 @@
 
   const toggleCondition = (id: string, enabled: boolean) => {
     conditions = conditions.map(condition =>
-      condition.id === id
-        ? { ...condition, disabled: !enabled }
-        : condition
+      condition.id === id ? { ...condition, disabled: !enabled } : condition
     )
   }
 
