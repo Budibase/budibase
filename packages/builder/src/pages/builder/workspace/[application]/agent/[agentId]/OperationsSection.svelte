@@ -51,6 +51,7 @@ Any constraints the agent must follow.
 
   let operationPanelOpen = $state(false)
   let currentAgentId = $derived($selectedAgent?._id)
+  let operationName = $derived(agent?.operationName?.trim() || "Main operation")
   let hasOperation = $derived.by(() => {
     if (!agent) {
       return false
@@ -74,6 +75,7 @@ Any constraints the agent must follow.
       return
     }
     if (agent) {
+      agent.operationName = agent.operationName?.trim()
       agent.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
     }
     onUpdated()
@@ -88,7 +90,7 @@ Any constraints the agent must follow.
     const safeAgent = agent
     await confirm({
       title: "Confirm deletion",
-      body: "Delete the default operation? This will clear instructions and selected tools.",
+      body: "Delete this operation? This will clear instructions and selected tools.",
       okText: "Delete",
       warning: true,
       onConfirm: async () => {
@@ -130,7 +132,7 @@ Any constraints the agent must follow.
         type="button"
         onclick={() => openOperationPanel()}
       >
-        <span class="operation-name">Main operation</span>
+        <span class="operation-name">{operationName}</span>
 
         <Icon
           name="dots-three"

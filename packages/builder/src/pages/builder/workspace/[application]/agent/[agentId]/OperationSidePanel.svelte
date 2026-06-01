@@ -14,6 +14,7 @@
   import { EditorModes } from "@/components/common/CodeEditor"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
+  import OperationNameInput from "./OperationNameInput.svelte"
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
 
@@ -80,6 +81,15 @@
       {} as Record<string, AgentTool[]>
     )
   )
+  let operationName = $derived(agent?.operationName?.trim() || "Main operation")
+  const saveOperationName = (name: string) => {
+    if (!agent) {
+      return
+    }
+    const trimmed = name.trim()
+    agent.operationName = trimmed || "Main operation"
+    onUpdated()
+  }
 
   const handleToolClick = (tool: AgentTool) => {
     if (!agent) {
@@ -131,11 +141,10 @@
       >
         <svelte:fragment slot="panel-title-content">
           <div class="operation-title-row">
-            <Body
-              size="S"
-              weight="500"
-              color="var(--spectrum-global-color-gray-900)">Main operation</Body
-            >
+            <OperationNameInput
+              value={operationName}
+              onSave={saveOperationName}
+            />
           </div>
         </svelte:fragment>
         <div class="operation-panel">
