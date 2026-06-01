@@ -9,7 +9,11 @@
   const tabs = ["settings", "styles"]
   let section = "settings"
 
-  $: $selectedScreen, (section = "settings")
+  let currentScreenId = $selectedScreen?._id
+  $: if ($selectedScreen?._id !== currentScreenId) {
+    currentScreenId = $selectedScreen?._id
+    section = "settings"
+  }
 </script>
 
 {#if $selectedScreen}

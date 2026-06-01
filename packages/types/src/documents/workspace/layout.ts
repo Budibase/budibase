@@ -15,7 +15,4 @@ export interface Layout extends Document {
   logoUrl?: string
   hideTitle?: boolean
   banner?: AppBanner
-  screenBackground?: string
-  screenGradient?: string
-  screenCustomCss?: string
 }
