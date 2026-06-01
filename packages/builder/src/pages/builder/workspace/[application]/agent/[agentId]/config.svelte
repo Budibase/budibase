@@ -52,6 +52,7 @@
     goal: "",
     icon: "",
     iconColor: "",
+    operations: [],
   })
 
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
@@ -179,7 +180,12 @@
         goal: agent.goal || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
-        operations: agent.operations || [],
+        operations:
+          agent.operations?.map(op => ({
+            id: op.id,
+            name: op.name,
+            promptInstructions: op.promptInstructions,
+          })) || [],
       }
       draftAgentId = agent._id
     }
