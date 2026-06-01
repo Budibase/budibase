@@ -94,16 +94,8 @@ describe("test the update row action", () => {
       sourceType: TableSourceType.INTERNAL,
       sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
-        user1: {
-          ...linkField,
-          name: "user1",
-          fieldName: uuid.v4().replace(/-/g, ""),
-        },
-        user2: {
-          ...linkField,
-          name: "user2",
-          fieldName: uuid.v4().replace(/-/g, ""),
-        },
+        user1: { ...linkField, name: "user1", fieldName: uuid.v4() },
+        user2: { ...linkField, name: "user2", fieldName: uuid.v4() },
       },
     })
 
@@ -156,16 +148,8 @@ describe("test the update row action", () => {
       sourceType: TableSourceType.INTERNAL,
       sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
-        user1: {
-          ...linkField,
-          name: "user1",
-          fieldName: uuid.v4().replace(/-/g, ""),
-        },
-        user2: {
-          ...linkField,
-          name: "user2",
-          fieldName: uuid.v4().replace(/-/g, ""),
-        },
+        user1: { ...linkField, name: "user1", fieldName: uuid.v4() },
+        user2: { ...linkField, name: "user2", fieldName: uuid.v4() },
       },
     })
 

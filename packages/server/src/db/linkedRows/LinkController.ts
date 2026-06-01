@@ -1,5 +1,4 @@
 import { context, logging } from "@budibase/backend-core"
-import { ValidColumnNameRegex } from "@budibase/shared-core"
 import {
   Database,
   FieldSchema,
@@ -97,9 +96,6 @@ class LinkController {
     for (let schema of Object.values(table.schema)) {
       if (schema.type !== FieldType.LINK) {
         continue
-      }
-      if (schema.fieldName && !schema.fieldName.match(ValidColumnNameRegex)) {
-        throw new Error("Column names can't contain special characters")
       }
       const unique = schema.tableId! + schema?.fieldName
       if (usedAlready.indexOf(unique) !== -1) {
