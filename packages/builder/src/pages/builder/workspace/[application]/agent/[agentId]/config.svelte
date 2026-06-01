@@ -535,7 +535,10 @@
   onUpdated={() => scheduleSave(true)}
 />
 
-<WebSearchConfigModal bind:this={webSearchConfigModal} aiconfigId={draft.aiconfig} />
+<WebSearchConfigModal
+  bind:this={webSearchConfigModal}
+  aiconfigId={draft.aiconfig}
+/>
 
 <style>
   .llm-section-container {
