@@ -69,6 +69,13 @@ async function lookup(address: string): Promise<string[]> {
   return addresses.map(addr => addr.address)
 }
 
+export async function resolveAddress(address: string): Promise<string[]> {
+  if (!net.isIP(address)) {
+    return lookup(address)
+  }
+  return [address]
+}
+
 function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
   const trimmed = entry.trim()
   if (!trimmed) {
@@ -135,18 +142,14 @@ export async function isBlacklisted(address: string): Promise<boolean> {
   }
 
   let ips: string[]
-  if (!net.isIP(address)) {
-    try {
-      ips = await lookup(address)
-    } catch (e) {
-      if (e instanceof TypeError) {
-        console.error("Black list error: could not parse address: ", address)
-        return true
-      }
-      return shouldApplyDefaultBlacklist()
+  try {
+    ips = await resolveAddress(address)
+  } catch (e) {
+    if (e instanceof TypeError) {
+      console.error("Black list error: could not parse address: ", address)
+      return true
     }
-  } else {
-    ips = [address]
+    return shouldApplyDefaultBlacklist()
   }
   return ips.some(ip => blackList!.check(ip, getIpVersion(ip)))
 }
