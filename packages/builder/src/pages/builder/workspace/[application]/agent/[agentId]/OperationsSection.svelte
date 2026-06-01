@@ -35,6 +35,7 @@ Any constraints the agent must follow.
     toolsLoaded = false,
     availableTools = [],
     webSearchConfigured = false,
+    onDeleteOperation = async () => {},
     onUpdated,
   }: {
     agent?: Agent
@@ -44,6 +45,7 @@ Any constraints the agent must follow.
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
     webSearchConfigured?: boolean
+    onDeleteOperation?: () => Promise<void>
     onUpdated: () => void
   } = $props()
 
@@ -83,21 +85,26 @@ Any constraints the agent must follow.
       return
     }
 
-    const confirmed = await confirm({
+    const safeAgent = agent
+    await confirm({
       title: "Confirm deletion",
       body: "Delete the default operation? This will clear instructions and selected tools.",
       okText: "Delete",
       warning: true,
+      onConfirm: async () => {
+        try {
+          await onDeleteOperation()
+          safeAgent.promptInstructions = ""
+          safeAgent.enabledTools = []
+          onUpdated()
+          closeOperationPanel()
+          notifications.success("Operation deleted.")
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to delete operation")
+        }
+      },
     })
-    if (!confirmed) {
-      return
-    }
-
-    agent.promptInstructions = ""
-    agent.enabledTools = []
-    onUpdated()
-    closeOperationPanel()
-    notifications.success("Operation deleted.")
   }
 </script>
 

@@ -410,6 +410,26 @@
     }
   }
 
+  async function deleteOperationKnowledge() {
+    if (!currentAgent?._id) {
+      return
+    }
+
+    const agentId = currentAgent._id
+    const knowledge = await agentsStore.fetchAgentKnowledge(agentId)
+    const fileDeletes = (knowledge.files || [])
+      .map(file => file._id)
+      .filter((id): id is string => !!id)
+      .map(fileId => agentsStore.deleteAgentFile(agentId, fileId))
+
+    const sourceDisconnects = (currentAgent.knowledgeSources || [])
+      .map(source => source.config?.site?.id)
+      .filter((id): id is string => !!id)
+      .map(siteId => agentsStore.disconnectAgentSharePointSite(agentId, siteId))
+
+    await Promise.all([...fileDeletes, ...sourceDisconnects])
+  }
+
   const scheduleSave = (immediate = false) => {
     clearAutoSave()
 
@@ -501,6 +521,7 @@
   {toolsLoaded}
   {availableTools}
   {webSearchConfigured}
+  onDeleteOperation={deleteOperationKnowledge}
   onUpdated={() => scheduleSave(true)}
 />
 
