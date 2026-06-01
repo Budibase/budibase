@@ -307,6 +307,7 @@ export async function create(
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     promptInstructions: request.promptInstructions,
+    operationName: request.operationName,
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -354,6 +355,7 @@ export async function duplicate(
     description: source.description,
     aiconfig: source.aiconfig,
     promptInstructions: source.promptInstructions,
+    operationName: source.operationName,
     goal: source.goal,
     icon: source.icon,
     iconColor: source.iconColor,
