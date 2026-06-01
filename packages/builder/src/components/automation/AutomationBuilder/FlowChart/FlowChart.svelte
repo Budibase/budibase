@@ -760,6 +760,8 @@
   .wrapper {
     position: relative;
     height: 100%;
+    overflow: hidden;
+    background-color: var(--xy-background-color);
     --automation-flow-item-background: var(--background);
     --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
@@ -790,6 +792,7 @@
     position: relative;
     width: 100%;
     height: 100%;
+    background-color: var(--xy-background-color);
   }
 
   .automation-heading {
@@ -816,6 +819,7 @@
   .root {
     height: 100%;
     width: 100%;
+    background-color: var(--xy-background-color);
   }
 
   .sticky-note-layer {
@@ -837,6 +841,10 @@
   }
 
   .root :global(.svelte-flow__pane) {
+    background-color: var(--xy-background-color);
+  }
+
+  .root :global(.svelte-flow) {
     background-color: var(--xy-background-color);
   }
 
