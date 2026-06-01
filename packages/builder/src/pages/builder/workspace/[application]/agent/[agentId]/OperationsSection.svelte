@@ -3,6 +3,7 @@
   import type { Agent, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
+  import { confirm } from "@/helpers/confirm"
   import * as routify from "@roxi/routify"
   import { selectedAgent } from "@/stores/portal"
   import OperationSidePanel from "./OperationSidePanel.svelte"
@@ -31,6 +32,14 @@
 
   let operationPanelOpen = $state(false)
   let currentAgentId = $derived($selectedAgent?._id)
+  let hasOperation = $derived.by(() => {
+    if (!agent) {
+      return false
+    }
+    const hasInstructions = Boolean(agent.promptInstructions?.trim())
+    const hasEnabledTools = (agent.enabledTools?.length || 0) > 0
+    return hasInstructions || hasEnabledTools
+  })
 
   const openOperationPanel = () => {
     operationPanelOpen = true
@@ -46,7 +55,25 @@
   }
 
   const deleteOperation = async () => {
-    notifications.warning("Delete operation is not implemented yet.")
+    if (!agent) {
+      return
+    }
+
+    const confirmed = await confirm({
+      title: "Confirm deletion",
+      body: "Delete the default operation? This will clear instructions and selected tools.",
+      okText: "Delete",
+      warning: true,
+    })
+    if (!confirmed) {
+      return
+    }
+
+    agent.promptInstructions = ""
+    agent.enabledTools = []
+    onUpdated()
+    closeOperationPanel()
+    notifications.success("Operation deleted.")
   }
 </script>
 
@@ -65,21 +92,23 @@
     </Button>
   </div>
 
-  <div class="operation-list">
-    <button
-      class="operation-row"
-      type="button"
-      onclick={() => openOperationPanel()}
-    >
-      <span class="operation-name">Default operation</span>
+  {#if hasOperation}
+    <div class="operation-list">
+      <button
+        class="operation-row"
+        type="button"
+        onclick={() => openOperationPanel()}
+      >
+        <span class="operation-name">Default operation</span>
 
-      <Icon
-        name="dots-three"
-        size="S"
-        color="var(--spectrum-global-color-gray-600)"
-      />
-    </button>
-  </div>
+        <Icon
+          name="dots-three"
+          size="S"
+          color="var(--spectrum-global-color-gray-600)"
+        />
+      </button>
+    </div>
+  {/if}
 </div>
 
 <OperationSidePanel
