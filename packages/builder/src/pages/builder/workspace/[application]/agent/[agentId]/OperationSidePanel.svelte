@@ -194,14 +194,10 @@
                   {/if}
                 </div>
                 <div class="editor-footer">
-                  <div class="footer-hint">
-                    <span>Use</span>
-                    <code>{`{{`}</code>
-                    <span>
-                      to add tools to your instructions or the button to the
-                      right.
-                    </span>
-                  </div>
+                  <p class="footer-hint">
+                    Use <code>{`{{`}</code> to add tools to your instructions,
+                    or use the button to the right.
+                  </p>
                   <div class="tools-popover-container">
                     <ToolsDropdown
                       {filteredTools}
@@ -329,12 +325,12 @@
   }
 
   .footer-hint {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    display: block;
     color: var(--spectrum-global-color-gray-900);
     font-size: 13px;
+    line-height: 1.4;
     min-width: 0;
+    margin: 0;
   }
 
   .footer-hint code {
