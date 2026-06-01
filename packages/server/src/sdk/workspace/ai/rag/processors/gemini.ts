@@ -4,7 +4,9 @@ import {
   KnowledgeBaseFile,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
+  WithRequired,
 } from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import { RagProcessor, RetrievedContextChunk } from "."
 import {
   deleteGeminiFileFromStore,
@@ -14,9 +16,9 @@ import {
 import { updateKnowledgeBaseFile } from "../../knowledgeBase"
 
 export class GeminiRagProcessor implements RagProcessor {
-  private knowledgeBase: GeminiKnowledgeBase
+  private knowledgeBase: WithRequired<GeminiKnowledgeBase, "_id">
 
-  constructor(knowledgeBase: KnowledgeBase) {
+  constructor(knowledgeBase: WithRequired<KnowledgeBase, "_id">) {
     if (knowledgeBase.type !== KnowledgeBaseType.GEMINI) {
       throw new Error(
         `GeminiRagProcessor is not compatible with knowledge base type ${knowledgeBase.type}`
@@ -27,15 +29,16 @@ export class GeminiRagProcessor implements RagProcessor {
   }
 
   async ingestKnowledgeBaseFile(
-    input: KnowledgeBaseFile,
+    input: WithRequired<KnowledgeBaseFile, "_id">,
     fileBuffer: Buffer
   ): Promise<void> {
     const startedAtMs = Date.now()
     const knowledgeBaseId = this.knowledgeBase._id
+    const fileId = input._id
     console.log("Starting Gemini RAG file ingestion", {
       knowledgeBaseId,
       vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
-      fileId: input._id,
+      fileId,
       filename: input.filename,
       mimetype: input.mimetype,
       fileSize: fileBuffer.byteLength,
@@ -57,15 +60,22 @@ export class GeminiRagProcessor implements RagProcessor {
       console.log("Completed Gemini RAG file ingestion", {
         knowledgeBaseId,
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
-        fileId: input._id,
+        fileId,
         ragSourceId: input.ragSourceId,
         durationMs: Date.now() - startedAtMs,
+      })
+
+      events.ai.ragFileProcessed({
+        knowledgeBaseId,
+        fileId,
+        sourceType: input.source?.type,
+        processor: this.knowledgeBase.type,
       })
     } catch (error) {
       console.error("Failed Gemini RAG file ingestion", {
         knowledgeBaseId,
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
-        fileId: input._id,
+        fileId,
         filename: input.filename,
         durationMs: Date.now() - startedAtMs,
         error,

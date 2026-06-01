@@ -32,6 +32,7 @@ import {
   type FlowBlockPath,
   type FormUpdate,
   type StepInputs,
+  type StickyNote,
 } from "@/types/automations"
 import {
   AutomationTestProgressEvent,
@@ -101,6 +102,10 @@ import { derived, get, readable, Readable } from "svelte/store"
 import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
 import { contextMenuStore } from "./contextMenu"
+
+export interface AutomationSaveOptions {
+  skipUnpublishedChanges?: boolean
+}
 
 const sameMoveContainer = (
   sourcePath: BlockPath[],
@@ -2625,11 +2630,11 @@ const automationActions = (store: AutomationStore) => ({
     }
   ),
 
-  save: async (automation: Automation) => {
+  save: async (automation: Automation, opts: AutomationSaveOptions = {}) => {
     const response = await API.updateAutomation(automation)
 
     // Mark automation as having unpublished changes
-    if (response.automation._id) {
+    if (!opts.skipUnpublishedChanges && response.automation._id) {
       workspaceDeploymentStore.setAutomationUnpublishedChanges(
         response.automation._id
       )
@@ -2646,6 +2651,90 @@ const automationActions = (store: AutomationStore) => ({
       state.testResults = undefined
       state.testProgress = {}
       return state
+    })
+  },
+
+  addStickyNote: async (position?: { x: number; y: number }) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto) return
+
+    const notes = auto.uiTree?.stickyNotes || []
+    const newNote = {
+      id: generate(),
+      title: "Note",
+      text: "",
+      x: position?.x ?? 100 + notes.length * 30,
+      y: position?.y ?? 100 + notes.length * 30,
+    }
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...(updated.uiTree || {}),
+      stickyNotes: [...notes, newNote],
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
+  },
+
+  updateStickyNote: async (
+    noteId: string,
+    updates: {
+      title?: string
+      text?: string
+      width?: number
+      height?: number
+      x?: number
+      y?: number
+    }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
+        n.id === noteId ? { ...n, ...updates } : n
+      ),
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
+  },
+
+  updateStickyNotePosition: async (
+    noteId: string,
+    position: { x: number; y: number }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
+        n.id === noteId ? { ...n, x: position.x, y: position.y } : n
+      ),
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
+  },
+
+  removeStickyNote: async (noteId: string) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.filter(
+        (n: StickyNote) => n.id !== noteId
+      ),
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
     })
   },
 
@@ -3077,7 +3166,7 @@ class AutomationStore extends DerivedBudiStore<
   AutomationStoreState,
   DerivedAutomationStoreState
 > {
-  history: HistoryStore<Automation>
+  history: HistoryStore<Automation, AutomationSaveOptions>
   actions: ReturnType<typeof automationActions>
   selected: SelectedAutomationStore
 
@@ -3102,7 +3191,7 @@ class AutomationStore extends DerivedBudiStore<
 
     super(initialAutomationState, makeDerivedStore)
     this.actions = automationActions(this)
-    this.history = createHistoryStore({
+    this.history = createHistoryStore<Automation, AutomationSaveOptions>({
       getDoc: this.actions.getDefinition.bind(this),
       selectDoc: this.actions.select.bind(this),
     })
