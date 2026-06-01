@@ -24,6 +24,7 @@
   import type { BranchFlowContext, FlowBlockPath } from "@/types/automations"
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import Panel from "@/components/design/Panel.svelte"
+  import { getAutomationStepIconColor } from "./AutomationStepCategories"
 
   export let block
   export let onClose = () => {}
@@ -38,6 +39,7 @@
   let actionOrderMap: Record<string, number> = {}
   let isSelectingAction = false
   let actionSelectionLocked = false
+  type BranchPathLike = Array<{ branchIdx?: number | null }>
 
   $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
@@ -60,7 +62,19 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
-  $: insideLoopV2 = block?.insertIntoLoopV2
+  $: toolbarEnd = $automationStore.actionPanelToolbarFlowEnd
+  $: flowEnd =
+    toolbarEnd && $selectedAutomation?.data && $selectedAutomation?.blockRefs
+      ? automationStore.actions.getToolbarFlowEndInsertion(
+          $selectedAutomation.data,
+          $selectedAutomation.blockRefs
+        )
+      : null
+  $: insideLoopV2 = toolbarEnd
+    ? !!(
+        flowEnd?.insertInsideLoopV2Children || flowEnd?.anchorRef?.isLoopV2Child
+      )
+    : !!block?.insertIntoLoopV2
   $: loopStepId = block?.loopStepId || block?.id
   $: loopChildInsertIndex =
     typeof block?.loopChildInsertIndex === "number"
@@ -126,13 +140,23 @@
     ]
   }
 
+  const pathHasBranchHop = (path: BranchPathLike | undefined) => {
+    return path?.some(hop => Number.isInteger(hop.branchIdx)) ?? false
+  }
+
   $: blockRef = block?.id
     ? $selectedAutomation.blockRefs?.[block.id]
     : undefined
   $: targetPath =
-    blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+    toolbarEnd && flowEnd?.targetPath?.length
+      ? flowEnd.targetPath
+      : blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+  $: targetPathIsInsideBranch = pathHasBranchHop(targetPath)
+  $: targetIsLoopContainer = insideLoopV2 && loopStepId === block?.id
 
-  $: lastStep = blockRef?.terminating
+  $: lastStep = toolbarEnd
+    ? flowEnd?.anchorRef?.terminating
+    : blockRef?.terminating
   $: pathSteps =
     targetPath && $selectedAutomation?.data
       ? automationStore.actions.getPathSteps(
@@ -341,7 +365,13 @@
         action.stepId,
         action
       )
-      if (insideLoopV2 && loopStepId) {
+      if (
+        insideLoopV2 &&
+        loopStepId &&
+        !toolbarEnd &&
+        !block?.branchNode &&
+        (!targetPathIsInsideBranch || targetIsLoopContainer)
+      ) {
         await automationStore.actions.addBlockToLoopChildren(
           loopStepId,
           newBlock,
@@ -353,9 +383,7 @@
       stepInserted = true
 
       // Determine presence of the block before focusing
-      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
-      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
-      await automationStore.actions.selectNode(createdBlockLoc?.id)
+      await automationStore.actions.selectNode(newBlock.id)
 
       automationStore.actions.closeActionPanel()
       onClose()
@@ -494,11 +522,16 @@
                       class="external-icon"
                     />
                   {:else}
-                    <div class="icon-container">
+                    <div
+                      class="icon-container"
+                      style:--automation-step-icon-color={getAutomationStepIconColor(
+                        action.stepId
+                      )}
+                    >
                       <Icon
                         name={action.icon}
                         size="M"
-                        color="var(--spectrum-global-color-static-gray-50)"
+                        color="var(--spectrum-global-color-gray-900)"
                       />
                     </div>
                   {/if}
@@ -548,8 +581,17 @@
                 on:keydown={e => handleActionKeydown(e, action)}
               >
                 <div class="item-body">
-                  <div class="item-icon">
-                    <Icon name={action.icon} size="M" />
+                  <div
+                    class="icon-container"
+                    style:--automation-step-icon-color={getAutomationStepIconColor(
+                      action.stepId
+                    )}
+                  >
+                    <Icon
+                      name={action.icon}
+                      size="M"
+                      color="var(--spectrum-global-color-gray-900)"
+                    />
                   </div>
                   <div class="item-label">
                     <Body
@@ -574,7 +616,7 @@
     position: fixed;
     right: 0;
     z-index: 99;
-    height: calc(100% - 60px);
+    height: calc(100% - var(--top-bar-height, 51px));
     display: flex;
     flex-direction: row;
     align-items: stretch;
@@ -622,8 +664,8 @@
     cursor: pointer;
   }
   .icon-container {
-    background-color: #215f9e;
-    border: 0.5px solid #467db4;
+    background-color: var(--automation-step-icon-color);
+    border: 0.5px solid var(--automation-step-icon-color);
     padding: 4px;
     border-radius: 8px;
   }
@@ -646,7 +688,6 @@
     gap: var(--spacing-m);
     width: 100%;
   }
-  .item-icon,
   .external-icon {
     width: 17.5px;
     height: 17.5px;

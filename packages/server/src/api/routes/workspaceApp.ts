@@ -1,8 +1,9 @@
 import { middleware } from "@budibase/backend-core"
-import { builderRoutes } from "./endpointGroups"
-
-import * as controller from "../controllers/workspaceApp"
+import { AppFontFamily, Theme } from "@budibase/types"
 import Joi from "joi"
+
+import { builderRoutes } from "./endpointGroups"
+import * as controller from "../controllers/workspaceApp"
 
 const baseSchema = {
   name: Joi.string().required(),
@@ -21,6 +22,19 @@ const updateSchema = Joi.object({
   _rev: Joi.string().required(),
   ...baseSchema,
   navigation: Joi.object().required(),
+  theme: Joi.string()
+    .valid(...Object.values(Theme))
+    .optional(),
+  customTheme: Joi.object({
+    buttonBorderRadius: Joi.string().optional(),
+    fontFamily: Joi.string()
+      .valid(...Object.values(AppFontFamily))
+      .optional(),
+    primaryColor: Joi.string().optional(),
+    primaryColorHover: Joi.string().optional(),
+    navTextColor: Joi.string().optional(),
+    navBackground: Joi.string().optional(),
+  }).optional(),
 })
 
 function workspaceAppValidator(

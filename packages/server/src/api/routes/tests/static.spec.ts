@@ -1,5 +1,5 @@
-import { constants, objectStore } from "@budibase/backend-core"
-import { Datasource, SourceName } from "@budibase/types"
+import { constants, objectStore, roles } from "@budibase/backend-core"
+import { BuiltinPermissionID, Datasource, SourceName } from "@budibase/types"
 import fsp from "fs/promises"
 import path from "path"
 import { tmpdir } from "os"
@@ -160,6 +160,36 @@ describe("/static", () => {
         )
       })
 
+      it("should require authorization to generate a signed upload URL", async () => {
+        await request
+          .post(`/api/attachments/${datasource._id}/url`)
+          .send({
+            bucket: "foo",
+            key: "bar",
+          })
+          .expect("Content-Type", /json/)
+          .expect(401)
+      })
+
+      it("should deny app users without write permissions", async () => {
+        const readOnlyRole = await config.api.roles.save({
+          name: "s3_signed_url_read_only",
+          permissionId: BuiltinPermissionID.READ_ONLY,
+          inherits: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        })
+        await config.loginAsRole(readOnlyRole._id!, async () => {
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "bar",
+            })
+            .set(config.defaultHeaders())
+            .expect("Content-Type", /json/)
+            .expect(403)
+        })
+      })
+
       it("should require a bucket parameter", async () => {
         const res = await request
           .post(`/api/attachments/${datasource._id}/url`)
@@ -183,6 +213,25 @@ describe("/static", () => {
           .expect("Content-Type", /json/)
           .expect(400)
         expect(res.body.message).toEqual("bucket and key values are required")
+      })
+
+      it("should allow non-creator app users to generate a signed upload URL", async () => {
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const res = await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "bar",
+            })
+            .set(config.defaultHeaders())
+            .expect("Content-Type", /json/)
+            .expect(200)
+
+          expect(res.body.signedUrl).toBeDefined()
+          expect(res.body.publicUrl).toEqual(
+            "https://foo.s3.eu-west-1.amazonaws.com/bar"
+          )
+        })
       })
     })
   })

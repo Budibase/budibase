@@ -148,7 +148,23 @@ export async function getUsers(
   return { users, notFoundIds: notFoundIds }
 }
 
+/**
+ * Invalidate a user from the cache.
+ * @param userId the id of the user to invalidate
+ */
 export async function invalidateUser(userId: string) {
   const client = await redis.getUserClient()
   await client.delete(userId)
+}
+
+/**
+ * Invalidate a list of users from the cache.
+ * @param userIds the ids of the users to invalidate
+ */
+export async function invalidateUsers(userIds: string[]) {
+  if (userIds.length === 0) {
+    return
+  }
+  const client = await redis.getUserClient()
+  await client.bulkDelete(userIds)
 }

@@ -10,6 +10,7 @@
   export let text: string | undefined = undefined
   export let disabled = false
   export let readonly = false
+  export let quiet = false
   export let size: "S" | "M" | "L" | "XL" = "M"
   export let indeterminate = false
 
@@ -23,12 +24,14 @@
 
 <label
   class="spectrum-Checkbox {sizeClass}"
-  class:spectrum-Checkbox--emphasized={!disabled}
+  class:spectrum-Checkbox--emphasized={!disabled && !quiet}
+  class:is-indeterminate={indeterminate}
   class:is-disabled={disabled}
   class:readonly
 >
   <input
-    checked={value || indeterminate}
+    checked={value}
+    {indeterminate}
     {disabled}
     on:change={onChange}
     type="checkbox"

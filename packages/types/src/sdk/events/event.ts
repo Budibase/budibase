@@ -42,6 +42,12 @@ export enum Event {
   AI_AGENT_CREATED = "ai:agent:created",
   AI_AGENT_UPDATED = "ai:agent:updated",
   AI_AGENT_DELETED = "ai:agent:deleted",
+  RAG_FILE_UPLOADED = "rag:file:uploaded",
+  RAG_FILE_DELETED = "rag:file:deleted",
+  RAG_FILE_SHAREPOINT_CONNECTED = "rag:file:sharepoint:connected",
+  RAG_FILE_SHAREPOINT_DISCONNECTED = "rag:file:sharepoint:disconnected",
+  RAG_FILE_SHAREPOINT_SYNC = "rag:file:sharepoint:sync",
+  RAG_FILE_PROCESSED = "rag:file:processed",
 
   // AUTH
   AUTH_SSO_CREATED = "auth:sso:created",
@@ -205,8 +211,11 @@ export enum Event {
 
   //ACTION
   ACTION_AUTOMATION_STEP_EXECUTED = "action:automation_step:executed",
+  ACTION_AUTOMATION_STEP_FAILED = "action:automation_step:failed",
   ACTION_CRUD_EXECUTED = "action:crud:executed",
+  ACTION_CRUD_FAILED = "action:crud:failed",
   ACTION_AI_AGENT_EXECUTED = "action:ai_agent:executed",
+  ACTION_AI_AGENT_FAILED = "action:ai_agent:failed",
 
   // WORKSPACE APP
   WORKSPACE_APP_CREATED = "workspace_app:created",
@@ -290,6 +299,12 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.AI_AGENT_CREATED]: `AI agent "{{ name }}" created`,
   [Event.AI_AGENT_UPDATED]: `AI agent "{{ name }}" updated`,
   [Event.AI_AGENT_DELETED]: `AI agent "{{ name }}" deleted`,
+  [Event.RAG_FILE_UPLOADED]: undefined,
+  [Event.RAG_FILE_DELETED]: undefined,
+  [Event.RAG_FILE_SHAREPOINT_CONNECTED]: undefined,
+  [Event.RAG_FILE_SHAREPOINT_DISCONNECTED]: undefined,
+  [Event.RAG_FILE_SHAREPOINT_SYNC]: undefined,
+  [Event.RAG_FILE_PROCESSED]: undefined,
 
   // AUTH
   [Event.AUTH_SSO_CREATED]: `SSO configuration created`,
@@ -374,8 +389,11 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
 
   // ACTIONS - NOT AUDITED
   [Event.ACTION_AUTOMATION_STEP_EXECUTED]: undefined,
+  [Event.ACTION_AUTOMATION_STEP_FAILED]: undefined,
   [Event.ACTION_CRUD_EXECUTED]: undefined,
+  [Event.ACTION_CRUD_FAILED]: undefined,
   [Event.ACTION_AI_AGENT_EXECUTED]: undefined,
+  [Event.ACTION_AI_AGENT_FAILED]: undefined,
 
   // ROLE - NOT AUDITED
   [Event.ROLE_CREATED]: undefined,

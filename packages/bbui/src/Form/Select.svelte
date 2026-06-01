@@ -37,6 +37,7 @@
   export let size: "S" | "M" | "L" = "M"
   export let bordered: boolean = true
   export let autoWidth: boolean = false
+  export let popoverAutoWidth: boolean = false
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
   export let tooltipMessage:
@@ -92,6 +93,7 @@
     {options}
     {placeholder}
     {autoWidth}
+    {popoverAutoWidth}
     {sort}
     {align}
     {footer}

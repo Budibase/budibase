@@ -28,6 +28,33 @@ interface RankedMatch {
   file: KnowledgeBaseFile
 }
 
+const GEMINI_RETRIEVAL_UNAVAILABLE_MESSAGE =
+  "Gemini knowledge retrieval is temporarily unavailable (upstream 503). Budibase is operating normally; please retry shortly."
+const GEMINI_UPSTREAM_EVENT = "ai.gemini.upstream_unavailable"
+
+const isGeminiRetrievalUnavailable = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") {
+    return false
+  }
+
+  const maybeStatus = (error as { status?: unknown }).status
+  if (maybeStatus === 503) {
+    return true
+  }
+
+  const maybeMessage = String((error as { message?: unknown }).message || "")
+    .toLowerCase()
+    .trim()
+  if (!maybeMessage) {
+    return false
+  }
+
+  return (
+    maybeMessage.includes("upstream unavailable") ||
+    maybeMessage.includes("service unavailable")
+  )
+}
+
 const toEpochMillis = (value?: string | number) => {
   if (value == null) {
     return 0
@@ -247,6 +274,52 @@ export const createKnowledgeFilesTool = (
           file => file.status === KnowledgeBaseFileStatus.FAILED
         ).length,
         files: metadata,
+      }
+    },
+  }),
+})
+
+export const createKnowledgeSearchTool = (
+  agentId: string
+): BudibaseToolDefinition => ({
+  name: "search_knowledge",
+  sourceType: ToolType.INTERNAL_TABLE,
+  sourceLabel: "Budibase",
+  description:
+    "Search the agent knowledge files and return relevant context snippets with source metadata",
+  tool: tool({
+    description:
+      "Search attached knowledge files for answer context. Use for factual questions grounded in uploaded docs.",
+    inputSchema: z.object({
+      question: z.string().trim().min(1),
+    }),
+    execute: async ({ question }) => {
+      const agent = await sdk.ai.agents.getOrThrow(agentId)
+      try {
+        const result = await sdk.ai.rag.retrieveContextForAgent(agent, question)
+        return {
+          context: result.text,
+          sources: result.sources,
+          chunks: result.chunks,
+        }
+      } catch (error: any) {
+        if (isGeminiRetrievalUnavailable(error)) {
+          console.error("[AI_UPSTREAM] Gemini unavailable", {
+            event: GEMINI_UPSTREAM_EVENT,
+            provider: "gemini",
+            path: "knowledge_retrieval",
+            upstreamStatus: error?.status,
+            agentId,
+            errorMessage: error?.message,
+          })
+          throw new Error(GEMINI_RETRIEVAL_UNAVAILABLE_MESSAGE)
+        }
+        console.error("Failed to retrieve agent knowledge context", {
+          agentId,
+          status: error?.status,
+          message: error?.message,
+        })
+        throw error
       }
     },
   }),

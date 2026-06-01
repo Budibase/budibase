@@ -5,6 +5,7 @@ export enum AgentChannelProvider {
   DISCORD = "discord",
   MSTEAMS = "msteams",
   SLACK = "slack",
+  TELEGRAM = "telegram",
 }
 
 export type ChatIdentityLinkProvider = AgentChannelProvider
@@ -14,12 +15,14 @@ export const DEPLOYMENT_CHANNEL_IDS: Record<AgentChannelProvider, string> = {
   [AgentChannelProvider.DISCORD]: "discord",
   [AgentChannelProvider.MSTEAMS]: "MSTeams",
   [AgentChannelProvider.SLACK]: "slack",
+  [AgentChannelProvider.TELEGRAM]: "telegram",
 }
 
 export const DEPLOYMENT_ID_TO_PROVIDER: Record<string, AgentChannelProvider> = {
   discord: AgentChannelProvider.DISCORD,
   MSTeams: AgentChannelProvider.MSTEAMS,
   slack: AgentChannelProvider.SLACK,
+  telegram: AgentChannelProvider.TELEGRAM,
 }
 
 export interface ConversationStarter {

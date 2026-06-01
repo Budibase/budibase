@@ -79,8 +79,14 @@ export interface AppNavigationLink {
   icon?: string
 }
 
+export enum AppFontFamily {
+  SOURCE_SANS = "sourceSans",
+  INTER = "inter",
+}
+
 export interface AppCustomTheme {
   buttonBorderRadius?: string
+  fontFamily?: AppFontFamily
   primaryColor?: string
   primaryColorHover?: string
 
@@ -106,6 +112,7 @@ export interface WorkspaceFeatures {
   disableUserMetadata?: boolean
   skeletonLoader?: boolean
   recaptchaEnabled?: boolean
+  suppressErrorNotifications?: boolean
 }
 
 export interface AutomationSettings {

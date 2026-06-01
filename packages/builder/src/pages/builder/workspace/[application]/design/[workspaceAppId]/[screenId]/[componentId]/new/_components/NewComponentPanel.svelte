@@ -13,7 +13,6 @@
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
   import NewPill from "@/components/common/NewPill.svelte"
-  import { featureFlags } from "@/stores/portal"
 
   $goto
 
@@ -37,9 +36,7 @@
     $selectedScreen,
     $selectedComponent
   )
-  $: structure = getComponentStructure({
-    chatbox: $featureFlags.AI_AGENTS && $featureFlags.AI_AGENTS,
-  })
+  $: structure = getComponentStructure()
   $: enrichedStructure = enrichStructure(
     structure,
     $componentStore.components,
@@ -311,7 +308,7 @@
     position: fixed;
     right: 0;
     z-index: 1;
-    height: calc(100% - 60px);
+    height: calc(100% - var(--top-bar-height, 51px));
     display: flex;
     flex-direction: row;
     align-items: stretch;

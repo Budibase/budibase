@@ -8,6 +8,8 @@ import {
   GetAutomationTriggerDefinitionsResponse,
   TestAutomationRequest,
   TestAutomationResponse,
+  TestEmailConnectionRequest,
+  TestEmailConnectionResponse,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
   UpdateAutomationRequest,
@@ -108,6 +110,19 @@ export class AutomationAPI extends TestAPI {
       {
         expectations,
         body,
+      }
+    )
+  }
+
+  testEmailConnection = async (
+    body: TestEmailConnectionRequest,
+    expectations?: Expectations
+  ): Promise<TestEmailConnectionResponse> => {
+    return await this._post<TestEmailConnectionResponse>(
+      `/api/automations/email/test-connection`,
+      {
+        body,
+        expectations,
       }
     )
   }

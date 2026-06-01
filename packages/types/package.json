@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@ai-sdk/provider-utils": "^4.0.19",
-    "@budibase/nano": "10.1.5",
+    "@budibase/nano": "10.1.6",
     "@types/json-schema": "^7.0.15",
     "@types/koa": "3.0.1",
     "@types/nodemailer": "7.0.11",

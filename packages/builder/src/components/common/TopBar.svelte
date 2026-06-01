@@ -7,6 +7,7 @@
 </script>
 
 <script lang="ts">
+  import { onDestroy } from "svelte"
   import { Body, Icon, Popover, PopoverAlignment, Tag } from "@budibase/bbui"
   import PublishMenu from "./PublishMenu.svelte"
   import { deploymentStore } from "@/stores/builder"
@@ -21,6 +22,23 @@
 
   let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
+  let topBarEl: HTMLElement | undefined
+  let topBarObserver: ResizeObserver | undefined
+  $: lastVisibleBreadcrumbIndex = breadcrumbs.reduce(
+    (lastIndex, breadcrumb, idx) => (breadcrumb.text ? idx : lastIndex),
+    -1
+  )
+
+  $: if (topBarEl) {
+    topBarObserver?.disconnect()
+    topBarObserver = new ResizeObserver(([entry]) => {
+      document.documentElement.style.setProperty(
+        "--top-bar-height",
+        `${entry.borderBoxSize[0].blockSize}px`
+      )
+    })
+    topBarObserver.observe(topBarEl)
+  }
 
   $: hasBeenPublished($deploymentStore.publishCount)
 
@@ -32,9 +50,14 @@
       publishSuccessPopover?.show()
     }
   }
+
+  onDestroy(() => {
+    topBarObserver?.disconnect()
+    document.documentElement.style.removeProperty("--top-bar-height")
+  })
 </script>
 
-<div class="top-bar">
+<div class="top-bar" bind:this={topBarEl}>
   {#if icon}
     <div class="icon-container">
       <Icon name={icon} size="M" weight="regular" />
@@ -44,7 +67,12 @@
     {#each breadcrumbs as breadcrumb, idx}
       {#if breadcrumb.text}
         <div class="breadcrumb-item">
-          <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+          <a
+            href={$url(breadcrumb.url || "./")}
+            aria-current={idx === lastVisibleBreadcrumbIndex
+              ? "page"
+              : undefined}>{breadcrumb.text}</a
+          >
           {#if breadcrumb.tag}
             <div class="breadcrumb-tag-wrapper">
               <Tag emphasized>{breadcrumb.tag}</Tag>
@@ -115,13 +143,13 @@
     font-size: 11px;
     line-height: 1.1;
   }
-  .breadcrumbs a {
+  .breadcrumb-item a {
     font-size: 14px;
     font-weight: 500 !important;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .breadcrumbs a:first-child {
     color: var(--spectrum-global-color-gray-600);
+  }
+  .breadcrumb-item a[aria-current="page"] {
+    color: var(--spectrum-global-color-gray-900);
   }
   .breadcrumbs .divider {
     font-size: 14px;

@@ -1,9 +1,7 @@
 <script lang="ts">
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
-  import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
-  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
@@ -16,8 +14,22 @@
     type AutomationTrigger,
     type AutomationStepResult,
     type AutomationTriggerResult,
+    type AutomationResults,
   } from "@budibase/types"
+  import {
+    getRunHighlight,
+    isTerminalFailure,
+    hasSuccessOutput,
+    isAutomationStepResult,
+    getRunResults,
+    type RunHighlight,
+  } from "./FlowCanvas/FlowRunHelpers"
   import { type DragView } from "./FlowCanvas/FlowChartDnD"
+
+  type FlowItemStatusResult =
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | undefined
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -26,6 +38,9 @@
     | AutomationStepResult
     | AutomationTriggerResult
     | null = null
+  export let statusResult: FlowItemStatusResult | null = null
+  export let runResults: AutomationResults | undefined = undefined
+  export let triggerCompleted: boolean | undefined = undefined
   export let viewMode: ViewMode = ViewMode.EDITOR
   export let selectedLogStepId: string | null = null
   export let unexecuted: boolean = false
@@ -33,17 +48,74 @@
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
   const view = getContext<Writable<DragView>>("draggableView")
-  const pos = getContext<Writable<{ x: number; y: number }>>("viewPos")
   const contentPos =
     getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
+  const focusNodeRequest =
+    getContext<Writable<{ nodeId: string; ensureVisible?: boolean } | null>>(
+      "focusNodeRequest"
+    )
 
-  let webhookModal: Modal | undefined
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
   let blockDims: DOMRect | undefined
+  let pressingDraggableNode = false
+  let draggedDuringPress = false
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
+  $: testStatusResult =
+    viewMode === ViewMode.LOGS
+      ? undefined
+      : (($automationStore.testProgress?.[block.id]?.result ||
+          automationStore.actions.processBlockResults(
+            $automationStore.testResults,
+            block
+          )) as FlowItemStatusResult)
+  $: resolvedStatusResult = statusResult ?? testStatusResult
+  $: resolvedRunResults =
+    runResults ||
+    (viewMode === ViewMode.LOGS
+      ? undefined
+      : getRunResults($automationStore.testResults))
+  $: resolvedTriggerCompleted =
+    triggerCompleted ??
+    (isTrigger &&
+      !$view?.dragging &&
+      (!!$automationStore.inProgressTest || !!testStatusResult))
+  $: blockSuccess = hasSuccessOutput(resolvedStatusResult)
+    ? resolvedStatusResult.outputs.success === true
+    : isTrigger && resolvedTriggerCompleted
+  $: blockFailed = hasSuccessOutput(resolvedStatusResult)
+    ? resolvedStatusResult.outputs.success === false
+    : false
+  $: terminalFailure =
+    !isTrigger && isAutomationStepResult(resolvedStatusResult)
+      ? isTerminalFailure(resolvedStatusResult)
+      : false
+  $: continuedFailure = blockFailed && !terminalFailure
+  $: runHighlight = getRunHighlight(resolvedRunResults)
+  $: blockExecuted = hasSuccessOutput(resolvedStatusResult)
+    ? true
+    : isTrigger && resolvedTriggerCompleted
+  $: successHighlight = blockExecuted
+    ? runHighlight
+      ? runHighlight === "success"
+      : blockSuccess || continuedFailure
+    : false
+  $: errorHighlight = blockExecuted
+    ? runHighlight
+      ? runHighlight === "error"
+      : terminalFailure
+    : false
+  $: warnHighlight = blockExecuted ? runHighlight === "stopped" : false
+  $: triggerIconColor = getTriggerIconColor({
+    selected,
+    errorHighlight,
+    successHighlight,
+    warnHighlight,
+    triggerCompleted: resolvedTriggerCompleted,
+    runHighlight,
+  })
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
     : undefined
@@ -69,13 +141,15 @@
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
       : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
-  $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
+  $: dragging =
+    $view?.dragging && $view?.moveStep && $view?.moveStep?.id === block.id
+  $: if (pressingDraggableNode && dragging) {
+    draggedDuringPress = true
+  }
 
   $: if (dragging && blockEle) {
     updateBlockDims()
   }
-
-  $: placeholderDims = buildPlaceholderStyles(blockDims)
 
   // Move the selected item
   // Listen for scrolling in the content. As its scrolled this will be updated
@@ -104,27 +178,25 @@
       return
     }
     positionStyles = `
-      --blockPosX: ${Math.round(dragPos.x - scrollX / $view.scale)}px;
-      --blockPosY: ${Math.round(dragPos.y - scrollY / $view.scale)}px;
+      --blockTranslateX: ${Math.round(dragPos.x - scrollX / $view.scale)}px;
+      --blockTranslateY: ${Math.round(dragPos.y - scrollY / $view.scale)}px;
     `
   }
 
-  function buildPlaceholderStyles(dims?: DOMRect) {
-    if (!dims) {
-      return ""
+  function onNodeMouseDown(e: MouseEvent) {
+    // left-click only
+    if (e.button !== 0) {
+      return
     }
-    const { width, height } = dims
-    return `--pswidth: ${Math.round(width)}px;
-            --psheight: ${Math.round(height)}px;`
-  }
 
-  function onHandleMouseDown(e: MouseEvent) {
-    if (isTrigger || isInsideLoop) {
+    if (!draggable || isTrigger || isInsideLoop) {
       e.preventDefault()
       return
     }
 
     e.stopPropagation()
+    pressingDraggableNode = true
+    draggedDuringPress = false
 
     updateBlockDims()
 
@@ -133,14 +205,10 @@
       ...state,
       moveStep: {
         id: block.id,
-        offsetX: $pos.x,
-        offsetY: $pos.y,
+        startX: clientX,
+        startY: clientY,
         w: blockDims?.width,
         h: blockDims?.height,
-        mouse: {
-          x: Math.max(Math.round(clientX - (blockDims?.left || 0)), 0),
-          y: Math.max(Math.round(clientY - (blockDims?.top || 0)), 0),
-        },
       },
     }))
   }
@@ -148,7 +216,46 @@
   function handleHeaderUpdate(e: CustomEvent) {
     automationStore.actions.updateBlockTitle(block, e.detail)
   }
+
+  function getTriggerIconColor({
+    selected,
+    errorHighlight,
+    successHighlight,
+    warnHighlight,
+    triggerCompleted,
+    runHighlight,
+  }: {
+    selected: boolean
+    errorHighlight: boolean
+    successHighlight: boolean
+    warnHighlight: boolean
+    triggerCompleted: boolean
+    runHighlight: RunHighlight | undefined
+  }) {
+    if (errorHighlight) {
+      return "var(--spectrum-semantic-negative-color-status)"
+    }
+    if (selected && successHighlight) {
+      return "var(--spectrum-semantic-positive-color-status)"
+    }
+    if ((selected || triggerCompleted) && warnHighlight) {
+      return "var(--spectrum-global-color-orange-500)"
+    }
+    if (triggerCompleted && runHighlight !== "error") {
+      return "var(--spectrum-semantic-positive-color-status)"
+    }
+    if (selected) {
+      return "var(--spectrum-global-color-blue-700)"
+    }
+    return "var(--spectrum-global-color-gray-500)"
+  }
 </script>
+
+<svelte:window
+  on:mouseup={() => {
+    pressingDraggableNode = false
+  }}
+/>
 
 {#if block.stepId !== "LOOP"}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -157,19 +264,21 @@
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
     class:dragging
+    class:pressingDraggableNode
     class:draggable={draggable && !isInsideLoop}
     class:selected
+    class:success={successHighlight}
+    class:error={errorHighlight}
+    class:warn={warnHighlight}
     class:unexecuted
   >
     <div class="wrap">
-      {#if $view?.dragging && dragging}
-        <div class="drag-placeholder" style={placeholderDims}></div>
-      {/if}
       <div
         bind:this={blockEle}
         class="block-content"
         class:dragging={$view?.dragging && dragging}
         style={positionStyles}
+        on:mousedown={onNodeMouseDown}
       >
         <div class="block-float">
           <FlowItemStatus
@@ -178,22 +287,34 @@
             hideStatus={$view?.dragging}
             {logStepData}
             {viewMode}
+            showFlowStatus={false}
           />
         </div>
-        {#if draggable && !isInsideLoop}
-          <div
-            class="handle"
-            class:grabbing={dragging}
-            on:mousedown={onHandleMouseDown}
-          >
-            <Icon name="dots-six-vertical" weight="bold" />
+        {#if !isTrigger}
+          <div class="block-status">
+            <FlowItemStatus
+              {block}
+              branch={undefined}
+              hideStatus={$view?.dragging}
+              {logStepData}
+              {viewMode}
+              showBlockType={false}
+              iconOnly
+            />
           </div>
         {/if}
         <div
           class="block-core"
+          class:has-status={!isTrigger}
           on:click={async () => {
+            if (draggedDuringPress) {
+              draggedDuringPress = false
+              return
+            }
+
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
+              focusNodeRequest.set({ nodeId: block.id, ensureVisible: true })
             } else if (viewMode === ViewMode.LOGS && logStepData) {
               onStepSelect(logStepData)
             }
@@ -202,8 +323,11 @@
           <div class="blockSection block-info">
             <BlockHeader
               disabled
+              compact
               {automation}
               {block}
+              showTriggerIcon={isTrigger}
+              {triggerIconColor}
               on:update={handleHeaderUpdate}
             />
           </div>
@@ -222,10 +346,6 @@
     </div>
   </div>
 {/if}
-
-<Modal bind:this={webhookModal}>
-  <CreateWebhookModal />
-</Modal>
 
 <style>
   .unexecuted {
@@ -254,48 +374,44 @@
     display: inline-block;
   }
   .block {
-    width: 320px;
+    width: fit-content;
+    max-width: var(--automation-flow-item-max-width, 360px);
     font-size: var(--spectrum-global-dimension-font-size-150) !important;
-    border-radius: 12px;
+    border-radius: 32px;
     font-weight: 600;
     cursor: default;
   }
   .block .wrap {
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     position: relative;
   }
+  .block.dragging .wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(92, 92, 92, 0.1);
+    border: 1px dashed #5c5c5c;
+    border-radius: 8px;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
   .block.draggable .wrap {
-    display: flex;
-    flex-direction: row;
-  }
-  .block.draggable .wrap .handle {
-    height: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--grey-1);
-    padding: 6px 0;
-    color: var(--grey-4);
-    cursor: grab;
-    border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px;
-  }
-  .block.draggable .wrap .handle.grabbing {
-    cursor: grabbing;
-  }
-  .block.draggable .wrap .handle :global(.drag-handle) {
-    width: 6px;
+    display: block;
   }
   .block .wrap .block-content {
-    width: 100%;
+    width: fit-content;
+    max-width: var(--automation-flow-item-max-width, 360px);
     display: flex;
     flex-direction: row;
-    background-color: var(--background);
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    position: relative;
+    background-color: var(--automation-flow-item-background, var(--background));
+    border: 2px solid var(--spectrum-global-color-gray-200);
+    border-radius: 16px;
+    box-sizing: border-box;
   }
   .blockSection {
-    padding: var(--spacing-xl);
+    padding: 0;
   }
   .separator {
     width: 1px;
@@ -309,25 +425,25 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .drag-placeholder {
-    height: calc(var(--psheight) - 2px);
-    width: var(--pswidth);
-    background-color: rgba(92, 92, 92, 0.1);
-    border: 1px dashed #5c5c5c;
-    border-radius: 12px;
-    display: block;
-  }
   .block-core {
-    flex: 1;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .block-core.has-status {
+    padding-right: 20px;
   }
   .block-core.dragging {
     pointer-events: none;
   }
   .block-content.dragging {
-    position: absolute;
+    position: relative;
     z-index: 3;
-    top: var(--blockPosY);
-    left: var(--blockPosX);
+    transform: translate(var(--blockTranslateX), var(--blockTranslateY));
   }
   .block-float {
     pointer-events: none;
@@ -336,16 +452,70 @@
     top: -35px;
     left: 0;
   }
+  .block-status {
+    pointer-events: none;
+    width: 26px;
+    height: 26px;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(calc(-50% + 3px));
+    z-index: 1;
+  }
   .block-core {
     cursor: pointer;
   }
+  .block.draggable .block-content {
+    cursor: pointer;
+  }
+  .block.draggable .block-core {
+    cursor: pointer;
+  }
+  .block.draggable.pressingDraggableNode .block-content,
+  .block.draggable.pressingDraggableNode .block-core {
+    cursor: grab;
+  }
+  .block.draggable .block-content.dragging {
+    cursor: grabbing;
+  }
+  .block.draggable .block-content.dragging .block-core {
+    cursor: grabbing;
+  }
+  .block.success .block-content {
+    border-color: var(--spectrum-semantic-positive-color-status);
+    border-width: 2px;
+  }
+  .block.error .block-content {
+    border-color: var(--spectrum-semantic-negative-color-status);
+    border-width: 2px;
+  }
+
+  .block.warn .block-content {
+    border-color: var(--spectrum-global-color-orange-500);
+    border-width: 2px;
+  }
+  .block.selected:not(.success):not(.error):not(.warn) .block-content {
+    border-color: var(--spectrum-global-color-blue-600);
+    border-width: 2px;
+  }
   .block.selected .block-content {
-    border-color: var(--spectrum-global-color-blue-700);
-    transition: border 130ms ease-out;
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--spectrum-global-color-blue-600) 20%, transparent);
   }
 
   .block-info {
     pointer-events: none;
+    width: fit-content;
+    max-width: 100%;
+    height: 100%;
+  }
+  .block-info :global(.block-details.compact) {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+  .block-info :global(.heading.compact) {
+    flex: 1 1 auto;
   }
 
   .log-status-badge {

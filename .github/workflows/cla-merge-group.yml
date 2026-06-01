@@ -1,0 +1,15 @@
+name: CLA Assistant (merge queue)
+
+on:
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+jobs:
+  CLAssistant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA already enforced on PR
+        run: echo "CLA is enforced on pull_request_target; passing merge_group status."

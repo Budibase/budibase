@@ -121,7 +121,7 @@ const setBreakdown = (
   values: UsageValues
 ) => {
   const breakdownName = utils.getBreakdownName(name, id)
-  if (!breakdownName || !values?.breakdown) {
+  if (!breakdownName || values?.breakdown == null) {
     return monthUsage
   }
   if (!monthUsage.breakdown) {
@@ -280,6 +280,18 @@ const coreUsageUpdate = (
     const currentMonth = utils.getCurrentMonthString()
     quotaUsage.monthly[currentMonth][name] = values.total
     setMonthlyTriggers(name, currentMonth, quotaUsage, values.triggers)
+    if (
+      !APP_QUOTA_NAMES.includes(name) &&
+      BREAKDOWN_QUOTA_NAMES.includes(name) &&
+      opts?.id
+    ) {
+      quotaUsage.monthly[currentMonth] = setBreakdown(
+        quotaUsage.monthly[currentMonth],
+        name,
+        opts.id,
+        values
+      )
+    }
   } else {
     throw new Error(`Invalid usage type: ${type}`)
   }
@@ -335,6 +347,19 @@ export const getCurrentUsageValues = async (
       if (quotaUsage.monthly[currentMonth][monthlyName]) {
         total = quotaUsage.monthly[currentMonth][monthlyName]
         appValues = getAppUsageValue(quotaUsage, type, name, id)
+      }
+      // For non-app quotas with breakdown (e.g. ACTIONS), read from global monthly
+      if (
+        !APP_QUOTA_NAMES.includes(name) &&
+        BREAKDOWN_QUOTA_NAMES.includes(monthlyName) &&
+        id
+      ) {
+        const breakdownName = utils.getBreakdownName(monthlyName, id)
+        if (breakdownName) {
+          const globalBreakdown =
+            quotaUsage.monthly[currentMonth].breakdown?.[breakdownName]
+          appValues.breakdown = globalBreakdown?.values?.[id] ?? 0
+        }
       }
       break
     }

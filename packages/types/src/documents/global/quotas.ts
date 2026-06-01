@@ -4,6 +4,7 @@ export enum BreakdownQuotaName {
   ROW_QUERIES = "rowQueries",
   DATASOURCE_QUERIES = "datasourceQueries",
   AUTOMATIONS = "automations",
+  ACTIONS = "actions",
 }
 
 export const APP_QUOTA_NAMES = [
@@ -15,6 +16,7 @@ export const APP_QUOTA_NAMES = [
 export const BREAKDOWN_QUOTA_NAMES = [
   MonthlyQuotaName.QUERIES,
   MonthlyQuotaName.AUTOMATIONS,
+  MonthlyQuotaName.ACTIONS,
 ]
 
 export interface UsageBreakdown {

@@ -1,4 +1,4 @@
-export function getComponentStructure({ chatbox } = { chatbox: false }) {
+export function getComponentStructure() {
   const structure = [
     {
       name: "Blocks",
@@ -98,12 +98,11 @@ export function getComponentStructure({ chatbox } = { chatbox: false }) {
     },
   ]
 
-  if (chatbox) {
-    structure.push({
-      name: "AI",
-      icon: "GraphBarVertical",
-      children: ["chatbox"],
-    })
-  }
+  structure.push({
+    name: "AI",
+    icon: "GraphBarVertical",
+    children: ["chatbox"],
+  })
+
   return structure
 }

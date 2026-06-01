@@ -4,6 +4,8 @@
   import { Heading, Button, CollapsibleSearch } from "@budibase/bbui"
   import RouteActions from "@/settings/components/RouteActions.svelte"
 
+  $: locked = $bb.settings.locked
+
   let searchValue: string = ""
 
   $: connectionCards = restTemplates.flatTemplates
@@ -26,14 +28,18 @@
         value={searchValue}
         on:change={event => (searchValue = event.detail)}
       />
-      <Button
-        on:click={() => {
-          bb.settings("/connections/apis/new")
-        }}
-        icon="plus"
-      >
-        Create custom
-      </Button>
+      {#if locked}
+        <Button secondary on:click={() => bb.clearSettings()}>Cancel</Button>
+      {:else}
+        <Button
+          on:click={() => {
+            bb.settings("/connections/apis/new")
+          }}
+          icon="plus"
+        >
+          Create custom
+        </Button>
+      {/if}
     </div>
   </RouteActions>
   <div class="connection-group">

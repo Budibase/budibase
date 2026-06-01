@@ -1,14 +1,18 @@
 <script>
-  import { Body, ProgressBar, Heading, Icon, Link } from "@budibase/bbui"
+  import { Body, ProgressBar, Heading, Icon, Link, Modal } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import { admin } from "@/stores/portal/admin"
   import { auth } from "@/stores/portal/auth"
+  import ActionsBreakdownModal from "./ActionsBreakdownModal.svelte"
+
   export let usage
   export let warnWhenFull = false
+  export let breakdown = null
 
   let percentage
   let unlimited = false
   let showWarning = false
+  let breakdownModal
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   const { accountPortalUpgradeUrl } = helpers
@@ -38,6 +42,15 @@
           {usage.name}
         </span>
       </Heading>
+      {#if breakdown}
+        <button
+          class="info-btn"
+          on:click={() => breakdownModal.show()}
+          aria-label="View breakdown"
+        >
+          <Icon name="InfoOutline" size="S" />
+        </button>
+      {/if}
     </div>
     <Body size="S">
       <span class="nowrap">
@@ -79,6 +92,12 @@
   </div>
 </div>
 
+{#if breakdown}
+  <Modal bind:this={breakdownModal}>
+    <ActionsBreakdownModal {usage} {breakdown} />
+  </Modal>
+{/if}
+
 <style>
   .usage {
     display: flex;
@@ -95,8 +114,26 @@
   }
   .header-container {
     display: flex;
+    align-items: center;
   }
   .nowrap {
     white-space: nowrap;
+  }
+
+  .info-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--spectrum-global-color-gray-600);
+    opacity: 0.7;
+  }
+
+  .info-btn:hover {
+    opacity: 1;
+    color: var(--spectrum-global-color-blue-500);
   }
 </style>

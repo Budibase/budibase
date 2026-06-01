@@ -83,6 +83,10 @@ export function extractError(
 }
 
 export function determineTrigger(sessionId: string): string {
+  if (sessionId.startsWith("test:")) {
+    return "Test"
+  }
+
   if (isPreviewSession(sessionId)) {
     return "Chat Preview"
   }
@@ -97,6 +101,10 @@ export function determineTrigger(sessionId: string): string {
 
   if (sessionId.startsWith("discord:")) {
     return "Discord"
+  }
+
+  if (sessionId.startsWith("telegram:")) {
+    return "Telegram"
   }
 
   if (sessionId.startsWith("chat:") || sessionId.startsWith("chatconvo_")) {

@@ -26,7 +26,6 @@
   function openConfig() {
     bb.settings(`/connections/${row.configType}/${row._id || "new"}`, {
       provider: row.provider,
-      type: row.configType,
     })
   }
 

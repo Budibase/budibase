@@ -89,6 +89,17 @@ describe("viewBuilder", () => {
   })
 
   describe("Calculate", () => {
+    it("rejects unknown calculations", () => {
+      expect(() =>
+        viewTemplate({
+          field: "myField",
+          calculation: "custom_reduce",
+          tableId: "tableId",
+          filters: [],
+        })
+      ).toThrow("Invalid calculation type: custom_reduce")
+    })
+
     it("creates a view with the calculation statistics schema", () => {
       expect(
         viewTemplate({

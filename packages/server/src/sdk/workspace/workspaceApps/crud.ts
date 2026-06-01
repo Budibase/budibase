@@ -59,6 +59,8 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
     url: `/${slugify(name)}`,
     disabled: true,
     navigation: workspaceApp.navigation,
+    theme: workspaceApp.theme,
+    customTheme: workspaceApp.customTheme,
     isDefault: false,
   }
 
@@ -66,6 +68,17 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
 }
 
 const slugify = (text: string) => text.toLowerCase().replaceAll(" ", "-")
+
+type WorkspaceAppUpdate = Omit<
+  WorkspaceApp,
+  "createdAt" | "updatedAt" | "isDefault" | "theme" | "customTheme"
+> & {
+  theme?: WorkspaceApp["theme"]
+  customTheme?: WorkspaceApp["customTheme"]
+}
+
+const hasOwn = (obj: object, key: string) =>
+  Object.prototype.hasOwnProperty.call(obj, key)
 
 export async function fetch(
   db = context.getWorkspaceDB()
@@ -114,7 +127,7 @@ export async function duplicate(
 }
 
 export async function update(
-  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt" | "isDefault">
+  workspaceApp: WorkspaceAppUpdate
 ): Promise<WorkspaceApp> {
   const db = context.getWorkspaceDB()
 
@@ -134,6 +147,10 @@ export async function update(
     name: workspaceApp.name,
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
+    theme: hasOwn(workspaceApp, "theme") ? workspaceApp.theme : persisted.theme,
+    customTheme: hasOwn(workspaceApp, "customTheme")
+      ? workspaceApp.customTheme
+      : persisted.customTheme,
     disabled: workspaceApp.disabled,
 
     // Immutable properties

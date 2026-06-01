@@ -1,5 +1,5 @@
 import { auth } from "@budibase/backend-core"
-import { aiRagEnabled } from "../../middleware/aiRagEnabled"
+import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
 import * as ai from "../controllers/ai"
 import {
   builderAdminRoutes,
@@ -10,12 +10,17 @@ import {
   connectAgentSharePointSiteValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
+  provisionAgentTelegramChannelValidator,
   provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   syncAgentKnowledgeSourcesValidator,
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
+  runAgentTestSuiteValidator,
+  toggleAgentTelegramDeploymentValidator,
+  updateAgentSharePointSiteValidator,
+  updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 
@@ -55,16 +60,39 @@ builderAdminRoutes
     provisionAgentSlackChannelValidator(),
     ai.provisionAgentSlackChannel
   )
+  .post(
+    "/api/agent/:agentId/telegram/toggle",
+    toggleAgentTelegramDeploymentValidator(),
+    ai.toggleAgentTelegramDeployment
+  )
+  .post(
+    "/api/agent/:agentId/telegram/provision",
+    provisionAgentTelegramChannelValidator(),
+    ai.provisionAgentTelegramChannel
+  )
   .get("/api/agent/tools", ai.fetchTools)
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
 
-const aiRagBuilderAdminRoutes = endpointGroupList
+const aiTestBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)
-  .addGroupMiddleware(aiRagEnabled)
+  .addGroupMiddleware(aiTestsEnabled)
+aiTestBuilderAdminRoutes
+  .get("/api/agent/:agentId/tests", ai.fetchAgentTestSuite)
+  .put(
+    "/api/agent/:agentId/tests",
+    updateAgentTestSuiteValidator(),
+    ai.updateAgentTestSuite
+  )
+  .post(
+    "/api/agent/:agentId/tests/run",
+    runAgentTestSuiteValidator(),
+    ai.runAgentTestSuite
+  )
+  .get("/api/agent/:agentId/tests/run/:runId", ai.fetchAgentTestRun)
 
-aiRagBuilderAdminRoutes
+builderAdminRoutes
   .get(
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
@@ -73,7 +101,7 @@ aiRagBuilderAdminRoutes
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
   .get(
-    "/api/agent/:agentId/knowledge-sources/options",
+    "/api/knowledge-sources/:datasourceId/:authConfigId/options",
     ai.fetchAgentKnowledgeSourceOptions
   )
   .get(
@@ -85,14 +113,19 @@ aiRagBuilderAdminRoutes
     connectAgentSharePointSiteValidator(),
     ai.connectAgentSharePointSite
   )
+  .patch(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
+    updateAgentSharePointSiteValidator(),
+    ai.updateAgentSharePointSite
+  )
   .delete(
     "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
     ai.disconnectAgentSharePointSite
   )
   .post(
-    "/api/agent/:agentId/knowledge-sources/sync",
+    "/api/agent/:agentId/knowledge-sources/:sourceId/sync",
     syncAgentKnowledgeSourcesValidator(),
-    ai.syncAgentKnowledgeSources
+    ai.syncAgentKnowledgeSource
   )
 
 publicRoutes.get(

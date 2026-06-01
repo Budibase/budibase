@@ -16,6 +16,7 @@ import {
 import { features, groups, licensing, quotas } from "@budibase/pro"
 import {
   DefaultAppTheme,
+  DefaultNewAppFontFamily,
   helpers,
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
@@ -580,6 +581,13 @@ export async function fetchAppPackage(
         s => s.workspaceAppId === matchedWorkspaceApp._id
       )
       application.navigation = matchedWorkspaceApp.navigation
+      application.theme = matchedWorkspaceApp.theme ?? application.theme
+      application.customTheme = matchedWorkspaceApp.customTheme
+        ? {
+            ...(application.customTheme || {}),
+            ...matchedWorkspaceApp.customTheme,
+          }
+        : application.customTheme
     } else {
       screens = []
     }
@@ -761,6 +769,7 @@ async function performWorkspaceCreate(
     const instance = await createInstance(workspaceId, instanceConfig)
     const db = context.getWorkspaceDB()
     const isImport = !!instanceConfig.file
+    const isTemplate = !!instanceConfig.useTemplate && !isImport
 
     await addCreatorToUsersTable(ctx)
 
@@ -789,6 +798,7 @@ async function performWorkspaceCreate(
         primaryColor: "var(--spectrum-global-color-blue-700)",
         primaryColorHover: "var(--spectrum-global-color-blue-600)",
         buttonBorderRadius: "16px",
+        fontFamily: DefaultNewAppFontFamily,
       },
       features: {
         componentValidation: true,
@@ -810,7 +820,6 @@ async function performWorkspaceCreate(
         "_rev",
         "navigation",
         "theme",
-        "customTheme",
         "icon",
         "snippets",
         "scripts",
@@ -822,6 +831,18 @@ async function performWorkspaceCreate(
           newWorkspace[key] = existing[key]
         }
       })
+
+      if (existing.customTheme) {
+        newWorkspace.customTheme = isTemplate
+          ? {
+              ...existing.customTheme,
+              fontFamily:
+                existing.customTheme.fontFamily || DefaultNewAppFontFamily,
+            }
+          : existing.customTheme
+      } else if (isImport) {
+        newWorkspace.customTheme = undefined
+      }
 
       // Keep existing feature flags
       if (!existing.features?.componentValidation) {

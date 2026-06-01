@@ -615,6 +615,40 @@ type LiteLLMModelCostMap = Record<
   }
 >
 
+const modelMaxInputCache = new Map<
+  string,
+  { value?: number; expires: number }
+>()
+const MODEL_INFO_TTL_MS = 5 * 60 * 1000
+
+export async function fetchModelMaxInputTokens(
+  liteLLMModelId: string
+): Promise<number | undefined> {
+  if (!liteLLMModelId || !env.LITELLM_MASTER_KEY) return undefined
+  const cached = modelMaxInputCache.get(liteLLMModelId)
+  if (cached && cached.expires > Date.now()) return cached.value
+  let value: number | undefined
+  try {
+    const res = await fetch(`${liteLLMUrl}/model/info`, {
+      headers: { Authorization: liteLLMAuthorizationHeader },
+    })
+    if (res.ok) {
+      const json = (await res.json()) as {
+        data?: { model_info?: { id?: string; max_input_tokens?: number } }[]
+      }
+      value = json.data?.find(d => d.model_info?.id === liteLLMModelId)
+        ?.model_info?.max_input_tokens
+    }
+  } catch {
+    // fall through and cache undefined
+  }
+  modelMaxInputCache.set(liteLLMModelId, {
+    value,
+    expires: Date.now() + MODEL_INFO_TTL_MS,
+  })
+  return value
+}
+
 export async function fetchPublicModelCostMap(): Promise<LiteLLMModelCostMap> {
   const res = await fetch(`${liteLLMUrl}/public/litellm_model_cost_map`)
   if (!res.ok) {

@@ -1,15 +1,17 @@
 <script lang="ts">
   import {
     ActionButton,
-    Button,
     Icon,
     Layout,
+    StatusLight,
     notifications,
   } from "@budibase/bbui"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
+  import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
   import { FeatureFlag } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
@@ -31,14 +33,18 @@
 
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
-  let ragEnabled = $derived($featureFlags[FeatureFlag.AI_RAG])
+  let lastToolsAiConfigId = $state<string | null | undefined>(null)
+  let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
 
   let activeTab = $derived.by(() => {
-    if (ragEnabled && $isActive("./knowledge")) {
+    if ($isActive("./knowledge")) {
       return "Knowledge"
     }
     if ($isActive("./deployment")) {
       return "Deployment"
+    }
+    if (testsEnabled && $isActive("./tests")) {
+      return "Tests"
     }
     if ($isActive("./logs")) {
       return "Logs"
@@ -46,11 +52,38 @@
     return "Configuration"
   })
   let currentAgent = $derived($selectedAgent)
+  let hasPublishedUnpublishedChanges = $derived.by(() => {
+    if (!currentAgent?._id) {
+      return false
+    }
+    const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
+    if (!publishStatus?.publishedAt) {
+      return false
+    }
+
+    return publishStatus.unpublishedChanges === true
+  })
 
   $effect(() => {
-    if (!ragEnabled && $isActive("./knowledge")) {
+    if (!testsEnabled && $isActive("./tests")) {
       $goto("./config")
     }
+  })
+
+  $effect(() => {
+    if (!currentAgent?._id) {
+      return
+    }
+
+    const nextAiConfigId = currentAgent.aiconfig || undefined
+    if (nextAiConfigId === lastToolsAiConfigId) {
+      return
+    }
+
+    lastToolsAiConfigId = nextAiConfigId
+    agentsStore.fetchTools(nextAiConfigId).catch(error => {
+      console.error("Failed to load agent tools", error)
+    })
   })
 
   async function toggleAgentLive() {
@@ -102,15 +135,13 @@
       >
         Configuration
       </ActionButton>
-      {#if ragEnabled}
-        <ActionButton
-          quiet
-          selected={activeTab === "Knowledge"}
-          on:click={() => $goto("./knowledge")}
-        >
-          Knowledge
-        </ActionButton>
-      {/if}
+      <ActionButton
+        quiet
+        selected={activeTab === "Knowledge"}
+        on:click={() => $goto("./knowledge")}
+      >
+        Knowledge
+      </ActionButton>
       <ActionButton
         quiet
         selected={activeTab === "Deployment"}
@@ -118,6 +149,15 @@
       >
         Deployment
       </ActionButton>
+      {#if testsEnabled}
+        <ActionButton
+          quiet
+          selected={activeTab === "Tests"}
+          on:click={() => $goto("./tests")}
+        >
+          Tests
+        </ActionButton>
+      {/if}
       <ActionButton
         quiet
         selected={activeTab === "Logs"}
@@ -125,6 +165,12 @@
       >
         Logs
       </ActionButton>
+      {#if hasPublishedUnpublishedChanges}
+        <div class="unpublished-changes-indicator">
+          <StatusLight color="var(--spectrum-global-color-blue-600)" size="L" />
+          <span>Unpublished changes</span>
+        </div>
+      {/if}
     </div>
     <div class="start-pause-row">
       <div class="status-icons">
@@ -140,26 +186,24 @@
           color="var(--spectrum-global-color-gray-600)"
         />
       </div>
-      <Button
-        primary={!currentAgent?.live}
-        secondary={currentAgent?.live}
-        icon={currentAgent?.live ? "stop" : "play"}
-        iconColor={currentAgent?.live ? "" : "var(--bb-blue)"}
-        iconWeight="fill"
-        on:click={toggleAgentLive}
+      <LiveToggleButton
+        live={currentAgent?.live === true}
         disabled={togglingLive}
-        >{currentAgent?.live ? "Stop" : "Set live"}</Button
-      >
+        on:click={toggleAgentLive}
+      />
     </div>
   </div>
-  <div class="config-page" class:full-width={activeTab === "Logs"}>
+  <div
+    class="config-page"
+    class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+  >
     <div
       class="config-content"
-      class:full-width={activeTab === "Logs"}
-      class:logs-tab={activeTab === "Logs"}
+      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+      class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
     >
       <div class="config-form">
-        {#if activeTab === "Logs"}
+        {#if activeTab === "Logs" || activeTab === "Tests"}
           <!-- svelte-ignore slot_element_deprecated -->
           <slot />
         {:else}
@@ -170,7 +214,7 @@
         {/if}
       </div>
     </div>
-    {#if activeTab !== "Logs"}
+    {#if activeTab !== "Logs" && activeTab !== "Tests"}
       <div class="config-preview">
         <AgentChatPanel
           agentId={currentAgent?._id}
@@ -272,6 +316,20 @@
   .filter {
     display: flex;
     gap: 10px;
+    align-items: center;
+    flex: 1 1 auto;
+  }
+
+  .unpublished-changes-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--font-size-s);
+    font-weight: 500;
+    margin-left: auto;
+    margin-right: var(--spacing-s);
+    white-space: nowrap;
   }
 
   .filter :global(.spectrum-ActionButton) {
