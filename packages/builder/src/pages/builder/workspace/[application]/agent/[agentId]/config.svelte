@@ -42,23 +42,6 @@
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
   const AUTO_SAVE_DEBOUNCE_MS = 800
-  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
-What is this agent responsible for?
-
-**Inputs**
-What information does the agent receive?
-
-**Actions**
-- What should the agent do?
-- When should it use tools or APIs?
-
-**Output**
-- What should the response look like?
-- Include any structure, formatting, or fields required.
-
-**Rules**
-Any constraints the agent must follow.
-`
   // Agent state
   let draftAgentId: string | undefined = $state()
   let draft = $state({
@@ -66,7 +49,7 @@ Any constraints the agent must follow.
     description: "",
     aiconfig: "",
     goal: "",
-    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+    promptInstructions: "",
     icon: "",
     iconColor: "",
   })
@@ -193,8 +176,7 @@ Any constraints the agent must follow.
         description: agent.description || "",
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
-        promptInstructions:
-          agent.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS,
+        promptInstructions: agent.promptInstructions ?? "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
       }

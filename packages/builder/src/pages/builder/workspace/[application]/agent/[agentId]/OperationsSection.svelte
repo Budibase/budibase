@@ -9,6 +9,23 @@
   import OperationSidePanel from "./OperationSidePanel.svelte"
   const { goto } = routify
   $goto
+  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
+What is this agent responsible for?
+
+**Inputs**
+What information does the agent receive?
+
+**Actions**
+- What should the agent do?
+- When should it use tools or APIs?
+
+**Output**
+- What should the response look like?
+- Include any structure, formatting, or fields required.
+
+**Rules**
+Any constraints the agent must follow.
+`
 
   let {
     agent = $bindable(),
@@ -50,8 +67,15 @@
   }
 
   const handleAddOperation = () => {
-    notifications.info("Only one operation is supported at the moment.")
-    return
+    if (hasOperation) {
+      notifications.info("Only one operation is supported at the moment.")
+      return
+    }
+    if (agent) {
+      agent.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
+    }
+    onUpdated()
+    openOperationPanel()
   }
 
   const deleteOperation = async () => {
