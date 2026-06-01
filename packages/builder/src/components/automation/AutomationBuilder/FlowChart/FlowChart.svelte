@@ -58,7 +58,6 @@
 
   import {
     SvelteFlow,
-    useStore,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -113,13 +112,12 @@
   } | null>(null)
 
   const { getViewport, setViewport, getNodes, getNodesBounds } = useSvelteFlow()
-  const { viewport } = useStore()
   $: stickyNotes = $selectedAutomation?.data?.uiTree?.stickyNotes || []
-  $: stickyNoteLayerTransform = `translate(${$viewport.x}px, ${
-    $viewport.y
-  }px) scale(${$viewport.zoom})`
+  $: stickyNoteLayerTransform = `translate(${$flowViewport.x}px, ${
+    $flowViewport.y
+  }px) scale(${$flowViewport.zoom})`
   $: stickyNoteAddPosition =
-    paneEl && $nodes ? getStickyNoteAddPosition($viewport) : undefined
+    paneEl && $nodes ? getStickyNoteAddPosition($flowViewport) : undefined
   $: canAddStickyNote = !!stickyNoteAddPosition
 
   // DnD helper and context stores
@@ -278,6 +276,14 @@
     $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
 
+  const setSyncedViewport = (
+    viewport: Viewport,
+    options?: Parameters<typeof setViewport>[1]
+  ) => {
+    flowViewport.set(viewport)
+    setViewport(viewport, options)
+  }
+
   // Keep the trigger focused on load
   const focusOnTrigger = () => {
     if (!paneEl || $nodes.length === 0) {
@@ -295,7 +301,7 @@
     const x = nodeOffset - triggerNode.position.x
     const y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
 
-    setViewport({ x, y, zoom: 1 }, { duration: 0 })
+    setSyncedViewport({ x, y, zoom: 1 }, { duration: 0 })
   }
 
   const focusOnNode = (
@@ -321,7 +327,7 @@
       const stride = (nodeWidth + NODE_SPACING) * safeZoom
       const x = currentViewport.x - direction * stride
       const y = currentViewport.y
-      setViewport(
+      setSyncedViewport(
         { x, y, zoom: safeZoom },
         { duration: VIEWPORT_ANIMATION_DURATION }
       )
@@ -335,7 +341,7 @@
     const y =
       paneRect.height / 2 - position.y * safeZoom - (nodeHeight / 2) * safeZoom
 
-    setViewport(
+    setSyncedViewport(
       { x, y, zoom: safeZoom },
       { duration: VIEWPORT_ANIMATION_DURATION }
     )
@@ -481,7 +487,7 @@
       nextY += yUnderflow
     }
 
-    setViewport(
+    setSyncedViewport(
       {
         x: nextX,
         y: nextY,
@@ -541,6 +547,10 @@
   }
 
   const handleMove = () => {
+    const viewport = getViewport()
+    if (viewport) {
+      flowViewport.set(viewport)
+    }
     closeContextMenuOnCanvasInteraction()
   }
 
