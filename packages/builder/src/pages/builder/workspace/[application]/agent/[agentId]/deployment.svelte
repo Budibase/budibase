@@ -11,11 +11,10 @@
     AgentChannelProvider,
     DEPLOYMENT_CHANNEL_IDS,
     DEPLOYMENT_ID_TO_PROVIDER,
-    FeatureFlag,
     type Agent,
     type DeploymentRow,
   } from "@budibase/types"
-  import { selectedAgent, agentsStore, featureFlags } from "@/stores/portal"
+  import { selectedAgent, agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
@@ -85,7 +84,6 @@
   )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
-  const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_AGENTS])
 
   const channelMetadata: Record<
     AgentChannelProvider,
@@ -309,7 +307,7 @@
           </div>
         </div>
       {/each}
-      {#if agentChatEnabled && currentAgent?._id}
+      {#if currentAgent?._id}
         <AgentChatChannel
           agentId={currentAgent._id}
           agentName={currentAgent.name || "Agent"}

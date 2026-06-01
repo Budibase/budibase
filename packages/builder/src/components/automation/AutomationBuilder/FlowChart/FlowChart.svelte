@@ -13,6 +13,7 @@
   import {
     PublishResourceState,
     AutomationStatus,
+    isBranchStep,
     type UIAutomation,
     type BlockRef,
   } from "@budibase/types"
@@ -39,6 +40,12 @@
     DEFAULT_NODE_WIDTH,
     DEFAULT_NODE_HEIGHT,
   } from "./FlowCanvas/FlowGeometry"
+  import {
+    MIN_STICKY_NOTE_WIDTH,
+    MIN_STICKY_NOTE_HEIGHT,
+    clampStickyNoteToGraphBounds,
+    clampStickyNoteToViewportBounds,
+  } from "./FlowCanvas/StickyNoteBounds"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
@@ -47,9 +54,11 @@
   import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
   import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
   import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
+  import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
 
   import {
     SvelteFlow,
+    useStore,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -65,6 +74,8 @@
   const VIEWPORT_ANIMATION_DURATION = 180
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 2.5
+  const ACTION_PANEL_DEFAULT_WIDTH = 480
+  const ACTION_PANEL_STORAGE_KEY = "automation-side-panel-width"
 
   const memoAutomation = memo(automation)
 
@@ -82,6 +93,7 @@
   let blockRefs: Record<string, BlockRef> = {}
   let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
+  let flowControlsEl: HTMLDivElement | null = null
   let paneResizeObserver: ResizeObserver | undefined
   let changingStatus = false
 
@@ -89,6 +101,7 @@
   let preserveViewport = false
   let visibleSelectionRequest: string | undefined
   let lastVisibleSelectionCheck: string | undefined
+  let lastVisibleActionTargetCheck: string | undefined
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
   let flowViewport = writable<Viewport>({ x: 0, y: 0, zoom: 1 })
@@ -99,7 +112,15 @@
     ensureVisible?: boolean
   } | null>(null)
 
-  const { getViewport, setViewport } = useSvelteFlow()
+  const { getViewport, setViewport, getNodes, getNodesBounds } = useSvelteFlow()
+  const { viewport } = useStore()
+  $: stickyNotes = $selectedAutomation?.data?.uiTree?.stickyNotes || []
+  $: stickyNoteLayerTransform = `translate(${$viewport.x}px, ${
+    $viewport.y
+  }px) scale(${$viewport.zoom})`
+  $: stickyNoteAddPosition =
+    paneEl && $nodes ? getStickyNoteAddPosition($viewport) : undefined
+  $: canAddStickyNote = !!stickyNoteAddPosition
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -167,6 +188,7 @@
     )
 
     const selectable = viewMode === ViewMode.EDITOR
+
     nodes.set(
       laidOut.nodes.map(node => ({
         ...node,
@@ -232,6 +254,23 @@
     lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
     visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
     ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
+  }
+
+  $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
+    $automationStore.actionPanelBlock
+  )
+
+  $: if (
+    actionPanelTargetNodeId &&
+    actionPanelTargetNodeId !== lastVisibleActionTargetCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleActionTargetCheck = actionPanelTargetNodeId
+    visibleSelectionRequest = actionPanelTargetNodeId
+    ensureSelectedNodeVisible(actionPanelTargetNodeId, {
+      rightInset: getActionPanelWidth(),
+    })
   }
 
   // Check if automation has unpublished changes
@@ -336,7 +375,57 @@
     }
   }
 
-  const ensureSelectedNodeVisible = async (nodeId: string) => {
+  const getActionPanelTargetNodeId = (target: unknown) => {
+    if (!target || typeof target !== "object") {
+      lastVisibleActionTargetCheck = undefined
+      return undefined
+    }
+
+    const block = target as Record<string, unknown>
+    if (block.branchNode) {
+      const branchStepId =
+        typeof block.branchStepId === "string" ? block.branchStepId : undefined
+      const branchIdx =
+        typeof block.branchIdx === "number" ? block.branchIdx : undefined
+      if (!branchStepId || branchIdx == null) {
+        return undefined
+      }
+
+      const branchStep = automationStore.actions.getBlockByRef(
+        $selectedAutomation.data,
+        $selectedAutomation.blockRefs?.[branchStepId]
+      )
+      if (!branchStep || !isBranchStep(branchStep)) {
+        return undefined
+      }
+
+      const branchId = branchStep.inputs.branches?.[branchIdx]?.id
+      return branchId
+        ? `branch-${branchStepId}-${branchIdx}-${branchId}`
+        : undefined
+    }
+
+    if (typeof block.id === "string") {
+      const anchorNodeId = `anchor-${block.id}`
+      return get(nodes).some(node => node.id === anchorNodeId)
+        ? anchorNodeId
+        : block.id
+    }
+
+    return undefined
+  }
+
+  const getActionPanelWidth = () => {
+    const storedWidth = Number(localStorage?.getItem(ACTION_PANEL_STORAGE_KEY))
+    return Number.isFinite(storedWidth) && storedWidth > 0
+      ? storedWidth
+      : ACTION_PANEL_DEFAULT_WIDTH
+  }
+
+  const ensureSelectedNodeVisible = async (
+    nodeId: string,
+    options: { rightInset?: number } = {}
+  ) => {
     await tick()
     if (visibleSelectionRequest !== nodeId || !paneEl) {
       return
@@ -353,6 +442,8 @@
       getNodeDimensions(targetNode)
     const position = getAbsoluteNodePosition(targetNode)
     const margin = 24
+    const rightInset = options.rightInset ?? 0
+    const visiblePaneWidth = Math.max(paneRect.width - rightInset, 0)
     const nodeRight =
       position.x * currentViewport.zoom +
       currentViewport.x +
@@ -363,7 +454,7 @@
       currentViewport.y +
       nodeHeight * currentViewport.zoom
     const nodeTop = position.y * currentViewport.zoom + currentViewport.y
-    const xOverflow = nodeRight + margin - paneRect.width
+    const xOverflow = nodeRight + margin - visiblePaneWidth
     const xUnderflow = margin - nodeLeft
     const yOverflow = nodeBottom + margin - paneRect.height
     const yUnderflow = margin - nodeTop
@@ -451,6 +542,52 @@
 
   const handleMove = () => {
     closeContextMenuOnCanvasInteraction()
+  }
+
+  const getStickyNoteAddPosition = (viewport: Viewport | undefined) => {
+    if (!paneEl || !viewport) {
+      return undefined
+    }
+    const rect = paneEl.getBoundingClientRect()
+    const toolbarRect = flowControlsEl?.getBoundingClientRect()
+    const toolbarTop = toolbarRect ? toolbarRect.top - rect.top : rect.height
+    const margin = 40
+    const toolbarTopFlowY = (toolbarTop - viewport.y) / viewport.zoom
+    const position = {
+      x: (rect.width / 2 - viewport.x) / viewport.zoom,
+      y: toolbarTopFlowY - MIN_STICKY_NOTE_HEIGHT - margin,
+    }
+    const flowNodes = getNodes()
+    const graphPosition = flowNodes.length
+      ? clampStickyNoteToGraphBounds(position, getNodesBounds(flowNodes), {
+          width: MIN_STICKY_NOTE_WIDTH,
+          height: MIN_STICKY_NOTE_HEIGHT,
+        })
+      : position
+
+    const viewportPosition = clampStickyNoteToViewportBounds(
+      graphPosition,
+      viewport,
+      { width: rect.width, height: rect.height },
+      {
+        width: MIN_STICKY_NOTE_WIDTH,
+        height: MIN_STICKY_NOTE_HEIGHT,
+      }
+    )
+
+    return graphPosition.x === viewportPosition.x &&
+      graphPosition.y === viewportPosition.y
+      ? graphPosition
+      : undefined
+  }
+
+  const handleAddNote = () => {
+    const position = getStickyNoteAddPosition(getViewport())
+    if (!position) {
+      return
+    }
+
+    automationStore.actions.addStickyNote(position)
   }
 
   const handleCanvasPointerMove = (e: PointerEvent) => {
@@ -566,7 +703,7 @@
         {edgeTypes}
         viewport={flowViewport}
         colorMode="system"
-        nodesDraggable={false}
+        nodesDraggable={true}
         elementsSelectable={viewMode === ViewMode.EDITOR}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
@@ -576,7 +713,24 @@
         onMove={handleMove}
         on:paneclick={closeContextMenuOnCanvasInteraction}
       >
-        <FlowControls historyStore={automationHistoryStore} />
+        <FlowControls
+          bind:controlsEl={flowControlsEl}
+          historyStore={automationHistoryStore}
+          canAddNote={canAddStickyNote}
+          on:addnote={handleAddNote}
+        />
+        <div
+          class="sticky-note-layer"
+          style:transform={stickyNoteLayerTransform}
+        >
+          {#each stickyNotes as note (note.id)}
+            <StickyNoteNode
+              data={{ note }}
+              positionAbsoluteX={note.x}
+              positionAbsoluteY={note.y}
+            />
+          {/each}
+        </div>
       </SvelteFlow>
     </div>
   </div>
@@ -612,7 +766,7 @@
     --xy-controls-button-background-color: var(
       --spectrum-global-color-gray-200
     );
-    --xy-edge-stroke: var(--spectrum-global-color-gray-400);
+    --xy-edge-stroke: var(--spectrum-global-color-gray-300);
   }
 
   :global(.spectrum--dark) .wrapper,
@@ -652,6 +806,15 @@
   .root {
     height: 100%;
     width: 100%;
+  }
+
+  .sticky-note-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: top left;
+    pointer-events: none;
+    z-index: 1002;
   }
 
   .root :global(.svelte-flow__edgelabel-renderer) {

@@ -139,12 +139,14 @@ const createTeamsMessageHandler = ({
   agentId,
   channelEnabled,
   idleTimeoutMinutes,
+  requireUserLink,
 }: {
   workspaceId: string
   chatAppId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }) => {
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as MSTeamsActivity | undefined
@@ -304,6 +306,7 @@ const createTeamsMessageHandler = ({
         channel,
         scope,
         idleTimeoutMinutes,
+        requireUserLink,
       })
     } catch (error) {
       console.error("Teams webhook processing failed", error)
@@ -327,17 +330,22 @@ export async function MSTeamsWebhook(
     ctx,
     providerName: "Teams",
     createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
-      const { integration, idleTimeoutMinutes, channelEnabled } =
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          const agent = await sdk.ai.agents.getOrThrow(agentId)
-          return {
-            integration:
-              sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
-            idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
-            channelEnabled:
-              !!agent.MSTeamsIntegration?.messagingEndpointUrl?.trim(),
-          }
-        })
+      const {
+        integration,
+        idleTimeoutMinutes,
+        channelEnabled,
+        requireUserLink,
+      } = await context.doInWorkspaceContext(workspaceId, async () => {
+        const agent = await sdk.ai.agents.getOrThrow(agentId)
+        return {
+          integration:
+            sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
+          idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
+          requireUserLink: agent.MSTeamsIntegration?.requireUserLink,
+          channelEnabled:
+            !!agent.MSTeamsIntegration?.messagingEndpointUrl?.trim(),
+        }
+      })
 
       const chat = new Chat({
         userName: "Budibase",
@@ -361,6 +369,7 @@ export async function MSTeamsWebhook(
         agentId,
         channelEnabled,
         idleTimeoutMinutes,
+        requireUserLink,
       })
       chat.onDirectMessage(async (thread, message) => {
         await handler(thread, message)

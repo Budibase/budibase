@@ -1,5 +1,5 @@
-import { constants, objectStore } from "@budibase/backend-core"
-import { Datasource, SourceName } from "@budibase/types"
+import { constants, objectStore, roles } from "@budibase/backend-core"
+import { BuiltinPermissionID, Datasource, SourceName } from "@budibase/types"
 import fsp from "fs/promises"
 import path from "path"
 import { tmpdir } from "os"
@@ -160,6 +160,36 @@ describe("/static", () => {
         )
       })
 
+      it("should require authorization to generate a signed upload URL", async () => {
+        await request
+          .post(`/api/attachments/${datasource._id}/url`)
+          .send({
+            bucket: "foo",
+            key: "bar",
+          })
+          .expect("Content-Type", /json/)
+          .expect(401)
+      })
+
+      it("should deny app users without write permissions", async () => {
+        const readOnlyRole = await config.api.roles.save({
+          name: "s3_signed_url_read_only",
+          permissionId: BuiltinPermissionID.READ_ONLY,
+          inherits: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        })
+        await config.loginAsRole(readOnlyRole._id!, async () => {
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "bar",
+            })
+            .set(config.defaultHeaders())
+            .expect("Content-Type", /json/)
+            .expect(403)
+        })
+      })
+
       it("should require a bucket parameter", async () => {
         const res = await request
           .post(`/api/attachments/${datasource._id}/url`)
@@ -183,6 +213,25 @@ describe("/static", () => {
           .expect("Content-Type", /json/)
           .expect(400)
         expect(res.body.message).toEqual("bucket and key values are required")
+      })
+
+      it("should allow non-creator app users to generate a signed upload URL", async () => {
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const res = await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "bar",
+            })
+            .set(config.defaultHeaders())
+            .expect("Content-Type", /json/)
+            .expect(200)
+
+          expect(res.body.signedUrl).toBeDefined()
+          expect(res.body.publicUrl).toEqual(
+            "https://foo.s3.eu-west-1.amazonaws.com/bar"
+          )
+        })
       })
     })
   })
@@ -361,6 +410,78 @@ describe("/static", () => {
         expect(res.status).toEqual(500)
         expect(res.body.message).toMatch("No valid icons found in the zip file")
         expect(mockedUpload).not.toHaveBeenCalled()
+      })
+
+      it("rejects a symlinked icons.json file", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "icons.json")
+        await fsp.writeFile(
+          sensitiveFile,
+          JSON.stringify({
+            icons: [
+              {
+                src: "icon-192.png",
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          })
+        )
+        await fsp.writeFile(path.join(tempDir, "icon-192.png"), "fake-png-data")
+        await fsp.symlink(sensitiveFile, path.join(tempDir, "icons.json"))
+
+        try {
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(500)
+          expect(res.body.message).toMatch(
+            "Invalid zip structure - missing icons.json"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
+      })
+
+      it("skips icons whose src is a symlink to a file outside the zip directory", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "secret.png")
+        await fsp.writeFile(sensitiveFile, "sensitive-data")
+        await fsp.symlink(sensitiveFile, path.join(tempDir, "evil.png"))
+
+        try {
+          const iconsJson = {
+            icons: [
+              {
+                src: "evil.png",
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          }
+          await fsp.writeFile(
+            path.join(tempDir, "icons.json"),
+            JSON.stringify(iconsJson)
+          )
+
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(500)
+          expect(res.body.message).toMatch(
+            "No valid icons found in the zip file"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
       })
     })
   })

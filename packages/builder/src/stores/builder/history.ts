@@ -8,16 +8,17 @@ export const enum Operations {
   Change = "Change",
 }
 
-interface Operator<T extends Document> {
+interface Operator<T extends Document, SaveOptions = void> {
   id?: number
   type: Operations
   doc: T
+  saveOptions?: SaveOptions
   forwardPatch?: jsonpatch.Operation[]
   backwardsPatch?: jsonpatch.Operation[]
 }
 
-interface HistoryState<T extends Document> {
-  history: Operator<T>[]
+interface HistoryState<T extends Document, SaveOptions = void> {
+  history: Operator<T, SaveOptions>[]
   position: number
   loading?: boolean
 }
@@ -28,16 +29,16 @@ export const initialState = {
   loading: false,
 }
 
-export interface HistoryStore<T extends Document>
+export interface HistoryStore<T extends Document, SaveOptions = void>
   extends Readable<
-    HistoryState<T> & {
+    HistoryState<T, SaveOptions> & {
       canUndo: boolean
       canRedo: boolean
     }
   > {
   wrapSaveDoc: (
-    fn: (doc: T) => Promise<T>
-  ) => (doc: T, operationId?: number) => Promise<T>
+    fn: (doc: T, opts?: SaveOptions) => Promise<T>
+  ) => (doc: T, opts?: SaveOptions, operationId?: number) => Promise<T>
   wrapDeleteDoc: (
     fn: (doc: T) => Promise<void>
   ) => (doc: T, operationId?: number) => Promise<void>
@@ -47,7 +48,7 @@ export interface HistoryStore<T extends Document>
   redo: () => Promise<void>
 }
 
-export const createHistoryStore = <T extends Document>({
+export const createHistoryStore = <T extends Document, SaveOptions = void>({
   getDoc,
   selectDoc,
   beforeAction,
@@ -55,11 +56,11 @@ export const createHistoryStore = <T extends Document>({
 }: {
   getDoc: (id: string) => T | undefined
   selectDoc: (id: string) => void
-  beforeAction?: (operation?: Operator<T>) => void
-  afterAction?: (operation?: Operator<T>) => void
-}): HistoryStore<T> => {
+  beforeAction?: (operation?: Operator<T, SaveOptions>) => void
+  afterAction?: (operation?: Operator<T, SaveOptions>) => void
+}): HistoryStore<T, SaveOptions> => {
   // Use a derived store to check if we are able to undo or redo any operations
-  const store = writable<HistoryState<T>>(initialState)
+  const store = writable<HistoryState<T, SaveOptions>>(initialState)
   const derivedStore = derived(store, $store => {
     return {
       ...$store,
@@ -70,7 +71,7 @@ export const createHistoryStore = <T extends Document>({
 
   // Wrapped versions of essential functions which we call ourselves when using
   // undo and redo
-  let saveFn: (doc: T, operationId?: number) => Promise<T>
+  let saveFn: (doc: T, opts?: SaveOptions, operationId?: number) => Promise<T>
   let deleteFn: (doc: T, operationId?: number) => Promise<void>
 
   /**
@@ -105,7 +106,7 @@ export const createHistoryStore = <T extends Document>({
    * For internal use only.
    * @param operation the operation to save
    */
-  const saveOperation = (operation: Operator<T>) => {
+  const saveOperation = (operation: Operator<T, SaveOptions>) => {
     store.update(state => {
       // Update history
       let history = state.history
@@ -132,8 +133,8 @@ export const createHistoryStore = <T extends Document>({
    * @param fn the save function
    * @returns {function} a wrapped version of the save function
    */
-  const wrapSaveDoc = (fn: (doc: T) => Promise<T>) => {
-    saveFn = async (doc: T, operationId?: number) => {
+  const wrapSaveDoc = (fn: (doc: T, opts?: SaveOptions) => Promise<T>) => {
+    saveFn = async (doc: T, opts?: SaveOptions, operationId?: number) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
@@ -141,7 +142,7 @@ export const createHistoryStore = <T extends Document>({
       startLoading()
       try {
         const oldDoc = getDoc(doc._id!)
-        const newDoc = jsonpatch.deepClone(await fn(doc))
+        const newDoc = jsonpatch.deepClone(await fn(doc, opts))
 
         // Store the change
         if (!oldDoc) {
@@ -149,6 +150,7 @@ export const createHistoryStore = <T extends Document>({
           saveOperation({
             type: Operations.Add,
             doc: newDoc,
+            saveOptions: opts,
             id: operationId,
           })
         } else {
@@ -158,6 +160,7 @@ export const createHistoryStore = <T extends Document>({
             forwardPatch: jsonpatch.compare(oldDoc, doc),
             backwardsPatch: jsonpatch.compare(doc, oldDoc),
             doc: newDoc,
+            saveOptions: opts,
             id: operationId,
           })
         }
@@ -251,7 +254,7 @@ export const createHistoryStore = <T extends Document>({
         // doc again without conflicts
         let doc = jsonpatch.deepClone(operation.doc)
         delete doc._rev
-        const created = await saveFn(doc, operation.id)
+        const created = await saveFn(doc, operation.saveOptions, operation.id)
         selectDoc?.(created?._id || doc._id)
       }
 
@@ -264,7 +267,7 @@ export const createHistoryStore = <T extends Document>({
             doc,
             jsonpatch.deepClone(operation.backwardsPatch)
           )
-          await saveFn(doc, operation.id)
+          await saveFn(doc, operation.saveOptions, operation.id)
           selectDoc?.(doc._id)
         }
       }
@@ -315,7 +318,7 @@ export const createHistoryStore = <T extends Document>({
         // doc again without conflicts
         let doc = jsonpatch.deepClone(operation.doc)
         delete doc._rev
-        const created = await saveFn(doc, operation.id)
+        const created = await saveFn(doc, operation.saveOptions, operation.id)
         selectDoc?.(created?._id || doc._id)
       }
 
@@ -333,7 +336,7 @@ export const createHistoryStore = <T extends Document>({
         let doc = jsonpatch.deepClone(getDoc(operation.doc._id!))
         if (doc) {
           jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
-          await saveFn(doc, operation.id)
+          await saveFn(doc, operation.saveOptions, operation.id)
           selectDoc?.(doc._id)
         }
       }

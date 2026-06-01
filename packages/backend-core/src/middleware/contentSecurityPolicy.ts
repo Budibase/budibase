@@ -16,6 +16,7 @@ const CSP_DIRECTIVES = {
     "https://d2l5prqdbvm3op.cloudfront.net",
     "https://us-assets.i.posthog.com",
     "https://www.google.com/recaptcha/api.js",
+    "https://companion.frontapp.com",
   ],
   "style-src": [
     "'self'",
@@ -70,6 +71,8 @@ const CSP_DIRECTIVES = {
     "https://*.s3.us-gov-west-1.amazonaws.com",
     "https://api.github.com",
     "https://d2l5prqdbvm3op.cloudfront.net",
+    "https://companion.frontapp.com",
+    "https://*.frontapp.com",
   ],
   "font-src": [
     "'self'",

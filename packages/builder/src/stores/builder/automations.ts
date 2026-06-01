@@ -29,8 +29,10 @@ import {
   RowTriggers,
   SelectedAutomationState,
   ViewMode,
+  type FlowBlockPath,
   type FormUpdate,
   type StepInputs,
+  type StickyNote,
 } from "@/types/automations"
 import {
   AutomationTestProgressEvent,
@@ -101,6 +103,10 @@ import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
 import { contextMenuStore } from "./contextMenu"
 
+export interface AutomationSaveOptions {
+  skipUnpublishedChanges?: boolean
+}
+
 const sameMoveContainer = (
   sourcePath: BlockPath[],
   destPath: BlockPath[]
@@ -154,6 +160,67 @@ const initialAutomationState: AutomationStoreState = {
   },
   selectedAutomationId: null,
   viewMode: ViewMode.EDITOR,
+  actionPanelToolbarFlowEnd: false,
+}
+
+export type ToolbarFlowEndInsertion = {
+  targetPath: FlowBlockPath
+  anchorRef?: BlockRef
+  insertInsideLoopV2Children?: boolean
+}
+
+/** Toolbar + insert path: main chain tail, last branch, then Loop V2 children. */
+export const getToolbarFlowEndInsertion = (
+  automation: Automation | undefined | null,
+  blockRefs: Record<string, BlockRef>
+): ToolbarFlowEndInsertion => {
+  if (!automation?.definition?.trigger) return { targetPath: [] }
+
+  const tid = automation.definition.trigger.id
+  const fallback = (): ToolbarFlowEndInsertion => ({
+    targetPath: blockRefs[tid]?.pathTo ?? [{ stepIdx: 0, id: tid }],
+  })
+
+  const steps = automation.definition.steps ?? []
+  if (!steps.length) return fallback()
+
+  let cursor: AutomationStep = steps[steps.length - 1]
+  for (;;) {
+    if (isBranchStep(cursor)) {
+      const branches = cursor.inputs?.branches ?? []
+      if (!branches.length) {
+        const r = blockRefs[cursor.id]
+        return r?.pathTo ? { targetPath: r.pathTo, anchorRef: r } : fallback()
+      }
+      const bi = branches.length - 1
+      const kids = cursor.inputs?.children?.[branches[bi].id] ?? []
+      const host = blockRefs[cursor.id]
+      if (!kids.length) {
+        return {
+          targetPath: [
+            ...(host?.pathTo ?? []),
+            { branchIdx: bi, branchStepId: cursor.id, stepIdx: -1 },
+          ],
+          insertInsideLoopV2Children: Boolean(host?.isLoopV2Child),
+        }
+      }
+      cursor = kids[kids.length - 1]
+      continue
+    }
+    if (isLoopV2Step(cursor)) {
+      const p = blockRefs[cursor.id]?.pathTo
+      return p?.length
+        ? {
+            targetPath: p,
+            anchorRef: blockRefs[cursor.id],
+          }
+        : fallback()
+    }
+    break
+  }
+
+  const r = blockRefs[cursor.id]
+  return r?.pathTo?.length ? { targetPath: r.pathTo, anchorRef: r } : fallback()
 }
 
 let testStatusTimer: NodeJS.Timeout | undefined
@@ -891,6 +958,8 @@ const automationActions = (store: AutomationStore) => ({
     })
     return blockRefs
   },
+
+  getToolbarFlowEndInsertion,
 
   getAvailableBindings: (
     block: any,
@@ -2561,11 +2630,11 @@ const automationActions = (store: AutomationStore) => ({
     }
   ),
 
-  save: async (automation: Automation) => {
+  save: async (automation: Automation, opts: AutomationSaveOptions = {}) => {
     const response = await API.updateAutomation(automation)
 
     // Mark automation as having unpublished changes
-    if (response.automation._id) {
+    if (!opts.skipUnpublishedChanges && response.automation._id) {
       workspaceDeploymentStore.setAutomationUnpublishedChanges(
         response.automation._id
       )
@@ -2582,6 +2651,90 @@ const automationActions = (store: AutomationStore) => ({
       state.testResults = undefined
       state.testProgress = {}
       return state
+    })
+  },
+
+  addStickyNote: async (position?: { x: number; y: number }) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto) return
+
+    const notes = auto.uiTree?.stickyNotes || []
+    const newNote = {
+      id: generate(),
+      title: "Note",
+      text: "",
+      x: position?.x ?? 100 + notes.length * 30,
+      y: position?.y ?? 100 + notes.length * 30,
+    }
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...(updated.uiTree || {}),
+      stickyNotes: [...notes, newNote],
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
+  },
+
+  updateStickyNote: async (
+    noteId: string,
+    updates: {
+      title?: string
+      text?: string
+      width?: number
+      height?: number
+      x?: number
+      y?: number
+    }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
+        n.id === noteId ? { ...n, ...updates } : n
+      ),
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
+  },
+
+  updateStickyNotePosition: async (
+    noteId: string,
+    position: { x: number; y: number }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
+        n.id === noteId ? { ...n, x: position.x, y: position.y } : n
+      ),
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
+  },
+
+  removeStickyNote: async (noteId: string) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.filter(
+        (n: StickyNote) => n.id !== noteId
+      ),
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
     })
   },
 
@@ -2835,6 +2988,7 @@ const automationActions = (store: AutomationStore) => ({
         selectedBranchNode: undefined,
         selectedNodeMode: mode ?? DataMode.INPUT,
         actionPanelBlock: undefined,
+        actionPanelToolbarFlowEnd: false,
       }
     })
   },
@@ -2851,14 +3005,28 @@ const automationActions = (store: AutomationStore) => ({
       selectedBranchNode: selection,
       selectedNodeMode: DataMode.INPUT,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
-  openActionPanel: (block: BlockRef) => {
+  openActionPanel: (block: AutomationStoreState["actionPanelBlock"]) => {
     contextMenuStore.close()
     store.update(state => ({
       ...state,
       actionPanelBlock: block,
+      actionPanelToolbarFlowEnd: false,
+      selectedNodeId: undefined,
+      selectedBranchNode: undefined,
+    }))
+  },
+  openActionPanelToolbarFlowEnd: (
+    block: AutomationStoreState["actionPanelBlock"]
+  ) => {
+    contextMenuStore.close()
+    store.update(state => ({
+      ...state,
+      actionPanelBlock: block,
+      actionPanelToolbarFlowEnd: true,
       selectedNodeId: undefined,
       selectedBranchNode: undefined,
     }))
@@ -2867,6 +3035,7 @@ const automationActions = (store: AutomationStore) => ({
     store.update(state => ({
       ...state,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
@@ -2883,6 +3052,7 @@ const automationActions = (store: AutomationStore) => ({
       selectedNodeId: undefined,
       selectedBranchNode: undefined,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
@@ -2903,6 +3073,7 @@ const automationActions = (store: AutomationStore) => ({
       selectedNodeId: undefined,
       selectedBranchNode: undefined,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
       showLogDetailsPanel: false,
     }))
   },
@@ -2995,7 +3166,7 @@ class AutomationStore extends DerivedBudiStore<
   AutomationStoreState,
   DerivedAutomationStoreState
 > {
-  history: HistoryStore<Automation>
+  history: HistoryStore<Automation, AutomationSaveOptions>
   actions: ReturnType<typeof automationActions>
   selected: SelectedAutomationStore
 
@@ -3020,7 +3191,7 @@ class AutomationStore extends DerivedBudiStore<
 
     super(initialAutomationState, makeDerivedStore)
     this.actions = automationActions(this)
-    this.history = createHistoryStore({
+    this.history = createHistoryStore<Automation, AutomationSaveOptions>({
       getDoc: this.actions.getDefinition.bind(this),
       selectDoc: this.actions.select.bind(this),
     })
