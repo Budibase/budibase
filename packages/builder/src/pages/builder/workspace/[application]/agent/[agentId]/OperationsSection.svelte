@@ -35,6 +35,8 @@ Any constraints the agent must follow.
     toolsLoaded = false,
     availableTools = [],
     webSearchConfigured = false,
+    onAddApiConnection = () => {},
+    onConfigureWebSearch = () => {},
     onDeleteOperation = async () => {},
     onUpdated,
   }: {
@@ -45,6 +47,8 @@ Any constraints the agent must follow.
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
     webSearchConfigured?: boolean
+    onAddApiConnection?: () => void
+    onConfigureWebSearch?: () => void
     onDeleteOperation?: () => Promise<void>
     onUpdated: () => void
   } = $props()
@@ -155,6 +159,8 @@ Any constraints the agent must follow.
   {toolsLoaded}
   {availableTools}
   {webSearchConfigured}
+  {onAddApiConnection}
+  {onConfigureWebSearch}
   {onUpdated}
   onClose={closeOperationPanel}
   onDelete={deleteOperation}

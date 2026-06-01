@@ -36,6 +36,7 @@
   import { shouldAutoSelectAgentModel } from "./configUtils"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
+  import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
 
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
@@ -57,6 +58,7 @@
 
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
+  let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
@@ -470,6 +472,10 @@
       saveAgent({ showNotifications: false })
     }
   })
+
+  const openWebSearchConfigModal = () => {
+    webSearchConfigModal?.show()
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -523,9 +529,13 @@
   {toolsLoaded}
   {availableTools}
   {webSearchConfigured}
+  onAddApiConnection={() => bb.settings("/connections/apis")}
+  onConfigureWebSearch={openWebSearchConfigModal}
   onDeleteOperation={deleteOperationKnowledge}
   onUpdated={() => scheduleSave(true)}
 />
+
+<WebSearchConfigModal bind:this={webSearchConfigModal} aiconfigId={draft.aiconfig} />
 
 <style>
   .llm-section-container {
