@@ -46,14 +46,16 @@ import {
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { render } from "svelte/server"
 
 const ACTIVE_CONTENT_EXTENSIONS = new Set([
   "html",
   "htm",
+  "js",
+  "jse",
+  "mjs",
   "svg",
   "svgz",
+  "wasm",
   "xhtml",
   "mhtml",
   "shtml",
@@ -62,6 +64,9 @@ const ACTIVE_CONTENT_EXTENSIONS = new Set([
 const ACTIVE_CONTENT_MIME_TYPES = [
   "text/html",
   "image/svg+xml",
+  "application/javascript",
+  "application/wasm",
+  "text/javascript",
   "application/xhtml+xml",
 ]
 
@@ -167,29 +172,25 @@ export const uploadFile = async function (
         )
       }
 
-      if (isPublicUser) {
-        if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
-          throw new ActiveContentFileError(fileName)
-        }
+      if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
+        throw new ActiveContentFileError(fileName)
+      }
 
-        const mimeType =
-          typeof rawMimeType === "string"
-            ? rawMimeType.toLowerCase()
-            : undefined
-        if (
-          mimeType &&
-          ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
-        ) {
-          throw new ActiveContentFileError(fileName)
-        }
+      const mimeType =
+        typeof rawMimeType === "string" ? rawMimeType.toLowerCase() : undefined
+      if (
+        mimeType &&
+        ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
+      ) {
+        throw new ActiveContentFileError(fileName)
+      }
 
-        if (
-          filePath &&
-          (typeof filePath === "string" || Buffer.isBuffer(filePath)) &&
-          (await detectActiveContent(filePath))
-        ) {
-          throw new ActiveContentFileError(fileName)
-        }
+      if (
+        filePath &&
+        (typeof filePath === "string" || Buffer.isBuffer(filePath)) &&
+        (await detectActiveContent(filePath))
+      ) {
+        throw new ActiveContentFileError(fileName)
       }
 
       // filenames converted to UUIDs so they are unique
@@ -357,7 +358,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo.theme)
+    const themeVariables = getThemeVariables(
+      workspaceApp?.theme ?? appInfo.theme
+    )
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
     const manifestUrl = hasPWA ? `/api/apps/${workspaceId}/manifest.json` : ""
     const addAppScripts =
@@ -365,6 +368,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       false
 
     if (!env.isJest()) {
+      const [{ default: AppComponent }, { render }] = await Promise.all([
+        import("./templates/BudibaseApp.svelte"),
+        import("svelte/server"),
+      ])
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function

@@ -1,10 +1,13 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from "svelte"
   import { writable } from "svelte/store"
+  import Checkbox from "../Form/Core/Checkbox.svelte"
   import Icon from "../Icon/Icon.svelte"
   import type { TreeViewContext } from "./context"
 
   export let selected: boolean = false
+  export let showCheckbox: boolean = false
+  export let indeterminate: boolean = false
   export let disabled: boolean = false
   export let open: boolean = false
   export let href: string | null = null
@@ -18,10 +21,11 @@
     selectable: writable(false),
     quiet: writable(false),
   }
-
+  const selectableStore = treeViewContext.selectable
   const quietStore = treeViewContext.quiet
   const dispatch = createEventDispatcher<{ toggle: boolean; select: boolean }>()
 
+  $: isSelectable = !!$selectableStore
   $: isQuiet = !!$quietStore
   $: if (!hasChildren) {
     open = false
@@ -47,6 +51,10 @@
       dispatch("toggle", open)
     }
   }
+
+  const handleCheckboxChange = (event: CustomEvent<boolean>) => {
+    dispatch("select", event.detail)
+  }
 </script>
 
 <li
@@ -57,10 +65,23 @@
 >
   <a
     on:click
-    class:spectrum-TreeView-itemLink--selectable={!disabled}
+    class:spectrum-TreeView-itemLink--selectable={isSelectable && !disabled}
     class="spectrum-TreeView-itemLink"
     {href}
   >
+    {#if showCheckbox}
+      <span class="checkbox-wrapper">
+        <Checkbox
+          value={selected}
+          {indeterminate}
+          size="S"
+          quiet={isQuiet}
+          {disabled}
+          on:change={handleCheckboxChange}
+        />
+      </span>
+    {/if}
+
     {#if hasChildren}
       <span
         class="spectrum-TreeView-itemIndicator"
@@ -96,6 +117,14 @@
 </li>
 
 <style>
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-end: var(--spacing-s);
+    flex-shrink: 0;
+  }
+
   .item-post {
     margin-inline-start: auto;
     padding-inline-end: 8px;
@@ -104,6 +133,11 @@
 
   .item-post :global(.spectrum-StatusLight) {
     margin: 0;
+  }
+
+  .checkbox-wrapper :global(.spectrum-Checkbox) {
+    margin: 0;
+    min-height: 0;
   }
 
   .spectrum-TreeView-itemIndicator :global(i) {

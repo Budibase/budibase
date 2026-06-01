@@ -8,7 +8,7 @@ interface MockWebhookChatPayload {
 interface ChatMockModule {
   resetMockChatState: () => void
   setMockPostEphemeralResult: (
-    provider: "slack" | "teams",
+    provider: "slack" | "teams" | "telegram",
     result: { usedFallback: boolean }
   ) => void
 }
@@ -41,7 +41,7 @@ jest.mock("../../../controllers/ai/chatConversations", () => {
 })
 
 import sdk from "../../../../sdk"
-import { context, db, docIds, encryption } from "@budibase/backend-core"
+import { context, db, docIds, encryption, roles } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -66,6 +66,9 @@ const extractLinkUrl = (messages: string[]) => {
   return urls[0]
 }
 
+const extractConfirmationToken = (html: string) =>
+  html.match(/name="confirmationToken" value="([^"]+)"/)?.[1]
+
 const secretMatch = (plain: string, encoded: string) => {
   if (!encoded.startsWith(SECRET_ENCODING_PREFIX)) {
     throw new Error("Encoded slack secret not properly configured.")
@@ -88,6 +91,11 @@ describe("agent slack integration provisioning", () => {
     }
     return result
   }
+
+  const getPersistedChatApp = async () =>
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      return await sdk.ai.chatApps.getSingle()
+    })
 
   beforeEach(async () => {
     await config.newTenant()
@@ -125,6 +133,13 @@ describe("agent slack integration provisioning", () => {
     expect(updated?.slackIntegration?.messagingEndpointUrl).toEqual(
       result.messagingEndpointUrl
     )
+
+    const chatApp = await getPersistedChatApp()
+    expect(chatApp?.agents).toContainEqual({
+      agentId: agent._id,
+      isEnabled: false,
+      isDefault: false,
+    })
   })
 
   it("obfuscates slack secrets in responses and preserves them on update", async () => {
@@ -196,15 +211,38 @@ describe("agent slack integration provisioning", () => {
           .filter((chat): chat is ChatConversation => !!chat)
       })
 
-    const setupProvisionedSlackAgent = async () => {
+    const setupProvisionedSlackAgent = async ({
+      requireUserLink,
+      roleId,
+    }: {
+      requireUserLink?: boolean
+      roleId?: string
+    } = {}) => {
       const agent = await config.api.agent.create({
         name: "Slack Incoming Messages Agent",
         slackIntegration: {
           botToken: "xoxb-token-3",
           signingSecret: "slack-signing-secret-3",
+          ...(requireUserLink !== undefined && { requireUserLink }),
         },
       })
       const channel = await config.api.agent.provisionSlackChannel(agent._id!)
+      if (roleId) {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const chatApp = await sdk.ai.chatApps.getSingle()
+          if (!chatApp) {
+            throw new Error("Chat app not found")
+          }
+          await sdk.ai.chatApps.update({
+            ...chatApp,
+            agents: chatApp.agents.map(chatAgent =>
+              chatAgent.agentId === agent._id
+                ? { ...chatAgent, roleId }
+                : chatAgent
+            ),
+          })
+        })
+      }
       await config.publish()
       const linkExternalUser = async (
         externalUserId: string,
@@ -344,7 +382,34 @@ describe("agent slack integration provisioning", () => {
         .set(config.defaultHeaders({}, true))
         .expect(200)
       expect(authHandoff.type).toEqual("text/html")
-      expect(authHandoff.text).toContain("Authentication succeeded.")
+      expect(authHandoff.text).toContain("Confirm chat account link")
+      const confirmationToken = extractConfirmationToken(authHandoff.text)
+      expect(confirmationToken).toBeTruthy()
+
+      await config.doInTenant(async () => {
+        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "user-1",
+          teamId: "T123",
+        })
+        expect(link).toBeUndefined()
+      })
+
+      await config
+        .getRequest()!
+        .post(handoffPath)
+        .set(config.defaultHeaders({}, true))
+        .send({})
+        .expect(400)
+
+      const confirmHandoff = await config
+        .getRequest()!
+        .post(handoffPath)
+        .set(config.defaultHeaders({}, true))
+        .send({ confirmationToken })
+        .expect(200)
+      expect(confirmHandoff.type).toEqual("text/html")
+      expect(confirmHandoff.text).toContain("Authentication succeeded.")
 
       await config.doInTenant(async () => {
         const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
@@ -405,6 +470,119 @@ describe("agent slack integration provisioning", () => {
         `/${ChatCommands.LINK}`
       )
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
+    it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
+      const { agent, chatAppId } = await setupProvisionedSlackAgent({
+        requireUserLink: false,
+      })
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "first",
+            user: "user-unlinked",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "second",
+            user: "user-unlinked",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(2)
+
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.userId).toEqual("slack:T123:user-unlinked")
+      expect(conversations[0]?.messages).toHaveLength(4)
+
+      await config.doInTenant(async () => {
+        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "user-unlinked",
+          teamId: "T123",
+        })
+        expect(link).toBeUndefined()
+      })
+    })
+
+    it("blocks optional-link unlinked users when the agent requires a higher role", async () => {
+      const { agent, chatAppId } = await setupProvisionedSlackAgent({
+        requireUserLink: false,
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+      })
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-unlinked",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(response.body.messages).toContain(
+        "This agent is not available to unlinked users."
+      )
+    })
+
+    it("uses the linked Budibase user when linking is optional", async () => {
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedSlackAgent({
+          requireUserLink: false,
+        })
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello linked slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.userId).toEqual(config.getUser()._id)
     })
 
     it("acknowledges when the link prompt falls back to a DM", async () => {

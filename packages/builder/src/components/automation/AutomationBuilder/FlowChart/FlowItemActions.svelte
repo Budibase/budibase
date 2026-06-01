@@ -22,6 +22,9 @@
     branchStepId &&
     $selectedAutomation?.blockRefs?.[branchStepId] &&
     viewMode === ViewMode.EDITOR
+  $: isActiveInsertionPoint =
+    getActionTargetKey($automationStore.actionPanelBlock) ===
+    getActionTargetKey(block)
 
   const checkIsInsideBranchInLoop = (blockRef: BlockRef | undefined) => {
     if (!blockRef?.pathTo) return false
@@ -33,9 +36,30 @@
 
     return false
   }
+
+  const getActionTargetKey = (value: unknown) => {
+    if (!value || typeof value !== "object") {
+      return undefined
+    }
+
+    const target = value as Record<string, unknown>
+    if (target.insertIntoLoopV2) {
+      return [
+        "loop",
+        target.loopStepId || target.id,
+        target.loopChildInsertIndex,
+      ].join(":")
+    }
+
+    if (target.branchNode) {
+      return ["branch", target.branchStepId, target.branchIdx].join(":")
+    }
+
+    return typeof target.id === "string" ? `step:${target.id}` : undefined
+  }
 </script>
 
-<div class="action-bar">
+<div class="action-bar" class:active-insertion-point={isActiveInsertionPoint}>
   {#if !hideBranch && !block.branchNode && !isInsideBranchInLoop}
     <Icon
       hoverable
@@ -48,6 +72,8 @@
       tooltipPosition={TooltipPosition.Left}
       tooltip={"Create branch"}
       size="S"
+      color="var(--automation-flow-action-icon-color)"
+      hoverColor="var(--automation-flow-action-icon-hover-color)"
     />
   {/if}
   {#if canShowAddBranch}
@@ -62,6 +88,8 @@
       tooltipPosition={TooltipPosition.Right}
       tooltip={"Add branch"}
       size="S"
+      color="var(--automation-flow-action-icon-color)"
+      hoverColor="var(--automation-flow-action-icon-hover-color)"
     />
   {/if}
   <Icon
@@ -75,16 +103,42 @@
     tooltipPosition={TooltipPosition.Right}
     tooltip={"Add a step"}
     size="S"
+    color={isActiveInsertionPoint
+      ? "var(--spectrum-global-color-blue-600)"
+      : "var(--automation-flow-action-icon-color)"}
+    hoverColor="var(--automation-flow-action-icon-hover-color)"
   />
 </div>
 
 <style>
   .action-bar {
-    background-color: var(--spectrum-global-color-gray-100);
-    border-radius: 4px 4px 4px 4px;
+    --automation-flow-action-icon-color: var(--spectrum-global-color-gray-700);
+    --automation-flow-action-icon-hover-color: var(
+      --spectrum-global-color-gray-900
+    );
+    background-color: var(
+      --automation-flow-action-background,
+      var(--spectrum-global-color-gray-100)
+    );
+    border: var(--automation-flow-action-border, 0);
+    border-radius: 16px;
     display: flex;
+    width: fit-content;
+    box-sizing: border-box;
     gap: var(--spacing-m);
-    padding: 8px 12px;
+    justify-content: center;
+    padding: 8px;
     cursor: default;
+  }
+
+  :global(.spectrum--light) .action-bar,
+  :global(.spectrum--lightest) .action-bar {
+    --automation-flow-action-background: var(--spectrum-global-color-gray-50);
+    --automation-flow-action-border: 1px solid
+      var(--spectrum-global-color-gray-200);
+    --automation-flow-action-icon-color: var(--spectrum-global-color-gray-900);
+    --automation-flow-action-icon-hover-color: var(
+      --spectrum-global-color-gray-900
+    );
   }
 </style>

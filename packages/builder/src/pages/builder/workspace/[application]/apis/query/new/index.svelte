@@ -2,9 +2,9 @@
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
   import { queries, workspaceConnections } from "@/stores/builder"
 
-  const initialDatasourceId = queries.resetTargetDatasourceId()
+  const datasourceId = queries.resetTargetDatasourceId()
 </script>
 
 {#key $workspaceConnections.draft?.key}
-  <APIEndpointViewer {initialDatasourceId} />
+  <APIEndpointViewer {datasourceId} />
 {/key}

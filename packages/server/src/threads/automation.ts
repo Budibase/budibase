@@ -11,6 +11,8 @@ import {
   processStringSync,
 } from "@budibase/string-templates"
 import {
+  ActionFailureReason,
+  ActionType,
   Automation,
   AutomationActionStepId,
   AutomationData,
@@ -27,9 +29,13 @@ import {
   BranchSearchFilters,
   BranchStep,
   ContextEmitter,
+  isArraySearchOperator,
+  isBasicSearchOperator,
   isCronTrigger,
   isEmailTrigger,
   isLogicalFilter,
+  isLogicalSearchOperator,
+  isRangeSearchOperator,
   LoopV2Step,
   LoopV2StepInputs,
 } from "@budibase/types"
@@ -198,20 +204,74 @@ async function branchMatches(
   // evaluate all of the bindings.
   const evaluateBindings = (fs: Readonly<BranchSearchFilters>) => {
     const filters = cloneDeep(fs)
-    for (const filter of Object.values(filters)) {
-      if (!filter) {
+    const evaluateValue = (value: any): any => {
+      if (typeof value === "string" && findHBSBlocks(value).length > 0) {
+        return processStringSync(value, ctx)
+      }
+      if (Array.isArray(value)) {
+        return value.map(evaluateValue)
+      }
+      if (value && typeof value === "object") {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, nestedValue]) => [
+            key,
+            evaluateValue(nestedValue),
+          ])
+        )
+      }
+      return value
+    }
+    const coerceFieldValue = (fieldValue: any, conditionValue: any): any => {
+      const reference = Array.isArray(conditionValue)
+        ? conditionValue.find(value => value != null)
+        : conditionValue
+
+      if (typeof fieldValue === "string" && typeof reference === "number") {
+        if (fieldValue.trim() === "") {
+          return fieldValue
+        }
+        const parsed = Number(fieldValue)
+        return Number.isNaN(parsed) ? fieldValue : parsed
+      }
+      if (typeof fieldValue === "string" && typeof reference === "boolean") {
+        if (fieldValue === "true") {
+          return true
+        }
+        if (fieldValue === "false") {
+          return false
+        }
+      }
+      return fieldValue
+    }
+
+    for (const [operator, filter] of Object.entries(filters)) {
+      if (isLogicalSearchOperator(operator)) {
+        if (filter && isLogicalFilter(filter)) {
+          filter.conditions = filter.conditions.map(evaluateBindings)
+        }
         continue
       }
 
-      if (isLogicalFilter(filter)) {
-        filter.conditions = filter.conditions.map(evaluateBindings)
-      } else {
-        for (const [field, value] of Object.entries(filter)) {
-          toFilter[field] = processStringSync(field, ctx)
-          if (typeof value === "string" && findHBSBlocks(value).length > 0) {
-            filter[field] = processStringSync(value, ctx)
-          }
-        }
+      if (
+        !isBasicSearchOperator(operator) &&
+        !isArraySearchOperator(operator) &&
+        !isRangeSearchOperator(operator)
+      ) {
+        continue
+      }
+
+      const evaluatedFilter = filter as Record<string, unknown> | undefined
+      if (!evaluatedFilter) {
+        continue
+      }
+
+      for (const [field, value] of Object.entries(evaluatedFilter)) {
+        const evaluatedValue = evaluateValue(value)
+        toFilter[field] = coerceFieldValue(
+          processStringSync(field, ctx),
+          evaluatedValue
+        )
+        evaluatedFilter[field] = evaluatedValue
       }
     }
 
@@ -555,6 +615,27 @@ class Orchestrator {
         results.push(result)
       }
 
+      const shouldStopAfterFailure = (stepResults: AutomationStepResult[]) => {
+        return stepResults.some(
+          result =>
+            result.outputs.success === false && !canContinueOnError(result)
+        )
+      }
+
+      const canContinueOnError = (result: AutomationStepResult) => {
+        if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
+          return true
+        }
+        return (
+          result.inputs?.continueOnError === true &&
+          [
+            AutomationActionStepId.API_REQUEST,
+            AutomationActionStepId.EXECUTE_QUERY,
+            AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+          ].includes(result.stepId)
+        )
+      }
+
       while (stepIndex < steps.length) {
         if (this.stopped) {
           break
@@ -563,8 +644,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            const branchResults = await quotas.addAction(() =>
-              this.executeBranchStep(ctx, step)
+            const branchResults = await quotas.addAction(
+              ActionType.AUTOMATION_STEP,
+              () => this.executeBranchStep(ctx, step)
             )
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
@@ -575,6 +657,10 @@ class Orchestrator {
                 branchResults[0],
                 ctx
               )
+            }
+            if (shouldStopAfterFailure(branchResults)) {
+              ctx._error = true
+              return results
             }
             stepIndex++
             break
@@ -593,7 +679,8 @@ class Orchestrator {
             this.reportStepProgress(step, progressStatus(result), result, ctx)
             if (
               result.outputs.success === false &&
-              result.outputs.status == null
+              result.outputs.status == null &&
+              !canContinueOnError(result)
             ) {
               return results
             }
@@ -604,7 +691,7 @@ class Orchestrator {
             this.reportStepProgress(step, "running", undefined, ctx)
             addToContext(
               step,
-              await quotas.addAction(async () => {
+              await quotas.addAction(ActionType.AUTOMATION_STEP, async () => {
                 const response = await this.executeStep(ctx, step)
                 if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
                   ctx.state ??= {}
@@ -612,6 +699,13 @@ class Orchestrator {
                 }
 
                 events.action.automationStepExecuted({ stepId: step.stepId })
+                if (response.outputs.success === false) {
+                  events.action.automationStepFailed({
+                    stepId: step.stepId,
+                    reason: ActionFailureReason.ERROR,
+                    errorMessage: response.outputs.error as string | undefined,
+                  })
+                }
                 return response
               })
             )
@@ -621,8 +715,15 @@ class Orchestrator {
               if (
                 step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
                 latest.outputs.success === false &&
+                !canContinueOnError(latest) &&
                 (latest.outputs.status === AutomationStatus.ERROR ||
                   latest.outputs.status === AutomationStatus.STOPPED_ERROR)
+              ) {
+                return results
+              }
+              if (
+                latest.outputs.success === false &&
+                !canContinueOnError(latest)
               ) {
                 return results
               }
@@ -664,6 +765,10 @@ class Orchestrator {
             status: AutomationStepStatus.INCORRECT_TYPE,
             iterations,
           })
+          events.action.automationStepFailed({
+            stepId: step.stepId,
+            reason: ActionFailureReason.INCORRECT_TYPE,
+          })
           return stepFailure(step, {
             status: AutomationStepStatus.INCORRECT_TYPE,
           })
@@ -690,6 +795,10 @@ class Orchestrator {
               status: AutomationStepStatus.MAX_ITERATIONS,
               iterations,
             })
+            events.action.automationStepFailed({
+              stepId: step.stepId,
+              reason: ActionFailureReason.MAX_ITERATIONS,
+            })
             return stepFailure(
               step,
               automationUtils.buildLoopOutput(
@@ -704,6 +813,10 @@ class Orchestrator {
             span.addTags({
               status: AutomationStepStatus.FAILURE_CONDITION,
               iterations,
+            })
+            events.action.automationStepFailed({
+              stepId: step.stepId,
+              reason: ActionFailureReason.FAILURE_CONDITION,
             })
             return stepFailure(
               step,
@@ -727,7 +840,10 @@ class Orchestrator {
             // For both legacy and new loops, we need to preserve the step index
             // so child steps don't affect the main step numbering
             const savedStepIndex = ctx._stepIndex
-            const iterationResults = await this.executeSteps(ctx, children)
+            const iterationResults = await this.executeSteps(
+              ctx,
+              cloneDeep(children)
+            )
             ctx._stepIndex = savedStepIndex
 
             // Process results based on their type
@@ -768,6 +884,16 @@ class Orchestrator {
             }
 
             if (this.stopped) {
+              const stoppedByFilter = iterationResults.some(
+                result =>
+                  result.stepId === AutomationActionStepId.FILTER &&
+                  result.outputs.status === AutomationStatus.STOPPED
+              )
+              if (stoppedByFilter) {
+                this.stopped = false
+                continue
+              }
+
               const output = automationUtils.buildLoopOutput(
                 storage,
                 undefined,
@@ -829,6 +955,10 @@ class Orchestrator {
       }
 
       span.addTags({ status: AutomationStatus.NO_CONDITION_MET })
+      events.action.automationStepFailed({
+        stepId: step.stepId,
+        reason: ActionFailureReason.NO_CONDITION_MET,
+      })
       return [stepFailure(step, { status: AutomationStatus.NO_CONDITION_MET })]
     })
   }
@@ -865,7 +995,8 @@ class Orchestrator {
       if (
         step.stepId !== AutomationActionStepId.EXECUTE_BASH &&
         step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
-        step.stepId !== AutomationActionStepId.EXTRACT_STATE
+        step.stepId !== AutomationActionStepId.EXTRACT_STATE &&
+        step.stepId !== AutomationActionStepId.SERVER_LOG
       ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
@@ -891,9 +1022,10 @@ class Orchestrator {
           })
         )
       } catch (err: any) {
+        const errorMessage = automationUtils.getError(err)
         return stepFailure(step, {
           status: AutomationStatus.ERROR,
-          error: automationUtils.getError(err),
+          error: errorMessage,
         })
       }
 

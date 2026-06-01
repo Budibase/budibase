@@ -137,7 +137,12 @@
   </div>
 </div>
 
-<Popover bind:this={popover} {anchor} useAnchorWidth resizable={false}>
+<Popover
+  bind:this={popover}
+  {anchor}
+  widthMode="fixed-to-anchor"
+  resizable={false}
+>
   <Menu>
     <MenuItem on:click={addCustomButton}>Custom button</MenuItem>
     {#each rowActionTemplates as template}

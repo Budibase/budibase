@@ -74,24 +74,33 @@ export async function discordWebhook(
     ctx,
     providerName: "Discord",
     createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
-      const { publicKey, botToken, applicationId, idleTimeoutMinutes } =
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          const agent = await sdk.ai.agents.getOrThrow(agentId)
-          const integration =
-            sdk.ai.deployments.discord.validateDiscordIntegration(agent)
-          const pk = agent.discordIntegration?.publicKey?.trim()
-          if (!pk) {
-            throw new HTTPError(
-              "Discord public key is not configured for this agent",
-              400
-            )
-          }
-          return {
-            ...integration,
-            publicKey: pk,
-            idleTimeoutMinutes: agent.discordIntegration?.idleTimeoutMinutes,
-          }
-        })
+      const {
+        publicKey,
+        botToken,
+        applicationId,
+        idleTimeoutMinutes,
+        channelEnabled,
+        requireUserLink,
+      } = await context.doInWorkspaceContext(workspaceId, async () => {
+        const agent = await sdk.ai.agents.getOrThrow(agentId)
+        const integration =
+          sdk.ai.deployments.discord.validateDiscordIntegration(agent)
+        const pk = agent.discordIntegration?.publicKey?.trim()
+        if (!pk) {
+          throw new HTTPError(
+            "Discord public key is not configured for this agent",
+            400
+          )
+        }
+        return {
+          ...integration,
+          publicKey: pk,
+          idleTimeoutMinutes: agent.discordIntegration?.idleTimeoutMinutes,
+          requireUserLink: agent.discordIntegration?.requireUserLink,
+          channelEnabled:
+            !!agent.discordIntegration?.interactionsEndpointUrl?.trim(),
+        }
+      })
 
       const chat = new Chat({
         userName: "Budibase",
@@ -174,12 +183,14 @@ export async function discordWebhook(
               chatAppId,
               agentId,
               provider: AgentChannelProvider.DISCORD,
+              channelEnabled,
               command,
               content: event.text || "",
               user: { externalUserId: userId || "", displayName },
               channel,
               scope,
               idleTimeoutMinutes,
+              requireUserLink,
             })
           } catch (error) {
             console.error("Discord webhook processing failed", error)

@@ -1,5 +1,5 @@
 import { structures } from "@budibase/backend-core/tests"
-import { type Workspace } from "@budibase/types"
+import { AppFontFamily, Theme, type Workspace } from "@budibase/types"
 import nock from "nock"
 import * as setup from "./utilities"
 import sdk from "../../../sdk"
@@ -32,7 +32,7 @@ describe("/workspaceApp", () => {
     nock.cleanAll()
   })
 
-  const getAppScrens = async (appId: string) => {
+  const getAppScreens = async (appId: string) => {
     const screens = await context.doInWorkspaceContext(
       testConfig.getDevWorkspaceId(),
       async () => {
@@ -102,13 +102,13 @@ describe("/workspaceApp", () => {
         }
       )
 
-      const originalScreens = await getAppScrens(originalApp._id)
+      const originalScreens = await getAppScreens(originalApp._id)
       const { workspaceApp: duplicatedApp } = await api.workspaceApp.duplicate(
         originalApp._id
       )
 
       // check basics
-      const dupeScreens = await getAppScrens(duplicatedApp._id)
+      const dupeScreens = await getAppScreens(duplicatedApp._id)
       expect(duplicatedApp).toBeDefined()
       expect(duplicatedApp.name).not.toBe(originalApp.name)
       expect(duplicatedApp.navigation.title).toBe(originalApp.navigation.title)
@@ -118,9 +118,39 @@ describe("/workspaceApp", () => {
       expect(screen.routing.route).toBe("66")
 
       // ensure original isnt messed with
-      const originalScreensAfterDupe = await getAppScrens(originalApp._id)
+      const originalScreensAfterDupe = await getAppScreens(originalApp._id)
       expect(JSON.stringify(originalScreens)).toBe(
         JSON.stringify(originalScreensAfterDupe)
+      )
+    })
+
+    it("copies explicit app theme settings", async () => {
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Theme App",
+          url: "/theme",
+        })
+      )
+      const { workspaceApp: themedApp } = await api.workspaceApp.update({
+        _id: workspaceApp._id,
+        _rev: workspaceApp._rev,
+        name: workspaceApp.name,
+        url: workspaceApp.url,
+        navigation: workspaceApp.navigation,
+        disabled: workspaceApp.disabled,
+        theme: Theme.NORD,
+        customTheme: {
+          fontFamily: AppFontFamily.SOURCE_SANS,
+        },
+      })
+
+      const { workspaceApp: duplicatedApp } = await api.workspaceApp.duplicate(
+        themedApp._id
+      )
+
+      expect(duplicatedApp.theme).toBe(Theme.NORD)
+      expect(duplicatedApp.customTheme?.fontFamily).toBe(
+        AppFontFamily.SOURCE_SANS
       )
     })
   })
@@ -155,6 +185,18 @@ describe("/workspaceApp", () => {
 
       expect(events.workspace.appCreated).toHaveBeenCalledTimes(1)
     })
+
+    it("creates apps with Inter font by default", async () => {
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Theme App",
+          url: "/theme",
+        })
+      )
+
+      expect(workspaceApp.theme).toBeUndefined()
+      expect(workspaceApp.customTheme?.fontFamily).toBe(AppFontFamily.INTER)
+    })
   })
 
   describe("/update", () => {
@@ -176,6 +218,111 @@ describe("/workspaceApp", () => {
       })
 
       expect(events.workspace.appUpdated).toHaveBeenCalledTimes(1)
+    })
+
+    it("updates theme settings", async () => {
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "App to update",
+          url: "/to-update",
+        })
+      )
+
+      const { workspaceApp: updated } = await api.workspaceApp.update({
+        _id: workspaceApp._id,
+        _rev: workspaceApp._rev,
+        name: workspaceApp.name,
+        url: workspaceApp.url,
+        navigation: workspaceApp.navigation,
+        disabled: workspaceApp.disabled,
+        theme: Theme.MIDNIGHT,
+        customTheme: {
+          fontFamily: AppFontFamily.SOURCE_SANS,
+        },
+      })
+
+      expect(updated.theme).toBe(Theme.MIDNIGHT)
+      expect(updated.customTheme?.fontFamily).toBe(AppFontFamily.SOURCE_SANS)
+    })
+
+    it("preserves theme settings when they are omitted", async () => {
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "App to update",
+          url: "/to-update",
+        })
+      )
+
+      const { workspaceApp: themedApp } = await api.workspaceApp.update({
+        _id: workspaceApp._id,
+        _rev: workspaceApp._rev,
+        name: workspaceApp.name,
+        url: workspaceApp.url,
+        navigation: workspaceApp.navigation,
+        disabled: workspaceApp.disabled,
+        theme: Theme.MIDNIGHT,
+        customTheme: {
+          fontFamily: AppFontFamily.SOURCE_SANS,
+        },
+      })
+
+      const { workspaceApp: updated } = await api.workspaceApp.update({
+        _id: themedApp._id,
+        _rev: themedApp._rev,
+        name: "Updated theme app",
+        url: themedApp.url,
+        navigation: themedApp.navigation,
+        disabled: themedApp.disabled,
+      })
+
+      expect(updated.theme).toBe(Theme.MIDNIGHT)
+      expect(updated.customTheme?.fontFamily).toBe(AppFontFamily.SOURCE_SANS)
+    })
+
+    it("rejects invalid theme settings", async () => {
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "App to update",
+          url: "/to-update",
+        })
+      )
+
+      await api.workspaceApp.update(
+        {
+          _id: workspaceApp._id,
+          _rev: workspaceApp._rev,
+          name: workspaceApp.name,
+          url: workspaceApp.url,
+          navigation: workspaceApp.navigation,
+          disabled: workspaceApp.disabled,
+          theme: "unknown" as Theme,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("rejects invalid font settings", async () => {
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "App to update",
+          url: "/to-update",
+        })
+      )
+
+      await api.workspaceApp.update(
+        {
+          _id: workspaceApp._id,
+          _rev: workspaceApp._rev,
+          name: workspaceApp.name,
+          url: workspaceApp.url,
+          navigation: workspaceApp.navigation,
+          disabled: workspaceApp.disabled,
+          customTheme: {
+            fontFamily: "unknown" as AppFontFamily,
+          },
+        },
+        { status: 400 }
+      )
     })
   })
 })

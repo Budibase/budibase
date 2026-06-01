@@ -43,14 +43,21 @@
   export let drawerForceModal: boolean = false
   export let drawerZIndex: number | undefined = undefined
 
+  export function addEntry() {
+    fields = [...fields, { name: "", value: "" }]
+    fieldActivity = [...fieldActivity, true]
+    changed()
+  }
+
+  const isLocked = (name?: string) => (name ? lockedKeySet.has(name) : false)
+
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
     value,
   }))
   let fieldActivity = buildFieldActivity(activity)
-  $: lockedKeySet = new Set((lockedKeys || []).filter(Boolean))
-  const isLocked = (name?: string) => (name ? lockedKeySet.has(name) : false)
 
+  $: lockedKeySet = new Set((lockedKeys || []).filter(Boolean))
   $: fullObject = fields.reduce<Record<string, unknown>>((acc, next) => {
     acc[next.name] = next.value
     return acc
@@ -79,12 +86,6 @@
       }
     }
     return array
-  }
-
-  export function addEntry() {
-    fields = [...fields, { name: "", value: "" }]
-    fieldActivity = [...fieldActivity, true]
-    changed()
   }
 
   function deleteEntry(idx: number) {

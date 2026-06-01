@@ -88,7 +88,7 @@ services:
       - couchdb-service
 
   litellm-service:
-    image: ghcr.io/berriai/litellm:main-v1.81.14-stable
+    image: ghcr.io/berriai/litellm:main-v1.83.10-stable
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:
@@ -103,7 +103,11 @@ services:
     depends_on:
       - litellm-db
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -118,7 +122,8 @@ services:
     volumes:
       - litellm_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${LITELLM_DB_NAME} -U ${LITELLM_DB_USER}"]
+      test:
+        ["CMD-SHELL", "pg_isready -d ${LITELLM_DB_NAME} -U ${LITELLM_DB_USER}"]
       interval: 1s
       timeout: 5s
       retries: 10

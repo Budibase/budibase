@@ -37,6 +37,7 @@
   export let quiet: boolean = false
   export let bordered: boolean = true
   export let autoWidth: boolean = false
+  export let popoverAutoWidth: boolean = false
   export let autocomplete: boolean = false
   export let sort: boolean = false
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
@@ -122,6 +123,7 @@
   {fieldColour}
   {options}
   {autoWidth}
+  {popoverAutoWidth}
   {align}
   {footer}
   {getOptionLabel}

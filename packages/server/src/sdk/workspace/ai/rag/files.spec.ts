@@ -475,7 +475,7 @@ describe("rag files", () => {
       ])
     })
 
-    it("passes only current ready source ids to processor search", async () => {
+    it("searches processor once when ready files exist", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([
         {
@@ -518,10 +518,7 @@ describe("rag files", () => {
         chunks: [],
         sources: [],
       })
-      expect(mockProcessorSearch).toHaveBeenCalledWith("What is policy?", [
-        "source-ready-1",
-        "source-ready-2",
-      ])
+      expect(mockProcessorSearch).toHaveBeenCalledWith("What is policy?")
     })
 
     it("allows filename fallback only for currently ready files", async () => {

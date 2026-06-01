@@ -82,7 +82,7 @@
             <Icon
               name={trigger.icon}
               size="M"
-              color="var(--spectrum-global-color-static-gray-50)"
+              color="var(--spectrum-global-color-gray-900)"
             />
           </div>
           <Body size="S">{trigger.name}</Body>
@@ -97,6 +97,14 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
+    --automation-step-icon-trigger-color: var(--color-green-200);
+  }
+
+  :global(.spectrum--dark) .item-list,
+  :global(.spectrum--darkest) .item-list,
+  :global(.spectrum--midnight) .item-list,
+  :global(.spectrum--nord) .item-list {
+    --automation-step-icon-trigger-color: var(--color-green-600);
   }
 
   .item {
@@ -113,8 +121,7 @@
   }
 
   .icon-container {
-    background-color: #215f9e;
-    border: 0.5px solid #467db4;
+    background-color: var(--automation-step-icon-trigger-color);
     padding: 4px;
     border-radius: 8px;
   }

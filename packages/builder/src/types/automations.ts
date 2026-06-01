@@ -20,7 +20,6 @@ import {
   AutomationTriggerStepId,
   UIAutomation,
   Branch,
-  LayoutDirection,
   LoopV2Step,
   AutomationTestProgressEvent,
   InProgressTestState,
@@ -146,13 +145,24 @@ export type BranchPathEntry = Partial<BlockPath> & {
   stepIdx?: number
 }
 
-export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
+export type LoopPathEntry = Partial<BlockPath> & {
+  loopStepId: string
+  stepIdx: number
+}
+
+export type FlowBlockPath = Array<BlockPath | BranchPathEntry | LoopPathEntry>
 
 export interface BranchFlowContext {
   branchNode: true
   pathTo: FlowBlockPath
   branchIdx: number
   branchStepId: string
+}
+
+export interface SelectedBranchNode {
+  nodeId: string
+  stepId: string
+  branchIdx: number
 }
 
 export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
@@ -191,8 +201,11 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedAutomationId: string | null
   appSelf?: SelfResponse
   selectedNodeId?: string
+  selectedBranchNode?: SelectedBranchNode
   selectedNodeMode?: DataMode
-  actionPanelBlock?: BlockRef
+  actionPanelBlock?: BlockRef | FlowBlockContext
+  /** Toolbar + opened the step picker (append at flow tail). */
+  actionPanelToolbarFlowEnd?: boolean
   selectedLog?: AutomationLog
   selectedLogStepData?: any
   showLogsPanel?: boolean
@@ -247,6 +260,7 @@ export enum FlowStatusType {
   WARN = "warn",
   ERROR = "error",
   SUCCESS = "success",
+  SKIPPED = "skipped",
 }
 
 /**
@@ -293,7 +307,6 @@ export type BlockStatus = {
  */
 export interface StepNodeData {
   block: AutomationBlock
-  direction?: LayoutDirection
   [key: string]: unknown
 }
 
@@ -301,7 +314,6 @@ export interface BranchNodeData {
   block: AutomationBlock
   branch: Branch
   branchIdx: number
-  direction?: LayoutDirection
   isSubflow?: boolean
   laneWidth?: number
   [key: string]: unknown
@@ -309,14 +321,28 @@ export interface BranchNodeData {
 
 export interface LoopV2NodeData {
   block: LoopV2Step
-  direction?: LayoutDirection
   containerHeight: number
   containerWidth: number
+  handleY: number
   [key: string]: unknown
 }
 
 export interface AnchorNodeData {
-  direction?: LayoutDirection
+  [key: string]: unknown
+}
+
+export interface StickyNote {
+  id: string
+  title: string
+  text: string
+  x: number
+  y: number
+  width?: number
+  height?: number
+}
+
+export interface StickyNoteNodeData {
+  note: StickyNote
   [key: string]: unknown
 }
 
@@ -325,7 +351,6 @@ export interface AnchorNodeData {
  */
 export interface BaseEdgeData {
   block: FlowBlockContext
-  direction?: LayoutDirection
   pathTo?: FlowBlockPath
   isSubflowEdge?: boolean
   [key: string]: unknown

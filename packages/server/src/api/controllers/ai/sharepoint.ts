@@ -14,7 +14,7 @@ export const getSharePointSources = (agent?: Agent): AgentKnowledgeSource[] =>
 
 export const getSharePointSiteIds = (agent?: Agent): Set<string> => {
   const ids = getSharePointSources(agent)
-    .map(source => source.config.site?.id?.trim())
+    .map(source => source.config.site.id.trim())
     .filter((id): id is string => !!id)
   return new Set(ids)
 }

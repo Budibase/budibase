@@ -33,6 +33,10 @@ spec:
 {{ end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.automationWorkers.terminationGracePeriodSeconds }}
+      {{- if .Values.services.automationWorkers.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.automationWorkers.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT
@@ -276,6 +280,10 @@ spec:
         args:
         {{- toYaml .Values.services.automationWorkers.args | nindent 10 }}
         {{ end }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.services.automationWorkers.preStopDelaySeconds }}"]
         {{ if .Values.services.automationWorkers.extraVolumeMounts }}
         volumeMounts:
         {{- toYaml .Values.services.automationWorkers.extraVolumeMounts | nindent 10 }}

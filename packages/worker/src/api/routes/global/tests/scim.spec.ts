@@ -8,8 +8,14 @@ import {
   ScimUpdateRequest,
   ScimUserResponse,
 } from "@budibase/types"
+import {
+  context,
+  db as dbCore,
+  encryption,
+  events,
+  utils,
+} from "@budibase/backend-core"
 import { TestConfiguration } from "../../../../tests"
-import { events } from "@budibase/backend-core"
 
 jest.setTimeout(30000)
 
@@ -27,6 +33,33 @@ describe("scim", () => {
   beforeEach(setup)
 
   const config = new TestConfiguration()
+
+  async function createAPIKeyForUser(userId: string) {
+    const apiKey = encryption.encrypt(
+      `${config.tenantId}${dbCore.SEPARATOR}${utils.newid()}`
+    )
+
+    await config.doInTenant(async () => {
+      const db = context.getGlobalDB()
+      await db.put({
+        _id: dbCore.generateDevInfoID(userId),
+        userId,
+        apiKey,
+      })
+    })
+
+    return apiKey
+  }
+
+  async function withAPIKey<T>(apiKey: string, fn: () => Promise<T>) {
+    const previousAPIKey = config.apiKey
+    config.apiKey = apiKey
+    try {
+      return await fn()
+    } finally {
+      config.apiKey = previousAPIKey
+    }
+  }
 
   const unauthorisedTests = (fn: (...params: any) => Promise<any>) => {
     describe("unauthorised calls", () => {
@@ -82,6 +115,19 @@ describe("scim", () => {
   })
 
   describe("/api/global/scim/v2/users", () => {
+    describe("authorisation", () => {
+      it("returns 403 when a non-admin user API key calls SCIM", async () => {
+        const user = await config.createUser()
+        const apiKey = await createAPIKeyForUser(user._id!)
+
+        const response = await withAPIKey(apiKey, () =>
+          config.api.scimUsersAPI.get({ expect: 403 })
+        )
+
+        expect(response).toEqual(config.adminOnlyResponse())
+      })
+    })
+
     describe("GET /api/global/scim/v2/users", () => {
       const getScimUsers = config.api.scimUsersAPI.get
 

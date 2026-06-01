@@ -10,6 +10,8 @@ import {
   FetchAgentKnowledgeSourceOptionsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
+  ProvisionAgentTelegramChannelRequest,
+  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -20,6 +22,11 @@ import {
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  FetchAgentTestSuiteResponse,
+  RunAgentTestSuiteRequest,
+  RunAgentTestSuiteResponse,
+  UpdateAgentTestSuiteRequest,
+  UpdateAgentTestSuiteResponse,
 } from "@budibase/types"
 import { AttachedFile, Expectations, TestAPI } from "../base"
 
@@ -104,6 +111,20 @@ export class AgentAPI extends TestAPI {
     )
   }
 
+  provisionTelegramChannel = async (
+    agentId: string,
+    body?: ProvisionAgentTelegramChannelRequest,
+    expectations?: Expectations
+  ): Promise<ProvisionAgentTelegramChannelResponse> => {
+    return await this._post<ProvisionAgentTelegramChannelResponse>(
+      `/api/agent/${agentId}/telegram/provision`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
   toggleDiscordDeployment = async (
     agentId: string,
     body?: ToggleAgentDeploymentRequest | Record<string, unknown>,
@@ -111,6 +132,20 @@ export class AgentAPI extends TestAPI {
   ): Promise<ToggleAgentDeploymentResponse> => {
     return await this._post<ToggleAgentDeploymentResponse>(
       `/api/agent/${agentId}/discord/toggle`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  toggleTelegramDeployment = async (
+    agentId: string,
+    body?: ToggleAgentDeploymentRequest | Record<string, unknown>,
+    expectations?: Expectations
+  ): Promise<ToggleAgentDeploymentResponse> => {
+    return await this._post<ToggleAgentDeploymentResponse>(
+      `/api/agent/${agentId}/telegram/toggle`,
       {
         body,
         expectations,
@@ -129,6 +164,46 @@ export class AgentAPI extends TestAPI {
           ...expectations,
           status: expectations?.status || 201,
         },
+      }
+    )
+  }
+
+  fetchTestSuite = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentTestSuiteResponse> => {
+    return await this._get<FetchAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  updateTestSuite = async (
+    agentId: string,
+    body: UpdateAgentTestSuiteRequest,
+    expectations?: Expectations
+  ): Promise<UpdateAgentTestSuiteResponse> => {
+    return await this._put<UpdateAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  runTestSuite = async (
+    agentId: string,
+    expectations?: Expectations,
+    body?: RunAgentTestSuiteRequest
+  ): Promise<RunAgentTestSuiteResponse> => {
+    return await this._post<RunAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests/run`,
+      {
+        body,
+        expectations,
       }
     )
   }
@@ -176,11 +251,12 @@ export class AgentAPI extends TestAPI {
   }
 
   fetchKnowledgeSourceOptions = async (
-    agentId: string,
+    datasourceId: string,
+    authConfigId: string,
     expectations?: Expectations
   ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
     return await this._get<FetchAgentKnowledgeSourceOptionsResponse>(
-      `/api/agent/${agentId}/knowledge-sources/options`,
+      `/api/knowledge-sources/${encodeURIComponent(datasourceId)}/${encodeURIComponent(authConfigId)}/options`,
       {
         expectations,
       }
@@ -216,11 +292,12 @@ export class AgentAPI extends TestAPI {
 
   syncKnowledgeSources = async (
     agentId: string,
+    sourceId: string,
     body?: SyncAgentKnowledgeSourcesRequest,
     expectations?: Expectations
   ): Promise<SyncAgentKnowledgeSourcesResponse> => {
     return await this._post<SyncAgentKnowledgeSourcesResponse>(
-      `/api/agent/${agentId}/knowledge-sources/sync`,
+      `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
       {
         body,
         expectations,

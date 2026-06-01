@@ -37,7 +37,6 @@ export interface KnowledgeSourceOption {
 
 export interface FetchAgentKnowledgeSourceOptionsResponse {
   options: KnowledgeSourceOption[]
-  runs: KnowledgeSourceSyncRun[]
 }
 
 export interface SharePointKnowledgeSourceSnapshot {
@@ -54,7 +53,6 @@ export interface SharePointKnowledgeSourceSnapshot {
 
 export interface FetchAgentKnowledgeResponse {
   files: KnowledgeBaseFile[]
-  hasSharePointConnection: boolean
   sharePointSources: SharePointKnowledgeSourceSnapshot[]
 }
 
@@ -80,24 +78,33 @@ export interface KnowledgeSourceSyncRun {
   status: AgentKnowledgeSourceSyncRunStatus
 }
 
-export interface SyncAgentKnowledgeSourcesRequest {
-  sourceId: string
-}
+export interface SyncAgentKnowledgeSourcesRequest {}
 
 export interface SyncAgentKnowledgeSourcesResponse {
   agentId: string
   synced: number
   failed: number
   alreadySynced: number
+  deleted: number
   unsupported: number
   totalDiscovered: number
 }
 
 export interface ConnectAgentSharePointSiteRequest {
   siteId: string
+  datasourceId: string
+  authConfigId: string
+  filters?: string[]
 }
 
 export type ConnectAgentSharePointSiteResponse =
+  FetchAgentKnowledgeSourceOptionsResponse
+
+export interface UpdateAgentSharePointSiteRequest {
+  filters?: string[]
+}
+
+export type UpdateAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
 export interface DisconnectAgentSharePointSiteResponse {
@@ -142,6 +149,15 @@ export type ProvisionAgentSlackChannelRequest =
 export interface ProvisionAgentSlackChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
+}
+
+export type ProvisionAgentTelegramChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentTelegramChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+  warning?: string
 }
 
 export interface ToggleAgentDeploymentRequest {

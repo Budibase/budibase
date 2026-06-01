@@ -16,6 +16,7 @@
     restTemplates,
     automationStore,
     queries,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { onDestroy, onMount, untrack } from "svelte"
@@ -617,6 +618,7 @@ Any constraints the agent must follow.
         notifications.success("Agent saved successfully")
       }
       await agentsStore.fetchAgents()
+      await workspaceDeploymentStore.fetch()
     } catch (error) {
       notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
     } finally {
@@ -656,7 +658,11 @@ Any constraints the agent must follow.
   })
 
   onDestroy(() => {
+    const shouldFlushSave = !!autoSaveTimeout
     clearAutoSave()
+    if (shouldFlushSave) {
+      saveAgent({ showNotifications: false })
+    }
   })
 </script>
 
@@ -667,13 +673,14 @@ Any constraints the agent must follow.
     <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body
     >
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Select which provider and model to use for the agent.{" "}
+      Choose the model that runs this agent. Use{" "}
       <button
         class="link-button"
         onclick={() => bb.settings(`/connections/${AIConfigType.COMPLETIONS}`)}
       >
-        View AI Connectors.
-      </button>
+        AI Connectors
+      </button>{" "}
+      to add or change providers and models.
     </Body>
   </div>
   <div class="form-row">

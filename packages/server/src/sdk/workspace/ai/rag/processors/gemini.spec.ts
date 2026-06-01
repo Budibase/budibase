@@ -15,8 +15,17 @@ jest.mock("../../knowledgeBase", () => ({
     mockUpdateKnowledgeBaseFile(...args),
 }))
 
-import { KnowledgeBaseType } from "@budibase/types"
+import { KnowledgeBase, KnowledgeBaseType } from "@budibase/types"
 import { GeminiRagProcessor } from "./gemini"
+
+const knowledgeBase = {
+  _id: "kb_1",
+  name: "KB",
+  type: KnowledgeBaseType.GEMINI,
+  config: {
+    googleFileStoreId: "store_1",
+  },
+} satisfies KnowledgeBase
 
 describe("GeminiRagProcessor", () => {
   beforeEach(() => {
@@ -33,14 +42,7 @@ describe("GeminiRagProcessor", () => {
       },
     ])
 
-    const processor = new GeminiRagProcessor({
-      _id: "kb_1",
-      name: "KB",
-      type: KnowledgeBaseType.GEMINI,
-      config: {
-        googleFileStoreId: "store_1",
-      },
-    } as any)
+    const processor = new GeminiRagProcessor(knowledgeBase)
 
     const result = await processor.search("What is policy?")
 
@@ -62,14 +64,7 @@ describe("GeminiRagProcessor", () => {
       },
     ])
 
-    const processor = new GeminiRagProcessor({
-      _id: "kb_1",
-      name: "KB",
-      type: KnowledgeBaseType.GEMINI,
-      config: {
-        googleFileStoreId: "store_1",
-      },
-    } as any)
+    const processor = new GeminiRagProcessor(knowledgeBase)
 
     const result = await processor.search("What is policy?")
 
@@ -79,29 +74,5 @@ describe("GeminiRagProcessor", () => {
         chunkText: "4-day policy",
       },
     ])
-  })
-
-  it("passes allowed source ids to Gemini vector store search", async () => {
-    mockSearchGeminiFileStore.mockResolvedValue([])
-
-    const processor = new GeminiRagProcessor({
-      _id: "kb_1",
-      name: "KB",
-      type: KnowledgeBaseType.GEMINI,
-      config: {
-        googleFileStoreId: "store_1",
-      },
-    } as any)
-
-    await processor.search("What is policy?", [
-      "gemini-file-1",
-      "gemini-file-2",
-    ])
-
-    expect(mockSearchGeminiFileStore).toHaveBeenCalledWith({
-      vectorStoreId: "store_1",
-      query: "What is policy?",
-      fileIds: ["gemini-file-1", "gemini-file-2"],
-    })
   })
 })

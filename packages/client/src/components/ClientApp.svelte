@@ -225,6 +225,7 @@
     class="spectrum spectrum--medium {resolvedThemeClassNames}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
+    style={$themeStore.customThemeCss}
   >
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
@@ -253,6 +254,8 @@
                         class:preview={$builderStore.inBuilder}
                         class:tablet-preview={displayPreviewDevice === "tablet"}
                         class:mobile-preview={displayPreviewDevice === "mobile"}
+                        class:modal-tablet-preview={$builderStore.previewModalDevice ===
+                          "tablet"}
                         class:modal-mobile-preview={$builderStore.previewModalDevice ===
                           "mobile"}
                       >
@@ -386,6 +389,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    font-family: var(--font-sans);
   }
   #spectrum-root.builder {
     background: transparent;
@@ -414,6 +418,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    font-family: var(--font-sans);
   }
 
   #app-body {
@@ -489,6 +494,13 @@
   }
   #clip-root.modal-mobile-preview {
     padding: 0;
+  }
+  #clip-root.modal-tablet-preview {
+    padding: 0;
+  }
+  #clip-root.modal-tablet-preview.tablet-preview {
+    width: 100%;
+    height: 100%;
   }
   #clip-root.modal-mobile-preview.mobile-preview {
     width: 100%;
