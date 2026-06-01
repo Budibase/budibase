@@ -6,6 +6,7 @@
   import { Constants } from "@budibase/frontend-core"
   import { getSequentialName } from "@/helpers/duplicate"
   import { derived, writable } from "svelte/store"
+  import { appStore } from "@/stores/builder"
 
   export let constraints
   export let optionColors = {}
@@ -15,13 +16,14 @@
   const { OptionColours } = Constants
   const getDefaultColor = idx => OptionColours[idx % OptionColours.length]
 
-  const SAVED_COLORS_KEY = "budibase-saved-option-colors"
   const MAX_SAVED_COLORS = 8
+
+  $: savedColorsKey = `budibase-saved-option-colors-${$appStore.appId}`
 
   let savedColors = []
 
   onMount(() => {
-    const stored = localStorage.getItem(SAVED_COLORS_KEY)
+    const stored = localStorage.getItem(savedColorsKey)
     if (stored) {
       try {
         savedColors = JSON.parse(stored)
@@ -40,12 +42,12 @@
     } else {
       savedColors = [...savedColors, color]
     }
-    localStorage.setItem(SAVED_COLORS_KEY, JSON.stringify(savedColors))
+    localStorage.setItem(savedColorsKey, JSON.stringify(savedColors))
   }
 
   const removeSavedColor = color => {
     savedColors = savedColors.filter(c => c !== color)
-    localStorage.setItem(SAVED_COLORS_KEY, JSON.stringify(savedColors))
+    localStorage.setItem(savedColorsKey, JSON.stringify(savedColors))
   }
   const options = writable(
     constraints.inclusion.map((value, idx) => ({
