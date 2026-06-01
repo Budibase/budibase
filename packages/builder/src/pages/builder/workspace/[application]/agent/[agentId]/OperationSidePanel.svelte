@@ -128,8 +128,8 @@
   >
     <ResizablePanel
       storageKey="agent-operation-side-panel-width"
-      defaultWidth={540}
-      minWidth={360}
+      defaultWidth={680}
+      minWidth={560}
       maxWidthRatio={0.6}
       position="right"
     >
@@ -195,8 +195,8 @@
                 </div>
                 <div class="editor-footer">
                   <p class="footer-hint">
-                    Use <code>{`{{`}</code> to add tools to your instructions,
-                    or use the button to the right.
+                    Use <code>{`{{`}</code> to add tools to your instructions, or
+                    use the button to the right.
                   </p>
                   <div class="tools-popover-container">
                     <ToolsDropdown
