@@ -91,7 +91,7 @@
     {#if $automationStore.viewMode === ViewMode.EDITOR}
       <span class="icon-btn-wrap" class:disabled={!canAddNote}>
         <Icon
-          name="chat"
+          name="note-blank"
           size="L"
           hoverable={canAddNote}
           tooltip={canAddNote ? "Add a note" : "Move closer to add a note"}
