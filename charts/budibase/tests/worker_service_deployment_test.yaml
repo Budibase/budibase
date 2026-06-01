@@ -136,17 +136,17 @@ tests:
             name: SMTP_HOST
             value: "smtp.example.com"
 
-  - it: should set terminationGracePeriodSeconds to 75 by default
+  - it: should set terminationGracePeriodSeconds to 70 by default
     asserts:
       - equal:
           path: spec.template.spec.terminationGracePeriodSeconds
-          value: 75
+          value: 70
 
-  - it: should set preStop sleep to 40 by default
+  - it: should set preStop sleep to 45 by default
     asserts:
       - equal:
           path: spec.template.spec.containers[0].lifecycle.preStop.exec.command
-          value: ["sleep", "40"]
+          value: ["sleep", "45"]
 
   - it: should not render readinessGates by default
     asserts:

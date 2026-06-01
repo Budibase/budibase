@@ -283,7 +283,12 @@ export const summariseBranch = (branch: Branch) => {
   const filters = groups[0]?.filters || []
   if (filters.length === 0) return ""
 
-  const { field, operator, value } = filters[0]
+  const firstFilter = filters[0]
+  if (!("field" in firstFilter)) {
+    return ""
+  }
+
+  const { field, operator, value } = firstFilter
   let summary = `${field} ${operator} ${value}`
 
   if (filters.length > 1) {

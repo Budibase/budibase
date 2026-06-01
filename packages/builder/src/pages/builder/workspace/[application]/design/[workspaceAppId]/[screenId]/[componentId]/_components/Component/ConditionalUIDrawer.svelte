@@ -6,13 +6,12 @@
     DrawerContent,
     Layout,
     Select,
-    DatePicker,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
-  import DrawerBindableSlot from "@/components/common/bindings/DrawerBindableSlot.svelte"
+  import ConditionValueControl from "@/components/common/ConditionValueControl.svelte"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { selectedComponent, componentStore } from "@/stores/builder"
   import { getComponentForSetting } from "@/components/design/settings/componentSettingsRegistry"
@@ -39,26 +38,6 @@
       value: "update",
     },
   ]
-  const valueTypeOptions = [
-    {
-      value: "string",
-      label: "Text",
-    },
-    {
-      value: "number",
-      label: "Number",
-    },
-    {
-      value: "datetime",
-      label: "Date",
-    },
-    {
-      value: "boolean",
-      label: "Boolean",
-    },
-  ]
-  const bindingValueTypes = ["string", "Binding"]
-
   let dragDisabled = true
 
   $: finalActionOptions = actionOptions ?? defaultActionOptions
@@ -277,64 +256,23 @@
                 on:change={e => onOperatorChange(condition, e.detail)}
                 popoverAutoWidth
               />
-              <Select
-                disabled={condition.noValue || condition.operator === "oneOf"}
-                options={valueTypeOptions}
-                bind:value={condition.valueType}
-                placeholder={false}
-                on:change={e => onValueTypeChange(condition, e.detail)}
-                popoverAutoWidth
+              <ConditionValueControl
+                disabled={condition.noValue}
+                typeSelectDisabled={condition.noValue ||
+                  condition.operator === "oneOf"}
+                {bindings}
+                valueType={condition.valueType}
+                value={condition.referenceValue}
+                on:change={e => {
+                  if ("valueType" in e.detail) {
+                    condition.valueType = e.detail.valueType
+                    onValueTypeChange(condition, e.detail.valueType)
+                  }
+                  if ("value" in e.detail) {
+                    condition.referenceValue = e.detail.value
+                  }
+                }}
               />
-              {#if bindingValueTypes.includes(condition.valueType) || condition.valueType === "number"}
-                <DrawerBindableInput
-                  disabled={condition.noValue}
-                  {bindings}
-                  placeholder="Value"
-                  value={condition.referenceValue}
-                  inputType={condition.valueType === "number"
-                    ? "number"
-                    : undefined}
-                  on:change={e => (condition.referenceValue = e.detail)}
-                />
-              {:else if condition.valueType === "datetime"}
-                <DrawerBindableSlot
-                  title="Value"
-                  type="date"
-                  value={condition.referenceValue}
-                  on:change={e => (condition.referenceValue = e.detail)}
-                  {bindings}
-                  updateOnChange={false}
-                  disabled={condition.noValue}
-                >
-                  <DatePicker
-                    placeholder="Value"
-                    disabled={condition.noValue}
-                    value={condition.referenceValue}
-                    on:change={e => (condition.referenceValue = e.detail)}
-                  />
-                </DrawerBindableSlot>
-              {:else if condition.valueType === "boolean"}
-                <DrawerBindableSlot
-                  title="Value"
-                  type="boolean"
-                  value={condition.referenceValue}
-                  on:change={e => (condition.referenceValue = e.detail)}
-                  {bindings}
-                  updateOnChange={false}
-                  disabled={condition.noValue}
-                >
-                  <Select
-                    placeholder={false}
-                    disabled={condition.noValue}
-                    options={[
-                      { label: "True", value: "true" },
-                      { label: "False", value: "false" },
-                    ]}
-                    bind:value={condition.referenceValue}
-                    popoverAutoWidth
-                  />
-                </DrawerBindableSlot>
-              {/if}
               <Icon
                 name="copy"
                 hoverable
