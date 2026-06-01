@@ -6,7 +6,7 @@
 
   export let buttons
   export let text = "Action"
-  export let type = "primary"
+  export let type
   export let size = "M"
   export let align = "left"
   export let offset
@@ -21,11 +21,12 @@
     await button.onClick?.()
   }
 
-  $: cta = type === "cta"
-  $: primary = type === "primary"
-  $: secondary = type === "secondary"
-  $: warning = type === "warning"
-  $: overBackground = type === "overBackground"
+  $: effectiveType = type ?? (quiet ? "secondary" : "primary")
+  $: cta = effectiveType === "cta"
+  $: primary = effectiveType === "primary"
+  $: secondary = effectiveType === "secondary"
+  $: warning = effectiveType === "warning"
+  $: overBackground = effectiveType === "overBackground"
 </script>
 
 <Button
