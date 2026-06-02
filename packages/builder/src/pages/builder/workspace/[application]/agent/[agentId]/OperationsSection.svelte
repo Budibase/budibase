@@ -98,7 +98,7 @@ Any constraints the agent must follow.
       return
     }
     if (agent) {
-      agent.operationName = agent.operationName?.trim() || "Main operation"
+      agent.operationName = "Main operation"
       agent.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
     }
     onUpdated()

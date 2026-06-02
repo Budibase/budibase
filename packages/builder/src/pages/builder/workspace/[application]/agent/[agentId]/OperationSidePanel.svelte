@@ -78,7 +78,7 @@
       {} as Record<string, AgentTool[]>
     )
   )
-  let operationName = $derived(agent?.operationName?.trim() || "Main operation")
+  let operationName = $derived(agent?.operationName?.trim())
   let readableToRuntimeBinding = $derived.by(() =>
     Object.fromEntries(
       promptBindings
