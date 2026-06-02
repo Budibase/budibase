@@ -178,9 +178,9 @@
   >
     <ResizablePanel
       storageKey="agent-operation-side-panel-width"
-      defaultWidth={680}
-      minWidth={560}
-      maxWidthRatio={0.6}
+      defaultWidth={800}
+      minWidth={800}
+      maxWidthRatio={0.8}
       position="right"
     >
       <Panel
