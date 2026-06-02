@@ -23,6 +23,11 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       include: ["src/**/*.test.*", "src/**/*.spec.*"],
+      deps: {
+        web: {
+          transformCss: true,
+        },
+      },
     },
     server: {
       open: false,
