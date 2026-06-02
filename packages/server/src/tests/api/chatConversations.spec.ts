@@ -1157,13 +1157,23 @@ describe("Agent chat tool call tracking", () => {
     })
   }
 
-  function makeWebhookStreamTextMock(toolResults: { toolCallId: string }[]) {
+  function makeWebhookStreamTextMock(
+    toolResults: Array<{
+      toolCallId: string
+      toolName?: string
+      output?: unknown
+      preliminary?: boolean
+    }>
+  ) {
     return (options: any) => ({
       text: (async () => {
         if (options.onStepFinish) {
           await options.onStepFinish({
             content: [],
-            toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
+            toolCalls: toolResults.map(r => ({
+              toolCallId: r.toolCallId,
+              toolName: r.toolName,
+            })),
             toolResults,
           })
         }
@@ -1591,6 +1601,71 @@ describe("Agent chat tool call tracking", () => {
       )
 
       expect(addActionMock).toHaveBeenCalledTimes(3)
+    })
+
+    it("returns RAG sources reported by the agent", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock([
+          {
+            toolCallId: "call-1",
+            toolName: "search_knowledge",
+            output: {
+              sources: [
+                {
+                  sourceId: "pricing-source",
+                  fileId: "file-1",
+                  filename: "Budibase Enterprise Pricing V8.pdf",
+                },
+                {
+                  sourceId: "faq-source",
+                  fileId: "file-2",
+                  filename: "FAQ.md",
+                },
+              ],
+            },
+          },
+          {
+            toolCallId: "call-2",
+            toolName: "report_used_sources",
+            output: {
+              accepted: [
+                {
+                  sourceId: "pricing-source",
+                  fileId: "file-1",
+                  filename: "Budibase Enterprise Pricing V8.pdf",
+                },
+              ],
+            },
+          },
+        ]) as any
+      )
+
+      const result = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () =>
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "summarize pricing" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+      )
+
+      expect(result.ragSources).toEqual([
+        {
+          sourceId: "pricing-source",
+          fileId: "file-1",
+          filename: "Budibase Enterprise Pricing V8.pdf",
+        },
+      ])
     })
 
     it("counts zero actions when the agent makes no tool calls", async () => {

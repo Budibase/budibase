@@ -214,12 +214,17 @@ describe("agent slack integration provisioning", () => {
     const setupProvisionedSlackAgent = async ({
       requireUserLink,
       roleId,
+      allowKnowledgeSourceDownload,
     }: {
       requireUserLink?: boolean
       roleId?: string
+      allowKnowledgeSourceDownload?: boolean
     } = {}) => {
       const agent = await config.api.agent.create({
         name: "Slack Incoming Messages Agent",
+        ...(allowKnowledgeSourceDownload !== undefined && {
+          allowKnowledgeSourceDownload,
+        }),
         slackIntegration: {
           botToken: "xoxb-token-3",
           signingSecret: "slack-signing-secret-3",
@@ -262,6 +267,10 @@ describe("agent slack integration provisioning", () => {
     }
 
     const getLinkPath = (linkUrl: string) => new URL(linkUrl).pathname
+
+    beforeEach(() => {
+      jest.restoreAllMocks()
+    })
 
     it(`returns a private link prompt for the /${ChatCommands.LINK} slash command`, async () => {
       const { agent, chatAppId } = await setupProvisionedSlackAgent()
@@ -646,6 +655,159 @@ describe("agent slack integration provisioning", () => {
       )
       expect(conversations[0]?.userId).toEqual(config.getUser()._id)
       expect(conversations[0]?.messages).toHaveLength(2)
+    })
+
+    it("appends downloadable RAG source links to Slack assistant replies", async () => {
+      jest
+        .spyOn(sdk.ai.rag, "getFileUrlForAgent")
+        .mockResolvedValue("/files/signed/prod-budi-app-assets/source.pdf")
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer with sources" }],
+          },
+        ] as any,
+        assistantText: "Answer with sources",
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Source <One>|Draft.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        [
+          "Answer with sources",
+          "",
+          "Sources:",
+          "- <http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf|Source One Draft.pdf>",
+        ].join("\n")
+      )
+      expect(sdk.ai.rag.getFileUrlForAgent).toHaveBeenCalledWith(
+        agent._id,
+        "file-1"
+      )
+    })
+
+    it("does not append RAG source links when downloads are disabled", async () => {
+      const getFileUrlForAgentSpy = jest.spyOn(sdk.ai.rag, "getFileUrlForAgent")
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer without links" }],
+          },
+        ] as any,
+        assistantText: "Answer without links",
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Source.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedSlackAgent({
+          allowKnowledgeSourceDownload: false,
+        })
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Answer without links")
+      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(getFileUrlForAgentSpy).not.toHaveBeenCalled()
+    })
+
+    it("ignores RAG sources without file ids in Slack replies", async () => {
+      const getFileUrlForAgentSpy = jest.spyOn(sdk.ai.rag, "getFileUrlForAgent")
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer without source ids" }],
+          },
+        ] as any,
+        assistantText: "Answer without source ids",
+        ragSources: [
+          {
+            sourceId: "source-1",
+            filename: "Source.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Answer without source ids")
+      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(getFileUrlForAgentSpy).not.toHaveBeenCalled()
     })
 
     it("reuses the existing conversation for subsequent messages in the same scope", async () => {

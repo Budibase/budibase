@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { configs, context, HTTPError } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
@@ -8,6 +8,7 @@ import {
   type ChatConversationChannel,
   type Ctx,
   type SlackConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
 import { Chat, type Message, type SlashCommandEvent, type Thread } from "chat"
 import sdk from "../../../sdk"
@@ -19,6 +20,67 @@ import { pickLatestConversation } from "./utils"
 
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
+
+const isAbsoluteUrl = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://")
+
+const toAbsoluteUrl = async (url: string) => {
+  if (isAbsoluteUrl(url)) {
+    return url
+  }
+
+  if (!url.startsWith("/")) {
+    return url
+  }
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  return `${platformUrl.replace(/\/$/, "")}${url}`
+}
+
+const formatSlackLinkLabel = (value: string) =>
+  value.replace(/[<>|]/g, " ").replace(/\s+/g, " ").trim()
+
+export const formatSlackAssistantReply = async ({
+  agentId,
+  result,
+  allowKnowledgeSourceDownload,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  allowKnowledgeSourceDownload?: boolean
+}) => {
+  const assistantText = result.assistantText || ""
+  if (allowKnowledgeSourceDownload === false) {
+    return assistantText
+  }
+
+  const sources = result.ragSources || []
+  const sourceLinks: string[] = []
+  for (const source of sources) {
+    if (!source.fileId) {
+      continue
+    }
+
+    try {
+      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
+        agentId,
+        source.fileId
+      )
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      const label =
+        formatSlackLinkLabel(source.filename || "") || "Knowledge source"
+      sourceLinks.push(`- <${absoluteUrl}|${label}>`)
+    } catch (error) {
+      console.error("Failed to generate Slack RAG source link", error)
+    }
+  }
+
+  if (!sourceLinks.length) {
+    return assistantText
+  }
+
+  return `${assistantText}\n\nSources:\n${sourceLinks.join("\n")}`
+}
 
 export const isSlackDirectMessage = (event?: SlackEvent) =>
   event?.channel_type === "im" || !!event?.channel?.startsWith("D")
@@ -89,6 +151,7 @@ const createSlackInputHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
+  allowKnowledgeSourceDownload,
 }: {
   workspaceId: string
   chatAppId: string
@@ -96,6 +159,7 @@ const createSlackInputHandler = ({
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
+  allowKnowledgeSourceDownload?: boolean
 }) => {
   return async ({
     target,
@@ -149,6 +213,12 @@ const createSlackInputHandler = ({
             )
           }
         },
+        formatAssistantReply: async result =>
+          await formatSlackAssistantReply({
+            agentId,
+            result,
+            allowKnowledgeSourceDownload,
+          }),
         workspaceId,
         chatAppId,
         agentId,
@@ -218,12 +288,14 @@ export async function slackWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
+        allowKnowledgeSourceDownload,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
           integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
           idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.slackIntegration?.requireUserLink,
+          allowKnowledgeSourceDownload: agent.allowKnowledgeSourceDownload,
           channelEnabled:
             !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -253,6 +325,7 @@ export async function slackWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
+        allowKnowledgeSourceDownload,
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 
