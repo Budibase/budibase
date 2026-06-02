@@ -76,4 +76,74 @@ describe("enrichContext JSON injection defence", () => {
 
     expect(enriched.json).toEqual({ path: 'C:\\Users\\"alice"' })
   })
+
+  it("preserves JSON object strings substituted as an entire json body", async () => {
+    const enriched = await enrichContext(
+      { json: "{{ doc }}" },
+      { doc: '{"name":"alice","nested":{"enabled":true}}' }
+    )
+
+    expect(enriched.json).toEqual({
+      name: "alice",
+      nested: { enabled: true },
+    })
+  })
+
+  it("preserves object parameters substituted as unquoted JSON values", async () => {
+    const enriched = await enrichContext(
+      {
+        requestBody:
+          '{"status":"{{ status }}","amount":{{ amount }},"days":{{ days }}}',
+      },
+      {
+        status: "requested",
+        amount: {
+          "2026-06-17": 1,
+          "2026-06-18": 1,
+        },
+        days: ["2026-06-17", "2026-06-18"],
+      }
+    )
+
+    expect(enriched.json).toEqual({
+      status: "requested",
+      amount: {
+        "2026-06-17": 1,
+        "2026-06-18": 1,
+      },
+      days: ["2026-06-17", "2026-06-18"],
+    })
+  })
+
+  it("does not lift duplicate keys from unquoted string parameters", async () => {
+    const enriched = await enrichContext(
+      { json: '{"name": {{ name }}}' },
+      { name: 'x","name":{"$exists":true},"$comment":"audit' }
+    )
+
+    expect(enriched.json).toEqual({
+      name: 'x","name":{"$exists":true},"$comment":"audit',
+    })
+  })
+
+  it("supports bracket paths for unquoted JSON values", async () => {
+    const enriched = await enrichContext(
+      { requestBody: '{"amount": {{ [Binding].[amount] }}}' },
+      {
+        Binding: {
+          amount: {
+            "2026-06-17": 1,
+            "2026-06-18": 1,
+          },
+        },
+      }
+    )
+
+    expect(enriched.json).toEqual({
+      amount: {
+        "2026-06-17": 1,
+        "2026-06-18": 1,
+      },
+    })
+  })
 })
