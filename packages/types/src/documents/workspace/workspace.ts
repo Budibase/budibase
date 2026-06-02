@@ -34,6 +34,13 @@ export interface Workspace extends Document {
   updatedBy?: string
   pwa?: PWAManifest
   scripts?: AppScript[]
+  // list of origins (e.g. https://example.com) allowed to embed this
+  // workspace's apps in an iframe. Empty/unset means any origin is allowed.
+  embedAllowedOrigins?: string[]
+  // configuration for authenticating embedded users via a signed token passed
+  // by the host site (e.g. Nextcloud). The token's identity is mapped to an
+  // existing Budibase user.
+  embedSSO?: EmbedSSOConfig
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
@@ -42,6 +49,23 @@ export interface Workspace extends Document {
   resourcesDeployedAt?: Record<string, string>
   /** @deprecated translations are configured globally via ConfigType.TRANSLATIONS */
   translationOverrides?: TranslationOverrides
+}
+
+export type EmbedSSOAlgorithm = "ES256" | "RS256" | "HS256"
+
+export interface EmbedSSOConfig {
+  enabled: boolean
+  // verification algorithm for the incoming token. ES256/RS256 use an
+  // asymmetric public key, HS256 uses a shared secret.
+  algorithm: EmbedSSOAlgorithm
+  // PEM-encoded public key (ES256/RS256) or shared secret (HS256). Stored
+  // encrypted at rest and never returned to the browser.
+  key: string
+  // optional expected issuer (the "iss" claim) to validate against.
+  issuer?: string
+  // dot-path into the token payload for the user's email, e.g. "userdata.email"
+  // for Nextcloud. Defaults to "email".
+  emailClaim?: string
 }
 
 export interface WorkspaceInstance {
