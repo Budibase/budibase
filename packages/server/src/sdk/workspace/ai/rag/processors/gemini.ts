@@ -189,11 +189,13 @@ const getChunkTextFromPart = (part: unknown): string | undefined => {
 const getChunkText = (row: Record<string, unknown>): string => {
   const content = row.content
   if (Array.isArray(content)) {
-    return content
+    const contentText = content
       .map(getChunkTextFromPart)
       .filter((text): text is string => Boolean(text))
       .join("\n")
       .trim()
+
+    return contentText || getStringValue(getRetrievedContext(row)?.text) || ""
   }
 
   return (

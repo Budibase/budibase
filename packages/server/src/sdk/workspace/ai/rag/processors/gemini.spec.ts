@@ -174,4 +174,33 @@ describe("GeminiRagProcessor", () => {
       },
     ])
   })
+
+  it("falls back to row-level retrievedContext text when content parts have no text", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        id: "row-1",
+        filename: "policy.md",
+        score: 0.9,
+        retrievedContext: {
+          text: "Policies are reviewed quarterly.",
+        },
+        content: [
+          {
+            type: "metadata",
+          },
+        ],
+      },
+    ])
+
+    const result = await createProcessor().search(
+      "How often are policies reviewed?"
+    )
+
+    expect(result).toEqual([
+      {
+        source: "policy.md",
+        chunkText: "Policies are reviewed quarterly.",
+      },
+    ])
+  })
 })
