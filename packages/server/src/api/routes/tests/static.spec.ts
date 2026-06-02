@@ -433,7 +433,10 @@ describe("/static", () => {
           path.join(tempDir, "android", "launchericon-192x192.png"),
           "fake-png-data"
         )
-        await fsp.writeFile(path.join(tempDir, "ios", "192.png"), "fake-png-data")
+        await fsp.writeFile(
+          path.join(tempDir, "ios", "192.png"),
+          "fake-png-data"
+        )
 
         mockedUpload
           .mockResolvedValueOnce({
