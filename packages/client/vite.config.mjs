@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       },
       server: {
         deps: {
-          inline: [/@budibase\/bbui/, /@spectrum-css/],
+          inline: [/@budibase\/bbui/, /@spectrum-css/, /easymde/],
         },
       },
     },
