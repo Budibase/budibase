@@ -125,7 +125,7 @@
 <style>
   .controls {
     position: absolute;
-    z-index: 10;
+    z-index: 1003;
     left: 50%;
     bottom: var(--spacing-l);
     transform: translateX(-50%);
