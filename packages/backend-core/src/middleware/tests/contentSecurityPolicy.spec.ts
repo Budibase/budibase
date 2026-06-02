@@ -204,6 +204,89 @@ describe("contentSecurityPolicy middleware", () => {
     expect(next).toHaveBeenCalled()
   })
 
+  describe("embed allowed origins", () => {
+    const appId = "app_embed"
+    const buildWorkspace = (embedAllowedOrigins?: string[]): Workspace => ({
+      appId,
+      type: "foo",
+      version: "1",
+      componentLibraries: [],
+      name: "foo",
+      url: "/foo",
+      template: undefined,
+      instance: { _id: appId },
+      tenantId: "default",
+      status: "foo",
+      embedAllowedOrigins,
+    })
+
+    const embedRequest = (origins?: string[]) => {
+      ctx.appId = appId
+      ctx.request = { get: () => "true" }
+      // @ts-ignore
+      workspace.getWorkspaceMetadata.mockImplementation(() =>
+        buildWorkspace(origins)
+      )
+    }
+
+    it("should restrict frame-ancestors to the configured origins", async () => {
+      embedRequest(["https://example.com", "https://*.foo.bar"])
+
+      await contentSecurityPolicy(ctx, next)
+
+      const cspHeader = ctx.set.mock.calls[0][1]
+      expect(cspHeader).toContain(
+        "frame-ancestors https://example.com https://*.foo.bar"
+      )
+      expect(next).toHaveBeenCalled()
+    })
+
+    it("should allow any origin when the allowlist is empty", async () => {
+      embedRequest([])
+
+      await contentSecurityPolicy(ctx, next)
+
+      const cspHeader = ctx.set.mock.calls[0][1]
+      expect(cspHeader).toContain("frame-ancestors *")
+    })
+
+    it("should filter out invalid origins", async () => {
+      embedRequest(["https://example.com", "https://evil.com', script-src *"])
+
+      await contentSecurityPolicy(ctx, next)
+
+      const cspHeader = ctx.set.mock.calls[0][1]
+      expect(cspHeader).toContain("frame-ancestors https://example.com")
+      expect(cspHeader).not.toContain("script-src *")
+    })
+
+    it("should keep the wildcard default when the metadata lookup fails", async () => {
+      ctx.appId = appId
+      ctx.request = { get: () => "true" }
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation()
+      // @ts-ignore
+      workspace.getWorkspaceMetadata.mockImplementation(() => {
+        throw new Error("boom")
+      })
+
+      await contentSecurityPolicy(ctx, next)
+
+      const cspHeader = ctx.set.mock.calls[0][1]
+      expect(cspHeader).toContain("frame-ancestors *")
+      consoleSpy.mockRestore()
+    })
+
+    it("should not set frame-ancestors for non-embed requests", async () => {
+      ctx.appId = appId
+      ctx.request = { get: () => undefined }
+
+      await contentSecurityPolicy(ctx, next)
+
+      const cspHeader = ctx.set.mock.calls[0][1]
+      expect(cspHeader).not.toContain("frame-ancestors")
+    })
+  })
+
   describe("custom environment variables", () => {
     it("should add custom domains from environment variables", async () => {
       // @ts-ignore
