@@ -358,7 +358,7 @@
         return `${workspacePrefix}/data/table/${view?.tableId}/${id}`
       },
       [WorkspaceResource.AGENT]: (id: string) =>
-        `${workspacePrefix}/agent/${id}/config`,
+        `${workspacePrefix}/agent/${id}`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)

@@ -50,7 +50,7 @@
         live: false,
       })
       modal.hide()
-      goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)
+      goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}`)
     } catch (error) {
       notifications.error(getErrorMessage(error) || "Error creating agent")
       return keepOpen

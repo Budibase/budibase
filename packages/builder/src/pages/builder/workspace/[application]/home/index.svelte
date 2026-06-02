@@ -516,7 +516,7 @@
       return
     }
     if (row.type === "agent") {
-      goto(url(`../agent/${row.id}/config`))
+      goto(url(`../agent/${row.id}`))
       return
     }
   }
