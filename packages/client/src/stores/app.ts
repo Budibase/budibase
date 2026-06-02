@@ -13,6 +13,7 @@ interface AppStoreState {
   application?: Workspace
   pageWidth?: string
   recaptchaKey?: string
+  recaptchaEnabled?: boolean
   clientCacheKey?: string
 }
 
