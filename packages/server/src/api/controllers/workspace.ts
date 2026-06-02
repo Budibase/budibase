@@ -40,6 +40,7 @@ import {
   FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
+  Feature,
   ImportToUpdateWorkspaceRequest,
   ImportToUpdateWorkspaceResponse,
   Layout,
@@ -69,6 +70,7 @@ import {
   generateUserMetadataID,
   generateWorkspaceID,
   getDevWorkspaceID,
+  getProdWorkspaceID,
   getLayoutParams,
   isDevWorkspaceID,
   WorkspaceStatus,
@@ -618,6 +620,7 @@ export async function fetchAppPackage(
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
+    recaptchaEnabled: license?.features?.includes(Feature.RECAPTCHA) ?? false,
     clientCacheKey,
   }
 }
@@ -1074,6 +1077,7 @@ export async function update(
   }
 
   const app = await updateWorkspacePackage(ctx.request.body, ctx.params.appId)
+  await syncRecaptchaStateToPublishedApp(ctx.params.appId, ctx.request.body)
   await events.app.updated(app)
   ctx.body = app
   builderSocket?.emitAppMetadataUpdate(ctx, {
@@ -1087,6 +1091,36 @@ export async function update(
       chainAutomations: app.automations?.chainAutomations,
     },
   })
+}
+
+const syncRecaptchaStateToPublishedApp = async (
+  workspaceId: string,
+  updates: UpdateWorkspaceRequest
+) => {
+  const recaptchaEnabled = updates.features?.recaptchaEnabled
+  if (!isDevWorkspaceID(workspaceId) || typeof recaptchaEnabled !== "boolean") {
+    return
+  }
+
+  const prodWorkspaceId = getProdWorkspaceID(workspaceId)
+  const prodMetadata = await context.doInWorkspaceContext(
+    prodWorkspaceId,
+    async () => {
+      return sdk.workspaces.metadata.tryGet()
+    }
+  )
+  if (!prodMetadata) {
+    return
+  }
+
+  await updateWorkspacePackage(
+    {
+      features: {
+        recaptchaEnabled,
+      },
+    },
+    prodWorkspaceId
+  )
 }
 
 export async function updateClient(
