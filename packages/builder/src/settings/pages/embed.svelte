@@ -156,7 +156,6 @@
       label="Allowed domains"
       value={allowedOrigins}
       placeholder="https://example.com"
-      helpText="Only these domains will be permitted to embed this workspace's apps in an iframe. Leave empty to allow any domain."
       on:change={e => updateAllowedOrigins(e.detail)}
     />
   </div>
