@@ -396,13 +396,11 @@
   }
 
   .footer-hint code {
-    font-family: "Andale Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 12px;
-    line-height: 1;
+    background: var(--spectrum-global-color-gray-200);
+    padding: 2px 6px;
     border-radius: 4px;
-    padding: 2px 4px;
-    color: var(--spectrum-global-color-gray-900);
-    background: var(--spectrum-global-color-blue-700);
+    font-family: monospace;
+    font-size: 11px;
   }
 
   .tools-list {
