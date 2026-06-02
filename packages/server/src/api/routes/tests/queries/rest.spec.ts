@@ -566,12 +566,13 @@ describe("rest", () => {
       fields: {
         path: "www.example.com",
         bodyType: BodyType.JSON,
-        requestBody: '{"status":"{{ status }}","amount":{{ amount }}}',
+        requestBody: '{"status":"{{ status }}","amount": {{ amount }} }',
       },
     })
 
     await config.api.query.execute(query._id!, {
       parameters: {
+        status: "requested",
         amount: '{"2026-06-17":1,"2026-06-18":1}',
       },
     })
