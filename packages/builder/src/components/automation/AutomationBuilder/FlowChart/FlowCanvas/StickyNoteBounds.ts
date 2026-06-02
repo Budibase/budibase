@@ -1,3 +1,5 @@
+import type { StickyNote } from "@/types/automations"
+
 export interface FlowBounds {
   x: number
   y: number
@@ -25,6 +27,33 @@ export const MIN_STICKY_NOTE_WIDTH = 160
 export const MIN_STICKY_NOTE_HEIGHT = 140
 export const MAX_STICKY_NOTE_WIDTH = 300
 export const MAX_STICKY_NOTE_HEIGHT = 400
+
+export const getBoundsOfFlowBounds = (bounds: FlowBounds[]): FlowBounds => {
+  const left = Math.min(...bounds.map(bound => bound.x))
+  const top = Math.min(...bounds.map(bound => bound.y))
+  const right = Math.max(...bounds.map(bound => bound.x + bound.width))
+  const bottom = Math.max(...bounds.map(bound => bound.y + bound.height))
+
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  }
+}
+
+export const getStickyNoteBounds = (note: StickyNote): FlowBounds => ({
+  x: note.x,
+  y: note.y,
+  width: Math.min(
+    MAX_STICKY_NOTE_WIDTH,
+    Math.max(MIN_STICKY_NOTE_WIDTH, note.width ?? MIN_STICKY_NOTE_WIDTH)
+  ),
+  height: Math.min(
+    MAX_STICKY_NOTE_HEIGHT,
+    Math.max(MIN_STICKY_NOTE_HEIGHT, note.height ?? MIN_STICKY_NOTE_HEIGHT)
+  ),
+})
 
 export const clampStickyNoteToGraphBounds = (
   position: StickyNotePosition,

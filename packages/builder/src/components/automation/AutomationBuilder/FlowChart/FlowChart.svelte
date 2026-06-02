@@ -43,8 +43,11 @@
   import {
     MIN_STICKY_NOTE_WIDTH,
     MIN_STICKY_NOTE_HEIGHT,
+    getBoundsOfFlowBounds,
+    getStickyNoteBounds,
     clampStickyNoteToGraphBounds,
     clampStickyNoteToViewportBounds,
+    type FlowBounds,
   } from "./FlowCanvas/StickyNoteBounds"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
@@ -59,6 +62,7 @@
   import {
     SvelteFlow,
     useSvelteFlow,
+    getViewportForBounds,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
@@ -379,6 +383,40 @@
           : undefined) ||
         DEFAULT_NODE_HEIGHT,
     }
+  }
+
+  const getAutomationViewportBounds = () => {
+    const flowNodes = getNodes()
+    const bounds: FlowBounds[] = []
+
+    if (flowNodes.length) {
+      bounds.push(getNodesBounds(flowNodes))
+    }
+    bounds.push(...stickyNotes.map(getStickyNoteBounds))
+
+    return bounds.length ? getBoundsOfFlowBounds(bounds) : undefined
+  }
+
+  const handleAutoLayout = () => {
+    if (!paneEl) {
+      return
+    }
+
+    const bounds = getAutomationViewportBounds()
+    if (!bounds) {
+      return
+    }
+
+    const rect = paneEl.getBoundingClientRect()
+    const viewport = getViewportForBounds(
+      bounds,
+      rect.width,
+      rect.height,
+      MIN_ZOOM,
+      MAX_ZOOM,
+      0.1
+    )
+    setSyncedViewport(viewport, { duration: VIEWPORT_ANIMATION_DURATION })
   }
 
   const getActionPanelTargetNodeId = (target: unknown) => {
@@ -727,7 +765,8 @@
           bind:controlsEl={flowControlsEl}
           historyStore={automationHistoryStore}
           canAddNote={canAddStickyNote}
-          on:addnote={handleAddNote}
+          onAddNote={handleAddNote}
+          onAutoLayout={handleAutoLayout}
         />
         <div
           class="sticky-note-layer"

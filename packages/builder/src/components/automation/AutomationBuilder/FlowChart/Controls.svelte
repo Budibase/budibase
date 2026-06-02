@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
-  import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
@@ -10,13 +8,11 @@
   import type { AutomationSaveOptions } from "@/stores/builder/automations"
   import type { Automation } from "@budibase/types"
 
-  const dispatch = createEventDispatcher()
-
   export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
   export let canAddNote = true
   export let controlsEl: HTMLDivElement | null = null
-
-  const flow = useSvelteFlow()
+  export let onAddNote = () => {}
+  export let onAutoLayout = () => {}
 
   const openAddStepPanel = () => {
     if ($automationStore.viewMode !== ViewMode.EDITOR) {
@@ -85,7 +81,7 @@
         tooltipPosition={TooltipPosition.Top}
         color="var(--spectrum-alias-text-color)"
         hoverColor="var(--spectrum-alias-text-color-hover)"
-        on:click={() => flow.fitView()}
+        on:click={onAutoLayout}
       />
     </span>
     {#if $automationStore.viewMode === ViewMode.EDITOR}
@@ -102,7 +98,7 @@
           hoverColor="var(--spectrum-alias-text-color-hover)"
           on:click={() => {
             if (canAddNote) {
-              dispatch("addnote")
+              onAddNote()
             }
           }}
         />
