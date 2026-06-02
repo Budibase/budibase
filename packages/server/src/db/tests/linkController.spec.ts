@@ -204,6 +204,25 @@ describe("test the link controller", () => {
     )
   })
 
+  it("should throw an error when linked field name has illegal characters", async () => {
+    const controller = await createLinkController(table1)
+    const copyTable = cloneDeep(table1)
+    const linkSchema = copyTable.schema.link as RelationshipFieldMetadata
+    linkSchema.fieldName = "Table 2!@£$%^&*()>"
+
+    let error: any
+    try {
+      controller.validateTable(copyTable)
+    } catch (err) {
+      error = err
+    }
+
+    expect(error).toBeDefined()
+    expect(error.message).toEqual(
+      "Column names can't contain special characters"
+    )
+  })
+
   it("should be able to remove a link when saving/updating the row", async () => {
     const row = await createLinkedRow()
     // remove the link from the row
