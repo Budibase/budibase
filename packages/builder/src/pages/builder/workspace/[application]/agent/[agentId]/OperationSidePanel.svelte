@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Button } from "@budibase/bbui"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import type {
     Agent,
     CaretPositionFn,
@@ -17,6 +17,8 @@
   import OperationNameInput from "./OperationNameInput.svelte"
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
+  import ToolIcon from "./ToolIcon.svelte"
+  import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
 
   let {
     open = false,
@@ -82,6 +84,24 @@
     )
   )
   let operationName = $derived(agent?.operationName?.trim() || "Main operation")
+  let readableToRuntimeBinding = $derived.by(() =>
+    Object.fromEntries(
+      promptBindings
+        .filter(binding => binding.readableBinding && binding.runtimeBinding)
+        .map(binding => [binding.readableBinding, binding.runtimeBinding])
+    )
+  )
+  let includedToolRuntimeBindings = $derived(
+    getIncludedToolRuntimeBindings(
+      agent?.promptInstructions,
+      readableToRuntimeBinding
+    )
+  )
+  let includedToolsWithDetails = $derived(
+    availableTools.filter(tool =>
+      includedToolRuntimeBindings.includes(tool.runtimeBinding)
+    )
+  )
   const saveOperationName = (name: string) => {
     if (!agent) {
       return
@@ -91,20 +111,71 @@
     onUpdated()
   }
 
-  const handleToolClick = (tool: AgentTool) => {
+  const insertToolBinding = (readableBinding: string) => {
     if (!agent) {
       return
     }
-    const binding = tool.readableBinding || tool.runtimeBinding
-    if (!binding) {
+    const currentValue = agent.promptInstructions || ""
+    const caretPos = getCaretPosition?.() ?? {
+      start: currentValue.length,
+      end: currentValue.length,
+    }
+    const start = caretPos.start
+    const end = caretPos.end
+    const wrapped = `{{ ${readableBinding} }}`
+
+    if (insertAtPos) {
+      insertAtPos({
+        start,
+        end,
+        value: wrapped,
+        cursor: { anchor: start + wrapped.length },
+      })
+    } else {
+      agent.promptInstructions =
+        currentValue.slice(0, start) + wrapped + currentValue.slice(end)
+    }
+  }
+
+  const handleToolClick = (tool: AgentTool) => {
+    if (!agent || !tool.readableBinding) {
       return
     }
-    const current = agent.promptInstructions || ""
-    const insertion = `{{ ${binding} }}`
-    agent.promptInstructions = `${current}${current ? "\n" : ""}${insertion}`
-    agent.enabledTools = Array.from(
-      new Set([...(agent.enabledTools || []), tool.runtimeBinding])
+    if (tool.sourceType && tool.runtimeBinding) {
+      agent.enabledTools = Array.from(
+        new Set([...(agent.enabledTools || []), tool.runtimeBinding])
+      )
+    }
+    insertToolBinding(tool.readableBinding)
+    onUpdated()
+  }
+
+  const formatToolLabel = (tool: AgentTool) =>
+    (tool.readableName || tool.name)
+      .split(".")
+      .map(part =>
+        part
+          .split("_")
+          .join(" ")
+          .replace(/\b\w/g, l => l.toUpperCase())
+      )
+      .join(".")
+
+  const escapeRegExp = (str: string) =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+  const removeToolBindingFromPrompt = (tool: AgentTool) => {
+    if (!agent || !tool.readableBinding) {
+      return
+    }
+    agent.enabledTools = (agent.enabledTools || []).filter(
+      name => name !== tool.runtimeBinding
     )
+    const current = agent.promptInstructions || ""
+    const binding = escapeRegExp(tool.readableBinding)
+    const regex = new RegExp(`\\{\\{\\s*${binding}\\s*\\}\\}`, "g")
+    const next = current.replace(regex, "").replace(/\n{3,}/g, "\n\n")
+    agent.promptInstructions = next
     onUpdated()
   }
 </script>
@@ -211,6 +282,43 @@
                   </div>
                 </div>
               </div>
+              {#if includedToolsWithDetails.length > 0}
+                <div class="tools-list">
+                  {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
+                    <div class="tool-card">
+                      <div class="tool-main">
+                        <div class="tool-item-icon">
+                          <ToolIcon
+                            icon={tool.icon}
+                            size="S"
+                            fallbackIcon="Wrench"
+                          />
+                        </div>
+                        <div class="tool-label">
+                          <span>
+                            {tool.sourceLabel || "Tool"}:
+                          </span>
+                          <span>{formatToolLabel(tool)}</span>
+                        </div>
+                      </div>
+                      <div class="tool-actions">
+                        <button
+                          class="tool-close-button"
+                          type="button"
+                          onclick={() => removeToolBindingFromPrompt(tool)}
+                        >
+                          <Icon
+                            name="x"
+                            size="XS"
+                            color="var(--spectrum-global-color-gray-600)"
+                            hoverable
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
             </div>
 
             <Knowledge></Knowledge>
@@ -341,6 +449,61 @@
     padding: 2px 4px;
     color: var(--spectrum-global-color-gray-900);
     background: var(--spectrum-global-color-blue-700);
+  }
+
+  .tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+  }
+
+  .tool-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: var(--spectrum-global-color-blue-100);
+  }
+
+  .tool-main {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    min-width: 0;
+  }
+
+  .tool-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+  }
+
+  .tool-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .tool-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  .tool-close-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .operation-panel-footer {
