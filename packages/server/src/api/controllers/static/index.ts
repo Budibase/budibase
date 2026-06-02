@@ -649,6 +649,10 @@ export const getSignedUploadURL = async function (
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
     }
+    const datasourceBucket = datasource?.config?.bucket
+    if (datasourceBucket && datasourceBucket !== bucket) {
+      ctx.throw(400, "bucket must match the datasource configuration")
+    }
     try {
       let endpoint = datasource?.config?.endpoint
       if (endpoint && !utils.urlHasProtocol(endpoint)) {
