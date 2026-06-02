@@ -13,6 +13,7 @@ import * as knowledgeBaseSdk from "../knowledgeBase"
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
+const DEFAULT_OPERATION_NAME = "Main operation"
 
 const guardName = async (name: string, id?: string) => {
   if (!name.trim()) {
@@ -132,6 +133,10 @@ const decodeTelegramIntegrationSecrets = (
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
+  operationName:
+    agent.operationName || agent.promptInstructions
+      ? agent.operationName || DEFAULT_OPERATION_NAME
+      : agent.operationName,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
   knowledgeBases: agent.knowledgeBases || [],

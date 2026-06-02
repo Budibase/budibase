@@ -62,7 +62,7 @@ Any constraints the agent must follow.
   let renameModal: Modal | undefined = $state()
   let renameDraft = $state("")
   let isRenameValid = $derived(Boolean(renameDraft.trim()))
-  let operationName = $derived(agent?.operationName?.trim() || "Main operation")
+  let operationName = $derived(agent?.operationName?.trim())
   let hasOperation = $derived(Boolean(agent?.operationName?.trim()))
 
   const openOperationPanel = () => {
@@ -74,7 +74,7 @@ Any constraints the agent must follow.
   }
 
   const openRenameModal = () => {
-    renameDraft = agent?.operationName || "Main operation"
+    renameDraft = agent?.operationName || ""
     renameModal?.show()
   }
 
