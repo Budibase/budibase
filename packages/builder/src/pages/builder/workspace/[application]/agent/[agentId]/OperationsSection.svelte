@@ -4,11 +4,8 @@
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
-  import * as routify from "@roxi/routify"
-  import { selectedAgent } from "@/stores/portal"
+  import { contextMenuStore } from "@/stores/builder"
   import OperationSidePanel from "./OperationSidePanel.svelte"
-  const { goto } = routify
-  $goto
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
 What is this agent responsible for?
 
@@ -54,12 +51,8 @@ Any constraints the agent must follow.
   } = $props()
 
   let operationPanelOpen = $state(false)
-  let currentAgentId = $derived($selectedAgent?._id)
   let operationName = $derived(agent?.operationName?.trim() || "Main operation")
-  let hasOperation = $derived(
-    Boolean(agent?.operationName?.trim()) ||
-      Boolean(agent?.promptInstructions?.trim())
-  )
+  let hasOperation = $derived(Boolean(agent?.operationName?.trim()))
 
   const openOperationPanel = () => {
     operationPanelOpen = true
@@ -88,7 +81,7 @@ Any constraints the agent must follow.
     }
 
     const safeAgent = agent
-    await confirm({
+    confirm({
       title: "Confirm deletion",
       body: "Delete this operation? This will clear instructions and selected tools.",
       okText: "Delete",
@@ -109,6 +102,24 @@ Any constraints the agent must follow.
       },
     })
   }
+
+  const openOperationContextMenu = (event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    contextMenuStore.open(
+      "agent-operation",
+      [
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          callback: deleteOperation,
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
+  }
 </script>
 
 <div class="operations-section">
@@ -128,26 +139,33 @@ Any constraints the agent must follow.
 
   {#if hasOperation}
     <div class="operation-list">
-      <button
-        class="operation-row"
-        type="button"
-        onclick={() => openOperationPanel()}
-      >
-        <span class="operation-name">{operationName}</span>
+      <div class="operation-row">
+        <button
+          class="operation-open-button"
+          onclick={() => openOperationPanel()}
+        >
+          <span class="operation-name">{operationName}</span>
+        </button>
 
-        <Icon
-          name="dots-three"
-          size="S"
-          color="var(--spectrum-global-color-gray-600)"
-        />
-      </button>
+        <button
+          class="operation-menu-trigger"
+          aria-label="Operation actions"
+          onclick={openOperationContextMenu}
+        >
+          <Icon
+            name="dots-three"
+            size="S"
+            color="var(--spectrum-global-color-gray-600)"
+            hoverable
+          />
+        </button>
+      </div>
     </div>
   {/if}
 </div>
 
 <OperationSidePanel
   open={operationPanelOpen}
-  agentId={currentAgentId}
   bind:agent
   {promptBindings}
   {bindingIcons}
@@ -159,7 +177,6 @@ Any constraints the agent must follow.
   {onConfigureWebSearch}
   {onUpdated}
   onClose={closeOperationPanel}
-  onDelete={deleteOperation}
 />
 
 <style>
@@ -198,12 +215,7 @@ Any constraints the agent must follow.
     background: transparent;
     color: var(--spectrum-global-color-gray-900);
     border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .operation-row {
     min-height: 36px;
-    padding: 8px 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -214,10 +226,35 @@ Any constraints the agent must follow.
     border-color: var(--spectrum-global-color-gray-300);
   }
 
+  .operation-open-button {
+    flex: 1;
+    min-width: 0;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
   .operation-name {
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 13px;
+  }
+
+  .operation-menu-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
   }
 </style>

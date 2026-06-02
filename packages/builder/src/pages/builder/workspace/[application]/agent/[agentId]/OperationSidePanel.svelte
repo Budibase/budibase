@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Button, Icon } from "@budibase/bbui"
+  import { Body, Icon } from "@budibase/bbui"
   import type {
     Agent,
     CaretPositionFn,
@@ -23,7 +23,6 @@
   let {
     open = false,
     agent = $bindable(),
-    agentId = undefined,
     promptBindings = [],
     bindingIcons = {},
     completions = [],
@@ -31,14 +30,12 @@
     availableTools = [],
     webSearchConfigured = false,
     onClose = () => {},
-    onDelete = () => {},
     onUpdated = () => {},
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
   }: {
     open?: boolean
     agent?: Agent
-    agentId?: string
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -46,7 +43,6 @@
     availableTools?: AgentTool[]
     webSearchConfigured?: boolean
     onClose?: () => void
-    onDelete?: () => void
     onUpdated?: () => void
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
@@ -141,11 +137,6 @@
     if (!agent || !tool.readableBinding) {
       return
     }
-    if (tool.sourceType && tool.runtimeBinding) {
-      agent.enabledTools = Array.from(
-        new Set([...(agent.enabledTools || []), tool.runtimeBinding])
-      )
-    }
     insertToolBinding(tool.readableBinding)
     onUpdated()
   }
@@ -168,9 +159,6 @@
     if (!agent || !tool.readableBinding) {
       return
     }
-    agent.enabledTools = (agent.enabledTools || []).filter(
-      name => name !== tool.runtimeBinding
-    )
     const current = agent.promptInstructions || ""
     const binding = escapeRegExp(tool.readableBinding)
     const regex = new RegExp(`\\{\\{\\s*${binding}\\s*\\}\\}`, "g")
@@ -322,14 +310,6 @@
             </div>
 
             <Knowledge></Knowledge>
-          </div>
-
-          <div class="operation-panel-footer">
-            {#if agentId}
-              <Button secondary quiet icon="trash" on:click={onDelete}>
-                Delete operation
-              </Button>
-            {/if}
           </div>
         </div>
       </Panel>
@@ -504,16 +484,5 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .operation-panel-footer {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-    padding: var(--spacing-m) var(--spacing-xl);
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    background: var(--background);
   }
 </style>
