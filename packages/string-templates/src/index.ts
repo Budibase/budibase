@@ -274,6 +274,129 @@ export function processStringSync(
   })
 }
 
+export type JsonTemplateValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonTemplateValue[]
+  | { [key: string]: JsonTemplateValue }
+
+const RAW_JSON_BINDING_PREFIX = "__budibaseRawJsonBinding"
+
+interface RawJsonBinding {
+  token: string
+  block: string
+}
+
+const processJsonTemplateString = (
+  value: string,
+  context?: object,
+  opts?: ProcessOptions
+) => {
+  return processStringSync(value, context, opts)
+}
+
+const quoteRawJsonBindings = (template: string) => {
+  const bindings: RawJsonBinding[] = []
+  let output = ""
+  let inString = false
+  let escaped = false
+
+  for (let i = 0; i < template.length; i++) {
+    const char = template[i]
+
+    if (inString) {
+      output += char
+      if (escaped) {
+        escaped = false
+      } else if (char === "\\") {
+        escaped = true
+      } else if (char === '"') {
+        inString = false
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inString = true
+      output += char
+      continue
+    }
+
+    if (char === "{" && template[i + 1] === "{") {
+      const end = template.indexOf("}}", i + 2)
+      if (end !== -1) {
+        const block = template.slice(i, end + 2)
+        const token = `${RAW_JSON_BINDING_PREFIX}${bindings.length}__`
+        bindings.push({ token, block })
+        output += JSON.stringify(token)
+        i = end + 1
+        continue
+      }
+    }
+
+    output += char
+  }
+
+  return { template: output, bindings }
+}
+
+const parseRawJsonBinding = (value: string): JsonTemplateValue => {
+  try {
+    return JSON.parse(value) as JsonTemplateValue
+  } catch (_err) {
+    return value
+  }
+}
+
+const processJsonTemplateValue = (
+  value: JsonTemplateValue,
+  bindings: RawJsonBinding[],
+  context?: object,
+  opts?: ProcessOptions
+): JsonTemplateValue => {
+  if (typeof value === "string") {
+    const binding = bindings.find(binding => binding.token === value)
+    if (binding) {
+      const processed = processJsonTemplateString(binding.block, context, opts)
+      return parseRawJsonBinding(processed)
+    }
+    return processJsonTemplateString(value, context, opts)
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(item =>
+      processJsonTemplateValue(item, bindings, context, opts)
+    )
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        processJsonTemplateValue(child, bindings, context, opts),
+      ])
+    )
+  }
+
+  return value
+}
+
+export function processJsonStringSync(
+  template: string,
+  context?: object,
+  opts?: ProcessOptions
+): JsonTemplateValue | string {
+  const prepared = quoteRawJsonBindings(template)
+  try {
+    const parsed = JSON.parse(prepared.template) as JsonTemplateValue
+    return processJsonTemplateValue(parsed, prepared.bindings, context, opts)
+  } catch (_err) {
+    return processStringSync(template, context, opts)
+  }
+}
+
 /**
  * Same as function above, but allows logging to be returned - this is only for JS bindings.
  */
