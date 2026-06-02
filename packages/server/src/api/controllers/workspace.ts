@@ -602,6 +602,14 @@ export async function fetchAppPackage(
     application.version
   )
 
+  // never expose the embed SSO secret to the browser - strip it entirely for
+  // the published client and mask the key for the builder
+  if (application.embedSSO) {
+    application.embedSSO = isBuilder
+      ? sdk.embedSSO.maskConfigForBuilder(application.embedSSO)
+      : undefined
+  }
+
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
@@ -1419,6 +1427,15 @@ export async function updateWorkspacePackage(
               : icon
         )
       }
+    }
+
+    // encrypt the embed SSO secret at rest (and preserve the existing secret
+    // when the builder submits the masked placeholder)
+    if (workspacePackage.embedSSO) {
+      newWorkspacePackage.embedSSO = sdk.embedSSO.encodeConfigForStorage(
+        workspacePackage.embedSSO,
+        application.embedSSO
+      )
     }
 
     // the locked by property is attached by server but generated from
