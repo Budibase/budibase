@@ -235,7 +235,13 @@ export async function processPWAZip(ctx: UserCtx) {
     await extract(filePath, { dir: tempDir })
     const iconsJsonPath = join(tempDir, "icons.json")
 
-    if (!fs.existsSync(iconsJsonPath)) {
+    let iconsJsonStats
+    try {
+      iconsJsonStats = await fsp.lstat(iconsJsonPath)
+    } catch (_err) {
+      ctx.throw(400, "Invalid zip structure - missing icons.json")
+    }
+    if (!iconsJsonStats.isFile()) {
       ctx.throw(400, "Invalid zip structure - missing icons.json")
     }
 
@@ -253,17 +259,26 @@ export async function processPWAZip(ctx: UserCtx) {
 
     const icons = []
     const baseDir = path.dirname(iconsJsonPath)
+    const realBaseDir = await fsp.realpath(baseDir)
     const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
       const resolvedSrc = icon.src ? path.resolve(baseDir, icon.src) : undefined
-      if (
-        !icon.src ||
-        !icon.sizes ||
-        !resolvedSrc ||
-        !resolvedSrc.startsWith(baseDir + path.sep) ||
-        !fs.existsSync(resolvedSrc)
-      ) {
+      let validIconFile = false
+      if (resolvedSrc?.startsWith(baseDir + path.sep)) {
+        try {
+          const [iconStats, realSrc] = await Promise.all([
+            fsp.lstat(resolvedSrc),
+            fsp.realpath(resolvedSrc),
+          ])
+          validIconFile =
+            iconStats.isFile() && realSrc.startsWith(realBaseDir + path.sep)
+        } catch (_err) {
+          validIconFile = false
+        }
+      }
+
+      if (!icon.src || !icon.sizes || !resolvedSrc || !validIconFile) {
         continue
       }
 
@@ -348,6 +363,24 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
     const appInfo = await sdk.workspaces.metadata.get()
+
+    // When embedded, allow the host site to authenticate the user via a signed
+    // token. Establishing the session here sets the auth cookie on the initial
+    // document response so the client's subsequent API calls are authenticated.
+    if (bbHeaderEmbed && !ctx.isAuthenticated && appInfo.embedSSO?.enabled) {
+      const embedToken = ctx.query.jwt
+      if (typeof embedToken === "string" && embedToken) {
+        try {
+          await sdk.embedSSO.authenticateEmbedUser(
+            ctx,
+            appInfo.embedSSO,
+            embedToken
+          )
+        } catch (err) {
+          console.warn(`Embed SSO authentication failed: ${err}`)
+        }
+      }
+    }
     const clientVersion = isChatRoute ? envCore.VERSION : appInfo.version
     const clientCacheKey = await objectStore.getClientCacheKey(clientVersion)
     const clientAssetScopeId = isChatRoute
