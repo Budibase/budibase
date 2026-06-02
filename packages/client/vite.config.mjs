@@ -28,6 +28,11 @@ export default defineConfig(({ mode }) => {
           transformCss: true,
         },
       },
+      server: {
+        deps: {
+          inline: [/@budibase\/bbui/, /@spectrum-css/],
+        },
+      },
     },
     server: {
       open: false,
