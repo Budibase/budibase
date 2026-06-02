@@ -2,7 +2,14 @@ import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { USERS_TABLE_SCHEMA } from "../../../constants"
 import { setEnv, withEnv } from "../../../environment"
 
-import { Header, context, db, events, roles } from "@budibase/backend-core"
+import {
+  Header,
+  context,
+  db,
+  events,
+  objectStore,
+  roles,
+} from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import {
   type Workspace,
@@ -1351,6 +1358,71 @@ describe("/applications", () => {
       })
       expect(updatedApp._rev).toBeDefined()
       expect(events.app.updated).toHaveBeenCalledTimes(1)
+    })
+
+    it("should delete removed pwa icons from object storage", async () => {
+      const appId = config.getProdWorkspaceId()
+      const iconOne = `${appId}/pwa/icon-one.png`
+      const iconTwo = `${appId}/pwa/icon-two.png`
+
+      await objectStore.upload({
+        bucket: "apps",
+        filename: iconOne,
+        body: Buffer.from("icon-one"),
+        type: "image/png",
+      })
+
+      await objectStore.upload({
+        bucket: "apps",
+        filename: iconTwo,
+        body: Buffer.from("icon-two"),
+        type: "image/png",
+      })
+
+      await config.api.workspace.update(workspace.appId, {
+        pwa: {
+          name: "Test App",
+          short_name: "TestApp",
+          description: "Test app description",
+          background_color: "#FFFFFF",
+          theme_color: "#4285F4",
+          display: "standalone",
+          start_url: "/",
+          scope: "/",
+          screenshots: [],
+          icons: [
+            {
+              src: iconOne,
+              sizes: "192x192",
+              type: "image/png",
+            },
+            {
+              src: iconTwo,
+              sizes: "512x512",
+              type: "image/png",
+            },
+          ],
+        },
+      })
+
+      await config.api.workspace.update(workspace.appId, {
+        pwa: {
+          name: "Test App",
+          short_name: "TestApp",
+          description: "Test app description",
+          background_color: "#FFFFFF",
+          theme_color: "#4285F4",
+          display: "standalone",
+          start_url: "/",
+          scope: "/",
+          screenshots: [],
+          icons: [],
+        },
+      })
+
+      const fileEtags = await getAppObjectStorageEtags(appId)
+      expect(fileEtags[`pwa/icon-one.png`]).toBeUndefined()
+      expect(fileEtags[`pwa/icon-two.png`]).toBeUndefined()
     })
 
     it("trims workspace name before saving when updating", async () => {
