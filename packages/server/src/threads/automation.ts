@@ -29,9 +29,13 @@ import {
   BranchSearchFilters,
   BranchStep,
   ContextEmitter,
+  isArraySearchOperator,
+  isBasicSearchOperator,
   isCronTrigger,
   isEmailTrigger,
   isLogicalFilter,
+  isLogicalSearchOperator,
+  isRangeSearchOperator,
   LoopV2Step,
   LoopV2StepInputs,
 } from "@budibase/types"
@@ -200,20 +204,74 @@ async function branchMatches(
   // evaluate all of the bindings.
   const evaluateBindings = (fs: Readonly<BranchSearchFilters>) => {
     const filters = cloneDeep(fs)
-    for (const filter of Object.values(filters)) {
-      if (!filter) {
+    const evaluateValue = (value: any): any => {
+      if (typeof value === "string" && findHBSBlocks(value).length > 0) {
+        return processStringSync(value, ctx)
+      }
+      if (Array.isArray(value)) {
+        return value.map(evaluateValue)
+      }
+      if (value && typeof value === "object") {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, nestedValue]) => [
+            key,
+            evaluateValue(nestedValue),
+          ])
+        )
+      }
+      return value
+    }
+    const coerceFieldValue = (fieldValue: any, conditionValue: any): any => {
+      const reference = Array.isArray(conditionValue)
+        ? conditionValue.find(value => value != null)
+        : conditionValue
+
+      if (typeof fieldValue === "string" && typeof reference === "number") {
+        if (fieldValue.trim() === "") {
+          return fieldValue
+        }
+        const parsed = Number(fieldValue)
+        return Number.isNaN(parsed) ? fieldValue : parsed
+      }
+      if (typeof fieldValue === "string" && typeof reference === "boolean") {
+        if (fieldValue === "true") {
+          return true
+        }
+        if (fieldValue === "false") {
+          return false
+        }
+      }
+      return fieldValue
+    }
+
+    for (const [operator, filter] of Object.entries(filters)) {
+      if (isLogicalSearchOperator(operator)) {
+        if (filter && isLogicalFilter(filter)) {
+          filter.conditions = filter.conditions.map(evaluateBindings)
+        }
         continue
       }
 
-      if (isLogicalFilter(filter)) {
-        filter.conditions = filter.conditions.map(evaluateBindings)
-      } else {
-        for (const [field, value] of Object.entries(filter)) {
-          toFilter[field] = processStringSync(field, ctx)
-          if (typeof value === "string" && findHBSBlocks(value).length > 0) {
-            filter[field] = processStringSync(value, ctx)
-          }
-        }
+      if (
+        !isBasicSearchOperator(operator) &&
+        !isArraySearchOperator(operator) &&
+        !isRangeSearchOperator(operator)
+      ) {
+        continue
+      }
+
+      const evaluatedFilter = filter as Record<string, unknown> | undefined
+      if (!evaluatedFilter) {
+        continue
+      }
+
+      for (const [field, value] of Object.entries(evaluatedFilter)) {
+        const evaluatedValue = evaluateValue(value)
+        toFilter[field] = coerceFieldValue(
+          processStringSync(field, ctx),
+          evaluatedValue
+        )
+        evaluatedFilter[field] = evaluatedValue
       }
     }
 
