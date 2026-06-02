@@ -143,4 +143,35 @@ describe("GeminiRagProcessor", () => {
       },
     ])
   })
+
+  it("extracts source from row-level retrievedContext media id", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        id: "row-1",
+        score: 0.9,
+        retrievedContext: {
+          mediaId: "gemini-file-42",
+        },
+        content: [
+          {
+            type: "text",
+            retrievedContext: {
+              text: "Policies are reviewed quarterly.",
+            },
+          },
+        ],
+      },
+    ])
+
+    const result = await createProcessor().search(
+      "How often are policies reviewed?"
+    )
+
+    expect(result).toEqual([
+      {
+        source: "gemini-file-42",
+        chunkText: "Policies are reviewed quarterly.",
+      },
+    ])
+  })
 })

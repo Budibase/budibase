@@ -152,6 +152,8 @@ const getChunkSource = (row: Record<string, unknown>): string | undefined => {
       context?.title,
       context?.uri,
     ]),
+    retrievedContext?.mediaId,
+    retrievedContext?.media_id,
     row.id,
     retrievedContext?.title,
     retrievedContext?.uri,
