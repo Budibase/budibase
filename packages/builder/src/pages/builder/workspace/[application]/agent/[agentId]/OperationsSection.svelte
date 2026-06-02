@@ -142,13 +142,16 @@ Any constraints the agent must follow.
       <div class="operation-row">
         <button
           class="operation-open-button"
+          type="button"
           onclick={() => openOperationPanel()}
+          oncontextmenu={openOperationContextMenu}
         >
           <span class="operation-name">{operationName}</span>
         </button>
 
         <button
           class="operation-menu-trigger"
+          type="button"
           aria-label="Operation actions"
           onclick={openOperationContextMenu}
         >
