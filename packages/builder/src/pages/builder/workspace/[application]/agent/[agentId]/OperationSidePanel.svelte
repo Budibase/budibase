@@ -14,7 +14,6 @@
   import { EditorModes } from "@/components/common/CodeEditor"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
-  import OperationNameInput from "./OperationNameInput.svelte"
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
@@ -98,14 +97,6 @@
       includedToolRuntimeBindings.includes(tool.runtimeBinding)
     )
   )
-  const saveOperationName = (name: string) => {
-    if (!agent) {
-      return
-    }
-    const trimmed = name.trim()
-    agent.operationName = trimmed || "Main operation"
-    onUpdated()
-  }
 
   const insertToolBinding = (readableBinding: string) => {
     if (!agent) {
@@ -193,19 +184,11 @@
       position="right"
     >
       <Panel
-        title="Operation"
+        title={operationName}
         showCloseButton
         onClickCloseButton={onClose}
         resizable
       >
-        <svelte:fragment slot="panel-title-content">
-          <div class="operation-title-row">
-            <OperationNameInput
-              value={operationName}
-              onSave={saveOperationName}
-            />
-          </div>
-        </svelte:fragment>
         <div class="operation-panel">
           <div class="operation-panel-content">
             <div class="operation-panel-section">
@@ -356,15 +339,6 @@
     flex-direction: column;
     gap: var(--spacing-xl);
   }
-
-  .operation-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: var(--spacing-s);
-  }
-
   .operation-panel-section {
     display: flex;
     flex-direction: column;

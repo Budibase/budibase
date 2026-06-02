@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { Body, Button, Icon, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Icon,
+    Input,
+    Modal,
+    ModalContent,
+    notifications,
+  } from "@budibase/bbui"
   import type { Agent, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
@@ -51,6 +59,9 @@ Any constraints the agent must follow.
   } = $props()
 
   let operationPanelOpen = $state(false)
+  let renameModal: Modal | undefined = $state()
+  let renameDraft = $state("")
+  let isRenameValid = $derived(Boolean(renameDraft.trim()))
   let operationName = $derived(agent?.operationName?.trim() || "Main operation")
   let hasOperation = $derived(Boolean(agent?.operationName?.trim()))
 
@@ -60,6 +71,25 @@ Any constraints the agent must follow.
 
   const closeOperationPanel = () => {
     operationPanelOpen = false
+  }
+
+  const openRenameModal = () => {
+    renameDraft = agent?.operationName || "Main operation"
+    renameModal?.show()
+  }
+
+  const saveRename = () => {
+    if (!agent) {
+      return
+    }
+    const trimmedName = renameDraft.trim()
+    if (!trimmedName) {
+      notifications.error("Operation name is required.")
+      return
+    }
+    agent.operationName = trimmedName
+    onUpdated()
+    renameModal?.hide()
   }
 
   const handleAddOperation = () => {
@@ -110,6 +140,12 @@ Any constraints the agent must follow.
     contextMenuStore.open(
       "agent-operation",
       [
+        {
+          icon: "pencil",
+          name: "Edit",
+          visible: true,
+          callback: openRenameModal,
+        },
         {
           icon: "trash",
           name: "Delete",
@@ -181,6 +217,17 @@ Any constraints the agent must follow.
   {onUpdated}
   onClose={closeOperationPanel}
 />
+
+<Modal bind:this={renameModal}>
+  <ModalContent
+    title="Rename operation"
+    confirmText="Save"
+    disabled={!isRenameValid}
+    onConfirm={saveRename}
+  >
+    <Input label="Name" bind:value={renameDraft} />
+  </ModalContent>
+</Modal>
 
 <style>
   .operations-section {
