@@ -58,7 +58,11 @@ import {
   OnboardingWorkspaceRequest,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
-import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
+import {
+  DEFAULT_BB_DATASOURCE_ID,
+  ObjectStoreBuckets,
+  USERS_TABLE_SCHEMA,
+} from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -1417,6 +1421,20 @@ export async function updateWorkspacePackage(
     }
 
     // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
+    let deletedIconSources: string[] = []
+    const pwaIconSource = (src: string) => {
+      const signedIcon = objectStore.extractBucketAndPath(src)
+      if (signedIcon) {
+        return signedIcon.bucket === ObjectStoreBuckets.APPS
+          ? signedIcon.path
+          : undefined
+      }
+
+      return src
+    }
+    const isDefinedPwaIconSource = (src: string | undefined): src is string =>
+      src !== undefined
+
     if (workspacePackage.pwa && application.pwa) {
       if (workspacePackage.pwa.icons) {
         workspacePackage.pwa.icons = workspacePackage.pwa.icons.map(
@@ -1425,6 +1443,20 @@ export async function updateWorkspacePackage(
             application?.pwa?.icons?.[i]
               ? { ...icon, src: application?.pwa?.icons?.[i].src }
               : icon
+        )
+
+        const oldIconSources = new Set(
+          application.pwa.icons
+            .map(icon => pwaIconSource(icon.src))
+            .filter(isDefinedPwaIconSource)
+        )
+        const newIconSources = new Set(
+          workspacePackage.pwa.icons
+            .map(icon => pwaIconSource(icon.src))
+            .filter(isDefinedPwaIconSource)
+        )
+        deletedIconSources = [...oldIconSources].filter(
+          src => !newIconSources.has(src)
         )
       }
     }
@@ -1443,6 +1475,16 @@ export async function updateWorkspacePackage(
     delete newWorkspacePackage.lockedBy
 
     await db.put(newWorkspacePackage)
+    if (deletedIconSources.length > 0) {
+      try {
+        await objectStore.deleteFiles(
+          ObjectStoreBuckets.APPS,
+          deletedIconSources
+        )
+      } catch (error) {
+        console.error("Failed to delete removed PWA icons:", error)
+      }
+    }
     // remove any cached metadata, so that it will be updated
     await cache.workspace.invalidateWorkspaceMetadata(workspaceId)
     return newWorkspacePackage
