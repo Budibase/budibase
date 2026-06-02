@@ -234,5 +234,6 @@
   .add-tools-label img {
     object-fit: contain;
     pointer-events: none;
+    height: 18px;
   }
 </style>
