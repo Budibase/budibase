@@ -56,14 +56,10 @@ Any constraints the agent must follow.
   let operationPanelOpen = $state(false)
   let currentAgentId = $derived($selectedAgent?._id)
   let operationName = $derived(agent?.operationName?.trim() || "Main operation")
-  let hasOperation = $derived.by(() => {
-    if (!agent) {
-      return false
-    }
-    const hasInstructions = Boolean(agent.promptInstructions?.trim())
-    const hasEnabledTools = (agent.enabledTools?.length || 0) > 0
-    return hasInstructions || hasEnabledTools
-  })
+  let hasOperation = $derived(
+    Boolean(agent?.operationName?.trim()) ||
+      Boolean(agent?.promptInstructions?.trim())
+  )
 
   const openOperationPanel = () => {
     operationPanelOpen = true
@@ -79,7 +75,7 @@ Any constraints the agent must follow.
       return
     }
     if (agent) {
-      agent.operationName = agent.operationName?.trim()
+      agent.operationName = agent.operationName?.trim() || "Main operation"
       agent.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
     }
     onUpdated()
