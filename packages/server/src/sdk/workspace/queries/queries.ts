@@ -153,7 +153,7 @@ export async function enrichContext(
     }
   }
   const jsonField = ["json", "customData", "requestBody"].find(key =>
-    Object.prototype.hasOwnProperty.call(enrichedQuery, key)
+    Object.hasOwn(enrichedQuery, key)
   )
   if (jsonField) {
     try {
