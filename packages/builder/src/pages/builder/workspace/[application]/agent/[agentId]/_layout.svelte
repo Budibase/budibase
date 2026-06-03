@@ -110,8 +110,14 @@
       )
     } catch (error) {
       console.error(error)
+      const errorMessage = nextLive
+        ? "Error setting agent live"
+        : "Error stopping agent"
+
       notifications.error(
-        nextLive ? "Error setting agent live" : "Error stopping agent"
+        [errorMessage, (error as { message?: string }).message]
+          .filter(Boolean)
+          .join(": ")
       )
     } finally {
       togglingLive = false
