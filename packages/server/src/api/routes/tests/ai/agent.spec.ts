@@ -1,7 +1,9 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 
 describe("agent duplicate", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
 
   afterAll(() => {
     config.end()
@@ -9,6 +11,12 @@ describe("agent duplicate", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   it("duplicates an agent with a unique copy name", async () => {

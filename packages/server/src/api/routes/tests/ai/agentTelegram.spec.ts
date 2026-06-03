@@ -50,6 +50,7 @@ import {
   type ChatConversation,
 } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -76,6 +77,7 @@ const secretMatch = (plain: string, encoded: string) => {
 
 describe("agent telegram integration provisioning", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
 
   async function getPersistedAgent(id: string | undefined) {
     const result = await db.doWithDB(config.getDevWorkspaceId(), db =>
@@ -99,9 +101,18 @@ describe("agent telegram integration provisioning", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(
+      config,
+      "test-config"
+    )
     mockedWebhookChat.mockClear()
     resetMockChatState()
     mockFetch()
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   afterEach(() => {

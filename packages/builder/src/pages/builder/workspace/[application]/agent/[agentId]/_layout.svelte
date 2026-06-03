@@ -56,6 +56,9 @@
     if (!currentAgent?._id) {
       return false
     }
+    if (!currentAgent.live) {
+      return false
+    }
     const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
     if (!publishStatus?.publishedAt) {
       return false
@@ -107,8 +110,14 @@
       )
     } catch (error) {
       console.error(error)
+      const errorMessage = nextLive
+        ? "Error setting agent live"
+        : "Error stopping agent"
+
       notifications.error(
-        nextLive ? "Error setting agent live" : "Error stopping agent"
+        [errorMessage, (error as { message?: string }).message]
+          .filter(Boolean)
+          .join(": ")
       )
     } finally {
       togglingLive = false
