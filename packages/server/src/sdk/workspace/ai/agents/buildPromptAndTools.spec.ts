@@ -84,9 +84,13 @@ describe("buildPromptAndTools", () => {
       name: "Support Agent",
       aiconfig: "",
       operations: [
-        { id: "operation_1", name: "Main operation", enabledTools: [] },
+        {
+          id: "operation_1",
+          name: "Main operation",
+          enabledTools: [],
+          knowledgeBases: ["kb_1"],
+        },
       ],
-      knowledgeBases: ["kb_1"],
     } as Agent
 
     const result = await buildPromptAndTools(agent)
@@ -110,9 +114,13 @@ describe("buildPromptAndTools", () => {
       name: "Support Agent",
       aiconfig: "",
       operations: [
-        { id: "operation_1", name: "Main operation", enabledTools: [] },
+        {
+          id: "operation_1",
+          name: "Main operation",
+          enabledTools: [],
+          knowledgeBases: [],
+        },
       ],
-      knowledgeBases: [],
     } as Agent
 
     const result = await buildPromptAndTools(agent)
@@ -127,9 +135,13 @@ describe("buildPromptAndTools", () => {
       name: "Support Agent",
       aiconfig: "",
       operations: [
-        { id: "operation_1", name: "Main operation", enabledTools: [] },
+        {
+          id: "operation_1",
+          name: "Main operation",
+          enabledTools: [],
+          knowledgeBases: ["kb_1"],
+        },
       ],
-      knowledgeBases: ["kb_1"],
     } as Agent
 
     await expect(buildPromptAndTools(agent)).rejects.toThrow(

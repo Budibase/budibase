@@ -177,9 +177,13 @@ describe("agent test runner", () => {
       name: "Support Agent",
       aiconfig: "config-1",
       operations: [
-        { id: "operation_1", name: "Main operation", enabledTools: [] },
+        {
+          id: "operation_1",
+          name: "Main operation",
+          enabledTools: [],
+          knowledgeBases: [],
+        },
       ],
-      knowledgeBases: [],
     })
     sdk.ai.agents.buildPromptAndTools.mockResolvedValue({
       systemPrompt: "You are a helpful assistant.",
@@ -457,9 +461,13 @@ describe("agent test runner", () => {
       name: "Support Agent",
       aiconfig: "config-1",
       operations: [
-        { id: "operation_1", name: "Main operation", enabledTools: [] },
+        {
+          id: "operation_1",
+          name: "Main operation",
+          enabledTools: [],
+          knowledgeBases: ["kb-1"],
+        },
       ],
-      knowledgeBases: ["kb-1"],
     })
     mockAgentRun({ response: "The policy is 30 days." })
 
@@ -473,7 +481,11 @@ describe("agent test runner", () => {
         agent: expect.objectContaining({
           _id: "agent-1",
           aiconfig: "config-1",
-          knowledgeBases: ["kb-1"],
+          operations: [
+            expect.objectContaining({
+              knowledgeBases: ["kb-1"],
+            }),
+          ],
         }),
         aiConfigId: "config-1",
         errorLabel: "agent test",

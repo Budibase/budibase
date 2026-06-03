@@ -143,7 +143,13 @@ describe("agents crud", () => {
         _id: "agent_1",
         _rev: "1-abc",
         name: "Agent 1",
-        knowledgeBases: ["kb_1"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: ["kb_1"],
+          },
+        ],
       } as Agent
       const knowledgeBase = {
         _id: "kb_1",
@@ -187,7 +193,7 @@ describe("agents crud", () => {
           _id: agent._id,
           _rev: agent._rev,
           name: agent.name,
-          knowledgeBases: agent.knowledgeBases,
+          operations: agent.operations,
         })
       )
     })
@@ -197,7 +203,13 @@ describe("agents crud", () => {
         _id: "agent_2",
         _rev: "1-def",
         name: "Agent 2",
-        knowledgeBases: ["kb_missing"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: ["kb_missing"],
+          },
+        ],
       } as Agent
 
       mockDbTryGet.mockResolvedValue(agent)
@@ -213,7 +225,7 @@ describe("agents crud", () => {
           _id: agent._id,
           _rev: agent._rev,
           name: agent.name,
-          knowledgeBases: agent.knowledgeBases,
+          operations: agent.operations,
         })
       )
     })
@@ -223,7 +235,13 @@ describe("agents crud", () => {
         _id: "agent_del",
         _rev: "1-abc",
         name: "Delete Me",
-        knowledgeBases: [] as string[],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: [] as string[],
+          },
+        ],
       } as Agent
 
       mockDbTryGet.mockResolvedValue(agent)
@@ -240,7 +258,13 @@ describe("agents crud", () => {
         _id: "agent_3",
         _rev: "1-ghi",
         name: "Agent 3",
-        knowledgeBases: ["kb_3"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: ["kb_3"],
+          },
+        ],
       } as Agent
       const knowledgeBase = {
         _id: "kb_3",
@@ -317,9 +341,13 @@ describe("agents crud", () => {
         name: "Original Name",
         aiconfig: "cfg_1",
         operations: [
-          { id: "operation_1", name: "Main operation", enabledTools: [] },
+          {
+            id: "operation_1",
+            name: "Main operation",
+            enabledTools: [],
+            knowledgeBases: [],
+          },
         ],
-        knowledgeBases: [],
       } as Agent
 
       mockDbTryGet.mockResolvedValue(existing)
@@ -342,9 +370,13 @@ describe("agents crud", () => {
         name: "Original Name",
         aiconfig: "cfg_1",
         operations: [
-          { id: "operation_1", name: "Main operation", enabledTools: [] },
+          {
+            id: "operation_1",
+            name: "Main operation",
+            enabledTools: [],
+            knowledgeBases: [],
+          },
         ],
-        knowledgeBases: [],
         live: false,
       } as Agent
 
@@ -372,13 +404,13 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        knowledgeBases: [],
         operations: [
           {
             id: "operation_1",
             name: "Primary",
             promptInstructions: "Do work",
             enabledTools: [],
+            knowledgeBases: [],
           },
         ],
       } as Agent
@@ -405,13 +437,13 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        knowledgeBases: [],
         operations: [
           {
             id: "operation_1",
             name: "Primary",
             promptInstructions: "Do work",
             enabledTools: [],
+            knowledgeBases: [],
           },
         ],
       } as Agent
@@ -427,12 +459,14 @@ describe("agents crud", () => {
             name: "Primary",
             promptInstructions: "Do work",
             enabledTools: [],
+            knowledgeBases: [],
           },
           {
             id: "operation_2",
             name: "Secondary",
             promptInstructions: "Then do more",
             enabledTools: [],
+            knowledgeBases: [],
           },
         ],
       })

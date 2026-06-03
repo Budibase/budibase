@@ -144,9 +144,13 @@ describe("agent test run queue", () => {
         agentName: "Agent",
         aiconfig: "config-1",
         operations: [
-          { id: "operation_1", name: "Main operation", enabledTools: [] },
+          {
+            id: "operation_1",
+            name: "Main operation",
+            enabledTools: [],
+            knowledgeBases: [],
+          },
         ],
-        knowledgeBases: [],
       },
       results: [],
     }

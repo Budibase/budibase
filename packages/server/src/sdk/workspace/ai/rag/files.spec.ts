@@ -85,7 +85,13 @@ describe("rag files", () => {
       } satisfies KnowledgeBase
       mockAgentsGetOrThrow.mockResolvedValue({
         _id: "agent_1",
-        knowledgeBases: ["kb_existing"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: ["kb_existing"],
+          },
+        ],
       } satisfies Partial<Agent>)
       mockKnowledgeBaseFind.mockResolvedValue(existing)
 
@@ -110,7 +116,9 @@ describe("rag files", () => {
         _rev: "1-x",
         name: "Agent 1",
         aiconfig: "config_1",
-        knowledgeBases: [],
+        operations: [
+          { id: "operation_1", name: "Main operation", knowledgeBases: [] },
+        ],
       } as Agent
       const created = {
         _id: "kb_new",
@@ -122,19 +130,31 @@ describe("rag files", () => {
       mockKnowledgeBaseCreate.mockResolvedValue(created)
       mockAgentsUpdate.mockResolvedValue({
         ...agent,
-        knowledgeBases: [created._id],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: [created._id],
+          },
+        ],
       })
 
       const result = await ensureKnowledgeBaseForAgent("agent_1")
 
       expect(result).toEqual(created)
       expect(mockKnowledgeBaseCreate).toHaveBeenCalledWith({
-        name: `Agent files (${agent._id})`,
+        name: `Agent files (${agent._id}:operation_1)`,
         type: KnowledgeBaseType.GEMINI,
       })
       expect(mockAgentsUpdate).toHaveBeenCalledWith({
         ...agent,
-        knowledgeBases: [created._id],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: [created._id],
+          },
+        ],
       })
     })
   })
@@ -265,7 +285,13 @@ describe("rag files", () => {
       mockKnowledgeBaseGetFileOrThrow.mockResolvedValue(file)
       mockAgentsGetOrThrow.mockResolvedValue({
         _id: "agent_1",
-        knowledgeBases: [knowledgeBaseId],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: [knowledgeBaseId],
+          },
+        ],
       } as Partial<Agent>)
       mockKnowledgeBaseFind.mockResolvedValue(knowledgeBase)
 
@@ -289,7 +315,13 @@ describe("rag files", () => {
     }
     const defaultAgent = {
       _id: "agent_1",
-      knowledgeBases: [defaultKnowledgeBase._id],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          knowledgeBases: [defaultKnowledgeBase._id],
+        },
+      ],
     } as Agent
 
     it("returns empty context without searching when no knowledge bases are configured", async () => {
@@ -297,7 +329,9 @@ describe("rag files", () => {
         _id: "agent_1",
         name: "agent_name",
         aiconfig: "config",
-        knowledgeBases: [],
+        operations: [
+          { id: "operation_1", name: "Main operation", knowledgeBases: [] },
+        ],
       } satisfies Agent
 
       const result = await retrieveContextForAgent(agent, "What is Budibase?")
@@ -314,7 +348,13 @@ describe("rag files", () => {
     it("returns empty context for an empty question", async () => {
       const agent = {
         _id: "agent_1",
-        knowledgeBases: ["kb_1"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: ["kb_1"],
+          },
+        ],
       } as Agent
 
       const result = await retrieveContextForAgent(agent, "  ")
@@ -329,7 +369,13 @@ describe("rag files", () => {
     it("returns empty context when knowledge base ids are invalid", async () => {
       const agent = {
         _id: "agent_1",
-        knowledgeBases: ["missing_1", "missing_2"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: ["missing_1", "missing_2"],
+          },
+        ],
       } as Agent
       mockKnowledgeBaseFind.mockResolvedValue(undefined)
 
@@ -585,7 +631,13 @@ describe("rag files", () => {
       }
       const agent = {
         _id: "agent_1",
-        knowledgeBases: [knowledgeBaseOne._id, knowledgeBaseTwo._id],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            knowledgeBases: [knowledgeBaseOne._id, knowledgeBaseTwo._id],
+          },
+        ],
       } as Agent
 
       mockKnowledgeBaseFind.mockImplementation(async (id: string) => {

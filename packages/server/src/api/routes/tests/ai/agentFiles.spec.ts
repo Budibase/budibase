@@ -208,6 +208,12 @@ describe("agent files", () => {
     const created = await config.api.agent.create({
       name: "Support Agent",
       aiconfig: "default",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+        },
+      ],
     })
 
     const autoKbScope = mockAutoKnowledgeBaseCreate()
@@ -230,13 +236,19 @@ describe("agent files", () => {
 
     const refreshed = await config.api.agent.fetch()
     const saved = refreshed.agents.find(agent => agent._id === created._id)
-    expect(saved?.knowledgeBases?.length).toBe(1)
+    expect(saved?.operations?.[0]?.knowledgeBases?.length).toBe(1)
   })
 
   it("deletes an uploaded agent file", async () => {
     const created = await config.api.agent.create({
       name: "Support Agent",
       aiconfig: "default",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+        },
+      ],
     })
 
     mockAutoKnowledgeBaseCreate()
@@ -400,7 +412,7 @@ describe("agent files", () => {
         ...current!,
         name: "SharePoint Agent Update No Change 2",
         knowledgeSources: current!.knowledgeSources,
-        knowledgeBases: current!.knowledgeBases,
+        operations: current!.operations,
       } as any)
 
       expect(updated.name).toBe("SharePoint Agent Update No Change 2")
