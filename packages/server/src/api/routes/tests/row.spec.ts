@@ -3481,6 +3481,37 @@ if (descriptions.length) {
               relation: [table2_row1, table2_row2],
             })
           })
+
+          it("should replace a subset of many-to-many links in a single save", async () => {
+            const table2_row1 = await config.api.row.save(table2._id!, {
+              name: "one",
+            })
+            const table2_row2 = await config.api.row.save(table2._id!, {
+              name: "two",
+            })
+            const table2_row3 = await config.api.row.save(table2._id!, {
+              name: "three",
+            })
+
+            const row = await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [table2_row1, table2_row2],
+            })
+
+            await config.api.row.save(table1._id!, {
+              ...row,
+              relation: [table2_row2, table2_row3],
+            })
+
+            const updatedRow = await config.api.row.get(table1._id!, row._id!)
+            expect(updatedRow.relation).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({ _id: table2_row2._id }),
+                expect.objectContaining({ _id: table2_row3._id }),
+              ])
+            )
+            expect(updatedRow.relation).toHaveLength(2)
+          })
         })
 
       // Upserting isn't yet supported in MSSQL or Oracle, see:
