@@ -17,6 +17,7 @@
   import { onMount } from "svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import { recaptchaStore } from "@/stores/builder"
 
   $redirect
 
@@ -53,6 +54,7 @@
         },
       }
       await API.saveConfig(recaptchaConfig)
+      recaptchaStore.setAvailable(true)
       notifications.success(`Recaptcha configuration updated`)
     } catch (err: any) {
       notifications.error(
