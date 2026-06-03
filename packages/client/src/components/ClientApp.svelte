@@ -225,10 +225,11 @@
     class="spectrum spectrum--medium {resolvedThemeClassNames}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
+    style={$themeStore.customThemeCss}
   >
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
-    {:else if $featuresStore.recaptchaEnabled && $appStore.application?.features?.recaptchaEnabled && $appStore.recaptchaKey && !$recaptchaStore.verified && !$builderStore.inBuilder}
+    {:else if $appStore.recaptchaEnabled && $appStore.application?.features?.recaptchaEnabled && $appStore.recaptchaKey && !$recaptchaStore.verified && !$builderStore.inBuilder}
       <RecaptchaV2 />
     {:else}
       <EmbedProvider>
@@ -388,6 +389,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    font-family: var(--font-sans);
   }
   #spectrum-root.builder {
     background: transparent;

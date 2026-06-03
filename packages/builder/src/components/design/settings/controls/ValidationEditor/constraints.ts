@@ -1,3 +1,5 @@
+export { defaultErrorForConstraint } from "@budibase/types"
+
 export interface ValidationConstraintOption {
   label: string
   value: string

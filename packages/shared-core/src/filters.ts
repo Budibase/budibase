@@ -73,7 +73,6 @@ export const getValidOperatorsForType = (
     Op.LessThan,
     Op.Empty,
     Op.NotEmpty,
-    Op.In,
   ]
   const arrayOps = [
     Op.Contains,

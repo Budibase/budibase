@@ -17,6 +17,14 @@ export interface PrivatePostTarget {
   ) => Promise<unknown>
 }
 
+export const buildPlainTextLinkPrompt = ({
+  text,
+  linkUrl,
+}: {
+  text: string
+  linkUrl: string
+}) => `${text}\n${linkUrl}`
+
 export const buildLinkPromptCard = ({
   text,
   linkUrl,
@@ -46,18 +54,24 @@ export const postLinkPromptPrivately = async ({
   user,
   text,
   linkUrl,
+  renderMode,
 }: {
   target: PrivatePostTarget
   user: string | Author
   text: string
   linkUrl: string
+  renderMode?: "card" | "plainText"
 }): Promise<{
   delivered: boolean
   usedDirectMessageFallback: boolean
 }> => {
-  const card = buildLinkPromptCard({ text, linkUrl })
+  const message =
+    renderMode === "plainText"
+      ? buildPlainTextLinkPrompt({ text, linkUrl })
+      : buildLinkPromptCard({ text, linkUrl })
+
   try {
-    const response = await target.postEphemeral(user, card, {
+    const response = await target.postEphemeral(user, message, {
       fallbackToDM: true,
     })
     if (response) {

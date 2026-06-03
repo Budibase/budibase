@@ -37,6 +37,26 @@ const parseRetryAfterMs = (value: string | null): number | undefined => {
   return Math.max(0, dateMs - Date.now())
 }
 
+const getErrorStatus = (error: unknown): number | undefined => {
+  if (typeof error !== "object" || error == null || !("status" in error)) {
+    return
+  }
+
+  const status = (error as { status?: unknown }).status
+  return typeof status === "number" ? status : undefined
+}
+
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (typeof error !== "object" || error == null || !("message" in error)) {
+    return
+  }
+
+  const message = (error as { message?: unknown }).message
+  return typeof message === "string" && message.trim().length > 0
+    ? message
+    : undefined
+}
+
 const requestWithRetries = async (
   operation: string,
   request: () => Promise<Response>
@@ -182,6 +202,7 @@ const fetchSharePointSitesByAppToken = async (
       if (response.status === 401) {
         errorMessage =
           "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again."
+        throw new HTTPError(errorMessage, 401)
       } else if (response.status === 403) {
         errorMessage =
           "Access denied by Microsoft Graph. Ensure SharePoint application permissions are granted."
@@ -243,8 +264,35 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
   authConfigId: string
 ): Promise<KnowledgeSourceOption[]> => {
   await readConnection(datasourceId, authConfigId)
-  const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-  return fetchSharePointSitesByAppToken(bearerToken)
+  try {
+    const bearerToken = await getSharePointBearerToken(
+      datasourceId,
+      authConfigId
+    )
+    return await fetchSharePointSitesByAppToken(bearerToken)
+  } catch (error) {
+    if (getErrorStatus(error) !== 401) {
+      throw error
+    }
+
+    await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId, datasourceId)
+    try {
+      const bearerToken = await getSharePointBearerToken(
+        datasourceId,
+        authConfigId
+      )
+      return await fetchSharePointSitesByAppToken(bearerToken)
+    } catch (retryError) {
+      if (getErrorStatus(retryError) === 401) {
+        throw new HTTPError(
+          getErrorMessage(retryError) ||
+            "Authentication failed with Microsoft Graph. Verify SharePoint application credentials and try again.",
+          400
+        )
+      }
+      throw retryError
+    }
+  }
 }
 
 interface SharePointDrive {
@@ -258,6 +306,9 @@ interface SharePointDriveListResponse {
 interface SharePointDriveItem {
   id?: string
   name?: string
+  eTag?: string
+  lastModifiedDateTime?: string
+  size?: number
   file?: {
     mimeType?: string
   }
@@ -275,6 +326,9 @@ interface SharePointFileRef {
   filename: string
   path: string
   mimetype?: string
+  etag?: string
+  lastModifiedAt?: string
+  remoteSize?: number
 }
 
 export const listSharePointDrives = async (
@@ -315,8 +369,8 @@ const listSharePointDriveItems = async (
   itemId?: string
 ): Promise<SharePointDriveItem[]> => {
   const initialPath = itemId
-    ? `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/children?$top=200&$select=id,name,file,folder`
-    : `${SHAREPOINT_API_BASE}/drives/${driveId}/root/children?$top=200&$select=id,name,file,folder`
+    ? `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/children?$top=200&$select=id,name,eTag,lastModifiedDateTime,size,file,folder`
+    : `${SHAREPOINT_API_BASE}/drives/${driveId}/root/children?$top=200&$select=id,name,eTag,lastModifiedDateTime,size,file,folder`
 
   const items: SharePointDriveItem[] = []
   let nextLink = initialPath
@@ -399,6 +453,9 @@ export const collectSharePointFilesRecursive = async (
       filename: name,
       path: parentPath ? `${parentPath}/${name}` : name,
       mimetype: item.file.mimeType || undefined,
+      etag: item.eTag || undefined,
+      lastModifiedAt: item.lastModifiedDateTime || undefined,
+      remoteSize: item.size,
     })
   }
 

@@ -31,6 +31,8 @@
   export let useWorkspaceInviteModal = workspaceOnly
   export let assignToWorkspace = workspaceOnly
   export let inviteTitle = "Invite users to workspace"
+  export let showGroupSelect = !useWorkspaceInviteModal
+  export let showInviteIcon = true
 
   const password = generatePassword(12)
   let userGroups = []
@@ -378,11 +380,13 @@
   <svelte:fragment slot="header">
     {#if useWorkspaceInviteModal}
       <span class="modal-title">
-        <Icon
-          name="user-plus"
-          size="XL"
-          color="var(--spectrum-global-color-gray-600)"
-        />
+        {#if showInviteIcon}
+          <Icon
+            name="user-plus"
+            size="XL"
+            color="var(--spectrum-global-color-gray-600)"
+          />
+        {/if}
         <span>{inviteTitle}</span>
       </span>
     {/if}
@@ -463,6 +467,17 @@
           />
         {/if}
 
+        {#if showGroupSelect && $licensing.groupsEnabled && internalGroups?.length}
+          <Multiselect
+            bind:value={userGroups}
+            placeholder="No groups"
+            label="Add to groups (optional)"
+            options={internalGroups}
+            getOptionLabel={option => option.name}
+            getOptionValue={option => option._id}
+          />
+        {/if}
+
         <div class="onboarding">
           <Label size="L">Select onboarding</Label>
           <RadioGroup
@@ -534,7 +549,7 @@
     </Layout>
   {/if}
 
-  {#if !useWorkspaceInviteModal && $licensing.groupsEnabled && internalGroups?.length}
+  {#if !useWorkspaceInviteModal && showGroupSelect && $licensing.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"

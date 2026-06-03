@@ -523,6 +523,110 @@ describe("rest", () => {
     })
   })
 
+  it("should bind object parameters to unquoted json request body fields", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        method: "POST",
+      },
+    })
+
+    mockAgent!
+      .get("http://www.example.com")
+      .intercept({ path: "/", method: "POST" })
+      .reply(({ body }) => {
+        const payload = JSON.parse(toBodyString(body))
+        expect(payload).toEqual({
+          status: "requested",
+          amount: {
+            "2026-06-17": 1,
+            "2026-06-18": 1,
+          },
+        })
+        return {
+          statusCode: 200,
+          data: {},
+          responseOptions: { headers: jsonHeaders },
+        }
+      })
+
+    const query = await config.api.query.save({
+      datasourceId: datasource._id!,
+      name: generator.guid(),
+      parameters: [
+        { name: "status", default: "requested" },
+        { name: "amount", default: "{}" },
+      ],
+      queryVerb: "create",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        bodyType: BodyType.JSON,
+        requestBody: '{"status":"{{ status }}","amount": {{ amount }} }',
+      },
+    })
+
+    await config.api.query.execute(query._id!, {
+      parameters: {
+        status: "requested",
+        amount: '{"2026-06-17":1,"2026-06-18":1}',
+      },
+    })
+  })
+
+  it("should escape quoted json request body bindings", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        method: "POST",
+      },
+    })
+
+    const injectedName = 'alice","admin":true,"name":"bob'
+    mockAgent!
+      .get("http://www.example.com")
+      .intercept({ path: "/", method: "POST" })
+      .reply(({ body }) => {
+        const payload = JSON.parse(toBodyString(body))
+        expect(payload).toEqual({
+          name: injectedName,
+          role: "user",
+        })
+        return {
+          statusCode: 200,
+          data: {},
+          responseOptions: { headers: jsonHeaders },
+        }
+      })
+
+    const query = await config.api.query.save({
+      datasourceId: datasource._id!,
+      name: generator.guid(),
+      parameters: [{ name: "name", default: "alice" }],
+      queryVerb: "create",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        bodyType: BodyType.JSON,
+        requestBody: '{"name":"{{ name }}","role":"user"}',
+      },
+    })
+
+    await config.api.query.execute(query._id!, {
+      parameters: {
+        name: injectedName,
+      },
+    })
+  })
+
   it("should bind the current user to the request body - xml", async () => {
     const datasource = await config.api.datasource.create({
       name: generator.guid(),
@@ -1047,7 +1151,7 @@ describe("rest", () => {
               _id: authId,
               name: "OAuth2 Auth",
               type: RestAuthType.OAUTH2,
-              url: "https://auth.example.com/token",
+              url: "https://example.com/oauth/token",
               clientId: "my-client-id",
               clientSecret: "my-client-secret",
               method: OAuth2CredentialsMethod.BODY,
@@ -1057,7 +1161,7 @@ describe("rest", () => {
         },
       })
 
-      nock("https://auth.example.com").post("/token").reply(200, {
+      nock("https://example.com").post("/oauth/token").reply(200, {
         access_token: "oauth-access-token",
         token_type: "Bearer",
         expires_in: 3600,

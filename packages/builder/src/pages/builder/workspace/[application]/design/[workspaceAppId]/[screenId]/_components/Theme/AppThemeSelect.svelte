@@ -1,11 +1,11 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { themeStore, appStore } from "@/stores/builder"
+  import { themeStore } from "@/stores/builder"
   import { ThemeOptions, getThemeClassNames } from "@budibase/shared-core"
 
   const onChangeTheme = async theme => {
     try {
-      await themeStore.save(theme, $appStore.appId)
+      await themeStore.save(theme)
     } catch (error) {
       notifications.error("Error updating theme")
     }

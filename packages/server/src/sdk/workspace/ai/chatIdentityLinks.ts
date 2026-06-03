@@ -129,6 +129,9 @@ export const buildChatIdentityProviderRedirectUrl = ({
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "https://teams.microsoft.com"
   }
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return "https://web.telegram.org"
+  }
   return "https://discord.com/channels/@me"
 }
 
@@ -166,6 +169,23 @@ export const createChatIdentityLinkSession = async ({
 
 export const getChatIdentityLinkSession = async (token: string) =>
   loadSession(token)
+
+export const prepareChatIdentityLinkSessionConfirmation = async (
+  token: string
+) => {
+  const session = await loadSession(token)
+  if (!session || session.tenantId !== context.getTenantId()) {
+    return undefined
+  }
+
+  const confirmationToken = utils.newid()
+  const nextSession: ChatIdentityLinkSession = {
+    ...session,
+    confirmationToken,
+  }
+  await storeSession(nextSession)
+  return nextSession
+}
 
 export const consumeChatIdentityLinkSession = async (token: string) => {
   const session = await loadSession(token)

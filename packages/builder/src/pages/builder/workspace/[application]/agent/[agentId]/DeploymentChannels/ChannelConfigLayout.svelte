@@ -58,6 +58,10 @@
     gap: var(--spacing-s) var(--spacing-m);
   }
 
+  .field-grid :global(.field-grid-leading) {
+    grid-column: 1;
+  }
+
   .response-section {
     border-top: 1px solid var(--spectrum-global-color-gray-200);
     padding-top: var(--spacing-m);

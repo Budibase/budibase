@@ -61,6 +61,9 @@ Each commit requires permission.
 Never auto-push changes unless explicitly asked to do so. You may ask permission to push.
 Each push requires permission.
 
+Never auto-stage or add changes unless explicitly asked to do so. As a developer I want to review the changes that the LLM has made.
+Never unstage changes.
+
 For example, if I command `git add, commit, push` go ahead and do that once. Any subsequent changes will require permission. You may ask for permission on a per commit basis.
 
 ## Pull requests
