@@ -215,6 +215,35 @@ describe("/static", () => {
         expect(res.body.message).toEqual("bucket and key values are required")
       })
 
+      it("should reject buckets that do not match a datasource bucket constraint", async () => {
+        const constrainedDatasource = await config.createDatasource({
+          datasource: {
+            type: "datasource",
+            name: "Constrained Test",
+            source: SourceName.S3,
+            config: {
+              accessKeyId: "bb",
+              secretAccessKey: "bb",
+              bucket: "allowed-bucket",
+            },
+          },
+        })
+
+        const res = await request
+          .post(`/api/attachments/${constrainedDatasource._id}/url`)
+          .send({
+            bucket: "other-bucket",
+            key: "bar",
+          })
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(res.body.message).toEqual(
+          "bucket must match the datasource configuration"
+        )
+      })
+
       it("should allow non-creator app users to generate a signed upload URL", async () => {
         await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
           const res = await request
@@ -410,6 +439,78 @@ describe("/static", () => {
         expect(res.status).toEqual(500)
         expect(res.body.message).toMatch("No valid icons found in the zip file")
         expect(mockedUpload).not.toHaveBeenCalled()
+      })
+
+      it("rejects a symlinked icons.json file", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "icons.json")
+        await fsp.writeFile(
+          sensitiveFile,
+          JSON.stringify({
+            icons: [
+              {
+                src: "icon-192.png",
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          })
+        )
+        await fsp.writeFile(path.join(tempDir, "icon-192.png"), "fake-png-data")
+        await fsp.symlink(sensitiveFile, path.join(tempDir, "icons.json"))
+
+        try {
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(500)
+          expect(res.body.message).toMatch(
+            "Invalid zip structure - missing icons.json"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
+      })
+
+      it("skips icons whose src is a symlink to a file outside the zip directory", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "secret.png")
+        await fsp.writeFile(sensitiveFile, "sensitive-data")
+        await fsp.symlink(sensitiveFile, path.join(tempDir, "evil.png"))
+
+        try {
+          const iconsJson = {
+            icons: [
+              {
+                src: "evil.png",
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          }
+          await fsp.writeFile(
+            path.join(tempDir, "icons.json"),
+            JSON.stringify(iconsJson)
+          )
+
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(500)
+          expect(res.body.message).toMatch(
+            "No valid icons found in the zip file"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
       })
     })
   })

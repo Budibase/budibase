@@ -235,9 +235,18 @@ export async function externalTrigger(
     sdk.automations.isRowAction(automation) ||
     sdk.automations.isWebhookAction(automation)
   ) {
+    const {
+      appId: _appId,
+      timeout: _timeout,
+      user: _user,
+      metadata: _metadata,
+      automation: _automation,
+      ...fields
+    } = params.fields || {}
+
     params = {
       ...params,
-      ...params.fields,
+      ...fields,
       fields: {},
     }
   }
