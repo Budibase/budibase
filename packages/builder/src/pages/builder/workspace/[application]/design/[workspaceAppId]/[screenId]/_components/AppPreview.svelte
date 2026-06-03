@@ -200,8 +200,8 @@
       await componentStore.addParent(componentId, parentType)
     } else if (type === "set-preview-modal-device") {
       const { device } = data || {}
-      if (device === "mobile") {
-        previewStore.setModalDevice("mobile")
+      if (device === "mobile" || device === "tablet") {
+        previewStore.setModalDevice(device)
       } else {
         previewStore.resetModalDevice()
       }

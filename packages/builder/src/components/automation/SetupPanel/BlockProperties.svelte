@@ -6,7 +6,10 @@
     type AutomationStep,
     type AutomationTrigger,
     type Automation,
+    AutomationActionStepId,
+    AutomationStepType,
   } from "@budibase/types"
+  import { Checkbox, Divider } from "@budibase/bbui"
   import { type SchemaConfigProps } from "@/types/automations"
   import { writable } from "svelte/store"
   import { getCustomStepLayout } from "./layouts"
@@ -58,6 +61,25 @@
   $: if ($stepStore) {
     customLayout = getCustomStepLayout(block, stepStore)
   }
+
+  $: inputData = automationStore.actions.getInputData(block)
+  $: showContinueOnError =
+    block?.type === AutomationStepType.ACTION &&
+    [
+      AutomationActionStepId.EXECUTE_QUERY,
+      AutomationActionStepId.API_REQUEST,
+      AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+    ].includes(block.stepId)
+  $: continueOnError = Boolean(
+    inputData && "continueOnError" in inputData && inputData.continueOnError
+  )
+
+  const updateContinueOnError = (value: boolean) => {
+    if (!block || block.type !== AutomationStepType.ACTION) {
+      return
+    }
+    automationStore.actions.requestUpdate({ continueOnError: value }, block)
+  }
 </script>
 
 {#if customLayout}
@@ -67,3 +89,22 @@
   <!-- Render Automation Step Schema > [string, BaseIOStructure][] -->
   <AutomationSchemaLayout {context} {bindings} {block} />
 {/if}
+
+{#if showContinueOnError}
+  <Divider noMargin />
+  <div class="continue-on-error">
+    <Checkbox
+      text="Continue on error"
+      value={continueOnError}
+      on:change={e => {
+        updateContinueOnError(e.detail)
+      }}
+    />
+  </div>
+{/if}
+
+<style>
+  .continue-on-error {
+    padding: 0 0 var(--spacing-m) var(--spacing-m);
+  }
+</style>

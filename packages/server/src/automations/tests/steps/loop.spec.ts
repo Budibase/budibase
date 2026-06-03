@@ -1,6 +1,22 @@
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      action: {
+        ...actual.events.action,
+        automationStepExecuted: jest.fn(),
+        automationStepFailed: jest.fn(),
+      },
+    },
+  }
+})
+
 import * as automation from "../../index"
 import { basicTable } from "../../../tests/utilities/structures"
 import {
+  ActionFailureReason,
   Table,
   LoopStepType,
   ServerLogStepOutputs,
@@ -8,9 +24,11 @@ import {
   FieldType,
   FilterCondition,
   AutomationStepStatus,
+  AutomationStatus,
   AutomationStepResult,
   AutomationActionStepId,
 } from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -194,7 +212,7 @@ describe("Loop Automations", () => {
 
     expect(results.steps[0].outputs).toEqual(
       expect.objectContaining({
-        status: "FAILURE_CONDITION_MET",
+        status: AutomationStepStatus.FAILURE_CONDITION,
         success: false,
       })
     )
@@ -698,7 +716,7 @@ describe("Loop Automations", () => {
         refValue: 1,
         result: false,
         success: true,
-        status: "stopped",
+        status: AutomationStatus.STOPPED,
       })
     })
 
@@ -1124,7 +1142,7 @@ describe("Loop Automations", () => {
 
       // Check inner loop summaries
       expect(innerLoopResults[0].outputs.summary.totalProcessed).toBe(3)
-      expect(innerLoopResults[1].outputs.summary.totalProcessed).toBe(3)
+      expect(innerLoopResults[1].outputs.summary.totalProcessed).toBe(2)
     })
 
     it("should handle filter steps that stop execution within a loop iteration", async () => {
@@ -1147,8 +1165,8 @@ describe("Loop Automations", () => {
         .test({ fields: {} })
 
       expect(steps[0].outputs.success).toBe(true)
-      expect(steps[0].outputs.summary.totalProcessed).toBe(3)
-      expect(steps[0].outputs.summary.successCount).toBe(3)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(5)
+      expect(steps[0].outputs.summary.successCount).toBe(5)
 
       const loopResults = getLoopItems(steps[0].outputs)
       const [filterResults, logResults] = Object.values(loopResults)
@@ -1157,10 +1175,12 @@ describe("Loop Automations", () => {
       expect(logResults[0].outputs.message).toContain("Processed: process")
 
       expect(filterResults[1].outputs.result).toBe(false)
-      expect(filterResults[1].outputs.status).toBe("stopped")
+      expect(filterResults[1].outputs.status).toBe(AutomationStatus.STOPPED)
 
-      expect(logResults).toHaveLength(1)
+      expect(filterResults).toHaveLength(3)
+      expect(logResults).toHaveLength(2)
       expect(logResults[0].outputs.message).toContain("Processed: process")
+      expect(logResults[1].outputs.message).toContain("Processed: process")
     })
 
     it("sanitizes branch results in loop items", async () => {
@@ -1204,13 +1224,115 @@ describe("Loop Automations", () => {
       // Inputs should be stripped
       expect(first.inputs).toEqual({})
 
-      // Only expose success/status/branchName
+      // Only expose the data needed to render the selected branch
       expect(Object.keys(first.outputs).sort()).toEqual([
+        "branchId",
         "branchName",
         "status",
         "success",
       ])
       expect(first.outputs.branchName).toBe("takeA")
+      expect(first.outputs.branchId).toBeDefined()
+    })
+
+    it("stores branch child results in loop items", async () => {
+      const branchALogId = "11111111-1111-1111-1111-111111111111"
+      const branchBLogId = "22222222-2222-2222-2222-222222222222"
+      const afterBranchLogId = "33333333-3333-3333-3333-333333333333"
+
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.branch({
+                takeA: {
+                  steps: b =>
+                    b.serverLog(
+                      { text: "Branch A {{loop.currentItem}}" },
+                      { stepId: branchALogId }
+                    ),
+                  condition: {
+                    equal: { "{{ literal loop.currentItem }}": 1 },
+                  },
+                },
+                takeB: {
+                  steps: b =>
+                    b.serverLog(
+                      { text: "Branch B {{loop.currentItem}}" },
+                      { stepId: branchBLogId }
+                    ),
+                  condition: {
+                    notEqual: { "{{ literal loop.currentItem }}": 1 },
+                  },
+                },
+              }),
+              builder.serverLog(
+                { text: "After branch {{loop.currentItem}}" },
+                { stepId: afterBranchLogId }
+              ),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [1, 2],
+        })
+        .test({ fields: {} })
+
+      const items = getLoopItems(steps[0].outputs)
+
+      expect(items[branchALogId]).toHaveLength(1)
+      expect(items[branchALogId][0].outputs.message).toContain("Branch A 1")
+
+      expect(items[branchBLogId]).toHaveLength(1)
+      expect(items[branchBLogId][0].outputs.message).toContain("Branch B 2")
+
+      expect(items[afterBranchLogId]).toHaveLength(2)
+      expect(items[afterBranchLogId][0].outputs.message).toContain(
+        "After branch 1"
+      )
+      expect(items[afterBranchLogId][1].outputs.message).toContain(
+        "After branch 2"
+      )
+    })
+  })
+
+  describe("failed action telemetry", () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it("emits automationStepFailed with MAX_ITERATIONS when loop exceeds max iterations", async () => {
+      await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          option: LoopStepType.ARRAY,
+          binding: ["a", "b", "c"],
+          iterations: 2,
+          steps: s => s.serverLog({ text: "log" }),
+        })
+        .test({ fields: {} })
+
+      expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: ActionFailureReason.MAX_ITERATIONS })
+      )
+    })
+
+    it("emits automationStepFailed with FAILURE_CONDITION when loop matches failure condition", async () => {
+      await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          option: LoopStepType.ARRAY,
+          binding: ["ok", "stop", "also-ok"],
+          failure: "stop",
+          steps: s => s.serverLog({ text: "log" }),
+        })
+        .test({ fields: {} })
+
+      expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reason: ActionFailureReason.FAILURE_CONDITION,
+        })
+      )
     })
   })
 })

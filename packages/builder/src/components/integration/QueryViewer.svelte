@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { goto as gotoStore } from "@roxi/routify"
   import { datasources, integrations, queries } from "@/stores/builder"
   import {
@@ -12,6 +12,7 @@
     Divider,
     Button,
     ActionButton,
+    Checkbox,
   } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -24,37 +25,62 @@
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import QueryViewerSavePromptModal from "./QueryViewerSavePromptModal.svelte"
   import { Utils } from "@budibase/frontend-core"
-  import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import ConnectedQueryUsage from "./ConnectedQueryUsage.svelte"
   import { getErrorMessage } from "@/helpers/errors"
+  import type {
+    Datasource,
+    Integration,
+    PreviewQueryResponse,
+    Query,
+    QueryFields,
+    QuerySchema,
+    PaginationConfig,
+    UIInternalDatasource,
+  } from "@budibase/types"
+
+  type DatasourceOption = Datasource | UIInternalDatasource
+  type QueryField = keyof QueryFields
+  type QuerySchemaMap = Record<string, QuerySchema | string>
+  type NestedSchemaFields = NonNullable<Query["nestedSchemaFields"]>
+  type RunQueryOptions = {
+    suppressErrors?: boolean
+  }
 
   $: goto = $gotoStore
 
-  export let query
-  let queryHash
+  export let query: Query
+  let queryHash = ""
 
   let loading = false
   let modified = false
   let scrolling = false
   let showSidePanel = false
-  let nameError
+  let nameError: string | null = null
 
-  let newQuery
+  let newQuery: Query
 
-  let datasource
-  let integration
-  let schemaType
+  let datasource: DatasourceOption
+  let integration: Integration
+  let schemaType: QueryField | "fields"
 
-  let schema = {}
-  let nestedSchemaFields = {}
-  let rows = []
-  let keys = {}
+  let schema: QuerySchemaMap = {}
+  let nestedSchemaFields: NestedSchemaFields = {}
+  let rows: PreviewQueryResponse["rows"] = []
 
-  const parseQuery = query => {
+  let pagination: PaginationConfig | undefined = undefined
+
+  const parseQuery = (query: Query) => {
     modified = false
 
-    datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
-    integration = $integrations[datasource.source]
-    schemaType = integration.query[query.queryVerb].type
+    datasource = $datasources.list.find(
+      (ds: DatasourceOption) => ds._id === query.datasourceId
+    )!
+    const matchingIntegration = $integrations[datasource.source]
+    if (!matchingIntegration) {
+      return
+    }
+    integration = matchingIntegration
+    schemaType = matchingIntegration.query[query.queryVerb].type as QueryField
 
     newQuery = cloneDeep(query)
     // init schema from the query if one already exists
@@ -63,12 +89,26 @@
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
 
+    // Initialize pagination for SQL Read queries
+    if (newQuery.queryVerb === "read" && schemaType === "sql") {
+      if (!newQuery.fields.pagination) {
+        newQuery.fields.pagination = {
+          enabled: false,
+          offsetBinding: "offset",
+          limitBinding: "limit",
+        }
+      }
+      pagination = newQuery.fields.pagination
+    } else {
+      pagination = undefined
+    }
+
     queryHash = JSON.stringify(newQuery)
   }
 
   $: parseQuery(query)
 
-  const checkIsModified = newQuery => {
+  const checkIsModified = (newQuery: Query) => {
     const newQueryHash = JSON.stringify(newQuery)
     modified = newQueryHash !== queryHash
 
@@ -79,7 +119,7 @@
 
   $: debouncedCheckIsModified(newQuery)
 
-  async function runQuery({ suppressErrors = true }) {
+  async function runQuery({ suppressErrors = true }: RunQueryOptions = {}) {
     try {
       showSidePanel = true
       loading = true
@@ -125,7 +165,7 @@
       notifications.success("Query saved successfully")
       return response
     } catch (error) {
-      notifications.error(error.message || "Error saving query")
+      notifications.error(getErrorMessage(error) || "Error saving query")
     } finally {
       loading = false
     }
@@ -133,31 +173,66 @@
 
   function resetDependentFields() {
     if (newQuery.fields.extra) {
-      newQuery.fields.extra = {}
+      newQuery.fields.extra = {} as QueryFields["extra"]
     }
   }
 
-  function populateExtraQuery(extraQueryFields) {
+  function populateExtraQuery(extraQueryFields: Query["fields"]["extra"]) {
     newQuery.fields.extra = extraQueryFields
   }
 
-  const handleScroll = e => {
-    scrolling = e.target.scrollTop !== 0
+  const handleScroll = (e: Event) => {
+    scrolling =
+      e.currentTarget instanceof HTMLElement
+        ? e.currentTarget.scrollTop !== 0
+        : false
   }
 
-  async function handleKeyDown(evt) {
-    keys[evt.key] = true
-    if ((keys["Meta"] || keys["Control"]) && keys["Enter"]) {
-      await runQuery({ suppressErrors: false })
+  const handleBindingsChange = (
+    e: CustomEvent<{ name: string; value: string }[]>
+  ) => {
+    newQuery.parameters = e.detail.map(binding => {
+      return {
+        name: binding.name,
+        default: binding.value,
+      }
+    })
+  }
+
+  const handleSchemaChange = (newSchema?: QuerySchemaMap) => {
+    if (newSchema) {
+      schema = newSchema
     }
   }
 
-  function handleKeyUp(evt) {
-    delete keys[evt.key]
+  const setPaginationField = (field: string, value: unknown) => {
+    if (!newQuery.fields.pagination) {
+      newQuery.fields.pagination = {
+        enabled: false,
+        offsetBinding: "offset",
+        limitBinding: "limit",
+      }
+    }
+    const newPagination = {
+      ...newQuery.fields.pagination,
+      [field]: value,
+    }
+    // Reassign the parent fields object to trigger Svelte reactivity
+    newQuery.fields = {
+      ...newQuery.fields,
+      pagination: newPagination,
+    }
+    pagination = newQuery.fields.pagination
+  }
+
+  async function handleKeyDown(evt: KeyboardEvent) {
+    if (evt.key === "Enter" && (evt.metaKey || evt.ctrlKey)) {
+      await runQuery({ suppressErrors: false })
+    }
   }
 </script>
 
-<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
+<svelte:window on:keydown={handleKeyDown} />
 <QueryViewerSavePromptModal
   checkIsModified={() => checkIsModified(newQuery)}
   attemptSave={() => runQuery({ suppressErrors: false }).then(saveQuery)}
@@ -173,12 +248,13 @@
         </Body>
       </div>
       <div class="controls">
-        <ConnectedQueryScreens sourceId={query._id} />
+        {#if query._id}
+          <ConnectedQueryUsage sourceId={query._id} />
+        {/if}
         <ActionButton
           icon="play"
           disabled={loading}
-          on:click={runQuery}
-          overBackground
+          on:click={() => runQuery()}
         >
           Run query
         </ActionButton>
@@ -188,17 +264,19 @@
               const response = await saveQuery()
 
               // When creating a new query the initally passed in query object will have no id.
-              if (response._id && !newQuery._id) {
+              if (response?._id && !newQuery._id) {
                 // Set the comparison query hash to match the new query so that the user doesn't
                 // get nagged when navigating to the edit view
                 queryHash = JSON.stringify(newQuery)
                 goto(`../../${response._id}`)
               }
             }}
-            disabled={loading ||
+            disabled={!!(
+              loading ||
               !newQuery.name ||
               nameError ||
-              rows.length === 0}
+              rows.length === 0
+            )}
             overBackground
           >
             <Icon size="S" name="floppy-disk" />
@@ -215,7 +293,10 @@
           <Input
             value={newQuery.name}
             on:input={e => {
-              let newValue = e.target.value || ""
+              let newValue =
+                e.currentTarget instanceof HTMLInputElement
+                  ? e.currentTarget.value
+                  : ""
               if (newValue.match(ValidQueryNameRegex)) {
                 newQuery.name = newValue.trim()
                 nameError = null
@@ -223,7 +304,7 @@
                 nameError = "Invalid query name"
               }
             }}
-            error={nameError}
+            error={nameError || undefined}
           />
           {#if integration.query}
             <Label>Function</Label>
@@ -235,7 +316,7 @@
                 integration.query[verb]?.displayName || capitalise(verb)}
             />
             <Label>Access</Label>
-            <AccessLevelSelect query={newQuery} />
+            <AccessLevelSelect query={newQuery} label={undefined} />
             {#if integration?.extra && newQuery.queryVerb}
               <ExtraQueryConfig
                 query={newQuery}
@@ -249,7 +330,7 @@
         <Divider />
 
         <div class="heading">
-          <Heading weight="L" size="XS">Query</Heading>
+          <Heading weight="heavy" size="XS">Query</Heading>
         </div>
         <div class="copy">
           <Body size="S">
@@ -275,7 +356,7 @@
         <Divider />
 
         <div class="heading">
-          <Heading weight="L" size="XS">Bindings</Heading>
+          <Heading weight="heavy" size="XS">Bindings</Heading>
         </div>
         <div class="copy">
           <Body size="S">
@@ -286,22 +367,52 @@
         </div>
         {#key newQuery.parameters}
           <BindingBuilder
-            hideHeading
             queryBindings={newQuery.parameters}
-            on:change={e => {
-              newQuery.parameters = e.detail.map(binding => {
-                return {
-                  name: binding.name,
-                  default: binding.value,
-                }
-              })
-            }}
+            on:change={handleBindingsChange}
           />
         {/key}
 
+        {#if pagination && newQuery.queryVerb === "read"}
+          <Divider />
+          <div class="heading">
+            <Heading weight="heavy" size="XS">Pagination</Heading>
+          </div>
+          <div class="copy">
+            <Body size="S">
+              Enable pagination to support limit and offset parameters in this
+              query.
+            </Body>
+          </div>
+          <div class="pagination">
+            {#key pagination.enabled}
+              <Checkbox
+                text="Enable pagination"
+                bind:value={pagination.enabled}
+                on:change={e => setPaginationField("enabled", e.detail)}
+              />
+            {/key}
+            {#if pagination.enabled}
+              <div class="pagination-inputs">
+                <Input
+                  label="Offset binding name"
+                  placeholder="e.g., offset"
+                  value={pagination.offsetBinding}
+                  on:change={e => setPaginationField("offsetBinding", e.detail)}
+                />
+                <Input
+                  label="Limit binding name"
+                  placeholder="e.g., limit"
+                  value={pagination.limitBinding}
+                  on:change={e => setPaginationField("limitBinding", e.detail)}
+                />
+              </div>
+            {/if}
+          </div>
+        {/if}
+
         <Divider />
         <div class="heading">
-          <Heading weight="L" size="XS">Transformer</Heading>
+          <Heading weight="heavy" size="XS">Transformer</Heading>
         </div>
         <div class="copy">
           <Body size="S">
@@ -309,8 +420,9 @@
           </Body>
         </div>
         <CodeMirrorEditor
+          label={undefined}
           height={200}
-          value={newQuery.transformer}
+          value={newQuery.transformer || ""}
           resize="vertical"
           on:change={e => (newQuery.transformer = e.detail)}
         />
@@ -321,9 +433,7 @@
   <div class:showSidePanel class="sidePanel">
     <QueryViewerSidePanel
       onClose={() => (showSidePanel = false)}
-      onSchemaChange={newSchema => {
-        schema = newSchema
-      }}
+      onSchemaChange={handleSchemaChange}
       {rows}
       {schema}
     />
@@ -466,5 +576,17 @@
 
   .showSidePanel {
     width: 450px;
+  }
+
+  .pagination {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+
+  .pagination-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-m);
   }
 </style>

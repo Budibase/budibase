@@ -3,8 +3,9 @@
   import { KNOWLEDGE_FILE_ACCEPT_ATTRIBUTE } from "@budibase/types"
   import { notifications } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
-  import AddKnowledgeModal from "./AddKnowledgeModal.svelte"
+  import AddKnowledgeModal from "./new/AddKnowledgeModal.svelte"
   import type { PendingUpload } from "./knowledgeTableRows"
+  import addKnowledgeIcons from "assets/add-knowledge-icons.svg"
 
   const BYTES_IN_MB = 1024 * 1024
   const MAX_FILE_SIZE_BYTES = 100 * BYTES_IN_MB
@@ -171,8 +172,14 @@
   secondary
   disabled={isUploading}
   on:click={openAddKnowledgeModal}
-  >{isUploading ? uploadProgress || "Uploading..." : "Add knowledge"}</Button
 >
+  <span class="add-knowledge-label">
+    <span
+      >{isUploading ? uploadProgress || "Uploading..." : "Add knowledge"}</span
+    >
+    <img src={addKnowledgeIcons} alt="" />
+  </span>
+</Button>
 
 <input
   type="file"
@@ -190,3 +197,17 @@
   onUpload={handleUploadClick}
   onSharePoint={handleSharePoint}
 />
+
+<style>
+  .add-knowledge-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .add-knowledge-label img {
+    object-fit: contain;
+    pointer-events: none;
+    height: 18px;
+  }
+</style>

@@ -55,6 +55,7 @@
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
+    assignExistingUsersToGroups,
     buildWorkspaceInvitePayload,
     dedupeUsersByEmail,
     getEffectiveGroupIds,
@@ -289,8 +290,9 @@
     addUsersData: UserData,
     onboardingType?: string
   ) => {
-    // no-op if users already exist
-    userData = await removingDuplicities(addUsersData)
+    userData = isWorkspaceOnly
+      ? await removingDuplicities(addUsersData)
+      : dedupeUsersByEmail(addUsersData)
     if (!userData?.users?.length) {
       return
     }
@@ -304,9 +306,6 @@
   }
 
   async function createUserFlow() {
-    if (!isWorkspaceOnly) {
-      return
-    }
     let usersForInvite = userData?.users ?? []
     let assignedExistingUsers = false
     if (isWorkspaceOnly) {
@@ -326,6 +325,20 @@
         notifications.error("Error adding some users to workspace")
       }
       if (!usersForInvite.length) {
+        await refreshUserList()
+        return
+      }
+    } else {
+      const result = await assignExistingUsersToGroups(userData)
+      usersForInvite = result.newUsers
+      if (result.assignedCount && !usersForInvite.length) {
+        notifications.success("Users added to groups")
+      }
+      if (result.failedCount) {
+        notifications.error("Error adding some users to groups")
+      }
+      if (!usersForInvite.length) {
+        await groups.init()
         await refreshUserList()
         return
       }
@@ -396,11 +409,17 @@
       users.push(newUser)
     }
 
-    userData = await removingDuplicities({
-      groups,
-      users,
-      assignToWorkspace: isWorkspaceOnly,
-    })
+    userData = isWorkspaceOnly
+      ? await removingDuplicities({
+          groups,
+          users,
+          assignToWorkspace: isWorkspaceOnly,
+        })
+      : dedupeUsersByEmail({
+          groups,
+          users,
+          assignToWorkspace: isWorkspaceOnly,
+        })
     if (!userData.users.length) return
 
     return createUsers()
@@ -409,7 +428,9 @@
   async function createUsers() {
     try {
       addedToWorkspaceEmails = []
-      let usersForCreation = await removingDuplicities(userData)
+      let usersForCreation = isWorkspaceOnly
+        ? await removingDuplicities(userData)
+        : dedupeUsersByEmail(userData)
 
       if (isWorkspaceOnly) {
         const result = await assignExistingUsersToWorkspace(
@@ -427,6 +448,21 @@
           notifications.error("Error adding some users to workspace")
         }
         if (!usersForCreation.users.length) {
+          await refreshUserList()
+          return
+        }
+      } else {
+        const result = await assignExistingUsersToGroups(usersForCreation)
+        usersForCreation = { ...usersForCreation, users: result.newUsers }
+
+        if (result.assignedCount && !usersForCreation.users.length) {
+          notifications.success("Users added to groups")
+        }
+        if (result.failedCount) {
+          notifications.error("Error adding some users to groups")
+        }
+        if (!usersForCreation.users.length) {
+          await groups.init()
           await refreshUserList()
           return
         }
@@ -474,7 +510,7 @@
   }
 
   async function chooseCreationType(onboardingType: string) {
-    if (onboardingType === OnboardingType.EMAIL && isWorkspaceOnly) {
+    if (onboardingType === OnboardingType.EMAIL) {
       await createUserFlow()
     } else {
       await createUsers()
@@ -648,6 +684,16 @@
               >
                 <Icon name={"upload-simple"} size="M" />
               </ActionButton>
+              <Button
+                size="M"
+                disabled={readonly}
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : createUserModal.show}
+                cta
+              >
+                Invite users
+              </Button>
             {/if}
             {#if isWorkspaceOnly}
               <Button
@@ -697,21 +743,23 @@
   </div>
 </div>
 
-{#if isWorkspaceOnly}
-  <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
-    <AddUserModal
-      {showOnboardingTypeModal}
-      workspaceOnly={isWorkspaceOnly}
-      useWorkspaceInviteModal={isWorkspaceOnly}
-      assignToWorkspace={isWorkspaceOnly}
-      inviteTitle="Invite users to workspace"
-    />
-  </Modal>
+<Modal bind:this={createUserModal} closeOnOutsideClick={false}>
+  <AddUserModal
+    {showOnboardingTypeModal}
+    workspaceOnly={isWorkspaceOnly}
+    useWorkspaceInviteModal={true}
+    assignToWorkspace={isWorkspaceOnly}
+    inviteTitle={isWorkspaceOnly
+      ? "Invite users to workspace"
+      : "Invite user to organisation"}
+    showGroupSelect={!isWorkspaceOnly}
+    showInviteIcon={isWorkspaceOnly}
+  />
+</Modal>
 
-  <Modal bind:this={inviteConfirmationModal}>
-    <InvitedModal {inviteUsersResponse} />
-  </Modal>
-{/if}
+<Modal bind:this={inviteConfirmationModal}>
+  <InvitedModal {inviteUsersResponse} />
+</Modal>
 
 <Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal

@@ -3,6 +3,7 @@ import {
   docIds,
   encryption,
   env,
+  events,
   HTTPError,
 } from "@budibase/backend-core"
 import { licensing } from "@budibase/pro"
@@ -253,6 +254,7 @@ export async function create(
   }
 
   await liteLLM.syncKeyModels()
+  events.ai.configCreated(newConfig)
 
   return newConfig
 }
@@ -378,6 +380,8 @@ export async function update(
     }
   }
 
+  events.ai.configUpdated(updatedConfig)
+
   return updatedConfig
 }
 
@@ -386,6 +390,7 @@ export async function remove(id: string) {
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)
+  events.ai.configDeleted(existing)
 
   await liteLLM.syncKeyModels()
 }

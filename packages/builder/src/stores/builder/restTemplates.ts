@@ -1,15 +1,24 @@
 import type { RestTemplate, RestTemplateId } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import ActiveCampaignLogo from "assets/rest-template-icons/activecampaign.avif"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
+import ApolloLogo from "assets/rest-template-icons/apollo.avif"
 import AttioLogo from "assets/rest-template-icons/attio.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import ConfluenceLogo from "assets/rest-template-icons/confluence.svg"
+import CustomerIoLogo from "assets/rest-template-icons/customer-io.avif"
 import DiscordLogo from "assets/rest-template-icons/discord.svg"
+import DocuSignLogo from "assets/rest-template-icons/docusign.avif"
+import DocumensoLogo from "assets/rest-template-icons/documenso.svg"
 import FigmaLogo from "assets/rest-template-icons/figma.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
+import GongLogo from "assets/rest-template-icons/gong.avif"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import PandaDocLogo from "assets/rest-template-icons/pandadoc.avif"
+import PipedriveLogo from "assets/rest-template-icons/pipedrive.avif"
+import SalesforceLogo from "assets/rest-template-icons/salesforce.avif"
 import ServiceNowLogo from "assets/rest-template-icons/servicenow.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import SplunkLogo from "assets/rest-template-icons/splunk.svg"
@@ -115,7 +124,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Account%20Info/Rollouts/144923/2025-09/accountInfo.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/account-info/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -127,7 +136,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Actions%20V4/Rollouts/148901/v4/actionsV4.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/actions-v4/openapi.json",
         },
       ],
       operationsCount: 16,
@@ -139,7 +148,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/App%20Uninstalls/Rollouts/209039/v3/appUninstalls.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/app-uninstalls/openapi.json",
         },
       ],
       operationsCount: 1,
@@ -151,7 +160,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Appointments/Rollouts/424/2026-03/appointments.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/appointments/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -163,7 +172,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations/Rollouts/130902/2025-09/associations.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/associations/openapi.json",
         },
       ],
       operationsCount: 23,
@@ -175,7 +184,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations%20Schema/Rollouts/130902/v4/associationsSchema.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/associations-schema/openapi.json",
         },
       ],
       operationsCount: 9,
@@ -187,7 +196,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Audit%20Logs/Rollouts/144923/v3/auditLogs.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/audit-logs/openapi.json",
         },
       ],
       operationsCount: 3,
@@ -200,7 +209,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Authors/Rollouts/635/v3/authors.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/authors/openapi.json",
         },
       ],
       operationsCount: 14,
@@ -212,7 +221,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Automation%20V4/Rollouts/144908/v4/automationV4.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/automation-v4/openapi.json",
         },
       ],
       operationsCount: 8,
@@ -224,7 +233,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Blog%20Settings/Rollouts/635/v3/blogSettings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/blog-settings/openapi.json",
         },
       ],
       operationsCount: 9,
@@ -236,7 +245,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Bucket_Test111/Rollouts/424/v3/buckettest111.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/bucket-test111/openapi.json",
         },
       ],
       operationsCount: 10,
@@ -248,7 +257,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Business%20Units/Business%20Units/Rollouts/140946/v3/businessUnits.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/business-units/openapi.json",
         },
       ],
       operationsCount: 1,
@@ -260,7 +269,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Calling%20Extensions/Rollouts/145891/v3/callingExtensions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/calling-extensions/openapi.json",
         },
       ],
       operationsCount: 12,
@@ -273,7 +282,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Calls/Rollouts/424/2025-09/calls.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/calls/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -285,7 +294,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Campaigns%20Public%20Api/Rollouts/177944/v3/campaignsPublicApi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/campaigns-public-api/openapi.json",
         },
       ],
       operationsCount: 24,
@@ -298,7 +307,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Carts/Rollouts/424/2025-09/carts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/carts/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -311,7 +320,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Cms%20Content%20Audit/Rollouts/144888/v3/cmsContentAudit.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/cms-content-audit/openapi.json",
         },
       ],
       operationsCount: 1,
@@ -324,7 +333,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Commerce%20Payments/Rollouts/424/2025-09/commercePayments.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/commerce-payments/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -337,7 +346,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Commerce%20Subscriptions/Rollouts/206901/2025-09/commerceSubscriptions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/commerce-subscriptions/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -350,7 +359,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Communications/Rollouts/424/2025-09/communications.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/communications/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -363,7 +372,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Companies/Rollouts/424/2025-09/companies.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/companies/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -376,7 +385,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Contacts/Rollouts/424/2026-03/contacts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/contacts/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -389,7 +398,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Contracts/Rollouts/424/2025-09/contracts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/contracts/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -401,7 +410,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Conversations/Rollouts/54902/v3/conversations.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/conversations/openapi.json",
         },
       ],
       operationsCount: 16,
@@ -413,7 +422,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Conversations%20Inbox%20&%20Messages/Rollouts/54902/v3/conversationsInboxMessages.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/conversations-inbox-messages/openapi.json",
         },
       ],
       operationsCount: 16,
@@ -426,7 +435,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Courses/Rollouts/424/2025-09/courses.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/courses/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -439,7 +448,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Meetings/Rollouts/424/2025-09/meetings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/crm-meetings/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -452,7 +461,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Crm%20Owners/Rollouts/146888/v3/crmOwners.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/crm-owners/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -464,7 +473,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Custom%20Channels/Rollouts/160898/v3/customChannels.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/custom-channels/openapi.json",
         },
       ],
       operationsCount: 13,
@@ -477,7 +486,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Custom%20Objects/Rollouts/424/2026-03/customObjects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/custom-objects/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -489,7 +498,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Deal%20Splits/Rollouts/157885/v3/dealSplits.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/deal-splits/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -502,7 +511,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Deals/Rollouts/424/2025-09/deals.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/deals/openapi.json",
         },
       ],
       operationsCount: 15,
@@ -515,7 +524,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Discounts/Rollouts/424/2026-03/discounts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/discounts/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -527,7 +536,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Domains/Rollouts/149894/v3/domains.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/domains/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -540,7 +549,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Emails/Rollouts/424/2025-09/emails.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/emails/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -552,7 +561,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Events/Rollouts/147897/v3/events.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/events/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -564,7 +573,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Exports/Rollouts/95922/v3/exports.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/exports/openapi.json",
         },
       ],
       operationsCount: 3,
@@ -577,7 +586,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Feedback%20Submissions/Rollouts/424/2025-09/feedbackSubmissions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/feedback-submissions/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -590,7 +599,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Fees/Rollouts/424/2025-09/fees.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/fees/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -602,7 +611,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Files/Files/Rollouts/140950/v3/files.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/files/openapi.json",
         },
       ],
       operationsCount: 20,
@@ -614,7 +623,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Forms/Rollouts/144909/v3/forms.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/forms/openapi.json",
         },
       ],
       operationsCount: 6,
@@ -627,7 +636,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Goal%20Targets/Rollouts/424/2025-09/goalTargets.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/goal-targets/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -639,7 +648,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Hubdb/Rollouts/243927/v3/hubdb.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/hubdb/openapi.json",
         },
       ],
       operationsCount: 31,
@@ -651,7 +660,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Imports/Rollouts/144903/v3/imports.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/imports/openapi.json",
         },
       ],
       operationsCount: 5,
@@ -664,7 +673,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Invoices/Rollouts/424/2025-09/invoices.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/invoices/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -677,7 +686,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Leads/Rollouts/424/2025-09/leads.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/leads/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -689,7 +698,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Limits%20Tracking/Rollouts/199890/v3/limitsTracking.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/limits-tracking/openapi.json",
         },
       ],
       operationsCount: 9,
@@ -702,7 +711,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Line%20Items/Rollouts/424/2025-09/lineItems.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/line-items/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -715,7 +724,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Listings/Rollouts/424/2025-09/listings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/listings/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -727,7 +736,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Lists/Rollouts/144891/v3/lists.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/lists/openapi.json",
         },
       ],
       operationsCount: 28,
@@ -739,7 +748,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Manage%20Event%20Definitions/Rollouts/138888/v3/manageEventDefinitions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/manage-event-definitions/openapi.json",
         },
       ],
       operationsCount: 9,
@@ -751,7 +760,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Emails/Rollouts/145892/v3/marketingEmails.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/marketing-emails/openapi.json",
         },
       ],
       operationsCount: 19,
@@ -763,7 +772,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Emails%20V3/Rollouts/155892/v3/marketingEmailsV3.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/marketing-emails-v3/openapi.json",
         },
       ],
       operationsCount: 19,
@@ -775,7 +784,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Events/Rollouts/129888/v3/marketingEvents.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/marketing-events/openapi.json",
         },
       ],
       operationsCount: 36,
@@ -787,7 +796,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Media%20Bridge/Rollouts/787/v1/mediaBridge.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/media-bridge/openapi.json",
         },
       ],
       operationsCount: 32,
@@ -799,7 +808,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/Multicurrency/Rollouts/145897/v3/multicurrency.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/multicurrency/openapi.json",
         },
       ],
       operationsCount: 15,
@@ -812,7 +821,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Notes/Rollouts/424/2025-09/notes.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/notes/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -824,7 +833,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Auth/Oauth/Rollouts/155908/v1/oauth.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/oauth/openapi.json",
         },
       ],
       operationsCount: 4,
@@ -836,7 +845,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Object%20Library/Rollouts/196908/v3/objectLibrary.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/object-library/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -849,7 +858,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Objects/Rollouts/424/2025-09/objects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/objects/openapi.json",
         },
       ],
       operationsCount: 11,
@@ -862,7 +871,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Orders/Rollouts/424/2025-09/orders.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/orders/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -874,7 +883,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Meta/Origins/Rollouts/277913/v1/origins.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/origins/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -887,7 +896,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Pages/Rollouts/59888/v3/pages.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/pages/openapi.json",
         },
       ],
       operationsCount: 66,
@@ -900,7 +909,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Partner%20Clients/Rollouts/424/2025-09/partnerClients.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/partner-clients/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -913,7 +922,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Partner%20Services/Rollouts/424/2025-09/partnerServices.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/partner-services/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -925,7 +934,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Payments/Rollouts/424/v3/payments.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/payments/openapi.json",
         },
       ],
       operationsCount: 4,
@@ -938,7 +947,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Pipelines/Rollouts/145896/v3/pipelines.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/pipelines/openapi.json",
         },
       ],
       operationsCount: 14,
@@ -951,7 +960,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Postal%20Mail/Rollouts/424/2025-09/postalMail.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/postal-mail/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -964,7 +973,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Posts/Rollouts/635/v3/posts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/posts/openapi.json",
         },
       ],
       operationsCount: 24,
@@ -977,7 +986,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Products/Rollouts/424/2025-09/products.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/products/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -990,7 +999,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Projects/Rollouts/260890/v3/projects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/projects/openapi.json",
         },
       ],
       operationsCount: 12,
@@ -1003,7 +1012,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Properties/Rollouts/145899/2025-09/properties.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/properties/openapi.json",
         },
       ],
       operationsCount: 13,
@@ -1015,7 +1024,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Property%20Validations/Rollouts/215885/v3/propertyValidations.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/property-validations/openapi.json",
         },
       ],
       operationsCount: 4,
@@ -1028,7 +1037,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Public%20App%20Crm%20Cards/Rollouts/147892/v3/publicAppCrmCards.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/public-app-crm-cards/openapi.json",
         },
       ],
       operationsCount: 6,
@@ -1040,7 +1049,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Public%20App%20Feature%20Flags%20V3/Rollouts/195919/v3/publicAppFeatureFlagsV3.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/public-app-feature-flags-v3/openapi.json",
         },
       ],
       operationsCount: 9,
@@ -1053,7 +1062,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Quotes/Rollouts/424/2025-09/quotes.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/quotes/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -1065,7 +1074,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Scheduler/Meetings/Rollouts/177892/v3/meetings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/scheduler-meetings/openapi.json",
         },
       ],
       operationsCount: 5,
@@ -1078,7 +1087,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Schemas/Rollouts/145900/v3/schemas.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/schemas/openapi.json",
         },
       ],
       operationsCount: 7,
@@ -1090,7 +1099,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Send%20Event%20Completions/Rollouts/669/v3/sendEventCompletions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/send-event-completions/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -1102,7 +1111,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Sequences/Rollouts/177891/v4/sequences.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/sequences/openapi.json",
         },
       ],
       operationsCount: 4,
@@ -1115,7 +1124,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Services/Rollouts/424/2025-09/services.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/services/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -1127,7 +1136,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Single-send/Rollouts/106894/v4/singlesend.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/single-send/openapi.json",
         },
       ],
       operationsCount: 1,
@@ -1140,7 +1149,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Site%20Search/Rollouts/144890/v3/siteSearch.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/site-search/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -1153,7 +1162,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Source%20Code/Rollouts/140886/v3/sourceCode.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/source-code/openapi.json",
         },
       ],
       operationsCount: 8,
@@ -1165,7 +1174,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Subscription%20Lifecycle/Rollouts/206901/v1/subscriptionLifecycle.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/subscription-lifecycle/openapi.json",
         },
       ],
       operationsCount: 3,
@@ -1177,7 +1186,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Communication%20Preferences/Subscriptions/Rollouts/176901/v4/subscriptions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/subscriptions/openapi.json",
         },
       ],
       operationsCount: 10,
@@ -1190,7 +1199,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Tags/Rollouts/635/v3/tags.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tags/openapi.json",
         },
       ],
       operationsCount: 14,
@@ -1203,7 +1212,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Tasks/Rollouts/424/2025-09/tasks.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tasks/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -1215,7 +1224,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/Tax%20Rates/Rollouts/207908/v1/taxRates.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tax-rates/openapi.json",
         },
       ],
       operationsCount: 2,
@@ -1228,7 +1237,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Taxes/Rollouts/424/2025-09/taxes.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/taxes/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -1240,7 +1249,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Test%20Child%20Api/Rollouts/144923/v3/testChildApi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/test-child-api/openapi.json",
         },
       ],
       operationsCount: 4,
@@ -1253,7 +1262,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Tickets/Rollouts/424/2025-09/tickets.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tickets/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -1266,7 +1275,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Timeline/Rollouts/147898/v3/timeline.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/timeline/openapi.json",
         },
       ],
       operationsCount: 13,
@@ -1278,7 +1287,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Transactional%20Single%20Send/Rollouts/140892/v3/transactionalSingleSend.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/transactional-single-send/openapi.json",
         },
       ],
       operationsCount: 6,
@@ -1290,7 +1299,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Transcriptions/Rollouts/178922/v3/transcriptions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/transcriptions/openapi.json",
         },
       ],
       operationsCount: 3,
@@ -1302,7 +1311,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Url%20Redirects/Rollouts/149916/v3/urlRedirects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/url-redirects/openapi.json",
         },
       ],
       operationsCount: 5,
@@ -1314,7 +1323,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/User%20Provisioning/Rollouts/144927/v3/userProvisioning.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/user-provisioning/openapi.json",
         },
       ],
       operationsCount: 7,
@@ -1327,7 +1336,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Users/Rollouts/424/2025-09/users.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/users/openapi.json",
         },
       ],
       operationsCount: 17,
@@ -1340,7 +1349,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Video%20Conferencing%20Extension/Rollouts/148903/v3/videoConferencingExtension.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/video-conferencing-extension/openapi.json",
         },
       ],
       operationsCount: 3,
@@ -1353,7 +1362,7 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Visitor%20Identification/Rollouts/140938/v3/visitorIdentification.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/visitor-identification/openapi.json",
         },
       ],
       operationsCount: 1,
@@ -1366,10 +1375,110 @@ const hubspotRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Webhooks/Webhooks/Rollouts/147891/v3/webhooks.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/webhooks/openapi.json",
         },
       ],
       operationsCount: 9,
+    },
+  ],
+}
+
+const docusignRestTemplateGroup: RestTemplate = {
+  id: "docusign",
+  name: "DocuSign",
+  icon: DocuSignLogo,
+  description: "Electronic signature and agreement workflows.",
+  connectionMode: "independent",
+  operationsCount: 405,
+  templates: [
+    {
+      id: "docusign-esignature",
+      name: "eSignature",
+      description:
+        "Send, sign, manage, and track DocuSign eSignature envelopes.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/docusign/esignature/openapi.yaml",
+        },
+      ],
+      operationsCount: 405,
+    },
+  ],
+}
+
+const gongRestTemplateGroup: RestTemplate = {
+  id: "gong",
+  name: "Gong",
+  icon: GongLogo,
+  description:
+    "Revenue intelligence, conversations, calls, users, and engagement workflows.",
+  connectionMode: "independent",
+  operationsCount: 62,
+  templates: [
+    {
+      id: "gong-public-api",
+      name: "Public API",
+      description:
+        "Access Gong calls, transcripts, users, scorecards, libraries, and conversation data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/gong/public-api/openapi.yaml",
+        },
+      ],
+      operationsCount: 56,
+    },
+    {
+      id: "gong-engage",
+      name: "Engage",
+      description:
+        "Manage Gong Engage flows, folders, and engagement workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/gong/engage/openapi.yaml",
+        },
+      ],
+      operationsCount: 6,
+    },
+  ],
+}
+
+const salesforceRestTemplateGroup: RestTemplate = {
+  id: "salesforce",
+  name: "Salesforce",
+  icon: SalesforceLogo,
+  description:
+    "CRM data, sObjects, SOQL queries, composite requests, and bulk jobs.",
+  connectionMode: "shared",
+  operationsCount: 29,
+  templates: [
+    {
+      id: "salesforce-core",
+      name: "Core",
+      description:
+        "Query, describe, read, write, and compose Salesforce sObject data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/salesforce/core/openapi.yaml",
+        },
+      ],
+      operationsCount: 14,
+    },
+    {
+      id: "salesforce-bulk-api-2",
+      name: "Bulk API 2.0",
+      description:
+        "Asynchronous large-volume ingest, delete, upsert, and query jobs for Salesforce data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/salesforce/bulk-api-2/openapi.yaml",
+        },
+      ],
+      operationsCount: 15,
     },
   ],
 }
@@ -1391,7 +1500,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_accounts_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/accounts/openapi.yaml",
         },
       ],
       operationsCount: 20,
@@ -1403,7 +1512,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_assistants_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/assistants/openapi.yaml",
         },
       ],
       operationsCount: 30,
@@ -1416,7 +1525,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_bulkexports_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/bulk-exports/openapi.yaml",
         },
       ],
       operationsCount: 9,
@@ -1428,7 +1537,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_chat_v3.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/chat/openapi.yaml",
         },
       ],
       operationsCount: 1,
@@ -1440,7 +1549,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_content_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/content/openapi.yaml",
         },
       ],
       operationsCount: 2,
@@ -1452,7 +1561,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_conversations_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/conversations/openapi.yaml",
         },
       ],
       operationsCount: 103,
@@ -1465,7 +1574,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_events_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/events/openapi.yaml",
         },
       ],
       operationsCount: 22,
@@ -1477,7 +1586,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_flex_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/flex/openapi.yaml",
         },
       ],
       operationsCount: 3,
@@ -1490,7 +1599,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_frontline_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/frontline/openapi.yaml",
         },
       ],
       operationsCount: 2,
@@ -1502,7 +1611,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_iam_organizations.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/iam-organizations/openapi.yaml",
         },
       ],
       operationsCount: 12,
@@ -1514,7 +1623,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_insights_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/insights/openapi.yaml",
         },
       ],
       operationsCount: 17,
@@ -1526,7 +1635,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_intelligence_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/intelligence/openapi.yaml",
         },
       ],
       operationsCount: 29,
@@ -1538,7 +1647,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_ip_messaging_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/ip-messaging/openapi.yaml",
         },
       ],
       operationsCount: 54,
@@ -1550,7 +1659,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_knowledge_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/knowledge/openapi.yaml",
         },
       ],
       operationsCount: 7,
@@ -1562,7 +1671,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_lookups_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/lookups/openapi.yaml",
         },
       ],
       operationsCount: 10,
@@ -1574,7 +1683,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_marketplace_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/marketplace/openapi.yaml",
         },
       ],
       operationsCount: 18,
@@ -1586,7 +1695,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_monitor_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/monitor/openapi.yaml",
         },
       ],
       operationsCount: 6,
@@ -1598,7 +1707,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_notify_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/notify/openapi.yaml",
         },
       ],
       operationsCount: 15,
@@ -1610,7 +1719,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_numbers_v3.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/numbers/openapi.yaml",
         },
       ],
       operationsCount: 1,
@@ -1623,7 +1732,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_oauth_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/oauth/openapi.yaml",
         },
       ],
       operationsCount: 1,
@@ -1635,7 +1744,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_preview.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/preview/openapi.yaml",
         },
       ],
       operationsCount: 34,
@@ -1647,7 +1756,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_pricing_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/pricing/openapi.yaml",
         },
       ],
       operationsCount: 6,
@@ -1659,7 +1768,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_proxy_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/proxy/openapi.yaml",
         },
       ],
       operationsCount: 25,
@@ -1671,7 +1780,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_routes_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/routes/openapi.yaml",
         },
       ],
       operationsCount: 6,
@@ -1683,7 +1792,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_serverless_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/serverless/openapi.yaml",
         },
       ],
       operationsCount: 39,
@@ -1695,7 +1804,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_studio_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/studio/openapi.yaml",
         },
       ],
       operationsCount: 19,
@@ -1707,7 +1816,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_supersim_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/super-sim/openapi.yaml",
         },
       ],
       operationsCount: 31,
@@ -1719,7 +1828,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_sync_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/sync/openapi.yaml",
         },
       ],
       operationsCount: 48,
@@ -1731,7 +1840,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_taskrouter_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/taskrouter/openapi.yaml",
         },
       ],
       operationsCount: 61,
@@ -1744,7 +1853,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_trunking_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/trunking/openapi.yaml",
         },
       ],
       operationsCount: 24,
@@ -1756,7 +1865,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_trusthub_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/trusthub/openapi.yaml",
         },
       ],
       operationsCount: 53,
@@ -1768,7 +1877,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_video_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/video/openapi.yaml",
         },
       ],
       operationsCount: 39,
@@ -1780,7 +1889,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_voice_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/voice/openapi.yaml",
         },
       ],
       operationsCount: 32,
@@ -1792,7 +1901,7 @@ const twilioRestTemplateGroup: RestTemplate = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_wireless_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/wireless/openapi.yaml",
         },
       ],
       operationsCount: 16,
@@ -1934,6 +2043,33 @@ const splunkRestTemplateGroup: RestTemplate = {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
+      id: "activecampaign",
+      name: "ActiveCampaign",
+      description: "Email marketing, CRM, and automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/activecampaign/openapi.yaml",
+        },
+      ],
+      operationsCount: 256,
+      icon: ActiveCampaignLogo,
+    },
+    {
+      id: "apollo",
+      name: "Apollo",
+      description:
+        "Sales intelligence, lead enrichment, prospecting, and engagement.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/apollo/openapi.yaml",
+        },
+      ],
+      operationsCount: 39,
+      icon: ApolloLogo,
+    },
+    {
       id: "attio",
       name: "Attio",
       description:
@@ -1941,7 +2077,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0.0",
-          url: "https://api.attio.com/openapi/api",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/attio/openapi.json",
         },
       ],
       operationsCount: 66,
@@ -1955,7 +2091,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://openapi.bamboohr.io/main/latest/docs/openapi/public-openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/bamboohr/openapi.yaml",
         },
       ],
       operationsCount: 134,
@@ -1975,17 +2111,44 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ConfluenceLogo,
     },
     {
+      id: "customer-io",
+      name: "Customer.io",
+      description: "Customer messaging, campaigns, broadcasts, and automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/customer-io/openapi.yaml",
+        },
+      ],
+      operationsCount: 111,
+      icon: CustomerIoLogo,
+    },
+    {
       id: "discord",
       name: "Discord",
       description: "Discord API for guilds, channels, messages, and webhooks",
       specs: [
         {
           version: "10",
-          url: "https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/discord/openapi.json",
         },
       ],
       operationsCount: 227,
       icon: DiscordLogo,
+    },
+    {
+      id: "documenso",
+      name: "Documenso",
+      description:
+        "Open source document signing, templates, recipients, fields, and e-signature workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/documenso/openapi.yaml",
+        },
+      ],
+      operationsCount: 85,
+      icon: DocumensoLogo,
     },
     {
       id: "figma",
@@ -1995,7 +2158,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "0.35.0",
-          url: "https://raw.githubusercontent.com/figma/rest-api-spec/main/openapi/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/figma/openapi.yaml",
         },
       ],
       operationsCount: 46,
@@ -2009,7 +2172,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.1.4",
-          url: "https://raw.githubusercontent.com/github/rest-api-description/refs/heads/main/descriptions/api.github.com/api.github.com.2022-11-28.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/github/openapi.yaml",
         },
       ],
       operationsCount: 1078,
@@ -2017,7 +2180,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "jira-cloud",
-      name: "Jira Cloud",
+      name: "Jira",
       description:
         "Build apps, script interactions with Jira, or develop any other type of integration",
       specs: [
@@ -2031,13 +2194,13 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "okta-management",
-      name: "Okta Management",
+      name: "Okta",
       description:
         "Configure and manage authorization servers and the security policies attached to them, enabling centralized control over API access",
       specs: [
         {
           version: "2025.11.0",
-          url: "https://raw.githubusercontent.com/okta/okta-management-openapi-spec/master/dist/current/management-oneOfInheritance.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/okta-management/openapi.yaml",
         },
       ],
       operationsCount: 694,
@@ -2051,7 +2214,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0.0",
-          url: "https://raw.githubusercontent.com/PagerDuty/api-schema/main/reference/REST/openapiv3.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pagerduty/openapi.json",
         },
       ],
       operationsCount: 390,
@@ -2059,13 +2222,13 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "slack-web-api",
-      name: "Slack Web API",
+      name: "Slack",
       description:
         "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
       specs: [
         {
           version: "1.7.0",
-          url: "https://api.slack.com/specs/openapi/v2/slack_web.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/slack-web-api/openapi.json",
         },
       ],
       operationsCount: 172,
@@ -2093,7 +2256,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.0",
-          url: "https://github.com/VirusTotal/vt-py/files/13278605/vt-api-v3-openapi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/virustotal/openapi.json",
         },
       ],
       operationsCount: 159,
@@ -2134,7 +2297,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2026-01-28.clover",
-          url: "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/stripe/openapi.yaml",
         },
       ],
       operationsCount: 587,
@@ -2272,7 +2435,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.0.0",
-          url: "https://dev.clever.com/openapi/6054fe66dc8ea400120e9f7a",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/clever/openapi.yaml",
         },
       ],
       operationsCount: 42,
@@ -2659,7 +2822,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://openrouter.ai/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/openrouter/openapi.yaml",
         },
       ],
       operationsCount: 57,
@@ -2667,7 +2830,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       id: "oyster-hr",
-      name: "Oyster HR",
+      name: "Oyster",
       description:
         "Oyster HR uses OAuth2 to enable customers to grant access to their data to third party applications.",
       specs: [
@@ -2691,6 +2854,34 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 22,
       icon: PeachPaymentsLogo,
+    },
+    {
+      id: "pandadoc",
+      name: "PandaDoc",
+      description:
+        "Document generation, e-signatures, templates, and workflow automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pandadoc/openapi.yaml",
+        },
+      ],
+      operationsCount: 115,
+      icon: PandaDocLogo,
+    },
+    {
+      id: "pipedrive",
+      name: "Pipedrive",
+      description:
+        "CRM deals, contacts, organizations, activities, projects, and sales workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pipedrive/openapi.yaml",
+        },
+      ],
+      operationsCount: 264,
+      icon: PipedriveLogo,
     },
     {
       id: "pinpoint",
@@ -3017,8 +3208,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       operationsCount: 80,
       icon: XLogo,
     },
+    docusignRestTemplateGroup,
+    gongRestTemplateGroup,
     hubspotRestTemplateGroup,
     microsoftSharepointRestTemplateGroup,
+    salesforceRestTemplateGroup,
     splunkRestTemplateGroup,
     twilioRestTemplateGroup,
     zendeskRestTemplateGroup,

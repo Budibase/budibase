@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@budibase/types": "*",
-    "cron-validate": "1.4.5"
+    "cron-validate": "1.4.5",
+    "minimatch": "^10.2.5"
   },
   "devDependencies": {
     "rimraf": "3.0.2"

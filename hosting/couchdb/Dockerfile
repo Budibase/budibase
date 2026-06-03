@@ -146,6 +146,8 @@ WORKDIR /opt/sqs
 ADD sqs ./
 RUN chmod +x ./install.sh && ./install.sh
 
+RUN npm install -g pm2
+
 WORKDIR /
 ADD runner.sh ./bbcouch-runner.sh
 RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau /opt/sqs/sqs

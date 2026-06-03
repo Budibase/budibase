@@ -46,10 +46,6 @@ class UserStore extends BudiStore<UserState> {
     return await API.getUsers()
   }
 
-  async onboard(payload: InviteUsersRequest) {
-    return await API.onboardUsers(payload)
-  }
-
   async invite(
     payload: {
       admin?: boolean

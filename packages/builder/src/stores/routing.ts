@@ -5,7 +5,7 @@ import { derived, get } from "svelte/store"
 import { auth } from "@/stores/portal/auth"
 import { admin } from "@/stores/portal/admin"
 import { appStore } from "@/stores/builder/app"
-import { setSettingsRouteResolver } from "@/stores/bb"
+import { bb, setSettingsRouteResolver } from "@/stores/bb"
 import { appsStore } from "@/stores/portal/apps"
 import {
   workspaceRoutes,
@@ -33,6 +33,10 @@ export const permittedRoutes = derived(
 
 export const flattenedRoutes = derived([permittedRoutes], ([$permitted]) => {
   return flatten($permitted)
+})
+
+flattenedRoutes.subscribe(() => {
+  bb.tryResolvePendingSettings()
 })
 
 setSettingsRouteResolver(path => {

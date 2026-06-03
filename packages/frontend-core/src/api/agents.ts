@@ -1,18 +1,21 @@
 import {
   AgentFileUploadResponse,
+  ConnectAgentSharePointSiteRequest,
+  ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
-  DisconnectAgentKnowledgeSourcesResponse,
+  DisconnectAgentSharePointSiteResponse,
   DuplicateAgentResponse,
-  FetchAgentFilesResponse,
+  FetchAgentKnowledgeResponse,
+  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
+  ProvisionAgentTelegramChannelRequest,
+  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
-  SetAgentKnowledgeSourcesRequest,
-  SetAgentKnowledgeSourcesResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
@@ -20,6 +23,8 @@ import {
   ToggleAgentDeploymentRequest,
   ToggleAgentDeploymentResponse,
   ToolMetadata,
+  UpdateAgentSharePointSiteRequest,
+  UpdateAgentSharePointSiteResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -45,6 +50,10 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ) => Promise<ProvisionAgentSlackChannelResponse>
+  provisionAgentTelegramChannel: (
+    agentId: string,
+    body?: ProvisionAgentTelegramChannelRequest
+  ) => Promise<ProvisionAgentTelegramChannelResponse>
   toggleAgentDiscordDeployment: (
     agentId: string,
     enabled: boolean
@@ -57,7 +66,11 @@ export interface AgentEndpoints {
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
-  fetchAgentFiles: (agentId: string) => Promise<FetchAgentFilesResponse>
+  toggleAgentTelegramDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentDeploymentResponse>
+  fetchAgentKnowledge: (agentId: string) => Promise<FetchAgentKnowledgeResponse>
   uploadAgentFile: (
     agentId: string,
     file: File
@@ -67,18 +80,29 @@ export interface AgentEndpoints {
     fileId: string
   ) => Promise<{ deleted: true }>
   fetchAgentKnowledgeSourceOptions: (
-    agentId: string
+    datasourceId: string,
+    authConfigId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
-  setAgentKnowledgeSources: (
+  fetchAgentKnowledgeSourceAllEntries: (
     agentId: string,
-    body: SetAgentKnowledgeSourcesRequest
-  ) => Promise<SetAgentKnowledgeSourcesResponse>
-  disconnectAgentKnowledgeSources: (
-    agentId: string
-  ) => Promise<DisconnectAgentKnowledgeSourcesResponse>
+    siteId: string
+  ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
+  connectAgentSharePointSite: (
+    agentId: string,
+    body: ConnectAgentSharePointSiteRequest
+  ) => Promise<ConnectAgentSharePointSiteResponse>
+  updateAgentSharePointSite: (
+    agentId: string,
+    siteId: string,
+    body: UpdateAgentSharePointSiteRequest
+  ) => Promise<UpdateAgentSharePointSiteResponse>
+  disconnectAgentSharePointSite: (
+    agentId: string,
+    siteId: string
+  ) => Promise<DisconnectAgentSharePointSiteResponse>
   syncAgentKnowledgeSources: (
     agentId: string,
-    body?: SyncAgentKnowledgeSourcesRequest
+    sourceId: string
   ) => Promise<SyncAgentKnowledgeSourcesResponse>
 }
 
@@ -153,6 +177,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  provisionAgentTelegramChannel: async (agentId: string, body) => {
+    return await API.post<
+      ProvisionAgentTelegramChannelRequest | undefined,
+      ProvisionAgentTelegramChannelResponse
+    >({
+      url: `/api/agent/${agentId}/telegram/provision`,
+      body,
+    })
+  },
+
   toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
     return await API.post<
       ToggleAgentDeploymentRequest,
@@ -183,9 +217,19 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentFiles: async (agentId: string) => {
-    return await API.get({
-      url: `/api/agent/${agentId}/files`,
+  toggleAgentTelegramDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
+    >({
+      url: `/api/agent/${agentId}/telegram/toggle`,
+      body: { enabled },
+    })
+  },
+
+  fetchAgentKnowledge: async (agentId: string) => {
+    return await API.get<FetchAgentKnowledgeResponse>({
+      url: `/api/agent/${agentId}/knowledge`,
     })
   },
 
@@ -205,38 +249,57 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentKnowledgeSourceOptions: async (agentId: string) => {
+  fetchAgentKnowledgeSourceOptions: async (
+    datasourceId: string,
+    authConfigId: string
+  ) => {
     return await API.get<FetchAgentKnowledgeSourceOptionsResponse>({
-      url: `/api/agent/${agentId}/knowledge-sources/options`,
+      url: `/api/knowledge-sources/${encodeURIComponent(datasourceId)}/${encodeURIComponent(authConfigId)}/options`,
     })
   },
 
-  setAgentKnowledgeSources: async (agentId: string, body) => {
-    return await API.put<
-      SetAgentKnowledgeSourcesRequest,
-      SetAgentKnowledgeSourcesResponse
+  fetchAgentKnowledgeSourceAllEntries: async (
+    agentId: string,
+    siteId: string
+  ) => {
+    const query = new URLSearchParams({ siteId })
+    return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/entries/all?${query.toString()}`,
+    })
+  },
+
+  connectAgentSharePointSite: async (agentId: string, body) => {
+    return await API.post<
+      ConnectAgentSharePointSiteRequest,
+      ConnectAgentSharePointSiteResponse
     >({
-      url: `/api/agent/${agentId}/knowledge-sources`,
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites`,
       body,
     })
   },
 
-  disconnectAgentKnowledgeSources: async (agentId: string) => {
-    return await API.delete<void, DisconnectAgentKnowledgeSourcesResponse>({
-      url: `/api/agent/${agentId}/knowledge-sources`,
+  updateAgentSharePointSite: async (agentId: string, siteId: string, body) => {
+    return await API.patch<
+      UpdateAgentSharePointSiteRequest,
+      UpdateAgentSharePointSiteResponse
+    >({
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+      body,
     })
   },
 
-  syncAgentKnowledgeSources: async (
-    agentId: string,
-    body?: SyncAgentKnowledgeSourcesRequest
-  ) => {
+  disconnectAgentSharePointSite: async (agentId: string, siteId: string) => {
+    return await API.delete<void, DisconnectAgentSharePointSiteResponse>({
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+    })
+  },
+
+  syncAgentKnowledgeSources: async (agentId: string, sourceId: string) => {
     return await API.post<
       SyncAgentKnowledgeSourcesRequest | undefined,
       SyncAgentKnowledgeSourcesResponse
     >({
-      url: `/api/agent/${agentId}/knowledge-sources/sync`,
-      body,
+      url: `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
     })
   },
 })

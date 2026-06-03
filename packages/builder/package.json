@@ -11,7 +11,7 @@
     "rollup": "rollup -c -w",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:types": "yarn svelte-check --incremental"
+    "check:types": "yarn svelte-check"
   },
   "jest": {
     "globals": {
@@ -101,7 +101,7 @@
     "svelte-jester": "^1.3.2",
     "vite": "7.3.2",
     "vite-plugin-static-copy": "^3.1.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.0"
   },
   "nx": {
     "targets": {

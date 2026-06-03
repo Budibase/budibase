@@ -2,19 +2,34 @@ import {
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
 } from "@budibase/types"
+
+import { features } from "@budibase/backend-core"
+import sdk from "../../../../sdk"
+import {
+  createKnowledgeFilesTool,
+  createKnowledgeSearchTool,
+} from "../knowledgeFiles"
+
+jest.mock("@budibase/backend-core", () => ({
+  features: {
+    isEnabled: jest.fn(),
+  },
+}))
+
 jest.mock("../../../../sdk", () => ({
   __esModule: true,
   default: {
     ai: {
+      agents: {
+        getOrThrow: jest.fn(),
+      },
       rag: {
         listFilesForAgent: jest.fn(),
+        retrieveContextForAgent: jest.fn(),
       },
     },
   },
 }))
-
-import sdk from "../../../../sdk"
-import { createKnowledgeFilesTool } from "../knowledgeFiles"
 
 const executeTool = async (
   agentId: string,
@@ -25,6 +40,21 @@ const executeTool = async (
   } = {}
 ) => {
   const toolDef = createKnowledgeFilesTool(agentId)
+  if (!toolDef.tool.execute) {
+    throw new Error("tool.execute is not a function")
+  }
+
+  return await toolDef.tool.execute(input, {
+    toolCallId: "test-tool-call",
+    messages: [],
+  })
+}
+
+const executeSearchTool = async (
+  agentId: string,
+  input: { question: string }
+) => {
+  const toolDef = createKnowledgeSearchTool(agentId)
   if (!toolDef.tool.execute) {
     throw new Error("tool.execute is not a function")
   }
@@ -86,7 +116,9 @@ describe("AI Tools - Knowledge files", () => {
 
     const result = (await executeTool("agent_123")) as {
       matchedCount: number
+      totalFiles: number
       ambiguous: boolean
+      needsClarification: boolean
       bestMatch?: unknown
       candidates: unknown[]
       total: number
@@ -107,7 +139,9 @@ describe("AI Tools - Knowledge files", () => {
 
     expect(listFilesSpy).toHaveBeenCalledWith("agent_123")
     expect(result.matchedCount).toBe(3)
+    expect(result.totalFiles).toBe(3)
     expect(result.ambiguous).toBe(false)
+    expect(result.needsClarification).toBe(false)
     expect(result.bestMatch).toBeUndefined()
     expect(result.candidates).toEqual([])
     expect(result.total).toBe(3)
@@ -135,7 +169,9 @@ describe("AI Tools - Knowledge files", () => {
 
     const result = (await executeTool("agent_456")) as {
       matchedCount: number
+      totalFiles: number
       ambiguous: boolean
+      needsClarification: boolean
       bestMatch?: unknown
       candidates: unknown[]
       total: number
@@ -147,7 +183,9 @@ describe("AI Tools - Knowledge files", () => {
 
     expect(result).toEqual({
       matchedCount: 0,
+      totalFiles: 0,
       ambiguous: false,
+      needsClarification: false,
       bestMatch: undefined,
       candidates: [],
       total: 0,
@@ -186,14 +224,18 @@ describe("AI Tools - Knowledge files", () => {
       filename: "filename",
     })) as {
       matchedCount: number
+      totalFiles: number
       ambiguous: boolean
+      needsClarification: boolean
       bestMatch?: { filename: string; sizeBytes?: number; matchedBy?: string }
       candidates: Array<{ filename: string; matchedBy?: string }>
       files: Array<{ filename: string; sizeBytes?: number; matchedBy?: string }>
     }
 
     expect(result.matchedCount).toBe(1)
+    expect(result.totalFiles).toBe(2)
     expect(result.ambiguous).toBe(false)
+    expect(result.needsClarification).toBe(false)
     expect(result.bestMatch).toMatchObject({
       filename: "fileName.pdf",
       sizeBytes: 512,
@@ -238,13 +280,17 @@ describe("AI Tools - Knowledge files", () => {
       filename: "policy",
     })) as {
       matchedCount: number
+      totalFiles: number
       ambiguous: boolean
+      needsClarification: boolean
       bestMatch?: { filename: string; matchedBy?: string }
       candidates: Array<{ filename: string; matchedBy?: string }>
     }
 
     expect(result.matchedCount).toBe(2)
+    expect(result.totalFiles).toBe(2)
     expect(result.ambiguous).toBe(true)
+    expect(result.needsClarification).toBe(true)
     expect(result.bestMatch).toMatchObject({
       filename: "policy-v2.pdf",
       matchedBy: "basename-prefix",
@@ -282,13 +328,17 @@ describe("AI Tools - Knowledge files", () => {
       matchMode: "contains",
     })) as {
       matchedCount: number
+      totalFiles: number
       ambiguous: boolean
+      needsClarification: boolean
       bestMatch?: { filename: string; matchedBy?: string }
       files: Array<{ filename: string; matchedBy?: string }>
     }
 
     expect(result.matchedCount).toBe(1)
+    expect(result.totalFiles).toBe(2)
     expect(result.ambiguous).toBe(false)
+    expect(result.needsClarification).toBe(false)
     expect(result.bestMatch).toMatchObject({
       filename: "project-filename.pdf",
       matchedBy: "filename-contains",
@@ -297,5 +347,40 @@ describe("AI Tools - Knowledge files", () => {
       "project-filename.pdf",
     ])
     expect(result.files[0].matchedBy).toBe("filename-contains")
+  })
+})
+
+describe("AI Tools - Knowledge search", () => {
+  beforeEach(() => {
+    jest.restoreAllMocks()
+    jest.mocked(features.isEnabled).mockResolvedValue(true)
+  })
+
+  it("hard-fails with a clear message when Gemini retrieval is unavailable", async () => {
+    jest
+      .spyOn(sdk.ai.agents, "getOrThrow")
+      .mockResolvedValue({ _id: "agent_1" } as any)
+    jest
+      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
+      .mockRejectedValue({ status: 503, message: "upstream unavailable" })
+
+    await expect(
+      executeSearchTool("agent_1", { question: "What is policy?" })
+    ).rejects.toThrow(
+      "Gemini knowledge retrieval is temporarily unavailable (upstream 503). Budibase is operating normally; please retry shortly."
+    )
+  })
+
+  it("preserves non-provider retrieval errors", async () => {
+    jest
+      .spyOn(sdk.ai.agents, "getOrThrow")
+      .mockResolvedValue({ _id: "agent_1" } as any)
+    jest
+      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
+      .mockRejectedValue(new Error("Failed to map source metadata"))
+
+    await expect(
+      executeSearchTool("agent_1", { question: "What is policy?" })
+    ).rejects.toThrow("Failed to map source metadata")
   })
 })

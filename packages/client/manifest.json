@@ -3517,6 +3517,29 @@
         "key": "helpText"
       },
       {
+        "type": "boolean",
+        "label": "Enable step controls",
+        "key": "enableStepper",
+        "defaultValue": false
+      },
+      {
+        "type": "number",
+        "label": "Min",
+        "key": "min"
+      },
+      {
+        "type": "number",
+        "label": "Max",
+        "key": "max"
+      },
+      {
+        "type": "number",
+        "label": "Increment",
+        "key": "step",
+        "defaultValue": 1,
+        "dependsOn": "enableStepper"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3534,6 +3557,12 @@
         "dependsOn": "onChange",
         "info": "Trigger actions by 'input' events as well as 'change' events",
         "defaultValue": false
+      },
+      {
+        "type": "number",
+        "label": "Debounce (ms)",
+        "key": "debounceMs",
+        "defaultValue": 500
       },
       {
         "type": "boolean",
@@ -4154,6 +4183,38 @@
         "dependsOn": {
           "setting": "optionsType",
           "value": "checkbox"
+        }
+      },
+      {
+        "type": "select",
+        "label": "Box columns",
+        "key": "columns",
+        "defaultValue": 1,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 1,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 2,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 3,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ],
+        "dependsOn": {
+          "setting": "direction",
+          "value": "horizontal"
         }
       },
       {
@@ -8529,6 +8590,16 @@
         "dependsOn": {
           "setting": "table.type",
           "value": ["table", "viewV2"]
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Row selection",
+        "key": "allowRowSelection",
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "allowDeleteRows",
+          "value": false
         }
       },
       {

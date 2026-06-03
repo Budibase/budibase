@@ -15,8 +15,17 @@ jest.mock("../../knowledgeBase", () => ({
     mockUpdateKnowledgeBaseFile(...args),
 }))
 
-import { KnowledgeBaseType } from "@budibase/types"
+import { KnowledgeBase, KnowledgeBaseType } from "@budibase/types"
 import { GeminiRagProcessor } from "./gemini"
+
+const knowledgeBase = {
+  _id: "kb_1",
+  name: "KB",
+  type: KnowledgeBaseType.GEMINI,
+  config: {
+    googleFileStoreId: "store_1",
+  },
+} satisfies KnowledgeBase
 
 describe("GeminiRagProcessor", () => {
   beforeEach(() => {
@@ -33,14 +42,29 @@ describe("GeminiRagProcessor", () => {
       },
     ])
 
-    const processor = new GeminiRagProcessor({
-      _id: "kb_1",
-      name: "KB",
-      type: KnowledgeBaseType.GEMINI,
-      config: {
-        googleFileStoreId: "store_1",
+    const processor = new GeminiRagProcessor(knowledgeBase)
+
+    const result = await processor.search("What is policy?")
+
+    expect(result).toEqual([
+      {
+        source: "gemini-file-1",
+        chunkText: "4-day policy",
       },
-    } as any)
+    ])
+  })
+
+  it("falls back to filename when Gemini file_id is missing", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        file_id: null,
+        filename: "policy.md",
+        score: 0.9,
+        content: [{ type: "text", text: "4-day policy" }],
+      },
+    ])
+
+    const processor = new GeminiRagProcessor(knowledgeBase)
 
     const result = await processor.search("What is policy?")
 

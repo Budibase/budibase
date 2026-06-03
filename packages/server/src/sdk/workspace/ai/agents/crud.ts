@@ -1,12 +1,20 @@
-import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  encryption,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
 import type { Agent, Optional } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
+import { assertAgentHasValidConfig } from "./utils"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
+const DEFAULT_OPERATION_NAME = "Main operation"
 
 const guardName = async (name: string, id?: string) => {
   if (!name.trim()) {
@@ -96,13 +104,48 @@ const decodeSlackIntegrationSecrets = (
   }
 }
 
+const encodeTelegramIntegrationSecrets = (
+  telegramIntegration?: Agent["telegramIntegration"]
+) => {
+  if (!telegramIntegration) {
+    return telegramIntegration
+  }
+
+  return {
+    ...telegramIntegration,
+    botToken: encodeSecret(telegramIntegration.botToken),
+    webhookSecretToken: encodeSecret(telegramIntegration.webhookSecretToken),
+  }
+}
+
+const decodeTelegramIntegrationSecrets = (
+  telegramIntegration?: Agent["telegramIntegration"]
+) => {
+  if (!telegramIntegration) {
+    return telegramIntegration
+  }
+
+  return {
+    ...telegramIntegration,
+    botToken: decodeSecret(telegramIntegration.botToken),
+    webhookSecretToken: decodeSecret(telegramIntegration.webhookSecretToken),
+  }
+}
+
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
+  operationName:
+    agent.operationName || agent.promptInstructions
+      ? agent.operationName || DEFAULT_OPERATION_NAME
+      : agent.operationName,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
   knowledgeBases: agent.knowledgeBases || [],
   discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
   slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
+  telegramIntegration: decodeTelegramIntegrationSecrets(
+    agent.telegramIntegration
+  ),
 })
 
 const mergeDiscordIntegration = ({
@@ -191,6 +234,39 @@ const mergeSlackIntegration = ({
   return merged
 }
 
+const mergeTelegramIntegration = ({
+  existing,
+  incoming,
+}: {
+  existing?: Agent["telegramIntegration"]
+  incoming?: Agent["telegramIntegration"]
+}) => {
+  if (incoming === undefined) {
+    return existing
+  }
+  if (!incoming) {
+    return incoming
+  }
+
+  const merged = {
+    ...(existing || {}),
+    ...incoming,
+  }
+
+  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
+    merged.botToken = existing.botToken
+  }
+
+  if (
+    incoming.webhookSecretToken === SECRET_MASK &&
+    existing?.webhookSecretToken
+  ) {
+    merged.webhookSecretToken = existing.webhookSecretToken
+  }
+
+  return merged
+}
+
 export async function fetch(): Promise<Agent[]> {
   const db = context.getWorkspaceDB()
   const result = await db.allDocs<Agent>(
@@ -237,6 +313,7 @@ export async function create(
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     promptInstructions: request.promptInstructions,
+    operationName: request.operationName,
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -250,6 +327,11 @@ export async function create(
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
+    telegramIntegration: request.telegramIntegration,
+  }
+
+  if (agent.live) {
+    await assertAgentHasValidConfig(agent)
   }
 
   const { rev } = await db.put({
@@ -258,9 +340,14 @@ export async function create(
       agent.discordIntegration
     ),
     slackIntegration: encodeSlackIntegrationSecrets(agent.slackIntegration),
+    telegramIntegration: encodeTelegramIntegrationSecrets(
+      agent.telegramIntegration
+    ),
   })
   agent._rev = rev
-  return withAgentDefaults(agent)
+  const result = withAgentDefaults(agent)
+  events.ai.agentCreated(result)
+  return result
 }
 
 export async function duplicate(
@@ -278,6 +365,7 @@ export async function duplicate(
     description: source.description,
     aiconfig: source.aiconfig,
     promptInstructions: source.promptInstructions,
+    operationName: source.operationName,
     goal: source.goal,
     icon: source.icon,
     iconColor: source.iconColor,
@@ -329,6 +417,14 @@ export async function update(agent: Agent): Promise<Agent> {
       existing: existing?.slackIntegration,
       incoming: agent.slackIntegration,
     }),
+    telegramIntegration: mergeTelegramIntegration({
+      existing: existing?.telegramIntegration,
+      incoming: agent.telegramIntegration,
+    }),
+  }
+
+  if (updated.live) {
+    await assertAgentHasValidConfig(updated)
   }
 
   const hasBeenPublished =
@@ -343,9 +439,14 @@ export async function update(agent: Agent): Promise<Agent> {
       updated.discordIntegration
     ),
     slackIntegration: encodeSlackIntegrationSecrets(updated.slackIntegration),
+    telegramIntegration: encodeTelegramIntegrationSecrets(
+      updated.telegramIntegration
+    ),
   })
   updated._rev = rev
-  return withAgentDefaults(updated)
+  const result = withAgentDefaults(updated)
+  events.ai.agentUpdated(result)
+  return result
 }
 
 export async function remove(agentId: string) {
@@ -390,4 +491,5 @@ export async function remove(agentId: string) {
   }
 
   await db.remove(agent)
+  events.ai.agentDeleted(agent)
 }

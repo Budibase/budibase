@@ -19,6 +19,12 @@ const { accountPortalUpgradeUrl } = helpers
 const UNLIMITED = -1
 const ONE_DAY_MILLIS = 86400000
 
+const BREAKDOWN_ACTION_NAME_MAP: Record<string, string> = {
+  automationStep: "Automation Steps",
+  aiAgent: "Agent Tool Calls",
+  crud: "Row Writes",
+}
+
 type MonthlyMetrics = { [key in MonthlyQuotaName]?: number }
 type StaticMetrics = { [key in StaticQuotaName]?: number }
 type UsageMetrics = MonthlyMetrics & StaticMetrics
@@ -68,6 +74,7 @@ interface LicensingState {
   actionsExceeded: boolean
   errUserLimit: boolean
   showTrialBanner: boolean
+  actionsBreakdown: Array<{ name: string; used: number }> | null
 }
 
 class LicensingStore extends BudiStore<LicensingState> {
@@ -116,6 +123,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       // AI Limits
       aiCreditsExceeded: false,
       showTrialBanner: false,
+      actionsBreakdown: null,
     })
 
     this.goToUpgradePage = this.goToUpgradePage.bind(this)
@@ -328,6 +336,22 @@ class LicensingStore extends BudiStore<LicensingState> {
     const aiCreditsLimit = aiCreditsQuota.value
     const actionsQuota = license.quotas.usage.monthly.actions
     const actionsLimit = actionsQuota.value
+
+    const actionsValues = usage.monthly.current.breakdown?.actions?.values
+    let actionsBreakdown: Array<{ name: string; used: number }> | null = null
+    if (actionsValues) {
+      const actionsTotal = usage.monthly.current.actions ?? 0
+      const tracked = Object.entries(BREAKDOWN_ACTION_NAME_MAP).map(
+        ([k, name]) => ({ name, used: actionsValues[k] ?? 0 })
+      )
+      const untracked =
+        actionsTotal - tracked.reduce((sum, item) => sum + item.used, 0)
+      actionsBreakdown = [
+        ...tracked.sort((a, b) => b.used - a.used),
+        ...(untracked > 0 ? [{ name: "N/A", used: untracked }] : []),
+      ]
+    }
+
     const userCount = usage.usageQuota.users
     const userLimitReached = this.usersLimitReached(userCount, userLimit)
     const userLimitExceeded = this.usersLimitExceeded(userCount, userLimit)
@@ -364,6 +388,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         actionsLimit,
         aiCreditsExceeded,
         actionsExceeded,
+        actionsBreakdown,
       }
     })
   }

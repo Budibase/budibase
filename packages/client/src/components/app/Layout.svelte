@@ -689,7 +689,7 @@
     align-self: center;
     flex: 1;
   }
-  .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+  .main:not(.size--max):has(:global(.screenslot-dom > .component > .grid)) {
     padding: calc(32px - var(--grid-spacing) * 2px);
   }
 
@@ -874,7 +874,7 @@
     padding: 16px;
   }
   .mobile:not(.layout--none)
-    .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    .main:not(.size--max):has(:global(.screenslot-dom > .component > .grid)) {
     padding: 6px;
   }
   .mobile .main.size--max {

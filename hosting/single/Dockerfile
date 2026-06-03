@@ -63,7 +63,7 @@ RUN apt-get update && \
 # Install litellm
 RUN python3 -m venv /opt/venv/litellm
 
-ARG LITELLM_PYPI_VERSION=1.81.14
+ARG LITELLM_PYPI_VERSION=1.83.10
 RUN /opt/venv/litellm/bin/pip install "litellm[proxy]==${LITELLM_PYPI_VERSION}"
 ENV PATH="/opt/venv/litellm/bin:${PATH}"
 RUN mkdir -p /litellm
@@ -104,11 +104,6 @@ RUN mkdir -p /var/log/nginx && \
 # Setup minio
 WORKDIR /minio
 
-# A 2022 version of minio that supports gateway mode
-COPY scripts/resources/minio /minio
-RUN chmod +x minio
-
-# Handles the installation of minio in non-aas environments
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
 

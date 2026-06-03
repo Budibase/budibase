@@ -59,6 +59,8 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
     url: `/${slugify(name)}`,
     disabled: true,
     navigation: workspaceApp.navigation,
+    theme: workspaceApp.theme,
+    customTheme: workspaceApp.customTheme,
     isDefault: false,
   }
 
@@ -66,6 +68,17 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
 }
 
 const slugify = (text: string) => text.toLowerCase().replaceAll(" ", "-")
+
+type WorkspaceAppUpdate = Omit<
+  WorkspaceApp,
+  "createdAt" | "updatedAt" | "isDefault" | "theme" | "customTheme"
+> & {
+  theme?: WorkspaceApp["theme"]
+  customTheme?: WorkspaceApp["customTheme"]
+}
+
+const hasOwn = (obj: object, key: string) =>
+  Object.prototype.hasOwnProperty.call(obj, key)
 
 export async function fetch(
   db = context.getWorkspaceDB()
@@ -101,6 +114,7 @@ export async function create(
     },
     { returnDoc: true }
   )
+  events.workspace.appCreated(response.doc, context.getWorkspaceId()!)
   return response.doc
 }
 
@@ -113,7 +127,7 @@ export async function duplicate(
 }
 
 export async function update(
-  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt" | "isDefault">
+  workspaceApp: WorkspaceAppUpdate
 ): Promise<WorkspaceApp> {
   const db = context.getWorkspaceDB()
 
@@ -133,6 +147,10 @@ export async function update(
     name: workspaceApp.name,
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
+    theme: hasOwn(workspaceApp, "theme") ? workspaceApp.theme : persisted.theme,
+    customTheme: hasOwn(workspaceApp, "customTheme")
+      ? workspaceApp.customTheme
+      : persisted.customTheme,
     disabled: workspaceApp.disabled,
 
     // Immutable properties
@@ -142,6 +160,7 @@ export async function update(
     _deleted: undefined,
   }
   const response = await db.put(docToUpdate, { returnDoc: true })
+  events.workspace.appUpdated(response.doc, context.getWorkspaceId()!)
   return response.doc
 }
 
@@ -161,7 +180,7 @@ export async function remove(
     await db.remove(workspaceAppId, _rev)
 
     // Clear out any favourites related to this
-    events.workspace.deleted(existing, context.getWorkspaceId()!)
+    events.workspace.appDeleted(existing, context.getWorkspaceId()!)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(

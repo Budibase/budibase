@@ -1,9 +1,45 @@
 import { context } from "@budibase/backend-core"
-import { processStringSync } from "@budibase/string-templates"
-import { Query, QuerySchema } from "@budibase/types"
+import {
+  processJsonStringSync,
+  processStringSync,
+} from "@budibase/string-templates"
+import type { JSONValue, Query, QuerySchema } from "@budibase/types"
 import { BaseQueryVerbs } from "../../../constants"
 import { getQueryParams, isProdWorkspaceID } from "../../../db/utils"
 import { getEnvironmentVariables } from "../../utils"
+
+export interface EnrichContextOpts {
+  escapeNewlines?: boolean
+}
+
+const DEFAULT_ENRICH_CONTEXT_OPTS: Required<EnrichContextOpts> = {
+  escapeNewlines: true,
+}
+
+const JSON_TEMPLATE_FIELDS = new Set(["json", "customData", "requestBody"])
+
+const processTemplateString = (
+  value: string,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+) => {
+  return processStringSync(value, parameters, {
+    noEscaping: true,
+    noHelpers: true,
+    escapeNewlines: options.escapeNewlines,
+  })
+}
+
+const enrichJsonTemplate = (
+  template: string,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+) =>
+  processJsonStringSync(template, parameters, {
+    noEscaping: true,
+    noHelpers: true,
+    escapeNewlines: options.escapeNewlines,
+  }) as JSONValue | string
 
 function updateSchema(query: Query): Query {
   if (!query.schema) {
@@ -67,13 +103,14 @@ export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
 
 export async function enrichArrayContext(
   fields: any[],
-  inputs = {}
+  inputs = {},
+  opts: EnrichContextOpts = {}
 ): Promise<any[]> {
   const map: Record<string, any> = {}
   for (let index in fields) {
     map[index] = fields[index]
   }
-  const output = await enrichContext(map, inputs)
+  const output = await enrichContext(map, inputs, opts)
   const outputArray: any[] = []
   for (let [key, value] of Object.entries(output)) {
     outputArray[parseInt(key)] = value
@@ -83,14 +120,19 @@ export async function enrichArrayContext(
 
 export async function enrichContext(
   fields: Record<string, any>,
-  inputs = {}
+  inputs = {},
+  opts: EnrichContextOpts = {}
 ): Promise<Record<string, any>> {
+  const options: Required<EnrichContextOpts> = {
+    ...DEFAULT_ENRICH_CONTEXT_OPTS,
+    ...opts,
+  }
   const enrichedQuery: Record<string, any> = {}
   if (!fields || !inputs) {
     return enrichedQuery
   }
   if (Array.isArray(fields)) {
-    return enrichArrayContext(fields, inputs)
+    return enrichArrayContext(fields, inputs, options)
   }
   const env = await getEnvironmentVariables()
   const parameters = { ...inputs, env }
@@ -101,14 +143,11 @@ export async function enrichContext(
     }
     if (typeof fields[key] === "object") {
       // enrich nested fields object
-      enrichedQuery[key] = await enrichContext(fields[key], parameters)
+      enrichedQuery[key] = await enrichContext(fields[key], parameters, options)
     } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      enrichedQuery[key] = processStringSync(fields[key], parameters, {
-        noEscaping: true,
-        noHelpers: true,
-        escapeNewlines: true,
-      })
+      enrichedQuery[key] = JSON_TEMPLATE_FIELDS.has(key)
+        ? enrichJsonTemplate(fields[key], parameters, options)
+        : processTemplateString(fields[key], parameters, options)
     } else {
       enrichedQuery[key] = fields[key]
     }
@@ -119,11 +158,11 @@ export async function enrichContext(
     enrichedQuery.requestBody
   ) {
     try {
-      enrichedQuery.json = JSON.parse(
+      const json =
         enrichedQuery.json ||
-          enrichedQuery.customData ||
-          enrichedQuery.requestBody
-      )
+        enrichedQuery.customData ||
+        enrichedQuery.requestBody
+      enrichedQuery.json = typeof json === "string" ? JSON.parse(json) : json
     } catch (err) {
       // no json found, ignore
     }

@@ -1,23 +1,32 @@
-import { context, docIds, features, roles } from "@budibase/backend-core"
-import { DocumentType, FeatureFlag } from "@budibase/types"
+import { context, docIds, roles } from "@budibase/backend-core"
+import { ActionType, AgentChannelProvider, DocumentType } from "@budibase/types"
 import type {
   Agent,
-  AgentChannelProvider,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
   User,
 } from "@budibase/types"
-import type { ModelMessage, ToolSet } from "ai"
+import type { LanguageModelUsage, ModelMessage, ToolSet } from "ai"
 import { convertToModelMessages, pruneMessages, streamText } from "ai"
 import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../utilities/aiConfig"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
-import { retrieveContextForAgent } from "../../sdk/workspace/ai/rag"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
-import { webhookChat } from "../../api/controllers/ai/chatConversations"
+import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV3 } from "ai/test"
+
+const mockAiConfigsFind = jest.fn()
+
+jest.mock("../../sdk/workspace/ai/configs", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/configs")
+  return {
+    ...actual,
+    find: (...args: any[]) => mockAiConfigsFind(...args),
+  }
+})
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -25,7 +34,11 @@ jest.mock("@budibase/pro", () => {
     ...actual,
     quotas: {
       ...actual.quotas,
-      addAction: jest.fn().mockImplementation((fn: () => Promise<any>) => fn()),
+      addAction: jest
+        .fn()
+        .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
+          fn()
+        ),
       throwIfBudibaseAICreditsExceeded: jest.fn(),
     },
     ai: {
@@ -37,11 +50,31 @@ jest.mock("@budibase/pro", () => {
 
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
+  const mockStreamText = jest.fn()
+
+  class MockToolLoopAgent {
+    private settings: Record<string, any>
+
+    constructor(settings: Record<string, any>) {
+      this.settings = settings
+    }
+
+    async stream(options: Record<string, any>) {
+      const { instructions, ...settings } = this.settings
+      return mockStreamText({
+        ...settings,
+        ...options,
+        system: instructions,
+      })
+    }
+  }
+
   return {
     ...actual,
     convertToModelMessages: jest.fn(),
     pruneMessages: jest.fn(),
-    streamText: jest.fn(),
+    streamText: mockStreamText,
+    ToolLoopAgent: MockToolLoopAgent,
   }
 })
 
@@ -70,17 +103,10 @@ jest.mock("../../sdk/workspace/ai/agentLogs", () => {
   }
 })
 
-jest.mock("../../sdk/workspace/ai/rag", () => {
-  const actual = jest.requireActual("../../sdk/workspace/ai/rag")
-  return {
-    ...actual,
-    retrieveContextForAgent: jest.fn(),
-  }
-})
-
 const createMockSessionLogIndexer = () => ({
   addRequestId: jest.fn(),
   index: jest.fn().mockResolvedValue(undefined),
+  getRequestIds: jest.fn().mockReturnValue([]),
 })
 
 const aiActual = jest.requireActual<typeof import("ai")>("ai")
@@ -120,6 +146,7 @@ const createChatTestLanguageModel = () =>
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
   let userA: User
   let userB: User
   let chatApp: ChatApp
@@ -132,6 +159,7 @@ describe("chat conversations authorization", () => {
 
   beforeAll(async () => {
     await config.init("chat-conversation-scope")
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
     userA = config.getUser()
     userB = await config.createUser({
       roles: {
@@ -223,7 +251,8 @@ describe("chat conversations authorization", () => {
     )
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await cleanupAIConfig?.()
     config.end()
   })
 
@@ -693,6 +722,7 @@ describe("chat conversation transient behavior", () => {
       providerOptions: jest.fn(),
       uploadFile: jest.fn(),
     })
+    mockAiConfigsFind.mockResolvedValue({ _id: "config-1" } as any)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
@@ -911,9 +941,52 @@ describe("chat conversation title helpers", () => {
 
 describe("chat conversation path validation", () => {
   const config = new TestConfiguration()
+  let basicUser: User
+  let bodyChatApp: ChatApp
+  let pathChatApp: ChatApp
+  let pathConversation: ChatConversation
 
   beforeAll(async () => {
     await config.init("chat-conversation-validation")
+    basicUser = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        bodyChatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          live: true,
+          createdAt: now,
+        }
+        pathChatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          live: true,
+          createdAt: now,
+        }
+        pathConversation = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: pathChatApp._id!,
+          agentId: "agent-1",
+          userId: config.getUser()._id!,
+          messages: [],
+          title: "body conversation",
+          createdAt: now,
+        }
+
+        await db.put(bodyChatApp)
+        await db.put(pathChatApp)
+        await db.put(pathConversation)
+      }
+    )
   })
 
   afterAll(() => {
@@ -925,10 +998,10 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .post(`/api/chatapps/${pathChatApp._id}/conversations/new/stream`)
       .set(headers)
       .send({
-        chatAppId: "chatapp-body",
+        chatAppId: bodyChatApp._id,
         agentId: "agent-1",
         messages: [],
         title: "hello",
@@ -942,17 +1015,38 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post("/api/chatapps/chatapp-path/conversations/convo-path/stream")
+      .post(
+        `/api/chatapps/${pathChatApp._id}/conversations/${pathConversation._id}/stream`
+      )
       .set(headers)
       .send({
-        chatAppId: "chatapp-path",
+        chatAppId: pathChatApp._id,
         agentId: "agent-1",
-        _id: "convo-body",
+        _id: docIds.generateChatConversationID(),
         messages: [],
         title: "hello",
       })
 
     expect(res.status).toBe(400)
+  })
+
+  it("rejects preview mode for non-builder users before input validation", async () => {
+    const headers = await config.withUser(basicUser, async () =>
+      config.defaultHeaders({}, true)
+    )
+
+    const res = await config
+      .getRequest()!
+      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .set(headers)
+      .send({
+        agentId: "agent-1",
+        isPreview: true,
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(403)
   })
 })
 
@@ -961,13 +1055,6 @@ describe("Agent chat tool call tracking", () => {
   let chatApp: ChatApp
   let sessionLogIndexer: ReturnType<typeof createMockSessionLogIndexer>
   const addActionMock = jest.mocked(quotas.addAction)
-
-  const withRagEnabled = async <T>(f: () => Promise<T>) =>
-    await features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.AI_RAG]: true },
-      f
-    )
 
   function makeStreamTextMock(toolResults: { toolCallId: string }[]) {
     return (options: any) => ({
@@ -999,10 +1086,30 @@ describe("Agent chat tool call tracking", () => {
     })
   }
 
+  const lmTestUsage = (
+    inputTokens: number,
+    outputTokens: number
+  ): LanguageModelUsage => ({
+    inputTokens,
+    outputTokens,
+    totalTokens: inputTokens + outputTokens,
+    inputTokenDetails: {
+      noCacheTokens: inputTokens,
+      cacheReadTokens: undefined,
+      cacheWriteTokens: undefined,
+    },
+    outputTokenDetails: {
+      textTokens: outputTokens,
+      reasoningTokens: undefined,
+    },
+  })
+
   function makeStreamTextMockWithMetadata({
     toolCalls,
     toolResults,
     onMetadata,
+    stepLmUsages,
+    finishTotalLmUsage,
   }: {
     toolCalls: { toolCallId: string; toolName?: string }[]
     toolResults: {
@@ -1014,6 +1121,8 @@ describe("Agent chat tool call tracking", () => {
       startMetadata: Record<string, any> | undefined
       finishMetadata: Record<string, any> | undefined
     }) => void
+    stepLmUsages?: LanguageModelUsage[]
+    finishTotalLmUsage?: LanguageModelUsage
   }) {
     return (options: any) => ({
       response: Promise.resolve({
@@ -1030,11 +1139,16 @@ describe("Agent chat tool call tracking", () => {
         .fn()
         .mockImplementation(async (res: any, pipeOptions: any) => {
           if (options.onStepFinish) {
-            await options.onStepFinish({
-              content: [],
-              toolCalls,
-              toolResults,
-            })
+            const usages = stepLmUsages?.length ? stepLmUsages : [undefined]
+            for (const usage of usages) {
+              await options.onStepFinish({
+                content: [],
+                toolCalls,
+                toolResults,
+                response: { id: "step-resp" } as any,
+                usage,
+              })
+            }
           }
 
           onMetadata({
@@ -1042,7 +1156,11 @@ describe("Agent chat tool call tracking", () => {
               part: { type: "start" },
             }),
             finishMetadata: pipeOptions?.messageMetadata?.({
-              part: { type: "finish", finishReason: "stop" },
+              part: {
+                type: "finish",
+                finishReason: "stop",
+                totalUsage: finishTotalLmUsage,
+              },
             }),
           })
 
@@ -1133,16 +1251,12 @@ describe("Agent chat tool call tracking", () => {
       providerOptions: jest.fn().mockReturnValue({}),
       uploadFile: jest.fn(),
     })
+    mockAiConfigsFind.mockResolvedValue({ _id: "config-1" } as any)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
       >
     ).mockResolvedValue([])
-    ;(
-      retrieveContextForAgent as jest.MockedFunction<
-        typeof retrieveContextForAgent
-      >
-    ).mockResolvedValue({ text: "", chunks: [], sources: [] })
   })
 
   afterEach(() => {
@@ -1205,39 +1319,63 @@ describe("Agent chat tool call tracking", () => {
       expect(addActionMock).not.toHaveBeenCalled()
     })
 
-    it("does not include ragSources when list_knowledge_files returns successfully", async () => {
+    it("exposes context usage from the first model step in metadata", async () => {
       let finishMetadata: Record<string, any> | undefined
-      ;(
-        sdk.ai.agents.getOrThrow as jest.MockedFunction<
-          typeof sdk.ai.agents.getOrThrow
-        >
-      ).mockResolvedValue({
-        _id: "agent-1",
-        name: "Test Agent",
-        aiconfig: "config-1",
-        knowledgeBases: ["kb-1"],
-      } as any)
-      ;(
-        retrieveContextForAgent as jest.MockedFunction<
-          typeof retrieveContextForAgent
-        >
-      ).mockResolvedValue({
-        text: "Retrieved context",
-        chunks: [],
-        sources: [
-          {
-            sourceId: "pricing-source",
-            filename: "Budibase Enterprise Pricing V8.pdf",
-          },
-        ],
-      })
       jest.mocked(streamText).mockImplementation(
         makeStreamTextMockWithMetadata({
-          toolCalls: [
-            { toolCallId: "call-1", toolName: "list_knowledge_files" },
+          toolCalls: [],
+          toolResults: [],
+          stepLmUsages: [lmTestUsage(1700, 20), lmTestUsage(3500, 120)],
+          finishTotalLmUsage: lmTestUsage(5200, 140),
+          onMetadata: metadata => {
+            finishMetadata = metadata.finishMetadata
+          },
+        }) as any
+      )
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
           ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      expect(finishMetadata?.usage?.segments).toEqual([
+        { type: "system", tokens: 2 },
+        { type: "input", tokens: 1698 },
+        { type: "output", tokens: 120 },
+      ])
+    })
+
+    it("includes ragSources when search_knowledge returns sources", async () => {
+      let finishMetadata: Record<string, any> | undefined
+      jest.mocked(streamText).mockImplementation(
+        makeStreamTextMockWithMetadata({
+          toolCalls: [{ toolCallId: "call-1", toolName: "search_knowledge" }],
           toolResults: [
-            { toolCallId: "call-1", toolName: "list_knowledge_files" },
+            {
+              toolCallId: "call-1",
+              toolName: "search_knowledge",
+              output: {
+                sources: [
+                  {
+                    sourceId: "pricing-source",
+                    filename: "Budibase Enterprise Pricing V8.pdf",
+                  },
+                ],
+              },
+            } as any,
           ],
           onMetadata: metadata => {
             finishMetadata = metadata.finishMetadata
@@ -1246,60 +1384,64 @@ describe("Agent chat tool call tracking", () => {
       )
 
       const headers = await config.defaultHeaders({}, true)
-      const res = await withRagEnabled(async () =>
-        config
-          .getRequest()!
-          .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-          .set(headers)
-          .send({
-            agentId: "agent-1",
-            messages: [
-              {
-                id: "msg-1",
-                role: "user",
-                parts: [{ type: "text", text: "how many files do I have" }],
-              },
-            ],
-            transient: true,
-          })
-      )
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "summarize the pricing file" }],
+            },
+          ],
+          transient: true,
+        })
 
       expect(res.status).toBe(200)
       expect(finishMetadata?.ragSources).toBeUndefined()
     })
 
-    it("keeps ragSources when list_knowledge_files call fails", async () => {
+    it("includes ragSources only when report_used_sources is called with known ids", async () => {
       let finishMetadata: Record<string, any> | undefined
-      ;(
-        sdk.ai.agents.getOrThrow as jest.MockedFunction<
-          typeof sdk.ai.agents.getOrThrow
-        >
-      ).mockResolvedValue({
-        _id: "agent-1",
-        name: "Test Agent",
-        aiconfig: "config-1",
-        knowledgeBases: ["kb-1"],
-      } as any)
-      ;(
-        retrieveContextForAgent as jest.MockedFunction<
-          typeof retrieveContextForAgent
-        >
-      ).mockResolvedValue({
-        text: "Retrieved context",
-        chunks: [],
-        sources: [
-          {
-            sourceId: "pricing-source",
-            filename: "Budibase Enterprise Pricing V8.pdf",
-          },
-        ],
-      })
       jest.mocked(streamText).mockImplementation(
         makeStreamTextMockWithMetadata({
           toolCalls: [
-            { toolCallId: "call-1", toolName: "list_knowledge_files" },
+            { toolCallId: "call-1", toolName: "search_knowledge" },
+            { toolCallId: "call-2", toolName: "report_used_sources" },
           ],
-          toolResults: [],
+          toolResults: [
+            {
+              toolCallId: "call-1",
+              toolName: "search_knowledge",
+              output: {
+                sources: [
+                  {
+                    sourceId: "pricing-source",
+                    filename: "Budibase Enterprise Pricing V8.pdf",
+                  },
+                  {
+                    sourceId: "faq-source",
+                    filename: "FAQ.md",
+                  },
+                ],
+              },
+            } as any,
+            {
+              toolCallId: "call-2",
+              toolName: "report_used_sources",
+              output: {
+                accepted: [
+                  {
+                    sourceId: "pricing-source",
+                    filename: "Budibase Enterprise Pricing V8.pdf",
+                  },
+                ],
+              },
+            } as any,
+          ],
           onMetadata: metadata => {
             finishMetadata = metadata.finishMetadata
           },
@@ -1307,23 +1449,21 @@ describe("Agent chat tool call tracking", () => {
       )
 
       const headers = await config.defaultHeaders({}, true)
-      const res = await withRagEnabled(async () =>
-        config
-          .getRequest()!
-          .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-          .set(headers)
-          .send({
-            agentId: "agent-1",
-            messages: [
-              {
-                id: "msg-1",
-                role: "user",
-                parts: [{ type: "text", text: "how many files do I have" }],
-              },
-            ],
-            transient: true,
-          })
-      )
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "summarize the pricing file" }],
+            },
+          ],
+          transient: true,
+        })
 
       expect(res.status).toBe(200)
       expect(finishMetadata?.ragSources).toEqual([
@@ -1334,36 +1474,36 @@ describe("Agent chat tool call tracking", () => {
       ])
     })
 
-    it("includes ragSources when no knowledge file listing tool is called", async () => {
+    it("ignores report_used_sources ids that were not returned by search_knowledge", async () => {
       let finishMetadata: Record<string, any> | undefined
-      ;(
-        sdk.ai.agents.getOrThrow as jest.MockedFunction<
-          typeof sdk.ai.agents.getOrThrow
-        >
-      ).mockResolvedValue({
-        _id: "agent-1",
-        name: "Test Agent",
-        aiconfig: "config-1",
-        knowledgeBases: ["kb-1"],
-      } as any)
-      ;(
-        retrieveContextForAgent as jest.MockedFunction<
-          typeof retrieveContextForAgent
-        >
-      ).mockResolvedValue({
-        text: "Retrieved context",
-        chunks: [],
-        sources: [
-          {
-            sourceId: "pricing-source",
-            filename: "Budibase Enterprise Pricing V8.pdf",
-          },
-        ],
-      })
       jest.mocked(streamText).mockImplementation(
         makeStreamTextMockWithMetadata({
-          toolCalls: [],
-          toolResults: [],
+          toolCalls: [
+            { toolCallId: "call-1", toolName: "search_knowledge" },
+            { toolCallId: "call-2", toolName: "report_used_sources" },
+          ],
+          toolResults: [
+            {
+              toolCallId: "call-1",
+              toolName: "search_knowledge",
+              output: {
+                sources: [
+                  {
+                    sourceId: "pricing-source",
+                    filename: "Budibase Enterprise Pricing V8.pdf",
+                  },
+                ],
+              },
+            } as any,
+            {
+              toolCallId: "call-2",
+              toolName: "report_used_sources",
+              output: {
+                accepted: [],
+                ignored: ["unknown-source"],
+              },
+            } as any,
+          ],
           onMetadata: metadata => {
             finishMetadata = metadata.finishMetadata
           },
@@ -1371,87 +1511,21 @@ describe("Agent chat tool call tracking", () => {
       )
 
       const headers = await config.defaultHeaders({}, true)
-      const res = await withRagEnabled(async () =>
-        config
-          .getRequest()!
-          .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-          .set(headers)
-          .send({
-            agentId: "agent-1",
-            messages: [
-              {
-                id: "msg-1",
-                role: "user",
-                parts: [{ type: "text", text: "summarize the pricing file" }],
-              },
-            ],
-            transient: true,
-          })
-      )
-
-      expect(res.status).toBe(200)
-      expect(finishMetadata?.ragSources).toEqual([
-        {
-          sourceId: "pricing-source",
-          filename: "Budibase Enterprise Pricing V8.pdf",
-        },
-      ])
-    })
-
-    it("does not include ragSources when retrieved context text is empty", async () => {
-      let finishMetadata: Record<string, any> | undefined
-      ;(
-        sdk.ai.agents.getOrThrow as jest.MockedFunction<
-          typeof sdk.ai.agents.getOrThrow
-        >
-      ).mockResolvedValue({
-        _id: "agent-1",
-        name: "Test Agent",
-        aiconfig: "config-1",
-        knowledgeBases: ["kb-1"],
-      } as any)
-      ;(
-        retrieveContextForAgent as jest.MockedFunction<
-          typeof retrieveContextForAgent
-        >
-      ).mockResolvedValue({
-        text: "   ",
-        chunks: [],
-        sources: [
-          {
-            sourceId: "pricing-source",
-            filename: "Budibase Enterprise Pricing V8.pdf",
-          },
-        ],
-      })
-      jest.mocked(streamText).mockImplementation(
-        makeStreamTextMockWithMetadata({
-          toolCalls: [],
-          toolResults: [],
-          onMetadata: metadata => {
-            finishMetadata = metadata.finishMetadata
-          },
-        }) as any
-      )
-
-      const headers = await config.defaultHeaders({}, true)
-      const res = await withRagEnabled(async () =>
-        config
-          .getRequest()!
-          .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-          .set(headers)
-          .send({
-            agentId: "agent-1",
-            messages: [
-              {
-                id: "msg-1",
-                role: "user",
-                parts: [{ type: "text", text: "summarize the pricing file" }],
-              },
-            ],
-            transient: true,
-          })
-      )
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "summarize the pricing file" }],
+            },
+          ],
+          transient: true,
+        })
 
       expect(res.status).toBe(200)
       expect(finishMetadata?.ragSources).toBeUndefined()
@@ -1459,6 +1533,48 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("webhookChat", () => {
+    it("allows configured channel deployments when internal agent chat is disabled", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock([]) as any)
+
+      await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          const disabledChatApp: ChatApp = {
+            ...chatApp,
+            _id: docIds.generateChatAppID(),
+            agents: [
+              { agentId: "agent-1", isEnabled: false, isDefault: false },
+            ],
+          }
+          await db.put(disabledChatApp)
+
+          const result = await webhookChat({
+            chat: {
+              chatAppId: disabledChatApp._id!,
+              agentId: "agent-1",
+              channel: {
+                provider: AgentChannelProvider.MSTEAMS,
+                externalUserId: "teams-user-1",
+              },
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+
+          expect(result.assistantText).toBe("response")
+        }
+      )
+    })
+
     it("counts each completed tool call as one action", async () => {
       jest
         .mocked(streamText)

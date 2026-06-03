@@ -52,6 +52,7 @@ export interface FetchAppPackageResponse {
   clientLibPath: string
   hasLock: boolean
   recaptchaKey?: string
+  recaptchaEnabled?: boolean
   clientCacheKey?: string
 }
 

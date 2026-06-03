@@ -13,10 +13,12 @@ import { cloneDeep } from "lodash/fp"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { getRowParams } from "../../../db/utils"
 import { basicTable } from "../../../tests/utilities/structures"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import * as setup from "./utilities"
 
 describe("/api/deploy", () => {
   let config = setup.getConfig()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
 
   afterAll(() => {
     setup.afterAll()
@@ -28,6 +30,12 @@ describe("/api/deploy", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   describe("GET /api/deploy/status", () => {
@@ -265,6 +273,87 @@ describe("/api/deploy", () => {
       // Should not include deleted automation
       expect(res.automations[automation._id!]).toBeUndefined()
       expect(Object.keys(res.automations)).toHaveLength(0)
+    })
+
+    it("does not treat live agents as published before workspace publish", async () => {
+      await config.api.workspace.unpublish(config.devWorkspaceId!)
+
+      const agent = await config.api.agent.create({
+        name: "Unpublished Live Agent",
+        aiconfig: "default",
+        live: true,
+      })
+
+      const res = await config.api.deploy.publishStatus()
+
+      expect(res.agents[agent._id!]).toEqual({
+        published: false,
+        name: agent.name,
+        unpublishedChanges: true,
+        state: "disabled",
+      })
+      expect(res.agents[agent._id!].publishedAt).toBeUndefined()
+    })
+
+    it("does not treat newly created live agents as published until next publish", async () => {
+      await config.api.workspace.publish(config.devWorkspace!.appId)
+
+      const agent = await config.api.agent.create({
+        name: "Post Publish Live Agent",
+        aiconfig: "default",
+        live: true,
+      })
+
+      const res = await config.api.deploy.publishStatus()
+
+      expect(res.agents[agent._id!]).toEqual({
+        published: false,
+        name: agent.name,
+        unpublishedChanges: true,
+        state: "disabled",
+      })
+      expect(res.agents[agent._id!].publishedAt).toBeUndefined()
+    })
+
+    it("marks published agents as having unpublished changes when public metadata changes", async () => {
+      const created = await config.api.agent.create({
+        name: "Metadata Agent",
+        aiconfig: "default",
+        live: true,
+        icon: "Robot",
+        iconColor: "#0B8A6A",
+      })
+
+      await config.api.workspace.publish(config.devWorkspace!.appId)
+
+      await config.api.agent.update({
+        ...created,
+        name: "Metadata Agent Renamed",
+        icon: "Sparkles",
+        iconColor: "#B45309",
+      })
+
+      const status = await config.api.deploy.publishStatus()
+      expect(status.agents[created._id!]).toEqual(
+        expect.objectContaining({
+          published: true,
+          name: "Metadata Agent Renamed",
+          unpublishedChanges: true,
+          state: "published",
+        })
+      )
+
+      await config.api.workspace.publish(config.devWorkspace!.appId)
+
+      const republishedStatus = await config.api.deploy.publishStatus()
+      expect(republishedStatus.agents[created._id!]).toEqual(
+        expect.objectContaining({
+          published: true,
+          name: "Metadata Agent Renamed",
+          unpublishedChanges: false,
+          state: "published",
+        })
+      )
     })
   })
 

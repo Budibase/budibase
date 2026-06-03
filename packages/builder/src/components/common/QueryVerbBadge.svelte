@@ -22,6 +22,7 @@
     white-space: nowrap;
     min-width: 42px;
     background-color: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     padding: 4px 8px;
   }

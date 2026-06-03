@@ -6,7 +6,7 @@
   "license": "MPL-2.0",
   "svelte": "./src/index.ts",
   "scripts": {
-    "check:types": "yarn svelte-check --incremental",
+    "check:types": "yarn svelte-check",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -21,6 +21,6 @@
     "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.0"
   }
 }

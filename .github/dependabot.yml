@@ -6,6 +6,7 @@ updates:
       interval: "daily"
     ignore:
       - dependency-name: "@budibase/*"
+      - dependency-name: "svelte"
     open-pull-requests-limit: 0
     groups:
       all-non-major-security:

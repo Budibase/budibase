@@ -26,7 +26,6 @@
   export let agentAvailability: AgentAvailability = "ready"
 
   export let chat: ChatConversationLike
-  export let loading: boolean = false
   export let suppressAgentPicker: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""

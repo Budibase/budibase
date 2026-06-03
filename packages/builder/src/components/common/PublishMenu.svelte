@@ -13,8 +13,8 @@
     workspaceAppStore,
     appStore,
   } from "@/stores/builder"
-  import { agentsStore, featureFlags } from "@/stores/portal"
-  import { FeatureFlag, PluginType, type Plugin } from "@budibase/types"
+  import { agentsStore } from "@/stores/portal"
+  import { PluginType, type Plugin } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
   let actionMenu: any
@@ -112,7 +112,7 @@
   on:click={publish}
   on:keydown={e => e.key === "Enter" && publish()}
 >
-  <Icon size="M" name="arrow-circle-up" />
+  <Icon size="M" name="arrow-circle-up" weight="fill" />
   <span>Publish</span>
 </div>
 
@@ -137,7 +137,7 @@
         Apps published: {$workspaceAppStore.workspaceApps.length}
         <br />
       {/if}
-      {#if $featureFlags[FeatureFlag.AI_AGENTS] && $agentsStore.agents.length}
+      {#if $agentsStore.agents.length}
         Agents published: {$agentsStore.agents.length}
       {/if}
     </Body>
@@ -183,7 +183,7 @@
     font-size: var(--font-size-l);
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: 0.375rem;
     background: var(--spectrum-global-color-gray-800);
     border-radius: 8px;
     color: var(--spectrum-global-color-gray-50);

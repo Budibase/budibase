@@ -8,7 +8,6 @@
     Tag,
     Search,
   } from "@budibase/bbui"
-  import Panel from "@/components/design/Panel.svelte"
   import {
     AutomationActionStepId,
     BlockDefinitionTypes,
@@ -23,17 +22,28 @@
   import { fly } from "svelte/transition"
   import NewPill from "@/components/common/NewPill.svelte"
   import type { BranchFlowContext, FlowBlockPath } from "@/types/automations"
+  import ResizablePanel from "@/components/common/ResizablePanel.svelte"
+  import Panel from "@/components/design/Panel.svelte"
+  import { getAutomationStepIconColor } from "./AutomationStepCategories"
 
   export let block
   export let onClose = () => {}
 
+  const SIDE_PANEL_STORAGE_KEY = "automation-side-panel-width"
+
   let searchString: string = ""
   let searchRef: HTMLInputElement | undefined = undefined
+  let panelContainerRef: HTMLDivElement | undefined = undefined
+  let selectedIndex: number | null = null
+  let navigableActions: AutomationStepDefinition[] = []
+  let actionOrderMap: Record<string, number> = {}
+  let isSelectingAction = false
+  let actionSelectionLocked = false
+  type BranchPathLike = Array<{ branchIdx?: number | null }>
 
   $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
-  let selectedAction: string | undefined
   let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
     ([key, action]) =>
       key !== AutomationActionStepId.BRANCH && action.deprecated !== true
@@ -52,7 +62,19 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
-  $: insideLoopV2 = block?.insertIntoLoopV2
+  $: toolbarEnd = $automationStore.actionPanelToolbarFlowEnd
+  $: flowEnd =
+    toolbarEnd && $selectedAutomation?.data && $selectedAutomation?.blockRefs
+      ? automationStore.actions.getToolbarFlowEndInsertion(
+          $selectedAutomation.data,
+          $selectedAutomation.blockRefs
+        )
+      : null
+  $: insideLoopV2 = toolbarEnd
+    ? !!(
+        flowEnd?.insertInsideLoopV2Children || flowEnd?.anchorRef?.isLoopV2Child
+      )
+    : !!block?.insertIntoLoopV2
   $: loopStepId = block?.loopStepId || block?.id
   $: loopChildInsertIndex =
     typeof block?.loopChildInsertIndex === "number"
@@ -118,13 +140,23 @@
     ]
   }
 
+  const pathHasBranchHop = (path: BranchPathLike | undefined) => {
+    return path?.some(hop => Number.isInteger(hop.branchIdx)) ?? false
+  }
+
   $: blockRef = block?.id
     ? $selectedAutomation.blockRefs?.[block.id]
     : undefined
   $: targetPath =
-    blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+    toolbarEnd && flowEnd?.targetPath?.length
+      ? flowEnd.targetPath
+      : blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+  $: targetPathIsInsideBranch = pathHasBranchHop(targetPath)
+  $: targetIsLoopContainer = insideLoopV2 && loopStepId === block?.id
 
-  $: lastStep = blockRef?.terminating
+  $: lastStep = toolbarEnd
+    ? flowEnd?.anchorRef?.terminating
+    : blockRef?.terminating
   $: pathSteps =
     targetPath && $selectedAutomation?.data
       ? automationStore.actions.getPathSteps(
@@ -288,16 +320,58 @@
     matchesSearch(action, searchString)
   )
 
-  const selectAction = async (action: AutomationStepDefinition) => {
-    selectedAction = action.name
+  $: {
+    const categoryActions = filteredCategories.flatMap(category =>
+      category.items
+        .filter(([idx]) => {
+          const state = checkDisabled(idx)
+          return !(state && state.disabled)
+        })
+        .map(([_, action]) => action)
+    )
+    const pluginActions = filteredPlugins.map(([_, action]) => action)
+    navigableActions = [...categoryActions, ...pluginActions]
+    actionOrderMap = navigableActions.reduce<Record<string, number>>(
+      (acc, action, idx) => {
+        acc[action.stepId] = idx
+        return acc
+      },
+      {}
+    )
 
+    if (!navigableActions.length) {
+      selectedIndex = null
+    } else if (searchString && selectedIndex == null) {
+      selectedIndex = 0
+    } else if (
+      selectedIndex != null &&
+      selectedIndex >= navigableActions.length
+    ) {
+      selectedIndex = 0
+    }
+  }
+
+  const selectAction = async (action: AutomationStepDefinition) => {
+    if (isSelectingAction || actionSelectionLocked) {
+      return
+    }
+
+    actionSelectionLocked = true
+    isSelectingAction = true
+    let stepInserted = false
     try {
       const newBlock = automationStore.actions.constructBlock(
         BlockDefinitionTypes.ACTION,
         action.stepId,
         action
       )
-      if (insideLoopV2 && loopStepId) {
+      if (
+        insideLoopV2 &&
+        loopStepId &&
+        !toolbarEnd &&
+        !block?.branchNode &&
+        (!targetPathIsInsideBranch || targetIsLoopContainer)
+      ) {
         await automationStore.actions.addBlockToLoopChildren(
           loopStepId,
           newBlock,
@@ -306,17 +380,21 @@
       } else {
         await automationStore.actions.addBlockToAutomation(newBlock, targetPath)
       }
+      stepInserted = true
 
       // Determine presence of the block before focusing
-      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
-      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
-      await automationStore.actions.selectNode(createdBlockLoc?.id)
+      await automationStore.actions.selectNode(newBlock.id)
 
       automationStore.actions.closeActionPanel()
       onClose()
     } catch (error) {
       console.error(error)
       notifications.error("Error saving automation")
+      if (!stepInserted) {
+        actionSelectionLocked = false
+      }
+    } finally {
+      isSelectingAction = false
     }
   }
 
@@ -324,120 +402,213 @@
     return externalActions[stepId as keyof typeof externalActions]
   }
 
+  const handleActionKeydown = async (
+    e: KeyboardEvent,
+    action: AutomationStepDefinition,
+    disabled = false
+  ) => {
+    if (disabled || isSelectingAction || actionSelectionLocked) {
+      return
+    }
+    if (e.key === "Enter") {
+      e.preventDefault()
+      await selectAction(action)
+    }
+  }
+
+  const handleKeyDown = async (e: KeyboardEvent) => {
+    const target = e.target
+    if (!(target instanceof Node) || !panelContainerRef?.contains(target)) {
+      return
+    }
+
+    if (!navigableActions.length) {
+      return
+    }
+
+    if (isSelectingAction || actionSelectionLocked) {
+      return
+    }
+
+    if (e.key === "Tab" || e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (selectedIndex == null) {
+        selectedIndex = 0
+      } else {
+        const direction =
+          e.key === "ArrowUp" || (e.key === "Tab" && e.shiftKey) ? -1 : 1
+        selectedIndex =
+          (selectedIndex + direction + navigableActions.length) %
+          navigableActions.length
+      }
+      e.preventDefault()
+      e.stopPropagation()
+      return
+    }
+
+    if (e.key === "Enter" && selectedIndex != null) {
+      const action = navigableActions[selectedIndex]
+      if (action) {
+        await selectAction(action)
+      }
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
   onMount(() => {
     searchRef?.focus()
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
   })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
-  <Panel
-    title="Automation Step"
-    showCloseButton
-    onClickCloseButton={onClose}
-    customWidth={400}
-    borderLeft
+<div
+  class="container"
+  bind:this={panelContainerRef}
+  transition:fly|local={{ x: 260, duration: 300 }}
+>
+  <ResizablePanel
+    storageKey={SIDE_PANEL_STORAGE_KEY}
+    defaultWidth={480}
+    minWidth={360}
+    maxWidthRatio={0.6}
+    position="right"
   >
-    <div class="step-panel-content">
-      <div class="search-container">
-        <Search
-          placeholder="Search"
-          value={searchString}
-          on:change={e => (searchString = e.detail)}
-          bind:inputRef={searchRef}
-        />
-      </div>
-      {#each filteredCategories as category, i}
-        {#if i > 0}
-          <div class="section-divider"></div>
-        {/if}
-        <Detail size="M" weight={600}>{category.name}</Detail>
-        <div class="item-list">
-          {#each category.items as [idx, action]}
-            {@const isDisabled =
-              checkDisabled(idx) && checkDisabled(idx).disabled}
-            <div
-              class="item"
-              class:disabled={isDisabled}
-              class:selected={selectedAction === action.name}
-              on:click={isDisabled ? null : () => selectAction(action)}
-            >
-              <div class="item-body">
-                {#if !action.internal && getExternalAction(action.stepId)?.icon}
-                  <img
-                    width={17.5}
-                    height={17.5}
-                    src={getExternalAction(action.stepId)?.icon}
-                    alt={getExternalAction(action.stepId)?.name}
-                    class="external-icon"
-                  />
-                {:else}
-                  <div class="icon-container">
-                    <Icon
-                      name={action.icon}
-                      size="M"
-                      color="var(--spectrum-global-color-static-gray-50)"
+    <Panel
+      title="Automation Step"
+      showCloseButton
+      onClickCloseButton={onClose}
+      resizable
+    >
+      <div class="step-panel-content">
+        <div class="search-container">
+          <Search
+            placeholder="Search"
+            value={searchString}
+            on:change={e => (searchString = e.detail)}
+            bind:inputRef={searchRef}
+          />
+        </div>
+        {#each filteredCategories as category, i}
+          {#if i > 0}
+            <div class="section-divider"></div>
+          {/if}
+          <Detail size="M" weight={600}>{category.name}</Detail>
+          <div class="item-list">
+            {#each category.items as [idx, action]}
+              {@const isDisabled =
+                checkDisabled(idx) && checkDisabled(idx).disabled}
+              <div
+                class="item"
+                class:disabled={isDisabled}
+                class:selected={selectedIndex === actionOrderMap[action.stepId]}
+                role="button"
+                tabindex={isDisabled ? -1 : 0}
+                on:click={isDisabled ? null : () => selectAction(action)}
+                on:mouseenter={() => (selectedIndex = null)}
+                on:keydown={e => handleActionKeydown(e, action, isDisabled)}
+              >
+                <div class="item-body">
+                  {#if !action.internal && getExternalAction(action.stepId)?.icon}
+                    <img
+                      width={17.5}
+                      height={17.5}
+                      src={getExternalAction(action.stepId)?.icon}
+                      alt={getExternalAction(action.stepId)?.name}
+                      class="external-icon"
                     />
-                  </div>
-                {/if}
-                <Body
-                  size="S"
-                  weight="500"
-                  color="var(--spectrum-global-color-gray-900)"
-                >
-                  {action.internal === false
-                    ? action.stepTitle ||
-                      idx.charAt(0).toUpperCase() + idx.slice(1)
-                    : action.name}
-                </Body>
-                {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
-                  <div class="tag-color">
-                    <Tags>
-                      <Tag icon="lock" emphasized>Premium</Tag>
-                    </Tags>
-                  </div>
-                {:else if isDisabled}
-                  <Icon name="question" tooltip={checkDisabled(idx).message} />
-                {:else if action.new}
-                  <NewPill />
-                {/if}
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/each}
-      {#if filteredPlugins.length}
-        <div class="section-divider"></div>
-        <div class="section-header">
-          <Detail size="M" weight={700}>Plugins</Detail>
-        </div>
-        <div class="item-list">
-          {#each filteredPlugins as [_, action]}
-            <div
-              class="item"
-              class:selected={selectedAction === action.name}
-              on:click={() => selectAction(action)}
-            >
-              <div class="item-body">
-                <div class="item-icon">
-                  <Icon name={action.icon} size="M" />
-                </div>
-                <div class="item-label">
+                  {:else}
+                    <div
+                      class="icon-container"
+                      style:--automation-step-icon-color={getAutomationStepIconColor(
+                        action.stepId
+                      )}
+                    >
+                      <Icon
+                        name={action.icon}
+                        size="M"
+                        color="var(--spectrum-global-color-gray-900)"
+                      />
+                    </div>
+                  {/if}
                   <Body
                     size="S"
                     weight="500"
                     color="var(--spectrum-global-color-gray-900)"
-                    >{action.name}</Body
                   >
+                    {action.internal === false
+                      ? action.stepTitle ||
+                        idx.charAt(0).toUpperCase() + idx.slice(1)
+                      : action.name}
+                  </Body>
+                  {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
+                    <div class="tag-color">
+                      <Tags>
+                        <Tag icon="lock" emphasized>Premium</Tag>
+                      </Tags>
+                    </div>
+                  {:else if isDisabled}
+                    <Icon
+                      name="question"
+                      tooltip={checkDisabled(idx).message}
+                    />
+                  {:else if action.new}
+                    <NewPill />
+                  {/if}
                 </div>
               </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  </Panel>
+            {/each}
+          </div>
+        {/each}
+        {#if filteredPlugins.length}
+          <div class="section-divider"></div>
+          <div class="section-header">
+            <Detail size="M" weight={700}>Plugins</Detail>
+          </div>
+          <div class="item-list">
+            {#each filteredPlugins as [_, action]}
+              <div
+                class="item"
+                class:selected={selectedIndex === actionOrderMap[action.stepId]}
+                role="button"
+                tabindex={0}
+                on:click={() => selectAction(action)}
+                on:mouseenter={() => (selectedIndex = null)}
+                on:keydown={e => handleActionKeydown(e, action)}
+              >
+                <div class="item-body">
+                  <div
+                    class="icon-container"
+                    style:--automation-step-icon-color={getAutomationStepIconColor(
+                      action.stepId
+                    )}
+                  >
+                    <Icon
+                      name={action.icon}
+                      size="M"
+                      color="var(--spectrum-global-color-gray-900)"
+                    />
+                  </div>
+                  <div class="item-label">
+                    <Body
+                      size="S"
+                      weight="500"
+                      color="var(--spectrum-global-color-gray-900)"
+                      >{action.name}</Body
+                    >
+                  </div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    </Panel>
+  </ResizablePanel>
 </div>
 
 <style>
@@ -445,7 +616,7 @@
     position: fixed;
     right: 0;
     z-index: 99;
-    height: calc(100% - 60px);
+    height: calc(100% - var(--top-bar-height, 51px));
     display: flex;
     flex-direction: row;
     align-items: stretch;
@@ -493,13 +664,16 @@
     cursor: pointer;
   }
   .icon-container {
-    background-color: #215f9e;
-    border: 0.5px solid #467db4;
+    background-color: var(--automation-step-icon-color);
+    border: 0.5px solid var(--automation-step-icon-color);
     padding: 4px;
     border-radius: 8px;
   }
   .item:not(.disabled):hover,
-  .selected {
+  .item.selected {
+    border-color: var(--spectrum-global-color-blue-400);
+  }
+  .item:not(.disabled):hover {
     background: var(--spectrum-global-color-gray-200);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
@@ -514,7 +688,6 @@
     gap: var(--spacing-m);
     width: 100%;
   }
-  .item-icon,
   .external-icon {
     width: 17.5px;
     height: 17.5px;

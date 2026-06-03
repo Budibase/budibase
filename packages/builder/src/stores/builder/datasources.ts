@@ -26,7 +26,11 @@ class TableImportError extends Error {
   errors: Record<string, string>
 
   constructor(errors: Record<string, string>) {
-    super()
+    super(
+      Object.entries(errors)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\n")
+    )
     this.name = "TableImportError"
     this.errors = errors
   }

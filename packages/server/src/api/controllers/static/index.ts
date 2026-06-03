@@ -46,14 +46,16 @@ import {
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { render } from "svelte/server"
 
 const ACTIVE_CONTENT_EXTENSIONS = new Set([
   "html",
   "htm",
+  "js",
+  "jse",
+  "mjs",
   "svg",
   "svgz",
+  "wasm",
   "xhtml",
   "mhtml",
   "shtml",
@@ -62,6 +64,9 @@ const ACTIVE_CONTENT_EXTENSIONS = new Set([
 const ACTIVE_CONTENT_MIME_TYPES = [
   "text/html",
   "image/svg+xml",
+  "application/javascript",
+  "application/wasm",
+  "text/javascript",
   "application/xhtml+xml",
 ]
 
@@ -167,29 +172,25 @@ export const uploadFile = async function (
         )
       }
 
-      if (isPublicUser) {
-        if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
-          throw new ActiveContentFileError(fileName)
-        }
+      if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
+        throw new ActiveContentFileError(fileName)
+      }
 
-        const mimeType =
-          typeof rawMimeType === "string"
-            ? rawMimeType.toLowerCase()
-            : undefined
-        if (
-          mimeType &&
-          ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
-        ) {
-          throw new ActiveContentFileError(fileName)
-        }
+      const mimeType =
+        typeof rawMimeType === "string" ? rawMimeType.toLowerCase() : undefined
+      if (
+        mimeType &&
+        ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
+      ) {
+        throw new ActiveContentFileError(fileName)
+      }
 
-        if (
-          filePath &&
-          (typeof filePath === "string" || Buffer.isBuffer(filePath)) &&
-          (await detectActiveContent(filePath))
-        ) {
-          throw new ActiveContentFileError(fileName)
-        }
+      if (
+        filePath &&
+        (typeof filePath === "string" || Buffer.isBuffer(filePath)) &&
+        (await detectActiveContent(filePath))
+      ) {
+        throw new ActiveContentFileError(fileName)
       }
 
       // filenames converted to UUIDs so they are unique
@@ -234,7 +235,13 @@ export async function processPWAZip(ctx: UserCtx) {
     await extract(filePath, { dir: tempDir })
     const iconsJsonPath = join(tempDir, "icons.json")
 
-    if (!fs.existsSync(iconsJsonPath)) {
+    let iconsJsonStats
+    try {
+      iconsJsonStats = await fsp.lstat(iconsJsonPath)
+    } catch (_err) {
+      ctx.throw(400, "Invalid zip structure - missing icons.json")
+    }
+    if (!iconsJsonStats.isFile()) {
       ctx.throw(400, "Invalid zip structure - missing icons.json")
     }
 
@@ -252,17 +259,26 @@ export async function processPWAZip(ctx: UserCtx) {
 
     const icons = []
     const baseDir = path.dirname(iconsJsonPath)
+    const realBaseDir = await fsp.realpath(baseDir)
     const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
       const resolvedSrc = icon.src ? path.resolve(baseDir, icon.src) : undefined
-      if (
-        !icon.src ||
-        !icon.sizes ||
-        !resolvedSrc ||
-        !resolvedSrc.startsWith(baseDir + path.sep) ||
-        !fs.existsSync(resolvedSrc)
-      ) {
+      let validIconFile = false
+      if (resolvedSrc?.startsWith(baseDir + path.sep)) {
+        try {
+          const [iconStats, realSrc] = await Promise.all([
+            fsp.lstat(resolvedSrc),
+            fsp.realpath(resolvedSrc),
+          ])
+          validIconFile =
+            iconStats.isFile() && realSrc.startsWith(realBaseDir + path.sep)
+        } catch (_err) {
+          validIconFile = false
+        }
+      }
+
+      if (!icon.src || !icon.sizes || !resolvedSrc || !validIconFile) {
         continue
       }
 
@@ -347,6 +363,24 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
     const appInfo = await sdk.workspaces.metadata.get()
+
+    // When embedded, allow the host site to authenticate the user via a signed
+    // token. Establishing the session here sets the auth cookie on the initial
+    // document response so the client's subsequent API calls are authenticated.
+    if (bbHeaderEmbed && !ctx.isAuthenticated && appInfo.embedSSO?.enabled) {
+      const embedToken = ctx.query.jwt
+      if (typeof embedToken === "string" && embedToken) {
+        try {
+          await sdk.embedSSO.authenticateEmbedUser(
+            ctx,
+            appInfo.embedSSO,
+            embedToken
+          )
+        } catch (err) {
+          console.warn(`Embed SSO authentication failed: ${err}`)
+        }
+      }
+    }
     const clientVersion = isChatRoute ? envCore.VERSION : appInfo.version
     const clientCacheKey = await objectStore.getClientCacheKey(clientVersion)
     const clientAssetScopeId = isChatRoute
@@ -357,7 +391,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo.theme)
+    const themeVariables = getThemeVariables(
+      workspaceApp?.theme ?? appInfo.theme
+    )
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
     const manifestUrl = hasPWA ? `/api/apps/${workspaceId}/manifest.json` : ""
     const addAppScripts =
@@ -365,6 +401,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       false
 
     if (!env.isJest()) {
+      const [{ default: AppComponent }, { render }] = await Promise.all([
+        import("./templates/BudibaseApp.svelte"),
+        import("svelte/server"),
+      ])
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function
@@ -608,6 +648,10 @@ export const getSignedUploadURL = async function (
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
+    }
+    const datasourceBucket = datasource?.config?.bucket
+    if (datasourceBucket && datasourceBucket !== bucket) {
+      ctx.throw(400, "bucket must match the datasource configuration")
     }
     try {
       let endpoint = datasource?.config?.endpoint

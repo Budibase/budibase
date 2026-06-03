@@ -14,6 +14,7 @@
   import { onMount } from "svelte"
   import dayjs from "dayjs"
   import StatusRenderer from "@/settings/pages/automations/_components/StatusRenderer.svelte"
+  import { didRunStopWithoutBranchMatch } from "./FlowCanvas/FlowRunHelpers"
 
   export let automation
   export let onSelectLog = () => {}
@@ -114,6 +115,10 @@
     await fetchLogs(automation._id, status, 0, timeRange, true)
     loaded = true
   })
+
+  const getLogStatus = log => {
+    return didRunStopWithoutBranchMatch(log) ? STOPPED : log.status
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -188,7 +193,7 @@
                       </Body>
                     </div>
                     <div class="log-status">
-                      <StatusRenderer value={log.status} />
+                      <StatusRenderer value={getLogStatus(log)} />
                     </div>
                   </div>
                 </div>
@@ -216,7 +221,7 @@
     position: fixed;
     right: 0;
     z-index: 99;
-    height: calc(100% - 60px);
+    height: calc(100% - var(--top-bar-height, 51px));
     display: flex;
     flex-direction: row;
     align-items: stretch;

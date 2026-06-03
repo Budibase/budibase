@@ -21,6 +21,7 @@
     "bull": "4.10.1",
     "dd-trace": "5.56.0",
     "jsonwebtoken": "9.0.2",
+    "isolated-vm": "^6.0.1",
     "lru-cache": "^7.14.1",
     "memorystream": "^0.3.1",
     "node-fetch": "2.6.7",

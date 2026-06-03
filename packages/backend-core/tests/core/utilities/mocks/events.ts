@@ -130,4 +130,8 @@ beforeAll(async () => {
   jest.spyOn(events.license, "portalOpened")
   jest.spyOn(events.license, "paymentFailed")
   jest.spyOn(events.license, "paymentRecovered")
+
+  jest.spyOn(events.workspace, "appCreated")
+  jest.spyOn(events.workspace, "appUpdated")
+  jest.spyOn(events.workspace, "appDeleted")
 })

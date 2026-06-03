@@ -1,24 +1,28 @@
 import { readFile, unlink } from "node:fs/promises"
-import { HTTPError } from "@budibase/backend-core"
+import { events, HTTPError } from "@budibase/backend-core"
 import {
   AgentKnowledgeSourceType,
   AgentFileUploadResponse,
-  DisconnectAgentKnowledgeSourcesResponse,
+  ConnectAgentSharePointSiteRequest,
+  ConnectAgentSharePointSiteResponse,
+  DisconnectAgentSharePointSiteResponse,
+  UpdateAgentSharePointSiteRequest,
+  UpdateAgentSharePointSiteResponse,
+  SharePointKnowledgeSourceSnapshot,
+  FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
-  FetchAgentFilesResponse,
+  FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
-  SetAgentKnowledgeSourcesRequest,
-  SetAgentKnowledgeSourcesResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   UserCtx,
+  KnowledgeBaseFileStatus,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import {
-  cleanupSharePointFilesForAgent,
-  getSharePointSiteIds,
-  getSharePointSources,
-} from "./sharepoint"
+import { fetchSharePointSitesByDatasourceAuthConfig } from "../../../sdk/workspace/ai/knowledgeSources/sharepoint"
+import { getSharePointSiteIds, getSharePointSources } from "./sharepoint"
+
+const GEMINI_UPSTREAM_EVENT = "ai.gemini.upstream_unavailable"
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {
@@ -41,12 +45,67 @@ const unlinkSafe = async (path?: string) => {
   }
 }
 
-export async function fetchAgentFiles(
-  ctx: UserCtx<void, FetchAgentFilesResponse, { agentId: string }>
+const sanitizeSharePointSourceId = (siteId: string) =>
+  `sharepoint_site_${siteId.replace(/[^a-zA-Z0-9_-]/g, "_")}`
+
+const fetchSharePointOptionsForDatasourceAuthConfig = async (
+  datasourceId: string,
+  authConfigId: string
+): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
+  const options = await fetchSharePointSitesByDatasourceAuthConfig(
+    datasourceId,
+    authConfigId
+  )
+  return { options }
+}
+
+export async function fetchAgentKnowledge(
+  ctx: UserCtx<void, FetchAgentKnowledgeResponse, { agentId: string }>
 ) {
   const { agentId } = ctx.params
-  const files = await sdk.ai.rag.listFilesForAgent(agentId)
-  ctx.body = { files }
+  const [files, agent, syncState] = await Promise.all([
+    sdk.ai.rag.listFilesForAgent(agentId),
+    sdk.ai.agents.getOrThrow(agentId),
+    sdk.ai.rag.fetchKnowledgeSourceSyncStateForAgent(agentId),
+  ])
+  const runsBySourceId = new Map(syncState.runs.map(run => [run.sourceId, run]))
+  const sharePointSources = getSharePointSources(agent)
+    .filter(source => source.config.site.id)
+    .map<SharePointKnowledgeSourceSnapshot>(source => {
+      const site = source.config.site
+      const run = runsBySourceId.get(source.id)
+      const filesForSource = files.filter(
+        file => file.source?.knowledgeSourceId === source.id
+      )
+
+      const totalCount = filesForSource.length
+      const syncedCount = filesForSource.filter(
+        file => file.status === KnowledgeBaseFileStatus.READY
+      ).length
+      const failedCount = filesForSource.filter(
+        file => file.status === KnowledgeBaseFileStatus.FAILED
+      ).length
+      const processingCount = filesForSource.filter(
+        file => file.status === KnowledgeBaseFileStatus.PROCESSING
+      ).length
+
+      return {
+        sourceId: source.id,
+        name: site?.name,
+        webUrl: site?.webUrl,
+        runStatus: run?.status,
+        lastRunAt: run?.lastRunAt,
+        syncedCount,
+        failedCount,
+        processingCount,
+        totalCount,
+      } satisfies SharePointKnowledgeSourceSnapshot
+    })
+
+  ctx.body = {
+    files,
+    sharePointSources,
+  }
   ctx.status = 200
 }
 
@@ -92,6 +151,23 @@ export async function uploadAgentFile(
     ctx.body = { file: updated }
     ctx.status = 201
   } catch (error: any) {
+    const normalizedMessage = String(error?.message || "").toLowerCase()
+    const isGeminiUpstreamUnavailable =
+      error?.status === 503 ||
+      error?.statusCode === 503 ||
+      normalizedMessage.includes("upstream unavailable") ||
+      normalizedMessage.includes("service unavailable")
+
+    if (isGeminiUpstreamUnavailable) {
+      console.error("[AI_UPSTREAM] Gemini unavailable", {
+        event: GEMINI_UPSTREAM_EVENT,
+        provider: "gemini",
+        path: "knowledge_ingest",
+        upstreamStatus: error?.status,
+        agentId,
+        errorMessage: error?.message,
+      })
+    }
     console.error("Failed to upload agent file", error)
     throw new HTTPError(
       error?.message || "Failed to process uploaded file",
@@ -115,183 +191,227 @@ export async function fetchAgentKnowledgeSourceOptions(
   ctx: UserCtx<
     void,
     FetchAgentKnowledgeSourceOptionsResponse,
-    { agentId: string }
+    { datasourceId: string; authConfigId: string }
   >
 ) {
-  const { agentId } = ctx.params
-  ctx.body = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
+  const { datasourceId, authConfigId } = ctx.params
+  if (!datasourceId || !authConfigId) {
+    throw new HTTPError("datasourceId and authConfigId are required", 400)
+  }
+  ctx.body = {
+    options: await fetchSharePointSitesByDatasourceAuthConfig(
+      datasourceId,
+      authConfigId
+    ),
+  }
   ctx.status = 200
 }
 
-export async function syncAgentKnowledgeSources(
+export async function fetchAgentKnowledgeSourceAllEntries(
   ctx: UserCtx<
-    SyncAgentKnowledgeSourcesRequest,
-    SyncAgentKnowledgeSourcesResponse,
+    void,
+    FetchAgentKnowledgeSourceEntriesResponse,
     { agentId: string }
   >
 ) {
   const { agentId } = ctx.params
-  const sourceIds = Array.isArray(ctx.request.body?.sourceIds)
-    ? ctx.request.body.sourceIds
-    : undefined
+  const siteId = String(ctx.query.siteId || "").trim()
+  if (!siteId) {
+    throw new HTTPError("siteId is required", 400)
+  }
+  ctx.body = await sdk.ai.rag.fetchAllSharePointEntriesForAgent(agentId, siteId)
+  ctx.status = 200
+}
+
+export async function syncAgentKnowledgeSource(
+  ctx: UserCtx<
+    SyncAgentKnowledgeSourcesRequest,
+    SyncAgentKnowledgeSourcesResponse,
+    { agentId: string; sourceId: string }
+  >
+) {
+  const { agentId, sourceId } = ctx.params
+
   console.log("Agent knowledge source sync requested", {
     agentId,
-    sourceIds: sourceIds?.length ? sourceIds : "all",
+    sourceId,
   })
-  const response = sourceIds
-    ? await sdk.ai.rag.syncSharePointSourcesForAgent(agentId, sourceIds)
-    : await sdk.ai.rag.syncSharePointSourcesForAgent(agentId)
+  const response = await sdk.ai.rag.syncSharePointSourcesForAgent(
+    agentId,
+    sourceId
+  )
   ctx.body = response
   ctx.status = 200
 }
 
-export async function setAgentKnowledgeSources(
+export async function connectAgentSharePointSite(
   ctx: UserCtx<
-    SetAgentKnowledgeSourcesRequest,
-    SetAgentKnowledgeSourcesResponse,
+    ConnectAgentSharePointSiteRequest,
+    ConnectAgentSharePointSiteResponse,
     { agentId: string }
   >
 ) {
   const { agentId } = ctx.params
-  const siteIds = Array.from(
-    new Set(
-      (ctx.request.body.sourceIds || [])
-        .map(id => id?.trim())
-        .filter((id): id is string => !!id)
-    )
-  )
+  const { datasourceId, authConfigId, siteId, filters } = ctx.request.body
+  if (!siteId) {
+    throw new HTTPError("siteId is required", 400)
+  }
 
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
-  const hasWorkspaceConnection =
-    await sdk.ai.rag.hasSharePointWorkspaceConnection()
-  if (!hasWorkspaceConnection) {
-    throw new HTTPError("SharePoint is not connected for this agent", 400)
+  const existingSites = getSharePointSiteIds(existingAgent)
+  if (existingSites.has(siteId)) {
+    ctx.body = await fetchSharePointOptionsForDatasourceAuthConfig(
+      datasourceId,
+      authConfigId
+    )
+    ctx.status = 200
+    return
   }
-  const sharePointSources = getSharePointSources(existingAgent)
-
-  const previousSiteIdsSet = getSharePointSiteIds(existingAgent)
-  const previousSiteIds = Array.from(previousSiteIdsSet)
-  const addedSharePointSiteIds = siteIds.filter(
-    id => !previousSiteIdsSet.has(id)
+  const availableOptions = await fetchSharePointOptionsForDatasourceAuthConfig(
+    datasourceId,
+    authConfigId
   )
-  const removedSharePointSiteIds = previousSiteIds.filter(
-    id => !siteIds.includes(id)
+  const selectedOption = availableOptions.options.find(
+    option => option.id === siteId
   )
-  console.log("Updating agent knowledge sources", {
-    agentId,
-    previousSiteCount: previousSiteIds.length,
-    nextSiteCount: siteIds.length,
-    addedSharePointSiteIds,
-    removedSharePointSiteIds,
-  })
-  const availableSites = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
-  const availableById = new Map(
-    availableSites.options.map(site => [
-      site.id,
-      { name: site.name, webUrl: site.webUrl },
-    ])
-  )
-  const existingById = new Map(
-    sharePointSources
-      .map(source => source.config.site)
-      .filter(
-        (site): site is { id: string; name?: string; webUrl?: string } =>
-          !!site?.id
-      )
-      .map(site => [site.id, site] as const)
-  )
-  const nextSources = siteIds.map(siteId => {
-    const sourceSiteId = siteId.replace(/[^a-zA-Z0-9_-]/g, "_")
-    const existingSite = existingById.get(siteId)
-    const fetchedSite = availableById.get(siteId)
-    return {
-      id: `sharepoint_site_${sourceSiteId}`,
-      type: AgentKnowledgeSourceType.SHAREPOINT,
-      config: {
-        site: {
-          id: siteId,
-          name: fetchedSite?.name || existingSite?.name,
-          webUrl: fetchedSite?.webUrl || existingSite?.webUrl,
-        },
+  const nextSource = {
+    id: sanitizeSharePointSourceId(siteId),
+    type: AgentKnowledgeSourceType.SHAREPOINT,
+    config: {
+      datasourceId,
+      authConfigId,
+      site: {
+        id: siteId,
+        name: selectedOption?.name,
+        webUrl: selectedOption?.webUrl,
       },
-    }
+      filters: filters ? { patterns: filters } : undefined,
+    },
+  }
+  console.log("Connecting SharePoint site to agent", {
+    agentId,
+    siteId,
+    sourceId: nextSource.id,
   })
   const nonSharePointSources = (existingAgent.knowledgeSources || []).filter(
     source => source.type !== AgentKnowledgeSourceType.SHAREPOINT
   )
-
   const updated = await sdk.ai.agents.update({
     ...existingAgent,
-    knowledgeSources: [...nonSharePointSources, ...nextSources],
+    knowledgeSources: [
+      ...nonSharePointSources,
+      ...getSharePointSources(existingAgent),
+      nextSource,
+    ],
   })
   await sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(updated)
-
-  await cleanupSharePointFilesForAgent({
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueAgentJobs(
     agentId,
-    removedSharePointSiteIds,
-    sharePointDisconnected: false,
-  })
-  await sdk.ai.rag.deleteKnowledgeSourceSyncStateForAgent(
-    agentId,
-    removedSharePointSiteIds
+    AgentKnowledgeSourceType.SHAREPOINT,
+    [nextSource.id]
   )
-
-  const nextSourceIds = nextSources.map(source => source.id)
-  if (nextSourceIds.length > 0) {
-    await sdk.ai.rag.syncSharePointSourcesForAgent(agentId, nextSourceIds)
-  }
-
-  console.log("Updated agent knowledge sources", {
-    agentId,
-    nextSourceIds,
-    addedSharePointSiteIds,
-    removedSharePointSiteIds,
-  })
-
-  ctx.body = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
+  ctx.body = await fetchSharePointOptionsForDatasourceAuthConfig(
+    datasourceId,
+    authConfigId
+  )
   ctx.status = 200
 }
 
-export async function disconnectAgentKnowledgeSources(
+export async function updateAgentSharePointSite(
   ctx: UserCtx<
-    void,
-    DisconnectAgentKnowledgeSourcesResponse,
-    { agentId: string }
+    UpdateAgentSharePointSiteRequest,
+    UpdateAgentSharePointSiteResponse,
+    { agentId: string; siteId: string }
   >
 ) {
-  const { agentId } = ctx.params
+  const { agentId, siteId } = ctx.params
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
-  const removedSharePointSiteIds = Array.from(
-    getSharePointSiteIds(existingAgent)
+  const source = getSharePointSources(existingAgent).find(
+    source => source.config.site.id === siteId
   )
-  console.log("Disconnecting agent knowledge sources", {
-    agentId,
-    removedSharePointSiteIds,
-    removedCount: removedSharePointSiteIds.length,
-  })
+  if (!source) {
+    throw new HTTPError("SharePoint site is not connected for this agent", 404)
+  }
 
-  const nextSources = (existingAgent.knowledgeSources || []).filter(
+  const { filters } = ctx.request.body
+  const nextSharePointSources = getSharePointSources(existingAgent).map(
+    existingSource =>
+      existingSource.id === source.id
+        ? {
+            ...existingSource,
+            config: {
+              ...existingSource.config,
+              filters: filters ? { patterns: filters } : undefined,
+            },
+          }
+        : existingSource
+  )
+  const nonSharePointSources = (existingAgent.knowledgeSources || []).filter(
     source => source.type !== AgentKnowledgeSourceType.SHAREPOINT
   )
-  await sdk.ai.agents.update({
+  const updated = await sdk.ai.agents.update({
     ...existingAgent,
-    knowledgeSources: nextSources,
+    knowledgeSources: [...nonSharePointSources, ...nextSharePointSources],
   })
-  await sdk.ai.rag.knowledgeSourceSyncQueue.removeAllAgentJobs(agentId)
-  await cleanupSharePointFilesForAgent({
+  await sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(updated)
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueAgentJobs(
     agentId,
-    removedSharePointSiteIds: [],
-    sharePointDisconnected: true,
-  })
-  await sdk.ai.rag.deleteKnowledgeSourceSyncStateForAgent(agentId)
-  console.log("Disconnected agent knowledge sources", {
-    agentId,
-    removedSharePointSiteIds,
-  })
+    AgentKnowledgeSourceType.SHAREPOINT,
+    [source.id]
+  )
+  ctx.body = await fetchSharePointOptionsForDatasourceAuthConfig(
+    source.config.datasourceId,
+    source.config.authConfigId
+  )
+  ctx.status = 200
+}
 
+export async function disconnectAgentSharePointSite(
+  ctx: UserCtx<
+    void,
+    DisconnectAgentSharePointSiteResponse,
+    { agentId: string; siteId: string }
+  >
+) {
+  const { agentId, siteId } = ctx.params
+  const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
+  const removedSource = getSharePointSources(existingAgent).find(
+    source => source.config.site.id === siteId
+  )
+  if (!removedSource) {
+    throw new HTTPError("SharePoint site is not connected for this agent", 404)
+  }
+  const nextSharePointSources = getSharePointSources(existingAgent).filter(
+    source => source.id !== removedSource.id
+  )
+  const nonSharePointSources = (existingAgent.knowledgeSources || []).filter(
+    source => source.type !== AgentKnowledgeSourceType.SHAREPOINT
+  )
+  const updated = await sdk.ai.agents.update({
+    ...existingAgent,
+    knowledgeSources: [...nonSharePointSources, ...nextSharePointSources],
+  })
+  await sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(updated)
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueDisconnectSharePointSiteJob(
+    agentId,
+    removedSource.id,
+    siteId
+  )
+  const sourceId = removedSource.id
+  events.ai.ragFileSharePointDisconnected({
+    agentId,
+    siteId,
+    sourceId,
+  })
+  console.log("Disconnected SharePoint site from agent", {
+    agentId,
+    siteId,
+    sourceId,
+  })
   ctx.body = {
     agentId,
     disconnected: true,
+    siteId,
   }
   ctx.status = 200
 }

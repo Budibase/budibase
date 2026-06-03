@@ -1,5 +1,6 @@
 import {
   context,
+  HTTPError,
   locks,
   sql,
   SQLITE_DESIGN_DOC_ID,
@@ -522,6 +523,9 @@ export async function search(
     return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
+    if (msg?.includes("ECONNREFUSED")) {
+      throw new HTTPError("Search is temporarily unavailable", 503)
+    }
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
       await locks.doWithLock(
         {

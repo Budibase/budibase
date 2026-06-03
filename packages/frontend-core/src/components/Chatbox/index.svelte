@@ -13,11 +13,12 @@
     AgentMessageMetadata,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
-  import { tick } from "svelte"
+  import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
   import { formatToolName } from "../../utils/aiTools"
   import ReasoningStatus from "./ReasoningStatus.svelte"
+  import ContextUsage from "./ContextUsage.svelte"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -71,6 +72,7 @@
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
+  let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
@@ -84,6 +86,9 @@
       .filter(isReasoningUIPart)
       .map(p => p.text)
       .join("")
+
+  const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
+    reasoningTextByMessageId[message.id] || getReasoningText(message)
 
   const isReasoningStreaming = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(
@@ -232,6 +237,11 @@
 
   let messages = $derived(chatInstance.messages)
   let lastMessage = $derived(messages[messages.length - 1])
+
+  let lastAssistantUsage = $derived(
+    messages.findLast(m => m.role === "assistant" && m.metadata?.usage)
+      ?.metadata?.usage
+  )
   let lastAssistantMessage = $derived(
     messages.findLast(message => message.role === "assistant")
   )
@@ -269,6 +279,36 @@
       }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
+      reasoningTextByMessageId = {}
+    }
+  })
+
+  $effect(() => {
+    const nextReasoningTextByMessageId = untrack(() => ({
+      ...reasoningTextByMessageId,
+    }))
+    let hasChanged = false
+
+    for (const message of messages) {
+      if (message.role !== "assistant") {
+        continue
+      }
+
+      const reasoningText = getReasoningText(message)
+      if (!reasoningText) {
+        continue
+      }
+
+      if (nextReasoningTextByMessageId[message.id] === reasoningText) {
+        continue
+      }
+
+      nextReasoningTextByMessageId[message.id] = reasoningText
+      hasChanged = true
+    }
+
+    if (hasChanged) {
+      reasoningTextByMessageId = nextReasoningTextByMessageId
     }
   })
 
@@ -513,7 +553,7 @@
           <MarkdownViewer value={getUserMessageText(message)} />
         </div>
       {:else if message.role === "assistant"}
-        {@const reasoningText = getReasoningText(message)}
+        {@const reasoningText = getCachedReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
         {@const pendingAssistant =
           isBusy &&
@@ -522,14 +562,22 @@
         {@const toolError = hasToolError(message)}
         {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
+        {@const activeAssistant =
+          isBusy && lastAssistantMessage?.id === message.id}
         {@const isThinking =
-          (reasoningStreaming || pendingAssistant) &&
+          (reasoningStreaming || pendingAssistant || activeAssistant) &&
           !toolError &&
           !messageError &&
           !message.metadata?.completedAt}
+        {@const showReasoningStatus =
+          reasoningText ||
+          pendingAssistant ||
+          activeAssistant ||
+          message.metadata?.createdAt ||
+          message.metadata?.completedAt}
         {#if hasVisibleAssistantContent(message) || pendingAssistant}
           <div class="message assistant">
-            {#if reasoningText || pendingAssistant}
+            {#if showReasoningStatus}
               <ReasoningStatus
                 thinking={isThinking}
                 label={isThinking ? "Thinking" : "Thought"}
@@ -713,6 +761,9 @@
           {/if}
         </button>
       </div>
+      <div class="input-footer">
+        <ContextUsage usage={lastAssistantUsage} />
+      </div>
     </div>
   {/if}
 </div>
@@ -838,6 +889,13 @@
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
+    gap: 6px;
+  }
+
+  .input-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 4px;
   }
 
   .read-only-notice {

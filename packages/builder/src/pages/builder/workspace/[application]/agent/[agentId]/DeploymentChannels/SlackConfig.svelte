@@ -1,11 +1,18 @@
 <script lang="ts">
-  import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Checkbox,
+    CopyInput,
+    Input,
+    notifications,
+  } from "@budibase/bbui"
   import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
     ProvisionAgentSlackChannelResponse,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -21,6 +28,7 @@
     botToken: "",
     signingSecret: "",
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
+    requireUserLink: true,
   })
 
   let provisioning = $state(false)
@@ -52,6 +60,7 @@
       signingSecret: integration?.signingSecret || "",
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
+      requireUserLink: integration?.requireUserLink !== false,
     }
     provisionResult = undefined
     draftAgentId = currentAgent._id
@@ -72,9 +81,13 @@
           chatAppId: agent.slackIntegration?.chatAppId,
           messagingEndpointUrl: agent.slackIntegration?.messagingEndpointUrl,
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
+          requireUserLink: draft.requireUserLink,
         },
       })
       provisionResult = await agentsStore.provisionSlackChannel(agent._id)
+      if (agent.live) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Slack channel settings saved")
     } catch (error) {
       console.error(error)
@@ -109,6 +122,12 @@
       type="number"
       bind:value={draft.idleTimeoutMinutes}
     />
+    <div class="field-grid-leading">
+      <Checkbox
+        bind:value={draft.requireUserLink}
+        text="Require users to link a Budibase account"
+      />
+    </div>
   {/snippet}
 
   {#snippet response()}

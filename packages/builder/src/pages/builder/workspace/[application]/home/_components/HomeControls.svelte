@@ -5,7 +5,6 @@
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
 
   export let typeFilter: HomeType = "all"
-  export let agentsEnabled = false
 
   interface HomeFilterOption {
     label: string
@@ -17,12 +16,10 @@
     typeChange: HomeType
   }>()
 
-  const getOptions = (agentsEnabled: boolean) => {
+  const getOptions = () => {
     const options: HomeFilterOption[] = []
 
-    if (agentsEnabled) {
-      options.push({ label: "Agents", value: "agent" })
-    }
+    options.push({ label: "Agents", value: "agent" })
     options.push({ label: "Automations", value: "automation" })
     options.push({ label: "Apps", value: "app" })
 
@@ -31,7 +28,7 @@
 
   $: tabOptions = [
     { label: "All", value: "all" },
-    ...getOptions(agentsEnabled),
+    ...getOptions(),
   ] satisfies HomeFilterOption[]
 </script>
 
