@@ -28,7 +28,6 @@ import {
   ViewV2,
 } from "@budibase/types"
 import dayjs from "dayjs"
-import { isEqual, omit } from "lodash"
 import { cloneDeep } from "lodash/fp"
 import { isRelationshipColumn } from "../../../db/utils"
 import env from "../../../environment"
@@ -528,6 +527,13 @@ export class ExternalRequest<T extends Operation> {
         through: relationship.tableId,
       })
       const rows = related[relatedKey]?.rows || []
+      const selectedRowKey = (valueRow: Row) =>
+        relationshipType === RelationshipType.MANY_TO_MANY
+          ? [valueRow[linkPrimary], linkSecondary && valueRow[linkSecondary]]
+              .filter(value => value != null)
+              .map(value => String(value))
+              .join("::")
+          : ""
 
       const relationshipMatchPredicate = ({
         row,
@@ -540,12 +546,11 @@ export class ExternalRequest<T extends Operation> {
         linkSecondary?: string
         relationshipType: RelationshipType
       }) => {
-        // In many-to-many relationships, the table will contain 3 fields: a
-        // primary key (usually an auto-incrementing ID), and then the 2 foreign
-        // keys that link to the two tables. So a row is equal if the 2
-        // non-primary keys match the body.
+        // In many-to-many relationships, the junction row is uniquely
+        // identified by the two foreign keys. Compare those directly so the
+        // diff is stable even if the row shape carries extra fields.
         if (relationshipType === RelationshipType.MANY_TO_MANY) {
-          return isEqual(omit(row, [linkPrimary]), omit(body, [linkPrimary]))
+          return selectedRowKey(row) === selectedRowKey(body)
         }
 
         const matchesPrimaryLink =
