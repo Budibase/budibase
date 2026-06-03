@@ -487,6 +487,48 @@ if (descriptions.length) {
           })
         })
 
+        it("a create query with a json string document parameter", async () => {
+          const query = await createQuery({
+            fields: {
+              json: "{{ doc }}",
+              extra: {
+                actionType: "insertOne",
+              },
+            },
+            queryVerb: "create",
+            parameters: [
+              {
+                name: "doc",
+                default: "{}",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: {
+              doc: '{"foo":"bar","nested":{"enabled":true}}',
+            },
+          })
+
+          expect(result.data).toEqual([
+            {
+              acknowledged: true,
+              insertedId: expectValidId,
+            },
+          ])
+
+          await withCollection(async collection => {
+            const doc = await collection.findOne({ foo: { $eq: "bar" } })
+            expect(doc).toEqual({
+              _id: expectValidBsonObjectId,
+              foo: "bar",
+              nested: {
+                enabled: true,
+              },
+            })
+          })
+        })
+
         it("a delete query with parameters", async () => {
           const query = await createQuery({
             fields: {
