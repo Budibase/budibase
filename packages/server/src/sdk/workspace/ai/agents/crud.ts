@@ -137,20 +137,25 @@ const decodeTelegramIntegrationSecrets = (
   }
 }
 
-const toPrimaryOperation = (
-  agent: Omit<DeprecatedAgent, "aiconfig">
-): AgentOperation => {
-  const existing = agent.operations?.[0]
-  return {
-    id: existing?.id || "operation_default",
-    name: existing?.name || agent.operationName || DEFAULT_OPERATION_NAME,
-    promptInstructions:
-      existing?.promptInstructions ?? agent.promptInstructions ?? "",
+const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
+  if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
+    return raw.operations ?? []
   }
+
+  if (raw.promptInstructions || raw.operationName) {
+    return [
+      {
+        id: "operation_default",
+        name: raw.operationName || DEFAULT_OPERATION_NAME,
+        promptInstructions: raw.promptInstructions || "",
+      },
+    ]
+  }
+
+  return []
 }
 
 const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
-  const operation = toPrimaryOperation(raw)
   const {
     promptInstructions: _promptInstructions,
     operationName: _operationName,
@@ -159,7 +164,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   return {
     ...rest,
     live: raw.live ?? false,
-    operations: [operation],
+    operations: migrateOperations(raw),
     discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
     slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
     telegramIntegration: decodeTelegramIntegrationSecrets(
@@ -327,13 +332,12 @@ export async function create(
 
   await guardName(request.name)
 
-  const primaryOperation = toPrimaryOperation(request)
   const agent: Agent = {
     _id: docIds.generateAgentID(),
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
-    operations: [primaryOperation],
+    operations: request.operations || [],
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -414,17 +418,14 @@ export async function update(agent: Agent): Promise<Agent> {
   }
 
   const now = new Date().toISOString()
-  const incomingOperation = toPrimaryOperation(agent as DeprecatedAgent)
+  const hasOperations = Object.prototype.hasOwnProperty.call(agent, "operations")
   const updated: Agent = {
     ...existing,
     ...agent,
     updatedAt: now,
-    operations: [
-      {
-        ...(existing.operations?.[0] || {}),
-        ...incomingOperation,
-      },
-    ],
+    operations: hasOperations
+      ? agent.operations ?? []
+      : existing.operations || migrateOperations(agent as DeprecatedAgent),
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,

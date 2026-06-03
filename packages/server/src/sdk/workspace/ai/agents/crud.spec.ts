@@ -64,7 +64,7 @@ describe("agents crud", () => {
   })
 
   describe("fetch", () => {
-    it("wipes legacy promptInstructions when normalizing agents", async () => {
+    it("migrates legacy promptInstructions into the default operation", async () => {
       mockDbAllDocs.mockResolvedValue({
         rows: [
           {
@@ -87,6 +87,8 @@ describe("agents crud", () => {
           name: "Legacy Agent",
           operations: [
             expect.objectContaining({
+              id: "operation_default",
+              name: "Operation",
               promptInstructions: "Legacy instructions",
             }),
           ],
@@ -358,6 +360,90 @@ describe("agents crud", () => {
           live: true,
         })
       )
+    })
+
+    it("persists an explicitly empty operations array", async () => {
+      const existing = {
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        enabledTools: [],
+        knowledgeBases: [],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Primary",
+            promptInstructions: "Do work",
+          },
+        ],
+      } as Agent
+
+      mockDbTryGet.mockResolvedValue(existing)
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      const updated = await agentsCrud.update({
+        ...existing,
+        operations: [],
+      })
+
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operations: [],
+        })
+      )
+      expect(updated.operations).toEqual([])
+    })
+
+    it("persists multiple operations without collapsing them", async () => {
+      const existing = {
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        enabledTools: [],
+        knowledgeBases: [],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Primary",
+            promptInstructions: "Do work",
+          },
+        ],
+      } as Agent
+
+      mockDbTryGet.mockResolvedValue(existing)
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      const updated = await agentsCrud.update({
+        ...existing,
+        operations: [
+          {
+            id: "operation_1",
+            name: "Primary",
+            promptInstructions: "Do work",
+          },
+          {
+            id: "operation_2",
+            name: "Secondary",
+            promptInstructions: "Then do more",
+          },
+        ],
+      })
+
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operations: expect.arrayContaining([
+            expect.objectContaining({
+              id: "operation_1",
+            }),
+            expect.objectContaining({
+              id: "operation_2",
+            }),
+          ]),
+        })
+      )
+      expect(updated.operations).toHaveLength(2)
     })
   })
 })
