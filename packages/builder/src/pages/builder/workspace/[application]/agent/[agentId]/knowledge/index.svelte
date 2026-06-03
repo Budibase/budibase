@@ -48,10 +48,12 @@
   let savingAllowKnowledgeSourceDownload = $state(false)
 
   $effect(() => {
-    if (currentAgent?._id) {
-      allowKnowledgeSourceDownloadDraft =
-        currentAgent.allowKnowledgeSourceDownload !== false
+    if (!currentAgent) {
+      return
     }
+
+    allowKnowledgeSourceDownloadDraft =
+      currentAgent.allowKnowledgeSourceDownload !== false
   })
 
   const persistAllowKnowledgeSourceDownload = async () => {
