@@ -13,6 +13,7 @@ import { assertAgentHasValidConfig } from "./utils"
 
 type DeprecatedAgent = Agent & {
   promptInstructions?: string
+  operationName?: string
 }
 
 const SECRET_MASK = "********"
@@ -136,14 +137,13 @@ const decodeTelegramIntegrationSecrets = (
   }
 }
 
-const toPrimaryOperation = (agent: {
-  operations?: AgentOperation[]
-  promptInstructions?: string
-}): AgentOperation => {
+const toPrimaryOperation = (
+  agent: Omit<DeprecatedAgent, "aiconfig">
+): AgentOperation => {
   const existing = agent.operations?.[0]
   return {
     id: existing?.id || "operation_default",
-    name: existing?.name || DEFAULT_OPERATION_NAME,
+    name: existing?.name || agent.operationName || DEFAULT_OPERATION_NAME,
     promptInstructions:
       existing?.promptInstructions ?? agent.promptInstructions ?? "",
   }
@@ -151,7 +151,11 @@ const toPrimaryOperation = (agent: {
 
 const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   const operation = toPrimaryOperation(raw)
-  const { promptInstructions: _promptInstructions, ...rest } = raw
+  const {
+    promptInstructions: _promptInstructions,
+    operationName: _operationName,
+    ...rest
+  } = raw
   return {
     ...rest,
     live: raw.live ?? false,
