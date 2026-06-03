@@ -1,8 +1,9 @@
 import * as XLSX from "xlsx"
 import {
-  prepareKnowledgeFileForRagIngestion,
-  stringifySpreadsheetForRag,
-} from "./spreadsheetText"
+  prepareTabularKnowledgeFileForRagIngestion,
+  stringifyRowsForRag,
+  stringifyTabularFileForRag,
+} from "./tabularText"
 
 const buildWorkbookBuffer = (
   sheets: Array<{ name: string; rows: Array<Array<string | number>> }>
@@ -20,7 +21,28 @@ const buildWorkbookBuffer = (
   return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 }
 
-describe("spreadsheetText", () => {
+describe("tabularText", () => {
+  it("stringifies row sections independently from file parsing", () => {
+    const result = stringifyRowsForRag({
+      documentLabel: "File: inventory.csv",
+      sections: [
+        {
+          label: "Table: inventory.csv",
+          rows: [
+            ["Product", "Stock"],
+            ["Desk", "8"],
+          ],
+        },
+      ],
+    })
+
+    expect(result).toContain("File: inventory.csv")
+    expect(result).toContain("Table: inventory.csv")
+    expect(result).toContain("Columns: Product | Stock")
+    expect(result).toContain("Product: Desk")
+    expect(result).toContain("Stock: 8")
+  })
+
   it("stringifies sheets as header-aware row blocks", () => {
     const buffer = buildWorkbookBuffer([
       {
@@ -40,7 +62,7 @@ describe("spreadsheetText", () => {
       },
     ])
 
-    const result = stringifySpreadsheetForRag("pricing.xlsx", buffer)
+    const result = stringifyTabularFileForRag("pricing.xlsx", buffer)
 
     expect(result).toContain("Workbook: pricing.xlsx")
     expect(result).toContain("Sheet: Plans")
@@ -69,7 +91,7 @@ describe("spreadsheetText", () => {
       },
     ])
 
-    const result = stringifySpreadsheetForRag("status.xlsx", buffer)
+    const result = stringifyTabularFileForRag("status.xlsx", buffer)
 
     expect(result).toContain("Columns: Column 1 | Status | Status 2")
     expect(result).toContain("Column 1: Alice")
@@ -92,7 +114,7 @@ describe("spreadsheetText", () => {
       },
     ])
 
-    const result = prepareKnowledgeFileForRagIngestion({
+    const result = prepareTabularKnowledgeFileForRagIngestion({
       filename: "pricing.xlsx",
       mimetype:
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -114,7 +136,7 @@ describe("spreadsheetText", () => {
       "utf8"
     )
 
-    const result = prepareKnowledgeFileForRagIngestion({
+    const result = prepareTabularKnowledgeFileForRagIngestion({
       filename: "contacts.csv",
       mimetype: "text/csv",
       buffer,
@@ -138,7 +160,7 @@ describe("spreadsheetText", () => {
       "utf8"
     )
 
-    const result = prepareKnowledgeFileForRagIngestion({
+    const result = prepareTabularKnowledgeFileForRagIngestion({
       filename: "team-data",
       mimetype: "text/tab-separated-values",
       buffer,

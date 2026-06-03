@@ -14,7 +14,7 @@ import {
   searchGeminiFileStore,
 } from "../../knowledgeBase/geminiFileStore"
 import { updateKnowledgeBaseFile } from "../../knowledgeBase"
-import { prepareKnowledgeFileForRagIngestion } from "./spreadsheetText"
+import { prepareTabularKnowledgeFileForRagIngestion } from "./tabularText"
 
 export class GeminiRagProcessor implements RagProcessor {
   private knowledgeBase: WithRequired<GeminiKnowledgeBase, "_id">
@@ -46,7 +46,7 @@ export class GeminiRagProcessor implements RagProcessor {
     })
 
     try {
-      const fileForIngestion = prepareKnowledgeFileForRagIngestion({
+      const fileForIngestion = prepareTabularKnowledgeFileForRagIngestion({
         filename: input.filename,
         mimetype: input.mimetype,
         buffer: fileBuffer,
