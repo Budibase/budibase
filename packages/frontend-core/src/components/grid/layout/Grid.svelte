@@ -63,6 +63,7 @@
   export let aiEnabled = false
   export let canHideColumns = true
   export let externalClipboard: ExternalClipboardData | undefined = undefined
+  export let honorDisabledConditions = false
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -124,6 +125,7 @@
     aiEnabled,
     canHideColumns,
     externalClipboard,
+    honorDisabledConditions,
   })
 
   // missing definition, propagate this

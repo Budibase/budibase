@@ -85,6 +85,7 @@ export interface BaseStoreProps {
   minHeight?: number
   canHideColumns?: boolean
   externalClipboard?: ExternalClipboardData
+  honorDisabledConditions?: boolean
   buttons?: {
     text: string
     onClick: unknown
