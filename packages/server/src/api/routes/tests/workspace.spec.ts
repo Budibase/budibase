@@ -15,6 +15,7 @@ import {
   type Workspace,
   AppFontFamily,
   BuiltinPermissionID,
+  Feature,
   PermissionLevel,
   Screen,
   Theme,
@@ -936,6 +937,21 @@ describe("/applications", () => {
       )
     })
 
+    it("should expose recaptcha availability to public app packages", async () => {
+      mocks.licenses.useUnlimited({ features: [Feature.RECAPTCHA] })
+
+      await config.publish()
+      const res = await config.withHeaders(
+        { referer: `http://localhost:10000/app${workspace.url}` },
+        () =>
+          config.api.workspace.getAppPackage(config.getProdWorkspaceId(), {
+            publicUser: true,
+          })
+      )
+
+      expect(res.recaptchaEnabled).toBe(true)
+    })
+
     it("should allow users in multiple groups with different roles to access all permitted screens", async () => {
       mocks.licenses.useUnlimited()
 
@@ -1431,6 +1447,20 @@ describe("/applications", () => {
       })
 
       expect(updatedApp.name).toBe("TEST_APP")
+    })
+
+    it("updates published recaptcha state without requiring publish", async () => {
+      await config.api.workspace.publish(workspace.appId)
+      await config.api.workspace.update(workspace.appId, {
+        features: {
+          recaptchaEnabled: true,
+        },
+      })
+
+      await config.withProdApp(async () => {
+        const prodApp = await sdk.workspaces.metadata.get()
+        expect(prodApp.features?.recaptchaEnabled).toBe(true)
+      })
     })
   })
 

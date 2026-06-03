@@ -215,6 +215,35 @@ describe("/static", () => {
         expect(res.body.message).toEqual("bucket and key values are required")
       })
 
+      it("should reject buckets that do not match a datasource bucket constraint", async () => {
+        const constrainedDatasource = await config.createDatasource({
+          datasource: {
+            type: "datasource",
+            name: "Constrained Test",
+            source: SourceName.S3,
+            config: {
+              accessKeyId: "bb",
+              secretAccessKey: "bb",
+              bucket: "allowed-bucket",
+            },
+          },
+        })
+
+        const res = await request
+          .post(`/api/attachments/${constrainedDatasource._id}/url`)
+          .send({
+            bucket: "other-bucket",
+            key: "bar",
+          })
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(res.body.message).toEqual(
+          "bucket must match the datasource configuration"
+        )
+      })
+
       it("should allow non-creator app users to generate a signed upload URL", async () => {
         await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
           const res = await request

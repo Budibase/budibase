@@ -48,7 +48,10 @@ export async function verify(
       const session: RecaptchaSessionCookie = {
         sessionId,
       }
-      utils.setCookie(ctx, session, Cookie.RecaptchaSession)
+      utils.setCookie(ctx, session, Cookie.RecaptchaSession, {
+        sign: true,
+        sameSite: "none",
+      })
     }
 
     ctx.body = {
