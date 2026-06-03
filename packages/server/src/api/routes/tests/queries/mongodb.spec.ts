@@ -641,8 +641,7 @@ if (descriptions.length) {
         it("does not allow quoted updateMany parameters to widen the filter", async () => {
           const query = await createQuery({
             fields: {
-              json:
-                '{"filter":{"name":"{{ name }}"},"update":{"$set":{"touched":true}}}',
+              json: '{"filter":{"name":"{{ name }}"},"update":{"$set":{"touched":true}}}',
               extra: {
                 actionType: "updateMany",
               },
