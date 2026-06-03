@@ -499,14 +499,26 @@
 
 <style>
   .sources-access {
+    --sources-access-label-offset: calc(
+      var(
+          --spectrum-checkbox-m-box-size,
+          var(--spectrum-alias-item-control-2-size-m)
+        ) +
+        var(
+          --spectrum-checkbox-m-text-gap,
+          var(--spectrum-alias-item-control-gap-m)
+        )
+    );
+
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-xxs);
     padding-top: var(--spacing-xs);
   }
 
   .sources-access :global(p) {
     margin: 0;
+    padding-left: var(--sources-access-label-offset);
   }
 
   .section-header {
