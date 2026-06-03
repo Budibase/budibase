@@ -83,6 +83,7 @@ export interface Agent extends Document {
   description?: string
   aiconfig: string
   promptInstructions?: string
+  operationName?: string
   goal?: string
   live?: boolean
   publishedAt?: string
