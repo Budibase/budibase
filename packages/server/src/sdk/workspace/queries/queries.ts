@@ -152,16 +152,12 @@ export async function enrichContext(
       enrichedQuery[key] = fields[key]
     }
   }
-  if (
-    enrichedQuery.json ||
-    enrichedQuery.customData ||
-    enrichedQuery.requestBody
-  ) {
+  const jsonField = ["json", "customData", "requestBody"].find(key =>
+    Object.prototype.hasOwnProperty.call(enrichedQuery, key)
+  )
+  if (jsonField) {
     try {
-      const json =
-        enrichedQuery.json ||
-        enrichedQuery.customData ||
-        enrichedQuery.requestBody
+      const json = enrichedQuery[jsonField]
       enrichedQuery.json = typeof json === "string" ? JSON.parse(json) : json
     } catch (err) {
       // no json found, ignore
