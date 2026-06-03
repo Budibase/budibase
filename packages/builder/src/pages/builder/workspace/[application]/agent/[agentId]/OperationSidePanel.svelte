@@ -34,7 +34,7 @@
     onConfigureWebSearch = () => {},
   }: {
     open?: boolean
-    operation?: AgentOperation
+    operation: AgentOperation
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -78,7 +78,7 @@
       {} as Record<string, AgentTool[]>
     )
   )
-  let operationName = $derived(operation?.name?.trim())
+  let operationName = $derived(operation.name?.trim())
   let readableToRuntimeBinding = $derived.by(() =>
     Object.fromEntries(
       promptBindings
@@ -88,7 +88,7 @@
   )
   let includedToolRuntimeBindings = $derived(
     getIncludedToolRuntimeBindings(
-      operation?.promptInstructions,
+      operation.promptInstructions,
       readableToRuntimeBinding
     )
   )
@@ -199,7 +199,7 @@
                 <div class="instructions-actions">
                   <GenerateInstructionsControl
                     triggerLabel="Help write instructions"
-                    promptInstructions={operation?.promptInstructions || ""}
+                    promptInstructions={operation.promptInstructions || ""}
                     {promptBindings}
                     {bindingIcons}
                     onApplyInstructions={instructions => {
@@ -216,7 +216,7 @@
                   {#if toolsLoaded}
                     {#key resolvedIconCount}
                       <CodeEditor
-                        value={operation?.promptInstructions || ""}
+                        value={operation.promptInstructions || ""}
                         bindings={promptBindings}
                         {bindingIcons}
                         {completions}
@@ -292,7 +292,7 @@
               {/if}
             </div>
 
-            <Knowledge></Knowledge>
+            <Knowledge {operation}></Knowledge>
           </div>
         </div>
       </Panel>

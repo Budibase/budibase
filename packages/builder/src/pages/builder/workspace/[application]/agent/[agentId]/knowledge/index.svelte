@@ -7,6 +7,7 @@
     AgentKnowledgeSourceType,
     KnowledgeBaseFileStatus,
     type Agent,
+    type AgentOperation,
     type KnowledgeBaseFile,
     type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
@@ -20,6 +21,7 @@
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
   import { onDestroy, onMount } from "svelte"
+  import { get } from "svelte/store"
   import type {
     KnowledgeTableRow,
     SharePointSelectionMode,
@@ -35,6 +37,8 @@
     coalesceAgentPollRequests,
     createKnowledgePollingController,
   } from "./polling"
+
+  let { operation }: { operation?: AgentOperation } = $props()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let activeAgentId = $derived(currentAgent?._id)
@@ -138,6 +142,19 @@
 
   const refreshDeploymentStatus = async () => {
     await workspaceDeploymentStore.fetch()
+  }
+
+  const syncOperationKnowledgeBasesFromStore = () => {
+    if (!operation) {
+      return
+    }
+
+    const latestAgent = get(selectedAgent)
+    const latestOperation = latestAgent?.operations?.find(
+      latest => latest.id === operation.id
+    )
+
+    operation.knowledgeBases = latestOperation?.knowledgeBases
   }
 
   const showSharePointSyncResult = (
@@ -406,6 +423,7 @@
       }}
       onUploaded={async agentId => {
         await fetchFiles(agentId)
+        syncOperationKnowledgeBasesFromStore()
         await refreshDeploymentStatus()
       }}
       onSharePoint={() =>

@@ -185,6 +185,8 @@
             id: op.id,
             name: op.name,
             promptInstructions: op.promptInstructions,
+            enabledTools: op.enabledTools,
+            knowledgeBases: op.knowledgeBases,
           })) || [],
       }
       draftAgentId = agent._id
@@ -389,29 +391,18 @@
 
     saving = true
     try {
-      const instructions =
-        currentAgent.operations?.map(o => o.promptInstructions).join("\n\n") ||
-        ""
-      const enabledTools = getIncludedToolRuntimeBindings(
-        instructions,
-        readableToRuntimeBinding
-      )
       const operations =
-        currentAgent.operations?.map((operation, index) => ({
+        draft.operations?.map(operation => ({
           ...operation,
-          enabledTools:
-            index === 0
-              ? enabledTools
-              : getIncludedToolRuntimeBindings(
-                  operation.promptInstructions,
-                  readableToRuntimeBinding
-                ),
+          enabledTools: getIncludedToolRuntimeBindings(
+            operation.promptInstructions,
+            readableToRuntimeBinding
+          ),
         })) || []
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
-        operations:
-          operations.length > 0 ? operations : (draft.operations ?? []),
+        operations,
       })
 
       if (showNotifications) {

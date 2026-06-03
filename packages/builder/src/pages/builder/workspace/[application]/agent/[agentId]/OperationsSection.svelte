@@ -65,10 +65,8 @@ Any constraints the agent must follow.
   let renameDraft = $state("")
   let isRenameValid = $derived(Boolean(renameDraft.trim()))
 
-  let mainOperation = $derived(agent?.operations?.[0])
-
-  let operationName = $derived(mainOperation?.name?.trim())
-  let hasOperation = $derived(Boolean(mainOperation?.name?.trim()))
+  let operationName = $derived(agent?.operations?.[0]?.name?.trim())
+  let hasOperation = $derived(Boolean(agent?.operations?.[0]?.name?.trim()))
 
   const openOperationPanel = () => {
     operationPanelOpen = true
@@ -79,12 +77,12 @@ Any constraints the agent must follow.
   }
 
   const openRenameModal = () => {
-    renameDraft = mainOperation?.name || ""
+    renameDraft = agent?.operations?.[0]?.name || ""
     renameModal?.show()
   }
 
   const saveRename = () => {
-    if (!mainOperation) {
+    if (!agent?.operations?.[0]) {
       return
     }
     const trimmedName = renameDraft.trim()
@@ -92,7 +90,7 @@ Any constraints the agent must follow.
       notifications.error("Operation name is required.")
       return
     }
-    mainOperation.name = trimmedName
+    agent.operations[0].name = trimmedName
     onUpdated()
     renameModal?.hide()
   }
@@ -211,10 +209,10 @@ Any constraints the agent must follow.
   {/if}
 </div>
 
-{#if mainOperation}
+{#if agent?.operations?.[0]}
   <OperationSidePanel
     open={operationPanelOpen}
-    bind:operation={mainOperation}
+    bind:operation={agent.operations[0]}
     {promptBindings}
     {bindingIcons}
     {completions}
