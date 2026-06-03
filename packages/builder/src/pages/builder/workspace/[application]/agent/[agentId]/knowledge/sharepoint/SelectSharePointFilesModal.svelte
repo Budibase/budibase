@@ -28,10 +28,11 @@
 
   export interface Props {
     agentId?: string
+    operationId?: string
     siteId?: string
   }
 
-  let { agentId, siteId }: Props = $props()
+  let { agentId, operationId, siteId }: Props = $props()
 
   let selectedEntryPaths = $state<string[]>([])
   let loadingEntries = $state(false)
@@ -44,7 +45,11 @@
     if (!siteId) {
       return undefined
     }
-    return $selectedAgent?.knowledgeSources?.find(
+    const sources =
+      $selectedAgent?.operations?.find(
+        operation => operation.id === operationId
+      )?.knowledgeSources || []
+    return sources.find(
       source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
         source.config.site.id === siteId

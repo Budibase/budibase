@@ -84,6 +84,7 @@ export interface AgentOperation {
   promptInstructions?: string
   enabledTools?: string[]
   knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
 }
 
 export interface Agent extends Document {
@@ -101,7 +102,6 @@ export interface Agent extends Document {
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
   telegramIntegration?: TelegramAgentIntegration
-  knowledgeSources?: AgentKnowledgeSource[]
 }
 
 export interface AgentMessageRagSource {

@@ -187,6 +187,7 @@
             promptInstructions: op.promptInstructions,
             enabledTools: op.enabledTools,
             knowledgeBases: op.knowledgeBases,
+            knowledgeSources: op.knowledgeSources,
           })) || [],
       }
       draftAgentId = agent._id
@@ -429,7 +430,8 @@
       .filter((id): id is string => !!id)
       .map(fileId => agentsStore.deleteAgentFile(agentId, fileId))
 
-    const sourceDisconnects = (currentAgent.knowledgeSources || [])
+    const sourceDisconnects = (currentAgent.operations || [])
+      .flatMap(operation => operation.knowledgeSources || [])
       .map(source => source.config?.site?.id)
       .filter((id): id is string => !!id)
       .map(siteId => agentsStore.disconnectAgentSharePointSite(agentId, siteId))

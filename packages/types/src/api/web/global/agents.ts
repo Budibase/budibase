@@ -95,6 +95,7 @@ export interface ConnectAgentSharePointSiteRequest {
   datasourceId: string
   authConfigId: string
   filters?: string[]
+  operationId?: string
 }
 
 export type ConnectAgentSharePointSiteResponse =

@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import env from "../../../../../environment"
 import { deleteFileForAgent } from "../files"
+import { getSharePointKnowledgeSources } from "../../agents/knowledgeConfig"
 import {
   deleteKnowledgeSourceSyncStateForAgent,
   deleteSharePointFilesForAgentSite,
@@ -64,9 +65,7 @@ const getJobId = (job: KnowledgeSourceSyncJob) =>
   `${getAgentJobPrefix(job.workspaceId, job.agentId)}${job.sourceType}_${job.sourceId}`
 
 const getAgentSharePointSources = (agent: Agent) =>
-  (agent.knowledgeSources || []).filter(
-    source => source.type === AgentKnowledgeSourceType.SHAREPOINT
-  )
+  getSharePointKnowledgeSources(agent)
 
 const hasSchedulableSharePointSource = (agent: Agent) => {
   return getAgentSharePointSources(agent).some(
@@ -425,10 +424,8 @@ export async function rehydrateScheduledJobs() {
         repeatable => !!repeatable.id
       ).length
 
-      const reconcileTargets = agents.filter(agent =>
-        (agent.knowledgeSources || []).some(
-          source => source.type === AgentKnowledgeSourceType.SHAREPOINT
-        )
+      const reconcileTargets = agents.filter(
+        agent => getSharePointKnowledgeSources(agent).length > 0
       )
       const reconcileResults = await Promise.all(
         reconcileTargets.map(agent => reconcileAgentJobs(agent, workspaceId))

@@ -1,4 +1,5 @@
 export * from "./crud"
+export * from "./knowledgeConfig"
 export * from "./utils"
 export * from "./agentRuntime"
 export * from "./usage"

@@ -61,10 +61,12 @@ const obfuscateAgentSecrets = (agent: Agent): Agent => ({
   }),
 })
 
-const withoutKnowledgeConfig = <T extends Agent>(agent: T) => {
-  const { knowledgeSources: _knowledgeSources, ...rest } = agent
-  return rest
-}
+const withoutKnowledgeConfig = <T extends Agent>(agent: T): T => ({
+  ...agent,
+  operations: agent.operations?.map(
+    ({ knowledgeSources: _knowledgeSources, ...operation }) => operation
+  ),
+})
 
 const stableSerialize = (value: unknown): string => {
   if (Array.isArray(value)) {
@@ -317,7 +319,6 @@ export async function createAgent(
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
-    knowledgeSources: undefined,
     operations: body.operations,
   }
 
@@ -336,7 +337,11 @@ export async function updateAgent(
 
   if (Object.prototype.hasOwnProperty.call(rawBody, "knowledgeSources")) {
     const incoming = normalizeKnowledgeSources(rawBody.knowledgeSources)
-    const current = normalizeKnowledgeSources(existing.knowledgeSources || [])
+    const current = normalizeKnowledgeSources(
+      existing.operations?.flatMap(
+        operation => operation.knowledgeSources ?? []
+      ) ?? []
+    )
     if (stableSerialize(incoming) !== stableSerialize(current)) {
       throw new HTTPError(
         "knowledgeSources cannot be updated from this endpoint",

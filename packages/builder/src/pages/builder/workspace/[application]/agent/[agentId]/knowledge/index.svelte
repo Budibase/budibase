@@ -43,7 +43,7 @@
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let activeAgentId = $derived(currentAgent?._id)
   let sharePointSources = $derived.by(() =>
-    (currentAgent?.knowledgeSources || []).filter(
+    (operation?.knowledgeSources || []).filter(
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
@@ -144,7 +144,7 @@
     await workspaceDeploymentStore.fetch()
   }
 
-  const syncOperationKnowledgeBasesFromStore = () => {
+  const syncOperationKnowledgeFromStore = () => {
     if (!operation) {
       return
     }
@@ -155,6 +155,7 @@
     )
 
     operation.knowledgeBases = latestOperation?.knowledgeBases
+    operation.knowledgeSources = latestOperation?.knowledgeSources
   }
 
   const showSharePointSyncResult = (
@@ -423,7 +424,7 @@
       }}
       onUploaded={async agentId => {
         await fetchFiles(agentId)
-        syncOperationKnowledgeBasesFromStore()
+        syncOperationKnowledgeFromStore()
         await refreshDeploymentStatus()
       }}
       onSharePoint={() =>
@@ -444,6 +445,7 @@
 <SelectSharePointSiteModal
   bind:this={selectSharePointSiteModal}
   agentId={activeAgentId || ""}
+  operationId={operation?.id}
   existingSiteIds={selectedSiteIds}
   onCreated={onSharePointSiteCreated}
 />
@@ -451,6 +453,7 @@
 <DisplaySharePointSiteModal
   bind:this={displaySharePointSiteModal}
   agentId={currentAgent?._id}
+  operationId={operation?.id}
   siteId={selectedSharePointSiteId}
   onEdit={openSharePointSiteSelectionModal}
 />
@@ -458,6 +461,7 @@
 <SelectSharePointFilesModal
   bind:this={selectSharePointFilesModal}
   agentId={currentAgent?._id}
+  operationId={operation?.id}
   siteId={selectedSharePointSiteId}
 />
 

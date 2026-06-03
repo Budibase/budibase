@@ -6,7 +6,12 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
-import type { Agent, AgentOperation, Optional } from "@budibase/types"
+import type {
+  Agent,
+  AgentKnowledgeSource,
+  AgentOperation,
+  Optional,
+} from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import { assertAgentHasValidConfig } from "./utils"
@@ -17,6 +22,7 @@ type DeprecatedAgent = Agent & {
   operationName?: string
   enabledTools?: string[]
   knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
 }
 
 const SECRET_MASK = "********"
@@ -141,11 +147,18 @@ const decodeTelegramIntegrationSecrets = (
 }
 
 const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
+  const legacyKnowledgeSources = raw.knowledgeSources
+
   if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
-    return (raw.operations ?? []).map(operation => ({
+    return (raw.operations ?? []).map((operation, index) => ({
       ...operation,
       enabledTools: operation.enabledTools || [],
       knowledgeBases: operation.knowledgeBases || [],
+      knowledgeSources: operation.knowledgeSources?.length
+        ? operation.knowledgeSources
+        : index === 0 && legacyKnowledgeSources?.length
+          ? legacyKnowledgeSources
+          : operation.knowledgeSources || [],
     }))
   }
 
@@ -153,7 +166,8 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
     raw.promptInstructions ||
     raw.operationName ||
     raw.enabledTools?.length ||
-    raw.knowledgeBases?.length
+    raw.knowledgeBases?.length ||
+    legacyKnowledgeSources?.length
   ) {
     return [
       {
@@ -162,6 +176,7 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
         promptInstructions: raw.promptInstructions || "",
         enabledTools: raw.enabledTools || [],
         knowledgeBases: raw.knowledgeBases || [],
+        knowledgeSources: legacyKnowledgeSources || [],
       },
     ]
   }
@@ -175,6 +190,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
     operationName: _operationName,
     enabledTools: _enabledTools,
     knowledgeBases: _knowledgeBases,
+    knowledgeSources: _knowledgeSources,
     ...rest
   } = raw
   return {
@@ -361,7 +377,6 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
-    knowledgeSources: request.knowledgeSources,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -443,6 +458,7 @@ export async function update(agent: Agent): Promise<Agent> {
           ...operation,
           enabledTools: operation.enabledTools || [],
           knowledgeBases: operation.knowledgeBases || [],
+          knowledgeSources: operation.knowledgeSources || [],
         }))
       : (
           existing.operations || migrateOperations(agent as DeprecatedAgent)
@@ -450,6 +466,7 @@ export async function update(agent: Agent): Promise<Agent> {
           ...operation,
           enabledTools: operation.enabledTools || [],
           knowledgeBases: operation.knowledgeBases || [],
+          knowledgeSources: operation.knowledgeSources || [],
         })),
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,

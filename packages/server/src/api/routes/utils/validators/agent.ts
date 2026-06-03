@@ -54,12 +54,34 @@ const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
   .optional()
   .allow(null)
 
+const KNOWLEDGE_SOURCE_FILTER_SCHEMA = Joi.object({
+  patterns: Joi.array().items(Joi.string()).optional(),
+}).optional()
+
+const SHAREPOINT_KNOWLEDGE_SOURCE_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  type: Joi.string().valid("sharepoint").required(),
+  config: Joi.object({
+    datasourceId: Joi.string().required(),
+    authConfigId: Joi.string().required(),
+    site: Joi.object({
+      id: Joi.string().required(),
+      name: OPTIONAL_STRING,
+      webUrl: OPTIONAL_STRING,
+    }).required(),
+    filters: KNOWLEDGE_SOURCE_FILTER_SCHEMA,
+  }).required(),
+})
+
 const AGENT_OPERATION_SCHEMA = Joi.object({
   id: Joi.string().required(),
   name: OPTIONAL_STRING,
   promptInstructions: OPTIONAL_STRING,
   enabledTools: Joi.array().items(Joi.string()).optional(),
   knowledgeBases: Joi.array().items(Joi.string()).optional(),
+  knowledgeSources: Joi.array()
+    .items(SHAREPOINT_KNOWLEDGE_SOURCE_SCHEMA)
+    .optional(),
 })
 
 export function createAgentValidator() {
@@ -236,6 +258,7 @@ export function connectAgentSharePointSiteValidator() {
       datasourceId: NON_EMPTY_STRING.required(),
       authConfigId: NON_EMPTY_STRING.required(),
       filters: Joi.array().items(NON_EMPTY_STRING).optional(),
+      operationId: OPTIONAL_STRING,
     }).required()
   )
 }

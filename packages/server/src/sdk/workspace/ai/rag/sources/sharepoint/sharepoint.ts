@@ -11,7 +11,6 @@ import {
   type AgentKnowledgeSourceFilterConfig,
   type AgentKnowledgeSourceSyncState,
   AgentKnowledgeSourceSyncRunStatus,
-  AgentKnowledgeSourceType,
   LockName,
   LockType,
   type AgentKnowledgeSource,
@@ -37,6 +36,10 @@ import {
   listSharePointDrives,
 } from "../../../knowledgeSources/sharepoint"
 import {
+  findKnowledgeSource,
+  getSharePointKnowledgeSources,
+} from "../../../agents/knowledgeConfig"
+import {
   deleteFileForAgent,
   ensureKnowledgeBaseForAgent,
   listFilesForAgent,
@@ -52,11 +55,8 @@ export const getSharePointFileDedupKey = ({
   itemId: string
 }) => `${siteId}:${driveId}:${itemId}`
 
-const getSharePointSources = (agent: Agent): AgentKnowledgeSource[] => {
-  return (agent.knowledgeSources || []).filter(
-    source => source.type === AgentKnowledgeSourceType.SHAREPOINT
-  )
-}
+const getSharePointSources = (agent: Agent): AgentKnowledgeSource[] =>
+  getSharePointKnowledgeSources(agent)
 
 const getSharePointSyncRunStatus = (
   synced: number,
@@ -338,13 +338,10 @@ const runSharePointSourcesForAgent = async (
     throw new HTTPError("SharePoint is not connected for this agent", 400)
   }
 
-  const site = agent.knowledgeSources?.find(s => s.id === sourceId)?.config.site
-  const sourceDatasourceId = agent.knowledgeSources?.find(
-    s => s.id === sourceId
-  )?.config.datasourceId
-  const sourceAuthConfigId = agent.knowledgeSources?.find(
-    s => s.id === sourceId
-  )?.config.authConfigId
+  const knowledgeSource = findKnowledgeSource(agent, sourceId)
+  const site = knowledgeSource?.config.site
+  const sourceDatasourceId = knowledgeSource?.config.datasourceId
+  const sourceAuthConfigId = knowledgeSource?.config.authConfigId
   if (!site) {
     throw new HTTPError(
       "Specified SharePoint site is not connected for this agent",
@@ -353,8 +350,7 @@ const runSharePointSourcesForAgent = async (
   }
 
   const siteId = site.id
-  const sourceFilters = agent.knowledgeSources?.find(s => s.id === sourceId)
-    ?.config.filters
+  const sourceFilters = knowledgeSource?.config.filters
 
   console.log("Starting SharePoint sync for agent", {
     agentId,
