@@ -12,10 +12,10 @@
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
-  import { FeatureFlag } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
+  import { FeatureFlag } from "@budibase/types"
 
   const { goto, isActive, params } = routify
 
@@ -134,13 +134,6 @@
         on:click={() => $goto("./config")}
       >
         Configuration
-      </ActionButton>
-      <ActionButton
-        quiet
-        selected={activeTab === "Knowledge"}
-        on:click={() => $goto("./knowledge")}
-      >
-        Knowledge
       </ActionButton>
       <ActionButton
         quiet
