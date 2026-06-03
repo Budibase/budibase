@@ -1,10 +1,19 @@
 import { getKnowledgeFileExtension } from "@budibase/types"
 import * as XLSX from "xlsx"
 
-const SPREADSHEET_EXTENSIONS = new Set([".xls", ".xlsx"])
-const SPREADSHEET_MIME_TYPES = new Set([
+type TabularExtension = ".xls" | ".xlsx" | ".csv" | ".tsv"
+
+const TABULAR_EXTENSIONS = new Set<TabularExtension>([
+  ".xls",
+  ".xlsx",
+  ".csv",
+  ".tsv",
+])
+const TABULAR_MIME_TYPES = new Set([
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv",
+  "text/tab-separated-values",
 ])
 
 interface KnowledgeFileIngestionPayload {
@@ -28,6 +37,27 @@ const trimTrailingEmptyCells = (row: string[]) => {
 
 const hasContent = (row: string[]) => row.some(Boolean)
 
+const getDelimitedSeparator = ({
+  filename,
+  mimetype,
+}: {
+  filename: string
+  mimetype?: string
+}) => {
+  const extension = getKnowledgeFileExtension(filename)
+  const normalizedMimetype = mimetype?.trim().toLowerCase() || ""
+
+  if (
+    extension === ".tsv" ||
+    normalizedMimetype === "text/tab-separated-values"
+  ) {
+    return "\t"
+  }
+  if (extension === ".csv" || normalizedMimetype === "text/csv") {
+    return ","
+  }
+}
+
 const buildColumnLabels = (headerRow: string[]) => {
   const seen = new Map<string, number>()
 
@@ -47,24 +77,57 @@ export const isSpreadsheetKnowledgeFile = ({
   mimetype?: string
 }) => {
   const extension = getKnowledgeFileExtension(filename)
-  if (SPREADSHEET_EXTENSIONS.has(extension as ".xls" | ".xlsx")) {
+  if (TABULAR_EXTENSIONS.has(extension as TabularExtension)) {
     return true
   }
 
   const normalizedMimetype = mimetype?.trim().toLowerCase() || ""
-  return SPREADSHEET_MIME_TYPES.has(normalizedMimetype)
+  return TABULAR_MIME_TYPES.has(normalizedMimetype)
 }
 
-export const stringifySpreadsheetForRag = (
-  filename: string,
-  buffer: Buffer
-): string => {
-  const workbook = XLSX.read(buffer, {
+const parseWorkbook = ({
+  filename,
+  mimetype,
+  buffer,
+}: KnowledgeFileIngestionPayload) => {
+  const separator = getDelimitedSeparator({ filename, mimetype })
+
+  if (separator) {
+    return XLSX.read(buffer.toString("utf8").replace(/^\uFEFF/, ""), {
+      type: "string",
+      raw: false,
+      cellText: true,
+      FS: separator,
+    })
+  }
+
+  return XLSX.read(buffer, {
     type: "buffer",
     raw: false,
     cellText: true,
   })
-  const sections = [`Workbook: ${filename}`]
+}
+
+const getWorkbookLabel = ({
+  filename,
+  mimetype,
+}: {
+  filename: string
+  mimetype?: string
+}) => {
+  return getDelimitedSeparator({ filename, mimetype })
+    ? `File: ${filename}`
+    : `Workbook: ${filename}`
+}
+
+export const stringifySpreadsheetForRag = (
+  filename: string,
+  buffer: Buffer,
+  mimetype?: string
+): string => {
+  const workbook = parseWorkbook({ filename, mimetype, buffer })
+  const isDelimitedFile = !!getDelimitedSeparator({ filename, mimetype })
+  const sections = [getWorkbookLabel({ filename, mimetype })]
 
   for (const sheetName of workbook.SheetNames) {
     const worksheet = workbook.Sheets[sheetName]
@@ -86,7 +149,9 @@ export const stringifySpreadsheetForRag = (
       continue
     }
 
-    sections.push(`Sheet: ${sheetName}`)
+    sections.push(
+      isDelimitedFile ? `Table: ${filename}` : `Sheet: ${sheetName}`
+    )
 
     if (rows.length === 1) {
       sections.push("Row 1")
@@ -133,7 +198,11 @@ export const prepareKnowledgeFileForRagIngestion = ({
   }
 
   try {
-    const normalizedText = stringifySpreadsheetForRag(filename, buffer)
+    const normalizedText = stringifySpreadsheetForRag(
+      filename,
+      buffer,
+      mimetype
+    )
     if (!normalizedText) {
       return { filename, mimetype, buffer }
     }
@@ -145,7 +214,7 @@ export const prepareKnowledgeFileForRagIngestion = ({
     }
   } catch (error) {
     console.error(
-      "Failed to normalize spreadsheet knowledge file, falling back to raw upload",
+      "Failed to normalize tabular knowledge file, falling back to raw upload",
       {
         filename,
         mimetype,

@@ -103,4 +103,54 @@ describe("spreadsheetText", () => {
     expect(result.mimetype).toBe("text/plain")
     expect(result.buffer.toString("utf8")).toContain("Plan: Pro")
   })
+
+  it("converts CSV uploads into header-aware row blocks", () => {
+    const buffer = Buffer.from(
+      [
+        "Name,Team,Notes",
+        'Jess,Support,"Handles billing, refunds"',
+        "Sam,Sales,Enterprise accounts",
+      ].join("\n"),
+      "utf8"
+    )
+
+    const result = prepareKnowledgeFileForRagIngestion({
+      filename: "contacts.csv",
+      mimetype: "text/csv",
+      buffer,
+    })
+    const text = result.buffer.toString("utf8")
+
+    expect(result.filename).toBe("contacts.csv")
+    expect(result.mimetype).toBe("text/plain")
+    expect(text).toContain("File: contacts.csv")
+    expect(text).toContain("Table: contacts.csv")
+    expect(text).toContain("Columns: Name | Team | Notes")
+    expect(text).toContain("Name: Jess")
+    expect(text).toContain("Team: Support")
+    expect(text).toContain("Notes: Handles billing, refunds")
+    expect(text).toContain("Name: Sam")
+  })
+
+  it("converts TSV uploads detected by mimetype", () => {
+    const buffer = Buffer.from(
+      ["Name\tTeam", "Lee\tEngineering"].join("\n"),
+      "utf8"
+    )
+
+    const result = prepareKnowledgeFileForRagIngestion({
+      filename: "team-data",
+      mimetype: "text/tab-separated-values",
+      buffer,
+    })
+    const text = result.buffer.toString("utf8")
+
+    expect(result.filename).toBe("team-data")
+    expect(result.mimetype).toBe("text/plain")
+    expect(text).toContain("File: team-data")
+    expect(text).toContain("Table: team-data")
+    expect(text).toContain("Columns: Name | Team")
+    expect(text).toContain("Name: Lee")
+    expect(text).toContain("Team: Engineering")
+  })
 })
