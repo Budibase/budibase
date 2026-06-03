@@ -56,6 +56,9 @@
     if (!currentAgent?._id) {
       return false
     }
+    if (!currentAgent.live) {
+      return false
+    }
     const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
     if (!publishStatus?.publishedAt) {
       return false
