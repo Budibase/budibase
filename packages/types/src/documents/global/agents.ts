@@ -82,6 +82,7 @@ export interface AgentOperation {
   id: string
   name: string
   promptInstructions?: string
+  enabledTools?: string[]
 }
 
 export interface Agent extends Document {
@@ -95,7 +96,6 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
-  enabledTools?: string[]
   knowledgeBases?: string[]
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration

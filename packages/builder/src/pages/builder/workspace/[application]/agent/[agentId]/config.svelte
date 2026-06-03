@@ -396,10 +396,22 @@
         instructions,
         readableToRuntimeBinding
       )
+      const operations =
+        currentAgent.operations?.map((operation, index) => ({
+          ...operation,
+          enabledTools:
+            index === 0
+              ? enabledTools
+              : getIncludedToolRuntimeBindings(
+                  operation.promptInstructions,
+                  readableToRuntimeBinding
+                ),
+        })) || []
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
-        enabledTools,
+        operations:
+          operations.length > 0 ? operations : (draft.operations ?? []),
       })
 
       if (showNotifications) {

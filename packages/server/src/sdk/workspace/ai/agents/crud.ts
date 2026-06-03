@@ -14,6 +14,7 @@ import { assertAgentHasValidConfig } from "./utils"
 type DeprecatedAgent = Agent & {
   promptInstructions?: string
   operationName?: string
+  enabledTools?: string[]
 }
 
 const SECRET_MASK = "********"
@@ -139,15 +140,19 @@ const decodeTelegramIntegrationSecrets = (
 
 const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
-    return raw.operations ?? []
+    return (raw.operations ?? []).map(operation => ({
+      ...operation,
+      enabledTools: operation.enabledTools || [],
+    }))
   }
 
-  if (raw.promptInstructions || raw.operationName) {
+  if (raw.promptInstructions || raw.operationName || raw.enabledTools?.length) {
     return [
       {
         id: "operation_default",
         name: raw.operationName || DEFAULT_OPERATION_NAME,
         promptInstructions: raw.promptInstructions || "",
+        enabledTools: raw.enabledTools || [],
       },
     ]
   }
@@ -159,6 +164,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   const {
     promptInstructions: _promptInstructions,
     operationName: _operationName,
+    enabledTools: _enabledTools,
     ...rest
   } = raw
   return {
@@ -345,7 +351,6 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
-    enabledTools: request.enabledTools || [],
     knowledgeBases: request.knowledgeBases || [],
     knowledgeSources: request.knowledgeSources,
     discordIntegration: request.discordIntegration,
@@ -395,7 +400,6 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     operations: source.operations,
-    enabledTools: source.enabledTools || [],
     knowledgeBases: source.knowledgeBases || [],
   })
 }
@@ -427,8 +431,16 @@ export async function update(agent: Agent): Promise<Agent> {
     ...agent,
     updatedAt: now,
     operations: hasOperations
-      ? (agent.operations ?? [])
-      : existing.operations || migrateOperations(agent as DeprecatedAgent),
+      ? (agent.operations ?? []).map(operation => ({
+          ...operation,
+          enabledTools: operation.enabledTools || [],
+        }))
+      : (existing.operations || migrateOperations(agent as DeprecatedAgent)).map(
+          operation => ({
+            ...operation,
+            enabledTools: operation.enabledTools || [],
+          })
+        ),
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,

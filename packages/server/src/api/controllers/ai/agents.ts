@@ -317,14 +317,13 @@ export async function createAgent(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
-    enabledTools: body.enabledTools,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
     knowledgeSources: undefined,
     knowledgeBases: undefined,
-    operations: undefined,
+    operations: body.operations,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -373,7 +372,6 @@ export async function updateAgent(
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
-    enabledTools: body.enabledTools,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,

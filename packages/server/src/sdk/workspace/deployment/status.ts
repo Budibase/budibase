@@ -110,7 +110,7 @@ export async function status() {
       aiconfig: agent.aiconfig,
       goal: agent.goal,
       live: agent.live,
-      enabledTools: normalizeArray(agent.enabledTools || []),
+      enabledTools: normalizeArray(agent.operations?.[0]?.enabledTools || []),
       discordIntegration: agent.discordIntegration
         ? {
             applicationId: agent.discordIntegration.applicationId,

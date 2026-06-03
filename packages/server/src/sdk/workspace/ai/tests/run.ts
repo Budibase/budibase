@@ -548,9 +548,9 @@ const buildRunSnapshot = async ({
     aiconfig: agent.aiconfig,
     aiConfig,
     aiConfigs,
-    promptInstructions: agent.promptInstructions,
+    promptInstructions: agent.operations?.[0]?.promptInstructions,
     goal: agent.goal,
-    enabledTools: [...(agent.enabledTools || [])],
+    enabledTools: [...(agent.operations?.[0]?.enabledTools || [])],
     knowledgeBases: [...(agent.knowledgeBases || [])],
   }
 }

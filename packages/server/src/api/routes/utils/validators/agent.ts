@@ -54,6 +54,13 @@ const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
   .optional()
   .allow(null)
 
+const AGENT_OPERATION_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  name: OPTIONAL_STRING,
+  promptInstructions: OPTIONAL_STRING,
+  enabledTools: Joi.array().items(Joi.string()).optional(),
+})
+
 export function createAgentValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -66,6 +73,7 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      operations: Joi.array().items(AGENT_OPERATION_SCHEMA).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -92,7 +100,7 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
-      enabledTools: Joi.array().items(Joi.string()).optional(),
+      operations: Joi.array().items(AGENT_OPERATION_SCHEMA).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,

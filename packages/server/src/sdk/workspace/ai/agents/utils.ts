@@ -156,7 +156,7 @@ export async function buildPromptAndTools(
   const hasKnowledgeBases = agent.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const enabledToolNames = new Set(agent.enabledTools || [])
+  const enabledToolNames = new Set(agent.operations?.[0]?.enabledTools || [])
   const enabledTools = addHelperTools(
     allTools.filter(
       tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
