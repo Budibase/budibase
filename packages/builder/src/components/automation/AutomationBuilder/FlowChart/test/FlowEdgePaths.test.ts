@@ -160,7 +160,6 @@ describe("getPrimaryBranchPath", () => {
       y: sourceY,
     })
   })
-
 })
 
 describe("getLoopEdgePath", () => {
