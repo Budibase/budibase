@@ -106,7 +106,7 @@
       <div class="purchase-credits-action">
         <Button
           primary
-          on:click={() => (window.location.href = purchaseCreditsUrl)}
+          on:click={() => window.open(purchaseCreditsUrl, "_blank")}
         >
           Purchase credits
         </Button>
