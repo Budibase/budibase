@@ -56,6 +56,10 @@
   $: block = deriveBlockContext(data)
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
+  $: runResults =
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
 
   const view = getContext<Writable<DragView>>("draggableView")
   const flow = useSvelteFlow()
@@ -158,7 +162,7 @@
           targetX,
           targetY,
           preBranchLabelX,
-          reserveActionBarGap: viewMode === ViewMode.EDITOR,
+          splitPathAroundActionBar: viewMode === ViewMode.EDITOR,
         })
       : undefined
 
@@ -270,14 +274,10 @@
       }
     }
 
-    const results =
-      viewMode === ViewMode.LOGS
-        ? $automationStore.selectedLog
-        : $automationStore.testResults
-    if (!edgeData || !isRunResults(results)) {
+    if (!edgeData || !isRunResults(runResults)) {
       return
     }
-    const runHighlight = getRunHighlight(results)
+    const runHighlight = getRunHighlight(runResults)
 
     if (isBranchEdgeData(edgeData)) {
       if (
@@ -303,7 +303,7 @@
         : undefined
     }
 
-    return didTargetRun(results) ? runHighlight : undefined
+    return didTargetRun(runResults) ? runHighlight : undefined
   }
 
   const getProgressEdgeHighlight = (
@@ -338,11 +338,7 @@
   }
 
   const didBranchRun = (branchStepId: string, branchIdx: number) => {
-    const results =
-      viewMode === ViewMode.LOGS
-        ? $automationStore.selectedLog
-        : $automationStore.testResults
-    if (!isRunResults(results)) {
+    if (!isRunResults(runResults)) {
       return false
     }
     const branchStep = getBranchStep(branchStepId)
@@ -350,7 +346,7 @@
     if (!branchId) {
       return false
     }
-    const result = results.steps.find(step => step.id === branchStepId)
+    const result = runResults.steps.find(step => step.id === branchStepId)
     if (isTerminalFailure(result)) {
       return false
     }
@@ -364,15 +360,11 @@
   }
 
   const didBranchStepFail = (branchStepId: string) => {
-    const results =
-      viewMode === ViewMode.LOGS
-        ? $automationStore.selectedLog
-        : $automationStore.testResults
-    if (!isRunResults(results)) {
+    if (!isRunResults(runResults)) {
       return false
     }
     return isTerminalFailure(
-      results.steps.find(step => step.id === branchStepId)
+      runResults.steps.find(step => step.id === branchStepId)
     )
   }
 

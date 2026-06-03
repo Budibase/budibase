@@ -15,7 +15,7 @@ interface PrimaryBranchPathArgs {
   targetX: number
   targetY: number
   preBranchLabelX: number
-  reserveActionBarGap?: boolean
+  splitPathAroundActionBar?: boolean
 }
 
 export const getPrimaryBranchPath = ({
@@ -24,14 +24,14 @@ export const getPrimaryBranchPath = ({
   targetX,
   targetY,
   preBranchLabelX,
-  reserveActionBarGap = true,
+  splitPathAroundActionBar = true,
 }: PrimaryBranchPathArgs) => {
   const actionBarHalfWidth = FLOW_ITEM_ACTION_BAR_WIDTH / 2
   const actionBarLeft = preBranchLabelX - actionBarHalfWidth
   const actionBarRight = preBranchLabelX + actionBarHalfWidth
   const radius = 12
 
-  if (!reserveActionBarGap) {
+  if (!splitPathAroundActionBar) {
     if (sourceY === targetY) {
       return [`M ${sourceX},${sourceY}`, `L ${targetX},${targetY}`].join(" ")
     }

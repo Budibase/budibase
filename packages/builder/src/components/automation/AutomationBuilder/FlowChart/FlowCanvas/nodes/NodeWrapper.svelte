@@ -105,14 +105,18 @@
     width: fit-content;
     max-width: 360px;
   }
-  .step-wrapper.error :global(.custom-handle) {
-    background-color: var(--spectrum-semantic-negative-color-status);
+  .step-wrapper.error {
+    --automation-flow-handle-color: var(
+      --spectrum-semantic-negative-color-status
+    );
   }
-  .step-wrapper.success :global(.custom-handle) {
-    background-color: var(--spectrum-semantic-positive-color-status);
+  .step-wrapper.success {
+    --automation-flow-handle-color: var(
+      --spectrum-semantic-positive-color-status
+    );
   }
-  .step-wrapper.warn :global(.custom-handle) {
-    background-color: var(--spectrum-global-color-orange-500);
+  .step-wrapper.warn {
+    --automation-flow-handle-color: var(--spectrum-global-color-orange-500);
   }
   .step-wrapper.logs :global(.svelte-flow__handle-left.custom-handle),
   .step-wrapper.logs :global(.svelte-flow__handle-right.custom-handle) {
