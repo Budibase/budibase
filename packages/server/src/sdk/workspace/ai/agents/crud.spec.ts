@@ -17,7 +17,7 @@ const mockKnowledgeBaseFind = jest.fn()
 const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
 const mockKnowledgeBaseRemove = jest.fn()
-const mockCreateLLM = jest.fn()
+const mockAssertAgentHasValidConfig = jest.fn().mockResolvedValue(undefined)
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -48,9 +48,12 @@ jest.mock("../knowledgeBase", () => ({
   remove: (...args: any[]) => mockKnowledgeBaseRemove(...args),
 }))
 
-jest.mock("../llm", () => ({
-  createLLM: (...args: any[]) => mockCreateLLM(...args),
-}))
+jest.mock("./utils", () => {
+  return {
+    assertAgentHasValidConfig: (...args: any[]) =>
+      mockAssertAgentHasValidConfig(...args),
+  }
+})
 
 import type { Agent, KnowledgeBase, KnowledgeBaseFile } from "@budibase/types"
 import * as agentsCrud from "./crud"
@@ -58,7 +61,6 @@ import * as agentsCrud from "./crud"
 describe("agents crud", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockCreateLLM.mockResolvedValue({})
   })
 
   describe("remove", () => {
@@ -223,7 +225,13 @@ describe("agents crud", () => {
         live: true,
       })
 
-      expect(mockCreateLLM).toHaveBeenCalledWith("cfg_1")
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledTimes(1)
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aiconfig: "cfg_1",
+          live: true,
+        })
+      )
     })
   })
 
@@ -270,7 +278,14 @@ describe("agents crud", () => {
         live: true,
       })
 
-      expect(mockCreateLLM).toHaveBeenCalledWith("cfg_1")
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledTimes(1)
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _id: "agent_upd",
+          aiconfig: "cfg_1",
+          live: true,
+        })
+      )
     })
   })
 })
