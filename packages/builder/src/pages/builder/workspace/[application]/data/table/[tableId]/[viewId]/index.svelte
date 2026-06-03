@@ -133,6 +133,7 @@
       aiEnabled={$aiStore.aiEnabled}
       showAvatars={false}
       externalClipboard={externalClipboardData}
+      honorDisabledConditions={!isProductionMode}
       on:updatedatasource={handleGridViewUpdate}
       on:definitionMissing={handleDefinitionMissing}
       isCloud={$admin.cloud}
