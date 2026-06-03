@@ -399,9 +399,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (!agent.aiconfig) {
-    ctx.throw(500, "Agent is not properly configured: missing AI config")
-  }
+  await sdk.ai.agents.assertAgentHasValidConfig(agent)
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
