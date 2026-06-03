@@ -17,7 +17,9 @@ import { GeminiRagProcessor } from "./processors/gemini"
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
 ): Promise<KnowledgeBase[]> => {
-  const knowledgeBaseIds = (agent.knowledgeBases || []).filter(Boolean)
+  const knowledgeBaseIds = (
+    agent.operations?.flatMap(operation => operation.knowledgeBases || []) || []
+  ).filter(Boolean)
   if (knowledgeBaseIds.length === 0) {
     return []
   }
@@ -80,6 +82,12 @@ const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
   return sourceIdByFilename
 }
 
+const getOperationKnowledgeBaseName = (agent: Agent) => {
+  const operation = agent.operations?.[0]
+  const operationId = operation?.id || ""
+  return `Agent files (${agent._id}:${operationId})`
+}
+
 export const ensureKnowledgeBaseForAgent = async (
   agentId: string
 ): Promise<KnowledgeBase> => {
@@ -91,19 +99,28 @@ export const ensureKnowledgeBaseForAgent = async (
     },
     async () => {
       const agent = await agentsSdk.getOrThrow(agentId)
-      const existing = await getAgentKnowledgeBase(agent.knowledgeBases)
+      const existing = await getAgentKnowledgeBase(
+        agent.operations?.[0]?.knowledgeBases
+      )
       if (existing) {
         return existing
       }
 
       const created = await knowledgeBaseSdk.create({
-        name: `Agent files (${agent._id})`,
+        name: getOperationKnowledgeBaseName(agent),
         type: KnowledgeBaseType.GEMINI,
       })
 
       await agentsSdk.update({
         ...agent,
-        knowledgeBases: created._id ? [created._id] : [],
+        operations: (agent.operations || []).map((operation, index) =>
+          index === 0
+            ? {
+                ...operation,
+                knowledgeBases: created._id ? [created._id] : [],
+              }
+            : operation
+        ),
       })
 
       return created
@@ -117,7 +134,9 @@ const getKnowledgeBaseIdsForAgent = async (
   agentId: string
 ): Promise<string[]> => {
   const agent = await agentsSdk.getOrThrow(agentId)
-  return (agent.knowledgeBases || []).filter(Boolean)
+  return (
+    agent.operations?.flatMap(operation => operation.knowledgeBases || []) || []
+  ).filter(Boolean)
 }
 
 export const listFilesForAgent = async (

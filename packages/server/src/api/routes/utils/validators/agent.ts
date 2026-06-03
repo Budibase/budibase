@@ -59,6 +59,7 @@ const AGENT_OPERATION_SCHEMA = Joi.object({
   name: OPTIONAL_STRING,
   promptInstructions: OPTIONAL_STRING,
   enabledTools: Joi.array().items(Joi.string()).optional(),
+  knowledgeBases: Joi.array().items(Joi.string()).optional(),
 })
 
 export function createAgentValidator() {

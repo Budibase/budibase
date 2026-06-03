@@ -551,7 +551,7 @@ const buildRunSnapshot = async ({
     promptInstructions: agent.operations?.[0]?.promptInstructions,
     goal: agent.goal,
     enabledTools: [...(agent.operations?.[0]?.enabledTools || [])],
-    knowledgeBases: [...(agent.knowledgeBases || [])],
+    knowledgeBases: [...(agent.operations?.[0]?.knowledgeBases || [])],
   }
 }
 

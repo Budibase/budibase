@@ -11,10 +11,12 @@ import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import { assertAgentHasValidConfig } from "./utils"
 
+// TODO: this will eventually go away, after a grace period
 type DeprecatedAgent = Agent & {
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
+  knowledgeBases?: string[]
 }
 
 const SECRET_MASK = "********"
@@ -143,16 +145,23 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
     return (raw.operations ?? []).map(operation => ({
       ...operation,
       enabledTools: operation.enabledTools || [],
+      knowledgeBases: operation.knowledgeBases || [],
     }))
   }
 
-  if (raw.promptInstructions || raw.operationName || raw.enabledTools?.length) {
+  if (
+    raw.promptInstructions ||
+    raw.operationName ||
+    raw.enabledTools?.length ||
+    raw.knowledgeBases?.length
+  ) {
     return [
       {
         id: "operation_default",
         name: raw.operationName || DEFAULT_OPERATION_NAME,
         promptInstructions: raw.promptInstructions || "",
         enabledTools: raw.enabledTools || [],
+        knowledgeBases: raw.knowledgeBases || [],
       },
     ]
   }
@@ -165,6 +174,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
     promptInstructions: _promptInstructions,
     operationName: _operationName,
     enabledTools: _enabledTools,
+    knowledgeBases: _knowledgeBases,
     ...rest
   } = raw
   return {
@@ -351,7 +361,6 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
-    knowledgeBases: request.knowledgeBases || [],
     knowledgeSources: request.knowledgeSources,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
@@ -400,7 +409,6 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     operations: source.operations,
-    knowledgeBases: source.knowledgeBases || [],
   })
 }
 
@@ -434,12 +442,14 @@ export async function update(agent: Agent): Promise<Agent> {
       ? (agent.operations ?? []).map(operation => ({
           ...operation,
           enabledTools: operation.enabledTools || [],
+          knowledgeBases: operation.knowledgeBases || [],
         }))
       : (
           existing.operations || migrateOperations(agent as DeprecatedAgent)
         ).map(operation => ({
           ...operation,
           enabledTools: operation.enabledTools || [],
+          knowledgeBases: operation.knowledgeBases || [],
         })),
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
@@ -489,8 +499,12 @@ export async function remove(agentId: string) {
   const db = context.getWorkspaceDB()
   const agent = await getOrThrow(agentId)
 
-  if (agent.knowledgeBases) {
-    for (const knowledgeBaseId of agent.knowledgeBases) {
+  const knowledgeBaseIds = agent.operations?.flatMap(
+    operation => operation.knowledgeBases || []
+  )
+
+  if (knowledgeBaseIds?.length) {
+    for (const knowledgeBaseId of knowledgeBaseIds) {
       const knowledgeBase = await knowledgeBaseSdk.find(knowledgeBaseId)
       if (!knowledgeBase) {
         continue

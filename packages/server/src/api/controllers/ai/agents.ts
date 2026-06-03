@@ -62,11 +62,7 @@ const obfuscateAgentSecrets = (agent: Agent): Agent => ({
 })
 
 const withoutKnowledgeConfig = <T extends Agent>(agent: T) => {
-  const {
-    knowledgeSources: _knowledgeSources,
-    knowledgeBases: _knowledgeBases,
-    ...rest
-  } = agent
+  const { knowledgeSources: _knowledgeSources, ...rest } = agent
   return rest
 }
 
@@ -322,7 +318,6 @@ export async function createAgent(
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
     knowledgeSources: undefined,
-    knowledgeBases: undefined,
     operations: body.operations,
   }
 
@@ -352,7 +347,9 @@ export async function updateAgent(
 
   if (Object.prototype.hasOwnProperty.call(rawBody, "knowledgeBases")) {
     const incoming = normalizeKnowledgeBases(rawBody.knowledgeBases)
-    const current = normalizeKnowledgeBases(existing.knowledgeBases || [])
+    const current = normalizeKnowledgeBases(
+      existing.operations?.[0]?.knowledgeBases || []
+    )
     if (stableSerialize(incoming) !== stableSerialize(current)) {
       throw new HTTPError(
         "knowledgeBases cannot be updated from this endpoint",

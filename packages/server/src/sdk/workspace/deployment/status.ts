@@ -111,6 +111,9 @@ export async function status() {
       goal: agent.goal,
       live: agent.live,
       enabledTools: normalizeArray(agent.operations?.[0]?.enabledTools || []),
+      knowledgeBases: normalizeArray(
+        agent.operations?.[0]?.knowledgeBases || []
+      ),
       discordIntegration: agent.discordIntegration
         ? {
             applicationId: agent.discordIntegration.applicationId,

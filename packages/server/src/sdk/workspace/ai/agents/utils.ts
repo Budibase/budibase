@@ -153,7 +153,8 @@ export async function buildPromptAndTools(
   if (!agentId) {
     throw new Error("Agent _id is required")
   }
-  const hasKnowledgeBases = agent.knowledgeBases?.some(Boolean) ?? false
+  const hasKnowledgeBases =
+    agent.operations?.[0]?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.operations?.[0]?.enabledTools || [])
