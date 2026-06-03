@@ -151,8 +151,9 @@ const toPrimaryOperation = (agent: {
 
 const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   const operation = toPrimaryOperation(raw)
+  const { promptInstructions: _promptInstructions, ...rest } = raw
   return {
-    ...raw,
+    ...rest,
     live: raw.live ?? false,
     operations: [operation],
     discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
