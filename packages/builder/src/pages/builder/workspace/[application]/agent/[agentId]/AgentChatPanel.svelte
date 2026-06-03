@@ -30,11 +30,11 @@
       ...INITIAL_CHAT,
       agentId: nextAgentId || "",
     }
+    refreshKey += 1
   }
 
   const refreshChat = () => {
     resetChat(agentId)
-    refreshKey += 1
   }
 
   $effect(() => {

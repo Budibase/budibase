@@ -855,7 +855,10 @@
   }
 
   :global(.svelte-flow__handle.custom-handle) {
-    background-color: var(--spectrum-global-color-gray-700);
+    background-color: var(
+      --automation-flow-handle-color,
+      var(--spectrum-global-color-gray-700)
+    );
     border-radius: 1px;
     width: 8px;
     height: 4px;
