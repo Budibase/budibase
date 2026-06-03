@@ -2,7 +2,7 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { Icon, Input, Popover } from "@budibase/bbui"
-  import { tick, onMount } from "svelte"
+  import { tick, onMount, onDestroy } from "svelte"
   import { Constants } from "@budibase/frontend-core"
   import { getSequentialName } from "@/helpers/duplicate"
   import { derived, writable } from "svelte/store"
@@ -18,19 +18,46 @@
 
   const MAX_SAVED_COLORS = 8
 
-  $: savedColorsKey = `budibase-saved-option-colors-${$appStore.appId}`
+  import { get } from "svelte/store"
 
+  let savedColorsKey = null
   let savedColors = []
 
-  onMount(() => {
-    const stored = localStorage.getItem(savedColorsKey)
+  const loadSavedColors = key => {
+    if (!key) {
+      savedColors = []
+      return
+    }
+    const stored = localStorage.getItem(key)
     if (stored) {
       try {
         savedColors = JSON.parse(stored)
       } catch (e) {
         savedColors = []
       }
+    } else {
+      savedColors = []
     }
+  }
+
+  onMount(() => {
+    // Use the current appId at mount time to form a stable key.
+    const appId = get(appStore)?.appId
+    savedColorsKey = appId ? `budibase-saved-option-colors-${appId}` : null
+    loadSavedColors(savedColorsKey)
+
+    // Subscribe to appStore to reload saved colors if app changes (e.g., after a rebase or navigation)
+    const unsub = appStore.subscribe(state => {
+      const nextKey = state?.appId
+        ? `budibase-saved-option-colors-${state.appId}`
+        : null
+      if (nextKey !== savedColorsKey) {
+        savedColorsKey = nextKey
+        loadSavedColors(savedColorsKey)
+      }
+    })
+
+    onDestroy(unsub)
   })
 
   const saveCustomColor = color => {
