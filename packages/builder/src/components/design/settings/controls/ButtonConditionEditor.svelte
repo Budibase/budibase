@@ -448,6 +448,7 @@
                 {/if}
                 <Toggle
                   text=""
+                  noMargin={true}
                   value={!condition.disabled}
                   on:change={e => toggleCondition(condition.id, e.detail)}
                 />
