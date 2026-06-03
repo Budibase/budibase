@@ -10,11 +10,14 @@ describe("queries SDK", () => {
       ["false", false],
       ["0", 0],
       ["null", null],
-    ])("keeps JSON primitive request bodies: %s", async (template, expected) => {
-      const result = await enrichContext({ requestBody: template })
+    ])(
+      "keeps JSON primitive request bodies: %s",
+      async (template, expected) => {
+        const result = await enrichContext({ requestBody: template })
 
-      expect(result.json).toBe(expected)
-    })
+        expect(result.json).toBe(expected)
+      }
+    )
 
     it("keeps JSON primitive custom data and removes the customData field", async () => {
       const result = await enrichContext({ customData: "false" })
