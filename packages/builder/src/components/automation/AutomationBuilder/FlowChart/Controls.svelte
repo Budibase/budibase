@@ -10,6 +10,7 @@
 
   export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
   export let canAddNote = true
+  export let addNoteDisabledReason = "Move closer to add a note"
   export let controlsEl: HTMLDivElement | null = null
   export let onAddNote = () => {}
   export let onAutoLayout = () => {}
@@ -90,7 +91,7 @@
           name="note-blank"
           size="L"
           hoverable={canAddNote}
-          tooltip={canAddNote ? "Add a note" : "Move closer to add a note"}
+          tooltip={canAddNote ? "Add a note" : addNoteDisabledReason}
           tooltipPosition={TooltipPosition.Top}
           color={canAddNote
             ? "var(--spectrum-alias-text-color)"

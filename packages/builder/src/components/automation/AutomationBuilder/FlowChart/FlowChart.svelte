@@ -20,6 +20,7 @@
   import {
     automationStore,
     automationHistoryStore,
+    MAX_STICKY_NOTES_PER_AUTOMATION,
     selectedAutomation,
     workspaceDeploymentStore,
     deploymentStore,
@@ -122,7 +123,12 @@
   }px) scale(${$flowViewport.zoom})`
   $: stickyNoteAddPosition =
     paneEl && $nodes ? getStickyNoteAddPosition($flowViewport) : undefined
-  $: canAddStickyNote = !!stickyNoteAddPosition
+  $: canAddMoreStickyNotes =
+    stickyNotes.length < MAX_STICKY_NOTES_PER_AUTOMATION
+  $: canAddStickyNote = !!stickyNoteAddPosition && canAddMoreStickyNotes
+  $: addStickyNoteDisabledReason = canAddMoreStickyNotes
+    ? "Move closer to add a note"
+    : `Maximum of ${MAX_STICKY_NOTES_PER_AUTOMATION} notes reached`
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -630,6 +636,10 @@
   }
 
   const handleAddNote = () => {
+    if (!canAddMoreStickyNotes) {
+      return
+    }
+
     const position = getStickyNoteAddPosition(getViewport())
     if (!position) {
       return
@@ -765,6 +775,7 @@
           bind:controlsEl={flowControlsEl}
           historyStore={automationHistoryStore}
           canAddNote={canAddStickyNote}
+          addNoteDisabledReason={addStickyNoteDisabledReason}
           onAddNote={handleAddNote}
           onAutoLayout={handleAutoLayout}
         />

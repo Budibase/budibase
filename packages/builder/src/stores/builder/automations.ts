@@ -107,6 +107,8 @@ export interface AutomationSaveOptions {
   skipUnpublishedChanges?: boolean
 }
 
+export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
 const sameMoveContainer = (
   sourcePath: BlockPath[],
   destPath: BlockPath[]
@@ -2659,6 +2661,10 @@ const automationActions = (store: AutomationStore) => ({
     if (!auto) return
 
     const notes = auto.uiTree?.stickyNotes || []
+    if (notes.length >= MAX_STICKY_NOTES_PER_AUTOMATION) {
+      return
+    }
+
     const newNote = {
       id: generate(),
       title: "Note",
