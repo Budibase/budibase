@@ -435,12 +435,12 @@ export async function update(agent: Agent): Promise<Agent> {
           ...operation,
           enabledTools: operation.enabledTools || [],
         }))
-      : (existing.operations || migrateOperations(agent as DeprecatedAgent)).map(
-          operation => ({
-            ...operation,
-            enabledTools: operation.enabledTools || [],
-          })
-        ),
+      : (
+          existing.operations || migrateOperations(agent as DeprecatedAgent)
+        ).map(operation => ({
+          ...operation,
+          enabledTools: operation.enabledTools || [],
+        })),
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,

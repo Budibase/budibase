@@ -83,7 +83,9 @@ describe("buildPromptAndTools", () => {
       _id: "agent_1",
       name: "Support Agent",
       aiconfig: "",
-      enabledTools: [],
+      operations: [
+        { id: "operation_1", name: "Main operation", enabledTools: [] },
+      ],
       knowledgeBases: ["kb_1"],
     } as Agent
 
@@ -107,7 +109,9 @@ describe("buildPromptAndTools", () => {
       _id: "agent_2",
       name: "Support Agent",
       aiconfig: "",
-      enabledTools: [],
+      operations: [
+        { id: "operation_1", name: "Main operation", enabledTools: [] },
+      ],
       knowledgeBases: [],
     } as Agent
 
@@ -122,7 +126,9 @@ describe("buildPromptAndTools", () => {
     const agent = {
       name: "Support Agent",
       aiconfig: "",
-      enabledTools: [],
+      operations: [
+        { id: "operation_1", name: "Main operation", enabledTools: [] },
+      ],
       knowledgeBases: ["kb_1"],
     } as Agent
 

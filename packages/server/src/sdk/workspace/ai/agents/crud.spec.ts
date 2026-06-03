@@ -316,7 +316,9 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        enabledTools: [],
+        operations: [
+          { id: "operation_1", name: "Main operation", enabledTools: [] },
+        ],
         knowledgeBases: [],
       } as Agent
 
@@ -339,7 +341,9 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        enabledTools: [],
+        operations: [
+          { id: "operation_1", name: "Main operation", enabledTools: [] },
+        ],
         knowledgeBases: [],
         live: false,
       } as Agent
@@ -368,13 +372,13 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        enabledTools: [],
         knowledgeBases: [],
         operations: [
           {
             id: "operation_1",
             name: "Primary",
             promptInstructions: "Do work",
+            enabledTools: [],
           },
         ],
       } as Agent
@@ -401,13 +405,13 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        enabledTools: [],
         knowledgeBases: [],
         operations: [
           {
             id: "operation_1",
             name: "Primary",
             promptInstructions: "Do work",
+            enabledTools: [],
           },
         ],
       } as Agent
@@ -422,11 +426,13 @@ describe("agents crud", () => {
             id: "operation_1",
             name: "Primary",
             promptInstructions: "Do work",
+            enabledTools: [],
           },
           {
             id: "operation_2",
             name: "Secondary",
             promptInstructions: "Then do more",
+            enabledTools: [],
           },
         ],
       })

@@ -24,8 +24,14 @@ describe("agent duplicate", () => {
       name: "Support Agent",
       aiconfig: "default",
       description: "Support assistant",
-      promptInstructions: "Be helpful",
-      operationName: "Customer support",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Customer support",
+          promptInstructions: "Be helpful",
+          enabledTools: [],
+        },
+      ],
       live: true,
     })
 
@@ -36,28 +42,46 @@ describe("agent duplicate", () => {
     expect(duplicate.name).not.toEqual(created.name)
     expect(duplicate.name).toContain("Support Agent")
     expect(duplicate.description).toEqual(created.description)
-    expect(duplicate.promptInstructions).toEqual(created.promptInstructions)
-    expect(duplicate.operationName).toEqual(created.operationName)
+    expect(duplicate.operations?.[0]?.promptInstructions).toEqual(
+      created.operations?.[0]?.promptInstructions
+    )
+    expect(duplicate.operations?.[0]?.name).toEqual(
+      created.operations?.[0]?.name
+    )
     expect(duplicate.live).toEqual(created.live)
   })
 
-  it("persists operationName on create and update", async () => {
+  it("persists operation name on create and update", async () => {
     const created = await config.api.agent.create({
       name: "Operation Name Agent",
       aiconfig: "default",
-      operationName: "Main triage flow",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main triage flow",
+          enabledTools: [],
+        },
+      ],
     })
-    expect(created.operationName).toEqual("Main triage flow")
+    expect(created.operations?.[0]?.name).toEqual("Main triage flow")
 
     const updated = await config.api.agent.update({
       ...created,
-      operationName: "Escalation flow",
+      operations: [
+        {
+          ...(created.operations?.[0] || {
+            id: "operation_1",
+            enabledTools: [],
+          }),
+          name: "Escalation flow",
+        },
+      ],
     })
-    expect(updated.operationName).toEqual("Escalation flow")
+    expect(updated.operations?.[0]?.name).toEqual("Escalation flow")
 
     const { agents } = await config.api.agent.fetch()
     const fetched = agents.find(agent => agent._id === created._id)
-    expect(fetched?.operationName).toEqual("Escalation flow")
+    expect(fetched?.operations?.[0]?.name).toEqual("Escalation flow")
   })
 
   it("returns 404 for unknown agent", async () => {

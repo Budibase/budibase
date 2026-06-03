@@ -176,7 +176,9 @@ describe("agent test runner", () => {
       _id: "agent-1",
       name: "Support Agent",
       aiconfig: "config-1",
-      enabledTools: [],
+      operations: [
+        { id: "operation_1", name: "Main operation", enabledTools: [] },
+      ],
       knowledgeBases: [],
     })
     sdk.ai.agents.buildPromptAndTools.mockResolvedValue({
@@ -454,7 +456,9 @@ describe("agent test runner", () => {
       _id: "agent-1",
       name: "Support Agent",
       aiconfig: "config-1",
-      enabledTools: [],
+      operations: [
+        { id: "operation_1", name: "Main operation", enabledTools: [] },
+      ],
       knowledgeBases: ["kb-1"],
     })
     mockAgentRun({ response: "The policy is 30 days." })
