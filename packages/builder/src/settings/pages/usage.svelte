@@ -32,10 +32,6 @@
 
   $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
   $: manageUrl = accountPortalBillingUrl($admin.accountPortalUrl)
-  $: purchaseCreditsUrl = accountPortalBillingUrl($admin.accountPortalUrl, {
-    tenantId: $auth.tenantId,
-    purchasePrepaidAiCredits: true,
-  })
 
   const WARN_USAGE = ["Queries", "Automations", "Rows", "Users"]
   const oneDayInSeconds = 86400
@@ -252,7 +248,6 @@
                     accountPortalAccess &&
                     !usesInvoicing &&
                     !!license?.billing?.subscription}
-                  {purchaseCreditsUrl}
                 />
               {/each}
             </Layout>

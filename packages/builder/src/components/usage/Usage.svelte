@@ -17,7 +17,6 @@
   export let warnWhenFull = false
   export let breakdown = null
   export let showPurchaseCreditsLink = false
-  export let purchaseCreditsUrl = ""
 
   let percentage
   let unlimited = false
@@ -25,7 +24,7 @@
   let breakdownModal
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
-  const { accountPortalUpgradeUrl } = helpers
+  const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
 
   const getPercentage = () => {
     if (!usage?.total || usage.total <= 0) {
@@ -35,6 +34,10 @@
   }
 
   $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
+  $: purchaseCreditsUrl = accountPortalBillingUrl($admin.accountPortalUrl, {
+    tenantId: $auth.tenantId,
+    purchasePrepaidAiCredits: true,
+  })
 
   $: unlimited = usage?.total === -1
   $: percentage = unlimited ? 100 : getPercentage()
