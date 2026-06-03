@@ -1,5 +1,13 @@
 <script>
-  import { Body, ProgressBar, Heading, Icon, Link, Modal } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    ProgressBar,
+    Heading,
+    Icon,
+    Link,
+    Modal,
+  } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import { admin } from "@/stores/portal/admin"
   import { auth } from "@/stores/portal/auth"
@@ -8,6 +16,7 @@
   export let usage
   export let warnWhenFull = false
   export let breakdown = null
+  export let showPurchaseCreditsLink = false
 
   let percentage
   let unlimited = false
@@ -15,7 +24,7 @@
   let breakdownModal
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
-  const { accountPortalUpgradeUrl } = helpers
+  const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
 
   const getPercentage = () => {
     if (!usage?.total || usage.total <= 0) {
@@ -25,6 +34,10 @@
   }
 
   $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
+  $: purchaseCreditsUrl = accountPortalBillingUrl($admin.accountPortalUrl, {
+    tenantId: $auth.tenantId,
+    purchasePrepaidAiCredits: true,
+  })
 
   $: unlimited = usage?.total === -1
   $: percentage = unlimited ? 100 : getPercentage()
@@ -62,7 +75,7 @@
       </span>
     </Body>
   </div>
-  <div>
+  <div class="usage-bar">
     {#if unlimited}
       <ProgressBar
         showPercentage={false}
@@ -88,6 +101,17 @@
           contact your account holder
         {/if}
       </Body>
+    {/if}
+    {#if showPurchaseCreditsLink && purchaseCreditsUrl}
+      <div class="purchase-credits-action">
+        <Button
+          primary
+          on:click={() =>
+            window.open(purchaseCreditsUrl, "_blank", "noopener,noreferrer")}
+        >
+          Purchase credits
+        </Button>
+      </div>
     {/if}
   </div>
 </div>
@@ -135,5 +159,16 @@
   .info-btn:hover {
     opacity: 1;
     color: var(--spectrum-global-color-blue-500);
+  }
+
+  .usage-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .purchase-credits-action {
+    display: flex;
+    justify-content: flex-end;
   }
 </style>
