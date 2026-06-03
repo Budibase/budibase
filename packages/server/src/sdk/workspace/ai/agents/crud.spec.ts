@@ -63,6 +63,78 @@ describe("agents crud", () => {
     jest.clearAllMocks()
   })
 
+  describe("fetch", () => {
+    it("wipes legacy promptInstructions when normalizing agents", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "agent_legacy",
+              _rev: "1-abc",
+              name: "Legacy Agent",
+              aiconfig: "cfg_1",
+              promptInstructions: "Legacy instructions",
+            },
+          },
+        ],
+      })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents).toEqual([
+        expect.objectContaining({
+          _id: "agent_legacy",
+          name: "Legacy Agent",
+          operations: [
+            expect.objectContaining({
+              promptInstructions: "Legacy instructions",
+            }),
+          ],
+        }),
+      ])
+      expect(agents[0]).not.toHaveProperty("promptInstructions")
+    })
+
+    it("keeps existing operation promptInstructions when already migrated", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "agent_migrated",
+              _rev: "1-abc",
+              name: "Migrated Agent",
+              aiconfig: "cfg_1",
+              operations: [
+                {
+                  id: "operation_1",
+                  name: "Primary",
+                  promptInstructions: "Keep me",
+                },
+              ],
+            },
+          },
+        ],
+      })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents).toEqual([
+        expect.objectContaining({
+          _id: "agent_migrated",
+          name: "Migrated Agent",
+          operations: [
+            expect.objectContaining({
+              id: "operation_1",
+              name: "Primary",
+              promptInstructions: "Keep me",
+            }),
+          ],
+        }),
+      ])
+      expect(agents[0]).not.toHaveProperty("promptInstructions")
+    })
+  })
+
   describe("remove", () => {
     it("cascades KB file and KB deletion before deleting the agent", async () => {
       const agent = {
