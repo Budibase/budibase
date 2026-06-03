@@ -512,6 +512,7 @@
       {:else}
         <Select
           bind:value={draft.aiconfig}
+          placeholder={false}
           options={modelOptions}
           size="S"
           on:change={() => scheduleSave(true)}
