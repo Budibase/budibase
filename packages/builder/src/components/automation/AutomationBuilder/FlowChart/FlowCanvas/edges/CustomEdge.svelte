@@ -162,7 +162,6 @@
           targetX,
           targetY,
           preBranchLabelX,
-          splitPathAroundActionBar: viewMode === ViewMode.EDITOR,
         })
       : undefined
 
