@@ -1456,15 +1456,20 @@ export async function updateWorkspacePackage(
 
     // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
     let deletedIconSources: string[] = []
+    const appPwaPrefix = `${getProdWorkspaceID(workspaceId)}/pwa/`
     const pwaIconSource = (src: string) => {
       const signedIcon = objectStore.extractBucketAndPath(src)
-      if (signedIcon) {
-        return signedIcon.bucket === ObjectStoreBuckets.APPS
+      const resolvedSrc = signedIcon
+        ? signedIcon.bucket === ObjectStoreBuckets.APPS
           ? signedIcon.path
           : undefined
+        : src
+
+      if (!resolvedSrc?.startsWith(appPwaPrefix)) {
+        return undefined
       }
 
-      return src
+      return resolvedSrc
     }
     const isDefinedPwaIconSource = (src: string | undefined): src is string =>
       src !== undefined
