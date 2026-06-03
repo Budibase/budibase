@@ -24,5 +24,46 @@ describe("queries SDK", () => {
 
       expect(result).toEqual({ json: false })
     })
+
+    it("falls back to requestBody when json is blank", async () => {
+      const result = await enrichContext({
+        json: "",
+        requestBody: { ok: true },
+      })
+
+      expect(result).toEqual({
+        json: { ok: true },
+        requestBody: { ok: true },
+      })
+    })
+
+    it("prefers json over customData and requestBody", async () => {
+      const result = await enrichContext({
+        json: { source: "json" },
+        customData: { source: "customData" },
+        requestBody: { source: "requestBody" },
+      })
+
+      expect(result).toEqual({
+        json: { source: "json" },
+        requestBody: { source: "requestBody" },
+      })
+    })
+
+    it.each([
+      ["false", false],
+      ["0", 0],
+      ["null", null],
+    ])("prefers falsy json values: %s", async (template, expected) => {
+      const result = await enrichContext({
+        json: template,
+        requestBody: { ok: true },
+      })
+
+      expect(result).toEqual({
+        json: expected,
+        requestBody: { ok: true },
+      })
+    })
   })
 })

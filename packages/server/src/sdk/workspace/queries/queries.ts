@@ -41,6 +41,12 @@ const enrichJsonTemplate = (
     escapeNewlines: options.escapeNewlines,
   }) as JSONValue | string
 
+const isBlankJsonField = (value: any) =>
+  typeof value === "string" && value.trim() === ""
+
+const parseJsonField = (value: any) =>
+  typeof value === "string" ? JSON.parse(value) : value
+
 function updateSchema(query: Query): Query {
   if (!query.schema) {
     return query
@@ -152,17 +158,20 @@ export async function enrichContext(
       enrichedQuery[key] = fields[key]
     }
   }
-  const jsonField = ["json", "customData", "requestBody"].find(key =>
-    Object.hasOwn(enrichedQuery, key)
-  )
-  if (jsonField) {
+  for (const key of ["json", "customData", "requestBody"]) {
+    if (
+      !Object.hasOwn(enrichedQuery, key) ||
+      isBlankJsonField(enrichedQuery[key])
+    ) {
+      continue
+    }
     try {
-      const json = enrichedQuery[jsonField]
-      enrichedQuery.json = typeof json === "string" ? JSON.parse(json) : json
+      enrichedQuery.json = parseJsonField(enrichedQuery[key])
+      delete enrichedQuery.customData
+      break
     } catch (err) {
       // no json found, ignore
     }
-    delete enrichedQuery.customData
   }
   return enrichedQuery
 }
