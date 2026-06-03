@@ -2,6 +2,7 @@
   import {
     Body,
     Button,
+    Helpers,
     Icon,
     Input,
     Modal,
@@ -96,15 +97,21 @@ Any constraints the agent must follow.
     renameModal?.hide()
   }
 
+  const createDefaultOperation = () => ({
+    id: `operation_${Helpers.uuid()}`,
+    name: "Main operation",
+    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+  })
+
   const handleAddOperation = () => {
     if (hasOperation) {
       notifications.info("Only one operation is supported at the moment.")
       return
     }
-    if (mainOperation) {
-      mainOperation.name = "Main operation"
-      mainOperation.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
+    if (!agent) {
+      return
     }
+    agent.operations = [createDefaultOperation()]
     onUpdated()
     openOperationPanel()
   }

@@ -418,13 +418,16 @@ export async function update(agent: Agent): Promise<Agent> {
   }
 
   const now = new Date().toISOString()
-  const hasOperations = Object.prototype.hasOwnProperty.call(agent, "operations")
+  const hasOperations = Object.prototype.hasOwnProperty.call(
+    agent,
+    "operations"
+  )
   const updated: Agent = {
     ...existing,
     ...agent,
     updatedAt: now,
     operations: hasOperations
-      ? agent.operations ?? []
+      ? (agent.operations ?? [])
       : existing.operations || migrateOperations(agent as DeprecatedAgent),
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,

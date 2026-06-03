@@ -99,18 +99,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return created
   }
 
-  createAgentOperation = async (agentId: string) => {
-    const updated = await API.createAgentOperation(agentId)
-    this.update(state => {
-      const index = state.agents.findIndex(a => a._id === updated._id)
-      if (index !== -1) {
-        state.agents[index] = updated
-      }
-      return state
-    })
-    return updated
-  }
-
   updateAgent = async (agent: UpdateAgentRequest) => {
     const updated = await API.updateAgent(agent)
     this.update(state => {

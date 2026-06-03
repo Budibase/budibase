@@ -387,37 +387,6 @@ export async function updateAgent(
   ctx.status = 200
 }
 
-export async function createAgentOperation(
-  ctx: UserCtx<{ name?: string }, UpdateAgentResponse, { agentId: string }>
-) {
-  const { agentId } = ctx.params
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const operations = agent.operations || []
-
-  if (operations.length >= 1) {
-    throw new HTTPError("Only one operation is supported at the moment", 400)
-  }
-
-  const now = Date.now()
-  const operation = {
-    id: `operation_${now}`,
-    name: ctx.request.body?.name?.trim() || "Operation",
-    live: false,
-    promptInstructions: "",
-    enabledTools: [],
-    knowledgeBases: [],
-    knowledgeSources: [],
-  }
-
-  const updated = await sdk.ai.agents.update({
-    ...agent,
-    operations: [...operations, operation],
-  })
-
-  ctx.body = withoutKnowledgeConfig(obfuscateAgentSecrets(updated))
-  ctx.status = 201
-}
-
 export async function syncAgentDiscordCommands(
   ctx: UserCtx<
     SyncAgentDiscordCommandsRequest,
