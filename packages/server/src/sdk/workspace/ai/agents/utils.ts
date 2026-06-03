@@ -303,5 +303,11 @@ export const assertAgentHasValidConfig = async (agent: Agent) => {
     )
   }
 
-  await sdk.ai.llm.createLLM(agent.aiconfig)
+  const aiConfig = await sdk.ai.configs.find(agent.aiconfig)
+  if (!aiConfig) {
+    throw new HTTPError(
+      `Agent is not properly configured: AI config "${agent.aiconfig}" not found`,
+      422
+    )
+  }
 }
