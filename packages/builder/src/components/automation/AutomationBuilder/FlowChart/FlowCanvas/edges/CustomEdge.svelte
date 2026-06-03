@@ -38,6 +38,8 @@
     isRunResults,
     didStepRun,
     isTerminalFailure,
+    didBranchStopWithoutMatch,
+    didRunStopWithoutBranchMatch,
     type RunHighlight,
   } from "../FlowRunHelpers"
 
@@ -279,6 +281,9 @@
     const runHighlight = getRunHighlight(runResults)
 
     if (isBranchEdgeData(edgeData)) {
+      if (didBranchStepStopWithoutMatch(edgeData.branchStepId)) {
+        return "stopped"
+      }
       if (
         runHighlight !== "stopped" &&
         didBranchStepFail(edgeData.branchStepId)
@@ -291,6 +296,9 @@
     }
 
     if (isBranchContext(edgeData.block)) {
+      if (didBranchStepStopWithoutMatch(edgeData.block.branchStepId)) {
+        return
+      }
       if (
         runHighlight !== "stopped" &&
         didBranchStepFail(edgeData.block.branchStepId)
@@ -302,7 +310,14 @@
         : undefined
     }
 
-    return didTargetRun(runResults) ? runHighlight : undefined
+    if (didBranchStepStopWithoutMatch(target)) {
+      return "stopped"
+    }
+
+    if (!didTargetRun(runResults)) {
+      return
+    }
+    return didRunStopWithoutBranchMatch(runResults) ? "stopped" : runHighlight
   }
 
   const getProgressEdgeHighlight = (
@@ -363,6 +378,15 @@
       return false
     }
     return isTerminalFailure(
+      runResults.steps.find(step => step.id === branchStepId)
+    )
+  }
+
+  const didBranchStepStopWithoutMatch = (branchStepId: string) => {
+    if (!isRunResults(runResults)) {
+      return false
+    }
+    return didBranchStopWithoutMatch(
       runResults.steps.find(step => step.id === branchStepId)
     )
   }

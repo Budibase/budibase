@@ -22,6 +22,7 @@
     hasSuccessOutput,
     isAutomationStepResult,
     getRunResults,
+    didRunStopWithoutBranchMatch,
     type RunHighlight,
   } from "./FlowCanvas/FlowRunHelpers"
   import { type DragView } from "./FlowCanvas/FlowChartDnD"
@@ -94,6 +95,8 @@
       : false
   $: continuedFailure = blockFailed && !terminalFailure
   $: runHighlight = getRunHighlight(resolvedRunResults)
+  $: runStoppedWithoutBranchMatch =
+    didRunStopWithoutBranchMatch(resolvedRunResults)
   $: blockExecuted = hasSuccessOutput(resolvedStatusResult)
     ? true
     : isTrigger && resolvedTriggerCompleted
@@ -104,10 +107,12 @@
     : false
   $: errorHighlight = blockExecuted
     ? runHighlight
-      ? runHighlight === "error"
+      ? runHighlight === "error" && !runStoppedWithoutBranchMatch
       : terminalFailure
     : false
-  $: warnHighlight = blockExecuted ? runHighlight === "stopped" : false
+  $: warnHighlight = blockExecuted
+    ? runHighlight === "stopped" || runStoppedWithoutBranchMatch
+    : false
   $: triggerIconColor = getTriggerIconColor({
     selected,
     errorHighlight,

@@ -12,7 +12,11 @@
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
   import { type Automation, type Branch } from "@budibase/types"
-  import { getRunHighlight, isTerminalFailure } from "../FlowRunHelpers"
+  import {
+    didBranchStopWithoutMatch,
+    getRunHighlight,
+    isTerminalFailure,
+  } from "../FlowRunHelpers"
   import { type DragView } from "../FlowChartDnD"
 
   type BranchResult = {
@@ -69,13 +73,16 @@
   $: branchStepFailed = isTerminalFailure(branchResult)
   $: branchStepFailure =
     branchStepFailed && (branchExecuted || !hasBranchResultValue)
+  $: branchStoppedWithoutMatch = didBranchStopWithoutMatch(branchResult)
   $: branchSuccess =
     branchExecuted && runHighlight === "success" && !branchStepFailure
   $: branchFailed =
+    !branchStoppedWithoutMatch &&
     runHighlight !== "stopped" &&
     (branchStepFailure || (branchExecuted && runHighlight === "error"))
   $: branchStopped =
-    !branchFailed && branchExecuted && runHighlight === "stopped"
+    branchStoppedWithoutMatch ||
+    (!branchFailed && branchExecuted && runHighlight === "stopped")
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`

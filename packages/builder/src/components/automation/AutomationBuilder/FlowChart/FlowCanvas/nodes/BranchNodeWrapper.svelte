@@ -7,7 +7,11 @@
   import { type BranchStep } from "@budibase/types"
   import { SUBFLOW } from "../FlowGeometry"
   import { getLogStepData } from "../../AutomationStepHelpers"
-  import { getRunHighlight, isTerminalFailure } from "../FlowRunHelpers"
+  import {
+    didBranchStopWithoutMatch,
+    getRunHighlight,
+    isTerminalFailure,
+  } from "../FlowRunHelpers"
 
   export let data: BranchNodeData
 
@@ -45,17 +49,21 @@
   $: branchStepFailed = isTerminalFailure(branchResult)
   $: branchStepFailure =
     branchStepFailed && (branchExecuted || !hasBranchResultValue)
+  $: branchStoppedWithoutMatch = didBranchStopWithoutMatch(branchResult)
   $: branchError =
+    !branchStoppedWithoutMatch &&
     runHighlight !== "stopped" &&
     (branchStepFailure || (branchExecuted && runHighlight === "error"))
   $: branchSuccess =
     !branchError && branchExecuted && runHighlight === "success"
   $: branchStopped =
-    !branchError && branchExecuted && runHighlight === "stopped"
+    branchStoppedWithoutMatch ||
+    (!branchError && branchExecuted && runHighlight === "stopped")
 
   type BranchResult = {
     outputs: {
       branchId?: string
+      success?: boolean
     }
   }
 

@@ -12,6 +12,7 @@
   } from "@budibase/types"
   import {
     didStepRun,
+    didRunStopWithoutBranchMatch,
     getRunHighlight,
     isTerminalFailure,
   } from "../FlowRunHelpers"
@@ -42,8 +43,15 @@
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
+  $: runStoppedWithoutBranchMatch = didRunStopWithoutBranchMatch(
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
+  )
   $: handleStopped =
-    !!result && didStepRun(result) && runHighlight === "stopped"
+    !!result &&
+    didStepRun(result) &&
+    (runHighlight === "stopped" || runStoppedWithoutBranchMatch)
   $: handleError = isTerminalFailure(result) && !handleStopped
   $: handleSuccess =
     !handleError && !!result && didStepRun(result) && runHighlight === "success"
