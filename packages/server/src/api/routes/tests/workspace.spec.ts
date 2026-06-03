@@ -1380,6 +1380,7 @@ describe("/applications", () => {
       const appId = config.getProdWorkspaceId()
       const iconOne = `${appId}/pwa/icon-one.png`
       const iconTwo = `${appId}/pwa/icon-two.png`
+      const foreignIcon = `app_prod_foreign/pwa/icon-foreign.png`
 
       await objectStore.upload({
         bucket: "apps",
@@ -1392,6 +1393,13 @@ describe("/applications", () => {
         bucket: "apps",
         filename: iconTwo,
         body: Buffer.from("icon-two"),
+        type: "image/png",
+      })
+
+      await objectStore.upload({
+        bucket: "apps",
+        filename: foreignIcon,
+        body: Buffer.from("icon-foreign"),
         type: "image/png",
       })
 
@@ -1417,6 +1425,11 @@ describe("/applications", () => {
               sizes: "512x512",
               type: "image/png",
             },
+            {
+              src: foreignIcon,
+              sizes: "256x256",
+              type: "image/png",
+            },
           ],
         },
       })
@@ -1439,6 +1452,7 @@ describe("/applications", () => {
       const fileEtags = await getAppObjectStorageEtags(appId)
       expect(fileEtags[`pwa/icon-one.png`]).toBeUndefined()
       expect(fileEtags[`pwa/icon-two.png`]).toBeUndefined()
+      expect(await objectStore.objectExists("apps", foreignIcon)).toBe(true)
     })
 
     it("trims workspace name before saving when updating", async () => {
