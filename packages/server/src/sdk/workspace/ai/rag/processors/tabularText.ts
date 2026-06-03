@@ -79,6 +79,16 @@ const buildColumnLabels = (headerRow: string[]) => {
   })
 }
 
+const getRowReference = (sectionLabel: string, rowNumber: number) => {
+  if (sectionLabel.startsWith("Sheet: ")) {
+    return `Row ${rowNumber} in Sheet ${sectionLabel.slice("Sheet: ".length)}`
+  }
+  if (sectionLabel.startsWith("Table: ")) {
+    return `Row ${rowNumber} in ${sectionLabel.slice("Table: ".length)}`
+  }
+  return `Row ${rowNumber} in ${sectionLabel}`
+}
+
 export const isTabularKnowledgeFile = ({
   filename,
   mimetype,
@@ -188,7 +198,7 @@ export const stringifyRowsForRag = ({
     output.push(section.label)
 
     if (rows.length === 1) {
-      output.push("Row 1")
+      output.push(getRowReference(section.label, 1))
       rows[0].forEach((value, index) => {
         if (!value) {
           return
@@ -207,7 +217,7 @@ export const stringifyRowsForRag = ({
         continue
       }
 
-      output.push(`Row ${rowIndex + 1}`)
+      output.push(getRowReference(section.label, rowIndex + 1))
       row.forEach((value, index) => {
         if (!value) {
           return
