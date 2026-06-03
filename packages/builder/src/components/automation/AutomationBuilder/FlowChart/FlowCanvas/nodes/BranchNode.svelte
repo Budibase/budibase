@@ -282,10 +282,8 @@
   .block.executed:not(.error):not(.warn) {
     border-color: var(--spectrum-semantic-positive-color-status);
   }
-  .block.selected:not(.success):not(.error):not(.warn):not(.executed) {
-    border-color: var(--spectrum-global-color-blue-600);
-  }
   .block.selected {
+    border-color: var(--spectrum-global-color-blue-600);
     box-shadow: 0 0 0 3px
       color-mix(in srgb, var(--spectrum-global-color-blue-600) 20%, transparent);
   }

@@ -494,11 +494,9 @@
     border-color: var(--spectrum-global-color-orange-500);
     border-width: 2px;
   }
-  .block.selected:not(.success):not(.error):not(.warn) .block-content {
+  .block.selected .block-content {
     border-color: var(--spectrum-global-color-blue-600);
     border-width: 2px;
-  }
-  .block.selected .block-content {
     box-shadow: 0 0 0 3px
       color-mix(in srgb, var(--spectrum-global-color-blue-600) 20%, transparent);
   }
