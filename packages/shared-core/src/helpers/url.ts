@@ -1,4 +1,4 @@
-import { ACCOUNT_PORTAL_PATHS, BUILDER_URLS } from "../constants/urls"
+import { ACCOUNT_PORTAL_PATHS, BUILDER_URLS } from "../constants"
 
 const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
 
@@ -77,8 +77,31 @@ const normalizeAppUrl = (appUrl: string) =>
 export const accountPortalAccountUrl = (accountPortalUrl?: string | null) =>
   joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.ACCOUNT)
 
-export const accountPortalBillingUrl = (accountPortalUrl?: string | null) =>
-  joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.BILLING)
+export const accountPortalBillingUrl = (
+  accountPortalUrl?: string | null,
+  options?:
+    | { tenantId?: string | null; purchasePrepaidAiCredits?: boolean }
+    | string
+    | null
+) => {
+  const resolvedOptions =
+    typeof options === "string" || options == null
+      ? { tenantId: options }
+      : options
+
+  const base = joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.BILLING)
+  const params = new URLSearchParams()
+
+  if (resolvedOptions?.tenantId) {
+    params.set("tenantId", resolvedOptions.tenantId)
+  }
+  if (resolvedOptions?.purchasePrepaidAiCredits) {
+    params.set("purchasePrepaidAiCredits", "1")
+  }
+
+  const query = params.toString()
+  return query ? `${base}?${query}` : base
+}
 
 export const accountPortalUpgradeUrl = (
   accountPortalUrl?: string | null,
