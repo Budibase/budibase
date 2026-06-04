@@ -82,7 +82,7 @@ export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  playbookId?: string
+  projectId?: string
   promptInstructions?: string
   operationName?: string
   goal?: string

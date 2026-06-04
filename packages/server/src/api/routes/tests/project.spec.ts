@@ -2,7 +2,7 @@ import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   FeatureFlag,
-  type PlaybookPackageDependencyIndex,
+  type ProjectPackageDependencyIndex,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
 import fsp from "fs/promises"
@@ -21,7 +21,7 @@ import {
   createQueryScreen,
 } from "../../../tests/utilities/structures"
 
-describe("/playbooks", () => {
+describe("/projects", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
 
@@ -29,10 +29,10 @@ describe("/playbooks", () => {
     config.end()
   })
 
-  const withPlaybooksEnabled = async <T>(f: () => Promise<T>) => {
+  const withProjectsEnabled = async <T>(f: () => Promise<T>) => {
     return await features.testutils.withFeatureFlags(
       config.getTenantId(),
-      { [FeatureFlag.PLAYBOOKS]: true },
+      { [FeatureFlag.PROJECTS]: true },
       f
     )
   }
@@ -70,8 +70,8 @@ describe("/playbooks", () => {
   }
 
   const createTarPackage = async (entries: Record<string, unknown>) => {
-    const tmpPath = await fsp.mkdtemp(join(tmpdir(), "playbook-package-"))
-    const tarPath = join(tmpPath, "playbook-export.tar.gz")
+    const tmpPath = await fsp.mkdtemp(join(tmpdir(), "project-package-"))
+    const tarPath = join(tmpPath, "project-export.tar.gz")
 
     try {
       await Promise.all(
@@ -98,29 +98,29 @@ describe("/playbooks", () => {
   const createMinimalPackageEntries = (
     overrides: {
       manifest?: Record<string, unknown>
-      playbook?: Record<string, unknown>
+      project?: Record<string, unknown>
       dependencyIndex?: Record<string, unknown>
       docs?: Record<string, unknown>
       extraEntries?: Record<string, unknown>
     } = {}
   ) => {
-    const playbook = {
-      _id: "playbook_source",
+    const project = {
+      _id: "project_source",
       name: "Operations",
       createdAt: new Date().toISOString(),
-      ...overrides.playbook,
+      ...overrides.project,
     }
     const manifest = {
       formatVersion: 1,
-      artifactType: "playbook",
+      artifactType: "project",
       budibaseVersion: "test",
       exportedAt: new Date().toISOString(),
-      playbook,
+      project,
       sourceWorkspace: {
         id: "app_source",
       },
       resourcesByType: {
-        playbook: 1,
+        project: 1,
       },
       containsRows: false,
       containsAttachments: false,
@@ -130,10 +130,10 @@ describe("/playbooks", () => {
       ...overrides.manifest,
     }
     const dependencyIndex = {
-      rootPlaybookId: "playbook_source",
+      rootProjectId: "project_source",
       directMembers: [],
       resources: {
-        playbook_source: {
+        project_source: {
           dependencies: [],
         },
       },
@@ -142,7 +142,7 @@ describe("/playbooks", () => {
 
     return {
       "manifest.json": manifest,
-      "playbook.json": playbook,
+      "project.json": project,
       "dependency-index.json": dependencyIndex,
       ...overrides.docs,
       ...overrides.extraEntries,
@@ -150,55 +150,55 @@ describe("/playbooks", () => {
   }
 
   it("returns 404 when the feature flag is disabled", async () => {
-    await config.api.playbook.fetch({ status: 404 })
+    await config.api.project.fetch({ status: 404 })
   })
 
-  it("creates and fetches playbooks when the feature is enabled", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("creates and fetches projects when the feature is enabled", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
         description: "Operational workflows",
         color: "#8CA171",
       })
 
-      expect(playbook._id).toBeDefined()
-      expect(playbook.name).toBe("Operations")
+      expect(project._id).toBeDefined()
+      expect(project.name).toBe("Operations")
 
-      const { playbooks } = await config.api.playbook.fetch()
-      expect(playbooks.map(existing => existing._id)).toContain(playbook._id)
+      const { projects } = await config.api.project.fetch()
+      expect(projects.map(existing => existing._id)).toContain(project._id)
     })
   })
 
-  it("updates playbooks without client timestamps", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("updates projects without client timestamps", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
         description: "Initial",
       })
 
-      const updated = await config.api.playbook.update({
-        _id: playbook._id,
-        _rev: playbook._rev,
+      const updated = await config.api.project.update({
+        _id: project._id,
+        _rev: project._rev,
         name: "Operations revised",
         description: "Updated",
         color: "#8CA171",
       })
 
-      expect(updated.playbook.name).toBe("Operations revised")
-      expect(updated.playbook.description).toBe("Updated")
-      expect(updated.playbook.createdAt).toBe(playbook.createdAt)
+      expect(updated.project.name).toBe("Operations revised")
+      expect(updated.project.description).toBe("Updated")
+      expect(updated.project.createdAt).toBe(project.createdAt)
     })
   })
 
-  it("rejects path and body playbook id mismatches on update", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("rejects path and body project id mismatches on update", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
 
-      await config.api.playbook.update(
+      await config.api.project.update(
         {
-          ...playbook,
+          ...project,
           name: "Updated operations",
         },
         {
@@ -207,13 +207,13 @@ describe("/playbooks", () => {
             message: "Path and body ids do not match",
           },
         },
-        "playbook_mismatch"
+        "project_mismatch"
       )
     })
   })
 
-  it("rejects assigning an unknown playbook id", async () => {
-    await withPlaybooksEnabled(async () => {
+  it("rejects assigning an unknown project id", async () => {
+    await withProjectsEnabled(async () => {
       const datasource = await config.api.datasource.create(
         basicDatasource().datasource
       )
@@ -222,12 +222,12 @@ describe("/playbooks", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          playbookId: "playbook_missing",
+          projectId: "project_missing",
         }),
         {
           status: 404,
           body: {
-            message: "Playbook 'playbook_missing' not found.",
+            message: "Project 'project_missing' not found.",
           },
         }
       )
@@ -236,12 +236,12 @@ describe("/playbooks", () => {
       await config.api.automation.update(
         {
           ...automation,
-          playbookId: "playbook_missing",
+          projectId: "project_missing",
         },
         {
           status: 404,
           body: {
-            message: "Playbook 'playbook_missing' not found.",
+            message: "Project 'project_missing' not found.",
           },
         }
       )
@@ -250,12 +250,12 @@ describe("/playbooks", () => {
         {
           name: "Ops agent",
           aiconfig: "default",
-          playbookId: "playbook_missing",
+          projectId: "project_missing",
         },
         {
           status: 404,
           body: {
-            message: "Playbook 'playbook_missing' not found.",
+            message: "Project 'project_missing' not found.",
           },
         }
       )
@@ -263,12 +263,12 @@ describe("/playbooks", () => {
       await config.api.table.save(
         {
           ...basicTable(),
-          playbookId: "playbook_missing",
+          projectId: "project_missing",
         },
         {
           status: 404,
           body: {
-            message: "Playbook 'playbook_missing' not found.",
+            message: "Project 'project_missing' not found.",
           },
         }
       )
@@ -276,12 +276,12 @@ describe("/playbooks", () => {
       await config.api.query.save(
         {
           ...basicQuery(datasource._id!),
-          playbookId: "playbook_missing",
+          projectId: "project_missing",
         },
         {
           status: 404,
           body: {
-            message: "Playbook 'playbook_missing' not found.",
+            message: "Project 'project_missing' not found.",
           },
         }
       )
@@ -289,37 +289,37 @@ describe("/playbooks", () => {
       await config.api.datasource.create(
         {
           ...basicDatasource().datasource,
-          playbookId: "playbook_missing",
+          projectId: "project_missing",
         },
         {
           status: 404,
           body: {
-            message: "Playbook 'playbook_missing' not found.",
+            message: "Project 'project_missing' not found.",
           },
         }
       )
     })
   })
 
-  it("rejects assigning a playbook while the feature is disabled", async () => {
+  it("rejects assigning a project while the feature is disabled", async () => {
     await config.api.workspaceApp.create(
       structures.workspaceApps.createRequest({
         name: "Ops app",
         url: "/ops-app",
-        playbookId: "playbook_1",
+        projectId: "project_1",
       }),
       {
         status: 404,
         body: {
-          message: "Playbooks feature is not enabled.",
+          message: "Projects feature is not enabled.",
         },
       }
     )
   })
 
-  it("clears assignments when deleting a playbook", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("clears assignments when deleting a project", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
 
@@ -327,7 +327,7 @@ describe("/playbooks", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          playbookId: playbook._id,
+          projectId: project._id,
         })
       )
 
@@ -335,115 +335,115 @@ describe("/playbooks", () => {
       const { automation: updatedAutomation } =
         await config.api.automation.update({
           ...automation,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
 
       const agent = await config.api.agent.create({
         name: "Ops agent",
         aiconfig: "default",
-        playbookId: playbook._id,
+        projectId: project._id,
       })
 
       const table = await config.api.table.save({
         ...basicTable(),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
 
       const datasource = await config.api.datasource.create({
         ...basicDatasource().datasource,
-        playbookId: playbook._id,
+        projectId: project._id,
       })
 
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
 
-      await config.api.playbook.delete(playbook._id, playbook._rev)
+      await config.api.project.delete(project._id, project._rev)
 
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
-      expect(fetchedWorkspaceApp.playbookId).toBeUndefined()
+      expect(fetchedWorkspaceApp.projectId).toBeUndefined()
 
       const fetchedAutomation = await config.api.automation.get(
         updatedAutomation._id!
       )
-      expect(fetchedAutomation.playbookId).toBeUndefined()
+      expect(fetchedAutomation.projectId).toBeUndefined()
 
       const { agents } = await config.api.agent.fetch()
       const fetchedAgent = agents.find(existing => existing._id === agent._id)
-      expect(fetchedAgent?.playbookId).toBeUndefined()
+      expect(fetchedAgent?.projectId).toBeUndefined()
 
       const fetchedTable = await config.api.table.get(table._id!)
-      expect(fetchedTable.playbookId).toBeUndefined()
+      expect(fetchedTable.projectId).toBeUndefined()
 
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
-      expect(fetchedDatasource.playbookId).toBeUndefined()
+      expect(fetchedDatasource.projectId).toBeUndefined()
 
       const fetchedQuery = await config.api.query.get(query._id!)
-      expect(fetchedQuery.playbookId).toBeUndefined()
+      expect(fetchedQuery.projectId).toBeUndefined()
     })
   })
 
   it("does not clear assignments when deleting with a stale rev", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          playbookId: playbook._id,
+          projectId: project._id,
         })
       )
 
-      await config.api.playbook.delete(playbook._id, "1-stale", {
+      await config.api.project.delete(project._id, "1-stale", {
         status: 409,
       })
 
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
-      expect(fetchedWorkspaceApp.playbookId).toBe(playbook._id)
+      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
     })
   })
 
-  it("preserves assignments when updates omit playbook ids", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("preserves assignments when updates omit project ids", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          playbookId: playbook._id,
+          projectId: project._id,
         })
       )
       const automation = await config.createAutomation()
       const { automation: assignedAutomation } =
         await config.api.automation.update({
           ...automation,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
       const agent = await config.api.agent.create({
         name: "Ops agent",
         aiconfig: "default",
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const table = await config.api.table.save({
         ...basicTable(),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const datasource = await config.api.datasource.create({
         ...basicDatasource().datasource,
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
 
       const { workspaceApp: updatedWorkspaceApp } =
@@ -458,7 +458,7 @@ describe("/playbooks", () => {
           disabled: workspaceApp.disabled,
         })
 
-      const { playbookId: _automationPlaybookId, ...automationUpdate } =
+      const { projectId: _automationProjectId, ...automationUpdate } =
         assignedAutomation
       const { automation: updatedAutomation } =
         await config.api.automation.update({
@@ -466,43 +466,43 @@ describe("/playbooks", () => {
           name: "Ops automation updated",
         })
 
-      const { playbookId: _agentPlaybookId, ...agentUpdate } = agent
+      const { projectId: _agentProjectId, ...agentUpdate } = agent
       const updatedAgent = await config.api.agent.update({
         ...agentUpdate,
         name: "Ops agent updated",
       })
 
-      const { playbookId: _tablePlaybookId, ...tableUpdate } = table
+      const { projectId: _tableProjectId, ...tableUpdate } = table
       const updatedTable = await config.api.table.save({
         ...tableUpdate,
         name: "Ops table updated",
       })
 
-      const { playbookId: _datasourcePlaybookId, ...datasourceUpdate } =
+      const { projectId: _datasourceProjectId, ...datasourceUpdate } =
         datasource
       const updatedDatasource = await config.api.datasource.update({
         ...datasourceUpdate,
         name: "Ops datasource updated",
       })
 
-      const { playbookId: _queryPlaybookId, ...queryUpdate } = query
+      const { projectId: _queryProjectId, ...queryUpdate } = query
       const updatedQuery = await config.api.query.save({
         ...queryUpdate,
         name: "Ops query updated",
       })
 
-      expect(updatedWorkspaceApp.playbookId).toBe(playbook._id)
-      expect(updatedAutomation.playbookId).toBe(playbook._id)
-      expect(updatedAgent.playbookId).toBe(playbook._id)
-      expect(updatedTable.playbookId).toBe(playbook._id)
-      expect(updatedDatasource.playbookId).toBe(playbook._id)
-      expect(updatedQuery.playbookId).toBe(playbook._id)
+      expect(updatedWorkspaceApp.projectId).toBe(project._id)
+      expect(updatedAutomation.projectId).toBe(project._id)
+      expect(updatedAgent.projectId).toBe(project._id)
+      expect(updatedTable.projectId).toBe(project._id)
+      expect(updatedDatasource.projectId).toBe(project._id)
+      expect(updatedQuery.projectId).toBe(project._id)
     })
   })
 
-  it("exports a playbook tarball with selective docs and manifest", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("exports a project tarball with selective docs and manifest", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
         description: "Operational workflows",
         color: "#8CA171",
@@ -513,20 +513,20 @@ describe("/playbooks", () => {
         config: {
           password: "super-secret",
         },
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const table = await config.api.table.save({
         ...basicTable(),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const { workspaceApp } = await config.api.workspaceApp.create({
         name: "Operations app",
         url: "/operations-app",
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const screen = await config.api.screen.save({
         ...createQueryScreen(datasource._id!, query),
@@ -536,7 +536,7 @@ describe("/playbooks", () => {
       const automation = await config.createAutomation()
       await config.api.automation.update({
         ...automation,
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const agent = await config.api.agent.create({
         name: "Ops agent",
@@ -551,16 +551,16 @@ describe("/playbooks", () => {
           webhookSecretToken: "secret-telegram-webhook",
           botUserName: "ops_bot",
         },
-        playbookId: playbook._id,
+        projectId: project._id,
       })
 
-      const body = await config.api.playbook.export(playbook._id)
+      const body = await config.api.project.export(project._id)
       const files = await readTarEntries(body)
 
       expect(Array.from(files.keys())).toEqual(
         expect.arrayContaining([
           "manifest.json",
-          "playbook.json",
+          "project.json",
           "dependency-index.json",
           `docs/datasource/${datasource._id}.json`,
           `docs/query/${query._id}.json`,
@@ -574,19 +574,19 @@ describe("/playbooks", () => {
 
       const manifest = JSON.parse(files.get("manifest.json")!.toString())
       expect(manifest).toMatchObject({
-        artifactType: "playbook",
+        artifactType: "project",
         formatVersion: 1,
         containsRows: false,
         containsAttachments: false,
         requiresSecrets: true,
-        playbook: {
-          _id: playbook._id,
-          name: playbook.name,
-          description: playbook.description,
-          color: playbook.color,
+        project: {
+          _id: project._id,
+          name: project.name,
+          description: project.description,
+          color: project.color,
         },
         resourcesByType: {
-          playbook: 1,
+          project: 1,
           datasource: 1,
           query: 1,
           table: 1,
@@ -604,11 +604,9 @@ describe("/playbooks", () => {
         supportedImportModes: ["additiveImport"],
       })
 
-      const exportedPlaybook = JSON.parse(
-        files.get("playbook.json")!.toString()
-      )
-      expect(exportedPlaybook._id).toBe(playbook._id)
-      expect(exportedPlaybook._rev).toBeUndefined()
+      const exportedProject = JSON.parse(files.get("project.json")!.toString())
+      expect(exportedProject._id).toBe(project._id)
+      expect(exportedProject._rev).toBeUndefined()
 
       const exportedDatasource = JSON.parse(
         files.get(`docs/datasource/${datasource._id}.json`)!.toString()
@@ -629,8 +627,8 @@ describe("/playbooks", () => {
 
       const dependencyIndex = JSON.parse(
         files.get("dependency-index.json")!.toString()
-      ) as PlaybookPackageDependencyIndex
-      expect(dependencyIndex.rootPlaybookId).toBe(playbook._id)
+      ) as ProjectPackageDependencyIndex
+      expect(dependencyIndex.rootProjectId).toBe(project._id)
       expect(
         dependencyIndex.directMembers.map(resource => resource.id)
       ).toEqual(
@@ -646,24 +644,24 @@ describe("/playbooks", () => {
     })
   })
 
-  it("returns 404 when exporting an unknown playbook", async () => {
-    await withPlaybooksEnabled(async () => {
-      await config.api.playbook.export("playbook_missing", undefined, {
+  it("returns 404 when exporting an unknown project", async () => {
+    await withProjectsEnabled(async () => {
+      await config.api.project.export("project_missing", undefined, {
         status: 404,
         body: {
-          message: "Playbook with id 'playbook_missing' not found.",
+          message: "Project with id 'project_missing' not found.",
         },
       })
     })
   })
 
-  it("exports encrypted playbook tarballs when requested", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("exports encrypted project tarballs when requested", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
 
-      const body = await config.api.playbook.export(playbook._id, {
+      const body = await config.api.project.export(project._id, {
         encryptPassword: "abcde",
       })
       const files = await readTarEntries(body)
@@ -671,20 +669,20 @@ describe("/playbooks", () => {
       expect(Array.from(files.keys())).toEqual(
         expect.arrayContaining([
           "manifest.json.enc",
-          "playbook.json.enc",
+          "project.json.enc",
           "dependency-index.json.enc",
         ])
       )
     })
   })
 
-  it("imports empty playbooks without requiring docs", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("imports empty projects without requiring docs", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
 
-      const body = await config.api.playbook.export(playbook._id)
+      const body = await config.api.project.export(project._id)
       const destinationWorkspace = await config.api.workspace.create({
         name: "Imported workspace",
       })
@@ -692,9 +690,9 @@ describe("/playbooks", () => {
       await config.withHeaders(
         { [Header.APP_ID]: destinationWorkspace.appId },
         async () => {
-          const imported = await config.api.playbook.import(body)
+          const imported = await config.api.project.import(body)
           expect(imported.resources).toEqual({
-            playbook: [imported.playbook._id],
+            project: [imported.project._id],
           })
         }
       )
@@ -702,8 +700,8 @@ describe("/playbooks", () => {
   })
 
   it("exports and imports app screens that need workspace app repair", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
       const defaultWorkspaceApp = await config.api.workspaceApp.find(
@@ -716,7 +714,7 @@ describe("/playbooks", () => {
         url: defaultWorkspaceApp.url,
         disabled: defaultWorkspaceApp.disabled,
         navigation: defaultWorkspaceApp.navigation,
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const screen = await config.api.screen.save({
         ...basicScreen("/operations"),
@@ -731,7 +729,7 @@ describe("/playbooks", () => {
         })
       })
 
-      const body = await config.api.playbook.export(playbook._id)
+      const body = await config.api.project.export(project._id)
       const files = await readTarEntries(body)
       const exportedScreen = JSON.parse(
         files.get(`docs/screen/${screen._id}.json`)!.toString()
@@ -746,7 +744,7 @@ describe("/playbooks", () => {
       await config.withHeaders(
         { [Header.APP_ID]: destinationWorkspace.appId },
         async () => {
-          const imported = await config.api.playbook.import(body)
+          const imported = await config.api.project.import(body)
           const importedScreens = await config.api.screen.list()
           const importedScreen = importedScreens.find(
             existing => existing._id === imported.resources.screen?.[0]
@@ -763,19 +761,19 @@ describe("/playbooks", () => {
   })
 
   it("imports row action dependencies with remapped automation references", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
       const table = await config.api.table.save({
         ...basicTable(),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const rowAction = await config.api.rowAction.save(table._id!, {
         name: "Approve",
       })
 
-      const body = await config.api.playbook.export(playbook._id)
+      const body = await config.api.project.export(project._id)
       const destinationWorkspace = await config.api.workspace.create({
         name: "Imported workspace",
       })
@@ -783,7 +781,7 @@ describe("/playbooks", () => {
       await config.withHeaders(
         { [Header.APP_ID]: destinationWorkspace.appId },
         async () => {
-          const imported = await config.api.playbook.import(body)
+          const imported = await config.api.project.import(body)
           expect(imported.resources.table).toHaveLength(1)
           expect(imported.resources.automation).toHaveLength(1)
           expect(imported.resources.row_action).toHaveLength(1)
@@ -815,9 +813,9 @@ describe("/playbooks", () => {
     })
   })
 
-  it("imports exported playbooks additively into another workspace", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("imports exported projects additively into another workspace", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
         description: "Operational workflows",
       })
@@ -826,20 +824,20 @@ describe("/playbooks", () => {
         config: {
           password: "super-secret",
         },
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const table = await config.api.table.save({
         ...basicTable(),
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const { workspaceApp } = await config.api.workspaceApp.create({
         name: "Operations app",
         url: "/operations-app",
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const screen = await config.api.screen.save({
         ...createQueryScreen(datasource._id!, query),
@@ -848,7 +846,7 @@ describe("/playbooks", () => {
       const automation = await config.createAutomation()
       await config.api.automation.update({
         ...automation,
-        playbookId: playbook._id,
+        projectId: project._id,
       })
       const agent = await config.api.agent.create({
         name: "Ops agent",
@@ -858,10 +856,10 @@ describe("/playbooks", () => {
           botToken: "secret-token",
           signingSecret: "secret-signing-key",
         },
-        playbookId: playbook._id,
+        projectId: project._id,
       })
 
-      const body = await config.api.playbook.export(playbook._id)
+      const body = await config.api.project.export(project._id)
       const destinationWorkspace = await config.api.workspace.create({
         name: "Imported workspace",
       })
@@ -874,9 +872,9 @@ describe("/playbooks", () => {
             url: "/existing-app",
           })
 
-          const imported = await config.api.playbook.import(body)
-          expect(imported.playbook._id).not.toBe(playbook._id)
-          expect(imported.resources.playbook).toEqual([imported.playbook._id])
+          const imported = await config.api.project.import(body)
+          expect(imported.project._id).not.toBe(project._id)
+          expect(imported.resources.project).toEqual([imported.project._id])
           expect(imported.resources.datasource).toHaveLength(1)
           expect(imported.resources.query).toHaveLength(1)
           expect(imported.resources.table).toHaveLength(1)
@@ -898,9 +896,9 @@ describe("/playbooks", () => {
             ])
           )
 
-          const { playbooks } = await config.api.playbook.fetch()
-          expect(playbooks.map(existing => existing._id)).toContain(
-            imported.playbook._id
+          const { projects } = await config.api.project.fetch()
+          expect(projects.map(existing => existing._id)).toContain(
+            imported.project._id
           )
 
           const importedWorkspaceApps = await config.api.workspaceApp.fetch()
@@ -929,24 +927,24 @@ describe("/playbooks", () => {
           expect(importedQuery.datasourceId).toBe(
             imported.resources.datasource?.[0]
           )
-          expect(importedQuery.playbookId).toBe(imported.playbook._id)
+          expect(importedQuery.projectId).toBe(imported.project._id)
 
           const importedTable = await config.api.table.get(
             imported.resources.table?.[0]!
           )
-          expect(importedTable.playbookId).toBe(imported.playbook._id)
+          expect(importedTable.projectId).toBe(imported.project._id)
 
           const importedAutomation = await config.api.automation.get(
             imported.resources.automation?.[0]!
           )
-          expect(importedAutomation.playbookId).toBe(imported.playbook._id)
+          expect(importedAutomation.projectId).toBe(imported.project._id)
           expect(importedAutomation.appId).toBe(destinationWorkspace.appId)
           expect(importedAutomation.disabled).toBe(true)
 
           const importedDatasource = await config.api.datasource.get(
             imported.resources.datasource?.[0]!
           )
-          expect(importedDatasource.playbookId).toBe(imported.playbook._id)
+          expect(importedDatasource.projectId).toBe(imported.project._id)
           expect(importedDatasource.config?.password).not.toBe("super-secret")
 
           const { agents } = await config.api.agent.fetch()
@@ -954,15 +952,15 @@ describe("/playbooks", () => {
             existing => existing._id === imported.resources.agent?.[0]
           )
           expect(importedAgent).toBeDefined()
-          expect(importedAgent?.playbookId).toBe(imported.playbook._id)
+          expect(importedAgent?.projectId).toBe(imported.project._id)
           expect(importedAgent?.live).toBe(false)
 
           const resourceGraph =
             await config.api.resource.getResourceDependencies()
           expect(
-            resourceGraph.body.resources[
-              imported.playbook._id
-            ].dependencies.map(resource => resource.id)
+            resourceGraph.body.resources[imported.project._id].dependencies.map(
+              resource => resource.id
+            )
           ).toEqual(
             expect.arrayContaining([
               imported.resources.datasource?.[0],
@@ -983,17 +981,17 @@ describe("/playbooks", () => {
     })
   })
 
-  it("rejects encrypted playbook imports without a password", async () => {
-    await withPlaybooksEnabled(async () => {
-      const { playbook } = await config.api.playbook.create({
+  it("rejects encrypted project imports without a password", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
         name: "Operations",
       })
 
-      const body = await config.api.playbook.export(playbook._id, {
+      const body = await config.api.project.export(project._id, {
         encryptPassword: "abcde",
       })
 
-      await config.api.playbook.import(body, undefined, {
+      await config.api.project.import(body, undefined, {
         status: 400,
         body: {
           message: "Files are encrypted but no password has been supplied.",
@@ -1009,7 +1007,7 @@ describe("/playbooks", () => {
   ])(
     "rejects packages with %s supported import modes",
     async (_label, value) => {
-      await withPlaybooksEnabled(async () => {
+      await withProjectsEnabled(async () => {
         const packageBuffer = await createTarPackage(
           createMinimalPackageEntries({
             manifest: {
@@ -1018,10 +1016,10 @@ describe("/playbooks", () => {
           })
         )
 
-        await config.api.playbook.import(packageBuffer, undefined, {
+        await config.api.project.import(packageBuffer, undefined, {
           status: 400,
           body: {
-            message: "Playbook package does not support additive import.",
+            message: "Project package does not support additive import.",
           },
         })
       })
@@ -1029,12 +1027,12 @@ describe("/playbooks", () => {
   )
 
   it("rejects packages with docs that are not declared in the dependency index", async () => {
-    await withPlaybooksEnabled(async () => {
+    await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
         createMinimalPackageEntries({
           manifest: {
             resourcesByType: {
-              playbook: 1,
+              project: 1,
               automation: 1,
             },
           },
@@ -1054,29 +1052,29 @@ describe("/playbooks", () => {
         })
       )
 
-      await config.api.playbook.import(packageBuffer, undefined, {
+      await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
           message:
-            "Playbook package contains docs not listed in dependency-index.json.",
+            "Project package contains docs not listed in dependency-index.json.",
         },
       })
     })
   })
 
   it("rejects packages that reference missing docs", async () => {
-    await withPlaybooksEnabled(async () => {
+    await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
         createMinimalPackageEntries({
           manifest: {
             resourcesByType: {
-              playbook: 1,
+              project: 1,
               automation: 1,
             },
           },
           dependencyIndex: {
             resources: {
-              playbook_source: {
+              project_source: {
                 dependencies: [
                   {
                     id: "au_missing",
@@ -1093,28 +1091,28 @@ describe("/playbooks", () => {
         })
       )
 
-      await config.api.playbook.import(packageBuffer, undefined, {
+      await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
-          message: "Playbook package dependency index references missing docs.",
+          message: "Project package dependency index references missing docs.",
         },
       })
     })
   })
 
-  it("rejects packages with docs that are not reachable from the playbook", async () => {
-    await withPlaybooksEnabled(async () => {
+  it("rejects packages with docs that are not reachable from the project", async () => {
+    await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
         createMinimalPackageEntries({
           manifest: {
             resourcesByType: {
-              playbook: 1,
+              project: 1,
               automation: 1,
             },
           },
           dependencyIndex: {
             resources: {
-              playbook_source: {
+              project_source: {
                 dependencies: [],
               },
               au_orphan: {
@@ -1138,29 +1136,29 @@ describe("/playbooks", () => {
         })
       )
 
-      await config.api.playbook.import(packageBuffer, undefined, {
+      await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
           message:
-            "Playbook package contains docs that are not reachable from the root playbook.",
+            "Project package contains docs that are not reachable from the root project.",
         },
       })
     })
   })
 
   it("rejects packages when doc paths do not match resource types", async () => {
-    await withPlaybooksEnabled(async () => {
+    await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
         createMinimalPackageEntries({
           manifest: {
             resourcesByType: {
-              playbook: 1,
+              project: 1,
               automation: 1,
             },
           },
           dependencyIndex: {
             resources: {
-              playbook_source: {
+              project_source: {
                 dependencies: [
                   {
                     id: "ta_wrong",
@@ -1183,18 +1181,18 @@ describe("/playbooks", () => {
         })
       )
 
-      await config.api.playbook.import(packageBuffer, undefined, {
+      await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
           message:
-            "Playbook package doc 'ta_wrong' does not match resource type 'automation'.",
+            "Project package doc 'ta_wrong' does not match resource type 'automation'.",
         },
       })
     })
   })
 
   it("rejects packages with unsupported root files", async () => {
-    await withPlaybooksEnabled(async () => {
+    await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
         createMinimalPackageEntries({
           extraEntries: {
@@ -1203,17 +1201,17 @@ describe("/playbooks", () => {
         })
       )
 
-      await config.api.playbook.import(packageBuffer, undefined, {
+      await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
-          message: "Playbook package contains unsupported files.",
+          message: "Project package contains unsupported files.",
         },
       })
     })
   })
 
   it("rejects workspace exports", async () => {
-    await withPlaybooksEnabled(async () => {
+    await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
         createMinimalPackageEntries({
           extraEntries: {
@@ -1222,28 +1220,28 @@ describe("/playbooks", () => {
         })
       )
 
-      await config.api.playbook.import(packageBuffer, undefined, {
+      await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
-          message: "Workspace exports cannot be imported as Playbook packages.",
+          message: "Workspace exports cannot be imported as Project packages.",
         },
       })
     })
   })
 
   it("rejects packages with paths that are too deep", async () => {
-    await withPlaybooksEnabled(async () => {
+    await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
         createMinimalPackageEntries({
           manifest: {
             resourcesByType: {
-              playbook: 1,
+              project: 1,
               automation: 1,
             },
           },
           dependencyIndex: {
             resources: {
-              playbook_source: {
+              project_source: {
                 dependencies: [
                   {
                     id: "au_deep",
@@ -1266,10 +1264,10 @@ describe("/playbooks", () => {
         })
       )
 
-      await config.api.playbook.import(packageBuffer, undefined, {
+      await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
-          message: "Playbook package contains paths that are too deep.",
+          message: "Project package contains paths that are too deep.",
         },
       })
     })

@@ -3,10 +3,10 @@ import {
   Agent,
   AnyDocument,
   Datasource,
-  Playbook,
-  PlaybookPackageDependencyIndex,
-  PlaybookPackageManifest,
-  PlaybookPackageUnsupportedContent,
+  Project,
+  ProjectPackageDependencyIndex,
+  ProjectPackageManifest,
+  ProjectPackageUnsupportedContent,
   ResourceType,
   Screen,
   UsedResource,
@@ -19,12 +19,12 @@ import sdk from "../../.."
 import { budibaseTempDir } from "../../../../utilities/budibaseDir"
 import { streamFile } from "../../../../utilities/fileSystem"
 import {
-  PLAYBOOK_ATTACHMENTS_DIRECTORY,
-  PLAYBOOK_DEPENDENCY_INDEX_FILE,
-  PLAYBOOK_DOCS_DIRECTORY,
-  PLAYBOOK_EXPORT_FORMAT_VERSION,
-  PLAYBOOK_FILE,
-  PLAYBOOK_MANIFEST_FILE,
+  PROJECT_ATTACHMENTS_DIRECTORY,
+  PROJECT_DEPENDENCY_INDEX_FILE,
+  PROJECT_DOCS_DIRECTORY,
+  PROJECT_EXPORT_FORMAT_VERSION,
+  PROJECT_FILE,
+  PROJECT_MANIFEST_FILE,
 } from "./constants"
 
 async function tarFilesToTmp(tmpDir: string, files: string[]) {
@@ -46,7 +46,7 @@ function getExportDirectoryName(resourceType: ResourceType) {
   return resourceType
 }
 
-async function getDirectMembers(playbookId: string): Promise<UsedResource[]> {
+async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
   const [datasources, tables, queries, automations, agents, workspaceApps] =
     await Promise.all([
       sdk.datasources.fetch(),
@@ -68,22 +68,22 @@ async function getDirectMembers(playbookId: string): Promise<UsedResource[]> {
 
   return [
     ...datasources
-      .filter(datasource => datasource.playbookId === playbookId)
+      .filter(datasource => datasource.projectId === projectId)
       .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
     ...tables
-      .filter(table => table.playbookId === playbookId)
+      .filter(table => table.projectId === projectId)
       .map(table => asUsedResource(table, ResourceType.TABLE)),
     ...queries
-      .filter(query => query.playbookId === playbookId)
+      .filter(query => query.projectId === projectId)
       .map(query => asUsedResource(query, ResourceType.QUERY)),
     ...automations
-      .filter(automation => automation.playbookId === playbookId)
+      .filter(automation => automation.projectId === projectId)
       .map(automation => asUsedResource(automation, ResourceType.AUTOMATION)),
     ...agents
-      .filter(agent => agent.playbookId === playbookId)
+      .filter(agent => agent.projectId === projectId)
       .map(agent => asUsedResource(agent, ResourceType.AGENT)),
     ...workspaceApps
-      .filter(workspaceApp => workspaceApp.playbookId === playbookId)
+      .filter(workspaceApp => workspaceApp.projectId === projectId)
       .map(workspaceApp =>
         asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
       ),
@@ -91,13 +91,13 @@ async function getDirectMembers(playbookId: string): Promise<UsedResource[]> {
 }
 
 async function getUnsupportedContent(
-  playbookId: string
-): Promise<PlaybookPackageUnsupportedContent[]> {
+  projectId: string
+): Promise<ProjectPackageUnsupportedContent[]> {
   const agents = await sdk.ai.agents.fetch()
   const workspaceApps = await sdk.workspaceApps.fetch()
-  const assignedAgents = agents.filter(agent => agent.playbookId === playbookId)
+  const assignedAgents = agents.filter(agent => agent.projectId === projectId)
   const assignedWorkspaceApps = workspaceApps.filter(
-    workspaceApp => workspaceApp.playbookId === playbookId
+    workspaceApp => workspaceApp.projectId === projectId
   )
   const assignedWorkspaceAppIds = new Set(
     assignedWorkspaceApps.map(workspaceApp => workspaceApp._id)
@@ -116,14 +116,14 @@ async function getUnsupportedContent(
       : [],
   ])
 
-  const unsupported: PlaybookPackageUnsupportedContent[] = []
+  const unsupported: ProjectPackageUnsupportedContent[] = []
 
   if (assignedAgentFiles.length) {
     unsupported.push({
       type: "agent_file",
       count: assignedAgentFiles.length,
       reason:
-        "Agent files and related RAG data are excluded from Playbook exports.",
+        "Agent files and related RAG data are excluded from Project exports.",
     })
   }
 
@@ -132,7 +132,7 @@ async function getUnsupportedContent(
       type: "agent_linked_content",
       count: assignedAgents.length,
       reason:
-        "Agent chats, deployments, and other linked AI content are excluded from Playbook exports.",
+        "Agent chats, deployments, and other linked AI content are excluded from Project exports.",
     })
   }
 
@@ -141,7 +141,7 @@ async function getUnsupportedContent(
       type: "screen",
       count: orphanScreens.length,
       reason:
-        "Screens without a workspace app link are excluded from deterministic Playbook export packaging.",
+        "Screens without a workspace app link are excluded from deterministic Project export packaging.",
     })
   }
 
@@ -174,18 +174,18 @@ async function sanitizeDocumentForExport(
   return sanitized
 }
 
-function sanitizePlaybookForExport(playbook: Playbook) {
-  const sanitized = structuredClone(playbook)
+function sanitizeProjectForExport(project: Project) {
+  const sanitized = structuredClone(project)
   delete sanitized._rev
   return sanitized
 }
 
 function buildManifest(
-  playbook: Playbook,
+  project: Project,
   workspaceId: string,
   dependencies: UsedResource[],
-  unsupportedContent: PlaybookPackageUnsupportedContent[]
-): PlaybookPackageManifest {
+  unsupportedContent: ProjectPackageUnsupportedContent[]
+): ProjectPackageManifest {
   const resourcesByType = dependencies.reduce<
     Partial<Record<ResourceType, number>>
   >(
@@ -193,21 +193,21 @@ function buildManifest(
       acc[dependency.type] = (acc[dependency.type] || 0) + 1
       return acc
     },
-    { [ResourceType.PLAYBOOK]: 1 }
+    { [ResourceType.PROJECT]: 1 }
   )
 
   return {
-    formatVersion: PLAYBOOK_EXPORT_FORMAT_VERSION,
-    artifactType: "playbook",
+    formatVersion: PROJECT_EXPORT_FORMAT_VERSION,
+    artifactType: "project",
     budibaseVersion: process.env.BUDIBASE_VERSION || "unknown",
     exportedAt: new Date().toISOString(),
-    playbook: {
-      _id: playbook._id!,
-      name: playbook.name,
-      description: playbook.description,
-      color: playbook.color,
-      createdAt: String(playbook.createdAt),
-      updatedAt: playbook.updatedAt,
+    project: {
+      _id: project._id!,
+      name: project.name,
+      description: project.description,
+      color: project.color,
+      createdAt: String(project.createdAt),
+      updatedAt: project.updatedAt,
     },
     sourceWorkspace: {
       id: workspaceId,
@@ -231,7 +231,7 @@ async function writeJsonFile(filePath: string, value: unknown) {
 async function encryptDirectory(dirPath: string, password: string) {
   for (let file of await fsp.readdir(dirPath)) {
     const fullPath = join(dirPath, file)
-    if (file === PLAYBOOK_ATTACHMENTS_DIRECTORY) {
+    if (file === PROJECT_ATTACHMENTS_DIRECTORY) {
       continue
     }
 
@@ -245,49 +245,49 @@ async function encryptDirectory(dirPath: string, password: string) {
   }
 }
 
-export async function exportPlaybook(
-  playbookId: string,
+export async function exportProject(
+  projectId: string,
   opts?: {
     encryptPassword?: string
   }
 ) {
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
-    throw new Error("Could not determine workspace for Playbook export")
+    throw new Error("Could not determine workspace for Project export")
   }
 
-  const playbook = await sdk.playbooks.get(playbookId)
-  if (!playbook) {
-    throw new Error(`Playbook '${playbookId}' not found`)
+  const project = await sdk.projects.get(projectId)
+  if (!project) {
+    throw new Error(`Project '${projectId}' not found`)
   }
 
   const graph = await sdk.resources.getResourcesInfo()
-  const playbookDependencies = Array.from(
+  const projectDependencies = Array.from(
     new Map(
-      (graph[playbookId]?.dependencies || []).map(resource => [
+      (graph[projectId]?.dependencies || []).map(resource => [
         resource.id,
         resource,
       ])
     ).values()
   )
-  const directMembers = await getDirectMembers(playbookId)
-  const unsupportedContent = await getUnsupportedContent(playbookId)
+  const directMembers = await getDirectMembers(projectId)
+  const unsupportedContent = await getUnsupportedContent(projectId)
 
   const typeByResourceId = new Map(
-    playbookDependencies.map(resource => [resource.id, resource.type])
+    projectDependencies.map(resource => [resource.id, resource.type])
   )
-  const docsToExport = playbookDependencies.map(resource => resource.id)
+  const docsToExport = projectDependencies.map(resource => resource.id)
   const exportedDocs = docsToExport.length
     ? await context.getWorkspaceDB().getMultiple<AnyDocument>(docsToExport, {
         allowMissing: false,
       })
     : []
 
-  const dependencyIndex: PlaybookPackageDependencyIndex = {
-    rootPlaybookId: playbookId,
+  const dependencyIndex: ProjectPackageDependencyIndex = {
+    rootProjectId: projectId,
     directMembers,
     resources: {
-      [playbookId]: graph[playbookId] || { dependencies: [] },
+      [projectId]: graph[projectId] || { dependencies: [] },
       ...Object.fromEntries(
         docsToExport.map(id => [id, graph[id] || { dependencies: [] }])
       ),
@@ -295,9 +295,9 @@ export async function exportPlaybook(
   }
 
   const manifest = buildManifest(
-    playbook,
+    project,
     workspaceId,
-    playbookDependencies,
+    projectDependencies,
     unsupportedContent
   )
   const screenWorkspaceAppIdByScreenId = new Map<string, string>()
@@ -312,18 +312,18 @@ export async function exportPlaybook(
     }
   }
 
-  const tmpPath = await fsp.mkdtemp(join(budibaseTempDir(), "playbook-export-"))
+  const tmpPath = await fsp.mkdtemp(join(budibaseTempDir(), "project-export-"))
   try {
-    await writeJsonFile(join(tmpPath, PLAYBOOK_MANIFEST_FILE), manifest)
+    await writeJsonFile(join(tmpPath, PROJECT_MANIFEST_FILE), manifest)
     await writeJsonFile(
-      join(tmpPath, PLAYBOOK_FILE),
-      sanitizePlaybookForExport(playbook)
+      join(tmpPath, PROJECT_FILE),
+      sanitizeProjectForExport(project)
     )
     await writeJsonFile(
-      join(tmpPath, PLAYBOOK_DEPENDENCY_INDEX_FILE),
+      join(tmpPath, PROJECT_DEPENDENCY_INDEX_FILE),
       dependencyIndex
     )
-    await fsp.mkdir(join(tmpPath, PLAYBOOK_DOCS_DIRECTORY), { recursive: true })
+    await fsp.mkdir(join(tmpPath, PROJECT_DOCS_DIRECTORY), { recursive: true })
 
     for (const doc of exportedDocs) {
       const type = typeByResourceId.get(doc._id!)
@@ -339,7 +339,7 @@ export async function exportPlaybook(
       await writeJsonFile(
         join(
           tmpPath,
-          PLAYBOOK_DOCS_DIRECTORY,
+          PROJECT_DOCS_DIRECTORY,
           getExportDirectoryName(type),
           `${doc._id}.json`
         ),
@@ -357,14 +357,14 @@ export async function exportPlaybook(
   }
 }
 
-export async function streamExportPlaybook({
-  playbookId,
+export async function streamExportProject({
+  projectId,
   encryptPassword,
 }: {
-  playbookId: string
+  projectId: string
   encryptPassword?: string
 }) {
-  const tarPath = await exportPlaybook(playbookId, {
+  const tarPath = await exportProject(projectId, {
     encryptPassword,
   })
   const stream = streamFile(tarPath)

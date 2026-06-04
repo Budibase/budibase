@@ -22,9 +22,9 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import {
-  resolvePlaybookId,
-  resolveUpdatedPlaybookId,
-} from "../../../utilities/playbooks"
+  resolveProjectId,
+  resolveUpdatedProjectId,
+} from "../../../utilities/projects"
 
 const SECRET_MASK = "********"
 
@@ -308,7 +308,7 @@ export async function createAgent(
   const body = ctx.request.body
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
-  const playbookId = await resolvePlaybookId(body.playbookId)
+  const projectId = await resolveProjectId(body.projectId)
 
   const createRequest: RequiredKeys<
     Parameters<typeof sdk.ai.agents.create>[0]
@@ -316,7 +316,7 @@ export async function createAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    playbookId,
+    projectId,
     promptInstructions: body.promptInstructions,
     operationName: body.operationName,
     goal: body.goal,
@@ -347,9 +347,9 @@ export async function updateAgent(
   const body = ctx.request.body
   const rawBody = ctx.request.body as Record<string, unknown>
   const existing = await sdk.ai.agents.getOrThrow(body._id)
-  const playbookId = await resolveUpdatedPlaybookId(
-    body.playbookId,
-    existing.playbookId
+  const projectId = await resolveUpdatedProjectId(
+    body.projectId,
+    existing.projectId
   )
 
   if (Object.prototype.hasOwnProperty.call(rawBody, "knowledgeSources")) {
@@ -380,7 +380,7 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    playbookId,
+    projectId,
     promptInstructions: body.promptInstructions,
     operationName: body.operationName,
     goal: body.goal,

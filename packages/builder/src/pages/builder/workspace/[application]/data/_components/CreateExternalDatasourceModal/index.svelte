@@ -55,12 +55,12 @@
     store.editConfigStage()
   })
 
-  const createDatasource = async ({ config, playbookId }) => {
+  const createDatasource = async ({ config, projectId }) => {
     try {
       const datasource = await datasources.create({
         integration: get(store).integration,
         config,
-        playbookId,
+        projectId,
       })
       store.setDatasource(datasource)
 
@@ -95,7 +95,7 @@
     <DatasourceConfigEditor
       integration={$store.integration}
       config={$store.config}
-      showPlaybookField
+      showProjectField
       onSubmit={createDatasource}
     />
   {:else if $store.stage === "selectTables"}

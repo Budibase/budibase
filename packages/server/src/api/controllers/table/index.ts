@@ -54,9 +54,9 @@ import {
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
 import {
-  resolvePlaybookId,
-  resolveUpdatedPlaybookId,
-} from "../../../utilities/playbooks"
+  resolveProjectId,
+  resolveUpdatedProjectId,
+} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -176,14 +176,14 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const isCreate = !table._id
 
   if (isCreate) {
-    table.playbookId = await resolvePlaybookId(table.playbookId)
+    table.projectId = await resolveProjectId(table.projectId)
   } else {
     const existingTable = await sdk.tables.getTable(table._id!)
-    table.playbookId = await resolveUpdatedPlaybookId(
-      table.playbookId,
-      existingTable.playbookId
+    table.projectId = await resolveUpdatedProjectId(
+      table.projectId,
+      existingTable.projectId
     )
-    ctx.request.body.playbookId = table.playbookId
+    ctx.request.body.projectId = table.projectId
   }
 
   await guardTable(table, isCreate)

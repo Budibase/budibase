@@ -42,7 +42,7 @@ export type QueryFields = RestQueryFields &
 
 export interface Query extends Document {
   datasourceId: string
-  playbookId?: string
+  projectId?: string
   name: string
   parameters: QueryParameter[]
   fields: QueryFields

@@ -8,7 +8,7 @@
   export let filteredRowsCount = 0
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""
-  export let selectedPlaybookName = ""
+  export let selectedProjectName = ""
 
   const dispatch = createEventDispatcher<{
     clearSearch: void
@@ -20,11 +20,11 @@
 
   $: hasAnyRows = allRowsCount > 0
   $: hasSearch = !!searchTerm.trim()
-  $: hasPlaybookFilter = !!selectedPlaybookName
-  $: hasFilter = typeFilter !== "all" || hasPlaybookFilter
+  $: hasProjectFilter = !!selectedProjectName
+  $: hasFilter = typeFilter !== "all" || hasProjectFilter
   $: isNoResults = hasAnyRows && filteredRowsCount === 0
-  $: noResultsText = hasPlaybookFilter
-    ? `No results in ${selectedPlaybookName}.`
+  $: noResultsText = hasProjectFilter
+    ? `No results in ${selectedProjectName}.`
     : "No results."
 
   const agentColor = getRowIconColor("agent")

@@ -3,7 +3,7 @@
   import { get } from "svelte/store"
   import { tables, datasources } from "@/stores/builder"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
-  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
 
   export let table
 
@@ -16,17 +16,17 @@
 
   let originalName
   let updatedName
-  let originalPlaybookId = ""
-  let playbookId = ""
+  let originalProjectId = ""
+  let projectId = ""
   let hasChanges = false
 
   $: hasChanges =
-    updatedName !== originalName || playbookId !== originalPlaybookId
+    updatedName !== originalName || projectId !== originalProjectId
 
   async function save() {
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
-    updatedTable.playbookId = playbookId || undefined
+    updatedTable.projectId = projectId || undefined
     await tables.save(updatedTable)
     await datasources.fetch()
     notifications.success("Table updated successfully")
@@ -45,8 +45,8 @@
     error = ""
     originalName = table.name + ""
     updatedName = table.name + ""
-    originalPlaybookId = table.playbookId || ""
-    playbookId = originalPlaybookId
+    originalProjectId = table.projectId || ""
+    projectId = originalProjectId
   }
 </script>
 
@@ -66,7 +66,7 @@
         on:input={checkValid}
         {error}
       />
-      <PlaybookSelect bind:value={playbookId} />
+      <ProjectSelect bind:value={projectId} />
     </form>
   </ModalContent>
 </Modal>

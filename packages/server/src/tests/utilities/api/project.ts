@@ -1,28 +1,28 @@
 import {
-  CreatePlaybookRequest,
-  CreatePlaybookResponse,
-  ExportPlaybookRequest,
-  FetchPlaybooksResponse,
-  ImportPlaybookRequest,
-  ImportPlaybookResponse,
-  UpdatePlaybookRequest,
-  UpdatePlaybookResponse,
+  CreateProjectRequest,
+  CreateProjectResponse,
+  ExportProjectRequest,
+  FetchProjectsResponse,
+  ImportProjectRequest,
+  ImportProjectResponse,
+  UpdateProjectRequest,
+  UpdateProjectResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
-export class PlaybookAPI extends TestAPI {
+export class ProjectAPI extends TestAPI {
   fetch = async (expectations?: Expectations) => {
-    return await this._get<FetchPlaybooksResponse>("/api/playbooks", {
+    return await this._get<FetchProjectsResponse>("/api/projects", {
       expectations,
     })
   }
 
   create = async (
-    playbook: CreatePlaybookRequest,
+    project: CreateProjectRequest,
     expectations?: Expectations
   ) => {
-    return await this._post<CreatePlaybookResponse>("/api/playbooks", {
-      body: playbook,
+    return await this._post<CreateProjectResponse>("/api/projects", {
+      body: project,
       expectations: {
         status: 201,
         ...expectations,
@@ -32,7 +32,7 @@ export class PlaybookAPI extends TestAPI {
 
   export = async (
     id: string,
-    body?: ExportPlaybookRequest,
+    body?: ExportProjectRequest,
     expectations?: Expectations
   ) => {
     const expectsError = (expectations?.status || 200) >= 400
@@ -44,7 +44,7 @@ export class PlaybookAPI extends TestAPI {
       },
     }
 
-    return await this._post<Buffer>(`/api/playbooks/${id}/export`, {
+    return await this._post<Buffer>(`/api/projects/${id}/export`, {
       body,
       expectations: exp,
     })
@@ -52,15 +52,15 @@ export class PlaybookAPI extends TestAPI {
 
   import = async (
     file: Buffer | string,
-    body?: ImportPlaybookRequest,
+    body?: ImportProjectRequest,
     expectations?: Expectations
   ) => {
-    return await this._post<ImportPlaybookResponse>(`/api/playbooks/import`, {
+    return await this._post<ImportProjectResponse>(`/api/projects/import`, {
       fields: body,
       files: {
         file: {
           file,
-          name: "playbook-export.tar.gz",
+          name: "project-export.tar.gz",
         },
       },
       expectations,
@@ -68,21 +68,21 @@ export class PlaybookAPI extends TestAPI {
   }
 
   update = async (
-    playbook: UpdatePlaybookRequest,
+    project: UpdateProjectRequest,
     expectations?: Expectations,
     pathId?: string
   ) => {
-    return await this._put<UpdatePlaybookResponse>(
-      `/api/playbooks/${pathId || playbook._id}`,
+    return await this._put<UpdateProjectResponse>(
+      `/api/projects/${pathId || project._id}`,
       {
-        body: playbook,
+        body: project,
         expectations,
       }
     )
   }
 
   delete = async (id: string, rev: string, expectations?: Expectations) => {
-    return await this._delete<void>(`/api/playbooks/${id}/${rev}`, {
+    return await this._delete<void>(`/api/projects/${id}/${rev}`, {
       expectations: {
         status: 204,
         ...expectations,

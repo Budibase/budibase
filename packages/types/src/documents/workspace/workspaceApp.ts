@@ -10,5 +10,5 @@ export interface WorkspaceApp extends Document {
   customTheme?: AppCustomTheme
   isDefault: boolean
   disabled?: boolean
-  playbookId?: string
+  projectId?: string
 }

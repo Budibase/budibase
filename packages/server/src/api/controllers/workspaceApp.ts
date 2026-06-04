@@ -14,9 +14,9 @@ import {
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
 import {
-  resolvePlaybookId,
-  resolveUpdatedPlaybookId,
-} from "../../utilities/playbooks"
+  resolveProjectId,
+  resolveUpdatedProjectId,
+} from "../../utilities/projects"
 
 const hasOwn = (obj: object, key: string) =>
   Object.prototype.hasOwnProperty.call(obj, key)
@@ -36,7 +36,7 @@ function toWorkspaceAppResponse(
     createdAt: workspaceApp.createdAt as string,
     updatedAt: workspaceApp.updatedAt!,
     disabled: workspaceApp.disabled,
-    playbookId: workspaceApp.playbookId,
+    projectId: workspaceApp.projectId,
   }
 }
 
@@ -79,12 +79,12 @@ export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const playbookId = await resolvePlaybookId(body.playbookId)
+  const projectId = await resolveProjectId(body.projectId)
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
     disabled: body.disabled,
-    playbookId,
+    projectId,
     navigation: defaultAppNavigator(body.name),
     customTheme: {
       fontFamily: DefaultNewAppFontFamily,
@@ -113,9 +113,9 @@ export async function edit(
     ctx.throw(404)
   }
 
-  const playbookId = await resolveUpdatedPlaybookId(
-    body.playbookId,
-    existingWorkspaceApp.playbookId
+  const projectId = await resolveUpdatedProjectId(
+    body.projectId,
+    existingWorkspaceApp.projectId
   )
 
   const workspaceApp = await sdk.workspaceApps.update({
@@ -125,7 +125,7 @@ export async function edit(
     url: body.url,
     navigation: body.navigation,
     disabled: body.disabled,
-    playbookId,
+    projectId,
     ...(hasOwn(body, "theme") ? { theme: body.theme } : {}),
     ...(hasOwn(body, "customTheme") ? { customTheme: body.customTheme } : {}),
   })

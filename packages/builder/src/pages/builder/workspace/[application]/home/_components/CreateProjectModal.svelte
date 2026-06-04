@@ -40,7 +40,7 @@
 </script>
 
 <ModalContent
-  title="Create playbook"
+  title="Create project"
   confirmText="Create"
   size="M"
   onConfirm={confirm}
@@ -50,7 +50,7 @@
     bind:value={description}
     label="Description"
     minHeight={96}
-    placeholder="What does this playbook cover?"
+    placeholder="What does this project cover?"
   />
 
   <div class="color-field">

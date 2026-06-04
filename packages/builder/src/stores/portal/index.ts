@@ -20,7 +20,7 @@ export { themeStore } from "./theme"
 export { temporalStore } from "./temporal"
 export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
-export { playbooksStore } from "./playbooks"
+export { projectsStore } from "./projects"
 export { agentsStore, selectedAgent } from "./agents"
 export { knowledgeConnectionsStore } from "./knowledgeConnections"
 export {

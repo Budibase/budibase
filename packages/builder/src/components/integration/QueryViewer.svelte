@@ -27,7 +27,7 @@
   import { Utils } from "@budibase/frontend-core"
   import ConnectedQueryUsage from "./ConnectedQueryUsage.svelte"
   import { getErrorMessage } from "@/helpers/errors"
-  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import type {
     Datasource,
     Integration,
@@ -57,7 +57,7 @@
   let scrolling = false
   let showSidePanel = false
   let nameError: string | null = null
-  let playbookId = ""
+  let projectId = ""
   let canSaveQuery = false
 
   let newQuery: Query
@@ -95,7 +95,7 @@
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
-    playbookId = newQuery.playbookId || ""
+    projectId = newQuery.projectId || ""
 
     // Initialize pagination for SQL Read queries
     if (newQuery.queryVerb === "read" && schemaType === "sql") {
@@ -126,7 +126,7 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   $: if (newQuery) {
-    newQuery.playbookId = playbookId || undefined
+    newQuery.projectId = projectId || undefined
   }
 
   $: debouncedCheckIsModified(newQuery)
@@ -321,7 +321,7 @@
             }}
             error={nameError || undefined}
           />
-          <PlaybookSelect bind:value={playbookId} />
+          <ProjectSelect bind:value={projectId} />
           {#if integration.query}
             <Label>Function</Label>
             <Select

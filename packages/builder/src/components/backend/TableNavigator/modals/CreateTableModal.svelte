@@ -4,7 +4,7 @@
   import { notifications, Input, ModalContent } from "@budibase/bbui"
   import { API } from "@/api"
   import { tables, datasources, dataEnvironmentStore } from "@/stores/builder"
-  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import TableDataImport from "../TableDataImport.svelte"
   import { chunkRows, IMPORT_ROWS_PER_CHUNK } from "../utils"
   import {
@@ -46,7 +46,7 @@
   let rows = []
   let allValid = true
   let displayColumn = null
-  let playbookId = ""
+  let projectId = ""
 
   const buildOptionConstraints = (schema, rows) => {
     const updatedSchema = {}
@@ -167,7 +167,7 @@
       type: "table",
       sourceId: targetDatasourceId,
       sourceType: DB_TYPE_INTERNAL,
-      playbookId: playbookId || undefined,
+      projectId: projectId || undefined,
     }
 
     // Only set primary display if defined
@@ -217,7 +217,7 @@
     bind:value={name}
     {error}
   />
-  <PlaybookSelect bind:value={playbookId} />
+  <ProjectSelect bind:value={projectId} />
   <TableDataImport
     {promptUpload}
     bind:rows

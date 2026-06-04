@@ -338,7 +338,7 @@ export async function create(
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
-    playbookId: request.playbookId,
+    projectId: request.projectId,
     promptInstructions: request.promptInstructions,
     operationName: request.operationName,
     live: request.live ?? false,
@@ -392,7 +392,7 @@ export async function duplicate(
     name,
     description: source.description,
     aiconfig: source.aiconfig,
-    playbookId: source.playbookId,
+    projectId: source.projectId,
     promptInstructions: source.promptInstructions,
     operationName: source.operationName,
     goal: source.goal,

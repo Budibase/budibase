@@ -1,40 +1,40 @@
 <script lang="ts">
   import { Select } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
-  import { featureFlags, playbooksStore } from "@/stores/portal"
+  import { featureFlags, projectsStore } from "@/stores/portal"
 
-  interface PlaybookOption {
+  interface ProjectOption {
     label: string
     value: string
     color?: string
   }
 
   export let value = ""
-  export let label = "Playbook"
+  export let label = "Project"
   export let includeEmptyOption = true
-  export let emptyLabel = "No playbook"
+  export let emptyLabel = "No project"
 
-  let options: PlaybookOption[] = []
+  let options: ProjectOption[] = []
 
-  $: playbooksEnabled = $featureFlags[FeatureFlag.PLAYBOOKS]
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
 
-  $: if (playbooksEnabled) {
-    playbooksStore.ensureFetched().catch(console.error)
+  $: if (projectsEnabled) {
+    projectsStore.ensureFetched().catch(console.error)
   }
 
   $: options = [
     ...(includeEmptyOption
       ? [{ label: emptyLabel, value: "", color: undefined }]
       : []),
-    ...$playbooksStore.map(playbook => ({
-      label: playbook.name,
-      value: playbook._id,
-      color: playbook.color,
+    ...$projectsStore.map(project => ({
+      label: project.name,
+      value: project._id,
+      color: project.color,
     })),
   ]
 </script>
 
-{#if playbooksEnabled}
+{#if projectsEnabled}
   <Select
     {label}
     bind:value

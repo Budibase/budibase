@@ -11,11 +11,11 @@
 
   let modal
 
-  async function saveDatasource({ config, name, playbookId }) {
+  async function saveDatasource({ config, name, projectId }) {
     try {
       await datasources.save({
         integration,
-        datasource: { ...datasource, config, name, playbookId },
+        datasource: { ...datasource, config, name, projectId },
       })
 
       notifications.success(
@@ -35,9 +35,9 @@
     {integration}
     config={datasource.config}
     showNameField
-    showPlaybookField
+    showProjectField
     nameFieldValue={datasource.name}
-    playbookIdValue={datasource.playbookId || ""}
+    projectIdValue={datasource.projectId || ""}
     onSubmit={saveDatasource}
   />
 </Modal>

@@ -37,7 +37,7 @@
 </script>
 
 <ModalContent
-  title="Import playbook"
+  title="Import project"
   confirmText="Import"
   size="M"
   bind:disabled
@@ -49,7 +49,7 @@
     })}
 >
   <Body size="S">
-    Importing a Playbook adds a new Playbook and its supported resource
+    Importing a Project adds a new Project and its supported resource
     definitions to this workspace without replacing existing apps or
     automations.
   </Body>
@@ -57,7 +57,7 @@
   <Layout noPadding gap="S">
     <Dropzone
       gallery={false}
-      label="Playbook export"
+      label="Project export"
       on:change={handleFileChange}
     />
     <Toggle

@@ -6,13 +6,13 @@
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import AssignPlaybookModal from "./_components/AssignPlaybookModal.svelte"
-  import CreatePlaybookModal from "./_components/CreatePlaybookModal.svelte"
-  import ExportPlaybookModal from "./_components/ExportPlaybookModal.svelte"
+  import AssignProjectModal from "./_components/AssignProjectModal.svelte"
+  import CreateProjectModal from "./_components/CreateProjectModal.svelte"
+  import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
   import HomeMetrics from "./_components/HomeMetrics.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
-  import ImportPlaybookModal from "./_components/ImportPlaybookModal.svelte"
+  import ImportProjectModal from "./_components/ImportProjectModal.svelte"
   import {
     appStore,
     automationStore,
@@ -27,7 +27,7 @@
     auth,
     featureFlags,
     licensing,
-    playbooksStore,
+    projectsStore,
   } from "@/stores/portal"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { getErrorMessage } from "@/helpers/errors"
@@ -57,7 +57,7 @@
     type HomeSortColumn,
     type HomeSortOrder,
     type HomeType,
-    type PlaybookResponse,
+    type ProjectResponse,
     PublishResourceState,
     type Agent,
     type Table,
@@ -103,16 +103,16 @@
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
   let selectedRow: HomeRow | null = null
 
-  let createPlaybookModal: ModalAPI
-  let assignPlaybookModal: ModalAPI
-  let exportPlaybookModal: ModalAPI
-  let importPlaybookModal: ModalAPI
-  let createPlaybookModalKey = 0
-  let exportPlaybookModalKey = 0
-  let importPlaybookModalKey = 0
+  let createProjectModal: ModalAPI
+  let assignProjectModal: ModalAPI
+  let exportProjectModal: ModalAPI
+  let importProjectModal: ModalAPI
+  let createProjectModalKey = 0
+  let exportProjectModalKey = 0
+  let importProjectModalKey = 0
 
   let typeFilter: HomeType = "all"
-  let selectedPlaybookId = ""
+  let selectedProjectId = ""
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
 
@@ -125,8 +125,8 @@
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
-  $: playbooksEnabled = $featureFlags[FeatureFlag.PLAYBOOKS]
-  $: if (!playbooksEnabled && selectedPlaybookId) selectedPlaybookId = ""
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
 
   let getFavourite: (
     _resourceType: WorkspaceResource,
@@ -188,7 +188,7 @@
       return {
         q: "",
         type: null as HomeType | null,
-        playbook: "",
+        project: "",
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
       }
@@ -196,10 +196,10 @@
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
     const type = normaliseType(params.get("type"))
-    const playbook = params.get("playbook") ?? ""
+    const project = params.get("project") ?? ""
     const sort = normaliseSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
-    return { q, type, playbook, sort, order }
+    return { q, type, project, sort, order }
   }
 
   const writeUrlState = () => {
@@ -223,10 +223,10 @@
       params.set("type", typeFilter)
     }
 
-    if (!playbooksEnabled || !selectedPlaybookId) {
-      params.delete("playbook")
+    if (!projectsEnabled || !selectedProjectId) {
+      params.delete("project")
     } else {
-      params.set("playbook", selectedPlaybookId)
+      params.set("project", selectedProjectId)
     }
 
     const defaultSortColumn: HomeSortColumn = "updated"
@@ -289,19 +289,19 @@
     agentModal?.show()
   }
 
-  const createPlaybook = () => {
-    createPlaybookModalKey += 1
-    createPlaybookModal?.show()
+  const createProject = () => {
+    createProjectModalKey += 1
+    createProjectModal?.show()
   }
 
-  const exportPlaybook = () => {
-    exportPlaybookModalKey += 1
-    exportPlaybookModal?.show()
+  const exportProject = () => {
+    exportProjectModalKey += 1
+    exportProjectModal?.show()
   }
 
-  const importPlaybook = () => {
-    importPlaybookModalKey += 1
-    importPlaybookModal?.show()
+  const importProject = () => {
+    importProjectModalKey += 1
+    importProjectModal?.show()
   }
 
   const goToCreate = (target: "data/new" | "apis/new") => {
@@ -415,8 +415,8 @@
     }
   }
 
-  const assignPlaybook = async (playbookId: string | undefined) => {
-    if (!playbooksEnabled || !selectedRow) {
+  const assignProject = async (projectId: string | undefined) => {
+    if (!projectsEnabled || !selectedRow) {
       return keepOpen
     }
 
@@ -424,44 +424,44 @@
       if (selectedRow.type === "app") {
         await workspaceAppStore.edit({
           ...selectedRow.resource,
-          playbookId,
+          projectId,
         })
       } else if (selectedRow.type === "automation") {
         await automationStore.actions.save({
           ...selectedRow.resource,
-          playbookId,
+          projectId,
         })
       } else if (selectedRow.type === "agent") {
         await agentsStore.updateAgent({
           ...selectedRow.resource,
-          playbookId,
+          projectId,
         })
       }
 
-      notifications.success("Playbook updated successfully")
-      assignPlaybookModal?.hide()
+      notifications.success("Project updated successfully")
+      assignProjectModal?.hide()
     } catch (error) {
       console.error(error)
-      notifications.error("Unable to update playbook")
+      notifications.error("Unable to update project")
       return keepOpen
     }
   }
 
-  const handleCreatePlaybook = async (
-    playbook: Pick<PlaybookResponse, "name" | "description" | "color">
+  const handleCreateProject = async (
+    project: Pick<ProjectResponse, "name" | "description" | "color">
   ) => {
     try {
-      await playbooksStore.create(playbook)
-      notifications.success("Playbook created successfully")
-      createPlaybookModal?.hide()
+      await projectsStore.create(project)
+      notifications.success("Project created successfully")
+      createProjectModal?.hide()
     } catch (error) {
       console.error(error)
-      notifications.error("Unable to create playbook")
+      notifications.error("Unable to create project")
       return keepOpen
     }
   }
 
-  const handleExportPlaybook = async ({
+  const handleExportProject = async ({
     id,
     encryptPassword,
   }: {
@@ -469,17 +469,17 @@
     encryptPassword?: string
   }) => {
     try {
-      await playbooksStore.exportPlaybook(id, { encryptPassword })
-      exportPlaybookModal?.hide()
+      await projectsStore.exportProject(id, { encryptPassword })
+      exportProjectModal?.hide()
     } catch (error) {
       console.error(error)
-      notifications.error(getErrorMessage(error) || "Unable to export playbook")
+      notifications.error(getErrorMessage(error) || "Unable to export project")
       return keepOpen
     }
   }
 
   const notifyImportFollowUps = (
-    response: Awaited<ReturnType<typeof playbooksStore.importPlaybook>>
+    response: Awaited<ReturnType<typeof projectsStore.importProject>>
   ) => {
     if (response.requirements.length) {
       const names = response.requirements
@@ -492,13 +492,11 @@
       const summary = response.unsupportedContent
         .map(item => `${item.count} ${item.type}`)
         .join(", ")
-      notifications.warning(
-        `Some Playbook content was not imported: ${summary}`
-      )
+      notifications.warning(`Some Project content was not imported: ${summary}`)
     }
   }
 
-  const handleImportPlaybook = async ({
+  const handleImportProject = async ({
     file,
     encryptPassword,
   }: {
@@ -506,16 +504,16 @@
     encryptPassword?: string
   }) => {
     try {
-      const response = await playbooksStore.importPlaybook(file, {
+      const response = await projectsStore.importProject(file, {
         encryptPassword,
       })
       await Promise.all([appStore.refresh(), loadMetrics()])
-      importPlaybookModal?.hide()
-      notifications.success(`Imported playbook '${response.playbook.name}'`)
+      importProjectModal?.hide()
+      notifications.success(`Imported project '${response.project.name}'`)
       notifyImportFollowUps(response)
     } catch (error) {
       console.error(error)
-      notifications.error(getErrorMessage(error) || "Unable to import playbook")
+      notifications.error(getErrorMessage(error) || "Unable to import project")
       return keepOpen
     }
   }
@@ -549,9 +547,9 @@
         },
         {
           icon: "stack",
-          name: "Assign playbook",
-          visible: playbooksEnabled,
-          callback: () => assignPlaybookModal.show(),
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
         {
           icon: "globe-simple",
@@ -603,9 +601,9 @@
         edit,
         {
           icon: "stack",
-          name: "Assign playbook",
-          visible: playbooksEnabled,
-          callback: () => assignPlaybookModal.show(),
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
         {
           icon: "copy",
@@ -638,9 +636,9 @@
         },
         {
           icon: "stack",
-          name: "Assign playbook",
-          visible: playbooksEnabled,
-          callback: () => assignPlaybookModal.show(),
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
         {
           icon: "copy",
@@ -726,44 +724,44 @@
     getFavourite,
   })
 
-  $: playbookLookup = (
-    playbooksEnabled
+  $: projectLookup = (
+    projectsEnabled
       ? Object.fromEntries(
-          $playbooksStore.map(playbook => [playbook._id, playbook])
+          $projectsStore.map(project => [project._id, project])
         )
       : {}
-  ) as Record<string, PlaybookResponse>
-  $: selectedPlaybookName = selectedPlaybookId
-    ? playbookLookup[selectedPlaybookId]?.name || ""
+  ) as Record<string, ProjectResponse>
+  $: selectedProjectName = selectedProjectId
+    ? projectLookup[selectedProjectId]?.name || ""
     : ""
   $: if (
-    playbooksEnabled &&
-    selectedPlaybookId &&
-    playbooksStore.hasFetched() &&
-    !playbookLookup[selectedPlaybookId]
+    projectsEnabled &&
+    selectedProjectId &&
+    projectsStore.hasFetched() &&
+    !projectLookup[selectedProjectId]
   ) {
-    selectedPlaybookId = ""
+    selectedProjectId = ""
   }
 
-  $: playbookOptions = [
+  $: projectOptions = [
     { label: "All", value: "", color: undefined },
-    ...($playbooksStore || []).map(playbook => ({
-      label: playbook.name,
-      value: playbook._id,
-      color: playbook.color,
+    ...($projectsStore || []).map(project => ({
+      label: project.name,
+      value: project._id,
+      color: project.color,
     })),
   ]
 
-  $: rowsWithPlaybooks = baseRows.map(row => {
-    const playbook = row.playbookId ? playbookLookup[row.playbookId] : undefined
+  $: rowsWithProjects = baseRows.map(row => {
+    const project = row.projectId ? projectLookup[row.projectId] : undefined
     return {
       ...row,
-      playbookName: playbook?.name,
-      playbookColor: playbook?.color,
+      projectName: project?.name,
+      projectColor: project?.color,
     }
   })
 
-  $: allRows = sortHomeRows(rowsWithPlaybooks, { sortColumn, sortOrder })
+  $: allRows = sortHomeRows(rowsWithProjects, { sortColumn, sortOrder })
 
   $: filteredRows = filterHomeRows({
     rows: allRows,
@@ -771,9 +769,9 @@
     searchTerm,
   }).filter(
     row =>
-      !playbooksEnabled ||
-      !selectedPlaybookId ||
-      row.playbookId === selectedPlaybookId
+      !projectsEnabled ||
+      !selectedProjectId ||
+      row.projectId === selectedProjectId
   )
   $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
   $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
@@ -825,15 +823,15 @@
       return
     }
 
-    const { q, type, playbook, sort, order } = readUrlState()
+    const { q, type, project, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
     }
     if (type) {
       typeFilter = type
     }
-    if (playbook) {
-      selectedPlaybookId = playbook
+    if (project) {
+      selectedProjectId = project
     }
     if (sort) {
       sortColumn = sort
@@ -847,7 +845,7 @@
 
     await Promise.all([
       agentsStore.fetchAgents(),
-      playbooksEnabled ? playbooksStore.fetch() : Promise.resolve(),
+      projectsEnabled ? projectsStore.fetch() : Promise.resolve(),
       loadMetrics(),
     ])
   })
@@ -900,12 +898,12 @@
         on:typeChange={({ detail }) => setTypeFilter(detail)}
       />
       <div class="controls-right">
-        {#if playbooksEnabled && $playbooksStore.length}
-          <div class="playbook-filter">
+        {#if projectsEnabled && $projectsStore.length}
+          <div class="project-filter">
             <Select
-              placeholder="Playbook"
-              bind:value={selectedPlaybookId}
-              options={playbookOptions}
+              placeholder="Project"
+              bind:value={selectedProjectId}
+              options={projectOptions}
               getOptionLabel={option => option.label}
               getOptionValue={option => option.value}
               getOptionColour={option => option.color}
@@ -959,18 +957,18 @@
             App
           </MenuItem>
 
-          {#if playbooksEnabled}
+          {#if projectsEnabled}
             <MenuSeparator />
-            <MenuItem icon="stack" on:click={createPlaybook}>Playbook</MenuItem>
-            <MenuItem icon="upload-simple" on:click={importPlaybook}>
-              Import playbook
+            <MenuItem icon="stack" on:click={createProject}>Project</MenuItem>
+            <MenuItem icon="upload-simple" on:click={importProject}>
+              Import project
             </MenuItem>
             <MenuItem
               icon="download-simple"
-              on:click={exportPlaybook}
-              disabled={!$playbooksStore.length}
+              on:click={exportProject}
+              disabled={!$projectsStore.length}
             >
-              Export playbook
+              Export project
             </MenuItem>
           {/if}
 
@@ -991,8 +989,8 @@
       allRowsCount={allRows.length}
       {typeFilter}
       {searchTerm}
-      {playbooksEnabled}
-      {selectedPlaybookName}
+      {projectsEnabled}
+      {selectedProjectName}
       {sortColumn}
       {sortOrder}
       {highlightedRowId}
@@ -1002,7 +1000,7 @@
       on:clearSearch={() => (searchTerm = "")}
       on:resetFilters={() => {
         typeFilter = "all"
-        selectedPlaybookId = ""
+        selectedProjectId = ""
       }}
       on:sortChange={({ detail }) => setSort(detail)}
       on:createAgent={createAgent}
@@ -1012,34 +1010,34 @@
   </div>
 </div>
 
-{#if playbooksEnabled}
-  <Modal bind:this={createPlaybookModal}>
-    {#key createPlaybookModalKey}
-      <CreatePlaybookModal onConfirm={handleCreatePlaybook} />
+{#if projectsEnabled}
+  <Modal bind:this={createProjectModal}>
+    {#key createProjectModalKey}
+      <CreateProjectModal onConfirm={handleCreateProject} />
     {/key}
   </Modal>
 
-  <Modal bind:this={assignPlaybookModal}>
-    <AssignPlaybookModal
+  <Modal bind:this={assignProjectModal}>
+    <AssignProjectModal
       row={selectedRow}
-      playbooks={$playbooksStore}
-      onConfirm={assignPlaybook}
+      projects={$projectsStore}
+      onConfirm={assignProject}
     />
   </Modal>
 
-  <Modal bind:this={exportPlaybookModal}>
-    {#key exportPlaybookModalKey}
-      <ExportPlaybookModal
-        playbooks={$playbooksStore}
-        {selectedPlaybookId}
-        onConfirm={handleExportPlaybook}
+  <Modal bind:this={exportProjectModal}>
+    {#key exportProjectModalKey}
+      <ExportProjectModal
+        projects={$projectsStore}
+        {selectedProjectId}
+        onConfirm={handleExportProject}
       />
     {/key}
   </Modal>
 
-  <Modal bind:this={importPlaybookModal}>
-    {#key importPlaybookModalKey}
-      <ImportPlaybookModal onConfirm={handleImportPlaybook} />
+  <Modal bind:this={importProjectModal}>
+    {#key importProjectModalKey}
+      <ImportProjectModal onConfirm={handleImportProject} />
     {/key}
   </Modal>
 {/if}
@@ -1177,7 +1175,7 @@
     justify-content: flex-end;
   }
 
-  .controls-row .playbook-filter {
+  .controls-row .project-filter {
     flex: 0 0 auto;
     width: 140px;
   }

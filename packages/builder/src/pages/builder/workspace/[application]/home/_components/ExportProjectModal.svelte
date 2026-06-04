@@ -1,9 +1,9 @@
 <script lang="ts">
   import { Body, Input, ModalContent, Select, Toggle } from "@budibase/bbui"
-  import type { PlaybookResponse } from "@budibase/types"
+  import type { ProjectResponse } from "@budibase/types"
 
-  export let playbooks: PlaybookResponse[] = []
-  export let selectedPlaybookId = ""
+  export let projects: ProjectResponse[] = []
+  export let selectedProjectId = ""
 
   interface ConfirmPayload {
     id: string
@@ -12,21 +12,21 @@
 
   export let onConfirm: (_payload: ConfirmPayload) => unknown = () => {}
 
-  let playbookId = ""
+  let projectId = ""
   let encrypted = false
   let encryptPassword = ""
   let disabled = false
   let initialised = false
 
-  $: if (!initialised && playbooks.length) {
-    const selectedPlaybook = playbooks.find(
-      playbook => playbook._id === selectedPlaybookId
+  $: if (!initialised && projects.length) {
+    const selectedProject = projects.find(
+      project => project._id === selectedProjectId
     )
 
-    if (selectedPlaybook) {
-      playbookId = selectedPlaybook._id
-    } else if (playbooks.length === 1) {
-      playbookId = playbooks[0]._id
+    if (selectedProject) {
+      projectId = selectedProject._id
+    } else if (projects.length === 1) {
+      projectId = projects[0]._id
     }
 
     initialised = true
@@ -36,32 +36,32 @@
     encryptPassword = ""
   }
 
-  $: disabled = !playbookId || (encrypted && !encryptPassword.trim())
+  $: disabled = !projectId || (encrypted && !encryptPassword.trim())
 </script>
 
 <ModalContent
-  title="Export playbook"
+  title="Export project"
   confirmText="Export"
   size="M"
   bind:disabled
   onConfirm={() =>
     onConfirm({
-      id: playbookId,
+      id: projectId,
       encryptPassword: encrypted ? encryptPassword.trim() : undefined,
     })}
 >
   <Body size="S">
-    Export a portable Playbook package for use in another workspace. Rows and
+    Export a portable Project package for use in another workspace. Rows and
     attachments are not included yet.
   </Body>
 
   <Select
-    label="Playbook"
-    bind:value={playbookId}
-    options={playbooks}
-    getOptionLabel={playbook => playbook.name}
-    getOptionValue={playbook => playbook._id}
-    getOptionColour={playbook => playbook.color}
+    label="Project"
+    bind:value={projectId}
+    options={projects}
+    getOptionLabel={project => project.name}
+    getOptionValue={project => project._id}
+    getOptionColour={project => project.color}
   />
 
   <Toggle text="Encrypt export" bind:value={encrypted} />

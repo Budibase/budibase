@@ -39,10 +39,10 @@ import { ObjectStoreBuckets } from "../../../constants"
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
-  const withPlaybooksEnabled = async <T>(f: () => Promise<T>) => {
+  const withProjectsEnabled = async <T>(f: () => Promise<T>) => {
     return await features.testutils.withFeatureFlags(
       config.getTenantId(),
-      { [FeatureFlag.PLAYBOOKS]: true },
+      { [FeatureFlag.PROJECTS]: true },
       f
     )
   }
@@ -274,27 +274,27 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("should include direct playbook members and transitive dependencies", async () => {
-      await withPlaybooksEnabled(async () => {
-        const { playbook } = await config.api.playbook.create({
+    it("should include direct project members and transitive dependencies", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
           name: "Operations",
         })
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         const query = await config.api.query.save({
           ...basicQuery(datasource._id!),
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         const table = await config.api.table.save({
           ...basicTable(),
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         const { workspaceApp } = await config.api.workspaceApp.create({
           name: "Operations app",
           url: "/operations-app",
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         const screen = await config.api.screen.save({
           ...createQueryScreen(datasource._id!, query),
@@ -304,17 +304,17 @@ describe("/api/resources/usage", () => {
         const automation = await config.createAutomation()
         await config.api.automation.update({
           ...automation,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         const agent = await config.api.agent.create({
           name: "Ops agent",
           aiconfig: "default",
-          playbookId: playbook._id,
+          projectId: project._id,
         })
 
         const result = await config.api.resource.getResourceDependencies()
 
-        expect(result.body.resources[playbook._id!]).toEqual({
+        expect(result.body.resources[project._id!]).toEqual({
           dependencies: [
             {
               id: datasource._id,
@@ -356,9 +356,9 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("should include repaired app screens for playbook apps", async () => {
-      await withPlaybooksEnabled(async () => {
-        const { playbook } = await config.api.playbook.create({
+    it("should include repaired app screens for project apps", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
           name: "Operations",
         })
         const defaultWorkspaceApp = await config.api.workspaceApp.find(
@@ -371,7 +371,7 @@ describe("/api/resources/usage", () => {
           url: defaultWorkspaceApp.url,
           disabled: defaultWorkspaceApp.disabled,
           navigation: defaultWorkspaceApp.navigation,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         const screen = await config.api.screen.save({
           ...basicScreen("/operations"),
@@ -388,7 +388,7 @@ describe("/api/resources/usage", () => {
 
         const result = await config.api.resource.getResourceDependencies()
 
-        expect(result.body.resources[playbook._id!].dependencies).toEqual(
+        expect(result.body.resources[project._id!].dependencies).toEqual(
           expect.arrayContaining([
             {
               id: workspaceApp._id,
@@ -405,21 +405,21 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("should not include playbook resources when the feature flag is disabled", async () => {
-      const { playbook } = await withPlaybooksEnabled(async () => {
-        const { playbook } = await config.api.playbook.create({
+    it("should not include project resources when the feature flag is disabled", async () => {
+      const { project } = await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
           name: "Operations",
         })
         await config.api.datasource.create({
           ...basicDatasource().datasource,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
-        return { playbook }
+        return { project }
       })
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.resources[playbook._id]).toBeUndefined()
+      expect(result.body.resources[project._id]).toBeUndefined()
     })
   })
 
@@ -771,14 +771,14 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("strips playbook assignments when duplicating with playbooks disabled", async () => {
-      const { datasource } = await withPlaybooksEnabled(async () => {
-        const { playbook } = await config.api.playbook.create({
+    it("strips project assignments when duplicating with projects disabled", async () => {
+      const { datasource } = await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
           name: "Operations",
         })
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         return { datasource }
       })
@@ -794,19 +794,19 @@ describe("/api/resources/usage", () => {
           const copiedDatasource = await config.api.datasource.get(
             datasource._id!
           )
-          expect(copiedDatasource.playbookId).toBeUndefined()
+          expect(copiedDatasource.projectId).toBeUndefined()
         }
       )
     })
 
-    it("strips dangling playbook assignments when the playbook is not duplicated", async () => {
-      await withPlaybooksEnabled(async () => {
-        const { playbook } = await config.api.playbook.create({
+    it("strips dangling project assignments when the project is not duplicated", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
           name: "Operations",
         })
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
-          playbookId: playbook._id,
+          projectId: project._id,
         })
         const newWorkspace = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
@@ -820,7 +820,7 @@ describe("/api/resources/usage", () => {
             const copiedDatasource = await config.api.datasource.get(
               datasource._id!
             )
-            expect(copiedDatasource.playbookId).toBeUndefined()
+            expect(copiedDatasource.projectId).toBeUndefined()
           }
         )
       })

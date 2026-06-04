@@ -15,7 +15,7 @@ import { MiscAPI } from "./misc"
 import { NavigationAPI } from "./navigation"
 import { OAuth2API } from "./oauth2"
 import { PermissionAPI } from "./permission"
-import { PlaybookAPI } from "./playbook"
+import { ProjectAPI } from "./project"
 import { PluginAPI } from "./plugin"
 import { RowPublicAPI } from "./public/row"
 import { UserPublicAPI } from "./public/user"
@@ -49,7 +49,7 @@ export default class API {
   misc: MiscAPI
   oauth2: OAuth2API
   permission: PermissionAPI
-  playbook: PlaybookAPI
+  project: ProjectAPI
   plugin: PluginAPI
   query: QueryAPI
   roles: RoleAPI
@@ -90,7 +90,7 @@ export default class API {
     this.misc = new MiscAPI(config)
     this.oauth2 = new OAuth2API(config)
     this.permission = new PermissionAPI(config)
-    this.playbook = new PlaybookAPI(config)
+    this.project = new ProjectAPI(config)
     this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)
     this.roles = new RoleAPI(config)

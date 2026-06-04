@@ -33,7 +33,7 @@
     toWorkspaceId = undefined
     copyRows = false
     selectedResources = {
-      [ResourceType.PLAYBOOK]: [],
+      [ResourceType.PROJECT]: [],
       [ResourceType.AGENT]: [],
       [ResourceType.DATASOURCE]: [],
       [ResourceType.TABLE]: [],
@@ -57,7 +57,7 @@
   let copyRows = false
 
   let selectedResources: Record<ResourceType, DataType[]> = {
-    [ResourceType.PLAYBOOK]: [],
+    [ResourceType.PROJECT]: [],
     [ResourceType.AGENT]: [],
     [ResourceType.DATASOURCE]: [],
     [ResourceType.TABLE]: [],

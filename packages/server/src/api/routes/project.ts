@@ -1,7 +1,7 @@
 import { middleware } from "@budibase/backend-core"
 import Joi from "joi"
-import { playbooksEnabled } from "../../middleware/playbooksEnabled"
-import * as controller from "../controllers/playbook"
+import { projectsEnabled } from "../../middleware/projectsEnabled"
+import * as controller from "../controllers/project"
 import { builderRoutes } from "./endpointGroups"
 
 const baseSchema = {
@@ -11,10 +11,10 @@ const baseSchema = {
 }
 
 builderRoutes
-  .get("/api/playbooks", playbooksEnabled, controller.fetch)
+  .get("/api/projects", projectsEnabled, controller.fetch)
   .post(
-    "/api/playbooks/import",
-    playbooksEnabled,
+    "/api/projects/import",
+    projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
         encryptPassword: Joi.string().optional().allow(""),
@@ -26,8 +26,8 @@ builderRoutes
     controller.importBundle
   )
   .post(
-    "/api/playbooks/:id/export",
-    playbooksEnabled,
+    "/api/projects/:id/export",
+    projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
         encryptPassword: Joi.string().optional().allow(""),
@@ -39,16 +39,16 @@ builderRoutes
     controller.exportBundle
   )
   .post(
-    "/api/playbooks",
-    playbooksEnabled,
+    "/api/projects",
+    projectsEnabled,
     middleware.joiValidator.body(Joi.object(baseSchema), {
       allowUnknown: false,
     }),
     controller.create
   )
   .put(
-    "/api/playbooks/:id",
-    playbooksEnabled,
+    "/api/projects/:id",
+    projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
         _id: Joi.string().required(),
@@ -61,4 +61,4 @@ builderRoutes
     ),
     controller.update
   )
-  .delete("/api/playbooks/:id/:rev", playbooksEnabled, controller.remove)
+  .delete("/api/projects/:id/:rev", projectsEnabled, controller.remove)

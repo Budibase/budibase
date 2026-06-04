@@ -18,7 +18,7 @@ import {
   FieldType,
   DatabaseQueryOpts,
   FeatureFlag,
-  Playbook,
+  Project,
   Row,
   RowAttachment,
   WithDocMetadata,
@@ -39,8 +39,8 @@ export async function getResourcesInfo(): Promise<
 > {
   const automations = await sdk.automations.fetch()
   const agents = await sdk.ai.agents.fetch()
-  const playbooksEnabled = await features.isEnabled(FeatureFlag.PLAYBOOKS)
-  const playbooks = playbooksEnabled ? await sdk.playbooks.fetch() : []
+  const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
+  const projects = projectsEnabled ? await sdk.projects.fetch() : []
   const workspaceApps = await sdk.workspaceApps.fetch()
 
   const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
@@ -253,7 +253,7 @@ export async function getResourcesInfo(): Promise<
     }
   }
 
-  if (playbooks.length) {
+  if (projects.length) {
     const allTables = await sdk.tables.getAllTables()
 
     const buildUsedResource = (
@@ -265,41 +265,41 @@ export async function getResourcesInfo(): Promise<
       type,
     })
 
-    for (const playbook of playbooks.filter(
-      (doc): doc is Required<Pick<Playbook, "_id" | "name">> & Playbook =>
+    for (const project of projects.filter(
+      (doc): doc is Required<Pick<Project, "_id" | "name">> & Project =>
         !!doc._id && !!doc.name
     )) {
       const directMembers: UsedResource[] = [
         ...datasources
-          .filter(datasource => datasource.playbookId === playbook._id)
+          .filter(datasource => datasource.projectId === project._id)
           .map(datasource =>
             buildUsedResource(datasource, ResourceType.DATASOURCE)
           ),
         ...allTables
-          .filter(table => table.playbookId === playbook._id)
+          .filter(table => table.projectId === project._id)
           .map(table => buildUsedResource(table, ResourceType.TABLE)),
         ...queries
-          .filter(query => query.playbookId === playbook._id)
+          .filter(query => query.projectId === project._id)
           .map(query => buildUsedResource(query, ResourceType.QUERY)),
         ...automations
-          .filter(automation => automation.playbookId === playbook._id)
+          .filter(automation => automation.projectId === project._id)
           .map(automation =>
             buildUsedResource(automation, ResourceType.AUTOMATION)
           ),
         ...agents
-          .filter(agent => agent.playbookId === playbook._id)
+          .filter(agent => agent.projectId === project._id)
           .map(agent => buildUsedResource(agent, ResourceType.AGENT)),
         ...workspaceApps
-          .filter(workspaceApp => workspaceApp.playbookId === playbook._id)
+          .filter(workspaceApp => workspaceApp.projectId === project._id)
           .map(workspaceApp =>
             buildUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
           ),
       ]
 
-      addDependencies(playbook._id, directMembers)
+      addDependencies(project._id, directMembers)
       for (const member of directMembers) {
         addDependencies(
-          playbook._id,
+          project._id,
           dependencies[member.id]?.dependencies || []
         )
       }
@@ -321,7 +321,7 @@ async function getDestinationDb(toWorkspace: string) {
 }
 
 const resourceTypeIdPrefixes: Record<ResourceType, string> = {
-  [ResourceType.PLAYBOOK]: prefixed(DocumentType.PLAYBOOK),
+  [ResourceType.PROJECT]: prefixed(DocumentType.PROJECT),
   [ResourceType.AGENT]: prefixed(DocumentType.AGENT),
   [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
   [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
@@ -688,10 +688,10 @@ export async function duplicateResourcesToWorkspace(
   }
 ) {
   resources = Array.from(new Set(resources).keys())
-  const playbooksEnabled = await features.isEnabled(FeatureFlag.PLAYBOOKS)
-  if (!playbooksEnabled) {
+  const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
+  if (!projectsEnabled) {
     resources = resources.filter(
-      id => getResourceType(id) !== ResourceType.PLAYBOOK
+      id => getResourceType(id) !== ResourceType.PROJECT
     )
   }
 
@@ -733,11 +733,11 @@ export async function duplicateResourcesToWorkspace(
           sanitizedDoc.appId = toWorkspace
         }
         if (
-          !playbooksEnabled ||
-          (sanitizedDoc.playbookId &&
-            !resources.includes(sanitizedDoc.playbookId))
+          !projectsEnabled ||
+          (sanitizedDoc.projectId &&
+            !resources.includes(sanitizedDoc.projectId))
         ) {
-          delete sanitizedDoc.playbookId
+          delete sanitizedDoc.projectId
         }
         return sanitizedDoc
       })
@@ -773,9 +773,9 @@ export async function duplicateResourcesToWorkspace(
         name = (doc as Automation).name
         displayType = "Automation"
         break
-      case ResourceType.PLAYBOOK:
-        name = (doc as Playbook).name
-        displayType = "Playbook"
+      case ResourceType.PROJECT:
+        name = (doc as Project).name
+        displayType = "Project"
         break
       case ResourceType.AGENT:
         name = (doc as Agent).name

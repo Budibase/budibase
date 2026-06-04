@@ -23,7 +23,7 @@ import { buildFlagEndpoints } from "./flags"
 import { buildLayoutEndpoints } from "./layouts"
 import { buildOtherEndpoints } from "./other"
 import { buildPermissionsEndpoints } from "./permissions"
-import { buildPlaybookEndpoints } from "./playbooks"
+import { buildProjectEndpoints } from "./projects"
 import { buildQueryEndpoints } from "./queries"
 import { buildRelationshipEndpoints } from "./relationships"
 import { buildRoleEndpoints } from "./roles"
@@ -328,7 +328,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     rowActions: buildRowActionEndpoints(API),
     oauth2: buildOAuth2Endpoints(API),
     navigation: buildNavigationEndpoints(API),
-    playbooks: buildPlaybookEndpoints(API),
+    projects: buildProjectEndpoints(API),
     workspaceApp: buildWorkspaceAppEndpoints(API),
     workspace: buildWorkspaceFavouriteEndpoints(API),
     workspaceHome: buildWorkspaceHomeEndpoints(API),

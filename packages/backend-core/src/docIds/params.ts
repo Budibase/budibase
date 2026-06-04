@@ -186,9 +186,9 @@ export const getWorkspaceFavouriteParams = (
   )
 }
 
-export const getPlaybookParams = (
-  playbookId?: string | null,
+export const getProjectParams = (
+  projectId?: string | null,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ) => {
-  return getDocParams(DocumentType.PLAYBOOK, playbookId, otherProps)
+  return getDocParams(DocumentType.PROJECT, projectId, otherProps)
 }

@@ -4,11 +4,11 @@ import {
   AnyDocument,
   Datasource,
   DocumentType,
-  ImportPlaybookResponse,
-  Playbook,
-  PlaybookImportRequirement,
-  PlaybookPackageDependencyIndex,
-  PlaybookPackageManifest,
+  ImportProjectResponse,
+  Project,
+  ProjectImportRequirement,
+  ProjectPackageDependencyIndex,
+  ProjectPackageManifest,
   ResourceType,
   RowActionPermissions,
   TableRowActions,
@@ -30,11 +30,11 @@ import {
 import { decryptFiles, untarFile } from "../../backups/imports"
 import sdk from "../../.."
 import {
-  PLAYBOOK_DEPENDENCY_INDEX_FILE,
-  PLAYBOOK_DOCS_DIRECTORY,
-  PLAYBOOK_EXPORT_FORMAT_VERSION,
-  PLAYBOOK_FILE,
-  PLAYBOOK_MANIFEST_FILE,
+  PROJECT_DEPENDENCY_INDEX_FILE,
+  PROJECT_DOCS_DIRECTORY,
+  PROJECT_EXPORT_FORMAT_VERSION,
+  PROJECT_FILE,
+  PROJECT_MANIFEST_FILE,
 } from "./constants"
 
 const IMPORT_ORDER: ResourceType[] = [
@@ -74,11 +74,11 @@ interface ImportedDoc {
   doc: AnyDocument
 }
 
-interface ExtractedPlaybookPackage {
+interface ExtractedProjectPackage {
   tmpPath: string
-  manifest: PlaybookPackageManifest
-  playbook: Playbook
-  dependencyIndex: PlaybookPackageDependencyIndex
+  manifest: ProjectPackageManifest
+  project: Project
+  dependencyIndex: ProjectPackageDependencyIndex
   docs: ImportedDoc[]
 }
 
@@ -104,12 +104,12 @@ const readDirectoryRecursively = async (
     const relPath = relative(rootPath, fullPath)
     if (relPath.split(/[\\/]/).length > MAX_PATH_SEGMENTS) {
       throw new HTTPError(
-        "Playbook package contains paths that are too deep.",
+        "Project package contains paths that are too deep.",
         400
       )
     }
     if (entry.isSymbolicLink()) {
-      throw new HTTPError("Playbook package contains unsupported links.", 400)
+      throw new HTTPError("Project package contains unsupported links.", 400)
     }
     if (entry.isDirectory()) {
       files.push(
@@ -120,10 +120,10 @@ const readDirectoryRecursively = async (
       totals.files += 1
       totals.bytes += stats.size
       if (totals.files > MAX_PACKAGE_FILES) {
-        throw new HTTPError("Playbook package contains too many files.", 400)
+        throw new HTTPError("Project package contains too many files.", 400)
       }
       if (totals.bytes > MAX_EXTRACTED_SIZE_BYTES) {
-        throw new HTTPError("Playbook package is too large.", 400)
+        throw new HTTPError("Project package is too large.", 400)
       }
       files.push(fullPath)
     }
@@ -140,23 +140,23 @@ const getResourceTypeForDocPath = (
   const pathParts = relPath.split(/[\\/]/)
   const [docsDirectory, resourceType] = pathParts
   if (
-    docsDirectory !== PLAYBOOK_DOCS_DIRECTORY ||
+    docsDirectory !== PROJECT_DOCS_DIRECTORY ||
     pathParts.length !== 3 ||
     !relPath.endsWith(".json")
   ) {
-    throw new HTTPError(`Unsupported Playbook doc path '${relPath}'.`, 400)
+    throw new HTTPError(`Unsupported Project doc path '${relPath}'.`, 400)
   }
   if (
     !resourceType ||
     !ALLOWED_IMPORT_TYPES.has(resourceType as ResourceType)
   ) {
-    throw new HTTPError(`Unsupported Playbook doc path '${relPath}'.`, 400)
+    throw new HTTPError(`Unsupported Project doc path '${relPath}'.`, 400)
   }
   return resourceType as ResourceType
 }
 
 const RESOURCE_ID_PREFIXES: Record<ResourceType, string[]> = {
-  [ResourceType.PLAYBOOK]: [prefixed(DocumentType.PLAYBOOK)],
+  [ResourceType.PROJECT]: [prefixed(DocumentType.PROJECT)],
   [ResourceType.AGENT]: [prefixed(DocumentType.AGENT)],
   [ResourceType.DATASOURCE]: [
     prefixed(DocumentType.DATASOURCE),
@@ -173,21 +173,18 @@ const RESOURCE_ID_PREFIXES: Record<ResourceType, string[]> = {
 const validateDocMatchesPath = (importedDoc: ImportedDoc) => {
   const id = importedDoc.doc._id
   if (!id) {
-    throw new HTTPError("Playbook package contains a doc without an id.", 400)
+    throw new HTTPError("Project package contains a doc without an id.", 400)
   }
 
   const expectedFileName = `${id}.json`
   if (basename(importedDoc.path) !== expectedFileName) {
-    throw new HTTPError(
-      `Playbook package doc path does not match '${id}'.`,
-      400
-    )
+    throw new HTTPError(`Project package doc path does not match '${id}'.`, 400)
   }
 
   const validPrefixes = RESOURCE_ID_PREFIXES[importedDoc.resourceType]
   if (!validPrefixes.some(prefix => id.startsWith(prefix))) {
     throw new HTTPError(
-      `Playbook package doc '${id}' does not match resource type '${importedDoc.resourceType}'.`,
+      `Project package doc '${id}' does not match resource type '${importedDoc.resourceType}'.`,
       400
     )
   }
@@ -295,7 +292,7 @@ const generateImportedId = (
       const datasourceId = doc.datasourceId && idMap.get(doc.datasourceId)
       if (!datasourceId) {
         throw new HTTPError(
-          `Playbook import could not remap datasource for query '${doc._id}'.`,
+          `Project import could not remap datasource for query '${doc._id}'.`,
           400
         )
       }
@@ -307,7 +304,7 @@ const generateImportedId = (
       const tableId = idMap.get(extractTableIdFromRowActionsID(doc._id!))
       if (!tableId) {
         throw new HTTPError(
-          `Playbook import could not remap table for row actions '${doc._id}'.`,
+          `Project import could not remap table for row actions '${doc._id}'.`,
           400
         )
       }
@@ -319,19 +316,19 @@ const generateImportedId = (
       return generateScreenID()
     default:
       throw new HTTPError(
-        `Playbook import does not support resource type '${resourceType}'.`,
+        `Project import does not support resource type '${resourceType}'.`,
         400
       )
   }
 }
 
-const validateManifest = (manifest: PlaybookPackageManifest) => {
-  if (manifest.artifactType !== "playbook") {
-    throw new HTTPError("Supplied file is not a Playbook package.", 400)
+const validateManifest = (manifest: ProjectPackageManifest) => {
+  if (manifest.artifactType !== "project") {
+    throw new HTTPError("Supplied file is not a Project package.", 400)
   }
-  if (manifest.formatVersion !== PLAYBOOK_EXPORT_FORMAT_VERSION) {
+  if (manifest.formatVersion !== PROJECT_EXPORT_FORMAT_VERSION) {
     throw new HTTPError(
-      `Unsupported Playbook package format version '${manifest.formatVersion}'.`,
+      `Unsupported Project package format version '${manifest.formatVersion}'.`,
       400
     )
   }
@@ -340,21 +337,21 @@ const validateManifest = (manifest: PlaybookPackageManifest) => {
     !manifest.supportedImportModes.includes("additiveImport")
   ) {
     throw new HTTPError(
-      "Playbook package does not support additive import.",
+      "Project package does not support additive import.",
       400
     )
   }
 }
 
 const validateDependencyIndex = (
-  playbook: Playbook,
-  dependencyIndex: PlaybookPackageDependencyIndex,
+  project: Project,
+  dependencyIndex: ProjectPackageDependencyIndex,
   docs: ImportedDoc[],
-  manifest: PlaybookPackageManifest
+  manifest: ProjectPackageManifest
 ) => {
-  if (dependencyIndex.rootPlaybookId !== playbook._id) {
+  if (dependencyIndex.rootProjectId !== project._id) {
     throw new HTTPError(
-      "Playbook package dependency index does not match playbook.json.",
+      "Project package dependency index does not match project.json.",
       400
     )
   }
@@ -362,13 +359,13 @@ const validateDependencyIndex = (
   const actualDocIds = new Set(docs.map(doc => doc.doc._id!))
   const expectedDocIds = new Set(
     Object.keys(dependencyIndex.resources).filter(
-      id => id !== dependencyIndex.rootPlaybookId
+      id => id !== dependencyIndex.rootProjectId
     )
   )
 
-  if (!dependencyIndex.resources[dependencyIndex.rootPlaybookId]) {
+  if (!dependencyIndex.resources[dependencyIndex.rootProjectId]) {
     throw new HTTPError(
-      "Playbook package docs do not match dependency-index.json.",
+      "Project package docs do not match dependency-index.json.",
       400
     )
   }
@@ -377,7 +374,7 @@ const validateDependencyIndex = (
     validateDocMatchesPath(doc)
     if (!expectedDocIds.has(doc.doc._id!)) {
       throw new HTTPError(
-        "Playbook package contains docs not listed in dependency-index.json.",
+        "Project package contains docs not listed in dependency-index.json.",
         400
       )
     }
@@ -386,7 +383,7 @@ const validateDependencyIndex = (
   for (const expectedDocId of expectedDocIds) {
     if (!actualDocIds.has(expectedDocId)) {
       throw new HTTPError(
-        "Playbook package dependency index references missing docs.",
+        "Project package dependency index references missing docs.",
         400
       )
     }
@@ -405,12 +402,12 @@ const validateDependencyIndex = (
       }
     }
   }
-  visit(dependencyIndex.rootPlaybookId)
+  visit(dependencyIndex.rootProjectId)
 
   for (const docId of actualDocIds) {
     if (!reachable.has(docId)) {
       throw new HTTPError(
-        "Playbook package contains docs that are not reachable from the root playbook.",
+        "Project package contains docs that are not reachable from the root project.",
         400
       )
     }
@@ -420,7 +417,7 @@ const validateDependencyIndex = (
     dependencyIndex.directMembers.some(member => !actualDocIds.has(member.id))
   ) {
     throw new HTTPError(
-      "Playbook package docs do not match dependency-index.json.",
+      "Project package docs do not match dependency-index.json.",
       400
     )
   }
@@ -430,7 +427,7 @@ const validateDependencyIndex = (
       acc[doc.resourceType] = (acc[doc.resourceType] || 0) + 1
       return acc
     },
-    { [ResourceType.PLAYBOOK]: 1 }
+    { [ResourceType.PROJECT]: 1 }
   )
 
   const resourceTypes = new Set([
@@ -444,7 +441,7 @@ const validateDependencyIndex = (
       manifest.resourcesByType[resourceType as ResourceType] || 0
     if (actualCount !== expectedCount) {
       throw new HTTPError(
-        `Playbook package resource count mismatch for '${resourceType}'.`,
+        `Project package resource count mismatch for '${resourceType}'.`,
         400
       )
     }
@@ -502,22 +499,22 @@ const bulkInsertDocs = async (
 
   if (failedId) {
     throw new HTTPError(
-      `Playbook import failed while saving '${failedId}'.`,
+      `Project import failed while saving '${failedId}'.`,
       400
     )
   }
 }
 
-async function extractPlaybookPackage(
+async function extractProjectPackage(
   file: { path: string },
   encryptPassword?: string
-): Promise<ExtractedPlaybookPackage> {
+): Promise<ExtractedProjectPackage> {
   const fileStats = await fsp.stat(file.path)
   if (fileStats.size > MAX_ARCHIVE_SIZE_BYTES) {
-    throw new HTTPError("Playbook package is too large.", 400)
+    throw new HTTPError("Project package is too large.", 400)
   }
   if (encryptPassword && encryptPassword.length > MAX_ENCRYPT_PASSWORD_LENGTH) {
-    throw new HTTPError("Playbook package password is too long.", 400)
+    throw new HTTPError("Project package password is too long.", 400)
   }
 
   const tmpPath = await untarFile(file)
@@ -536,7 +533,7 @@ async function extractPlaybookPackage(
     }
     if (rootEntries.includes("db.txt")) {
       throw new HTTPError(
-        "Workspace exports cannot be imported as Playbook packages.",
+        "Workspace exports cannot be imported as Project packages.",
         400
       )
     }
@@ -544,40 +541,40 @@ async function extractPlaybookPackage(
       rootEntries.some(
         entry =>
           ![
-            PLAYBOOK_MANIFEST_FILE,
-            PLAYBOOK_FILE,
-            PLAYBOOK_DEPENDENCY_INDEX_FILE,
-            PLAYBOOK_DOCS_DIRECTORY,
+            PROJECT_MANIFEST_FILE,
+            PROJECT_FILE,
+            PROJECT_DEPENDENCY_INDEX_FILE,
+            PROJECT_DOCS_DIRECTORY,
           ].includes(entry)
       )
     ) {
-      throw new HTTPError("Playbook package contains unsupported files.", 400)
+      throw new HTTPError("Project package contains unsupported files.", 400)
     }
 
-    const manifestPath = join(tmpPath, PLAYBOOK_MANIFEST_FILE)
-    const playbookPath = join(tmpPath, PLAYBOOK_FILE)
-    const dependencyIndexPath = join(tmpPath, PLAYBOOK_DEPENDENCY_INDEX_FILE)
-    const docsPath = join(tmpPath, PLAYBOOK_DOCS_DIRECTORY)
+    const manifestPath = join(tmpPath, PROJECT_MANIFEST_FILE)
+    const projectPath = join(tmpPath, PROJECT_FILE)
+    const dependencyIndexPath = join(tmpPath, PROJECT_DEPENDENCY_INDEX_FILE)
+    const docsPath = join(tmpPath, PROJECT_DOCS_DIRECTORY)
 
     await Promise.all([
       fsp.access(manifestPath).catch(() => {
-        throw new HTTPError("Playbook package is missing manifest.json.", 400)
+        throw new HTTPError("Project package is missing manifest.json.", 400)
       }),
-      fsp.access(playbookPath).catch(() => {
-        throw new HTTPError("Playbook package is missing playbook.json.", 400)
+      fsp.access(projectPath).catch(() => {
+        throw new HTTPError("Project package is missing project.json.", 400)
       }),
       fsp.access(dependencyIndexPath).catch(() => {
         throw new HTTPError(
-          "Playbook package is missing dependency-index.json.",
+          "Project package is missing dependency-index.json.",
           400
         )
       }),
     ])
 
-    const [manifest, playbook, dependencyIndex] = await Promise.all([
-      readJsonFile<PlaybookPackageManifest>(manifestPath),
-      readJsonFile<Playbook>(playbookPath),
-      readJsonFile<PlaybookPackageDependencyIndex>(dependencyIndexPath),
+    const [manifest, project, dependencyIndex] = await Promise.all([
+      readJsonFile<ProjectPackageManifest>(manifestPath),
+      readJsonFile<Project>(projectPath),
+      readJsonFile<ProjectPackageDependencyIndex>(dependencyIndexPath),
     ])
 
     const docFiles = await fsp
@@ -588,11 +585,11 @@ async function extractPlaybookPackage(
       .catch(() => [])
 
     if (docFiles.length > MAX_PACKAGE_DOCS) {
-      throw new HTTPError("Playbook package contains too many docs.", 400)
+      throw new HTTPError("Project package contains too many docs.", 400)
     }
     if (docFiles.some(filePath => !filePath.endsWith(".json"))) {
       throw new HTTPError(
-        "Playbook package contains unsupported doc files.",
+        "Project package contains unsupported doc files.",
         400
       )
     }
@@ -609,12 +606,12 @@ async function extractPlaybookPackage(
         }))
     )
 
-    validateDependencyIndex(playbook, dependencyIndex, docs, manifest)
+    validateDependencyIndex(project, dependencyIndex, docs, manifest)
 
     return {
       tmpPath,
       manifest,
-      playbook,
+      project,
       dependencyIndex,
       docs,
     }
@@ -624,10 +621,8 @@ async function extractPlaybookPackage(
   }
 }
 
-const buildRequirements = (
-  docs: ImportedDoc[]
-): PlaybookImportRequirement[] => {
-  return docs.flatMap<PlaybookImportRequirement>(importedDoc => {
+const buildRequirements = (docs: ImportedDoc[]): ProjectImportRequirement[] => {
+  return docs.flatMap<ProjectImportRequirement>(importedDoc => {
     if (importedDoc.resourceType === ResourceType.DATASOURCE) {
       const doc = importedDoc.doc as Datasource
       return [
@@ -636,7 +631,7 @@ const buildRequirements = (
           resourceId: doc._id!,
           name: doc.name || "Unknown",
           reason:
-            "Datasource credentials are excluded from Playbook exports and must be reconfigured after import.",
+            "Datasource credentials are excluded from Project exports and must be reconfigured after import.",
         },
       ]
     }
@@ -655,7 +650,7 @@ const buildRequirements = (
             resourceId: doc._id!,
             name: doc.name || "Unknown",
             reason:
-              "Agent integration secrets are excluded from Playbook exports and must be reconfigured after import.",
+              "Agent integration secrets are excluded from Project exports and must be reconfigured after import.",
           },
         ]
       }
@@ -665,33 +660,33 @@ const buildRequirements = (
   })
 }
 
-export async function importPlaybook(
+export async function importProject(
   file: { path: string },
   opts?: { encryptPassword?: string }
-): Promise<ImportPlaybookResponse> {
+): Promise<ImportProjectResponse> {
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
-    throw new Error("Could not determine workspace for Playbook import")
+    throw new Error("Could not determine workspace for Project import")
   }
 
-  const extracted = await extractPlaybookPackage(file, opts?.encryptPassword)
+  const extracted = await extractProjectPackage(file, opts?.encryptPassword)
   const insertedDocs: InsertedDocRef[] = []
-  let importedPlaybook: Playbook | undefined
+  let importedProject: Project | undefined
   try {
-    importedPlaybook = await sdk.playbooks.create({
-      name: extracted.playbook.name,
-      description: extracted.playbook.description,
-      color: extracted.playbook.color,
+    importedProject = await sdk.projects.create({
+      name: extracted.project.name,
+      description: extracted.project.description,
+      color: extracted.project.color,
     })
 
     const idMap = new Map<string, string>([
-      [extracted.playbook._id!, importedPlaybook._id!],
+      [extracted.project._id!, importedProject._id!],
     ])
 
     assignImportedIds(extracted.docs, idMap)
 
     const resources: Partial<Record<ResourceType, string[]>> = {
-      [ResourceType.PLAYBOOK]: [importedPlaybook._id!],
+      [ResourceType.PROJECT]: [importedProject._id!],
     }
 
     for (const resourceType of IMPORT_ORDER) {
@@ -722,14 +717,14 @@ export async function importPlaybook(
     }))
 
     return {
-      playbook: {
-        _id: importedPlaybook._id!,
-        _rev: importedPlaybook._rev!,
-        name: importedPlaybook.name,
-        description: importedPlaybook.description,
-        color: importedPlaybook.color,
-        createdAt: String(importedPlaybook.createdAt),
-        updatedAt: importedPlaybook.updatedAt,
+      project: {
+        _id: importedProject._id!,
+        _rev: importedProject._rev!,
+        name: importedProject.name,
+        description: importedProject.description,
+        color: importedProject.color,
+        createdAt: String(importedProject.createdAt),
+        updatedAt: importedProject.updatedAt,
       },
       resources,
       unsupportedContent: extracted.manifest.unsupportedContent,
@@ -741,10 +736,10 @@ export async function importPlaybook(
         silenceErrors: true,
       })
     }
-    if (importedPlaybook?._id && importedPlaybook._rev) {
+    if (importedProject?._id && importedProject._rev) {
       await context
         .getWorkspaceDB()
-        .remove(importedPlaybook._id, importedPlaybook._rev)
+        .remove(importedProject._id, importedProject._rev)
         .catch(() => {})
     }
     throw err

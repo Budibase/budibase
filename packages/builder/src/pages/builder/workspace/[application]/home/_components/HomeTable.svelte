@@ -21,8 +21,8 @@
   export let allRowsCount = 0
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""
-  export let playbooksEnabled = false
-  export let selectedPlaybookName = ""
+  export let projectsEnabled = false
+  export let selectedProjectName = ""
   export let sortColumn: HomeSortColumn
   export let sortOrder: HomeSortOrder
 
@@ -193,14 +193,14 @@
                 <Body size="S" color="var(--spectrum-global-color-gray-900)"
                   >{row.name}</Body
                 >
-                {#if playbooksEnabled && row.playbookName}
+                {#if projectsEnabled && row.projectName}
                   <span
-                    class="playbook-chip"
-                    style={`--playbook-color: ${row.playbookColor || "#8CA171"}`}
-                    title={row.playbookName}
+                    class="project-chip"
+                    style={`--project-color: ${row.projectColor || "#8CA171"}`}
+                    title={row.projectName}
                   >
-                    <span class="playbook-chip__dot"></span>
-                    <span class="playbook-chip__name">{row.playbookName}</span>
+                    <span class="project-chip__dot"></span>
+                    <span class="project-chip__name">{row.projectName}</span>
                   </span>
                 {/if}
               </div>
@@ -257,7 +257,7 @@
             {searchTerm}
             {allRowsCount}
             filteredRowsCount={rows.length}
-            {selectedPlaybookName}
+            {selectedProjectName}
             on:create={() => dispatch("create")}
             on:clearSearch={() => dispatch("clearSearch")}
             on:resetFilters={() => dispatch("resetFilters")}
@@ -311,7 +311,7 @@
     flex-wrap: wrap;
   }
 
-  .playbook-chip {
+  .project-chip {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-xs);
@@ -325,17 +325,17 @@
     max-width: 180px;
   }
 
-  .playbook-chip__name {
+  .project-chip__name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .playbook-chip__dot {
+  .project-chip__dot {
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--playbook-color);
+    background: var(--project-color);
     flex-shrink: 0;
   }
 
