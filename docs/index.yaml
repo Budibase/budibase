@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 3.39.10
+    created: "2026-06-04T14:24:42.339058019Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.5.6
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: f63683d562abd838353334291021018886aaf251f07335302b5ae932376592d3
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.617.tgz
+    version: 3.0.617
+  - apiVersion: v2
     appVersion: 3.39.9
     created: "2026-06-02T17:10:59.181568917Z"
     dependencies:
@@ -17180,8 +17204,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 3.39.9
-    created: "2026-06-02T17:11:02.426590439Z"
+    appVersion: 3.39.10
+    created: "2026-06-04T14:24:45.521312531Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -17189,7 +17213,7 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: ebcff6d716b2aa87ee82a5d438aade4a02026c3149685c09aa01f6579ed34a0f
+    digest: 16d9adede672960aca9188b3a9b8025ef283fa610998166a214a6740eaddc56e
     icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
     keywords:
     - low-code
@@ -40784,4 +40808,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2026-06-04T14:24:10.984018792Z"
+generated: "2026-06-04T14:24:45.516155734Z"
