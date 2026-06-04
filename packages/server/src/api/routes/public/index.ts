@@ -37,6 +37,8 @@ if (!env.DISABLE_RATE_LIMITING) {
     return parseInt(env.API_REQ_LIMIT_PER_SEC)
   }
 
+  // Normal tests avoid the Redis-backed store because koa2-ratelimit uses the
+  // node-redis package directly and opens a real connection on construction.
   if (!env.isTest()) {
     rateLimitStore = new Stores.Redis(
       getPublicApiRedisConfig(
