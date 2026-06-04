@@ -433,16 +433,13 @@ const isValidUrlHostname = (hostname: string): boolean => {
   return isValidDomainHostname(normalisedHostname)
 }
 
-const EMAIL_LOCAL_PART_ATOM =
-  /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+$/i
+const EMAIL_LOCAL_PART_ATOM = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+$/i
 
 const isValidEmailLocalPart = (localPart: string): boolean => {
   if (!localPart) {
     return false
   }
-  return localPart
-    .split(".")
-    .every(atom => EMAIL_LOCAL_PART_ATOM.test(atom))
+  return localPart.split(".").every(atom => EMAIL_LOCAL_PART_ATOM.test(atom))
 }
 
 const isValidEmailAddress = (value: string): boolean => {
