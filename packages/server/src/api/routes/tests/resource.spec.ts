@@ -826,6 +826,34 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("preserves project assignments when the destination already has the project", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectId: project._id,
+        })
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        await duplicateResources([project._id!], newWorkspace.appId)
+        await duplicateResources([datasource._id!], newWorkspace.appId)
+
+        await config.withHeaders(
+          { [Header.APP_ID]: newWorkspace.appId },
+          async () => {
+            const copiedDatasource = await config.api.datasource.get(
+              datasource._id!
+            )
+            expect(copiedDatasource.projectId).toBe(project._id)
+          }
+        )
+      })
+    })
+
     it("duplicates apps that reference the same dependency multiple times", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,

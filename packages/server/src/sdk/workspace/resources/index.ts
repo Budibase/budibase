@@ -688,6 +688,7 @@ export async function duplicateResourcesToWorkspace(
   }
 ) {
   resources = Array.from(new Set(resources).keys())
+  const resourceIds = new Set(resources)
   const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
   if (!projectsEnabled) {
     resources = resources.filter(
@@ -714,6 +715,26 @@ export async function duplicateResourcesToWorkspace(
   const docsToInsert = documentToCopy.filter(
     doc => doc._id && toCopy.includes(doc._id)
   )
+  const referencedProjectIds = Array.from(
+    new Set(
+      docsToInsert
+        .map(doc => doc.projectId)
+        .filter((projectId): projectId is string => !!projectId)
+    )
+  )
+  const destinationProjectIds = new Set(
+    projectsEnabled && referencedProjectIds.length
+      ? (
+          await destinationDb.getMultiple<AnyDocument>(referencedProjectIds, {
+            allowMissing: true,
+          })
+        )
+          .filter(
+            doc => doc._id && getResourceType(doc._id) === ResourceType.PROJECT
+          )
+          .map(doc => doc._id!)
+      : []
+  )
 
   const fromWorkspace = context.getWorkspaceId()
   if (!fromWorkspace) {
@@ -735,7 +756,8 @@ export async function duplicateResourcesToWorkspace(
         if (
           !projectsEnabled ||
           (sanitizedDoc.projectId &&
-            !resources.includes(sanitizedDoc.projectId))
+            !resourceIds.has(sanitizedDoc.projectId) &&
+            !destinationProjectIds.has(sanitizedDoc.projectId))
         ) {
           delete sanitizedDoc.projectId
         }
