@@ -1496,7 +1496,7 @@ describe("/applications", () => {
     })
 
     it("allows embed SSO updates when the feature is enabled", async () => {
-      mocks.licenses.useIframeEmbeds()
+      mocks.licenses.useEmbedAuth()
 
       const updatedApp = await config.api.workspace.update(workspace.appId, {
         embedSSO: {

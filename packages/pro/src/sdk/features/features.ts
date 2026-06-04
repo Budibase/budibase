@@ -69,10 +69,10 @@ export async function isEnforceableSSO() {
   return areFeaturesEnabled(Feature.ENFORCEABLE_SSO)
 }
 
-// AUTH IFRAMES
+// EMBED AUTH
 
-export async function isIframeEmbedsEnabled() {
-  return areFeaturesEnabled(Feature.IFRAME_EMBEDS)
+export async function isEmbedAuthEnabled() {
+  return areFeaturesEnabled(Feature.EMBED_AUTH)
 }
 
 // SYNC WEBHOOK

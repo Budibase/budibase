@@ -79,8 +79,8 @@ export const useEnforceableSSO = () => {
   return useFeature(Feature.ENFORCEABLE_SSO)
 }
 
-export const useIframeEmbeds = () => {
-  return useFeature(Feature.IFRAME_EMBEDS)
+export const useEmbedAuth = () => {
+  return useFeature(Feature.EMBED_AUTH)
 }
 
 export const useGroups = () => {

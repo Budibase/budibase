@@ -443,7 +443,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       bbHeaderEmbed &&
       !ctx.isAuthenticated &&
       appInfo.embedSSO?.enabled &&
-      (await pro.features.isIframeEmbedsEnabled())
+      (await pro.features.isEmbedAuthEnabled())
     ) {
       const embedToken = ctx.query.jwt
       if (typeof embedToken === "string" && embedToken) {

@@ -1081,7 +1081,7 @@ export async function update(
   }
 
   if ("embedSSO" in ctx.request.body) {
-    await features.checkFeature(Feature.IFRAME_EMBEDS)
+    await features.checkFeature(Feature.EMBED_AUTH)
   }
 
   const app = await updateWorkspacePackage(ctx.request.body, ctx.params.appId)

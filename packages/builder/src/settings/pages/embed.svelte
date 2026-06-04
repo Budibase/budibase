@@ -67,7 +67,7 @@
   $: canReuseStoredKey = ssoKeySet && ssoAlgorithm === originalAlgorithm
 
   const onSSOToggle = () => {
-    if (!$licensing.iframeEmbedsEnabled) {
+    if (!$licensing.embedAuthEnabled) {
       return
     }
     // persist immediately when disabling; enabling reveals the fields and waits
@@ -78,7 +78,7 @@
   }
 
   const saveSSO = async () => {
-    if (!$licensing.iframeEmbedsEnabled) {
+    if (!$licensing.embedAuthEnabled) {
       return
     }
     if (ssoEnabled && !ssoKey && !canReuseStoredKey) {
@@ -173,8 +173,8 @@
   <LockedFeature
     title={"Authenticated iframe embeds"}
     planType={"Enterprise"}
-    description={"Authenticate embedded users in iframes by passing a signed token on the embed URL."}
-    enabled={$licensing.iframeEmbedsEnabled}
+    description={"Authenticate embedded users by passing a signed token on the embed URL."}
+    enabled={$licensing.embedAuthEnabled}
     upgradeButtonClick={async () => {
       licensing.goToUpgradePage()
     }}
@@ -193,7 +193,7 @@
         text="Enable"
         bind:value={ssoEnabled}
         on:change={onSSOToggle}
-        disabled={!$licensing.iframeEmbedsEnabled}
+        disabled={!$licensing.embedAuthEnabled}
       />
       {#if ssoEnabled}
         <Select
@@ -202,7 +202,7 @@
           bind:value={ssoAlgorithm}
           getOptionLabel={o => o.label}
           getOptionValue={o => o.value}
-          disabled={!$licensing.iframeEmbedsEnabled}
+          disabled={!$licensing.embedAuthEnabled}
         />
         <TextArea
           label={isSecretAlgorithm ? "Shared secret" : "Public key (PEM)"}
@@ -218,27 +218,27 @@
           error={ssoKeySet && !canReuseStoredKey
             ? "A new key is required for the selected algorithm"
             : undefined}
-          disabled={!$licensing.iframeEmbedsEnabled}
+          disabled={!$licensing.embedAuthEnabled}
         />
         <Input
           label="Issuer (optional)"
           bind:value={ssoIssuer}
           placeholder="https://nextcloud.example.com"
           helpText="If set, the token's 'iss' claim must match this value."
-          disabled={!$licensing.iframeEmbedsEnabled}
+          disabled={!$licensing.embedAuthEnabled}
         />
         <Input
           label="Email claim"
           bind:value={ssoEmailClaim}
           placeholder="email"
           helpText="Path to the email in the token payload. Use 'userdata.email' for Nextcloud. Defaults to 'email'."
-          disabled={!$licensing.iframeEmbedsEnabled}
+          disabled={!$licensing.embedAuthEnabled}
         />
         <div>
           <Button
             cta
             on:click={saveSSO}
-            disabled={!$licensing.iframeEmbedsEnabled}
+            disabled={!$licensing.embedAuthEnabled}
           >
             Save
           </Button>
