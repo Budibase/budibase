@@ -78,11 +78,7 @@ describe("form validation", () => {
       [["ftp"], "ftp://example.com", null],
       [["ftp"], "https://example.com", URL_ERROR],
       [["mailto"], "mailto:test@example.com", null],
-      [
-        ["mailto"],
-        "mailto:test@example.com?subject=Hello&body=World",
-        null,
-      ],
+      [["mailto"], "mailto:test@example.com?subject=Hello&body=World", null],
       [["mailto"], "test@example.com", URL_ERROR],
       [["mailto"], "https://example.com", URL_ERROR],
     ] as const)("protocols %j: %s", (protocols, input, expected) => {
