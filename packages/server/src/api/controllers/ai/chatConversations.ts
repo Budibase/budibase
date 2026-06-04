@@ -15,6 +15,7 @@ import {
   CreateChatConversationRequest,
   DocumentType,
   FetchAgentHistoryResponse,
+  FetchAgentFileUrlResponse,
   ContextUser,
   UserCtx,
   WebhookChatCompleteResult,
@@ -527,6 +528,42 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     )
     ctx.res.end()
   }
+}
+
+export async function fetchChatAppAgentFileUrl(
+  ctx: UserCtx<
+    void,
+    FetchAgentFileUrlResponse,
+    { chatAppId: string; agentId: string; fileId: string }
+  >
+) {
+  const { chatAppId, agentId, fileId } = ctx.params
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
+
+  const chatAgentConfig = chatApp.agents?.find(
+    agent => agent.agentId === agentId
+  )
+  if (!chatAgentConfig?.isEnabled) {
+    throw new HTTPError("chat agent not found", 404)
+  }
+
+  if (!(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))) {
+    throw new HTTPError("Forbidden", 403)
+  }
+
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  if (agent.allowKnowledgeSourceDownload === false) {
+    throw new HTTPError(
+      "Knowledge source downloads are disabled for this agent",
+      403
+    )
+  }
+
+  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  ctx.body = { url }
+  ctx.status = 200
 }
 
 export async function createChatConversation(

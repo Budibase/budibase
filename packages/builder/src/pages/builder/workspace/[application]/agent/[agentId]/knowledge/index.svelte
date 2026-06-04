@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { Body, Layout, notifications } from "@budibase/bbui"
+  import { Body, Checkbox, Layout, notifications } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
+  import { getErrorMessage } from "@/helpers/errors"
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
     AgentKnowledgeSourceType,
@@ -43,6 +44,46 @@
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
+  let allowKnowledgeSourceDownloadDraft = $state(true)
+  let savingAllowKnowledgeSourceDownload = $state(false)
+
+  $effect(() => {
+    if (!currentAgent) {
+      return
+    }
+
+    allowKnowledgeSourceDownloadDraft =
+      currentAgent.allowKnowledgeSourceDownload !== false
+  })
+
+  const persistAllowKnowledgeSourceDownload = async () => {
+    const agent = currentAgent
+    if (!agent?._id || !agent._rev) {
+      return
+    }
+    const next = allowKnowledgeSourceDownloadDraft
+    if (next === (agent.allowKnowledgeSourceDownload !== false)) {
+      return
+    }
+    savingAllowKnowledgeSourceDownload = true
+    try {
+      await agentsStore.updateAgent({
+        ...agent,
+        allowKnowledgeSourceDownload: next,
+      })
+      await agentsStore.fetchAgents()
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      allowKnowledgeSourceDownloadDraft =
+        agent.allowKnowledgeSourceDownload !== false
+      notifications.error(
+        getErrorMessage(error) || "Failed to save download setting"
+      )
+    } finally {
+      savingAllowKnowledgeSourceDownload = false
+    }
+  }
+
   let loading = $state(true)
   let pendingUploadsByAgent = $state<Record<string, PendingUpload[]>>({})
   let uploadingByAgent = $state<Record<string, boolean>>({})
@@ -416,6 +457,19 @@
     />
   </div>
 
+  <div class="sources-access">
+    <Checkbox
+      text="Allow users to download knowledge source files from chat"
+      bind:value={allowKnowledgeSourceDownloadDraft}
+      disabled={savingAllowKnowledgeSourceDownload || !currentAgent?._id}
+      on:change={() => persistAllowKnowledgeSourceDownload()}
+    />
+    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+      When disabled, chat still shows which files were used, without a download
+      link.
+    </Body>
+  </div>
+
   <KnowledgeTable
     {loading}
     rows={knowledgeTableRows}
@@ -444,6 +498,29 @@
 />
 
 <style>
+  .sources-access {
+    --sources-access-label-offset: calc(
+      var(
+          --spectrum-checkbox-m-box-size,
+          var(--spectrum-alias-item-control-2-size-m)
+        ) +
+        var(
+          --spectrum-checkbox-m-text-gap,
+          var(--spectrum-alias-item-control-gap-m)
+        )
+    );
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxs);
+    padding-top: var(--spacing-xs);
+  }
+
+  .sources-access :global(p) {
+    margin: 0;
+    padding-left: var(--sources-access-label-offset);
+  }
+
   .section-header {
     display: flex;
     justify-content: space-between;

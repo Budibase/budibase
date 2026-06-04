@@ -100,6 +100,7 @@ builderAdminRoutes
   .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledge)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
+  .get("/api/agent/:agentId/files/:fileId/url", ai.fetchAgentFileUrl)
   .get(
     "/api/knowledge-sources/:datasourceId/:authConfigId/options",
     ai.fetchAgentKnowledgeSourceOptions
