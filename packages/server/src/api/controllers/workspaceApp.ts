@@ -18,6 +18,9 @@ import {
   resolveUpdatedPlaybookId,
 } from "../../utilities/playbooks"
 
+const hasOwn = (obj: object, key: string) =>
+  Object.prototype.hasOwnProperty.call(obj, key)
+
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
 ): WorkspaceAppResponse {
@@ -121,10 +124,10 @@ export async function edit(
     name: body.name,
     url: body.url,
     navigation: body.navigation,
-    theme: body.theme,
-    customTheme: body.customTheme,
     disabled: body.disabled,
     playbookId,
+    ...(hasOwn(body, "theme") ? { theme: body.theme } : {}),
+    ...(hasOwn(body, "customTheme") ? { customTheme: body.customTheme } : {}),
   })
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
