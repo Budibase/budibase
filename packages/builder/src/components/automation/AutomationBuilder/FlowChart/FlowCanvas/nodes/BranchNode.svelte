@@ -12,7 +12,11 @@
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
   import { type Automation, type Branch } from "@budibase/types"
-  import { getRunHighlight } from "../FlowRunHelpers"
+  import {
+    didBranchStopWithoutMatch,
+    getRunHighlight,
+    isTerminalFailure,
+  } from "../FlowRunHelpers"
   import { type DragView } from "../FlowChartDnD"
 
   type BranchResult = {
@@ -56,8 +60,9 @@
           $automationStore.testResults,
           step
         )
+  $: hasBranchResultValue = hasBranchResult(branchResult)
   $: branchExecuted =
-    branch && hasBranchResult(branchResult)
+    branch && hasBranchResultValue
       ? branchResult.outputs.branchId === branch.id
       : false
   $: runHighlight = getRunHighlight(
@@ -65,9 +70,19 @@
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
-  $: branchSuccess = branchExecuted && runHighlight === "success"
-  $: branchFailed = branchExecuted && runHighlight === "error"
-  $: branchStopped = branchExecuted && runHighlight === "stopped"
+  $: branchStepFailed = isTerminalFailure(branchResult)
+  $: branchStepFailure =
+    branchStepFailed && (branchExecuted || !hasBranchResultValue)
+  $: branchStoppedWithoutMatch = didBranchStopWithoutMatch(branchResult)
+  $: branchSuccess =
+    branchExecuted && runHighlight === "success" && !branchStepFailure
+  $: branchFailed =
+    !branchStoppedWithoutMatch &&
+    runHighlight !== "stopped" &&
+    (branchStepFailure || (branchExecuted && runHighlight === "error"))
+  $: branchStopped =
+    branchStoppedWithoutMatch ||
+    (!branchFailed && branchExecuted && runHighlight === "stopped")
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
@@ -271,13 +286,11 @@
     border-color: var(--spectrum-global-color-orange-500);
   }
 
-  .block.executed {
+  .block.executed:not(.error):not(.warn) {
     border-color: var(--spectrum-semantic-positive-color-status);
   }
-  .block.selected:not(.success):not(.error):not(.warn):not(.executed) {
-    border-color: var(--spectrum-global-color-blue-600);
-  }
   .block.selected {
+    border-color: var(--spectrum-global-color-blue-600);
     box-shadow: 0 0 0 3px
       color-mix(in srgb, var(--spectrum-global-color-blue-600) 20%, transparent);
   }

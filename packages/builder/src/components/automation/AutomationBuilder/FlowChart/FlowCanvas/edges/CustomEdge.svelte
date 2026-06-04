@@ -38,6 +38,8 @@
     isRunResults,
     didStepRun,
     isTerminalFailure,
+    didBranchStopWithoutMatch,
+    didRunStopWithoutBranchMatch,
     type RunHighlight,
   } from "../FlowRunHelpers"
 
@@ -56,6 +58,10 @@
   $: block = deriveBlockContext(data)
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
+  $: runResults =
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
 
   const view = getContext<Writable<DragView>>("draggableView")
   const flow = useSvelteFlow()
@@ -269,28 +275,49 @@
       }
     }
 
-    const results =
-      viewMode === ViewMode.LOGS
-        ? $automationStore.selectedLog
-        : $automationStore.testResults
-    if (!edgeData || !isRunResults(results)) {
+    if (!edgeData || !isRunResults(runResults)) {
       return
     }
-    const runHighlight = getRunHighlight(results)
+    const runHighlight = getRunHighlight(runResults)
 
     if (isBranchEdgeData(edgeData)) {
+      if (didBranchStepStopWithoutMatch(edgeData.branchStepId)) {
+        return "stopped"
+      }
+      if (
+        runHighlight !== "stopped" &&
+        didBranchStepFail(edgeData.branchStepId)
+      ) {
+        return runHighlight
+      }
       return didBranchRun(edgeData.branchStepId, edgeData.branchIdx)
         ? runHighlight
         : undefined
     }
 
     if (isBranchContext(edgeData.block)) {
+      if (didBranchStepStopWithoutMatch(edgeData.block.branchStepId)) {
+        return
+      }
+      if (
+        runHighlight !== "stopped" &&
+        didBranchStepFail(edgeData.block.branchStepId)
+      ) {
+        return runHighlight
+      }
       return didBranchRun(edgeData.block.branchStepId, edgeData.block.branchIdx)
         ? runHighlight
         : undefined
     }
 
-    return didTargetRun(results) ? runHighlight : undefined
+    if (didBranchStepStopWithoutMatch(target)) {
+      return "stopped"
+    }
+
+    if (!didTargetRun(runResults)) {
+      return
+    }
+    return didRunStopWithoutBranchMatch(runResults) ? "stopped" : runHighlight
   }
 
   const getProgressEdgeHighlight = (
@@ -325,11 +352,7 @@
   }
 
   const didBranchRun = (branchStepId: string, branchIdx: number) => {
-    const results =
-      viewMode === ViewMode.LOGS
-        ? $automationStore.selectedLog
-        : $automationStore.testResults
-    if (!isRunResults(results)) {
+    if (!isRunResults(runResults)) {
       return false
     }
     const branchStep = getBranchStep(branchStepId)
@@ -337,7 +360,7 @@
     if (!branchId) {
       return false
     }
-    const result = results.steps.find(step => step.id === branchStepId)
+    const result = runResults.steps.find(step => step.id === branchStepId)
     if (isTerminalFailure(result)) {
       return false
     }
@@ -347,6 +370,24 @@
       typeof outputs === "object" &&
       "branchId" in outputs &&
       outputs.branchId === branchId
+    )
+  }
+
+  const didBranchStepFail = (branchStepId: string) => {
+    if (!isRunResults(runResults)) {
+      return false
+    }
+    return isTerminalFailure(
+      runResults.steps.find(step => step.id === branchStepId)
+    )
+  }
+
+  const didBranchStepStopWithoutMatch = (branchStepId: string) => {
+    if (!isRunResults(runResults)) {
+      return false
+    }
+    return didBranchStopWithoutMatch(
+      runResults.steps.find(step => step.id === branchStepId)
     )
   }
 
