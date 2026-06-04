@@ -21,6 +21,7 @@ import {
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
+import { HTTPError } from "@budibase/backend-core"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -292,4 +293,21 @@ export function formatIncompleteToolCallError(
 ): string {
   const toolNames = incompleteTools.map(t => t.toolName).join(", ")
   return `The AI model failed to complete tool execution${toolNames ? ` for: ${toolNames}` : ""}. This may be due to a compatibility issue with the selected model. Please try a different model or try again.`
+}
+
+export const assertAgentHasValidConfig = async (agent: Agent) => {
+  if (!agent.aiconfig) {
+    throw new HTTPError(
+      "Agent is not properly configured: missing AI config",
+      422
+    )
+  }
+
+  const aiConfig = await sdk.ai.configs.find(agent.aiconfig)
+  if (!aiConfig) {
+    throw new HTTPError(
+      `Agent is not properly configured: AI config "${agent.aiconfig}" not found`,
+      422
+    )
+  }
 }

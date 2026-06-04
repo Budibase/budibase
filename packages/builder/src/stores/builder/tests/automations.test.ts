@@ -4,6 +4,7 @@ import {
   automationStore,
   getToolbarFlowEndInsertion,
   isNoOpBlockMove,
+  MAX_STICKY_NOTES_PER_AUTOMATION,
   selectedAutomation,
 } from "../automations"
 import { type AutomationBlockRef } from "@/types/automations"
@@ -429,6 +430,45 @@ describe("automation store", () => {
       expect.objectContaining({ _id: "automation" }),
       { skipUnpublishedChanges: true }
     )
+
+    save.mockRestore()
+  })
+
+  it("does not create more than 12 sticky notes", async () => {
+    const stickyNotes = Array.from(
+      { length: MAX_STICKY_NOTES_PER_AUTOMATION },
+      (_, idx) => ({
+        id: `note-${idx}`,
+        title: "Note",
+        text: "",
+        x: 100,
+        y: 100,
+      })
+    )
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+      uiTree: {
+        stickyNotes,
+      },
+    }
+    const save = vi.spyOn(automationStore.actions, "save")
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    await automationStore.actions.addStickyNote({ x: 120, y: 160 })
+
+    expect(save).not.toHaveBeenCalled()
 
     save.mockRestore()
   })

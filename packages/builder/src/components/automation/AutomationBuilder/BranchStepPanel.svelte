@@ -22,6 +22,7 @@
   } from "@/stores/builder"
   import {
     type Automation,
+    BasicOperator,
     type Branch,
     type BranchStep,
     type EnrichedBinding,
@@ -162,6 +163,34 @@
     }
   }
 
+  const addDefaultConditionOperators = (
+    conditionUI: UISearchFilter
+  ): UISearchFilter => {
+    if (!conditionUI?.groups) {
+      return conditionUI
+    }
+
+    const conditionUpdate = cloneDeep(conditionUI)
+    conditionUpdate.groups = (conditionUpdate.groups || []).map(group => {
+      if (!group.filters) {
+        return group
+      }
+      return {
+        ...group,
+        filters: group.filters.map(filter => {
+          if (!("field" in filter)) {
+            return filter
+          }
+          return {
+            ...filter,
+            operator: filter.operator || BasicOperator.EQUAL,
+          }
+        }),
+      }
+    })
+    return conditionUpdate
+  }
+
   const saveBranchCondition = async () => {
     if (
       !branchStep ||
@@ -175,7 +204,9 @@
     }
 
     branchConditionDrawer?.hide()
-    const updatedConditionsUI = Utils.parseFilter(editableBranchConditionUI)
+    const updatedConditionsUI = Utils.parseFilter(
+      addDefaultConditionOperators(editableBranchConditionUI)
+    )
     const updatedBranch: Branch = {
       ...selectedBranch,
       conditionUI: updatedConditionsUI as Branch["conditionUI"],
@@ -187,6 +218,9 @@
 
     const branchesArray = branchStepUpdate.inputs.branches || []
     for (let i = 0; i < branchesArray.length; i++) {
+      if (i === selectedBranchNode.branchIdx) {
+        continue
+      }
       const br = branchesArray[i]
       if (!Object.keys(br.condition || {}).length) {
         branchesArray[i] = {
