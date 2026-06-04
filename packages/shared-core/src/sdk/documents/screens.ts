@@ -2,7 +2,10 @@ import { Screen, Component } from "@budibase/types"
 
 export function findInSettings(screen: Screen, toFind: string) {
   const foundIn: { setting: string; value: string }[] = []
-  function recurse(props: Component | Record<string, unknown> | unknown[], parentKey = "") {
+  function recurse(
+    props: Component | Record<string, unknown> | unknown[],
+    parentKey = ""
+  ) {
     if (!props || typeof props !== "object") {
       return
     }
