@@ -24,26 +24,17 @@ export const getPrimaryBranchPath = ({
   targetY,
   preBranchLabelX,
 }: PrimaryBranchPathArgs) => {
-  const actionBarHalfWidth = FLOW_ITEM_ACTION_BAR_WIDTH / 2
-  const actionBarLeft = preBranchLabelX - actionBarHalfWidth
-  const actionBarRight = preBranchLabelX + actionBarHalfWidth
   const radius = 12
 
   if (sourceY === targetY) {
-    return [
-      `M ${sourceX},${sourceY}`,
-      `L ${actionBarLeft},${sourceY}`,
-      `M ${actionBarRight},${sourceY}`,
-      `L ${targetX},${targetY}`,
-    ].join(" ")
+    return [`M ${sourceX},${sourceY}`, `L ${targetX},${targetY}`].join(" ")
   }
 
   const yDirection = targetY > sourceY ? 1 : -1
 
   return [
     `M ${sourceX},${sourceY}`,
-    `L ${actionBarLeft},${sourceY}`,
-    `M ${preBranchLabelX},${sourceY}`,
+    `L ${preBranchLabelX},${sourceY}`,
     `L ${preBranchLabelX},${targetY - yDirection * radius}`,
     `Q ${preBranchLabelX},${targetY} ${preBranchLabelX + radius},${targetY}`,
     `L ${targetX},${targetY}`,
