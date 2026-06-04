@@ -1,6 +1,5 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
 import {
   ConfigType,
   TranslationsConfig,
@@ -8,7 +7,9 @@ import {
   isTranslationsConfig,
 } from "@budibase/types"
 import { filterValidTranslationOverrides } from "@budibase/shared-core"
+import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
+import { licensing } from "./licensing"
 
 interface TranslationsState {
   loaded: boolean
@@ -19,13 +20,13 @@ export type TranslationOverrideMap = Record<string, string>
 
 const DEFAULT_LOCALE = "en"
 
-const DEFAULT_STATE: TranslationsState = {
+const createDefaultState = (): TranslationsState => ({
   loaded: false,
   config: {
     defaultLocale: DEFAULT_LOCALE,
     locales: {},
   },
-}
+})
 
 const defaultLocaleLabel = (locale: string) =>
   locale === DEFAULT_LOCALE ? "English" : locale
@@ -60,7 +61,12 @@ const ensureDefaultLocale = (
 
 class TranslationsStore extends BudiStore<TranslationsState> {
   constructor() {
-    super(DEFAULT_STATE)
+    super(createDefaultState())
+    licensing.subscribe(state => {
+      if (!state.translationsEnabled) {
+        this.set(createDefaultState())
+      }
+    })
   }
 
   private getActiveLocale(state: TranslationsState, locale?: string) {
