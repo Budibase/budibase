@@ -10,7 +10,7 @@ import type {
 import { BudiStore } from "../BudiStore"
 import { get } from "svelte/store"
 
-class PlaybooksStore extends BudiStore<PlaybookResponse[]> {
+export class PlaybooksStore extends BudiStore<PlaybookResponse[]> {
   private loaded = false
   private fetchPromise: Promise<PlaybookResponse[]> | undefined
 
@@ -19,24 +19,32 @@ class PlaybooksStore extends BudiStore<PlaybookResponse[]> {
   }
 
   fetch = async () => {
-    this.fetchPromise = API.playbooks
+    const promise = API.playbooks
       .fetch()
       .then(({ playbooks }) => {
-        this.loaded = true
-        this.set(playbooks)
+        if (this.fetchPromise === promise) {
+          this.loaded = true
+          this.set(playbooks)
+        }
         return playbooks
       })
       .finally(() => {
-        this.fetchPromise = undefined
+        if (this.fetchPromise === promise) {
+          this.fetchPromise = undefined
+        }
       })
-    return await this.fetchPromise
+    this.fetchPromise = promise
+    return await promise
   }
 
   ensureFetched = async () => {
+    if (this.fetchPromise) {
+      return await this.fetchPromise
+    }
     if (this.loaded) {
       return get(this.store)
     }
-    return await (this.fetchPromise || this.fetch())
+    return await this.fetch()
   }
 
   hasFetched = () => this.loaded
