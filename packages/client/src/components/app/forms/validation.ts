@@ -433,10 +433,21 @@ const isValidUrlHostname = (hostname: string): boolean => {
   return isValidDomainHostname(normalisedHostname)
 }
 
+const isValidEmailAddress = (value: string): boolean => {
+  const parts = value.split("@")
+  if (parts.length !== 2) {
+    return false
+  }
+
+  const [localPart, domain] = parts
+  if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+$/i.test(localPart)) {
+    return false
+  }
+  return isValidDomainHostname(domain)
+}
+
 const isValidMailtoUrl = (url: URL): boolean => {
-  return (
-    !url.host && !url.hash && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(url.pathname)
-  )
+  return !url.host && !url.hash && isValidEmailAddress(url.pathname)
 }
 
 const urlHandler = (value: unknown, rule: UIFieldValidationRule) => {
@@ -485,7 +496,7 @@ const emailHandler = (value: unknown) => {
   if (typeof value !== "string") {
     return false
   }
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  return isValidEmailAddress(value)
 }
 
 // Evaluates a contains constraint
