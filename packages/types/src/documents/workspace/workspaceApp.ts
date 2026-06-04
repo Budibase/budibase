@@ -10,4 +10,5 @@ export interface WorkspaceApp extends Document {
   customTheme?: AppCustomTheme
   isDefault: boolean
   disabled?: boolean
+  projectId?: string
 }

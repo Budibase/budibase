@@ -53,6 +53,10 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
+import {
+  resolveProjectId,
+  resolveUpdatedProjectId,
+} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -170,6 +174,17 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const renaming = ctx.request.body._rename
 
   const isCreate = !table._id
+
+  if (isCreate) {
+    table.projectId = await resolveProjectId(table.projectId)
+  } else {
+    const existingTable = await sdk.tables.getTable(table._id!)
+    table.projectId = await resolveUpdatedProjectId(
+      table.projectId,
+      existingTable.projectId
+    )
+    ctx.request.body.projectId = table.projectId
+  }
 
   await guardTable(table, isCreate)
 
