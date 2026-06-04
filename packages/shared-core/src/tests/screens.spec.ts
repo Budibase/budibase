@@ -18,6 +18,9 @@ describe("screens", () => {
           _id: "root",
           _component: "@budibase/standard-components/container",
           _children: [],
+          ScreenProps: [],
+          _instanceName: "",
+          _styles: {},
         },
         onLoad: [
           {
