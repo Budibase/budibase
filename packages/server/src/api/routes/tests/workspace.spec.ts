@@ -2,7 +2,14 @@ import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { USERS_TABLE_SCHEMA } from "../../../constants"
 import { setEnv, withEnv } from "../../../environment"
 
-import { Header, context, db, events, roles } from "@budibase/backend-core"
+import {
+  Header,
+  configs,
+  context,
+  db,
+  events,
+  roles,
+} from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import {
   type Workspace,
@@ -12,6 +19,7 @@ import {
   PermissionLevel,
   Screen,
   Theme,
+  type TranslationsConfig,
   WorkspaceApp,
 } from "@budibase/types"
 import nock from "nock"
@@ -943,6 +951,22 @@ describe("/applications", () => {
       )
 
       expect(res.recaptchaEnabled).toBe(true)
+    })
+
+    it("should not include translation overrides when the feature is disabled", async () => {
+      await config.doInTenant(async () => {
+        const translationsConfig: TranslationsConfig =
+          configs.createDefaultTranslationsConfig()
+        translationsConfig.config.locales.en.overrides["portal.greeting"] =
+          "Welcome back"
+        await configs.save(translationsConfig)
+      })
+
+      mocks.licenses.useCloudFree()
+
+      const res = await config.api.workspace.getAppPackage(workspace.appId)
+
+      expect(res.application.translationOverrides).toEqual({})
     })
 
     it("should allow users in multiple groups with different roles to access all permitted screens", async () => {

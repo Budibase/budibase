@@ -387,6 +387,16 @@ describe("configs", () => {
       ).rejects.toThrow("License does not allow translations")
     })
 
+    it("should return default translations when feature is disabled", async () => {
+      await saveConfig(translations({ "login.emailLabel": "Profile test" }))
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(false)
+
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+
+      expect(saved.config.defaultLocale).toEqual("en")
+      expect(saved.config.locales.en.overrides).toEqual({})
+    })
+
     it("should resolve bindings inside translation overrides", async () => {
       await saveConfig(
         translations({ "portal.greeting": "Welcome {{ name }}" })
@@ -581,6 +591,21 @@ describe("configs", () => {
       const overrides = res.body.locales.en.overrides
       expect(overrides["login.emailLabel"]).toEqual("Public email")
       expect(overrides["forgotPassword.heading"]).toEqual("Reset password")
+    })
+
+    it("should return only default public translations when feature is disabled", async () => {
+      await saveConfig(
+        translations({
+          "login.emailLabel": "Public email",
+          "forgotPassword.heading": "Reset password",
+        })
+      )
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(false)
+
+      const res = await config.api.configs.getPublicTranslations()
+
+      expect(res.body.defaultLocale).toEqual("en")
+      expect(res.body.locales.en.overrides).toEqual({})
     })
   })
 })
