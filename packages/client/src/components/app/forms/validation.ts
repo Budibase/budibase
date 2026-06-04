@@ -342,9 +342,7 @@ const isUrlValidationProtocol = (
   protocol: unknown
 ): protocol is UrlValidationProtocol => {
   const protocols: readonly string[] = URL_VALIDATION_PROTOCOLS
-  return (
-    typeof protocol === "string" && protocols.includes(protocol)
-  )
+  return typeof protocol === "string" && protocols.includes(protocol)
 }
 
 const getAllowedUrlProtocols = (
@@ -412,9 +410,7 @@ const isValidUrlHostname = (hostname: string): boolean => {
 
 const isValidMailtoUrl = (url: URL): boolean => {
   return (
-    !url.host &&
-    !url.hash &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(url.pathname)
+    !url.host && !url.hash && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(url.pathname)
   )
 }
 
@@ -428,6 +424,9 @@ const urlHandler = (value: unknown, rule: UIFieldValidationRule) => {
 
   const allowedProtocols = getAllowedUrlProtocols(rule)
   const trimmedValue = value.trim()
+  if (trimmedValue.includes("\\")) {
+    return false
+  }
   const valueToParse = hasExplicitUrlProtocol(trimmedValue)
     ? trimmedValue
     : `https://${trimmedValue}`

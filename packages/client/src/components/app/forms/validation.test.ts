@@ -14,12 +14,7 @@ describe("form validation", () => {
       },
     ]
 
-    return createValidatorFromConstraints(
-      null,
-      rules,
-      "website",
-      undefined
-    )
+    return createValidatorFromConstraints(null, rules, "website", undefined)
   }
 
   it("accepts valid URLs", () => {
@@ -29,6 +24,9 @@ describe("form validation", () => {
     expect(validator("http://budibase.com/pricing")).toBeNull()
     expect(validator("www.google.com")).toBeNull()
     expect(validator("http://localhost:10000")).toBeNull()
+    expect(validator("http://192.168.0.1/path")).toBeNull()
+    expect(validator("http://[2001:db8::1]/path")).toBeNull()
+    expect(validator("https://example.com/path%5Csegment")).toBeNull()
   })
 
   it("rejects invalid URLs while leaving empty values to other rules", () => {
@@ -38,6 +36,12 @@ describe("form validation", () => {
     expect(validator("mailto:test@example.com")).toBe("Invalid URL")
     expect(validator("ftp://example.com")).toBe("Invalid URL")
     expect(validator("https://www.g?&^%&^%&^%.com")).toBe("Invalid URL")
+    expect(validator("https://example.com\\path")).toBe("Invalid URL")
+    expect(
+      validator(
+        "//////\\\\\\\\\\\\\\\\///////////////\\\\\\\\\\\\\\\\///www.google.com"
+      )
+    ).toBe("Invalid URL")
     expect(validator("not a url")).toBe("Invalid URL")
     expect(validator("")).toBeNull()
     expect(validator(null)).toBeNull()
