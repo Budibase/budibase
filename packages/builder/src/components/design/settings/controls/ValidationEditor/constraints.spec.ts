@@ -13,6 +13,7 @@ describe("validation constraints", () => {
         "notEqual",
         "regex",
         "notRegex",
+        "url",
       ],
     ],
     ["number", ["required", "maxValue", "minValue", "equal", "notEqual"]],
@@ -36,6 +37,16 @@ describe("validation constraints", () => {
   it("returns empty constraints for unknown field types", () => {
     expect(getConstraintsForType("not-a-real-type")).toStrictEqual([])
   })
+
+  it("includes a URL rule for text and URL fields", () => {
+    const stringConstraints = getConstraintsForType("string")
+    const urlConstraints = getConstraintsForType("url")
+
+    expect(stringConstraints.map(constraint => constraint.value)).toContain(
+      "url"
+    )
+    expect(urlConstraints.map(constraint => constraint.value)).toContain("url")
+  })
 })
 
 describe("defaultErrorForConstraint", () => {
@@ -46,6 +57,7 @@ describe("defaultErrorForConstraint", () => {
   })
 
   it.each([
+    ["url", null, "Must be a valid URL"],
     ["minLength", 5, "Must be at least 5 characters"],
     ["maxLength", 10, "Must be at most 10 characters"],
     ["minValue", 5, "Must be at least 5"],
