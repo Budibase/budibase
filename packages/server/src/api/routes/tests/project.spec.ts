@@ -1,4 +1,4 @@
-import { features } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import { FeatureFlag } from "@budibase/types"
 import sdk from "../../../sdk"
