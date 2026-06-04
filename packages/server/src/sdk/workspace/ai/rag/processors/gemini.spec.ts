@@ -15,7 +15,7 @@ jest.mock("../../knowledgeBase", () => ({
     mockUpdateKnowledgeBaseFile(...args),
 }))
 
-import { KnowledgeBase, KnowledgeBaseType } from "@budibase/types"
+import { KnowledgeBaseType, type KnowledgeBase } from "@budibase/types"
 import { GeminiRagProcessor } from "./gemini"
 
 const knowledgeBase = {
@@ -31,6 +31,16 @@ describe("GeminiRagProcessor", () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
+
+  const createProcessor = () =>
+    new GeminiRagProcessor({
+      _id: "kb_1",
+      name: "KB",
+      type: KnowledgeBaseType.GEMINI,
+      config: {
+        googleFileStoreId: "store_1",
+      },
+    } satisfies KnowledgeBase)
 
   it("maps search sourceId from Gemini file_id", async () => {
     mockSearchGeminiFileStore.mockResolvedValue([
@@ -72,6 +82,124 @@ describe("GeminiRagProcessor", () => {
       {
         source: "policy.md",
         chunkText: "4-day policy",
+      },
+    ])
+  })
+
+  it("reads chunk text from retrievedContext fields", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        id: "gemini-file-1",
+        filename: "color.pdf",
+        score: 0.9,
+        content: [
+          {
+            type: "text",
+            retrievedContext: {
+              text: "Dom's favourite colour is magenta.",
+            },
+          },
+        ],
+      },
+    ])
+
+    const result = await createProcessor().search(
+      "What's Dom's favourite color?"
+    )
+
+    expect(result).toEqual([
+      {
+        source: "color.pdf",
+        chunkText: "Dom's favourite colour is magenta.",
+      },
+    ])
+  })
+
+  it("extracts source from content-level retrievedContext", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        id: "row-1",
+        score: 0.9,
+        content: [
+          {
+            type: "text",
+            retrievedContext: {
+              mediaId: "gemini-file-42",
+              text: "Policies are reviewed quarterly.",
+            },
+          },
+        ],
+      },
+    ])
+
+    const result = await createProcessor().search(
+      "How often are policies reviewed?"
+    )
+
+    expect(result).toEqual([
+      {
+        source: "gemini-file-42",
+        chunkText: "Policies are reviewed quarterly.",
+      },
+    ])
+  })
+
+  it("extracts source from row-level retrievedContext media id", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        id: "row-1",
+        score: 0.9,
+        retrievedContext: {
+          mediaId: "gemini-file-42",
+        },
+        content: [
+          {
+            type: "text",
+            retrievedContext: {
+              text: "Policies are reviewed quarterly.",
+            },
+          },
+        ],
+      },
+    ])
+
+    const result = await createProcessor().search(
+      "How often are policies reviewed?"
+    )
+
+    expect(result).toEqual([
+      {
+        source: "gemini-file-42",
+        chunkText: "Policies are reviewed quarterly.",
+      },
+    ])
+  })
+
+  it("falls back to row-level retrievedContext text when content parts have no text", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        id: "row-1",
+        filename: "policy.md",
+        score: 0.9,
+        retrievedContext: {
+          text: "Policies are reviewed quarterly.",
+        },
+        content: [
+          {
+            type: "metadata",
+          },
+        ],
+      },
+    ])
+
+    const result = await createProcessor().search(
+      "How often are policies reviewed?"
+    )
+
+    expect(result).toEqual([
+      {
+        source: "policy.md",
+        chunkText: "Policies are reviewed quarterly.",
       },
     ])
   })
