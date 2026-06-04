@@ -2,10 +2,13 @@ import dayjs from "dayjs"
 import { Helpers } from "@budibase/bbui"
 import {
   defaultErrorForConstraint,
+  DEFAULT_URL_VALIDATION_PROTOCOLS,
   FieldConstraints,
   FieldType,
   Table,
   UIFieldValidationRule,
+  URL_VALIDATION_PROTOCOLS,
+  type UrlValidationProtocol,
 } from "@budibase/types"
 
 /**
@@ -335,6 +338,121 @@ const notRegexHandler = (value: any, rule: UIFieldValidationRule) => {
   return !regexHandler(value, rule)
 }
 
+const isUrlValidationProtocol = (
+  protocol: unknown
+): protocol is UrlValidationProtocol => {
+  const protocols: readonly string[] = URL_VALIDATION_PROTOCOLS
+  return typeof protocol === "string" && protocols.includes(protocol)
+}
+
+const getAllowedUrlProtocols = (
+  rule: UIFieldValidationRule
+): UrlValidationProtocol[] => {
+  if (!Array.isArray(rule.value) || !rule.value.length) {
+    return DEFAULT_URL_VALIDATION_PROTOCOLS
+  }
+
+  return rule.value.filter(isUrlValidationProtocol)
+}
+
+const hasExplicitUrlProtocol = (value: string): boolean => {
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(value) || /^mailto:/i.test(value)
+}
+
+const isValidIpv4Hostname = (hostname: string): boolean => {
+  const parts = hostname.split(".")
+  return (
+    parts.length === 4 &&
+    parts.every(part => {
+      if (!/^\d{1,3}$/.test(part)) {
+        return false
+      }
+      const value = Number(part)
+      return value >= 0 && value <= 255 && String(value) === part
+    })
+  )
+}
+
+const isValidDomainHostname = (hostname: string): boolean => {
+  const labels = hostname.split(".")
+  const topLevelDomain = labels[labels.length - 1]
+
+  if (labels.length < 2) {
+    return false
+  }
+
+  if (!/^([a-z]{2,}|xn--[a-z0-9-]{2,})$/i.test(topLevelDomain)) {
+    return false
+  }
+
+  return labels.every(label => {
+    return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(label)
+  })
+}
+
+const isValidUrlHostname = (hostname: string): boolean => {
+  const normalisedHostname = hostname.replace(/^\[|\]$/g, "")
+
+  if (!normalisedHostname) {
+    return false
+  }
+  if (normalisedHostname === "localhost") {
+    return true
+  }
+  if (normalisedHostname.includes(":")) {
+    return true
+  }
+  if (isValidIpv4Hostname(normalisedHostname)) {
+    return true
+  }
+  return isValidDomainHostname(normalisedHostname)
+}
+
+const isValidMailtoUrl = (url: URL): boolean => {
+  return (
+    !url.host && !url.hash && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(url.pathname)
+  )
+}
+
+const urlHandler = (value: unknown, rule: UIFieldValidationRule) => {
+  if (value == null) {
+    return true
+  }
+  if (typeof value !== "string") {
+    return false
+  }
+
+  const allowedProtocols = getAllowedUrlProtocols(rule)
+  const trimmedValue = value.trim()
+  if (trimmedValue.includes("\\")) {
+    return false
+  }
+  const valueToParse = hasExplicitUrlProtocol(trimmedValue)
+    ? trimmedValue
+    : `https://${trimmedValue}`
+
+  try {
+    const url = new URL(valueToParse)
+    const protocol = url.protocol.replace(":", "")
+
+    if (!isUrlValidationProtocol(protocol)) {
+      return false
+    }
+    if (!allowedProtocols.includes(protocol)) {
+      return false
+    }
+    if (protocol === "mailto") {
+      return isValidMailtoUrl(url)
+    }
+    if (url.username || url.password) {
+      return false
+    }
+    return isValidUrlHostname(url.hostname)
+  } catch {
+    return false
+  }
+}
+
 // Evaluates a contains constraint
 const containsHandler = (value: any, rule: UIFieldValidationRule) => {
   const expectedValue = parseType(rule.value, "string")
@@ -373,6 +491,7 @@ const handlerMap = {
   notEqual: notEqualHandler,
   regex: regexHandler,
   notRegex: notRegexHandler,
+  url: urlHandler,
   contains: containsHandler,
   notContains: notContainsHandler,
   json: jsonHandler,
