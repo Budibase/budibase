@@ -1,13 +1,29 @@
-import { features } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { FeatureFlag } from "@budibase/types"
+import {
+  FeatureFlag,
+  KnowledgeBaseFileStatus,
+  type Agent,
+  type KnowledgeBaseFile,
+  type ProjectPackageDependencyIndex,
+} from "@budibase/types"
+import { Header } from "@budibase/shared-core"
+import fsp from "fs/promises"
+import { tmpdir } from "os"
+import { join } from "path"
+import { Readable, Writable } from "stream"
+import { pipeline } from "stream/promises"
+import * as tar from "tar"
 import sdk from "../../../sdk"
+import { listAssignedAgentFiles } from "../../../sdk/workspace/projects/backups/exports"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
   basicDatasource,
   basicQuery,
+  basicScreen,
   basicTable,
+  createQueryScreen,
 } from "../../../tests/utilities/structures"
 
 describe("/projects", () => {
@@ -35,6 +51,144 @@ describe("/projects", () => {
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
   })
+
+  const readTarEntries = async (buffer: Buffer) => {
+    const files = new Map<string, Buffer>()
+    const parser = tar.list({
+      onReadEntry: entry => {
+        if (entry.type === "Directory") {
+          return
+        }
+
+        const chunks: Buffer[] = []
+        entry.on("data", chunk => chunks.push(chunk))
+        entry.on("end", () => {
+          files.set(
+            entry.path,
+            Buffer.concat(chunks.map(chunk => new Uint8Array(chunk)))
+          )
+        })
+      },
+    })
+    await pipeline(Readable.from(buffer), parser as unknown as Writable)
+    return files
+  }
+
+  const createTarPackage = async (entries: Record<string, unknown>) => {
+    const tmpPath = await fsp.mkdtemp(join(tmpdir(), "project-package-"))
+    const tarPath = join(tmpPath, "project-export.tar.gz")
+
+    try {
+      await Promise.all(
+        Object.entries(entries).map(async ([entryPath, value]) => {
+          const fullPath = join(tmpPath, entryPath)
+          await fsp.mkdir(join(fullPath, ".."), { recursive: true })
+          await fsp.writeFile(fullPath, JSON.stringify(value, null, 2))
+        })
+      )
+      await tar.create(
+        {
+          gzip: true,
+          file: tarPath,
+          cwd: tmpPath,
+        },
+        Object.keys(entries)
+      )
+      return await fsp.readFile(tarPath)
+    } finally {
+      await fsp.rm(tmpPath, { recursive: true, force: true })
+    }
+  }
+
+  const createOversizedTarPackage = async () => {
+    const oversizedEntryPath = "docs/automation/au_oversized.json"
+    const entries = createMinimalPackageEntries({
+      docs: {
+        [oversizedEntryPath]: {
+          _id: "au_oversized",
+          name: "Oversized automation",
+        },
+      },
+    })
+    const tmpPath = await fsp.mkdtemp(join(tmpdir(), "project-package-"))
+    const tarPath = join(tmpPath, "project-export.tar.gz")
+
+    try {
+      await Promise.all(
+        Object.entries(entries).map(async ([entryPath, value]) => {
+          const fullPath = join(tmpPath, entryPath)
+          await fsp.mkdir(join(fullPath, ".."), { recursive: true })
+          await fsp.writeFile(fullPath, JSON.stringify(value, null, 2))
+        })
+      )
+      await fsp.truncate(join(tmpPath, oversizedEntryPath), 101 * 1024 * 1024)
+      await tar.create(
+        {
+          gzip: true,
+          file: tarPath,
+          cwd: tmpPath,
+        },
+        Object.keys(entries)
+      )
+      return await fsp.readFile(tarPath)
+    } finally {
+      await fsp.rm(tmpPath, { recursive: true, force: true })
+    }
+  }
+
+  const createMinimalPackageEntries = (
+    overrides: {
+      manifest?: Record<string, unknown>
+      project?: Record<string, unknown>
+      dependencyIndex?: Record<string, unknown>
+      docs?: Record<string, unknown>
+      extraEntries?: Record<string, unknown>
+    } = {}
+  ) => {
+    const project = {
+      _id: "project_source",
+      name: "Operations",
+      createdAt: new Date().toISOString(),
+      ...overrides.project,
+    }
+    const manifest = {
+      formatVersion: 1,
+      artifactType: "project",
+      budibaseVersion: "test",
+      exportedAt: new Date().toISOString(),
+      project,
+      sourceWorkspace: {
+        id: "app_source",
+      },
+      resourcesByType: {
+        project: 1,
+      },
+      containsRows: false,
+      containsAttachments: false,
+      requiresSecrets: false,
+      unsupportedContent: [],
+      supportedImportModes: ["additiveImport"],
+      ...overrides.manifest,
+    }
+    const dependencyIndex = {
+      rootProjectId: "project_source",
+      directMembers: [],
+      resources: {
+        project_source: {
+          dependencies: [],
+        },
+      },
+      ...overrides.dependencyIndex,
+    }
+
+    return {
+      "manifest.json": manifest,
+      "project.json": project,
+      "dependency-index.json": dependencyIndex,
+      ...overrides.docs,
+      ...overrides.extraEntries,
+    }
+  }
 
   it("returns 404 when the feature flag is disabled", async () => {
     await config.api.project.fetch({ status: 404 })
@@ -445,6 +599,824 @@ describe("/projects", () => {
       expect(updatedTable.projectId).toBe(project._id)
       expect(updatedDatasource.projectId).toBe(project._id)
       expect(updatedQuery.projectId).toBe(project._id)
+    })
+  })
+
+  it("exports a project tarball with selective docs and manifest", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+        description: "Operational workflows",
+        color: "#8CA171",
+      })
+
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        config: {
+          password: "super-secret",
+        },
+        projectId: project._id,
+      })
+      const query = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        projectId: project._id,
+      })
+      const table = await config.api.table.save({
+        ...basicTable(),
+        projectId: project._id,
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create({
+        name: "Operations app",
+        url: "/operations-app",
+        projectId: project._id,
+      })
+      const screen = await config.api.screen.save({
+        ...createQueryScreen(datasource._id!, query),
+        workspaceAppId: workspaceApp._id,
+      })
+
+      const automation = await config.createAutomation()
+      await config.api.automation.update({
+        ...automation,
+        projectId: project._id,
+      })
+      const agent = await config.api.agent.create({
+        name: "Ops agent",
+        aiconfig: "default",
+        live: true,
+        slackIntegration: {
+          botToken: "secret-token",
+          signingSecret: "secret-signing-key",
+        },
+        telegramIntegration: {
+          botToken: "secret-telegram-token",
+          webhookSecretToken: "secret-telegram-webhook",
+          botUserName: "ops_bot",
+        },
+        projectId: project._id,
+      })
+
+      const body = await config.api.project.export(project._id)
+      const files = await readTarEntries(body)
+
+      expect(Array.from(files.keys())).toEqual(
+        expect.arrayContaining([
+          "manifest.json",
+          "project.json",
+          "dependency-index.json",
+          `docs/datasource/${datasource._id}.json`,
+          `docs/query/${query._id}.json`,
+          `docs/table/${table._id}.json`,
+          `docs/automation/${automation._id}.json`,
+          `docs/agent/${agent._id}.json`,
+          `docs/workspace_app/${workspaceApp._id}.json`,
+          `docs/screen/${screen._id}.json`,
+        ])
+      )
+
+      const manifest = JSON.parse(files.get("manifest.json")!.toString())
+      expect(manifest).toMatchObject({
+        artifactType: "project",
+        formatVersion: 1,
+        containsRows: false,
+        containsAttachments: false,
+        requiresSecrets: true,
+        project: {
+          _id: project._id,
+          name: project.name,
+          description: project.description,
+          color: project.color,
+        },
+        resourcesByType: {
+          project: 1,
+          datasource: 1,
+          query: 1,
+          table: 1,
+          automation: 1,
+          agent: 1,
+          workspace_app: 1,
+          screen: 1,
+        },
+        unsupportedContent: [
+          {
+            type: "agent_linked_content",
+            count: 1,
+          },
+        ],
+        supportedImportModes: ["additiveImport"],
+      })
+
+      const exportedProject = JSON.parse(files.get("project.json")!.toString())
+      expect(exportedProject._id).toBe(project._id)
+      expect(exportedProject._rev).toBeUndefined()
+
+      const exportedDatasource = JSON.parse(
+        files.get(`docs/datasource/${datasource._id}.json`)!.toString()
+      )
+      expect(exportedDatasource.config.password).not.toBe("super-secret")
+
+      const exportedAgent = JSON.parse(
+        files.get(`docs/agent/${agent._id}.json`)!.toString()
+      )
+      expect(exportedAgent.live).toBe(false)
+      expect(exportedAgent.slackIntegration?.botToken).toBeUndefined()
+      expect(exportedAgent.slackIntegration?.signingSecret).toBeUndefined()
+      expect(exportedAgent.telegramIntegration?.botToken).toBeUndefined()
+      expect(
+        exportedAgent.telegramIntegration?.webhookSecretToken
+      ).toBeUndefined()
+      expect(exportedAgent.telegramIntegration?.botUserName).toBe("ops_bot")
+
+      const dependencyIndex = JSON.parse(
+        files.get("dependency-index.json")!.toString()
+      ) as ProjectPackageDependencyIndex
+      expect(dependencyIndex.rootProjectId).toBe(project._id)
+      expect(
+        dependencyIndex.directMembers.map(resource => resource.id)
+      ).toEqual(
+        expect.arrayContaining([
+          datasource._id,
+          query._id,
+          table._id,
+          automation._id,
+          agent._id,
+          workspaceApp._id,
+        ])
+      )
+    })
+  })
+
+  it("continues listing assigned agent files when one RAG lookup fails", async () => {
+    const file: KnowledgeBaseFile = {
+      _id: "kb_file_1",
+      knowledgeBaseId: "kb_1",
+      filename: "guide.pdf",
+      objectStoreKey: "files/guide.pdf",
+      ragSourceId: "rag_1",
+      status: KnowledgeBaseFileStatus.READY,
+      uploadedBy: "user_1",
+    }
+    const listFilesForAgent = jest.fn(async (agentId: string) => {
+      if (agentId === "ag_failed") {
+        throw new Error("RAG unavailable")
+      }
+      return [file]
+    })
+
+    await expect(
+      listAssignedAgentFiles(
+        "project_1",
+        [
+          { _id: "ag_failed", name: "Failed agent" } as Agent,
+          { _id: "ag_ok", name: "Working agent" } as Agent,
+        ],
+        listFilesForAgent
+      )
+    ).resolves.toEqual([file])
+
+    expect(listFilesForAgent).toHaveBeenCalledTimes(2)
+  })
+
+  it("returns 404 when exporting an unknown project", async () => {
+    await withProjectsEnabled(async () => {
+      await config.api.project.export("project_missing", undefined, {
+        status: 404,
+        body: {
+          message: "Project with id 'project_missing' not found.",
+        },
+      })
+    })
+  })
+
+  it("exports encrypted project tarballs when requested", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+
+      const body = await config.api.project.export(project._id, {
+        encryptPassword: "abcde",
+      })
+      const files = await readTarEntries(body)
+
+      expect(Array.from(files.keys())).toEqual(
+        expect.arrayContaining([
+          "manifest.json.enc",
+          "project.json.enc",
+          "dependency-index.json.enc",
+        ])
+      )
+    })
+  })
+
+  it("imports empty projects without requiring docs", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+
+      const body = await config.api.project.export(project._id)
+      const destinationWorkspace = await config.api.workspace.create({
+        name: "Imported workspace",
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: destinationWorkspace.appId },
+        async () => {
+          const imported = await config.api.project.import(body)
+          expect(imported.resources).toEqual({
+            project: [imported.project._id],
+          })
+        }
+      )
+    })
+  })
+
+  it("exports and imports app screens that need workspace app repair", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const defaultWorkspaceApp = await config.api.workspaceApp.find(
+        config.getDefaultWorkspaceAppId()
+      )
+      const { workspaceApp } = await config.api.workspaceApp.update({
+        _id: defaultWorkspaceApp._id,
+        _rev: defaultWorkspaceApp._rev,
+        name: defaultWorkspaceApp.name,
+        url: defaultWorkspaceApp.url,
+        disabled: defaultWorkspaceApp.disabled,
+        navigation: defaultWorkspaceApp.navigation,
+        projectId: project._id,
+      })
+      const screen = await config.api.screen.save({
+        ...basicScreen("/operations"),
+        workspaceAppId: workspaceApp._id,
+      })
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        await db.put({
+          ...screen,
+          workspaceAppId: undefined,
+        })
+      })
+
+      const body = await config.api.project.export(project._id)
+      const files = await readTarEntries(body)
+      const exportedScreen = JSON.parse(
+        files.get(`docs/screen/${screen._id}.json`)!.toString()
+      )
+
+      expect(exportedScreen.workspaceAppId).toBe(workspaceApp._id)
+
+      const destinationWorkspace = await config.api.workspace.create({
+        name: "Imported workspace",
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: destinationWorkspace.appId },
+        async () => {
+          const imported = await config.api.project.import(body)
+          const importedScreens = await config.api.screen.list()
+          const importedScreen = importedScreens.find(
+            existing => existing._id === imported.resources.screen?.[0]
+          )
+
+          expect(imported.resources.workspace_app).toHaveLength(1)
+          expect(imported.resources.screen).toHaveLength(1)
+          expect(importedScreen?.workspaceAppId).toBe(
+            imported.resources.workspace_app?.[0]
+          )
+        }
+      )
+    })
+  })
+
+  it("imports row action dependencies with remapped automation references", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const table = await config.api.table.save({
+        ...basicTable(),
+        projectId: project._id,
+      })
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "Approve",
+      })
+
+      const body = await config.api.project.export(project._id)
+      const destinationWorkspace = await config.api.workspace.create({
+        name: "Imported workspace",
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: destinationWorkspace.appId },
+        async () => {
+          const imported = await config.api.project.import(body)
+          expect(imported.resources.table).toHaveLength(1)
+          expect(imported.resources.automation).toHaveLength(1)
+          expect(imported.resources.row_action).toHaveLength(1)
+
+          const importedRowActions = await config.api.rowAction.find(
+            imported.resources.table?.[0]!
+          )
+          const importedAction = Object.values(importedRowActions.actions)[0]
+
+          expect(importedAction).toBeDefined()
+          expect(importedAction.tableId).toBe(imported.resources.table?.[0])
+          expect(importedAction.automationId).toBe(
+            imported.resources.automation?.[0]
+          )
+          expect(importedAction.id).not.toBe(rowAction.id)
+
+          const importedAutomation = await config.api.automation.get(
+            imported.resources.automation?.[0]!
+          )
+          const triggerInputs = importedAutomation.definition.trigger
+            .inputs as {
+            tableId?: string
+            rowActionId?: string
+          }
+          expect(triggerInputs.tableId).toBe(imported.resources.table?.[0])
+          expect(triggerInputs.rowActionId).toBe(importedAction.id)
+        }
+      )
+    })
+  })
+
+  it("imports exported projects additively into another workspace", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+        description: "Operational workflows",
+      })
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        config: {
+          password: "super-secret",
+        },
+        projectId: project._id,
+      })
+      const query = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        projectId: project._id,
+      })
+      const table = await config.api.table.save({
+        ...basicTable(),
+        projectId: project._id,
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create({
+        name: "Operations app",
+        url: "/operations-app",
+        projectId: project._id,
+      })
+      const screen = await config.api.screen.save({
+        ...createQueryScreen(datasource._id!, query),
+        workspaceAppId: workspaceApp._id,
+      })
+      const automation = await config.createAutomation()
+      await config.api.automation.update({
+        ...automation,
+        projectId: project._id,
+      })
+      const agent = await config.api.agent.create({
+        name: "Ops agent",
+        aiconfig: "default",
+        live: true,
+        slackIntegration: {
+          botToken: "secret-token",
+          signingSecret: "secret-signing-key",
+        },
+        projectId: project._id,
+      })
+
+      const body = await config.api.project.export(project._id)
+      const destinationWorkspace = await config.api.workspace.create({
+        name: "Imported workspace",
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: destinationWorkspace.appId },
+        async () => {
+          await config.api.workspaceApp.create({
+            name: "Existing app",
+            url: "/existing-app",
+          })
+
+          const imported = await config.api.project.import(body)
+          expect(imported.project._id).not.toBe(project._id)
+          expect(imported.resources.project).toEqual([imported.project._id])
+          expect(imported.resources.datasource).toHaveLength(1)
+          expect(imported.resources.query).toHaveLength(1)
+          expect(imported.resources.table).toHaveLength(1)
+          expect(imported.resources.automation).toHaveLength(1)
+          expect(imported.resources.agent).toHaveLength(1)
+          expect(imported.resources.workspace_app).toHaveLength(1)
+          expect(imported.resources.screen).toHaveLength(1)
+          expect(imported.requirements).toHaveLength(2)
+          expect(imported.requirements).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "datasource_secrets",
+                resourceId: imported.resources.datasource?.[0],
+              }),
+              expect.objectContaining({
+                type: "agent_secrets",
+                resourceId: imported.resources.agent?.[0],
+              }),
+            ])
+          )
+
+          const { projects } = await config.api.project.fetch()
+          expect(projects.map(existing => existing._id)).toContain(
+            imported.project._id
+          )
+
+          const importedWorkspaceApps = await config.api.workspaceApp.fetch()
+          expect(
+            importedWorkspaceApps.workspaceApps.map(app => app.name)
+          ).toEqual(expect.arrayContaining(["Existing app", "Operations app"]))
+
+          const importedScreens = await config.api.screen.list()
+          const importedScreen = importedScreens.find(
+            screen => screen._id === imported.resources.screen?.[0]
+          )
+          expect(importedScreen).toBeDefined()
+          expect(importedScreen!.workspaceAppId).toBe(
+            imported.resources.workspace_app?.[0]
+          )
+          expect(importedScreen!.props._children?.[0].table._id).toBe(
+            imported.resources.query?.[0]
+          )
+          expect(importedScreen!.props._children?.[0].table.datasourceId).toBe(
+            imported.resources.datasource?.[0]
+          )
+
+          const importedQuery = await config.api.query.get(
+            imported.resources.query?.[0]!
+          )
+          expect(importedQuery.datasourceId).toBe(
+            imported.resources.datasource?.[0]
+          )
+          expect(importedQuery.projectId).toBe(imported.project._id)
+
+          const importedTable = await config.api.table.get(
+            imported.resources.table?.[0]!
+          )
+          expect(importedTable.projectId).toBe(imported.project._id)
+
+          const importedAutomation = await config.api.automation.get(
+            imported.resources.automation?.[0]!
+          )
+          expect(importedAutomation.projectId).toBe(imported.project._id)
+          expect(importedAutomation.appId).toBe(destinationWorkspace.appId)
+          expect(importedAutomation.disabled).toBe(true)
+
+          const importedDatasource = await config.api.datasource.get(
+            imported.resources.datasource?.[0]!
+          )
+          expect(importedDatasource.projectId).toBe(imported.project._id)
+          expect(importedDatasource.config?.password).not.toBe("super-secret")
+
+          const { agents } = await config.api.agent.fetch()
+          const importedAgent = agents.find(
+            existing => existing._id === imported.resources.agent?.[0]
+          )
+          expect(importedAgent).toBeDefined()
+          expect(importedAgent?.projectId).toBe(imported.project._id)
+          expect(importedAgent?.live).toBe(false)
+
+          const resourceGraph =
+            await config.api.resource.getResourceDependencies()
+          expect(
+            resourceGraph.body.resources[imported.project._id].dependencies.map(
+              resource => resource.id
+            )
+          ).toEqual(
+            expect.arrayContaining([
+              imported.resources.datasource?.[0],
+              imported.resources.query?.[0],
+              imported.resources.table?.[0],
+              imported.resources.automation?.[0],
+              imported.resources.agent?.[0],
+              imported.resources.workspace_app?.[0],
+              imported.resources.screen?.[0],
+            ])
+          )
+        }
+      )
+
+      expect(screen._id).toBeDefined()
+      expect(table._id).toBeDefined()
+      expect(agent._id).toBeDefined()
+    })
+  })
+
+  it("rejects encrypted project imports without a password", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+
+      const body = await config.api.project.export(project._id, {
+        encryptPassword: "abcde",
+      })
+
+      await config.api.project.import(body, undefined, {
+        status: 400,
+        body: {
+          message: "Files are encrypted but no password has been supplied.",
+        },
+      })
+    })
+  })
+
+  it.each([
+    ["missing", undefined],
+    ["non-array", "additiveImport"],
+    ["empty", []],
+  ])(
+    "rejects packages with %s supported import modes",
+    async (_label, value) => {
+      await withProjectsEnabled(async () => {
+        const packageBuffer = await createTarPackage(
+          createMinimalPackageEntries({
+            manifest: {
+              supportedImportModes: value,
+            },
+          })
+        )
+
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message: "Project package does not support additive import.",
+          },
+        })
+      })
+    }
+  )
+
+  it("rejects packages with docs that are not declared in the dependency index", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              automation: 1,
+            },
+          },
+          docs: {
+            "docs/automation/au_extra.json": {
+              _id: "au_extra",
+              name: "Unexpected automation",
+              definition: {
+                trigger: {
+                  id: "trigger",
+                  inputs: {},
+                },
+                steps: [],
+              },
+            },
+          },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message:
+            "Project package contains docs not listed in dependency-index.json.",
+        },
+      })
+    })
+  })
+
+  it("rejects packages that reference missing docs", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              automation: 1,
+            },
+          },
+          dependencyIndex: {
+            resources: {
+              project_source: {
+                dependencies: [
+                  {
+                    id: "au_missing",
+                    name: "Missing automation",
+                    type: "automation",
+                  },
+                ],
+              },
+              au_missing: {
+                dependencies: [],
+              },
+            },
+          },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Project package dependency index references missing docs.",
+        },
+      })
+    })
+  })
+
+  it("rejects packages with docs that are not reachable from the project", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              automation: 1,
+            },
+          },
+          dependencyIndex: {
+            resources: {
+              project_source: {
+                dependencies: [],
+              },
+              au_orphan: {
+                dependencies: [],
+              },
+            },
+          },
+          docs: {
+            "docs/automation/au_orphan.json": {
+              _id: "au_orphan",
+              name: "Orphan automation",
+              definition: {
+                trigger: {
+                  id: "trigger",
+                  inputs: {},
+                },
+                steps: [],
+              },
+            },
+          },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message:
+            "Project package contains docs that are not reachable from the root project.",
+        },
+      })
+    })
+  })
+
+  it("rejects packages when doc paths do not match resource types", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              automation: 1,
+            },
+          },
+          dependencyIndex: {
+            resources: {
+              project_source: {
+                dependencies: [
+                  {
+                    id: "ta_wrong",
+                    name: "Wrongly typed table",
+                    type: "automation",
+                  },
+                ],
+              },
+              ta_wrong: {
+                dependencies: [],
+              },
+            },
+          },
+          docs: {
+            "docs/automation/ta_wrong.json": {
+              _id: "ta_wrong",
+              name: "Wrongly typed table",
+            },
+          },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message:
+            "Project package doc 'ta_wrong' does not match resource type 'automation'.",
+        },
+      })
+    })
+  })
+
+  it("rejects packages with unsupported root files", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          extraEntries: {
+            "readme.txt": "unexpected",
+          },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Project package contains unsupported files.",
+        },
+      })
+    })
+  })
+
+  it("rejects workspace exports", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          extraEntries: {
+            "db.txt": "workspace export marker",
+          },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Workspace exports cannot be imported as Project packages.",
+        },
+      })
+    })
+  })
+
+  it("rejects packages that exceed the extracted size limit before extraction", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createOversizedTarPackage()
+
+      expect(packageBuffer.length).toBeLessThan(50 * 1024 * 1024)
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Project package is too large.",
+        },
+      })
+    })
+  })
+
+  it("rejects packages with paths that are too deep", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              automation: 1,
+            },
+          },
+          dependencyIndex: {
+            resources: {
+              project_source: {
+                dependencies: [
+                  {
+                    id: "au_deep",
+                    name: "Deep automation",
+                    type: "automation",
+                  },
+                ],
+              },
+              au_deep: {
+                dependencies: [],
+              },
+            },
+          },
+          docs: {
+            "docs/automation/nested/deeper/au_deep.json": {
+              _id: "au_deep",
+              name: "Deep automation",
+            },
+          },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Project package contains paths that are too deep.",
+        },
+      })
     })
   })
 })
