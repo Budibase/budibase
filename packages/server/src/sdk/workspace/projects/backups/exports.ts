@@ -1,8 +1,9 @@
-import { context, encryption } from "@budibase/backend-core"
+import { context, encryption, logging } from "@budibase/backend-core"
 import {
   Agent,
   AnyDocument,
   Datasource,
+  KnowledgeBaseFile,
   Project,
   ProjectPackageDependencyIndex,
   ProjectPackageManifest,
@@ -44,6 +45,32 @@ async function tarFilesToTmp(tmpDir: string, files: string[]) {
 
 function getExportDirectoryName(resourceType: ResourceType) {
   return resourceType
+}
+
+export async function listAssignedAgentFiles(
+  projectId: string,
+  assignedAgents: Agent[],
+  listFilesForAgent = sdk.ai.rag.listFilesForAgent
+): Promise<KnowledgeBaseFile[]> {
+  return (
+    await Promise.all(
+      assignedAgents.map(async agent => {
+        try {
+          return await listFilesForAgent(agent._id!)
+        } catch (err) {
+          logging.logWarn(
+            "Project export: failed to list RAG files for agent",
+            {
+              err,
+              projectId,
+              agentId: agent._id,
+            }
+          )
+          return []
+        }
+      })
+    )
+  ).flat()
 }
 
 async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
@@ -106,9 +133,7 @@ async function getUnsupportedContent(
     workspaceApps.find(workspaceApp => workspaceApp.isDefault) ||
     workspaceApps[0]
   const [assignedAgentFiles, orphanScreens] = await Promise.all([
-    Promise.all(
-      assignedAgents.map(agent => sdk.ai.rag.listFilesForAgent(agent._id!))
-    ).then(files => files.flat()),
+    listAssignedAgentFiles(projectId, assignedAgents),
     defaultWorkspaceApp && assignedWorkspaceAppIds.has(defaultWorkspaceApp._id)
       ? sdk.screens
           .fetch(undefined, { repairMissingWorkspaceAppId: false })

@@ -16,8 +16,12 @@ import {
   VirtualDocumentType,
   prefixed,
 } from "@budibase/types"
+import fs from "fs"
 import fsp from "fs/promises"
 import { basename, join, relative } from "path"
+import { Writable } from "stream"
+import { pipeline } from "stream/promises"
+import * as tar from "tar"
 import {
   extractTableIdFromRowActionsID,
   generateAutomationID,
@@ -87,6 +91,13 @@ interface InsertedDocRef {
   _rev: string
 }
 
+interface ProjectPackageTarEntry {
+  path: string
+  type?: string
+  size?: number
+  resume?: () => void
+}
+
 const readJsonFile = async <T>(filePath: string): Promise<T> => {
   return JSON.parse(await fsp.readFile(filePath, "utf8"))
 }
@@ -130,6 +141,63 @@ const readDirectoryRecursively = async (
   }
 
   return files
+}
+
+const validateProjectPackageBeforeExtraction = async (file: {
+  path: string
+}) => {
+  const totals = { files: 0, bytes: 0 }
+  const fileTypes = new Set(["File", "OldFile", "ContiguousFile"])
+  const linkTypes = new Set(["Link", "SymbolicLink"])
+  const stream = fs.createReadStream(file.path)
+  let validationError: HTTPError | undefined
+
+  const fail = (error: HTTPError) => {
+    validationError = error
+    stream.destroy(error)
+  }
+
+  const parser = new tar.Parser({
+    onReadEntry: (entry: ProjectPackageTarEntry) => {
+      if (validationError) {
+        return
+      }
+      if (
+        entry.path.split(/[\\/]/).filter(Boolean).length > MAX_PATH_SEGMENTS
+      ) {
+        fail(
+          new HTTPError(
+            "Project package contains paths that are too deep.",
+            400
+          )
+        )
+        return
+      }
+      if (entry.type && linkTypes.has(entry.type)) {
+        fail(new HTTPError("Project package contains unsupported links.", 400))
+        return
+      }
+      if (!entry.type || fileTypes.has(entry.type)) {
+        totals.files += 1
+        totals.bytes += entry.size || 0
+        if (totals.files > MAX_PACKAGE_FILES) {
+          fail(new HTTPError("Project package contains too many files.", 400))
+          return
+        }
+        if (totals.bytes > MAX_EXTRACTED_SIZE_BYTES) {
+          fail(new HTTPError("Project package is too large.", 400))
+          return
+        }
+      }
+      entry.resume?.()
+    },
+  })
+
+  try {
+    await pipeline(stream, parser as unknown as Writable)
+  } catch (err) {
+    throw validationError || err
+  }
 }
 
 const getResourceTypeForDocPath = (
@@ -517,6 +585,7 @@ async function extractProjectPackage(
     throw new HTTPError("Project package password is too long.", 400)
   }
 
+  await validateProjectPackageBeforeExtraction(file)
   const tmpPath = await untarFile(file)
   try {
     if (encryptPassword) {

@@ -2,6 +2,9 @@ import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   FeatureFlag,
+  KnowledgeBaseFileStatus,
+  type Agent,
+  type KnowledgeBaseFile,
   type ProjectPackageDependencyIndex,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
@@ -11,6 +14,7 @@ import { join } from "path"
 import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
+import { listAssignedAgentFiles } from "../../../sdk/workspace/projects/backups/exports"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
@@ -81,6 +85,42 @@ describe("/projects", () => {
           await fsp.writeFile(fullPath, JSON.stringify(value, null, 2))
         })
       )
+      await tar.create(
+        {
+          gzip: true,
+          file: tarPath,
+          cwd: tmpPath,
+        },
+        Object.keys(entries)
+      )
+      return await fsp.readFile(tarPath)
+    } finally {
+      await fsp.rm(tmpPath, { recursive: true, force: true })
+    }
+  }
+
+  const createOversizedTarPackage = async () => {
+    const oversizedEntryPath = "docs/automation/au_oversized.json"
+    const entries = createMinimalPackageEntries({
+      docs: {
+        [oversizedEntryPath]: {
+          _id: "au_oversized",
+          name: "Oversized automation",
+        },
+      },
+    })
+    const tmpPath = await fsp.mkdtemp(join(tmpdir(), "project-package-"))
+    const tarPath = join(tmpPath, "project-export.tar.gz")
+
+    try {
+      await Promise.all(
+        Object.entries(entries).map(async ([entryPath, value]) => {
+          const fullPath = join(tmpPath, entryPath)
+          await fsp.mkdir(join(fullPath, ".."), { recursive: true })
+          await fsp.writeFile(fullPath, JSON.stringify(value, null, 2))
+        })
+      )
+      await fsp.truncate(join(tmpPath, oversizedEntryPath), 101 * 1024 * 1024)
       await tar.create(
         {
           gzip: true,
@@ -642,6 +682,37 @@ describe("/projects", () => {
         ])
       )
     })
+  })
+
+  it("continues listing assigned agent files when one RAG lookup fails", async () => {
+    const file: KnowledgeBaseFile = {
+      _id: "kb_file_1",
+      knowledgeBaseId: "kb_1",
+      filename: "guide.pdf",
+      objectStoreKey: "files/guide.pdf",
+      ragSourceId: "rag_1",
+      status: KnowledgeBaseFileStatus.READY,
+      uploadedBy: "user_1",
+    }
+    const listFilesForAgent = jest.fn(async (agentId: string) => {
+      if (agentId === "ag_failed") {
+        throw new Error("RAG unavailable")
+      }
+      return [file]
+    })
+
+    await expect(
+      listAssignedAgentFiles(
+        "project_1",
+        [
+          { _id: "ag_failed", name: "Failed agent" } as Agent,
+          { _id: "ag_ok", name: "Working agent" } as Agent,
+        ],
+        listFilesForAgent
+      )
+    ).resolves.toEqual([file])
+
+    expect(listFilesForAgent).toHaveBeenCalledTimes(2)
   })
 
   it("returns 404 when exporting an unknown project", async () => {
@@ -1224,6 +1295,20 @@ describe("/projects", () => {
         status: 400,
         body: {
           message: "Workspace exports cannot be imported as Project packages.",
+        },
+      })
+    })
+  })
+
+  it("rejects packages that exceed the extracted size limit before extraction", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createOversizedTarPackage()
+
+      expect(packageBuffer.length).toBeLessThan(50 * 1024 * 1024)
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Project package is too large.",
         },
       })
     })
