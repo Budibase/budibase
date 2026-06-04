@@ -406,13 +406,17 @@
                   class:rule-row--no-value={valueDisabled}
                   class:rule-row--url-value={isUrlValue}
                 >
-                  <Select
-                    label="Constraint"
-                    bind:value={rule.constraint}
-                    options={constraintOptions}
-                    placeholder="Constraint"
-                    on:change={() => updateRuleConstraint(rule)}
-                  />
+                  <div class="rule-row__constraint">
+                    <Select
+                      label="Constraint"
+                      bind:value={rule.constraint}
+                      options={constraintOptions}
+                      placeholder="Constraint"
+                      autoWidth
+                      popoverAutoWidth
+                      on:change={() => updateRuleConstraint(rule)}
+                    />
+                  </div>
                   {#if !valueDisabled}
                     {#if isUrlValue}
                       <Multiselect
@@ -532,22 +536,26 @@
     flex-direction: column;
     gap: var(--spacing-m);
   }
+  .rule-row__constraint {
+    justify-self: start;
+    max-width: 100%;
+  }
+  .rule-row__constraint :global(.spectrum-Form-itemField) {
+    width: auto;
+  }
   .rule-row {
     display: grid;
     grid-template-columns:
-      minmax(170px, 210px) minmax(130px, 160px) minmax(180px, 1fr)
+      auto minmax(130px, 160px) minmax(180px, 1fr)
       minmax(220px, 1.3fr);
     gap: var(--spacing-m);
     align-items: center;
   }
   .rule-row--no-value {
-    grid-template-columns: minmax(170px, 210px) minmax(220px, 1.3fr);
+    grid-template-columns: auto minmax(220px, 1.3fr);
   }
   .rule-row--url-value {
-    grid-template-columns: minmax(170px, 210px) minmax(180px, 1fr) minmax(
-        220px,
-        1.3fr
-      );
+    grid-template-columns: auto minmax(180px, 1fr) minmax(220px, 1.3fr);
   }
   .icon-button {
     display: flex;
@@ -562,6 +570,14 @@
     .rule-row {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       align-items: start;
+    }
+    .rule-row__constraint {
+      justify-self: stretch;
+      width: 100%;
+    }
+    .rule-row__constraint :global(.spectrum-Form-itemField),
+    .rule-row__constraint :global(.spectrum-Picker.auto-width) {
+      width: 100%;
     }
   }
 
