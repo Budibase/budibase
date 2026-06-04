@@ -502,11 +502,19 @@ const emailHandler = (value: unknown) => {
 // Evaluates a contains constraint
 const containsHandler = (value: unknown, rule: UIFieldValidationRule) => {
   const expectedValue = parseType(rule.value, "string")
-  return (
-    typeof value === "string" &&
-    typeof expectedValue === "string" &&
-    value.includes(expectedValue)
-  )
+  if (typeof expectedValue !== "string") {
+    return false
+  }
+  if (value == null) {
+    return false
+  }
+  if (typeof value === "string") {
+    return value.includes(expectedValue)
+  }
+  if (Array.isArray(value)) {
+    return value.includes(expectedValue)
+  }
+  return false
 }
 
 // Evaluates a not contains constraint

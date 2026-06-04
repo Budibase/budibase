@@ -5,6 +5,8 @@ import { createValidatorFromConstraints } from "./validation"
 
 const URL_ERROR = "Invalid URL"
 const EMAIL_ERROR = "Invalid email address"
+const CONTAINS_ERROR = 'Must contain "admin"'
+const NOT_CONTAINS_ERROR = 'Must not contain "guest"'
 
 describe("form validation", () => {
   const createUrlValidator = (rule?: Partial<UIFieldValidationRule>) => {
@@ -131,5 +133,106 @@ describe("form validation", () => {
         expect(validator(input)).toBeNull()
       }
     )
+  })
+
+  describe("contains validation", () => {
+    const createContainsValidator = (
+      type: FieldType,
+      constraint: "contains" | "notContains" = "contains"
+    ) => {
+      const error =
+        constraint === "contains" ? CONTAINS_ERROR : NOT_CONTAINS_ERROR
+      const rules: UIFieldValidationRule[] = [
+        {
+          type,
+          constraint,
+          value: constraint === "contains" ? "admin" : "guest",
+          error,
+        },
+      ]
+
+      return createValidatorFromConstraints(null, rules, "field", undefined)
+    }
+
+    describe("string fields", () => {
+      let validator: ReturnType<typeof createContainsValidator>
+
+      beforeEach(() => {
+        validator = createContainsValidator(FieldType.STRING)
+      })
+
+      it.each([
+        ["admin user", null],
+        ["hello world", CONTAINS_ERROR],
+        ["foo", CONTAINS_ERROR],
+      ] as const)("value %j", (input, expected) => {
+        expect(validator(input)).toBe(expected)
+      })
+
+      it.each(["", null] as const)("empty value %s fails contains", input => {
+        expect(validator(input)).toBe(CONTAINS_ERROR)
+      })
+    })
+
+    describe("array fields", () => {
+      let validator: ReturnType<typeof createContainsValidator>
+
+      beforeEach(() => {
+        validator = createContainsValidator(FieldType.ARRAY)
+      })
+
+      it.each([
+        [["admin", "user"], null],
+        [["user"], CONTAINS_ERROR],
+      ] as const)("value %j", (input, expected) => {
+        expect(validator(input)).toBe(expected)
+      })
+
+      it.each([null, []] as const)("empty value %j fails contains", input => {
+        expect(validator(input)).toBe(CONTAINS_ERROR)
+      })
+    })
+
+    describe("link fields", () => {
+      let validator: ReturnType<typeof createContainsValidator>
+
+      beforeEach(() => {
+        validator = createContainsValidator(FieldType.LINK)
+      })
+
+      it.each([
+        [["admin", "user"], null],
+        [["user"], CONTAINS_ERROR],
+      ] as const)("value %j", (input, expected) => {
+        expect(validator(input)).toBe(expected)
+      })
+    })
+  })
+
+  describe("notContains validation", () => {
+    const createNotContainsValidator = (type: FieldType) => {
+      const rules: UIFieldValidationRule[] = [
+        {
+          type,
+          constraint: "notContains",
+          value: "guest",
+          error: NOT_CONTAINS_ERROR,
+        },
+      ]
+
+      return createValidatorFromConstraints(null, rules, "field", undefined)
+    }
+
+    it.each([
+      [FieldType.STRING, "hello", null],
+      [FieldType.STRING, "guest user", NOT_CONTAINS_ERROR],
+      [FieldType.ARRAY, ["admin", "user"], null],
+      [FieldType.ARRAY, ["guest"], NOT_CONTAINS_ERROR],
+      [FieldType.LINK, ["admin"], null],
+      [FieldType.LINK, ["guest"], NOT_CONTAINS_ERROR],
+    ] as const)("type %s value %j", (type, input, expected) => {
+      const validator = createNotContainsValidator(type)
+      expect(validator(input)).toBe(expected)
+    })
   })
 })
