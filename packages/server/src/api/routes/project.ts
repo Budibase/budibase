@@ -13,6 +13,32 @@ const baseSchema = {
 builderRoutes
   .get("/api/projects", projectsEnabled, controller.fetch)
   .post(
+    "/api/projects/import",
+    projectsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        encryptPassword: Joi.string().optional().allow(""),
+      }),
+      {
+        allowUnknown: false,
+      }
+    ),
+    controller.importBundle
+  )
+  .post(
+    "/api/projects/:id/export",
+    projectsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        encryptPassword: Joi.string().optional().allow(""),
+      }),
+      {
+        allowUnknown: false,
+      }
+    ),
+    controller.exportBundle
+  )
+  .post(
     "/api/projects",
     projectsEnabled,
     middleware.joiValidator.body(Joi.object(baseSchema), {
