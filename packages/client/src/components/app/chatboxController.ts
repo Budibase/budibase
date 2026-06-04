@@ -19,6 +19,7 @@ export interface EnabledAgentListItem {
   isDefault?: boolean
   icon?: string
   iconColor?: string
+  allowKnowledgeSourceDownload?: boolean
 }
 
 export interface ChatAppAgentMetadata {
@@ -27,6 +28,7 @@ export interface ChatAppAgentMetadata {
   icon?: string
   iconColor?: string
   live?: boolean
+  allowKnowledgeSourceDownload?: boolean
 }
 
 interface ChatboxAPI {
@@ -319,6 +321,8 @@ export class ChatboxController {
             iconColor:
               resolvedAgent?.iconColor ||
               this.agentIconColors[index % this.agentIconColors.length],
+            allowKnowledgeSourceDownload:
+              resolvedAgent?.allowKnowledgeSourceDownload,
           }
         })
         .filter(agent => Boolean(agent.name))

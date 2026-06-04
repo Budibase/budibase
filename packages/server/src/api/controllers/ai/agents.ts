@@ -320,6 +320,7 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
+    allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
@@ -377,6 +378,9 @@ export async function updateAgent(
     live: body.live,
     publishedAt: undefined,
     enabledTools: body.enabledTools,
+    allowKnowledgeSourceDownload:
+      body.allowKnowledgeSourceDownload ??
+      existing.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
