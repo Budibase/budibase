@@ -1,7 +1,7 @@
 <script lang="ts">
   import Popover from "../Popover/Popover.svelte"
   import Layout from "../Layout/Layout.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import "@spectrum-css/popover/dist/index-vars.css"
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
@@ -22,6 +22,8 @@
 
   let dropdown: Popover | undefined
   let preview: HTMLElement | undefined
+  let displayColor: string | undefined
+  let refreshColor = 0
 
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
@@ -182,39 +184,80 @@
     return "var(--spectrum-global-color-static-gray-900)"
   }
 
+  const resolveColorInDocument = (
+    val: string,
+    doc: Document
+  ): string | undefined => {
+    const match = val.match(/var\((--[^,)]+)(?:,[^)]+)?\)/)
+    if (!match) {
+      return undefined
+    }
+
+    const varName = match[1]
+    const rootValue = doc.defaultView
+      ?.getComputedStyle(doc.documentElement)
+      .getPropertyValue(varName)
+      .trim()
+    if (rootValue) {
+      return rootValue
+    }
+
+    const sentinel = "rgb(1, 2, 3)"
+    const probe = doc.createElement("div")
+    probe.style.color = `var(${varName}, ${sentinel})`
+    probe.style.display = "none"
+    doc.body.appendChild(probe)
+    const resolved = doc.defaultView?.getComputedStyle(probe).color
+    probe.remove()
+
+    return resolved && resolved !== sentinel ? resolved : undefined
+  }
+
   const resolveColor = (val: string | undefined): string | undefined => {
     if (!val) {
       return val
     }
-    const match = val.match(/var\((--[^)]+)\)/)
-    if (match) {
-      const varName = match[1]
-      try {
-        // Try resolving from the current document first
-        const hostStyle = window.getComputedStyle(document.documentElement)
-        let resolved = hostStyle.getPropertyValue(varName).trim()
-        if (resolved) {
-          return resolved
-        }
-        // If not found in host, try resolving from the preview iframe
-        const iframe = document.querySelector("iframe")
-        if (iframe && iframe.contentWindow) {
-          const iframeStyle = iframe.contentWindow.getComputedStyle(
-            iframe.contentWindow.document.documentElement
-          )
-          resolved = iframeStyle.getPropertyValue(varName).trim()
-          if (resolved) {
-            return resolved
-          }
-        }
-      } catch (e) {
-        // Fallback to original value on error
-      }
+
+    if (!val.includes("var(")) {
+      return val
     }
+
+    try {
+      const resolved = resolveColorInDocument(val, document)
+      if (resolved) {
+        return resolved
+      }
+
+      for (const iframe of Array.from(document.querySelectorAll("iframe"))) {
+        const iframeDocument = iframe.contentWindow?.document
+        if (!iframeDocument?.body) {
+          continue
+        }
+
+        const iframeResolved = resolveColorInDocument(val, iframeDocument)
+        if (iframeResolved) {
+          return iframeResolved
+        }
+      }
+    } catch (e) {
+      // Fall back to the original value if iframe access or CSS parsing fails.
+    }
+
     return val
   }
 
-  $: displayColor = resolveColor(value)
+  const refreshDisplayColor = () => {
+    refreshColor += 1
+  }
+
+  onMount(() => {
+    requestAnimationFrame(refreshDisplayColor)
+  })
+
+  $: {
+    refreshColor
+    displayColor = resolveColor(value)
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -223,6 +266,7 @@
   bind:this={preview}
   class="preview size--{size || 'M'}"
   on:click={() => {
+    refreshDisplayColor()
     dropdown?.toggle()
   }}
 >
