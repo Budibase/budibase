@@ -13,6 +13,13 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
+import {
+  resolveProjectId,
+  resolveUpdatedProjectId,
+} from "../../utilities/projects"
+
+const hasOwn = (obj: object, key: string) =>
+  Object.prototype.hasOwnProperty.call(obj, key)
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -29,6 +36,7 @@ function toWorkspaceAppResponse(
     createdAt: workspaceApp.createdAt as string,
     updatedAt: workspaceApp.updatedAt!,
     disabled: workspaceApp.disabled,
+    projectId: workspaceApp.projectId,
   }
 }
 
@@ -71,10 +79,12 @@ export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
+  const projectId = await resolveProjectId(body.projectId)
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
     disabled: body.disabled,
+    projectId,
     navigation: defaultAppNavigator(body.name),
     customTheme: {
       fontFamily: DefaultNewAppFontFamily,
@@ -98,7 +108,27 @@ export async function edit(
     ctx.throw(400, "Path and body ids do not match")
   }
 
-  const workspaceApp = await sdk.workspaceApps.update(body)
+  const existingWorkspaceApp = await sdk.workspaceApps.get(body._id)
+  if (!existingWorkspaceApp) {
+    ctx.throw(404)
+  }
+
+  const projectId = await resolveUpdatedProjectId(
+    body.projectId,
+    existingWorkspaceApp.projectId
+  )
+
+  const workspaceApp = await sdk.workspaceApps.update({
+    _id: body._id,
+    _rev: body._rev,
+    name: body.name,
+    url: body.url,
+    navigation: body.navigation,
+    disabled: body.disabled,
+    projectId,
+    ...(hasOwn(body, "theme") ? { theme: body.theme } : {}),
+    ...(hasOwn(body, "customTheme") ? { customTheme: body.customTheme } : {}),
+  })
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }

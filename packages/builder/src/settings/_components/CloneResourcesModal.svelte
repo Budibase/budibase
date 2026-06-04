@@ -33,6 +33,8 @@
     toWorkspaceId = undefined
     copyRows = false
     selectedResources = {
+      [ResourceType.PROJECT]: [],
+      [ResourceType.AGENT]: [],
       [ResourceType.DATASOURCE]: [],
       [ResourceType.TABLE]: [],
       [ResourceType.ROW_ACTION]: [],
@@ -55,6 +57,8 @@
   let copyRows = false
 
   let selectedResources: Record<ResourceType, DataType[]> = {
+    [ResourceType.PROJECT]: [],
+    [ResourceType.AGENT]: [],
     [ResourceType.DATASOURCE]: [],
     [ResourceType.TABLE]: [],
     [ResourceType.ROW_ACTION]: [],
@@ -129,13 +133,13 @@
 
   $: $tables.list.forEach(t => rowActions.refreshRowActions(t._id!))
 
-  let resourceTypesToDisplay: {
+  let resourceTypesToDisplay: Partial<{
     [K in ResourceType]: {
       displayName: string
       type: K
       data: DataType[]
     }
-  }
+  }>
   $: resourceTypesToDisplay = {
     [ResourceType.TABLE]: {
       displayName: "Tables",
