@@ -30,11 +30,11 @@
   {#if loading}
     <div class="loading-state">
       <ProgressCircle size="S" />
-      <Body size="S">Loading knowledge...</Body>
+      <Body size="XS">Loading knowledge...</Body>
     </div>
   {:else if rows.length === 0}
     <div class="empty-state">
-      <Body size="S">No files uploaded yet</Body>
+      <Body size="XS">No files uploaded yet</Body>
     </div>
   {:else}
     <Table

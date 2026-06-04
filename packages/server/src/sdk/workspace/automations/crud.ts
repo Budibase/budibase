@@ -27,6 +27,8 @@ export interface PersistedAutomation extends Automation {
   _rev: string
 }
 
+const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
 function getEmailTriggerAuthType(inputs?: EmailTriggerInputs) {
   return inputs?.authType || EmailTriggerAuthType.PASSWORD
 }
@@ -117,6 +119,7 @@ export async function find(ids: string[], opts?: { allowMissing?: boolean }) {
 
 export async function create(automation: Automation) {
   automation = trimUnexpectedObjectFields(automation)
+  validateStickyNoteLimit(automation)
   const db = getDb()
 
   // Respect existing IDs if recreating a deleted automation
@@ -143,6 +146,7 @@ export async function create(automation: Automation) {
 
 export async function update(automation: Automation) {
   automation = trimUnexpectedObjectFields(automation)
+  validateStickyNoteLimit(automation)
   if (!automation._id || !automation._rev) {
     throw new HTTPError("_id or _rev fields missing", 400)
   }
@@ -306,6 +310,19 @@ function guardInvalidUpdatesAndThrow(
         )
       }
     })
+  }
+}
+
+function validateStickyNoteLimit(automation: Automation) {
+  const stickyNotes = automation.uiTree?.stickyNotes
+  if (
+    Array.isArray(stickyNotes) &&
+    stickyNotes.length > MAX_STICKY_NOTES_PER_AUTOMATION
+  ) {
+    throw new HTTPError(
+      `Automations cannot have more than ${MAX_STICKY_NOTES_PER_AUTOMATION} sticky notes`,
+      400
+    )
   }
 }
 

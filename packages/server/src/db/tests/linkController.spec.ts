@@ -17,7 +17,6 @@ import {
   basicTable,
 } from "../../tests/utilities/structures"
 import LinkController from "../linkedRows/LinkController"
-import { isRelationshipColumn } from "../utils"
 
 const baseColumn = {
   type: FieldType.LINK,
@@ -208,13 +207,8 @@ describe("test the link controller", () => {
   it("should throw an error when linked field name has illegal characters", async () => {
     const controller = await createLinkController(table1)
     const copyTable = cloneDeep(table1)
-
-    if (!isRelationshipColumn(copyTable.schema.link)) {
-      throw new Error(
-        "Expected link schema to be a relationship field metadata"
-      )
-    }
-    copyTable.schema.link.fieldName = "Table 2!@£$%^&*()>"
+    const linkSchema = copyTable.schema.link as RelationshipFieldMetadata
+    linkSchema.fieldName = "Table 2!@£$%^&*()>"
 
     let error: any
     try {

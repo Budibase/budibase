@@ -78,6 +78,7 @@
             name: value.name,
             used: isAICredits ? Math.floor((used ?? 0) / 1000) : (used ?? 0),
             total: isAICredits ? Math.floor(value.value / 1000) : value.value,
+            quotaKey: key,
           }
           if (key === "actions" && $licensing.actionsBreakdown) {
             entry.breakdown = $licensing.actionsBreakdown
@@ -241,6 +242,12 @@
                   {usage}
                   warnWhenFull={WARN_USAGE.includes(usage.name)}
                   breakdown={usage.breakdown ?? null}
+                  showPurchaseCreditsLink={usage.quotaKey ===
+                    "budibaseAICredits" &&
+                    $admin.cloud &&
+                    accountPortalAccess &&
+                    !usesInvoicing &&
+                    !!license?.billing?.subscription}
                 />
               {/each}
             </Layout>

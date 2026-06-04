@@ -7,6 +7,7 @@ import { default as backups } from "./workspace/backups"
 import * as common from "./workspace/common"
 import { default as datasources } from "./workspace/datasources"
 import { default as deployment } from "./workspace/deployment"
+import * as embedSSO from "./workspace/embedSSO"
 import * as workspace from "./workspace/favourites"
 import { default as links } from "./workspace/links"
 import * as navigation from "./workspace/navigation"
@@ -46,6 +47,7 @@ const sdk = {
   navigation,
   resources,
   deployment,
+  embedSSO,
   dev,
   workspace,
 }

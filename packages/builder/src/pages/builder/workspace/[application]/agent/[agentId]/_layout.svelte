@@ -12,10 +12,10 @@
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
-  import { FeatureFlag } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
+  import { FeatureFlag } from "@budibase/types"
 
   const { goto, isActive, params } = routify
 
@@ -54,6 +54,9 @@
   let currentAgent = $derived($selectedAgent)
   let hasPublishedUnpublishedChanges = $derived.by(() => {
     if (!currentAgent?._id) {
+      return false
+    }
+    if (!currentAgent.live) {
       return false
     }
     const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
@@ -107,8 +110,14 @@
       )
     } catch (error) {
       console.error(error)
+      const errorMessage = nextLive
+        ? "Error setting agent live"
+        : "Error stopping agent"
+
       notifications.error(
-        nextLive ? "Error setting agent live" : "Error stopping agent"
+        [errorMessage, (error as { message?: string }).message]
+          .filter(Boolean)
+          .join(": ")
       )
     } finally {
       togglingLive = false
@@ -134,13 +143,6 @@
         on:click={() => $goto("./config")}
       >
         Configuration
-      </ActionButton>
-      <ActionButton
-        quiet
-        selected={activeTab === "Knowledge"}
-        on:click={() => $goto("./knowledge")}
-      >
-        Knowledge
       </ActionButton>
       <ActionButton
         quiet
@@ -219,6 +221,8 @@
         <AgentChatPanel
           agentId={currentAgent?._id}
           workspaceId={$params.application || ""}
+          allowKnowledgeSourceDownload={currentAgent?.allowKnowledgeSourceDownload !==
+            false}
         />
       </div>
     {/if}
