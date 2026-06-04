@@ -258,7 +258,7 @@ describe("/projects", () => {
       const { project } = await config.api.project.create({
         name: "Operations",
       })
-      const { _rev: _rev, ...projectWithoutRev } = project
+      const { _rev, ...projectWithoutRev } = project
       const updateWithoutRev = {
         ...projectWithoutRev,
         name: "Updated operations",
