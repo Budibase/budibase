@@ -10,6 +10,7 @@ export function getComponentStructure({ chatbox } = { chatbox: false }) {
         "multistepformblock",
         "chartblock",
         "rowexplorer",
+        "galleryblock",
       ],
     },
     {

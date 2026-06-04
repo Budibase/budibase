@@ -7778,6 +7778,144 @@
       }
     ]
   },
+  "galleryblock": {
+    "block": true,
+    "name": "Gallery",
+    "icon": "images",
+    "styles": [
+      "size"
+    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource",
+        "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter",
+        "nested": true
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "sortColumn",
+        "placeholder": "None"
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "sortOrder",
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 20
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate"
+      },
+      {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No images found"
+      },
+      {
+        "section": true,
+        "name": "Gallery",
+        "settings": [
+          {
+            "type": "boolean",
+            "label": "Array of URLs",
+            "key": "arrayOfUrls",
+            "defaultValue": false
+          },
+          {
+            "type": "field",
+            "key": "imageColumn",
+            "label": "Image column",
+            "nested": true,
+            "resetOn": "dataSource",
+            "dependsOn": {
+              "setting": "arrayOfUrls",
+              "value": true,
+              "invert": true
+            }
+          },
+          {
+            "type": "field",
+            "key": "captionColumn",
+            "label": "Caption column",
+            "nested": true,
+            "resetOn": "dataSource",
+            "dependsOn": {
+              "setting": "arrayOfUrls",
+              "value": true,
+              "invert": true
+            }
+          },
+          {
+            "type": "number",
+            "label": "Tile width",
+            "key": "tileWidth"
+          },
+          {
+            "type": "number",
+            "label": "Tile height",
+            "key": "tileHeight"
+          }
+        ]
+      }
+    ]
+  },
   "markdownviewer": {
     "deprecated": true,
     "name": "Markdown Viewer",
