@@ -3561,6 +3561,7 @@
             "id": "default-url-validation",
             "type": "string",
             "constraint": "url",
+            "value": ["http", "https"],
             "error": "Must be a valid URL"
           }
         ]
