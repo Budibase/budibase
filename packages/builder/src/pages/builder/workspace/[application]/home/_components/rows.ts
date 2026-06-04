@@ -184,6 +184,7 @@ export const buildHomeRows = ({
       id,
       name: app.name,
       type: "app",
+      projectId: app.projectId,
       status: app.publishStatus.state,
       updatedAt: app.updatedAt,
       createdAt: app.createdAt ? String(app.createdAt) : undefined,
@@ -201,6 +202,7 @@ export const buildHomeRows = ({
       id,
       name: automation.name,
       type: "automation",
+      projectId: automation.projectId,
       status: automation.publishStatus.state,
       updatedAt: automation.updatedAt,
       createdAt: automation.createdAt
@@ -220,6 +222,7 @@ export const buildHomeRows = ({
       id,
       name: agent.name,
       type: "agent",
+      projectId: agent.projectId,
       live: agent.live === true,
       updatedAt: agent.updatedAt,
       createdAt: agent.createdAt ? String(agent.createdAt) : undefined,

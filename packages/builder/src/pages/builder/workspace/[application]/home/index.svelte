@@ -6,9 +6,13 @@
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import AssignProjectModal from "./_components/AssignProjectModal.svelte"
+  import CreateProjectModal from "./_components/CreateProjectModal.svelte"
+  import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
   import HomeMetrics from "./_components/HomeMetrics.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
+  import ImportProjectModal from "./_components/ImportProjectModal.svelte"
   import {
     appStore,
     automationStore,
@@ -17,8 +21,16 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, appsStore, auth, licensing } from "@/stores/portal"
+  import {
+    agentsStore,
+    appsStore,
+    auth,
+    featureFlags,
+    licensing,
+    projectsStore,
+  } from "@/stores/portal"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     ActionMenu,
@@ -30,11 +42,14 @@
     Modal,
     type ModalAPI,
     Notification,
+    keepOpen,
     notifications,
     PopoverAlignment,
+    Select,
     Tag,
   } from "@budibase/bbui"
   import {
+    FeatureFlag,
     type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
@@ -42,6 +57,7 @@
     type HomeSortColumn,
     type HomeSortOrder,
     type HomeType,
+    type ProjectResponse,
     PublishResourceState,
     type Agent,
     type Table,
@@ -85,8 +101,18 @@
   let selectedAgent: Agent | undefined
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
+  let selectedRow: HomeRow | null = null
+
+  let createProjectModal: ModalAPI
+  let assignProjectModal: ModalAPI
+  let exportProjectModal: ModalAPI
+  let importProjectModal: ModalAPI
+  let createProjectModalKey = 0
+  let exportProjectModalKey = 0
+  let importProjectModalKey = 0
 
   let typeFilter: HomeType = "all"
+  let selectedProjectId = ""
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
 
@@ -99,6 +125,8 @@
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
 
   let getFavourite: (
     _resourceType: WorkspaceResource,
@@ -160,6 +188,7 @@
       return {
         q: "",
         type: null as HomeType | null,
+        project: "",
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
       }
@@ -167,9 +196,10 @@
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
     const type = normaliseType(params.get("type"))
+    const project = params.get("project") ?? ""
     const sort = normaliseSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
-    return { q, type, sort, order }
+    return { q, type, project, sort, order }
   }
 
   const writeUrlState = () => {
@@ -191,6 +221,12 @@
       params.delete("type")
     } else {
       params.set("type", typeFilter)
+    }
+
+    if (!projectsEnabled || !selectedProjectId) {
+      params.delete("project")
+    } else {
+      params.set("project", selectedProjectId)
     }
 
     const defaultSortColumn: HomeSortColumn = "updated"
@@ -218,6 +254,19 @@
     typeFilter = normalised
   }
 
+  const openPrimaryCreate = () => {
+    switch (typeFilter) {
+      case "automation":
+        return createAutomation()
+      case "agent":
+        return createAgent()
+      case "app":
+      case "all":
+      default:
+        return createApp()
+    }
+  }
+
   const setSort = (column: HomeSortColumn) => {
     if (sortColumn === column) {
       sortOrder = sortOrder === "asc" ? "desc" : "asc"
@@ -238,6 +287,21 @@
 
   const createAgent = () => {
     agentModal?.show()
+  }
+
+  const createProject = () => {
+    createProjectModalKey += 1
+    createProjectModal?.show()
+  }
+
+  const exportProject = () => {
+    exportProjectModalKey += 1
+    exportProjectModal?.show()
+  }
+
+  const importProject = () => {
+    importProjectModalKey += 1
+    importProjectModal?.show()
   }
 
   const goToCreate = (target: "data/new" | "apis/new") => {
@@ -300,10 +364,11 @@
       notifications.success(
         `App '${selectedWorkspaceApp.name}' deleted successfully`
       )
-    } catch (e: any) {
+    } catch (error) {
       let message = "Error deleting app"
-      if (e.message) {
-        message += ` - ${e.message}`
+      const errorMessage = getErrorMessage(error)
+      if (errorMessage) {
+        message += ` - ${errorMessage}`
       }
       notifications.error(message)
     }
@@ -350,6 +415,109 @@
     }
   }
 
+  const assignProject = async (projectId: string | undefined) => {
+    if (!projectsEnabled || !selectedRow) {
+      return keepOpen
+    }
+
+    try {
+      if (selectedRow.type === "app") {
+        await workspaceAppStore.edit({
+          ...selectedRow.resource,
+          projectId,
+        })
+      } else if (selectedRow.type === "automation") {
+        await automationStore.actions.save({
+          ...selectedRow.resource,
+          projectId,
+        })
+      } else if (selectedRow.type === "agent") {
+        await agentsStore.updateAgent({
+          ...selectedRow.resource,
+          projectId,
+        })
+      }
+
+      notifications.success("Project updated successfully")
+      assignProjectModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to update project")
+      return keepOpen
+    }
+  }
+
+  const handleCreateProject = async (
+    project: Pick<ProjectResponse, "name" | "description" | "color">
+  ) => {
+    try {
+      await projectsStore.create(project)
+      notifications.success("Project created successfully")
+      createProjectModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to create project")
+      return keepOpen
+    }
+  }
+
+  const handleExportProject = async ({
+    id,
+    encryptPassword,
+  }: {
+    id: string
+    encryptPassword?: string
+  }) => {
+    try {
+      await projectsStore.exportProject(id, { encryptPassword })
+      exportProjectModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error(getErrorMessage(error) || "Unable to export project")
+      return keepOpen
+    }
+  }
+
+  const notifyImportFollowUps = (
+    response: Awaited<ReturnType<typeof projectsStore.importProject>>
+  ) => {
+    if (response.requirements.length) {
+      const names = response.requirements
+        .map(requirement => requirement.name)
+        .join(", ")
+      notifications.warning(`Some imported resources need secrets: ${names}`)
+    }
+
+    if (response.unsupportedContent.length) {
+      const summary = response.unsupportedContent
+        .map(item => `${item.count} ${item.type}`)
+        .join(", ")
+      notifications.warning(`Some Project content was not imported: ${summary}`)
+    }
+  }
+
+  const handleImportProject = async ({
+    file,
+    encryptPassword,
+  }: {
+    file: File
+    encryptPassword?: string
+  }) => {
+    try {
+      const response = await projectsStore.importProject(file, {
+        encryptPassword,
+      })
+      await Promise.all([appStore.refresh(), loadMetrics()])
+      importProjectModal?.hide()
+      notifications.success(`Imported project '${response.project.name}'`)
+      notifyImportFollowUps(response)
+    } catch (error) {
+      console.error(error)
+      notifications.error(getErrorMessage(error) || "Unable to import project")
+      return keepOpen
+    }
+  }
+
   const getContextMenuItemsForRow = (row: HomeRow) => {
     if (row.type === "app") {
       const workspaceApp = row.resource
@@ -376,6 +544,12 @@
             selectedWorkspaceApp = workspaceApp
             workspaceAppModal.show()
           },
+        },
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
         {
           icon: "globe-simple",
@@ -426,6 +600,12 @@
       return [
         edit,
         {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
+        },
+        {
           icon: "copy",
           name: "Duplicate",
           visible: true,
@@ -453,6 +633,12 @@
           name: "Edit",
           visible: true,
           callback: () => updateAgentModal.show(),
+        },
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
         {
           icon: "copy",
@@ -485,6 +671,7 @@
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
+    selectedRow = row
 
     highlightedRowId = row._id
 
@@ -537,9 +724,55 @@
     getFavourite,
   })
 
-  $: allRows = sortHomeRows(baseRows, { sortColumn, sortOrder })
+  $: projectLookup = (
+    projectsEnabled
+      ? Object.fromEntries(
+          $projectsStore.map(project => [project._id, project])
+        )
+      : {}
+  ) as Record<string, ProjectResponse>
+  $: selectedProjectName = selectedProjectId
+    ? projectLookup[selectedProjectId]?.name || ""
+    : ""
+  $: if (
+    projectsEnabled &&
+    selectedProjectId &&
+    projectsStore.hasFetched() &&
+    !projectLookup[selectedProjectId]
+  ) {
+    selectedProjectId = ""
+  }
 
-  $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
+  $: projectOptions = [
+    { label: "All", value: "", color: undefined },
+    ...($projectsStore || []).map(project => ({
+      label: project.name,
+      value: project._id,
+      color: project.color,
+    })),
+  ]
+
+  $: rowsWithProjects = baseRows.map(row => {
+    const project = row.projectId ? projectLookup[row.projectId] : undefined
+    return {
+      ...row,
+      projectName: project?.name,
+      projectColor: project?.color,
+    }
+  })
+
+  $: allRows = sortHomeRows(rowsWithProjects, { sortColumn, sortOrder })
+
+  $: filteredRows = filterHomeRows({
+    rows: allRows,
+    typeFilter,
+    searchTerm,
+  }).filter(
+    row =>
+      !projectsEnabled ||
+      !selectedProjectId ||
+      row.projectId === selectedProjectId
+  )
   $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
   $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
     .filter(([, logIds]) => logIds.length > 0)
@@ -590,12 +823,15 @@
       return
     }
 
-    const { q, type, sort, order } = readUrlState()
+    const { q, type, project, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
     }
     if (type) {
       typeFilter = type
+    }
+    if (project) {
+      selectedProjectId = project
     }
     if (sort) {
       sortColumn = sort
@@ -607,7 +843,11 @@
     hasMounted = true
     writeUrlState()
 
-    await Promise.all([agentsStore.fetchAgents(), loadMetrics()])
+    await Promise.all([
+      agentsStore.fetchAgents(),
+      projectsEnabled ? projectsStore.fetch() : Promise.resolve(),
+      loadMetrics(),
+    ])
   })
 </script>
 
@@ -658,6 +898,18 @@
         on:typeChange={({ detail }) => setTypeFilter(detail)}
       />
       <div class="controls-right">
+        {#if projectsEnabled && $projectsStore.length}
+          <div class="project-filter">
+            <Select
+              placeholder="Project"
+              bind:value={selectedProjectId}
+              options={projectOptions}
+              getOptionLabel={option => option.label}
+              getOptionValue={option => option.value}
+              getOptionColour={option => option.color}
+            />
+          </div>
+        {/if}
         <div class="search-wrapper">
           <Icon name="magnifying-glass" size="S" />
           <input
@@ -705,6 +957,21 @@
             App
           </MenuItem>
 
+          {#if projectsEnabled}
+            <MenuSeparator />
+            <MenuItem icon="stack" on:click={createProject}>Project</MenuItem>
+            <MenuItem icon="upload-simple" on:click={importProject}>
+              Import project
+            </MenuItem>
+            <MenuItem
+              icon="download-simple"
+              on:click={exportProject}
+              disabled={!$projectsStore.length}
+            >
+              Export project
+            </MenuItem>
+          {/if}
+
           <MenuSeparator />
           <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
             Connection
@@ -722,13 +989,19 @@
       allRowsCount={allRows.length}
       {typeFilter}
       {searchTerm}
+      {projectsEnabled}
+      {selectedProjectName}
       {sortColumn}
       {sortOrder}
       {highlightedRowId}
+      on:create={() => openPrimaryCreate()}
       on:openRow={({ detail }) => openRow(detail)}
       on:openContextMenu={({ detail }) => openHomeContextMenu(detail)}
       on:clearSearch={() => (searchTerm = "")}
-      on:resetFilters={() => (typeFilter = "all")}
+      on:resetFilters={() => {
+        typeFilter = "all"
+        selectedProjectId = ""
+      }}
       on:sortChange={({ detail }) => setSort(detail)}
       on:createAgent={createAgent}
       on:createAutomation={createAutomation}
@@ -736,6 +1009,38 @@
     />
   </div>
 </div>
+
+{#if projectsEnabled}
+  <Modal bind:this={createProjectModal}>
+    {#key createProjectModalKey}
+      <CreateProjectModal onConfirm={handleCreateProject} />
+    {/key}
+  </Modal>
+
+  <Modal bind:this={assignProjectModal}>
+    <AssignProjectModal
+      row={selectedRow}
+      projects={$projectsStore}
+      onConfirm={assignProject}
+    />
+  </Modal>
+
+  <Modal bind:this={exportProjectModal}>
+    {#key exportProjectModalKey}
+      <ExportProjectModal
+        projects={$projectsStore}
+        {selectedProjectId}
+        onConfirm={handleExportProject}
+      />
+    {/key}
+  </Modal>
+
+  <Modal bind:this={importProjectModal}>
+    {#key importProjectModalKey}
+      <ImportProjectModal onConfirm={handleImportProject} />
+    {/key}
+  </Modal>
+{/if}
 
 <WorkspaceAppModal
   bind:this={workspaceAppModal}
@@ -856,15 +1161,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-m);
+    gap: var(--spacing-m) var(--spacing-l);
+    flex-wrap: wrap;
     position: relative;
-    margin-bottom: -12px;
   }
 
   .controls-row .controls-right {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    margin-left: auto;
+    flex-shrink: 0;
+    justify-content: flex-end;
+  }
+
+  .controls-row .project-filter {
+    flex: 0 0 auto;
+    width: 140px;
   }
 
   .controls-row .search-wrapper {
@@ -872,11 +1185,13 @@
     align-items: center;
     gap: var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 6px;
-    padding: 3px 8px;
-    min-width: 200px;
+    border-radius: var(--border-radius-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    min-width: 140px;
     height: 32px;
     box-sizing: border-box;
+    flex: 1 1 160px;
+    max-width: 240px;
   }
 
   .controls-row .search-input {
@@ -885,7 +1200,7 @@
     outline: none;
     flex: 1;
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-900);
   }
 
@@ -893,25 +1208,49 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .controls-row .create-menu-control :global(button) {
-    border-radius: 100px;
-    padding: 7px 15px 8px;
-    height: 32px;
-    box-sizing: border-box;
-  }
-
   .create-popover-container {
     position: absolute;
   }
 
   .create-popover-container :global(.spectrum-Popover) {
-    min-width: 245px;
-    border-radius: 6px !important;
-    background: var(--background) !important;
-    border: 1px solid var(--spectrum-global-color-gray-200) !important;
-    padding: 4px !important;
-    margin-top: 4px;
-    margin-left: 2px;
+    min-width: 240px;
+    border-radius: var(--border-radius-s);
+    background: var(--background);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    padding: var(--spacing-xs);
+    margin-top: var(--spacing-xs);
+  }
+
+  @media (max-width: 1080px) {
+    .controls-row .controls-right {
+      width: 100%;
+      margin-left: 0;
+      flex-shrink: 1;
+      justify-content: flex-end;
+    }
+
+    .controls-row .search-wrapper {
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .controls-row .controls-right {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .controls-row .search-wrapper {
+      width: 100%;
+    }
+
+    .controls-row .create-menu-control {
+      width: 100%;
+    }
+
+    .controls-row .create-menu-control :global(button) {
+      width: 100%;
+    }
   }
 
   .create-popover-container :global(.spectrum-Menu) {
@@ -920,7 +1259,7 @@
   }
 
   .create-popover-container :global(.spectrum-Menu-item) {
-    border-radius: 4px;
+    border-radius: var(--border-radius-s);
     margin: 0;
   }
 
@@ -931,13 +1270,12 @@
   .create-popover-container
     :global(.spectrum-Menu-item)
     :global(.spectrum-Menu-itemLabel) {
-    font-size: 13px;
-    line-height: 17px;
+    font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-800);
   }
 
   .create-popover-container :global(.spectrum-Menu-divider) {
-    margin: 4px 0;
+    margin: var(--spacing-xs) 0;
     background: var(--spectrum-global-color-gray-200);
   }
 </style>

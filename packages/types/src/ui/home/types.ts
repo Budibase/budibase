@@ -14,6 +14,9 @@ interface HomeRowBase {
   id: string
   name: string
   type: HomeRowType
+  projectId?: string
+  projectName?: string
+  projectColor?: string
   updatedAt?: string
   createdAt?: string
   favourite: WorkspaceFavourite
