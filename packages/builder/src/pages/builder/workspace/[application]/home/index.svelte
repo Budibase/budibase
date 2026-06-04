@@ -509,12 +509,7 @@
       const response = await playbooksStore.importPlaybook(file, {
         encryptPassword,
       })
-      await Promise.all([
-        workspaceAppStore.refresh(),
-        automationStore.actions.fetch(),
-        agentsStore.fetchAgents(),
-        loadMetrics(),
-      ])
+      await Promise.all([appStore.refresh(), loadMetrics()])
       importPlaybookModal?.hide()
       notifications.success(`Imported playbook '${response.playbook.name}'`)
       notifyImportFollowUps(response)
