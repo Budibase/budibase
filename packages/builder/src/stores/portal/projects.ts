@@ -49,8 +49,13 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
 
   hasFetched = () => this.loaded
 
+  private invalidateFetch = () => {
+    this.fetchPromise = undefined
+  }
+
   create = async (project: CreateProjectRequest) => {
     const response = await API.projects.create(project)
+    this.invalidateFetch()
     this.update(state => [...state, response.project])
     return response.project
   }
@@ -80,6 +85,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
 
   updateProject = async (project: UpdateProjectRequest) => {
     const response = await API.projects.update(project)
+    this.invalidateFetch()
     this.update(state =>
       state.map(existing =>
         existing._id === response.project._id ? response.project : existing
@@ -90,6 +96,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
 
   deleteProject = async (id: string, rev: string) => {
     await API.projects.delete(id, rev)
+    this.invalidateFetch()
     this.update(state => state.filter(project => project._id !== id))
   }
 }

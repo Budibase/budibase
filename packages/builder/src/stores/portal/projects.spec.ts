@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   ResourceType,
+  type CreateProjectResponse,
   type FetchProjectsResponse,
   type ImportProjectResponse,
   type ProjectResponse,
+  type UpdateProjectResponse,
 } from "@budibase/types"
 import { API } from "@/api"
 import { ProjectsStore } from "./projects"
+import { get } from "svelte/store"
 
 vi.mock("@/api", () => {
   return {
@@ -30,6 +33,9 @@ vi.mock("@budibase/frontend-core", () => {
 })
 
 const fetchProjects = vi.mocked(API.projects.fetch)
+const createProject = vi.mocked(API.projects.create)
+const updateProject = vi.mocked(API.projects.update)
+const deleteProject = vi.mocked(API.projects.delete)
 const importBundle = vi.mocked(API.projects.importBundle)
 
 const defer = <T>() => {
@@ -48,6 +54,8 @@ const project = (id: string): ProjectResponse => ({
   name: id,
   createdAt: "2026-01-01T00:00:00.000Z",
 })
+
+const getProjects = (store: ProjectsStore) => get(store.store)
 
 describe("ProjectsStore", () => {
   beforeEach(() => {
@@ -99,5 +107,69 @@ describe("ProjectsStore", () => {
     expect(fetchProjects).toHaveBeenCalledTimes(1)
 
     warn.mockRestore()
+  })
+
+  it("does not let an in-flight fetch overwrite a created project", async () => {
+    const store = new ProjectsStore()
+    const fetch = defer<FetchProjectsResponse>()
+    const created = project("created_project")
+    const response: CreateProjectResponse = { project: created }
+
+    fetchProjects.mockReturnValue(fetch.promise)
+    createProject.mockResolvedValue(response)
+
+    const fetchPromise = store.fetch()
+    await store.create({ name: "Created project" })
+    fetch.resolve({ projects: [project("stale_project")] })
+
+    await expect(fetchPromise).resolves.toEqual([project("stale_project")])
+    expect(getProjects(store)).toEqual([created])
+  })
+
+  it("does not let an in-flight fetch overwrite an updated project", async () => {
+    const store = new ProjectsStore()
+    const fetch = defer<FetchProjectsResponse>()
+    const original = project("project_1")
+    const updated: ProjectResponse = {
+      ...original,
+      _rev: "2-rev",
+      name: "Updated project",
+    }
+    const response: UpdateProjectResponse = { project: updated }
+
+    fetchProjects.mockResolvedValueOnce({ projects: [original] })
+    await store.fetch()
+    fetchProjects.mockReturnValue(fetch.promise)
+    updateProject.mockResolvedValue(response)
+
+    const fetchPromise = store.fetch()
+    await store.updateProject({
+      _id: original._id,
+      _rev: original._rev,
+      name: updated.name,
+    })
+    fetch.resolve({ projects: [original] })
+
+    await expect(fetchPromise).resolves.toEqual([original])
+    expect(getProjects(store)).toEqual([updated])
+  })
+
+  it("does not let an in-flight fetch re-add a deleted project", async () => {
+    const store = new ProjectsStore()
+    const fetch = defer<FetchProjectsResponse>()
+    const deleted = project("project_1")
+    const retained = project("project_2")
+
+    fetchProjects.mockResolvedValueOnce({ projects: [deleted, retained] })
+    await store.fetch()
+    fetchProjects.mockReturnValue(fetch.promise)
+    deleteProject.mockResolvedValue(undefined)
+
+    const fetchPromise = store.fetch()
+    await store.deleteProject(deleted._id, deleted._rev)
+    fetch.resolve({ projects: [deleted, retained] })
+
+    await expect(fetchPromise).resolves.toEqual([deleted, retained])
+    expect(getProjects(store)).toEqual([retained])
   })
 })
