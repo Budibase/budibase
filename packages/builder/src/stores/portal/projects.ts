@@ -70,7 +70,11 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     body?: ImportProjectRequest
   ): Promise<ImportProjectResponse> => {
     const response = await API.projects.importBundle(file, body)
-    await this.fetch()
+    try {
+      await this.fetch()
+    } catch (err) {
+      console.warn("Failed to refresh projects after import", err)
+    }
     return response
   }
 

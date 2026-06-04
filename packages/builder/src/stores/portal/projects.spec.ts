@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import type { FetchProjectsResponse, ProjectResponse } from "@budibase/types"
+import {
+  ResourceType,
+  type FetchProjectsResponse,
+  type ImportProjectResponse,
+  type ProjectResponse,
+} from "@budibase/types"
 import { API } from "@/api"
 import { ProjectsStore } from "./projects"
 
@@ -25,6 +30,7 @@ vi.mock("@budibase/frontend-core", () => {
 })
 
 const fetchProjects = vi.mocked(API.projects.fetch)
+const importBundle = vi.mocked(API.projects.importBundle)
 
 const defer = <T>() => {
   let resolve!: (value: T) => void
@@ -71,5 +77,27 @@ describe("ProjectsStore", () => {
 
     await expect(newerFetch).resolves.toEqual([project("project_1")])
     await expect(ensuredFetch).resolves.toEqual([project("project_1")])
+  })
+
+  it("returns the import response when the post-import refresh fails", async () => {
+    const store = new ProjectsStore()
+    const response: ImportProjectResponse = {
+      project: project("project_1"),
+      resources: {
+        [ResourceType.PROJECT]: ["project_1"],
+      },
+      unsupportedContent: [],
+      requirements: [],
+    }
+    const file = new File(["project"], "project.tar.gz")
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+    importBundle.mockResolvedValue(response)
+    fetchProjects.mockRejectedValue(new Error("refresh failed"))
+
+    await expect(store.importProject(file)).resolves.toEqual(response)
+    expect(fetchProjects).toHaveBeenCalledTimes(1)
+
+    warn.mockRestore()
   })
 })
