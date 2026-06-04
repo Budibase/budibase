@@ -16,6 +16,8 @@
   import { AppStatus } from "@/constants"
   import { appsStore } from "@/stores/portal/apps"
   import { appStore, workspaceAppStore } from "@/stores/builder"
+  import { licensing } from "@/stores/portal/licensing"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { onMount } from "svelte"
 
   let selectedApp
@@ -65,6 +67,9 @@
   $: canReuseStoredKey = ssoKeySet && ssoAlgorithm === originalAlgorithm
 
   const onSSOToggle = () => {
+    if (!$licensing.iframeEmbedsEnabled) {
+      return
+    }
     // persist immediately when disabling; enabling reveals the fields and waits
     // for an explicit save once a key has been provided
     if (!ssoEnabled) {
@@ -73,6 +78,9 @@
   }
 
   const saveSSO = async () => {
+    if (!$licensing.iframeEmbedsEnabled) {
+      return
+    }
     if (ssoEnabled && !ssoKey && !canReuseStoredKey) {
       notifications.error(
         "Please provide a verification key for the selected algorithm"
@@ -162,56 +170,82 @@
 
   <Divider />
 
-  <div class="embed-sso">
-    <div class="embed-sso-heading">
-      <span class="embed-sso-title">Authenticate embedded users</span>
-      <span class="embed-sso-description">
-        Let the host site sign in users by passing a signed token (e.g. the
-        <code>?jwt=</code> parameter) on the embed URL. The token's email is mapped
-        to an existing Budibase user.
-      </span>
-    </div>
-    <Toggle text="Enable" bind:value={ssoEnabled} on:change={onSSOToggle} />
-    {#if ssoEnabled}
-      <Select
-        label="Verification algorithm"
-        options={algorithmOptions}
-        bind:value={ssoAlgorithm}
-        getOptionLabel={o => o.label}
-        getOptionValue={o => o.value}
-      />
-      <TextArea
-        label={isSecretAlgorithm ? "Shared secret" : "Public key (PEM)"}
-        bind:value={ssoKey}
-        placeholder={canReuseStoredKey
-          ? "A key is set — enter a new value to replace it"
-          : isSecretAlgorithm
-            ? "Shared HMAC secret"
-            : "-----BEGIN PUBLIC KEY-----"}
-        helpText={ssoKeySet && !canReuseStoredKey
-          ? `Enter a new key for ${ssoAlgorithm} — the stored key cannot be reused after changing the algorithm.`
-          : "Used to verify the signature of the incoming token."}
-        error={ssoKeySet && !canReuseStoredKey
-          ? "A new key is required for the selected algorithm"
-          : undefined}
-      />
-      <Input
-        label="Issuer (optional)"
-        bind:value={ssoIssuer}
-        placeholder="https://nextcloud.example.com"
-        helpText="If set, the token's 'iss' claim must match this value."
-      />
-      <Input
-        label="Email claim"
-        bind:value={ssoEmailClaim}
-        placeholder="email"
-        helpText="Path to the email in the token payload. Use 'userdata.email' for Nextcloud. Defaults to 'email'."
-      />
-      <div>
-        <Button cta on:click={saveSSO}>Save</Button>
+  <LockedFeature
+    title={"Authenticated iframe embeds"}
+    planType={"Enterprise"}
+    description={"Authenticate embedded users in iframes by passing a signed token on the embed URL."}
+    enabled={$licensing.iframeEmbedsEnabled}
+    upgradeButtonClick={async () => {
+      licensing.goToUpgradePage()
+    }}
+    showContentWhenDisabled
+  >
+    <div class="embed-sso">
+      <div class="embed-sso-heading">
+        <span class="embed-sso-title">Authenticate embedded users</span>
+        <span class="embed-sso-description">
+          Let the host site sign in users by passing a signed token (e.g. the
+          <code>?jwt=</code> parameter) on the embed URL. The token's email is mapped
+          to an existing Budibase user.
+        </span>
       </div>
-    {/if}
-  </div>
+      <Toggle
+        text="Enable"
+        bind:value={ssoEnabled}
+        on:change={onSSOToggle}
+        disabled={!$licensing.iframeEmbedsEnabled}
+      />
+      {#if ssoEnabled}
+        <Select
+          label="Verification algorithm"
+          options={algorithmOptions}
+          bind:value={ssoAlgorithm}
+          getOptionLabel={o => o.label}
+          getOptionValue={o => o.value}
+          disabled={!$licensing.iframeEmbedsEnabled}
+        />
+        <TextArea
+          label={isSecretAlgorithm ? "Shared secret" : "Public key (PEM)"}
+          bind:value={ssoKey}
+          placeholder={canReuseStoredKey
+            ? "A key is set — enter a new value to replace it"
+            : isSecretAlgorithm
+              ? "Shared HMAC secret"
+              : "-----BEGIN PUBLIC KEY-----"}
+          helpText={ssoKeySet && !canReuseStoredKey
+            ? `Enter a new key for ${ssoAlgorithm} — the stored key cannot be reused after changing the algorithm.`
+            : "Used to verify the signature of the incoming token."}
+          error={ssoKeySet && !canReuseStoredKey
+            ? "A new key is required for the selected algorithm"
+            : undefined}
+          disabled={!$licensing.iframeEmbedsEnabled}
+        />
+        <Input
+          label="Issuer (optional)"
+          bind:value={ssoIssuer}
+          placeholder="https://nextcloud.example.com"
+          helpText="If set, the token's 'iss' claim must match this value."
+          disabled={!$licensing.iframeEmbedsEnabled}
+        />
+        <Input
+          label="Email claim"
+          bind:value={ssoEmailClaim}
+          placeholder="email"
+          helpText="Path to the email in the token payload. Use 'userdata.email' for Nextcloud. Defaults to 'email'."
+          disabled={!$licensing.iframeEmbedsEnabled}
+        />
+        <div>
+          <Button
+            cta
+            on:click={saveSSO}
+            disabled={!$licensing.iframeEmbedsEnabled}
+          >
+            Save
+          </Button>
+        </div>
+      {/if}
+    </div>
+  </LockedFeature>
 </Layout>
 
 <style>

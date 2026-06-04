@@ -1080,6 +1080,10 @@ export async function update(
     ctx.request.body.url = url
   }
 
+  if ("embedSSO" in ctx.request.body) {
+    await features.checkFeature(Feature.IFRAME_EMBEDS)
+  }
+
   const app = await updateWorkspacePackage(ctx.request.body, ctx.params.appId)
   await syncRecaptchaStateToPublishedApp(ctx.params.appId, ctx.request.body)
   await events.app.updated(app)
