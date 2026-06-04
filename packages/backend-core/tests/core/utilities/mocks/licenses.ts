@@ -2,6 +2,7 @@ import {
   Feature,
   License,
   MonthlyQuotaName,
+  PlanType,
   QuotaType,
   QuotaUsageType,
 } from "@budibase/types"
@@ -77,6 +78,12 @@ export const useBackups = () => {
 
 export const useEnforceableSSO = () => {
   return useFeature(Feature.ENFORCEABLE_SSO)
+}
+
+export const useIframeEmbeds = () => {
+  const license = cloneDeep(getCachedLicense() || UNLIMITED_LICENSE)
+  license.plan.type = PlanType.ENTERPRISE
+  return useLicense(license, { features: [Feature.IFRAME_EMBEDS] })
 }
 
 export const useGroups = () => {

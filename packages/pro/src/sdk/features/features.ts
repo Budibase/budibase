@@ -69,6 +69,12 @@ export async function isEnforceableSSO() {
   return areFeaturesEnabled(Feature.ENFORCEABLE_SSO)
 }
 
+// AUTH IFRAMES
+
+export async function isIframeEmbedsEnabled() {
+  return areFeaturesEnabled(Feature.IFRAME_EMBEDS)
+}
+
 // SYNC WEBHOOK
 
 export async function isSyncAutomationsEnabled() {

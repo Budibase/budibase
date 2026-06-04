@@ -91,6 +91,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.WORKSPACE_BACKUPS,
     Feature.ENVIRONMENT_VARIABLES,
     Feature.ENFORCEABLE_SSO,
+    Feature.IFRAME_EMBEDS,
     //Feature.AUDIT_LOGS, // This feature is not available in the trial version
     Feature.BRANDING,
     Feature.SYNC_AUTOMATIONS,
@@ -116,6 +117,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.WORKSPACE_BACKUPS,
     Feature.ENVIRONMENT_VARIABLES,
     Feature.ENFORCEABLE_SSO,
+    Feature.IFRAME_EMBEDS,
     Feature.AUDIT_LOGS,
     Feature.BRANDING,
     Feature.SYNC_AUTOMATIONS,

@@ -48,6 +48,7 @@ interface LicensingState {
   customAppScriptsEnabled: boolean
   syncAutomationsEnabled: boolean
   triggerAutomationRunEnabled: boolean
+  iframeEmbedsEnabled: boolean
   recaptchaEnabled: boolean
   pkceOidcEnabled: boolean
   pdfEnabled: boolean
@@ -98,6 +99,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       customAppScriptsEnabled: false,
       syncAutomationsEnabled: false,
       triggerAutomationRunEnabled: false,
+      iframeEmbedsEnabled: false,
       recaptchaEnabled: false,
       pkceOidcEnabled: false,
       pdfEnabled: false,
@@ -227,6 +229,9 @@ class LicensingStore extends BudiStore<LicensingState> {
     const customAppScriptsEnabled = features.includes(
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
+    const iframeEmbedsEnabled = features.includes(
+      Constants.Features.IFRAME_EMBEDS
+    )
     const recaptchaEnabled = features.includes(Constants.Features.RECAPTCHA)
     const pkceOidcEnabled = features.includes(Constants.Features.PKCE_OIDC)
     const pdfEnabled = features.includes(Constants.Features.PDF)
@@ -252,6 +257,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         enforceableSSO,
         syncAutomationsEnabled,
         triggerAutomationRunEnabled,
+        iframeEmbedsEnabled,
         customAppScriptsEnabled,
         pdfEnabled,
         recaptchaEnabled,
