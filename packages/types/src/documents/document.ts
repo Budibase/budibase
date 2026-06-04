@@ -57,6 +57,7 @@ export enum DocumentType {
   KNOWLEDGE_BASE = "knowledgebase",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
+  PROJECT = "project",
   AUTO_COLUMN_STATE = "autocolumn_state",
 }
 
