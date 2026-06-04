@@ -3480,7 +3480,7 @@
       ]
     }
   },
-  "websiteurlfield": {
+  "urlfield": {
     "name": "URL Field",
     "icon": "link",
     "styles": ["size"],

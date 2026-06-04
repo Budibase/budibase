@@ -1,7 +1,7 @@
 export const form = () => import("./Form.svelte")
 export const fieldgroup = () => import("./FieldGroup.svelte")
 export const stringfield = () => import("./StringField.svelte")
-export const websiteurlfield = () => import("./URLField.svelte")
+export const urlfield = () => import("./URLField.svelte")
 export const numberfield = () => import("./NumberField.svelte")
 export const bigintfield = () => import("./BigIntField.svelte")
 export const optionsfield = () => import("./OptionsField.svelte")
