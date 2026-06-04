@@ -4,6 +4,7 @@
   import { notifications, Input, ModalContent } from "@budibase/bbui"
   import { API } from "@/api"
   import { tables, datasources, dataEnvironmentStore } from "@/stores/builder"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import TableDataImport from "../TableDataImport.svelte"
   import { chunkRows, IMPORT_ROWS_PER_CHUNK } from "../utils"
   import {
@@ -45,6 +46,7 @@
   let rows = []
   let allValid = true
   let displayColumn = null
+  let projectId = ""
 
   const buildOptionConstraints = (schema, rows) => {
     const updatedSchema = {}
@@ -165,6 +167,7 @@
       type: "table",
       sourceId: targetDatasourceId,
       sourceType: DB_TYPE_INTERNAL,
+      projectId: projectId || undefined,
     }
 
     // Only set primary display if defined
@@ -214,6 +217,7 @@
     bind:value={name}
     {error}
   />
+  <ProjectSelect bind:value={projectId} />
   <TableDataImport
     {promptUpload}
     bind:rows

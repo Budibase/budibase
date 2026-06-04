@@ -81,6 +81,7 @@
   import ExpandablePanel from "@/components/common/ExpandablePanel.svelte"
   import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { confirm } from "@/helpers"
   import {
@@ -963,6 +964,9 @@
           {#if editableQuery}
             <div class="access">
               <AccessLevelSelect query={editableQuery} label="Access" />
+            </div>
+            <div class="project">
+              <ProjectSelect bind:value={editableQuery.projectId} />
             </div>
           {/if}
           {#if endpointDocs}

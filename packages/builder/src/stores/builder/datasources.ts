@@ -212,12 +212,14 @@ export class DatasourceStore extends DerivedBudiStore<
     integration,
     config,
     name,
+    projectId,
     restTemplateId,
     restTemplateVersion,
   }: {
     integration: UIIntegration
     config: Record<string, any>
     name?: string
+    projectId?: string
     restTemplateId?: RestTemplateId
     restTemplateVersion?: RestTemplateSpecVersion
   }) {
@@ -229,6 +231,7 @@ export class DatasourceStore extends DerivedBudiStore<
       source: integration.name as SourceName,
       config,
       name: `${name || integration.friendlyName}${nameModifier}`,
+      projectId,
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
       ...(restTemplateId && { restTemplateId }),
@@ -254,11 +257,16 @@ export class DatasourceStore extends DerivedBudiStore<
   async save({
     integration,
     datasource,
+    skipConnectionCheck,
   }: {
     integration: Integration
     datasource: Datasource
+    skipConnectionCheck?: boolean
   }) {
-    if (!(await this.checkDatasourceValidity(integration, datasource)).valid) {
+    if (
+      !skipConnectionCheck &&
+      !(await this.checkDatasourceValidity(integration, datasource)).valid
+    ) {
       throw new Error("Unable to connect")
     }
 

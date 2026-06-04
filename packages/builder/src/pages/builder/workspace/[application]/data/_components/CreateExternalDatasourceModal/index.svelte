@@ -36,17 +36,7 @@
   $: handleStoreChanges($store, modal, $goto)
 
   export function show(integration) {
-    if (integration.name === IntegrationTypes.REST) {
-      // A REST integration is created immediately, we don't need to display a config modal.
-      loading = true
-      datasources
-        .create({ integration, config: configFromIntegration(integration) })
-        .then(datasource => {
-          store.setIntegration(integration)
-          store.setDatasource(datasource)
-        })
-        .finally(() => (loading = false))
-    } else if (integration.name === IntegrationTypes.GOOGLE_SHEETS) {
+    if (integration.name === IntegrationTypes.GOOGLE_SHEETS) {
       // This prompt redirects users to the Google OAuth flow, they'll be returned to this modal afterwards
       // with query params populated that trigger the `onGoogleAuth` store.
       store.googleAuthStage()
@@ -65,11 +55,12 @@
     store.editConfigStage()
   })
 
-  const createDatasource = async config => {
+  const createDatasource = async ({ config, projectId }) => {
     try {
       const datasource = await datasources.create({
         integration: get(store).integration,
         config,
+        projectId,
       })
       store.setDatasource(datasource)
 
@@ -104,7 +95,8 @@
     <DatasourceConfigEditor
       integration={$store.integration}
       config={$store.config}
-      onSubmit={({ config }) => createDatasource(config)}
+      showProjectField
+      onSubmit={createDatasource}
     />
   {:else if $store.stage === "selectTables"}
     <TableImportSelection
