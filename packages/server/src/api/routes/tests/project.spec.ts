@@ -14,6 +14,7 @@ import { join } from "path"
 import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
+import sdk from "../../../sdk"
 import { listAssignedAgentFiles } from "../../../sdk/workspace/projects/backups/exports"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
@@ -249,6 +250,68 @@ describe("/projects", () => {
         },
         "project_mismatch"
       )
+    })
+  })
+
+  it("rejects updates without a revision", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { _rev: _rev, ...projectWithoutRev } = project
+      const updateWithoutRev = {
+        ...projectWithoutRev,
+        name: "Updated operations",
+      } as Parameters<typeof config.api.project.update>[0]
+
+      await config.api.project.update(updateWithoutRev, {
+        status: 400,
+      })
+    })
+  })
+
+  it("rejects stale revisions on update", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+
+      await config.api.project.update({
+        ...project,
+        name: "Updated operations",
+      })
+
+      await config.api.project.update(
+        {
+          ...project,
+          name: "Stale operations",
+        },
+        {
+          status: 409,
+        }
+      )
+    })
+  })
+
+  it("rejects sdk updates without a revision", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+
+      await expect(
+        config.doInContext(config.getDevWorkspaceId(), async () =>
+          sdk.projects.update({
+            _id: project._id,
+            name: "Updated operations",
+          } as Parameters<typeof sdk.projects.update>[0])
+        )
+      ).rejects.toThrow("Project revision is required.")
+
+      const { projects } = await config.api.project.fetch()
+      expect(
+        projects.find(existing => existing._id === project._id)?.name
+      ).toBe("Operations")
     })
   })
 

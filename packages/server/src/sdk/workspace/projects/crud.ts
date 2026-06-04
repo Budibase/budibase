@@ -45,6 +45,9 @@ export async function update(project: ProjectUpdate): Promise<Project> {
   if (!project._id) {
     throw new HTTPError("Project id is required.", 400)
   }
+  if (!project._rev) {
+    throw new HTTPError("Project revision is required.", 400)
+  }
 
   const db = context.getWorkspaceDB()
   const persisted = await get(project._id)
@@ -56,6 +59,7 @@ export async function update(project: ProjectUpdate): Promise<Project> {
     {
       ...persisted,
       ...project,
+      _rev: project._rev,
       createdAt: persisted.createdAt,
       updatedAt: new Date().toISOString(),
     },
