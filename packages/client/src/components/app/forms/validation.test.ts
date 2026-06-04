@@ -123,6 +123,9 @@ describe("form validation", () => {
       " user@example.com ",
       "@example.com",
       "user@",
+      ".user@example.com",
+      "user.@example.com",
+      "user..name@example.com",
     ])("rejects invalid email %s", input => {
       expect(validator(input)).toBe(EMAIL_ERROR)
     })
