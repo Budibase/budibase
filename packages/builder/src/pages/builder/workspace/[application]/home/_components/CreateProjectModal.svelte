@@ -18,7 +18,7 @@
 
   let name = ""
   let description = ""
-  let color = "#8CA171"
+  let color: string | undefined = "#8CA171"
   let nameError: string | undefined = undefined
 
   $: if (name.trim()) {
@@ -34,7 +34,7 @@
     return onConfirm({
       name: name.trim(),
       description: description.trim() || undefined,
-      color: color.trim() || undefined,
+      color: color?.trim() || undefined,
     })
   }
 </script>
