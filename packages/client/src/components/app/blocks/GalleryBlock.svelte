@@ -40,7 +40,7 @@ let selectedIndex = 0
 let showLightbox = false
 
 $: effectiveColumn = arrayOfUrls ? "Value" : imageColumn
-$: rows = ($context[dataProviderId]?.rows || []).filter(r => r[effectiveColumn])
+$: rows = ($context[dataProviderId]?.rows || []).filter((r) => r[effectiveColumn])
 $: imageCount = rows.length
 $: effectiveTileWidth = tileWidth || tileHeight || 200
 $: effectiveTileHeight = tileHeight || tileWidth || 200
