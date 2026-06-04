@@ -117,10 +117,14 @@ export async function importBundle(
   if (Array.isArray(playbookExport)) {
     ctx.throw(400, "Must only supply one Playbook export")
   }
+  const filePath = playbookExport.filepath
+  if (!filePath) {
+    ctx.throw(400, "Must supply Playbook export file to import")
+  }
 
   ctx.body = await sdk.playbooks.importPlaybook(
     {
-      path: playbookExport.filepath,
+      path: filePath,
     },
     {
       encryptPassword: ctx.request.body?.encryptPassword || undefined,

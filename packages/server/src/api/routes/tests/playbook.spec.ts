@@ -12,6 +12,7 @@ import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
   basicDatasource,
   basicQuery,
@@ -22,6 +23,7 @@ import {
 
 describe("/playbooks", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
 
   afterAll(() => {
     config.end()
@@ -37,6 +39,12 @@ describe("/playbooks", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   const readTarEntries = async (buffer: Buffer) => {
@@ -993,6 +1001,32 @@ describe("/playbooks", () => {
       })
     })
   })
+
+  it.each([
+    ["missing", undefined],
+    ["non-array", "additiveImport"],
+    ["empty", []],
+  ])(
+    "rejects packages with %s supported import modes",
+    async (_label, value) => {
+      await withPlaybooksEnabled(async () => {
+        const packageBuffer = await createTarPackage(
+          createMinimalPackageEntries({
+            manifest: {
+              supportedImportModes: value,
+            },
+          })
+        )
+
+        await config.api.playbook.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message: "Playbook package does not support additive import.",
+          },
+        })
+      })
+    }
+  )
 
   it("rejects packages with docs that are not declared in the dependency index", async () => {
     await withPlaybooksEnabled(async () => {

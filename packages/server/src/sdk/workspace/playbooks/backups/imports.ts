@@ -335,7 +335,10 @@ const validateManifest = (manifest: PlaybookPackageManifest) => {
       400
     )
   }
-  if (!manifest.supportedImportModes.includes("additiveImport")) {
+  if (
+    !Array.isArray(manifest.supportedImportModes) ||
+    !manifest.supportedImportModes.includes("additiveImport")
+  ) {
     throw new HTTPError(
       "Playbook package does not support additive import.",
       400
