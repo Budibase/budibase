@@ -80,10 +80,18 @@ const stringConstraints = [
   Constraints.Email,
 ]
 
+const urlConstraints = stringConstraints.filter(
+  constraint => constraint.value !== Constraints.Email.value
+)
+
+const emailConstraints = stringConstraints.filter(
+  constraint => constraint.value !== Constraints.Url.value
+)
+
 const ConstraintMap: Record<string, ValidationConstraintOption[]> = {
   ["string"]: stringConstraints,
-  ["url"]: stringConstraints,
-  ["email"]: stringConstraints,
+  ["url"]: urlConstraints,
+  ["email"]: emailConstraints,
   ["number"]: [
     Constraints.Required,
     Constraints.MaxValue,

@@ -11,6 +11,7 @@
     name?: string
     icon?: string
     iconColor?: string
+    allowKnowledgeSourceDownload?: boolean
   }
 
   export let selectedAgentId: string | null = null

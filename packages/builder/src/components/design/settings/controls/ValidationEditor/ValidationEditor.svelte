@@ -2,6 +2,7 @@
   import { Button, ActionButton, Drawer, Heading, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
+  import { DEFAULT_URL_VALIDATION_PROTOCOLS } from "@budibase/types"
   import type { Component, EnrichedBinding } from "@budibase/types"
   import { FIELDS } from "@/constants/backend"
   import ValidationDrawer from "./ValidationDrawer.svelte"
@@ -49,10 +50,15 @@
   ): ValidationEditorRule[] => {
     return (rules || []).map(rule => {
       const sanitisedRule = { ...rule }
-      if (
-        ["required", "url", "email"].includes(sanitisedRule.constraint || "")
-      ) {
+      if (["required", "email"].includes(sanitisedRule.constraint || "")) {
         delete sanitisedRule.value
+        delete sanitisedRule.valueType
+      }
+      if (sanitisedRule.constraint === "url") {
+        sanitisedRule.value =
+          Array.isArray(sanitisedRule.value) && sanitisedRule.value.length
+            ? sanitisedRule.value
+            : [...DEFAULT_URL_VALIDATION_PROTOCOLS]
         delete sanitisedRule.valueType
       }
       if (!sanitisedRule.error) {

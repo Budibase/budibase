@@ -655,6 +655,26 @@ describe("/automations", () => {
       const { automation: updated } = await config.api.automation.update(second)
       expect(updated.name).toEqual(first.name)
     })
+
+    it("rejects updates with more than 12 sticky notes", async () => {
+      const { automation } = await config.api.automation.post(basicAutomation())
+      automation.uiTree = {
+        stickyNotes: Array.from({ length: 13 }, (_, index) => ({
+          id: `note-${index}`,
+          title: "Note",
+          text: "",
+          x: 100,
+          y: 100,
+        })),
+      }
+
+      await config.api.automation.update(automation, {
+        status: 400,
+        body: {
+          message: "Automations cannot have more than 12 sticky notes",
+        },
+      })
+    })
   })
 
   describe("fetch", () => {

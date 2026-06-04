@@ -3480,7 +3480,7 @@
       ]
     }
   },
-  "websiteurlfield": {
+  "urlfield": {
     "name": "URL Field",
     "icon": "link",
     "styles": ["size"],
@@ -3561,6 +3561,7 @@
             "id": "default-url-validation",
             "type": "string",
             "constraint": "url",
+            "value": ["http", "https"],
             "error": "Must be a valid URL"
           }
         ]
@@ -8491,6 +8492,7 @@
     "illegalChildren": ["section", "sidepanel", "modal"],
     "showEmptyState": false,
     "draggable": false,
+    "styles": ["background"],
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
     "settings": [
       {
@@ -8498,6 +8500,28 @@
         "key": "ignoreClicksOutside",
         "label": "Ignore clicks outside",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "small",
+        "options": [
+          { "label": "Small", "value": "small" },
+          { "label": "Medium", "value": "medium" },
+          { "label": "Large", "value": "large" },
+          { "label": "Fullscreen", "value": "fullscreen" }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Position",
+        "key": "position",
+        "defaultValue": "right",
+        "options": [
+          { "label": "Left", "value": "left" },
+          { "label": "Right", "value": "right" }
+        ]
       },
       {
         "type": "event",

@@ -25,6 +25,32 @@ describe("validation constraints", () => {
     ["signature_single", ["required"]],
     ["link", ["required", "contains", "notContains", "minLength", "maxLength"]],
     [
+      "url",
+      [
+        "required",
+        "minLength",
+        "maxLength",
+        "equal",
+        "notEqual",
+        "regex",
+        "notRegex",
+        "url",
+      ],
+    ],
+    [
+      "email",
+      [
+        "required",
+        "minLength",
+        "maxLength",
+        "equal",
+        "notEqual",
+        "regex",
+        "notRegex",
+        "email",
+      ],
+    ],
+    [
       "array",
       ["required", "minLength", "maxLength", "contains", "notContains"],
     ],
@@ -49,6 +75,14 @@ describe("validation constraints", () => {
     expect(urlConstraints.map(constraint => constraint.value)).toContain("url")
   })
 
+  it("does not include an email rule for URL fields", () => {
+    const urlConstraints = getConstraintsForType("url")
+
+    expect(urlConstraints.map(constraint => constraint.value)).not.toContain(
+      "email"
+    )
+  })
+
   it("includes an email rule for text and email fields", () => {
     const stringConstraints = getConstraintsForType("string")
     const emailConstraints = getConstraintsForType("email")
@@ -58,6 +92,14 @@ describe("validation constraints", () => {
     )
     expect(emailConstraints.map(constraint => constraint.value)).toContain(
       "email"
+    )
+  })
+
+  it("does not include a URL rule for email fields", () => {
+    const emailConstraints = getConstraintsForType("email")
+
+    expect(emailConstraints.map(constraint => constraint.value)).not.toContain(
+      "url"
     )
   })
 })

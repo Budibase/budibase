@@ -107,6 +107,8 @@ export interface AutomationSaveOptions {
   skipUnpublishedChanges?: boolean
 }
 
+export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
 const sameMoveContainer = (
   sourcePath: BlockPath[],
   destPath: BlockPath[]
@@ -2659,6 +2661,10 @@ const automationActions = (store: AutomationStore) => ({
     if (!auto) return
 
     const notes = auto.uiTree?.stickyNotes || []
+    if (notes.length >= MAX_STICKY_NOTES_PER_AUTOMATION) {
+      return
+    }
+
     const newNote = {
       id: generate(),
       title: "Note",
@@ -2675,6 +2681,20 @@ const automationActions = (store: AutomationStore) => ({
     await automationStore.actions.save(updated, {
       skipUnpublishedChanges: true,
     })
+  },
+
+  saveStickyNoteUpdate: async (updated: Automation, previous: Automation) => {
+    store.actions.replace(updated._id!, updated)
+    store.actions.select(updated._id!)
+    try {
+      await automationStore.actions.save(updated, {
+        skipUnpublishedChanges: true,
+      })
+    } catch (error) {
+      store.actions.replace(previous._id!, previous)
+      store.actions.select(previous._id!)
+      throw error
+    }
   },
 
   updateStickyNote: async (
@@ -2698,9 +2718,7 @@ const automationActions = (store: AutomationStore) => ({
         n.id === noteId ? { ...n, ...updates } : n
       ),
     }
-    await automationStore.actions.save(updated, {
-      skipUnpublishedChanges: true,
-    })
+    await automationStore.actions.saveStickyNoteUpdate(updated, auto)
   },
 
   updateStickyNotePosition: async (
@@ -2717,9 +2735,7 @@ const automationActions = (store: AutomationStore) => ({
         n.id === noteId ? { ...n, x: position.x, y: position.y } : n
       ),
     }
-    await automationStore.actions.save(updated, {
-      skipUnpublishedChanges: true,
-    })
+    await automationStore.actions.saveStickyNoteUpdate(updated, auto)
   },
 
   removeStickyNote: async (noteId: string) => {

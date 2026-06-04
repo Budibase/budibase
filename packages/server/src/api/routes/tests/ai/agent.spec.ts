@@ -1,7 +1,9 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 
 describe("agent duplicate", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
 
   afterAll(() => {
     config.end()
@@ -9,6 +11,12 @@ describe("agent duplicate", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   it("duplicates an agent with a unique copy name", async () => {
@@ -17,6 +25,7 @@ describe("agent duplicate", () => {
       aiconfig: "default",
       description: "Support assistant",
       promptInstructions: "Be helpful",
+      operationName: "Customer support",
       live: true,
     })
 
@@ -28,7 +37,27 @@ describe("agent duplicate", () => {
     expect(duplicate.name).toContain("Support Agent")
     expect(duplicate.description).toEqual(created.description)
     expect(duplicate.promptInstructions).toEqual(created.promptInstructions)
+    expect(duplicate.operationName).toEqual(created.operationName)
     expect(duplicate.live).toEqual(created.live)
+  })
+
+  it("persists operationName on create and update", async () => {
+    const created = await config.api.agent.create({
+      name: "Operation Name Agent",
+      aiconfig: "default",
+      operationName: "Main triage flow",
+    })
+    expect(created.operationName).toEqual("Main triage flow")
+
+    const updated = await config.api.agent.update({
+      ...created,
+      operationName: "Escalation flow",
+    })
+    expect(updated.operationName).toEqual("Escalation flow")
+
+    const { agents } = await config.api.agent.fetch()
+    const fetched = agents.find(agent => agent._id === created._id)
+    expect(fetched?.operationName).toEqual("Escalation flow")
   })
 
   it("returns 404 for unknown agent", async () => {

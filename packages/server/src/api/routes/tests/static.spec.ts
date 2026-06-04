@@ -215,6 +215,35 @@ describe("/static", () => {
         expect(res.body.message).toEqual("bucket and key values are required")
       })
 
+      it("should reject buckets that do not match a datasource bucket constraint", async () => {
+        const constrainedDatasource = await config.createDatasource({
+          datasource: {
+            type: "datasource",
+            name: "Constrained Test",
+            source: SourceName.S3,
+            config: {
+              accessKeyId: "bb",
+              secretAccessKey: "bb",
+              bucket: "allowed-bucket",
+            },
+          },
+        })
+
+        const res = await request
+          .post(`/api/attachments/${constrainedDatasource._id}/url`)
+          .send({
+            bucket: "other-bucket",
+            key: "bar",
+          })
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(res.body.message).toEqual(
+          "bucket must match the datasource configuration"
+        )
+      })
+
       it("should allow non-creator app users to generate a signed upload URL", async () => {
         await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
           const res = await request
@@ -339,7 +368,7 @@ describe("/static", () => {
             .attach("file", Buffer.from("fake-zip"), "icons.zip")
             .set(config.defaultHeaders())
 
-          expect(res.status).toEqual(500)
+          expect(res.status).toEqual(400)
           expect(res.body.message).toMatch(
             "No valid icons found in the zip file"
           )
@@ -387,6 +416,86 @@ describe("/static", () => {
         ])
       })
 
+      it("accepts a manifest.json zip layout", async () => {
+        const iconFile = path.join(tempDir, "images", "icon-192.png")
+        await fsp.mkdir(path.dirname(iconFile), { recursive: true })
+        await fsp.writeFile(iconFile, "fake-png-data")
+
+        const manifestJson = {
+          icons: [
+            {
+              src: "images/icon-192.png",
+              sizes: "192x192",
+              type: "image/png",
+            },
+          ],
+        }
+        await fsp.writeFile(
+          path.join(tempDir, "manifest.json"),
+          JSON.stringify(manifestJson)
+        )
+
+        mockedUpload.mockResolvedValue({
+          Key: "app_prod_test123/pwa/some-uuid.png",
+        } as any)
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        expect(mockedUpload).toHaveBeenCalledTimes(1)
+        expect(res.body.icons).toEqual([
+          {
+            src: "app_prod_test123/pwa/some-uuid.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+        ])
+      })
+
+      it("derives icons from a folder-based PWA asset zip", async () => {
+        await fsp.mkdir(path.join(tempDir, "android"), { recursive: true })
+        await fsp.mkdir(path.join(tempDir, "ios"), { recursive: true })
+        await fsp.writeFile(
+          path.join(tempDir, "android", "launchericon-192x192.png"),
+          "fake-png-data"
+        )
+        await fsp.writeFile(
+          path.join(tempDir, "ios", "192.png"),
+          "fake-png-data"
+        )
+
+        mockedUpload
+          .mockResolvedValueOnce({
+            Key: "app_prod_test123/pwa/icon-192.png",
+          } as any)
+          .mockResolvedValueOnce({
+            Key: "app_prod_test123/pwa/icon-ios-192.png",
+          } as any)
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "appstore-images.zip")
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        expect(mockedUpload).toHaveBeenCalledTimes(2)
+        expect(res.body.icons).toEqual([
+          {
+            src: "app_prod_test123/pwa/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "app_prod_test123/pwa/icon-ios-192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+        ])
+      })
+
       it("skips icons with an absolute src path outside the zip directory", async () => {
         const iconsJson = {
           icons: [
@@ -407,9 +516,81 @@ describe("/static", () => {
           .attach("file", Buffer.from("fake-zip"), "icons.zip")
           .set(config.defaultHeaders())
 
-        expect(res.status).toEqual(500)
+        expect(res.status).toEqual(400)
         expect(res.body.message).toMatch("No valid icons found in the zip file")
         expect(mockedUpload).not.toHaveBeenCalled()
+      })
+
+      it("rejects a symlinked icons.json file", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "icons.json")
+        await fsp.writeFile(
+          sensitiveFile,
+          JSON.stringify({
+            icons: [
+              {
+                src: "icon-192.png",
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          })
+        )
+        await fsp.writeFile(path.join(tempDir, "icon-192.png"), "fake-png-data")
+        await fsp.symlink(sensitiveFile, path.join(tempDir, "icons.json"))
+
+        try {
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(400)
+          expect(res.body.message).toMatch(
+            "Invalid zip structure - missing icons.json"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
+      })
+
+      it("skips icons whose src is a symlink to a file outside the zip directory", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "secret.png")
+        await fsp.writeFile(sensitiveFile, "sensitive-data")
+        await fsp.symlink(sensitiveFile, path.join(tempDir, "evil.png"))
+
+        try {
+          const iconsJson = {
+            icons: [
+              {
+                src: "evil.png",
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          }
+          await fsp.writeFile(
+            path.join(tempDir, "icons.json"),
+            JSON.stringify(iconsJson)
+          )
+
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(400)
+          expect(res.body.message).toMatch(
+            "No valid icons found in the zip file"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
       })
     })
   })

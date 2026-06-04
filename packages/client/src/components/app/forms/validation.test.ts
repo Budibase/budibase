@@ -4,48 +4,70 @@ import { FieldType, type UIFieldValidationRule } from "@budibase/types"
 import { createValidatorFromConstraints } from "./validation"
 
 describe("form validation", () => {
-  it("accepts valid URLs", () => {
+  const createUrlValidator = (rule?: Partial<UIFieldValidationRule>) => {
     const rules: UIFieldValidationRule[] = [
       {
         type: FieldType.STRING,
         constraint: "url",
         error: "Invalid URL",
+        ...rule,
       },
     ]
 
-    const validator = createValidatorFromConstraints(
-      null,
-      rules,
-      "website",
-      undefined
-    )
+    return createValidatorFromConstraints(null, rules, "website", undefined)
+  }
+
+  it("accepts valid URLs", () => {
+    const validator = createUrlValidator()
 
     expect(validator("https://budibase.com")).toBeNull()
     expect(validator("http://budibase.com/pricing")).toBeNull()
+    expect(validator("www.google.com")).toBeNull()
+    expect(validator("http://localhost:10000")).toBeNull()
+    expect(validator("http://192.168.0.1/path")).toBeNull()
+    expect(validator("http://[2001:db8::1]/path")).toBeNull()
+    expect(validator("https://example.com/path%5Csegment")).toBeNull()
   })
 
   it("rejects invalid URLs while leaving empty values to other rules", () => {
-    const rules: UIFieldValidationRule[] = [
-      {
-        type: FieldType.STRING,
-        constraint: "url",
-        error: "Invalid URL",
-      },
-    ]
+    const validator = createUrlValidator()
 
-    const validator = createValidatorFromConstraints(
-      null,
-      rules,
-      "website",
-      undefined
-    )
-
-    expect(validator("budibase.com")).toBe("Invalid URL")
     expect(validator("javascript:alert(1)")).toBe("Invalid URL")
     expect(validator("mailto:test@example.com")).toBe("Invalid URL")
     expect(validator("ftp://example.com")).toBe("Invalid URL")
+    expect(validator("https://www.g?&^%&^%&^%.com")).toBe("Invalid URL")
+    expect(validator("https://example.com\\path")).toBe("Invalid URL")
+    expect(
+      validator(
+        "//////\\\\\\\\\\\\\\\\///////////////\\\\\\\\\\\\\\\\///www.google.com"
+      )
+    ).toBe("Invalid URL")
+    expect(validator("not a url")).toBe("Invalid URL")
     expect(validator("")).toBeNull()
     expect(validator(null)).toBeNull()
+  })
+
+  it("respects custom URL protocol restrictions", () => {
+    const httpsValidator = createUrlValidator({ value: ["https"] })
+    const httpValidator = createUrlValidator({ value: ["http"] })
+    const ftpValidator = createUrlValidator({ value: ["ftp"] })
+    const mailtoValidator = createUrlValidator({ value: ["mailto"] })
+
+    expect(httpsValidator("https://budibase.com")).toBeNull()
+    expect(httpsValidator("www.google.com")).toBeNull()
+    expect(httpsValidator("http://budibase.com")).toBe("Invalid URL")
+
+    expect(httpValidator("www.google.com")).toBe("Invalid URL")
+
+    expect(ftpValidator("ftp://example.com")).toBeNull()
+    expect(ftpValidator("https://example.com")).toBe("Invalid URL")
+
+    expect(mailtoValidator("mailto:test@example.com")).toBeNull()
+    expect(
+      mailtoValidator("mailto:test@example.com?subject=Hello&body=World")
+    ).toBeNull()
+    expect(mailtoValidator("test@example.com")).toBe("Invalid URL")
+    expect(mailtoValidator("https://example.com")).toBe("Invalid URL")
   })
 
   it("accepts valid email addresses", () => {
