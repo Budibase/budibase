@@ -181,6 +181,40 @@
 
     return "var(--spectrum-global-color-static-gray-900)"
   }
+
+  const resolveColor = (val: string | undefined): string | undefined => {
+    if (!val) {
+      return val
+    }
+    const match = val.match(/var\((--[^)]+)\)/)
+    if (match) {
+      const varName = match[1]
+      try {
+        // Try resolving from the current document first
+        const hostStyle = window.getComputedStyle(document.documentElement)
+        let resolved = hostStyle.getPropertyValue(varName).trim()
+        if (resolved) {
+          return resolved
+        }
+        // If not found in host, try resolving from the preview iframe
+        const iframe = document.querySelector("iframe")
+        if (iframe && iframe.contentWindow) {
+          const iframeStyle = iframe.contentWindow.getComputedStyle(
+            iframe.contentWindow.document.documentElement
+          )
+          resolved = iframeStyle.getPropertyValue(varName).trim()
+          if (resolved) {
+            return resolved
+          }
+        }
+      } catch (e) {
+        // Fallback to original value on error
+      }
+    }
+    return val
+  }
+
+  $: displayColor = resolveColor(value)
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -194,7 +228,7 @@
 >
   <div
     class="fill {themeClasses}"
-    style={value ? `background: ${value};` : ""}
+    style={displayColor ? `background: ${displayColor};` : ""}
     class:placeholder={!value}
   ></div>
 </div>
