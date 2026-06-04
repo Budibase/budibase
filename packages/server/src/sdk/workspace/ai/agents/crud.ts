@@ -9,6 +9,7 @@ import { DocumentType } from "@budibase/types"
 import type { Agent, Optional } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
+import { assertAgentHasValidConfig } from "./utils"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -330,6 +331,10 @@ export async function create(
     telegramIntegration: request.telegramIntegration,
   }
 
+  if (agent.live) {
+    await assertAgentHasValidConfig(agent)
+  }
+
   const { rev } = await db.put({
     ...agent,
     discordIntegration: encodeDiscordIntegrationSecrets(
@@ -418,6 +423,10 @@ export async function update(agent: Agent): Promise<Agent> {
       existing: existing?.telegramIntegration,
       incoming: agent.telegramIntegration,
     }),
+  }
+
+  if (updated.live) {
+    await assertAgentHasValidConfig(updated)
   }
 
   const hasBeenPublished =
