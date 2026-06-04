@@ -17,7 +17,7 @@ describe("validation constraints", () => {
       ],
     ],
     ["number", ["required", "maxValue", "minValue", "equal", "notEqual"]],
-    ["boolean", ["required", "equal", "notEqual"]],
+    ["boolean", ["equal", "notEqual"]],
     ["datetime", ["required", "maxValue", "minValue", "equal", "notEqual"]],
     ["attachment", ["required", "maxFileSize", "maxUploadSize"]],
     ["attachment_single", ["required", "maxUploadSize"]],
