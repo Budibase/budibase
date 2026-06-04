@@ -76,7 +76,7 @@ async function clearAssignments(projectId: string) {
       sdk.automations.fetch(),
       sdk.ai.agents.fetch(),
       sdk.tables.getAllTables(),
-      sdk.queries.fetch(),
+      sdk.queries.fetch({ enrich: false }),
       sdk.datasources.getExternalDatasources(),
     ])
 

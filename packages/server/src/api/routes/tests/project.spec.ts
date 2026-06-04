@@ -302,8 +302,10 @@ describe("/projects", () => {
         projectId: project._id,
       })
 
+      const queryRequest = basicQuery(datasource._id!)
+      delete (queryRequest as Partial<typeof queryRequest>).readable
       const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
+        ...queryRequest,
         projectId: project._id,
       })
 
@@ -331,6 +333,11 @@ describe("/projects", () => {
 
       const fetchedQuery = await config.api.query.get(query._id!)
       expect(fetchedQuery.projectId).toBeUndefined()
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const rawQuery = await context.getWorkspaceDB().get(query._id!)
+        expect(rawQuery).not.toHaveProperty("readable")
+      })
     })
   })
 
