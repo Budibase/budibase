@@ -458,6 +458,10 @@ export async function fetchAppDefinition(
 }
 
 async function resolveGlobalTranslationOverrides(application: Workspace) {
+  if (!(await features.isTranslationsEnabled())) {
+    return {}
+  }
+
   const translationsConfig = await configs.getTranslationsConfigDoc()
   const defaultLocale = translationsConfig.config.defaultLocale
   const localeConfig = translationsConfig.config.locales[defaultLocale]

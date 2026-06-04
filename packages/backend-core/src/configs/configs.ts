@@ -33,7 +33,7 @@ export function generateConfigID(type: ConfigType) {
 
 const DEFAULT_TRANSLATION_LOCALE = "en"
 
-function createDefaultTranslationsConfig(): TranslationsConfig {
+export function createDefaultTranslationsConfig(): TranslationsConfig {
   return {
     _id: generateConfigID(ConfigType.TRANSLATIONS),
     type: ConfigType.TRANSLATIONS,

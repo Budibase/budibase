@@ -496,6 +496,14 @@ async function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
 export async function find(ctx: UserCtx<void, FindConfigResponse>) {
   // Find the config with the most granular scope based on context
   const type = ctx.params.type
+  if (
+    type === ConfigType.TRANSLATIONS &&
+    !(await pro.features.isTranslationsEnabled())
+  ) {
+    ctx.body = configs.createDefaultTranslationsConfig()
+    return
+  }
+
   let config = await configs.getConfig(type)
 
   if (!config && type === ConfigType.AI) {
@@ -668,6 +676,14 @@ export async function publicTranslations(
   ctx: Ctx<void, GetPublicTranslationsResponse>
 ) {
   try {
+    const translationsEnabled = await pro.features.isTranslationsEnabled()
+    if (!translationsEnabled) {
+      ctx.body = filterPublicTranslations(
+        configs.createDefaultTranslationsConfig().config
+      )
+      return
+    }
+
     const configDoc = await configs.getTranslationsConfigDoc()
     ctx.body = filterPublicTranslations(configDoc.config)
   } catch (err: any) {
