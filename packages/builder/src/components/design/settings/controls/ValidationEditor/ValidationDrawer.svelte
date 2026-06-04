@@ -230,9 +230,7 @@
     protocol: unknown
   ): protocol is UrlValidationProtocol => {
     const protocols: readonly string[] = URL_VALIDATION_PROTOCOLS
-    return (
-      typeof protocol === "string" && protocols.includes(protocol)
-    )
+    return typeof protocol === "string" && protocols.includes(protocol)
   }
 
   const getUrlProtocolValue = (
@@ -457,8 +455,8 @@
                       {:else if rule.type === "array"}
                         <Select
                           label="Value"
-                          options={dataSourceSchema?.schema?.[field]?.constraints
-                            ?.inclusion || []}
+                          options={dataSourceSchema?.schema?.[field]
+                            ?.constraints?.inclusion || []}
                           getOptionLabel={x => x}
                           getOptionValue={x => x}
                           value={rule.value}
