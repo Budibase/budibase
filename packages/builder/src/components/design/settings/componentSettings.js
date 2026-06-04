@@ -102,6 +102,7 @@ const componentMap = {
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
   "validation/url": ValidationEditor,
+  "validation/email": ValidationEditor,
   "validation/array": ValidationEditor,
   "validation/number": ValidationEditor,
   "validation/boolean": ValidationEditor,
