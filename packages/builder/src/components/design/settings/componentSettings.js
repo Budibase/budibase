@@ -38,6 +38,7 @@ import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
+import GapControl from "./controls/GapControl.svelte"
 import { setComponentSettingsResolver } from "./componentSettingsRegistry"
 
 const componentMap = {
@@ -52,6 +53,7 @@ const componentMap = {
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
   number: Stepper,
+  gapControl: GapControl,
   event: ButtonActionEditor,
   table: TableSelect,
   color: ColorPicker,

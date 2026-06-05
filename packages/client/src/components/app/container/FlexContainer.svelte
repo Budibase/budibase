@@ -16,14 +16,27 @@
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
   $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
   $: sizeClass = size ? `size-${size}` : ""
-  $: gapClass = gap ? `gap-${gap}` : ""
+  $: isCustomGap = gap && typeof gap === "object"
+  $: gapClass = gap && !isCustomGap ? `gap-${gap}` : ""
+  $: customGapStyle = isCustomGap
+    ? `--custom-column-gap: ${gap?.column || "0"}; --custom-row-gap: ${gap?.row || "0"};`
+    : ""
   $: classNames = [
     directionClass,
     hAlignClass,
     vAlignClass,
     sizeClass,
     gapClass,
-  ].join(" ")
+    isCustomGap ? "custom-gap" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
+  // Merge custom gap styles with component styles to avoid conflicts with styleable action
+  $: enrichedStyles = {
+    ...$component.styles,
+    custom: ($component.styles?.custom || "") + customGapStyle,
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -31,7 +44,7 @@
 <div
   class={classNames}
   class:clickable={!!onClick}
-  use:styleable={$component.styles}
+  use:styleable={enrichedStyles}
   class:wrap
   on:click={onClick}
 >
@@ -82,6 +95,7 @@
   .direction-column.vAlign-stretch {
     justify-content: space-between;
   }
+
   .direction-row.hAlign-space-around {
     justify-content: space-around;
   }
@@ -111,6 +125,11 @@
   }
   .gap-L {
     gap: 32px;
+  }
+
+  .custom-gap {
+    column-gap: var(--custom-column-gap, 0);
+    row-gap: var(--custom-row-gap, 0);
   }
 
   .wrap {
