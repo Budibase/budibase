@@ -46,6 +46,27 @@
     savedColorsKey = appId ? `budibase-saved-option-colors-${appId}` : null
     loadSavedColors(savedColorsKey)
 
+    // If nothing was found for the per-app key, check for legacy global key and migrate
+    if ((savedColors == null || savedColors.length === 0) && !savedColorsKey) {
+      const legacy = localStorage.getItem("budibase-saved-option-colors")
+      if (legacy) {
+        try {
+          const parsed = JSON.parse(legacy)
+          if (Array.isArray(parsed) && parsed.length) {
+            // If we have an appId, store under the per-app key; otherwise keep legacy
+            if (savedColorsKey) {
+              localStorage.setItem(savedColorsKey, JSON.stringify(parsed))
+              savedColors = parsed
+            } else {
+              savedColors = parsed
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
     // Subscribe to appStore to reload saved colors if app changes (e.g., after a rebase or navigation)
     const unsub = appStore.subscribe(state => {
       const nextKey = state?.appId
