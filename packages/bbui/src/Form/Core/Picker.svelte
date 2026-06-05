@@ -238,6 +238,7 @@
   {disabled}
   class:is-open={open}
   class:is-readonly={readonly}
+  class:auto-width={autoWidth}
   aria-haspopup="listbox"
   on:click={onClick}
   bind:this={button}
@@ -443,6 +444,10 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+  }
+  .spectrum-Picker.auto-width {
+    width: auto;
+    max-width: 100%;
   }
   .spectrum-Picker.has-border {
     border: 1px solid var(--spectrum-global-color-gray-200);
