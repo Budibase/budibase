@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Body, Button, Checkbox, Layout, notifications } from "@budibase/bbui"
-  import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
   import { getErrorMessage } from "@/helpers/errors"
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
