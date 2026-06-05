@@ -1,4 +1,10 @@
-import { context, docIds, HTTPError, objectStore } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  events,
+  HTTPError,
+  objectStore,
+} from "@budibase/backend-core"
 import {
   GeminiKnowledgeBase,
   KnowledgeBaseFile,
@@ -92,7 +98,7 @@ export const uploadKnowledgeBaseFile = async (
       await enqueueRagFileIngestion({
         workspaceId,
         knowledgeBaseId: input.knowledgeBaseId,
-        fileId: knowledgeBaseFile._id!,
+        fileId: knowledgeBaseFile._id,
         objectStoreKey,
       })
       console.log("Completed knowledge base file upload and queued ingestion", {
@@ -101,6 +107,12 @@ export const uploadKnowledgeBaseFile = async (
         fileId: knowledgeBaseFile._id,
         objectStoreKey,
         durationMs: Date.now() - startedAtMs,
+      })
+
+      events.ai.ragFileUploaded({
+        knowledgeBaseId: input.knowledgeBaseId,
+        fileId: knowledgeBaseFile._id,
+        sourceType: input.source?.type,
       })
 
       return knowledgeBaseFile

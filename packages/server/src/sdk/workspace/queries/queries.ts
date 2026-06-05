@@ -1,6 +1,9 @@
 import { context } from "@budibase/backend-core"
-import { processStringSync } from "@budibase/string-templates"
-import { Query, QuerySchema } from "@budibase/types"
+import {
+  processJsonStringSync,
+  processStringSync,
+} from "@budibase/string-templates"
+import type { JSONValue, Query, QuerySchema } from "@budibase/types"
 import { BaseQueryVerbs } from "../../../constants"
 import { getQueryParams, isProdWorkspaceID } from "../../../db/utils"
 import { getEnvironmentVariables } from "../../utils"
@@ -12,6 +15,37 @@ export interface EnrichContextOpts {
 const DEFAULT_ENRICH_CONTEXT_OPTS: Required<EnrichContextOpts> = {
   escapeNewlines: true,
 }
+
+const JSON_TEMPLATE_FIELDS = new Set(["json", "customData", "requestBody"])
+
+const processTemplateString = (
+  value: string,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+) => {
+  return processStringSync(value, parameters, {
+    noEscaping: true,
+    noHelpers: true,
+    escapeNewlines: options.escapeNewlines,
+  })
+}
+
+const enrichJsonTemplate = (
+  template: string,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+) =>
+  processJsonStringSync(template, parameters, {
+    noEscaping: true,
+    noHelpers: true,
+    escapeNewlines: options.escapeNewlines,
+  }) as JSONValue | string
+
+const isBlankJsonField = (value: any) =>
+  typeof value === "string" && value.trim() === ""
+
+const parseJsonField = (value: any) =>
+  typeof value === "string" ? JSON.parse(value) : value
 
 function updateSchema(query: Query): Query {
   if (!query.schema) {
@@ -117,31 +151,27 @@ export async function enrichContext(
       // enrich nested fields object
       enrichedQuery[key] = await enrichContext(fields[key], parameters, options)
     } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      enrichedQuery[key] = processStringSync(fields[key], parameters, {
-        noEscaping: true,
-        noHelpers: true,
-        escapeNewlines: options.escapeNewlines,
-      })
+      enrichedQuery[key] = JSON_TEMPLATE_FIELDS.has(key)
+        ? enrichJsonTemplate(fields[key], parameters, options)
+        : processTemplateString(fields[key], parameters, options)
     } else {
       enrichedQuery[key] = fields[key]
     }
   }
-  if (
-    enrichedQuery.json ||
-    enrichedQuery.customData ||
-    enrichedQuery.requestBody
-  ) {
+  for (const key of ["json", "customData", "requestBody"]) {
+    if (
+      !Object.hasOwn(enrichedQuery, key) ||
+      isBlankJsonField(enrichedQuery[key])
+    ) {
+      continue
+    }
     try {
-      enrichedQuery.json = JSON.parse(
-        enrichedQuery.json ||
-          enrichedQuery.customData ||
-          enrichedQuery.requestBody
-      )
+      enrichedQuery.json = parseJsonField(enrichedQuery[key])
+      delete enrichedQuery.customData
+      break
     } catch (err) {
       // no json found, ignore
     }
-    delete enrichedQuery.customData
   }
   return enrichedQuery
 }

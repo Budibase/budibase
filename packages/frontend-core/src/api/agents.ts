@@ -7,6 +7,7 @@ import {
   DisconnectAgentSharePointSiteResponse,
   DuplicateAgentResponse,
   FetchAgentKnowledgeResponse,
+  FetchAgentFileUrlResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentsResponse,
@@ -79,6 +80,10 @@ export interface AgentEndpoints {
     agentId: string,
     fileId: string
   ) => Promise<{ deleted: true }>
+  fetchAgentFileUrl: (
+    agentId: string,
+    fileId: string
+  ) => Promise<FetchAgentFileUrlResponse>
   fetchAgentKnowledgeSourceOptions: (
     datasourceId: string,
     authConfigId: string
@@ -247,6 +252,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteAgentFile: async (agentId: string, fileId: string) => {
     return await API.delete({
       url: `/api/agent/${agentId}/files/${fileId}`,
+    })
+  },
+
+  fetchAgentFileUrl: async (agentId: string, fileId: string) => {
+    return await API.get<FetchAgentFileUrlResponse>({
+      url: `/api/agent/${agentId}/files/${fileId}/url`,
     })
   },
 

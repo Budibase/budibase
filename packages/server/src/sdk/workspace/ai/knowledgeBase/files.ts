@@ -2,6 +2,7 @@ import {
   context,
   db,
   docIds,
+  events,
   HTTPError,
   objectStore,
 } from "@budibase/backend-core"
@@ -13,6 +14,7 @@ import {
   KnowledgeBaseFileStatus,
   RequiredKeys,
   ToDocCreateMetadata,
+  WithRequired,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
 import { deleteKnowledgeBaseFileChunks } from "../rag/files"
@@ -31,7 +33,7 @@ interface CreateKnowledgeBaseFileOptions {
 
 export const createKnowledgeBaseFile = async (
   options: CreateKnowledgeBaseFileOptions
-): Promise<KnowledgeBaseFile> => {
+): Promise<WithRequired<KnowledgeBaseFile, "_id">> => {
   const db = context.getWorkspaceDB()
   const {
     id,
@@ -148,4 +150,10 @@ export const removeKnowledgeBaseFile = async (
   }
 
   await context.getWorkspaceDB().remove(file)
+
+  events.ai.ragFileDeleted({
+    knowledgeBaseId: file.knowledgeBaseId,
+    fileId: file._id!,
+    sourceType: file.source?.type,
+  })
 }

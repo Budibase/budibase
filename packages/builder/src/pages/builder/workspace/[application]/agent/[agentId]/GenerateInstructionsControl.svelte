@@ -23,6 +23,7 @@
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     onApplyInstructions?: (_instructions: string) => void
+    triggerLabel?: string
   }
 
   let {
@@ -32,6 +33,7 @@
     promptBindings = [],
     bindingIcons = {},
     onApplyInstructions = () => {},
+    triggerLabel = "Generate",
   }: Props = $props()
 
   let readableToRuntimeBinding = $derived.by(() => {
@@ -141,7 +143,7 @@
 
 {#if enabled}
   <Button secondary size="S" icon="sparkle" on:click={() => modal?.show()}>
-    Generate
+    {triggerLabel}
   </Button>
 
   <Modal

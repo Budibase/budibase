@@ -1,5 +1,5 @@
 import { readFile, unlink } from "node:fs/promises"
-import { HTTPError } from "@budibase/backend-core"
+import { events, HTTPError } from "@budibase/backend-core"
 import {
   AgentKnowledgeSourceType,
   AgentFileUploadResponse,
@@ -10,6 +10,7 @@ import {
   UpdateAgentSharePointSiteResponse,
   SharePointKnowledgeSourceSnapshot,
   FetchAgentKnowledgeResponse,
+  FetchAgentFileUrlResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
@@ -184,6 +185,26 @@ export async function deleteAgentFile(
   const { agentId, fileId } = ctx.params
   await sdk.ai.rag.deleteFileForAgent(agentId, fileId)
   ctx.body = { deleted: true }
+  ctx.status = 200
+}
+
+export async function fetchAgentFileUrl(
+  ctx: UserCtx<
+    void,
+    FetchAgentFileUrlResponse,
+    { agentId: string; fileId: string }
+  >
+) {
+  const { agentId, fileId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  if (agent.allowKnowledgeSourceDownload === false) {
+    throw new HTTPError(
+      "Knowledge source downloads are disabled for this agent",
+      403
+    )
+  }
+  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  ctx.body = { url }
   ctx.status = 200
 }
 
@@ -406,10 +427,16 @@ export async function disconnectAgentSharePointSite(
     removedSource.id,
     siteId
   )
+  const sourceId = removedSource.id
+  events.ai.ragFileSharePointDisconnected({
+    agentId,
+    siteId,
+    sourceId,
+  })
   console.log("Disconnected SharePoint site from agent", {
     agentId,
     siteId,
-    sourceId: removedSource.id,
+    sourceId,
   })
   ctx.body = {
     agentId,
