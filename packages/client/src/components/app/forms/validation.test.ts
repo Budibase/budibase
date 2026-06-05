@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import { FieldType, type UIFieldValidationRule } from "@budibase/types"
 import { createValidatorFromConstraints } from "./validation"
+
+const URL_ERROR = "Invalid URL"
+const EMAIL_ERROR = "Invalid email address"
+const CONTAINS_ERROR = 'Must contain "admin"'
+const NOT_CONTAINS_ERROR = 'Must not contain "guest"'
 
 describe("form validation", () => {
   const createUrlValidator = (rule?: Partial<UIFieldValidationRule>) => {
@@ -9,7 +14,7 @@ describe("form validation", () => {
       {
         type: FieldType.STRING,
         constraint: "url",
-        error: "Invalid URL",
+        error: URL_ERROR,
         ...rule,
       },
     ]
@@ -17,56 +22,220 @@ describe("form validation", () => {
     return createValidatorFromConstraints(null, rules, "website", undefined)
   }
 
-  it("accepts valid URLs", () => {
-    const validator = createUrlValidator()
+  const createEmailValidator = () => {
+    const rules: UIFieldValidationRule[] = [
+      {
+        type: FieldType.STRING,
+        constraint: "email",
+        error: EMAIL_ERROR,
+      },
+    ]
 
-    expect(validator("https://budibase.com")).toBeNull()
-    expect(validator("http://budibase.com/pricing")).toBeNull()
-    expect(validator("www.google.com")).toBeNull()
-    expect(validator("http://localhost:10000")).toBeNull()
-    expect(validator("http://192.168.0.1/path")).toBeNull()
-    expect(validator("http://[2001:db8::1]/path")).toBeNull()
-    expect(validator("https://example.com/path%5Csegment")).toBeNull()
+    return createValidatorFromConstraints(null, rules, "email", undefined)
+  }
+
+  describe("URL validation", () => {
+    let validator: ReturnType<typeof createUrlValidator>
+
+    beforeEach(() => {
+      validator = createUrlValidator()
+    })
+
+    it.each([
+      "https://budibase.com",
+      "http://budibase.com/pricing",
+      "www.google.com",
+      "http://localhost:10000",
+      "http://192.168.0.1/path",
+      "http://[2001:db8::1]/path",
+      "https://example.com/path%5Csegment",
+    ])("accepts valid URL %s", input => {
+      expect(validator(input)).toBeNull()
+    })
+
+    it.each([
+      "javascript:alert(1)",
+      "mailto:test@example.com",
+      "ftp://example.com",
+      "https://www.g?&^%&^%&^%.com",
+      "https://example.com\\path",
+      "//////\\\\\\\\\\\\\\\\///////////////\\\\\\\\\\\\\\\\///www.google.com",
+      "not a url",
+    ])("rejects invalid URL %s", input => {
+      expect(validator(input)).toBe(URL_ERROR)
+    })
+
+    it.each(["", null] as const)(
+      "leaves empty value to other rules: %s",
+      input => {
+        expect(validator(input)).toBeNull()
+      }
+    )
+
+    it.each([
+      [["https"], "https://budibase.com", null],
+      [["https"], "www.google.com", null],
+      [["https"], "http://budibase.com", URL_ERROR],
+      [["http"], "www.google.com", URL_ERROR],
+      [["ftp"], "ftp://example.com", null],
+      [["ftp"], "https://example.com", URL_ERROR],
+      [["mailto"], "mailto:test@example.com", null],
+      [["mailto"], "mailto:test@example.com?subject=Hello&body=World", null],
+      [["mailto"], "test@example.com", URL_ERROR],
+      [["mailto"], "https://example.com", URL_ERROR],
+    ] as const)("protocols %j: %s", (protocols, input, expected) => {
+      const restricted = createUrlValidator({ value: [...protocols] })
+      expect(restricted(input)).toBe(expected)
+    })
   })
 
-  it("rejects invalid URLs while leaving empty values to other rules", () => {
-    const validator = createUrlValidator()
+  describe("email validation", () => {
+    let validator: ReturnType<typeof createEmailValidator>
 
-    expect(validator("javascript:alert(1)")).toBe("Invalid URL")
-    expect(validator("mailto:test@example.com")).toBe("Invalid URL")
-    expect(validator("ftp://example.com")).toBe("Invalid URL")
-    expect(validator("https://www.g?&^%&^%&^%.com")).toBe("Invalid URL")
-    expect(validator("https://example.com\\path")).toBe("Invalid URL")
-    expect(
-      validator(
-        "//////\\\\\\\\\\\\\\\\///////////////\\\\\\\\\\\\\\\\///www.google.com"
-      )
-    ).toBe("Invalid URL")
-    expect(validator("not a url")).toBe("Invalid URL")
-    expect(validator("")).toBeNull()
-    expect(validator(null)).toBeNull()
+    beforeEach(() => {
+      validator = createEmailValidator()
+    })
+
+    it.each([
+      "user@example.com",
+      "user.name+tag@example.co.uk",
+      "user@sub.example.com",
+    ])("accepts valid email %s", input => {
+      expect(validator(input)).toBeNull()
+    })
+
+    it.each([
+      "example.com",
+      "user@example",
+      "user@localhost",
+      "user@example.c",
+      "user@.example.com",
+      "user@example..com",
+      "user@-example.com",
+      "user@example-.com",
+      "user@exa_mple.com",
+      "user@example.com.",
+      "user@example.com/path",
+      "user@example.com?subject=Hello",
+      "mailto:user@example.com",
+      "user@@example.com",
+      "user name@example.com",
+      " user@example.com ",
+      "@example.com",
+      "user@",
+      ".user@example.com",
+      "user.@example.com",
+      "user..name@example.com",
+    ])("rejects invalid email %s", input => {
+      expect(validator(input)).toBe(EMAIL_ERROR)
+    })
+
+    it.each(["", null] as const)(
+      "leaves empty value to other rules: %s",
+      input => {
+        expect(validator(input)).toBeNull()
+      }
+    )
   })
 
-  it("respects custom URL protocol restrictions", () => {
-    const httpsValidator = createUrlValidator({ value: ["https"] })
-    const httpValidator = createUrlValidator({ value: ["http"] })
-    const ftpValidator = createUrlValidator({ value: ["ftp"] })
-    const mailtoValidator = createUrlValidator({ value: ["mailto"] })
+  describe("contains validation", () => {
+    const createContainsValidator = (
+      type: FieldType,
+      constraint: "contains" | "notContains" = "contains"
+    ) => {
+      const error =
+        constraint === "contains" ? CONTAINS_ERROR : NOT_CONTAINS_ERROR
+      const rules: UIFieldValidationRule[] = [
+        {
+          type,
+          constraint,
+          value: constraint === "contains" ? "admin" : "guest",
+          error,
+        },
+      ]
 
-    expect(httpsValidator("https://budibase.com")).toBeNull()
-    expect(httpsValidator("www.google.com")).toBeNull()
-    expect(httpsValidator("http://budibase.com")).toBe("Invalid URL")
+      return createValidatorFromConstraints(null, rules, "field", undefined)
+    }
 
-    expect(httpValidator("www.google.com")).toBe("Invalid URL")
+    describe("string fields", () => {
+      let validator: ReturnType<typeof createContainsValidator>
 
-    expect(ftpValidator("ftp://example.com")).toBeNull()
-    expect(ftpValidator("https://example.com")).toBe("Invalid URL")
+      beforeEach(() => {
+        validator = createContainsValidator(FieldType.STRING)
+      })
 
-    expect(mailtoValidator("mailto:test@example.com")).toBeNull()
-    expect(
-      mailtoValidator("mailto:test@example.com?subject=Hello&body=World")
-    ).toBeNull()
-    expect(mailtoValidator("test@example.com")).toBe("Invalid URL")
-    expect(mailtoValidator("https://example.com")).toBe("Invalid URL")
+      it.each([
+        ["admin user", null],
+        ["hello world", CONTAINS_ERROR],
+        ["foo", CONTAINS_ERROR],
+      ] as const)("value %j", (input, expected) => {
+        expect(validator(input)).toBe(expected)
+      })
+
+      it.each(["", null] as const)("empty value %s fails contains", input => {
+        expect(validator(input)).toBe(CONTAINS_ERROR)
+      })
+    })
+
+    describe("array fields", () => {
+      let validator: ReturnType<typeof createContainsValidator>
+
+      beforeEach(() => {
+        validator = createContainsValidator(FieldType.ARRAY)
+      })
+
+      it.each([
+        [["admin", "user"], null],
+        [["user"], CONTAINS_ERROR],
+      ] as const)("value %j", (input, expected) => {
+        expect(validator(input)).toBe(expected)
+      })
+
+      it.each([null, []] as const)("empty value %j fails contains", input => {
+        expect(validator(input)).toBe(CONTAINS_ERROR)
+      })
+    })
+
+    describe("link fields", () => {
+      let validator: ReturnType<typeof createContainsValidator>
+
+      beforeEach(() => {
+        validator = createContainsValidator(FieldType.LINK)
+      })
+
+      it.each([
+        [["admin", "user"], null],
+        [["user"], CONTAINS_ERROR],
+      ] as const)("value %j", (input, expected) => {
+        expect(validator(input)).toBe(expected)
+      })
+    })
+  })
+
+  describe("notContains validation", () => {
+    const createNotContainsValidator = (type: FieldType) => {
+      const rules: UIFieldValidationRule[] = [
+        {
+          type,
+          constraint: "notContains",
+          value: "guest",
+          error: NOT_CONTAINS_ERROR,
+        },
+      ]
+
+      return createValidatorFromConstraints(null, rules, "field", undefined)
+    }
+
+    it.each([
+      [FieldType.STRING, "hello", null],
+      [FieldType.STRING, "guest user", NOT_CONTAINS_ERROR],
+      [FieldType.ARRAY, ["admin", "user"], null],
+      [FieldType.ARRAY, ["guest"], NOT_CONTAINS_ERROR],
+      [FieldType.LINK, ["admin"], null],
+      [FieldType.LINK, ["guest"], NOT_CONTAINS_ERROR],
+    ] as const)("type %s value %j", (type, input, expected) => {
+      const validator = createNotContainsValidator(type)
+      expect(validator(input)).toBe(expected)
+    })
   })
 })

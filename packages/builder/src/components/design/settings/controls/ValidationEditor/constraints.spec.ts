@@ -14,15 +14,42 @@ describe("validation constraints", () => {
         "regex",
         "notRegex",
         "url",
+        "email",
       ],
     ],
     ["number", ["required", "maxValue", "minValue", "equal", "notEqual"]],
-    ["boolean", ["required", "equal", "notEqual"]],
+    ["boolean", ["equal", "notEqual"]],
     ["datetime", ["required", "maxValue", "minValue", "equal", "notEqual"]],
     ["attachment", ["required", "maxFileSize", "maxUploadSize"]],
     ["attachment_single", ["required", "maxUploadSize"]],
     ["signature_single", ["required"]],
     ["link", ["required", "contains", "notContains", "minLength", "maxLength"]],
+    [
+      "url",
+      [
+        "required",
+        "minLength",
+        "maxLength",
+        "equal",
+        "notEqual",
+        "regex",
+        "notRegex",
+        "url",
+      ],
+    ],
+    [
+      "email",
+      [
+        "required",
+        "minLength",
+        "maxLength",
+        "equal",
+        "notEqual",
+        "regex",
+        "notRegex",
+        "email",
+      ],
+    ],
     [
       "array",
       ["required", "minLength", "maxLength", "contains", "notContains"],
@@ -47,6 +74,34 @@ describe("validation constraints", () => {
     )
     expect(urlConstraints.map(constraint => constraint.value)).toContain("url")
   })
+
+  it("does not include an email rule for URL fields", () => {
+    const urlConstraints = getConstraintsForType("url")
+
+    expect(urlConstraints.map(constraint => constraint.value)).not.toContain(
+      "email"
+    )
+  })
+
+  it("includes an email rule for text and email fields", () => {
+    const stringConstraints = getConstraintsForType("string")
+    const emailConstraints = getConstraintsForType("email")
+
+    expect(stringConstraints.map(constraint => constraint.value)).toContain(
+      "email"
+    )
+    expect(emailConstraints.map(constraint => constraint.value)).toContain(
+      "email"
+    )
+  })
+
+  it("does not include a URL rule for email fields", () => {
+    const emailConstraints = getConstraintsForType("email")
+
+    expect(emailConstraints.map(constraint => constraint.value)).not.toContain(
+      "url"
+    )
+  })
 })
 
 describe("defaultErrorForConstraint", () => {
@@ -58,6 +113,7 @@ describe("defaultErrorForConstraint", () => {
 
   it.each([
     ["url", null, "Must be a valid URL"],
+    ["email", null, "Must be a valid email address"],
     ["minLength", 5, "Must be at least 5 characters"],
     ["maxLength", 10, "Must be at most 10 characters"],
     ["minValue", 5, "Must be at least 5"],
