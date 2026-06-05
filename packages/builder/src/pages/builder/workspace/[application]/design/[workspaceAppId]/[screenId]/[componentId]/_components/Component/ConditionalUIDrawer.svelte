@@ -135,7 +135,11 @@
       Constants.OperatorOptions.NotEmpty.value,
     ]
     condition.noValue = noValueOptions.includes(newOperator)
-    if (condition.noValue || newOperator === "oneOf") {
+    if (
+      condition.noValue ||
+      newOperator === "oneOf" ||
+      newOperator === "notOneOf"
+    ) {
       condition.referenceValue = null
       condition.valueType = "string"
     }
@@ -259,7 +263,8 @@
               <ConditionValueControl
                 disabled={condition.noValue}
                 typeSelectDisabled={condition.noValue ||
-                  condition.operator === "oneOf"}
+                  condition.operator === "oneOf" ||
+                  condition.operator === "notOneOf"}
                 {bindings}
                 valueType={condition.valueType}
                 value={condition.referenceValue}

@@ -98,6 +98,15 @@ export async function search(
     })
   }
 
+  // Make sure notOneOf _id queries decode the Row IDs
+  if (query?.notOneOf?._id) {
+    const rowIds = query.notOneOf._id
+    query.notOneOf._id = rowIds.map((row: string) => {
+      const ids = breakRowIdField(row)
+      return ids[0]
+    })
+  }
+
   try {
     const parameters = {
       filters: query,
