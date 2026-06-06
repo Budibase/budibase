@@ -16,13 +16,17 @@ jest.mock("@budibase/backend-core", () => {
 import {
   ActionFailureReason,
   AutomationStatus,
+  BasicOperator,
   EmptyFilterOption,
+  FieldType,
   Table,
+  UILogicalOperator,
 } from "@budibase/types"
 import { events } from "@budibase/backend-core"
-import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import * as automation from "../index"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { dataFilters } from "@budibase/shared-core"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import * as automation from "../../index"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("Branching automations", () => {
   const config = new TestConfiguration()
@@ -30,15 +34,16 @@ describe("Branching automations", () => {
 
   beforeAll(async () => {
     await config.init()
+    await automation.init()
   })
 
   beforeEach(async () => {
-    await automation.init()
     table = await config.createTable()
     await config.createRow()
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
@@ -129,6 +134,86 @@ describe("Branching automations", () => {
       "activeBranch branch taken"
     )
     expect(results.steps[1].outputs.message).toContain("Active user")
+  })
+
+  it("executes branch conditions produced by the condition builder", async () => {
+    const condition = dataFilters.buildQuery({
+      logicalOperator: UILogicalOperator.ALL,
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      groups: [
+        {
+          logicalOperator: UILogicalOperator.ANY,
+          filters: [
+            {
+              field: "{{ trigger.fields.name }}",
+              operator: BasicOperator.EQUAL,
+              type: FieldType.STRING,
+              valueType: "Value",
+              value: "j",
+            },
+          ],
+        },
+      ],
+    })
+
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition,
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { name: "j" } })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
+  })
+
+  it("executes number branch conditions produced by the condition builder", async () => {
+    const condition = dataFilters.buildQuery({
+      logicalOperator: UILogicalOperator.ALL,
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      groups: [
+        {
+          logicalOperator: UILogicalOperator.ANY,
+          filters: [
+            {
+              field: "{{ trigger.fields.age }}",
+              operator: BasicOperator.EQUAL,
+              type: FieldType.NUMBER,
+              valueType: "Value",
+              value: "40",
+            },
+          ],
+        },
+      ],
+    })
+
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition,
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { age: "40" } })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
   })
 
   it("should handle multiple conditions with AND operator", async () => {
@@ -304,6 +389,171 @@ describe("Branching automations", () => {
       .test({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
+  })
+
+  it("supports expanded branch condition operands", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition: {
+            $and: {
+              conditions: [
+                { string: { "{{trigger.fields.name}}": "Bud" } },
+                { fuzzy: { "{{trigger.fields.description}}": "low-code" } },
+                { oneOf: { "{{trigger.fields.status}}": ["new", "active"] } },
+                { range: { "{{trigger.fields.score}}": { low: 10 } } },
+                {
+                  range: {
+                    "{{trigger.fields.createdAt}}": {
+                      high: "2026-01-31T00:00:00.000Z",
+                    },
+                  },
+                },
+                { equal: { "{{ literal trigger.fields.enabled }}": true } },
+                { empty: { "{{trigger.fields.notes}}": null } },
+              ],
+            },
+          },
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({
+        fields: {
+          name: "Budibase",
+          description: "Build low-code tools",
+          status: "active",
+          score: 15,
+          createdAt: "2026-01-15T00:00:00.000Z",
+          enabled: true,
+          notes: "",
+        },
+      })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
+  })
+
+  it("evaluates bindings inside branch condition values", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition: {
+            $and: {
+              conditions: [
+                {
+                  range: {
+                    "{{trigger.fields.score}}": {
+                      low: "{{trigger.fields.minimumScore}}",
+                    },
+                  },
+                },
+                {
+                  oneOf: {
+                    "{{trigger.fields.status}}": [
+                      "{{trigger.fields.expectedStatus}}",
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({
+        fields: {
+          score: 12,
+          minimumScore: 10,
+          status: "active",
+          expectedStatus: "active",
+        },
+      })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
+  })
+
+  it("does not coerce empty string branch condition fields to zero", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition: {
+            equal: {
+              "{{trigger.fields.score}}": 0,
+            },
+          },
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({
+        fields: {
+          score: "",
+        },
+      })
+
+    expect(results.steps[0].outputs.status).toContain("fallback branch taken")
+    expect(results.steps[1].outputs.message).toContain("Fallback")
+  })
+
+  it("executes date branch conditions produced by the condition builder", async () => {
+    const condition = dataFilters.buildQuery({
+      logicalOperator: UILogicalOperator.ALL,
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      groups: [
+        {
+          logicalOperator: UILogicalOperator.ANY,
+          filters: [
+            {
+              field: "{{ trigger.fields.date }}",
+              operator: "rangeLow",
+              type: FieldType.DATETIME,
+              valueType: "Value",
+              value: "01/05/2026 10:45",
+            },
+          ],
+        },
+      ],
+    })
+
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        matched: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Matched" }),
+          condition,
+        },
+        fallback: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Fallback" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { date: "01/05/2026 10:45" } })
+
+    expect(results.steps[0].outputs.status).toContain("matched branch taken")
+    expect(results.steps[1].outputs.message).toContain("Matched")
   })
 
   it("should execute ELSE branch when no other conditions match", async () => {

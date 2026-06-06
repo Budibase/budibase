@@ -29,8 +29,10 @@ import {
   RowTriggers,
   SelectedAutomationState,
   ViewMode,
+  type FlowBlockPath,
   type FormUpdate,
   type StepInputs,
+  type StickyNote,
 } from "@/types/automations"
 import {
   AutomationTestProgressEvent,
@@ -101,6 +103,31 @@ import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
 import { contextMenuStore } from "./contextMenu"
 
+export interface AutomationSaveOptions {
+  skipUnpublishedChanges?: boolean
+}
+
+export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
+const sameMoveContainer = (
+  sourcePath: BlockPath[],
+  destPath: BlockPath[]
+): boolean => {
+  const sourceContainer = sourcePath.slice(0, -1)
+  const destContainer = destPath.slice(0, -1)
+  if (JSON.stringify(sourceContainer) !== JSON.stringify(destContainer)) {
+    return false
+  }
+
+  const pathSource = sourcePath.at(-1)
+  const pathEnd = destPath.at(-1)
+  return (
+    pathSource?.branchIdx === pathEnd?.branchIdx &&
+    pathSource?.branchStepId === pathEnd?.branchStepId &&
+    pathSource?.loopStepId === pathEnd?.loopStepId
+  )
+}
+
 export const isNoOpBlockMove = (
   sourcePath: BlockPath[],
   destPath: BlockPath[]
@@ -117,8 +144,11 @@ export const isNoOpBlockMove = (
     pathEnd.branchStepId === pathSource.branchStepId &&
     pathEnd.branchIdx === pathSource.branchIdx &&
     pathSource.stepIdx === 0
+  const isPreviousSibling =
+    sameMoveContainer(sourcePath, destPath) &&
+    pathEnd.stepIdx === pathSource.stepIdx - 1
 
-  return Boolean(isOwnDragzone || isFirstBranchStep)
+  return Boolean(isOwnDragzone || isFirstBranchStep || isPreviousSibling)
 }
 
 const initialAutomationState: AutomationStoreState = {
@@ -132,6 +162,67 @@ const initialAutomationState: AutomationStoreState = {
   },
   selectedAutomationId: null,
   viewMode: ViewMode.EDITOR,
+  actionPanelToolbarFlowEnd: false,
+}
+
+export type ToolbarFlowEndInsertion = {
+  targetPath: FlowBlockPath
+  anchorRef?: BlockRef
+  insertInsideLoopV2Children?: boolean
+}
+
+/** Toolbar + insert path: main chain tail, last branch, then Loop V2 children. */
+export const getToolbarFlowEndInsertion = (
+  automation: Automation | undefined | null,
+  blockRefs: Record<string, BlockRef>
+): ToolbarFlowEndInsertion => {
+  if (!automation?.definition?.trigger) return { targetPath: [] }
+
+  const tid = automation.definition.trigger.id
+  const fallback = (): ToolbarFlowEndInsertion => ({
+    targetPath: blockRefs[tid]?.pathTo ?? [{ stepIdx: 0, id: tid }],
+  })
+
+  const steps = automation.definition.steps ?? []
+  if (!steps.length) return fallback()
+
+  let cursor: AutomationStep = steps[steps.length - 1]
+  for (;;) {
+    if (isBranchStep(cursor)) {
+      const branches = cursor.inputs?.branches ?? []
+      if (!branches.length) {
+        const r = blockRefs[cursor.id]
+        return r?.pathTo ? { targetPath: r.pathTo, anchorRef: r } : fallback()
+      }
+      const bi = branches.length - 1
+      const kids = cursor.inputs?.children?.[branches[bi].id] ?? []
+      const host = blockRefs[cursor.id]
+      if (!kids.length) {
+        return {
+          targetPath: [
+            ...(host?.pathTo ?? []),
+            { branchIdx: bi, branchStepId: cursor.id, stepIdx: -1 },
+          ],
+          insertInsideLoopV2Children: Boolean(host?.isLoopV2Child),
+        }
+      }
+      cursor = kids[kids.length - 1]
+      continue
+    }
+    if (isLoopV2Step(cursor)) {
+      const p = blockRefs[cursor.id]?.pathTo
+      return p?.length
+        ? {
+            targetPath: p,
+            anchorRef: blockRefs[cursor.id],
+          }
+        : fallback()
+    }
+    break
+  }
+
+  const r = blockRefs[cursor.id]
+  return r?.pathTo?.length ? { targetPath: r.pathTo, anchorRef: r } : fallback()
 }
 
 let testStatusTimer: NodeJS.Timeout | undefined
@@ -870,6 +961,8 @@ const automationActions = (store: AutomationStore) => ({
     return blockRefs
   },
 
+  getToolbarFlowEndInsertion,
+
   getAvailableBindings: (
     block: any,
     automation: Automation
@@ -1367,6 +1460,8 @@ const automationActions = (store: AutomationStore) => ({
       }
       state.testProgress = {}
       state.testResults = undefined
+      state.selectedNodeId = undefined
+      state.selectedBranchNode = undefined
       return state
     })
     try {
@@ -1830,6 +1925,7 @@ const automationActions = (store: AutomationStore) => ({
     ) {
       const branchNode = container[insertIdx] as BranchStep
       const branches = branchNode.inputs.branches
+      const branchIdx = branches.length
       const branchEntry = createBranch(`Branch ${branches.length + 1}`)
       branches.splice(branches.length, 0, branchEntry)
       branchNode.inputs.children = {
@@ -1838,6 +1934,11 @@ const automationActions = (store: AutomationStore) => ({
       }
       try {
         await store.actions.save(newAutomation)
+        await store.actions.selectBranchNode({
+          nodeId: `branch-${branchNode.id}-${branchIdx}-${branchEntry.id}`,
+          stepId: branchNode.id,
+          branchIdx,
+        })
       } catch (e) {
         notifications.error("Error adding branch to automation")
         console.error("Error adding automation branch", e)
@@ -1868,6 +1969,11 @@ const automationActions = (store: AutomationStore) => ({
 
     try {
       await store.actions.save(newAutomation)
+      await store.actions.selectBranchNode({
+        nodeId: `branch-${newBranch.id}-0-${newBranch.inputs.branches[0].id}`,
+        stepId: newBranch.id,
+        branchIdx: 0,
+      })
     } catch (e) {
       notifications.error("Error adding branch to automation")
       console.error("Error adding automation branch", e)
@@ -2083,7 +2189,10 @@ const automationActions = (store: AutomationStore) => ({
    *
    * @param {Array<Object>} pathTo the path to the target node
    */
-  deleteAutomationBlock: async (pathTo: Array<BlockPath>) => {
+  deleteAutomationBlock: async (
+    pathTo: Array<BlockPath>,
+    options?: { cascadeNextBranchInLoop?: boolean }
+  ) => {
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
@@ -2110,6 +2219,7 @@ const automationActions = (store: AutomationStore) => ({
 
           children.splice(lastHop.stepIdx, 1)
           if (
+            options?.cascadeNextBranchInLoop &&
             children[lastHop.stepIdx]?.stepId === AutomationActionStepId.BRANCH
           ) {
             children.splice(lastHop.stepIdx, 1)
@@ -2269,6 +2379,7 @@ const automationActions = (store: AutomationStore) => ({
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
+      delete state.selectedBranchNode
       state.showLogsPanel = false
       state.showLogDetailsPanel = false
       delete state.selectedLog
@@ -2521,11 +2632,11 @@ const automationActions = (store: AutomationStore) => ({
     }
   ),
 
-  save: async (automation: Automation) => {
+  save: async (automation: Automation, opts: AutomationSaveOptions = {}) => {
     const response = await API.updateAutomation(automation)
 
     // Mark automation as having unpublished changes
-    if (response.automation._id) {
+    if (!opts.skipUnpublishedChanges && response.automation._id) {
       workspaceDeploymentStore.setAutomationUnpublishedChanges(
         response.automation._id
       )
@@ -2533,7 +2644,114 @@ const automationActions = (store: AutomationStore) => ({
 
     store.actions.replace(response.automation._id!, response.automation)
     store.actions.select(response.automation._id!)
+    store.actions.clearRunResults()
     return response.automation
+  },
+
+  clearRunResults: () => {
+    store.update(state => {
+      state.testResults = undefined
+      state.testProgress = {}
+      return state
+    })
+  },
+
+  addStickyNote: async (position?: { x: number; y: number }) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto) return
+
+    const notes = auto.uiTree?.stickyNotes || []
+    if (notes.length >= MAX_STICKY_NOTES_PER_AUTOMATION) {
+      return
+    }
+
+    const newNote = {
+      id: generate(),
+      title: "Note",
+      text: "",
+      x: position?.x ?? 100 + notes.length * 30,
+      y: position?.y ?? 100 + notes.length * 30,
+    }
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...(updated.uiTree || {}),
+      stickyNotes: [...notes, newNote],
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
+  },
+
+  saveStickyNoteUpdate: async (updated: Automation, previous: Automation) => {
+    store.actions.replace(updated._id!, updated)
+    store.actions.select(updated._id!)
+    try {
+      await automationStore.actions.save(updated, {
+        skipUnpublishedChanges: true,
+      })
+    } catch (error) {
+      store.actions.replace(previous._id!, previous)
+      store.actions.select(previous._id!)
+      throw error
+    }
+  },
+
+  updateStickyNote: async (
+    noteId: string,
+    updates: {
+      title?: string
+      text?: string
+      width?: number
+      height?: number
+      x?: number
+      y?: number
+    }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
+        n.id === noteId ? { ...n, ...updates } : n
+      ),
+    }
+    await automationStore.actions.saveStickyNoteUpdate(updated, auto)
+  },
+
+  updateStickyNotePosition: async (
+    noteId: string,
+    position: { x: number; y: number }
+  ) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.map((n: StickyNote) =>
+        n.id === noteId ? { ...n, x: position.x, y: position.y } : n
+      ),
+    }
+    await automationStore.actions.saveStickyNoteUpdate(updated, auto)
+  },
+
+  removeStickyNote: async (noteId: string) => {
+    const auto = get(selectedAutomation)?.data
+    if (!auto?.uiTree?.stickyNotes) return
+
+    const updated = cloneDeep(auto)
+    updated.uiTree = {
+      ...updated.uiTree,
+      stickyNotes: updated.uiTree.stickyNotes.filter(
+        (n: StickyNote) => n.id !== noteId
+      ),
+    }
+    await automationStore.actions.save(updated, {
+      skipUnpublishedChanges: true,
+    })
   },
 
   delete: async (automation: Automation) => {
@@ -2764,7 +2982,7 @@ const automationActions = (store: AutomationStore) => ({
       )
 
       await automationStore.actions.save(updated)
-      await automationStore.actions.selectNode(targetStep.id)
+      await automationStore.actions.selectNode(loopBlock.id)
     } catch (e) {
       notifications.error("Error wrapping step in Loop")
       console.error("Error wrapping step in Loop V2", e)
@@ -2783,23 +3001,57 @@ const automationActions = (store: AutomationStore) => ({
       return {
         ...state,
         selectedNodeId: blockId,
+        selectedBranchNode: undefined,
         selectedNodeMode: mode ?? DataMode.INPUT,
+        actionPanelBlock: undefined,
+        actionPanelToolbarFlowEnd: false,
       }
     })
   },
 
-  openActionPanel: (block: BlockRef) => {
+  selectBranchNode: async (selection: {
+    nodeId: string
+    stepId: string
+    branchIdx: number
+  }) => {
+    contextMenuStore.close()
+    store.update(state => ({
+      ...state,
+      selectedNodeId: selection.nodeId,
+      selectedBranchNode: selection,
+      selectedNodeMode: DataMode.INPUT,
+      actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
+    }))
+  },
+
+  openActionPanel: (block: AutomationStoreState["actionPanelBlock"]) => {
     contextMenuStore.close()
     store.update(state => ({
       ...state,
       actionPanelBlock: block,
+      actionPanelToolbarFlowEnd: false,
       selectedNodeId: undefined,
+      selectedBranchNode: undefined,
+    }))
+  },
+  openActionPanelToolbarFlowEnd: (
+    block: AutomationStoreState["actionPanelBlock"]
+  ) => {
+    contextMenuStore.close()
+    store.update(state => ({
+      ...state,
+      actionPanelBlock: block,
+      actionPanelToolbarFlowEnd: true,
+      selectedNodeId: undefined,
+      selectedBranchNode: undefined,
     }))
   },
   closeActionPanel: () => {
     store.update(state => ({
       ...state,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
@@ -2814,7 +3066,9 @@ const automationActions = (store: AutomationStore) => ({
       selectedLog: log,
       selectedLogStepData: stepData,
       selectedNodeId: undefined,
+      selectedBranchNode: undefined,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
     }))
   },
 
@@ -2833,7 +3087,9 @@ const automationActions = (store: AutomationStore) => ({
       ...state,
       showLogsPanel: true,
       selectedNodeId: undefined,
+      selectedBranchNode: undefined,
       actionPanelBlock: undefined,
+      actionPanelToolbarFlowEnd: false,
       showLogDetailsPanel: false,
     }))
   },
@@ -2926,7 +3182,7 @@ class AutomationStore extends DerivedBudiStore<
   AutomationStoreState,
   DerivedAutomationStoreState
 > {
-  history: HistoryStore<Automation>
+  history: HistoryStore<Automation, AutomationSaveOptions>
   actions: ReturnType<typeof automationActions>
   selected: SelectedAutomationStore
 
@@ -2951,7 +3207,7 @@ class AutomationStore extends DerivedBudiStore<
 
     super(initialAutomationState, makeDerivedStore)
     this.actions = automationActions(this)
-    this.history = createHistoryStore({
+    this.history = createHistoryStore<Automation, AutomationSaveOptions>({
       getDoc: this.actions.getDefinition.bind(this),
       selectDoc: this.actions.select.bind(this),
     })

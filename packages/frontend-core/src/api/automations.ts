@@ -10,6 +10,8 @@ import {
   SearchAutomationLogsResponse,
   TestAutomationRequest,
   TestAutomationResponse,
+  TestEmailConnectionRequest,
+  TestEmailConnectionResponse,
   TestProgressState,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
@@ -44,6 +46,9 @@ export interface AutomationEndpoints {
     data: TestAutomationRequest,
     options?: { async?: boolean }
   ) => Promise<TestAutomationResponse>
+  testEmailConnection: (
+    data: TestEmailConnectionRequest
+  ) => Promise<TestEmailConnectionResponse>
   getAutomationTestStatus: (automationId: string) => Promise<TestProgressState>
   getAutomationDefinitions: () => Promise<GetAutomationStepDefinitionsResponse>
   getAutomationLogs: (
@@ -88,6 +93,16 @@ export const buildAutomationEndpoints = (
   getAutomationTestStatus: async automationId => {
     return await API.get({
       url: `/api/automations/${automationId}/test/status`,
+    })
+  },
+
+  testEmailConnection: async data => {
+    return await API.post<
+      TestEmailConnectionRequest,
+      TestEmailConnectionResponse
+    >({
+      url: "/api/automations/email/test-connection",
+      body: data,
     })
   },
 

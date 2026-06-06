@@ -3,35 +3,62 @@
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import { ViewMode, type StepNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
-  import { enrichLog } from "../../AutomationStepHelpers"
+  import { enrichLog, getLogStepData } from "../../AutomationStepHelpers"
   import {
     type AutomationStep,
     type AutomationTrigger,
     type AutomationStepResult,
     type AutomationTriggerResult,
-    type LayoutDirection,
   } from "@budibase/types"
+  import {
+    didStepRun,
+    didRunStopWithoutBranchMatch,
+    getRunHighlight,
+    isTerminalFailure,
+  } from "../FlowRunHelpers"
 
   export let data: StepNodeData
 
-  // Extract block and other data
   $: block = data.block
   $: viewMode = $automationStore.viewMode
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
-
-  // Get automation data from store
   $: automation = $selectedAutomation?.data
   $: isTrigger = "type" in block && block.type === "TRIGGER"
 
   // TODO: Fix Casting this temporarily
   // Don't want to drill down into the block types here
   $: stepBlock = block as AutomationStep | AutomationTrigger
+  $: logStepData =
+    viewMode === ViewMode.LOGS
+      ? getLogStepData(stepBlock, $automationStore.selectedLog)
+      : null
+  $: result =
+    viewMode === ViewMode.LOGS
+      ? logStepData
+      : automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          stepBlock
+        )
+  $: runHighlight = getRunHighlight(
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
+  )
+  $: runStoppedWithoutBranchMatch = didRunStopWithoutBranchMatch(
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
+  )
+  $: handleStopped =
+    !!result &&
+    didStepRun(result) &&
+    (runHighlight === "stopped" || runStoppedWithoutBranchMatch)
+  $: handleError = isTerminalFailure(result) && !handleStopped
+  $: handleSuccess =
+    !handleError && !!result && didStepRun(result) && runHighlight === "success"
 
   function handleStepSelect(
     stepData: AutomationStepResult | AutomationTriggerResult
   ) {
-    // Show step details when a step is selected in logs mode
     if (
       stepData &&
       viewMode === ViewMode.LOGS &&
@@ -47,13 +74,19 @@
   }
 </script>
 
-<div style="position: relative;">
+<div
+  class="step-wrapper"
+  class:error={handleError}
+  class:success={handleSuccess}
+  class:warn={handleStopped}
+  class:logs={viewMode === ViewMode.LOGS}
+>
   {#if !isTrigger}
     <Handle
       isConnectable={false}
       class="custom-handle"
       type="target"
-      position={isHorizontal ? Position.Left : Position.Top}
+      position={Position.Left}
     />
   {/if}
   <StepNode
@@ -69,7 +102,32 @@
       isConnectable={false}
       class="custom-handle"
       type="source"
-      position={isHorizontal ? Position.Right : Position.Bottom}
+      position={Position.Right}
     />
   </div>
 </div>
+
+<style>
+  .step-wrapper {
+    position: relative;
+    width: fit-content;
+    max-width: 360px;
+  }
+  .step-wrapper.error {
+    --automation-flow-handle-color: var(
+      --spectrum-semantic-negative-color-status
+    );
+  }
+  .step-wrapper.success {
+    --automation-flow-handle-color: var(
+      --spectrum-semantic-positive-color-status
+    );
+  }
+  .step-wrapper.warn {
+    --automation-flow-handle-color: var(--spectrum-global-color-orange-500);
+  }
+  .step-wrapper.logs :global(.svelte-flow__handle-left.custom-handle),
+  .step-wrapper.logs :global(.svelte-flow__handle-right.custom-handle) {
+    top: 31px;
+  }
+</style>

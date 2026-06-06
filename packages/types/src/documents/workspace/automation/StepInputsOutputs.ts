@@ -1,12 +1,8 @@
 import { Table } from "@budibase/types"
 import type { UIMessage, LanguageModelUsage } from "ai"
 import { SortOrder } from "../../../api"
-import {
-  SearchFilters,
-  EmptyFilterOption,
-  BasicOperator,
-  LogicalOperator,
-} from "../../../sdk"
+import { EmptyFilterOption, SearchFilters } from "../../../sdk"
+import type { UISearchFilter } from "../../../api"
 import { HttpMethod } from "../query"
 import { Row, RowAttachment } from "../row"
 import {
@@ -168,24 +164,10 @@ export type Branch = {
   id: any
   name: string
   condition: BranchSearchFilters
-  conditionUI?: {
-    groups?: {
-      filters?: {
-        field: string
-        operator: BasicOperator
-        value: any
-      }[]
-    }[]
-  }
+  conditionUI?: UISearchFilter
 }
 
-export type BranchSearchFilters = Pick<
-  SearchFilters,
-  | BasicOperator.EQUAL
-  | BasicOperator.NOT_EQUAL
-  | LogicalOperator.AND
-  | LogicalOperator.OR
->
+export type BranchSearchFilters = SearchFilters
 
 export type MakeIntegrationInputs = {
   url: string
@@ -459,12 +441,20 @@ export type CronTriggerInputs = {
   cron: string
 }
 
+export enum EmailTriggerAuthType {
+  PASSWORD = "password",
+  OAUTH2 = "oauth2",
+}
+
 export interface EmailTriggerInputs {
   host: string
   port: number
   secure: boolean
   username: string
-  password: string
+  authType?: EmailTriggerAuthType
+  password?: string
+  datasourceId?: string
+  authConfigId?: string
   mailbox?: string
 }
 

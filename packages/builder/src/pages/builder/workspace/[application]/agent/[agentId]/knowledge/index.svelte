@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { Body, Layout, notifications } from "@budibase/bbui"
+  import { Body, Button, Checkbox, Layout, notifications } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
+  import { getErrorMessage } from "@/helpers/errors"
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
     AgentKnowledgeSourceType,
@@ -43,6 +44,46 @@
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
+  let allowKnowledgeSourceDownloadDraft = $state(true)
+  let savingAllowKnowledgeSourceDownload = $state(false)
+
+  $effect(() => {
+    if (!currentAgent) {
+      return
+    }
+
+    allowKnowledgeSourceDownloadDraft =
+      currentAgent.allowKnowledgeSourceDownload !== false
+  })
+
+  const persistAllowKnowledgeSourceDownload = async () => {
+    const agent = currentAgent
+    if (!agent?._id || !agent._rev) {
+      return
+    }
+    const next = allowKnowledgeSourceDownloadDraft
+    if (next === (agent.allowKnowledgeSourceDownload !== false)) {
+      return
+    }
+    savingAllowKnowledgeSourceDownload = true
+    try {
+      await agentsStore.updateAgent({
+        ...agent,
+        allowKnowledgeSourceDownload: next,
+      })
+      await agentsStore.fetchAgents()
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      allowKnowledgeSourceDownloadDraft =
+        agent.allowKnowledgeSourceDownload !== false
+      notifications.error(
+        getErrorMessage(error) || "Failed to save download setting"
+      )
+    } finally {
+      savingAllowKnowledgeSourceDownload = false
+    }
+  }
+
   let loading = $state(true)
   let pendingUploadsByAgent = $state<Record<string, PendingUpload[]>>({})
   let uploadingByAgent = $state<Record<string, boolean>>({})
@@ -98,6 +139,15 @@
   )
   let activeUploadProgress = $derived(
     activeAgentId ? uploadProgressByAgent[activeAgentId] || "" : ""
+  )
+
+  let resetting = $state(false)
+  let hasStoreAccessFailures = $derived(
+    files.some(
+      file =>
+        file.status === KnowledgeBaseFileStatus.FAILED &&
+        file.errorMessage?.includes("Reset store")
+    )
   )
 
   const setPendingUploadsForAgent = (
@@ -378,6 +428,33 @@
     })
   }
 
+  async function resetKnowledgeStore() {
+    const agentId = currentAgent?._id
+    if (!agentId) {
+      return
+    }
+
+    await confirm({
+      title: "Reset knowledge store",
+      body: `This will recreate the underlying vector store and re-queue all sync files for ingestion. Use this if uploads are failing due to an inaccessible store.`,
+      okText: "Reset",
+      onConfirm: async () => {
+        resetting = true
+        try {
+          await agentsStore.resetKnowledgeBaseStore(agentId)
+          notifications.success(
+            "Knowledge store reset - files are re-queued for ingestion"
+          )
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to reset knowledge store")
+        } finally {
+          resetting = false
+        }
+      },
+    })
+  }
+
   onDestroy(() => {
     stopSharePointBootstrapPolling()
     knowledgePollingController.stop()
@@ -387,33 +464,61 @@
 <Layout gap="S" noPadding>
   <div class="section-header">
     <Body size="S">Knowledge</Body>
-    <KnowledgeAddControls
-      agentId={currentAgent?._id}
-      isUploading={isUploadingActiveAgent}
-      uploadProgress={activeUploadProgress}
-      onPendingUploadsAdded={(agentId, uploads) => {
-        setPendingUploadsForAgent(agentId, [
-          ...uploads,
-          ...(pendingUploadsByAgent[agentId] || []),
-        ])
-      }}
-      onPendingUploadRemoved={(agentId, tempId) => {
-        removePendingUpload(agentId, tempId)
-      }}
-      onUploadingChange={(agentId, uploading, progress) => {
-        setUploadingForAgent(agentId, uploading)
-        setUploadProgressForAgent(agentId, progress)
-      }}
-      onUploaded={async agentId => {
-        await fetchFiles(agentId)
-        await refreshDeploymentStatus()
-      }}
-      onSharePoint={() =>
-        openSharePointFlow().catch(error => {
-          console.error(error)
-          notifications.error("Failed to fetch SharePoint sites")
-        })}
+    <div class="section-header-actions">
+      {#if hasStoreAccessFailures}
+        <Button
+          quiet
+          size="S"
+          secondary
+          disabled={resetting}
+          iconColor="var(--orange)"
+          icon="cloud-rain"
+          on:click={resetKnowledgeStore}
+        >
+          Reset store
+        </Button>
+      {/if}
+      <KnowledgeAddControls
+        agentId={currentAgent?._id}
+        isUploading={isUploadingActiveAgent}
+        uploadProgress={activeUploadProgress}
+        onPendingUploadsAdded={(agentId, uploads) => {
+          setPendingUploadsForAgent(agentId, [
+            ...uploads,
+            ...(pendingUploadsByAgent[agentId] || []),
+          ])
+        }}
+        onPendingUploadRemoved={(agentId, tempId) => {
+          removePendingUpload(agentId, tempId)
+        }}
+        onUploadingChange={(agentId, uploading, progress) => {
+          setUploadingForAgent(agentId, uploading)
+          setUploadProgressForAgent(agentId, progress)
+        }}
+        onUploaded={async agentId => {
+          await fetchFiles(agentId)
+          await refreshDeploymentStatus()
+        }}
+        onSharePoint={() =>
+          openSharePointFlow().catch(error => {
+            console.error(error)
+            notifications.error("Failed to fetch SharePoint sites")
+          })}
+      />
+    </div>
+  </div>
+
+  <div class="sources-access">
+    <Checkbox
+      text="Allow users to download knowledge source files from chat"
+      bind:value={allowKnowledgeSourceDownloadDraft}
+      disabled={savingAllowKnowledgeSourceDownload || !currentAgent?._id}
+      on:change={() => persistAllowKnowledgeSourceDownload()}
     />
+    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+      When disabled, chat still shows which files were used, without a download
+      link.
+    </Body>
   </div>
 
   <KnowledgeTable
@@ -444,10 +549,39 @@
 />
 
 <style>
+  .sources-access {
+    --sources-access-label-offset: calc(
+      var(
+          --spectrum-checkbox-m-box-size,
+          var(--spectrum-alias-item-control-2-size-m)
+        ) +
+        var(
+          --spectrum-checkbox-m-text-gap,
+          var(--spectrum-alias-item-control-gap-m)
+        )
+    );
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxs);
+    padding-top: var(--spacing-xs);
+  }
+
+  .sources-access :global(p) {
+    margin: 0;
+    padding-left: var(--sources-access-label-offset);
+  }
+
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .section-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
   }
 </style>

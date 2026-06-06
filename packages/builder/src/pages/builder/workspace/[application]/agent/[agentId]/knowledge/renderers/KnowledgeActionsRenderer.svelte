@@ -37,7 +37,7 @@
 
 <div class="file-actions" class:loading={processing}>
   {#if row.kind === "sharepoint_connection"}
-    <AbsTooltip text="Sync SharePoint">
+    <AbsTooltip text="Sync SharePoint" noWrap>
       <ActionButton
         icon={"arrows-clockwise"}
         size="M"
@@ -47,7 +47,7 @@
         loading={syncing}
       ></ActionButton>
     </AbsTooltip>
-    <AbsTooltip text="Disconnect SharePoint">
+    <AbsTooltip text="Disconnect" noWrap>
       <ActionButton
         icon="trash"
         size="M"
@@ -57,7 +57,7 @@
       />
     </AbsTooltip>
   {:else if row.onDelete}
-    <AbsTooltip text="Remove file">
+    <AbsTooltip text="Remove" noWrap>
       <ActionButton
         icon="trash"
         size="M"

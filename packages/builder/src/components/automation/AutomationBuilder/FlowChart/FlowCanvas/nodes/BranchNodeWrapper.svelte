@@ -1,77 +1,135 @@
 <script lang="ts">
   import BranchNode from "./BranchNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
-  import { ViewMode, type BranchNodeData } from "@/types/automations"
+  import { ViewMode } from "@/types/automations"
+  import { type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
-  import { enrichLog } from "../../AutomationStepHelpers"
-  import { STEP, SUBFLOW } from "../FlowGeometry"
+  import { type BranchStep } from "@budibase/types"
+  import { SUBFLOW } from "../FlowGeometry"
+  import { getLogStepData } from "../../AutomationStepHelpers"
   import {
-    type AutomationStepResult,
-    type AutomationTriggerResult,
-    type LayoutDirection,
-  } from "@budibase/types"
+    didBranchStopWithoutMatch,
+    getRunHighlight,
+    isTerminalFailure,
+  } from "../FlowRunHelpers"
 
   export let data: BranchNodeData
 
   // unwrap data passed from SvelteFlow
   $: block = data.block
+  $: stepBlock = block as BranchStep
   $: branchIdx = data.branchIdx
   $: viewMode = $automationStore.viewMode as ViewMode
   $: automation = $selectedAutomation?.data
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
   $: isSubflow = !!data?.isSubflow
   $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
-  $: handleOffset =
-    isHorizontal && isSubflow
-      ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
-      : 0
+  $: targetHandleStyle = isSubflow ? "left: -3px;" : undefined
+  $: sourceHandleStyle = isSubflow ? "right: -3px;" : undefined
+  $: logData = $automationStore.selectedLog
+  $: logStepData =
+    viewMode === ViewMode.LOGS ? getLogStepData(stepBlock, logData) : null
+  $: branchResult =
+    viewMode === ViewMode.LOGS
+      ? logStepData
+      : automationStore.actions.processBlockResults(
+          $automationStore.testResults,
+          stepBlock
+        )
+  $: runHighlight = getRunHighlight(
+    viewMode === ViewMode.LOGS
+      ? $automationStore.selectedLog
+      : $automationStore.testResults
+  )
+  $: hasBranchResultValue = hasBranchResult(branchResult)
+  $: branchExecuted =
+    branchIdx !== undefined && hasBranchResultValue
+      ? branchResult.outputs.branchId ===
+        stepBlock.inputs.branches?.[branchIdx]?.id
+      : false
+  $: branchStepFailed = isTerminalFailure(branchResult)
+  $: branchStepFailure =
+    branchStepFailed && (branchExecuted || !hasBranchResultValue)
+  $: branchStoppedWithoutMatch = didBranchStopWithoutMatch(branchResult)
+  $: branchError =
+    !branchStoppedWithoutMatch &&
+    runHighlight !== "stopped" &&
+    (branchStepFailure || (branchExecuted && runHighlight === "error"))
+  $: branchSuccess =
+    !branchError && branchExecuted && runHighlight === "success"
+  $: branchStopped =
+    branchStoppedWithoutMatch ||
+    (!branchError && branchExecuted && runHighlight === "stopped")
 
-  // Handle step selection in logs mode (open details panel)
-  function handleStepSelect(
-    stepData: AutomationStepResult | AutomationTriggerResult
-  ) {
-    if (
-      stepData &&
-      viewMode === ViewMode.LOGS &&
-      $automationStore.selectedLog
-    ) {
-      const enriched =
-        enrichLog(
-          $automationStore.blockDefinitions,
-          $automationStore.selectedLog
-        ) ?? $automationStore.selectedLog
-      automationStore.actions.openLogPanel(enriched, stepData)
+  type BranchResult = {
+    outputs: {
+      branchId?: string
+      success?: boolean
     }
+  }
+
+  const hasBranchResult = (value: unknown): value is BranchResult => {
+    if (!value || typeof value !== "object" || !("outputs" in value)) {
+      return false
+    }
+    const outputs = value.outputs
+    return !!outputs && typeof outputs === "object" && "branchId" in outputs
   }
 </script>
 
-<div class="branch-wrapper">
+<div
+  class="branch-wrapper"
+  class:subflow={isSubflow}
+  class:error={branchError}
+  class:success={branchSuccess}
+  class:warn={branchStopped}
+  class:logs={viewMode === ViewMode.LOGS}
+  style:--branch-wrapper-width={`${laneWidth}px`}
+>
   <Handle
     isConnectable={false}
     class="custom-handle"
     type="target"
-    position={isHorizontal ? Position.Left : Position.Top}
-    style={isHorizontal && isSubflow
-      ? `left: ${handleOffset - 3}px;`
-      : undefined}
+    position={Position.Left}
+    style={targetHandleStyle}
   />
   <div class="branch-container">
-    <BranchNode
-      {automation}
-      step={block}
-      {branchIdx}
-      {viewMode}
-      onStepSelect={handleStepSelect}
-    />
+    <BranchNode {automation} step={block} {branchIdx} {viewMode} />
   </div>
   <Handle
     isConnectable={false}
     class="custom-handle"
     type="source"
-    position={isHorizontal ? Position.Right : Position.Bottom}
-    style={isHorizontal && isSubflow
-      ? `right: ${handleOffset - 3}px;`
-      : undefined}
+    position={Position.Right}
+    style={sourceHandleStyle}
   />
 </div>
+
+<style>
+  .branch-wrapper {
+    position: relative;
+    width: fit-content;
+    max-width: 360px;
+  }
+  .branch-wrapper.subflow {
+    width: fit-content;
+    max-width: 360px;
+  }
+  .branch-container {
+    width: fit-content;
+    max-width: 360px;
+    margin: 0;
+  }
+  .branch-wrapper.error :global(.custom-handle) {
+    background-color: var(--spectrum-semantic-negative-color-status);
+  }
+  .branch-wrapper.success :global(.custom-handle) {
+    background-color: var(--spectrum-semantic-positive-color-status);
+  }
+  .branch-wrapper.warn :global(.custom-handle) {
+    background-color: var(--spectrum-global-color-orange-500);
+  }
+  .branch-wrapper.logs :global(.svelte-flow__handle-left.custom-handle),
+  .branch-wrapper.logs :global(.svelte-flow__handle-right.custom-handle) {
+    top: 31px;
+  }
+</style>

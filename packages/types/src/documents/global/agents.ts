@@ -22,6 +22,7 @@ export interface ToolMetadata {
 interface ChatAgentIntegration {
   chatAppId?: string
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }
 
 export interface DiscordAgentIntegration extends ChatAgentIntegration {
@@ -82,6 +83,7 @@ export interface Agent extends Document {
   description?: string
   aiconfig: string
   promptInstructions?: string
+  operationName?: string
   goal?: string
   live?: boolean
   publishedAt?: string
@@ -90,6 +92,8 @@ export interface Agent extends Document {
   createdBy?: string
   enabledTools?: string[]
   knowledgeBases?: string[]
+  /** When false, chat users cannot download knowledge source files. Default is allowed. */
+  allowKnowledgeSourceDownload?: boolean
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration

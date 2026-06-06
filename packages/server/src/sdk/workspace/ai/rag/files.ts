@@ -7,11 +7,13 @@ import {
   KnowledgeBaseType,
   LockName,
   LockType,
+  type WithRequired,
 } from "@budibase/types"
-import { HTTPError, locks } from "@budibase/backend-core"
+import { HTTPError, locks, objectStore } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
+import { ObjectStoreBuckets } from "../../../../constants"
 
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
@@ -183,7 +185,42 @@ export const deleteFileForAgent = async (
   await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
 }
 
-function getProcessor(kb: KnowledgeBase) {
+export const getFileUrlForAgent = async (
+  agentId: string,
+  fileId: string
+): Promise<string> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this agent", 404)
+  }
+
+  if (!file.objectStoreKey) {
+    throw new HTTPError("Knowledge base file is missing object key", 400)
+  }
+
+  return await objectStore.getPresignedUrl(
+    ObjectStoreBuckets.APPS,
+    file.objectStoreKey
+  )
+}
+
+const assertKnowledgeBaseHasId: (
+  knowledgeBase: KnowledgeBase
+) => asserts knowledgeBase is WithRequired<KnowledgeBase, "_id"> = (
+  knowledgeBase: KnowledgeBase
+) => {
+  if (!knowledgeBase._id) {
+    throw new Error("Knowledge base id not set")
+  }
+}
+
+function getProcessor(kb: WithRequired<KnowledgeBase, "_id">) {
   const ProcessorClassByType = {
     [KnowledgeBaseType.GEMINI]: GeminiRagProcessor,
   }
@@ -201,13 +238,17 @@ export const ingestKnowledgeBaseFile = async (
   knowledgeBaseFile: KnowledgeBaseFile,
   fileBuffer: Buffer
 ): Promise<void> => {
-  const knowledgeBaseId = knowledgeBase._id
-  if (!knowledgeBaseId) {
-    throw new Error("Knowledge base id not set")
+  assertKnowledgeBaseHasId(knowledgeBase)
+  const knowledgeBaseFileId = knowledgeBaseFile._id
+  if (!knowledgeBaseFileId) {
+    throw new Error("Knowledge base file id not set")
   }
 
   const processor = getProcessor(knowledgeBase)
-  await processor.ingestKnowledgeBaseFile(knowledgeBaseFile, fileBuffer)
+  await processor.ingestKnowledgeBaseFile(
+    { ...knowledgeBaseFile, _id: knowledgeBaseFileId },
+    fileBuffer
+  )
 }
 
 interface RetrievedContextResult {
@@ -251,6 +292,7 @@ export const retrieveContextForAgent = async (
 
     const readyFileSourceIds = new Set(readyFileSources)
     const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
+    assertKnowledgeBaseHasId(knowledgeBase)
     const processor = getProcessor(knowledgeBase)
     const returned = await processor.search(question)
 
@@ -326,6 +368,7 @@ export const deleteKnowledgeBaseFileChunks = async (
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
+  assertKnowledgeBaseHasId(knowledgeBase)
 
   const processor = getProcessor(knowledgeBase)
   await processor.deleteFiles(sourceIds)

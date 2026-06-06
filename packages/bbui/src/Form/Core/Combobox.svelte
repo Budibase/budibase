@@ -42,7 +42,7 @@
     return String(value).toLowerCase()
   }
 
-  $: query = value || ""
+  $: if (!focus) query = value || ""
   $: filteredOptions =
     !query.trim() || !options?.length
       ? options
@@ -59,12 +59,13 @@
   }
 
   const onType: FormEventHandler<HTMLInputElement> = e => {
-    const value = e.currentTarget.value
-    dispatch("type", value)
-    selectOption(value, false)
+    query = e.currentTarget.value
+    dispatch("type", query)
+    open = true
   }
 
   const onPick = (value: string) => {
+    query = value
     dispatch("pick", value)
     selectOption(value)
   }
@@ -87,10 +88,13 @@
       on:focus={() => (focus = true)}
       on:blur={() => {
         focus = false
+        if (query !== (value || "")) {
+          dispatch("change", query)
+        }
         dispatch("blur")
       }}
       on:input={onType}
-      value={value || ""}
+      value={query}
       placeholder={placeholder || ""}
       {disabled}
       {readonly}
@@ -135,6 +139,7 @@
             role="option"
             aria-selected="true"
             tabindex="0"
+            on:mousedown|preventDefault
             on:click={() => onPick(getOptionValue(option))}
           >
             <span class="spectrum-Menu-itemLabel">{getOptionLabel(option)}</span

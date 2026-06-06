@@ -70,4 +70,12 @@ describe("fetchWithBlacklist redirects", () => {
     expect(response.status).toEqual(304)
     expect(nock.isDone()).toEqual(true)
   })
+
+  it("returns redirect response when location header is missing", async () => {
+    nock("http://8.8.8.8").get("/start").reply(302, { ok: false })
+    const response = await fetchWithBlacklist("http://8.8.8.8/start")
+    expect(response.status).toEqual(302)
+    expect(await response.json()).toEqual({ ok: false })
+    expect(nock.isDone()).toEqual(true)
+  })
 })

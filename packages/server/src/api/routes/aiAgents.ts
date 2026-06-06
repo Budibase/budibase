@@ -1,5 +1,5 @@
 import { auth } from "@budibase/backend-core"
-import { aiRagEnabled } from "../../middleware/aiRagEnabled"
+import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
 import * as ai from "../controllers/ai"
 import {
   builderAdminRoutes,
@@ -17,8 +17,10 @@ import {
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
+  runAgentTestSuiteValidator,
   toggleAgentTelegramDeploymentValidator,
   updateAgentSharePointSiteValidator,
+  updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 
@@ -73,11 +75,24 @@ builderAdminRoutes
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
 
-const aiRagBuilderAdminRoutes = endpointGroupList
+const aiTestBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)
-  .addGroupMiddleware(aiRagEnabled)
+  .addGroupMiddleware(aiTestsEnabled)
+aiTestBuilderAdminRoutes
+  .get("/api/agent/:agentId/tests", ai.fetchAgentTestSuite)
+  .put(
+    "/api/agent/:agentId/tests",
+    updateAgentTestSuiteValidator(),
+    ai.updateAgentTestSuite
+  )
+  .post(
+    "/api/agent/:agentId/tests/run",
+    runAgentTestSuiteValidator(),
+    ai.runAgentTestSuite
+  )
+  .get("/api/agent/:agentId/tests/run/:runId", ai.fetchAgentTestRun)
 
-aiRagBuilderAdminRoutes
+builderAdminRoutes
   .get(
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
@@ -85,6 +100,7 @@ aiRagBuilderAdminRoutes
   .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledge)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
+  .get("/api/agent/:agentId/files/:fileId/url", ai.fetchAgentFileUrl)
   .get(
     "/api/knowledge-sources/:datasourceId/:authConfigId/options",
     ai.fetchAgentKnowledgeSourceOptions
@@ -111,6 +127,10 @@ aiRagBuilderAdminRoutes
     "/api/agent/:agentId/knowledge-sources/:sourceId/sync",
     syncAgentKnowledgeSourcesValidator(),
     ai.syncAgentKnowledgeSource
+  )
+  .post(
+    "/api/agent/:agentId/knowledge/store/reset",
+    ai.resetAgentKnowledgeBaseStore
   )
 
 publicRoutes.get(

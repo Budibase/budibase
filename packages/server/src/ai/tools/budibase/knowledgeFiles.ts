@@ -1,10 +1,8 @@
 import {
   KnowledgeBaseFileStatus,
   ToolType,
-  FeatureFlag,
   type KnowledgeBaseFile,
 } from "@budibase/types"
-import { features } from "@budibase/backend-core"
 import { tool } from "ai"
 import { z } from "zod"
 import sdk from "../../../sdk"
@@ -296,10 +294,6 @@ export const createKnowledgeSearchTool = (
       question: z.string().trim().min(1),
     }),
     execute: async ({ question }) => {
-      if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
-        return { context: "", sources: [], chunks: [] }
-      }
-
       const agent = await sdk.ai.agents.getOrThrow(agentId)
       try {
         const result = await sdk.ai.rag.retrieveContextForAgent(agent, question)

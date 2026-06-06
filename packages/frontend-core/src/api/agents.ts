@@ -7,6 +7,7 @@ import {
   DisconnectAgentSharePointSiteResponse,
   DuplicateAgentResponse,
   FetchAgentKnowledgeResponse,
+  FetchAgentFileUrlResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentsResponse,
@@ -79,6 +80,10 @@ export interface AgentEndpoints {
     agentId: string,
     fileId: string
   ) => Promise<{ deleted: true }>
+  fetchAgentFileUrl: (
+    agentId: string,
+    fileId: string
+  ) => Promise<FetchAgentFileUrlResponse>
   fetchAgentKnowledgeSourceOptions: (
     datasourceId: string,
     authConfigId: string
@@ -104,6 +109,7 @@ export interface AgentEndpoints {
     agentId: string,
     sourceId: string
   ) => Promise<SyncAgentKnowledgeSourcesResponse>
+  resetAgentKnowledgeBaseStore: (agentId: string) => Promise<void>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -249,6 +255,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  fetchAgentFileUrl: async (agentId: string, fileId: string) => {
+    return await API.get<FetchAgentFileUrlResponse>({
+      url: `/api/agent/${agentId}/files/${fileId}/url`,
+    })
+  },
+
   fetchAgentKnowledgeSourceOptions: async (
     datasourceId: string,
     authConfigId: string
@@ -300,6 +312,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       SyncAgentKnowledgeSourcesResponse
     >({
       url: `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
+    })
+  },
+
+  resetAgentKnowledgeBaseStore: async (agentId: string) => {
+    await API.post({
+      url: `/api/agent/${agentId}/knowledge/store/reset`,
     })
   },
 })

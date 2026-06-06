@@ -386,6 +386,31 @@ if (descriptions.length) {
           ])
         })
 
+        it("does not allow quoted find parameters to inject Mongo operators", async () => {
+          const query = await createQuery({
+            fields: {
+              json: '{"name": "{{ name }}"}',
+              extra: {
+                actionType: "find",
+              },
+            },
+            parameters: [
+              {
+                name: "name",
+                default: "",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: {
+              name: 'x","name":{"$exists":true},"$comment":"audit',
+            },
+          })
+
+          expect(result.data).toEqual([])
+        })
+
         it("a findOne query", async () => {
           const query = await createQuery({
             fields: {
@@ -487,6 +512,48 @@ if (descriptions.length) {
           })
         })
 
+        it("a create query with a json string document parameter", async () => {
+          const query = await createQuery({
+            fields: {
+              json: "{{ doc }}",
+              extra: {
+                actionType: "insertOne",
+              },
+            },
+            queryVerb: "create",
+            parameters: [
+              {
+                name: "doc",
+                default: "{}",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: {
+              doc: '{"foo":"bar","nested":{"enabled":true}}',
+            },
+          })
+
+          expect(result.data).toEqual([
+            {
+              acknowledged: true,
+              insertedId: expectValidId,
+            },
+          ])
+
+          await withCollection(async collection => {
+            const doc = await collection.findOne({ foo: { $eq: "bar" } })
+            expect(doc).toEqual({
+              _id: expectValidBsonObjectId,
+              foo: "bar",
+              nested: {
+                enabled: true,
+              },
+            })
+          })
+        })
+
         it("a delete query with parameters", async () => {
           const query = await createQuery({
             fields: {
@@ -568,6 +635,44 @@ if (descriptions.length) {
 
             const oldDoc = await collection.findOne({ name: { $eq: "one" } })
             expect(oldDoc).toBeNull()
+          })
+        })
+
+        it("does not allow quoted updateMany parameters to widen the filter", async () => {
+          const query = await createQuery({
+            fields: {
+              json: '{"filter":{"name":"{{ name }}"},"update":{"$set":{"touched":true}}}',
+              extra: {
+                actionType: "updateMany",
+              },
+            },
+            queryVerb: "update",
+            parameters: [
+              {
+                name: "name",
+                default: "",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: {
+              name: 'x","name":{"$exists":true},"$comment":"esc',
+            },
+          })
+
+          expect(result.data).toEqual([
+            {
+              acknowledged: true,
+              matchedCount: 0,
+              modifiedCount: 0,
+              upsertedCount: 0,
+              upsertedId: null,
+            },
+          ])
+
+          await withCollection(async collection => {
+            expect(await collection.countDocuments({ touched: true })).toBe(0)
           })
         })
 

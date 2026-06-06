@@ -12,10 +12,10 @@
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
-  import { FeatureFlag } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
+  import { FeatureFlag } from "@budibase/types"
 
   const { goto, isActive, params } = routify
 
@@ -33,14 +33,18 @@
 
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
-  let ragEnabled = $derived($featureFlags[FeatureFlag.AI_RAG])
+  let lastToolsAiConfigId = $state<string | null | undefined>(null)
+  let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
 
   let activeTab = $derived.by(() => {
-    if (ragEnabled && $isActive("./knowledge")) {
+    if ($isActive("./knowledge")) {
       return "Knowledge"
     }
     if ($isActive("./deployment")) {
       return "Deployment"
+    }
+    if (testsEnabled && $isActive("./tests")) {
+      return "Tests"
     }
     if ($isActive("./logs")) {
       return "Logs"
@@ -52,6 +56,9 @@
     if (!currentAgent?._id) {
       return false
     }
+    if (!currentAgent.live) {
+      return false
+    }
     const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
     if (!publishStatus?.publishedAt) {
       return false
@@ -61,9 +68,25 @@
   })
 
   $effect(() => {
-    if (!ragEnabled && $isActive("./knowledge")) {
+    if (!testsEnabled && $isActive("./tests")) {
       $goto("./config")
     }
+  })
+
+  $effect(() => {
+    if (!currentAgent?._id) {
+      return
+    }
+
+    const nextAiConfigId = currentAgent.aiconfig || undefined
+    if (nextAiConfigId === lastToolsAiConfigId) {
+      return
+    }
+
+    lastToolsAiConfigId = nextAiConfigId
+    agentsStore.fetchTools(nextAiConfigId).catch(error => {
+      console.error("Failed to load agent tools", error)
+    })
   })
 
   async function toggleAgentLive() {
@@ -87,8 +110,14 @@
       )
     } catch (error) {
       console.error(error)
+      const errorMessage = nextLive
+        ? "Error setting agent live"
+        : "Error stopping agent"
+
       notifications.error(
-        nextLive ? "Error setting agent live" : "Error stopping agent"
+        [errorMessage, (error as { message?: string }).message]
+          .filter(Boolean)
+          .join(": ")
       )
     } finally {
       togglingLive = false
@@ -115,15 +144,6 @@
       >
         Configuration
       </ActionButton>
-      {#if ragEnabled}
-        <ActionButton
-          quiet
-          selected={activeTab === "Knowledge"}
-          on:click={() => $goto("./knowledge")}
-        >
-          Knowledge
-        </ActionButton>
-      {/if}
       <ActionButton
         quiet
         selected={activeTab === "Deployment"}
@@ -131,6 +151,15 @@
       >
         Deployment
       </ActionButton>
+      {#if testsEnabled}
+        <ActionButton
+          quiet
+          selected={activeTab === "Tests"}
+          on:click={() => $goto("./tests")}
+        >
+          Tests
+        </ActionButton>
+      {/if}
       <ActionButton
         quiet
         selected={activeTab === "Logs"}
@@ -166,14 +195,17 @@
       />
     </div>
   </div>
-  <div class="config-page" class:full-width={activeTab === "Logs"}>
+  <div
+    class="config-page"
+    class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+  >
     <div
       class="config-content"
-      class:full-width={activeTab === "Logs"}
-      class:logs-tab={activeTab === "Logs"}
+      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+      class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
     >
       <div class="config-form">
-        {#if activeTab === "Logs"}
+        {#if activeTab === "Logs" || activeTab === "Tests"}
           <!-- svelte-ignore slot_element_deprecated -->
           <slot />
         {:else}
@@ -184,11 +216,13 @@
         {/if}
       </div>
     </div>
-    {#if activeTab !== "Logs"}
+    {#if activeTab !== "Logs" && activeTab !== "Tests"}
       <div class="config-preview">
         <AgentChatPanel
           agentId={currentAgent?._id}
           workspaceId={$params.application || ""}
+          allowKnowledgeSourceDownload={currentAgent?.allowKnowledgeSourceDownload !==
+            false}
         />
       </div>
     {/if}

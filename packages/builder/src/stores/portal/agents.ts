@@ -266,6 +266,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     sourceId: string
   ): Promise<SyncAgentKnowledgeSourcesResponse> =>
     await API.syncAgentKnowledgeSources(agentId, sourceId)
+
+  resetKnowledgeBaseStore = async (agentId: string): Promise<void> => {
+    await API.resetAgentKnowledgeBaseStore(agentId)
+    await this.fetchAgentKnowledge(agentId)
+  }
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>

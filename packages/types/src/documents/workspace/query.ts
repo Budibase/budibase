@@ -35,14 +35,16 @@ export interface ImportEndpoint {
   queryString?: string
 }
 
+export type QueryFields = RestQueryFields &
+  SQLQueryFields &
+  MongoQueryFields &
+  GoogleSheetsQueryFields
+
 export interface Query extends Document {
   datasourceId: string
   name: string
   parameters: QueryParameter[]
-  fields: RestQueryFields &
-    SQLQueryFields &
-    MongoQueryFields &
-    GoogleSheetsQueryFields
+  fields: QueryFields
   transformer: string | null
   schema: Record<string, QuerySchema | string>
   nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
@@ -94,6 +96,7 @@ export interface RestQueryFields {
 }
 export interface SQLQueryFields {
   sql?: string
+  pagination?: PaginationConfig
 }
 
 export interface MongoQueryFields {
@@ -121,11 +124,16 @@ export interface GoogleSheetsQueryFields {
 }
 
 export interface PaginationConfig {
+  // REST query pagination
   type?: string
   location?: string
   pageParam?: string
   sizeParam?: string
   responseParam?: string
+  // SQL query pagination
+  enabled?: boolean
+  offsetBinding?: string
+  limitBinding?: string
 }
 
 export interface PaginationValues {
