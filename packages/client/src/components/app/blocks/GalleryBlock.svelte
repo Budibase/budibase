@@ -48,8 +48,6 @@ $: effectiveTileHeight = tileHeight || tileWidth || 200
 const getUrl = (row) => row?.[effectiveColumn]
 const getCaption = (row) => row?.[captionColumn]
 
-$: console.log("ROWS ?? ", rows)
-
 export const getAdditionalDataContext = () => {
   const rows = get(context)[dataProviderId]?.rows || []
   const goldenRow = generateGoldenSample(rows)
@@ -112,20 +110,19 @@ const handleKeydown = (e) => {
       >
         {#each rows as row, i (i)}
           {@const url = getUrl(row)}
-          {@const caption = getCaption(row)}
           {#if url}
             <button
               class="gallery-thumb"
               onclick={() => openLightbox(i)}
-              aria-label={caption || `Image ${i + 1}`}
+              aria-label={row?.[captionColumn] || `Image ${i + 1}`}
             >
               <img
                 src={url}
-                alt={caption || ""}
+                alt={row?.[captionColumn] || ""}
                 loading="lazy"
               />
-              {#if caption}
-                <div class="gallery-thumb-caption">{caption}</div>
+              {#if row?.[captionColumn]}
+                <div class="gallery-thumb-caption">{row?.[captionColumn]}</div>
               {/if}
             </button>
           {/if}
@@ -175,7 +172,7 @@ const handleKeydown = (e) => {
           <div class="lightbox-image-wrapper">
             <img
               src={getUrl(rows[selectedIndex])}
-              alt={getCaption(rows[selectedIndex]) || ""}
+              alt={rows[selectedIndex]?.[captionColumn] || ""}
             />
           </div>
           {#if imageCount > 1}
@@ -188,8 +185,8 @@ const handleKeydown = (e) => {
             </button>
           {/if}
         </div>
-        {#if getCaption(rows[selectedIndex])}
-          <div class="lightbox-caption">{getCaption(rows[selectedIndex])}</div>
+        {#if rows[selectedIndex]?.[captionColumn]}
+          <div class="lightbox-caption">{rows[selectedIndex]?.[captionColumn]}</div>
         {/if}
       </div>
     </div>
@@ -213,9 +210,8 @@ const handleKeydown = (e) => {
     overflow: hidden;
     border-radius: var(--border-radius-s);
     width: 100%;
-    aspect-ratio: var(--tile-width) / var(--tile-height);
     max-width: var(--tile-width);
-    max-height: var(--tile-height);
+    height: var(--tile-height);
   }
 
   .gallery-thumb img {
@@ -307,6 +303,7 @@ const handleKeydown = (e) => {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    position: relative;
   }
 
   .lightbox-nav {
@@ -330,6 +327,33 @@ const handleKeydown = (e) => {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  @media (max-width: 640px) {
+    .lightbox-body {
+      gap: 0;
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      padding: var(--spacing-m) var(--spacing-s);
+      font-size: 32px;
+    }
+
+    .lightbox-prev {
+      left: var(--spacing-xs);
+    }
+
+    .lightbox-next {
+      right: var(--spacing-xs);
+    }
+
+    .lightbox-image-wrapper img {
+      max-width: 100vw;
+    }
   }
 
   .lightbox-image-wrapper img {
