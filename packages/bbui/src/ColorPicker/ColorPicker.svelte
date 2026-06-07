@@ -26,8 +26,65 @@
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
   $: themeClasses = getThemeClasses(spectrumTheme)
+  $: isCSSVariable = value?.startsWith("var(--") ?? false
+  $: resolvedCSS = isCSSVariable ? resolveCSSVariable(value) : null
+  $: previewBackground = getPreviewBackground()
 
   const dispatch = createEventDispatcher()
+
+  function getPreviewBackground(): string | null {
+    if (!value) return null
+    if (!isCSSVariable) return value
+    return resolvedCSS
+  }
+
+  function resolveCSSVariable(val: string): string | null {
+    try {
+      // Step 1: Resolve the full expression in the host document.
+      // This handles Spectrum vars, fallbacks (var(--x, #fff)), etc.
+      const temp = document.createElement("div")
+      temp.style.cssText = `background: ${val}; width: 0; height: 0; position: absolute;`
+      document.body.appendChild(temp)
+      const computed = getComputedStyle(temp).backgroundColor
+      document.body.removeChild(temp)
+      if (computed && computed !== "transparent" && computed !== "rgba(0, 0, 0, 0)") {
+        return computed
+      }
+
+      // Step 2: Resolve from preview iframes by variable name
+      const varName = extractVarName(val)
+      if (varName) {
+        for (const iframe of Array.from(document.querySelectorAll("iframe"))) {
+          const iframeDoc = iframe.contentWindow?.document
+          if (!iframeDoc?.body) continue
+          const resolved = resolveVarInDocument(varName, iframeDoc)
+          if (resolved) return resolved
+        }
+      }
+    } catch {}
+    return null
+  }
+
+  function extractVarName(val: string): string | null {
+    const match = val.match(/var\((--[^,)]+)/)
+    return match?.[1] ?? null
+  }
+
+  function resolveVarInDocument(varName: string, doc: Document): string | null {
+    const rootVal = doc.defaultView
+      ?.getComputedStyle(doc.documentElement)
+      .getPropertyValue(varName)
+      .trim()
+    if (rootVal) return rootVal
+    const probe = doc.createElement("div")
+    const sentinel = "rgb(1, 2, 3)"
+    probe.style.color = `var(${varName}, ${sentinel})`
+    probe.style.display = "none"
+    doc.body.appendChild(probe)
+    const resolved = doc.defaultView?.getComputedStyle(probe).color
+    probe.remove()
+    return resolved && resolved !== sentinel ? resolved : null
+  }
   const categories = [
     {
       label: "Theme colors",
@@ -194,8 +251,10 @@
 >
   <div
     class="fill {themeClasses}"
-    style={value ? `background: ${value};` : ""}
+    style={previewBackground ? `background: ${previewBackground};` : ""}
     class:placeholder={!value}
+    class:css-variable={isCSSVariable && !resolvedCSS}
+    title={value ?? ""}
   ></div>
 </div>
 
@@ -299,6 +358,22 @@
         #eee 75%,
         #eee 100%
       );
+  }
+  .fill.css-variable {
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 4px,
+        rgba(128, 96, 192, 0.08) 4px,
+        rgba(128, 96, 192, 0.08) 8px
+      ),
+      linear-gradient(
+        135deg,
+        #f3eff7 0%,
+        #ede6f5 100%
+      );
+    box-shadow: inset 0 0 0 1px rgba(128, 96, 192, 0.15);
   }
   .size--S {
     width: 20px;
