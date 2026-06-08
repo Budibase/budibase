@@ -128,6 +128,10 @@ builderAdminRoutes
     syncAgentKnowledgeSourcesValidator(),
     ai.syncAgentKnowledgeSource
   )
+  .post(
+    "/api/agent/:agentId/knowledge/store/reset",
+    ai.resetAgentKnowledgeBaseStore
+  )
 
 publicRoutes.get(
   "/api/agent/knowledge-sources/sharepoint/callback",
