@@ -6,18 +6,28 @@ import {
   objectStore,
 } from "@budibase/backend-core"
 import {
+  GeminiKnowledgeBase,
   KnowledgeBaseFile,
   KnowledgeBaseFileSource,
   KnowledgeBaseFileStatus,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
-import { enqueueRagFileIngestion } from "../rag/ragQueue"
+import {
+  enqueueRagFileIngestion,
+  removeRagFileIngestionJob,
+} from "../rag/ragQueue"
 import {
   createKnowledgeBaseFile,
   getKnowledgeBaseFileOrThrow,
+  listKnowledgeBaseFiles,
   updateKnowledgeBaseFile,
 } from "./files"
 import { find as findKnowledgeBase } from "./crud"
+import {
+  createGeminiFileStore,
+  deleteGeminiVectorStore,
+} from "./geminiFileStore"
+import { syncKeyVectorStores } from "../configs/litellm"
 
 interface UploadKnowledgeBaseFileInput {
   knowledgeBaseId: string
@@ -137,6 +147,72 @@ export const uploadKnowledgeBaseFile = async (
         // Ignore, it might not exist
       })
     throw error
+  }
+}
+
+export const resetKnowledgeBaseStore = async (
+  knowledgeBase: GeminiKnowledgeBase
+): Promise<void> => {
+  const db = context.getWorkspaceDB()
+  const workspaceId = context.getOrThrowWorkspaceId()
+  const knowledgeBaseId = knowledgeBase._id
+  if (!knowledgeBaseId) {
+    throw new HTTPError("Knowledge base id not set", 400)
+  }
+
+  const newGoogleFileStoreId = await createGeminiFileStore(knowledgeBase.name)
+
+  const updated: GeminiKnowledgeBase = {
+    ...knowledgeBase,
+    config: { googleFileStoreId: newGoogleFileStoreId },
+  }
+  const { rev } = await db.put(updated)
+  updated._rev = rev
+
+  await deleteGeminiVectorStore(knowledgeBase.config.googleFileStoreId).catch(
+    (error: any) => {
+      if (error?.status !== 403 && error?.status !== 404) {
+        console.error("Failed to delete old Gemini vector store", {
+          vectorStoreId: knowledgeBase.config.googleFileStoreId,
+          error,
+        })
+        throw error
+      }
+    }
+  )
+
+  await syncKeyVectorStores()
+
+  const files = await listKnowledgeBaseFiles(knowledgeBaseId)
+  for (const file of files) {
+    if (!file.objectStoreKey) {
+      continue
+    }
+    await removeRagFileIngestionJob(file._id!)
+    file.status = KnowledgeBaseFileStatus.PROCESSING
+    file.ragSourceId = undefined
+    file.errorMessage = undefined
+    file.processedAt = undefined
+    await updateKnowledgeBaseFile(file)
+    try {
+      await enqueueRagFileIngestion({
+        workspaceId,
+        knowledgeBaseId,
+        fileId: file._id!,
+        objectStoreKey: file.objectStoreKey,
+      })
+    } catch (error: any) {
+      file.status = KnowledgeBaseFileStatus.FAILED
+      file.errorMessage =
+        error?.message || "Failed to enqueue file for processing"
+      await updateKnowledgeBaseFile(file)
+      console.error("Failed to enqueue knowledge base file during reset", {
+        workspaceId,
+        knowledgeBaseId,
+        fileId: file._id,
+        error,
+      })
+    }
   }
 }
 
