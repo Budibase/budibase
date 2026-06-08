@@ -1,6 +1,6 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { FeatureFlag, type Project } from "@budibase/types"
+import { FeatureFlag } from "@budibase/types"
 import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
@@ -56,27 +56,24 @@ describe("/projects", () => {
     })
   })
 
-  it("returns valid timestamps for projects without persisted timestamps", async () => {
+  it("returns valid timestamps for projects with invalid persisted timestamps", async () => {
     await withProjectsEnabled(async () => {
-      const fetchProjects = jest.spyOn(sdk.projects, "fetch")
-      fetchProjects.mockResolvedValueOnce([
-        {
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
           _id: "project_legacy",
-          _rev: "1-test",
           name: "Legacy project",
-        } as Project,
-      ])
+          createdAt: "invalid",
+        })
+      })
 
-      try {
-        const { projects } = await config.api.project.fetch()
+      const { projects } = await config.api.project.fetch()
+      const project = projects.find(
+        existing => existing._id === "project_legacy"
+      )
 
-        expect(projects[0].createdAt).not.toBe("undefined")
-        expect(new Date(projects[0].createdAt).toISOString()).toBe(
-          projects[0].createdAt
-        )
-      } finally {
-        fetchProjects.mockRestore()
-      }
+      expect(new Date(project!.createdAt).toISOString()).toBe(
+        project!.createdAt
+      )
     })
   })
 
@@ -405,7 +402,7 @@ describe("/projects", () => {
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const db = context.getWorkspaceDB()
         const remove = jest
-          .spyOn(db, "remove")
+          .spyOn(Object.getPrototypeOf(db), "remove")
           .mockRejectedValueOnce(new Error("Project deletion failed"))
 
         try {
