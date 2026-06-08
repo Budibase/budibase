@@ -66,7 +66,14 @@
     return sharePointSites.filter(site => !excluded.has(site.id))
   })
 
-  const loadSharePointConnections = async () => {
+  const sharePointConnectionSignature = () =>
+    $knowledgeConnectionsStore.connections
+      .map(connection => connection._id)
+      .join(":")
+
+  const loadSharePointConnections = async ({
+    refreshDatasources = false,
+  }: { refreshDatasources?: boolean } = {}) => {
     if (!agentId) {
       sharePointConnectionOptions = []
       selectedConnectionId = ""
@@ -75,6 +82,9 @@
       return
     }
     try {
+      if (refreshDatasources) {
+        await datasources.fetch()
+      }
       const connections = $knowledgeConnectionsStore.connections
       const sharePointConnections = connections.filter(
         connection => connection.sourceType === "sharepoint"
@@ -226,12 +236,12 @@
   }
 
   $effect(() => {
-    const connectionSignature = $knowledgeConnectionsStore.connections
-      .map(connection => connection._id)
-      .join(":")
+    const connectionSignature = sharePointConnectionSignature()
+    const settingsOpen = $bb.settings.open
     const shouldResume =
       awaitingAdvancedSetup &&
       !resumeFromAdvancedSetupInFlight &&
+      !settingsOpen &&
       connectionSignature !== lastResumeConnectionSignature
 
     if (!shouldResume) {
@@ -240,9 +250,9 @@
 
     const resume = async () => {
       resumeFromAdvancedSetupInFlight = true
-      lastResumeConnectionSignature = connectionSignature
       try {
-        await loadSharePointConnections()
+        await loadSharePointConnections({ refreshDatasources: true })
+        lastResumeConnectionSignature = sharePointConnectionSignature()
         if (sharePointConnectionOptions.length === 0) {
           return
         }
@@ -254,6 +264,9 @@
         }
         skippedConnectionStep = false
         connectionStepModal?.show()
+      } catch (error) {
+        lastResumeConnectionSignature = connectionSignature
+        throw error
       } finally {
         resumeFromAdvancedSetupInFlight = false
       }
