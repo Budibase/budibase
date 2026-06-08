@@ -1,6 +1,6 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { FeatureFlag } from "@budibase/types"
+import { FeatureFlag, type Project } from "@budibase/types"
 import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
@@ -53,6 +53,30 @@ describe("/projects", () => {
 
       const { projects } = await config.api.project.fetch()
       expect(projects.map(existing => existing._id)).toContain(project._id)
+    })
+  })
+
+  it("returns valid timestamps for projects without persisted timestamps", async () => {
+    await withProjectsEnabled(async () => {
+      const fetchProjects = jest.spyOn(sdk.projects, "fetch")
+      fetchProjects.mockResolvedValueOnce([
+        {
+          _id: "project_legacy",
+          _rev: "1-test",
+          name: "Legacy project",
+        } as Project,
+      ])
+
+      try {
+        const { projects } = await config.api.project.fetch()
+
+        expect(projects[0].createdAt).not.toBe("undefined")
+        expect(new Date(projects[0].createdAt).toISOString()).toBe(
+          projects[0].createdAt
+        )
+      } finally {
+        fetchProjects.mockRestore()
+      }
     })
   })
 
@@ -356,6 +380,41 @@ describe("/projects", () => {
 
       await config.api.project.delete(project._id, "1-stale", {
         status: 409,
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+    })
+  })
+
+  it("does not clear assignments when project deletion fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectId: project._id,
+        })
+      )
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const remove = jest
+          .spyOn(db, "remove")
+          .mockRejectedValueOnce(new Error("Project deletion failed"))
+
+        try {
+          await expect(
+            sdk.projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Project deletion failed")
+        } finally {
+          remove.mockRestore()
+        }
       })
 
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
