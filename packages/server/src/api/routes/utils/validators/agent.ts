@@ -76,6 +76,7 @@ const SHAREPOINT_KNOWLEDGE_SOURCE_SCHEMA = Joi.object({
 const AGENT_OPERATION_SCHEMA = Joi.object({
   id: Joi.string().required(),
   name: OPTIONAL_STRING,
+  live: Joi.boolean().optional(),
   promptInstructions: OPTIONAL_STRING,
   enabledTools: Joi.array().items(Joi.string()).optional(),
   knowledgeBases: Joi.array().items(Joi.string()).optional(),

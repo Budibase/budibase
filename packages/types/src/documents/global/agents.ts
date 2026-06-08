@@ -81,6 +81,7 @@ export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 export interface AgentOperation {
   id: string
   name: string
+  live: boolean
   promptInstructions?: string
   enabledTools?: string[]
   knowledgeBases?: string[]

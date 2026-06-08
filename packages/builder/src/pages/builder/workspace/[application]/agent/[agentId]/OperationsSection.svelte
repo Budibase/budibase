@@ -2,12 +2,14 @@
   import {
     Body,
     Button,
+    Badge,
     Helpers,
     Icon,
     Input,
     Modal,
     ModalContent,
     notifications,
+    StatusLight,
   } from "@budibase/bbui"
   import type { Agent, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
@@ -57,7 +59,7 @@ Any constraints the agent must follow.
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
     onDeleteOperation?: () => Promise<void>
-    onUpdated: () => void
+    onUpdated: () => void | Promise<boolean | void>
   } = $props()
 
   let operationPanelOpen = $state(false)
@@ -67,6 +69,7 @@ Any constraints the agent must follow.
 
   let operationName = $derived(agent?.operations?.[0]?.name?.trim())
   let hasOperation = $derived(Boolean(agent?.operations?.[0]?.name?.trim()))
+  let operationLive = $derived(agent?.operations?.[0]?.live === true)
 
   const openOperationPanel = () => {
     operationPanelOpen = true
@@ -98,8 +101,22 @@ Any constraints the agent must follow.
   const createDefaultOperation = () => ({
     id: `operation_${Helpers.uuid()}`,
     name: "Main operation",
+    live: false,
     promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
   })
+
+  const setOperationLive = async (nextLive: boolean) => {
+    if (!agent?.operations?.[0] || agent.operations[0].live === nextLive) {
+      return
+    }
+    const currentOperation = agent.operations[0]
+    const previousLive = currentOperation.live
+    currentOperation.live = nextLive
+    const saveSucceeded = await Promise.resolve(onUpdated())
+    if (saveSucceeded === false) {
+      currentOperation.live = previousLive
+    }
+  }
 
   const handleAddOperation = () => {
     if (hasOperation) {
@@ -147,6 +164,12 @@ Any constraints the agent must follow.
       "agent-operation",
       [
         {
+          icon: operationLive ? "stop" : "play",
+          name: operationLive ? "Stop" : "Set live",
+          visible: true,
+          callback: async () => await setOperationLive(!operationLive),
+        },
+        {
           icon: "pencil",
           name: "Edit",
           visible: true,
@@ -190,6 +213,18 @@ Any constraints the agent must follow.
         >
           <span class="operation-name">{operationName}</span>
         </button>
+
+        <Badge size="S" grey hoverable>
+          <span class="operation-status-pill-content">
+            <StatusLight
+              size="XS"
+              positive={operationLive}
+              negative={!operationLive}
+              square
+            />
+            <span>{operationLive ? "Live" : "Stopped"}</span>
+          </span>
+        </Badge>
 
         <button
           class="operation-menu-trigger"
@@ -285,7 +320,7 @@ Any constraints the agent must follow.
   }
 
   .operation-open-button {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     min-height: 36px;
     padding: 8px 12px;
@@ -314,5 +349,14 @@ Any constraints the agent must follow.
     border: 0;
     background: transparent;
     cursor: pointer;
+  }
+
+  .operation-status-pill-content {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .operations-section :global(.spectrum-Label--grey) {
+    font-weight: unset !important;
   }
 </style>

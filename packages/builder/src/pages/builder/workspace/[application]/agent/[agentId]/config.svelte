@@ -386,9 +386,9 @@
     showNotifications = true,
   }: {
     showNotifications?: boolean
-  }) {
-    if (!currentAgent) return
-    if (saving) return
+  }): Promise<boolean> {
+    if (!currentAgent) return false
+    if (saving) return false
 
     saving = true
     try {
@@ -411,8 +411,10 @@
       }
       await agentsStore.fetchAgents()
       await workspaceDeploymentStore.fetch()
+      return true
     } catch (error) {
       notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
+      return false
     } finally {
       saving = false
     }
@@ -443,14 +445,14 @@
     clearAutoSave()
 
     if (immediate) {
-      saveAgent({ showNotifications: false })
-      return
+      return saveAgent({ showNotifications: false })
     }
 
     autoSaveTimeout = setTimeout(() => {
       saveAgent({ showNotifications: false })
       autoSaveTimeout = undefined
     }, AUTO_SAVE_DEBOUNCE_MS)
+    return Promise.resolve(false)
   }
   const clearAutoSave = () => {
     if (autoSaveTimeout) {

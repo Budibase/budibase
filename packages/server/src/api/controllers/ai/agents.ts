@@ -19,6 +19,7 @@ import {
   UpdateAgentRequest,
   UpdateAgentResponse,
   UserCtx,
+  AgentOperation,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -304,7 +305,7 @@ export async function createAgent(
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
   const createRequest: RequiredKeys<
-    Parameters<typeof sdk.ai.agents.create>[0]
+    Parameters<typeof sdk.ai.agents.create>[number]
   > = {
     name: body.name,
     description: body.description,
@@ -320,7 +321,18 @@ export async function createAgent(
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
-    operations: body.operations,
+    operations: body.operations?.map(
+      operation =>
+        ({
+          id: operation.id,
+          name: operation.name,
+          live: operation.live,
+          promptInstructions: operation.promptInstructions,
+          enabledTools: operation.enabledTools,
+          knowledgeBases: operation.knowledgeBases,
+          knowledgeSources: operation.knowledgeSources,
+        }) satisfies RequiredKeys<AgentOperation>
+    ),
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -382,7 +394,18 @@ export async function updateAgent(
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
-    operations: body.operations,
+    operations: body.operations?.map(
+      operation =>
+        ({
+          id: operation.id,
+          name: operation.name,
+          live: operation.live,
+          promptInstructions: operation.promptInstructions,
+          enabledTools: operation.enabledTools,
+          knowledgeBases: operation.knowledgeBases,
+          knowledgeSources: operation.knowledgeSources,
+        }) satisfies RequiredKeys<AgentOperation>
+    ),
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)
