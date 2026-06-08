@@ -342,7 +342,6 @@
         {buttons}
         buttonsCollapsed
         canHideColumns={false}
-        honorDisabledConditions={!isProductionMode}
         externalClipboard={externalClipboardData}
         on:updatedatasource={handleGridTableUpdate}
         on:definitionMissing={handleDefinitionMissing}

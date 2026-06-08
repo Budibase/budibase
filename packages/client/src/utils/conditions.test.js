@@ -63,7 +63,7 @@ describe("getActiveConditions", () => {
 })
 
 describe("disabled condition helpers", () => {
-  it("derives whether disabled conditions should be honored", () => {
+  it("always honors disabled conditions", () => {
     expect(
       shouldHonorDisabledConditions({ inBuilder: true, isDevApp: false })
     ).toEqual(true)
@@ -72,7 +72,7 @@ describe("disabled condition helpers", () => {
     ).toEqual(true)
     expect(
       shouldHonorDisabledConditions({ inBuilder: false, isDevApp: false })
-    ).toEqual(false)
+    ).toEqual(true)
   })
 
   it("returns evaluatable conditions based on disabled handling mode", () => {

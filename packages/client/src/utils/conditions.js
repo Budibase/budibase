@@ -5,7 +5,7 @@ import { processStringSync } from "@budibase/string-templates"
 export const shouldHonorDisabledConditions = ({
   inBuilder = false,
   isDevApp = false,
-} = {}) => inBuilder || isDevApp
+} = {}) => true
 
 export const getEvaluatableConditions = (
   conditions,

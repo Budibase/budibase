@@ -4,14 +4,10 @@
   import { getContext, onDestroy, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
   import { featuresStore } from "@/stores"
-  import { appStore } from "@/stores/app"
   import { createAutoRefresh } from "@/utils/autoRefresh"
   import { Grid } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
-  import {
-    enrichGridConditions,
-    shouldHonorDisabledConditions,
-  } from "@/utils/conditions"
+  import { enrichGridConditions } from "@/utils/conditions"
   import { UILogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -64,10 +60,6 @@
   $: selectedRows = deriveSelectedRows(gridContext)
   $: styles = patchStyles($component.styles, minHeight)
   $: rowMap = gridContext?.rowLookupMap
-  $: honorDisabledConditions = shouldHonorDisabledConditions({
-    inBuilder: $builderStore.inBuilder,
-    isDevApp: $appStore.isDevApp,
-  })
 
   $: data = {
     selectedRows: $selectedRows,
@@ -299,7 +291,6 @@
     buttons={enrichedButtons}
     {buttonsCollapsed}
     {buttonsCollapsedText}
-    {honorDisabledConditions}
     isCloud={$environmentStore.cloud}
     aiEnabled={$featuresStore.aiEnabled}
     on:rowclick={e => onRowClick?.({ row: e.detail })}

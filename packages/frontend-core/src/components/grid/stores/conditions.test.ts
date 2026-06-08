@@ -9,29 +9,20 @@ vi.mock("../../../utils", () => ({
 import { getGridEvaluatableConditions } from "./conditions"
 
 describe("grid condition evaluation helpers", () => {
-  it("filters disabled conditions when disabled conditions should be honoured", () => {
+  it("filters disabled conditions", () => {
     const conditions = [
       { disabled: true },
       { disabled: false },
       { disabled: true },
     ] as UICondition[]
 
-    expect(getGridEvaluatableConditions(conditions, true)).toEqual([
+    expect(getGridEvaluatableConditions(conditions)).toEqual([
       { disabled: false },
     ])
   })
 
-  it("keeps disabled conditions when disabled conditions should not be honoured", () => {
-    const conditions = [
-      { disabled: true },
-      { disabled: false },
-    ] as UICondition[]
-
-    expect(getGridEvaluatableConditions(conditions, false)).toEqual(conditions)
-  })
-
   it("returns an empty array when no conditions are supplied", () => {
-    expect(getGridEvaluatableConditions(undefined, true)).toEqual([])
-    expect(getGridEvaluatableConditions([], false)).toEqual([])
+    expect(getGridEvaluatableConditions(undefined)).toEqual([])
+    expect(getGridEvaluatableConditions([])).toEqual([])
   })
 })

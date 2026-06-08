@@ -27,14 +27,10 @@ export const createStores = (): ConditionStore => {
 }
 
 export const getGridEvaluatableConditions = (
-  conditions: UICondition[] | undefined,
-  honorDisabledConditions = false
+  conditions: UICondition[] | undefined
 ) => {
   if (!conditions?.length) {
     return []
-  }
-  if (!honorDisabledConditions) {
-    return conditions
   }
   return conditions.filter(condition => !condition.disabled)
 }
@@ -88,7 +84,7 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
 }
 
 export const initialise = (context: StoreContext) => {
-  const { metadata, conditions, rows, props } = context
+  const { metadata, conditions, rows } = context
 
   const recomputeAllMetadata = () => {
     let newMetadata: Record<string, any> = {}
@@ -103,15 +99,6 @@ export const initialise = (context: StoreContext) => {
 
   // Recompute all metadata if conditions change
   conditions.subscribe(() => {
-    recomputeAllMetadata()
-  })
-
-  let lastHonorDisabledConditions = get(props).honorDisabledConditions
-  props.subscribe($props => {
-    if ($props.honorDisabledConditions === lastHonorDisabledConditions) {
-      return
-    }
-    lastHonorDisabledConditions = $props.honorDisabledConditions
     recomputeAllMetadata()
   })
 
@@ -223,10 +210,7 @@ const evaluateConditions = (
     }
   }
 
-  allConditions = getGridEvaluatableConditions(
-    allConditions,
-    !!$props.honorDisabledConditions
-  )
+  allConditions = getGridEvaluatableConditions(allConditions)
 
   // Pre-process button conditions to set default visibility for show conditions
   const buttonShowConditions = new Set()
