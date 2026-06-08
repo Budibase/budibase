@@ -4,6 +4,7 @@ import {
   automationStore,
   getToolbarFlowEndInsertion,
   isNoOpBlockMove,
+  MAX_STICKY_NOTES_PER_AUTOMATION,
   selectedAutomation,
 } from "../automations"
 import { type AutomationBlockRef } from "@/types/automations"
@@ -327,6 +328,254 @@ describe("automation store", () => {
     }
 
     expect(savedLoop.inputs.children).toEqual([])
+
+    save.mockRestore()
+  })
+
+  it("saves sticky note position without marking the automation as unpublished", async () => {
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+      uiTree: {
+        stickyNotes: [
+          {
+            id: "note-1",
+            title: "Note",
+            text: "Text",
+            x: 100,
+            y: 100,
+          },
+        ],
+      },
+    }
+    let savedAutomation: Automation | undefined
+    const save = vi
+      .spyOn(automationStore.actions, "save")
+      .mockImplementation(async updatedAutomation => {
+        savedAutomation = updatedAutomation
+        return updatedAutomation
+      })
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    await automationStore.actions.updateStickyNotePosition("note-1", {
+      x: 240,
+      y: 180,
+    })
+
+    expect(savedAutomation?.uiTree?.stickyNotes?.[0]).toEqual({
+      id: "note-1",
+      title: "Note",
+      text: "Text",
+      x: 240,
+      y: 180,
+    })
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "automation" }),
+      { skipUnpublishedChanges: true }
+    )
+
+    save.mockRestore()
+  })
+
+  it("creates a sticky note without marking the automation as unpublished", async () => {
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+      uiTree: {
+        stickyNotes: [],
+      },
+    }
+    let savedAutomation: Automation | undefined
+    const save = vi
+      .spyOn(automationStore.actions, "save")
+      .mockImplementation(async updatedAutomation => {
+        savedAutomation = updatedAutomation
+        return updatedAutomation
+      })
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    await automationStore.actions.addStickyNote({ x: 120, y: 160 })
+
+    expect(savedAutomation?.uiTree?.stickyNotes?.[0]).toEqual(
+      expect.objectContaining({
+        title: "Note",
+        text: "",
+        x: 120,
+        y: 160,
+      })
+    )
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "automation" }),
+      { skipUnpublishedChanges: true }
+    )
+
+    save.mockRestore()
+  })
+
+  it("does not create more than 12 sticky notes", async () => {
+    const stickyNotes = Array.from(
+      { length: MAX_STICKY_NOTES_PER_AUTOMATION },
+      (_, idx) => ({
+        id: `note-${idx}`,
+        title: "Note",
+        text: "",
+        x: 100,
+        y: 100,
+      })
+    )
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+      uiTree: {
+        stickyNotes,
+      },
+    }
+    const save = vi.spyOn(automationStore.actions, "save")
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    await automationStore.actions.addStickyNote({ x: 120, y: 160 })
+
+    expect(save).not.toHaveBeenCalled()
+
+    save.mockRestore()
+  })
+
+  it("updates a sticky note without marking the automation as unpublished", async () => {
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+      uiTree: {
+        stickyNotes: [
+          {
+            id: "note-1",
+            title: "Note",
+            text: "Text",
+            x: 100,
+            y: 100,
+          },
+        ],
+      },
+    }
+    let savedAutomation: Automation | undefined
+    const save = vi
+      .spyOn(automationStore.actions, "save")
+      .mockImplementation(async updatedAutomation => {
+        savedAutomation = updatedAutomation
+        return updatedAutomation
+      })
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    await automationStore.actions.updateStickyNote("note-1", {
+      title: "Updated note",
+      text: "Updated text",
+      width: 260,
+      height: 180,
+    })
+
+    expect(savedAutomation?.uiTree?.stickyNotes?.[0]).toEqual({
+      id: "note-1",
+      title: "Updated note",
+      text: "Updated text",
+      width: 260,
+      height: 180,
+      x: 100,
+      y: 100,
+    })
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "automation" }),
+      { skipUnpublishedChanges: true }
+    )
+
+    save.mockRestore()
+  })
+
+  it("deletes a sticky note without marking the automation as unpublished", async () => {
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+      uiTree: {
+        stickyNotes: [
+          {
+            id: "note-1",
+            title: "Note",
+            text: "Text",
+            x: 100,
+            y: 100,
+          },
+        ],
+      },
+    }
+    let savedAutomation: Automation | undefined
+    const save = vi
+      .spyOn(automationStore.actions, "save")
+      .mockImplementation(async updatedAutomation => {
+        savedAutomation = updatedAutomation
+        return updatedAutomation
+      })
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    await automationStore.actions.removeStickyNote("note-1")
+
+    expect(savedAutomation?.uiTree?.stickyNotes).toEqual([])
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "automation" }),
+      { skipUnpublishedChanges: true }
+    )
 
     save.mockRestore()
   })

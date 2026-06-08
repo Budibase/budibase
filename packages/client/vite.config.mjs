@@ -23,6 +23,16 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       include: ["src/**/*.test.*", "src/**/*.spec.*"],
+      deps: {
+        web: {
+          transformCss: true,
+        },
+      },
+      server: {
+        deps: {
+          inline: [/@budibase\/bbui/, /@spectrum-css/, /easymde/],
+        },
+      },
     },
     server: {
       open: false,

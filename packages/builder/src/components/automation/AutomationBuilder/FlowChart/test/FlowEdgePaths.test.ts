@@ -35,44 +35,6 @@ const expectLineSegmentsToBeOrthogonal = (path: string) => {
   }
 }
 
-const getPathSegments = (path: string) => {
-  const commands = [
-    ...path.matchAll(
-      /([ML]) ([\d.-]+),([\d.-]+)|Q ([\d.-]+),([\d.-]+) ([\d.-]+),([\d.-]+)/g
-    ),
-  ]
-  const segmentGroups: Array<Array<"horizontal" | "vertical">> = []
-  let segments: Array<"horizontal" | "vertical"> = []
-  let currentPoint: { x: number; y: number } | undefined
-
-  for (const command of commands) {
-    const [, type, rawX, rawY] = command
-    if (!type) {
-      currentPoint = { x: Number(command[6]), y: Number(command[7]) }
-      continue
-    }
-    const point = { x: Number(rawX), y: Number(rawY) }
-    if (type === "M") {
-      if (segments.length) {
-        segmentGroups.push(segments)
-      }
-      segments = []
-      currentPoint = point
-      continue
-    }
-    if (currentPoint) {
-      segments.push(point.y === currentPoint.y ? "horizontal" : "vertical")
-    }
-    currentPoint = point
-  }
-
-  if (segments.length) {
-    segmentGroups.push(segments)
-  }
-
-  return segmentGroups
-}
-
 const getContinuousPathCommands = (path: string) => {
   return path.split(" M ").map((group, idx) => {
     const normalized = idx === 0 ? group : `M ${group}`
@@ -99,29 +61,13 @@ const getContinuousPathCommands = (path: string) => {
   })
 }
 
-const expectNoSShapedSegments = (path: string) => {
-  const segmentGroups = getPathSegments(path)
-
-  for (const segments of segmentGroups) {
-    for (let i = 0; i < segments.length - 2; i++) {
-      expect(segments.slice(i, i + 3)).not.toEqual([
-        "horizontal",
-        "vertical",
-        "horizontal",
-      ])
-    }
-  }
-}
-
 describe("getPrimaryBranchPath", () => {
-  it("resumes same-row primary branch edges from the right side of the action bar", () => {
+  it("routes same-row primary branch edges behind the action bar", () => {
     const sourceX = 200
     const sourceY = 120
     const preBranchLabelX = 300
     const targetX = 400
     const targetY = 120
-    const actionBarHalfWidth = FLOW_ITEM_ACTION_BAR_WIDTH / 2
-
     const path = getPrimaryBranchPath({
       sourceX,
       sourceY,
@@ -131,12 +77,7 @@ describe("getPrimaryBranchPath", () => {
     })
 
     expect(path).toBe(
-      [
-        `M ${sourceX},${sourceY}`,
-        `L ${preBranchLabelX - actionBarHalfWidth},${sourceY}`,
-        `M ${preBranchLabelX + actionBarHalfWidth},${sourceY}`,
-        `L ${targetX},${targetY}`,
-      ].join(" ")
+      [`M ${sourceX},${sourceY}`, `L ${targetX},${targetY}`].join(" ")
     )
   })
 
@@ -152,16 +93,23 @@ describe("getPrimaryBranchPath", () => {
     expectLineSegmentsToBeOrthogonal(path)
   })
 
-  it("does not route offset primary branch edges as S-shaped paths", () => {
+  it("routes offset primary branch edges behind the action bar", () => {
+    const sourceX = 200
+    const sourceY = 120
+    const preBranchLabelX = 300
+    const targetX = 420
+    const targetY = 240
     const path = getPrimaryBranchPath({
-      sourceX: 200,
-      sourceY: 120,
-      targetX: 420,
-      targetY: 240,
-      preBranchLabelX: 300,
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      preBranchLabelX,
     })
 
-    expectNoSShapedSegments(path)
+    expect(path).toContain(`L ${preBranchLabelX},${sourceY}`)
+    expect(path).toContain(`Q ${preBranchLabelX},${targetY}`)
+    expect(path).toContain(`L ${targetX},${targetY}`)
   })
 
   it("starts offset primary branch vertical lines from the middle of the action bar", () => {
@@ -174,55 +122,43 @@ describe("getPrimaryBranchPath", () => {
       targetY: 240,
       preBranchLabelX,
     })
-    const [, branchPath] = getContinuousPathCommands(path)
+    const [branchPath] = getContinuousPathCommands(path)
 
-    expect(branchPath[0]).toMatchObject({
-      type: "M",
+    expect(branchPath[1]).toMatchObject({
+      type: "L",
       x: preBranchLabelX,
       y: sourceY,
     })
-    expect(branchPath[1]).toMatchObject({
+    expect(branchPath[2]).toMatchObject({
       type: "L",
       x: preBranchLabelX,
     })
   })
 
-  it("starts same-row primary branch horizontal lines from the right edge of the action bar", () => {
+  it("runs same-row primary branch horizontal lines behind the action bar", () => {
     const preBranchLabelX = 300
+    const sourceX = 200
     const sourceY = 120
-    const actionBarRight = preBranchLabelX + FLOW_ITEM_ACTION_BAR_WIDTH / 2
+    const targetX = 420
     const path = getPrimaryBranchPath({
-      sourceX: 200,
+      sourceX,
       sourceY,
-      targetX: 420,
+      targetX,
       targetY: sourceY,
       preBranchLabelX,
     })
-    const [, branchPath] = getContinuousPathCommands(path)
+    const [branchPath] = getContinuousPathCommands(path)
 
     expect(branchPath[0]).toMatchObject({
       type: "M",
-      x: actionBarRight,
+      x: sourceX,
       y: sourceY,
     })
     expect(branchPath[1]).toMatchObject({
       type: "L",
+      x: targetX,
       y: sourceY,
     })
-  })
-
-  it("curves when changing from vertical to horizontal", () => {
-    const path = getPrimaryBranchPath({
-      sourceX: 200,
-      sourceY: 120,
-      targetX: 420,
-      targetY: 240,
-      preBranchLabelX: 300,
-    })
-    const [, branchPath] = getContinuousPathCommands(path)
-
-    // Q: quadratic Bézier curve.
-    expect(branchPath.some(command => command.type === "Q")).toBe(true)
   })
 })
 

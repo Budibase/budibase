@@ -97,6 +97,25 @@ export function isTerminalFailure(
   )
 }
 
+export function didBranchStopWithoutMatch(
+  result: AutomationStepResult | AutomationTriggerResult | undefined
+): boolean {
+  const outputs = result?.outputs
+  return (
+    result?.stepId === AutomationActionStepId.BRANCH &&
+    !!outputs &&
+    typeof outputs === "object" &&
+    "success" in outputs &&
+    outputs.success === false &&
+    !("branchId" in outputs)
+  )
+}
+
+export function didRunStopWithoutBranchMatch(results: unknown): boolean {
+  const runResults = getRunResults(results)
+  return !!runResults?.steps.some(didBranchStopWithoutMatch)
+}
+
 /**
  * Determine the run highlight state based on automation results
  * Returns "error" if terminal failure, "stopped" if stopped status, "success" otherwise

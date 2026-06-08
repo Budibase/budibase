@@ -62,7 +62,7 @@
   >
     <div class="content">
       <div class="title">
-        <Body size="S">Add knowledge to agent</Body>
+        <Body size="S">Add knowledge to operation</Body>
       </div>
 
       <ActionButton

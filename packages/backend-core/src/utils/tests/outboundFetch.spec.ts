@@ -1,6 +1,7 @@
 import fetch, { Headers } from "node-fetch"
-import { isBlacklisted } from "../../blacklist"
+import { isBlacklisted, resolveAddress } from "../../blacklist"
 import { fetchWithBlacklist } from "../outboundFetch"
+import { generator } from "../../../tests"
 
 // Expose the real Headers class so the redirect header-stripping logic works
 jest.mock("node-fetch", () => {
@@ -10,6 +11,7 @@ jest.mock("node-fetch", () => {
 
 jest.mock("../../blacklist", () => ({
   isBlacklisted: jest.fn(),
+  resolveAddress: jest.fn(),
 }))
 
 describe("outboundFetch", () => {
@@ -17,9 +19,13 @@ describe("outboundFetch", () => {
   const isBlacklistedMock = isBlacklisted as jest.MockedFunction<
     typeof isBlacklisted
   >
+  const resolveAddressMock = resolveAddress as jest.MockedFunction<
+    typeof resolveAddress
+  >
 
   beforeEach(() => {
     jest.clearAllMocks()
+    resolveAddressMock.mockResolvedValue([generator.ip()])
   })
 
   // ─── URL validation ───────────────────────────────────────────────────────
@@ -116,6 +122,76 @@ describe("outboundFetch", () => {
     ).rejects.toThrow("Redirects are not permitted.")
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(resume).toHaveBeenCalledTimes(1)
+  })
+
+  it("returns redirect response without location when explicitly enabled", async () => {
+    isBlacklistedMock.mockResolvedValue(false)
+    const response = {
+      status: 302,
+      headers: { get: jest.fn().mockReturnValue(null) },
+      body: { resume: jest.fn() },
+    } as any
+    fetchMock.mockResolvedValue(response)
+
+    const result = await fetchWithBlacklist(
+      "https://example.com/start",
+      {},
+      { returnRedirectWithoutLocation: true }
+    )
+
+    expect(result).toBe(response)
+  })
+
+  it("validates resolved addresses before pinning", async () => {
+    resolveAddressMock.mockResolvedValue(["203.0.113.10", "127.0.0.1"])
+    isBlacklistedMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+
+    await expect(
+      fetchWithBlacklist("https://example.com/start")
+    ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("supports lookup callback when all=true", async () => {
+    isBlacklistedMock.mockResolvedValue(false)
+    resolveAddressMock.mockResolvedValue(["203.0.113.10"])
+
+    fetchMock.mockImplementationOnce(async (_url, req: any) => {
+      const agent = req.agent
+      await new Promise<void>((resolve, reject) => {
+        agent.options.lookup(
+          "example.com",
+          { all: true },
+          (
+            err: Error | null,
+            addresses: Array<{ address: string; family: number }>
+          ) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            expect(addresses).toEqual([{ address: "203.0.113.10", family: 4 }])
+            resolve()
+          }
+        )
+      })
+      return { status: 200, ok: true, headers: { get: jest.fn() } } as any
+    })
+
+    const result = await fetchWithBlacklist("https://example.com/start")
+    expect(result.status).toBe(200)
+  })
+
+  it("wraps pinned connection errors with hostname context", async () => {
+    isBlacklistedMock.mockResolvedValue(false)
+    resolveAddressMock.mockResolvedValue(["203.0.113.10"])
+    fetchMock.mockRejectedValueOnce(new Error("Invalid IP address: undefined"))
+
+    await expect(
+      fetchWithBlacklist("http://example.com/start")
+    ).rejects.toThrow(
+      "Failed to connect to resolved IP for example.com: Invalid IP address: undefined"
+    )
   })
 
   it.each([301, 302, 303, 307, 308])(

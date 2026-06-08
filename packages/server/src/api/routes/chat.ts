@@ -34,6 +34,10 @@ userRoutes
   .get("/api/chatapps", ai.fetchChatApp)
   .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
   .get("/api/chatapps/:chatAppId/agents", ai.fetchChatAppAgents)
+  .get(
+    "/api/chatapps/:chatAppId/agents/:agentId/files/:fileId/url",
+    ai.fetchChatAppAgentFileUrl
+  )
   .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
   .get(
     "/api/chatapps/:chatAppId/conversations/:chatConversationId",

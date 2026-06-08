@@ -1,16 +1,19 @@
 <script lang="ts">
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
-  import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
   import { isBranchStep } from "@budibase/types"
   import type { HistoryStore } from "@/stores/builder/history"
+  import type { AutomationSaveOptions } from "@/stores/builder/automations"
   import type { Automation } from "@budibase/types"
 
-  export let historyStore: HistoryStore<Automation>
-
-  const flow = useSvelteFlow()
+  export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
+  export let canAddNote = true
+  export let addNoteDisabledReason = "Move closer to add a note"
+  export let controlsEl: HTMLDivElement | null = null
+  export let onAddNote = () => {}
+  export let onAutoLayout = () => {}
 
   const openAddStepPanel = () => {
     if ($automationStore.viewMode !== ViewMode.EDITOR) {
@@ -67,7 +70,7 @@
   }
 </script>
 
-<div class="controls">
+<div class="controls" bind:this={controlsEl}>
   <div class="toolbar">
     <UndoRedoControl store={historyStore} showButtonGroup showTooltips />
     <span class="fit-view-wrap">
@@ -79,9 +82,29 @@
         tooltipPosition={TooltipPosition.Top}
         color="var(--spectrum-alias-text-color)"
         hoverColor="var(--spectrum-alias-text-color-hover)"
-        on:click={() => flow.fitView()}
+        on:click={onAutoLayout}
       />
     </span>
+    {#if $automationStore.viewMode === ViewMode.EDITOR}
+      <span class="icon-btn-wrap" class:disabled={!canAddNote}>
+        <Icon
+          name="note-blank"
+          size="L"
+          hoverable={canAddNote}
+          tooltip={canAddNote ? "Add a note" : addNoteDisabledReason}
+          tooltipPosition={TooltipPosition.Top}
+          color={canAddNote
+            ? "var(--spectrum-alias-text-color)"
+            : "var(--spectrum-alias-text-color-disabled)"}
+          hoverColor="var(--spectrum-alias-text-color-hover)"
+          on:click={() => {
+            if (canAddNote) {
+              onAddNote()
+            }
+          }}
+        />
+      </span>
+    {/if}
     {#if $automationStore.viewMode === ViewMode.EDITOR}
       <span class="add-step-wrap">
         <Icon
@@ -103,7 +126,7 @@
 <style>
   .controls {
     position: absolute;
-    z-index: 10;
+    z-index: 1003;
     left: 50%;
     bottom: var(--spacing-l);
     transform: translateX(-50%);
@@ -213,6 +236,10 @@
     border-radius: 50%;
   }
 
+  .icon-btn-wrap.disabled :global(i.ph) {
+    color: var(--spectrum-alias-text-color-disabled) !important;
+  }
+
   :global(.spectrum--dark) .fit-view-wrap:hover,
   :global(.spectrum--darkest) .fit-view-wrap:hover,
   :global(.spectrum--midnight) .fit-view-wrap:hover,
@@ -238,5 +265,26 @@
       black
     );
     border-radius: 50%;
+  }
+
+  .icon-btn-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .icon-btn-wrap:hover {
+    background: var(--spectrum-global-color-gray-200);
+    border-radius: 50%;
+  }
+
+  :global(.spectrum--dark) .icon-btn-wrap:hover,
+  :global(.spectrum--darkest) .icon-btn-wrap:hover,
+  :global(.spectrum--midnight) .icon-btn-wrap:hover,
+  :global(.spectrum--nord) .icon-btn-wrap:hover {
+    background: var(--spectrum-global-color-gray-300);
   }
 </style>
