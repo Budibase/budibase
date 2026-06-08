@@ -18,7 +18,7 @@
   } from "@/stores/builder"
   import { API } from "@/api"
   import { agentsStore, appsStore, auth, licensing } from "@/stores/portal"
-  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import FreeTrialBanner from "@/components/portal/licensing/FreeTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     ActionMenu,
@@ -625,7 +625,7 @@
 
       {#if showHeaderActions}
         <div class="header-actions">
-          <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
+          <FreeTrialBanner show={$licensing.showTrialBanner} />
         </div>
       {/if}
     </div>
