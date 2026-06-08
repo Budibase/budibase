@@ -22,16 +22,20 @@ const toTimestamp = (timestamp?: string | number) => {
   return date.toISOString()
 }
 
-const toProjectResponse = (project: Project): ProjectResponse => {
-  const updatedAt = toTimestamp(project.updatedAt)
+export const toProjectResponse = (project: Project): ProjectResponse => {
+  const fallbackTimestamp = new Date().toISOString()
+  const createdAt =
+    toTimestamp(project.createdAt) ??
+    toTimestamp(project.updatedAt) ??
+    fallbackTimestamp
+  const updatedAt = toTimestamp(project.updatedAt) ?? createdAt
   return {
     _id: project._id!,
     _rev: project._rev!,
     name: project.name,
     description: project.description,
     color: project.color,
-    createdAt:
-      toTimestamp(project.createdAt) ?? updatedAt ?? new Date().toISOString(),
+    createdAt,
     updatedAt,
   }
 }

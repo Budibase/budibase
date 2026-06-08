@@ -1,6 +1,7 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { FeatureFlag } from "@budibase/types"
+import { FeatureFlag, type Project } from "@budibase/types"
+import { toProjectResponse } from "../../controllers/project"
 import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
@@ -73,6 +74,20 @@ describe("/projects", () => {
 
       expect(project!.createdAt).toBe(project!.updatedAt)
     })
+  })
+
+  it("uses the created timestamp when the updated timestamp is invalid", () => {
+    const createdAt = "2026-06-08T10:00:00.000Z"
+    const project = toProjectResponse({
+      _id: "project_legacy",
+      _rev: "1-test",
+      name: "Legacy project",
+      createdAt,
+      updatedAt: "invalid",
+    } as Project)
+
+    expect(project.createdAt).toBe(createdAt)
+    expect(project.updatedAt).toBe(createdAt)
   })
 
   it("updates projects without client timestamps", async () => {
