@@ -459,7 +459,26 @@ const copyToClipboardHandler = async action => {
 const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
-    sidePanelStore.actions.open(id)
+    // Pass through optional size parameter (if set via the builder action).
+    // A size of ":default" means "inherit component setting", so we should
+    // not force a size in that case.
+    const size = action.parameters?.size
+    const effectiveSize = size === ":default" ? undefined : size
+
+    // Allow optional position override from the action.
+    // ":default" means inherit the configured side panel setting.
+    const position = action.parameters?.position
+    const effectivePosition = position === ":default" ? undefined : position
+
+    const options = {
+      ...(effectiveSize ? { size: effectiveSize } : {}),
+      ...(effectivePosition ? { position: effectivePosition } : {}),
+    }
+
+    sidePanelStore.actions.open(
+      id,
+      Object.keys(options).length ? options : undefined
+    )
   }
 }
 

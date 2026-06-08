@@ -10,8 +10,17 @@
     Input,
     DatePicker,
     Label,
+    Multiselect,
   } from "@budibase/bbui"
-  import type { Component, EnrichedBinding } from "@budibase/types"
+  import {
+    DEFAULT_URL_VALIDATION_PROTOCOLS,
+    URL_VALIDATION_PROTOCOLS,
+  } from "@budibase/types"
+  import type {
+    Component,
+    EnrichedBinding,
+    UrlValidationProtocol,
+  } from "@budibase/types"
   import { isJSBinding } from "@budibase/string-templates"
   import { generate } from "shortid"
   import { SvelteSet } from "svelte/reactivity"
@@ -35,6 +44,11 @@
   } from "./types"
 
   type InputValue = string | number | null | undefined
+
+  interface UrlProtocolOption {
+    label: string
+    value: UrlValidationProtocol
+  }
 
   interface ScreenAsset {
     props: Component
@@ -65,6 +79,13 @@
     "contains",
     "notContains",
   ]
+
+  const urlProtocolOptions: UrlProtocolOption[] = URL_VALIDATION_PROTOCOLS.map(
+    protocol => ({
+      label: protocol === "mailto" ? "Mailto" : protocol.toUpperCase(),
+      value: protocol,
+    })
+  )
 
   export let fieldName: string | null = null
   export let rules: ValidationEditorRule[] = []
@@ -101,8 +122,11 @@
   $: dataSourceSchema = getDataSourceSchema($selectedScreen, $selectedComponent)
   $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
-  $: fieldType = type?.split("/")[1] || "string"
-  $: constraintOptions = getConstraintsForType(fieldType)
+  $: validationType = type?.split("/")[1] || "string"
+  $: fieldType = ["url", "email"].includes(validationType)
+    ? "string"
+    : validationType
+  $: constraintOptions = getConstraintsForType(validationType)
 
   const getDataSourceSchema = (
     asset: ScreenAsset | null | undefined,
@@ -204,6 +228,50 @@
     rule.value = event.detail
   }
 
+  const isUrlProtocol = (
+    protocol: unknown
+  ): protocol is UrlValidationProtocol => {
+    const protocols: readonly string[] = URL_VALIDATION_PROTOCOLS
+    return typeof protocol === "string" && protocols.includes(protocol)
+  }
+
+  const getUrlProtocolValue = (
+    value: ValidationValue | undefined
+  ): UrlValidationProtocol[] => {
+    if (!Array.isArray(value)) {
+      return [...DEFAULT_URL_VALIDATION_PROTOCOLS]
+    }
+
+    const protocols = value.filter(isUrlProtocol)
+    return protocols.length ? protocols : [...DEFAULT_URL_VALIDATION_PROTOCOLS]
+  }
+
+  const updateRuleUrlProtocols = (
+    rule: ValidationEditorRule,
+    event: CustomEvent<UrlValidationProtocol[]>
+  ): void => {
+    rule.value = getUrlProtocolValue(event.detail)
+  }
+
+  const updateRuleConstraint = (rule: ValidationEditorRule): void => {
+    if (rule.constraint === "url") {
+      rule.value = getUrlProtocolValue(rule.value)
+      delete rule.valueType
+      return
+    }
+
+    if (["required", "email"].includes(rule.constraint || "")) {
+      delete rule.value
+      delete rule.valueType
+      return
+    }
+
+    if (Array.isArray(rule.value)) {
+      rule.value = null
+    }
+    rule.valueType ||= "Binding"
+  }
+
   const exists = (value: unknown): boolean => {
     return value != null && value !== ""
   }
@@ -237,6 +305,10 @@
     expandedRules.add(newRule.id)
   }
 
+  const supportsConstraintValue = (constraint?: string): boolean => {
+    return !["required", "email"].includes(constraint || "")
+  }
+
   const toggleRule = (id: string): void => {
     const nextExpandedRules = new SvelteSet(expandedRules)
     if (nextExpandedRules.has(id)) {
@@ -253,7 +325,17 @@
   }
 
   const valueSummary = (rule: ValidationEditorRule): string => {
-    if (rule.constraint === "required") {
+    if (rule.constraint === "url") {
+      const protocols = getUrlProtocolValue(rule.value)
+      return protocols
+        .map(
+          protocol =>
+            urlProtocolOptions.find(option => option.value === protocol)?.label
+        )
+        .filter(Boolean)
+        .join(", ")
+    }
+    if (!supportsConstraintValue(rule.constraint)) {
       return ""
     }
     if (rule.value == null || rule.value === "") {
@@ -290,7 +372,8 @@
         {#if rules?.length}
           <div class="rules">
             {#each rules as rule (rule.id)}
-              {@const valueDisabled = rule.constraint === "required"}
+              {@const valueDisabled = !supportsConstraintValue(rule.constraint)}
+              {@const isUrlValue = rule.constraint === "url"}
               {@const isExpanded = expandedRules.has(rule.id)}
               <ValidationRuleCard
                 title={constraintLabel(rule.constraint)}
@@ -318,78 +401,98 @@
                   </button>
                 {/snippet}
 
-                <div class="rule-row" class:rule-row--no-value={valueDisabled}>
-                  <Select
-                    label="Constraint"
-                    bind:value={rule.constraint}
-                    options={constraintOptions}
-                    placeholder="Constraint"
-                  />
-                  {#if !valueDisabled}
+                <div
+                  class="rule-row"
+                  class:rule-row--no-value={valueDisabled}
+                  class:rule-row--url-value={isUrlValue}
+                >
+                  <div class="rule-row__constraint">
                     <Select
-                      label="Value type"
-                      placeholder={false}
-                      bind:value={rule.valueType}
-                      options={["Binding", "Value"]}
+                      label="Constraint"
+                      bind:value={rule.constraint}
+                      options={constraintOptions}
+                      placeholder="Constraint"
+                      autoWidth
+                      popoverAutoWidth
+                      on:change={() => updateRuleConstraint(rule)}
                     />
+                  </div>
+                  {#if !valueDisabled}
+                    {#if isUrlValue}
+                      <Multiselect
+                        label="Allowed protocols"
+                        options={urlProtocolOptions}
+                        getOptionLabel={option => option.label}
+                        getOptionValue={option => option.value}
+                        value={getUrlProtocolValue(rule.value)}
+                        on:change={e => updateRuleUrlProtocols(rule, e)}
+                      />
+                    {:else}
+                      <Select
+                        label="Value type"
+                        placeholder={false}
+                        bind:value={rule.valueType}
+                        options={["Binding", "Value"]}
+                      />
 
-                    {#if rule.valueType === "Binding"}
-                      <DrawerBindableInput
-                        label="Value"
-                        title="Value"
-                        placeholder="Constraint value"
-                        value={rule.value}
-                        {bindings}
-                        on:change={e => (rule.value = e.detail)}
-                      />
-                    {:else if rule.type !== "array" && rule.constraint && stringConstraints.includes(rule.constraint)}
-                      <Input
-                        label="Value"
-                        value={inputValue(rule.value)}
-                        on:change={e => updateRuleValue(rule, e)}
-                        placeholder="Constraint value"
-                      />
-                    {:else if rule.type && ["string", "number", "options", "longform"].includes(rule.type)}
-                      <Input
-                        label="Value"
-                        value={inputValue(rule.value)}
-                        on:change={e => updateRuleValue(rule, e)}
-                        placeholder="Constraint value"
-                      />
-                    {:else if rule.type === "array"}
-                      <Select
-                        label="Value"
-                        options={dataSourceSchema?.schema?.[field]?.constraints
-                          ?.inclusion || []}
-                        getOptionLabel={x => x}
-                        getOptionValue={x => x}
-                        value={rule.value}
-                        on:change={e => {
-                          rule.value = e.detail
-                        }}
-                      />
-                    {:else if rule.type === "boolean"}
-                      <Select
-                        label="Value"
-                        options={[
-                          { label: "True", value: "true" },
-                          { label: "False", value: "false" },
-                        ]}
-                        bind:value={rule.value}
-                      />
-                    {:else if rule.type === "datetime"}
-                      <Layout noPadding gap="XS">
-                        <Label>Value</Label>
-                        <DatePicker
-                          enableTime={false}
+                      {#if rule.valueType === "Binding"}
+                        <DrawerBindableInput
+                          label="Value"
+                          title="Value"
+                          placeholder="Constraint value"
+                          value={rule.value}
+                          {bindings}
+                          on:change={e => (rule.value = e.detail)}
+                        />
+                      {:else if rule.type !== "array" && rule.constraint && stringConstraints.includes(rule.constraint)}
+                        <Input
+                          label="Value"
+                          value={inputValue(rule.value)}
+                          on:change={e => updateRuleValue(rule, e)}
+                          placeholder="Constraint value"
+                        />
+                      {:else if rule.type && ["string", "number", "options", "longform"].includes(rule.type)}
+                        <Input
+                          label="Value"
+                          value={inputValue(rule.value)}
+                          on:change={e => updateRuleValue(rule, e)}
+                          placeholder="Constraint value"
+                        />
+                      {:else if rule.type === "array"}
+                        <Select
+                          label="Value"
+                          options={dataSourceSchema?.schema?.[field]
+                            ?.constraints?.inclusion || []}
+                          getOptionLabel={x => x}
+                          getOptionValue={x => x}
+                          value={rule.value}
+                          on:change={e => {
+                            rule.value = e.detail
+                          }}
+                        />
+                      {:else if rule.type === "boolean"}
+                        <Select
+                          label="Value"
+                          options={[
+                            { label: "True", value: "true" },
+                            { label: "False", value: "false" },
+                          ]}
                           bind:value={rule.value}
                         />
-                      </Layout>
-                    {:else}
-                      <Layout noPadding gap="XS">
-                        <Label>Value</Label>
-                        <DrawerBindableInput disabled />
-                      </Layout>
+                      {:else if rule.type === "datetime"}
+                        <Layout noPadding gap="XS">
+                          <Label>Value</Label>
+                          <DatePicker
+                            enableTime={false}
+                            bind:value={rule.value}
+                          />
+                        </Layout>
+                      {:else}
+                        <Layout noPadding gap="XS">
+                          <Label>Value</Label>
+                          <DrawerBindableInput disabled />
+                        </Layout>
+                      {/if}
                     {/if}
                   {/if}
                   <DrawerBindableInput
@@ -433,16 +536,26 @@
     flex-direction: column;
     gap: var(--spacing-m);
   }
+  .rule-row__constraint {
+    justify-self: start;
+    max-width: 100%;
+  }
+  .rule-row__constraint :global(.spectrum-Form-itemField) {
+    width: auto;
+  }
   .rule-row {
     display: grid;
     grid-template-columns:
-      minmax(170px, 210px) minmax(130px, 160px) minmax(180px, 1fr)
+      auto minmax(130px, 160px) minmax(180px, 1fr)
       minmax(220px, 1.3fr);
     gap: var(--spacing-m);
     align-items: center;
   }
   .rule-row--no-value {
-    grid-template-columns: minmax(170px, 210px) minmax(220px, 1.3fr);
+    grid-template-columns: auto minmax(220px, 1.3fr);
+  }
+  .rule-row--url-value {
+    grid-template-columns: auto minmax(180px, 1fr) minmax(220px, 1.3fr);
   }
   .icon-button {
     display: flex;
@@ -457,6 +570,14 @@
     .rule-row {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       align-items: start;
+    }
+    .rule-row__constraint {
+      justify-self: stretch;
+      width: 100%;
+    }
+    .rule-row__constraint :global(.spectrum-Form-itemField),
+    .rule-row__constraint :global(.spectrum-Picker.auto-width) {
+      width: 100%;
     }
   }
 

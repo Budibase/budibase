@@ -42,6 +42,14 @@ const Constraints = {
     label: "Must not match regex",
     value: "notRegex",
   },
+  Url: {
+    label: "Must be a valid URL",
+    value: "url",
+  },
+  Email: {
+    label: "Must be a valid email address",
+    value: "email",
+  },
   Contains: {
     label: "Must contain",
     value: "contains",
@@ -60,16 +68,30 @@ const Constraints = {
   },
 }
 
+const stringConstraints = [
+  Constraints.Required,
+  Constraints.MinLength,
+  Constraints.MaxLength,
+  Constraints.Equal,
+  Constraints.NotEqual,
+  Constraints.Regex,
+  Constraints.NotRegex,
+  Constraints.Url,
+  Constraints.Email,
+]
+
+const urlConstraints = stringConstraints.filter(
+  constraint => constraint.value !== Constraints.Email.value
+)
+
+const emailConstraints = stringConstraints.filter(
+  constraint => constraint.value !== Constraints.Url.value
+)
+
 const ConstraintMap: Record<string, ValidationConstraintOption[]> = {
-  ["string"]: [
-    Constraints.Required,
-    Constraints.MinLength,
-    Constraints.MaxLength,
-    Constraints.Equal,
-    Constraints.NotEqual,
-    Constraints.Regex,
-    Constraints.NotRegex,
-  ],
+  ["string"]: stringConstraints,
+  ["url"]: urlConstraints,
+  ["email"]: emailConstraints,
   ["number"]: [
     Constraints.Required,
     Constraints.MaxValue,
@@ -77,7 +99,7 @@ const ConstraintMap: Record<string, ValidationConstraintOption[]> = {
     Constraints.Equal,
     Constraints.NotEqual,
   ],
-  ["boolean"]: [Constraints.Required, Constraints.Equal, Constraints.NotEqual],
+  ["boolean"]: [Constraints.Equal, Constraints.NotEqual],
   ["datetime"]: [
     Constraints.Required,
     Constraints.MaxValue,
