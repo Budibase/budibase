@@ -219,9 +219,10 @@ Any constraints the agent must follow.
           oncontextmenu={openOperationContextMenu}
         >
           <span class="operation-name">{operationName}</span>
+          <span class="status-indicator">
+            <OperationLiveBadge live={operationLive} />
+          </span>
         </button>
-
-        <OperationLiveBadge live={operationLive} hoverable />
 
         <button
           class="operation-menu-trigger"
@@ -321,12 +322,20 @@ Any constraints the agent must follow.
     flex: 1 1 auto;
     min-width: 0;
     min-height: 36px;
-    padding: 8px 12px;
+    padding: 8px 0 8px 12px;
     border: 0;
     background: transparent;
     color: inherit;
     text-align: left;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+  }
+
+  .status-indicator {
+    pointer-events: none;
   }
 
   .operation-name {
