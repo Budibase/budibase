@@ -429,6 +429,10 @@ describe("rag files", () => {
           chunkText: "Name: User 99\nAge: 75",
         },
         {
+          source: "users.csv",
+          chunkText: "Sheet notes: Favorite number is a seeded random field.",
+        },
+        {
           source: "policy.md",
           chunkText: "Admins can approve workspace requests.",
         },
@@ -452,6 +456,9 @@ describe("rag files", () => {
       expect(result.text).toContain("Age: 40")
       expect(result.text).toContain("Favorite number: 66")
       expect(result.text).toContain("Is admin: 1")
+      expect(result.text).toContain(
+        "Sheet notes: Favorite number is a seeded random field."
+      )
       expect(result.text).toContain("Admins can approve workspace requests.")
       expect(result.text).not.toContain("Age: 75")
       const exactChunk = result.chunks[0]
@@ -459,6 +466,10 @@ describe("rag files", () => {
         {
           source: "source-users",
           chunkText: exactChunk.chunkText,
+        },
+        {
+          source: "source-users",
+          chunkText: "Sheet notes: Favorite number is a seeded random field.",
         },
         {
           source: "source-policy",

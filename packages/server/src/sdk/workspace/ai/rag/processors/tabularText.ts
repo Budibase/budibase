@@ -40,6 +40,9 @@ interface SearchTabularRowsForExactMatchesInput
 
 export interface TabularRowExactMatch {
   chunkText: string
+  columnLabels: string[]
+  matchedValues: string[]
+  rowValues: string[]
 }
 
 const DEFAULT_MAX_EXACT_MATCHES = 20
@@ -373,6 +376,16 @@ export const searchTabularRowsForExactMatches = ({
         continue
       }
 
+      const matchedValues = row.filter(
+        (value, index) =>
+          queryContainsExactCellValue(normalizedQuery, value) ||
+          queryContainsColumnValue(
+            normalizedQuery,
+            columnLabels[index] || `Column ${index + 1}`,
+            value
+          )
+      )
+
       matches.push({
         chunkText: stringifyRowForRag({
           documentLabel,
@@ -381,6 +394,9 @@ export const searchTabularRowsForExactMatches = ({
           row,
           rowNumber: rowIndex + 2,
         }),
+        columnLabels,
+        matchedValues,
+        rowValues: row.filter(Boolean),
       })
 
       if (matches.length >= maxMatches) {
