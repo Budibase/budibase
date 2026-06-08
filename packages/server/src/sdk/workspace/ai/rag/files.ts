@@ -356,10 +356,12 @@ export const retrieveContextForAgent = async (
       readyFiles,
       question
     )
-    if (exactTabularChunks.length) {
-      chunks.push(...exactTabularChunks)
-      continue
-    }
+    chunks.push(...exactTabularChunks)
+    const exactTabularSourceIds = new Set(
+      exactTabularChunks
+        .map(chunk => chunk.source)
+        .filter((source): source is string => !!source)
+    )
 
     const readyFileSourceIds = new Set(readyFileSources)
     const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
@@ -374,6 +376,9 @@ export const retrieveContextForAgent = async (
       }
 
       if (readyFileSourceIds.has(chunk.source)) {
+        if (exactTabularSourceIds.has(chunk.source)) {
+          continue
+        }
         chunks.push(chunk)
         continue
       }
@@ -382,6 +387,9 @@ export const retrieveContextForAgent = async (
         normalizeFilenameLookup(chunk.source)
       )
       if (!sourceIdFromFilename) {
+        continue
+      }
+      if (exactTabularSourceIds.has(sourceIdFromFilename)) {
         continue
       }
 

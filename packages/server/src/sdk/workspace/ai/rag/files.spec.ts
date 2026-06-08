@@ -389,7 +389,97 @@ describe("rag files", () => {
       ])
     })
 
-    it("returns exact tabular row matches without searching Gemini", async () => {
+    it("returns exact tabular row matches and continues searching other sources", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "users.csv",
+          mimetype: "text/csv",
+          objectStoreKey: "objects/users.csv",
+          ragSourceId: "source-users",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+        {
+          _id: "file_2",
+          knowledgeBaseId: "kb_123",
+          filename: "policy.md",
+          objectStoreKey: "objects/policy.md",
+          ragSourceId: "source-policy",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+      mockObjectStoreGetReadStream.mockResolvedValue({
+        stream: Readable.from([
+          Buffer.from(
+            [
+              "Name,Age,Favorite number,Is admin",
+              "User 99,75,63,0",
+              "User 991,40,66,1",
+            ].join("\n")
+          ),
+        ]),
+      })
+      mockProcessorSearch.mockResolvedValue([
+        {
+          source: "users.csv",
+          chunkText: "Name: User 99\nAge: 75",
+        },
+        {
+          source: "policy.md",
+          chunkText: "Admins can approve workspace requests.",
+        },
+      ])
+
+      const result = await retrieveContextForAgent(
+        defaultAgent,
+        "What are the details for User 991?"
+      )
+
+      expect(mockObjectStoreGetReadStream).toHaveBeenCalledWith(
+        expect.any(String),
+        "objects/users.csv"
+      )
+      expect(mockProcessorSearch).toHaveBeenCalledWith(
+        "What are the details for User 991?"
+      )
+      expect(result.text).toContain("Exact tabular match from File: users.csv")
+      expect(result.text).toContain("Row 3 in users.csv")
+      expect(result.text).toContain("Name: User 991")
+      expect(result.text).toContain("Age: 40")
+      expect(result.text).toContain("Favorite number: 66")
+      expect(result.text).toContain("Is admin: 1")
+      expect(result.text).toContain("Admins can approve workspace requests.")
+      expect(result.text).not.toContain("Age: 75")
+      const exactChunk = result.chunks[0]
+      expect(result.chunks).toEqual([
+        {
+          source: "source-users",
+          chunkText: exactChunk.chunkText,
+        },
+        {
+          source: "source-policy",
+          chunkText: "Admins can approve workspace requests.",
+        },
+      ])
+      expect(result.sources).toEqual([
+        {
+          sourceId: "source-users",
+          fileId: "file_1",
+          filename: "users.csv",
+        },
+        {
+          sourceId: "source-policy",
+          fileId: "file_2",
+          filename: "policy.md",
+        },
+      ])
+    })
+
+    it("keeps multiple exact tabular matches from the same file", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([
         {
@@ -408,36 +498,26 @@ describe("rag files", () => {
           Buffer.from(
             [
               "Name,Age,Favorite number,Is admin",
-              "User 99,75,63,0",
+              "User 990,61,40,1",
               "User 991,40,66,1",
+              "User 992,37,79,1",
             ].join("\n")
           ),
         ]),
       })
+      mockProcessorSearch.mockResolvedValue([])
 
       const result = await retrieveContextForAgent(
         defaultAgent,
-        "What are the details for User 991?"
+        "Compare User 991 and User 992"
       )
 
-      expect(mockObjectStoreGetReadStream).toHaveBeenCalledWith(
-        expect.any(String),
-        "objects/users.csv"
-      )
-      expect(mockProcessorSearch).not.toHaveBeenCalled()
-      expect(result.text).toContain("Exact tabular match from File: users.csv")
-      expect(result.text).toContain("Row 3 in users.csv")
+      expect(result.chunks).toHaveLength(2)
       expect(result.text).toContain("Name: User 991")
       expect(result.text).toContain("Age: 40")
-      expect(result.text).toContain("Favorite number: 66")
-      expect(result.text).toContain("Is admin: 1")
-      expect(result.text).not.toContain("Age: 75")
-      expect(result.chunks).toEqual([
-        {
-          source: "source-users",
-          chunkText: result.text,
-        },
-      ])
+      expect(result.text).toContain("Name: User 992")
+      expect(result.text).toContain("Age: 37")
+      expect(result.text).not.toContain("Name: User 990")
       expect(result.sources).toEqual([
         {
           sourceId: "source-users",

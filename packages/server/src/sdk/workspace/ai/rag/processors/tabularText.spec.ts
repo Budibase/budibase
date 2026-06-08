@@ -211,6 +211,64 @@ describe("tabularText", () => {
     expect(result[0].chunkText).not.toContain("Age: 75")
   })
 
+  it("returns multiple exact row matches from one query", () => {
+    const buffer = buildWorkbookBuffer([
+      {
+        name: "Users",
+        rows: [
+          ["Name", "Age", "Favorite number", "Is admin"],
+          ["User 990", 61, 40, 1],
+          ["User 991", 40, 66, 1],
+          ["User 992", 37, 79, 1],
+        ],
+      },
+    ])
+
+    const result = searchTabularRowsForExactMatches({
+      filename: "users.xlsx",
+      buffer,
+      query: "Compare User 991 and User 992",
+    })
+
+    expect(result).toHaveLength(2)
+    expect(result[0].chunkText).toContain("Name: User 991")
+    expect(result[0].chunkText).toContain("Age: 40")
+    expect(result[1].chunkText).toContain("Name: User 992")
+    expect(result[1].chunkText).toContain("Age: 37")
+    expect(result.map(match => match.chunkText).join("\n")).not.toContain(
+      "Name: User 990"
+    )
+  })
+
+  it("returns multiple rows for exact column value lookups", () => {
+    const buffer = buildWorkbookBuffer([
+      {
+        name: "Users",
+        rows: [
+          ["Name", "Age", "Favorite number", "Is admin"],
+          ["User 990", 61, 40, 1],
+          ["User 991", 40, 66, 1],
+          ["User 992", 37, 79, 0],
+          ["User 993", 68, 25, 1],
+        ],
+      },
+    ])
+
+    const result = searchTabularRowsForExactMatches({
+      filename: "users.xlsx",
+      buffer,
+      query: "Show rows where Is admin is 1",
+    })
+
+    expect(result).toHaveLength(3)
+    expect(result[0].chunkText).toContain("Name: User 990")
+    expect(result[1].chunkText).toContain("Name: User 991")
+    expect(result[2].chunkText).toContain("Name: User 993")
+    expect(result.map(match => match.chunkText).join("\n")).not.toContain(
+      "Name: User 992"
+    )
+  })
+
   it("does not match short numeric cells during exact row lookup", () => {
     const buffer = buildWorkbookBuffer([
       {
@@ -225,7 +283,7 @@ describe("tabularText", () => {
     const result = searchTabularRowsForExactMatches({
       filename: "users.xlsx",
       buffer,
-      query: "Who has age 40?",
+      query: "What does 40 mean?",
     })
 
     expect(result).toEqual([])

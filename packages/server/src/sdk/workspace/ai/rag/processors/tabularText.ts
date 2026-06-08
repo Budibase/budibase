@@ -42,7 +42,7 @@ export interface TabularRowExactMatch {
   chunkText: string
 }
 
-const DEFAULT_MAX_EXACT_MATCHES = 5
+const DEFAULT_MAX_EXACT_MATCHES = 20
 
 const normalizeCellValue = (value: unknown) =>
   String(value ?? "")
@@ -78,10 +78,30 @@ const queryContainsExactCellValue = (query: string, value: string) => {
     return false
   }
 
+  return queryContainsSearchTerm(query, normalizedValue)
+}
+
+const queryContainsSearchTerm = (query: string, value: string) => {
+  const normalizedValue = normalizeSearchValue(value)
+  if (!normalizedValue) {
+    return false
+  }
+
   return new RegExp(
     `(^|[^a-z0-9])${escapeRegExp(normalizedValue)}($|[^a-z0-9])`,
     "i"
   ).test(query)
+}
+
+const queryContainsColumnValue = (
+  query: string,
+  columnLabel: string,
+  value: string
+) => {
+  return (
+    queryContainsSearchTerm(query, columnLabel) &&
+    queryContainsSearchTerm(query, value)
+  )
 }
 
 const getDelimitedSeparator = ({
@@ -340,8 +360,14 @@ export const searchTabularRowsForExactMatches = ({
         continue
       }
 
-      const hasExactMatch = row.some(value =>
-        queryContainsExactCellValue(normalizedQuery, value)
+      const hasExactMatch = row.some(
+        (value, index) =>
+          queryContainsExactCellValue(normalizedQuery, value) ||
+          queryContainsColumnValue(
+            normalizedQuery,
+            columnLabels[index] || `Column ${index + 1}`,
+            value
+          )
       )
       if (!hasExactMatch) {
         continue
