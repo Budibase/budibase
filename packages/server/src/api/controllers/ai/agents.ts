@@ -315,6 +315,7 @@ export async function createAgent(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
+    allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
@@ -374,6 +375,9 @@ export async function updateAgent(
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
+    allowKnowledgeSourceDownload:
+      body.allowKnowledgeSourceDownload ??
+      existing.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,

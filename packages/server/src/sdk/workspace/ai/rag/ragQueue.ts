@@ -172,6 +172,15 @@ export async function enqueueRagFileIngestion(job: RagIngestionJob) {
   return await getQueue().add(job, { jobId: job.fileId })
 }
 
+export async function removeRagFileIngestionJob(fileId: string): Promise<void> {
+  const existing = await getQueue().getBullQueue().getJob(fileId)
+  if (existing) {
+    await existing.remove().catch(() => {
+      // Job may have moved to active state between getJob and remove - safe to ignore
+    })
+  }
+}
+
 const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
   const { stream } = await objectStore.getReadStream(
     ObjectStoreBuckets.APPS,

@@ -25,6 +25,7 @@
 - No semicolons, double quotes, 2-space tabs (see .prettierrc.json)
 - Use TypeScript strict mode with consistent-type-imports
 - Imports: Group external imports first, then internal `@budibase/*` packages
+- Assume the target Node version from the repo root `.nvmrc` when writing or reviewing code
 - Variables: camelCase, prefix unused with `_`
 - Functions: Prefer arrow functions, use async/await over Promises
 - Error handling: Use try/catch

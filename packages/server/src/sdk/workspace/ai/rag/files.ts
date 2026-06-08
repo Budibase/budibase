@@ -9,10 +9,11 @@ import {
   LockType,
   type WithRequired,
 } from "@budibase/types"
-import { HTTPError, locks } from "@budibase/backend-core"
+import { HTTPError, locks, objectStore } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
+import { ObjectStoreBuckets } from "../../../../constants"
 
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
@@ -201,6 +202,31 @@ export const deleteFileForAgent = async (
     throw new HTTPError("Agent file storage not found", 404)
   }
   await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+}
+
+export const getFileUrlForAgent = async (
+  agentId: string,
+  fileId: string
+): Promise<string> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this agent", 404)
+  }
+
+  if (!file.objectStoreKey) {
+    throw new HTTPError("Knowledge base file is missing object key", 400)
+  }
+
+  return await objectStore.getPresignedUrl(
+    ObjectStoreBuckets.APPS,
+    file.objectStoreKey
+  )
 }
 
 const assertKnowledgeBaseHasId: (

@@ -377,6 +377,7 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
+    allowKnowledgeSourceDownload: request.allowKnowledgeSourceDownload,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -424,6 +425,7 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     operations: source.operations,
+    allowKnowledgeSourceDownload: source.allowKnowledgeSourceDownload,
   })
 }
 

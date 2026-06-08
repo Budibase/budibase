@@ -98,6 +98,8 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
+  /** When false, chat users cannot download knowledge source files. Default is allowed. */
+  allowKnowledgeSourceDownload?: boolean
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
