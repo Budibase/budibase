@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
+import type { UICondition } from "@budibase/types"
 
 vi.mock("../../../utils", () => ({
-  derivedMemo: value => value,
+  derivedMemo: (value: unknown) => value,
   QueryUtils: {},
 }))
 
@@ -13,7 +14,7 @@ describe("grid condition evaluation helpers", () => {
       { disabled: true },
       { disabled: false },
       { disabled: true },
-    ]
+    ] as UICondition[]
 
     expect(getGridEvaluatableConditions(conditions, true)).toEqual([
       { disabled: false },
@@ -21,7 +22,10 @@ describe("grid condition evaluation helpers", () => {
   })
 
   it("keeps disabled conditions when disabled conditions should not be honoured", () => {
-    const conditions = [{ disabled: true }, { disabled: false }]
+    const conditions = [
+      { disabled: true },
+      { disabled: false },
+    ] as UICondition[]
 
     expect(getGridEvaluatableConditions(conditions, false)).toEqual(conditions)
   })
