@@ -1,5 +1,6 @@
 import {
   Agent,
+  AgentOperation,
   ToolType,
   ToolMetadata,
   SourceName,
@@ -34,6 +35,11 @@ const HELPER_TOOL_NAMES = new Set([
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
+
+export const getLiveOperation = (agent: Agent): AgentOperation | undefined => {
+  const operation = agent.operations?.[0]
+  return operation?.live === true ? operation : undefined
+}
 
 export function getToolDisplayNames(
   tools: AiToolDefinition[]
@@ -153,11 +159,11 @@ export async function buildPromptAndTools(
   if (!agentId) {
     throw new Error("Agent _id is required")
   }
-  const hasKnowledgeBases =
-    agent.operations?.[0]?.knowledgeBases?.some(Boolean) ?? false
+  const operation = getLiveOperation(agent)
+  const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const enabledToolNames = new Set(agent.operations?.[0]?.enabledTools || [])
+  const enabledToolNames = new Set(operation?.enabledTools || [])
   const enabledTools = addHelperTools(
     allTools.filter(
       tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
@@ -181,7 +187,7 @@ export async function buildPromptAndTools(
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
-    promptInstructions: agent.operations?.[0]?.promptInstructions,
+    promptInstructions: operation?.promptInstructions,
     includeGoal,
   })
 

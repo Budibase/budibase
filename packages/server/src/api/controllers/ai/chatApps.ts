@@ -1,5 +1,6 @@
 import { HTTPError, roles } from "@budibase/backend-core"
 import {
+  Agent,
   ChatApp,
   ChatAppAgent,
   FetchChatAppAgentsResponse,
@@ -8,6 +9,7 @@ import {
 } from "@budibase/types"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 
 export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
   const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
@@ -16,9 +18,8 @@ export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
   }
 }
 
-const getAllowKnowledgeSourceDownload = (agent: {
-  operations?: { allowKnowledgeSourceDownload?: boolean }[]
-}) => agent.operations?.[0]?.allowKnowledgeSourceDownload !== false
+const getAllowKnowledgeSourceDownload = (agent: Agent) =>
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload !== false
 
 export type ChatAgentAccessContext = Pick<UserCtx, "user" | "roleId">
 

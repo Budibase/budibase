@@ -87,6 +87,7 @@ describe("buildPromptAndTools", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: true,
           enabledTools: [],
           knowledgeBases: ["kb_1"],
         },
@@ -117,6 +118,7 @@ describe("buildPromptAndTools", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: true,
           enabledTools: [],
           knowledgeBases: [],
         },
@@ -138,6 +140,7 @@ describe("buildPromptAndTools", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: true,
           enabledTools: [],
           knowledgeBases: ["kb_1"],
         },
@@ -147,5 +150,34 @@ describe("buildPromptAndTools", () => {
     await expect(buildPromptAndTools(agent)).rejects.toThrow(
       "Agent _id is required"
     )
+  })
+
+  it("ignores operation prompt, tools, and knowledge when not live", async () => {
+    const agent = {
+      _id: "agent_3",
+      name: "Support Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          promptInstructions: "Draft instructions",
+          enabledTools: ["draft_tool"],
+          knowledgeBases: ["kb_1"],
+        },
+      ],
+    } as Agent
+
+    const { ai } = jest.requireMock("@budibase/pro")
+    const result = await buildPromptAndTools(agent)
+
+    expect(ai.composeAutomationAgentSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptInstructions: undefined,
+      })
+    )
+    expect(createKnowledgeFilesTool as jest.Mock).not.toHaveBeenCalled()
+    expect(Reflect.get(result.tools, "search_knowledge")).toBeUndefined()
   })
 })

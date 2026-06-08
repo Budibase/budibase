@@ -11,6 +11,7 @@ import {
 } from "@budibase/types"
 import { HTTPError, locks, objectStore } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
+import { getLiveOperation } from "../agents/utils"
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
 import { ObjectStoreBuckets } from "../../../../constants"
@@ -19,7 +20,7 @@ const resolveKnowledgeBasesForAgent = async (
   agent: Agent
 ): Promise<KnowledgeBase[]> => {
   const knowledgeBaseIds = (
-    agent.operations?.flatMap(operation => operation.knowledgeBases || []) || []
+    getLiveOperation(agent)?.knowledgeBases || []
   ).filter(Boolean)
   if (knowledgeBaseIds.length === 0) {
     return []
@@ -107,6 +108,11 @@ export const ensureKnowledgeBaseForAgent = async (
         return existing
       }
 
+      const targetOperation = agent.operations?.[0]
+      if (!targetOperation) {
+        throw new HTTPError("Agent has no operations configured", 422)
+      }
+
       const created = await knowledgeBaseSdk.create({
         name: getOperationKnowledgeBaseName(agent),
         type: KnowledgeBaseType.GEMINI,
@@ -132,18 +138,23 @@ export const ensureKnowledgeBaseForAgent = async (
 }
 
 const getKnowledgeBaseIdsForAgent = async (
-  agentId: string
+  agentId: string,
+  options: { liveOperationOnly?: boolean } = {}
 ): Promise<string[]> => {
   const agent = await agentsSdk.getOrThrow(agentId)
+  if (options.liveOperationOnly) {
+    return (getLiveOperation(agent)?.knowledgeBases || []).filter(Boolean)
+  }
   return (
     agent.operations?.flatMap(operation => operation.knowledgeBases || []) || []
   ).filter(Boolean)
 }
 
 export const listFilesForAgent = async (
-  agentId: string
+  agentId: string,
+  options: { liveOperationOnly?: boolean } = {}
 ): Promise<KnowledgeBaseFile[]> => {
-  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId, options)
   if (knowledgeBaseIds.length === 0) {
     return []
   }

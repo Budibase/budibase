@@ -8,6 +8,7 @@ import {
 import { v4 } from "uuid"
 import {
   ActionFailureReason,
+  Agent,
   ChatAgentRequest,
   ChatApp,
   ChatConversation,
@@ -30,6 +31,7 @@ import sdk from "../../../sdk"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
+  getLiveOperation,
   prepareAgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
@@ -50,9 +52,8 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
-const allowsKnowledgeSourceDownload = (agent: {
-  operations?: { allowKnowledgeSourceDownload?: boolean }[]
-}) => agent.operations?.[0]?.allowKnowledgeSourceDownload !== false
+const allowsKnowledgeSourceDownload = (agent: Agent) =>
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload !== false
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId

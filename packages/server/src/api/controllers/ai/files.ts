@@ -1,6 +1,7 @@
 import { readFile, unlink } from "node:fs/promises"
 import { events, HTTPError } from "@budibase/backend-core"
 import {
+  Agent,
   AgentKnowledgeSourceType,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
@@ -24,6 +25,7 @@ import {
   findOperationIdForSharePointSite,
   updateOperationKnowledgeSources,
 } from "../../../sdk/workspace/ai/agents/knowledgeConfig"
+import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 import { fetchSharePointSitesByDatasourceAuthConfig } from "../../../sdk/workspace/ai/knowledgeSources/sharepoint"
 import { getSharePointSiteIds, getSharePointSources } from "./sharepoint"
 
@@ -53,9 +55,8 @@ const unlinkSafe = async (path?: string) => {
 const sanitizeSharePointSourceId = (siteId: string) =>
   `sharepoint_site_${siteId.replace(/[^a-zA-Z0-9_-]/g, "_")}`
 
-const allowsKnowledgeSourceDownload = (agent: {
-  operations?: { allowKnowledgeSourceDownload?: boolean }[]
-}) => agent.operations?.[0]?.allowKnowledgeSourceDownload !== false
+const allowsKnowledgeSourceDownload = (agent: Agent) =>
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload !== false
 
 const fetchSharePointOptionsForDatasourceAuthConfig = async (
   datasourceId: string,
