@@ -300,6 +300,98 @@ describe("/projects", () => {
     )
   })
 
+  it("validates external table project assignments on datasource updates", async () => {
+    await withProjectsEnabled(async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const externalTable = basicTable(datasource, {
+        _id: buildExternalTableId(datasource._id!, "TestTable"),
+        projectId: "project_missing",
+      })
+
+      await config.api.datasource.update(
+        {
+          ...datasource,
+          entities: {
+            [externalTable.name]: externalTable,
+          },
+        },
+        {
+          status: 404,
+          body: {
+            message: "Project 'project_missing' not found.",
+          },
+        }
+      )
+
+      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+      expect(fetchedDatasource.entities).toBeUndefined()
+    })
+  })
+
+  it("rejects external table project assignments while disabled", async () => {
+    const datasource = await config.api.datasource.create(
+      basicDatasource().datasource
+    )
+    const externalTable = basicTable(datasource, {
+      _id: buildExternalTableId(datasource._id!, "TestTable"),
+      projectId: "project_1",
+    })
+
+    await config.api.datasource.update(
+      {
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
+      },
+      {
+        status: 404,
+        body: {
+          message: "Projects feature is not enabled.",
+        },
+      }
+    )
+  })
+
+  it("preserves omitted external table project assignments", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const externalTable = basicTable(datasource, {
+        _id: buildExternalTableId(datasource._id!, "TestTable"),
+        projectId: project._id,
+      })
+      const assignedDatasource = await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
+      })
+      const { projectId: _projectId, ...tableUpdate } =
+        assignedDatasource.entities![externalTable.name]
+
+      const updatedDatasource = await config.api.datasource.update({
+        ...assignedDatasource,
+        entities: {
+          [externalTable.name]: {
+            ...tableUpdate,
+            name: "Updated table",
+          },
+        },
+      })
+
+      expect(updatedDatasource.entities![externalTable.name].projectId).toBe(
+        project._id
+      )
+    })
+  })
+
   it("clears assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({

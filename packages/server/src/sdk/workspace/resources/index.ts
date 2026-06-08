@@ -363,6 +363,14 @@ function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
   return type === ResourceType.WORKSPACE_APP
 }
 
+function isDatasource(doc: AnyDocument): doc is Datasource {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.DATASOURCE
+}
+
 function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
   if (!doc._id) {
     return false
@@ -726,7 +734,12 @@ export async function duplicateResourcesToWorkspace(
   const referencedProjectIds = Array.from(
     new Set(
       docsToInsert
-        .map(doc => doc.projectId)
+        .flatMap(doc => [
+          doc.projectId,
+          ...(isDatasource(doc)
+            ? Object.values(doc.entities || {}).map(entity => entity.projectId)
+            : []),
+        ])
         .filter((projectId): projectId is string => !!projectId)
     )
   )
@@ -748,13 +761,30 @@ export async function duplicateResourcesToWorkspace(
   if (!fromWorkspace) {
     throw new Error("Could not get workspaceId")
   }
+
+  const hasAvailableProject = (projectId: string | undefined) => {
+    return (
+      projectsEnabled &&
+      !!projectId &&
+      (resourceIds.has(projectId) || destinationProjectIds.has(projectId))
+    )
+  }
+
+  const sanitizeProjectAssignment = (doc: object) => {
+    if (
+      "projectId" in doc &&
+      typeof doc.projectId === "string" &&
+      !hasAvailableProject(doc.projectId)
+    ) {
+      delete doc.projectId
+    }
+  }
+
   if (docsToInsert.length) {
     await destinationDb.bulkDocs(
       docsToInsert.map<AnyDocument>(doc => {
         const sanitizedDoc: AnyDocument = {
-          ...(isAgent(doc)
-            ? sdk.ai.agents.sanitiseAgentForExport(doc)
-            : doc),
+          ...(isAgent(doc) ? sdk.ai.agents.sanitiseAgentForExport(doc) : doc),
           fromWorkspace,
         }
         delete sanitizedDoc._rev
@@ -766,13 +796,15 @@ export async function duplicateResourcesToWorkspace(
         if (isAutomation(sanitizedDoc)) {
           sanitizedDoc.appId = toWorkspace
         }
-        if (
-          !projectsEnabled ||
-          (sanitizedDoc.projectId &&
-            !resourceIds.has(sanitizedDoc.projectId) &&
-            !destinationProjectIds.has(sanitizedDoc.projectId))
-        ) {
-          delete sanitizedDoc.projectId
+        sanitizeProjectAssignment(sanitizedDoc)
+        if (isDatasource(sanitizedDoc) && sanitizedDoc.entities) {
+          sanitizedDoc.entities = Object.fromEntries(
+            Object.entries(sanitizedDoc.entities).map(([name, entity]) => {
+              const sanitizedEntity = { ...entity }
+              sanitizeProjectAssignment(sanitizedEntity)
+              return [name, sanitizedEntity]
+            })
+          )
         }
         return sanitizedDoc
       })

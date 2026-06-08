@@ -1,4 +1,4 @@
-import { db, events, objectStore } from "@budibase/backend-core"
+import { db, events, features, objectStore } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
@@ -6,6 +6,7 @@ import {
   AnyDocument,
   Automation,
   Datasource,
+  FeatureFlag,
   FieldType,
   Query,
   RelationshipType,
@@ -21,7 +22,9 @@ import path from "path"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { generateRowActionsID } from "../../../db/utils"
+import { buildExternalTableId } from "../../../integrations/utils"
 import {
+  basicDatasource,
   basicQuery,
   basicScreen,
   basicTable,
@@ -749,6 +752,66 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("sanitises external table project assignments when duplicating datasources", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.PROJECTS]: true },
+        async () => {
+          const { project } = await config.api.project.create({
+            name: "Operations",
+          })
+          const datasource = await config.api.datasource.create(
+            basicDatasource().datasource
+          )
+          const externalTable = basicTable(datasource, {
+            _id: buildExternalTableId(datasource._id!, "TestTable"),
+            projectId: project._id,
+          })
+          const assignedDatasource = await config.api.datasource.update({
+            ...datasource,
+            entities: {
+              [externalTable.name]: externalTable,
+            },
+          })
+          const withoutProject = await config.api.workspace.create({
+            name: `Destination ${generator.natural()}`,
+          })
+          const withProject = await config.api.workspace.create({
+            name: `Destination ${generator.natural()}`,
+          })
+
+          await duplicateResources(
+            [assignedDatasource._id!],
+            withoutProject.appId
+          )
+          await duplicateResources(
+            [project._id, assignedDatasource._id!],
+            withProject.appId
+          )
+
+          const getDuplicatedDatasource = async (workspaceId: string) => {
+            const destinationDb = db.getDB(db.getDevWorkspaceID(workspaceId), {
+              skip_setup: true,
+            })
+            return await destinationDb.get<Datasource>(assignedDatasource._id!)
+          }
+          const datasourceWithoutProject = await getDuplicatedDatasource(
+            withoutProject.appId
+          )
+          const datasourceWithProject = await getDuplicatedDatasource(
+            withProject.appId
+          )
+
+          expect(
+            datasourceWithoutProject.entities![externalTable.name].projectId
+          ).toBeUndefined()
+          expect(
+            datasourceWithProject.entities![externalTable.name].projectId
+          ).toBe(project._id)
+        }
+      )
+    })
+
     it("duplicates individual tables", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
@@ -1067,12 +1130,9 @@ describe("/api/resources/usage", () => {
 
       await duplicateResources([agent._id!], newWorkspace.appId)
 
-      const destinationDb = db.getDB(
-        db.getDevWorkspaceID(newWorkspace.appId),
-        {
-          skip_setup: true,
-        }
-      )
+      const destinationDb = db.getDB(db.getDevWorkspaceID(newWorkspace.appId), {
+        skip_setup: true,
+      })
       const duplicatedAgent = await destinationDb.get<Agent>(agent._id!)
       expect(duplicatedAgent).toEqual(
         expect.objectContaining({

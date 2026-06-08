@@ -208,6 +208,24 @@ async function invalidateVariables(
   await invalidateCachedVariable(toInvalidate)
 }
 
+const resolveDatasourceEntityProjectIds = async (
+  datasource: Datasource,
+  existingDatasource?: Datasource
+) => {
+  if (!datasource.entities) {
+    return
+  }
+
+  for (const [name, entity] of Object.entries(datasource.entities)) {
+    entity.projectId = existingDatasource
+      ? await resolveUpdatedProjectId(
+          entity.projectId,
+          existingDatasource.entities?.[name]?.projectId
+        )
+      : await resolveProjectId(entity.projectId)
+  }
+}
+
 export async function update(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
@@ -235,6 +253,7 @@ export async function update(
     ctx.request.body.projectId,
     baseDatasource.projectId
   )
+  await resolveDatasourceEntityProjectIds(datasource, baseDatasource)
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -286,6 +305,7 @@ export async function save(
     tablesFilter,
   } = ctx.request.body
   datasourceData.projectId = await resolveProjectId(datasourceData.projectId)
+  await resolveDatasourceEntityProjectIds(datasourceData)
   const { datasource, errors } = await sdk.datasources.save(datasourceData, {
     fetchSchema,
     tablesFilter,
