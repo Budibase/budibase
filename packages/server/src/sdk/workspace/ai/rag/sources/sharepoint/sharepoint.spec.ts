@@ -68,6 +68,7 @@ import {
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
+  type AgentOperation,
   type Agent,
   type KnowledgeBaseFile,
 } from "@budibase/types"
@@ -90,17 +91,25 @@ const makeSharePointAgent = (
 ): Agent =>
   ({
     _id: "agent_1",
-    knowledgeSources: [
+    name: "Agent",
+    aiconfig: "default",
+    operations: [
       {
-        id: sourceId,
-        type: AgentKnowledgeSourceType.SHAREPOINT,
-        config: {
-          datasourceId,
-          authConfigId,
-          site: { id: siteId },
-          ...(patterns ? { filters: { patterns } } : {}),
-        },
-      },
+        id: "operation_1",
+        name: "Main operation",
+        knowledgeSources: [
+          {
+            id: sourceId,
+            type: AgentKnowledgeSourceType.SHAREPOINT,
+            config: {
+              datasourceId,
+              authConfigId,
+              site: { id: siteId },
+              ...(patterns ? { filters: { patterns } } : {}),
+            },
+          },
+        ],
+      } satisfies AgentOperation,
     ],
   }) as Agent
 

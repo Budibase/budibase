@@ -4,6 +4,7 @@ import { mocks, utils } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
 import {
   type Agent,
+  type AgentOperation,
   AgentKnowledgeSourceType,
   KnowledgeBaseFileStatus,
   RestAuthType,
@@ -106,15 +107,23 @@ describe("agent files", () => {
       const agentDoc = await db.tryGet<Agent>(agentId)
       await db.put({
         ...agentDoc!,
-        knowledgeSources: siteIds.map(siteId => ({
-          id: `sharepoint_site_${siteId}`,
-          type: AgentKnowledgeSourceType.SHAREPOINT,
-          config: {
-            datasourceId,
-            authConfigId,
-            site: { id: siteId },
+        operations: [
+          {
+            ...(agentDoc?.operations?.[0] || {
+              id: "operation_1",
+              name: "Main operation",
+            }),
+            knowledgeSources: siteIds.map(siteId => ({
+              id: `sharepoint_site_${siteId}`,
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId,
+                authConfigId,
+                site: { id: siteId },
+              },
+            })),
           },
-        })),
+        ],
       })
     })
   }
@@ -411,9 +420,7 @@ describe("agent files", () => {
       const updated = await config.api.agent.update({
         ...current!,
         name: "SharePoint Agent Update No Change 2",
-        knowledgeSources: current!.knowledgeSources,
-        operations: current!.operations,
-      } as any)
+      } satisfies Agent)
 
       expect(updated.name).toBe("SharePoint Agent Update No Change 2")
     })
@@ -440,7 +447,10 @@ describe("agent files", () => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       const db = context.getWorkspaceDB()
       const updated = await db.tryGet<Agent>(created._id!)
-      const siteIds = (updated?.knowledgeSources || [])
+      const siteIds = (updated?.operations || [])
+        .flatMap(
+          (operation: AgentOperation) => operation.knowledgeSources || []
+        )
         .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
         .map(source => source.config.site.id)
         .filter((id): id is string => !!id)

@@ -67,7 +67,11 @@ jest.mock("../files", () => ({
   deleteFileForAgent: (...args: any[]) => mockDeleteFileForAgent(...args),
 }))
 
-import { AgentKnowledgeSourceType, type Agent } from "@budibase/types"
+import {
+  AgentKnowledgeSourceType,
+  type Agent,
+  type AgentOperation,
+} from "@budibase/types"
 import {
   enqueueAgentJobs,
   reconcileAgentJobs,
@@ -132,25 +136,31 @@ describe("knowledgeSourceSyncQueue", () => {
       _id: "agent_1",
       name: "Agent",
       aiconfig: "default",
-      knowledgeSources: [
+      operations: [
         {
-          id: "sharepoint_site_site_1",
-          type: AgentKnowledgeSourceType.SHAREPOINT,
-          config: {
-            datasourceId: "datasource_1",
-            authConfigId: "auth_1",
-            site: { id: "site_1" },
-          },
-        },
-        {
-          id: "sharepoint_site_site_2",
-          type: AgentKnowledgeSourceType.SHAREPOINT,
-          config: {
-            datasourceId: "datasource_1",
-            authConfigId: "auth_1",
-            site: { id: "site_2" },
-          },
-        },
+          id: "operation_1",
+          name: "Main operation",
+          knowledgeSources: [
+            {
+              id: "sharepoint_site_site_1",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId: "datasource_1",
+                authConfigId: "auth_1",
+                site: { id: "site_1" },
+              },
+            },
+            {
+              id: "sharepoint_site_site_2",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId: "datasource_1",
+                authConfigId: "auth_1",
+                site: { id: "site_2" },
+              },
+            },
+          ],
+        } satisfies AgentOperation,
       ],
     }
 
@@ -293,16 +303,22 @@ describe("knowledgeSourceSyncQueue", () => {
             _id: "agent_1",
             name: "Agent",
             aiconfig: "default",
-            knowledgeSources: [
+            operations: [
               {
-                id: "sharepoint_site_site_1",
-                type: AgentKnowledgeSourceType.SHAREPOINT,
-                config: {
-                  datasourceId: "datasource_1",
-                  authConfigId: "auth_1",
-                  site: { id: "site_1" },
-                },
-              },
+                id: "operation_1",
+                name: "Main operation",
+                knowledgeSources: [
+                  {
+                    id: "sharepoint_site_site_1",
+                    type: AgentKnowledgeSourceType.SHAREPOINT,
+                    config: {
+                      datasourceId: "datasource_1",
+                      authConfigId: "auth_1",
+                      site: { id: "site_1" },
+                    },
+                  },
+                ],
+              } satisfies AgentOperation,
             ],
           } satisfies Agent,
         },
