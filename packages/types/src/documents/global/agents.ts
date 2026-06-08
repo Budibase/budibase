@@ -37,6 +37,7 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   appId?: string
   appPassword?: string
   tenantId?: string
+  teamId?: string
   messagingEndpointUrl?: string
 }
 
