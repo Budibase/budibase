@@ -221,8 +221,8 @@
         <AgentChatPanel
           agentId={currentAgent?._id}
           workspaceId={$params.application || ""}
-          allowKnowledgeSourceDownload={currentAgent?.allowKnowledgeSourceDownload !==
-            false}
+          allowKnowledgeSourceDownload={currentAgent?.operations?.[0]
+            ?.allowKnowledgeSourceDownload !== false}
         />
       </div>
     {/if}

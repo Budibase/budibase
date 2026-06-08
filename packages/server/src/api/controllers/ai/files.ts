@@ -53,6 +53,10 @@ const unlinkSafe = async (path?: string) => {
 const sanitizeSharePointSourceId = (siteId: string) =>
   `sharepoint_site_${siteId.replace(/[^a-zA-Z0-9_-]/g, "_")}`
 
+const allowsKnowledgeSourceDownload = (agent: {
+  operations?: { allowKnowledgeSourceDownload?: boolean }[]
+}) => agent.operations?.[0]?.allowKnowledgeSourceDownload !== false
+
 const fetchSharePointOptionsForDatasourceAuthConfig = async (
   datasourceId: string,
   authConfigId: string
@@ -201,7 +205,7 @@ export async function fetchAgentFileUrl(
 ) {
   const { agentId, fileId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (agent.allowKnowledgeSourceDownload === false) {
+  if (!allowsKnowledgeSourceDownload(agent)) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403

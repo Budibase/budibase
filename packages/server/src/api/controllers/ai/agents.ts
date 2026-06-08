@@ -316,7 +316,6 @@ export async function createAgent(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
-    allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
@@ -330,6 +329,7 @@ export async function createAgent(
           promptInstructions: operation.promptInstructions,
           enabledTools: operation.enabledTools,
           knowledgeBases: operation.knowledgeBases,
+          allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
           knowledgeSources: operation.knowledgeSources,
         }) satisfies RequiredKeys<AgentOperation>
     ),
@@ -387,9 +387,6 @@ export async function updateAgent(
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
-    allowKnowledgeSourceDownload:
-      body.allowKnowledgeSourceDownload ??
-      existing.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
@@ -403,6 +400,7 @@ export async function updateAgent(
           promptInstructions: operation.promptInstructions,
           enabledTools: operation.enabledTools,
           knowledgeBases: operation.knowledgeBases,
+          allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
           knowledgeSources: operation.knowledgeSources,
         }) satisfies RequiredKeys<AgentOperation>
     ),

@@ -23,6 +23,7 @@ type DeprecatedAgent = Agent & {
   enabledTools?: string[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
+  allowKnowledgeSourceDownload?: boolean
 }
 
 const SECRET_MASK = "********"
@@ -148,17 +149,22 @@ const decodeTelegramIntegrationSecrets = (
 
 const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   const legacyKnowledgeSources = raw.knowledgeSources
+  const legacyAllowKnowledgeSourceDownload = raw.allowKnowledgeSourceDownload
 
   if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
     return (raw.operations ?? []).map((operation, index) => ({
       ...operation,
       enabledTools: operation.enabledTools || [],
+      live: operation.live ?? false,
       knowledgeBases: operation.knowledgeBases || [],
       knowledgeSources: operation.knowledgeSources?.length
         ? operation.knowledgeSources
         : index === 0 && legacyKnowledgeSources?.length
           ? legacyKnowledgeSources
           : operation.knowledgeSources || [],
+      allowKnowledgeSourceDownload:
+        operation.allowKnowledgeSourceDownload ??
+        (index === 0 ? legacyAllowKnowledgeSourceDownload : undefined),
     }))
   }
 
@@ -173,10 +179,12 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
       {
         id: "operation_default",
         name: raw.operationName || DEFAULT_OPERATION_NAME,
+        live: false,
         promptInstructions: raw.promptInstructions || "",
         enabledTools: raw.enabledTools || [],
         knowledgeBases: raw.knowledgeBases || [],
         knowledgeSources: legacyKnowledgeSources || [],
+        allowKnowledgeSourceDownload: legacyAllowKnowledgeSourceDownload,
       },
     ]
   }
@@ -191,6 +199,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
     enabledTools: _enabledTools,
     knowledgeBases: _knowledgeBases,
     knowledgeSources: _knowledgeSources,
+    allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
     ...rest
   } = raw
   return {
@@ -377,7 +386,6 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
-    allowKnowledgeSourceDownload: request.allowKnowledgeSourceDownload,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -425,7 +433,6 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     operations: source.operations,
-    allowKnowledgeSourceDownload: source.allowKnowledgeSourceDownload,
   })
 }
 

@@ -16,6 +16,10 @@ export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
   }
 }
 
+const getAllowKnowledgeSourceDownload = (agent: {
+  operations?: { allowKnowledgeSourceDownload?: boolean }[]
+}) => agent.operations?.[0]?.allowKnowledgeSourceDownload !== false
+
 export type ChatAgentAccessContext = Pick<UserCtx, "user" | "roleId">
 
 const getUserRoleId = (ctx: ChatAgentAccessContext) =>
@@ -139,7 +143,7 @@ export async function fetchChatAppAgents(
       icon: agent.icon,
       iconColor: agent.iconColor,
       live: agent.live,
-      allowKnowledgeSourceDownload: agent.allowKnowledgeSourceDownload,
+      allowKnowledgeSourceDownload: getAllowKnowledgeSourceDownload(agent),
     }))
 
   ctx.body = { agents }

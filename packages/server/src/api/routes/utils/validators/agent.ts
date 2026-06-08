@@ -80,6 +80,7 @@ const AGENT_OPERATION_SCHEMA = Joi.object({
   promptInstructions: OPTIONAL_STRING,
   enabledTools: Joi.array().items(Joi.string()).optional(),
   knowledgeBases: Joi.array().items(Joi.string()).optional(),
+  allowKnowledgeSourceDownload: Joi.boolean().optional(),
   knowledgeSources: Joi.array()
     .items(SHAREPOINT_KNOWLEDGE_SOURCE_SCHEMA)
     .optional(),
@@ -98,7 +99,6 @@ export function createAgentValidator() {
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
       operations: Joi.array().items(AGENT_OPERATION_SCHEMA).optional(),
-      allowKnowledgeSourceDownload: Joi.boolean().optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -126,7 +126,6 @@ export function updateAgentValidator() {
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
       operations: Joi.array().items(AGENT_OPERATION_SCHEMA).optional(),
-      allowKnowledgeSourceDownload: Joi.boolean().optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,

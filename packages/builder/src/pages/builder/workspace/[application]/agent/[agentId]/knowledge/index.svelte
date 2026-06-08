@@ -52,34 +52,40 @@
   let savingAllowKnowledgeSourceDownload = $state(false)
 
   $effect(() => {
-    if (!currentAgent) {
+    if (!operation) {
       return
     }
 
     allowKnowledgeSourceDownloadDraft =
-      currentAgent.allowKnowledgeSourceDownload !== false
+      operation.allowKnowledgeSourceDownload !== false
   })
 
-  const persistAllowKnowledgeSourceDownload = async () => {
+  const persistAllowKnowledgeSourceDownload = async (next: boolean) => {
     const agent = currentAgent
-    if (!agent?._id || !agent._rev) {
+    if (!agent?._id || !agent._rev || !operation) {
       return
     }
-    const next = allowKnowledgeSourceDownloadDraft
-    if (next === (agent.allowKnowledgeSourceDownload !== false)) {
-      return
-    }
+
+    allowKnowledgeSourceDownloadDraft = next
     savingAllowKnowledgeSourceDownload = true
     try {
+      const operations = (agent.operations || []).map(existingOperation =>
+        existingOperation.id === operation.id
+          ? {
+              ...existingOperation,
+              allowKnowledgeSourceDownload: next,
+            }
+          : existingOperation
+      )
       await agentsStore.updateAgent({
         ...agent,
-        allowKnowledgeSourceDownload: next,
+        operations,
       })
       await agentsStore.fetchAgents()
       await workspaceDeploymentStore.fetch()
     } catch (error) {
       allowKnowledgeSourceDownloadDraft =
-        agent.allowKnowledgeSourceDownload !== false
+        operation.allowKnowledgeSourceDownload !== false
       notifications.error(
         getErrorMessage(error) || "Failed to save download setting"
       )
@@ -532,7 +538,8 @@
       text="Allow users to download knowledge source files from chat"
       bind:value={allowKnowledgeSourceDownloadDraft}
       disabled={savingAllowKnowledgeSourceDownload || !currentAgent?._id}
-      on:change={() => persistAllowKnowledgeSourceDownload()}
+      on:change={event =>
+        persistAllowKnowledgeSourceDownload(Boolean(event.detail))}
     />
     <Body size="XS" color="var(--spectrum-global-color-gray-600)">
       When disabled, chat still shows which files were used, without a download

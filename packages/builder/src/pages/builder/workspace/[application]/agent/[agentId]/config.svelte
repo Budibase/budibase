@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, notifications, Select, Button } from "@budibase/bbui"
+  import type { AgentOperation, RequiredKeys } from "@budibase/types"
   import {
     AIConfigType,
     ToolType,
@@ -181,14 +182,19 @@
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
         operations:
-          agent.operations?.map(op => ({
-            id: op.id,
-            name: op.name,
-            promptInstructions: op.promptInstructions,
-            enabledTools: op.enabledTools,
-            knowledgeBases: op.knowledgeBases,
-            knowledgeSources: op.knowledgeSources,
-          })) || [],
+          agent.operations?.map(
+            op =>
+              ({
+                id: op.id,
+                name: op.name,
+                live: op.live,
+                promptInstructions: op.promptInstructions,
+                enabledTools: op.enabledTools,
+                knowledgeBases: op.knowledgeBases,
+                allowKnowledgeSourceDownload: op.allowKnowledgeSourceDownload,
+                knowledgeSources: op.knowledgeSources,
+              }) satisfies RequiredKeys<AgentOperation>
+          ) || [],
       }
       draftAgentId = agent._id
     }

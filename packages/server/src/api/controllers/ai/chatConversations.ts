@@ -50,6 +50,10 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
+const allowsKnowledgeSourceDownload = (agent: {
+  operations?: { allowKnowledgeSourceDownload?: boolean }[]
+}) => agent.operations?.[0]?.allowKnowledgeSourceDownload !== false
+
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
   if (rawAgentId === undefined) {
@@ -554,7 +558,7 @@ export async function fetchChatAppAgentFileUrl(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (agent.allowKnowledgeSourceDownload === false) {
+  if (!allowsKnowledgeSourceDownload(agent)) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403
