@@ -190,16 +190,16 @@ export const stringifyRowsForRag = ({
   const output = [documentLabel]
 
   for (const section of sections) {
-    const rows = section.rows.filter(hasContent)
-    if (rows.length === 0) {
+    const [columns, ...rows] = section.rows.filter(hasContent)
+    if (!columns || columns.length === 0) {
       continue
     }
 
     output.push(section.label)
 
-    if (rows.length === 1) {
+    if (rows.length === 0) {
       output.push(getRowReference(section.label, 1))
-      rows[0].forEach((value, index) => {
+      columns.forEach((value, index) => {
         if (!value) {
           return
         }
@@ -208,16 +208,16 @@ export const stringifyRowsForRag = ({
       continue
     }
 
-    const columnLabels = buildColumnLabels(rows[0])
+    const columnLabels = buildColumnLabels(columns)
     output.push(`Columns: ${columnLabels.join(" | ")}`)
 
-    for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex]
       if (!hasContent(row)) {
         continue
       }
 
-      output.push(getRowReference(section.label, rowIndex + 1))
+      output.push(getRowReference(section.label, rowIndex + 2))
       row.forEach((value, index) => {
         if (!value) {
           return
