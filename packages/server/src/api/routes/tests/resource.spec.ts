@@ -2,6 +2,7 @@ import { db, events, objectStore } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
+  Agent,
   AnyDocument,
   Automation,
   Datasource,
@@ -1034,6 +1035,54 @@ describe("/api/resources/usage", () => {
         apps: [{ ...app, disabled: true }],
         screens,
       })
+    })
+
+    it("sanitises duplicated agents in the destination workspace", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+      const agent: Agent = {
+        _id: `agent_${generator.guid()}`,
+        name: "Duplicated agent",
+        aiconfig: "default",
+        live: true,
+        discordIntegration: {
+          publicKey: "discord-public-key",
+          botToken: "discord-bot-token",
+        },
+        MSTeamsIntegration: {
+          appPassword: "teams-app-password",
+        },
+        slackIntegration: {
+          botToken: "slack-bot-token",
+          signingSecret: "slack-signing-secret",
+        },
+        telegramIntegration: {
+          botToken: "telegram-bot-token",
+          webhookSecretToken: "telegram-webhook-secret",
+        },
+      }
+      const sourceDb = db.getDB(config.getDevWorkspaceId())
+      await sourceDb.put(agent)
+
+      await duplicateResources([agent._id!], newWorkspace.appId)
+
+      const destinationDb = db.getDB(
+        db.getDevWorkspaceID(newWorkspace.appId),
+        {
+          skip_setup: true,
+        }
+      )
+      const duplicatedAgent = await destinationDb.get<Agent>(agent._id!)
+      expect(duplicatedAgent).toEqual(
+        expect.objectContaining({
+          live: false,
+          discordIntegration: {},
+          MSTeamsIntegration: {},
+          slackIntegration: {},
+          telegramIntegration: {},
+        })
+      )
     })
 
     it("does not throw when copying the same resources twice", async () => {

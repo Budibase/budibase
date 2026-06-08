@@ -347,6 +347,14 @@ function isAutomation(doc: AnyDocument): doc is Automation {
   return type === ResourceType.AUTOMATION
 }
 
+function isAgent(doc: AnyDocument): doc is Agent {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.AGENT
+}
+
 function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
   if (!doc._id) {
     return false
@@ -743,7 +751,12 @@ export async function duplicateResourcesToWorkspace(
   if (docsToInsert.length) {
     await destinationDb.bulkDocs(
       docsToInsert.map<AnyDocument>(doc => {
-        const sanitizedDoc: AnyDocument = { ...doc, fromWorkspace }
+        const sanitizedDoc: AnyDocument = {
+          ...(isAgent(doc)
+            ? sdk.ai.agents.sanitiseAgentForExport(doc)
+            : doc),
+          fromWorkspace,
+        }
         delete sanitizedDoc._rev
         delete sanitizedDoc.createdAt
         delete sanitizedDoc.updatedAt
