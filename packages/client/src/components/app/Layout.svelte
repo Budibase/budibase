@@ -43,8 +43,10 @@
   export let navBackground
   export let navTextColor
   export let navLinkHoverTextColor
+  export let navLinkHoverIconColor
   export let navLinkHoverBackground
   export let navLinkActiveTextColor
+  export let navLinkActiveIconColor
   export let navLinkActiveBackground
   export let navWidth
   export let pageWidth
@@ -101,8 +103,10 @@
     navBackground,
     navTextColor,
     navLinkHoverTextColor,
+    navLinkHoverIconColor,
     navLinkHoverBackground,
     navLinkActiveTextColor,
+    navLinkActiveIconColor,
     navLinkActiveBackground,
     logoHeight,
     $context.device.width,
@@ -285,8 +289,10 @@
     backgroundColor,
     textColor,
     linkHoverTextColor,
+    linkHoverIconColor,
     linkHoverBackground,
     linkActiveTextColor,
+    linkActiveIconColor,
     linkActiveBackground,
     logoHeight,
     width,
@@ -302,11 +308,17 @@
     if (linkHoverTextColor) {
       style += `--navLinkHoverTextColor:${linkHoverTextColor};`
     }
+    if (linkHoverIconColor) {
+      style += `--navLinkHoverIconColor:${linkHoverIconColor};`
+    }
     if (linkHoverBackground) {
       style += `--navLinkHoverBackground:${linkHoverBackground};`
     }
     if (linkActiveTextColor) {
       style += `--navLinkActiveTextColor:${linkActiveTextColor};`
+    }
+    if (linkActiveIconColor) {
+      style += `--navLinkActiveIconColor:${linkActiveIconColor};`
     }
     if (linkActiveBackground) {
       style += `--navLinkActiveBackground:${linkActiveBackground};`
