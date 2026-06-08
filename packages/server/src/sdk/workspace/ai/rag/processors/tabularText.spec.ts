@@ -125,6 +125,7 @@ describe("tabularText", () => {
     expect(result.filename).toBe("pricing.xlsx")
     expect(result.mimetype).toBe("text/plain")
     expect(result.buffer.toString("utf8")).toContain("Plan: Pro")
+    expect(result.buffer.toString("utf8")).toContain("Price: 49")
   })
 
   it("converts CSV uploads into header-aware row blocks", () => {

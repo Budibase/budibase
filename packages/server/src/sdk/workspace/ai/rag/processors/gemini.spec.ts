@@ -258,6 +258,7 @@ describe("GeminiRagProcessor", () => {
       "Columns: Plan | Price"
     )
     expect(ingestPayload.buffer.toString("utf8")).toContain("Plan: Pro")
+    expect(ingestPayload.buffer.toString("utf8")).toContain("Price: 49")
     expect(mockUpdateKnowledgeBaseFile).toHaveBeenCalledWith(
       expect.objectContaining({
         status: KnowledgeBaseFileStatus.READY,
