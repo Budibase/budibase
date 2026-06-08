@@ -2,10 +2,7 @@ import { QueryUtils } from "@budibase/frontend-core"
 import { EmptyFilterOption } from "@budibase/types"
 import { processStringSync } from "@budibase/string-templates"
 
-export const shouldHonorDisabledConditions = ({
-  inBuilder = false,
-  isDevApp = false,
-} = {}) => true
+export const shouldHonorDisabledConditions = () => true
 
 export const getEvaluatableConditions = (
   conditions,
