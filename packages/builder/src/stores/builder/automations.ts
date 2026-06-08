@@ -2376,6 +2376,7 @@ const automationActions = (store: AutomationStore) => ({
     }
     store.update(state => {
       state.selectedAutomationId = id
+      state.viewMode = ViewMode.EDITOR
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
