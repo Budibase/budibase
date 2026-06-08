@@ -71,6 +71,9 @@
     if (type === "url") {
       return "url"
     }
+    if (type === "email") {
+      return "email"
+    }
     return type === "number" ? "decimal" : "text"
   }
 

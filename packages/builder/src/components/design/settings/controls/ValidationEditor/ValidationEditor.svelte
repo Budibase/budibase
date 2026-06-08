@@ -50,7 +50,7 @@
   ): ValidationEditorRule[] => {
     return (rules || []).map(rule => {
       const sanitisedRule = { ...rule }
-      if (sanitisedRule.constraint === "required") {
+      if (["required", "email"].includes(sanitisedRule.constraint || "")) {
         delete sanitisedRule.value
         delete sanitisedRule.valueType
       }

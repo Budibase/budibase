@@ -36,7 +36,7 @@ interface LicensingState {
   isEnterprisePlan: boolean
   isBusinessPlan: boolean
   isBusinessPlusPlan: boolean
-  isEnterpriseTrial: boolean
+  isTrialPlan: boolean
   // features
   groupsEnabled: boolean
   backupsEnabled: boolean
@@ -87,7 +87,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       isEnterprisePlan: true,
       isBusinessPlan: true,
       isBusinessPlusPlan: true,
-      isEnterpriseTrial: false,
+      isTrialPlan: false,
       // features
       groupsEnabled: false,
       backupsEnabled: false,
@@ -206,8 +206,10 @@ class LicensingStore extends BudiStore<LicensingState> {
     const isBusinessPlusPlan = planType === Constants.PlanType.BUSINESS_PLUS
     const isBusinessPlan =
       planType === Constants.PlanType.BUSINESS || isBusinessPlusPlan
-    const isEnterpriseTrial =
-      planType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
+    const isTrialPlan = [
+      Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
+      Constants.PlanType.PREMIUM_PLUS_TRIAL,
+    ].includes(planType as string)
     const groupsEnabled = features.includes(Constants.Features.USER_GROUPS)
     const backupsEnabled = features.includes(
       Constants.Features.WORKSPACE_BACKUPS
@@ -244,7 +246,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         isFreePlan,
         isBusinessPlan,
         isBusinessPlusPlan,
-        isEnterpriseTrial,
+        isTrialPlan,
         groupsEnabled,
         backupsEnabled,
         brandingEnabled,
