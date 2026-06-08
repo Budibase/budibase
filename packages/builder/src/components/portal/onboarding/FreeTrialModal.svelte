@@ -4,20 +4,13 @@
   import { get } from "svelte/store"
   import { auth, licensing, admin } from "@/stores/portal"
   import { API } from "@/api"
-  import { PlanType } from "@budibase/types"
-
   let freeTrialModal
 
-  $: planType = $licensing?.license?.plan?.type
-  $: showFreeTrialModal(planType, freeTrialModal)
+  $: showFreeTrialModal($licensing.isTrialPlan, freeTrialModal)
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  const showFreeTrialModal = (planType, freeTrialModal) => {
-    if (
-      planType === PlanType.ENTERPRISE_BASIC_TRIAL &&
-      !$auth.user?.freeTrialConfirmedAt &&
-      isOwner
-    ) {
+  const showFreeTrialModal = (isTrialPlan, freeTrialModal) => {
+    if (isTrialPlan && !$auth.user?.freeTrialConfirmedAt && isOwner) {
       freeTrialModal?.show()
     }
   }

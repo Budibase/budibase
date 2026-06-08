@@ -20,7 +20,7 @@
   $: showTime = enableTime || timeOnly
 
   const setToNow = () => {
-    const now = dayjs()
+    const now = dayjs().second(0).millisecond(0)
     calendar?.setDate(now)
     handleChange(now)
   }

@@ -119,6 +119,39 @@
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
     !$sidePanelStore.ignoreClicksOutside
+  $: sidePanelPosition = $sidePanelStore.position || "right"
+
+  // When the position anchor (left/right) changes, suppress the CSS
+  // transition so the panel snaps to the new off-screen position instantly.
+  // Without this the browser sees a transform change (e.g. translateX(100%)
+  // → translateX(-100%)) and animates through the center of the screen.
+  //
+  // This block runs inside Svelte's update cycle BEFORE the DOM is patched,
+  // so we must toggle the position classes directly on the element first,
+  // force a reflow to commit the snapped position, then re-enable the
+  // transition. Svelte's subsequent DOM patch will see the same classes and
+  // treat them as a no-op, while adding the "open" class triggers the
+  // correct slide-in animation.
+  let sidePanelContainer
+  let prevSidePanelPosition = null
+  $: if (sidePanelContainer && sidePanelPosition !== prevSidePanelPosition) {
+    if (prevSidePanelPosition != null) {
+      sidePanelContainer.style.transition = "none"
+      sidePanelContainer.classList.toggle(
+        "position--left",
+        sidePanelPosition === "left"
+      )
+      sidePanelContainer.classList.toggle(
+        "position--right",
+        sidePanelPosition !== "left"
+      )
+      // Force a synchronous reflow so the browser commits the snapped
+      // position before we re-enable the transition on the next line.
+      const _reflow = sidePanelContainer.offsetHeight
+      sidePanelContainer.style.transition = ""
+    }
+    prevSidePanelPosition = sidePanelPosition
+  }
 
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
@@ -510,17 +543,28 @@
   </div>
   <div
     id="side-panel-container"
+    bind:this={sidePanelContainer}
     class:open={$sidePanelStore.open}
     use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
     class:builder={$builderStore.inBuilder}
+    class={"size--" + ($sidePanelStore.size || "small")}
+    class:position--left={sidePanelPosition === "left"}
+    class:position--right={sidePanelPosition !== "left"}
   >
-    <div class="side-panel-header">
-      <Icon
-        color="var(--spectrum-global-color-gray-600)"
-        name="caret-line-right"
-        hoverable
+    <div class="side-panel-header" class:left={sidePanelPosition === "left"}>
+      <button
+        type="button"
+        class="side-panel-close-button"
+        aria-label="Close side panel"
         on:click={sidePanelStore.actions.close}
-      />
+      >
+        <Icon
+          color="currentColor"
+          name={sidePanelPosition === "left"
+            ? "caret-line-left"
+            : "caret-line-right"}
+        />
+      </button>
     </div>
   </div>
   <div class="modal-container"></div>
@@ -652,10 +696,33 @@
     overflow-x: hidden;
     transition: transform 130ms ease-out;
     position: absolute;
-    width: 400px;
-    right: 0;
-    transform: translateX(100%);
+    /* default width matches modal medium */
+    width: 600px;
     height: 100%;
+  }
+  #side-panel-container.position--right {
+    right: 0;
+    left: auto;
+    transform: translateX(100%);
+  }
+  #side-panel-container.position--left {
+    left: 0;
+    right: auto;
+    transform: translateX(-100%);
+  }
+  /* Side panel size variants */
+  #side-panel-container.size--small {
+    width: 400px;
+  }
+  #side-panel-container.size--medium {
+    width: 500px;
+  }
+  #side-panel-container.size--large {
+    width: 625px;
+  }
+  #side-panel-container.size--fullscreen {
+    width: calc(100vw - 40px);
+    max-width: calc(100vw - 40px);
   }
   #side-panel-container.builder {
     transform: translateX(0);
@@ -674,6 +741,29 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+  }
+  .side-panel-header.left {
+    justify-content: flex-start;
+  }
+  .side-panel-close-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--spectrum-alias-border-color);
+    background: var(--spectrum-alias-background-color-default);
+    color: var(--spectrum-alias-text-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .side-panel-close-button:hover {
+    background: var(--spectrum-alias-background-color-secondary);
+  }
+  .side-panel-close-button:focus-visible {
+    outline: 2px solid var(--spectrum-alias-border-color-focus);
+    outline-offset: 2px;
   }
 
   .main-wrapper {
@@ -701,7 +791,10 @@
     align-self: center;
     flex: 1;
   }
-  .main:not(.size--max):has(:global(.screenslot-dom > .component > .grid)) {
+  .main.size--max {
+    padding: 0;
+  }
+  .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
     padding: calc(32px - var(--grid-spacing) * 2px);
   }
 
@@ -723,11 +816,7 @@
   .size--max {
     width: 100%;
   }
-  .main.size--max {
-    padding: 0;
-  }
-
-  /*  Nav components */
+  /* Note: size variants are defined earlier; keep those as the source of width values. */
   .nav-toggle {
     display: flex;
     align-items: center;

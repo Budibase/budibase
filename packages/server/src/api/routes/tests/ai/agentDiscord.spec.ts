@@ -44,6 +44,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
 const DISCORD_PUBLIC_KEY_DER_PREFIX = "302a300506032b6570032100"
@@ -99,6 +100,7 @@ const secretMatch = (plain: string, encoded: string) => {
 
 describe("agent discord integration sync", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
 
   async function getPersistedAgent(id: string | undefined) {
     const result = await db.doWithDB(config.getDevWorkspaceId(), db =>
@@ -117,8 +119,17 @@ describe("agent discord integration sync", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(
+      config,
+      "test-config"
+    )
     mockedWebhookChat.mockClear()
     nock.cleanAll()
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   afterAll(() => {

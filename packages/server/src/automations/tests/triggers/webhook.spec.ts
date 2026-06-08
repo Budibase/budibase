@@ -1,6 +1,8 @@
 import { mocks } from "@budibase/backend-core/tests"
 import { Table, Webhook, WebhookActionType } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { automationQueue } from "../../bullboard"
+import { externalTrigger } from "../../triggers"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 mocks.licenses.useSyncAutomations()
@@ -62,5 +64,54 @@ describe("Webhook trigger test", () => {
     expect(typeof res).toBe("object")
     const collectedInfo = res as Record<string, any>
     expect(collectedInfo.value).toEqual("testing")
+  })
+
+  it("does not allow webhook fields to override automation execution params", async () => {
+    const addMock = jest
+      .spyOn(automationQueue, "add")
+      .mockResolvedValue({} as Awaited<ReturnType<typeof automationQueue.add>>)
+
+    const { automation } = await createAutomationBuilder(config)
+      .onWebhook({ body: {} })
+      .serverLog({ text: "{{ trigger.normalData }}" })
+      .save()
+
+    await config.doInContext(config.getProdWorkspaceId(), () =>
+      externalTrigger(automation, {
+        appId: config.getProdWorkspaceId(),
+        fields: {
+          appId: "app_victim",
+          timeout: 1,
+          user: { email: "attacker@example.com" },
+          metadata: { automationChainCount: -1 },
+          normalData: "test",
+          body: {
+            appId: "app_victim",
+            timeout: 1,
+            user: { email: "attacker@example.com" },
+            metadata: { automationChainCount: -1 },
+            normalData: "test",
+          },
+        },
+      })
+    )
+
+    const queuedJob = addMock.mock.calls[0][0]
+    expect(queuedJob.event.appId).toEqual(config.getProdWorkspaceId())
+    expect(queuedJob.event.timeout).toBeUndefined()
+    expect(queuedJob.event.user).toBeUndefined()
+    expect(queuedJob.event.metadata).toBeUndefined()
+    expect(queuedJob.event).toMatchObject({
+      normalData: "test",
+      body: {
+        appId: "app_victim",
+        timeout: 1,
+        user: { email: "attacker@example.com" },
+        metadata: { automationChainCount: -1 },
+        normalData: "test",
+      },
+    })
+
+    addMock.mockRestore()
   })
 })

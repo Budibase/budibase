@@ -82,7 +82,12 @@
     const base = value || now
     dispatch(
       "change",
-      base.year(date.year()).month(date.month()).date(date.date())
+      base
+        .year(date.year())
+        .month(date.month())
+        .date(date.date())
+        .second(0)
+        .millisecond(0)
     )
   }
 

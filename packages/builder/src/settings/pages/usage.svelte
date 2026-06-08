@@ -78,6 +78,7 @@
             name: value.name,
             used: isAICredits ? Math.floor((used ?? 0) / 1000) : (used ?? 0),
             total: isAICredits ? Math.floor(value.value / 1000) : value.value,
+            quotaKey: key,
           }
           if (key === "actions" && $licensing.actionsBreakdown) {
             entry.breakdown = $licensing.actionsBreakdown
@@ -123,7 +124,7 @@
     textRows = []
 
     if (cancelAt && !usesInvoicing) {
-      if (plan?.type !== Constants.PlanType.ENTERPRISE_BASIC_TRIAL) {
+      if (!$licensing.isTrialPlan) {
         textRows.push({ message: "Subscription has been cancelled" })
       }
       textRows.push({
@@ -241,6 +242,13 @@
                   {usage}
                   warnWhenFull={WARN_USAGE.includes(usage.name)}
                   breakdown={usage.breakdown ?? null}
+                  showPurchaseCreditsLink={usage.quotaKey ===
+                    "budibaseAICredits" &&
+                    $admin.cloud &&
+                    accountPortalAccess &&
+                    !usesInvoicing &&
+                    !$licensing.isTrialPlan &&
+                    !!license?.billing?.subscription}
                 />
               {/each}
             </Layout>

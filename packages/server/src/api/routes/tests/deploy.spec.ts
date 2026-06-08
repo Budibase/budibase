@@ -13,10 +13,12 @@ import { cloneDeep } from "lodash/fp"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { getRowParams } from "../../../db/utils"
 import { basicTable } from "../../../tests/utilities/structures"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import * as setup from "./utilities"
 
 describe("/api/deploy", () => {
   let config = setup.getConfig()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
 
   afterAll(() => {
     setup.afterAll()
@@ -28,6 +30,12 @@ describe("/api/deploy", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   describe("GET /api/deploy/status", () => {

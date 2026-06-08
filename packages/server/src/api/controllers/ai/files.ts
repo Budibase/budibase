@@ -10,6 +10,7 @@ import {
   UpdateAgentSharePointSiteResponse,
   SharePointKnowledgeSourceSnapshot,
   FetchAgentKnowledgeResponse,
+  FetchAgentFileUrlResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
@@ -187,6 +188,26 @@ export async function deleteAgentFile(
   ctx.status = 200
 }
 
+export async function fetchAgentFileUrl(
+  ctx: UserCtx<
+    void,
+    FetchAgentFileUrlResponse,
+    { agentId: string; fileId: string }
+  >
+) {
+  const { agentId, fileId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  if (agent.allowKnowledgeSourceDownload === false) {
+    throw new HTTPError(
+      "Knowledge source downloads are disabled for this agent",
+      403
+    )
+  }
+  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  ctx.body = { url }
+  ctx.status = 200
+}
+
 export async function fetchAgentKnowledgeSourceOptions(
   ctx: UserCtx<
     void,
@@ -221,6 +242,15 @@ export async function fetchAgentKnowledgeSourceAllEntries(
   }
   ctx.body = await sdk.ai.rag.fetchAllSharePointEntriesForAgent(agentId, siteId)
   ctx.status = 200
+}
+
+export async function resetAgentKnowledgeBaseStore(
+  ctx: UserCtx<void, void, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const knowledgeBase = await sdk.ai.rag.ensureKnowledgeBaseForAgent(agentId)
+  await sdk.ai.knowledgeBase.resetKnowledgeBaseStore(knowledgeBase)
+  ctx.status = 204
 }
 
 export async function syncAgentKnowledgeSource(

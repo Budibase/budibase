@@ -11,11 +11,22 @@ import type { LanguageModelUsage, ModelMessage, ToolSet } from "ai"
 import { convertToModelMessages, pruneMessages, streamText } from "ai"
 import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../utilities/aiConfig"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV3 } from "ai/test"
+
+const mockAiConfigsFind = jest.fn()
+
+jest.mock("../../sdk/workspace/ai/configs", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/configs")
+  return {
+    ...actual,
+    find: (...args: any[]) => mockAiConfigsFind(...args),
+  }
+})
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -135,6 +146,7 @@ const createChatTestLanguageModel = () =>
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
   let userA: User
   let userB: User
   let chatApp: ChatApp
@@ -147,6 +159,7 @@ describe("chat conversations authorization", () => {
 
   beforeAll(async () => {
     await config.init("chat-conversation-scope")
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
     userA = config.getUser()
     userB = await config.createUser({
       roles: {
@@ -238,7 +251,8 @@ describe("chat conversations authorization", () => {
     )
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await cleanupAIConfig?.()
     config.end()
   })
 
@@ -708,6 +722,7 @@ describe("chat conversation transient behavior", () => {
       providerOptions: jest.fn(),
       uploadFile: jest.fn(),
     })
+    mockAiConfigsFind.mockResolvedValue({ _id: "config-1" } as any)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
@@ -1236,6 +1251,7 @@ describe("Agent chat tool call tracking", () => {
       providerOptions: jest.fn().mockReturnValue({}),
       uploadFile: jest.fn(),
     })
+    mockAiConfigsFind.mockResolvedValue({ _id: "config-1" } as any)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
