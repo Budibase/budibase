@@ -37,5 +37,7 @@
 
   :global(.spectrum-Label--grey) {
     font-weight: unset !important;
+    background-color: #2c2c2c !important;
+    color: #c8c8c8 !important;
   }
 </style>
