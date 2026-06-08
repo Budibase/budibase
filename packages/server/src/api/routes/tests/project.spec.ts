@@ -557,6 +557,61 @@ describe("/projects", () => {
     })
   })
 
+  it("continues restoring assignments when a rollback fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectId: project._id,
+        })
+      )
+      const automation = await config.createAutomation()
+      const { automation: assignedAutomation } =
+        await config.api.automation.update({
+          ...automation,
+          projectId: project._id,
+        })
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const remove = jest
+          .spyOn(Object.getPrototypeOf(db), "remove")
+          .mockRejectedValueOnce(new Error("Project deletion failed"))
+        const originalUpdateAutomation = sdk.automations.update
+        const updateAutomation = jest
+          .spyOn(sdk.automations, "update")
+          .mockImplementation(async update => {
+            if (update.projectId === project._id) {
+              throw new Error("Automation rollback failed")
+            }
+            return await originalUpdateAutomation(update)
+          })
+
+        try {
+          await expect(
+            sdk.projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Project deletion failed")
+        } finally {
+          remove.mockRestore()
+          updateAutomation.mockRestore()
+        }
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+      const fetchedAutomation = await config.api.automation.get(
+        assignedAutomation._id!
+      )
+      expect(fetchedAutomation.projectId).toBeUndefined()
+    })
+  })
+
   it("does not delete a project when assignment cleanup fails", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({

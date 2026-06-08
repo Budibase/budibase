@@ -73,9 +73,26 @@ export async function update(project: ProjectUpdate): Promise<Project> {
 }
 
 async function rollbackAssignments(rollbacks: AssignmentRollback[]) {
+  const errors: unknown[] = []
   for (const rollback of [...rollbacks].reverse()) {
-    await rollback()
+    try {
+      await rollback()
+    } catch (err) {
+      errors.push(err)
+    }
   }
+  return errors
+}
+
+function throwWithRollbackErrors(err: unknown, rollbackErrors: unknown[]) {
+  if (!rollbackErrors.length) {
+    throw err
+  }
+
+  throw new AggregateError(
+    [err, ...rollbackErrors],
+    err instanceof Error ? err.message : "Project operation failed."
+  )
 }
 
 async function applyAssignmentUpdates(updates: AssignmentUpdate[]) {
@@ -85,8 +102,8 @@ async function applyAssignmentUpdates(updates: AssignmentUpdate[]) {
       rollbacks.push(await update())
     }
   } catch (err) {
-    await rollbackAssignments(rollbacks)
-    throw err
+    const rollbackErrors = await rollbackAssignments(rollbacks)
+    throwWithRollbackErrors(err, rollbackErrors)
   }
   return async () => await rollbackAssignments(rollbacks)
 }
@@ -178,7 +195,7 @@ export async function remove(id: string, rev: string) {
   try {
     return await db.remove(id, rev)
   } catch (err) {
-    await restoreAssignments()
-    throw err
+    const rollbackErrors = await restoreAssignments()
+    throwWithRollbackErrors(err, rollbackErrors)
   }
 }
