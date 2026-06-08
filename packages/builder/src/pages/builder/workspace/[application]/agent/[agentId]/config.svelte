@@ -420,6 +420,63 @@
     }
   }
 
+  async function setOperationLive(
+    operationId: string,
+    live: boolean
+  ): Promise<boolean> {
+    if (!currentAgent) {
+      return false
+    }
+
+    try {
+      const operations =
+        draft.operations?.map(operation => ({
+          ...operation,
+          enabledTools: getIncludedToolRuntimeBindings(
+            operation.promptInstructions,
+            readableToRuntimeBinding
+          ),
+        })) || []
+
+      const updated = await agentsStore.updateOperationLive(
+        {
+          ...currentAgent,
+          ...draft,
+          operations,
+        },
+        operationId,
+        live
+      )
+
+      draft = {
+        ...draft,
+        name: updated.name || "",
+        description: updated.description || "",
+        aiconfig: updated.aiconfig || "",
+        goal: updated.goal || "",
+        icon: updated.icon || "",
+        iconColor: updated.iconColor || "",
+        operations:
+          updated.operations?.map(op => ({
+            id: op.id,
+            name: op.name,
+            live: op.live,
+            promptInstructions: op.promptInstructions,
+            enabledTools: op.enabledTools,
+            knowledgeBases: op.knowledgeBases,
+            knowledgeSources: op.knowledgeSources,
+          })) || [],
+      }
+
+      await agentsStore.fetchAgents()
+      await workspaceDeploymentStore.fetch()
+      return true
+    } catch (error) {
+      notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
+      return false
+    }
+  }
+
   async function deleteOperationKnowledge() {
     if (!currentAgent?._id) {
       return
@@ -540,6 +597,7 @@
   onAddApiConnection={() => bb.settings("/connections/apis")}
   onConfigureWebSearch={openWebSearchConfigModal}
   onDeleteOperation={deleteOperationKnowledge}
+  onSetOperationLive={setOperationLive}
   onUpdated={() => scheduleSave(true)}
 />
 

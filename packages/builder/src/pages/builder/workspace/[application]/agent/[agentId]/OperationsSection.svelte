@@ -2,20 +2,19 @@
   import {
     Body,
     Button,
-    Badge,
     Helpers,
     Icon,
     Input,
     Modal,
     ModalContent,
     notifications,
-    StatusLight,
   } from "@budibase/bbui"
   import type { Agent, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
   import { contextMenuStore } from "@/stores/builder"
+  import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
 
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
@@ -47,6 +46,7 @@ Any constraints the agent must follow.
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
     onDeleteOperation = async () => {},
+    onSetOperationLive = async () => false,
     onUpdated,
   }: {
     agent?: Agent
@@ -59,6 +59,10 @@ Any constraints the agent must follow.
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
     onDeleteOperation?: () => Promise<void>
+    onSetOperationLive?: (
+      operationId: string,
+      live: boolean
+    ) => Promise<boolean>
     onUpdated: () => void | Promise<boolean | void>
   } = $props()
 
@@ -112,7 +116,10 @@ Any constraints the agent must follow.
     const currentOperation = agent.operations[0]
     const previousLive = currentOperation.live
     currentOperation.live = nextLive
-    const saveSucceeded = await Promise.resolve(onUpdated())
+    const saveSucceeded = await onSetOperationLive(
+      currentOperation.id,
+      nextLive
+    )
     if (saveSucceeded === false) {
       currentOperation.live = previousLive
     }
@@ -214,17 +221,7 @@ Any constraints the agent must follow.
           <span class="operation-name">{operationName}</span>
         </button>
 
-        <Badge size="S" grey hoverable>
-          <span class="operation-status-pill-content">
-            <StatusLight
-              size="XS"
-              positive={operationLive}
-              negative={!operationLive}
-              square
-            />
-            <span>{operationLive ? "Live" : "Stopped"}</span>
-          </span>
-        </Badge>
+        <OperationLiveBadge live={operationLive} hoverable />
 
         <button
           class="operation-menu-trigger"
@@ -256,6 +253,7 @@ Any constraints the agent must follow.
     {webSearchConfigured}
     {onAddApiConnection}
     {onConfigureWebSearch}
+    {onSetOperationLive}
     {onUpdated}
     onClose={closeOperationPanel}
   />
@@ -349,14 +347,5 @@ Any constraints the agent must follow.
     border: 0;
     background: transparent;
     cursor: pointer;
-  }
-
-  .operation-status-pill-content {
-    display: inline-flex;
-    gap: 6px;
-  }
-
-  .operations-section :global(.spectrum-Label--grey) {
-    font-weight: unset !important;
   }
 </style>

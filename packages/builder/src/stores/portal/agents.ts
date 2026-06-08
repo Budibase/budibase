@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
   Agent,
+  AgentOperation,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
@@ -109,6 +110,22 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       return state
     })
     return updated
+  }
+
+  updateOperationLive = async (
+    agent: UpdateAgentRequest,
+    operationId: string,
+    live: boolean
+  ) => {
+    const operations =
+      agent.operations?.map((operation: AgentOperation) =>
+        operation.id === operationId ? { ...operation, live } : operation
+      ) || []
+
+    return await this.updateAgent({
+      ...agent,
+      operations,
+    })
   }
 
   duplicateAgent = async (agentId: string) => {

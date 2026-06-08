@@ -12,8 +12,10 @@
   import Panel from "@/components/design/Panel.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
+  import { contextMenuStore } from "@/stores/builder"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
+  import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
@@ -32,6 +34,7 @@
     onUpdated = () => {},
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
+    onSetOperationLive = async () => false,
   }: {
     open?: boolean
     operation: AgentOperation
@@ -45,6 +48,10 @@
     onUpdated?: () => void
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
+    onSetOperationLive?: (
+      operationId: string,
+      live: boolean
+    ) => Promise<boolean>
   } = $props()
 
   let insertAtPos: InsertAtPositionFn | undefined = $state(undefined)
@@ -79,6 +86,7 @@
     )
   )
   let operationName = $derived(operation.name?.trim())
+  let operationLive = $derived(operation.live === true)
   let readableToRuntimeBinding = $derived.by(() =>
     Object.fromEntries(
       promptBindings
@@ -157,6 +165,34 @@
     operation.promptInstructions = next
     onUpdated()
   }
+
+  const setOperationLive = async (nextLive: boolean) => {
+    if (operation.live === nextLive) {
+      return
+    }
+    const previousLive = operation.live
+    operation.live = nextLive
+    const saveSucceeded = await onSetOperationLive(operation.id, nextLive)
+    if (saveSucceeded === false) {
+      operation.live = previousLive
+    }
+  }
+
+  const openHeaderMenu = (event: MouseEvent) => {
+    event.stopPropagation()
+    contextMenuStore.open(
+      "agent-operation-panel",
+      [
+        {
+          icon: operationLive ? "stop" : "play",
+          name: operationLive ? "Stop" : "Set live",
+          visible: true,
+          callback: async () => await setOperationLive(!operationLive),
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
+  }
 </script>
 
 {#if open}
@@ -183,12 +219,31 @@
       maxWidthRatio={0.8}
       position="right"
     >
-      <Panel
-        title={operationName}
-        showCloseButton
-        onClickCloseButton={onClose}
-        resizable
-      >
+      <Panel resizable>
+        <div slot="panel-header-content" class="operation-panel-header">
+          <div class="operation-panel-title">
+            <Body
+              size="S"
+              weight="500"
+              color="var(--spectrum-global-color-gray-900)"
+            >
+              {operationName}
+            </Body>
+          </div>
+          <div class="operation-panel-header-actions">
+            <button
+              class="operation-status-pill"
+              type="button"
+              aria-label={operationLive
+                ? "Stop operation"
+                : "Set operation live"}
+              onclick={openHeaderMenu}
+            >
+              <OperationLiveBadge live={operationLive} hoverable showMenuIcon />
+            </button>
+            <Icon name="x" hoverable on:click={onClose} />
+          </div>
+        </div>
         <div class="operation-panel">
           <div class="operation-panel-content">
             <div class="operation-panel-section">
@@ -339,6 +394,42 @@
     flex-direction: column;
     gap: var(--spacing-xl);
   }
+
+  .operation-panel-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    padding: 0 var(--spacing-l);
+    height: 100%;
+  }
+
+  .operation-panel-title {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .operation-panel-title :global(p) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .operation-panel-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  .operation-status-pill {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+  }
+
   .operation-panel-section {
     display: flex;
     flex-direction: column;
