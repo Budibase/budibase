@@ -124,7 +124,7 @@
     textRows = []
 
     if (cancelAt && !usesInvoicing) {
-      if (plan?.type !== Constants.PlanType.ENTERPRISE_BASIC_TRIAL) {
+      if (!$licensing.isTrialPlan) {
         textRows.push({ message: "Subscription has been cancelled" })
       }
       textRows.push({
@@ -247,6 +247,7 @@
                     $admin.cloud &&
                     accountPortalAccess &&
                     !usesInvoicing &&
+                    !$licensing.isTrialPlan &&
                     !!license?.billing?.subscription}
                 />
               {/each}
