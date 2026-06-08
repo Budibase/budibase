@@ -35,6 +35,7 @@
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
   import QuerySelect from "./QuerySelect.svelte"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
+  import { tick } from "svelte"
 
   export let bindings: EnrichedBinding[] | undefined = undefined
   export let block: AutomationStep | undefined = undefined
@@ -55,6 +56,8 @@
   // The step input properties
   $: inputData = automationStore.actions.getInputData(block)
   $: fieldKey = "query"
+  $: restTemplateId = (inputData as Record<string, any> | undefined)
+    ?.restTemplateId as string | undefined
   $: {
     value = getInputValue(inputData, fieldKey)
   }
@@ -67,9 +70,9 @@
 
   $: targetSource = selectedDatasourceId || query?.datasourceId
 
-  // Source for current query, if any
-  $: dataSource =
-    restSources?.find(ds => ds._id === targetSource) || restSources?.[0]
+  // Source for current query, if any. Do not default to the first REST source:
+  // create-request drafts must choose their connection from the draft/template.
+  $: dataSource = restSources?.find(ds => ds._id === targetSource)
 
   // The configured query
   $: query = $queries.list.find(query => query._id === value?.queryId)
@@ -135,9 +138,26 @@
   }
 
   const handleAddApi = () => {
-    workspaceConnections.startDraft()
+    workspaceConnections.startDraft(restTemplateId as any)
     modal.show()
   }
+
+  const handleAddTemplateApi = async () => {
+    if (!block?.id) {
+      return
+    }
+    const templateId = automationStore.actions.consumeApiRequestTemplate(
+      block.id
+    )
+    if (!templateId) {
+      return
+    }
+    workspaceConnections.startDraft(templateId)
+    await tick()
+    modal.show()
+  }
+
+  $: handleAddTemplateApi()
 
   const handleSavedQuery = (e: CustomEvent<{ queryId: string }>) => {
     defaultChange({ [fieldKey]: { queryId: e.detail.queryId } }, block)
@@ -210,6 +230,7 @@
   {:else}
     <QuerySelect
       value={value?.queryId}
+      {restTemplateId}
       fullWidthDropdown
       onchange={q => defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
       onaddApi={handleAddApi}

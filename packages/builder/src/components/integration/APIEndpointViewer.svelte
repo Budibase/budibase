@@ -89,7 +89,7 @@
   } from "../common/CodeEditor/urlParamHighlight"
   import { environment } from "@/stores/portal"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
-  import { onMount, createEventDispatcher } from "svelte"
+  import { onDestroy, onMount, createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -133,6 +133,8 @@
   let mergedBindings: EnrichedBinding[] = []
   let bindingPreviewContext: Record<string, any> = {}
   let baseUrlOptions: { label: string; url: string }[] = []
+  let lastQuerySourceKey: string | undefined
+  let openConnectionMenuTimer: ReturnType<typeof setTimeout> | undefined
 
   // Custom query mode state
   let customUrl: string = ""
@@ -141,8 +143,9 @@
   // ── DATASOURCE / MODE ────────────────────────────────────────────────────
   $: selectedDatasourceId =
     datasourceId ||
-    activeDatasourceId ||
-    $workspaceConnections.draft?.query?.datasourceId
+    $workspaceConnections.draft?.query?.datasourceId ||
+    (!$workspaceConnections.draft ? activeDatasourceId : undefined) ||
+    undefined
   $: datasource = structuredClone(
     $datasources.list.find(
       d => d._id === (selectedDatasourceId || storeQuery?.datasourceId)
@@ -163,9 +166,15 @@
       ? resolveStoreQuery($queries.list, queryId, undefined)
       : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
   $: isNewQuery = !storeQuery?._id
+  $: querySourceKey = storeQuery?._id
+    ? `query:${storeQuery._id}`
+    : $workspaceConnections.draft
+      ? `draft:${$workspaceConnections.draft.key}:${selectedDatasourceId || ""}`
+      : `new:${selectedDatasourceId || ""}`
 
-  $: if (!editableQuery || storeQuery?._id !== editableQuery._id) {
+  $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
+    lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
     selectedAuth = false
@@ -786,6 +795,7 @@
   }
 
   const ensureQueryDefaults = (target: Query) => {
+    target.fields ||= {}
     if (!target.fields?.disabledHeaders) {
       target.fields.disabledHeaders = {}
     }
@@ -922,7 +932,15 @@
       environment.loadVariables()
     }
     if ($workspaceConnections.draft && !datasourceId) {
-      setTimeout(() => connectionSelectRef.open(), 200)
+      openConnectionMenuTimer = setTimeout(() => {
+        connectionSelectRef?.open()
+      }, 200)
+    }
+  })
+
+  onDestroy(() => {
+    if (openConnectionMenuTimer) {
+      clearTimeout(openConnectionMenuTimer)
     }
   })
 </script>
@@ -996,9 +1014,11 @@
         <ConnectionSelect
           bind:this={connectionSelectRef}
           authConfigId={editableQuery?.fields?.authConfigId}
-          restTemplateId={datasource?.restTemplateId}
+          restTemplateId={datasource?.restTemplateId ||
+            $workspaceConnections.draft?.templateId}
           datasourceId={selectedDatasourceId || storeQuery?.datasourceId}
           editText="Edit connection + auth"
+          restrictToRestTemplate={!!$workspaceConnections.draft?.templateId}
           {settingsLocked}
           disabled={!isNewQuery}
           on:change={onConnectionChange}

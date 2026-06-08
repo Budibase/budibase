@@ -105,6 +105,7 @@ export type APIRequestStepInputs = {
     queryId: string
     [key: string]: any
   }
+  restTemplateId?: string
   continueOnError?: boolean
 }
 

@@ -357,6 +357,7 @@ beforeEach(async () => {
     screens: [],
   } as any)
   queries.store.update(s => ({ ...s, list: [], selectedQueryId: null }))
+  workspaceConnections.discardDraft()
   await setupDatasources()
 })
 
@@ -408,6 +409,137 @@ describe("API Endpoint Viewer", () => {
         expect(
           container.querySelector(".picker-button")?.textContent
         ).toContain("My Bearer")
+      })
+    })
+
+    it("resets stale unsaved query state when switching connector drafts", async () => {
+      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
+        const templates: Record<string, any> = {
+          bamboohr: {
+            id: "bamboohr",
+            name: "BambooHR",
+            icon: "bamboohr.svg",
+          },
+          github: {
+            id: "github",
+            name: "GitHub",
+            icon: "github.svg",
+          },
+        }
+        return templateId ? templates[templateId] : undefined
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr" as any,
+        config: {
+          ...REST_DS.config,
+          url: "https://{{companyDomain}}.bamboohr.com",
+        },
+      }
+      const githubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds",
+        name: "GitHub",
+        restTemplateId: "github" as any,
+        config: {
+          ...REST_DS_2_WITH_URL.config,
+          url: "https://api.github.com",
+        },
+      }
+      await setupTwoDatasources(bamboohrDatasource, githubDatasource)
+
+      workspaceConnections.startDraft("bamboohr" as any)
+      const { container } = setupDOM({ saveAndClose: true })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+        expect(container.querySelector(".cm-content")?.textContent).toContain(
+          "bamboohr.com"
+        )
+      })
+
+      workspaceConnections.startDraft("github" as any)
+
+      await waitFor(() => {
+        const selectedConnection =
+          container.querySelector(".picker-button")?.textContent
+        expect(selectedConnection).toContain("GitHub")
+        expect(selectedConnection).not.toContain("BambooHR")
+        expect(container.querySelector(".cm-content")?.textContent).toContain(
+          "api.github.com"
+        )
+      })
+    })
+
+    it("filters connection selection to the connector template for connector drafts", async () => {
+      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
+        const templates: Record<string, any> = {
+          bamboohr: {
+            id: "bamboohr",
+            name: "BambooHR",
+            icon: "bamboohr.svg",
+          },
+          github: {
+            id: "github",
+            name: "GitHub",
+            icon: "github.svg",
+          },
+        }
+        return templateId ? templates[templateId] : undefined
+      })
+
+      const internalDs: UIInternalDatasource = {
+        _id: "bb_internal",
+        type: "budibase",
+        name: "Budibase DB",
+        source: SourceName.BUDIBASE,
+        config: {},
+        entities: [],
+      }
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr" as any,
+      }
+      const githubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds",
+        name: "GitHub",
+        restTemplateId: "github" as any,
+      }
+      const githubDatasource2: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds_2",
+        name: "GitHub 2",
+        restTemplateId: "github" as any,
+      }
+      vi.mocked(API).getDatasources.mockResolvedValue([
+        internalDs,
+        bamboohrDatasource,
+        githubDatasource,
+        githubDatasource2,
+      ] as Datasource[])
+      await datasources.init()
+
+      workspaceConnections.startDraft("github" as any)
+      const { container, baseElement } = setupDOM({ saveAndClose: true })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("GitHub")
+      })
+
+      await waitFor(() => {
+        expect(baseElement.textContent).toContain("GitHub - No auth")
+        expect(baseElement.textContent).toContain("GitHub 2 - No auth")
+        expect(baseElement.textContent).not.toContain("BambooHR - No auth")
       })
     })
 

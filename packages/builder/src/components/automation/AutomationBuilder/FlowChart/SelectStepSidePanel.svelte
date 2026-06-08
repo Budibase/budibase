@@ -25,6 +25,8 @@
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { getAutomationStepIconColor } from "./AutomationStepCategories"
+  import { restTemplates } from "@/stores/builder/restTemplates"
+  import type { RestTemplate } from "@budibase/types"
 
   export let block
   export let onClose = () => {}
@@ -319,6 +321,26 @@
   $: filteredPlugins = Object.entries(plugins).filter(([_, action]) =>
     matchesSearch(action, searchString)
   )
+  $: connectorTemplates = ($restTemplates?.templates || []).filter(
+    template => template.icon
+  )
+  $: filteredConnectorTemplates = connectorTemplates
+    .filter(template => matchesTemplateSearch(template, searchString))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const matchesTemplateSearch = (template: RestTemplate, term: string) => {
+    const lowerTerm = term.trim().toLowerCase()
+    if (!lowerTerm) return true
+    return (
+      template.name.toLowerCase().includes(lowerTerm) ||
+      (template.description || "").toLowerCase().includes(lowerTerm) ||
+      template.templates?.some(
+        child =>
+          child.name.toLowerCase().includes(lowerTerm) ||
+          (child.description || "").toLowerCase().includes(lowerTerm)
+      )
+    )
+  }
 
   $: {
     const categoryActions = filteredCategories.flatMap(category =>
@@ -351,7 +373,10 @@
     }
   }
 
-  const selectAction = async (action: AutomationStepDefinition) => {
+  const selectAction = async (
+    action: AutomationStepDefinition,
+    restTemplateId?: RestTemplate["id"]
+  ) => {
     if (isSelectingAction || actionSelectionLocked) {
       return
     }
@@ -360,11 +385,26 @@
     isSelectingAction = true
     let stepInserted = false
     try {
+      const restTemplate =
+        restTemplateId && action.stepId === AutomationActionStepId.API_REQUEST
+          ? restTemplates.get(restTemplateId)
+          : undefined
       const newBlock = automationStore.actions.constructBlock(
         BlockDefinitionTypes.ACTION,
         action.stepId,
-        action
+        restTemplate
+          ? { ...action, name: `${restTemplate.name} request` }
+          : action
       )
+      if (
+        restTemplateId &&
+        action.stepId === AutomationActionStepId.API_REQUEST
+      ) {
+        newBlock.inputs = {
+          ...newBlock.inputs,
+          restTemplateId,
+        }
+      }
       if (
         insideLoopV2 &&
         loopStepId &&
@@ -381,6 +421,16 @@
         await automationStore.actions.addBlockToAutomation(newBlock, targetPath)
       }
       stepInserted = true
+
+      if (
+        restTemplateId &&
+        action.stepId === AutomationActionStepId.API_REQUEST
+      ) {
+        automationStore.actions.openApiRequestTemplate(
+          newBlock.id,
+          restTemplateId
+        )
+      }
 
       // Determine presence of the block before focusing
       await automationStore.actions.selectNode(newBlock.id)
@@ -400,6 +450,14 @@
 
   const getExternalAction = (stepId: string) => {
     return externalActions[stepId as keyof typeof externalActions]
+  }
+
+  const selectConnector = async (template: RestTemplate) => {
+    const apiRequestAction = allActions[AutomationActionStepId.API_REQUEST]
+    if (!apiRequestAction) {
+      return
+    }
+    await selectAction(apiRequestAction, template.id)
   }
 
   const handleActionKeydown = async (
@@ -601,6 +659,50 @@
                       >{action.name}</Body
                     >
                   </div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+        {#if filteredConnectorTemplates.length}
+          <div class="section-divider"></div>
+          <div class="section-header">
+            <Detail size="M" weight={700}>Connectors</Detail>
+          </div>
+          <div class="item-list">
+            {#each filteredConnectorTemplates as template (template.id)}
+              <div
+                class="item"
+                role="button"
+                tabindex={0}
+                on:click={() => selectConnector(template)}
+                on:mouseenter={() => (selectedIndex = null)}
+                on:keydown={e => {
+                  if (
+                    e.key === "Enter" &&
+                    !isSelectingAction &&
+                    !actionSelectionLocked
+                  ) {
+                    e.preventDefault()
+                    selectConnector(template)
+                  }
+                }}
+              >
+                <div class="item-body">
+                  <img
+                    width={17.5}
+                    height={17.5}
+                    src={template.icon}
+                    alt={template.name}
+                    class="external-icon"
+                  />
+                  <Body
+                    size="S"
+                    weight="500"
+                    color="var(--spectrum-global-color-gray-900)"
+                  >
+                    {template.name}
+                  </Body>
                 </div>
               </div>
             {/each}
