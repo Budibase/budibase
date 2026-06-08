@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx"
 import {
   prepareTabularKnowledgeFileForRagIngestion,
+  searchTabularRowsForExactMatches,
   stringifyRowsForRag,
   stringifyTabularFileForRag,
 } from "./tabularText"
@@ -28,7 +29,7 @@ describe("tabularText", () => {
       sections: [
         {
           label: "Table: inventory.csv",
-          rows: [
+          values: [
             ["Product", "Stock"],
             ["Desk", "8"],
           ],
@@ -178,5 +179,55 @@ describe("tabularText", () => {
     expect(text).toContain("Row 2 in team-data")
     expect(text).toContain("Name: Lee")
     expect(text).toContain("Team: Engineering")
+  })
+
+  it("returns exact row matches for tabular lookup questions", () => {
+    const buffer = buildWorkbookBuffer([
+      {
+        name: "Users",
+        rows: [
+          ["Name", "Age", "Favorite number", "Is admin"],
+          ["User 99", 75, 63, 0],
+          ["User 991", 40, 66, 1],
+        ],
+      },
+    ])
+
+    const result = searchTabularRowsForExactMatches({
+      filename: "users.xlsx",
+      buffer,
+      query: "What are the details for User 991?",
+    })
+
+    expect(result).toHaveLength(1)
+    expect(result[0].chunkText).toContain(
+      "Exact tabular match from Workbook: users.xlsx"
+    )
+    expect(result[0].chunkText).toContain("Row 3 in Sheet Users")
+    expect(result[0].chunkText).toContain("Name: User 991")
+    expect(result[0].chunkText).toContain("Age: 40")
+    expect(result[0].chunkText).toContain("Favorite number: 66")
+    expect(result[0].chunkText).toContain("Is admin: 1")
+    expect(result[0].chunkText).not.toContain("Age: 75")
+  })
+
+  it("does not match short numeric cells during exact row lookup", () => {
+    const buffer = buildWorkbookBuffer([
+      {
+        name: "Users",
+        rows: [
+          ["Name", "Age"],
+          ["Alice", 40],
+        ],
+      },
+    ])
+
+    const result = searchTabularRowsForExactMatches({
+      filename: "users.xlsx",
+      buffer,
+      query: "Who has age 40?",
+    })
+
+    expect(result).toEqual([])
   })
 })

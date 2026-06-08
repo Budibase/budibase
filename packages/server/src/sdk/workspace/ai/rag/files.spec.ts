@@ -6,6 +6,7 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseCreate = jest.fn()
 const mockKnowledgeBaseGetFileOrThrow = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
+const mockObjectStoreGetReadStream = jest.fn()
 
 const mockProcessorIngest = jest.fn()
 const mockProcessorSearch = jest.fn()
@@ -18,6 +19,10 @@ jest.mock("@budibase/backend-core", () => {
     locks: {
       ...actual.locks,
       doWithLock: (...args: any[]) => mockDoWithLock(...args),
+    },
+    objectStore: {
+      ...actual.objectStore,
+      getReadStream: (...args: any[]) => mockObjectStoreGetReadStream(...args),
     },
   }
 })
@@ -58,6 +63,7 @@ import {
   LockType,
   SEPARATOR,
 } from "@budibase/types"
+import { Readable } from "stream"
 import { GeminiRagProcessor } from "./processors/gemini"
 import {
   deleteKnowledgeBaseFileChunks,
@@ -379,6 +385,64 @@ describe("rag files", () => {
           sourceId: "source-1",
           fileId: "file_1",
           filename: "policy.md",
+        },
+      ])
+    })
+
+    it("returns exact tabular row matches without searching Gemini", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "users.csv",
+          mimetype: "text/csv",
+          objectStoreKey: "objects/users.csv",
+          ragSourceId: "source-users",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+      mockObjectStoreGetReadStream.mockResolvedValue({
+        stream: Readable.from([
+          Buffer.from(
+            [
+              "Name,Age,Favorite number,Is admin",
+              "User 99,75,63,0",
+              "User 991,40,66,1",
+            ].join("\n")
+          ),
+        ]),
+      })
+
+      const result = await retrieveContextForAgent(
+        defaultAgent,
+        "What are the details for User 991?"
+      )
+
+      expect(mockObjectStoreGetReadStream).toHaveBeenCalledWith(
+        expect.any(String),
+        "objects/users.csv"
+      )
+      expect(mockProcessorSearch).not.toHaveBeenCalled()
+      expect(result.text).toContain("Exact tabular match from File: users.csv")
+      expect(result.text).toContain("Row 3 in users.csv")
+      expect(result.text).toContain("Name: User 991")
+      expect(result.text).toContain("Age: 40")
+      expect(result.text).toContain("Favorite number: 66")
+      expect(result.text).toContain("Is admin: 1")
+      expect(result.text).not.toContain("Age: 75")
+      expect(result.chunks).toEqual([
+        {
+          source: "source-users",
+          chunkText: result.text,
+        },
+      ])
+      expect(result.sources).toEqual([
+        {
+          sourceId: "source-users",
+          fileId: "file_1",
+          filename: "users.csv",
         },
       ])
     })

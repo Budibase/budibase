@@ -22,20 +22,38 @@ interface KnowledgeFileIngestionPayload {
   buffer: Buffer
 }
 
-interface TabularRowsSection {
+interface TabularSection {
   label: string
-  rows: string[][]
+  values: string[][]
 }
 
 interface StringifyRowsForRagInput {
   documentLabel: string
-  sections: TabularRowsSection[]
+  sections: TabularSection[]
 }
+
+interface SearchTabularRowsForExactMatchesInput
+  extends KnowledgeFileIngestionPayload {
+  query: string
+  maxMatches?: number
+}
+
+export interface TabularRowExactMatch {
+  chunkText: string
+}
+
+const DEFAULT_MAX_EXACT_MATCHES = 5
 
 const normalizeCellValue = (value: unknown) =>
   String(value ?? "")
     .replace(/\s+/g, " ")
     .trim()
+
+const normalizeSearchValue = (value: string) =>
+  normalizeCellValue(value).toLowerCase()
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 const trimTrailingEmptyCells = (row: string[]) => {
   const trimmed = [...row]
@@ -46,6 +64,25 @@ const trimTrailingEmptyCells = (row: string[]) => {
 }
 
 const hasContent = (row: string[]) => row.some(Boolean)
+
+const isSearchableExactValue = (value: string) => {
+  if (value.length < 3) {
+    return false
+  }
+  return /[a-z]/i.test(value) || value.length >= 6
+}
+
+const queryContainsExactCellValue = (query: string, value: string) => {
+  const normalizedValue = normalizeSearchValue(value)
+  if (!isSearchableExactValue(normalizedValue)) {
+    return false
+  }
+
+  return new RegExp(
+    `(^|[^a-z0-9])${escapeRegExp(normalizedValue)}($|[^a-z0-9])`,
+    "i"
+  ).test(query)
+}
 
 const getDelimitedSeparator = ({
   filename,
@@ -87,6 +124,36 @@ const getRowReference = (sectionLabel: string, rowNumber: number) => {
     return `Row ${rowNumber} in ${sectionLabel.slice("Table: ".length)}`
   }
   return `Row ${rowNumber} in ${sectionLabel}`
+}
+
+const stringifyRowForRag = ({
+  documentLabel,
+  sectionLabel,
+  columnLabels,
+  row,
+  rowNumber,
+}: {
+  documentLabel: string
+  sectionLabel: string
+  columnLabels: string[]
+  row: string[]
+  rowNumber: number
+}) => {
+  const output = [
+    `Exact tabular match from ${documentLabel}`,
+    sectionLabel,
+    `Columns: ${columnLabels.join(" | ")}`,
+    getRowReference(sectionLabel, rowNumber),
+  ]
+
+  row.forEach((value, index) => {
+    if (!value) {
+      return
+    }
+    output.push(`${columnLabels[index] || `Column ${index + 1}`}: ${value}`)
+  })
+
+  return output.join("\n")
 }
 
 export const isTabularKnowledgeFile = ({
@@ -158,7 +225,7 @@ const getWorkbookSections = ({
 }: KnowledgeFileIngestionPayload): StringifyRowsForRagInput => {
   const workbook = parseWorkbook({ filename, mimetype, buffer })
   const isDelimitedFile = !!getDelimitedSeparator({ filename, mimetype })
-  const sections: TabularRowsSection[] = []
+  const sections: TabularSection[] = []
 
   for (const sheetName of workbook.SheetNames) {
     const worksheet = workbook.Sheets[sheetName]
@@ -173,7 +240,7 @@ const getWorkbookSections = ({
 
     sections.push({
       label: isDelimitedFile ? `Table: ${filename}` : `Sheet: ${sheetName}`,
-      rows,
+      values: rows,
     })
   }
 
@@ -190,7 +257,7 @@ export const stringifyRowsForRag = ({
   const output = [documentLabel]
 
   for (const section of sections) {
-    const [columns, ...rows] = section.rows.filter(hasContent)
+    const [columns, ...rows] = section.values.filter(hasContent)
     if (!columns || columns.length === 0) {
       continue
     }
@@ -236,6 +303,68 @@ export const stringifyTabularFileForRag = (
   mimetype?: string
 ): string =>
   stringifyRowsForRag(getWorkbookSections({ filename, mimetype, buffer }))
+
+export const searchTabularRowsForExactMatches = ({
+  filename,
+  mimetype,
+  buffer,
+  query,
+  maxMatches = DEFAULT_MAX_EXACT_MATCHES,
+}: SearchTabularRowsForExactMatchesInput): TabularRowExactMatch[] => {
+  if (!isTabularKnowledgeFile({ filename, mimetype })) {
+    return []
+  }
+
+  const normalizedQuery = normalizeSearchValue(query)
+  if (!normalizedQuery) {
+    return []
+  }
+
+  const { documentLabel, sections } = getWorkbookSections({
+    filename,
+    mimetype,
+    buffer,
+  })
+  const matches: TabularRowExactMatch[] = []
+
+  for (const section of sections) {
+    const [columns, ...rows] = section.values.filter(hasContent)
+    if (!columns || rows.length === 0) {
+      continue
+    }
+
+    const columnLabels = buildColumnLabels(columns)
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+      const row = rows[rowIndex]
+      if (!hasContent(row)) {
+        continue
+      }
+
+      const hasExactMatch = row.some(value =>
+        queryContainsExactCellValue(normalizedQuery, value)
+      )
+      if (!hasExactMatch) {
+        continue
+      }
+
+      matches.push({
+        chunkText: stringifyRowForRag({
+          documentLabel,
+          sectionLabel: section.label,
+          columnLabels,
+          row,
+          rowNumber: rowIndex + 2,
+        }),
+      })
+
+      if (matches.length >= maxMatches) {
+        return matches
+      }
+    }
+  }
+
+  return matches
+}
 
 export const prepareTabularKnowledgeFileForRagIngestion = ({
   filename,
