@@ -60,13 +60,20 @@ const ensureDefaultLocale = (
 }
 
 class TranslationsStore extends BudiStore<TranslationsState> {
+  private stateToken = 0
+
   constructor() {
     super(createDefaultState())
     licensing.subscribe(state => {
       if (!state.translationsEnabled) {
-        this.set(createDefaultState())
+        this.resetState()
       }
     })
+  }
+
+  private resetState() {
+    this.stateToken += 1
+    this.set(createDefaultState())
   }
 
   private getActiveLocale(state: TranslationsState, locale?: string) {
@@ -85,6 +92,7 @@ class TranslationsStore extends BudiStore<TranslationsState> {
   async init(options: { force?: boolean; public?: boolean } = {}) {
     const force = options.force ?? false
     const usePublic = options.public ?? false
+    const loadToken = this.stateToken
 
     const state = get(this.store)
     if (state.loaded && !force) {
@@ -107,6 +115,10 @@ class TranslationsStore extends BudiStore<TranslationsState> {
           : undefined
       config = ensureDefaultLocale(configDoc?.config)
     }
+    if (loadToken !== this.stateToken || !get(licensing).translationsEnabled) {
+      return
+    }
+
     this.set({ loaded: true, config: config ?? ensureDefaultLocale() })
   }
 
@@ -136,6 +148,10 @@ class TranslationsStore extends BudiStore<TranslationsState> {
       type: ConfigType.TRANSLATIONS,
       config: updatedConfig,
     })
+
+    if (!get(licensing).translationsEnabled) {
+      return
+    }
 
     this.set({ loaded: true, config: updatedConfig })
   }
