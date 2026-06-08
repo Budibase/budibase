@@ -71,9 +71,7 @@ describe("/projects", () => {
         existing => existing._id === "project_legacy"
       )
 
-      expect(new Date(project!.createdAt).toISOString()).toBe(
-        project!.createdAt
-      )
+      expect(project!.createdAt).toBe(project!.updatedAt)
     })
   })
 
@@ -414,6 +412,45 @@ describe("/projects", () => {
         }
       })
 
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+    })
+  })
+
+  it("does not delete a project when assignment cleanup fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectId: project._id,
+        })
+      )
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const put = jest
+          .spyOn(Object.getPrototypeOf(db), "put")
+          .mockRejectedValueOnce(new Error("Assignment cleanup failed"))
+
+        try {
+          await expect(
+            sdk.projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Assignment cleanup failed")
+        } finally {
+          put.mockRestore()
+        }
+      })
+
+      const fetchedProject = await config.api.project.fetch()
+      expect(fetchedProject.projects.map(existing => existing._id)).toContain(
+        project._id
+      )
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )

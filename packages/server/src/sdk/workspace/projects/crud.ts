@@ -5,6 +5,9 @@ import sdk from "../.."
 type ProjectUpdate = Pick<Project, "_id" | "_rev"> &
   Partial<Pick<Project, "name" | "description" | "color">>
 
+type AssignmentRollback = () => Promise<unknown>
+type AssignmentUpdate = () => Promise<AssignmentRollback>
+
 export async function fetch(): Promise<Project[]> {
   const db = context.getWorkspaceDB()
   const docs = await db.allDocs<Project>(
@@ -69,6 +72,25 @@ export async function update(project: ProjectUpdate): Promise<Project> {
   return response.doc
 }
 
+async function rollbackAssignments(rollbacks: AssignmentRollback[]) {
+  for (const rollback of [...rollbacks].reverse()) {
+    await rollback()
+  }
+}
+
+async function applyAssignmentUpdates(updates: AssignmentUpdate[]) {
+  const rollbacks: AssignmentRollback[] = []
+  try {
+    for (const update of updates) {
+      rollbacks.push(await update())
+    }
+  } catch (err) {
+    await rollbackAssignments(rollbacks)
+    throw err
+  }
+  return async () => await rollbackAssignments(rollbacks)
+}
+
 async function clearAssignments(projectId: string) {
   const [workspaceApps, automations, agents, tables, queries, datasources] =
     await Promise.all([
@@ -80,39 +102,72 @@ async function clearAssignments(projectId: string) {
       sdk.datasources.getExternalDatasources(),
     ])
 
-  await Promise.all([
+  const db = context.getWorkspaceDB()
+  const updates: AssignmentUpdate[] = [
     ...workspaceApps
       .filter(workspaceApp => workspaceApp.projectId === projectId)
-      .map(workspaceApp =>
-        sdk.workspaceApps.update({ ...workspaceApp, projectId: undefined })
-      ),
+      .map(workspaceApp => async () => {
+        const updated = await sdk.workspaceApps.update({
+          ...workspaceApp,
+          projectId: undefined,
+        })
+        return async () =>
+          await sdk.workspaceApps.update({ ...updated, projectId })
+      }),
     ...automations
       .filter(automation => automation.projectId === projectId)
-      .map(automation =>
-        sdk.automations.update({ ...automation, projectId: undefined })
-      ),
+      .map(automation => async () => {
+        const updated = await sdk.automations.update({
+          ...automation,
+          projectId: undefined,
+        })
+        return async () =>
+          await sdk.automations.update({ ...updated, projectId })
+      }),
     ...agents
       .filter(agent => agent.projectId === projectId)
-      .map(agent => sdk.ai.agents.update({ ...agent, projectId: undefined })),
+      .map(agent => async () => {
+        const updated = await sdk.ai.agents.update({
+          ...agent,
+          projectId: undefined,
+        })
+        return async () => await sdk.ai.agents.update({ ...updated, projectId })
+      }),
     ...tables
       .filter(table => table.projectId === projectId)
-      .map(table => sdk.tables.saveTable({ ...table, projectId: undefined })),
+      .map(table => async () => {
+        const updated = await sdk.tables.saveTable({
+          ...table,
+          projectId: undefined,
+        })
+        return async () => await sdk.tables.saveTable({ ...updated, projectId })
+      }),
     ...queries
       .filter(query => query.projectId === projectId)
-      .map(query =>
-        context.getWorkspaceDB().put({ ...query, projectId: undefined })
-      ),
+      .map(query => async () => {
+        const response = await db.put({ ...query, projectId: undefined })
+        return async () =>
+          await db.put({ ...query, _rev: response.rev, projectId })
+      }),
     ...datasources
       .filter(datasource => datasource.projectId === projectId)
-      .map(datasource =>
-        context.getWorkspaceDB().put(
+      .map(datasource => async () => {
+        const response = await db.put(
           sdk.tables.populateExternalTableSchemas({
             ...datasource,
             projectId: undefined,
           })
         )
-      ),
-  ])
+        return async () =>
+          await db.put({
+            ...datasource,
+            _rev: response.rev,
+            projectId,
+          })
+      }),
+  ]
+
+  return await applyAssignmentUpdates(updates)
 }
 
 export async function remove(id: string, rev: string) {
@@ -125,7 +180,11 @@ export async function remove(id: string, rev: string) {
     throw new HTTPError("Project revision does not match.", 409)
   }
 
-  const response = await db.remove(id, rev)
-  await clearAssignments(id)
-  return response
+  const restoreAssignments = await clearAssignments(id)
+  try {
+    return await db.remove(id, rev)
+  } catch (err) {
+    await restoreAssignments()
+    throw err
+  }
 }

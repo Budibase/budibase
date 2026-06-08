@@ -12,22 +12,29 @@ import {
 import sdk from "../../sdk"
 
 const toTimestamp = (timestamp?: string | number) => {
-  const date = timestamp == null ? new Date() : new Date(timestamp)
+  if (timestamp == null) {
+    return undefined
+  }
+  const date = new Date(timestamp)
   if (Number.isNaN(date.getTime())) {
-    return new Date().toISOString()
+    return undefined
   }
   return date.toISOString()
 }
 
-const toProjectResponse = (project: Project): ProjectResponse => ({
-  _id: project._id!,
-  _rev: project._rev!,
-  name: project.name,
-  description: project.description,
-  color: project.color,
-  createdAt: toTimestamp(project.createdAt ?? project.updatedAt),
-  updatedAt: project.updatedAt ? toTimestamp(project.updatedAt) : undefined,
-})
+const toProjectResponse = (project: Project): ProjectResponse => {
+  const updatedAt = toTimestamp(project.updatedAt)
+  return {
+    _id: project._id!,
+    _rev: project._rev!,
+    name: project.name,
+    description: project.description,
+    color: project.color,
+    createdAt:
+      toTimestamp(project.createdAt) ?? updatedAt ?? new Date().toISOString(),
+    updatedAt,
+  }
+}
 
 export async function fetch(ctx: Ctx<void, FetchProjectsResponse>) {
   const projects = await sdk.projects.fetch()
