@@ -1,5 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { Project, WithoutDocMetadata } from "@budibase/types"
+import { Datasource, Project, WithoutDocMetadata } from "@budibase/types"
 import sdk from "../.."
 
 type ProjectUpdate = Pick<Project, "_id" | "_rev"> &
@@ -152,18 +152,12 @@ async function clearAssignments(projectId: string) {
     ...datasources
       .filter(datasource => datasource.projectId === projectId)
       .map(datasource => async () => {
-        const response = await db.put(
-          sdk.tables.populateExternalTableSchemas({
-            ...datasource,
-            projectId: undefined,
-          })
-        )
-        return async () =>
-          await db.put({
-            ...datasource,
-            _rev: response.rev,
-            projectId,
-          })
+        const current = await db.get<Datasource>(datasource._id!)
+        await db.put({ ...current, projectId: undefined })
+        return async () => {
+          const updated = await db.get<Datasource>(datasource._id!)
+          await db.put({ ...updated, projectId })
+        }
       }),
   ]
 

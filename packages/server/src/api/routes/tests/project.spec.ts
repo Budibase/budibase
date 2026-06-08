@@ -3,6 +3,7 @@ import { structures } from "@budibase/backend-core/tests"
 import { FeatureFlag, type Project } from "@budibase/types"
 import { toProjectResponse } from "../../controllers/project"
 import sdk from "../../../sdk"
+import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
@@ -372,6 +373,36 @@ describe("/projects", () => {
         const rawQuery = await context.getWorkspaceDB().get(query._id!)
         expect(rawQuery).not.toHaveProperty("readable")
       })
+    })
+  })
+
+  it("clears datasource and external table assignments together", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        projectId: project._id,
+      })
+      const externalTable = basicTable(datasource, {
+        _id: buildExternalTableId(datasource._id!, "TestTable"),
+        projectId: project._id,
+      })
+      await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
+      })
+
+      await config.api.project.delete(project._id, project._rev)
+
+      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+      expect(fetchedDatasource.projectId).toBeUndefined()
+      expect(
+        fetchedDatasource.entities![externalTable.name].projectId
+      ).toBeUndefined()
     })
   })
 
