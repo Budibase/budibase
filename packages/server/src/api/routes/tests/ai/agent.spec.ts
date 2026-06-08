@@ -28,6 +28,7 @@ describe("agent duplicate", () => {
         {
           id: "operation_1",
           name: "Customer support",
+          live: false,
           promptInstructions: "Be helpful",
           enabledTools: [],
         },
@@ -59,6 +60,7 @@ describe("agent duplicate", () => {
         {
           id: "operation_1",
           name: "Main triage flow",
+          live: false,
           enabledTools: [],
         },
       ],
@@ -71,6 +73,7 @@ describe("agent duplicate", () => {
         {
           ...(created.operations?.[0] || {
             id: "operation_1",
+            live: false,
             enabledTools: [],
           }),
           name: "Escalation flow",

@@ -147,6 +147,7 @@ describe("agent test run queue", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             enabledTools: [],
             knowledgeBases: [],
           },

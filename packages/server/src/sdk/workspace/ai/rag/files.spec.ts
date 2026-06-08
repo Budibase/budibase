@@ -89,6 +89,7 @@ describe("rag files", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: ["kb_existing"],
           },
         ],
@@ -117,7 +118,12 @@ describe("rag files", () => {
         name: "Agent 1",
         aiconfig: "config_1",
         operations: [
-          { id: "operation_1", name: "Main operation", knowledgeBases: [] },
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: [],
+          },
         ],
       } as Agent
       const created = {
@@ -134,6 +140,7 @@ describe("rag files", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: [created._id],
           },
         ],
@@ -152,6 +159,7 @@ describe("rag files", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: [created._id],
           },
         ],
@@ -289,6 +297,7 @@ describe("rag files", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: [knowledgeBaseId],
           },
         ],
@@ -319,10 +328,35 @@ describe("rag files", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: true,
           knowledgeBases: [defaultKnowledgeBase._id],
         },
       ],
     } as Agent
+
+    it("returns empty context without searching when operation is not live", async () => {
+      const agent = {
+        _id: "agent_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: [defaultKnowledgeBase._id],
+          },
+        ],
+      } as Agent
+
+      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+
+      expect(result).toEqual({
+        text: "",
+        chunks: [],
+        sources: [],
+      })
+      expect(mockKnowledgeBaseFind).not.toHaveBeenCalled()
+      expect(mockProcessorSearch).not.toHaveBeenCalled()
+    })
 
     it("returns empty context without searching when no knowledge bases are configured", async () => {
       const agent = {
@@ -330,7 +364,12 @@ describe("rag files", () => {
         name: "agent_name",
         aiconfig: "config",
         operations: [
-          { id: "operation_1", name: "Main operation", knowledgeBases: [] },
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: true,
+            knowledgeBases: [],
+          },
         ],
       } satisfies Agent
 
@@ -352,6 +391,7 @@ describe("rag files", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: ["kb_1"],
           },
         ],
@@ -373,6 +413,7 @@ describe("rag files", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: true,
             knowledgeBases: ["missing_1", "missing_2"],
           },
         ],
@@ -635,6 +676,7 @@ describe("rag files", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: true,
             knowledgeBases: [knowledgeBaseOne._id, knowledgeBaseTwo._id],
           },
         ],

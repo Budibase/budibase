@@ -97,6 +97,7 @@ const makeSharePointAgent = (
       {
         id: "operation_1",
         name: "Main operation",
+        live: false,
         knowledgeSources: [
           {
             id: sourceId,

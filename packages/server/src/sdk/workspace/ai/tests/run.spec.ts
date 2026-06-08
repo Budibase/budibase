@@ -50,6 +50,12 @@ jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
     .mockReturnValue("Incomplete tool call"),
+  getLiveOperation: (agent: {
+    operations?: Array<{ live?: boolean } & Record<string, unknown>>
+  }) => {
+    const operation = agent.operations?.[0]
+    return operation?.live === true ? operation : undefined
+  },
   prepareAgentChatRun: jest.fn(),
 }))
 
@@ -180,6 +186,7 @@ describe("agent test runner", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: false,
           enabledTools: [],
           knowledgeBases: [],
         },
@@ -464,6 +471,7 @@ describe("agent test runner", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: false,
           enabledTools: [],
           knowledgeBases: ["kb-1"],
         },

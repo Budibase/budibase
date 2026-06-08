@@ -112,6 +112,7 @@ describe("agent files", () => {
             ...(agentDoc?.operations?.[0] || {
               id: "operation_1",
               name: "Main operation",
+              live: false,
             }),
             knowledgeSources: siteIds.map(siteId => ({
               id: `sharepoint_site_${siteId}`,
@@ -221,6 +222,7 @@ describe("agent files", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: false,
         },
       ],
     })
@@ -256,6 +258,7 @@ describe("agent files", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: false,
         },
       ],
     })

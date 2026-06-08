@@ -89,6 +89,7 @@ describe("agents crud", () => {
             expect.objectContaining({
               id: "operation_default",
               name: "Operation",
+              live: false,
               promptInstructions: "Legacy instructions",
             }),
           ],
@@ -110,6 +111,7 @@ describe("agents crud", () => {
                 {
                   id: "operation_1",
                   name: "Primary",
+                  live: false,
                   promptInstructions: "Keep me",
                 },
               ],
@@ -128,6 +130,7 @@ describe("agents crud", () => {
             expect.objectContaining({
               id: "operation_1",
               name: "Primary",
+              live: false,
               promptInstructions: "Keep me",
             }),
           ],
@@ -147,6 +150,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: ["kb_1"],
           },
         ],
@@ -193,7 +197,14 @@ describe("agents crud", () => {
           _id: agent._id,
           _rev: agent._rev,
           name: agent.name,
-          operations: agent.operations,
+          operations: [
+            expect.objectContaining({
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              knowledgeBases: ["kb_1"],
+            }),
+          ],
         })
       )
     })
@@ -207,6 +218,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: ["kb_missing"],
           },
         ],
@@ -225,7 +237,14 @@ describe("agents crud", () => {
           _id: agent._id,
           _rev: agent._rev,
           name: agent.name,
-          operations: agent.operations,
+          operations: [
+            expect.objectContaining({
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              knowledgeBases: ["kb_missing"],
+            }),
+          ],
         })
       )
     })
@@ -239,6 +258,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: [] as string[],
           },
         ],
@@ -262,6 +282,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             knowledgeBases: ["kb_3"],
           },
         ],
@@ -344,6 +365,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             enabledTools: [],
             knowledgeBases: [],
           },
@@ -373,6 +395,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Main operation",
+            live: false,
             enabledTools: [],
             knowledgeBases: [],
           },
@@ -408,6 +431,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Primary",
+            live: false,
             promptInstructions: "Do work",
             enabledTools: [],
             knowledgeBases: [],
@@ -441,6 +465,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Primary",
+            live: false,
             promptInstructions: "Do work",
             enabledTools: [],
             knowledgeBases: [],
@@ -457,6 +482,7 @@ describe("agents crud", () => {
           {
             id: "operation_1",
             name: "Primary",
+            live: false,
             promptInstructions: "Do work",
             enabledTools: [],
             knowledgeBases: [],
@@ -464,6 +490,7 @@ describe("agents crud", () => {
           {
             id: "operation_2",
             name: "Secondary",
+            live: false,
             promptInstructions: "Then do more",
             enabledTools: [],
             knowledgeBases: [],

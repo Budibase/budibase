@@ -241,7 +241,12 @@ describe("chat route auth split", () => {
           iconColor: "#6a9bcc",
           createdAt: now,
           operations: [
-            { id: "operation_1", name: "Main operation", enabledTools: [] },
+            {
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              enabledTools: [],
+            },
           ],
         }
         await db.put(agent)
@@ -256,7 +261,12 @@ describe("chat route auth split", () => {
           iconColor: "#9f8cd1",
           createdAt: now,
           operations: [
-            { id: "operation_1", name: "Main operation", enabledTools: [] },
+            {
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              enabledTools: [],
+            },
           ],
         }
         await db.put(disabledAgent)
@@ -271,7 +281,12 @@ describe("chat route auth split", () => {
           iconColor: "#a56f6f",
           createdAt: now,
           operations: [
-            { id: "operation_1", name: "Main operation", enabledTools: [] },
+            {
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              enabledTools: [],
+            },
           ],
         }
         await db.put(restrictedAgent)
@@ -425,6 +440,7 @@ describe("chat route auth split", () => {
       icon: "robot",
       iconColor: "#6a9bcc",
       live: true,
+      allowKnowledgeSourceDownload: true,
     })
     expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
     expect(

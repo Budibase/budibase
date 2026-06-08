@@ -140,6 +140,7 @@ describe("knowledgeSourceSyncQueue", () => {
         {
           id: "operation_1",
           name: "Main operation",
+          live: false,
           knowledgeSources: [
             {
               id: "sharepoint_site_site_1",
@@ -307,6 +308,7 @@ describe("knowledgeSourceSyncQueue", () => {
               {
                 id: "operation_1",
                 name: "Main operation",
+                live: false,
                 knowledgeSources: [
                   {
                     id: "sharepoint_site_site_1",

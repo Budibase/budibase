@@ -49,6 +49,7 @@ export const updateOperationKnowledgeSources = (
       {
         id: targetOperationId,
         name: "Operation",
+        live: false,
         knowledgeSources: updater([]),
       },
     ]
