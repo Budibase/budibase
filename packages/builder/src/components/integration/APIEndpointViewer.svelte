@@ -939,7 +939,9 @@
       !selectedDatasourceId
     ) {
       openConnectionMenuTimer = setTimeout(() => {
-        connectionSelectRef?.addConnection($workspaceConnections.draft?.templateId)
+        connectionSelectRef?.addConnection(
+          $workspaceConnections.draft?.templateId
+        )
       }, 200)
     } else if (
       $workspaceConnections.draft &&

@@ -697,7 +697,8 @@
             {#each filteredConnectorTemplates as template (template.id)}
               <div
                 class="item"
-                class:selected={selectedIndex === connectorOrderMap[template.id]}
+                class:selected={selectedIndex ===
+                  connectorOrderMap[template.id]}
                 role="button"
                 tabindex={0}
                 on:click={() => selectConnector(template)}
