@@ -21,6 +21,31 @@
     },
   ]
 
+  const screenTargetOptions = [
+    { label: "Current tab", value: "self" },
+    { label: "New tab", value: "newTab" },
+    { label: "Modal", value: "modal" },
+  ]
+
+  // Derived for display only - never written back on load, so existing
+  // actions keep their behaviour unless the user actively changes it.
+  $: screenTarget = getScreenTarget(parameters)
+
+  const getScreenTarget = params => {
+    if (params.peek) {
+      return "modal"
+    }
+    if (params.screenNewTab) {
+      return "newTab"
+    }
+    return "self"
+  }
+
+  const setScreenTarget = value => {
+    parameters.peek = value === "modal"
+    parameters.screenNewTab = value === "newTab"
+  }
+
   onMount(() => {
     if (!parameters.type) {
       parameters.type = "screen"
@@ -48,8 +73,13 @@
       options={$urlOptions}
       appendBindingsAsOptions={false}
     />
-    <div></div>
-    <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
+    <Label small>Open in</Label>
+    <Select
+      placeholder={null}
+      value={screenTarget}
+      options={screenTargetOptions}
+      on:change={e => setScreenTarget(e.detail)}
+    />
   {:else}
     <DrawerBindableInput
       title="Destination"
