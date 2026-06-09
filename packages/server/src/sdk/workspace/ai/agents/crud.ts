@@ -179,7 +179,7 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
       {
         id: "operation_default",
         name: raw.operationName || DEFAULT_OPERATION_NAME,
-        live: false,
+        live: true,
         promptInstructions: raw.promptInstructions || "",
         enabledTools: raw.enabledTools || [],
         knowledgeBases: raw.knowledgeBases || [],
