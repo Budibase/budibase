@@ -15,6 +15,7 @@ import type {
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import { assertAgentHasValidConfig } from "./utils"
+import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 
 // TODO: this will eventually go away, after a grace period
 type DeprecatedAgent = Agent & {
@@ -454,45 +455,24 @@ export async function update(agent: Agent): Promise<Agent> {
   }
 
   const now = new Date().toISOString()
-  const hasOperations = Object.prototype.hasOwnProperty.call(
-    agent,
-    "operations"
+  const removedOperations = (existing.operations ?? []).filter(
+    existingOperation =>
+      existingOperation.id &&
+      !(agent.operations ?? []).some(
+        incomingOperation => incomingOperation.id === existingOperation.id
+      )
   )
-  const removedOperations =
-    hasOperations && agent.operations !== undefined
-      ? (existing.operations ?? []).filter(
-          existingOperation =>
-            existingOperation.id &&
-            !(agent.operations ?? []).some(
-              incomingOperation => incomingOperation.id === existingOperation.id
-            )
-        )
-      : []
-
-  for (const removedOperation of removedOperations) {
-    const { cleanupKnowledgeForOperation } = await import("../rag/files")
-    await cleanupKnowledgeForOperation(_id, removedOperation.id!)
-  }
 
   const updated: Agent = {
     ...existing,
     ...agent,
     updatedAt: now,
-    operations: hasOperations
-      ? (agent.operations ?? []).map(operation => ({
-          ...operation,
-          enabledTools: operation.enabledTools || [],
-          knowledgeBases: operation.knowledgeBases || [],
-          knowledgeSources: operation.knowledgeSources || [],
-        }))
-      : (
-          existing.operations || migrateOperations(agent as DeprecatedAgent)
-        ).map(operation => ({
-          ...operation,
-          enabledTools: operation.enabledTools || [],
-          knowledgeBases: operation.knowledgeBases || [],
-          knowledgeSources: operation.knowledgeSources || [],
-        })),
+    operations: (agent.operations ?? []).map(operation => ({
+      ...operation,
+      enabledTools: operation.enabledTools || [],
+      knowledgeBases: operation.knowledgeBases || [],
+      knowledgeSources: operation.knowledgeSources || [],
+    })),
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
@@ -534,9 +514,10 @@ export async function update(agent: Agent): Promise<Agent> {
   updated._rev = rev
   const result = withAgentDefaults(updated)
   if (removedOperations.length > 0) {
-    const knowledgeSourceSyncQueue = await import(
-      "../rag/sources/knowledgeSourceSyncQueue"
-    )
+    for (const removedOperation of removedOperations) {
+      await cleanupKnowledgeForOperation(_id, removedOperation.id!)
+    }
+
     await knowledgeSourceSyncQueue.reconcileAgentJobs(result)
   }
   events.ai.agentUpdated(result)
