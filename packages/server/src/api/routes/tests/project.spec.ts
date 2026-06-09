@@ -714,17 +714,20 @@ describe("/projects", () => {
         projectId: project._id,
       })
 
-      const { workspaceApp: updatedWorkspaceApp } =
-        await config.api.workspaceApp.update({
-          _id: workspaceApp._id,
-          _rev: workspaceApp._rev,
-          name: "Ops app updated",
-          url: workspaceApp.url,
-          navigation: workspaceApp.navigation,
-          theme: workspaceApp.theme,
-          customTheme: workspaceApp.customTheme,
-          disabled: workspaceApp.disabled,
-        })
+      const updatedWorkspaceApp = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () =>
+          await sdk.workspaceApps.update({
+            _id: workspaceApp._id,
+            _rev: workspaceApp._rev,
+            name: "Ops app updated",
+            url: workspaceApp.url,
+            navigation: workspaceApp.navigation,
+            theme: workspaceApp.theme,
+            customTheme: workspaceApp.customTheme,
+            disabled: workspaceApp.disabled,
+          })
+      )
 
       const { projectId: _automationProjectId, ...automationUpdate } =
         assignedAutomation
