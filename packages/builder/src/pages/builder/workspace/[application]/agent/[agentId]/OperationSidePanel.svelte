@@ -231,16 +231,11 @@
             </Body>
           </div>
           <div class="operation-panel-header-actions">
-            <button
-              class="operation-status-pill"
-              type="button"
-              aria-label={operationLive
-                ? "Stop operation"
-                : "Set operation live"}
+            <OperationLiveBadge
+              live={operationLive}
+              showMenuIcon
               onclick={openHeaderMenu}
-            >
-              <OperationLiveBadge live={operationLive} hoverable showMenuIcon />
-            </button>
+            />
             <Icon name="x" hoverable on:click={onClose} />
           </div>
         </div>
@@ -401,13 +396,6 @@
   .operation-panel-header-actions {
     display: flex;
     gap: var(--spacing-s);
-  }
-
-  .operation-status-pill {
-    border: 0;
-    background: transparent;
-    padding: 0;
-    cursor: pointer;
   }
 
   .operation-panel-section {

@@ -3,17 +3,19 @@
 
   let {
     live = false,
-    hoverable = false,
     showMenuIcon = false,
+    onclick,
   }: {
     live?: boolean
-    hoverable?: boolean
     showMenuIcon?: boolean
+    onclick?: (event: MouseEvent) => void
   } = $props()
+
+  let ariaLabel = $derived(live ? "Stop operation" : "Set operation live")
 </script>
 
-<div class="operation-live-badge">
-  <Badge size="S" {hoverable}>
+{#snippet badgeContent()}
+  <Badge size="S">
     <span class="operation-status-pill-content">
       <StatusLight size="S" positive={live} negative={!live} />
       <span>{live ? "Live" : "Stopped"}</span>
@@ -22,16 +24,42 @@
       {/if}
     </span>
   </Badge>
-</div>
+{/snippet}
+
+{#if onclick}
+  <button
+    type="button"
+    class="operation-live-badge interactive"
+    aria-label={ariaLabel}
+    {onclick}
+  >
+    {@render badgeContent()}
+  </button>
+{:else}
+  <div class="operation-live-badge">
+    {@render badgeContent()}
+  </div>
+{/if}
 
 <style>
+  .operation-live-badge.interactive {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
   .operation-live-badge :global(.spectrum-Label) {
     background-color: var(--spectrum-global-color-gray-200);
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .operation-live-badge :global(.spectrum-Label.hoverable:hover) {
+  .operation-live-badge.interactive:hover :global(.spectrum-Label) {
     background-color: var(--spectrum-global-color-gray-300);
+  }
+
+  .operation-live-badge.interactive :global(*) {
+    pointer-events: none;
   }
 
   .operation-status-pill-content {
