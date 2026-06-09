@@ -8,7 +8,7 @@ const mockKnowledgeBaseGetFileOrThrow = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
 const mockKnowledgeBaseRemove = jest.fn()
 const mockDeleteSharePointFilesForOperationSite = jest.fn()
-const mockDeleteKnowledgeSourceSyncStateForAgent = jest.fn()
+const mockDeleteKnowledgeSourceSyncStateForOperation = jest.fn()
 const mockReconcileAgentJobs = jest.fn()
 
 const mockProcessorIngest = jest.fn()
@@ -47,8 +47,8 @@ jest.mock("..", () => ({
 jest.mock("./sources/sharepoint/sharepoint", () => ({
   deleteSharePointFilesForOperationSite: (...args: any[]) =>
     mockDeleteSharePointFilesForOperationSite(...args),
-  deleteKnowledgeSourceSyncStateForAgent: (...args: any[]) =>
-    mockDeleteKnowledgeSourceSyncStateForAgent(...args),
+  deleteKnowledgeSourceSyncStateForOperation: (...args: any[]) =>
+    mockDeleteKnowledgeSourceSyncStateForOperation(...args),
 }))
 
 jest.mock("./sources/knowledgeSourceSyncQueue", () => ({
@@ -856,6 +856,9 @@ describe("rag files", () => {
         files[0]
       )
       expect(mockKnowledgeBaseRemove).toHaveBeenCalledWith("kb_1")
+      expect(
+        mockDeleteKnowledgeSourceSyncStateForOperation
+      ).toHaveBeenCalledWith("agent_1", "operation_1")
       expect(mockAgentsUpdate).not.toHaveBeenCalled()
       expect(mockReconcileAgentJobs).not.toHaveBeenCalled()
     })

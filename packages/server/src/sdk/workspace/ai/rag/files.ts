@@ -17,7 +17,7 @@ import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
 import { ObjectStoreBuckets } from "../../../../constants"
 import {
-  deleteKnowledgeSourceSyncStateForAgent,
+  deleteKnowledgeSourceSyncStateForOperation,
   deleteSharePointFilesForOperationSite,
 } from "./sources/sharepoint/sharepoint"
 
@@ -284,8 +284,9 @@ export const cleanupKnowledgeForOperation = async (
       continue
     }
     await deleteSharePointFilesForOperationSite(agentId, operationId, siteId)
-    await deleteKnowledgeSourceSyncStateForAgent(agentId, source.id)
   }
+
+  await deleteKnowledgeSourceSyncStateForOperation(agentId, operationId)
 
   const knowledgeBaseIds = (operation.knowledgeBases || []).filter(Boolean)
   for (const knowledgeBaseId of knowledgeBaseIds) {

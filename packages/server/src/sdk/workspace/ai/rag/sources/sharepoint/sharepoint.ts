@@ -315,6 +315,38 @@ export const fetchKnowledgeSourceSyncStateForAgent = async (
   return { runs }
 }
 
+export const getSharePointSourceIdPrefixForOperation = (operationId: string) =>
+  `sharepoint_site_${operationId.replace(/[^a-zA-Z0-9_-]/g, "_")}_`
+
+export const deleteKnowledgeSourceSyncStateForOperation = async (
+  agentId: string,
+  operationId: string
+) => {
+  const sourceIdPrefix = getSharePointSourceIdPrefixForOperation(operationId)
+  const db = context.getWorkspaceDB()
+  const result = await db.allDocs<AgentKnowledgeSourceSyncState>(
+    docIds.getDocParams(
+      DocumentType.AGENT_KNOWLEDGE_SOURCE_SYNC_STATE,
+      `${agentId}_`,
+      { include_docs: true }
+    )
+  )
+  const docsToDelete = result.rows
+    .map(row => row.doc)
+    .filter(
+      (doc): doc is AgentKnowledgeSourceSyncState => !!doc?._id && !!doc._rev
+    )
+    .filter(doc => doc.sourceId.startsWith(sourceIdPrefix))
+    .map(doc => ({
+      ...doc,
+      _deleted: true,
+    }))
+
+  if (docsToDelete.length > 0) {
+    await db.bulkDocs(docsToDelete)
+  }
+}
+
 export const deleteKnowledgeSourceSyncStateForAgent = async (
   agentId: string,
   sourceId?: string
