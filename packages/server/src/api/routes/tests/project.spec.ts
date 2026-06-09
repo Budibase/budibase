@@ -502,14 +502,16 @@ describe("/projects", () => {
         ...basicDatasource().datasource,
         projectId: project._id,
       })
+      const entityKey = "TestTable"
       const externalTable = basicTable(datasource, {
-        _id: buildExternalTableId(datasource._id!, "TestTable"),
+        _id: buildExternalTableId(datasource._id!, entityKey),
+        name: "Updated table",
         projectId: project._id,
       })
       await config.api.datasource.update({
         ...datasource,
         entities: {
-          [externalTable.name]: externalTable,
+          [entityKey]: externalTable,
         },
       })
 
@@ -517,9 +519,9 @@ describe("/projects", () => {
 
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
       expect(fetchedDatasource.projectId).toBeUndefined()
-      expect(
-        fetchedDatasource.entities![externalTable.name].projectId
-      ).toBeUndefined()
+      expect(fetchedDatasource.entities![entityKey].projectId).toBeUndefined()
+      expect(fetchedDatasource.entities![externalTable.name]).toBeUndefined()
+      expect(Object.keys(fetchedDatasource.entities!)).toEqual([entityKey])
     })
   })
 

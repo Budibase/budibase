@@ -1,5 +1,6 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { Datasource, Project, WithoutDocMetadata } from "@budibase/types"
+import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../.."
 
 type ProjectUpdate = Pick<Project, "_id" | "_rev"> &
@@ -151,7 +152,9 @@ async function clearAssignments(projectId: string) {
         return async () => await sdk.ai.agents.update({ ...updated, projectId })
       }),
     ...tables
-      .filter(table => table.projectId === projectId)
+      .filter(
+        table => table.projectId === projectId && !isExternalTableID(table._id!)
+      )
       .map(table => async () => {
         const updated = await sdk.tables.saveTable({
           ...table,
@@ -166,16 +169,50 @@ async function clearAssignments(projectId: string) {
         return async () =>
           await db.put({ ...query, _rev: response.rev, projectId })
       }),
-    ...datasources
-      .filter(datasource => datasource.projectId === projectId)
-      .map(datasource => async () => {
-        const current = await db.get<Datasource>(datasource._id!)
-        await db.put({ ...current, projectId: undefined })
-        return async () => {
-          const updated = await db.get<Datasource>(datasource._id!)
-          await db.put({ ...updated, projectId })
-        }
-      }),
+    ...datasources.flatMap(datasource => {
+      const entityKeys = Object.entries(datasource.entities || {})
+        .filter(([_, entity]) => entity.projectId === projectId)
+        .map(([key]) => key)
+      const clearDatasourceProjectId = datasource.projectId === projectId
+      if (!clearDatasourceProjectId && !entityKeys.length) {
+        return []
+      }
+
+      return [
+        async () => {
+          const current = await db.get<Datasource>(datasource._id!)
+          const entities = { ...current.entities }
+          for (const key of entityKeys) {
+            const entity = entities[key]
+            if (entity) {
+              entities[key] = { ...entity, projectId: undefined }
+            }
+          }
+          await db.put({
+            ...current,
+            projectId: clearDatasourceProjectId ? undefined : current.projectId,
+            entities,
+          })
+          return async () => {
+            const updated = await db.get<Datasource>(datasource._id!)
+            const restoredEntities = { ...updated.entities }
+            for (const key of entityKeys) {
+              const entity = restoredEntities[key]
+              if (entity) {
+                restoredEntities[key] = { ...entity, projectId }
+              }
+            }
+            await db.put({
+              ...updated,
+              projectId: clearDatasourceProjectId
+                ? projectId
+                : updated.projectId,
+              entities: restoredEntities,
+            })
+          }
+        },
+      ]
+    }),
   ]
 
   return await applyAssignmentUpdates(updates)
