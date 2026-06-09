@@ -26,7 +26,6 @@
     getEvaluatableConditions,
     getActiveConditions,
     reduceConditionActions,
-    shouldHonorDisabledConditions,
   } from "@/utils/conditions"
   import EmptyPlaceholder from "@/components/app/EmptyPlaceholder.svelte"
   import ScreenPlaceholder from "@/components/app/ScreenPlaceholder.svelte"
@@ -520,13 +519,7 @@
       visible = true
       return
     }
-    const honorDisabledConditions = shouldHonorDisabledConditions({
-      inBuilder: $builderStore.inBuilder,
-      isDevApp: $appStore.isDevApp,
-    })
-    const evaluatableConditions = getEvaluatableConditions(conditions, {
-      honorDisabledConditions,
-    })
+    const evaluatableConditions = getEvaluatableConditions(conditions)
 
     // Default visible to false if there is a show condition
     let nextVisible = !evaluatableConditions.find(
@@ -534,9 +527,7 @@
     )
 
     // Execute conditions and determine settings and visibility changes
-    const activeConditions = getActiveConditions(evaluatableConditions, {
-      honorDisabledConditions,
-    })
+    const activeConditions = getActiveConditions(evaluatableConditions)
     const result = reduceConditionActions(activeConditions)
     if (result.visible != null) {
       nextVisible = result.visible

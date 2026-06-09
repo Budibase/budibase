@@ -42,13 +42,8 @@ describe("resolveCollapsedButtons", () => {
     mockGetSettingsDefinition.mockReturnValue([
       { key: "onClick", type: "event" },
     ])
-    mockGetEvaluatableConditions.mockImplementation(
-      (conditions, { honorDisabledConditions } = {}) => {
-        if (!honorDisabledConditions) {
-          return conditions
-        }
-        return conditions.filter(condition => !condition.disabled)
-      }
+    mockGetEvaluatableConditions.mockImplementation(conditions =>
+      conditions.filter(condition => !condition.disabled)
     )
   })
 
@@ -148,28 +143,5 @@ describe("resolveCollapsedButtons", () => {
     )
     await result[0].onClick()
     expect(enrichButtonActions).toHaveBeenCalledTimes(1)
-  })
-
-  it("ignores disabled conditions when disabled handling is turned off", async () => {
-    const resolveCollapsedButtons = await setupResolver()
-    mockEnrichProps.mockImplementation(props => ({
-      ...props,
-      _conditions: [{ action: "show", disabled: true }],
-    }))
-    mockGetActiveConditions.mockReturnValue([
-      { action: "show", disabled: true },
-    ])
-    mockReduceConditionActions.mockReturnValue({
-      settingUpdates: {},
-      visible: true,
-    })
-
-    const result = resolveCollapsedButtons(
-      [{ text: "Visible" }],
-      {},
-      vi.fn(),
-      false
-    )
-    expect(result).toHaveLength(1)
   })
 })

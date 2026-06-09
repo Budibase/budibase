@@ -33,25 +33,18 @@ const getButtonSettingsDefinitionMap = () => {
   return buttonSettingsDefinitionMap
 }
 
-const evaluateButtonConditions = (
-  conditions,
-  honorDisabledConditions = true
-) => {
+const evaluateButtonConditions = conditions => {
   if (!conditions?.length) {
     return { visible: true, settingUpdates: {} }
   }
 
-  const evaluatableConditions = getEvaluatableConditions(conditions, {
-    honorDisabledConditions,
-  })
+  const evaluatableConditions = getEvaluatableConditions(conditions)
 
   // Keep in line with Component.svelte's condition evaluation behavior.
   let visible = !evaluatableConditions.find(
     condition => condition.action === "show"
   )
-  const activeConditions = getActiveConditions(evaluatableConditions, {
-    honorDisabledConditions,
-  })
+  const activeConditions = getActiveConditions(evaluatableConditions)
   const result = reduceConditionActions(activeConditions)
   if (result.visible != null) {
     visible = result.visible
@@ -64,8 +57,7 @@ const buildCollapsedButton = (
   button,
   context,
   enrichButtonActions,
-  settingsDefinitionMap,
-  honorDisabledConditions
+  settingsDefinitionMap
 ) => {
   const rawConditions = button?._conditions || button?.conditions
   // Enrich bindings so dynamic text/actions/conditions resolve in collapsed mode.
@@ -78,8 +70,7 @@ const buildCollapsedButton = (
     settingsDefinitionMap
   )
   const { visible, settingUpdates } = evaluateButtonConditions(
-    enriched._conditions,
-    honorDisabledConditions
+    enriched._conditions
   )
 
   if (!visible) {
@@ -109,8 +100,7 @@ const buildCollapsedButton = (
 export const resolveCollapsedButtons = (
   buttons,
   context,
-  enrichButtonActions,
-  honorDisabledConditions = true
+  enrichButtonActions
 ) => {
   if (!buttons?.length) {
     return []
@@ -124,8 +114,7 @@ export const resolveCollapsedButtons = (
         button,
         context,
         enrichButtonActions,
-        settingsDefinitionMap,
-        honorDisabledConditions
+        settingsDefinitionMap
       )
     )
     .filter(Boolean)

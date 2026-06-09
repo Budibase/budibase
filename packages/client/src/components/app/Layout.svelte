@@ -10,7 +10,6 @@
     getEvaluatableConditions,
     getActiveConditions,
     reduceConditionActions,
-    shouldHonorDisabledConditions,
   } from "@/utils/conditions"
   import { appStore } from "@/stores/app"
   import { authStore } from "@/stores/auth"
@@ -238,18 +237,10 @@
 
   function evaluateNavItemConditions(conditions = []) {
     if (!conditions?.length) return true
-    const honorDisabledConditions = shouldHonorDisabledConditions({
-      inBuilder: $builderStore.inBuilder,
-      isDevApp: $appStore.isDevApp,
-    })
-    const evaluatableConditions = getEvaluatableConditions(conditions, {
-      honorDisabledConditions,
-    })
+    const evaluatableConditions = getEvaluatableConditions(conditions)
 
     // Get only the active (matching) conditions
-    const activeConditions = getActiveConditions(evaluatableConditions, {
-      honorDisabledConditions,
-    })
+    const activeConditions = getActiveConditions(evaluatableConditions)
     const { visible } = reduceConditionActions(activeConditions)
 
     if (visible == null) {

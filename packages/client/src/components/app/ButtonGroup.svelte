@@ -4,9 +4,6 @@
   import { CollapsedButtonGroup } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { resolveCollapsedButtons } from "@/utils/collapsedButtonGroup"
-  import { shouldHonorDisabledConditions } from "@/utils/conditions"
-  import { appStore } from "@/stores/app"
-  import { builderStore } from "@/stores/builder"
 
   export let buttons = []
   export let direction = "row"
@@ -21,15 +18,7 @@
   const context = getContext("context")
 
   $: collapsedButtons = collapsed
-    ? resolveCollapsedButtons(
-        buttons,
-        $context,
-        enrichButtonActions,
-        shouldHonorDisabledConditions({
-          inBuilder: $builderStore.inBuilder,
-          isDevApp: $appStore.isDevApp,
-        })
-      )
+    ? resolveCollapsedButtons(buttons, $context, enrichButtonActions)
     : null
 </script>
 

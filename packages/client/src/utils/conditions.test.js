@@ -4,7 +4,6 @@ import {
   enrichGridConditions,
   getEvaluatableConditions,
   getActiveConditions,
-  shouldHonorDisabledConditions,
 } from "./conditions"
 
 describe("enrichGridConditions", () => {
@@ -43,45 +42,12 @@ describe("getActiveConditions", () => {
 
     expect(active).toEqual([])
   })
-
-  it("ignores disabled flag when disabled handling is turned off", () => {
-    const active = getActiveConditions(
-      [
-        {
-          disabled: true,
-          valueType: "string",
-          operator: "equal",
-          referenceValue: "x",
-          newValue: "x",
-        },
-      ],
-      { honorDisabledConditions: false }
-    )
-
-    expect(active).toHaveLength(1)
-  })
 })
 
-describe("disabled condition helpers", () => {
-  it("always honors disabled conditions", () => {
-    expect(
-      shouldHonorDisabledConditions({ inBuilder: true, isDevApp: false })
-    ).toEqual(true)
-    expect(
-      shouldHonorDisabledConditions({ inBuilder: false, isDevApp: true })
-    ).toEqual(true)
-    expect(
-      shouldHonorDisabledConditions({ inBuilder: false, isDevApp: false })
-    ).toEqual(true)
-  })
-
-  it("returns evaluatable conditions based on disabled handling mode", () => {
+describe("getEvaluatableConditions", () => {
+  it("filters disabled conditions", () => {
     const conditions = [{ disabled: true }, { disabled: false }]
-    expect(
-      getEvaluatableConditions(conditions, { honorDisabledConditions: true })
-    ).toEqual([{ disabled: false }])
-    expect(
-      getEvaluatableConditions(conditions, { honorDisabledConditions: false })
-    ).toEqual(conditions)
+
+    expect(getEvaluatableConditions(conditions)).toEqual([{ disabled: false }])
   })
 })
