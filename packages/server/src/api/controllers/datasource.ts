@@ -1,4 +1,9 @@
-import { context, db as dbCore, events } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   BuildSchemaFromSourceRequest,
   BuildSchemaFromSourceResponse,
@@ -208,6 +213,9 @@ async function invalidateVariables(
   await invalidateCachedVariable(toInvalidate)
 }
 
+const isDatasourceEntity = (entity: unknown): entity is Table =>
+  typeof entity === "object" && entity !== null && !Array.isArray(entity)
+
 const resolveDatasourceEntityProjectIds = async (
   datasource: Datasource,
   existingDatasource?: Datasource
@@ -216,7 +224,11 @@ const resolveDatasourceEntityProjectIds = async (
     return
   }
 
-  for (const [name, entity] of Object.entries(datasource.entities)) {
+  for (const [name, entity] of Object.entries<unknown>(datasource.entities)) {
+    if (!isDatasourceEntity(entity)) {
+      throw new HTTPError(`Datasource entity '${name}' must be an object.`, 400)
+    }
+
     entity.projectId = existingDatasource
       ? await resolveUpdatedProjectId(
           entity.projectId,

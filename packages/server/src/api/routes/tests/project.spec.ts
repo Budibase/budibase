@@ -1,6 +1,6 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { FeatureFlag, type Project } from "@budibase/types"
+import { FeatureFlag, type Datasource, type Project } from "@budibase/types"
 import { toProjectResponse } from "../../controllers/project"
 import sdk from "../../../sdk"
 import { buildExternalTableId } from "../../../integrations/utils"
@@ -329,6 +329,31 @@ describe("/projects", () => {
       expect(fetchedDatasource.entities).toBeUndefined()
     })
   })
+
+  it.each([null, "invalid", []])(
+    "rejects malformed datasource entities",
+    async value => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const entities = {
+        TestTable: value,
+      } as unknown as NonNullable<Datasource["entities"]>
+
+      await config.api.datasource.update(
+        {
+          ...datasource,
+          entities,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Datasource entity 'TestTable' must be an object.",
+          },
+        }
+      )
+    }
+  )
 
   it("rejects external table project assignments while disabled", async () => {
     const datasource = await config.api.datasource.create(
