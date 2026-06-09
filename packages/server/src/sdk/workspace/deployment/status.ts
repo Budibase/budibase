@@ -92,14 +92,6 @@ export async function status() {
   })
 
   const normalizeAgentPayload = (agent: Agent, files: KnowledgeBaseFile[]) => {
-    const normalizedKnowledgeSources = (
-      agent.operations?.flatMap(
-        operation => operation.knowledgeSources ?? []
-      ) ?? []
-    )
-      .map(source => toComparableKnowledgeSource(source))
-      .sort((a, b) => a.id.localeCompare(b.id))
-
     const normalizedFiles = files
       .map(file => toComparableKnowledgeBaseFile(file))
       .sort((a, b) => {
@@ -115,10 +107,6 @@ export async function status() {
       aiconfig: agent.aiconfig,
       goal: agent.goal,
       live: agent.live,
-      enabledTools: normalizeArray(agent.operations?.[0]?.enabledTools || []),
-      knowledgeBases: normalizeArray(
-        agent.operations?.[0]?.knowledgeBases || []
-      ),
       discordIntegration: agent.discordIntegration
         ? {
             applicationId: agent.discordIntegration.applicationId,
@@ -153,7 +141,6 @@ export async function status() {
             requireUserLink: agent.slackIntegration.requireUserLink,
           }
         : undefined,
-      knowledgeSources: normalizedKnowledgeSources,
       files: normalizedFiles,
       operations: agent.operations?.map(operation => ({
         id: operation.id,
