@@ -143,7 +143,6 @@ describe("knowledgeTableRows", () => {
           lastRunAt: "2026-04-08T10:00:00.000Z",
         },
       ],
-      loadingSharePointSites: false,
       onDelete: async () => {},
       onSync: async () => {},
     })
@@ -151,6 +150,24 @@ describe("knowledgeTableRows", () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
     expect(rows[0].displayStatus).toBe("0/1 files")
+  })
+
+  it("shows loading label when site metadata is not available yet", () => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: { site: { id: "site-1" } },
+        },
+      ],
+      sharePointSourceSnapshots: [],
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].filename).toBe("Loading SharePoint site...")
+    expect(rows[0].displayStatus).toBe("Processing")
   })
 
   it("shows completed counts once syncing is done", () => {
@@ -173,7 +190,6 @@ describe("knowledgeTableRows", () => {
           lastRunAt: "2026-04-08T10:00:00.000Z",
         },
       ],
-      loadingSharePointSites: false,
       onDelete: async () => {},
       onSync: async () => {},
     })

@@ -117,10 +117,24 @@ export const getSharePointLastSyncLabel = (lastRunAt?: string) => {
   return `Last sync at ${formatTimestamp(lastRunAt)} - SharePoint`
 }
 
+const getSharePointSiteDisplayName = ({
+  site,
+  snapshot,
+}: {
+  site?: { id: string; name?: string; webUrl?: string }
+  snapshot?: SharePointKnowledgeSourceSnapshot
+}) => {
+  const resolvedName =
+    snapshot?.name || snapshot?.webUrl || site?.name || site?.webUrl
+  if (resolvedName) {
+    return resolvedName
+  }
+  return "Loading SharePoint site..."
+}
+
 export const toSharePointConnectionRows = ({
   sharePointSources,
   sharePointSourceSnapshots,
-  loadingSharePointSites,
   onDelete,
   onSync,
 }: {
@@ -129,7 +143,6 @@ export const toSharePointConnectionRows = ({
     config: { site?: { id: string; name?: string; webUrl?: string } }
   }>
   sharePointSourceSnapshots: SharePointKnowledgeSourceSnapshot[]
-  loadingSharePointSites: boolean
   onDelete: (siteId: string) => Promise<void>
   onSync: (sourceId: string) => Promise<void>
 }): SharePointConnectionTableRow[] => {
@@ -153,14 +166,7 @@ export const toSharePointConnectionRows = ({
       const syncFailures = snapshot?.failedCount || 0
       const processing = snapshot?.processingCount || 0
       const completed = Math.min(synced + syncFailures, total)
-      const siteDisplayName =
-        snapshot?.name ||
-        snapshot?.webUrl ||
-        site.name ||
-        site.webUrl ||
-        (loadingSharePointSites
-          ? "Loading SharePoint site..."
-          : "SharePoint site")
+      const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
       const displayStatus = !hasSynced
         ? "Processing"
         : total === 0

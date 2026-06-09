@@ -39,7 +39,7 @@
     createKnowledgePollingController,
   } from "./polling"
 
-  let { operation }: { operation?: AgentOperation } = $props()
+  let { operation = $bindable() }: { operation?: AgentOperation } = $props()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   const getOperationCacheKey = (agentId: string, operationId: string) =>
@@ -144,7 +144,7 @@
   let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
   let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
   let selectedSharePointSiteId = $state("")
-  let loadingSharePointSites = $state(false)
+  let activeKnowledgeLoadKey = $state<string | undefined>()
   const KNOWLEDGE_POLL_INTERVAL_MS = 1000
   const knowledgePollingController = createKnowledgePollingController({
     intervalMs: KNOWLEDGE_POLL_INTERVAL_MS,
@@ -216,7 +216,7 @@
   }
 
   const syncOperationKnowledgeFromStore = () => {
-    if (!operation) {
+    if (!operation?.id) {
       return
     }
 
@@ -224,9 +224,15 @@
     const latestOperation = latestAgent?.operations?.find(
       latest => latest.id === operation.id
     )
+    if (!latestOperation) {
+      return
+    }
 
-    operation.knowledgeBases = latestOperation?.knowledgeBases
-    operation.knowledgeSources = latestOperation?.knowledgeSources
+    operation = {
+      ...operation,
+      knowledgeBases: latestOperation.knowledgeBases,
+      knowledgeSources: latestOperation.knowledgeSources,
+    }
   }
 
   const showSharePointSyncResult = (
@@ -287,7 +293,6 @@
     return toSharePointConnectionRows({
       sharePointSources,
       sharePointSourceSnapshots,
-      loadingSharePointSites,
       onDelete: removeSharePointSite,
       onSync: async sourceId => {
         await syncSharePointNow(sourceId)
@@ -298,41 +303,46 @@
     return [...sharePointConnectionRows, ...fileTableRows]
   })
 
-  const loadInitialKnowledge = async (agentId: string, operationId: string) => {
-    loading = true
-    try {
-      if (
-        !$agentsStore.knowledgeByOperation[
-          getOperationCacheKey(agentId, operationId)
-        ]
-      ) {
-        await agentsStore.fetchAgentKnowledge(agentId)
-      }
-      initialKnowledgeLoadedForOperation = getOperationCacheKey(
-        agentId,
-        operationId
-      )
-    } finally {
-      loading = false
-    }
-  }
-
   $effect(() => {
     const agentId = currentAgent?._id
     const operationId = operation?.id
     if (!agentId || !operationId) {
       loading = false
       initialKnowledgeLoadedForOperation = undefined
+      activeKnowledgeLoadKey = undefined
       return
     }
+
     const cacheKey = getOperationCacheKey(agentId, operationId)
     if (initialKnowledgeLoadedForOperation === cacheKey) {
+      loading = false
       return
     }
-    loadInitialKnowledge(agentId, operationId).catch(error => {
-      console.error(error)
-      notifications.error("Failed to load knowledge")
-    })
+
+    activeKnowledgeLoadKey = cacheKey
+    loading = true
+
+    ;(async () => {
+      try {
+        if (!$agentsStore.knowledgeByOperation[cacheKey]) {
+          await agentsStore.fetchAgentKnowledge(agentId)
+        }
+        if (activeKnowledgeLoadKey !== cacheKey) {
+          return
+        }
+        initialKnowledgeLoadedForOperation = cacheKey
+      } catch (error) {
+        if (activeKnowledgeLoadKey !== cacheKey) {
+          return
+        }
+        console.error(error)
+        notifications.error("Failed to load knowledge")
+      } finally {
+        if (activeKnowledgeLoadKey === cacheKey) {
+          loading = false
+        }
+      }
+    })()
   })
 
   $effect(() => {

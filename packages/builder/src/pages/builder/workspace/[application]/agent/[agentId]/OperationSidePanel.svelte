@@ -347,7 +347,7 @@
             {/if}
           </div>
 
-          <Knowledge {operation}></Knowledge>
+          <Knowledge bind:operation />
         </div>
       </Panel>
     </ResizablePanel>
