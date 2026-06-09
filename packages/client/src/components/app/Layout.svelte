@@ -7,6 +7,7 @@
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
   import {
+    getEnabledConditions,
     getActiveConditions,
     reduceConditionActions,
   } from "@/utils/conditions"
@@ -235,14 +236,15 @@
 
   function evaluateNavItemConditions(conditions = []) {
     if (!conditions?.length) return true
+    const enabledConditions = getEnabledConditions(conditions)
 
     // Get only the active (matching) conditions
-    const activeConditions = getActiveConditions(conditions)
+    const activeConditions = getActiveConditions(enabledConditions)
     const { visible } = reduceConditionActions(activeConditions)
 
     if (visible == null) {
       // If any show condition exists, default to hidden unless one matches
-      const hasShow = conditions.some(cond => cond.action === "show")
+      const hasShow = enabledConditions.some(cond => cond.action === "show")
       return hasShow ? false : true
     }
     return visible
