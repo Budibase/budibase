@@ -9,6 +9,7 @@ import {
   FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
+  FetchAgentFileUrlResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentTelegramChannelRequest,
@@ -260,6 +261,20 @@ export class AgentAPI extends TestAPI {
   ): Promise<{ deleted: true }> => {
     return await this._delete<{ deleted: true }>(
       `/api/agent/${agentId}/operations/${operationId}/files/${fileId}`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  fetchFileUrl = async (
+    agentId: string,
+    operationId: string,
+    fileId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentFileUrlResponse> => {
+    return await this._get<FetchAgentFileUrlResponse>(
+      `/api/agent/${agentId}/operations/${operationId}/files/${fileId}/url`,
       {
         expectations,
       }

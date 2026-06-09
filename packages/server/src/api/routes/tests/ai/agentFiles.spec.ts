@@ -296,6 +296,78 @@ describe("agent files", () => {
     expect(files).toHaveLength(0)
   })
 
+  it("returns 403 when knowledge source downloads are disabled for the operation", async () => {
+    const created = await config.api.agent.create({
+      name: "Restricted Downloads Agent",
+      aiconfig: "default",
+      operations: [
+        {
+          ...operation,
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    })
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    mockGeminiIngest("gemini-file-download-blocked")
+
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "restricted.txt",
+      }
+    )
+
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    await config.api.agent.fetchFileUrl(
+      created._id!,
+      operationId,
+      upload.file._id!,
+      {
+        status: 403,
+        body: {
+          message: "Knowledge source downloads are disabled for this operation",
+        },
+      }
+    )
+  })
+
+  it("returns a file url when knowledge source downloads are allowed", async () => {
+    const created = await config.api.agent.create({
+      name: "Allowed Downloads Agent",
+      aiconfig: "default",
+      operations: [operation],
+    })
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    mockGeminiIngest("gemini-file-download-allowed")
+
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "allowed.txt",
+      }
+    )
+
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    const response = await config.api.agent.fetchFileUrl(
+      created._id!,
+      operationId,
+      upload.file._id!
+    )
+
+    expect(response.url).toEqual(expect.any(String))
+    expect(response.url.length).toBeGreaterThan(0)
+  })
+
   it("returns 400 when syncing SharePoint without a connected source", async () => {
     const created = await config.api.agent.create({
       name: "SharePoint Agent",

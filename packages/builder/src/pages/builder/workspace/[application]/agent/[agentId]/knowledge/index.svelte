@@ -321,7 +321,6 @@
 
     activeKnowledgeLoadKey = cacheKey
     loading = true
-
     ;(async () => {
       try {
         if (!$agentsStore.knowledgeByOperation[cacheKey]) {

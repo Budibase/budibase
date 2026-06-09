@@ -138,6 +138,31 @@ describe("agents crud", () => {
       ])
       expect(agents[0]).not.toHaveProperty("promptInstructions")
     })
+
+    it("returns no operations when operations is explicitly empty", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "agent_blank",
+              _rev: "1-abc",
+              name: "Blank Agent",
+              aiconfig: "cfg_1",
+              operations: [],
+            },
+          },
+        ],
+      })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents).toEqual([
+        expect.objectContaining({
+          _id: "agent_blank",
+          operations: [],
+        }),
+      ])
+    })
   })
 
   describe("remove", () => {
