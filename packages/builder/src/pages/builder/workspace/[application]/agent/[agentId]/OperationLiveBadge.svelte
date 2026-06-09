@@ -14,9 +14,7 @@
 
 <Badge size="S" grey {hoverable}>
   <span class="operation-status-pill-content">
-    <span class="operation-status-dot">
-      <StatusLight size="XS" positive={live} negative={!live} square />
-    </span>
+    <StatusLight size="S" positive={live} negative={!live} />
     <span>{live ? "Live" : "Stopped"}</span>
     {#if showMenuIcon}
       <Icon name="dots-three" size="XS" />
@@ -28,11 +26,7 @@
   .operation-status-pill-content {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-  }
-
-  .operation-status-dot {
-    display: inline-flex;
+    gap: 4px;
   }
 
   :global(.spectrum-Label--grey) {
