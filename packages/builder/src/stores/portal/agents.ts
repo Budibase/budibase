@@ -121,10 +121,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     operationId: string,
     live: boolean
   ) => {
-    const operations =
-      agent.operations?.map((operation: AgentOperation) =>
-        operation.id === operationId ? { ...operation, live } : operation
-      ) || []
+    const operations = agent.operations?.map((operation: AgentOperation) =>
+      operation.id === operationId ? { ...operation, live } : operation
+    )
 
     return await this.updateAgent({
       ...agent,
@@ -212,6 +211,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     const response = await API.fetchAgentKnowledge(agentId)
 
     this.update(state => {
+      for (const cacheKey of Object.keys(state.knowledgeByOperation)) {
+        if (cacheKey.startsWith(`${agentId}:`)) {
+          delete state.knowledgeByOperation[cacheKey]
+        }
+      }
+
       for (const [operationId, knowledge] of Object.entries(
         response.operations || {}
       )) {
