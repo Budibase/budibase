@@ -210,10 +210,11 @@ export class AgentAPI extends TestAPI {
 
   fetchFiles = async (
     agentId: string,
+    operationId: string,
     expectations?: Expectations
   ): Promise<FetchAgentKnowledgeResponse> => {
     return await this._get<FetchAgentKnowledgeResponse>(
-      `/api/agent/${agentId}/knowledge`,
+      `/api/agent/${agentId}/operations/${operationId}/knowledge`,
       {
         expectations,
       }
@@ -222,11 +223,12 @@ export class AgentAPI extends TestAPI {
 
   uploadFile = async (
     agentId: string,
+    operationId: string,
     file: AttachedFile,
     expectations?: Expectations
   ): Promise<AgentFileUploadResponse> => {
     return await this._post<AgentFileUploadResponse>(
-      `/api/agent/${agentId}/files`,
+      `/api/agent/${agentId}/operations/${operationId}/files`,
       {
         files: { file },
         expectations: {
@@ -239,11 +241,12 @@ export class AgentAPI extends TestAPI {
 
   removeFile = async (
     agentId: string,
+    operationId: string,
     fileId: string,
     expectations?: Expectations
   ): Promise<{ deleted: true }> => {
     return await this._delete<{ deleted: true }>(
-      `/api/agent/${agentId}/files/${fileId}`,
+      `/api/agent/${agentId}/operations/${operationId}/files/${fileId}`,
       {
         expectations,
       }
@@ -265,11 +268,12 @@ export class AgentAPI extends TestAPI {
 
   connectSharePointSite = async (
     agentId: string,
+    operationId: string,
     body: ConnectAgentSharePointSiteRequest,
     expectations?: Expectations
   ): Promise<ConnectAgentSharePointSiteResponse> => {
     return await this._post<ConnectAgentSharePointSiteResponse>(
-      `/api/agent/${agentId}/knowledge-sources/sharepoint/sites`,
+      `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/sites`,
       {
         body,
         expectations,
@@ -279,11 +283,12 @@ export class AgentAPI extends TestAPI {
 
   disconnectSharePointSite = async (
     agentId: string,
+    operationId: string,
     siteId: string,
     expectations?: Expectations
   ): Promise<DisconnectAgentSharePointSiteResponse> => {
     return await this._delete<DisconnectAgentSharePointSiteResponse>(
-      `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+      `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
       {
         expectations,
       }
@@ -292,12 +297,13 @@ export class AgentAPI extends TestAPI {
 
   syncKnowledgeSources = async (
     agentId: string,
+    operationId: string,
     sourceId: string,
     body?: SyncAgentKnowledgeSourcesRequest,
     expectations?: Expectations
   ): Promise<SyncAgentKnowledgeSourcesResponse> => {
     return await this._post<SyncAgentKnowledgeSourcesResponse>(
-      `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
+      `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
       {
         body,
         expectations,

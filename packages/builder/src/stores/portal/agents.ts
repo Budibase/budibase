@@ -34,7 +34,7 @@ interface AgentStoreState {
   currentAgentId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
-  knowledgeByAgent: Record<
+  knowledgeByOperation: Record<
     string,
     {
       files: KnowledgeBaseFile[]
@@ -49,9 +49,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      knowledgeByAgent: {},
+      knowledgeByOperation: {},
     })
   }
+
+  private getKnowledgeCacheKey = (agentId: string, operationId: string) =>
+    `${agentId}:${operationId}`
 
   init = async () => {
     await this.fetchAgents()
@@ -202,26 +205,34 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.toggleAgentTelegramDeployment(agentId, enabled)
     )
 
-  fetchAgentKnowledge = async (
-    agentId: string
+  fetchOperationKnowledge = async (
+    agentId: string,
+    operationId: string
   ): Promise<FetchAgentKnowledgeResponse> => {
-    const response = await API.fetchAgentKnowledge(agentId)
+    const response = await API.fetchOperationKnowledge(agentId, operationId)
+    const cacheKey = this.getKnowledgeCacheKey(agentId, operationId)
 
     this.update(state => {
-      state.knowledgeByAgent[agentId] = response
+      state.knowledgeByOperation[cacheKey] = response
       return state
     })
     return response
   }
 
-  uploadAgentFile = async (
+  uploadOperationFile = async (
     agentId: string,
+    operationId: string,
     file: File
   ): Promise<AgentFileUploadResponse> =>
-    await this.runAndRefreshAgents(() => API.uploadAgentFile(agentId, file))
+    await this.runAndRefreshAgents(() =>
+      API.uploadOperationFile(agentId, operationId, file)
+    )
 
-  deleteAgentFile = async (agentId: string, fileId: string) =>
-    await API.deleteAgentFile(agentId, fileId)
+  deleteOperationFile = async (
+    agentId: string,
+    operationId: string,
+    fileId: string
+  ) => await API.deleteOperationFile(agentId, operationId, fileId)
 
   fetchAgentKnowledgeSourceOptions = async (
     datasourceId: string,
@@ -233,60 +244,91 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
   }
 
-  fetchAgentKnowledgeSourceAllEntries = async (
+  fetchOperationKnowledgeSourceAllEntries = async (
     agentId: string,
+    operationId: string,
     siteId: string
   ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-    return await API.fetchAgentKnowledgeSourceAllEntries(agentId, siteId)
+    return await API.fetchOperationKnowledgeSourceAllEntries(
+      agentId,
+      operationId,
+      siteId
+    )
   }
 
-  connectAgentSharePointSite = async (
+  connectOperationSharePointSite = async (
     agentId: string,
+    operationId: string,
     body: ConnectAgentSharePointSiteRequest
   ): Promise<ConnectAgentSharePointSiteResponse> => {
-    const response = await API.connectAgentSharePointSite(agentId, body)
+    const response = await API.connectOperationSharePointSite(
+      agentId,
+      operationId,
+      body
+    )
     await this.fetchAgents()
-    await this.fetchAgentKnowledge(agentId)
+    await this.fetchOperationKnowledge(agentId, operationId)
     return response
   }
 
-  updateAgentSharePointSite = async (
+  updateOperationSharePointSite = async (
     agentId: string,
+    operationId: string,
     siteId: string,
     body: UpdateAgentSharePointSiteRequest
   ): Promise<UpdateAgentSharePointSiteResponse> => {
-    return await API.updateAgentSharePointSite(agentId, siteId, body)
+    return await API.updateOperationSharePointSite(
+      agentId,
+      operationId,
+      siteId,
+      body
+    )
   }
 
-  applyAgentSharePointSiteFilters = async (
+  applyOperationSharePointSiteFilters = async (
     agentId: string,
+    operationId: string,
     siteId: string,
     body: UpdateAgentSharePointSiteRequest
   ): Promise<UpdateAgentSharePointSiteResponse> => {
-    const response = await this.updateAgentSharePointSite(agentId, siteId, body)
-    await this.fetchAgentKnowledge(agentId)
+    const response = await this.updateOperationSharePointSite(
+      agentId,
+      operationId,
+      siteId,
+      body
+    )
+    await this.fetchOperationKnowledge(agentId, operationId)
     await this.fetchAgents()
     return response
   }
 
-  disconnectAgentSharePointSite = async (
+  disconnectOperationSharePointSite = async (
     agentId: string,
+    operationId: string,
     siteId: string
   ): Promise<DisconnectAgentSharePointSiteResponse> => {
-    const response = await API.disconnectAgentSharePointSite(agentId, siteId)
+    const response = await API.disconnectOperationSharePointSite(
+      agentId,
+      operationId,
+      siteId
+    )
     await this.fetchAgents()
     return response
   }
 
-  syncAgentKnowledgeSources = async (
+  syncOperationKnowledgeSources = async (
     agentId: string,
+    operationId: string,
     sourceId: string
   ): Promise<SyncAgentKnowledgeSourcesResponse> =>
-    await API.syncAgentKnowledgeSources(agentId, sourceId)
+    await API.syncOperationKnowledgeSources(agentId, operationId, sourceId)
 
-  resetKnowledgeBaseStore = async (agentId: string): Promise<void> => {
-    await API.resetAgentKnowledgeBaseStore(agentId)
-    await this.fetchAgentKnowledge(agentId)
+  resetOperationKnowledgeBaseStore = async (
+    agentId: string,
+    operationId: string
+  ): Promise<void> => {
+    await API.resetOperationKnowledgeBaseStore(agentId, operationId)
+    await this.fetchOperationKnowledge(agentId, operationId)
   }
 }
 export const agentsStore = new AgentsStore()

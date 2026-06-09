@@ -13,24 +13,23 @@
 
   export interface Props {
     agentId?: string
+    operationId?: string
     isUploading?: boolean
     uploadProgress?: string
-    onPendingUploadsAdded?: (
-      _agentId: string,
-      _uploads: PendingUpload[]
-    ) => void
-    onPendingUploadRemoved?: (_agentId: string, _tempId: string) => void
+    onPendingUploadsAdded?: (cacheKey: string, uploads: PendingUpload[]) => void
+    onPendingUploadRemoved?: (cacheKey: string, tempId: string) => void
     onUploadingChange?: (
-      _agentId: string,
-      _uploading: boolean,
-      _progress: string
+      cacheKey: string,
+      uploading: boolean,
+      progress: string
     ) => void
-    onUploaded?: (_agentId: string) => Promise<void>
+    onUploaded?: (agentId: string, operationId: string) => Promise<void>
     onSharePoint?: () => Promise<void> | void
   }
 
   let {
     agentId,
+    operationId,
     isUploading = false,
     uploadProgress = "",
     onPendingUploadsAdded,
@@ -42,6 +41,8 @@
 
   let fileInput = $state<HTMLInputElement>()
   let addKnowledgeModal = $state<AddKnowledgeModal>()
+  const getOperationCacheKey = (agentId: string, operationId: string) =>
+    `${agentId}:${operationId}`
 
   const openAddKnowledgeModal = () => {
     addKnowledgeModal?.show()
@@ -55,10 +56,11 @@
   }
 
   const handleFileUpload = async (event: Event) => {
-    if (!agentId) {
-      notifications.error("Missing agent context for file upload")
+    if (!agentId || !operationId) {
+      notifications.error("Missing operation context for file upload")
       return
     }
+    const cacheKey = getOperationCacheKey(agentId, operationId)
     const target = event.currentTarget as HTMLInputElement
     const selectedFiles = Array.from(target?.files || [])
     target.value = ""
@@ -73,7 +75,7 @@
     }))
 
     onPendingUploadsAdded?.(
-      agentId,
+      cacheKey,
       uploads.map(upload => ({
         tempId: upload.tempId,
         filename: upload.file.name,
@@ -83,7 +85,7 @@
       }))
     )
 
-    onUploadingChange?.(agentId, true, "")
+    onUploadingChange?.(cacheKey, true, "")
 
     let successfulUploads = 0
     const successfulTempIds: string[] = []
@@ -93,31 +95,35 @@
     try {
       for (const [index, upload] of uploads.entries()) {
         onUploadingChange?.(
-          agentId,
+          cacheKey,
           true,
           `Uploading ${index + 1}/${uploads.length}...`
         )
 
         if (upload.file.size > MAX_FILE_SIZE_BYTES) {
           oversizedUploads.push(upload.file.name)
-          onPendingUploadRemoved?.(agentId, upload.tempId)
+          onPendingUploadRemoved?.(cacheKey, upload.tempId)
           continue
         }
 
         try {
-          await agentsStore.uploadAgentFile(agentId, upload.file)
+          await agentsStore.uploadOperationFile(
+            agentId,
+            operationId,
+            upload.file
+          )
           successfulUploads += 1
           successfulTempIds.push(upload.tempId)
         } catch (error) {
           console.error(error)
           failedUploads.push(upload.file.name)
-          onPendingUploadRemoved?.(agentId, upload.tempId)
+          onPendingUploadRemoved?.(cacheKey, upload.tempId)
         }
       }
 
-      await onUploaded?.(agentId)
+      await onUploaded?.(agentId, operationId)
       for (const tempId of successfulTempIds) {
-        onPendingUploadRemoved?.(agentId, tempId)
+        onPendingUploadRemoved?.(cacheKey, tempId)
       }
 
       if (failedUploads.length === 0 && oversizedUploads.length === 0) {
@@ -157,7 +163,7 @@
           : "Failed to upload files"
       )
     } finally {
-      onUploadingChange?.(agentId, false, "")
+      onUploadingChange?.(cacheKey, false, "")
     }
   }
 

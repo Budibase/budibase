@@ -484,22 +484,34 @@
   }
 
   async function deleteOperationKnowledge() {
-    if (!currentAgent?._id) {
+    const currentOperation = draft.operations?.[0]
+    const operationId = currentOperation?.id
+    if (!currentAgent?._id || !operationId) {
       return
     }
 
     const agentId = currentAgent._id
-    const knowledge = await agentsStore.fetchAgentKnowledge(agentId)
+    const knowledge = await agentsStore.fetchOperationKnowledge(
+      agentId,
+      operationId
+    )
     const fileDeletes = (knowledge.files || [])
       .map(file => file._id)
       .filter((id): id is string => !!id)
-      .map(fileId => agentsStore.deleteAgentFile(agentId, fileId))
+      .map(fileId =>
+        agentsStore.deleteOperationFile(agentId, operationId, fileId)
+      )
 
-    const sourceDisconnects = (currentAgent.operations || [])
-      .flatMap(operation => operation.knowledgeSources || [])
+    const sourceDisconnects = (currentOperation?.knowledgeSources || [])
       .map(source => source.config?.site?.id)
       .filter((id): id is string => !!id)
-      .map(siteId => agentsStore.disconnectAgentSharePointSite(agentId, siteId))
+      .map(siteId =>
+        agentsStore.disconnectOperationSharePointSite(
+          agentId,
+          operationId,
+          siteId
+        )
+      )
 
     await Promise.all([...fileDeletes, ...sourceDisconnects])
   }

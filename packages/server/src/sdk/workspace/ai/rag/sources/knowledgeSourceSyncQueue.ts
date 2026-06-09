@@ -10,7 +10,7 @@ import { deleteFileForAgent } from "../files"
 import { getSharePointKnowledgeSources } from "../../agents/knowledgeConfig"
 import {
   deleteKnowledgeSourceSyncStateForAgent,
-  deleteSharePointFilesForAgentSite,
+  deleteSharePointFilesForOperationSite,
   syncSharePointSourcesForAgent,
 } from "./sharepoint/sharepoint"
 
@@ -39,6 +39,7 @@ interface KnowledgeBaseFileDeleteJob extends BaseKnowledgeSourceJob {
 
 interface SharePointSiteDisconnectJob extends BaseKnowledgeSourceJob {
   jobType: "disconnect_sharepoint_site"
+  operationId: string
   sourceId: string
   siteId: string
 }
@@ -171,7 +172,11 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
               await deleteFileForAgent(agentId, job.data.fileId)
               break
             case "disconnect_sharepoint_site":
-              await deleteSharePointFilesForAgentSite(agentId, job.data.siteId)
+              await deleteSharePointFilesForOperationSite(
+                agentId,
+                job.data.operationId,
+                job.data.siteId
+              )
               await deleteKnowledgeSourceSyncStateForAgent(
                 agentId,
                 job.data.sourceId
@@ -227,17 +232,19 @@ export async function enqueueDeleteFileJob(agentId: string, fileId: string) {
 
 export async function enqueueDisconnectSharePointSiteJob(
   agentId: string,
+  operationId: string,
   sourceId: string,
   siteId: string
 ) {
   const workspaceId = context.getWorkspaceId()
-  if (!workspaceId || !agentId || !sourceId || !siteId) {
+  if (!workspaceId || !agentId || !operationId || !sourceId || !siteId) {
     return
   }
   await enqueueJob({
     workspaceId,
     agentId,
     jobType: "disconnect_sharepoint_site",
+    operationId,
     sourceId,
     siteId,
   })

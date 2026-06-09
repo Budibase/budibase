@@ -125,17 +125,16 @@
   }
 
   const handleSelect = async (mode: SharePointSelectionMode) => {
-    if (!agentId || !selectedSiteId) {
+    if (!agentId || !operationId || !selectedSiteId) {
       return
     }
     saving = true
     try {
-      await agentsStore.connectAgentSharePointSite(agentId, {
+      await agentsStore.connectOperationSharePointSite(agentId, operationId, {
         datasourceId: selectedDatasourceId,
         authConfigId: selectedAuthConfigId,
         siteId: selectedSiteId,
         filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
-        operationId,
       })
       await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")

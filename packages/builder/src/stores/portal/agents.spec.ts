@@ -14,21 +14,25 @@ vi.mock("@/api", () => {
   return {
     API: {
       fetchAgents: vi.fn(),
-      fetchAgentKnowledge: vi.fn(),
-      uploadAgentFile: vi.fn(),
-      deleteAgentFile: vi.fn(),
-      syncAgentKnowledgeSources: vi.fn(),
-      resetAgentKnowledgeBaseStore: vi.fn(),
+      fetchOperationKnowledge: vi.fn(),
+      uploadOperationFile: vi.fn(),
+      deleteOperationFile: vi.fn(),
+      syncOperationKnowledgeSources: vi.fn(),
+      resetOperationKnowledgeBaseStore: vi.fn(),
     },
   }
 })
 
 const fetchAgents = vi.mocked(API.fetchAgents)
-const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
-const uploadAgentFile = vi.mocked(API.uploadAgentFile)
-const deleteAgentFile = vi.mocked(API.deleteAgentFile)
-const syncAgentKnowledgeSources = vi.mocked(API.syncAgentKnowledgeSources)
-const resetAgentKnowledgeBaseStore = vi.mocked(API.resetAgentKnowledgeBaseStore)
+const fetchOperationKnowledge = vi.mocked(API.fetchOperationKnowledge)
+const uploadOperationFile = vi.mocked(API.uploadOperationFile)
+const deleteOperationFile = vi.mocked(API.deleteOperationFile)
+const syncOperationKnowledgeSources = vi.mocked(
+  API.syncOperationKnowledgeSources
+)
+const resetOperationKnowledgeBaseStore = vi.mocked(
+  API.resetOperationKnowledgeBaseStore
+)
 
 describe("agentsStore sharepoint and file syncing", () => {
   let store: AgentsStore
@@ -40,7 +44,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      knowledgeByAgent: {},
+      knowledgeByOperation: {},
       currentAgentId: undefined,
     })
   })
@@ -49,8 +53,8 @@ describe("agentsStore sharepoint and file syncing", () => {
     vi.useRealTimers()
   })
 
-  it("syncAgentKnowledgeSources forwards sourceIds payload", async () => {
-    syncAgentKnowledgeSources.mockResolvedValue({
+  it("syncOperationKnowledgeSources forwards sourceIds payload", async () => {
+    syncOperationKnowledgeSources.mockResolvedValue({
       agentId: "agent_1",
       synced: 2,
       failed: 0,
@@ -60,14 +64,22 @@ describe("agentsStore sharepoint and file syncing", () => {
       totalDiscovered: 3,
     })
 
-    const result = await store.syncAgentKnowledgeSources("agent_1", "site-1")
+    const result = await store.syncOperationKnowledgeSources(
+      "agent_1",
+      "operation_1",
+      "site-1"
+    )
 
-    expect(syncAgentKnowledgeSources).toHaveBeenCalledWith("agent_1", "site-1")
+    expect(syncOperationKnowledgeSources).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "site-1"
+    )
     expect(result.synced).toBe(2)
     expect(result.totalDiscovered).toBe(3)
   })
 
-  it("fetchAgentKnowledge stores files by agent id", async () => {
+  it("fetchOperationKnowledge stores files by operation id", async () => {
     const files: KnowledgeBaseFile[] = [
       {
         _id: "kb_file_1",
@@ -87,16 +99,24 @@ describe("agentsStore sharepoint and file syncing", () => {
         uploadedBy: "user_1",
       },
     ]
-    fetchAgentKnowledge.mockResolvedValue({
+    fetchOperationKnowledge.mockResolvedValue({
       files,
       sharePointSources: [],
     })
 
-    const response = await store.fetchAgentKnowledge("agent_1")
+    const response = await store.fetchOperationKnowledge(
+      "agent_1",
+      "operation_1"
+    )
 
-    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+    expect(fetchOperationKnowledge).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1"
+    )
     expect(response.files).toHaveLength(1)
-    expect(get(store.store).knowledgeByAgent["agent_1"]).toEqual(response)
+    expect(
+      get(store.store).knowledgeByOperation["agent_1:operation_1"]
+    ).toEqual(response)
   })
 })
 
@@ -121,12 +141,16 @@ describe("AgentsStore file operations", () => {
         _id: "kb_file_1",
       } as AgentFileUploadResponse["file"],
     }
-    uploadAgentFile.mockResolvedValue(uploadResponse)
+    uploadOperationFile.mockResolvedValue(uploadResponse)
     fetchAgents.mockResolvedValue({ agents })
 
-    await store.uploadAgentFile("agent_1", {} as File)
+    await store.uploadOperationFile("agent_1", "operation_1", {} as File)
 
-    expect(uploadAgentFile).toHaveBeenCalledWith("agent_1", expect.anything())
+    expect(uploadOperationFile).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      expect.anything()
+    )
     expect(fetchAgents).toHaveBeenCalledTimes(1)
     expect(get(store.store).agents).toEqual(agents)
   })
@@ -142,19 +166,32 @@ describe("AgentsStore file operations", () => {
 
     fetchAgents.mockResolvedValue({ agents })
 
-    await store.deleteAgentFile("agent_1", "file_1")
+    await store.deleteOperationFile("agent_1", "operation_1", "file_1")
 
-    expect(deleteAgentFile).toHaveBeenCalledWith("agent_1", "file_1")
+    expect(deleteOperationFile).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "file_1"
+    )
     expect(fetchAgents).not.toHaveBeenCalled()
   })
 
-  it("calls resetAgentKnowledgeBaseStore and re-fetches knowledge on reset", async () => {
-    resetAgentKnowledgeBaseStore.mockResolvedValue(undefined)
-    fetchAgentKnowledge.mockResolvedValue({ files: [], sharePointSources: [] })
+  it("calls resetOperationKnowledgeBaseStore and re-fetches knowledge on reset", async () => {
+    resetOperationKnowledgeBaseStore.mockResolvedValue(undefined)
+    fetchOperationKnowledge.mockResolvedValue({
+      files: [],
+      sharePointSources: [],
+    })
 
-    await store.resetKnowledgeBaseStore("agent_1")
+    await store.resetOperationKnowledgeBaseStore("agent_1", "operation_1")
 
-    expect(resetAgentKnowledgeBaseStore).toHaveBeenCalledWith("agent_1")
-    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+    expect(resetOperationKnowledgeBaseStore).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1"
+    )
+    expect(fetchOperationKnowledge).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1"
+    )
   })
 })

@@ -260,7 +260,6 @@ export function connectAgentSharePointSiteValidator() {
       datasourceId: NON_EMPTY_STRING.required(),
       authConfigId: NON_EMPTY_STRING.required(),
       filters: Joi.array().items(NON_EMPTY_STRING).optional(),
-      operationId: OPTIONAL_STRING,
     }).required()
   )
 }

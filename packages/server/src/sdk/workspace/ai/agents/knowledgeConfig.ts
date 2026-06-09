@@ -35,6 +35,14 @@ export const findOperationIdForSharePointSite = (
     )
   )?.id
 
+export const findOperationIdForKnowledgeSource = (
+  agent: Agent,
+  sourceId: string
+): string | undefined =>
+  agent.operations?.find(operation =>
+    operation.knowledgeSources?.some(source => source.id === sourceId)
+  )?.id
+
 export const updateOperationKnowledgeSources = (
   agent: Agent,
   operationId: string | undefined,

@@ -42,7 +42,8 @@
   let { operation }: { operation?: AgentOperation } = $props()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  let activeAgentId = $derived(currentAgent?._id)
+  const getOperationCacheKey = (agentId: string, operationId: string) =>
+    `${agentId}:${operationId}`
   let sharePointSources = $derived.by(() =>
     (operation?.knowledgeSources || []).filter(
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
@@ -95,27 +96,38 @@
   }
 
   let loading = $state(true)
-  let pendingUploadsByAgent = $state<Record<string, PendingUpload[]>>({})
-  let uploadingByAgent = $state<Record<string, boolean>>({})
-  let uploadProgressByAgent = $state<Record<string, string>>({})
-  const fetchFiles = coalesceAgentPollRequests(async (agentId: string) => {
-    await agentsStore.fetchAgentKnowledge(agentId)
+  let pendingUploadsByOperation = $state<Record<string, PendingUpload[]>>({})
+  let uploadingByOperation = $state<Record<string, boolean>>({})
+  let uploadProgressByOperation = $state<Record<string, string>>({})
+  const fetchFiles = coalesceAgentPollRequests(async (cacheKey: string) => {
+    const [agentId, operationId] = cacheKey.split(":")
+    if (!agentId || !operationId) {
+      return
+    }
+    await agentsStore.fetchOperationKnowledge(agentId, operationId)
+  })
+  let knowledgeCacheKey = $derived.by(() => {
+    if (!currentAgent?._id || !operation?.id) {
+      return undefined
+    }
+    return getOperationCacheKey(currentAgent._id, operation.id)
   })
   let files = $derived.by(() => {
-    const agentId = currentAgent?._id
-    if (!agentId) {
+    if (!knowledgeCacheKey) {
       return [] as KnowledgeBaseFile[]
     }
-    return $agentsStore.knowledgeByAgent[agentId]?.files || []
+    return $agentsStore.knowledgeByOperation[knowledgeCacheKey]?.files || []
   })
 
-  let initialKnowledgeLoadedForAgent = $state<string | undefined>()
+  let initialKnowledgeLoadedForOperation = $state<string | undefined>()
   let sharePointSourceSnapshots = $derived.by(() => {
-    const agentId = currentAgent?._id
-    if (!agentId) {
+    if (!knowledgeCacheKey) {
       return [] as SharePointKnowledgeSourceSnapshot[]
     }
-    return $agentsStore.knowledgeByAgent[agentId]?.sharePointSources || []
+    return (
+      $agentsStore.knowledgeByOperation[knowledgeCacheKey]?.sharePointSources ||
+      []
+    )
   })
   let hasSharePointConnection = $derived(
     $knowledgeConnectionsStore.connections.some(
@@ -142,13 +154,13 @@
     },
   })
   let activePendingUploads = $derived(
-    activeAgentId ? pendingUploadsByAgent[activeAgentId] || [] : []
+    knowledgeCacheKey ? pendingUploadsByOperation[knowledgeCacheKey] || [] : []
   )
   let isUploadingActiveAgent = $derived(
-    activeAgentId ? !!uploadingByAgent[activeAgentId] : false
+    knowledgeCacheKey ? !!uploadingByOperation[knowledgeCacheKey] : false
   )
   let activeUploadProgress = $derived(
-    activeAgentId ? uploadProgressByAgent[activeAgentId] || "" : ""
+    knowledgeCacheKey ? uploadProgressByOperation[knowledgeCacheKey] || "" : ""
   )
 
   let resetting = $state(false)
@@ -160,35 +172,38 @@
     )
   )
 
-  const setPendingUploadsForAgent = (
-    agentId: string,
+  const setPendingUploadsForOperation = (
+    cacheKey: string,
     pendingUploads: PendingUpload[]
   ) => {
-    pendingUploadsByAgent = {
-      ...pendingUploadsByAgent,
-      [agentId]: pendingUploads,
+    pendingUploadsByOperation = {
+      ...pendingUploadsByOperation,
+      [cacheKey]: pendingUploads,
     }
   }
 
-  const removePendingUpload = (agentId: string, tempId: string) => {
-    const pendingUploads = pendingUploadsByAgent[agentId] || []
-    setPendingUploadsForAgent(
-      agentId,
+  const removePendingUpload = (cacheKey: string, tempId: string) => {
+    const pendingUploads = pendingUploadsByOperation[cacheKey] || []
+    setPendingUploadsForOperation(
+      cacheKey,
       pendingUploads.filter(upload => upload.tempId !== tempId)
     )
   }
 
-  const setUploadingForAgent = (agentId: string, uploading: boolean) => {
-    uploadingByAgent = {
-      ...uploadingByAgent,
-      [agentId]: uploading,
+  const setUploadingForOperation = (cacheKey: string, uploading: boolean) => {
+    uploadingByOperation = {
+      ...uploadingByOperation,
+      [cacheKey]: uploading,
     }
   }
 
-  const setUploadProgressForAgent = (agentId: string, progress: string) => {
-    uploadProgressByAgent = {
-      ...uploadProgressByAgent,
-      [agentId]: progress,
+  const setUploadProgressForOperation = (
+    cacheKey: string,
+    progress: string
+  ) => {
+    uploadProgressByOperation = {
+      ...uploadProgressByOperation,
+      [cacheKey]: progress,
     }
   }
 
@@ -283,11 +298,14 @@
     return [...sharePointConnectionRows, ...fileTableRows]
   })
 
-  const loadInitialKnowledge = async (agentId: string) => {
+  const loadInitialKnowledge = async (agentId: string, operationId: string) => {
     loading = true
     try {
-      await agentsStore.fetchAgentKnowledge(agentId)
-      initialKnowledgeLoadedForAgent = agentId
+      await agentsStore.fetchOperationKnowledge(agentId, operationId)
+      initialKnowledgeLoadedForOperation = getOperationCacheKey(
+        agentId,
+        operationId
+      )
     } finally {
       loading = false
     }
@@ -295,15 +313,17 @@
 
   $effect(() => {
     const agentId = currentAgent?._id
-    if (!agentId) {
+    const operationId = operation?.id
+    if (!agentId || !operationId) {
       loading = false
-      initialKnowledgeLoadedForAgent = undefined
+      initialKnowledgeLoadedForOperation = undefined
       return
     }
-    if (initialKnowledgeLoadedForAgent === agentId) {
+    const cacheKey = getOperationCacheKey(agentId, operationId)
+    if (initialKnowledgeLoadedForOperation === cacheKey) {
       return
     }
-    loadInitialKnowledge(agentId).catch(error => {
+    loadInitialKnowledge(agentId, operationId).catch(error => {
       console.error(error)
       notifications.error("Failed to load knowledge")
     })
@@ -311,7 +331,8 @@
 
   $effect(() => {
     const agentId = currentAgent?._id
-    if (!agentId) {
+    const operationId = operation?.id
+    if (!agentId || !operationId) {
       knowledgePollingController.stop()
       return
     }
@@ -322,7 +343,7 @@
       source => !source.lastRunAt
     )
     knowledgePollingController.setContinuous(
-      agentId,
+      `${agentId}:${operationId}`,
       hasProcessingFiles || hasUnsyncedSharePointSites
     )
   })
@@ -355,8 +376,9 @@
     mode: SharePointSelectionMode
   ) {
     const agentId = currentAgent?._id
-    if (agentId) {
-      await fetchFiles(agentId)
+    const operationId = operation?.id
+    if (agentId && operationId) {
+      await fetchFiles(getOperationCacheKey(agentId, operationId))
     }
     selectedSharePointSiteId = siteId
     selectSharePointSiteModal?.hide()
@@ -381,16 +403,21 @@
 
   async function syncSharePointNow(sourceId: string) {
     const agentId = currentAgent?._id
-    if (!agentId) {
+    const operationId = operation?.id
+    if (!agentId || !operationId) {
       return
     }
 
     try {
-      const result = await agentsStore.syncAgentKnowledgeSources(
+      const result = await agentsStore.syncOperationKnowledgeSources(
         agentId,
+        operationId,
         sourceId
       )
-      await Promise.all([fetchFiles(agentId), refreshDeploymentStatus()])
+      await Promise.all([
+        fetchFiles(getOperationCacheKey(agentId, operationId)),
+        refreshDeploymentStatus(),
+      ])
       showSharePointSyncResult(result)
     } catch (error) {
       console.error(error)
@@ -400,7 +427,8 @@
 
   async function removeSharePointSite(siteId: string) {
     const agent = currentAgent
-    if (!agent?._id || sharePointSources.length === 0) {
+    const operationId = operation?.id
+    if (!agent?._id || !operationId || sharePointSources.length === 0) {
       return
     }
     const agentId = agent._id
@@ -415,8 +443,12 @@
       okText: "Delete",
       onConfirm: async () => {
         try {
-          await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
-          await fetchFiles(agentId)
+          await agentsStore.disconnectOperationSharePointSite(
+            agentId,
+            operationId,
+            siteId
+          )
+          await fetchFiles(getOperationCacheKey(agentId, operationId))
           await refreshDeploymentStatus()
           notifications.success("SharePoint site removed")
         } catch (error) {
@@ -429,8 +461,9 @@
 
   async function removeFile(file: KnowledgeBaseFile) {
     const agentId = currentAgent?._id
+    const operationId = operation?.id
     const fileId = file._id
-    if (!agentId || !fileId) {
+    if (!agentId || !operationId || !fileId) {
       return
     }
 
@@ -440,8 +473,8 @@
       okText: "Delete",
       onConfirm: async () => {
         try {
-          await agentsStore.deleteAgentFile(agentId, fileId)
-          await fetchFiles(agentId)
+          await agentsStore.deleteOperationFile(agentId, operationId, fileId)
+          await fetchFiles(getOperationCacheKey(agentId, operationId))
           await refreshDeploymentStatus()
           notifications.success("File removed")
         } catch (error) {
@@ -454,7 +487,8 @@
 
   async function resetKnowledgeStore() {
     const agentId = currentAgent?._id
-    if (!agentId) {
+    const operationId = operation?.id
+    if (!agentId || !operationId) {
       return
     }
 
@@ -465,7 +499,10 @@
       onConfirm: async () => {
         resetting = true
         try {
-          await agentsStore.resetKnowledgeBaseStore(agentId)
+          await agentsStore.resetOperationKnowledgeBaseStore(
+            agentId,
+            operationId
+          )
           notifications.success(
             "Knowledge store reset - files are re-queued for ingestion"
           )
@@ -504,23 +541,24 @@
       {/if}
       <KnowledgeAddControls
         agentId={currentAgent?._id}
+        operationId={operation?.id}
         isUploading={isUploadingActiveAgent}
         uploadProgress={activeUploadProgress}
-        onPendingUploadsAdded={(agentId, uploads) => {
-          setPendingUploadsForAgent(agentId, [
+        onPendingUploadsAdded={(cacheKey, uploads) => {
+          setPendingUploadsForOperation(cacheKey, [
             ...uploads,
-            ...(pendingUploadsByAgent[agentId] || []),
+            ...(pendingUploadsByOperation[cacheKey] || []),
           ])
         }}
-        onPendingUploadRemoved={(agentId, tempId) => {
-          removePendingUpload(agentId, tempId)
+        onPendingUploadRemoved={(cacheKey, tempId) => {
+          removePendingUpload(cacheKey, tempId)
         }}
-        onUploadingChange={(agentId, uploading, progress) => {
-          setUploadingForAgent(agentId, uploading)
-          setUploadProgressForAgent(agentId, progress)
+        onUploadingChange={(cacheKey, uploading, progress) => {
+          setUploadingForOperation(cacheKey, uploading)
+          setUploadProgressForOperation(cacheKey, progress)
         }}
-        onUploaded={async agentId => {
-          await fetchFiles(agentId)
+        onUploaded={async (agentId, operationId) => {
+          await fetchFiles(getOperationCacheKey(agentId, operationId))
           syncOperationKnowledgeFromStore()
           await refreshDeploymentStatus()
         }}
@@ -556,7 +594,7 @@
 
 <SelectSharePointSiteModal
   bind:this={selectSharePointSiteModal}
-  agentId={activeAgentId || ""}
+  agentId={currentAgent?._id || ""}
   operationId={operation?.id}
   existingSiteIds={selectedSiteIds}
   onCreated={onSharePointSiteCreated}

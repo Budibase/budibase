@@ -85,17 +85,19 @@
   )
 
   const loadAllEntries = async () => {
-    if (!agentId || !siteId) {
+    if (!agentId || !operationId || !siteId) {
       return false
     }
     loadingEntries = true
     loadEntriesError = null
     allEntries = []
     try {
-      const response = await agentsStore.fetchAgentKnowledgeSourceAllEntries(
-        agentId,
-        siteId
-      )
+      const response =
+        await agentsStore.fetchOperationKnowledgeSourceAllEntries(
+          agentId,
+          operationId,
+          siteId
+        )
       allEntries = response.entries
       return true
     } catch (error) {
@@ -145,7 +147,7 @@
   }
 
   const handleConfirm = async () => {
-    if (!agentId || !siteId) {
+    if (!agentId || !operationId || !siteId) {
       return keepOpen
     }
     if (selectedEntryPaths.length === 0) {
@@ -162,14 +164,23 @@
     )
 
     try {
-      await agentsStore.applyAgentSharePointSiteFilters(agentId, siteId, {
-        filters,
-      })
+      await agentsStore.applyOperationSharePointSiteFilters(
+        agentId,
+        operationId,
+        siteId,
+        {
+          filters,
+        }
+      )
       if (sourceId) {
-        await agentsStore.syncAgentKnowledgeSources(agentId, sourceId)
+        await agentsStore.syncOperationKnowledgeSources(
+          agentId,
+          operationId,
+          sourceId
+        )
       }
       await Promise.all([
-        agentsStore.fetchAgentKnowledge(agentId),
+        agentsStore.fetchOperationKnowledge(agentId, operationId),
         workspaceDeploymentStore.fetch(),
       ])
 

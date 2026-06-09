@@ -6,7 +6,7 @@ const mockRemoveJobs = jest.fn()
 const mockDoInWorkspaceContext = jest.fn()
 const mockSyncSharePointSourcesForAgent = jest.fn()
 const mockDeleteFileForAgent = jest.fn()
-const mockDeleteSharePointFilesForAgentSite = jest.fn()
+const mockDeleteSharePointFilesForOperationSite = jest.fn()
 const mockDeleteKnowledgeSourceSyncStateForAgent = jest.fn()
 const mockGetAllWorkspaces = jest.fn()
 const mockWorkspaceAllDocs = jest.fn()
@@ -57,8 +57,8 @@ jest.mock("@budibase/backend-core", () => {
 jest.mock("./sharepoint/sharepoint", () => ({
   syncSharePointSourcesForAgent: (...args: any[]) =>
     mockSyncSharePointSourcesForAgent(...args),
-  deleteSharePointFilesForAgentSite: (...args: any[]) =>
-    mockDeleteSharePointFilesForAgentSite(...args),
+  deleteSharePointFilesForOperationSite: (...args: any[]) =>
+    mockDeleteSharePointFilesForOperationSite(...args),
   deleteKnowledgeSourceSyncStateForAgent: (...args: any[]) =>
     mockDeleteKnowledgeSourceSyncStateForAgent(...args),
 }))
@@ -253,6 +253,7 @@ describe("knowledgeSourceSyncQueue", () => {
         workspaceId: "app_dev_test",
         agentId: "agent_1",
         jobType: "disconnect_sharepoint_site",
+        operationId: "operation_1",
         sourceId: "sharepoint_site_site_1",
         siteId: "site_1",
       },
@@ -262,8 +263,9 @@ describe("knowledgeSourceSyncQueue", () => {
       "app_dev_test",
       expect.any(Function)
     )
-    expect(mockDeleteSharePointFilesForAgentSite).toHaveBeenCalledWith(
+    expect(mockDeleteSharePointFilesForOperationSite).toHaveBeenCalledWith(
       "agent_1",
+      "operation_1",
       "site_1"
     )
     expect(mockDeleteKnowledgeSourceSyncStateForAgent).toHaveBeenCalledWith(

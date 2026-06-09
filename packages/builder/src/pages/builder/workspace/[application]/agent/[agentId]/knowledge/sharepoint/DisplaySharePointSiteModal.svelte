@@ -24,6 +24,8 @@
 
   let { agentId, operationId, siteId, onEdit }: Props = $props()
   let modal = $state<Modal>()
+  const getOperationCacheKey = (agentId: string, operationId: string) =>
+    `${agentId}:${operationId}`
 
   const sharePointSource = $derived.by(() => {
     if (!siteId) {
@@ -48,10 +50,13 @@
   )
 
   const sharePointFiles = $derived.by(() => {
-    if (!agentId || !sharePointSource?.id) {
+    if (!agentId || !operationId || !sharePointSource?.id) {
       return [] as KnowledgeBaseFile[]
     }
-    const files = $agentsStore.knowledgeByAgent?.[agentId]?.files || []
+    const files =
+      $agentsStore.knowledgeByOperation?.[
+        getOperationCacheKey(agentId, operationId)
+      ]?.files || []
     return files.filter(
       file =>
         file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&

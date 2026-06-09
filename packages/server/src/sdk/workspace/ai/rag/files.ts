@@ -16,6 +16,16 @@ import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
 import { ObjectStoreBuckets } from "../../../../constants"
 
+const getOperationOrThrow = (agent: Agent, operationId: string) => {
+  const operation = agent.operations?.find(
+    operation => operation.id === operationId
+  )
+  if (!operation) {
+    throw new HTTPError("Operation not found for this agent", 404)
+  }
+  return operation
+}
+
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
 ): Promise<KnowledgeBase[]> => {
@@ -84,44 +94,48 @@ const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
   return sourceIdByFilename
 }
 
-const getOperationKnowledgeBaseName = (agent: Agent) => {
-  const operation = agent.operations?.[0]
-  const operationId = operation?.id || ""
+const getOperationKnowledgeBaseName = (agent: Agent, operationId: string) => {
   return `Agent files (${agent._id}:${operationId})`
 }
 
-export const ensureKnowledgeBaseForAgent = async (
-  agentId: string
+const getKnowledgeBaseIdsForOperation = async (
+  agentId: string,
+  operationId: string
+): Promise<string[]> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  const operation = getOperationOrThrow(agent, operationId)
+  return (operation.knowledgeBases || []).filter(Boolean)
+}
+
+export const ensureKnowledgeBaseForOperation = async (
+  agentId: string,
+  operationId: string
 ): Promise<KnowledgeBase> => {
   const { result } = await locks.doWithLock(
     {
       name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
       type: LockType.AUTO_EXTEND,
-      resource: agentId,
+      resource: `${agentId}:${operationId}`,
     },
     async () => {
       const agent = await agentsSdk.getOrThrow(agentId)
+      const targetOperation = getOperationOrThrow(agent, operationId)
       const existing = await getAgentKnowledgeBase(
-        agent.operations?.[0]?.knowledgeBases
+        targetOperation.knowledgeBases
       )
       if (existing) {
         return existing
       }
 
-      const targetOperation = agent.operations?.[0]
-      if (!targetOperation) {
-        throw new HTTPError("Agent has no operations configured", 422)
-      }
-
       const created = await knowledgeBaseSdk.create({
-        name: getOperationKnowledgeBaseName(agent),
+        name: getOperationKnowledgeBaseName(agent, operationId),
         type: KnowledgeBaseType.GEMINI,
       })
 
       await agentsSdk.update({
         ...agent,
-        operations: (agent.operations || []).map((operation, index) =>
-          index === 0
+        operations: (agent.operations || []).map(operation =>
+          operation.id === operationId
             ? {
                 ...operation,
                 knowledgeBases: created._id ? [created._id] : [],
@@ -135,6 +149,114 @@ export const ensureKnowledgeBaseForAgent = async (
   )
 
   return result
+}
+
+export const ensureKnowledgeBaseForAgent = async (
+  agentId: string
+): Promise<KnowledgeBase> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  const operationId = agent.operations?.[0]?.id
+  if (!operationId) {
+    throw new HTTPError("Agent has no operations configured", 422)
+  }
+  return await ensureKnowledgeBaseForOperation(agentId, operationId)
+}
+
+export const listFilesForOperation = async (
+  agentId: string,
+  operationId: string
+): Promise<KnowledgeBaseFile[]> => {
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForOperation(
+    agentId,
+    operationId
+  )
+  if (knowledgeBaseIds.length === 0) {
+    return []
+  }
+
+  return (
+    await Promise.all(
+      knowledgeBaseIds.map(id => knowledgeBaseSdk.listKnowledgeBaseFiles(id))
+    )
+  ).flat()
+}
+
+export const uploadFileForOperation = async (
+  agentId: string,
+  operationId: string,
+  input: UploadFileForAgentInput
+): Promise<KnowledgeBaseFile> => {
+  const knowledgeBase = await ensureKnowledgeBaseForOperation(
+    agentId,
+    operationId
+  )
+  const knowledgeBaseId = knowledgeBase._id
+  if (!knowledgeBaseId) {
+    throw new HTTPError("Failed to create operation file storage", 500)
+  }
+
+  return await knowledgeBaseSdk.uploadKnowledgeBaseFile({
+    knowledgeBaseId,
+    filename: input.filename,
+    mimetype: input.mimetype,
+    size: input.size ?? input.buffer.byteLength,
+    buffer: input.buffer,
+    uploadedBy: input.uploadedBy,
+  })
+}
+
+export const deleteFileForOperation = async (
+  agentId: string,
+  operationId: string,
+  fileId: string
+): Promise<void> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForOperation(
+    agentId,
+    operationId
+  )
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this operation", 404)
+  }
+
+  const knowledgeBase = await knowledgeBaseSdk.find(fileKnowledgeBaseId)
+  if (!knowledgeBase) {
+    throw new HTTPError("Operation file storage not found", 404)
+  }
+  await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+}
+
+export const getFileUrlForOperation = async (
+  agentId: string,
+  operationId: string,
+  fileId: string
+): Promise<string> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForOperation(
+    agentId,
+    operationId
+  )
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this operation", 404)
+  }
+
+  if (!file.objectStoreKey) {
+    throw new HTTPError("Knowledge base file is missing object key", 400)
+  }
+
+  return await objectStore.getPresignedUrl(
+    ObjectStoreBuckets.APPS,
+    file.objectStoreKey
+  )
 }
 
 const getKnowledgeBaseIdsForAgent = async (
