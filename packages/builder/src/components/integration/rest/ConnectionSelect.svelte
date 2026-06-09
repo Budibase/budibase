@@ -110,10 +110,10 @@
 
   $: hasSavedConnections = sortedAuthOptions.length > 0
   $: hasSuggestions = suggestedTemplates.length > 0
+  $: showFeaturedTemplates =
+    !activeTemplateFilter && !searchQuery && featuredItems.length > 0
   $: isEmptyState =
-    !hasSavedConnections &&
-    !hasSuggestions &&
-    !(searchQuery === "" && featuredItems.length > 0)
+    !hasSavedConnections && !hasSuggestions && !showFeaturedTemplates
 
   $: selectedAuth = authOptions.find(
     opt =>
@@ -443,7 +443,7 @@
           </div>
         {/if}
       </div>
-      {#if !activeTemplateFilter && !searchQuery && featuredItems.length > 0}
+      {#if showFeaturedTemplates}
         <div class="auth-fixed-bottom">
           <Divider noMargin />
           <div class="auth-section-header">
