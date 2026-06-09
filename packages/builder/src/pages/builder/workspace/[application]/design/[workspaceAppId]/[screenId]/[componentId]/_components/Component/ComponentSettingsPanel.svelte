@@ -51,6 +51,19 @@
   $: componentName = getComponentName(componentInstance)
 
   $: highlightedSetting = $builderStore.highlightedSetting
+  $: conditionCount = componentInstance?._conditions?.length || 0
+  $: disabledConditionCount =
+    componentInstance?._conditions?.filter(condition => condition.disabled)
+      .length || 0
+  $: allConditionsDisabled =
+    conditionCount > 0 && disabledConditionCount === conditionCount
+  $: someConditionsDisabled =
+    disabledConditionCount > 0 && disabledConditionCount < conditionCount
+  $: conditionsStatusColor = allConditionsDisabled
+    ? "var(--spectrum-semantic-negative-color-icon)"
+    : someConditionsDisabled
+      ? "var(--spectrum-semantic-notice-color-icon)"
+      : "var(--spectrum-semantic-positive-color-icon)"
   $: if (highlightedSetting) {
     if (highlightedSetting.key === "_conditions") {
       section = "conditions"
@@ -90,6 +103,7 @@
       <span slot="panel-header-content">
         <div class="settings-tabs">
           {#each tabs as tab}
+            {@const isConditionsTab = tab === "conditions"}
             <ActionButton
               size="M"
               quiet
@@ -98,7 +112,19 @@
                 section = tab
               }}
             >
-              {capitalise(tab)}
+              {#if isConditionsTab}
+                <span class="conditions-tab-label">
+                  {capitalise(tab)}
+                  {#if conditionCount > 0}
+                    <span
+                      class="conditions-tab-dot"
+                      style={`background-color: ${conditionsStatusColor};`}
+                    />
+                  {/if}
+                </span>
+              {:else}
+                {capitalise(tab)}
+              {/if}
             </ActionButton>
           {/each}
         </div>
@@ -145,6 +171,17 @@
     gap: var(--spacing-xs);
     padding: 0 var(--spacing-l);
     padding-bottom: var(--spacing-l);
+  }
+  .conditions-tab-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  .conditions-tab-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
   }
   .input {
     color: var(--spectrum-global-color-gray-900);

@@ -13,6 +13,7 @@ export interface Component extends Document {
 
 export interface ComponentCondition {
   id: string
+  disabled?: boolean
   operator: ArrayOperator | BasicOperator
   action: "update" | "show" | "hide"
   type: FieldType
