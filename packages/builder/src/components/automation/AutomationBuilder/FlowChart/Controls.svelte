@@ -15,8 +15,14 @@
   export let onAddNote = () => {}
   export let onAutoLayout = () => {}
 
+  $: isAddStepPanelOpen = !!$automationStore.actionPanelBlock
+
   const openAddStepPanel = () => {
     if ($automationStore.viewMode !== ViewMode.EDITOR) {
+      return
+    }
+    if ($automationStore.actionPanelBlock) {
+      automationStore.actions.closeActionPanel()
       return
     }
     const automation = $selectedAutomation?.data
@@ -106,7 +112,7 @@
       </span>
     {/if}
     {#if $automationStore.viewMode === ViewMode.EDITOR}
-      <span class="add-step-wrap">
+      <span class="add-step-wrap" class:active={isAddStepPanelOpen}>
         <Icon
           name="plus"
           size="L"
@@ -256,6 +262,7 @@
     border-radius: 50%;
     /* Matches data-step icon tiles (FlowChart `.wrapper` --automation-step-icon-data-color) */
     background: var(--automation-step-icon-data-color);
+    transition: transform ease-out 300ms;
   }
 
   .add-step-wrap:hover {
@@ -265,6 +272,10 @@
       black
     );
     border-radius: 50%;
+  }
+
+  .add-step-wrap.active {
+    transform: rotate(45deg);
   }
 
   .icon-btn-wrap {
