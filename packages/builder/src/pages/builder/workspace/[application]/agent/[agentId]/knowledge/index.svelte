@@ -63,7 +63,8 @@
 
   const persistAllowKnowledgeSourceDownload = async (next: boolean) => {
     const agent = currentAgent
-    if (!agent?._id || !agent._rev || !operation) {
+    const currentOperation = operation
+    if (!agent?._id || !agent._rev || !currentOperation?.id) {
       return
     }
 
@@ -71,7 +72,7 @@
     savingAllowKnowledgeSourceDownload = true
     try {
       const operations = (agent.operations || []).map(existingOperation =>
-        existingOperation.id === operation.id
+        existingOperation.id === currentOperation.id
           ? {
               ...existingOperation,
               allowKnowledgeSourceDownload: next,
@@ -86,7 +87,7 @@
       await workspaceDeploymentStore.fetch()
     } catch (error) {
       allowKnowledgeSourceDownloadDraft =
-        operation.allowKnowledgeSourceDownload !== false
+        currentOperation.allowKnowledgeSourceDownload !== false
       notifications.error(
         getErrorMessage(error) || "Failed to save download setting"
       )
@@ -216,20 +217,21 @@
   }
 
   const syncOperationKnowledgeFromStore = () => {
-    if (!operation?.id) {
+    const currentOperation = operation
+    if (!currentOperation?.id) {
       return
     }
 
     const latestAgent = get(selectedAgent)
     const latestOperation = latestAgent?.operations?.find(
-      latest => latest.id === operation.id
+      latest => latest.id === currentOperation.id
     )
     if (!latestOperation) {
       return
     }
 
     operation = {
-      ...operation,
+      ...currentOperation,
       knowledgeBases: latestOperation.knowledgeBases,
       knowledgeSources: latestOperation.knowledgeSources,
     }
