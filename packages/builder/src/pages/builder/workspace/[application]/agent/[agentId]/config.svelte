@@ -44,6 +44,20 @@
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
   const AUTO_SAVE_DEBOUNCE_MS = 800
+
+  const toDraftOperation = (
+    operation: AgentOperation
+  ): RequiredKeys<AgentOperation> => ({
+    id: operation.id,
+    name: operation.name,
+    live: operation.live,
+    promptInstructions: operation.promptInstructions,
+    enabledTools: operation.enabledTools,
+    knowledgeBases: operation.knowledgeBases,
+    allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+    knowledgeSources: operation.knowledgeSources,
+  })
+
   // Agent state
   let draftAgentId: string | undefined = $state()
   let draft = $state<Agent>({
@@ -182,20 +196,7 @@
         goal: agent.goal || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
-        operations:
-          agent.operations?.map(
-            op =>
-              ({
-                id: op.id,
-                name: op.name,
-                live: op.live,
-                promptInstructions: op.promptInstructions,
-                enabledTools: op.enabledTools,
-                knowledgeBases: op.knowledgeBases,
-                allowKnowledgeSourceDownload: op.allowKnowledgeSourceDownload,
-                knowledgeSources: op.knowledgeSources,
-              }) satisfies RequiredKeys<AgentOperation>
-          ) || [],
+        operations: agent.operations?.map(toDraftOperation) || [],
       }
       draftAgentId = agent._id
     }
@@ -481,16 +482,7 @@
         goal: updated.goal || "",
         icon: updated.icon || "",
         iconColor: updated.iconColor || "",
-        operations:
-          updated.operations?.map(op => ({
-            id: op.id,
-            name: op.name,
-            live: op.live,
-            promptInstructions: op.promptInstructions,
-            enabledTools: op.enabledTools,
-            knowledgeBases: op.knowledgeBases,
-            knowledgeSources: op.knowledgeSources,
-          })) || [],
+        operations: updated.operations?.map(toDraftOperation) || [],
       }
 
       await agentsStore.fetchAgents()
