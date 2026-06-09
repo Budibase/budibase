@@ -155,20 +155,28 @@ export const sanitiseAgentForExport = (agent: Agent): Agent => {
   if (sanitised.discordIntegration) {
     delete sanitised.discordIntegration.publicKey
     delete sanitised.discordIntegration.botToken
+    delete sanitised.discordIntegration.chatAppId
+    delete sanitised.discordIntegration.interactionsEndpointUrl
   }
 
   if (sanitised.slackIntegration) {
     delete sanitised.slackIntegration.botToken
     delete sanitised.slackIntegration.signingSecret
+    delete sanitised.slackIntegration.chatAppId
+    delete sanitised.slackIntegration.messagingEndpointUrl
   }
 
   if (sanitised.MSTeamsIntegration) {
     delete sanitised.MSTeamsIntegration.appPassword
+    delete sanitised.MSTeamsIntegration.chatAppId
+    delete sanitised.MSTeamsIntegration.messagingEndpointUrl
   }
 
   if (sanitised.telegramIntegration) {
     delete sanitised.telegramIntegration.botToken
     delete sanitised.telegramIntegration.webhookSecretToken
+    delete sanitised.telegramIntegration.chatAppId
+    delete sanitised.telegramIntegration.messagingEndpointUrl
   }
 
   return sanitised

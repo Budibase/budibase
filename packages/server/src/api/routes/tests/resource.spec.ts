@@ -1112,17 +1112,25 @@ describe("/api/resources/usage", () => {
         discordIntegration: {
           publicKey: "discord-public-key",
           botToken: "discord-bot-token",
+          chatAppId: "app_source",
+          interactionsEndpointUrl: "https://source.example/discord",
         },
         MSTeamsIntegration: {
           appPassword: "teams-app-password",
+          chatAppId: "app_source",
+          messagingEndpointUrl: "https://source.example/teams",
         },
         slackIntegration: {
           botToken: "slack-bot-token",
           signingSecret: "slack-signing-secret",
+          chatAppId: "app_source",
+          messagingEndpointUrl: "https://source.example/slack",
         },
         telegramIntegration: {
           botToken: "telegram-bot-token",
           webhookSecretToken: "telegram-webhook-secret",
+          chatAppId: "app_source",
+          messagingEndpointUrl: "https://source.example/telegram",
         },
       }
       const sourceDb = db.getDB(config.getDevWorkspaceId())
