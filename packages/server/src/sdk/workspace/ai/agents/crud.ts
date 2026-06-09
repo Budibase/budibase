@@ -151,7 +151,9 @@ const withAgentDefaults = (agent: Agent): Agent => ({
 export const sanitiseAgentForExport = (agent: Agent): Agent => {
   const sanitised = structuredClone(withAgentDefaults(agent))
   sanitised.live = false
+  sanitised.knowledgeBases = []
   delete sanitised.publishedAt
+  delete sanitised.knowledgeSources
 
   if (sanitised.discordIntegration) {
     delete sanitised.discordIntegration.publicKey

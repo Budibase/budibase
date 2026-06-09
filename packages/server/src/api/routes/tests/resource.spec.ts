@@ -3,6 +3,7 @@ import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
   Agent,
+  AgentKnowledgeSourceType,
   AnyDocument,
   Automation,
   Datasource,
@@ -1110,6 +1111,20 @@ describe("/api/resources/usage", () => {
         aiconfig: "default",
         live: true,
         publishedAt: "2026-06-09T10:00:00.000Z",
+        knowledgeBases: ["kb_source"],
+        knowledgeSources: [
+          {
+            id: "source",
+            type: AgentKnowledgeSourceType.SHAREPOINT,
+            config: {
+              datasourceId: "datasource_source",
+              authConfigId: "auth_source",
+              site: {
+                id: "site_source",
+              },
+            },
+          },
+        ],
         discordIntegration: {
           publicKey: "discord-public-key",
           botToken: "discord-bot-token",
@@ -1146,6 +1161,7 @@ describe("/api/resources/usage", () => {
       expect(duplicatedAgent).toEqual(
         expect.objectContaining({
           live: false,
+          knowledgeBases: [],
           discordIntegration: {},
           MSTeamsIntegration: {},
           slackIntegration: {},
@@ -1153,6 +1169,7 @@ describe("/api/resources/usage", () => {
         })
       )
       expect(duplicatedAgent.publishedAt).toBeUndefined()
+      expect(duplicatedAgent.knowledgeSources).toBeUndefined()
     })
 
     it("does not throw when copying the same resources twice", async () => {
