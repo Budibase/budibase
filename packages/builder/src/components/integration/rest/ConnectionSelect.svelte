@@ -188,6 +188,10 @@
 
   export const open = () => menuRef?.show()
 
+  export const addConnection = (templateId?: string) => {
+    addNewConnection(templateId ?? restTemplateId)
+  }
+
   const focusSearch = async () => {
     await tick()
     searchInput?.focus()

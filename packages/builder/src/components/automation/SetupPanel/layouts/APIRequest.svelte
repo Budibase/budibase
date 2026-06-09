@@ -204,6 +204,7 @@
               bind:this={apiViewer}
               datasourceId={dataSource?._id}
               queryId={query?._id}
+              {restTemplateId}
               settingsLocked={true}
             />
           {/if}

@@ -95,6 +95,7 @@
 
   export let queryId: string | undefined = undefined
   export let datasourceId: string | undefined = undefined
+  export let restTemplateId: string | undefined = undefined
   export let saveAndClose: boolean = false
   export let settingsLocked: boolean = false
 
@@ -166,6 +167,7 @@
       ? resolveStoreQuery($queries.list, queryId, undefined)
       : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
   $: isNewQuery = !storeQuery?._id
+  $: canChangeConnection = isNewQuery || !!restTemplateId
   $: querySourceKey = storeQuery?._id
     ? `query:${storeQuery._id}`
     : $workspaceConnections.draft
@@ -931,7 +933,19 @@
     if (!$environment.loaded) {
       environment.loadVariables()
     }
-    if ($workspaceConnections.draft && !datasourceId) {
+    if (
+      $workspaceConnections.draft?.templateId &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
+      openConnectionMenuTimer = setTimeout(() => {
+        connectionSelectRef?.addConnection($workspaceConnections.draft?.templateId)
+      }, 200)
+    } else if (
+      $workspaceConnections.draft &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
       openConnectionMenuTimer = setTimeout(() => {
         connectionSelectRef?.open()
       }, 200)
@@ -1014,13 +1028,16 @@
         <ConnectionSelect
           bind:this={connectionSelectRef}
           authConfigId={editableQuery?.fields?.authConfigId}
-          restTemplateId={datasource?.restTemplateId ||
+          restTemplateId={restTemplateId ||
+            datasource?.restTemplateId ||
             $workspaceConnections.draft?.templateId}
           datasourceId={selectedDatasourceId || storeQuery?.datasourceId}
           editText="Edit connection + auth"
-          restrictToRestTemplate={!!$workspaceConnections.draft?.templateId}
+          restrictToRestTemplate={!!(
+            restTemplateId || $workspaceConnections.draft?.templateId
+          )}
           {settingsLocked}
-          disabled={!isNewQuery}
+          disabled={!canChangeConnection}
           on:change={onConnectionChange}
         />
         {#if isCustomMode}

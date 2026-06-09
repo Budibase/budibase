@@ -185,4 +185,39 @@ describe("APIRequest", () => {
       expect(screen.queryByText("Add new API")).toBeNull()
     })
   })
+
+  it("passes the connector template into the API explorer for existing connector requests", async () => {
+    testState.inputData = {
+      restTemplateId: "github",
+      query: { queryId: "github_query" },
+    }
+    testState.queryStore.set({
+      list: [
+        {
+          _id: "github_query",
+          name: "GitHub repos",
+          datasourceId: "github_ds",
+          queryVerb: "read",
+        },
+      ],
+    })
+
+    render(APIRequest, {
+      props: {
+        block: { id: "step_1", inputs: {} } as any,
+        context: undefined,
+      },
+    })
+
+    await fireEvent.click(screen.getByText("Open API explorer"))
+
+    await waitFor(() => {
+      expect(screen.getByTestId("api-endpoint-viewer-query").textContent).toBe(
+        "github_query"
+      )
+      expect(
+        screen.getByTestId("api-endpoint-viewer-template").textContent
+      ).toBe("github")
+    })
+  })
 })

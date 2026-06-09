@@ -37,8 +37,13 @@
   let searchRef: HTMLInputElement | undefined = undefined
   let panelContainerRef: HTMLDivElement | undefined = undefined
   let selectedIndex: number | null = null
-  let navigableActions: AutomationStepDefinition[] = []
+  type NavigableItem =
+    | { type: "action"; action: AutomationStepDefinition }
+    | { type: "connector"; template: RestTemplate }
+
+  let navigableItems: NavigableItem[] = []
   let actionOrderMap: Record<string, number> = {}
+  let connectorOrderMap: Record<string, number> = {}
   let isSelectingAction = false
   let actionSelectionLocked = false
   type BranchPathLike = Array<{ branchIdx?: number | null }>
@@ -352,22 +357,43 @@
         .map(([_, action]) => action)
     )
     const pluginActions = filteredPlugins.map(([_, action]) => action)
-    navigableActions = [...categoryActions, ...pluginActions]
-    actionOrderMap = navigableActions.reduce<Record<string, number>>(
-      (acc, action, idx) => {
+    navigableItems = [
+      ...categoryActions.map(action => ({ type: "action" as const, action })),
+      ...pluginActions.map(action => ({ type: "action" as const, action })),
+      ...filteredConnectorTemplates.map(template => ({
+        type: "connector" as const,
+        template,
+      })),
+    ]
+    actionOrderMap = navigableItems.reduce<Record<string, number>>(
+      (acc, item, idx) => {
+        if (item.type !== "action") {
+          return acc
+        }
+        const { action } = item
         acc[action.stepId] = idx
         return acc
       },
       {}
     )
+    connectorOrderMap = navigableItems.reduce<Record<string, number>>(
+      (acc, item, idx) => {
+        if (item.type !== "connector") {
+          return acc
+        }
+        acc[item.template.id] = idx
+        return acc
+      },
+      {}
+    )
 
-    if (!navigableActions.length) {
+    if (!navigableItems.length) {
       selectedIndex = null
     } else if (searchString && selectedIndex == null) {
       selectedIndex = 0
     } else if (
       selectedIndex != null &&
-      selectedIndex >= navigableActions.length
+      selectedIndex >= navigableItems.length
     ) {
       selectedIndex = 0
     }
@@ -460,6 +486,14 @@
     await selectAction(apiRequestAction, template.id)
   }
 
+  const selectNavigableItem = async (item: NavigableItem) => {
+    if (item.type === "action") {
+      await selectAction(item.action)
+      return
+    }
+    await selectConnector(item.template)
+  }
+
   const handleActionKeydown = async (
     e: KeyboardEvent,
     action: AutomationStepDefinition,
@@ -480,7 +514,7 @@
       return
     }
 
-    if (!navigableActions.length) {
+    if (!navigableItems.length) {
       return
     }
 
@@ -495,8 +529,8 @@
         const direction =
           e.key === "ArrowUp" || (e.key === "Tab" && e.shiftKey) ? -1 : 1
         selectedIndex =
-          (selectedIndex + direction + navigableActions.length) %
-          navigableActions.length
+          (selectedIndex + direction + navigableItems.length) %
+          navigableItems.length
       }
       e.preventDefault()
       e.stopPropagation()
@@ -504,9 +538,9 @@
     }
 
     if (e.key === "Enter" && selectedIndex != null) {
-      const action = navigableActions[selectedIndex]
-      if (action) {
-        await selectAction(action)
+      const item = navigableItems[selectedIndex]
+      if (item) {
+        await selectNavigableItem(item)
       }
       e.preventDefault()
       e.stopPropagation()
@@ -673,6 +707,7 @@
             {#each filteredConnectorTemplates as template (template.id)}
               <div
                 class="item"
+                class:selected={selectedIndex === connectorOrderMap[template.id]}
                 role="button"
                 tabindex={0}
                 on:click={() => selectConnector(template)}

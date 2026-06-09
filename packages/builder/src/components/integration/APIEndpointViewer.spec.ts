@@ -213,6 +213,7 @@ import { oauth2 } from "@/stores/builder/oauth2"
 import { screenStore } from "@/stores/builder"
 import { workspaceConnections } from "@/stores/builder/workspaceConnection"
 import { confirm } from "@/helpers"
+import { bb } from "@/stores/bb"
 
 const REST_DS_ID = "datasource_c190e3055ae643b4b3bb66ee15ad12c9"
 const REST_DS_ID_2 = "datasource_aaaabbbbccccdddd1111222233334444"
@@ -358,6 +359,7 @@ beforeEach(async () => {
   } as any)
   queries.store.update(s => ({ ...s, list: [], selectedQueryId: null }))
   workspaceConnections.discardDraft()
+  bb.reset()
   await setupDatasources()
 })
 
@@ -535,12 +537,71 @@ describe("API Endpoint Viewer", () => {
           container.querySelector(".picker-button")?.textContent
         ).toContain("GitHub")
       })
+      await fireEvent.click(container.querySelector(".picker-button")!)
 
       await waitFor(() => {
         expect(baseElement.textContent).toContain("GitHub - No auth")
         expect(baseElement.textContent).toContain("GitHub 2 - No auth")
         expect(baseElement.textContent).not.toContain("BambooHR - No auth")
       })
+    })
+
+    it("does not automatically open the connection menu when a connector draft selects a connection", async () => {
+      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
+        const templates: Record<string, any> = {
+          bamboohr: {
+            id: "bamboohr",
+            name: "BambooHR",
+            icon: "bamboohr.svg",
+          },
+        }
+        return templateId ? templates[templateId] : undefined
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr" as any,
+      }
+      await setupDatasources(bamboohrDatasource)
+
+      workspaceConnections.startDraft("bamboohr" as any)
+      const { container, baseElement } = setupDOM({ saveAndClose: true })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 250))
+
+      expect(baseElement.textContent).not.toContain("Saved API connections")
+    })
+
+    it("opens the add connection modal when a connector draft has no saved connection", async () => {
+      const settingsSpy = vi.spyOn(bb, "settings")
+      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
+        const templates: Record<string, any> = {
+          bamboohr: {
+            id: "bamboohr",
+            name: "BambooHR",
+            icon: "bamboohr.svg",
+          },
+        }
+        return templateId ? templates[templateId] : undefined
+      })
+
+      workspaceConnections.startDraft("bamboohr" as any)
+      setupDOM({ saveAndClose: true, settingsLocked: true })
+
+      await new Promise(resolve => setTimeout(resolve, 250))
+
+      expect(settingsSpy).toHaveBeenCalledWith(
+        "/connections/apis/new/bamboohr",
+        { locked: "subtree" }
+      )
     })
 
     it("saves with authConfigId set when connection is changed on a new query", async () => {
@@ -624,6 +685,65 @@ describe("API Endpoint Viewer", () => {
             "[aria-label='ChevronDown'], [aria-label='ChevronUp'], .ph-caret-down, .ph-caret-up"
           )
         expect(chevron).toBeNull()
+      })
+    })
+
+    it("filters existing query connection selection to the provided connector template", async () => {
+      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
+        const templates: Record<string, any> = {
+          bamboohr: {
+            id: "bamboohr",
+            name: "BambooHR",
+            icon: "bamboohr.svg",
+          },
+          github: {
+            id: "github",
+            name: "GitHub",
+            icon: "github.svg",
+          },
+        }
+        return templateId ? templates[templateId] : undefined
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr" as any,
+      }
+      const githubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds",
+        name: "GitHub",
+        restTemplateId: "github" as any,
+      }
+      await setupTwoDatasources(bamboohrDatasource, githubDatasource)
+      queries.store.update(s => ({
+        ...s,
+        list: [
+          {
+            ...SAVED_QUERY,
+            datasourceId: "github_ds",
+          },
+        ],
+      }))
+
+      const { container, baseElement } = setupDOM({
+        queryId: QUERY_ID,
+        datasourceId: "github_ds",
+        restTemplateId: "github",
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("GitHub")
+      })
+      await fireEvent.click(container.querySelector(".picker-button")!)
+
+      await waitFor(() => {
+        expect(baseElement.textContent).toContain("GitHub - No auth")
+        expect(baseElement.textContent).not.toContain("BambooHR - No auth")
       })
     })
 
