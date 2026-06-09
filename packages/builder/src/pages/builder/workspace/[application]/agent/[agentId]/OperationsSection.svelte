@@ -45,7 +45,6 @@ Any constraints the agent must follow.
     webSearchConfigured = false,
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
-    onDeleteOperation = async () => {},
     onSetOperationLive = async () => false,
     onUpdated,
   }: {
@@ -58,7 +57,6 @@ Any constraints the agent must follow.
     webSearchConfigured?: boolean
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
-    onDeleteOperation?: () => Promise<void>
     onSetOperationLive?: (
       operationId: string,
       live: boolean
@@ -150,9 +148,8 @@ Any constraints the agent must follow.
       warning: true,
       onConfirm: async () => {
         try {
-          await onDeleteOperation()
           agent.operations = []
-          onUpdated()
+          await onUpdated()
           closeOperationPanel()
           notifications.success("Operation deleted.")
         } catch (error) {

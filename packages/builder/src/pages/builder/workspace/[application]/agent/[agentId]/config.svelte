@@ -494,43 +494,6 @@
     }
   }
 
-  async function deleteOperationKnowledge() {
-    const currentOperation = draft.operations?.[0]
-    const operationId = currentOperation?.id
-    if (!currentAgent?._id || !operationId) {
-      return
-    }
-
-    const agentId = currentAgent._id
-    let knowledge = agentsStore.getOperationKnowledge(agentId, operationId)
-    if (!knowledge) {
-      await agentsStore.fetchAgentKnowledge(agentId)
-      knowledge = agentsStore.getOperationKnowledge(agentId, operationId)
-    }
-    if (!knowledge) {
-      return
-    }
-    const fileDeletes = (knowledge.files || [])
-      .map(file => file._id)
-      .filter((id): id is string => !!id)
-      .map(fileId =>
-        agentsStore.deleteOperationFile(agentId, operationId, fileId)
-      )
-
-    const sourceDisconnects = (currentOperation?.knowledgeSources || [])
-      .map(source => source.config?.site?.id)
-      .filter((id): id is string => !!id)
-      .map(siteId =>
-        agentsStore.disconnectOperationSharePointSite(
-          agentId,
-          operationId,
-          siteId
-        )
-      )
-
-    await Promise.all([...fileDeletes, ...sourceDisconnects])
-  }
-
   const scheduleSave = (immediate = false) => {
     clearAutoSave()
 
@@ -629,7 +592,6 @@
   {webSearchConfigured}
   onAddApiConnection={() => bb.settings("/connections/apis")}
   onConfigureWebSearch={openWebSearchConfigModal}
-  onDeleteOperation={deleteOperationKnowledge}
   onSetOperationLive={setOperationLive}
   onUpdated={() => scheduleSave(true)}
 />

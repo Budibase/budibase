@@ -458,6 +458,22 @@ export async function update(agent: Agent): Promise<Agent> {
     agent,
     "operations"
   )
+  const removedOperations =
+    hasOperations && agent.operations !== undefined
+      ? (existing.operations ?? []).filter(
+          existingOperation =>
+            existingOperation.id &&
+            !(agent.operations ?? []).some(
+              incomingOperation => incomingOperation.id === existingOperation.id
+            )
+        )
+      : []
+
+  for (const removedOperation of removedOperations) {
+    const { cleanupKnowledgeForOperation } = await import("../rag/files")
+    await cleanupKnowledgeForOperation(_id, removedOperation.id!)
+  }
+
   const updated: Agent = {
     ...existing,
     ...agent,
@@ -517,6 +533,12 @@ export async function update(agent: Agent): Promise<Agent> {
   })
   updated._rev = rev
   const result = withAgentDefaults(updated)
+  if (removedOperations.length > 0) {
+    const knowledgeSourceSyncQueue = await import(
+      "../rag/sources/knowledgeSourceSyncQueue"
+    )
+    await knowledgeSourceSyncQueue.reconcileAgentJobs(result)
+  }
   events.ai.agentUpdated(result)
   return result
 }

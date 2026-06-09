@@ -1,4 +1,5 @@
 import {
+  AgentKnowledgeSourceType,
   AgentMessageRagSource,
   type Agent,
   type KnowledgeBase,
@@ -15,6 +16,10 @@ import { getLiveOperation } from "../agents/utils"
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
 import { ObjectStoreBuckets } from "../../../../constants"
+import {
+  deleteKnowledgeSourceSyncStateForAgent,
+  deleteSharePointFilesForOperationSite,
+} from "./sources/sharepoint/sharepoint"
 
 const getOperationOrThrow = (agent: Agent, operationId: string) => {
   const operation = agent.operations?.find(
@@ -228,6 +233,64 @@ export const deleteFileForOperation = async (
     throw new HTTPError("Operation file storage not found", 404)
   }
   await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+}
+
+const removeKnowledgeBaseWithFiles = async (
+  knowledgeBaseId: string,
+  contextLabel: string
+) => {
+  const knowledgeBase = await knowledgeBaseSdk.find(knowledgeBaseId)
+  if (!knowledgeBase) {
+    return
+  }
+
+  const files = await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
+  for (const file of files) {
+    try {
+      await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+    } catch (error) {
+      console.log(`Failed to remove knowledge base file for ${contextLabel}`, {
+        knowledgeBaseId,
+        fileId: file._id,
+        error,
+      })
+    }
+  }
+
+  try {
+    await knowledgeBaseSdk.remove(knowledgeBaseId)
+  } catch (error) {
+    console.log(`Failed to remove knowledge base for ${contextLabel}`, {
+      knowledgeBaseId,
+      error,
+    })
+  }
+}
+
+export const cleanupKnowledgeForOperation = async (
+  agentId: string,
+  operationId: string
+): Promise<void> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  const operation = getOperationOrThrow(agent, operationId)
+
+  const sharePointSources = (operation.knowledgeSources || []).filter(
+    source => source.type === AgentKnowledgeSourceType.SHAREPOINT
+  )
+
+  for (const source of sharePointSources) {
+    const siteId = source.config.site.id
+    if (!siteId) {
+      continue
+    }
+    await deleteSharePointFilesForOperationSite(agentId, operationId, siteId)
+    await deleteKnowledgeSourceSyncStateForAgent(agentId, source.id)
+  }
+
+  const knowledgeBaseIds = (operation.knowledgeBases || []).filter(Boolean)
+  for (const knowledgeBaseId of knowledgeBaseIds) {
+    await removeKnowledgeBaseWithFiles(knowledgeBaseId, "operation deletion")
+  }
 }
 
 export const getFileUrlForOperation = async (

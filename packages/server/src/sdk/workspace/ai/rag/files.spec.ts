@@ -6,6 +6,10 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseCreate = jest.fn()
 const mockKnowledgeBaseGetFileOrThrow = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
+const mockKnowledgeBaseRemove = jest.fn()
+const mockDeleteSharePointFilesForOperationSite = jest.fn()
+const mockDeleteKnowledgeSourceSyncStateForAgent = jest.fn()
+const mockReconcileAgentJobs = jest.fn()
 
 const mockProcessorIngest = jest.fn()
 const mockProcessorSearch = jest.fn()
@@ -36,7 +40,19 @@ jest.mock("..", () => ({
       mockKnowledgeBaseGetFileOrThrow(...args),
     removeKnowledgeBaseFile: (...args: any[]) =>
       mockKnowledgeBaseRemoveFile(...args),
+    remove: (...args: any[]) => mockKnowledgeBaseRemove(...args),
   },
+}))
+
+jest.mock("./sources/sharepoint/sharepoint", () => ({
+  deleteSharePointFilesForOperationSite: (...args: any[]) =>
+    mockDeleteSharePointFilesForOperationSite(...args),
+  deleteKnowledgeSourceSyncStateForAgent: (...args: any[]) =>
+    mockDeleteKnowledgeSourceSyncStateForAgent(...args),
+}))
+
+jest.mock("./sources/knowledgeSourceSyncQueue", () => ({
+  reconcileAgentJobs: (...args: any[]) => mockReconcileAgentJobs(...args),
 }))
 
 jest.mock("./processors/gemini", () => ({
@@ -64,6 +80,7 @@ import {
   deleteFileForAgent,
   ensureKnowledgeBaseForAgent,
   ingestKnowledgeBaseFile,
+  cleanupKnowledgeForOperation,
   retrieveContextForAgent,
 } from "./files"
 
@@ -796,6 +813,51 @@ describe("rag files", () => {
         chunks: [],
         sources: [],
       })
+    })
+  })
+
+  describe("cleanupKnowledgeForOperation", () => {
+    it("removes knowledge base files and deletes the knowledge base", async () => {
+      const agent = {
+        _id: "agent_1",
+        _rev: "1-abc",
+        name: "Support Agent",
+        aiconfig: "cfg_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: ["kb_1"],
+            knowledgeSources: [],
+          },
+        ],
+      } satisfies Agent
+      const knowledgeBase = {
+        _id: "kb_1",
+        name: "Agent files (agent_1:operation_1)",
+      } as KnowledgeBase
+      const files = [
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_1",
+          filename: "notes.txt",
+        },
+      ] as KnowledgeBaseFile[]
+
+      mockAgentsGetOrThrow.mockResolvedValue(agent)
+      mockKnowledgeBaseFind.mockResolvedValue(knowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue(files)
+
+      await cleanupKnowledgeForOperation("agent_1", "operation_1")
+
+      expect(mockKnowledgeBaseRemoveFile).toHaveBeenCalledWith(
+        knowledgeBase,
+        files[0]
+      )
+      expect(mockKnowledgeBaseRemove).toHaveBeenCalledWith("kb_1")
+      expect(mockAgentsUpdate).not.toHaveBeenCalled()
+      expect(mockReconcileAgentJobs).not.toHaveBeenCalled()
     })
   })
 })

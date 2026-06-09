@@ -18,6 +18,20 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
 const mockKnowledgeBaseRemove = jest.fn()
 const mockAssertAgentHasValidConfig = jest.fn().mockResolvedValue(undefined)
+const mockCleanupKnowledgeForOperation = jest.fn().mockResolvedValue(undefined)
+const mockReconcileAgentJobs = jest.fn().mockResolvedValue({
+  clearedSchedules: 0,
+  enabledSchedules: 0,
+})
+
+jest.mock("../rag/files", () => ({
+  cleanupKnowledgeForOperation: (...args: any[]) =>
+    mockCleanupKnowledgeForOperation(...args),
+}))
+
+jest.mock("../rag/sources/knowledgeSourceSyncQueue", () => ({
+  reconcileAgentJobs: (...args: any[]) => mockReconcileAgentJobs(...args),
+}))
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -478,6 +492,16 @@ describe("agents crud", () => {
         })
       )
       expect(updated.operations).toEqual([])
+      expect(mockCleanupKnowledgeForOperation).toHaveBeenCalledWith(
+        "agent_upd",
+        "operation_1"
+      )
+      expect(mockReconcileAgentJobs).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _id: "agent_upd",
+          operations: [],
+        })
+      )
     })
 
     it("persists multiple operations without collapsing them", async () => {
