@@ -21,31 +21,6 @@
     },
   ]
 
-  const screenTargetOptions = [
-    { label: "Current tab", value: "self" },
-    { label: "New tab", value: "newTab" },
-    { label: "Modal", value: "modal" },
-  ]
-
-  // Derived for display only - never written back on load, so existing
-  // actions keep their behaviour unless the user actively changes it.
-  $: screenTarget = getScreenTarget(parameters)
-
-  const getScreenTarget = params => {
-    if (params.peek) {
-      return "modal"
-    }
-    if (params.screenNewTab) {
-      return "newTab"
-    }
-    return "self"
-  }
-
-  const setScreenTarget = value => {
-    parameters.peek = value === "modal"
-    parameters.screenNewTab = value === "newTab"
-  }
-
   onMount(() => {
     if (!parameters.type) {
       parameters.type = "screen"
@@ -73,12 +48,26 @@
       options={$urlOptions}
       appendBindingsAsOptions={false}
     />
-    <Label small>Open in</Label>
-    <Select
-      placeholder={null}
-      value={screenTarget}
-      options={screenTargetOptions}
-      on:change={e => setScreenTarget(e.detail)}
+    <div></div>
+    <Checkbox
+      text="Open in new tab"
+      value={parameters.screenNewTab}
+      on:change={e => {
+        parameters.screenNewTab = e.detail
+        if (e.detail) {
+          parameters.peek = false
+        }
+      }}
+    />
+    <Checkbox
+      text="Open in modal"
+      value={parameters.peek}
+      on:change={e => {
+        parameters.peek = e.detail
+        if (e.detail) {
+          parameters.screenNewTab = false
+        }
+      }}
     />
   {:else}
     <DrawerBindableInput
@@ -91,7 +80,7 @@
       {bindings}
     />
     <div></div>
-    <Checkbox text="New Tab" bind:value={parameters.externalNewTab} />
+    <Checkbox text="Open in new tab" bind:value={parameters.externalNewTab} />
   {/if}
 </div>
 
