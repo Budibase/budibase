@@ -448,16 +448,6 @@
       }
       stepInserted = true
 
-      if (
-        restTemplateId &&
-        action.stepId === AutomationActionStepId.API_REQUEST
-      ) {
-        automationStore.actions.openApiRequestTemplate(
-          newBlock.id,
-          restTemplateId
-        )
-      }
-
       // Determine presence of the block before focusing
       await automationStore.actions.selectNode(newBlock.id)
 
