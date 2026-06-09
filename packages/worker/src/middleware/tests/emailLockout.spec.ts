@@ -42,7 +42,7 @@ describe("emailLockout middleware", () => {
 
   it("should call next if user not found", async () => {
     ctx.request.body = { username: "test@example.com" }
-    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue(null)
+    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue(undefined)
 
     await emailLockout(ctx, next)
 
@@ -55,7 +55,7 @@ describe("emailLockout middleware", () => {
     ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({
       email: "test@example.com",
     })
-    ;(cache.get as jest.Mock).mockResolvedValue(null)
+    jest.mocked(cache.get).mockResolvedValue(undefined)
 
     await emailLockout(ctx, next)
 
@@ -68,7 +68,7 @@ describe("emailLockout middleware", () => {
     ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({
       email: "test@example.com",
     })
-    ;(cache.get as jest.Mock).mockResolvedValue("1")
+    jest.mocked(cache.get).mockResolvedValue("1")
 
     ctx.throw = jest.fn().mockImplementation((status, message) => {
       const error = new Error(message)

@@ -2,7 +2,7 @@ import * as authController from "../../controllers/global/auth"
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 import { loggedInRoutes } from "../endpointGroups"
-import { emailLockout } from "../../../middleware"
+import { emailLockout, ipLockout } from "../../../middleware"
 
 function buildAuthValidation() {
   // prettier-ignore
@@ -33,6 +33,7 @@ loggedInRoutes
     "/api/global/auth/:tenantId/login",
     buildAuthValidation(),
     emailLockout,
+    ipLockout,
     authController.login
   )
   .post("/api/global/auth/logout", authController.logout)
