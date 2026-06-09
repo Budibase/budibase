@@ -15,6 +15,11 @@ import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { getLiveOperation } from "../agents/utils"
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
+import {
+  isTabularKnowledgeFile,
+  searchTabularRowsForExactMatches,
+  type TabularRowExactMatch,
+} from "./processors/tabularText"
 import { ObjectStoreBuckets } from "../../../../constants"
 import {
   deleteKnowledgeSourceSyncStateForOperation,
@@ -29,6 +34,11 @@ const getOperationOrThrow = (agent: Agent, operationId: string) => {
     throw new HTTPError("Operation not found for this agent", 404)
   }
   return operation
+}
+
+interface ExactTabularMatchResult {
+  chunks: RetrievedContextChunk[]
+  matchesBySourceId: Map<string, TabularRowExactMatch[]>
 }
 
 const resolveKnowledgeBasesForAgent = async (
@@ -71,6 +81,19 @@ const getAgentKnowledgeBase = async (
 
 const normalizeFilenameLookup = (value?: string) =>
   value?.trim().toLowerCase() || ""
+
+const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
+  const { stream } = await objectStore.getReadStream(
+    ObjectStoreBuckets.APPS,
+    objectKey
+  )
+
+  const chunks: Uint8Array[] = []
+  for await (const chunk of stream) {
+    chunks.push(new Uint8Array(chunk))
+  }
+  return Buffer.concat(chunks)
+}
 
 const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
   const sourceIdByFilename = new Map<string, string>()
@@ -506,6 +529,12 @@ export const retrieveContextForAgent = async (
       continue
     }
 
+    const exactTabularMatchResult = await retrieveExactTabularMatches(
+      readyFiles,
+      question
+    )
+    chunks.push(...exactTabularMatchResult.chunks)
+
     const readyFileSourceIds = new Set(readyFileSources)
     const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
     assertKnowledgeBaseHasId(knowledgeBase)
@@ -519,6 +548,14 @@ export const retrieveContextForAgent = async (
       }
 
       if (readyFileSourceIds.has(chunk.source)) {
+        if (
+          shouldSkipTabularVectorChunk(
+            chunk.chunkText,
+            exactTabularMatchResult.matchesBySourceId.get(chunk.source)
+          )
+        ) {
+          continue
+        }
         chunks.push(chunk)
         continue
       }
@@ -527,6 +564,14 @@ export const retrieveContextForAgent = async (
         normalizeFilenameLookup(chunk.source)
       )
       if (!sourceIdFromFilename) {
+        continue
+      }
+      if (
+        shouldSkipTabularVectorChunk(
+          chunk.chunkText,
+          exactTabularMatchResult.matchesBySourceId.get(sourceIdFromFilename)
+        )
+      ) {
         continue
       }
 
@@ -575,6 +620,94 @@ const toSourceMetadata = (
     }
   }
   return Array.from(summary.values())
+}
+const isTabularRowLikeChunk = (
+  chunkText: string,
+  exactMatches: TabularRowExactMatch[]
+) => {
+  if (/(^|\n)Row \d+ in /i.test(chunkText)) {
+    return true
+  }
+
+  for (const match of exactMatches) {
+    const matchingLabels = match.columnLabels.filter(label =>
+      new RegExp(
+        `(^|\n)${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:\\s*\\S`,
+        "i"
+      ).test(chunkText)
+    )
+    if (matchingLabels.length >= 2) {
+      return true
+    }
+  }
+
+  return false
+}
+
+const shouldSkipTabularVectorChunk = (
+  chunkText: string,
+  exactMatches?: TabularRowExactMatch[]
+) => {
+  if (!exactMatches?.length) {
+    return false
+  }
+
+  if (!isTabularRowLikeChunk(chunkText, exactMatches)) {
+    return false
+  }
+
+  return true
+}
+
+const retrieveExactTabularMatches = async (
+  readyFiles: KnowledgeBaseFile[],
+  question: string
+): Promise<ExactTabularMatchResult> => {
+  const chunks: RetrievedContextChunk[] = []
+  const matchesBySourceId = new Map<string, TabularRowExactMatch[]>()
+
+  for (const file of readyFiles) {
+    if (
+      !file.ragSourceId ||
+      !file.objectStoreKey ||
+      !isTabularKnowledgeFile({
+        filename: file.filename,
+        mimetype: file.mimetype,
+      })
+    ) {
+      continue
+    }
+
+    try {
+      const buffer = await loadFileBuffer(file.objectStoreKey)
+      const matches = searchTabularRowsForExactMatches({
+        filename: file.filename,
+        mimetype: file.mimetype,
+        buffer,
+        query: question,
+      })
+      if (!matches.length) {
+        continue
+      }
+
+      matchesBySourceId.set(file.ragSourceId, matches)
+
+      chunks.push(
+        ...matches.map(match => ({
+          source: file.ragSourceId,
+          chunkText: match.chunkText,
+        }))
+      )
+    } catch (error) {
+      console.error("Failed to run exact tabular knowledge lookup", {
+        fileId: file._id,
+        filename: file.filename,
+        error,
+      })
+    }
+  }
+
+  return { chunks, matchesBySourceId }
 }
 
 export const deleteKnowledgeBaseFileChunks = async (

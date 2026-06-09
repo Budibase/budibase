@@ -106,6 +106,9 @@ describe("buildPromptAndTools", () => {
     expect(Reflect.get(result.tools, "search_knowledge")).toBeDefined()
     expect(result.systemPrompt).toContain("call list_knowledge_files")
     expect(result.systemPrompt).toContain("call search_knowledge")
+    expect(result.systemPrompt).toContain(
+      "Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge."
+    )
     expect(result.systemPrompt).toContain("call report_used_sources")
   })
 
