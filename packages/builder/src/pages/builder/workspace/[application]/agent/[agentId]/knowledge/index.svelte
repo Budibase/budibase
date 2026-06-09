@@ -383,6 +383,7 @@
   ) {
     const agentId = currentAgent?._id
     const operationId = operation?.id
+    syncOperationKnowledgeFromStore()
     if (agentId && operationId) {
       await fetchFiles(getOperationCacheKey(agentId, operationId))
     }
@@ -454,6 +455,7 @@
             operationId,
             siteId
           )
+          syncOperationKnowledgeFromStore()
           await fetchFiles(getOperationCacheKey(agentId, operationId))
           await refreshDeploymentStatus()
           notifications.success("SharePoint site removed")
