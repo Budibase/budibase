@@ -26,9 +26,7 @@ export const createStores = (): ConditionStore => {
   }
 }
 
-export const getGridEvaluatableConditions = (
-  conditions: UICondition[] | undefined
-) => {
+export const getEnabledConditions = (conditions: UICondition[] | undefined) => {
   if (!conditions?.length) {
     return []
   }
@@ -210,7 +208,7 @@ const evaluateConditions = (
     }
   }
 
-  allConditions = getGridEvaluatableConditions(allConditions)
+  allConditions = getEnabledConditions(allConditions)
 
   // Pre-process button conditions to set default visibility for show conditions
   const buttonShowConditions = new Set()

@@ -1,7 +1,7 @@
 import { getSettingsDefinition } from "@budibase/frontend-core"
 import { enrichProps } from "@/utils/componentProps"
 import {
-  getEvaluatableConditions,
+  getEnabledConditions,
   getActiveConditions,
   reduceConditionActions,
 } from "@/utils/conditions"
@@ -38,13 +38,13 @@ const evaluateButtonConditions = conditions => {
     return { visible: true, settingUpdates: {} }
   }
 
-  const evaluatableConditions = getEvaluatableConditions(conditions)
+  const enabledConditions = getEnabledConditions(conditions)
 
   // Keep in line with Component.svelte's condition evaluation behavior.
-  let visible = !evaluatableConditions.find(
+  let visible = !enabledConditions.find(
     condition => condition.action === "show"
   )
-  const activeConditions = getActiveConditions(evaluatableConditions)
+  const activeConditions = getActiveConditions(enabledConditions)
   const result = reduceConditionActions(activeConditions)
   if (result.visible != null) {
     visible = result.visible

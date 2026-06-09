@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest"
 import {
   enrichGridConditions,
-  getEvaluatableConditions,
+  getEnabledConditions,
   getActiveConditions,
 } from "./conditions"
 
@@ -44,10 +44,10 @@ describe("getActiveConditions", () => {
   })
 })
 
-describe("getEvaluatableConditions", () => {
+describe("getEnabledConditions", () => {
   it("filters disabled conditions", () => {
     const conditions = [{ disabled: true }, { disabled: false }]
 
-    expect(getEvaluatableConditions(conditions)).toEqual([{ disabled: false }])
+    expect(getEnabledConditions(conditions)).toEqual([{ disabled: false }])
   })
 })

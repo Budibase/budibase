@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 const mockGetComponentDefinition = vi.fn()
 const mockGetSettingsDefinition = vi.fn()
 const mockEnrichProps = vi.fn()
-const mockGetEvaluatableConditions = vi.fn()
+const mockGetEnabledConditions = vi.fn()
 const mockGetActiveConditions = vi.fn()
 const mockReduceConditionActions = vi.fn()
 
@@ -24,7 +24,7 @@ vi.mock("@/utils/componentProps", () => ({
 }))
 
 vi.mock("@/utils/conditions", () => ({
-  getEvaluatableConditions: (...args) => mockGetEvaluatableConditions(...args),
+  getEnabledConditions: (...args) => mockGetEnabledConditions(...args),
   getActiveConditions: (...args) => mockGetActiveConditions(...args),
   reduceConditionActions: (...args) => mockReduceConditionActions(...args),
 }))
@@ -42,7 +42,7 @@ describe("resolveCollapsedButtons", () => {
     mockGetSettingsDefinition.mockReturnValue([
       { key: "onClick", type: "event" },
     ])
-    mockGetEvaluatableConditions.mockImplementation(conditions =>
+    mockGetEnabledConditions.mockImplementation(conditions =>
       conditions.filter(condition => !condition.disabled)
     )
   })

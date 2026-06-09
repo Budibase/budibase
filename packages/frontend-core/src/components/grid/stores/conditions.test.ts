@@ -6,7 +6,7 @@ vi.mock("../../../utils", () => ({
   QueryUtils: {},
 }))
 
-import { getGridEvaluatableConditions } from "./conditions"
+import { getEnabledConditions } from "./conditions"
 
 describe("grid condition evaluation helpers", () => {
   it("filters disabled conditions", () => {
@@ -16,13 +16,11 @@ describe("grid condition evaluation helpers", () => {
       { disabled: true },
     ] as UICondition[]
 
-    expect(getGridEvaluatableConditions(conditions)).toEqual([
-      { disabled: false },
-    ])
+    expect(getEnabledConditions(conditions)).toEqual([{ disabled: false }])
   })
 
   it("returns an empty array when no conditions are supplied", () => {
-    expect(getGridEvaluatableConditions(undefined)).toEqual([])
-    expect(getGridEvaluatableConditions([])).toEqual([])
+    expect(getEnabledConditions(undefined)).toEqual([])
+    expect(getEnabledConditions([])).toEqual([])
   })
 })

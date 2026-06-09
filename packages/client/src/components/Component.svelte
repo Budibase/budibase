@@ -23,7 +23,7 @@
   } from "@/stores"
   import { Helpers } from "@budibase/bbui"
   import {
-    getEvaluatableConditions,
+    getEnabledConditions,
     getActiveConditions,
     reduceConditionActions,
   } from "@/utils/conditions"
@@ -519,15 +519,15 @@
       visible = true
       return
     }
-    const evaluatableConditions = getEvaluatableConditions(conditions)
+    const enabledConditions = getEnabledConditions(conditions)
 
     // Default visible to false if there is a show condition
-    let nextVisible = !evaluatableConditions.find(
+    let nextVisible = !enabledConditions.find(
       condition => condition.action === "show"
     )
 
     // Execute conditions and determine settings and visibility changes
-    const activeConditions = getActiveConditions(evaluatableConditions)
+    const activeConditions = getActiveConditions(enabledConditions)
     const result = reduceConditionActions(activeConditions)
     if (result.visible != null) {
       nextVisible = result.visible
