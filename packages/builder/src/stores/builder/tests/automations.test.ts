@@ -7,7 +7,7 @@ import {
   MAX_STICKY_NOTES_PER_AUTOMATION,
   selectedAutomation,
 } from "../automations"
-import { type AutomationBlockRef } from "@/types/automations"
+import { type AutomationBlockRef, ViewMode } from "@/types/automations"
 import {
   automationTrigger,
   branchStep,
@@ -39,6 +39,41 @@ interface TestBlockRef extends AutomationBlockRef {
 }
 
 describe("automation store", () => {
+  it("selects new automations in editor mode", () => {
+    const existingAutomation: Automation = {
+      _id: "existing-automation",
+      name: "Existing automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+    }
+    const newAutomation: Automation = {
+      _id: "new-automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      disabled: true,
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+    }
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [existingAutomation, newAutomation],
+      selectedAutomationId: existingAutomation._id!,
+      viewMode: ViewMode.LOGS,
+    }))
+
+    automationStore.actions.select(newAutomation._id!)
+
+    expect(get(automationStore).viewMode).toBe(ViewMode.EDITOR)
+  })
+
   it("traverses branch steps inside Loop V2 subflows", () => {
     const { automation } = nestedLoopBranchAutomation()
     const blockRefs: Record<string, TestBlockRef> = {}
