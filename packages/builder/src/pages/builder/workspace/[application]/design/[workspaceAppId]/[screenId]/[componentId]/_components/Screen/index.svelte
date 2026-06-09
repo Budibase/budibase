@@ -38,7 +38,7 @@
       </div>
     </span>
     {#if section === "settings"}
-      <Layout gap="XS" paddingX="XL" paddingY="XL">
+      <Layout gap="XS" padding="XL">
         <GeneralPanel />
       </Layout>
     {/if}
