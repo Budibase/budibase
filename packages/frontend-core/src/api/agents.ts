@@ -6,7 +6,7 @@ import {
   CreateAgentResponse,
   DisconnectAgentSharePointSiteResponse,
   DuplicateAgentResponse,
-  FetchAgentKnowledgeResponse,
+  FetchAgentKnowledgeIndexResponse,
   FetchAgentFileUrlResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -35,6 +35,9 @@ import { BaseAPIClient } from "./types"
 export interface AgentEndpoints {
   fetchTools: (aiconfigId?: string) => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
+  fetchAgentKnowledge: (
+    agentId: string
+  ) => Promise<FetchAgentKnowledgeIndexResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   createAgentOperation: (agentId: string) => Promise<UpdateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
@@ -72,10 +75,6 @@ export interface AgentEndpoints {
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
-  fetchOperationKnowledge: (
-    agentId: string,
-    operationId: string
-  ) => Promise<FetchAgentKnowledgeResponse>
   uploadOperationFile: (
     agentId: string,
     operationId: string,
@@ -139,6 +138,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   fetchAgents: async () => {
     return await API.get({
       url: "/api/agent",
+    })
+  },
+
+  fetchAgentKnowledge: async (agentId: string) => {
+    return await API.get<FetchAgentKnowledgeIndexResponse>({
+      url: `/api/agent/${agentId}/knowledge`,
     })
   },
 
@@ -252,12 +257,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     >({
       url: `/api/agent/${agentId}/telegram/toggle`,
       body: { enabled },
-    })
-  },
-
-  fetchOperationKnowledge: async (agentId: string, operationId: string) => {
-    return await API.get<FetchAgentKnowledgeResponse>({
-      url: `/api/agent/${agentId}/operations/${operationId}/knowledge`,
     })
   },
 

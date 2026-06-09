@@ -100,11 +100,11 @@
   let uploadingByOperation = $state<Record<string, boolean>>({})
   let uploadProgressByOperation = $state<Record<string, string>>({})
   const fetchFiles = coalesceAgentPollRequests(async (cacheKey: string) => {
-    const [agentId, operationId] = cacheKey.split(":")
-    if (!agentId || !operationId) {
+    const [agentId] = cacheKey.split(":")
+    if (!agentId) {
       return
     }
-    await agentsStore.fetchOperationKnowledge(agentId, operationId)
+    await agentsStore.fetchAgentKnowledge(agentId)
   })
   let knowledgeCacheKey = $derived.by(() => {
     if (!currentAgent?._id || !operation?.id) {
@@ -301,7 +301,13 @@
   const loadInitialKnowledge = async (agentId: string, operationId: string) => {
     loading = true
     try {
-      await agentsStore.fetchOperationKnowledge(agentId, operationId)
+      if (
+        !$agentsStore.knowledgeByOperation[
+          getOperationCacheKey(agentId, operationId)
+        ]
+      ) {
+        await agentsStore.fetchAgentKnowledge(agentId)
+      }
       initialKnowledgeLoadedForOperation = getOperationCacheKey(
         agentId,
         operationId

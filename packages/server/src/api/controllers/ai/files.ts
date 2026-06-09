@@ -2,11 +2,14 @@ import { readFile, unlink } from "node:fs/promises"
 import { events, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
+  AgentOperation,
   AgentKnowledgeSourceType,
+  AgentKnowledgeSourceSyncRunStatus,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   DisconnectAgentSharePointSiteResponse,
+  FetchAgentKnowledgeIndexResponse,
   UpdateAgentSharePointSiteRequest,
   UpdateAgentSharePointSiteResponse,
   SharePointKnowledgeSourceSnapshot,
@@ -79,21 +82,23 @@ const fetchSharePointOptionsForDatasourceAuthConfig = async (
   return { options }
 }
 
-export async function fetchAgentKnowledge(
-  ctx: UserCtx<
-    void,
-    FetchAgentKnowledgeResponse,
-    { agentId: string; operationId: string }
+const buildOperationKnowledgeResponse = ({
+  files,
+  operation,
+  runsBySourceId,
+}: {
+  files: FetchAgentKnowledgeResponse["files"]
+  operation: AgentOperation
+  runsBySourceId: Map<
+    string,
+    {
+      status?: AgentKnowledgeSourceSyncRunStatus
+      lastRunAt?: string
+    }
   >
-) {
-  const { agentId, operationId } = ctx.params
-  const [files, agent, syncState] = await Promise.all([
-    sdk.ai.rag.listFilesForOperation(agentId, operationId),
-    sdk.ai.agents.getOrThrow(agentId),
-    sdk.ai.rag.fetchKnowledgeSourceSyncStateForAgent(agentId),
-  ])
-  const runsBySourceId = new Map(syncState.runs.map(run => [run.sourceId, run]))
-  const sharePointSources = getSharePointSourcesForOperation(agent, operationId)
+}): FetchAgentKnowledgeResponse => {
+  const sharePointSources = (operation.knowledgeSources || [])
+    .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
     .filter(source => source.config.site.id)
     .map<SharePointKnowledgeSourceSnapshot>(source => {
       const site = source.config.site
@@ -126,9 +131,35 @@ export async function fetchAgentKnowledge(
       } satisfies SharePointKnowledgeSourceSnapshot
     })
 
-  ctx.body = {
+  return {
     files,
     sharePointSources,
+  }
+}
+
+export async function fetchAgentKnowledgeIndex(
+  ctx: UserCtx<void, FetchAgentKnowledgeIndexResponse, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const [agent, syncState] = await Promise.all([
+    sdk.ai.agents.getOrThrow(agentId),
+    sdk.ai.rag.fetchKnowledgeSourceSyncStateForAgent(agentId),
+  ])
+  const runsBySourceId = new Map(syncState.runs.map(run => [run.sourceId, run]))
+
+  const knowledgeEntries = await Promise.all(
+    (agent.operations || []).map(async operation => [
+      operation.id,
+      buildOperationKnowledgeResponse({
+        files: await sdk.ai.rag.listFilesForOperation(agentId, operation.id),
+        operation,
+        runsBySourceId,
+      }),
+    ])
+  )
+
+  ctx.body = {
+    operations: Object.fromEntries(knowledgeEntries),
   }
   ctx.status = 200
 }

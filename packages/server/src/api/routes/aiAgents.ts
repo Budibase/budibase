@@ -97,10 +97,7 @@ builderAdminRoutes
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
   )
-  .get(
-    "/api/agent/:agentId/operations/:operationId/knowledge",
-    ai.fetchAgentKnowledge
-  )
+  .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledgeIndex)
   .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
   .delete(
     "/api/agent/:agentId/operations/:operationId/files/:fileId",

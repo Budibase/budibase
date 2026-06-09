@@ -6,6 +6,7 @@ import {
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   ProvisionAgentSlackChannelRequest,
@@ -213,8 +214,20 @@ export class AgentAPI extends TestAPI {
     operationId: string,
     expectations?: Expectations
   ): Promise<FetchAgentKnowledgeResponse> => {
-    return await this._get<FetchAgentKnowledgeResponse>(
-      `/api/agent/${agentId}/operations/${operationId}/knowledge`,
+    const { operations } = await this.fetchKnowledge(agentId, expectations)
+    const knowledge = operations?.[operationId]
+    if (!knowledge) {
+      throw new Error(`Knowledge not found for operation ${operationId}`)
+    }
+    return knowledge
+  }
+
+  fetchKnowledge = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentKnowledgeIndexResponse> => {
+    return await this._get<FetchAgentKnowledgeIndexResponse>(
+      `/api/agent/${agentId}/knowledge`,
       {
         expectations,
       }

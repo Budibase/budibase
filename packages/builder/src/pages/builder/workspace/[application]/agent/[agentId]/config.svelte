@@ -59,6 +59,7 @@
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
   let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
+  let preloadedKnowledgeAgentId: string | undefined = $state()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
@@ -220,6 +221,24 @@
       draft.aiconfig = modelOptions[0].value
       scheduleSave(true)
     }
+  })
+
+  $effect(() => {
+    const agentId = currentAgent?._id
+    if (!agentId || preloadedKnowledgeAgentId === agentId) {
+      return
+    }
+
+    agentsStore
+      .fetchAgentKnowledge(agentId)
+      .then(() => {
+        if (currentAgent?._id === agentId) {
+          preloadedKnowledgeAgentId = agentId
+        }
+      })
+      .catch(error => {
+        console.error(error)
+      })
   })
 
   function resolveAgentToolIcons(
@@ -491,10 +510,14 @@
     }
 
     const agentId = currentAgent._id
-    const knowledge = await agentsStore.fetchOperationKnowledge(
-      agentId,
-      operationId
-    )
+    let knowledge = agentsStore.getOperationKnowledge(agentId, operationId)
+    if (!knowledge) {
+      await agentsStore.fetchAgentKnowledge(agentId)
+      knowledge = agentsStore.getOperationKnowledge(agentId, operationId)
+    }
+    if (!knowledge) {
+      return
+    }
     const fileDeletes = (knowledge.files || [])
       .map(file => file._id)
       .filter((id): id is string => !!id)

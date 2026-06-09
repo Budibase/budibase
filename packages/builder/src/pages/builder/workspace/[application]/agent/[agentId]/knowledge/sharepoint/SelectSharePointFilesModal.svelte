@@ -180,7 +180,7 @@
         )
       }
       await Promise.all([
-        agentsStore.fetchOperationKnowledge(agentId, operationId),
+        agentsStore.fetchAgentKnowledge(agentId),
         workspaceDeploymentStore.fetch(),
       ])
 

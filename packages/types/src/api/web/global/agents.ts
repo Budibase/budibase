@@ -60,6 +60,10 @@ export interface FetchAgentKnowledgeResponse {
   sharePointSources: SharePointKnowledgeSourceSnapshot[]
 }
 
+export interface FetchAgentKnowledgeIndexResponse {
+  operations: Record<string, FetchAgentKnowledgeResponse>
+}
+
 export interface KnowledgeSourceEntry {
   id: string
   name: string

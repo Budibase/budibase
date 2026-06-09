@@ -103,9 +103,7 @@
                 source.fileId
               )
             ).url
-          : chat?.agentId
-            ? (await API.fetchAgentFileUrl(chat.agentId, source.fileId)).url
-            : undefined
+          : undefined
       if (!resolvedUrl) {
         notifications.error("Could not resolve source file URL")
         return

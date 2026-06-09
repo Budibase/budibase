@@ -8,6 +8,7 @@ import {
   ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   DisconnectAgentSharePointSiteResponse,
+  FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -27,7 +28,7 @@ import {
   UpdateAgentRequest,
   type KnowledgeBaseFile,
 } from "@budibase/types"
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 interface AgentStoreState {
   agents: Agent[]
@@ -205,19 +206,32 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.toggleAgentTelegramDeployment(agentId, enabled)
     )
 
-  fetchOperationKnowledge = async (
-    agentId: string,
-    operationId: string
-  ): Promise<FetchAgentKnowledgeResponse> => {
-    const response = await API.fetchOperationKnowledge(agentId, operationId)
-    const cacheKey = this.getKnowledgeCacheKey(agentId, operationId)
+  fetchAgentKnowledge = async (
+    agentId: string
+  ): Promise<FetchAgentKnowledgeIndexResponse> => {
+    const response = await API.fetchAgentKnowledge(agentId)
 
     this.update(state => {
-      state.knowledgeByOperation[cacheKey] = response
+      for (const [operationId, knowledge] of Object.entries(
+        response.operations || {}
+      )) {
+        state.knowledgeByOperation[
+          this.getKnowledgeCacheKey(agentId, operationId)
+        ] = knowledge
+      }
       return state
     })
+
     return response
   }
+
+  getOperationKnowledge = (
+    agentId: string,
+    operationId: string
+  ): FetchAgentKnowledgeResponse | undefined =>
+    get(this.store).knowledgeByOperation[
+      this.getKnowledgeCacheKey(agentId, operationId)
+    ]
 
   uploadOperationFile = async (
     agentId: string,
@@ -267,7 +281,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       body
     )
     await this.fetchAgents()
-    await this.fetchOperationKnowledge(agentId, operationId)
+    await this.fetchAgentKnowledge(agentId)
     return response
   }
 
@@ -297,7 +311,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       siteId,
       body
     )
-    await this.fetchOperationKnowledge(agentId, operationId)
+    await this.fetchAgentKnowledge(agentId)
     await this.fetchAgents()
     return response
   }
@@ -328,7 +342,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     operationId: string
   ): Promise<void> => {
     await API.resetOperationKnowledgeBaseStore(agentId, operationId)
-    await this.fetchOperationKnowledge(agentId, operationId)
+    await this.fetchAgentKnowledge(agentId)
   }
 }
 export const agentsStore = new AgentsStore()
