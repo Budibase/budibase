@@ -273,7 +273,9 @@ describe("automation store", () => {
       tagline: "",
       icon: "",
       description: "",
-      inputs: {},
+      inputs: {
+        tableId: "",
+      },
       schema: {
         inputs: {
           required: [],
