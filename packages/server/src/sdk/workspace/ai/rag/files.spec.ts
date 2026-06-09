@@ -76,7 +76,7 @@ describe("rag files", () => {
   })
 
   describe("ensureKnowledgeBaseForAgent", () => {
-    it("returns existing KB for the agent while holding a per-agent lock", async () => {
+    it("returns existing KB for the agent while holding a per-operation lock", async () => {
       const existing = {
         _id: "kb_existing",
         name: "Existing",
@@ -103,7 +103,7 @@ describe("rag files", () => {
         {
           name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
           type: LockType.AUTO_EXTEND,
-          resource: "agent_1",
+          resource: "agent_1:operation_1",
         },
         expect.any(Function)
       )
