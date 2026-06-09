@@ -142,13 +142,9 @@
     modal.show()
   }
 
-  const handleAddTemplateApi = async () => {
-    if (!block?.id) {
-      return
-    }
-    const templateId = automationStore.actions.consumeApiRequestTemplate(
-      block.id
-    )
+  const handleAddTemplateApi = async (blockId: string) => {
+    const templateId =
+      automationStore.actions.consumeApiRequestTemplate(blockId)
     if (!templateId) {
       return
     }
@@ -157,7 +153,9 @@
     modal.show()
   }
 
-  $: handleAddTemplateApi()
+  $: if (block?.id) {
+    handleAddTemplateApi(block.id)
+  }
 
   const handleSavedQuery = (e: CustomEvent<{ queryId: string }>) => {
     defaultChange({ [fieldKey]: { queryId: e.detail.queryId } }, block)

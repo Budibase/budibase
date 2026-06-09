@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import type { Datasource } from "@budibase/types"
 import APIRequest from "./APIRequest.svelte"
+import { automationStore } from "@/stores/builder"
+import { workspaceConnections } from "@/stores/builder/workspaceConnection"
 
 if (!Element.prototype.animate) {
   Element.prototype.animate = () =>
@@ -112,6 +114,7 @@ vi.mock("@/components/integration/query", () => ({
 
 describe("APIRequest", () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     if (!document.querySelector(".modal-container")) {
       const modalContainer = document.createElement("div")
       modalContainer.classList.add("modal-container")
@@ -218,6 +221,30 @@ describe("APIRequest", () => {
       expect(
         screen.getByTestId("api-endpoint-viewer-template").textContent
       ).toBe("github")
+    })
+  })
+
+  it("opens a pending connector template when the selected block changes", async () => {
+    vi.mocked(
+      automationStore.actions.consumeApiRequestTemplate
+    ).mockImplementation((blockId: string) =>
+      blockId === "step_2" ? ("github" as any) : undefined
+    )
+
+    const { rerender } = render(APIRequest, {
+      props: {
+        block: { id: "step_1", inputs: {} } as any,
+        context: undefined,
+      },
+    })
+
+    await rerender({
+      block: { id: "step_2", inputs: {} } as any,
+      context: undefined,
+    })
+
+    await waitFor(() => {
+      expect(workspaceConnections.startDraft).toHaveBeenCalledWith("github")
     })
   })
 })

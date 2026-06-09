@@ -142,7 +142,11 @@
   let selectedChildTemplateId: string | undefined
 
   // ── DATASOURCE / MODE ────────────────────────────────────────────────────
+  $: queryDatasourceId = queryId
+    ? $queries.list.find(q => q._id === queryId)?.datasourceId
+    : undefined
   $: selectedDatasourceId =
+    queryDatasourceId ||
     datasourceId ||
     $workspaceConnections.draft?.query?.datasourceId ||
     (!$workspaceConnections.draft ? activeDatasourceId : undefined) ||
@@ -155,15 +159,13 @@
   $: isCustomMode = !hasRestTemplate(datasource)
 
   // ── QUERY INITIALISATION ─────────────────────────────────────────────────
-  $: if (!datasourceId && queryId && !activeDatasourceId) {
-    const dsId = $queries.list.find(q => q._id === queryId)?.datasourceId
-    if (dsId) activeDatasourceId = dsId
+  $: if (!datasourceId && queryDatasourceId && !activeDatasourceId) {
+    activeDatasourceId = queryDatasourceId
   }
 
   $: storeQuery =
     queryId &&
-    activeDatasourceId ===
-      $queries.list.find(q => q._id === queryId)?.datasourceId
+    (activeDatasourceId || selectedDatasourceId) === queryDatasourceId
       ? resolveStoreQuery($queries.list, queryId, undefined)
       : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
   $: isNewQuery = !storeQuery?._id

@@ -688,6 +688,23 @@ describe("API Endpoint Viewer", () => {
       })
     })
 
+    it("uses the existing query datasource ahead of draft connection state", async () => {
+      await setupTwoDatasources(REST_DS_WITH_URL, REST_DS_2_WITH_URL)
+      workspaceConnections.startDraft()
+      workspaceConnections.updateDraftQuery({ datasourceId: REST_DS_ID_2 })
+
+      const { container } = setupDOM({ queryId: QUERY_ID })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("REST API 2")
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).not.toContain("Other REST API")
+      })
+    })
+
     it("filters existing query connection selection to the provided connector template", async () => {
       ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
         const templates: Record<string, any> = {
