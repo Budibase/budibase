@@ -753,6 +753,63 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("duplicates project external tables through their datasource", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.PROJECTS]: true },
+        async () => {
+          const { project } = await config.api.project.create({
+            name: "Operations",
+          })
+          const datasource = await config.api.datasource.create(
+            basicDatasource().datasource
+          )
+          const externalTable = basicTable(datasource, {
+            _id: buildExternalTableId(datasource._id!, "TestTable"),
+            projectId: project._id,
+          })
+          const assignedDatasource = await config.api.datasource.update({
+            ...datasource,
+            entities: {
+              [externalTable.name]: externalTable,
+            },
+          })
+          const internalTable = await createInternalTable({
+            name: "Internal project table",
+            projectId: project._id,
+          })
+          const destination = await config.api.workspace.create({
+            name: `Destination ${generator.natural()}`,
+          })
+
+          const resourcesToCopy = await collectDependantResourceIds(project._id)
+          expect(resourcesToCopy).toEqual([
+            project._id,
+            assignedDatasource._id,
+            internalTable._id,
+          ])
+
+          await duplicateResources(resourcesToCopy, destination.appId)
+
+          const destinationDb = db.getDB(
+            db.getDevWorkspaceID(destination.appId),
+            { skip_setup: true }
+          )
+          const duplicatedDatasource = await destinationDb.get<Datasource>(
+            assignedDatasource._id!
+          )
+
+          await expect(destinationDb.get(project._id)).resolves.toBeDefined()
+          await expect(
+            destinationDb.get(internalTable._id!)
+          ).resolves.toBeDefined()
+          expect(
+            duplicatedDatasource.entities![externalTable.name].projectId
+          ).toBe(project._id)
+        }
+      )
+    })
+
     it("sanitises external table project assignments when duplicating datasources", async () => {
       await features.testutils.withFeatureFlags(
         config.getTenantId(),

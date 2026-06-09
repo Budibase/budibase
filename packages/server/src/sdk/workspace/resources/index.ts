@@ -254,8 +254,6 @@ export async function getResourcesInfo(): Promise<
   }
 
   if (projects.length) {
-    const allTables = await sdk.tables.getAllTables()
-
     const buildUsedResource = (
       doc: { _id?: string; name?: string },
       type: ResourceType
@@ -271,11 +269,18 @@ export async function getResourcesInfo(): Promise<
     )) {
       const directMembers: UsedResource[] = [
         ...datasources
-          .filter(datasource => datasource.projectId === project._id)
+          .filter(
+            datasource =>
+              datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
+              (datasource.projectId === project._id ||
+                Object.values(datasource.entities || {}).some(
+                  table => table.projectId === project._id
+                ))
+          )
           .map(datasource =>
             buildUsedResource(datasource, ResourceType.DATASOURCE)
           ),
-        ...allTables
+        ...internalTables
           .filter(table => table.projectId === project._id)
           .map(table => buildUsedResource(table, ResourceType.TABLE)),
         ...queries
