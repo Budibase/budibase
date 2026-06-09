@@ -1,3 +1,3 @@
 export { default as cloudRestricted } from "./cloudRestricted"
 export { handleScimBody } from "./handleScimBody"
-export { default as lockout } from "./lockout"
+export { default as emailLockout } from "./emailLockout"
