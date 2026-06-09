@@ -601,6 +601,7 @@
 
   <KnowledgeTable
     {loading}
+    isUploading={isUploadingActiveAgent}
     rows={knowledgeTableRows}
     onRowClick={handleKnowledgeRowClick}
   />

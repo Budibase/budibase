@@ -237,10 +237,31 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string,
     operationId: string,
     file: File
-  ): Promise<AgentFileUploadResponse> =>
-    await this.runAndRefreshAgents(() =>
+  ): Promise<AgentFileUploadResponse> => {
+    const response = await this.runAndRefreshAgents(() =>
       API.uploadOperationFile(agentId, operationId, file)
     )
+    this.update(state => {
+      const cacheKey = this.getKnowledgeCacheKey(agentId, operationId)
+      const existing = state.knowledgeByOperation[cacheKey]
+      const files = existing?.files.some(
+        existingFile => existingFile._id === response.file._id
+      )
+        ? existing.files.map(existingFile =>
+            existingFile._id === response.file._id
+              ? response.file
+              : existingFile
+          )
+        : [...(existing?.files || []), response.file]
+
+      state.knowledgeByOperation[cacheKey] = {
+        files,
+        sharePointSources: existing?.sharePointSources || [],
+      }
+      return state
+    })
+    return response
+  }
 
   deleteOperationFile = async (
     agentId: string,

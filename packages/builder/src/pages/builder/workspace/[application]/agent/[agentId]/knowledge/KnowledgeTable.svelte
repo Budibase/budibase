@@ -8,11 +8,12 @@
 
   export interface Props {
     loading: boolean
+    isUploading?: boolean
     rows: KnowledgeTableRow[]
     onRowClick?: (_row: KnowledgeTableRow) => void
   }
 
-  let { loading, rows, onRowClick }: Props = $props()
+  let { loading, isUploading = false, rows, onRowClick }: Props = $props()
 
   const customRenderers = [
     { column: "icon", component: KnowledgeIconRenderer },
@@ -31,7 +32,7 @@
     <ProgressCircle size="S" />
     <Body size="XS">Loading knowledge...</Body>
   </div>
-{:else if rows.length === 0}
+{:else if rows.length === 0 && !isUploading}
   <div class="empty-state">
     <Body size="XS">No files uploaded yet</Body>
   </div>

@@ -32,6 +32,25 @@ describe("knowledgeTableRows", () => {
     expect(formatTimestamp(undefined)).toBe("—")
   })
 
+  it("includes pending upload rows", () => {
+    const rows = toFileTableRows(
+      [makeFile({ filename: "a.md" })],
+      async () => {},
+      [
+        {
+          tempId: "pending-1",
+          filename: "b.md",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+      ]
+    )
+
+    expect(rows.map(row => row.filename)).toEqual(["a.md", "b.md"])
+    expect(rows.find(row => row.filename === "b.md")?.displayStatus).toBe(
+      "Uploading"
+    )
+  })
+
   it("builds and sorts file rows", async () => {
     const onDelete = vi.fn(async () => {})
     const rows = toFileTableRows(

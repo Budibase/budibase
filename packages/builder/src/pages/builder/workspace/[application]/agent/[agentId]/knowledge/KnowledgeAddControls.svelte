@@ -88,7 +88,6 @@
     onUploadingChange?.(cacheKey, true, "")
 
     let successfulUploads = 0
-    const successfulTempIds: string[] = []
     const failedUploads: string[] = []
     const oversizedUploads: string[] = []
 
@@ -113,7 +112,7 @@
             upload.file
           )
           successfulUploads += 1
-          successfulTempIds.push(upload.tempId)
+          onPendingUploadRemoved?.(cacheKey, upload.tempId)
         } catch (error) {
           console.error(error)
           failedUploads.push(upload.file.name)
@@ -121,9 +120,8 @@
         }
       }
 
-      await onUploaded?.(agentId, operationId)
-      for (const tempId of successfulTempIds) {
-        onPendingUploadRemoved?.(cacheKey, tempId)
+      if (successfulUploads > 0) {
+        await onUploaded?.(agentId, operationId)
       }
 
       if (failedUploads.length === 0 && oversizedUploads.length === 0) {
@@ -137,7 +135,7 @@
 
       if (successfulUploads > 0) {
         notifications.info(
-          `Uploaded ${successfulUploads}/${uploads.length} files`
+          `Uploaded ${successfulUploads}/${selectedFiles.length} files`
         )
       }
 

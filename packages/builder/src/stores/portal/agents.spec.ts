@@ -167,6 +167,9 @@ describe("AgentsStore file operations", () => {
     )
     expect(fetchAgents).toHaveBeenCalledTimes(1)
     expect(get(store.store).agents).toEqual(agents)
+    expect(
+      get(store.store).knowledgeByOperation["agent_1:operation_1"]?.files
+    ).toEqual([uploadResponse.file])
   })
 
   it("does not refresh agents after deleting a file", async () => {
