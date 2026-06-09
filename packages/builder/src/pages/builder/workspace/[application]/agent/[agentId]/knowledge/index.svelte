@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Button, Checkbox, Layout, notifications } from "@budibase/bbui"
+  import { Body, Button, Layout, notifications, Toggle } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
   import { getErrorMessage } from "@/helpers/errors"
@@ -578,17 +578,25 @@
   </div>
 
   <div class="sources-access">
-    <Checkbox
-      text="Allow users to download knowledge source files from chat"
-      bind:value={allowKnowledgeSourceDownloadDraft}
+    <Toggle
+      value={allowKnowledgeSourceDownloadDraft}
       disabled={savingAllowKnowledgeSourceDownload || !currentAgent?._id}
       on:change={event =>
         persistAllowKnowledgeSourceDownload(Boolean(event.detail))}
     />
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-      When disabled, chat still shows which files were used, without a download
-      link.
-    </Body>
+    <div>
+      <Body
+        color={"var(--spectrum-global-color-gray-900)"}
+        weight="500"
+        size="XS"
+      >
+        Allow users to download knowledge source files from chat
+      </Body>
+      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
+        When disabled, chat still shows which files were used, without a
+        download link.
+      </Body>
+    </div>
   </div>
 
   <KnowledgeTable
@@ -623,26 +631,7 @@
 
 <style>
   .sources-access {
-    --sources-access-label-offset: calc(
-      var(
-          --spectrum-checkbox-m-box-size,
-          var(--spectrum-alias-item-control-2-size-m)
-        ) +
-        var(
-          --spectrum-checkbox-m-text-gap,
-          var(--spectrum-alias-item-control-gap-m)
-        )
-    );
-
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxs);
-    padding-top: var(--spacing-xs);
-  }
-
-  .sources-access :global(p) {
-    margin: 0;
-    padding-left: var(--sources-access-label-offset);
   }
 
   .section-header {
