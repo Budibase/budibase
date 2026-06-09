@@ -379,7 +379,7 @@ export const makeReadableKeyPropSafe = key => {
     return key
   }
 
-  if (new RegExp(/^\[(.+)\]$/).test(key.test)) {
+  if (new RegExp(/^\[(.+)\]$/).test(key)) {
     return key
   }
 

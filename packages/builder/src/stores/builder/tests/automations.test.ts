@@ -17,11 +17,13 @@ import {
 } from "@/test/automationFixtures"
 import {
   AutomationActionStepId,
+  AutomationIOType,
   AutomationStepType,
   isBranchStep,
   isLoopV2Step,
   type Automation,
   type BranchStep,
+  type AutomationStep,
 } from "@budibase/types"
 
 vi.mock("@/stores/builder", () => {
@@ -260,6 +262,64 @@ describe("automation store", () => {
     ]
 
     expect(isNoOpBlockMove(sourcePath, destPath)).toBe(true)
+  })
+
+  it("uses app readable binding escaping for automation step bindings", () => {
+    const queryRowsStep: AutomationStep = {
+      id: "queryRows",
+      stepId: AutomationActionStepId.QUERY_ROWS,
+      type: AutomationStepType.ACTION,
+      name: "Query rows",
+      tagline: "",
+      icon: "",
+      description: "",
+      inputs: {},
+      schema: {
+        inputs: {
+          required: [],
+          properties: {},
+        },
+        outputs: {
+          required: [],
+          properties: {
+            rows: {
+              type: AutomationIOType.ARRAY,
+            },
+          },
+        },
+      },
+    }
+    const branch = branchStep()
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [queryRowsStep, branch],
+      },
+    }
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    const bindings = automationStore.actions.getAvailableBindings(
+      get(selectedAutomation).blockRefs[branch.id],
+      automation
+    )
+
+    expect(bindings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          readableBinding: "steps.[Query rows].rows",
+          runtimeBinding: "steps.queryRows.rows",
+        }),
+      ])
+    )
   })
 
   it("deletes a linear Loop V2 child without deleting the following branch", async () => {

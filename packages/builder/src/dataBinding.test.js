@@ -4,6 +4,7 @@ import {
   readableToRuntimeBinding,
   updateReferencesInObject,
   getSchemaForDatasource,
+  makeReadableKeyPropSafe,
 } from "@/dataBinding"
 import { JSONUtils } from "@budibase/frontend-core"
 function createMockStore(initialValue) {
@@ -67,6 +68,20 @@ const getQueriesStore = () => queriesStore
 describe("Builder dataBinding", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  describe("makeReadableKeyPropSafe", () => {
+    it("wraps readable binding segments containing spaces", () => {
+      expect(makeReadableKeyPropSafe("Query rows")).toBe("[Query rows]")
+    })
+
+    it("preserves readable binding segments without spaces", () => {
+      expect(makeReadableKeyPropSafe("rows")).toBe("rows")
+    })
+
+    it("preserves already wrapped readable binding segments", () => {
+      expect(makeReadableKeyPropSafe("[Query rows]")).toBe("[Query rows]")
+    })
   })
 
   describe("runtimeToReadableBinding", () => {

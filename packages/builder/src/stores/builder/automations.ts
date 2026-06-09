@@ -7,6 +7,7 @@ import {
   getSchemaForDatasourcePlus,
   getSettingBindings,
   getUserBindings,
+  makeReadableKeyPropSafe,
   migrateReferencesInObject,
 } from "@/dataBinding"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
@@ -223,6 +224,13 @@ export const getToolbarFlowEndInsertion = (
 
   const r = blockRefs[cursor.id]
   return r?.pathTo?.length ? { targetPath: r.pathTo, anchorRef: r } : fallback()
+}
+
+const getReadableAutomationBinding = (
+  bindingName: string,
+  ...path: string[]
+) => {
+  return ["steps", bindingName, ...path].map(makeReadableKeyPropSafe).join(".")
 }
 
 let testStatusTimer: NodeJS.Timeout | undefined
@@ -1034,14 +1042,18 @@ const automationActions = (store: AutomationStore) => ({
         if (name === "currentItem") {
           defaultReadable = "loop.currentItem"
         } else if (name?.startsWith?.("items.") && opts?.readableChildName) {
-          defaultReadable = `steps.${bindingName}.items.${opts.readableChildName}`
+          defaultReadable = getReadableAutomationBinding(
+            bindingName,
+            "items",
+            opts.readableChildName
+          )
         } else {
-          defaultReadable = `steps.${bindingName}.${name}`
+          defaultReadable = getReadableAutomationBinding(bindingName, name)
         }
       } else {
         defaultReadable =
           bindingName && isStep
-            ? `steps.${bindingName}.${name}`
+            ? getReadableAutomationBinding(bindingName, name)
             : runtimeBinding
       }
 
