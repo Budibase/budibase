@@ -151,6 +151,7 @@ const withAgentDefaults = (agent: Agent): Agent => ({
 export const sanitiseAgentForExport = (agent: Agent): Agent => {
   const sanitised = structuredClone(withAgentDefaults(agent))
   sanitised.live = false
+  delete sanitised.publishedAt
 
   if (sanitised.discordIntegration) {
     delete sanitised.discordIntegration.publicKey
