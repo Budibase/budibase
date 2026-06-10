@@ -39,7 +39,6 @@ export interface AgentEndpoints {
     agentId: string
   ) => Promise<FetchAgentKnowledgeIndexResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
-  createAgentOperation: (agentId: string) => Promise<UpdateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
   duplicateAgent: (agentId: string) => Promise<DuplicateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
@@ -151,13 +150,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     return await API.post({
       url: "/api/agent",
       body: agent,
-    })
-  },
-
-  createAgentOperation: async (agentId: string) => {
-    return await API.post({
-      url: `/api/agent/${agentId}/operations`,
-      body: {},
     })
   },
 
