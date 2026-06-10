@@ -59,6 +59,10 @@
       return []
     }
 
+    // agentsStore getters use get() internally, so $derived must read $agentsStore
+    // to subscribe — otherwise polling updates never re-render these values.
+    const _store = $agentsStore
+
     return agentsStore.getOperationKnowledge(agentId, operationId)?.files || []
   })
 
@@ -66,6 +70,7 @@
     if (!agentId || !operationId) {
       return []
     }
+    const _store = $agentsStore
 
     return (
       agentsStore.getOperationKnowledge(agentId, operationId)

@@ -51,7 +51,7 @@ describe("knowledgeTableRows", () => {
     )
   })
 
-  it("hides pending upload rows when the file is already in the list", () => {
+  it("shows pending uploads even when another file has the same filename", () => {
     const rows = toFileTableRows(
       [
         makeFile({
@@ -66,11 +66,21 @@ describe("knowledgeTableRows", () => {
           filename: "notes.txt",
           createdAt: "2026-01-01T00:00:00.000Z",
         },
+        {
+          tempId: "pending-2",
+          filename: "notes.txt",
+          createdAt: "2026-01-01T00:00:01.000Z",
+        },
       ]
     )
 
-    expect(rows).toHaveLength(1)
-    expect(rows[0].displayStatus).toBe("Processing")
+    expect(rows).toHaveLength(3)
+    expect(
+      rows.filter(row => row.displayStatus === "Uploading").map(row => row._id)
+    ).toEqual(["pending-1", "pending-2"])
+    expect(rows.find(row => row._id === "file_1")?.displayStatus).toBe(
+      "Processing"
+    )
   })
 
   it("builds and sorts file rows", async () => {

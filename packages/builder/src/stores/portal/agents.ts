@@ -430,7 +430,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   private upsertOperationKnowledgeFile = (
     agentId: string,
     operationId: string,
-    file: KnowledgeBaseFile
+    file: KnowledgeBaseFile,
+    pendingTempId?: string
   ) => {
     this.update(state => {
       const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
@@ -447,6 +448,18 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         files,
         sharePointSources: existing?.sharePointSources || [],
       }
+
+      if (pendingTempId) {
+        const uploadState =
+          state.knowledgeUploadByOperation[cacheKey] || emptyUploadState()
+        state.knowledgeUploadByOperation[cacheKey] = {
+          ...uploadState,
+          pendingUploads: uploadState.pendingUploads.filter(
+            pending => pending.tempId !== pendingTempId
+          ),
+        }
+      }
+
       return state
     })
     this.syncKnowledgePollingForAgent(agentId)
@@ -521,13 +534,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
             upload.file
           )
           successfulUploads += 1
-          this.upsertOperationKnowledgeFile(agentId, operationId, response.file)
-          this.setOperationUploadState(cacheKey, current => ({
-            ...current,
-            pendingUploads: current.pendingUploads.filter(
-              pending => pending.tempId !== upload.tempId
-            ),
-          }))
+          this.upsertOperationKnowledgeFile(
+            agentId,
+            operationId,
+            response.file,
+            upload.tempId
+          )
         } catch (error) {
           console.error("Error uploading file:", error)
           failedUploads.push(upload.file.name)
