@@ -17,7 +17,7 @@
 
   export interface Props {
     agentId?: string
-    operationId?: string
+    operationId: string
     siteId?: string
     onEdit?: (_siteId: string) => Promise<void> | void
   }

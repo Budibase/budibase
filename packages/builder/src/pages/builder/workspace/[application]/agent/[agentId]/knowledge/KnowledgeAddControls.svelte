@@ -13,7 +13,7 @@
 
   export interface Props {
     agentId?: string
-    operationId?: string
+    operationId: string
     isUploading?: boolean
     uploadProgress?: string
     onPendingUploadsAdded?: (cacheKey: string, uploads: PendingUpload[]) => void
