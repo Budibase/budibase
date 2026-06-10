@@ -7,7 +7,13 @@ import {
 } from "@budibase/types"
 import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
-import { Cookie, DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
+import {
+  Cookie,
+  DocumentType,
+  Header,
+  MAX_VALID_DATE,
+  SEPARATOR,
+} from "../constants"
 import * as context from "../context"
 import { getAllWorkspaces } from "../db"
 import env from "../environment"
