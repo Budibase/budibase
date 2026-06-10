@@ -7,11 +7,12 @@ import {
 } from "@budibase/types"
 import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
-import { DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
+import { Cookie, DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
 import * as context from "../context"
 import { getAllWorkspaces } from "../db"
 import env from "../environment"
 import * as tenancy from "../tenancy"
+import { getSessionExpiryDate } from "./session"
 
 const WORKSPACE_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
@@ -211,6 +212,7 @@ export function setCookie(
     httpOnly?: boolean
     sameSite?: "lax" | "strict" | "none"
     secure?: boolean
+    expires?: Date
   } = { sign: true }
 ) {
   if (value && opts && opts.sign) {
@@ -234,7 +236,7 @@ export function setCookie(
   }
 
   const config: SetOption = {
-    expires: MAX_VALID_DATE,
+    expires: opts.expires ?? MAX_VALID_DATE,
     path: "/",
     httpOnly: opts.httpOnly ?? false,
     secure,
@@ -250,6 +252,14 @@ export function setCookie(
   }
 
   ctx.cookies.set(name, value, config)
+}
+
+export function setAuthCookie(ctx: Ctx, value: string) {
+  setCookie(ctx, value, Cookie.Auth, {
+    sign: false,
+    httpOnly: true,
+    expires: getSessionExpiryDate(),
+  })
 }
 
 /**

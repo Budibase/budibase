@@ -128,9 +128,12 @@ export function authenticated(
       // check the actual user is authenticated first, try header or cookie
       let headerToken = getHeader(ctx, Header.TOKEN)
 
-      const authCookie =
-        getCookie<SessionCookie>(ctx, Cookie.Auth) ||
-        openJwt<SessionCookie>(headerToken)
+      const authCookie = getCookie<SessionCookie>(ctx, Cookie.Auth)
+      if (authCookie && !authCookie.exp) {
+        clearCookie(ctx, Cookie.Auth)
+        ctx.throw(401, "Authentication token has expired")
+      }
+      const authToken = authCookie || openJwt<SessionCookie>(headerToken)
       let apiKey = getHeader(ctx, Header.API_KEY)
 
       if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
@@ -142,9 +145,9 @@ export function authenticated(
         user: User | { tenantId: string } | undefined = undefined,
         internal = false,
         loginMethod: LoginMethod | undefined = undefined
-      if (authCookie && !apiKey) {
-        const sessionId = authCookie.sessionId
-        const userId = authCookie.userId
+      if (authToken && !apiKey) {
+        const sessionId = authToken.sessionId
+        const userId = authToken.userId
         let session
         try {
           // getting session handles error checking (if session exists etc)
