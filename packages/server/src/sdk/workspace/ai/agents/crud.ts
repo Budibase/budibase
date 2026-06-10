@@ -9,6 +9,7 @@ import { DocumentType } from "@budibase/types"
 import type { Agent, Optional } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
+import { assertAgentHasValidConfig } from "./utils"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -322,11 +323,16 @@ export async function create(
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
     knowledgeBases: request.knowledgeBases || [],
+    allowKnowledgeSourceDownload: request.allowKnowledgeSourceDownload,
     knowledgeSources: request.knowledgeSources,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
     telegramIntegration: request.telegramIntegration,
+  }
+
+  if (agent.live) {
+    await assertAgentHasValidConfig(agent)
   }
 
   const { rev } = await db.put({
@@ -369,6 +375,7 @@ export async function duplicate(
     createdBy,
     enabledTools: source.enabledTools || [],
     knowledgeBases: source.knowledgeBases || [],
+    allowKnowledgeSourceDownload: source.allowKnowledgeSourceDownload,
   })
 }
 
@@ -416,6 +423,10 @@ export async function update(agent: Agent): Promise<Agent> {
       existing: existing?.telegramIntegration,
       incoming: agent.telegramIntegration,
     }),
+  }
+
+  if (updated.live) {
+    await assertAgentHasValidConfig(updated)
   }
 
   const hasBeenPublished =

@@ -17,6 +17,21 @@ describe("url helpers", () => {
       expect(url).toEqual(`${BASE}/portal/billing`)
     })
 
+    it("builds billing url with tenant and prepaid credits modal", () => {
+      const url = accountPortalBillingUrl(BASE, {
+        tenantId: "tenant123",
+        purchasePrepaidAiCredits: true,
+      })
+      expect(url).toEqual(
+        `${BASE}/portal/billing?tenantId=tenant123&purchasePrepaidAiCredits=1`
+      )
+    })
+
+    it("builds billing url with tenant only when passed as string", () => {
+      const url = accountPortalBillingUrl(BASE, "tenant123")
+      expect(url).toEqual(`${BASE}/portal/billing?tenantId=tenant123`)
+    })
+
     it("falls back to path when base missing", () => {
       const url = accountPortalUpgradeUrl(undefined)
       expect(url).toEqual("/portal/upgrade")

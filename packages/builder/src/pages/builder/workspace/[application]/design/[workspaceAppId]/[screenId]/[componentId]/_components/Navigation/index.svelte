@@ -182,6 +182,15 @@
           }}
         />
         <PropertyControl
+          label="Hover icon"
+          control={ColorPicker}
+          onChange={color => update("navLinkHoverIconColor", color)}
+          value={$nav.navLinkHoverIconColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
           label="Hover background"
           control={ColorPicker}
           onChange={color => update("navLinkHoverBackground", color)}
@@ -195,6 +204,15 @@
           control={ColorPicker}
           onChange={color => update("navLinkActiveTextColor", color)}
           value={$nav.navLinkActiveTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Active icon"
+          control={ColorPicker}
+          onChange={color => update("navLinkActiveIconColor", color)}
+          value={$nav.navLinkActiveIconColor}
           props={{
             spectrumTheme: $themeStore.theme,
           }}

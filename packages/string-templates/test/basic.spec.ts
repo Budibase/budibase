@@ -8,6 +8,7 @@ import {
   doesContainString,
   disableEscaping,
   findHBSBlocks,
+  processJsonStringSync,
 } from "../src/index"
 
 describe("Test that the string processing works correctly", () => {
@@ -122,6 +123,47 @@ describe("Test that the object processing works correctly", () => {
       second: "true",
       third: "another string",
       forth: "with value",
+    })
+  })
+})
+
+describe("Test that JSON string processing works correctly", () => {
+  const options = {
+    noEscaping: true,
+    noHelpers: true,
+    escapeNewlines: true,
+  }
+
+  it("escapes bindings in quoted JSON strings", () => {
+    const injectedName = 'alice","admin":true,"name":"bob'
+    const output = processJsonStringSync(
+      '{"name":"{{ name }}","role":"user"}',
+      { name: injectedName },
+      options
+    )
+
+    expect(output).toEqual({
+      name: injectedName,
+      role: "user",
+    })
+  })
+
+  it("parses bindings in unquoted JSON fields", () => {
+    const output = processJsonStringSync(
+      '{"status":"{{ status }}","amount": {{ amount }} }',
+      {
+        status: "requested",
+        amount: '{"2026-06-17":1,"2026-06-18":1}',
+      },
+      options
+    )
+
+    expect(output).toEqual({
+      status: "requested",
+      amount: {
+        "2026-06-17": 1,
+        "2026-06-18": 1,
+      },
     })
   })
 })

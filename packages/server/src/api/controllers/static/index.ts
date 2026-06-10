@@ -22,6 +22,7 @@ import {
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
   PWAManifest,
+  PWAManifestImage,
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
@@ -72,6 +73,60 @@ const ACTIVE_CONTENT_MIME_TYPES = [
 
 const MAX_SNIFF_BYTES = 4096
 const GLOBAL_CLIENT_ASSET_ID = "global"
+const PWA_MANIFEST_FILENAMES = ["icons.json", "manifest.json"]
+const PWA_ICON_PATTERNS = [
+  /^android\/launchericon-(\d+)x\1\.png$/i,
+  /^ios\/(\d+)\.png$/i,
+]
+
+const listFilesRecursively = async (directory: string): Promise<string[]> => {
+  const entries = await fsp.readdir(directory, { withFileTypes: true })
+  const files = await Promise.all(
+    entries.map(async entry => {
+      const entryPath = join(directory, entry.name)
+      if (entry.isDirectory()) {
+        return await listFilesRecursively(entryPath)
+      }
+
+      if (entry.isFile()) {
+        return [entryPath]
+      }
+
+      return []
+    })
+  )
+
+  return files.flat().sort()
+}
+
+const derivePWAIconsFromFiles = async (
+  directory: string,
+  files: string[]
+): Promise<PWAManifestImage[]> => {
+  const icons: PWAManifestImage[] = []
+
+  for (const filePath of files) {
+    const relativePath = path.relative(directory, filePath)
+    const normalizedPath = relativePath.split(path.sep).join("/")
+
+    for (const pattern of PWA_ICON_PATTERNS) {
+      const match = normalizedPath.match(pattern)
+      if (!match) {
+        continue
+      }
+
+      const size = match[1]
+      icons.push({
+        src: relativePath,
+        sizes: `${size}x${size}`,
+        type: "image/png",
+      })
+      break
+    }
+  }
+
+  return icons
+}
 
 const detectActiveContent = async (filePath: fs.PathLike) => {
   const handle = await fsp.open(filePath, "r")
@@ -233,36 +288,47 @@ export async function processPWAZip(ctx: UserCtx) {
     await fsp.mkdir(tempDir, { recursive: true })
 
     await extract(filePath, { dir: tempDir })
-    const iconsJsonPath = join(tempDir, "icons.json")
 
-    let iconsJsonStats
-    try {
-      iconsJsonStats = await fsp.lstat(iconsJsonPath)
-    } catch (_err) {
-      ctx.throw(400, "Invalid zip structure - missing icons.json")
-    }
-    if (!iconsJsonStats.isFile()) {
-      ctx.throw(400, "Invalid zip structure - missing icons.json")
+    const files = await listFilesRecursively(tempDir)
+    const manifestPath = files.find(filePath => {
+      const fileName = path.basename(filePath).toLowerCase()
+      return PWA_MANIFEST_FILENAMES.includes(fileName)
+    })
+    let manifestData: { icons?: PWAManifestImage[] } | undefined
+    let baseDir = tempDir
+
+    if (manifestPath) {
+      try {
+        const manifestContent = await fsp.readFile(manifestPath, "utf-8")
+        manifestData = JSON.parse(manifestContent) as {
+          icons?: PWAManifestImage[]
+        }
+      } catch (_error) {
+        ctx.throw(400, "Invalid PWA manifest file - could not parse JSON")
+      }
+
+      if (!manifestData?.icons || !Array.isArray(manifestData.icons)) {
+        ctx.throw(400, "Invalid PWA manifest file - missing icons array")
+      }
+      baseDir = path.dirname(manifestPath)
+    } else {
+      const derivedIcons = await derivePWAIconsFromFiles(tempDir, files)
+      if (derivedIcons.length === 0) {
+        ctx.throw(
+          400,
+          "Invalid zip structure - missing icons.json, manifest.json, or recognizable PWA icon files"
+        )
+      }
+
+      manifestData = { icons: derivedIcons }
     }
 
-    let iconsData
-    try {
-      const iconsContent = await fsp.readFile(iconsJsonPath, "utf-8")
-      iconsData = JSON.parse(iconsContent)
-    } catch (error) {
-      ctx.throw(400, "Invalid icons.json file - could not parse JSON")
-    }
-
-    if (!iconsData.icons || !Array.isArray(iconsData.icons)) {
-      ctx.throw(400, "Invalid icons.json file - missing icons array")
-    }
-
-    const icons = []
-    const baseDir = path.dirname(iconsJsonPath)
+    const iconsData = manifestData?.icons || []
+    const icons: PWAManifestImage[] = []
     const realBaseDir = await fsp.realpath(baseDir)
     const appId = context.getProdWorkspaceId()
 
-    for (const icon of iconsData.icons) {
+    for (const icon of iconsData) {
       const resolvedSrc = icon.src ? path.resolve(baseDir, icon.src) : undefined
       let validIconFile = false
       if (resolvedSrc?.startsWith(baseDir + path.sep)) {
@@ -312,8 +378,14 @@ export async function processPWAZip(ctx: UserCtx) {
     }
 
     ctx.body = { icons }
-  } catch (error: any) {
-    ctx.throw(500, `Error processing zip: ${error.message}`)
+  } catch (error) {
+    if (error && typeof error === "object" && "status" in error) {
+      throw error
+    }
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error"
+    ctx.throw(500, `Error processing zip: ${errorMessage}`)
   }
 }
 
@@ -367,7 +439,12 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     // When embedded, allow the host site to authenticate the user via a signed
     // token. Establishing the session here sets the auth cookie on the initial
     // document response so the client's subsequent API calls are authenticated.
-    if (bbHeaderEmbed && !ctx.isAuthenticated && appInfo.embedSSO?.enabled) {
+    if (
+      bbHeaderEmbed &&
+      !ctx.isAuthenticated &&
+      appInfo.embedSSO?.enabled &&
+      (await pro.features.isEmbedAuthEnabled())
+    ) {
       const embedToken = ctx.query.jwt
       if (typeof embedToken === "string" && embedToken) {
         try {

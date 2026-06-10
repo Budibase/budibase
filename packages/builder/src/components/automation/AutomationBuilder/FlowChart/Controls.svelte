@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
-  import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
@@ -10,13 +8,12 @@
   import type { AutomationSaveOptions } from "@/stores/builder/automations"
   import type { Automation } from "@budibase/types"
 
-  const dispatch = createEventDispatcher()
-
   export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
   export let canAddNote = true
+  export let addNoteDisabledReason = "Move closer to add a note"
   export let controlsEl: HTMLDivElement | null = null
-
-  const flow = useSvelteFlow()
+  export let onAddNote = () => {}
+  export let onAutoLayout = () => {}
 
   const openAddStepPanel = () => {
     if ($automationStore.viewMode !== ViewMode.EDITOR) {
@@ -85,16 +82,16 @@
         tooltipPosition={TooltipPosition.Top}
         color="var(--spectrum-alias-text-color)"
         hoverColor="var(--spectrum-alias-text-color-hover)"
-        on:click={() => flow.fitView()}
+        on:click={onAutoLayout}
       />
     </span>
     {#if $automationStore.viewMode === ViewMode.EDITOR}
       <span class="icon-btn-wrap" class:disabled={!canAddNote}>
         <Icon
-          name="chat"
+          name="note-blank"
           size="L"
           hoverable={canAddNote}
-          tooltip={canAddNote ? "Add a note" : "Move closer to add a note"}
+          tooltip={canAddNote ? "Add a note" : addNoteDisabledReason}
           tooltipPosition={TooltipPosition.Top}
           color={canAddNote
             ? "var(--spectrum-alias-text-color)"
@@ -102,7 +99,7 @@
           hoverColor="var(--spectrum-alias-text-color-hover)"
           on:click={() => {
             if (canAddNote) {
-              dispatch("addnote")
+              onAddNote()
             }
           }}
         />
@@ -129,7 +126,7 @@
 <style>
   .controls {
     position: absolute;
-    z-index: 10;
+    z-index: 1003;
     left: 50%;
     bottom: var(--spacing-l);
     transform: translateX(-50%);
