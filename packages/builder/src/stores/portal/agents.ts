@@ -247,16 +247,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       live,
     }))
 
-  updateOperationAllowKnowledgeSourceDownload = async (
-    agentId: string,
-    operationId: string,
-    allowKnowledgeSourceDownload: boolean
-  ) =>
-    await this.updateOperation(agentId, operationId, operation => ({
-      ...operation,
-      allowKnowledgeSourceDownload,
-    }))
-
   duplicateAgent = async (agentId: string) => {
     const duplicated = await API.duplicateAgent(agentId)
     this.update(state => {

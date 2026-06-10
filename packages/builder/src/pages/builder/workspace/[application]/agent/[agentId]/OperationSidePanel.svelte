@@ -30,11 +30,11 @@
     toolsLoaded = false,
     availableTools = [],
     webSearchConfigured = false,
-    onClose = () => {},
-    onUpdated = () => {},
-    onAddApiConnection = () => {},
-    onConfigureWebSearch = () => {},
-    onSetOperationLive = async () => false,
+    onClose,
+    onUpdated,
+    onAddApiConnection,
+    onConfigureWebSearch,
+    onSetOperationLive,
   }: {
     open?: boolean
     operation: AgentOperation
@@ -44,14 +44,11 @@
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
     webSearchConfigured?: boolean
-    onClose?: () => void
-    onUpdated?: () => void
-    onAddApiConnection?: () => void
-    onConfigureWebSearch?: () => void
-    onSetOperationLive?: (
-      operationId: string,
-      live: boolean
-    ) => Promise<boolean>
+    onClose: () => void
+    onUpdated: () => Promise<boolean>
+    onAddApiConnection: () => void
+    onConfigureWebSearch: () => void
+    onSetOperationLive: (operationId: string, live: boolean) => Promise<boolean>
   } = $props()
 
   let insertAtPos: InsertAtPositionFn | undefined = $state(undefined)
@@ -342,7 +339,7 @@
             {/if}
           </div>
 
-          <Knowledge bind:operation />
+          <Knowledge bind:operation {onUpdated} />
         </div>
       </Panel>
     </ResizablePanel>

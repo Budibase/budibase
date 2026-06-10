@@ -25,7 +25,6 @@ vi.mock("@/api", () => {
 })
 
 const fetchAgents = vi.mocked(API.fetchAgents)
-const updateAgent = vi.mocked(API.updateAgent)
 const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadOperationFile = vi.mocked(API.uploadOperationFile)
 const deleteOperationFile = vi.mocked(API.deleteOperationFile)
@@ -327,74 +326,5 @@ describe("AgentsStore file operations", () => {
       "operation_1"
     )
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
-  })
-})
-
-describe("AgentsStore operation updates", () => {
-  let store: AgentsStore
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-    store = new AgentsStore()
-  })
-
-  it("updates allowKnowledgeSourceDownload through the store", async () => {
-    const existingAgent = {
-      _id: "agent_1",
-      _rev: "1-rev",
-      name: "Support bot",
-      operations: [
-        {
-          id: "operation_1",
-          name: "Main operation",
-          live: false,
-          allowKnowledgeSourceDownload: true,
-        },
-        {
-          id: "operation_2",
-          name: "Secondary operation",
-          live: false,
-          allowKnowledgeSourceDownload: true,
-        },
-      ],
-    } as Agent
-    const updatedAgent = {
-      ...existingAgent,
-      _rev: "2-rev",
-      operations: [
-        {
-          ...existingAgent.operations![0],
-          allowKnowledgeSourceDownload: false,
-        },
-        existingAgent.operations![1],
-      ],
-    } as Agent
-
-    store.set({
-      ...createEmptyState(),
-      agents: [existingAgent],
-      agentsLoaded: true,
-      currentAgentId: existingAgent._id,
-    })
-    updateAgent.mockResolvedValue(updatedAgent)
-
-    const result = await store.updateOperationAllowKnowledgeSourceDownload(
-      "agent_1",
-      "operation_1",
-      false
-    )
-
-    expect(updateAgent).toHaveBeenCalledWith({
-      ...existingAgent,
-      operations: [
-        {
-          ...existingAgent.operations![0],
-          allowKnowledgeSourceDownload: false,
-        },
-        existingAgent.operations![1],
-      ],
-    })
-    expect(result).toEqual(updatedAgent)
-    expect(get(store.store).agents).toEqual([updatedAgent])
   })
 })

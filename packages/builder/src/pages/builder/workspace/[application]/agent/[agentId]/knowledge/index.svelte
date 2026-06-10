@@ -2,7 +2,6 @@
   import { Body, Button, Layout, notifications, Toggle } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
-  import { getErrorMessage } from "@/helpers/errors"
   import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
     AgentKnowledgeSourceType,
@@ -31,8 +30,12 @@
   } from "./knowledgeTableRows"
   import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
   import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
+  import { tick } from "svelte"
 
-  let { operation = $bindable() }: { operation: AgentOperation } = $props()
+  let {
+    operation = $bindable(),
+    onUpdated,
+  }: { operation: AgentOperation; onUpdated: () => Promise<boolean> } = $props()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let sharePointSources = $derived.by(() =>
@@ -55,7 +58,7 @@
     if (!agentId || !operationId) {
       return []
     }
-    const _store = $agentsStore
+
     return agentsStore.getOperationKnowledge(agentId, operationId)?.files || []
   })
 
@@ -63,7 +66,7 @@
     if (!agentId || !operationId) {
       return []
     }
-    const _store = $agentsStore
+
     return (
       agentsStore.getOperationKnowledge(agentId, operationId)
         ?.sharePointSources || []
@@ -121,6 +124,7 @@
       ...operation,
       knowledgeBases: latest.knowledgeBases,
       knowledgeSources: latest.knowledgeSources,
+      allowKnowledgeSourceDownload: latest.allowKnowledgeSourceDownload,
     }
   }
 
@@ -158,28 +162,6 @@
       notifications.warning(message)
     } else {
       notifications.success(message)
-    }
-  }
-
-  const persistAllowKnowledgeSourceDownload = async (next: boolean) => {
-    if (!agentId || !operationId) {
-      return
-    }
-
-    savingAllowKnowledgeSourceDownload = true
-    try {
-      await agentsStore.updateOperationAllowKnowledgeSourceDownload(
-        agentId,
-        operationId,
-        next
-      )
-      await refreshDeploymentStatus()
-    } catch (error) {
-      notifications.error(
-        getErrorMessage(error) || "Failed to save download setting"
-      )
-    } finally {
-      savingAllowKnowledgeSourceDownload = false
     }
   }
 
@@ -416,8 +398,15 @@
     <Toggle
       bind:value={operation.allowKnowledgeSourceDownload}
       disabled={savingAllowKnowledgeSourceDownload || !agentId}
-      on:change={event =>
-        persistAllowKnowledgeSourceDownload(Boolean(event.detail))}
+      on:change={async () => {
+        savingAllowKnowledgeSourceDownload = true
+        try {
+          await tick()
+          await onUpdated()
+        } finally {
+          savingAllowKnowledgeSourceDownload = false
+        }
+      }}
     />
     <div>
       <Body

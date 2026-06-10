@@ -61,7 +61,7 @@ Any constraints the agent must follow.
       operationId: string,
       live: boolean
     ) => Promise<boolean>
-    onUpdated: () => void | Promise<boolean | void>
+    onUpdated: () => Promise<boolean>
   } = $props()
 
   let operationPanelOpen = $state(false)
