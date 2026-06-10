@@ -413,12 +413,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId,
       user: ctx.user,
     })
-    const agentRequest = await sdk.ai.agentRequests.startRequest({
-      agentId,
-      chatConversationId: chatId,
-      latestPrompt: run.latestQuestion,
-      userId,
-    })
+    const agentRequest = await sdk.ai.agentRequests.createOrUpdateRequestForPrompt(
+      {
+        agentId,
+        sessionId,
+        latestPrompt: run.latestQuestion,
+        userId,
+      }
+    )
 
     const pendingToolCalls = new Set<string>()
 

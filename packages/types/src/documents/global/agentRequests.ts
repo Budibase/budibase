@@ -4,7 +4,7 @@ export type AgentRequestStatus = "waiting" | "completed"
 
 export interface AgentRequest extends Document {
   agentId: string
-  chatConversationId: string
+  sessionId: string
   userId: string
   promptHistory: string[]
   status: AgentRequestStatus

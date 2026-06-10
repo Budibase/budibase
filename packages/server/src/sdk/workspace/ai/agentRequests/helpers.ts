@@ -1,59 +1,91 @@
+import { generateText } from "ai"
 import type { AgentRequest } from "@budibase/types"
+import { createBBAIClient } from "../llm/bbai"
 
-const SAME_REQUEST_PREFIXES = [
-  "summarise",
-  "summarize",
-  "shorten",
-  "rephrase",
-  "rewrite",
-  "translate",
-  "explain",
-  "expand",
-  "continue",
-  "clarify",
-  "make it",
-  "turn it",
-  "put it",
-  "format it",
-  "now ",
-  "also ",
-  "and ",
-  "what about",
-]
+const BBAI_DEFAULT_MODEL = "budibase/v1"
 
-const SAME_REQUEST_PATTERNS = [
-  /\b(it|that|this|them|those|these|previous|above|same)\b/i,
-  /\b(in|under)\s+\d+\s+words?\b/i,
-  /\b(shorter|longer|brief|briefly)\b/i,
-]
+interface AgentRequestBoundaryDecision {
+  decision: "same_request" | "new_request"
+}
+
+export interface AgentRequestBoundaryAnalysis {
+  decision: AgentRequestBoundaryDecision["decision"]
+}
 
 const normalizePrompt = (prompt: string) => prompt.trim().replace(/\s+/g, " ")
 
-export function shouldCreateNewAgentRequest({
+const extractJson = (value: string): AgentRequestBoundaryDecision | undefined => {
+  const trimmed = value.trim()
+  const jsonMatch = trimmed.match(/\{[\s\S]*\}/)
+  const candidate = jsonMatch?.[0] || trimmed
+
+  try {
+    const parsed = JSON.parse(candidate) as Partial<AgentRequestBoundaryDecision>
+    if (
+      parsed.decision === "same_request" ||
+      parsed.decision === "new_request"
+    ) {
+      return parsed as AgentRequestBoundaryDecision
+    }
+  } catch {
+    return undefined
+  }
+
+  return undefined
+}
+
+export async function analyzeAgentRequestBoundary({
   latestPrompt,
   currentRequest,
+  agentId,
+  sessionId,
 }: {
   latestPrompt: string
   currentRequest?: AgentRequest
-}): boolean {
+  agentId: string
+  sessionId: string
+}): Promise<AgentRequestBoundaryAnalysis> {
   if (!currentRequest) {
-    return true
+    return {
+      decision: "new_request",
+    }
   }
 
-  const normalizedPrompt = normalizePrompt(latestPrompt).toLowerCase()
+  const normalizedPrompt = normalizePrompt(latestPrompt)
   if (!normalizedPrompt) {
-    return false
+    return {
+      decision: "same_request",
+    }
   }
 
-  if (
-    SAME_REQUEST_PREFIXES.some(prefix => normalizedPrompt.startsWith(prefix))
-  ) {
-    return false
-  }
+  const llm = await createBBAIClient(
+    BBAI_DEFAULT_MODEL,
+    `agent-request:${sessionId}`,
+    undefined,
+    "low",
+    agentId
+  )
+  const result = await generateText({
+    model: llm.chat,
+    providerOptions: llm.providerOptions?.(false),
+    messages: [
+      {
+        role: "system",
+        content:
+          'You decide whether a user message starts a new request or continues an existing one. Reply with JSON only in the form {"decision":"same_request"} or {"decision":"new_request"}. Choose "same_request" when the new prompt is a follow-up, transformation, clarification, continuation, or refinement of the earlier request. Choose "new_request" when the user has changed goal or topic.',
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          currentRequestPromptHistory: currentRequest.promptHistory,
+          latestPrompt: normalizedPrompt,
+        }),
+      },
+    ],
+  })
 
-  if (SAME_REQUEST_PATTERNS.some(pattern => pattern.test(normalizedPrompt))) {
-    return false
+  const decision = extractJson(result.text || "")
+  return {
+    decision: decision?.decision || "new_request",
   }
-
-  return true
 }
