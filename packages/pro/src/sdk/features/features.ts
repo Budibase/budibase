@@ -69,6 +69,12 @@ export async function isEnforceableSSO() {
   return areFeaturesEnabled(Feature.ENFORCEABLE_SSO)
 }
 
+// EMBED AUTH
+
+export async function isEmbedAuthEnabled() {
+  return areFeaturesEnabled(Feature.EMBED_AUTH)
+}
+
 // SYNC WEBHOOK
 
 export async function isSyncAutomationsEnabled() {
