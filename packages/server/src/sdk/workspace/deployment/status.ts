@@ -147,8 +147,7 @@ export async function status() {
         name: operation.name,
         promptInstructions: operation.promptInstructions,
         live: operation.live,
-        allowKnowledgeSourceDownload:
-          operation.allowKnowledgeSourceDownload !== false,
+        allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
         knowledgeSources: (operation.knowledgeSources || [])
           .map(source => toComparableKnowledgeSource(source))
           .sort((a, b) => a.id.localeCompare(b.id)),

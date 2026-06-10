@@ -89,6 +89,7 @@ import {
   cleanupKnowledgeForOperation,
   retrieveContextForAgent,
 } from "./files"
+import { generator } from "@budibase/backend-core/tests"
 
 describe("rag files", () => {
   beforeEach(() => {
@@ -114,6 +115,7 @@ describe("rag files", () => {
             name: "Main operation",
             live: false,
             knowledgeBases: ["kb_existing"],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
       } satisfies Partial<Agent>)
@@ -146,6 +148,7 @@ describe("rag files", () => {
             name: "Main operation",
             live: false,
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: true,
           },
         ],
       } as Agent
@@ -184,6 +187,7 @@ describe("rag files", () => {
             name: "Main operation",
             live: false,
             knowledgeBases: [created._id],
+            allowKnowledgeSourceDownload: true,
           },
         ],
       })
@@ -392,6 +396,7 @@ describe("rag files", () => {
             name: "Main operation",
             live: true,
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
       } satisfies Agent
@@ -985,6 +990,7 @@ describe("rag files", () => {
             live: false,
             knowledgeBases: ["kb_1"],
             knowledgeSources: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
       } satisfies Agent

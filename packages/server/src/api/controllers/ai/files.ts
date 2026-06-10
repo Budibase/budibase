@@ -69,7 +69,7 @@ const getSharePointSourcesForOperation = (agent: Agent, operationId: string) =>
   )
 
 const allowsKnowledgeSourceDownload = (agent: Agent, operationId: string) =>
-  getOperationOrThrow(agent, operationId).allowKnowledgeSourceDownload !== false
+  getOperationOrThrow(agent, operationId).allowKnowledgeSourceDownload
 
 const fetchSharePointOptionsForDatasourceAuthConfig = async (
   datasourceId: string,

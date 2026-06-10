@@ -19,7 +19,7 @@ export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
 }
 
 const getAllowKnowledgeSourceDownload = (agent: Agent) =>
-  getLiveOperation(agent)?.allowKnowledgeSourceDownload !== false
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
 
 export type ChatAgentAccessContext = Pick<UserCtx, "user" | "roleId">
 

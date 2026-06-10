@@ -86,8 +86,7 @@ export interface AgentOperation {
   enabledTools?: string[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
-  /** When false, chat users cannot download knowledge source files. Default is allowed. */
-  allowKnowledgeSourceDownload?: boolean
+  allowKnowledgeSourceDownload: boolean
 }
 
 export interface Agent extends Document {

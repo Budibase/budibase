@@ -90,6 +90,7 @@ describe("buildPromptAndTools", () => {
           live: true,
           enabledTools: [],
           knowledgeBases: ["kb_1"],
+          allowKnowledgeSourceDownload: true,
         },
       ],
     } as Agent
@@ -124,6 +125,7 @@ describe("buildPromptAndTools", () => {
           live: true,
           enabledTools: [],
           knowledgeBases: [],
+          allowKnowledgeSourceDownload: true,
         },
       ],
     } as Agent
@@ -146,6 +148,7 @@ describe("buildPromptAndTools", () => {
           live: true,
           enabledTools: [],
           knowledgeBases: ["kb_1"],
+          allowKnowledgeSourceDownload: true,
         },
       ],
     } as Agent

@@ -74,6 +74,7 @@ import {
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import { syncSharePointSourcesForAgent } from "./sharepoint"
+import { generator } from "@budibase/backend-core/tests"
 
 const toArrayBuffer = (value: string) => {
   const buffer = Buffer.from(value)
@@ -111,6 +112,7 @@ const makeSharePointAgent = (
             },
           },
         ],
+        allowKnowledgeSourceDownload: generator.bool(),
       } satisfies AgentOperation,
     ],
   }) as Agent

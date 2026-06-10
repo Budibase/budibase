@@ -246,6 +246,7 @@ describe("chat route auth split", () => {
               name: "Main operation",
               live: false,
               enabledTools: [],
+              allowKnowledgeSourceDownload: true,
             },
           ],
         }
@@ -266,6 +267,7 @@ describe("chat route auth split", () => {
               name: "Main operation",
               live: false,
               enabledTools: [],
+              allowKnowledgeSourceDownload: true,
             },
           ],
         }
@@ -286,6 +288,7 @@ describe("chat route auth split", () => {
               name: "Main operation",
               live: false,
               enabledTools: [],
+              allowKnowledgeSourceDownload: true,
             },
           ],
         }

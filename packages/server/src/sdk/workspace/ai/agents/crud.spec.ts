@@ -71,6 +71,7 @@ jest.mock("./utils", () => {
 
 import type { Agent, KnowledgeBase, KnowledgeBaseFile } from "@budibase/types"
 import * as agentsCrud from "./crud"
+import { generator } from "@budibase/backend-core/tests"
 
 describe("agents crud", () => {
   beforeEach(() => {
@@ -407,6 +408,7 @@ describe("agents crud", () => {
             live: false,
             enabledTools: [],
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
       } as Agent
@@ -437,6 +439,7 @@ describe("agents crud", () => {
             live: false,
             enabledTools: [],
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
         live: false,
@@ -474,6 +477,7 @@ describe("agents crud", () => {
             promptInstructions: "Do work",
             enabledTools: [],
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
       } as Agent
@@ -518,6 +522,7 @@ describe("agents crud", () => {
             promptInstructions: "Do work",
             enabledTools: [],
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
       } as Agent
@@ -535,6 +540,7 @@ describe("agents crud", () => {
             promptInstructions: "Do work",
             enabledTools: [],
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
           {
             id: "operation_2",
@@ -543,6 +549,7 @@ describe("agents crud", () => {
             promptInstructions: "Then do more",
             enabledTools: [],
             knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
           },
         ],
       })

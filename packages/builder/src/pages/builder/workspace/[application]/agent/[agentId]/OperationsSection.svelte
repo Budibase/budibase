@@ -9,7 +9,7 @@
     ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import type { Agent, EnrichedBinding } from "@budibase/types"
+  import type { Agent, AgentOperation, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
@@ -105,7 +105,8 @@ Any constraints the agent must follow.
     name: "Main operation",
     live: false,
     promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
-  })
+    allowKnowledgeSourceDownload: true
+  } satisfies AgentOperation)
 
   const setOperationLive = async (nextLive: boolean) => {
     if (!agent?.operations?.[0] || agent.operations[0].live === nextLive) {

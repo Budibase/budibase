@@ -59,6 +59,7 @@ export const updateOperationKnowledgeSources = (
         name: "Operation",
         live: false,
         knowledgeSources: updater([]),
+        allowKnowledgeSourceDownload: true,
       },
     ]
   }

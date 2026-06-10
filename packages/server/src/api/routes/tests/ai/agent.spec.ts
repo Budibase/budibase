@@ -31,6 +31,7 @@ describe("agent duplicate", () => {
           live: false,
           promptInstructions: "Be helpful",
           enabledTools: [],
+          allowKnowledgeSourceDownload: true,
         },
       ],
       live: true,
@@ -62,6 +63,7 @@ describe("agent duplicate", () => {
           name: "Main triage flow",
           live: false,
           enabledTools: [],
+          allowKnowledgeSourceDownload: true,
         },
       ],
     })
@@ -77,6 +79,7 @@ describe("agent duplicate", () => {
             enabledTools: [],
           }),
           name: "Escalation flow",
+          allowKnowledgeSourceDownload: true,
         },
       ],
     })

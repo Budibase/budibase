@@ -222,7 +222,7 @@
           agentId={currentAgent?._id}
           workspaceId={$params.application || ""}
           allowKnowledgeSourceDownload={currentAgent?.operations?.[0]
-            ?.allowKnowledgeSourceDownload !== false}
+            ?.allowKnowledgeSourceDownload}
         />
       </div>
     {/if}

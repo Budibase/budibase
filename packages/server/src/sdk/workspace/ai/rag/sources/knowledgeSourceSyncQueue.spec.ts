@@ -80,6 +80,7 @@ import {
   scheduleJob,
 } from "./knowledgeSourceSyncQueue"
 import { withEnv } from "../../../../../environment"
+import { generator } from "@budibase/backend-core/tests"
 
 describe("knowledgeSourceSyncQueue", () => {
   beforeEach(() => {
@@ -161,6 +162,7 @@ describe("knowledgeSourceSyncQueue", () => {
               },
             },
           ],
+          allowKnowledgeSourceDownload: generator.bool(),
         } satisfies AgentOperation,
       ],
     }
@@ -322,6 +324,7 @@ describe("knowledgeSourceSyncQueue", () => {
                     },
                   },
                 ],
+                allowKnowledgeSourceDownload: generator.bool(),
               } satisfies AgentOperation,
             ],
           } satisfies Agent,

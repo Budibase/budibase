@@ -185,7 +185,8 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
         enabledTools: raw.enabledTools || [],
         knowledgeBases: raw.knowledgeBases || [],
         knowledgeSources: legacyKnowledgeSources || [],
-        allowKnowledgeSourceDownload: legacyAllowKnowledgeSourceDownload,
+        allowKnowledgeSourceDownload:
+          legacyAllowKnowledgeSourceDownload ?? true,
       },
     ]
   }

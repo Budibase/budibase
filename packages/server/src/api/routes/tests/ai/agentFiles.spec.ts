@@ -45,6 +45,7 @@ describe("agent files", () => {
     id: "operation_1",
     name: "Main operation",
     live: false,
+    allowKnowledgeSourceDownload: false,
   }
 
   const mockLiteLLMProviders = () =>
@@ -340,7 +341,7 @@ describe("agent files", () => {
     const created = await config.api.agent.create({
       name: "Allowed Downloads Agent",
       aiconfig: "default",
-      operations: [operation],
+      operations: [{ ...operation, allowKnowledgeSourceDownload: true }],
     })
     const operationId = created.operations?.[0]?.id || operation.id
 
