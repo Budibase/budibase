@@ -35,3 +35,5 @@ export const withCacheWithDynamicTTL = <T>(
 ) => GENERIC.withCacheWithDynamicTTL(...args)
 export const bustCache = (...args: Parameters<typeof GENERIC.bustCache>) =>
   GENERIC.bustCache(...args)
+export const increment = (...args: Parameters<typeof GENERIC.increment>) =>
+  GENERIC.increment(...args)
