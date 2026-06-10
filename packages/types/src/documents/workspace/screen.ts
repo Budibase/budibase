@@ -23,6 +23,9 @@ export interface Screen extends Document {
   layoutId?: string
   showNavigation?: boolean
   width?: string
+  screenBackground?: string
+  screenGradient?: string
+  screenCustomCss?: string
   routing: ScreenRouting
   props: ScreenProps
   name?: string
