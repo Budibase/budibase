@@ -133,6 +133,22 @@ export const generateChatConversationID = () => {
   return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${newid()}`
 }
 
+export const getAgentRequestPrefix = (
+  agentId: string,
+  chatConversationId: string
+) => {
+  return `${DocumentType.AGENT_REQUEST}${SEPARATOR}${encodeURIComponent(
+    agentId
+  )}${SEPARATOR}${encodeURIComponent(chatConversationId)}`
+}
+
+export const generateAgentRequestID = (
+  agentId: string,
+  chatConversationId: string
+) => {
+  return `${getAgentRequestPrefix(agentId, chatConversationId)}${SEPARATOR}${newid()}`
+}
+
 export const getAgentTestSuiteID = (agentId: string) => {
   return `${DocumentType.AGENT_TEST_SUITE}${SEPARATOR}${agentId}`
 }

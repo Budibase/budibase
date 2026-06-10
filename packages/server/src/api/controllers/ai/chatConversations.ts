@@ -413,6 +413,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId,
       user: ctx.user,
     })
+    const agentRequest = await sdk.ai.agentRequests.startRequest({
+      agentId,
+      chatConversationId: chatId,
+      latestPrompt: run.latestQuestion,
+      userId,
+    })
 
     const pendingToolCalls = new Set<string>()
 
@@ -495,6 +501,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
+        if (agentRequest?._id) {
+          await sdk.ai.agentRequests.markCompleted(agentRequest._id)
+        }
         events.action.aiAgentExecuted({ agentId })
 
         if (chat.transient || !chatAppId) {
