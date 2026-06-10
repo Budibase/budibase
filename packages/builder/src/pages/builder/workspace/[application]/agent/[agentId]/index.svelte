@@ -1,13 +1,46 @@
 <script lang="ts">
   import { Body, Table } from "@budibase/bbui"
   import { API } from "@/api"
-  import { selectedAgent } from "@/stores/portal"
+  import {
+    aiConfigsStore,
+    currentChatApp,
+    selectedAgent,
+  } from "@/stores/portal"
   import type { AgentRequest } from "@budibase/types"
   import dayjs from "dayjs"
 
   let currentAgent = $derived($selectedAgent)
   let requests = $state<AgentRequest[]>([])
   let loading = $state(false)
+
+  let aiModel = $derived(
+    $aiConfigsStore.customConfigs.find(c => c._id === currentAgent?.aiconfig)
+      ?.name
+  )
+  let operationCount = $derived(currentAgent?.operationName ? 1 : 0)
+  let channels = $derived.by(() => {
+    const integrations = []
+    if (currentAgent?.slackIntegration) {
+      integrations.push("Slack")
+    }
+    if (currentAgent?.discordIntegration) {
+      integrations.push("Discord")
+    }
+    if (currentAgent?.MSTeamsIntegration) {
+      integrations.push("Microsoft Teams")
+    }
+    if (currentAgent?.telegramIntegration) {
+      integrations.push("Telegram")
+    }
+    if (
+      $currentChatApp?.agents.find(
+        a => a.agentId === currentAgent?._id && a.isEnabled
+      )
+    ) {
+      integrations.push("Agent Chat")
+    }
+    return integrations.join(", ") || "None"
+  })
 
   const formatRequestAge = (value?: string | number) => {
     if (!value) {
@@ -64,9 +97,9 @@
         {currentAgent?.name || "IT assistant"}
       </Body>
       <div class="meta">
-        <div><span>AI Model:</span> Budibase AI</div>
-        <div><span>Channel:</span> Slack</div>
-        <div><span>Operations:</span> 3</div>
+        <div><span>AI Model:</span> {aiModel}</div>
+        <div><span>Channel:</span> {channels}</div>
+        <div><span>Operations:</span> {operationCount}</div>
       </div>
     </div>
     <div class="card metric-card">
