@@ -2,9 +2,12 @@ import { Duration } from "./Duration"
 import env from "../environment"
 
 export function getSessionExpirySeconds() {
-  return env.SESSION_EXPIRY_SECONDS
-    ? parseInt(env.SESSION_EXPIRY_SECONDS)
-    : Duration.fromDays(7).toSeconds()
+  const DEFAULT = Duration.fromDays(7).toSeconds()
+  if (!env.SESSION_EXPIRY_SECONDS) {
+    return DEFAULT
+  }
+  const parsed = parseInt(env.SESSION_EXPIRY_SECONDS)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT
 }
 
 export function getSessionExpiryDate() {
