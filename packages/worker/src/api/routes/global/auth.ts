@@ -32,8 +32,8 @@ loggedInRoutes
   .post(
     "/api/global/auth/:tenantId/login",
     buildAuthValidation(),
-    emailLockout,
     ipLockout,
+    emailLockout,
     authController.login
   )
   .post("/api/global/auth/logout", authController.logout)
