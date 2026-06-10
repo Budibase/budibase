@@ -439,7 +439,12 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     // When embedded, allow the host site to authenticate the user via a signed
     // token. Establishing the session here sets the auth cookie on the initial
     // document response so the client's subsequent API calls are authenticated.
-    if (bbHeaderEmbed && !ctx.isAuthenticated && appInfo.embedSSO?.enabled) {
+    if (
+      bbHeaderEmbed &&
+      !ctx.isAuthenticated &&
+      appInfo.embedSSO?.enabled &&
+      (await pro.features.isEmbedAuthEnabled())
+    ) {
       const embedToken = ctx.query.jwt
       if (typeof embedToken === "string" && embedToken) {
         try {
