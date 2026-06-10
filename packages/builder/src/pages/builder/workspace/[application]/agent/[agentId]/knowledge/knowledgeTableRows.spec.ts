@@ -51,6 +51,28 @@ describe("knowledgeTableRows", () => {
     )
   })
 
+  it("hides pending upload rows when the file is already in the list", () => {
+    const rows = toFileTableRows(
+      [
+        makeFile({
+          filename: "notes.txt",
+          status: KnowledgeBaseFileStatus.PROCESSING,
+        }),
+      ],
+      async () => {},
+      [
+        {
+          tempId: "pending-1",
+          filename: "notes.txt",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+      ]
+    )
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].displayStatus).toBe("Processing")
+  })
+
   it("builds and sorts file rows", async () => {
     const onDelete = vi.fn(async () => {})
     const rows = toFileTableRows(

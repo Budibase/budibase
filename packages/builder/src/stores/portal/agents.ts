@@ -12,6 +12,7 @@ import {
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
+  KnowledgeBaseFileStatus,
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -29,6 +30,34 @@ import {
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import { derived, get } from "svelte/store"
+import { createOperationKnowledgePollingController } from "./operationKnowledgePolling"
+
+const KNOWLEDGE_POLL_INTERVAL_MS = 1000
+const BYTES_IN_MB = 1024 * 1024
+const MAX_OPERATION_KNOWLEDGE_FILE_SIZE_BYTES = 100 * BYTES_IN_MB
+
+export const MAX_OPERATION_KNOWLEDGE_FILE_SIZE_LABEL = "100MB"
+
+export interface OperationKnowledgePendingUpload {
+  tempId: string
+  filename: string
+  size?: number
+  mimetype?: string
+  createdAt: string
+}
+
+export interface OperationKnowledgeUploadState {
+  pendingUploads: OperationKnowledgePendingUpload[]
+  uploading: boolean
+  progress: string
+}
+
+export interface OperationKnowledgeUploadResult {
+  successfulUploads: number
+  failedUploads: string[]
+  oversizedUploads: string[]
+  totalSelected: number
+}
 
 interface AgentStoreState {
   agents: Agent[]
@@ -42,20 +71,40 @@ interface AgentStoreState {
       sharePointSources: SharePointKnowledgeSourceSnapshot[]
     }
   >
+  knowledgeUploadByOperation: Record<string, OperationKnowledgeUploadState>
+  knowledgeLoadingByOperation: Record<string, boolean>
 }
 
+const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>
+  `${agentId}:${operationId}`
+
+const emptyUploadState = (): OperationKnowledgeUploadState => ({
+  pendingUploads: [],
+  uploading: false,
+  progress: "",
+})
+
 export class AgentsStore extends BudiStore<AgentStoreState> {
+  private knowledgeRefreshByAgent = new Map<string, Promise<void>>()
+  private knowledgeLoadByKey = new Map<string, Promise<void>>()
+  private knowledgePolling = createOperationKnowledgePollingController({
+    intervalMs: KNOWLEDGE_POLL_INTERVAL_MS,
+    onPoll: agentId => this.refreshOperationKnowledge(agentId),
+    onError: error => {
+      console.error("Failed to poll knowledge files", error)
+    },
+  })
+
   constructor() {
     super({
       agents: [],
       tools: [],
       agentsLoaded: false,
       knowledgeByOperation: {},
+      knowledgeUploadByOperation: {},
+      knowledgeLoadingByOperation: {},
     })
   }
-
-  private getKnowledgeCacheKey = (agentId: string, operationId: string) =>
-    `${agentId}:${operationId}`
 
   private getAgentOrThrow = (agentId: string) => {
     const agent = get(this.store).agents.find(
@@ -82,6 +131,43 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       ...agent,
       operations,
     })
+  }
+
+  private setKnowledgeLoading = (cacheKey: string, loading: boolean) => {
+    this.update(state => {
+      state.knowledgeLoadingByOperation[cacheKey] = loading
+      return state
+    })
+  }
+
+  private setOperationUploadState = (
+    cacheKey: string,
+    updater: (
+      current: OperationKnowledgeUploadState
+    ) => OperationKnowledgeUploadState
+  ) => {
+    this.update(state => {
+      const current =
+        state.knowledgeUploadByOperation[cacheKey] || emptyUploadState()
+      state.knowledgeUploadByOperation[cacheKey] = updater(current)
+      return state
+    })
+  }
+
+  private syncKnowledgePollingForAgent = (agentId: string) => {
+    const needsPolling = Object.entries(get(this.store).knowledgeByOperation)
+      .filter(([cacheKey]) => cacheKey.startsWith(`${agentId}:`))
+      .some(([, knowledge]) => {
+        const hasProcessingFiles = knowledge.files.some(
+          file => file.status === KnowledgeBaseFileStatus.PROCESSING
+        )
+        const hasUnsyncedSharePointSites = knowledge.sharePointSources.some(
+          source => !source.lastRunAt
+        )
+        return hasProcessingFiles || hasUnsyncedSharePointSites
+      })
+
+    this.knowledgePolling.setContinuous(agentId, needsPolling)
   }
 
   init = async () => {
@@ -142,6 +228,14 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     })
     return updated
   }
+
+  getAgentOperation = (
+    agentId: string,
+    operationId: string
+  ): AgentOperation | undefined =>
+    get(this.store)
+      .agents.find(agent => agent._id === agentId)
+      ?.operations?.find(operation => operation.id === operationId)
 
   updateOperationLive = async (
     agent: UpdateAgentRequest,
@@ -253,13 +347,67 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         response.operations || {}
       )) {
         state.knowledgeByOperation[
-          this.getKnowledgeCacheKey(agentId, operationId)
+          getOperationKnowledgeCacheKey(agentId, operationId)
         ] = knowledge
       }
       return state
     })
 
+    this.syncKnowledgePollingForAgent(agentId)
     return response
+  }
+
+  refreshOperationKnowledge = async (agentId: string): Promise<void> => {
+    const existing = this.knowledgeRefreshByAgent.get(agentId)
+    if (existing) {
+      return await existing
+    }
+
+    const promise = this.fetchAgentKnowledge(agentId).then(() => undefined)
+    this.knowledgeRefreshByAgent.set(agentId, promise)
+
+    try {
+      await promise
+    } finally {
+      if (this.knowledgeRefreshByAgent.get(agentId) === promise) {
+        this.knowledgeRefreshByAgent.delete(agentId)
+      }
+    }
+  }
+
+  ensureOperationKnowledgeLoaded = async (
+    agentId: string,
+    operationId: string
+  ): Promise<void> => {
+    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+
+    if (get(this.store).knowledgeByOperation[cacheKey]) {
+      this.setKnowledgeLoading(cacheKey, false)
+      return
+    }
+
+    const existing = this.knowledgeLoadByKey.get(cacheKey)
+    if (existing) {
+      return await existing
+    }
+
+    this.setKnowledgeLoading(cacheKey, true)
+
+    const promise = this.fetchAgentKnowledge(agentId)
+      .then(() => undefined)
+      .finally(() => {
+        if (this.knowledgeLoadByKey.get(cacheKey) === promise) {
+          this.knowledgeLoadByKey.delete(cacheKey)
+        }
+        this.setKnowledgeLoading(cacheKey, false)
+      })
+
+    this.knowledgeLoadByKey.set(cacheKey, promise)
+    return await promise
+  }
+
+  stopOperationKnowledgePolling = () => {
+    this.knowledgePolling.stop()
   }
 
   getOperationKnowledge = (
@@ -267,8 +415,51 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     operationId: string
   ): FetchAgentKnowledgeResponse | undefined =>
     get(this.store).knowledgeByOperation[
-      this.getKnowledgeCacheKey(agentId, operationId)
+      getOperationKnowledgeCacheKey(agentId, operationId)
     ]
+
+  isOperationKnowledgeLoading = (
+    agentId: string,
+    operationId: string
+  ): boolean => {
+    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+    return get(this.store).knowledgeLoadingByOperation[cacheKey] === true
+  }
+
+  getOperationUploadState = (
+    agentId: string,
+    operationId: string
+  ): OperationKnowledgeUploadState => {
+    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+    return (
+      get(this.store).knowledgeUploadByOperation[cacheKey] || emptyUploadState()
+    )
+  }
+
+  private upsertOperationKnowledgeFile = (
+    agentId: string,
+    operationId: string,
+    file: KnowledgeBaseFile
+  ) => {
+    this.update(state => {
+      const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+      const existing = state.knowledgeByOperation[cacheKey]
+      const files = existing?.files.some(
+        existingFile => existingFile._id === file._id
+      )
+        ? existing.files.map(existingFile =>
+            existingFile._id === file._id ? file : existingFile
+          )
+        : [...(existing?.files || []), file]
+
+      state.knowledgeByOperation[cacheKey] = {
+        files,
+        sharePointSources: existing?.sharePointSources || [],
+      }
+      return state
+    })
+    this.syncKnowledgePollingForAgent(agentId)
+  }
 
   uploadOperationFile = async (
     agentId: string,
@@ -278,33 +469,115 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     const response = await this.runAndRefreshAgents(() =>
       API.uploadOperationFile(agentId, operationId, file)
     )
-    this.update(state => {
-      const cacheKey = this.getKnowledgeCacheKey(agentId, operationId)
-      const existing = state.knowledgeByOperation[cacheKey]
-      const files = existing?.files.some(
-        existingFile => existingFile._id === response.file._id
-      )
-        ? existing.files.map(existingFile =>
-            existingFile._id === response.file._id
-              ? response.file
-              : existingFile
-          )
-        : [...(existing?.files || []), response.file]
-
-      state.knowledgeByOperation[cacheKey] = {
-        files,
-        sharePointSources: existing?.sharePointSources || [],
-      }
-      return state
-    })
+    this.upsertOperationKnowledgeFile(agentId, operationId, response.file)
     return response
   }
 
-  deleteOperationFile = async (
+  uploadOperationFiles = async (
+    agentId: string,
+    operationId: string,
+    selectedFiles: File[]
+  ): Promise<OperationKnowledgeUploadResult> => {
+    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+    const uploads = selectedFiles.map((file, index) => ({
+      file,
+      tempId: `pending-upload-${Date.now()}-${index}`,
+      createdAt: new Date().toISOString(),
+    }))
+
+    this.setOperationUploadState(cacheKey, current => ({
+      ...current,
+      pendingUploads: [
+        ...uploads.map(upload => ({
+          tempId: upload.tempId,
+          filename: upload.file.name,
+          size: upload.file.size,
+          mimetype: upload.file.type || undefined,
+          createdAt: upload.createdAt,
+        })),
+        ...current.pendingUploads,
+      ],
+      uploading: true,
+      progress: "",
+    }))
+
+    let successfulUploads = 0
+    const failedUploads: string[] = []
+    const oversizedUploads: string[] = []
+
+    try {
+      for (const [index, upload] of uploads.entries()) {
+        this.setOperationUploadState(cacheKey, current => ({
+          ...current,
+          progress: `Uploading ${index + 1}/${uploads.length}...`,
+        }))
+
+        if (upload.file.size > MAX_OPERATION_KNOWLEDGE_FILE_SIZE_BYTES) {
+          oversizedUploads.push(upload.file.name)
+          this.setOperationUploadState(cacheKey, current => ({
+            ...current,
+            pendingUploads: current.pendingUploads.filter(
+              pending => pending.tempId !== upload.tempId
+            ),
+          }))
+          continue
+        }
+
+        try {
+          const response = await API.uploadOperationFile(
+            agentId,
+            operationId,
+            upload.file
+          )
+          successfulUploads += 1
+          this.upsertOperationKnowledgeFile(agentId, operationId, response.file)
+          this.setOperationUploadState(cacheKey, current => ({
+            ...current,
+            pendingUploads: current.pendingUploads.filter(
+              pending => pending.tempId !== upload.tempId
+            ),
+          }))
+        } catch (error) {
+          console.error("Error uploading file:", error)
+          failedUploads.push(upload.file.name)
+          this.setOperationUploadState(cacheKey, current => ({
+            ...current,
+            pendingUploads: current.pendingUploads.filter(
+              pending => pending.tempId !== upload.tempId
+            ),
+          }))
+        }
+      }
+
+      if (successfulUploads > 0) {
+        await this.fetchAgents()
+        await this.refreshOperationKnowledge(agentId)
+      }
+
+      return {
+        successfulUploads,
+        failedUploads,
+        oversizedUploads,
+        totalSelected: selectedFiles.length,
+      }
+    } finally {
+      this.setOperationUploadState(cacheKey, current => ({
+        ...current,
+        uploading: false,
+        progress: "",
+      }))
+    }
+  }
+
+  removeOperationKnowledgeFile = async (
     agentId: string,
     operationId: string,
     fileId: string
-  ) => await API.deleteOperationFile(agentId, operationId, fileId)
+  ) => {
+    await API.deleteOperationFile(agentId, operationId, fileId)
+    await this.fetchAgents()
+    await this.refreshOperationKnowledge(agentId)
+  }
 
   fetchAgentKnowledgeSourceOptions = async (
     datasourceId: string,
@@ -339,7 +612,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       body
     )
     await this.fetchAgents()
-    await this.fetchAgentKnowledge(agentId)
+    await this.refreshOperationKnowledge(agentId)
     return response
   }
 
@@ -369,8 +642,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       siteId,
       body
     )
-    await this.fetchAgentKnowledge(agentId)
     await this.fetchAgents()
+    await this.refreshOperationKnowledge(agentId)
     return response
   }
 
@@ -385,6 +658,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       siteId
     )
     await this.fetchAgents()
+    await this.refreshOperationKnowledge(agentId)
     return response
   }
 
@@ -392,15 +666,22 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string,
     operationId: string,
     sourceId: string
-  ): Promise<SyncAgentKnowledgeSourcesResponse> =>
-    await API.syncOperationKnowledgeSources(agentId, operationId, sourceId)
+  ): Promise<SyncAgentKnowledgeSourcesResponse> => {
+    const response = await API.syncOperationKnowledgeSources(
+      agentId,
+      operationId,
+      sourceId
+    )
+    await this.refreshOperationKnowledge(agentId)
+    return response
+  }
 
   resetOperationKnowledgeBaseStore = async (
     agentId: string,
     operationId: string
   ): Promise<void> => {
     await API.resetOperationKnowledgeBaseStore(agentId, operationId)
-    await this.fetchAgentKnowledge(agentId)
+    await this.refreshOperationKnowledge(agentId)
   }
 }
 export const agentsStore = new AgentsStore()

@@ -43,8 +43,17 @@ export const toFileTableRows = (
   onDelete: (file: KnowledgeBaseFile) => Promise<void>,
   activePendingUploads?: PendingUpload[]
 ): FileKnowledgeTableRow[] => {
+  const pendingUploads = (activePendingUploads || []).filter(
+    upload =>
+      !list.some(
+        file =>
+          file.filename?.trim().toLowerCase() ===
+          upload.filename.trim().toLowerCase()
+      )
+  )
+
   return [
-    ...(activePendingUploads || []).map(upload => ({
+    ...pendingUploads.map(upload => ({
       kind: "file" as const,
       _id: upload.tempId,
       filename: upload.filename,

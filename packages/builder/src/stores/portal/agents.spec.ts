@@ -36,26 +36,31 @@ const resetOperationKnowledgeBaseStore = vi.mocked(
   API.resetOperationKnowledgeBaseStore
 )
 
+const createEmptyState = () => ({
+  agents: [] as Agent[],
+  tools: [],
+  agentsLoaded: false,
+  knowledgeByOperation: {},
+  knowledgeUploadByOperation: {},
+  knowledgeLoadingByOperation: {},
+  currentAgentId: undefined as string | undefined,
+})
+
 describe("agentsStore sharepoint and file syncing", () => {
   let store: AgentsStore
 
   beforeEach(() => {
     vi.clearAllMocks()
     store = new AgentsStore()
-    store.set({
-      agents: [],
-      tools: [],
-      agentsLoaded: false,
-      knowledgeByOperation: {},
-      currentAgentId: undefined,
-    })
+    store.set(createEmptyState())
   })
 
   afterEach(() => {
     vi.useRealTimers()
+    store.stopOperationKnowledgePolling()
   })
 
-  it("syncOperationKnowledgeSources forwards sourceIds payload", async () => {
+  it("syncOperationKnowledgeSources refreshes knowledge after sync", async () => {
     syncOperationKnowledgeSources.mockResolvedValue({
       agentId: "agent_1",
       synced: 2,
@@ -64,6 +69,11 @@ describe("agentsStore sharepoint and file syncing", () => {
       deleted: 0,
       unsupported: 0,
       totalDiscovered: 3,
+    })
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: { files: [], sharePointSources: [] },
+      },
     })
 
     const result = await store.syncOperationKnowledgeSources(
@@ -77,8 +87,8 @@ describe("agentsStore sharepoint and file syncing", () => {
       "operation_1",
       "site-1"
     )
+    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
     expect(result.synced).toBe(2)
-    expect(result.totalDiscovered).toBe(3)
   })
 
   it("fetchAgentKnowledge stores all operation knowledge", async () => {
@@ -122,10 +132,7 @@ describe("agentsStore sharepoint and file syncing", () => {
 
   it("fetchAgentKnowledge clears stale operation knowledge for the agent before storing", async () => {
     store.set({
-      agents: [],
-      tools: [],
-      agentsLoaded: false,
-      currentAgentId: undefined,
+      ...createEmptyState(),
       knowledgeByOperation: {
         "agent_1:operation_old": {
           files: [
@@ -169,6 +176,21 @@ describe("agentsStore sharepoint and file syncing", () => {
       sharePointSources: [],
     })
   })
+
+  it("ensureOperationKnowledgeLoaded fetches when cache is empty", async () => {
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: { files: [], sharePointSources: [] },
+      },
+    })
+
+    await store.ensureOperationKnowledgeLoaded("agent_1", "operation_1")
+
+    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+    expect(store.isOperationKnowledgeLoading("agent_1", "operation_1")).toBe(
+      false
+    )
+  })
 })
 
 describe("AgentsStore file operations", () => {
@@ -177,6 +199,10 @@ describe("AgentsStore file operations", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     store = new AgentsStore()
+  })
+
+  afterEach(() => {
+    store.stopOperationKnowledgePolling()
   })
 
   it("refreshes agents after uploading a file", async () => {
@@ -209,25 +235,56 @@ describe("AgentsStore file operations", () => {
     ).toEqual([uploadResponse.file])
   })
 
-  it("does not refresh agents after deleting a file", async () => {
-    const agents: Agent[] = [
-      {
-        _id: "agent_1",
-        _rev: "3-rev",
-        name: "Support bot",
-      } as Agent,
-    ]
+  it("refreshes knowledge after removing a file", async () => {
+    fetchAgents.mockResolvedValue({ agents: [] })
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: { files: [], sharePointSources: [] },
+      },
+    })
 
-    fetchAgents.mockResolvedValue({ agents })
-
-    await store.deleteOperationFile("agent_1", "operation_1", "file_1")
+    await store.removeOperationKnowledgeFile("agent_1", "operation_1", "file_1")
 
     expect(deleteOperationFile).toHaveBeenCalledWith(
       "agent_1",
       "operation_1",
       "file_1"
     )
-    expect(fetchAgents).not.toHaveBeenCalled()
+    expect(fetchAgents).toHaveBeenCalledTimes(1)
+    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+  })
+
+  it("uploadOperationFiles tracks pending uploads and refreshes knowledge", async () => {
+    const uploadedFile = {
+      _id: "kb_file_1",
+      filename: "notes.txt",
+      status: KnowledgeBaseFileStatus.PROCESSING,
+    } as AgentFileUploadResponse["file"]
+    uploadOperationFile.mockResolvedValue({
+      file: uploadedFile,
+    })
+    fetchAgents.mockResolvedValue({ agents: [] })
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: { files: [uploadedFile], sharePointSources: [] },
+      },
+    })
+
+    const file = new File(["hello"], "notes.txt", { type: "text/plain" })
+    const result = await store.uploadOperationFiles("agent_1", "operation_1", [
+      file,
+    ])
+
+    expect(result.successfulUploads).toBe(1)
+    expect(
+      store.getOperationKnowledge("agent_1", "operation_1")?.files
+    ).toEqual([uploadedFile])
+    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+    expect(store.getOperationUploadState("agent_1", "operation_1")).toEqual({
+      pendingUploads: [],
+      uploading: false,
+      progress: "",
+    })
   })
 
   it("calls resetOperationKnowledgeBaseStore and re-fetches knowledge on reset", async () => {
@@ -289,11 +346,10 @@ describe("AgentsStore operation updates", () => {
     } as Agent
 
     store.set({
+      ...createEmptyState(),
       agents: [existingAgent],
-      tools: [],
       agentsLoaded: true,
       currentAgentId: existingAgent._id,
-      knowledgeByOperation: {},
     })
     updateAgent.mockResolvedValue(updatedAgent)
 

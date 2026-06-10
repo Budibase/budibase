@@ -10,7 +10,6 @@
     type Agent,
     type AgentOperation,
     type KnowledgeBaseFile,
-    type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import {
@@ -22,28 +21,20 @@
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
   import { onDestroy, onMount } from "svelte"
-  import { get } from "svelte/store"
   import type {
     KnowledgeTableRow,
     SharePointSelectionMode,
   } from "./renderers/types"
-  import type { PendingUpload } from "./knowledgeTableRows"
   import {
     toFileTableRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
   import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
   import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
-  import {
-    coalesceAgentPollRequests,
-    createKnowledgePollingController,
-  } from "./polling"
 
   let { operation = $bindable() }: { operation: AgentOperation } = $props()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  const getOperationCacheKey = (agentId: string, operationId: string) =>
-    `${agentId}:${operationId}`
   let sharePointSources = $derived.by(() =>
     (operation.knowledgeSources || []).filter(
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
@@ -51,66 +42,50 @@
   )
 
   let savingAllowKnowledgeSourceDownload = $state(false)
+  let resetting = $state(false)
+  let selectedSharePointSiteId = $state("")
+  let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
+  let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
+  let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
 
-  const persistAllowKnowledgeSourceDownload = async (next: boolean) => {
-    const agent = currentAgent
-    const currentOperation = operation
-    if (!agent?._id || !agent._rev || !currentOperation.id) {
-      return
-    }
+  let agentId = $derived(currentAgent?._id)
+  let operationId = $derived(operation.id)
 
-    savingAllowKnowledgeSourceDownload = true
-    try {
-      await agentsStore.updateOperationAllowKnowledgeSourceDownload(
-        agent._id,
-        currentOperation.id,
-        next
-      )
-
-      await workspaceDeploymentStore.fetch()
-    } catch (error) {
-      notifications.error(
-        getErrorMessage(error) || "Failed to save download setting"
-      )
-    } finally {
-      savingAllowKnowledgeSourceDownload = false
-    }
-  }
-
-  let loading = $state(true)
-  let pendingUploadsByOperation = $state<Record<string, PendingUpload[]>>({})
-  let uploadingByOperation = $state<Record<string, boolean>>({})
-  let uploadProgressByOperation = $state<Record<string, string>>({})
-  const fetchFiles = coalesceAgentPollRequests(async (cacheKey: string) => {
-    const [agentId] = cacheKey.split(":")
-    if (!agentId) {
-      return
-    }
-    await agentsStore.fetchAgentKnowledge(agentId)
-  })
-  let knowledgeCacheKey = $derived.by(() => {
-    if (!currentAgent?._id || !operation.id) {
-      return undefined
-    }
-    return getOperationCacheKey(currentAgent._id, operation.id)
-  })
   let files = $derived.by(() => {
-    if (!knowledgeCacheKey) {
-      return [] as KnowledgeBaseFile[]
+    if (!agentId || !operationId) {
+      return []
     }
-    return $agentsStore.knowledgeByOperation[knowledgeCacheKey]?.files || []
+    const _store = $agentsStore
+    return agentsStore.getOperationKnowledge(agentId, operationId)?.files || []
   })
 
-  let initialKnowledgeLoadedForOperation = $state<string | undefined>()
   let sharePointSourceSnapshots = $derived.by(() => {
-    if (!knowledgeCacheKey) {
-      return [] as SharePointKnowledgeSourceSnapshot[]
+    if (!agentId || !operationId) {
+      return []
     }
+    const _store = $agentsStore
     return (
-      $agentsStore.knowledgeByOperation[knowledgeCacheKey]?.sharePointSources ||
-      []
+      agentsStore.getOperationKnowledge(agentId, operationId)
+        ?.sharePointSources || []
     )
   })
+
+  let loading = $derived.by(() => {
+    if (!agentId || !operationId) {
+      return false
+    }
+    const _store = $agentsStore
+    return agentsStore.isOperationKnowledgeLoading(agentId, operationId)
+  })
+
+  let uploadState = $derived.by(() => {
+    if (!agentId || !operationId) {
+      return { pendingUploads: [], uploading: false, progress: "" }
+    }
+    const _store = $agentsStore
+    return agentsStore.getOperationUploadState(agentId, operationId)
+  })
+
   let hasSharePointConnection = $derived(
     $knowledgeConnectionsStore.connections.some(
       connection =>
@@ -122,30 +97,6 @@
       .map(source => source.config.site.id)
       .filter((siteId): siteId is string => !!siteId)
   )
-  let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
-  let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
-  let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
-  let selectedSharePointSiteId = $state("")
-  let activeKnowledgeLoadKey = $state<string | undefined>()
-  const KNOWLEDGE_POLL_INTERVAL_MS = 1000
-  const knowledgePollingController = createKnowledgePollingController({
-    intervalMs: KNOWLEDGE_POLL_INTERVAL_MS,
-    onPoll: fetchFiles,
-    onError: error => {
-      console.error("Failed to poll knowledge files", error)
-    },
-  })
-  let activePendingUploads = $derived(
-    knowledgeCacheKey ? pendingUploadsByOperation[knowledgeCacheKey] || [] : []
-  )
-  let isUploadingActiveAgent = $derived(
-    knowledgeCacheKey ? !!uploadingByOperation[knowledgeCacheKey] : false
-  )
-  let activeUploadProgress = $derived(
-    knowledgeCacheKey ? uploadProgressByOperation[knowledgeCacheKey] || "" : ""
-  )
-
-  let resetting = $state(false)
   let hasStoreAccessFailures = $derived(
     files.some(
       file =>
@@ -154,67 +105,22 @@
     )
   )
 
-  const setPendingUploadsForOperation = (
-    cacheKey: string,
-    pendingUploads: PendingUpload[]
-  ) => {
-    pendingUploadsByOperation = {
-      ...pendingUploadsByOperation,
-      [cacheKey]: pendingUploads,
-    }
-  }
-
-  const removePendingUpload = (cacheKey: string, tempId: string) => {
-    const pendingUploads = pendingUploadsByOperation[cacheKey] || []
-    setPendingUploadsForOperation(
-      cacheKey,
-      pendingUploads.filter(upload => upload.tempId !== tempId)
-    )
-  }
-
-  const setUploadingForOperation = (cacheKey: string, uploading: boolean) => {
-    uploadingByOperation = {
-      ...uploadingByOperation,
-      [cacheKey]: uploading,
-    }
-  }
-
-  const setUploadProgressForOperation = (
-    cacheKey: string,
-    progress: string
-  ) => {
-    uploadProgressByOperation = {
-      ...uploadProgressByOperation,
-      [cacheKey]: progress,
-    }
-  }
-
-  const stopSharePointBootstrapPolling = () => {
-    knowledgePollingController.stop()
-  }
-
   const refreshDeploymentStatus = async () => {
     await workspaceDeploymentStore.fetch()
   }
 
-  const syncOperationKnowledgeFromStore = () => {
-    const currentOperation = operation
-    if (!currentOperation?.id) {
+  const syncOperationFromStore = () => {
+    if (!agentId || !operationId) {
       return
     }
-
-    const latestAgent = get(selectedAgent)
-    const latestOperation = latestAgent?.operations?.find(
-      latest => latest.id === currentOperation.id
-    )
-    if (!latestOperation) {
+    const latest = agentsStore.getAgentOperation(agentId, operationId)
+    if (!latest) {
       return
     }
-
     operation = {
-      ...currentOperation,
-      knowledgeBases: latestOperation.knowledgeBases,
-      knowledgeSources: latestOperation.knowledgeSources,
+      ...operation,
+      knowledgeBases: latest.knowledgeBases,
+      knowledgeSources: latest.knowledgeSources,
     }
   }
 
@@ -255,95 +161,58 @@
     }
   }
 
-  const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
-    if (row.kind !== "sharepoint_connection") {
+  const persistAllowKnowledgeSourceDownload = async (next: boolean) => {
+    if (!agentId || !operationId) {
       return
     }
-    openSharePointSiteConfigModal(row.siteId).catch(error => {
-      console.error(error)
-      notifications.error("Failed to load SharePoint folders/files")
-    })
+
+    savingAllowKnowledgeSourceDownload = true
+    try {
+      await agentsStore.updateOperationAllowKnowledgeSourceDownload(
+        agentId,
+        operationId,
+        next
+      )
+      await refreshDeploymentStatus()
+    } catch (error) {
+      notifications.error(
+        getErrorMessage(error) || "Failed to save download setting"
+      )
+    } finally {
+      savingAllowKnowledgeSourceDownload = false
+    }
   }
 
   let fileTableRows = $derived.by(() =>
     toFileTableRows(
       files.filter(file => !file.source),
       removeFile,
-      activePendingUploads
+      uploadState.pendingUploads
     )
   )
-  let sharePointConnectionRows = $derived.by(() => {
-    return toSharePointConnectionRows({
+  let sharePointConnectionRows = $derived.by(() =>
+    toSharePointConnectionRows({
       sharePointSources,
       sharePointSourceSnapshots,
       onDelete: removeSharePointSite,
-      onSync: async sourceId => {
-        await syncSharePointNow(sourceId)
-      },
+      onSync: syncSharePointNow,
     })
-  })
-  let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => {
-    return [...sharePointConnectionRows, ...fileTableRows]
-  })
+  )
+  let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => [
+    ...sharePointConnectionRows,
+    ...fileTableRows,
+  ])
 
   $effect(() => {
-    const agentId = currentAgent?._id
-    const operationId = operation.id
     if (!agentId || !operationId) {
-      loading = false
-      initialKnowledgeLoadedForOperation = undefined
-      activeKnowledgeLoadKey = undefined
       return
     }
-
-    const cacheKey = getOperationCacheKey(agentId, operationId)
-    if (initialKnowledgeLoadedForOperation === cacheKey) {
-      loading = false
-      return
-    }
-
-    activeKnowledgeLoadKey = cacheKey
-    loading = true
-    ;(async () => {
-      try {
-        if (!$agentsStore.knowledgeByOperation[cacheKey]) {
-          await agentsStore.fetchAgentKnowledge(agentId)
-        }
-        if (activeKnowledgeLoadKey !== cacheKey) {
-          return
-        }
-        initialKnowledgeLoadedForOperation = cacheKey
-      } catch (error) {
-        if (activeKnowledgeLoadKey !== cacheKey) {
-          return
-        }
+    agentsStore
+      .ensureOperationKnowledgeLoaded(agentId, operationId)
+      .catch(error => {
         console.error(error)
         notifications.error("Failed to load knowledge")
-      } finally {
-        if (activeKnowledgeLoadKey === cacheKey) {
-          loading = false
-        }
-      }
-    })()
-  })
-
-  $effect(() => {
-    const agentId = currentAgent?._id
-    const operationId = operation.id
-    if (!agentId || !operationId) {
-      knowledgePollingController.stop()
-      return
-    }
-    const hasProcessingFiles = files.some(
-      file => file.status === KnowledgeBaseFileStatus.PROCESSING
-    )
-    const hasUnsyncedSharePointSites = sharePointSourceSnapshots.some(
-      source => !source.lastRunAt
-    )
-    knowledgePollingController.setContinuous(
-      `${agentId}:${operationId}`,
-      hasProcessingFiles || hasUnsyncedSharePointSites
-    )
+      })
   })
 
   onMount(async () => {
@@ -357,15 +226,15 @@
     }
   })
 
+  onDestroy(() => {
+    agentsStore.stopOperationKnowledgePolling()
+  })
+
   async function openSharePointFlow() {
     if (!hasSharePointConnection) {
       bb.settings("/connections/apis/new/microsoft-sharepoint")
       return
     }
-    await openSharePointSiteModal()
-  }
-
-  async function openSharePointSiteModal() {
     await selectSharePointSiteModal?.show()
   }
 
@@ -373,12 +242,10 @@
     siteId: string,
     mode: SharePointSelectionMode
   ) {
-    const agentId = currentAgent?._id
-    const operationId = operation.id
-    syncOperationKnowledgeFromStore()
-    if (agentId && operationId) {
-      await fetchFiles(getOperationCacheKey(agentId, operationId))
+    if (!agentId || !operationId) {
+      return
     }
+    syncOperationFromStore()
     selectedSharePointSiteId = siteId
     selectSharePointSiteModal?.hide()
     if (mode === "selective") {
@@ -387,10 +254,6 @@
   }
 
   async function openSharePointSiteSelectionModal(siteId: string) {
-    const agentId = currentAgent?._id
-    if (!agentId) {
-      return
-    }
     selectedSharePointSiteId = siteId
     await selectSharePointFilesModal?.show()
   }
@@ -400,9 +263,17 @@
     displaySharePointSiteModal?.show()
   }
 
+  const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
+    if (row.kind !== "sharepoint_connection") {
+      return
+    }
+    openSharePointSiteConfigModal(row.siteId).catch(error => {
+      console.error(error)
+      notifications.error("Failed to load SharePoint folders/files")
+    })
+  }
+
   async function syncSharePointNow(sourceId: string) {
-    const agentId = currentAgent?._id
-    const operationId = operation.id
     if (!agentId || !operationId) {
       return
     }
@@ -413,10 +284,7 @@
         operationId,
         sourceId
       )
-      await Promise.all([
-        fetchFiles(getOperationCacheKey(agentId, operationId)),
-        refreshDeploymentStatus(),
-      ])
+      await refreshDeploymentStatus()
       showSharePointSyncResult(result)
     } catch (error) {
       console.error(error)
@@ -425,12 +293,9 @@
   }
 
   async function removeSharePointSite(siteId: string) {
-    const agent = currentAgent
-    const operationId = operation.id
-    if (!agent?._id || !operationId || sharePointSources.length === 0) {
+    if (!agentId || !operationId || sharePointSources.length === 0) {
       return
     }
-    const agentId = agent._id
     const siteName =
       sharePointSources
         .map(source => source.config.site)
@@ -447,8 +312,7 @@
             operationId,
             siteId
           )
-          syncOperationKnowledgeFromStore()
-          await fetchFiles(getOperationCacheKey(agentId, operationId))
+          syncOperationFromStore()
           await refreshDeploymentStatus()
           notifications.success("SharePoint site removed")
         } catch (error) {
@@ -460,10 +324,7 @@
   }
 
   async function removeFile(file: KnowledgeBaseFile) {
-    const agentId = currentAgent?._id
-    const operationId = operation.id
-    const fileId = file._id
-    if (!agentId || !operationId || !fileId) {
+    if (!agentId || !operationId || !file._id) {
       return
     }
 
@@ -473,8 +334,11 @@
       okText: "Delete",
       onConfirm: async () => {
         try {
-          await agentsStore.deleteOperationFile(agentId, operationId, fileId)
-          await fetchFiles(getOperationCacheKey(agentId, operationId))
+          await agentsStore.removeOperationKnowledgeFile(
+            agentId,
+            operationId,
+            file._id!
+          )
           await refreshDeploymentStatus()
           notifications.success("File removed")
         } catch (error) {
@@ -486,8 +350,6 @@
   }
 
   async function resetKnowledgeStore() {
-    const agentId = currentAgent?._id
-    const operationId = operation.id
     if (!agentId || !operationId) {
       return
     }
@@ -515,11 +377,6 @@
       },
     })
   }
-
-  onDestroy(() => {
-    stopSharePointBootstrapPolling()
-    knowledgePollingController.stop()
-  })
 </script>
 
 <Layout gap="S" noPadding>
@@ -540,26 +397,10 @@
         </Button>
       {/if}
       <KnowledgeAddControls
-        agentId={currentAgent?._id}
-        operationId={operation.id}
-        isUploading={isUploadingActiveAgent}
-        uploadProgress={activeUploadProgress}
-        onPendingUploadsAdded={(cacheKey, uploads) => {
-          setPendingUploadsForOperation(cacheKey, [
-            ...uploads,
-            ...(pendingUploadsByOperation[cacheKey] || []),
-          ])
-        }}
-        onPendingUploadRemoved={(cacheKey, tempId) => {
-          removePendingUpload(cacheKey, tempId)
-        }}
-        onUploadingChange={(cacheKey, uploading, progress) => {
-          setUploadingForOperation(cacheKey, uploading)
-          setUploadProgressForOperation(cacheKey, progress)
-        }}
-        onUploaded={async (agentId, operationId) => {
-          await fetchFiles(getOperationCacheKey(agentId, operationId))
-          syncOperationKnowledgeFromStore()
+        {agentId}
+        {operationId}
+        onUploaded={async () => {
+          syncOperationFromStore()
           await refreshDeploymentStatus()
         }}
         onSharePoint={() =>
@@ -574,7 +415,7 @@
   <div class="sources-access">
     <Toggle
       bind:value={operation.allowKnowledgeSourceDownload}
-      disabled={savingAllowKnowledgeSourceDownload || !currentAgent?._id}
+      disabled={savingAllowKnowledgeSourceDownload || !agentId}
       on:change={event =>
         persistAllowKnowledgeSourceDownload(Boolean(event.detail))}
     />
@@ -595,7 +436,7 @@
 
   <KnowledgeTable
     {loading}
-    isUploading={isUploadingActiveAgent}
+    isUploading={uploadState.uploading}
     rows={knowledgeTableRows}
     onRowClick={handleKnowledgeRowClick}
   />
@@ -603,24 +444,24 @@
 
 <SelectSharePointSiteModal
   bind:this={selectSharePointSiteModal}
-  agentId={currentAgent?._id || ""}
-  operationId={operation.id || ""}
+  agentId={agentId || ""}
+  {operationId}
   existingSiteIds={selectedSiteIds}
   onCreated={onSharePointSiteCreated}
 />
 
 <DisplaySharePointSiteModal
   bind:this={displaySharePointSiteModal}
-  agentId={currentAgent?._id}
-  operationId={operation.id}
+  {agentId}
+  {operationId}
   siteId={selectedSharePointSiteId}
   onEdit={openSharePointSiteSelectionModal}
 />
 
 <SelectSharePointFilesModal
   bind:this={selectSharePointFilesModal}
-  agentId={currentAgent?._id}
-  operationId={operation.id}
+  {agentId}
+  {operationId}
   siteId={selectedSharePointSiteId}
 />
 
