@@ -156,6 +156,16 @@ export async function createOrUpdateRequestForPrompt({
   userId: string
 }): Promise<AgentRequest | undefined> {
   const currentRequest = await fetchLatestBySession(agentId, sessionId)
+
+  if (!currentRequest) {
+    return await createRequest({
+      agentId,
+      sessionId,
+      latestPrompt,
+      userId,
+    })
+  }
+
   const requestBoundary = await analyzeAgentRequestBoundary({
     latestPrompt,
     currentRequest,
@@ -163,7 +173,7 @@ export async function createOrUpdateRequestForPrompt({
     sessionId,
   })
 
-  if (requestBoundary.decision === "new_request" || !currentRequest) {
+  if (requestBoundary.decision === "new_request") {
     return await createRequest({
       agentId,
       sessionId,

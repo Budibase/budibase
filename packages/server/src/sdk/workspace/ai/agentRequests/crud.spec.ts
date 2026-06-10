@@ -4,6 +4,7 @@ import {
   appendToRequest,
   createRequest,
   createOrUpdateRequestForPrompt,
+  fetchByAgent,
   fetchBySession,
   fetchLatestBySession,
   markCompleted,
@@ -141,6 +142,40 @@ describe("agentRequests crud", () => {
 
       expect(second?._id).toEqual(first?._id)
       expect(second?.interactionCount).toEqual(2)
+    })
+  })
+
+  it("can store requests when called directly in development workspaces", async () => {
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const created = await createOrUpdateRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestPrompt: "Show me the holidays company policy",
+        userId: "user_1",
+      })
+
+      const requests = await fetchBySession("agent_1", "session_1")
+
+      expect(created?._id).toBeDefined()
+      expect(requests).toHaveLength(1)
+    })
+  })
+
+  it("always fetches agent requests for display from the production db", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await createRequest({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestPrompt: "Prod request",
+        userId: "user_1",
+      })
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const requests = await fetchByAgent("agent_1")
+
+      expect(requests).toHaveLength(1)
+      expect(requests[0].promptHistory).toEqual(["Prod request"])
     })
   })
 })
