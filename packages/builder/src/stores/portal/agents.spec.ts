@@ -191,6 +191,31 @@ describe("agentsStore sharepoint and file syncing", () => {
       false
     )
   })
+
+  it("ensureOperationKnowledgeLoaded restarts polling when cache exists", async () => {
+    vi.useFakeTimers()
+    const processingFile = {
+      _id: "kb_file_1",
+      status: KnowledgeBaseFileStatus.PROCESSING,
+    } as KnowledgeBaseFile
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: { files: [processingFile], sharePointSources: [] },
+      },
+    })
+
+    await store.fetchAgentKnowledge("agent_1")
+    expect(fetchAgentKnowledge).toHaveBeenCalledTimes(1)
+
+    store.stopOperationKnowledgePolling()
+    fetchAgentKnowledge.mockClear()
+
+    await store.ensureOperationKnowledgeLoaded("agent_1", "operation_1")
+    expect(fetchAgentKnowledge).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(fetchAgentKnowledge).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("AgentsStore file operations", () => {

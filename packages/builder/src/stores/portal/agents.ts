@@ -383,6 +383,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     if (get(this.store).knowledgeByOperation[cacheKey]) {
       this.setKnowledgeLoading(cacheKey, false)
+      this.syncKnowledgePollingForAgent(agentId)
       return
     }
 
