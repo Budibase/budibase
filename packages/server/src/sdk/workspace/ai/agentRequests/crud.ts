@@ -195,6 +195,21 @@ export async function markCompleted(
   })
 }
 
+export async function markLatestCompletedBySession({
+  agentId,
+  sessionId,
+}: {
+  agentId: string
+  sessionId: string
+}): Promise<AgentRequest | undefined> {
+  const latest = await fetchLatestBySession(agentId, sessionId)
+  if (!latest?._id) {
+    return undefined
+  }
+
+  return await markCompleted(latest._id)
+}
+
 export async function fetchByAgent(agentId: string): Promise<AgentRequest[]> {
   const db = context.getWorkspaceDB()
   const response = await db.allDocs<AgentRequest>({
