@@ -100,13 +100,14 @@ Any constraints the agent must follow.
     renameModal?.hide()
   }
 
-  const createDefaultOperation = () => ({
-    id: `operation_${Helpers.uuid()}`,
-    name: "Main operation",
-    live: false,
-    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
-    allowKnowledgeSourceDownload: true
-  } satisfies AgentOperation)
+  const createDefaultOperation = () =>
+    ({
+      id: `operation_${Helpers.uuid()}`,
+      name: "Main operation",
+      live: false,
+      promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+      allowKnowledgeSourceDownload: true,
+    }) satisfies AgentOperation
 
   const setOperationLive = async (nextLive: boolean) => {
     if (!agent?.operations?.[0] || agent.operations[0].live === nextLive) {
