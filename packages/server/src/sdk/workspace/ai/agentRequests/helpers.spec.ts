@@ -14,9 +14,7 @@ jest.mock("../llm/bbai", () => ({
   }),
 }))
 
-const buildRequest = (
-  overrides: Partial<AgentRequest> = {}
-): AgentRequest => ({
+const buildRequest = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
   _id: "agentrequest_agent_1_chat_1_req_1",
   agentId: "agent_1",
   sessionId: "session_1",

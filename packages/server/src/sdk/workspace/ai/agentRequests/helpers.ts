@@ -14,13 +14,17 @@ export interface AgentRequestBoundaryAnalysis {
 
 const normalizePrompt = (prompt: string) => prompt.trim().replace(/\s+/g, " ")
 
-const extractJson = (value: string): AgentRequestBoundaryDecision | undefined => {
+const extractJson = (
+  value: string
+): AgentRequestBoundaryDecision | undefined => {
   const trimmed = value.trim()
   const jsonMatch = trimmed.match(/\{[\s\S]*\}/)
   const candidate = jsonMatch?.[0] || trimmed
 
   try {
-    const parsed = JSON.parse(candidate) as Partial<AgentRequestBoundaryDecision>
+    const parsed = JSON.parse(
+      candidate
+    ) as Partial<AgentRequestBoundaryDecision>
     if (
       parsed.decision === "same_request" ||
       parsed.decision === "new_request"

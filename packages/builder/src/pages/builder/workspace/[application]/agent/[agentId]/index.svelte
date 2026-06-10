@@ -1,47 +1,60 @@
 <script lang="ts">
   import { Body, Table } from "@budibase/bbui"
+  import { API } from "@/api"
   import { selectedAgent } from "@/stores/portal"
+  import type { AgentRequest } from "@budibase/types"
+  import dayjs from "dayjs"
 
   let currentAgent = $derived($selectedAgent)
+  let requests = $state<AgentRequest[]>([])
+  let loading = $state(false)
 
-  const requests = [
-    {
-      title: "New MacBook for new starter (Marketing)",
-      subtitle: "Device provisioning • Joe Johnston • 2m",
-      status: "Processing",
-      tone: "blue",
-    },
-    {
-      title: "VR headset for design team",
-      subtitle: "Device provisioning • Sara Lee • 5m",
-      status: "Processing",
-      tone: "blue",
-    },
-    {
-      title: "Access request to product database",
-      subtitle: "Access request • Mark Taylor • 10m",
-      status: "Needs input",
-      tone: "amber",
-    },
-    {
-      title: "Printer for administrative office",
-      subtitle: "Device provisioning • Jim Taylor • 13m",
-      status: "Completed",
-      tone: "green",
-    },
-    {
-      title: "Wireless router for office",
-      subtitle: "Device provisioning • Lisa Taylor • 18m",
-      status: "Completed",
-      tone: "green",
-    },
-    {
-      title: "Cannot connect to VPN from home network",
-      subtitle: "IT assistant • Mel Taylor • 19m",
-      status: "Completed",
-      tone: "green",
-    },
-  ]
+  const formatRequestAge = (value?: string | number) => {
+    if (!value) {
+      return "Just now"
+    }
+    return dayjs(value).fromNow()
+  }
+
+  const formatRequestStatus = (status: AgentRequest["status"]) =>
+    status === "waiting" ? "Waiting" : "Completed"
+
+  let interactionCount = $derived.by(() =>
+    requests.reduce((total, request) => total + request.interactionCount, 0)
+  )
+
+  let tableRequests = $derived.by(() =>
+    requests.map(request => ({
+      title:
+        request.promptHistory[0] ||
+        request.promptHistory[request.promptHistory.length - 1] ||
+        "Untitled request",
+      subtitle: `${request.interactionCount} interaction${request.interactionCount === 1 ? "" : "s"} • ${formatRequestAge(request.updatedAt || request.createdAt)}`,
+      status: formatRequestStatus(request.status),
+    }))
+  )
+
+  async function loadRequests(agentId?: string) {
+    if (!agentId) {
+      requests = []
+      return
+    }
+
+    loading = true
+    try {
+      const response = await API.fetchAgentRequests(agentId, { limit: 10 })
+      requests = response.requests
+    } catch (error) {
+      console.error("Failed to fetch agent requests", error)
+      requests = []
+    } finally {
+      loading = false
+    }
+  }
+
+  $effect(() => {
+    loadRequests(currentAgent?._id)
+  })
 </script>
 
 <div class="overview">
@@ -57,19 +70,19 @@
       </div>
     </div>
     <div class="card metric-card">
-      <Body size="S" color="#a2a2a2">Requests handled</Body>
-      <div class="metric">3422</div>
+      <Body size="S" color="#a2a2a2">Recent requests</Body>
+      <div class="metric">{requests.length}</div>
     </div>
     <div class="card metric-card">
-      <Body size="S" color="#a2a2a2">Hours saved</Body>
-      <div class="metric">2324</div>
+      <Body size="S" color="#a2a2a2">Interactions</Body>
+      <div class="metric">{interactionCount}</div>
     </div>
   </div>
 
   <div class="card requests-card">
     <div class="requests-header">
       <Body size="S" color="#efefef" weight="600">Recent requests</Body>
-      <button class="view-all">View all Requests</button>
+      <Body size="XS" color="#a2a2a2">Showing latest {requests.length}</Body>
     </div>
     <Table
       compact
@@ -79,7 +92,7 @@
       allowEditRows={false}
       allowEditColumns={false}
       allowSelectRows={false}
-      data={requests}
+      data={tableRequests}
       schema={{
         title: { displayName: "Request", width: "minmax(0, 1.7fr)" },
         subtitle: { displayName: "Details", width: "minmax(0, 1.3fr)" },
@@ -91,6 +104,9 @@
         },
       }}
     />
+    {#if !loading && tableRequests.length === 0}
+      <div class="empty-state">No requests tracked yet.</div>
+    {/if}
   </div>
 </div>
 
@@ -163,15 +179,6 @@
     margin-bottom: 16px;
   }
 
-  .view-all {
-    border: 0;
-    background: transparent;
-    color: var(--spectrum-global-color-gray-600);
-    font-size: 13px;
-    font-weight: 600;
-    padding: 4px 12px;
-  }
-
   .requests-card :global(.spectrum-Table) {
     background: transparent;
   }
@@ -190,5 +197,11 @@
   .requests-card :global(.spectrum-Table-cell:last-child) {
     text-align: right;
     white-space: nowrap;
+  }
+
+  .empty-state {
+    padding-top: 12px;
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 13px;
   }
 </style>

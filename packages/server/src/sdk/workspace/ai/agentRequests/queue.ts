@@ -31,28 +31,29 @@ let agentRequestTrackingInitialised = false
 
 export function getQueue() {
   if (!agentRequestTrackingQueue) {
-    agentRequestTrackingQueue = new queue.BudibaseQueue<AgentRequestTrackingJob>(
-      queue.JobQueue.AGENT_REQUEST_TRACKING,
-      {
-        maxStalledCount: 3,
-        jobOptions: {
-          attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: DEFAULT_BACKOFF_MS,
+    agentRequestTrackingQueue =
+      new queue.BudibaseQueue<AgentRequestTrackingJob>(
+        queue.JobQueue.AGENT_REQUEST_TRACKING,
+        {
+          maxStalledCount: 3,
+          jobOptions: {
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: DEFAULT_BACKOFF_MS,
+            },
+            timeout: DEFAULT_TIMEOUT_MS,
+            removeOnComplete: true,
+            removeOnFail: 1000,
           },
-          timeout: DEFAULT_TIMEOUT_MS,
-          removeOnComplete: true,
-          removeOnFail: 1000,
-        },
-        jobTags: data => ({
-          workspaceId: data.workspaceId,
-          agentId: data.agentId,
-          sessionId: data.sessionId,
-          type: data.type,
-        }),
-      }
-    )
+          jobTags: data => ({
+            workspaceId: data.workspaceId,
+            agentId: data.agentId,
+            sessionId: data.sessionId,
+            type: data.type,
+          }),
+        }
+      )
   }
 
   return agentRequestTrackingQueue

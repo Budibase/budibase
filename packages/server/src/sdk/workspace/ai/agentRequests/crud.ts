@@ -40,7 +40,9 @@ const buildAgentRequest = ({
   }
 }
 
-export async function fetch(agentRequestId: string): Promise<AgentRequest | undefined> {
+export async function fetch(
+  agentRequestId: string
+): Promise<AgentRequest | undefined> {
   return await context.getWorkspaceDB().tryGet<AgentRequest>(agentRequestId)
 }
 
@@ -220,7 +222,10 @@ export async function fetchByAgent(agentId: string): Promise<AgentRequest[]> {
 
   return response.rows
     .map(row => row.doc)
-    .filter(
-      (doc): doc is AgentRequest => !!doc && doc.agentId === agentId
-    )
+    .filter((doc): doc is AgentRequest => !!doc && doc.agentId === agentId)
+    .sort((a, b) => {
+      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime()
+      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime()
+      return bTime - aTime
+    })
 }

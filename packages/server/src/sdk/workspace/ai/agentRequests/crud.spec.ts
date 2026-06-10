@@ -91,9 +91,7 @@ describe("agentRequests crud", () => {
       const latest = await fetchLatestBySession("agent_1", "session_1")
 
       expect(latest?.status).toEqual("completed")
-      expect(
-        await context.getWorkspaceDB().tryGet(latest!._id!)
-      ).toBeDefined()
+      expect(await context.getWorkspaceDB().tryGet(latest!._id!)).toBeDefined()
     })
   })
 
