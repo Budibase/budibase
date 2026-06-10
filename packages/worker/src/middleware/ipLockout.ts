@@ -18,14 +18,12 @@ export default async (ctx: Ctx, next: Next) => {
   }
 
   const key = ipKey(ip)
-  const current = Number((await cache.get(key)) || 0)
-  const nextCount = current + 1
-  await cache.store(key, nextCount, env.LOGIN_LOCKOUT_SECONDS)
+  const count = await cache.increment(key, env.LOGIN_LOCKOUT_SECONDS)
 
-  if (nextCount > env.LOGIN_IP_LOCKOUT_LIMIT) {
+  if (count > env.LOGIN_IP_LOCKOUT_LIMIT) {
     ctx.set("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
     console.log(
-      `[auth] login blocked due to IP lockout ip=${ip} count=${nextCount}`
+      `[auth] login blocked due to IP lockout ip=${ip} count=${count}`
     )
     return ctx.throw(429, "Too many login attempts. Try again later.")
   }

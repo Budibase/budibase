@@ -4,8 +4,7 @@ import env from "../../environment"
 
 jest.mock("@budibase/backend-core", () => ({
   cache: {
-    get: jest.fn(),
-    store: jest.fn(),
+    increment: jest.fn(),
   },
 }))
 
@@ -33,13 +32,12 @@ describe("ipLockout middleware", () => {
   })
 
   it("should call next when count is below the limit", async () => {
-    jest.mocked(cache.get).mockResolvedValue(0)
+    jest.mocked(cache.increment).mockResolvedValue(1)
 
     await ipLockout(ctx, next)
 
-    expect(cache.store).toHaveBeenCalledWith(
+    expect(cache.increment).toHaveBeenCalledWith(
       "auth:login:ip:1.2.3.4",
-      1,
       env.LOGIN_LOCKOUT_SECONDS
     )
     expect(next).toHaveBeenCalled()
@@ -47,7 +45,7 @@ describe("ipLockout middleware", () => {
   })
 
   it("should call next when count equals the limit", async () => {
-    jest.mocked(cache.get).mockResolvedValue(env.LOGIN_IP_LOCKOUT_LIMIT - 1)
+    jest.mocked(cache.increment).mockResolvedValue(env.LOGIN_IP_LOCKOUT_LIMIT)
 
     await ipLockout(ctx, next)
 
@@ -56,7 +54,9 @@ describe("ipLockout middleware", () => {
   })
 
   it("should throw 429 with Retry-After when count exceeds the limit", async () => {
-    jest.mocked(cache.get).mockResolvedValue(env.LOGIN_IP_LOCKOUT_LIMIT)
+    jest
+      .mocked(cache.increment)
+      .mockResolvedValue(env.LOGIN_IP_LOCKOUT_LIMIT + 1)
 
     ctx.throw = jest.fn().mockImplementation((status, message) => {
       const error = new Error(message)
