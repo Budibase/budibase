@@ -91,7 +91,7 @@ const environment = {
     parseIntSafe(process.env.LOGIN_MAX_FAILED_ATTEMPTS) || 5,
   LOGIN_LOCKOUT_SECONDS: parseIntSafe(process.env.LOGIN_LOCKOUT_SECONDS) || 900,
   LOGIN_IP_LOCKOUT_LIMIT:
-    parseIntSafe(process.env.LOGIN_IP_LOCKOUT_LIMIT) || 30,
+    parseIntSafe(process.env.LOGIN_IP_LOCKOUT_LIMIT) || 10,
 
   // password reset rate limiting
   PASSWORD_RESET_RATE_EMAIL_LIMIT:
