@@ -53,7 +53,7 @@ const getGlobalUserId = (ctx: UserCtx) => {
 }
 
 const allowsKnowledgeSourceDownload = (agent: Agent) =>
-  getLiveOperation(agent)?.allowKnowledgeSourceDownload
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
