@@ -16,12 +16,12 @@
   }
 </script>
 
-<Modal bind:this={modal} on:hide={modal}>
+<Modal bind:this={modal}>
   <ModalContent
-    title="Your account is currently de-activated"
+    title="Your tenant is currently de-activated"
     size="S"
-    showCancelButton={true}
-    showCloseIcon={false}
+    showCancelButton={false}
+    showCloseIcon={true}
     confirmText={"View plans"}
     {onConfirm}
   >
@@ -31,8 +31,8 @@
         for cloud users. Your tenant has been temporarily locked. Please upgrade
         to a paid plan to keep your data — otherwise it will be removed soon.
       {:else}
-        Due to the Free plan user limit being exceeded, your account has been
-        de-activated. Upgrade your plan to re-activate your account.
+        Due to the Free plan user limit being exceeded, your tenant has been
+        de-activated. Upgrade your plan to re-activate your tenant.
       {/if}
     </Body>
   </ModalContent>
