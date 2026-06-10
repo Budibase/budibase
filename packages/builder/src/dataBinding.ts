@@ -202,6 +202,12 @@ const isDataBindingObject = (value: unknown): value is DataBindingObject => {
   return value != null && typeof value === "object" && !Array.isArray(value)
 }
 
+const isDataBindingContainer = (
+  value: unknown
+): value is DataBindingObject | unknown[] => {
+  return value != null && typeof value === "object"
+}
+
 const asDataBindingObject = (value: unknown): DataBindingObject => {
   return isDataBindingObject(value) ? value : {}
 }
@@ -293,14 +299,17 @@ const asSchema = (value: unknown): DataBindingSchema => {
   if (!isDataBindingObject(value)) {
     return {}
   }
-  return Object.entries(value).reduce<DataBindingSchema>((acc, [key, field]) => {
-    if (typeof field === "string") {
-      acc[key] = { type: field }
-    } else if (isDataBindingObject(field) && typeof field.type === "string") {
-      acc[key] = field as DataBindingFieldSchema
-    }
-    return acc
-  }, {})
+  return Object.entries(value).reduce<DataBindingSchema>(
+    (acc, [key, field]) => {
+      if (typeof field === "string") {
+        acc[key] = { type: field }
+      } else if (isDataBindingObject(field) && typeof field.type === "string") {
+        acc[key] = field as DataBindingFieldSchema
+      }
+      return acc
+    },
+    {}
+  )
 }
 
 const toBindableProperty = (
@@ -1048,9 +1057,11 @@ const getSelectedRowsBindings = (asset: unknown): EnrichedDataBinding[] => {
     // Add bindings for table components
     const props = getAssetProps(asset)
     let tables = props
-      ? asComponents(findAllMatchingComponents(props, component =>
-      component._component.endsWith("table")
-    ))
+      ? asComponents(
+          findAllMatchingComponents(props, component =>
+            component._component.endsWith("table")
+          )
+        )
       : []
     const safeState = makePropSafe("rowSelection")
     bindings = bindings.concat(
@@ -1068,9 +1079,11 @@ const getSelectedRowsBindings = (asset: unknown): EnrichedDataBinding[] => {
 
     // Add bindings for table blocks
     let tableBlocks = props
-      ? asComponents(findAllMatchingComponents(props, component =>
-      component._component.endsWith("tableblock")
-    ))
+      ? asComponents(
+          findAllMatchingComponents(props, component =>
+            component._component.endsWith("tableblock")
+          )
+        )
       : []
     bindings = bindings.concat(
       tableBlocks.map(block => ({
@@ -1477,9 +1490,7 @@ export const getSchemaForDatasource = (
 
     // Determine if we should add ID and rev to the schema
     const isInternal = table && table?.sourceType === DB_TYPE_INTERNAL
-    const isDSPlus = ["table", "link", "viewV2"].includes(
-      datasourceConfig.type
-    )
+    const isDSPlus = ["table", "link", "viewV2"].includes(datasourceConfig.type)
 
     // ID is part of the readable schema for all tables
     // Rev is part of the readable schema for internal tables only
@@ -1613,7 +1624,9 @@ export const buildFormSchema = (
  * Returns an array of the keys of any state variables which are set anywhere
  * in the app.
  */
-export const getAllStateVariables = (screen?: unknown): (string | undefined)[] => {
+export const getAllStateVariables = (
+  screen?: unknown
+): (string | undefined)[] => {
   let assets: AssetRecord[] = []
   if (screen) {
     // only include state variables from a specific screen
@@ -1697,7 +1710,7 @@ export const getAllStateVariables = (screen?: unknown): (string | undefined)[] =
       eventSettings.push(screenAsset.onLoad)
     }
   } else {
-    ;(asAssets(get(screenStore).screens || [])).forEach(screen => {
+    asAssets(get(screenStore).screens || []).forEach(screen => {
       const screenAsset = asAsset(screen)
       if (screenAsset.onLoad) {
         eventSettings.push(screenAsset.onLoad)
@@ -1744,8 +1757,8 @@ export const removeBindings = (
   replacement = "Invalid binding"
 ): DataBindingObject => {
   for (let [key, value] of Object.entries(obj)) {
-    if (isDataBindingObject(value)) {
-      obj[key] = removeBindings(value, replacement)
+    if (isDataBindingContainer(value)) {
+      obj[key] = removeBindings(value as DataBindingObject, replacement)
     } else if (typeof value === "string") {
       obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, replacement)
     }
@@ -1985,8 +1998,7 @@ export const updateReferencesInObject = ({
     str: string,
     index: number,
     replaceWith: number | string | undefined
-  ) =>
-    str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
+  ) => str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
   for (const key in target) {
     if (typeof target[key] === "string") {
       const value = target[key]
@@ -2041,9 +2053,9 @@ export const updateReferencesInObject = ({
           }
         }
       }
-    } else if (isDataBindingObject(target[key])) {
+    } else if (isDataBindingContainer(target[key])) {
       updateReferencesInObject({
-        obj: target[key],
+        obj: target[key] as object,
         modifiedIndex,
         action,
         label,
@@ -2067,8 +2079,7 @@ export const migrateReferencesInObject = ({
     str: string,
     index: number,
     replaceWith: string | undefined
-  ) =>
-    str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
+  ) => str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
 
   for (const key in target) {
     if (typeof target[key] === "string") {
@@ -2083,9 +2094,10 @@ export const migrateReferencesInObject = ({
           steps[referencedStep]?.id
         )
       }
-    } else if (isDataBindingObject(target[key])) {
+    } else if (isDataBindingContainer(target[key])) {
       migrateReferencesInObject({
-        obj: target[key],
+        obj: target[key] as object,
+        label,
         steps,
         originalIndex,
       })

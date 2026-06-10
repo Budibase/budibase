@@ -3,6 +3,8 @@ import {
   runtimeToReadableBinding,
   readableToRuntimeBinding,
   updateReferencesInObject,
+  migrateReferencesInObject,
+  removeBindings,
   getSchemaForDatasource,
   makeReadableKeyPropSafe,
 } from "@/dataBinding"
@@ -618,6 +620,27 @@ describe("Builder dataBinding", () => {
       expect(obj[0].parameters.text).toEqual("{{ actions.0.result }}")
     })
 
+    it("updates references nested inside arrays", () => {
+      let obj = {
+        parameters: {
+          rows: [
+            {
+              value: "{{ actions.1.row }}",
+            },
+          ],
+        },
+      }
+
+      updateReferencesInObject({
+        obj,
+        modifiedIndex: 0,
+        action: "add",
+        label: "actions",
+      })
+
+      expect(obj.parameters.rows[0].value).toEqual("{{ actions.2.row }}")
+    })
+
     it("should handle on 'move' to a higher index", () => {
       let obj = [
         {
@@ -849,6 +872,46 @@ describe("Builder dataBinding", () => {
           id: "JEI5lAyJZ",
         },
       ])
+    })
+  })
+
+  describe("migrateReferencesInObject", () => {
+    it("migrates references nested inside arrays", () => {
+      let obj = {
+        parameters: {
+          rows: [
+            {
+              value: "{{ actions.1.row }}",
+            },
+          ],
+        },
+      }
+
+      migrateReferencesInObject({
+        obj,
+        label: "actions",
+        steps: [{ id: "first" }, { id: "second" }],
+      })
+
+      expect(obj.parameters.rows[0].value).toEqual("{{ actions.second.row }}")
+    })
+  })
+
+  describe("removeBindings", () => {
+    it("removes bindings nested inside arrays", () => {
+      let obj = {
+        parameters: {
+          rows: [
+            {
+              value: "Result: {{ actions.1.row }}",
+            },
+          ],
+        },
+      }
+
+      removeBindings(obj)
+
+      expect(obj.parameters.rows[0].value).toEqual("Result: Invalid binding")
     })
   })
 })
