@@ -816,7 +816,6 @@ export const deleteSharePointFilesForOperationSite = async (
     )
     .map(file => file._id)
     .filter((fileId): fileId is string => !!fileId)
-
   const results = await Promise.allSettled(
     fileIdsToDelete.map(fileId =>
       deleteFileForOperation(agentId, operationId, fileId)

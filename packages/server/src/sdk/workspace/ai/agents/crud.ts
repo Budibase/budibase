@@ -495,6 +495,12 @@ export async function update(agent: Agent): Promise<Agent> {
     await assertAgentHasValidConfig(updated)
   }
 
+  if (removedOperations.length > 0) {
+    for (const removedOperation of removedOperations) {
+      await cleanupKnowledgeForOperation(_id, removedOperation.id!)
+    }
+  }
+
   const hasBeenPublished =
     !!existing?.publishedAt || existing?.live === true || updated.live === true
   updated.publishedAt = hasBeenPublished
@@ -514,10 +520,6 @@ export async function update(agent: Agent): Promise<Agent> {
   updated._rev = rev
   const result = withAgentDefaults(updated)
   if (removedOperations.length > 0) {
-    for (const removedOperation of removedOperations) {
-      await cleanupKnowledgeForOperation(_id, removedOperation.id!)
-    }
-
     await knowledgeSourceSyncQueue.reconcileAgentJobs(result)
   }
   events.ai.agentUpdated(result)

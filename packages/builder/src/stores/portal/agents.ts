@@ -58,7 +58,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     `${agentId}:${operationId}`
 
   private getAgentOrThrow = (agentId: string) => {
-    const agent = get(this.store).agents.find(candidate => candidate._id === agentId)
+    const agent = get(this.store).agents.find(
+      candidate => candidate._id === agentId
+    )
     if (!agent) {
       throw new Error("Agent not found")
     }
