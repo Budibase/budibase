@@ -4,6 +4,7 @@ import {
   encryption,
   events,
   HTTPError,
+  utils,
 } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
 import type {
@@ -148,25 +149,25 @@ const decodeTelegramIntegrationSecrets = (
   }
 }
 
+const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
+  const {
+    promptInstructions: _promptInstructions,
+    operationName: _operationName,
+    enabledTools: _enabledTools,
+    knowledgeBases: _knowledgeBases,
+    knowledgeSources: _knowledgeSources,
+    allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
+    ...agent
+  } = raw
+  return agent as Agent
+}
+
 const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   const legacyKnowledgeSources = raw.knowledgeSources
   const legacyAllowKnowledgeSourceDownload = raw.allowKnowledgeSourceDownload
 
   if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
-    return (raw.operations ?? []).map((operation, index) => ({
-      ...operation,
-      enabledTools: operation.enabledTools || [],
-      live: operation.live ?? false,
-      knowledgeBases: operation.knowledgeBases || [],
-      knowledgeSources: operation.knowledgeSources?.length
-        ? operation.knowledgeSources
-        : index === 0 && legacyKnowledgeSources?.length
-          ? legacyKnowledgeSources
-          : operation.knowledgeSources || [],
-      allowKnowledgeSourceDownload:
-        operation.allowKnowledgeSourceDownload ??
-        (index === 0 ? legacyAllowKnowledgeSourceDownload : undefined),
-    }))
+    return raw.operations || []
   }
 
   if (
@@ -178,7 +179,7 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   ) {
     return [
       {
-        id: "operation_default",
+        id: `operation_${utils.newid()}`,
         name: raw.operationName || DEFAULT_OPERATION_NAME,
         live: true,
         promptInstructions: raw.promptInstructions || "",
@@ -195,17 +196,8 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
 }
 
 const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
-  const {
-    promptInstructions: _promptInstructions,
-    operationName: _operationName,
-    enabledTools: _enabledTools,
-    knowledgeBases: _knowledgeBases,
-    knowledgeSources: _knowledgeSources,
-    allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
-    ...rest
-  } = raw
   return {
-    ...rest,
+    ...stripDeprecatedAgentFields(raw),
     live: raw.live ?? false,
     operations: migrateOperations(raw),
     discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
@@ -380,7 +372,7 @@ export async function create(
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
-    operations: request.operations || [],
+    operations: request.operations,
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -464,16 +456,11 @@ export async function update(agent: Agent): Promise<Agent> {
       )
   )
 
-  const updated: Agent = {
+  const updated = stripDeprecatedAgentFields({
     ...existing,
     ...agent,
     updatedAt: now,
-    operations: (agent.operations ?? []).map(operation => ({
-      ...operation,
-      enabledTools: operation.enabledTools || [],
-      knowledgeBases: operation.knowledgeBases || [],
-      knowledgeSources: operation.knowledgeSources || [],
-    })),
+    operations: agent.operations,
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
@@ -490,7 +477,7 @@ export async function update(agent: Agent): Promise<Agent> {
       existing: existing?.telegramIntegration,
       incoming: agent.telegramIntegration,
     }),
-  }
+  } satisfies Agent)
 
   if (updated.live) {
     await assertAgentHasValidConfig(updated)

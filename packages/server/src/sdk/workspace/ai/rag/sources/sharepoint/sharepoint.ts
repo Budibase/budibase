@@ -336,7 +336,7 @@ export const deleteKnowledgeSourceSyncStateForOperation = async (
     .filter(
       (doc): doc is AgentKnowledgeSourceSyncState => !!doc?._id && !!doc._rev
     )
-    .filter(doc => doc.sourceId.startsWith(sourceIdPrefix))
+    .filter(doc => doc.sourceId?.startsWith(sourceIdPrefix))
     .map(doc => ({
       ...doc,
       _deleted: true,

@@ -102,7 +102,7 @@ describe("agents crud", () => {
           name: "Legacy Agent",
           operations: [
             expect.objectContaining({
-              id: "operation_default",
+              id: expect.stringMatching(/^operation_/),
               name: "Operation",
               live: true,
               promptInstructions: "Legacy instructions",
