@@ -173,7 +173,7 @@ export default class BaseCache {
     key = opts.useTenancy ? generateTenantKey(key) : key
     const client = await this.getClient()
     const count = await client.increment(key)
-    if (count === 1 && ttlSeconds) {
+    if (ttlSeconds) {
       await client.setExpiry(key, ttlSeconds)
     }
     return count
