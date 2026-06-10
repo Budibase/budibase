@@ -4,7 +4,6 @@ import {
   encryption,
   events,
   HTTPError,
-  utils,
 } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
 import type {
@@ -179,7 +178,7 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   ) {
     return [
       {
-        id: `operation_${utils.newid()}`,
+        id: "operation_default",
         name: raw.operationName || DEFAULT_OPERATION_NAME,
         live: true,
         promptInstructions: raw.promptInstructions || "",
