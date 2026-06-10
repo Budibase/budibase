@@ -213,7 +213,7 @@ export async function markLatestCompletedBySession({
 }
 
 export async function fetchByAgent(agentId: string): Promise<AgentRequest[]> {
-  const db = context.getWorkspaceDB()
+  const db = context.getProdWorkspaceDB()
   const response = await db.allDocs<AgentRequest>({
     ...docIds.getDocParams(DocumentType.AGENT_REQUEST, undefined, {
       include_docs: true,
