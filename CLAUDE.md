@@ -29,7 +29,7 @@
 - Variables: camelCase, prefix unused with `_`
 - Functions: Prefer arrow functions, use async/await over Promises
 - Error handling: Use try/catch
-- Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any.
+- Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any or unknown.
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
