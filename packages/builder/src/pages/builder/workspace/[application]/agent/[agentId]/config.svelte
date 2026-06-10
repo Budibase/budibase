@@ -580,19 +580,21 @@
   </div>
 </div>
 
-<OperationsSection
-  bind:agent={draft}
-  {promptBindings}
-  bindingIcons={readableToIcon}
-  completions={promptCompletions}
-  {toolsLoaded}
-  {availableTools}
-  {webSearchConfigured}
-  onAddApiConnection={() => bb.settings("/connections/apis")}
-  onConfigureWebSearch={openWebSearchConfigModal}
-  onSetOperationLive={setOperationLive}
-  onUpdated={() => scheduleSave(true)}
-/>
+{#key currentAgent?._id}
+  <OperationsSection
+    bind:agent={draft}
+    {promptBindings}
+    bindingIcons={readableToIcon}
+    completions={promptCompletions}
+    {toolsLoaded}
+    {availableTools}
+    {webSearchConfigured}
+    onAddApiConnection={() => bb.settings("/connections/apis")}
+    onConfigureWebSearch={openWebSearchConfigModal}
+    onSetOperationLive={setOperationLive}
+    onUpdated={() => scheduleSave(true)}
+  />
+{/key}
 
 <WebSearchConfigModal
   bind:this={webSearchConfigModal}
