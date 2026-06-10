@@ -174,6 +174,40 @@ describe("knowledgeTableRows", () => {
     expect(rows[0].displayStatus).toBe("0/1 files")
   })
 
+  it("shows file counts while sync is still running", () => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: {
+            site: {
+              id: "site-1",
+              name: "confluence",
+              webUrl: "https://example.sharepoint.com/sites/confluence",
+            },
+          },
+        },
+      ],
+      sharePointSourceSnapshots: [
+        {
+          sourceId: "source-1",
+          name: "confluence",
+          webUrl: "https://example.sharepoint.com/sites/confluence",
+          syncedCount: 18,
+          failedCount: 0,
+          processingCount: 107,
+          totalCount: 125,
+        },
+      ],
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows[0].displayStatus).toBe("18/125 files")
+    expect(rows[0].hasSynced).toBe(true)
+    expect(rows[0].__clickable).toBe(true)
+  })
+
   it("shows loading label when site metadata is not available yet", () => {
     const rows = toSharePointConnectionRows({
       sharePointSources: [

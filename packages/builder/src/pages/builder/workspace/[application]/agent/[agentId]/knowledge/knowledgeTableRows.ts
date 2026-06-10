@@ -169,18 +169,23 @@ export const toSharePointConnectionRows = ({
       const snapshot = sharePointSourceSnapshots.find(
         s => s.sourceId === source.id
       )
-      const hasSynced = !!snapshot?.lastRunAt
+      const hasCompletedSync = !!snapshot?.lastRunAt
       const total = snapshot?.totalCount || 0
       const synced = snapshot?.syncedCount || 0
       const syncFailures = snapshot?.failedCount || 0
       const processing = snapshot?.processingCount || 0
       const completed = Math.min(synced + syncFailures, total)
+      const hasFileData = total > 0
       const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
-      const displayStatus = !hasSynced
-        ? "Processing"
-        : total === 0
-          ? "No files found"
-          : `${completed}/${total} files`
+      const displayStatus =
+        !hasCompletedSync && !hasFileData
+          ? "Processing"
+          : total === 0
+            ? hasCompletedSync
+              ? "No files found"
+              : "Processing"
+            : `${completed}/${total} files`
+      const hasSynced = hasCompletedSync || hasFileData
       return {
         kind: "sharepoint_connection" as const,
         __clickable: hasSynced,
