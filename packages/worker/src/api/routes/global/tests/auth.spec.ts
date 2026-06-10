@@ -56,6 +56,18 @@ describe("/api/global/auth", () => {
 
   describe("password", () => {
     describe("POST /api/global/auth/:tenantId/login", () => {
+      const flushIpCounters = async () => {
+        await config.doInTenant(async () => {
+          const { cache } = require("@budibase/backend-core")
+          for (const ip of ["127.0.0.1", "::1", "::ffff:127.0.0.1"]) {
+            await cache.destroy(`auth:login:ip:${ip}`)
+          }
+        })
+      }
+
+      beforeEach(flushIpCounters)
+      afterEach(flushIpCounters)
+
       it("logs in with correct credentials", async () => {
         const tenantId = config.tenantId!
         const email = config.user!.email!
@@ -195,18 +207,6 @@ describe("/api/global/auth", () => {
       })
 
       describe("IP lockout", () => {
-        const flushIpCounters = async () => {
-          await config.doInTenant(async () => {
-            const { cache } = require("@budibase/backend-core")
-            for (const ip of ["127.0.0.1", "::1", "::ffff:127.0.0.1"]) {
-              await cache.destroy(`auth:login:ip:${ip}`)
-            }
-          })
-        }
-
-        beforeEach(flushIpCounters)
-        afterEach(flushIpCounters)
-
         it("returns 429 with Retry-After once the IP limit is exceeded", async () => {
           const { withEnv } = require("../../../../environment")
           const tenantId = config.tenantId!
