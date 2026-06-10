@@ -39,55 +39,36 @@
     createKnowledgePollingController,
   } from "./polling"
 
-  let { operation = $bindable() }: { operation?: AgentOperation } = $props()
+  let { operation = $bindable() }: { operation: AgentOperation } = $props()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   const getOperationCacheKey = (agentId: string, operationId: string) =>
     `${agentId}:${operationId}`
   let sharePointSources = $derived.by(() =>
-    (operation?.knowledgeSources || []).filter(
+    (operation.knowledgeSources || []).filter(
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
-  let allowKnowledgeSourceDownloadDraft = $state(true)
+
   let savingAllowKnowledgeSourceDownload = $state(false)
-
-  $effect(() => {
-    if (!operation) {
-      return
-    }
-
-    allowKnowledgeSourceDownloadDraft =
-      operation.allowKnowledgeSourceDownload !== false
-  })
 
   const persistAllowKnowledgeSourceDownload = async (next: boolean) => {
     const agent = currentAgent
     const currentOperation = operation
-    if (!agent?._id || !agent._rev || !currentOperation?.id) {
+    if (!agent?._id || !agent._rev || !currentOperation.id) {
       return
     }
 
-    allowKnowledgeSourceDownloadDraft = next
     savingAllowKnowledgeSourceDownload = true
     try {
-      const operations = (agent.operations || []).map(existingOperation =>
-        existingOperation.id === currentOperation.id
-          ? {
-              ...existingOperation,
-              allowKnowledgeSourceDownload: next,
-            }
-          : existingOperation
+      await agentsStore.updateOperationAllowKnowledgeSourceDownload(
+        agent._id,
+        currentOperation.id,
+        next
       )
-      await agentsStore.updateAgent({
-        ...agent,
-        operations,
-      })
-      await agentsStore.fetchAgents()
+
       await workspaceDeploymentStore.fetch()
     } catch (error) {
-      allowKnowledgeSourceDownloadDraft =
-        currentOperation.allowKnowledgeSourceDownload !== false
       notifications.error(
         getErrorMessage(error) || "Failed to save download setting"
       )
@@ -108,7 +89,7 @@
     await agentsStore.fetchAgentKnowledge(agentId)
   })
   let knowledgeCacheKey = $derived.by(() => {
-    if (!currentAgent?._id || !operation?.id) {
+    if (!currentAgent?._id || !operation.id) {
       return undefined
     }
     return getOperationCacheKey(currentAgent._id, operation.id)
@@ -307,7 +288,7 @@
 
   $effect(() => {
     const agentId = currentAgent?._id
-    const operationId = operation?.id
+    const operationId = operation.id
     if (!agentId || !operationId) {
       loading = false
       initialKnowledgeLoadedForOperation = undefined
@@ -348,7 +329,7 @@
 
   $effect(() => {
     const agentId = currentAgent?._id
-    const operationId = operation?.id
+    const operationId = operation.id
     if (!agentId || !operationId) {
       knowledgePollingController.stop()
       return
@@ -393,7 +374,7 @@
     mode: SharePointSelectionMode
   ) {
     const agentId = currentAgent?._id
-    const operationId = operation?.id
+    const operationId = operation.id
     syncOperationKnowledgeFromStore()
     if (agentId && operationId) {
       await fetchFiles(getOperationCacheKey(agentId, operationId))
@@ -421,7 +402,7 @@
 
   async function syncSharePointNow(sourceId: string) {
     const agentId = currentAgent?._id
-    const operationId = operation?.id
+    const operationId = operation.id
     if (!agentId || !operationId) {
       return
     }
@@ -445,7 +426,7 @@
 
   async function removeSharePointSite(siteId: string) {
     const agent = currentAgent
-    const operationId = operation?.id
+    const operationId = operation.id
     if (!agent?._id || !operationId || sharePointSources.length === 0) {
       return
     }
@@ -480,7 +461,7 @@
 
   async function removeFile(file: KnowledgeBaseFile) {
     const agentId = currentAgent?._id
-    const operationId = operation?.id
+    const operationId = operation.id
     const fileId = file._id
     if (!agentId || !operationId || !fileId) {
       return
@@ -506,7 +487,7 @@
 
   async function resetKnowledgeStore() {
     const agentId = currentAgent?._id
-    const operationId = operation?.id
+    const operationId = operation.id
     if (!agentId || !operationId) {
       return
     }
@@ -560,7 +541,7 @@
       {/if}
       <KnowledgeAddControls
         agentId={currentAgent?._id}
-        operationId={operation?.id}
+        operationId={operation.id}
         isUploading={isUploadingActiveAgent}
         uploadProgress={activeUploadProgress}
         onPendingUploadsAdded={(cacheKey, uploads) => {
@@ -592,7 +573,7 @@
 
   <div class="sources-access">
     <Toggle
-      value={allowKnowledgeSourceDownloadDraft}
+      bind:value={operation.allowKnowledgeSourceDownload}
       disabled={savingAllowKnowledgeSourceDownload || !currentAgent?._id}
       on:change={event =>
         persistAllowKnowledgeSourceDownload(Boolean(event.detail))}
@@ -623,7 +604,7 @@
 <SelectSharePointSiteModal
   bind:this={selectSharePointSiteModal}
   agentId={currentAgent?._id || ""}
-  operationId={operation?.id}
+  operationId={operation.id || ""}
   existingSiteIds={selectedSiteIds}
   onCreated={onSharePointSiteCreated}
 />
@@ -631,7 +612,7 @@
 <DisplaySharePointSiteModal
   bind:this={displaySharePointSiteModal}
   agentId={currentAgent?._id}
-  operationId={operation?.id}
+  operationId={operation.id}
   siteId={selectedSharePointSiteId}
   onEdit={openSharePointSiteSelectionModal}
 />
@@ -639,7 +620,7 @@
 <SelectSharePointFilesModal
   bind:this={selectSharePointFilesModal}
   agentId={currentAgent?._id}
-  operationId={operation?.id}
+  operationId={operation.id}
   siteId={selectedSharePointSiteId}
 />
 

@@ -14,6 +14,7 @@ vi.mock("@/api", () => {
   return {
     API: {
       fetchAgents: vi.fn(),
+      updateAgent: vi.fn(),
       fetchAgentKnowledge: vi.fn(),
       uploadOperationFile: vi.fn(),
       deleteOperationFile: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("@/api", () => {
 })
 
 const fetchAgents = vi.mocked(API.fetchAgents)
+const updateAgent = vi.mocked(API.updateAgent)
 const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadOperationFile = vi.mocked(API.uploadOperationFile)
 const deleteOperationFile = vi.mocked(API.deleteOperationFile)
@@ -118,6 +120,41 @@ describe("agentsStore sharepoint and file syncing", () => {
     ).toEqual({ files: [], sharePointSources: [] })
   })
 
+  it("fetchAgentKnowledge clears stale operation knowledge for the agent before storing", async () => {
+    store.set({
+      agents: [],
+      tools: [],
+      agentsLoaded: false,
+      currentAgentId: undefined,
+      knowledgeByOperation: {
+        "agent_1:operation_old": {
+          files: [
+            {
+              _id: "stale_file",
+            } as KnowledgeBaseFile,
+          ],
+          sharePointSources: [],
+        },
+        "agent_2:operation_keep": {
+          files: [],
+          sharePointSources: [],
+        },
+      },
+    })
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: { files: [], sharePointSources: [] },
+      },
+    })
+
+    await store.fetchAgentKnowledge("agent_1")
+
+    expect(get(store.store).knowledgeByOperation).toEqual({
+      "agent_1:operation_1": { files: [], sharePointSources: [] },
+      "agent_2:operation_keep": { files: [], sharePointSources: [] },
+    })
+  })
+
   it("getOperationKnowledge reads from the cached index", async () => {
     fetchAgentKnowledge.mockResolvedValue({
       operations: {
@@ -208,5 +245,75 @@ describe("AgentsStore file operations", () => {
       "operation_1"
     )
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+  })
+})
+
+describe("AgentsStore operation updates", () => {
+  let store: AgentsStore
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    store = new AgentsStore()
+  })
+
+  it("updates allowKnowledgeSourceDownload through the store", async () => {
+    const existingAgent = {
+      _id: "agent_1",
+      _rev: "1-rev",
+      name: "Support bot",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          id: "operation_2",
+          name: "Secondary operation",
+          live: false,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    } as Agent
+    const updatedAgent = {
+      ...existingAgent,
+      _rev: "2-rev",
+      operations: [
+        {
+          ...existingAgent.operations![0],
+          allowKnowledgeSourceDownload: false,
+        },
+        existingAgent.operations![1],
+      ],
+    } as Agent
+
+    store.set({
+      agents: [existingAgent],
+      tools: [],
+      agentsLoaded: true,
+      currentAgentId: existingAgent._id,
+      knowledgeByOperation: {},
+    })
+    updateAgent.mockResolvedValue(updatedAgent)
+
+    const result = await store.updateOperationAllowKnowledgeSourceDownload(
+      "agent_1",
+      "operation_1",
+      false
+    )
+
+    expect(updateAgent).toHaveBeenCalledWith({
+      ...existingAgent,
+      operations: [
+        {
+          ...existingAgent.operations![0],
+          allowKnowledgeSourceDownload: false,
+        },
+        existingAgent.operations![1],
+      ],
+    })
+    expect(result).toEqual(updatedAgent)
+    expect(get(store.store).agents).toEqual([updatedAgent])
   })
 })

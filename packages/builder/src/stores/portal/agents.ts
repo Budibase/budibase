@@ -57,6 +57,31 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   private getKnowledgeCacheKey = (agentId: string, operationId: string) =>
     `${agentId}:${operationId}`
 
+  private getAgentOrThrow = (agentId: string) => {
+    const agent = get(this.store).agents.find(candidate => candidate._id === agentId)
+    if (!agent) {
+      throw new Error("Agent not found")
+    }
+    return agent
+  }
+
+  private updateOperation = async (
+    agentId: string,
+    operationId: string,
+    updater: (operation: AgentOperation) => AgentOperation
+  ) => {
+    const agent = this.getAgentOrThrow(agentId)
+    const operations =
+      agent.operations?.map(operation =>
+        operation.id === operationId ? updater(operation) : operation
+      ) || []
+
+    return await this.updateAgent({
+      ...agent,
+      operations,
+    })
+  }
+
   init = async () => {
     await this.fetchAgents()
   }
@@ -120,16 +145,21 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agent: UpdateAgentRequest,
     operationId: string,
     live: boolean
-  ) => {
-    const operations = agent.operations?.map((operation: AgentOperation) =>
-      operation.id === operationId ? { ...operation, live } : operation
-    )
+  ) =>
+    await this.updateOperation(agent._id!, operationId, operation => ({
+      ...operation,
+      live,
+    }))
 
-    return await this.updateAgent({
-      ...agent,
-      operations,
-    })
-  }
+  updateOperationAllowKnowledgeSourceDownload = async (
+    agentId: string,
+    operationId: string,
+    allowKnowledgeSourceDownload: boolean
+  ) =>
+    await this.updateOperation(agentId, operationId, operation => ({
+      ...operation,
+      allowKnowledgeSourceDownload,
+    }))
 
   duplicateAgent = async (agentId: string) => {
     const duplicated = await API.duplicateAgent(agentId)

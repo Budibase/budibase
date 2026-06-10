@@ -418,14 +418,13 @@
 
     saving = true
     try {
-      const operations =
-        draft.operations?.map(operation => ({
-          ...operation,
-          enabledTools: getIncludedToolRuntimeBindings(
-            operation.promptInstructions,
-            readableToRuntimeBinding
-          ),
-        })) || []
+      const operations = draft.operations?.map(operation => ({
+        ...operation,
+        enabledTools: getIncludedToolRuntimeBindings(
+          operation.promptInstructions,
+          readableToRuntimeBinding
+        ),
+      }))
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
@@ -455,14 +454,13 @@
     }
 
     try {
-      const operations =
-        draft.operations?.map(operation => ({
-          ...operation,
-          enabledTools: getIncludedToolRuntimeBindings(
-            operation.promptInstructions,
-            readableToRuntimeBinding
-          ),
-        })) || []
+      const operations = draft.operations?.map(operation => ({
+        ...operation,
+        enabledTools: getIncludedToolRuntimeBindings(
+          operation.promptInstructions,
+          readableToRuntimeBinding
+        ),
+      }))
 
       const updated = await agentsStore.updateOperationLive(
         {

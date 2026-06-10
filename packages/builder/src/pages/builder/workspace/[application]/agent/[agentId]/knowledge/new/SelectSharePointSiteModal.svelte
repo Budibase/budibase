@@ -12,7 +12,7 @@
 
   export interface Props {
     agentId: string
-    operationId?: string
+    operationId: string
     existingSiteIds?: string[]
     onCreated?: (
       _siteId: string,
