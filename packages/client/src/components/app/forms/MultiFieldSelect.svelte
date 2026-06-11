@@ -34,6 +34,8 @@
   export let showSelectAll: boolean = false
   export let selectAllText: string = "Select all"
   export let wrapText: boolean = false
+  export let checkboxOutlineColor: string | undefined = undefined
+  export let checkboxCheckColor: string | undefined = undefined
 
   let fieldState: FieldState | undefined
   let fieldApi: FieldApi | undefined
@@ -118,6 +120,8 @@
         getOptionValue={flatOptions ? x => x : x => getProp("value", x)}
         {showSelectAll}
         {selectAllText}
+        {checkboxOutlineColor}
+        {checkboxCheckColor}
       />
     {/if}
   {/if}
