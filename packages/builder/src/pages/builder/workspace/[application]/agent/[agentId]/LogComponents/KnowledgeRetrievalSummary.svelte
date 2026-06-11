@@ -1,70 +1,34 @@
 <script lang="ts">
   import type { AgentKnowledgeRetrievalDiagnostics } from "@budibase/types"
-  import { formatDuration, formatNoResultReason } from "./utils"
+  import { buildKnowledgeRetrievalSummary } from "./utils"
 
   type Props = {
     diagnostics: AgentKnowledgeRetrievalDiagnostics
   }
 
   let { diagnostics }: Props = $props()
+  let summary = $derived(buildKnowledgeRetrievalSummary(diagnostics))
 </script>
 
 <div class="retrieval-summary">
   <div class="retrieval-row">
     <span class="retrieval-label">Query</span>
-    <span class="retrieval-value">{diagnostics.query}</span>
+    <span class="retrieval-value">{summary.query}</span>
   </div>
   <div class="retrieval-grid">
-    <div class="retrieval-row">
-      <span class="retrieval-label">Knowledge bases</span>
-      <span class="retrieval-value">
-        {diagnostics.knowledgeBaseCount}
-      </span>
-    </div>
-    <div class="retrieval-row">
-      <span class="retrieval-label">Files</span>
-      <span class="retrieval-value">
-        {diagnostics.readyFileCount} ready / {diagnostics.totalFileCount} total
-      </span>
-    </div>
-    <div class="retrieval-row">
-      <span class="retrieval-label">Skipped files</span>
-      <span class="retrieval-value">
-        {diagnostics.skippedFileCount}
-      </span>
-    </div>
-    <div class="retrieval-row">
-      <span class="retrieval-label">Chunks</span>
-      <span class="retrieval-value">
-        {diagnostics.acceptedChunkCount} accepted / {diagnostics.returnedChunkCount}
-        returned
-      </span>
-    </div>
-    <div class="retrieval-row">
-      <span class="retrieval-label">Duration</span>
-      <span class="retrieval-value">
-        {formatDuration(diagnostics.durationMs)}
-      </span>
-    </div>
-    {#if diagnostics.noResultReason}
+    {#each summary.statRows as row}
       <div class="retrieval-row">
-        <span class="retrieval-label">No result reason</span>
+        <span class="retrieval-label">{row.label}</span>
         <span class="retrieval-value">
-          {formatNoResultReason(diagnostics.noResultReason)}
+          {row.value}
         </span>
       </div>
-    {/if}
+    {/each}
   </div>
   <div class="retrieval-row">
     <span class="retrieval-label">Sources</span>
     <span class="retrieval-value">
-      {#if diagnostics.sources.length}
-        {diagnostics.sources
-          .map(source => source.filename || source.sourceId)
-          .join(", ")}
-      {:else}
-        -
-      {/if}
+      {summary.sourcesLabel}
     </span>
   </div>
 </div>

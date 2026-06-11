@@ -29,6 +29,7 @@ import {
   formatStructuredContent,
   parseKnowledgeRetrievalDiagnostics,
   formatNoResultReason,
+  buildKnowledgeRetrievalSummary,
 } from "./utils"
 
 function makeEntry(overrides: Partial<AgentLogEntry> = {}): AgentLogEntry {
@@ -504,5 +505,88 @@ describe("formatNoResultReason", () => {
 
   it("falls back to the provided reason", () => {
     expect(formatNoResultReason("custom_reason")).toBe("custom_reason")
+  })
+})
+
+describe("buildKnowledgeRetrievalSummary", () => {
+  it("builds the standard retrieval summary rows", () => {
+    const summary = buildKnowledgeRetrievalSummary({
+      query: "What is policy?",
+      knowledgeBaseCount: 1,
+      totalFileCount: 3,
+      readyFileCount: 2,
+      skippedFileCount: 1,
+      returnedChunkCount: 4,
+      acceptedChunkCount: 2,
+      sources: [{ sourceId: "source_1", filename: "policy.md" }],
+      durationMs: 1250,
+    })
+
+    expect(summary).toEqual({
+      query: "What is policy?",
+      statRows: [
+        { label: "Knowledge bases", value: 1 },
+        { label: "Files", value: "2 ready / 3 total" },
+        { label: "Skipped files", value: 1 },
+        { label: "Chunks", value: "2 accepted / 4 returned" },
+        { label: "Duration", value: "1.3s" },
+      ],
+      sourcesLabel: "policy.md",
+    })
+  })
+
+  it("includes a formatted no-result reason when present", () => {
+    const summary = buildKnowledgeRetrievalSummary({
+      query: "What is policy?",
+      knowledgeBaseCount: 1,
+      totalFileCount: 1,
+      readyFileCount: 1,
+      skippedFileCount: 0,
+      returnedChunkCount: 0,
+      acceptedChunkCount: 0,
+      sources: [],
+      durationMs: 25,
+      noResultReason: "provider_returned_no_chunks",
+    })
+
+    expect(summary.statRows).toContainEqual({
+      label: "No result reason",
+      value: "Provider returned no chunks",
+    })
+  })
+
+  it("formats sources by filename or source id", () => {
+    const summary = buildKnowledgeRetrievalSummary({
+      query: "What is policy?",
+      knowledgeBaseCount: 1,
+      totalFileCount: 2,
+      readyFileCount: 2,
+      skippedFileCount: 0,
+      returnedChunkCount: 2,
+      acceptedChunkCount: 2,
+      sources: [
+        { sourceId: "source_1", filename: "policy.md" },
+        { sourceId: "source_2" },
+      ],
+      durationMs: 25,
+    })
+
+    expect(summary.sourcesLabel).toBe("policy.md, source_2")
+  })
+
+  it("uses a dash when there are no sources", () => {
+    const summary = buildKnowledgeRetrievalSummary({
+      query: "What is policy?",
+      knowledgeBaseCount: 1,
+      totalFileCount: 1,
+      readyFileCount: 1,
+      skippedFileCount: 0,
+      returnedChunkCount: 0,
+      acceptedChunkCount: 0,
+      sources: [],
+      durationMs: 25,
+    })
+
+    expect(summary.sourcesLabel).toBe("-")
   })
 })

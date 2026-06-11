@@ -18,6 +18,17 @@ export interface ParsedAssistantResponse {
   response: string
 }
 
+export interface KnowledgeRetrievalSummaryRow {
+  label: string
+  value: string | number
+}
+
+export interface KnowledgeRetrievalSummary {
+  query: string
+  statRows: KnowledgeRetrievalSummaryRow[]
+  sourcesLabel: string
+}
+
 export function parseKnowledgeRetrievalDiagnostics(
   content: string
 ): AgentKnowledgeRetrievalDiagnostics | undefined {
@@ -56,6 +67,50 @@ export function formatNoResultReason(reason?: string): string {
       return "All chunks filtered"
     default:
       return reason || "-"
+  }
+}
+
+export function buildKnowledgeRetrievalSummary(
+  diagnostics: AgentKnowledgeRetrievalDiagnostics
+): KnowledgeRetrievalSummary {
+  const statRows: KnowledgeRetrievalSummaryRow[] = [
+    {
+      label: "Knowledge bases",
+      value: diagnostics.knowledgeBaseCount,
+    },
+    {
+      label: "Files",
+      value: `${diagnostics.readyFileCount} ready / ${diagnostics.totalFileCount} total`,
+    },
+    {
+      label: "Skipped files",
+      value: diagnostics.skippedFileCount,
+    },
+    {
+      label: "Chunks",
+      value: `${diagnostics.acceptedChunkCount} accepted / ${diagnostics.returnedChunkCount} returned`,
+    },
+    {
+      label: "Duration",
+      value: formatDuration(diagnostics.durationMs),
+    },
+  ]
+
+  if (diagnostics.noResultReason) {
+    statRows.push({
+      label: "No result reason",
+      value: formatNoResultReason(diagnostics.noResultReason),
+    })
+  }
+
+  return {
+    query: diagnostics.query,
+    statRows,
+    sourcesLabel: diagnostics.sources.length
+      ? diagnostics.sources
+          .map(source => source.filename || source.sourceId)
+          .join(", ")
+      : "-",
   }
 }
 
