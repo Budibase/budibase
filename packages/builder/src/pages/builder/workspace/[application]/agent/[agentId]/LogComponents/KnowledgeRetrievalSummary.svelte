@@ -10,27 +10,21 @@
   let summary = $derived(buildKnowledgeRetrievalSummary(diagnostics))
 </script>
 
-<div class="retrieval-summary">
+{#snippet retrievalRow(label: string, value: string | number)}
   <div class="retrieval-row">
-    <span class="retrieval-label">Query</span>
-    <span class="retrieval-value">{summary.query}</span>
+    <span class="retrieval-label">{label}</span>
+    <span class="retrieval-value">{value}</span>
   </div>
+{/snippet}
+
+<div class="retrieval-summary">
+  {@render retrievalRow("Query", summary.query)}
   <div class="retrieval-grid">
     {#each summary.statRows as row}
-      <div class="retrieval-row">
-        <span class="retrieval-label">{row.label}</span>
-        <span class="retrieval-value">
-          {row.value}
-        </span>
-      </div>
+      {@render retrievalRow(row.label, row.value)}
     {/each}
   </div>
-  <div class="retrieval-row">
-    <span class="retrieval-label">Sources</span>
-    <span class="retrieval-value">
-      {summary.sourcesLabel}
-    </span>
-  </div>
+  {@render retrievalRow("Sources", summary.sourcesLabel)}
 </div>
 
 <style>
