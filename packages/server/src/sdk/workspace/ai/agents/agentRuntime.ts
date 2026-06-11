@@ -1,3 +1,4 @@
+import { features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
@@ -7,6 +8,7 @@ import {
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
+  FeatureFlag,
 } from "@budibase/types"
 import {
   Output,
@@ -120,7 +122,10 @@ const chooseOperationForQuestion = async ({
   if (liveOperations.length === 0) {
     return undefined
   }
-  if (liveOperations.length === 1) {
+  const multipleOperationsEnabled = await features.isEnabled(
+    FeatureFlag.MULTIPLE_OPERATIONS
+  )
+  if (!multipleOperationsEnabled || liveOperations.length === 1) {
     return liveOperations[0]
   }
   if (!latestQuestion.trim()) {

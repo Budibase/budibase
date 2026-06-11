@@ -1,4 +1,4 @@
-import { db, HTTPError } from "@budibase/backend-core"
+import { db, features, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   CreateAgentRequest,
@@ -244,6 +244,8 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
   const existing = await sdk.ai.agents.getOrThrow(body._id)
+
+  await assertMultipleOperationsAllowed(body.operations)
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
