@@ -221,6 +221,12 @@ describe("APIRequest", () => {
       expect(
         screen.getByTestId("api-endpoint-viewer-template").textContent
       ).toBe("github")
+      expect(
+        screen.getByTestId("api-endpoint-viewer-popover-target").textContent
+      ).toBe(".spectrum")
+      expect(
+        screen.getByTestId("api-endpoint-viewer-popover-z-index").textContent
+      ).toBe("9999")
     })
   })
 

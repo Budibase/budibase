@@ -42,6 +42,8 @@
   export let editText: string | undefined = "Edit"
   export let settingsLocked: boolean = false
   export let restrictToRestTemplate: boolean = false
+  export let popoverPortalTarget: string | undefined = undefined
+  export let popoverZIndex: number | undefined = undefined
 
   $: lockedMode = settingsLocked ? ("subtree" as const) : undefined
   $: activeTemplateFilter =
@@ -282,6 +284,8 @@
   on:open={focusSearch}
   align="right"
   roundedPopover
+  portalTarget={popoverPortalTarget}
+  customZIndex={popoverZIndex}
   {disabled}
 >
   <svelte:fragment slot="control" let:open>

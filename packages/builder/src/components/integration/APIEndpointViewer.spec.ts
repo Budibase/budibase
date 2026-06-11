@@ -530,14 +530,7 @@ describe("API Endpoint Viewer", () => {
       await datasources.init()
 
       workspaceConnections.startDraft("github" as any)
-      const { container, baseElement } = setupDOM({ saveAndClose: true })
-
-      await waitFor(() => {
-        expect(
-          container.querySelector(".picker-button")?.textContent
-        ).toContain("GitHub")
-      })
-      await fireEvent.click(container.querySelector(".picker-button")!)
+      const { baseElement } = setupDOM({ saveAndClose: true })
 
       await waitFor(() => {
         expect(baseElement.textContent).toContain("GitHub - No auth")
@@ -580,8 +573,7 @@ describe("API Endpoint Viewer", () => {
       expect(baseElement.textContent).not.toContain("Saved API connections")
     })
 
-    it("opens the add connection modal when a connector draft has no saved connection", async () => {
-      const settingsSpy = vi.spyOn(bb, "settings")
+    it("selects the only matching connector connection when datasources load after the draft starts", async () => {
       ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
         const templates: Record<string, any> = {
           bamboohr: {
@@ -593,15 +585,94 @@ describe("API Endpoint Viewer", () => {
         return templateId ? templates[templateId] : undefined
       })
 
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr" as any,
+      }
+
       workspaceConnections.startDraft("bamboohr" as any)
-      setupDOM({ saveAndClose: true, settingsLocked: true })
+      const { container, baseElement } = setupDOM({ saveAndClose: true })
+      await setupDatasources(bamboohrDatasource)
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+      })
 
       await new Promise(resolve => setTimeout(resolve, 250))
 
-      expect(settingsSpy).toHaveBeenCalledWith(
-        "/connections/apis/new/bamboohr",
-        { locked: "subtree" }
-      )
+      expect(baseElement.textContent).not.toContain("Saved API connections")
+    })
+
+    it("selects the only matching connection when opened for a connector template without a draft", async () => {
+      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
+        const templates: Record<string, any> = {
+          bamboohr: {
+            id: "bamboohr",
+            name: "BambooHR",
+            icon: "bamboohr.svg",
+          },
+        }
+        return templateId ? templates[templateId] : undefined
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr" as any,
+      }
+      await setupDatasources(bamboohrDatasource)
+
+      const { container, baseElement } = setupDOM({
+        restTemplateId: "bamboohr",
+        saveAndClose: true,
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 250))
+
+      expect(baseElement.textContent).not.toContain("Saved API connections")
+    })
+
+    it("opens the connection menu when a connector draft has no saved connection", async () => {
+      const settingsSpy = vi.spyOn(bb, "settings")
+      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
+        const templates: Record<string, any> = {
+          bamboohr: {
+            id: "bamboohr",
+            name: "BambooHR",
+            icon: "bamboohr.svg",
+          },
+        }
+        return templateId ? templates[templateId] : undefined
+      })
+      ;(restTemplates.flatTemplates as any) = [
+        {
+          id: "bamboohr",
+          name: "BambooHR",
+          icon: "bamboohr.svg",
+        },
+      ]
+
+      workspaceConnections.startDraft("bamboohr" as any)
+      const { baseElement } = setupDOM({
+        saveAndClose: true,
+        settingsLocked: true,
+      })
+
+      await waitFor(() => {
+        expect(baseElement.textContent).toContain("Add connection - BambooHR")
+      })
+      expect(settingsSpy).not.toHaveBeenCalled()
     })
 
     it("saves with authConfigId set when connection is changed on a new query", async () => {

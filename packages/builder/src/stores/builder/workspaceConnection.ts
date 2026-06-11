@@ -231,11 +231,13 @@ export class WorkspaceConnectionStore extends DerivedBudiStore<
 
   startDraft(templateId?: RestTemplateId) {
     const template = templateId ? restTemplates.get(templateId) : undefined
-    const matchingDatasource = templateId
-      ? get(datasources).list.find(datasource =>
+    const matchingDatasources = templateId
+      ? get(datasources).list.filter(datasource =>
           datasourceMatchesRestTemplate(datasource, templateId)
         )
-      : undefined
+      : []
+    const matchingDatasource =
+      matchingDatasources.length === 1 ? matchingDatasources[0] : undefined
     this.store.update(s => ({
       ...s,
       draft: {

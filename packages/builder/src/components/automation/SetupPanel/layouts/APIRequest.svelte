@@ -207,6 +207,8 @@
               bind:this={apiViewer}
               saveAndClose={true}
               settingsLocked={true}
+              connectionPopoverPortalTarget=".spectrum"
+              connectionPopoverZIndex={9999}
               on:savedQuery={handleSavedQuery}
             />
           {:else}
@@ -216,6 +218,8 @@
               queryId={query?._id}
               {restTemplateId}
               settingsLocked={true}
+              connectionPopoverPortalTarget=".spectrum"
+              connectionPopoverZIndex={9999}
             />
           {/if}
         </div>

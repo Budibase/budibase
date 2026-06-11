@@ -98,6 +98,8 @@
   export let restTemplateId: string | undefined = undefined
   export let saveAndClose: boolean = false
   export let settingsLocked: boolean = false
+  export let connectionPopoverPortalTarget: string | undefined = undefined
+  export let connectionPopoverZIndex: number | undefined = undefined
 
   $beforeUrlChange
   $: goto = $gotoStore
@@ -140,8 +142,31 @@
   // Custom query mode state
   let customUrl: string = ""
   let selectedChildTemplateId: string | undefined
+  let resolvedConnectorDatasourceId: string | undefined
 
   // ── DATASOURCE / MODE ────────────────────────────────────────────────────
+  $: draftRestTemplateId = $workspaceConnections.draft?.templateId
+  $: connectorRestTemplateId = draftRestTemplateId || restTemplateId
+  $: connectorMatchingConnections = connectorRestTemplateId
+    ? $workspaceConnections.list.filter(
+        connection =>
+          connection.source === "datasource" &&
+          connection.templateId === connectorRestTemplateId
+      )
+    : []
+  $: singleConnectorDatasourceId =
+    connectorMatchingConnections.length === 1
+      ? connectorMatchingConnections[0].sourceId
+      : undefined
+  $: resolvedConnectorDatasourceId =
+    connectorRestTemplateId && !queryId && !datasourceId
+      ? singleConnectorDatasourceId
+      : undefined
+  $: if (resolvedConnectorDatasourceId && openConnectionMenuTimer) {
+    clearTimeout(openConnectionMenuTimer)
+    openConnectionMenuTimer = undefined
+  }
+
   $: queryDatasourceId = queryId
     ? $queries.list.find(q => q._id === queryId)?.datasourceId
     : undefined
@@ -149,6 +174,7 @@
     queryDatasourceId ||
     datasourceId ||
     $workspaceConnections.draft?.query?.datasourceId ||
+    resolvedConnectorDatasourceId ||
     (!$workspaceConnections.draft ? activeDatasourceId : undefined) ||
     undefined
   $: datasource = structuredClone(
@@ -935,15 +961,9 @@
     if (!$environment.loaded) {
       environment.loadVariables()
     }
-    if (
-      $workspaceConnections.draft?.templateId &&
-      !datasourceId &&
-      !selectedDatasourceId
-    ) {
+    if (connectorRestTemplateId && !datasourceId && !selectedDatasourceId) {
       openConnectionMenuTimer = setTimeout(() => {
-        connectionSelectRef?.addConnection(
-          $workspaceConnections.draft?.templateId
-        )
+        connectionSelectRef?.open()
       }, 200)
     } else if (
       $workspaceConnections.draft &&
@@ -1041,6 +1061,8 @@
             restTemplateId || $workspaceConnections.draft?.templateId
           )}
           {settingsLocked}
+          popoverPortalTarget={connectionPopoverPortalTarget}
+          popoverZIndex={connectionPopoverZIndex}
           disabled={!canChangeConnection}
           on:change={onConnectionChange}
         />

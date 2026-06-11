@@ -82,7 +82,7 @@ describe("WorkspaceConnectionStore", () => {
     mockStores.datasourceStore.set({ list: [] })
   })
 
-  it("preselects the first connection matching the requested REST template", () => {
+  it("preselects a connection when exactly one matches the requested REST template", () => {
     const workspaceConnections = new WorkspaceConnectionStore()
 
     mockStores.datasourceStore.set({
@@ -105,6 +105,29 @@ describe("WorkspaceConnectionStore", () => {
     expect(get(workspaceConnections).draft?.query.datasourceId).toBe(
       "github_ds"
     )
+  })
+
+  it("does not preselect a connection when multiple match the requested REST template", () => {
+    const workspaceConnections = new WorkspaceConnectionStore()
+
+    mockStores.datasourceStore.set({
+      list: [
+        makeDatasource({
+          _id: "github_ds",
+          name: "GitHub",
+          restTemplateId: "github" as any,
+        }),
+        makeDatasource({
+          _id: "github_ds_2",
+          name: "GitHub 2",
+          restTemplateId: "github" as any,
+        }),
+      ],
+    })
+
+    workspaceConnections.startDraft("github" as any)
+
+    expect(get(workspaceConnections).draft?.query.datasourceId).toBeUndefined()
   })
 
   it("exposes template ids on saved REST connections", () => {
