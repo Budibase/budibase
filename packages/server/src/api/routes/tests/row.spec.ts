@@ -4382,6 +4382,42 @@ if (descriptions.length) {
         })
       }
 
+      if (isInternal) {
+        describe("user table (ta_users) access control", () => {
+          it("denies BASIC users from searching the user table", async () => {
+            await config.loginAsRole("BASIC", async () => {
+              await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 403 }
+              )
+            })
+          })
+
+          it("allows POWER users to search the user table", async () => {
+            await config.loginAsRole("POWER", async () => {
+              const { rows } = await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 200 }
+              )
+              expect(rows.length).toBeGreaterThan(0)
+            })
+          })
+
+          it("allows ADMIN users to search the user table", async () => {
+            await config.loginAsRole("ADMIN", async () => {
+              const { rows } = await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 200 }
+              )
+              expect(rows.length).toBeGreaterThan(0)
+            })
+          })
+        })
+      }
+
       if (!isInternal && !isOracle) {
         describe("bigint ids", () => {
           let table1: Table, table2: Table
