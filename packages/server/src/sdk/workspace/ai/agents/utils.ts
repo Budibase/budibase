@@ -9,6 +9,7 @@ import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
+  createEscalatePlaceholderTool,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
@@ -116,6 +117,7 @@ export async function getAvailableTools(
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
+    createEscalatePlaceholderTool(),
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
