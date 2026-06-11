@@ -146,7 +146,7 @@ export interface BuildPromptAndToolsOptions {
 
 export async function buildPromptAndTools(
   agent: Agent,
-  operation: AgentOperation,
+  operation?: AgentOperation,
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
@@ -158,7 +158,7 @@ export async function buildPromptAndTools(
   if (!agentId) {
     throw new Error("Agent _id is required")
   }
-  const hasKnowledgeBases = operation.knowledgeBases?.some(Boolean) ?? false
+  const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(operation?.enabledTools || [])
@@ -170,12 +170,14 @@ export async function buildPromptAndTools(
   )
 
   if (
+    operation &&
     hasKnowledgeBases &&
     !enabledTools.some(tool => tool.name === "list_knowledge_files")
   ) {
     enabledTools.push(createKnowledgeFilesTool(agentId, operation.id))
   }
   if (
+    operation &&
     hasKnowledgeBases &&
     !enabledTools.some(tool => tool.name === "search_knowledge")
   ) {
