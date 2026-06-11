@@ -34,7 +34,10 @@
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
   import QuerySelect from "./QuerySelect.svelte"
-  import { workspaceConnections } from "@/stores/builder/workspaceConnection"
+  import {
+    datasourceMatchesRestTemplate,
+    workspaceConnections,
+  } from "@/stores/builder/workspaceConnection"
   import { tick } from "svelte"
 
   export let bindings: EnrichedBinding[] | undefined = undefined
@@ -146,6 +149,15 @@
     const templateId =
       automationStore.actions.consumeApiRequestTemplate(blockId)
     if (!templateId) {
+      return
+    }
+    const hasExistingQuery = restSources?.some(ds => {
+      if (!datasourceMatchesRestTemplate(ds, templateId as any)) {
+        return false
+      }
+      return $queries.list.some(query => query.datasourceId === ds._id)
+    })
+    if (hasExistingQuery) {
       return
     }
     workspaceConnections.startDraft(templateId)

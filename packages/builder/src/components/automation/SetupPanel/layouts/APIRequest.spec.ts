@@ -247,4 +247,36 @@ describe("APIRequest", () => {
       expect(workspaceConnections.startDraft).toHaveBeenCalledWith("github")
     })
   })
+
+  it("does not open a connector draft when the template has an existing request", async () => {
+    vi.mocked(
+      automationStore.actions.consumeApiRequestTemplate
+    ).mockImplementation((blockId: string) =>
+      blockId === "step_1" ? ("github" as any) : undefined
+    )
+    testState.queryStore.set({
+      list: [
+        {
+          _id: "github_query",
+          name: "GitHub repos",
+          datasourceId: "github_ds",
+          queryVerb: "read",
+        },
+      ],
+    })
+
+    render(APIRequest, {
+      props: {
+        block: { id: "step_1", inputs: {} } as any,
+        context: undefined,
+      },
+    })
+
+    await waitFor(() => {
+      expect(
+        automationStore.actions.consumeApiRequestTemplate
+      ).toHaveBeenCalledWith("step_1")
+    })
+    expect(workspaceConnections.startDraft).not.toHaveBeenCalled()
+  })
 })
