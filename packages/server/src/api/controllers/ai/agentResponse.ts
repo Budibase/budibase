@@ -1,4 +1,4 @@
-import { Agent, AgentOperation } from "@budibase/types"
+import { Agent } from "@budibase/types"
 
 const SECRET_MASK = "********"
 
@@ -39,13 +39,5 @@ export const obfuscateAgentSecrets = (agent: Agent): Agent => ({
   }),
 })
 
-export const withoutKnowledgeConfig = <T extends Agent>(agent: T): T => ({
-  ...agent,
-  operations: agent.operations?.map(
-    ({ knowledgeSources: _knowledgeSources, ...operation }: AgentOperation) =>
-      operation
-  ),
-})
-
 export const toAgentResponse = (agent: Agent): Agent =>
-  withoutKnowledgeConfig(obfuscateAgentSecrets(agent))
+  obfuscateAgentSecrets(agent)
