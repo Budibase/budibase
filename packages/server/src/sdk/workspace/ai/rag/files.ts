@@ -1,6 +1,7 @@
 import {
   AgentKnowledgeSourceType,
   AgentMessageRagSource,
+  AgentOperation,
   type Agent,
   type KnowledgeBase,
   type KnowledgeBaseFile,
@@ -41,12 +42,10 @@ interface ExactTabularMatchResult {
   matchesBySourceId: Map<string, TabularRowExactMatch[]>
 }
 
-const resolveKnowledgeBasesForAgent = async (
-  agent: Agent
+const resolveKnowledgeBasesForOperation = async (
+  operation: AgentOperation
 ): Promise<KnowledgeBase[]> => {
-  const knowledgeBaseIds = (
-    getLiveOperation(agent)?.knowledgeBases || []
-  ).filter(Boolean)
+  const knowledgeBaseIds = (operation.knowledgeBases || []).filter(Boolean)
   if (knowledgeBaseIds.length === 0) {
     return []
   }
@@ -347,23 +346,18 @@ export const getFileUrlForOperation = async (
 }
 
 const getKnowledgeBaseIdsForAgent = async (
-  agentId: string,
-  options: { liveOperationOnly?: boolean } = {}
+  agentId: string
 ): Promise<string[]> => {
   const agent = await agentsSdk.getOrThrow(agentId)
-  if (options.liveOperationOnly) {
-    return (getLiveOperation(agent)?.knowledgeBases || []).filter(Boolean)
-  }
   return (
     agent.operations?.flatMap(operation => operation.knowledgeBases || []) || []
   ).filter(Boolean)
 }
 
 export const listFilesForAgent = async (
-  agentId: string,
-  options: { liveOperationOnly?: boolean } = {}
+  agentId: string
 ): Promise<KnowledgeBaseFile[]> => {
-  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId, options)
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
   if (knowledgeBaseIds.length === 0) {
     return []
   }
@@ -500,11 +494,25 @@ export const retrieveContextForAgent = async (
   agent: Agent,
   question: string
 ): Promise<RetrievedContextResult> => {
+  const operation = getLiveOperation(agent)
+  if (!operation) {
+    return { text: "", chunks: [], sources: [] }
+  }
+
+  return await retrieveContextForOperation(agent, operation.id, question)
+}
+
+export const retrieveContextForOperation = async (
+  agent: Agent,
+  operationId: string,
+  question: string
+): Promise<RetrievedContextResult> => {
   if (!question || question.trim().length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
 
-  const knowledgeBases = await resolveKnowledgeBasesForAgent(agent)
+  const operation = getOperationOrThrow(agent, operationId)
+  const knowledgeBases = await resolveKnowledgeBasesForOperation(operation)
   const chunks: Array<RetrievedContextChunk> = []
   const files: KnowledgeBaseFile[] = []
 
