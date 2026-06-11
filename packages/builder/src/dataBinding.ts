@@ -1858,7 +1858,7 @@ const bindingReplacement = (
   convertTo: BindingKey
 ): string => {
   if (typeof textWithBindings !== "string") {
-    return textWithBindings == null ? "" : `${textWithBindings}`
+    return textWithBindings as unknown as string
   }
   let bindingText = textWithBindings
   // Decide from base64 if using JS
