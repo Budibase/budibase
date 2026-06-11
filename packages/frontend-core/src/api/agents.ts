@@ -28,6 +28,9 @@ import {
   UpdateAgentSharePointSiteResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  CreateAgentOperationRequest,
+  UpdateAgentOperationRequest,
+  AgentOperationMutationResponse,
 } from "@budibase/types"
 
 import { BaseAPIClient } from "./types"
@@ -40,6 +43,19 @@ export interface AgentEndpoints {
   ) => Promise<FetchAgentKnowledgeIndexResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
+  createAgentOperation: (
+    agentId: string,
+    operation: CreateAgentOperationRequest
+  ) => Promise<AgentOperationMutationResponse>
+  updateAgentOperation: (
+    agentId: string,
+    operationId: string,
+    operation: UpdateAgentOperationRequest
+  ) => Promise<AgentOperationMutationResponse>
+  deleteAgentOperation: (
+    agentId: string,
+    operationId: string
+  ) => Promise<AgentOperationMutationResponse>
   duplicateAgent: (agentId: string) => Promise<DuplicateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
   syncAgentDiscordCommands: (
@@ -157,6 +173,26 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     return await API.put({
       url: "/api/agent",
       body: agent,
+    })
+  },
+
+  createAgentOperation: async (agentId, operation) => {
+    return await API.post({
+      url: `/api/agent/${agentId}/operations`,
+      body: operation,
+    })
+  },
+
+  updateAgentOperation: async (agentId, operationId, operation) => {
+    return await API.put({
+      url: `/api/agent/${agentId}/operations/${operationId}`,
+      body: operation,
+    })
+  },
+
+  deleteAgentOperation: async (agentId, operationId) => {
+    return await API.delete({
+      url: `/api/agent/${agentId}/operations/${operationId}`,
     })
   },
 

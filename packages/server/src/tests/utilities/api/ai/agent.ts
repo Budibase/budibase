@@ -24,6 +24,9 @@ import {
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  CreateAgentOperationRequest,
+  UpdateAgentOperationRequest,
+  AgentOperationMutationResponse,
   FetchAgentTestSuiteResponse,
   RunAgentTestSuiteRequest,
   RunAgentTestSuiteResponse,
@@ -52,6 +55,15 @@ export class AgentAPI extends TestAPI {
     })
   }
 
+  createWithOperation = async (
+    agent: CreateAgentRequest,
+    operation: CreateAgentOperationRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentResponse> => {
+    const created = await this.create(agent, expectations)
+    return await this.createOperation(created._id!, operation)
+  }
+
   update = async (
     body: UpdateAgentRequest,
     expectations?: Expectations
@@ -60,6 +72,51 @@ export class AgentAPI extends TestAPI {
       body,
       expectations,
     })
+  }
+
+  createOperation = async (
+    agentId: string,
+    body: CreateAgentOperationRequest,
+    expectations?: Expectations
+  ): Promise<AgentOperationMutationResponse> => {
+    return await this._post<AgentOperationMutationResponse>(
+      `/api/agent/${agentId}/operations`,
+      {
+        body,
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 201,
+        },
+      }
+    )
+  }
+
+  updateOperation = async (
+    agentId: string,
+    operationId: string,
+    body: UpdateAgentOperationRequest,
+    expectations?: Expectations
+  ): Promise<AgentOperationMutationResponse> => {
+    return await this._put<AgentOperationMutationResponse>(
+      `/api/agent/${agentId}/operations/${operationId}`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  deleteOperation = async (
+    agentId: string,
+    operationId: string,
+    expectations?: Expectations
+  ): Promise<AgentOperationMutationResponse> => {
+    return await this._delete<AgentOperationMutationResponse>(
+      `/api/agent/${agentId}/operations/${operationId}`,
+      {
+        expectations,
+      }
+    )
   }
 
   remove = async (

@@ -27,6 +27,8 @@ import {
   UpdateAgentSharePointSiteRequest,
   UpdateAgentSharePointSiteResponse,
   UpdateAgentRequest,
+  UpdateAgentOperationRequest,
+  CreateAgentOperationRequest,
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import { derived, get } from "svelte/store"
@@ -121,16 +123,29 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     operationId: string,
     updater: (operation: AgentOperation) => AgentOperation
   ) => {
-    const agent = this.getAgentOrThrow(agentId)
-    const operations =
-      agent.operations?.map(operation =>
-        operation.id === operationId ? updater(operation) : operation
-      ) || []
-
-    return await this.updateAgent({
-      ...agent,
-      operations,
+    const operation = this.getAgentOperation(agentId, operationId)
+    if (!operation) {
+      throw new Error("Operation not found")
+    }
+    const updated = updater(operation)
+    return await this.updateAgentOperation(agentId, operationId, {
+      name: updated.name,
+      live: updated.live,
+      promptInstructions: updated.promptInstructions,
+      enabledTools: updated.enabledTools,
+      allowKnowledgeSourceDownload: updated.allowKnowledgeSourceDownload,
     })
+  }
+
+  private replaceAgentInStore = (updated: Agent) => {
+    this.update(state => {
+      const index = state.agents.findIndex(a => a._id === updated._id)
+      if (index !== -1) {
+        state.agents[index] = updated
+      }
+      return state
+    })
+    return updated
   }
 
   private setKnowledgeLoading = (cacheKey: string, loading: boolean) => {
@@ -217,16 +232,80 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return created
   }
 
-  updateAgent = async (agent: UpdateAgentRequest) => {
-    const updated = await API.updateAgent(agent)
-    this.update(state => {
-      const index = state.agents.findIndex(a => a._id === updated._id)
-      if (index !== -1) {
-        state.agents[index] = updated
+  updateAgent = async (
+    agent: UpdateAgentRequest & { operations?: AgentOperation[] }
+  ) => {
+    const { operations: _operations, ...agentUpdate } = agent
+    const updated = await API.updateAgent(agentUpdate)
+    return this.replaceAgentInStore(updated)
+  }
+
+  updateAgentOperation = async (
+    agentId: string,
+    operationId: string,
+    operation: UpdateAgentOperationRequest
+  ) => {
+    const updated = await API.updateAgentOperation(
+      agentId,
+      operationId,
+      operation
+    )
+    return this.replaceAgentInStore(updated)
+  }
+
+  createAgentOperation = async (
+    agentId: string,
+    operation: CreateAgentOperationRequest
+  ) => {
+    const updated = await API.createAgentOperation(agentId, operation)
+    return this.replaceAgentInStore(updated)
+  }
+
+  deleteAgentOperation = async (agentId: string, operationId: string) => {
+    const updated = await API.deleteAgentOperation(agentId, operationId)
+    return this.replaceAgentInStore(updated)
+  }
+
+  syncAgentOperations = async (
+    agentId: string,
+    currentOperations: AgentOperation[] | undefined,
+    draftOperations: AgentOperation[]
+  ) => {
+    const current = currentOperations ?? []
+    const draftIds = new Set(draftOperations.map(operation => operation.id))
+    const currentIds = new Set(current.map(operation => operation.id))
+
+    let latestAgent: Agent | undefined
+
+    for (const operation of current) {
+      if (!draftIds.has(operation.id)) {
+        latestAgent = await this.deleteAgentOperation(agentId, operation.id)
       }
-      return state
-    })
-    return updated
+    }
+
+    for (const operation of draftOperations) {
+      const payload: UpdateAgentOperationRequest = {
+        name: operation.name,
+        live: operation.live,
+        promptInstructions: operation.promptInstructions,
+        enabledTools: operation.enabledTools,
+        allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+      }
+
+      latestAgent = currentIds.has(operation.id)
+        ? await this.updateAgentOperation(agentId, operation.id, payload)
+        : await this.createAgentOperation(agentId, {
+            id: operation.id,
+            name: operation.name,
+            live: operation.live,
+            promptInstructions: operation.promptInstructions,
+            enabledTools: operation.enabledTools,
+            allowKnowledgeSourceDownload:
+              operation.allowKnowledgeSourceDownload,
+          })
+    }
+
+    return latestAgent
   }
 
   getAgentOperation = (

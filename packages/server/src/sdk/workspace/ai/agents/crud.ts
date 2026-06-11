@@ -447,10 +447,11 @@ export async function update(agent: Agent): Promise<Agent> {
   }
 
   const now = new Date().toISOString()
+  const incomingOperations = agent.operations ?? existing.operations ?? []
   const removedOperations = (existing.operations ?? []).filter(
     existingOperation =>
       existingOperation.id &&
-      !(agent.operations ?? []).some(
+      !incomingOperations.some(
         incomingOperation => incomingOperation.id === existingOperation.id
       )
   )
@@ -459,7 +460,7 @@ export async function update(agent: Agent): Promise<Agent> {
     ...existing,
     ...agent,
     updatedAt: now,
-    operations: agent.operations,
+    operations: incomingOperations,
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,

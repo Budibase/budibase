@@ -8,6 +8,7 @@ import {
 } from "./endpointGroups"
 import {
   connectAgentSharePointSiteValidator,
+  createAgentOperationValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
   provisionAgentTelegramChannelValidator,
@@ -20,6 +21,7 @@ import {
   runAgentTestSuiteValidator,
   toggleAgentTelegramDeploymentValidator,
   updateAgentSharePointSiteValidator,
+  updateAgentOperationValidator,
   updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -28,6 +30,20 @@ builderAdminRoutes
   .get("/api/agent", ai.fetchAgents)
   .post("/api/agent", createAgentValidator(), ai.createAgent)
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
+  .post(
+    "/api/agent/:agentId/operations",
+    createAgentOperationValidator(),
+    ai.createAgentOperation
+  )
+  .put(
+    "/api/agent/:agentId/operations/:operationId",
+    updateAgentOperationValidator(),
+    ai.updateAgentOperation
+  )
+  .delete(
+    "/api/agent/:agentId/operations/:operationId",
+    ai.deleteAgentOperation
+  )
   .post("/api/agent/:agentId/duplicate", ai.duplicateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
   .post(

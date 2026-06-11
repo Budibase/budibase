@@ -418,18 +418,28 @@
 
     saving = true
     try {
-      const operations = draft.operations?.map(operation => ({
-        ...operation,
-        enabledTools: getIncludedToolRuntimeBindings(
-          operation.promptInstructions,
-          readableToRuntimeBinding
-        ),
-      }))
+      const { operations: draftOperations, ...agentDraft } = draft
+      const operations =
+        draftOperations?.map(operation => ({
+          ...operation,
+          enabledTools: getIncludedToolRuntimeBindings(
+            operation.promptInstructions,
+            readableToRuntimeBinding
+          ),
+        })) || []
+
       await agentsStore.updateAgent({
         ...currentAgent,
-        ...draft,
-        operations,
+        ...agentDraft,
       })
+
+      if (currentAgent._id) {
+        await agentsStore.syncAgentOperations(
+          currentAgent._id,
+          currentAgent.operations,
+          operations
+        )
+      }
 
       if (showNotifications) {
         notifications.success("Agent saved successfully")
@@ -454,22 +464,14 @@
     }
 
     try {
-      const operations = draft.operations?.map(operation => ({
-        ...operation,
-        enabledTools: getIncludedToolRuntimeBindings(
-          operation.promptInstructions,
-          readableToRuntimeBinding
-        ),
-      }))
+      if (!currentAgent._id) {
+        return false
+      }
 
-      const updated = await agentsStore.updateOperationLive(
-        {
-          ...currentAgent,
-          ...draft,
-          operations,
-        },
+      const updated = await agentsStore.updateAgentOperation(
+        currentAgent._id,
         operationId,
-        live
+        { live }
       )
 
       draft = {

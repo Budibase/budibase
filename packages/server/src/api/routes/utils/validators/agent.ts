@@ -54,36 +54,12 @@ const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
   .optional()
   .allow(null)
 
-const KNOWLEDGE_SOURCE_FILTER_SCHEMA = Joi.object({
-  patterns: Joi.array().items(Joi.string()).optional(),
-}).optional()
-
-const SHAREPOINT_KNOWLEDGE_SOURCE_SCHEMA = Joi.object({
-  id: Joi.string().required(),
-  type: Joi.string().valid("sharepoint").required(),
-  config: Joi.object({
-    datasourceId: Joi.string().required(),
-    authConfigId: Joi.string().required(),
-    site: Joi.object({
-      id: Joi.string().required(),
-      name: OPTIONAL_STRING,
-      webUrl: OPTIONAL_STRING,
-    }).required(),
-    filters: KNOWLEDGE_SOURCE_FILTER_SCHEMA,
-  }).required(),
-})
-
-const AGENT_OPERATION_SCHEMA = Joi.object({
-  id: Joi.string().required(),
+const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   name: OPTIONAL_STRING,
   live: Joi.boolean().optional(),
   promptInstructions: OPTIONAL_STRING,
   enabledTools: Joi.array().items(Joi.string()).optional(),
-  knowledgeBases: Joi.array().items(Joi.string()).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
-  knowledgeSources: Joi.array()
-    .items(SHAREPOINT_KNOWLEDGE_SOURCE_SCHEMA)
-    .optional(),
 })
 
 export function createAgentValidator() {
@@ -98,7 +74,6 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      operations: Joi.array().items(AGENT_OPERATION_SCHEMA).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -125,13 +100,26 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
-      operations: Joi.array().items(AGENT_OPERATION_SCHEMA).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
       telegramIntegration: TELEGRAM_INTEGRATION_SCHEMA,
     }).unknown(true)
   )
+}
+
+export function createAgentOperationValidator() {
+  return auth.joiValidator.body(
+    AGENT_OPERATION_CONFIG_SCHEMA.keys({
+      id: Joi.string().required(),
+      name: Joi.string().required(),
+      allowKnowledgeSourceDownload: Joi.boolean().required(),
+    }).required()
+  )
+}
+
+export function updateAgentOperationValidator() {
+  return auth.joiValidator.body(AGENT_OPERATION_CONFIG_SCHEMA.min(1).required())
 }
 
 export function syncAgentDiscordCommandsValidator() {
