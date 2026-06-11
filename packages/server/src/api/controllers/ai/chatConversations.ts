@@ -23,9 +23,10 @@ import {
 } from "@budibase/types"
 import {
   consumeStream,
+  readUIMessageStream,
   type LanguageModelUsage,
-  type StreamTextResult,
-  type ToolSet,
+  type UIMessageChunk,
+  type UIMessage,
 } from "ai"
 import sdk from "../../../sdk"
 import {
@@ -270,10 +271,36 @@ const resolveChatStreamRequest = async (
   }
 }
 
-export type WebhookAssistantStream = StreamTextResult<
-  ToolSet,
-  never
->["fullStream"]
+export type WebhookAssistantStream = AsyncIterable<string>
+
+const getAssistantMessageText = (
+  assistantMessage?: UIMessage
+) => assistantMessage?.parts?.flatMap(part =>
+  part.type === "text" ? [part.text] : []
+).join("") || ""
+
+const createAssistantTextStream = async function* (
+  stream: ReadableStream<UIMessageChunk>
+): AsyncGenerator<string, void, void> {
+  let previousText = ""
+  for await (const assistantMessage of readUIMessageStream({ stream })) {
+    const currentText = getAssistantMessageText(assistantMessage)
+    if (!currentText || currentText === previousText) {
+      continue
+    }
+
+    if (currentText.startsWith(previousText)) {
+      const delta = currentText.slice(previousText.length)
+      if (delta) {
+        yield delta
+      }
+    } else {
+      yield currentText
+    }
+
+    previousText = currentText
+  }
+}
 
 export async function webhookChat({
   chat,
@@ -320,12 +347,37 @@ export async function webhookChat({
 
   const result = await run.stream()
 
-  const streamTask = onAssistantStream
-    ? onAssistantStream(result.fullStream)
-    : Promise.resolve()
+  const uiMessageStream = result.toUIMessageStream({
+    sendReasoning: true,
+  })
+  let assistantStreamForCapture: ReadableStream<UIMessageChunk> = uiMessageStream
+  let streamTask: Promise<void> = Promise.resolve()
+  if (onAssistantStream) {
+    const [deliveryStream, captureStream] = uiMessageStream.tee()
+    assistantStreamForCapture = captureStream
+    streamTask = onAssistantStream(
+      createAssistantTextStream(deliveryStream)
+    )
+  }
 
-  const [textResult, responseResult, streamOutcome] = await Promise.allSettled([
-    result.text,
+  const assistantMessageTask = (async () => {
+    let assistantMessage: ChatConversation["messages"][number] | undefined
+    for await (const message of readUIMessageStream<
+      ChatConversation["messages"][number]
+    >({
+      stream: assistantStreamForCapture,
+    })) {
+      assistantMessage = message
+    }
+    return assistantMessage
+  })()
+
+  const [
+    assistantMessageResult,
+    responseResult,
+    streamOutcome,
+  ] = await Promise.allSettled([
+    assistantMessageTask,
     result.response,
     streamTask,
   ])
@@ -346,19 +398,19 @@ export async function webhookChat({
   run.sessionLogIndexer.addRequestId(requestId)
   await run.sessionLogIndexer.index()
 
-  if (textResult.status === "rejected") {
+  if (assistantMessageResult.status === "rejected") {
     console.error("Agent streaming error", {
       agentId,
       chatAppId,
       sessionId,
-      error: textResult.reason,
+      error: assistantMessageResult.reason,
     })
     events.action.aiAgentFailed({
       agentId,
       reason: ActionFailureReason.ERROR,
-      errorMessage: getErrorMessage(textResult.reason),
+      errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
-    throw textResult.reason
+    throw assistantMessageResult.reason
   }
   if (responseResult.status === "rejected") {
     console.error("Agent response metadata error", {
@@ -377,11 +429,15 @@ export async function webhookChat({
 
   events.action.aiAgentExecuted({ agentId })
 
-  const assistantText = textResult.value
+  const finalAssistantMessage =
+    assistantMessageResult.value || {
+      id: v4(),
+      role: "assistant",
+      parts: [{ type: "text", text: "" }],
+    }
+  const assistantText = getAssistantMessageText(finalAssistantMessage)
   const assistantMessage: ChatConversation["messages"][number] = {
-    id: v4(),
-    role: "assistant",
-    parts: [{ type: "text", text: assistantText || "" }],
+    ...finalAssistantMessage,
   }
 
   return {
