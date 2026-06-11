@@ -26,6 +26,13 @@ export const createStores = (): ConditionStore => {
   }
 }
 
+export const getEnabledConditions = (conditions: UICondition[] | undefined) => {
+  if (!conditions?.length) {
+    return []
+  }
+  return conditions.filter(condition => !condition.disabled)
+}
+
 export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
   const { columns, props } = context
 
@@ -77,15 +84,20 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
 export const initialise = (context: StoreContext) => {
   const { metadata, conditions, rows } = context
 
-  // Recompute all metadata if conditions change
-  conditions.subscribe($conditions => {
+  const recomputeAllMetadata = () => {
     let newMetadata: Record<string, any> = {}
+    const $conditions = get(conditions)
     if ($conditions?.length) {
       for (let row of get(rows)) {
         newMetadata[row._id] = evaluateConditions(row, $conditions, context)
       }
     }
     metadata.set(newMetadata)
+  }
+
+  // Recompute all metadata if conditions change
+  conditions.subscribe(() => {
+    recomputeAllMetadata()
   })
 
   // Recompute metadata for specific rows when they change
@@ -195,6 +207,8 @@ const evaluateConditions = (
       }
     }
   }
+
+  allConditions = getEnabledConditions(allConditions)
 
   // Pre-process button conditions to set default visibility for show conditions
   const buttonShowConditions = new Set()
