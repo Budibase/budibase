@@ -31,7 +31,6 @@ import sdk from "../../../sdk"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
-  getLiveOperation,
   prepareAgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
@@ -52,8 +51,9 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
-const allowsKnowledgeSourceDownload = (agent: Agent) =>
-  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
+const allowsKnowledgeSourceDownload = (agent: Agent, operationId: string) =>
+  (agent.operations || []).find(operation => operation.id === operationId)
+    ?.allowKnowledgeSourceDownload ?? true
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
@@ -436,6 +436,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       ...(Object.keys(run.toolDisplayNames).length > 0
         ? { toolDisplayNames: run.toolDisplayNames }
         : {}),
+      ...(run.selectedOperation
+        ? {
+            selectedOperationId: run.selectedOperation.id,
+            selectedOperationName: run.selectedOperation.name,
+            allowKnowledgeSourceDownload:
+              run.selectedOperation.allowKnowledgeSourceDownload,
+          }
+        : {}),
     }
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
@@ -544,6 +552,10 @@ export async function fetchChatAppAgentFileUrl(
   >
 ) {
   const { chatAppId, agentId, fileId } = ctx.params
+  const operationId =
+    typeof ctx.query.operationId === "string"
+      ? ctx.query.operationId
+      : undefined
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
@@ -560,14 +572,16 @@ export async function fetchChatAppAgentFileUrl(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (!allowsKnowledgeSourceDownload(agent)) {
+  if (!allowsKnowledgeSourceDownload(agent, operationId!)) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403
     )
   }
 
-  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  const url = operationId
+    ? await sdk.ai.rag.getFileUrlForOperation(agentId, operationId, fileId)
+    : await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
   ctx.body = { url }
   ctx.status = 200
 }

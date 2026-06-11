@@ -12,6 +12,7 @@ import type {
   AgentTestRun,
   AgentTestSnapshot,
   ContextUser,
+  AgentOperation,
 } from "@budibase/types"
 import {
   Output,
@@ -23,11 +24,7 @@ import {
   type ModelMessage,
 } from "ai"
 import sdk from "../../.."
-import {
-  formatIncompleteToolCallError,
-  getLiveOperation,
-  prepareAgentChatRun,
-} from "../agents"
+import { formatIncompleteToolCallError, prepareAgentChatRun } from "../agents"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -530,10 +527,12 @@ const buildConfigSnapshotMap = async (aiConfigIds: string[]) => {
 
 const buildRunSnapshot = async ({
   agent,
+  operation,
   suite,
   aiConfigIds,
 }: {
   agent: Agent
+  operation: AgentOperation
   suite: AgentTestSuite
   aiConfigIds: string[]
 }): Promise<AgentTestSnapshot> => {
@@ -542,8 +541,6 @@ const buildRunSnapshot = async ({
   const aiConfig = aiConfigs.find(
     config => config.aiConfigId === agent.aiconfig
   )
-
-  const operation = getLiveOperation(agent)
 
   return {
     agentId: agent._id!,
@@ -563,6 +560,7 @@ const buildRunSnapshot = async ({
 
 export async function runSuite({
   agentId,
+  operationId,
   user,
   caseId,
   groupId,
@@ -571,6 +569,7 @@ export async function runSuite({
   startedAt = new Date().toISOString(),
 }: {
   agentId: string
+  operationId: string
   user: ContextUser
   caseId?: string
   groupId?: string
@@ -579,6 +578,12 @@ export async function runSuite({
   startedAt?: string
 }): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const operation = agent.operations?.find(o => o.id === operationId)
+
+  if (!operation) {
+    throw new Error(`Operation ${operationId} not found in ${agentId}`)
+  }
+
   const suite = await fetchSuite(agentId)
   const casesToRun = selectCasesToRun({ suite, caseId, groupId })
   const runConfigIds = uniqueConfigIds(
@@ -589,6 +594,7 @@ export async function runSuite({
   const configSnapshots = await buildConfigSnapshotMap(runConfigIds)
   const snapshot = await buildRunSnapshot({
     agent,
+    operation,
     suite,
     aiConfigIds: runConfigIds,
   })

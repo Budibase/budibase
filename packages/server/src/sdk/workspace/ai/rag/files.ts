@@ -13,7 +13,6 @@ import {
 } from "@budibase/types"
 import { HTTPError, locks, objectStore } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
-import { getLiveOperation } from "../agents/utils"
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
 import {
@@ -488,18 +487,6 @@ interface RetrievedContextResult {
   text: string
   chunks: RetrievedContextChunk[]
   sources: AgentMessageRagSource[]
-}
-
-export const retrieveContextForAgent = async (
-  agent: Agent,
-  question: string
-): Promise<RetrievedContextResult> => {
-  const operation = getLiveOperation(agent)
-  if (!operation) {
-    return { text: "", chunks: [], sources: [] }
-  }
-
-  return await retrieveContextForOperation(agent, operation.id, question)
 }
 
 export const retrieveContextForOperation = async (
