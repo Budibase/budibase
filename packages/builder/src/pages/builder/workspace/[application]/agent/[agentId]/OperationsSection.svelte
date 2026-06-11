@@ -194,7 +194,12 @@ Any constraints the agent must follow.
           callback: deleteOperation,
         },
       ],
-      { x: event.clientX, y: event.clientY }
+      { x: event.clientX, y: event.clientY },
+      () => {
+        if (!operationPanelOpen) {
+          selectedOperationId = undefined
+        }
+      }
     )
   }
 </script>
@@ -228,9 +233,6 @@ Any constraints the agent must follow.
             oncontextmenu={event => {
               selectedOperationId = operation.id
               openOperationContextMenu(event)
-            }}
-            onblur={() => {
-              // selectedOperationId = undefined
             }}
           >
             <span class="operation-name"
