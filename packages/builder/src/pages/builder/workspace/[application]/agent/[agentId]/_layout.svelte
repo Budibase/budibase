@@ -221,12 +221,11 @@
         <AgentChatPanel
           agentId={currentAgent?._id}
           workspaceId={$params.application || ""}
-          operationId={currentAgent?.operations?.[0]?.live
-            ? currentAgent.operations[0].id
-            : undefined}
-          allowKnowledgeSourceDownload={currentAgent?.operations?.[0]?.live
-            ? currentAgent.operations[0].allowKnowledgeSourceDownload
-            : undefined}
+          allowKnowledgeSourceDownload={currentAgent?.operations?.some(
+            operation =>
+              operation.live === true &&
+              operation.allowKnowledgeSourceDownload === true
+          ) || false}
         />
       </div>
     {/if}

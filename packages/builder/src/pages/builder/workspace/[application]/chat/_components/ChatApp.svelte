@@ -135,8 +135,12 @@
         isDefault: agent.isDefault,
         icon: getAgentIcon(agent.agentId),
         iconColor: getAgentIconColor(agent.agentId, index),
-        allowKnowledgeSourceDownload: getAgent(agent.agentId)?.operations?.[0]
-          ?.allowKnowledgeSourceDownload,
+        allowKnowledgeSourceDownload:
+          getAgent(agent.agentId)?.operations?.some(
+            operation =>
+              operation.live === true &&
+              operation.allowKnowledgeSourceDownload === true
+          ) || false,
       }))
       .filter(agent => Boolean(agent.name))
 
