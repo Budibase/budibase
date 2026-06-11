@@ -4755,6 +4755,16 @@
             "barTitle": "3 columns"
           }
         ]
+      },
+      {
+        "type": "color",
+        "label": "Outline colour",
+        "key": "checkboxOutlineColor"
+      },
+      {
+        "type": "color",
+        "label": "Check colour",
+        "key": "checkboxCheckColor"
       }
     ],
     "context": {

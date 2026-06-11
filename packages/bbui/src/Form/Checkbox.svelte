@@ -13,6 +13,8 @@
   export let error: string | undefined = undefined
   export let size: "S" | "M" | "L" | "XL" = "M"
   export let helpText: string | undefined = undefined
+  export let checkboxOutlineColor: string | undefined = undefined
+  export let checkboxCheckColor: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<boolean>) => {
@@ -28,6 +30,8 @@
     {value}
     {size}
     {indeterminate}
+    {checkboxOutlineColor}
+    {checkboxCheckColor}
     on:change={onChange}
   />
 </Field>
