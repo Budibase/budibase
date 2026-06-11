@@ -107,6 +107,27 @@ export interface AgentMessageRagSource {
   filename?: string
 }
 
+export type AgentKnowledgeRetrievalNoResultReason =
+  | "feature_disabled"
+  | "empty_question"
+  | "no_knowledge_bases"
+  | "no_ready_files"
+  | "provider_returned_no_chunks"
+  | "all_chunks_filtered"
+
+export interface AgentKnowledgeRetrievalDiagnostics {
+  query: string
+  knowledgeBaseCount: number
+  totalFileCount: number
+  readyFileCount: number
+  skippedFileCount: number
+  returnedChunkCount: number
+  acceptedChunkCount: number
+  sources: AgentMessageRagSource[]
+  durationMs: number
+  noResultReason?: AgentKnowledgeRetrievalNoResultReason
+}
+
 export type AgentMessageUsageSegmentType =
   | "system"
   | "input"

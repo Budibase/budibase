@@ -3,18 +3,11 @@ import {
   type KnowledgeBaseFile,
 } from "@budibase/types"
 
-import { features } from "@budibase/backend-core"
 import sdk from "../../../../sdk"
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
 } from "../knowledgeFiles"
-
-jest.mock("@budibase/backend-core", () => ({
-  features: {
-    isEnabled: jest.fn(),
-  },
-}))
 
 jest.mock("../../../../sdk", () => ({
   __esModule: true,
@@ -353,7 +346,58 @@ describe("AI Tools - Knowledge files", () => {
 describe("AI Tools - Knowledge search", () => {
   beforeEach(() => {
     jest.restoreAllMocks()
-    jest.mocked(features.isEnabled).mockResolvedValue(true)
+    jest.clearAllMocks()
+  })
+
+  it("returns retrieved context with diagnostics", async () => {
+    jest
+      .spyOn(sdk.ai.agents, "getOrThrow")
+      .mockResolvedValue({ _id: "agent_1" } as any)
+    jest.spyOn(sdk.ai.rag, "retrieveContextForAgent").mockResolvedValue({
+      text: "Policy context",
+      chunks: [{ source: "source_1", chunkText: "Policy context" }],
+      sources: [
+        {
+          sourceId: "source_1",
+          fileId: "file_1",
+          filename: "policy.md",
+        },
+      ],
+      diagnostics: {
+        query: "What is policy?",
+        knowledgeBaseCount: 1,
+        totalFileCount: 2,
+        readyFileCount: 1,
+        skippedFileCount: 1,
+        returnedChunkCount: 1,
+        acceptedChunkCount: 1,
+        sources: [
+          {
+            sourceId: "source_1",
+            fileId: "file_1",
+            filename: "policy.md",
+          },
+        ],
+        durationMs: 42,
+      },
+    })
+
+    const result = await executeSearchTool("agent_1", {
+      question: "What is policy?",
+    })
+
+    expect(result).toMatchObject({
+      context: "Policy context",
+      diagnostics: {
+        query: "What is policy?",
+        totalFileCount: 2,
+        readyFileCount: 1,
+        skippedFileCount: 1,
+        returnedChunkCount: 1,
+        acceptedChunkCount: 1,
+        durationMs: 42,
+      },
+    })
   })
 
   it("hard-fails with a clear message when Gemini retrieval is unavailable", async () => {

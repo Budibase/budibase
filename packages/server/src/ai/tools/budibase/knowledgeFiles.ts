@@ -301,6 +301,7 @@ export const createKnowledgeSearchTool = (
           context: result.text,
           sources: result.sources,
           chunks: result.chunks,
+          diagnostics: result.diagnostics,
         }
       } catch (error: any) {
         if (isGeminiRetrievalUnavailable(error)) {

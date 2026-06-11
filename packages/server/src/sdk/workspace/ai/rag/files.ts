@@ -1,5 +1,7 @@
 import {
-  AgentMessageRagSource,
+  type AgentKnowledgeRetrievalDiagnostics,
+  type AgentKnowledgeRetrievalNoResultReason,
+  type AgentMessageRagSource,
   type Agent,
   type KnowledgeBase,
   type KnowledgeBaseFile,
@@ -367,19 +369,77 @@ interface RetrievedContextResult {
   text: string
   chunks: RetrievedContextChunk[]
   sources: AgentMessageRagSource[]
+  diagnostics: AgentKnowledgeRetrievalDiagnostics
 }
 
 export const retrieveContextForAgent = async (
   agent: Agent,
   question: string
 ): Promise<RetrievedContextResult> => {
+  const startedAtMs = Date.now()
+  const query = question?.trim() || ""
+  const buildResult = ({
+    chunks,
+    files,
+    knowledgeBaseCount,
+    readyFileCount,
+    returnedChunkCount,
+    noResultReason,
+  }: {
+    chunks: RetrievedContextChunk[]
+    files: KnowledgeBaseFile[]
+    knowledgeBaseCount: number
+    readyFileCount: number
+    returnedChunkCount: number
+    noResultReason?: AgentKnowledgeRetrievalNoResultReason
+  }): RetrievedContextResult => {
+    const sources = toSourceMetadata(chunks, files)
+    return {
+      text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
+      chunks,
+      sources,
+      diagnostics: {
+        query,
+        knowledgeBaseCount,
+        totalFileCount: files.length,
+        readyFileCount,
+        skippedFileCount: files.length - readyFileCount,
+        returnedChunkCount,
+        acceptedChunkCount: chunks.length,
+        sources,
+        durationMs: Date.now() - startedAtMs,
+        noResultReason,
+      },
+    }
+  }
+
   if (!question || question.trim().length === 0) {
-    return { text: "", chunks: [], sources: [] }
+    return buildResult({
+      chunks: [],
+      files: [],
+      knowledgeBaseCount: 0,
+      readyFileCount: 0,
+      returnedChunkCount: 0,
+      noResultReason: "empty_question",
+    })
   }
 
   const knowledgeBases = await resolveKnowledgeBasesForAgent(agent)
   const chunks: Array<RetrievedContextChunk> = []
   const files: KnowledgeBaseFile[] = []
+  let readyFileCount = 0
+  let returnedChunkCount = 0
+
+  if (knowledgeBases.length === 0) {
+    return buildResult({
+      chunks,
+      files,
+      knowledgeBaseCount: 0,
+      readyFileCount,
+      returnedChunkCount,
+      noResultReason: "no_knowledge_bases",
+    })
+  }
 
   for (const knowledgeBase of knowledgeBases) {
     const knowledgeBaseId = knowledgeBase._id
@@ -394,6 +454,7 @@ export const retrieveContextForAgent = async (
     const readyFiles = knowledgeBaseFiles.filter(
       file => file.status === KnowledgeBaseFileStatus.READY
     )
+    readyFileCount += readyFiles.length
     const readyFileSources = readyFiles
       .map(file => file.ragSourceId)
       .filter((id): id is string => !!id)
@@ -413,6 +474,7 @@ export const retrieveContextForAgent = async (
     assertKnowledgeBaseHasId(knowledgeBase)
     const processor = getProcessor(knowledgeBase)
     const returned = await processor.search(question)
+    returnedChunkCount += returned.length
 
     for (const chunk of returned) {
       if (!chunk.source) {
@@ -456,14 +518,29 @@ export const retrieveContextForAgent = async (
   }
 
   if (chunks.length === 0) {
-    return { text: "", chunks: [], sources: [] }
+    const noResultReason =
+      readyFileCount === 0
+        ? "no_ready_files"
+        : returnedChunkCount === 0
+          ? "provider_returned_no_chunks"
+          : "all_chunks_filtered"
+    return buildResult({
+      chunks,
+      files,
+      knowledgeBaseCount: knowledgeBases.length,
+      readyFileCount,
+      returnedChunkCount,
+      noResultReason,
+    })
   }
 
-  return {
-    text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
+  return buildResult({
     chunks,
-    sources: toSourceMetadata(chunks, files),
-  }
+    files,
+    knowledgeBaseCount: knowledgeBases.length,
+    readyFileCount,
+    returnedChunkCount,
+  })
 }
 
 const toSourceMetadata = (

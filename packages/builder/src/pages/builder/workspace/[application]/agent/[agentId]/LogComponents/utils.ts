@@ -1,5 +1,6 @@
 import dayjs, { type Dayjs } from "dayjs"
 import type {
+  AgentKnowledgeRetrievalDiagnostics,
   AgentLogEntry,
   AgentLogRequestError,
   AgentLogRequestDetail,
@@ -15,6 +16,47 @@ export interface StepFlow {
 export interface ParsedAssistantResponse {
   thinking: string
   response: string
+}
+
+export function parseKnowledgeRetrievalDiagnostics(
+  content: string
+): AgentKnowledgeRetrievalDiagnostics | undefined {
+  try {
+    const parsed = JSON.parse(content)
+    const diagnostics = parsed?.diagnostics
+    if (!diagnostics || typeof diagnostics !== "object") {
+      return undefined
+    }
+    if (typeof diagnostics.query !== "string") {
+      return undefined
+    }
+    if (!Array.isArray(diagnostics.sources)) {
+      return undefined
+    }
+
+    return diagnostics as AgentKnowledgeRetrievalDiagnostics
+  } catch (_error) {
+    return undefined
+  }
+}
+
+export function formatNoResultReason(reason?: string): string {
+  switch (reason) {
+    case "feature_disabled":
+      return "RAG feature disabled"
+    case "empty_question":
+      return "Empty query"
+    case "no_knowledge_bases":
+      return "No knowledge bases"
+    case "no_ready_files":
+      return "No ready files"
+    case "provider_returned_no_chunks":
+      return "Provider returned no chunks"
+    case "all_chunks_filtered":
+      return "All chunks filtered"
+    default:
+      return reason || "-"
+  }
 }
 
 export function formatLogDateForApi(

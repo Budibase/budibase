@@ -27,6 +27,8 @@ import {
   parseAssistantResponse,
   formatErrorDetail,
   formatStructuredContent,
+  parseKnowledgeRetrievalDiagnostics,
+  formatNoResultReason,
 } from "./utils"
 
 function makeEntry(overrides: Partial<AgentLogEntry> = {}): AgentLogEntry {
@@ -444,5 +446,63 @@ describe("formatStructuredContent", () => {
 
   it("returns raw content for invalid JSON starting with [ or {", () => {
     expect(formatStructuredContent("{not json}")).toBe("{not json}")
+  })
+})
+
+describe("parseKnowledgeRetrievalDiagnostics", () => {
+  it("returns diagnostics from a search_knowledge tool result", () => {
+    const result = parseKnowledgeRetrievalDiagnostics(
+      JSON.stringify({
+        context: "Policy context",
+        diagnostics: {
+          query: "What is policy?",
+          knowledgeBaseCount: 1,
+          totalFileCount: 2,
+          readyFileCount: 1,
+          skippedFileCount: 1,
+          returnedChunkCount: 3,
+          acceptedChunkCount: 2,
+          sources: [{ sourceId: "source_1", filename: "policy.md" }],
+          durationMs: 25,
+        },
+      })
+    )
+
+    expect(result).toMatchObject({
+      query: "What is policy?",
+      knowledgeBaseCount: 1,
+      totalFileCount: 2,
+      readyFileCount: 1,
+      skippedFileCount: 1,
+      returnedChunkCount: 3,
+      acceptedChunkCount: 2,
+      sources: [{ sourceId: "source_1", filename: "policy.md" }],
+      durationMs: 25,
+    })
+  })
+
+  it("returns undefined when diagnostics are absent", () => {
+    expect(parseKnowledgeRetrievalDiagnostics('{"context":"Policy"}')).toBe(
+      undefined
+    )
+  })
+
+  it("returns undefined for invalid JSON", () => {
+    expect(parseKnowledgeRetrievalDiagnostics("{not json}")).toBe(undefined)
+  })
+})
+
+describe("formatNoResultReason", () => {
+  it("formats known no-result reasons", () => {
+    expect(formatNoResultReason("all_chunks_filtered")).toBe(
+      "All chunks filtered"
+    )
+    expect(formatNoResultReason("provider_returned_no_chunks")).toBe(
+      "Provider returned no chunks"
+    )
+  })
+
+  it("falls back to the provided reason", () => {
+    expect(formatNoResultReason("custom_reason")).toBe("custom_reason")
   })
 })

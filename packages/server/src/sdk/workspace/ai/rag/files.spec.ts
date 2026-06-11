@@ -308,10 +308,22 @@ describe("rag files", () => {
 
       const result = await retrieveContextForAgent(agent, "What is Budibase?")
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         text: "",
         chunks: [],
         sources: [],
+        diagnostics: {
+          query: "What is Budibase?",
+          knowledgeBaseCount: 0,
+          totalFileCount: 0,
+          readyFileCount: 0,
+          skippedFileCount: 0,
+          returnedChunkCount: 0,
+          acceptedChunkCount: 0,
+          sources: [],
+          durationMs: expect.any(Number),
+          noResultReason: "no_knowledge_bases",
+        },
       })
       expect(mockKnowledgeBaseFind).not.toHaveBeenCalled()
       expect(mockProcessorSearch).not.toHaveBeenCalled()
@@ -325,10 +337,22 @@ describe("rag files", () => {
 
       const result = await retrieveContextForAgent(agent, "  ")
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         text: "",
         chunks: [],
         sources: [],
+        diagnostics: {
+          query: "",
+          knowledgeBaseCount: 0,
+          totalFileCount: 0,
+          readyFileCount: 0,
+          skippedFileCount: 0,
+          returnedChunkCount: 0,
+          acceptedChunkCount: 0,
+          sources: [],
+          durationMs: expect.any(Number),
+          noResultReason: "empty_question",
+        },
       })
     })
 
@@ -341,11 +365,62 @@ describe("rag files", () => {
 
       const result = await retrieveContextForAgent(agent, "What is Budibase?")
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         text: "",
         chunks: [],
         sources: [],
+        diagnostics: {
+          query: "What is Budibase?",
+          knowledgeBaseCount: 0,
+          totalFileCount: 0,
+          readyFileCount: 0,
+          skippedFileCount: 0,
+          returnedChunkCount: 0,
+          acceptedChunkCount: 0,
+          sources: [],
+          durationMs: expect.any(Number),
+          noResultReason: "no_knowledge_bases",
+        },
       })
+    })
+
+    it("returns diagnostics when no files are ready", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "policy.md",
+          objectStoreKey: "obj",
+          ragSourceId: "source-processing",
+          status: KnowledgeBaseFileStatus.PROCESSING,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+
+      const result = await retrieveContextForAgent(
+        defaultAgent,
+        "What is policy?"
+      )
+
+      expect(result).toMatchObject({
+        text: "",
+        chunks: [],
+        sources: [],
+        diagnostics: {
+          query: "What is policy?",
+          knowledgeBaseCount: 1,
+          totalFileCount: 1,
+          readyFileCount: 0,
+          skippedFileCount: 1,
+          returnedChunkCount: 0,
+          acceptedChunkCount: 0,
+          sources: [],
+          durationMs: expect.any(Number),
+          noResultReason: "no_ready_files",
+        },
+      })
+      expect(mockProcessorSearch).not.toHaveBeenCalled()
     })
 
     it("maps chunks to source metadata", async () => {
@@ -387,6 +462,23 @@ describe("rag files", () => {
           filename: "policy.md",
         },
       ])
+      expect(result.diagnostics).toMatchObject({
+        query: "What is the policy?",
+        knowledgeBaseCount: 1,
+        totalFileCount: 1,
+        readyFileCount: 1,
+        skippedFileCount: 0,
+        returnedChunkCount: 1,
+        acceptedChunkCount: 1,
+        sources: [
+          {
+            sourceId: "source-1",
+            fileId: "file_1",
+            filename: "policy.md",
+          },
+        ],
+        durationMs: expect.any(Number),
+      })
     })
 
     it("returns exact tabular row matches and continues searching other sources", async () => {
@@ -668,10 +760,22 @@ describe("rag files", () => {
         "What is policy?"
       )
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         text: "",
         chunks: [],
         sources: [],
+        diagnostics: {
+          query: "What is policy?",
+          knowledgeBaseCount: 1,
+          totalFileCount: 3,
+          readyFileCount: 2,
+          skippedFileCount: 1,
+          returnedChunkCount: 0,
+          acceptedChunkCount: 0,
+          sources: [],
+          durationMs: expect.any(Number),
+          noResultReason: "provider_returned_no_chunks",
+        },
       })
       expect(mockProcessorSearch).toHaveBeenCalledWith("What is policy?")
     })
@@ -852,10 +956,22 @@ describe("rag files", () => {
         "What is policy?"
       )
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         text: "",
         chunks: [],
         sources: [],
+        diagnostics: {
+          query: "What is policy?",
+          knowledgeBaseCount: 1,
+          totalFileCount: 2,
+          readyFileCount: 2,
+          skippedFileCount: 0,
+          returnedChunkCount: 1,
+          acceptedChunkCount: 0,
+          sources: [],
+          durationMs: expect.any(Number),
+          noResultReason: "all_chunks_filtered",
+        },
       })
     })
   })
