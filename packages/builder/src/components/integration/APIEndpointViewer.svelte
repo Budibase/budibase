@@ -97,6 +97,7 @@
   export let datasourceId: string | undefined = undefined
   export let restTemplateId: string | undefined = undefined
   export let saveAndClose: boolean = false
+  export let redirectNewQueryOnSave: boolean = true
   export let settingsLocked: boolean = false
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
@@ -603,7 +604,7 @@
   }
 
   // SAVE/PREVIEW
-  const saveQuery = async (redirectIfNew = true) => {
+  const saveQuery = async (redirectIfNew = redirectNewQueryOnSave) => {
     if (!builtQuery || !datasource) {
       return
     }
@@ -655,7 +656,7 @@
         return { ok: true }
       }
 
-      if (isNew && saveAndClose && _id) {
+      if (saveAndClose && _id) {
         dispatch("savedQuery", { queryId: _id })
         workspaceConnections.discardDraft()
         return { ok: true }

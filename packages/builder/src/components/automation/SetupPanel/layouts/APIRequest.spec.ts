@@ -230,6 +230,50 @@ describe("APIRequest", () => {
     })
   })
 
+  it("keeps existing request saves inside automations and closes through the saved query handler", async () => {
+    testState.inputData = {
+      restTemplateId: "github",
+      query: { queryId: "github_query" },
+    }
+    testState.queryStore.set({
+      list: [
+        {
+          _id: "github_query",
+          name: "GitHub repos",
+          datasourceId: "github_ds",
+          queryVerb: "read",
+        },
+      ],
+    })
+
+    render(APIRequest, {
+      props: {
+        block: { id: "step_1", inputs: {} } as any,
+        context: undefined,
+      },
+    })
+
+    await fireEvent.click(screen.getByText("Open API explorer"))
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("api-endpoint-viewer-save-and-close").textContent
+      ).toBe("true")
+      expect(
+        screen.getByTestId("api-endpoint-viewer-redirect-new-query").textContent
+      ).toBe("false")
+    })
+
+    await fireEvent.click(screen.getByText("Save request"))
+
+    await waitFor(() => {
+      expect(automationStore.actions.requestUpdate).toHaveBeenCalledWith(
+        { query: { queryId: "saved_query" } },
+        { id: "step_1", inputs: {} }
+      )
+    })
+  })
+
   it("opens a pending connector template when the selected block changes", async () => {
     vi.mocked(
       automationStore.actions.consumeApiRequestTemplate

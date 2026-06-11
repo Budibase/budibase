@@ -1,8 +1,9 @@
 import { it, expect, describe, vi } from "vitest"
 import { writable } from "svelte/store"
-import { render, waitFor, fireEvent } from "@testing-library/svelte"
+import { render, waitFor, fireEvent, screen } from "@testing-library/svelte"
 import { notifications } from "@budibase/bbui"
 import APIEndpointViewer from "./APIEndpointViewer.svelte"
+import APIEndpointViewerEventHarness from "@/test/APIEndpointViewerEventHarness.svelte"
 import { API } from "@/api"
 import * as queryModule from "./query"
 import {
@@ -22,6 +23,11 @@ if (!Element.prototype.animate) {
 // bbui Popover mounts its content into .spectrum via svelte-portal.
 // Ensure the element exists before each test so portal renders don't throw.
 beforeEach(() => {
+  if (!document.querySelector(".modal-container")) {
+    const el = document.createElement("div")
+    el.classList.add("modal-container")
+    document.body.appendChild(el)
+  }
   if (!document.querySelector(".spectrum")) {
     const el = document.createElement("div")
     el.classList.add("spectrum")
@@ -1204,6 +1210,38 @@ describe("API Endpoint Viewer", () => {
       })
     })
 
+    it("emits savedQuery for an existing query when saveAndClose is enabled", async () => {
+      vi.mocked(API).saveQuery.mockResolvedValue({
+        ...DIRTY_QUERY,
+        _rev: "2-updated",
+      })
+      const { container } = render(APIEndpointViewerEventHarness, {
+        props: {
+          queryId: QUERY_ID,
+          saveAndClose: true,
+        },
+      })
+
+      await waitFor(() =>
+        expect(container.querySelector(".query-name-input")).not.toBeNull()
+      )
+      const nameEl = container.querySelector(
+        ".query-name-input"
+      ) as HTMLInputElement
+      await fireEvent.input(nameEl, { target: { value: "New name" } })
+      await fireEvent.blur(nameEl)
+      const saveBtn = await waitFor(() => {
+        const btn = getSaveButton(container)
+        expect(btn?.classList.contains("is-disabled")).toBe(false)
+        return btn!
+      })
+      await fireEvent.click(saveBtn)
+
+      await waitFor(() => {
+        expect(screen.getByTestId("saved-query-id").textContent).toBe(QUERY_ID)
+      })
+    })
+
     it("shows an error notification when the save fails", async () => {
       vi.mocked(API).saveQuery.mockRejectedValue(new Error("Save failed"))
       const { container } = setupDOM({ queryId: QUERY_ID })
@@ -2100,6 +2138,7 @@ describe("API Endpoint Viewer", () => {
         expect(saved?.fields?.path).toBe("https://api.example.com/items")
       })
     })
+
   })
 
   // A shared collection (e.g. HubSpot) stores one datasource for all its child

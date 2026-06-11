@@ -217,9 +217,12 @@
               datasourceId={dataSource?._id}
               queryId={query?._id}
               {restTemplateId}
+              saveAndClose={true}
+              redirectNewQueryOnSave={false}
               settingsLocked={true}
               connectionPopoverPortalTarget=".spectrum"
               connectionPopoverZIndex={9999}
+              on:savedQuery={handleSavedQuery}
             />
           {/if}
         </div>
