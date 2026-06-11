@@ -2138,7 +2138,6 @@ describe("API Endpoint Viewer", () => {
         expect(saved?.fields?.path).toBe("https://api.example.com/items")
       })
     })
-
   })
 
   // A shared collection (e.g. HubSpot) stores one datasource for all its child
