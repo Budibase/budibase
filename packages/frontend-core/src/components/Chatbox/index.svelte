@@ -85,9 +85,15 @@
   }
 
   const openRagSource = async (
+    message: UIMessage<AgentMessageMetadata>,
     source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
   ) => {
-    if (!allowKnowledgeSourceDownload) {
+    const selectedOperationId = message.metadata?.selectedOperationId
+    const messageAllowsDownload =
+      message.metadata?.allowKnowledgeSourceDownload ??
+      allowKnowledgeSourceDownload
+
+    if (!messageAllowsDownload) {
       notifications.error("Source downloads are disabled for this agent")
       return
     }
@@ -102,14 +108,17 @@
               await API.fetchChatAppAgentFileUrl(
                 chat.chatAppId,
                 chat.agentId,
-                source.fileId
+                source.fileId,
+                selectedOperationId
               )
             ).url
-          : isAgentPreviewChat && chat?.agentId && operationId
+          : isAgentPreviewChat &&
+              chat?.agentId &&
+              (selectedOperationId || operationId)
             ? (
                 await API.fetchOperationFileUrl(
                   chat.agentId,
-                  operationId,
+                  selectedOperationId || operationId!,
                   source.fileId
                 )
               ).url
@@ -255,6 +264,7 @@
             _id: resolvedConversationId || chat?._id,
             chatAppId,
             agentId: chat?.agentId,
+            operationId: chat?.operationId,
             transient: !persistConversation,
             isPreview: isAgentPreviewChat,
             sessionId: stableSessionId,
@@ -785,7 +795,7 @@
                         <button
                           type="button"
                           class="source-link"
-                          onclick={() => openRagSource(source)}
+                          onclick={() => openRagSource(message, source)}
                         >
                           {source.filename}
                         </button>
