@@ -1,13 +1,17 @@
 import { ai, quotas } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import {
   ActionType,
   Agent,
+  AgentOperation,
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
 } from "@budibase/types"
 import {
+  Output,
   extractReasoningMiddleware,
+  jsonSchema,
   stepCountIs,
   ToolLoopAgent,
   type LanguageModelUsage,
@@ -25,6 +29,7 @@ import {
 import { updatePendingToolCalls } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
+import { getLiveOperations } from "./utils"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
 interface PrepareAgentChatRunParams {
@@ -42,6 +47,7 @@ interface PrepareAgentChatRunParams {
 
 export interface AgentChatRun {
   latestQuestion: string
+  selectedOperation?: AgentOperation
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -60,6 +66,90 @@ export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
   onToolCalls?: (toolNames: string[]) => void
   pendingToolCalls?: Set<string>
+}
+
+interface OperationRoute {
+  operationId?: string
+  reason?: string
+}
+
+const OPERATION_ROUTER_SCHEMA =
+  helpers.structuredOutput.normalizeSchemaForStructuredOutput({
+    type: "object",
+    properties: {
+      operationId: {
+        anyOf: [{ type: "string" }, { type: "null" }],
+      },
+      reason: { type: "string" },
+    },
+    required: ["operationId", "reason"],
+  })
+
+const buildOperationRoutingInstructions = (
+  operations: AgentOperation[]
+) => `You route a user request to one Budibase agent operation.
+
+Choose exactly one live operation only when it is clearly the best match for the latest user request.
+If the request does not fit any operation, return operationId as null.
+Be conservative. If the request is ambiguous, too broad, or unrelated, return null.
+Use the operation name, instructions, tools, and knowledge setup as signals.
+Return only the structured output.
+
+Live operations:
+${operations
+  .map(
+    operation => `- id: ${operation.id}
+  name: ${operation.name}
+  tools: ${(operation.enabledTools || []).length}
+  hasKnowledge: ${operation.knowledgeBases?.length ? "yes" : "no"}
+  instructions:
+  ${(operation.promptInstructions || "None").trim() || "None"}`
+  )
+  .join("\n")}`
+
+const chooseOperationForQuestion = async ({
+  agent,
+  latestQuestion,
+  llm,
+}: {
+  agent: Agent
+  latestQuestion: string
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+}): Promise<AgentOperation | undefined> => {
+  const liveOperations = getLiveOperations(agent)
+  if (liveOperations.length === 0) {
+    return undefined
+  }
+  if (liveOperations.length === 1) {
+    return liveOperations[0]
+  }
+  if (!latestQuestion.trim()) {
+    return undefined
+  }
+
+  const router = new ToolLoopAgent({
+    model: wrapLanguageModel({
+      model: llm.chat,
+      middleware: extractReasoningMiddleware({
+        tagName: "think",
+      }),
+    }),
+    instructions: buildOperationRoutingInstructions(liveOperations),
+    stopWhen: stepCountIs(1),
+    providerOptions: llm.providerOptions?.(false),
+    output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
+  })
+
+  const result = await router.stream({
+    prompt: latestQuestion,
+  })
+
+  const route = (await result.output) as OperationRoute
+  if (!route?.operationId) {
+    return undefined
+  }
+
+  return liveOperations.find(operation => operation.id === route.operationId)
 }
 
 export const prepareAgentChatRun = async ({
@@ -84,11 +174,7 @@ export const prepareAgentChatRun = async ({
     startedAt,
   })
 
-  const [promptAndTools, llm, modelMessages] = await Promise.all([
-    sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(user),
-      includeGoal: false,
-    }),
+  const [llm, modelMessages] = await Promise.all([
     sdk.ai.llm.createLLM(
       aiConfigId ?? agent.aiconfig,
       sessionId,
@@ -97,6 +183,19 @@ export const prepareAgentChatRun = async ({
     ),
     providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
   ])
+  const selectedOperation = await chooseOperationForQuestion({
+    agent,
+    latestQuestion,
+    llm,
+  })
+  const promptAndTools = await sdk.ai.agents.buildPromptAndTools(
+    agent,
+    selectedOperation,
+    {
+      baseSystemPrompt: ai.agentSystemPrompt(user),
+      includeGoal: false,
+    }
+  )
 
   const tools = promptAndTools.tools
   const retrievedKnowledgeSourceById = new Map<
@@ -146,6 +245,7 @@ export const prepareAgentChatRun = async ({
 
   return {
     latestQuestion,
+    selectedOperation,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
