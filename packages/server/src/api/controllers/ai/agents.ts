@@ -324,7 +324,7 @@ export async function updateAgent(
     telegramIntegration: body.telegramIntegration,
     operations: body.operations?.map(operation => {
       const existingOperation = existing.operations?.find(
-        o => o.id == operation.id
+        o => o.id === operation.id
       )
       return {
         id: operation.id,

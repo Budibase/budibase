@@ -471,35 +471,48 @@ describe("agent files", () => {
     )
   })
 
-  it("rejects changing knowledge sources via generic agent update", async () => {
+  it("ignores knowledge source changes via generic agent update", async () => {
     const created = await config.api.agent.create({
       name: "SharePoint Agent Update Guard",
       aiconfig: "default",
       operations: [operation],
     })
 
-    await config.api.agent.update(
-      {
-        ...created,
+    await setSharePointSourceInAgent(created._id!, ["site-1"])
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const workspaceDb = context.getWorkspaceDB()
+      const current = await workspaceDb.tryGet<Agent>(created._id!)
+      expect(current).toBeDefined()
+
+      const updated = await config.api.agent.update({
+        ...current!,
+        name: "SharePoint Agent Update Guard 2",
         knowledgeSources: [
           {
             id: "sharepoint_site_test",
             type: AgentKnowledgeSourceType.SHAREPOINT,
             config: {
               site: {
-                id: "site-1",
+                id: "site-2",
               },
             },
           },
         ],
-      } as any,
-      {
-        status: 400,
-        body: {
-          message: "knowledgeSources cannot be updated from this endpoint",
-        },
-      }
-    )
+      } as any)
+
+      expect(updated.name).toBe("SharePoint Agent Update Guard 2")
+
+      const saved = await workspaceDb.tryGet<Agent>(created._id!)
+      const siteIds = (saved?.operations || [])
+        .flatMap(
+          (operation: AgentOperation) => operation.knowledgeSources || []
+        )
+        .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
+        .map(source => source.config.site.id)
+        .filter((id): id is string => !!id)
+      expect(siteIds).toEqual(["site-1"])
+    })
   })
 
   it("allows generic agent update when knowledge sources are unchanged", async () => {
