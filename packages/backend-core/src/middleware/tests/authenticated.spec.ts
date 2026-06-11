@@ -14,9 +14,9 @@ jest.mock("dd-trace", () => ({ setUser: jest.fn() }))
 
 import * as utils from "../../utils"
 
-const getCookieMock = utils.getCookie as jest.Mock
-const openJwtMock = utils.openJwt as jest.Mock
-const clearCookieMock = utils.clearCookie as jest.Mock
+const getCookieMock = jest.mocked(utils.getCookie)
+const openJwtMock = jest.mocked(utils.openJwt)
+const clearCookieMock = jest.mocked(utils.clearCookie)
 
 describe("authenticated middleware — JWT expiration guard", () => {
   let ctx: ReturnType<typeof structures.koa.newContext>
