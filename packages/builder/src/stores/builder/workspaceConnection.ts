@@ -19,7 +19,7 @@ export interface DraftConnection {
   datasource: Partial<Datasource>
   query: Partial<Query>
   key: number
-  templateId?: string
+  templateId?: RestTemplateId
   dirty: boolean
 }
 
@@ -27,7 +27,7 @@ export interface DraftDatasource {
   _id: string
   name: string
   source: string
-  restTemplateId?: string
+  restTemplateId?: RestTemplateId
   selected: boolean
   containsSelected: boolean
   open: boolean

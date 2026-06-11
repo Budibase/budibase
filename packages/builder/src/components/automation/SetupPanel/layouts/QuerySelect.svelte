@@ -20,13 +20,13 @@
     customQueryIconColor,
     customQueryIconText,
   } from "@/helpers/data/utils"
-  import type { Query, Datasource } from "@budibase/types"
+  import type { Query, Datasource, RestTemplateId } from "@budibase/types"
 
   interface Props {
     value?: string
     disabled?: boolean
     fullWidthDropdown?: boolean
-    restTemplateId?: string
+    restTemplateId?: RestTemplateId
     onchange?: (_: Query) => void
     onaddApi?: () => void
   }
@@ -49,7 +49,7 @@
       .filter((ds): ds is Datasource => ds.source === "REST")
       .filter(ds =>
         restTemplateId
-          ? datasourceMatchesRestTemplate(ds, restTemplateId as any)
+          ? datasourceMatchesRestTemplate(ds, restTemplateId)
           : true
       )
       .sort((a, b) => (a.name || "").localeCompare(b.name || ""))

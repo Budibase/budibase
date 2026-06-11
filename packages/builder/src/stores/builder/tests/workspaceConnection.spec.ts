@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { get } from "svelte/store"
 import { SourceName } from "@budibase/types"
-import type { Datasource } from "@budibase/types"
+import type {
+  Datasource,
+  Query,
+  RestTemplate,
+  RestTemplateId,
+} from "@budibase/types"
 
 const mockStores = vi.hoisted(() => {
   const createStore = <T>(initial: T) => {
@@ -26,7 +31,7 @@ const mockStores = vi.hoisted(() => {
 
   return {
     datasourceStore: createStore({ list: [] as Datasource[] }),
-    queryStore: createStore({ list: [] }),
+    queryStore: createStore({ list: [] as Query[] }),
     oauthStore: createStore({ configs: [] }),
   }
 })
@@ -44,11 +49,12 @@ vi.mock("@/stores/builder/oauth2", () => ({
 }))
 
 vi.mock("@/stores/builder/restTemplates", () => {
-  const templates: Record<string, { id: string; name: string; icon: string }> =
-    {
-      bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
-      github: { id: "github", name: "GitHub", icon: "github.svg" },
-    }
+  const templates: Partial<
+    Record<RestTemplateId, Pick<RestTemplate, "id" | "name" | "icon">>
+  > = {
+    bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+    github: { id: "github", name: "GitHub", icon: "github.svg" },
+  }
 
   return {
     restTemplates: {
@@ -57,7 +63,7 @@ vi.mock("@/stores/builder/restTemplates", () => {
           return undefined
         }
         return (
-          templates[nameOrId] ||
+          templates[nameOrId as RestTemplateId] ||
           Object.values(templates).find(t => t.name === nameOrId)
         )
       }),
@@ -90,17 +96,17 @@ describe("WorkspaceConnectionStore", () => {
         makeDatasource({
           _id: "bamboohr_ds",
           name: "BambooHR",
-          restTemplateId: "bamboohr" as any,
+          restTemplateId: "bamboohr",
         }),
         makeDatasource({
           _id: "github_ds",
           name: "GitHub",
-          restTemplateId: "github" as any,
+          restTemplateId: "github",
         }),
       ],
     })
 
-    workspaceConnections.startDraft("github" as any)
+    workspaceConnections.startDraft("github")
 
     expect(get(workspaceConnections).draft?.query.datasourceId).toBe(
       "github_ds"
@@ -115,17 +121,17 @@ describe("WorkspaceConnectionStore", () => {
         makeDatasource({
           _id: "github_ds",
           name: "GitHub",
-          restTemplateId: "github" as any,
+          restTemplateId: "github",
         }),
         makeDatasource({
           _id: "github_ds_2",
           name: "GitHub 2",
-          restTemplateId: "github" as any,
+          restTemplateId: "github",
         }),
       ],
     })
 
-    workspaceConnections.startDraft("github" as any)
+    workspaceConnections.startDraft("github")
 
     expect(get(workspaceConnections).draft?.query.datasourceId).toBeUndefined()
   })
@@ -138,7 +144,7 @@ describe("WorkspaceConnectionStore", () => {
         makeDatasource({
           _id: "github_ds",
           name: "GitHub",
-          restTemplate: "GitHub" as any,
+          restTemplate: "GitHub",
         }),
       ],
     })

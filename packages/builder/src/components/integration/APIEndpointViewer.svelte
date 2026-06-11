@@ -95,7 +95,7 @@
 
   export let queryId: string | undefined = undefined
   export let datasourceId: string | undefined = undefined
-  export let restTemplateId: string | undefined = undefined
+  export let restTemplateId: RestTemplateId | undefined = undefined
   export let saveAndClose: boolean = false
   export let redirectNewQueryOnSave: boolean = true
   export let settingsLocked: boolean = false
@@ -735,7 +735,8 @@
       const ds = $datasources.list.find(d => d._id === newDatasourceId) as
         | Datasource
         | undefined
-      const templateId = ds?.restTemplateId as string | undefined
+      const templateId =
+        ds?.restTemplateId || restTemplates.get(ds?.restTemplate)?.id
       workspaceConnections.updateDraft({
         templateId,
         query: {

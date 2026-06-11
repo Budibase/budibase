@@ -1,13 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
-import type { Datasource } from "@budibase/types"
+import {
+  AutomationActionStepId,
+  AutomationStepType,
+  SourceName,
+} from "@budibase/types"
+import type {
+  APIRequestStep,
+  Datasource,
+  Query,
+  RestTemplateId,
+} from "@budibase/types"
 import APIRequest from "./APIRequest.svelte"
 import { automationStore } from "@/stores/builder"
 import { workspaceConnections } from "@/stores/builder/workspaceConnection"
 
 if (!Element.prototype.animate) {
   Element.prototype.animate = () =>
-    ({ onfinish: null, cancel: () => {}, finished: Promise.resolve() }) as any
+    Object.assign(Object.create(null), {
+      onfinish: null,
+      cancel: () => {},
+      finished: Promise.resolve(),
+    }) as Animation
 }
 
 const testState = vi.hoisted(() => {
@@ -28,34 +42,10 @@ const testState = vi.hoisted(() => {
     return store
   }
 
-  const bamboohrDatasource: Datasource = {
-    _id: "bamboohr_ds",
-    _rev: "1",
-    type: "datasource",
-    name: "BambooHR",
-    source: "REST" as any,
-    restTemplateId: "bamboohr" as any,
-    config: {},
-  }
-
-  const githubDatasource: Datasource = {
-    _id: "github_ds",
-    _rev: "1",
-    type: "datasource",
-    name: "GitHub",
-    source: "REST" as any,
-    restTemplateId: "github" as any,
-    config: {},
-  }
-
   return {
-    bamboohrDatasource,
-    githubDatasource,
     inputData: {} as Record<string, any>,
-    datasourceStore: createStore({
-      list: [bamboohrDatasource, githubDatasource],
-    }),
-    queryStore: createStore({ list: [] as any[] }),
+    datasourceStore: createStore({ list: [] as Datasource[] }),
+    queryStore: createStore({ list: [] as Query[] }),
     workspaceConnectionStore: createStore({
       draft: null,
       list: [],
@@ -112,7 +102,54 @@ vi.mock("@/components/integration/query", () => ({
   buildQueryBindings: vi.fn(() => ({ mergedBindings: [] })),
 }))
 
+const bamboohrDatasource: Datasource = {
+  _id: "bamboohr_ds",
+  _rev: "1",
+  type: "datasource",
+  name: "BambooHR",
+  source: SourceName.REST,
+  restTemplateId: "bamboohr",
+  config: {},
+}
+
+const githubDatasource: Datasource = {
+  _id: "github_ds",
+  _rev: "1",
+  type: "datasource",
+  name: "GitHub",
+  source: SourceName.REST,
+  restTemplateId: "github",
+  config: {},
+}
+
+const makeQuery = (
+  query: Pick<Query, "_id" | "name" | "datasourceId">
+): Query => ({
+  ...query,
+  queryVerb: "read",
+  parameters: [],
+  fields: {},
+  transformer: "",
+  schema: {},
+  readable: true,
+})
+
 describe("APIRequest", () => {
+  const makeBlock = (id: string): APIRequestStep => ({
+    id,
+    stepId: AutomationActionStepId.API_REQUEST,
+    name: "API request",
+    tagline: "",
+    icon: "",
+    description: "",
+    type: AutomationStepType.ACTION,
+    schema: {
+      inputs: { properties: {} },
+      outputs: { properties: {} },
+    },
+    inputs: { query: { queryId: "" } },
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     if (!document.querySelector(".modal-container")) {
@@ -131,7 +168,7 @@ describe("APIRequest", () => {
       selectedConnectionId: null,
     })
     testState.datasourceStore.set({
-      list: [testState.bamboohrDatasource, testState.githubDatasource],
+      list: [bamboohrDatasource, githubDatasource],
     })
     testState.queryStore.set({ list: [] })
     testState.inputData = {}
@@ -140,7 +177,7 @@ describe("APIRequest", () => {
   it("does not pass the first REST datasource into the create request explorer when no query is selected", async () => {
     render(APIRequest, {
       props: {
-        block: { id: "step_1", inputs: {} } as any,
+        block: makeBlock("step_1"),
         context: undefined,
       },
     })
@@ -158,24 +195,22 @@ describe("APIRequest", () => {
     testState.inputData = { restTemplateId: "github" }
     testState.queryStore.set({
       list: [
-        {
+        makeQuery({
           _id: "bamboohr_query",
           name: "BambooHR employees",
           datasourceId: "bamboohr_ds",
-          queryVerb: "read",
-        },
-        {
+        }),
+        makeQuery({
           _id: "github_query",
           name: "GitHub repos",
           datasourceId: "github_ds",
-          queryVerb: "read",
-        },
+        }),
       ],
     })
 
     render(APIRequest, {
       props: {
-        block: { id: "step_1", inputs: {} } as any,
+        block: makeBlock("step_1"),
         context: undefined,
       },
     })
@@ -196,18 +231,17 @@ describe("APIRequest", () => {
     }
     testState.queryStore.set({
       list: [
-        {
+        makeQuery({
           _id: "github_query",
           name: "GitHub repos",
           datasourceId: "github_ds",
-          queryVerb: "read",
-        },
+        }),
       ],
     })
 
     render(APIRequest, {
       props: {
-        block: { id: "step_1", inputs: {} } as any,
+        block: makeBlock("step_1"),
         context: undefined,
       },
     })
@@ -237,18 +271,17 @@ describe("APIRequest", () => {
     }
     testState.queryStore.set({
       list: [
-        {
+        makeQuery({
           _id: "github_query",
           name: "GitHub repos",
           datasourceId: "github_ds",
-          queryVerb: "read",
-        },
+        }),
       ],
     })
 
     render(APIRequest, {
       props: {
-        block: { id: "step_1", inputs: {} } as any,
+        block: makeBlock("step_1"),
         context: undefined,
       },
     })
@@ -269,7 +302,10 @@ describe("APIRequest", () => {
     await waitFor(() => {
       expect(automationStore.actions.requestUpdate).toHaveBeenCalledWith(
         { query: { queryId: "saved_query" } },
-        { id: "step_1", inputs: {} }
+        expect.objectContaining({
+          id: "step_1",
+          stepId: AutomationActionStepId.API_REQUEST,
+        })
       )
     })
   })
@@ -278,18 +314,18 @@ describe("APIRequest", () => {
     vi.mocked(
       automationStore.actions.consumeApiRequestTemplate
     ).mockImplementation((blockId: string) =>
-      blockId === "step_2" ? ("github" as any) : undefined
+      blockId === "step_2" ? ("github" satisfies RestTemplateId) : undefined
     )
 
     const { rerender } = render(APIRequest, {
       props: {
-        block: { id: "step_1", inputs: {} } as any,
+        block: makeBlock("step_1"),
         context: undefined,
       },
     })
 
     await rerender({
-      block: { id: "step_2", inputs: {} } as any,
+      block: makeBlock("step_2"),
       context: undefined,
     })
 
@@ -302,22 +338,21 @@ describe("APIRequest", () => {
     vi.mocked(
       automationStore.actions.consumeApiRequestTemplate
     ).mockImplementation((blockId: string) =>
-      blockId === "step_1" ? ("github" as any) : undefined
+      blockId === "step_1" ? ("github" satisfies RestTemplateId) : undefined
     )
     testState.queryStore.set({
       list: [
-        {
+        makeQuery({
           _id: "github_query",
           name: "GitHub repos",
           datasourceId: "github_ds",
-          queryVerb: "read",
-        },
+        }),
       ],
     })
 
     render(APIRequest, {
       props: {
-        block: { id: "step_1", inputs: {} } as any,
+        block: makeBlock("step_1"),
         context: undefined,
       },
     })

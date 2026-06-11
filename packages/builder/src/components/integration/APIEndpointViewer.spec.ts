@@ -11,6 +11,8 @@ import {
   SourceName,
   type Datasource,
   type Query,
+  type RestTemplate,
+  type RestTemplateId,
   type UIInternalDatasource,
 } from "@budibase/types"
 
@@ -223,6 +225,35 @@ import { bb } from "@/stores/bb"
 
 const REST_DS_ID = "datasource_c190e3055ae643b4b3bb66ee15ad12c9"
 const REST_DS_ID_2 = "datasource_aaaabbbbccccdddd1111222233334444"
+
+const mockRestTemplates = (
+  templates: Partial<
+    Record<RestTemplateId, Pick<RestTemplate, "id" | "name" | "icon">>
+  >
+) => {
+  const fullTemplates = Object.fromEntries(
+    Object.entries(templates).map(([id, template]) => [
+      id,
+      {
+        description: "",
+        operationsCount: 0,
+        ...template,
+      },
+    ])
+  ) as Partial<Record<RestTemplateId, RestTemplate>>
+
+  vi.mocked(restTemplates.get).mockImplementation((templateId?: string) => {
+    if (!templateId) {
+      return undefined
+    }
+    return fullTemplates[templateId as RestTemplateId]
+  })
+  restTemplates.flatTemplates.splice(
+    0,
+    restTemplates.flatTemplates.length,
+    ...Object.values(fullTemplates)
+  )
+}
 const QUERY_ID = "query_abc123"
 
 const REST_DS: Datasource = {
@@ -421,27 +452,16 @@ describe("API Endpoint Viewer", () => {
     })
 
     it("resets stale unsaved query state when switching connector drafts", async () => {
-      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
-        const templates: Record<string, any> = {
-          bamboohr: {
-            id: "bamboohr",
-            name: "BambooHR",
-            icon: "bamboohr.svg",
-          },
-          github: {
-            id: "github",
-            name: "GitHub",
-            icon: "github.svg",
-          },
-        }
-        return templateId ? templates[templateId] : undefined
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
       })
 
       const bamboohrDatasource: Datasource = {
         ...REST_DS,
         _id: "bamboohr_ds",
         name: "BambooHR",
-        restTemplateId: "bamboohr" as any,
+        restTemplateId: "bamboohr",
         config: {
           ...REST_DS.config,
           url: "https://{{companyDomain}}.bamboohr.com",
@@ -451,7 +471,7 @@ describe("API Endpoint Viewer", () => {
         ...REST_DS_2_WITH_URL,
         _id: "github_ds",
         name: "GitHub",
-        restTemplateId: "github" as any,
+        restTemplateId: "github",
         config: {
           ...REST_DS_2_WITH_URL.config,
           url: "https://api.github.com",
@@ -459,7 +479,7 @@ describe("API Endpoint Viewer", () => {
       }
       await setupTwoDatasources(bamboohrDatasource, githubDatasource)
 
-      workspaceConnections.startDraft("bamboohr" as any)
+      workspaceConnections.startDraft("bamboohr")
       const { container } = setupDOM({ saveAndClose: true })
 
       await waitFor(() => {
@@ -471,7 +491,7 @@ describe("API Endpoint Viewer", () => {
         )
       })
 
-      workspaceConnections.startDraft("github" as any)
+      workspaceConnections.startDraft("github")
 
       await waitFor(() => {
         const selectedConnection =
@@ -485,20 +505,9 @@ describe("API Endpoint Viewer", () => {
     })
 
     it("filters connection selection to the connector template for connector drafts", async () => {
-      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
-        const templates: Record<string, any> = {
-          bamboohr: {
-            id: "bamboohr",
-            name: "BambooHR",
-            icon: "bamboohr.svg",
-          },
-          github: {
-            id: "github",
-            name: "GitHub",
-            icon: "github.svg",
-          },
-        }
-        return templateId ? templates[templateId] : undefined
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
       })
 
       const internalDs: UIInternalDatasource = {
@@ -513,19 +522,19 @@ describe("API Endpoint Viewer", () => {
         ...REST_DS,
         _id: "bamboohr_ds",
         name: "BambooHR",
-        restTemplateId: "bamboohr" as any,
+        restTemplateId: "bamboohr",
       }
       const githubDatasource: Datasource = {
         ...REST_DS_2_WITH_URL,
         _id: "github_ds",
         name: "GitHub",
-        restTemplateId: "github" as any,
+        restTemplateId: "github",
       }
       const githubDatasource2: Datasource = {
         ...REST_DS_2_WITH_URL,
         _id: "github_ds_2",
         name: "GitHub 2",
-        restTemplateId: "github" as any,
+        restTemplateId: "github",
       }
       vi.mocked(API).getDatasources.mockResolvedValue([
         internalDs,
@@ -535,7 +544,7 @@ describe("API Endpoint Viewer", () => {
       ] as Datasource[])
       await datasources.init()
 
-      workspaceConnections.startDraft("github" as any)
+      workspaceConnections.startDraft("github")
       const { baseElement } = setupDOM({ saveAndClose: true })
 
       await waitFor(() => {
@@ -546,26 +555,19 @@ describe("API Endpoint Viewer", () => {
     })
 
     it("does not automatically open the connection menu when a connector draft selects a connection", async () => {
-      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
-        const templates: Record<string, any> = {
-          bamboohr: {
-            id: "bamboohr",
-            name: "BambooHR",
-            icon: "bamboohr.svg",
-          },
-        }
-        return templateId ? templates[templateId] : undefined
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
       })
 
       const bamboohrDatasource: Datasource = {
         ...REST_DS,
         _id: "bamboohr_ds",
         name: "BambooHR",
-        restTemplateId: "bamboohr" as any,
+        restTemplateId: "bamboohr",
       }
       await setupDatasources(bamboohrDatasource)
 
-      workspaceConnections.startDraft("bamboohr" as any)
+      workspaceConnections.startDraft("bamboohr")
       const { container, baseElement } = setupDOM({ saveAndClose: true })
 
       await waitFor(() => {
@@ -580,25 +582,18 @@ describe("API Endpoint Viewer", () => {
     })
 
     it("selects the only matching connector connection when datasources load after the draft starts", async () => {
-      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
-        const templates: Record<string, any> = {
-          bamboohr: {
-            id: "bamboohr",
-            name: "BambooHR",
-            icon: "bamboohr.svg",
-          },
-        }
-        return templateId ? templates[templateId] : undefined
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
       })
 
       const bamboohrDatasource: Datasource = {
         ...REST_DS,
         _id: "bamboohr_ds",
         name: "BambooHR",
-        restTemplateId: "bamboohr" as any,
+        restTemplateId: "bamboohr",
       }
 
-      workspaceConnections.startDraft("bamboohr" as any)
+      workspaceConnections.startDraft("bamboohr")
       const { container, baseElement } = setupDOM({ saveAndClose: true })
       await setupDatasources(bamboohrDatasource)
 
@@ -614,22 +609,15 @@ describe("API Endpoint Viewer", () => {
     })
 
     it("selects the only matching connection when opened for a connector template without a draft", async () => {
-      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
-        const templates: Record<string, any> = {
-          bamboohr: {
-            id: "bamboohr",
-            name: "BambooHR",
-            icon: "bamboohr.svg",
-          },
-        }
-        return templateId ? templates[templateId] : undefined
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
       })
 
       const bamboohrDatasource: Datasource = {
         ...REST_DS,
         _id: "bamboohr_ds",
         name: "BambooHR",
-        restTemplateId: "bamboohr" as any,
+        restTemplateId: "bamboohr",
       }
       await setupDatasources(bamboohrDatasource)
 
@@ -651,25 +639,11 @@ describe("API Endpoint Viewer", () => {
 
     it("opens the connection menu when a connector draft has no saved connection", async () => {
       const settingsSpy = vi.spyOn(bb, "settings")
-      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
-        const templates: Record<string, any> = {
-          bamboohr: {
-            id: "bamboohr",
-            name: "BambooHR",
-            icon: "bamboohr.svg",
-          },
-        }
-        return templateId ? templates[templateId] : undefined
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
       })
-      ;(restTemplates.flatTemplates as any) = [
-        {
-          id: "bamboohr",
-          name: "BambooHR",
-          icon: "bamboohr.svg",
-        },
-      ]
 
-      workspaceConnections.startDraft("bamboohr" as any)
+      workspaceConnections.startDraft("bamboohr")
       const { baseElement } = setupDOM({
         saveAndClose: true,
         settingsLocked: true,
@@ -783,33 +757,22 @@ describe("API Endpoint Viewer", () => {
     })
 
     it("filters existing query connection selection to the provided connector template", async () => {
-      ;(restTemplates.get as any).mockImplementation((templateId?: string) => {
-        const templates: Record<string, any> = {
-          bamboohr: {
-            id: "bamboohr",
-            name: "BambooHR",
-            icon: "bamboohr.svg",
-          },
-          github: {
-            id: "github",
-            name: "GitHub",
-            icon: "github.svg",
-          },
-        }
-        return templateId ? templates[templateId] : undefined
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
       })
 
       const bamboohrDatasource: Datasource = {
         ...REST_DS,
         _id: "bamboohr_ds",
         name: "BambooHR",
-        restTemplateId: "bamboohr" as any,
+        restTemplateId: "bamboohr",
       }
       const githubDatasource: Datasource = {
         ...REST_DS_2_WITH_URL,
         _id: "github_ds",
         name: "GitHub",
-        restTemplateId: "github" as any,
+        restTemplateId: "github",
       }
       await setupTwoDatasources(bamboohrDatasource, githubDatasource)
       queries.store.update(s => ({

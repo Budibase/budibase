@@ -4,6 +4,7 @@
     BodyType,
     type AutomationStep,
     type EnrichedBinding,
+    type RestTemplateId,
   } from "@budibase/types"
   import PropField from "../PropField.svelte"
   import { type AutomationContext } from "@/stores/builder/automations"
@@ -60,7 +61,7 @@
   $: inputData = automationStore.actions.getInputData(block)
   $: fieldKey = "query"
   $: restTemplateId = (inputData as Record<string, any> | undefined)
-    ?.restTemplateId as string | undefined
+    ?.restTemplateId as RestTemplateId | undefined
   $: {
     value = getInputValue(inputData, fieldKey)
   }
@@ -141,7 +142,7 @@
   }
 
   const handleAddApi = () => {
-    workspaceConnections.startDraft(restTemplateId as any)
+    workspaceConnections.startDraft(restTemplateId)
     modal.show()
   }
 
@@ -152,7 +153,7 @@
       return
     }
     const hasExistingQuery = restSources?.some(ds => {
-      if (!datasourceMatchesRestTemplate(ds, templateId as any)) {
+      if (!datasourceMatchesRestTemplate(ds, templateId)) {
         return false
       }
       return $queries.list.some(query => query.datasourceId === ds._id)

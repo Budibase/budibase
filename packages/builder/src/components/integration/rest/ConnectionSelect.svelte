@@ -18,7 +18,11 @@
   import { configFromIntegration } from "@/stores/selectors"
   import { IntegrationTypes } from "@/constants/backend"
   import { notifications } from "@budibase/bbui"
-  import { RestAuthType, type RestAuthConfig } from "@budibase/types"
+  import {
+    RestAuthType,
+    type RestAuthConfig,
+    type RestTemplateId,
+  } from "@budibase/types"
 
   type AuthConfigType = RestAuthConfig["type"]
 
@@ -36,7 +40,7 @@
   }
 
   export let authConfigId: string | undefined
-  export let restTemplateId: string | undefined = undefined
+  export let restTemplateId: RestTemplateId | undefined = undefined
   export let datasourceId: string | undefined = undefined
   export let disabled: boolean = false
   export let editText: string | undefined = "Edit"
