@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { Body, Icon } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Body,
+    Helpers,
+    Icon,
+    notifications,
+  } from "@budibase/bbui"
   import type { AgentLogEntry, AgentLogRequestDetail } from "@budibase/types"
   import { formatToolName } from "@budibase/frontend-core"
   import {
@@ -24,14 +30,21 @@
   let { entry, index, expanded, detail, loadingStep, onToggleStep }: Props =
     $props()
   let flow = $derived(getStepFlow(detail, loadingStep))
+
+  async function copyToClipboard(value: string) {
+    await Helpers.copyToClipboard(value)
+    notifications.success("Copied to clipboard")
+  }
 </script>
 
 {#snippet toolCard(
   item: { name: string; displayName?: string; toolCallId?: string },
   content: string,
-  kindLabel?: string
+  kindLabel?: string,
+  copyTooltip: string = "Copy content"
 )}
   {@const displayName = formatToolName(item.name, item.displayName)}
+  {@const formattedContent = formatStructuredContent(content)}
   <article class="tool-card">
     <div class="tool-card-header">
       <div class="tool-card-meta">
@@ -45,12 +58,21 @@
           </span>
         {/if}
       </div>
-      {#if kindLabel}
-        <span class="tool-card-kind">{kindLabel}</span>
-      {/if}
+      <div class="tool-card-actions">
+        {#if kindLabel}
+          <span class="tool-card-kind">{kindLabel}</span>
+        {/if}
+        <ActionButton
+          quiet
+          icon="Copy"
+          size="S"
+          tooltip={copyTooltip}
+          on:click={() => copyToClipboard(formattedContent)}
+        />
+      </div>
     </div>
     <div class="content-surface">
-      <pre><code>{formatStructuredContent(content)}</code></pre>
+      <pre><code>{formattedContent}</code></pre>
     </div>
   </article>
 {/snippet}
@@ -91,6 +113,7 @@
         </div>
       {:else if detail}
         {@const assistantResponse = parseAssistantResponse(detail.response)}
+        {@const promptContent = formatMessages(detail)}
         <div class="io-grid">
           <section class="io-panel">
             <div class="panel-header">
@@ -99,12 +122,21 @@
 
             <div class="content-section">
               <div class="content-section-header">
-                <div class="section-label-group">
-                  <h5 class="content-title">Prompt</h5>
+                <div class="content-section-heading">
+                  <div class="section-label-group">
+                    <h5 class="content-title">Prompt</h5>
+                  </div>
                 </div>
+                <ActionButton
+                  quiet
+                  icon="Copy"
+                  size="S"
+                  tooltip="Copy prompt"
+                  on:click={() => copyToClipboard(promptContent)}
+                />
               </div>
               <div class="content-surface">
-                <pre><code>{formatMessages(detail)}</code></pre>
+                <pre><code>{promptContent}</code></pre>
               </div>
             </div>
 
@@ -124,7 +156,12 @@
 
                 <div class="tool-stack">
                   {#each detail.toolResults as result}
-                    {@render toolCard(result, result.content, "Result")}
+                    {@render toolCard(
+                      result,
+                      result.content,
+                      "Result",
+                      "Copy tool context"
+                    )}
                   {/each}
                 </div>
               </div>
@@ -139,13 +176,22 @@
             {#if assistantResponse.thinking}
               <div class="content-section">
                 <div class="content-section-header">
-                  <div class="section-icon section-icon--thinking">
-                    <Icon name="Brain" size="S" />
+                  <div class="content-section-heading">
+                    <div class="section-icon section-icon--thinking">
+                      <Icon name="Brain" size="S" />
+                    </div>
+                    <div class="section-label-group">
+                      <h5 class="content-title">Thinking</h5>
+                      <p class="content-subtitle">Internal reasoning trace</p>
+                    </div>
                   </div>
-                  <div class="section-label-group">
-                    <h5 class="content-title">Thinking</h5>
-                    <p class="content-subtitle">Internal reasoning trace</p>
-                  </div>
+                  <ActionButton
+                    quiet
+                    icon="Copy"
+                    size="S"
+                    tooltip="Copy thinking"
+                    on:click={() => copyToClipboard(assistantResponse.thinking)}
+                  />
                 </div>
                 <div class="content-surface content-surface--thinking">
                   <pre><code>{assistantResponse.thinking}</code></pre>
@@ -154,20 +200,30 @@
             {/if}
 
             {#if detail.error}
+              {@const errorContent = formatErrorDetail(detail.error)}
               <div class="content-section">
                 <div class="content-section-header">
-                  <div class="section-icon section-icon--error">
-                    <Icon name="Alert" size="S" />
+                  <div class="content-section-heading">
+                    <div class="section-icon section-icon--error">
+                      <Icon name="Alert" size="S" />
+                    </div>
+                    <div class="section-label-group">
+                      <h5 class="content-title">Error</h5>
+                      <p class="content-subtitle">
+                        Provider and model failure details
+                      </p>
+                    </div>
                   </div>
-                  <div class="section-label-group">
-                    <h5 class="content-title">Error</h5>
-                    <p class="content-subtitle">
-                      Provider and model failure details
-                    </p>
-                  </div>
+                  <ActionButton
+                    quiet
+                    icon="Copy"
+                    size="S"
+                    tooltip="Copy error"
+                    on:click={() => copyToClipboard(errorContent)}
+                  />
                 </div>
                 <div class="content-surface content-surface--error">
-                  <pre><code>{formatErrorDetail(detail.error)}</code></pre>
+                  <pre><code>{errorContent}</code></pre>
                 </div>
               </div>
             {/if}
@@ -185,7 +241,12 @@
 
                 <div class="tool-stack">
                   {#each detail.toolCalls as toolCall}
-                    {@render toolCard(toolCall, toolCall.arguments)}
+                    {@render toolCard(
+                      toolCall,
+                      toolCall.arguments,
+                      undefined,
+                      "Copy tool call"
+                    )}
                   {/each}
                 </div>
               </div>
@@ -194,9 +255,18 @@
             {#if assistantResponse.response}
               <div class="content-section">
                 <div class="content-section-header">
-                  <div class="section-label-group">
-                    <h5 class="content-title">Final response</h5>
+                  <div class="content-section-heading">
+                    <div class="section-label-group">
+                      <h5 class="content-title">Final response</h5>
+                    </div>
                   </div>
+                  <ActionButton
+                    quiet
+                    icon="Copy"
+                    size="S"
+                    tooltip="Copy final response"
+                    on:click={() => copyToClipboard(assistantResponse.response)}
+                  />
                 </div>
                 <div class="content-surface">
                   <pre><code>{assistantResponse.response}</code></pre>
@@ -221,8 +291,6 @@
 
   .step--expanded {
     background: var(--spectrum-global-color-gray-100);
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
   }
 
   .step-header {
@@ -246,7 +314,6 @@
 
   .step--expanded .step-header {
     background: transparent;
-    border-radius: 8px 8px 0 0;
   }
 
   .step-number {
@@ -396,7 +463,15 @@
   .content-section-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
+  }
+
+  .content-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
   }
 
   .section-label-group {
@@ -451,6 +526,13 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+  }
+
+  .tool-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .tool-card-meta {
