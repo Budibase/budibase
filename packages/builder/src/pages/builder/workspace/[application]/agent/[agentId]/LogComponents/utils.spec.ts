@@ -244,10 +244,10 @@ describe("getSessionSummary", () => {
 })
 
 describe("getStepFlow", () => {
-  it("returns loading state", () => {
+  it("returns default flow while loading", () => {
     expect(getStepFlow(undefined, true)).toEqual({
-      from: "Loading details",
-      to: "...",
+      from: "Model input",
+      to: "Model output",
     })
   })
 

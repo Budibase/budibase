@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    ActionButton,
-    Body,
-    Helpers,
-    Icon,
-    notifications,
-  } from "@budibase/bbui"
+  import { ActionButton, Helpers, Icon, notifications } from "@budibase/bbui"
   import type { AgentLogEntry, AgentLogRequestDetail } from "@budibase/types"
   import { formatToolName } from "@budibase/frontend-core"
   import {
@@ -80,6 +74,29 @@
   </article>
 {/snippet}
 
+{#snippet loadingPanel(title: string)}
+  <section class="io-panel io-panel--loading" aria-busy="true">
+    <div class="panel-header">
+      <h4 class="panel-title">{title}</h4>
+    </div>
+
+    <div class="content-section">
+      <div class="content-section-header">
+        <div class="section-label-group">
+          <div class="loading-line loading-line--title"></div>
+          <div class="loading-line loading-line--subtitle"></div>
+        </div>
+      </div>
+      <div class="content-surface content-surface--loading">
+        <div class="loading-line loading-line--wide"></div>
+        <div class="loading-line"></div>
+        <div class="loading-line loading-line--short"></div>
+        <div class="loading-line loading-line--medium"></div>
+      </div>
+    </div>
+  </section>
+{/snippet}
+
 <div class="step" class:step--expanded={expanded}>
   <button class="step-header" type="button" onclick={() => onToggleStep(entry)}>
     <div class="step-number">{index + 1}</div>
@@ -109,10 +126,9 @@
   {#if expanded}
     <div class="step-body">
       {#if loadingStep && !detail}
-        <div class="step-loading">
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Loading step detail...
-          </Body>
+        <div class="io-grid">
+          {@render loadingPanel("Input")}
+          {@render loadingPanel("Output")}
         </div>
       {:else if detail}
         {@const assistantResponse = parseAssistantResponse(detail.response)}
@@ -424,10 +440,6 @@
     gap: var(--spacing-s);
   }
 
-  .step-loading {
-    padding: var(--spacing-s) 0;
-  }
-
   .io-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -597,6 +609,61 @@
   .content-surface--error {
     background: rgba(214, 60, 60, 0.04);
     border-color: rgba(214, 60, 60, 0.2);
+  }
+
+  .content-surface--loading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 126px;
+    padding: 10px;
+    overflow: hidden;
+  }
+
+  .loading-line {
+    width: 72%;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      var(--spectrum-global-color-gray-200) 0%,
+      var(--spectrum-global-color-gray-100) 48%,
+      var(--spectrum-global-color-gray-200) 100%
+    );
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.3s ease-in-out infinite;
+  }
+
+  .loading-line--title {
+    width: 76px;
+    height: 12px;
+  }
+
+  .loading-line--subtitle {
+    width: 148px;
+    height: 10px;
+  }
+
+  .loading-line--wide {
+    width: 94%;
+  }
+
+  .loading-line--medium {
+    width: 58%;
+  }
+
+  .loading-line--short {
+    width: 40%;
+  }
+
+  @keyframes loading-shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+
+    100% {
+      background-position: -100% 0;
+    }
   }
 
   .content-surface pre {
