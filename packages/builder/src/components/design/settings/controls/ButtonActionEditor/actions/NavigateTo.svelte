@@ -1,7 +1,7 @@
 <script>
   import { screenStore } from "@/stores/builder"
   import { onMount } from "svelte"
-  import { Label, Checkbox, Select } from "@budibase/bbui"
+  import { Label, Checkbox, Select, RadioGroup } from "@budibase/bbui"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
 
@@ -20,6 +20,38 @@
       value: "url",
     },
   ]
+
+  const screenOpenInOptions = [
+    {
+      label: "Same tab",
+      value: "same",
+    },
+    {
+      label: "Open in modal",
+      value: "modal",
+    },
+    {
+      label: "Open in new tab",
+      value: "newTab",
+    },
+  ]
+
+  const getScreenOpenIn = p => {
+    if (p.screenNewTab) {
+      return "newTab"
+    }
+    if (p.peek) {
+      return "modal"
+    }
+    return "same"
+  }
+
+  const setScreenOpenIn = value => {
+    parameters.peek = value === "modal"
+    parameters.screenNewTab = value === "newTab"
+  }
+
+  $: screenOpenIn = getScreenOpenIn(parameters)
 
   onMount(() => {
     if (!parameters.type) {
@@ -48,26 +80,11 @@
       options={$urlOptions}
       appendBindingsAsOptions={false}
     />
-    <div></div>
-    <Checkbox
-      text="Open in new tab"
-      value={parameters.screenNewTab}
-      on:change={e => {
-        parameters.screenNewTab = e.detail
-        if (e.detail) {
-          parameters.peek = false
-        }
-      }}
-    />
-    <Checkbox
-      text="Open in modal"
-      value={parameters.peek}
-      on:change={e => {
-        parameters.peek = e.detail
-        if (e.detail) {
-          parameters.screenNewTab = false
-        }
-      }}
+    <Label small>Open in</Label>
+    <RadioGroup
+      value={screenOpenIn}
+      options={screenOpenInOptions}
+      on:change={e => setScreenOpenIn(e.detail)}
     />
   {:else}
     <DrawerBindableInput
