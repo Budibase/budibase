@@ -11,6 +11,7 @@
   } from "./utils"
   import LogStepContentBlock from "./LogStepContentBlock.svelte"
   import LogStepLoadingPanel from "./LogStepLoadingPanel.svelte"
+  import LogStepPill from "./LogStepPill.svelte"
   import LogStepToolCard from "./LogStepToolCard.svelte"
 
   type Props = {
@@ -25,6 +26,11 @@
   let { entry, index, expanded, detail, loadingStep, onToggleStep }: Props =
     $props()
   let flow = $derived(getStepFlow(detail, loadingStep))
+
+  const formatTokenLabel = (count: number): string => {
+    const tokenLabel = count === 1 ? "token" : "tokens"
+    return `${count.toLocaleString()} ${tokenLabel}`
+  }
 </script>
 
 <div class="step" class:step--expanded={expanded}>
@@ -39,9 +45,6 @@
       <div class="step-model">{entry.model}</div>
     </div>
     <div class="step-metrics">
-      <span class="step-token-metric"
-        >{entry.inputTokens} → {entry.outputTokens}</span
-      >
       <span class="step-duration" class:step-duration--slow={isSlowStep(entry)}>
         {getStepDuration(entry)}
       </span>
@@ -57,8 +60,14 @@
     <div class="step-body">
       {#if loadingStep && !detail}
         <div class="io-grid">
-          <LogStepLoadingPanel title="Input" />
-          <LogStepLoadingPanel title="Output" />
+          <LogStepLoadingPanel
+            title="Input"
+            tokenLabel={formatTokenLabel(entry.inputTokens)}
+          />
+          <LogStepLoadingPanel
+            title="Output"
+            tokenLabel={formatTokenLabel(entry.outputTokens)}
+          />
         </div>
       {:else if detail}
         {@const assistantResponse = parseAssistantResponse(detail.response)}
@@ -67,6 +76,7 @@
           <section class="io-panel">
             <div class="panel-header">
               <h4 class="panel-title">Input</h4>
+              <LogStepPill>{formatTokenLabel(entry.inputTokens)}</LogStepPill>
             </div>
 
             <LogStepContentBlock
@@ -105,6 +115,7 @@
           <section class="io-panel">
             <div class="panel-header">
               <h4 class="panel-title">Output</h4>
+              <LogStepPill>{formatTokenLabel(entry.outputTokens)}</LogStepPill>
             </div>
 
             {#if assistantResponse.thinking}
@@ -277,10 +288,6 @@
     white-space: nowrap;
   }
 
-  .step-token-metric {
-    color: var(--spectrum-global-color-gray-700);
-  }
-
   .step-duration {
     color: var(--spectrum-global-color-gray-600);
     min-width: 34px;
@@ -313,6 +320,8 @@
   .panel-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     padding-bottom: 10px;
   }
 

@@ -1,14 +1,20 @@
 <script lang="ts">
+  import LogStepPill from "./LogStepPill.svelte"
+
   type Props = {
     title: string
+    tokenLabel?: string
   }
 
-  let { title }: Props = $props()
+  let { title, tokenLabel }: Props = $props()
 </script>
 
 <section class="io-panel" aria-busy="true">
   <div class="panel-header">
     <h4 class="panel-title">{title}</h4>
+    {#if tokenLabel}
+      <LogStepPill>{tokenLabel}</LogStepPill>
+    {/if}
   </div>
 
   <div class="content-section">
@@ -52,6 +58,8 @@
   .panel-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     padding-bottom: 10px;
   }
 

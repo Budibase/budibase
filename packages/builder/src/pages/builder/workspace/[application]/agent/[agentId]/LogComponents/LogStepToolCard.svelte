@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ActionButton, Helpers, Icon, notifications } from "@budibase/bbui"
   import { formatToolName } from "@budibase/frontend-core"
+  import LogStepPill from "./LogStepPill.svelte"
   import { formatStructuredContent } from "./utils"
 
   type ToolItem = {
@@ -49,7 +50,7 @@
     </div>
     <div class="tool-card-actions">
       {#if kindLabel}
-        <span class="tool-card-kind">{kindLabel}</span>
+        <LogStepPill>{kindLabel}</LogStepPill>
       {/if}
       <ActionButton
         quiet
@@ -86,8 +87,7 @@
   }
 
   .tool-card-subtitle,
-  .tool-card-id,
-  .tool-card-kind {
+  .tool-card-id {
     font-size: 11px;
     color: var(--spectrum-global-color-gray-600);
   }
@@ -130,14 +130,6 @@
 
   .tool-card-id {
     max-width: 240px;
-  }
-
-  .tool-card-kind {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    background: var(--spectrum-global-color-gray-100);
-    border-radius: 999px;
-    padding: 2px 8px;
-    flex-shrink: 0;
   }
 
   .content-surface {
