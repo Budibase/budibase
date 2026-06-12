@@ -48,7 +48,10 @@
   <article class="tool-card">
     <div class="tool-card-header">
       <div class="tool-card-meta">
-        <span class="tool-card-name">{displayName.primary}</span>
+        <div class="tool-card-title">
+          <Icon name="Wrench" size="S" />
+          <span class="tool-card-name">{displayName.primary}</span>
+        </div>
         {#if displayName.secondary}
           <span class="tool-card-subtitle">{displayName.secondary}</span>
         {/if}
@@ -143,14 +146,13 @@
             {#if detail.toolResults.length}
               <div class="content-section">
                 <div class="content-section-header">
-                  <div class="section-icon">
-                    <Icon name="Wrench" size="S" />
-                  </div>
-                  <div class="section-label-group">
-                    <h5 class="content-title">Tool context</h5>
-                    <p class="content-subtitle">
-                      Results available to this step
-                    </p>
+                  <div class="content-section-heading">
+                    <div class="section-label-group">
+                      <h5 class="content-title">Tool context</h5>
+                      <p class="content-subtitle">
+                        Results available to this step
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -231,11 +233,10 @@
             {#if detail.toolCalls.length}
               <div class="content-section">
                 <div class="content-section-header">
-                  <div class="section-icon">
-                    <Icon name="Wrench" size="S" />
-                  </div>
-                  <div class="section-label-group">
-                    <h5 class="content-title">Tool calls</h5>
+                  <div class="content-section-heading">
+                    <div class="section-label-group">
+                      <h5 class="content-title">Tool calls</h5>
+                    </div>
                   </div>
                 </div>
 
@@ -537,7 +538,14 @@
 
   .tool-card-meta {
     align-items: flex-start;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .tool-card-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
   }
 
   .tool-card-name {
