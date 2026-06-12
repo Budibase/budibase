@@ -9,7 +9,7 @@
     AgentLogRequestDetail,
     AgentLogSession,
   } from "@budibase/types"
-  import LogsSessionDetail from "./LogComponents/LogsSessionDetail.svelte"
+  import LogsSessionDetailPanel from "./LogComponents/LogsSessionDetailPanel.svelte"
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
   import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
   import { notifications } from "@budibase/bbui"
@@ -19,6 +19,7 @@
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
   let selectedSession = $state<AgentLogSession | null>(null)
+  let detailPanelOpen = $state(false)
   let expandedStepId = $state<string | null>(null)
   let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
   let expandedStepLoading = $state(false)
@@ -82,6 +83,7 @@
       hasMore = false
       nextBookmark = undefined
       selectedSession = null
+      detailPanelOpen = false
       resetDetailState()
       return
     }
@@ -127,6 +129,7 @@
 
       if (!append && !selectedStillExists) {
         selectedSession = null
+        detailPanelOpen = false
         resetDetailState()
       }
     } catch (error) {
@@ -136,6 +139,7 @@
         hasMore = false
         nextBookmark = undefined
         selectedSession = null
+        detailPanelOpen = false
         resetDetailState()
       }
     } finally {
@@ -198,6 +202,7 @@
       if (!isCurrentSelection()) return
       notifications.error("Failed to fetch full session detail")
       selectedSession = null
+      detailPanelOpen = false
       resetDetailState()
     }
   }
@@ -214,8 +219,14 @@
         item.sessionId === row.sessionId && item.environment === row.environment
     )
     if (session) {
+      detailPanelOpen = true
       selectSession(session)
     }
+  }
+
+  function closeDetailPanel() {
+    detailPanelOpen = false
+    resetDetailState()
   }
 
   async function loadMoreSessions() {
@@ -255,30 +266,26 @@
 </script>
 
 <div class="logs-container">
-  <div class="logs-split">
-    <div class="logs-table-panel">
-      <LogsSessionList
-        {loading}
-        {sessionTableData}
-        {hasMore}
-        bind:statusFilter
-        bind:dateRange
-        bind:triggerFilter
-        {onSessionRowClick}
-        onLoadMore={loadMoreSessions}
-      />
-    </div>
+  <LogsSessionList
+    {loading}
+    {sessionTableData}
+    {hasMore}
+    bind:statusFilter
+    bind:dateRange
+    bind:triggerFilter
+    {onSessionRowClick}
+    onLoadMore={loadMoreSessions}
+  />
 
-    <div class="detail-panel">
-      <LogsSessionDetail
-        selectedSession={visibleSelectedSession}
-        {expandedStepId}
-        {expandedStepDetail}
-        {expandedStepLoading}
-        onToggleStep={toggleStep}
-      />
-    </div>
-  </div>
+  <LogsSessionDetailPanel
+    open={detailPanelOpen}
+    selectedSession={visibleSelectedSession}
+    {expandedStepId}
+    {expandedStepDetail}
+    {expandedStepLoading}
+    onClose={closeDetailPanel}
+    onToggleStep={toggleStep}
+  />
 </div>
 
 <style>
@@ -288,64 +295,5 @@
     flex: 1 1 auto;
     height: 100%;
     min-height: 0;
-  }
-
-  .logs-split {
-    display: flex;
-    flex: 1 1 auto;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--background);
-  }
-
-  .logs-table-panel {
-    flex: 0 0 52%;
-    min-width: 420px;
-    max-width: 60%;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-    border-right: 1px solid var(--spectrum-global-color-gray-200);
-    background: var(--background);
-  }
-
-  .detail-panel {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 0;
-    overflow-y: auto;
-    background: var(--background-alt);
-    scrollbar-width: thin;
-  }
-
-  .detail-panel::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .detail-panel::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .detail-panel::-webkit-scrollbar-thumb {
-    background: var(--spectrum-global-color-gray-300);
-    border-radius: 3px;
-  }
-
-  @media (max-width: 1400px) {
-    .logs-split {
-      flex-direction: column;
-    }
-
-    .logs-table-panel {
-      flex: none;
-      min-width: 0;
-      max-width: none;
-      border-right: none;
-      border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-      max-height: 360px;
-    }
   }
 </style>
