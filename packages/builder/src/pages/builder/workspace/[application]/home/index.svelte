@@ -275,6 +275,15 @@
     window.open(liveUrl, "_blank", "noopener,noreferrer")
   }
 
+  const CONTACT_SALES_URL = "https://budibase.com/contact/"
+
+  const openContactSales = () => {
+    if (typeof window === "undefined") {
+      return
+    }
+    window.open(CONTACT_SALES_URL, "_blank", "noopener,noreferrer")
+  }
+
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {
     isDuplicatingWorkspaceApp = true
     try {
@@ -623,11 +632,14 @@
         >
       </div>
 
-      {#if showHeaderActions}
-        <div class="header-actions">
+      <div class="header-actions">
+        {#if showHeaderActions}
           <FreeTrialBanner show={$licensing.showTrialBanner} />
-        </div>
-      {/if}
+        {/if}
+        <Button size="M" secondary on:click={openContactSales}>
+          Contact sales
+        </Button>
+      </div>
     </div>
 
     {#if automationErrorEntries.length}
