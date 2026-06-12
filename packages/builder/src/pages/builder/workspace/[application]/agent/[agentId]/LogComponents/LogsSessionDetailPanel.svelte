@@ -14,7 +14,7 @@
     open: boolean
     selectedSession: AgentLogSession | null
     expandedStepId: string | null
-    expandedStepDetail: AgentLogRequestDetail | null
+    stepDetailCache: Record<string, AgentLogRequestDetail>
     expandedStepLoading: boolean
     onClose: () => void
     onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
@@ -24,7 +24,7 @@
     open,
     selectedSession,
     expandedStepId,
-    expandedStepDetail,
+    stepDetailCache,
     expandedStepLoading,
     onClose,
     onToggleStep,
@@ -73,7 +73,7 @@
         <LogsSessionDetail
           {selectedSession}
           {expandedStepId}
-          {expandedStepDetail}
+          {stepDetailCache}
           {expandedStepLoading}
           {onToggleStep}
         />

@@ -21,8 +21,8 @@
   let selectedSession = $state<AgentLogSession | null>(null)
   let detailPanelOpen = $state(false)
   let expandedStepId = $state<string | null>(null)
-  let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
-  let expandedStepLoading = $state(false)
+  let stepDetailCache = $state<Record<string, AgentLogRequestDetail>>({})
+  let loadingStepIds = $state<Record<string, boolean>>({})
   let hasMore = $state(false)
   let nextBookmark = $state<string | undefined>(undefined)
 
@@ -48,9 +48,13 @@
 
   function resetDetailState() {
     expandedStepId = null
-    expandedStepDetail = null
-    expandedStepLoading = false
+    stepDetailCache = {}
+    loadingStepIds = {}
   }
+
+  let expandedStepLoading = $derived(
+    expandedStepId != null && !!loadingStepIds[expandedStepId]
+  )
 
   let visibleSessions = $derived.by(() => sessions)
 
@@ -149,27 +153,40 @@
 
   async function loadStepDetail(entry: AgentLogEntry): Promise<void> {
     const agentId = $selectedAgent?._id
-    if (!agentId) return
+    const requestedSessionId = selectedSession?.sessionId
+    const requestedEnvironment = selectedSession?.environment
 
-    if (
-      expandedStepLoading ||
-      expandedStepDetail?.requestId === entry.requestId
-    ) {
+    if (!agentId || !requestedSessionId || !requestedEnvironment) {
       return
     }
 
-    expandedStepLoading = true
-    expandedStepDetail = null
+    if (stepDetailCache[entry.requestId] || loadingStepIds[entry.requestId]) {
+      return
+    }
+
+    loadingStepIds = {
+      ...loadingStepIds,
+      [entry.requestId]: true,
+    }
 
     try {
       const detail = await API.fetchAgentLogDetail(agentId, entry.requestId)
-      if (expandedStepId === entry.requestId) {
-        expandedStepDetail = detail
+      const selectionUnchanged =
+        selectedSession?.sessionId === requestedSessionId &&
+        selectedSession?.environment === requestedEnvironment
+
+      if (selectionUnchanged) {
+        stepDetailCache = {
+          ...stepDetailCache,
+          [detail.requestId || entry.requestId]: detail,
+        }
       }
     } catch (error) {
       console.error("Failed to fetch step detail", error)
     } finally {
-      expandedStepLoading = false
+      const { [entry.requestId]: _loadingStepId, ...remainingLoadingStepIds } =
+        loadingStepIds
+      loadingStepIds = remainingLoadingStepIds
     }
   }
 
@@ -240,8 +257,6 @@
   async function toggleStep(entry: AgentLogEntry) {
     if (expandedStepId === entry.requestId) {
       expandedStepId = null
-      expandedStepDetail = null
-      expandedStepLoading = false
       return
     }
 
@@ -281,7 +296,7 @@
     open={detailPanelOpen}
     selectedSession={visibleSelectedSession}
     {expandedStepId}
-    {expandedStepDetail}
+    {stepDetailCache}
     {expandedStepLoading}
     onClose={closeDetailPanel}
     onToggleStep={toggleStep}
