@@ -31,7 +31,8 @@ export async function loginUser(user: User) {
       tenantId,
       email: user.email,
     },
-    coreEnv.JWT_SECRET!
+    coreEnv.JWT_SECRET!,
+    { expiresIn: coreUtils.getSessionExpirySeconds() }
   )
 
   return {
