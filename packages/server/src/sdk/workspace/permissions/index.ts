@@ -79,15 +79,18 @@ export async function getResourcePerms(
     return p
   }, {})
 
+  const withoutPublic = (perms: ResourcePermissions) =>
+    Object.fromEntries(
+      Object.entries(perms).filter(
+        ([, v]) => v.role !== roles.BUILTIN_ROLE_IDS.PUBLIC
+      )
+    )
+
   const isInternalTable = (Object.values(InternalTables) as string[]).includes(
     resourceId
   )
   const mergeablePermissions = isInternalTable
-    ? Object.fromEntries(
-        Object.entries(permissions).filter(
-          ([, v]) => v.role !== roles.BUILTIN_ROLE_IDS.PUBLIC
-        )
-      )
+    ? withoutPublic(permissions)
     : permissions
 
   return Object.assign(basePermissions, mergeablePermissions)
