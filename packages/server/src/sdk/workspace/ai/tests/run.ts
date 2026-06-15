@@ -285,6 +285,8 @@ async function runReviewers({
   toolCalls,
   sessionLogIndexer,
   selectedOperationId,
+  selectedOperationName,
+  operationNamesById,
 }: {
   reviewers: AgentTestReviewer[]
   getLLM: () => Promise<TestLLM>
@@ -293,6 +295,8 @@ async function runReviewers({
   toolCalls: string[]
   sessionLogIndexer: SessionLogIndexer
   selectedOperationId?: string
+  selectedOperationName?: string
+  operationNamesById?: Record<string, string>
 }): Promise<AgentTestReviewerResult[]> {
   const results: AgentTestReviewerResult[] = []
   let llm: TestLLM | undefined
@@ -305,6 +309,8 @@ async function runReviewers({
           response,
           toolCalls,
           selectedOperationId,
+          selectedOperationName,
+          operationNamesById,
         })
       )
       continue
@@ -359,6 +365,9 @@ async function runCase({
   const startedAtMs = Date.now()
   const sessionId = `test:${runId}:${testCase.id}:${aiConfigId}`
   let sessionLogIndexer: SessionLogIndexer | undefined
+  const operationNamesById = Object.fromEntries(
+    (agent.operations || []).map(operation => [operation.id, operation.name])
+  )
 
   try {
     const messages = buildTestMessages({ testCase })
@@ -381,6 +390,8 @@ async function runCase({
       toolCalls: agentRun.toolCalls,
       sessionLogIndexer,
       selectedOperationId: agentRun.selectedOperationId,
+      selectedOperationName: agentRun.selectedOperationName,
+      operationNamesById,
     })
 
     await sessionLogIndexer.index()

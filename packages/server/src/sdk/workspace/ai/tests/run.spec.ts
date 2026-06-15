@@ -439,7 +439,7 @@ describe("agent test runner", () => {
           reviewerId: "reviewer-1",
           type: "operation_used",
           status: "passed",
-          message: 'Operation "operation_2" was used.',
+          message: 'Operation "Operation 2" was used.',
         },
       ],
     })
@@ -497,7 +497,7 @@ describe("agent test runner", () => {
           type: "operation_used",
           status: "failed",
           message:
-            'Expected operation "operation_2" to be used, but "operation_1" was selected.',
+            'Expected operation "Operation 2" to be used, but "Operation 1" was selected.',
         },
       ],
     })

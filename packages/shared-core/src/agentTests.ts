@@ -10,6 +10,8 @@ export interface ReviewerEvaluateContext {
   response: string
   toolCalls: string[]
   selectedOperationId?: string
+  selectedOperationName?: string
+  operationNamesById?: Record<string, string>
 }
 
 export interface ReviewerEvaluation {
@@ -29,6 +31,11 @@ export interface ReviewerDefinition {
       ) => ReviewerEvaluation)
     | "async"
 }
+
+const getOperationLabel = (
+  operationId: string,
+  operationNamesById?: Record<string, string>
+) => operationNamesById?.[operationId] || operationId
 
 export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
   exact_match: {
@@ -88,15 +95,27 @@ export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
     description: "Pass when a specific operation was selected for the run.",
     inputType: "select",
     requiredMessage: "operation is required",
-    evaluate: (r, { selectedOperationId }) => {
+    evaluate: (r, {
+      selectedOperationId,
+      selectedOperationName,
+      operationNamesById,
+    }) => {
       const passed = selectedOperationId === r.value
+      const expectedOperationLabel = getOperationLabel(
+        r.value,
+        operationNamesById
+      )
+      const selectedOperationLabel =
+        selectedOperationId &&
+        (selectedOperationName ||
+          getOperationLabel(selectedOperationId, operationNamesById))
       return {
         passed,
         message: passed
-          ? `Operation "${r.value}" was used.`
-          : selectedOperationId
-            ? `Expected operation "${r.value}" to be used, but "${selectedOperationId}" was selected.`
-            : `Expected operation "${r.value}" to be used.`,
+          ? `Operation "${expectedOperationLabel}" was used.`
+          : selectedOperationLabel
+            ? `Expected operation "${expectedOperationLabel}" to be used, but "${selectedOperationLabel}" was selected.`
+            : `Expected operation "${expectedOperationLabel}" to be used.`,
       }
     },
   },

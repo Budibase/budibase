@@ -44,11 +44,15 @@ export const evaluateReviewer = ({
   response,
   toolCalls,
   selectedOperationId,
+  selectedOperationName,
+  operationNamesById,
 }: {
   reviewer: AgentTestReviewer
   response: string
   toolCalls: string[]
   selectedOperationId?: string
+  selectedOperationName?: string
+  operationNamesById?: Record<string, string>
 }): AgentTestReviewerResult => {
   const def: ReviewerDefinition = REVIEWERS[reviewer.type]
   if (def.evaluate === "async") {
@@ -59,6 +63,8 @@ export const evaluateReviewer = ({
     response,
     toolCalls,
     selectedOperationId,
+    selectedOperationName,
+    operationNamesById,
   })
   return {
     reviewerId: reviewer.id,

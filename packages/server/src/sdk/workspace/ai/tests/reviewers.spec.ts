@@ -81,11 +81,16 @@ describe("agent test reviewers", () => {
         response: "Handled it.",
         toolCalls: [],
         selectedOperationId: "operation_2",
+        selectedOperationName: "Operation 2",
+        operationNamesById: {
+          operation_2: "Operation 2",
+        },
       })
     ).toMatchObject({
       reviewerId: "reviewer-1",
       type: "operation_used",
       status: "passed",
+      message: 'Operation "Operation 2" was used.',
     })
   })
 
