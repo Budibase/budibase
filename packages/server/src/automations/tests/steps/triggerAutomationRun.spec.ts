@@ -56,7 +56,7 @@ describe("Test triggering an automation from another automation", () => {
   it("should fail if the child automation times out", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onAppAction()
-      .delay({ time: 1000 })
+      .delay({ time: 1000, unit: "milliseconds" })
       .save()
 
     const result = await createAutomationBuilder(config)
@@ -185,7 +185,7 @@ describe("Test triggering an automation from another automation", () => {
     const { automation } = await createAutomationBuilder(config)
       .onAppAction()
       .serverLog({ text: "Step 1 - Before delay" })
-      .delay({ time: 500 })
+      .delay({ time: 500, unit: "milliseconds" })
       .serverLog({ text: "Step 2 - After delay (should not appear)" })
       .save()
 
@@ -212,7 +212,7 @@ describe("Test triggering an automation from another automation", () => {
   it("should run trigger automation synchronously - subsequent steps should wait", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onAppAction()
-      .delay({ time: 150 })
+      .delay({ time: 150, unit: "milliseconds" })
       .serverLog({ text: "Child automation completed" })
       .save()
 
@@ -246,7 +246,7 @@ describe("Test triggering an automation from another automation", () => {
       .onAppAction()
       .serverLog({ text: "Step 1 executed" })
       .serverLog({ text: "Step 2 executed" })
-      .delay({ time: 400 })
+      .delay({ time: 400, unit: "milliseconds" })
       .serverLog({ text: "Step 3 - should not execute" })
       .save()
 
@@ -271,7 +271,7 @@ describe("Test triggering an automation from another automation", () => {
   it("should not execute subsequent steps in parent when child automation times out immediately", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onAppAction()
-      .delay({ time: 300 })
+      .delay({ time: 300, unit: "milliseconds" })
       .save()
 
     const result = await createAutomationBuilder(config)
@@ -295,7 +295,7 @@ describe("Test triggering an automation from another automation", () => {
   it("should continue executing subsequent steps when child automation times out and continue on error is enabled", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onAppAction()
-      .delay({ time: 300 })
+      .delay({ time: 300, unit: "milliseconds" })
       .save()
 
     const result = await createAutomationBuilder(config)
@@ -328,7 +328,7 @@ describe("Test triggering an automation from another automation", () => {
 
     const { automation: slowAutomation } = await createAutomationBuilder(config)
       .onAppAction()
-      .delay({ time: 250 })
+      .delay({ time: 250, unit: "milliseconds" })
       .serverLog({ text: "Slow automation" })
       .save()
 
