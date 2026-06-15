@@ -114,7 +114,7 @@ describe("AI Tools - Automations", () => {
         config
       )
         .onAppAction()
-        .delay({ time: 100, unit: "milliseconds" })
+        .delay({ time: 100 })
         .serverLog({ text: "After delay" })
         .save()
 

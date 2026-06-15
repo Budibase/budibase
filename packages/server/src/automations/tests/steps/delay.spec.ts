@@ -20,7 +20,7 @@ describe("test the delay logic", () => {
 
     await createAutomationBuilder(config)
       .onAppAction()
-      .delay({ time, unit: "milliseconds" })
+      .delay({ time })
       .test({ fields: {} })
 
     const now = performance.now()
@@ -30,6 +30,7 @@ describe("test the delay logic", () => {
   })
 
   it("should convert the delay unit to milliseconds", () => {
+    expect(getDelayMs({ time: 3000 })).toBe(3000)
     expect(getDelayMs({ time: 100, unit: "milliseconds" })).toBe(100)
     expect(getDelayMs({ time: 10, unit: "seconds" })).toBe(10000)
     expect(getDelayMs({ time: 10, unit: "minutes" })).toBe(600000)

@@ -2,7 +2,9 @@ import type { DelayStepInputs, DelayStepOutputs } from "@budibase/types"
 
 import { wait } from "../../utilities"
 
-const delayUnitToMs: Record<DelayStepInputs["unit"], number> = {
+type DelayUnit = NonNullable<DelayStepInputs["unit"]>
+
+const delayUnitToMs: Record<DelayUnit, number> = {
   milliseconds: 1,
   seconds: 1000,
   minutes: 60 * 1000,
@@ -11,7 +13,7 @@ const delayUnitToMs: Record<DelayStepInputs["unit"], number> = {
 }
 
 export const getDelayMs = (inputs: DelayStepInputs) => {
-  return inputs.time * delayUnitToMs[inputs.unit]
+  return inputs.time * delayUnitToMs[inputs.unit || "milliseconds"]
 }
 
 export async function run({

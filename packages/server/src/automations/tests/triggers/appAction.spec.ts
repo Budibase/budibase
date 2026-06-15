@@ -83,7 +83,6 @@ describe("app action trigger", () => {
       .onAppAction()
       .delay({
         time: 1000,
-        unit: "milliseconds",
       })
       .test({ fields: {}, timeout: 10 })
 

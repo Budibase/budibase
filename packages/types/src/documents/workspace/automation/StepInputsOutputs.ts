@@ -67,7 +67,7 @@ export type CreateRowStepOutputs = BaseAutomationOutputs & {
 
 export type DelayStepInputs = {
   time: number
-  unit: "milliseconds" | "seconds" | "minutes" | "hours" | "days"
+  unit?: "milliseconds" | "seconds" | "minutes" | "hours" | "days"
 }
 
 export type DelayStepOutputs = BaseAutomationOutputs
