@@ -37,7 +37,7 @@ const getOperationLabel = (
   operationNamesById?: Record<string, string>
 ) => operationNamesById?.[operationId] || operationId
 
-export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
+export const REVIEWERS = {
   exact_match: {
     label: "Exact match",
     description: "Require the final response to exactly match some text.",
@@ -95,11 +95,10 @@ export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
     description: "Pass when a specific operation was selected for the run.",
     inputType: "select",
     requiredMessage: "operation is required",
-    evaluate: (r, {
-      selectedOperationId,
-      selectedOperationName,
-      operationNamesById,
-    }) => {
+    evaluate: (
+      r,
+      { selectedOperationId, selectedOperationName, operationNamesById }
+    ) => {
       const passed = selectedOperationId === r.value
       const expectedOperationLabel = getOperationLabel(
         r.value,
@@ -119,7 +118,7 @@ export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
       }
     },
   },
-}
+} satisfies Record<ReviewerType, ReviewerDefinition>
 
 export const REVIEWER_TYPES = Object.keys(REVIEWERS) as ReviewerType[]
 
