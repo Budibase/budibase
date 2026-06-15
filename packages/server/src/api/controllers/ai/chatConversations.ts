@@ -31,6 +31,7 @@ import sdk from "../../../sdk"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
+  getLiveOperations,
   prepareAgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
@@ -51,9 +52,19 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
-const allowsKnowledgeSourceDownload = (agent: Agent, operationId: string) =>
-  (agent.operations || []).find(operation => operation.id === operationId)
-    ?.allowKnowledgeSourceDownload ?? true
+const resolveOperationForKnowledgeSourceDownload = (
+  agent: Agent,
+  operationId?: string
+) => {
+  if (operationId) {
+    return (agent.operations || []).find(
+      operation => operation.id === operationId
+    )
+  }
+
+  const liveOperations = getLiveOperations(agent)
+  return liveOperations.length === 1 ? liveOperations[0] : undefined
+}
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
@@ -572,15 +583,31 @@ export async function fetchChatAppAgentFileUrl(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (!allowsKnowledgeSourceDownload(agent, operationId!)) {
+  const operation = resolveOperationForKnowledgeSourceDownload(
+    agent,
+    operationId
+  )
+
+  if (operationId && !operation) {
+    throw new HTTPError("Operation not found", 404)
+  }
+
+  if (agent.operations?.length && !operation) {
+    throw new HTTPError(
+      "Knowledge source downloads require a resolved operation",
+      403
+    )
+  }
+
+  if (operation && !operation.allowKnowledgeSourceDownload) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403
     )
   }
 
-  const url = operationId
-    ? await sdk.ai.rag.getFileUrlForOperation(agentId, operationId, fileId)
+  const url = operation
+    ? await sdk.ai.rag.getFileUrlForOperation(agentId, operation.id, fileId)
     : await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
   ctx.body = { url }
   ctx.status = 200

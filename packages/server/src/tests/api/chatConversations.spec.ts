@@ -256,6 +256,10 @@ describe("chat conversations authorization", () => {
     config.end()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   const headersForUser = async (user: User) =>
     await config.withUser(user, async () => config.defaultHeaders({}, true))
 
@@ -398,6 +402,41 @@ describe("chat conversations authorization", () => {
       .set(headers)
 
     expect(res.status).toBe(404)
+  })
+
+  it("fails closed when a chat app download request does not resolve to one operation", async () => {
+    const headers = await headersForUser(userA)
+    const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
+
+    getAgentSpy.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    } as Agent)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents/agent-1/files/file-1/url`)
+      .set(headers)
+
+    expect(res.status).toBe(403)
+    expect(res.body.message).toBe(
+      "Knowledge source downloads require a resolved operation"
+    )
   })
 })
 
