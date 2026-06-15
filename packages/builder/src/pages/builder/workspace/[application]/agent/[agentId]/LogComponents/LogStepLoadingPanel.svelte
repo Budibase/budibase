@@ -4,16 +4,17 @@
   type Props = {
     title: string
     tokenLabel?: string
+    tokenTooltip?: string
   }
 
-  let { title, tokenLabel }: Props = $props()
+  let { title, tokenLabel, tokenTooltip }: Props = $props()
 </script>
 
 <section class="io-panel" aria-busy="true">
   <div class="panel-header">
     <h4 class="panel-title">{title}</h4>
     {#if tokenLabel}
-      <LogStepPill>{tokenLabel}</LogStepPill>
+      <LogStepPill tooltip={tokenTooltip}>{tokenLabel}</LogStepPill>
     {/if}
   </div>
 

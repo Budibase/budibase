@@ -31,6 +31,9 @@
     const tokenLabel = count === 1 ? "token" : "tokens"
     return `${count.toLocaleString()} ${tokenLabel}`
   }
+
+  const inputTokenTooltip =
+    "Includes prompt, instructions, tools, history, and context."
 </script>
 
 <div class="step" class:step--expanded={expanded}>
@@ -63,6 +66,7 @@
           <LogStepLoadingPanel
             title="Input"
             tokenLabel={formatTokenLabel(entry.inputTokens)}
+            tokenTooltip={inputTokenTooltip}
           />
           <LogStepLoadingPanel
             title="Output"
@@ -76,7 +80,9 @@
           <section class="io-panel">
             <div class="panel-header">
               <h4 class="panel-title">Input</h4>
-              <LogStepPill>{formatTokenLabel(entry.inputTokens)}</LogStepPill>
+              <LogStepPill tooltip={inputTokenTooltip}>
+                {formatTokenLabel(entry.inputTokens)}
+              </LogStepPill>
             </div>
 
             <LogStepContentBlock

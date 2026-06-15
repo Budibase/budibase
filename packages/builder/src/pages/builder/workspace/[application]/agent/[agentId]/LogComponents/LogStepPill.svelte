@@ -1,4 +1,22 @@
-<span class="log-step-pill"><slot /></span>
+<script lang="ts">
+  import { TooltipWrapper } from "@budibase/bbui"
+  import type { Snippet } from "svelte"
+
+  type Props = {
+    children: Snippet
+    tooltip?: string
+  }
+
+  let { children, tooltip }: Props = $props()
+</script>
+
+{#if tooltip}
+  <TooltipWrapper {tooltip} size="S">
+    <span class="log-step-pill">{@render children()}</span>
+  </TooltipWrapper>
+{:else}
+  <span class="log-step-pill">{@render children()}</span>
+{/if}
 
 <style>
   .log-step-pill {
