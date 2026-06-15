@@ -75,6 +75,7 @@ Any constraints the agent must follow.
   let operationPanelOpen = $state(false)
   let renameModal: Modal | undefined = $state()
   let renameDraft = $state("")
+  let renameOperationId = $state<string | undefined>(undefined)
   let isRenameValid = $derived(Boolean(renameDraft.trim()))
 
   let operations = $derived(agent?.operations || [])
@@ -101,12 +102,13 @@ Any constraints the agent must follow.
   }
 
   const openRenameModal = () => {
+    renameOperationId = selectedOperation?.id
     renameDraft = selectedOperation?.name || ""
     renameModal?.show()
   }
 
-  const saveRename = () => {
-    if (!agent || !selectedOperation) {
+  const saveRename = async () => {
+    if (!agent || !renameOperationId) {
       return
     }
     const trimmedName = renameDraft.trim()
@@ -114,9 +116,17 @@ Any constraints the agent must follow.
       notifications.error("Operation name is required.")
       return
     }
-    selectedOperation.name = trimmedName
-    onUpdated()
+    const operation = operations.find(
+      operation => operation.id === renameOperationId
+    )
+    if (!operation) {
+      return
+    }
+
+    operation.name = trimmedName
+    await onUpdated()
     renameModal?.hide()
+    renameOperationId = undefined
   }
 
   const createDefaultOperation = () => {
@@ -169,6 +179,7 @@ Any constraints the agent must follow.
     if (!agent || !selectedOperationId) {
       return
     }
+    const operationIdToDelete = selectedOperationId
 
     confirm({
       title: "Confirm deletion",
@@ -178,10 +189,12 @@ Any constraints the agent must follow.
       onConfirm: async () => {
         try {
           agent.operations = (agent.operations || []).filter(
-            operation => operation.id !== selectedOperationId
+            operation => operation.id !== operationIdToDelete
           )
           await onUpdated()
-          closeOperationPanel()
+          if (selectedOperationId === operationIdToDelete) {
+            closeOperationPanel()
+          }
           notifications.success("Operation deleted.")
         } catch (error) {
           console.error(error)
