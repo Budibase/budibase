@@ -138,7 +138,7 @@
                 {menuLabels.password}
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
-                <MenuItem icon="user-gear" on:click={() => $goto("/builder")}>
+                <MenuItem icon="code" on:click={() => $goto("/builder")}>
                   {menuLabels.portal}
                 </MenuItem>
               {/if}

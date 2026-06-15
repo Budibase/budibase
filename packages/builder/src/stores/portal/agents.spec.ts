@@ -18,6 +18,7 @@ vi.mock("@/api", () => {
       uploadAgentFile: vi.fn(),
       deleteAgentFile: vi.fn(),
       syncAgentKnowledgeSources: vi.fn(),
+      resetAgentKnowledgeBaseStore: vi.fn(),
     },
   }
 })
@@ -27,6 +28,7 @@ const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadAgentFile = vi.mocked(API.uploadAgentFile)
 const deleteAgentFile = vi.mocked(API.deleteAgentFile)
 const syncAgentKnowledgeSources = vi.mocked(API.syncAgentKnowledgeSources)
+const resetAgentKnowledgeBaseStore = vi.mocked(API.resetAgentKnowledgeBaseStore)
 
 describe("agentsStore sharepoint and file syncing", () => {
   let store: AgentsStore
@@ -144,5 +146,15 @@ describe("AgentsStore file operations", () => {
 
     expect(deleteAgentFile).toHaveBeenCalledWith("agent_1", "file_1")
     expect(fetchAgents).not.toHaveBeenCalled()
+  })
+
+  it("calls resetAgentKnowledgeBaseStore and re-fetches knowledge on reset", async () => {
+    resetAgentKnowledgeBaseStore.mockResolvedValue(undefined)
+    fetchAgentKnowledge.mockResolvedValue({ files: [], sharePointSources: [] })
+
+    await store.resetKnowledgeBaseStore("agent_1")
+
+    expect(resetAgentKnowledgeBaseStore).toHaveBeenCalledWith("agent_1")
+    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
   })
 })

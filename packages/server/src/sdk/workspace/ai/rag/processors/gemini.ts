@@ -14,6 +14,7 @@ import {
   searchGeminiFileStore,
 } from "../../knowledgeBase/geminiFileStore"
 import { updateKnowledgeBaseFile } from "../../knowledgeBase"
+import { prepareTabularKnowledgeFileForRagIngestion } from "./tabularText"
 
 export class GeminiRagProcessor implements RagProcessor {
   private knowledgeBase: WithRequired<GeminiKnowledgeBase, "_id">
@@ -45,11 +46,17 @@ export class GeminiRagProcessor implements RagProcessor {
     })
 
     try {
-      const ingested = await ingestGeminiFile({
-        vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+      const fileForIngestion = prepareTabularKnowledgeFileForRagIngestion({
         filename: input.filename,
         mimetype: input.mimetype,
         buffer: fileBuffer,
+      })
+
+      const ingested = await ingestGeminiFile({
+        vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
+        filename: fileForIngestion.filename,
+        mimetype: fileForIngestion.mimetype,
+        buffer: fileForIngestion.buffer,
       })
 
       input.status = KnowledgeBaseFileStatus.READY

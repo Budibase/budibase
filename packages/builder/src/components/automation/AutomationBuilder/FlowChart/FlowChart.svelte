@@ -20,6 +20,7 @@
   import {
     automationStore,
     automationHistoryStore,
+    MAX_STICKY_NOTES_PER_AUTOMATION,
     selectedAutomation,
     workspaceDeploymentStore,
     deploymentStore,
@@ -43,8 +44,11 @@
   import {
     MIN_STICKY_NOTE_WIDTH,
     MIN_STICKY_NOTE_HEIGHT,
+    getBoundsOfFlowBounds,
+    getStickyNoteBounds,
     clampStickyNoteToGraphBounds,
     clampStickyNoteToViewportBounds,
+    type FlowBounds,
   } from "./FlowCanvas/StickyNoteBounds"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
@@ -58,8 +62,8 @@
 
   import {
     SvelteFlow,
-    useStore,
     useSvelteFlow,
+    getViewportForBounds,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
@@ -113,14 +117,18 @@
   } | null>(null)
 
   const { getViewport, setViewport, getNodes, getNodesBounds } = useSvelteFlow()
-  const { viewport } = useStore()
   $: stickyNotes = $selectedAutomation?.data?.uiTree?.stickyNotes || []
-  $: stickyNoteLayerTransform = `translate(${$viewport.x}px, ${
-    $viewport.y
-  }px) scale(${$viewport.zoom})`
+  $: stickyNoteLayerTransform = `translate(${$flowViewport.x}px, ${
+    $flowViewport.y
+  }px) scale(${$flowViewport.zoom})`
   $: stickyNoteAddPosition =
-    paneEl && $nodes ? getStickyNoteAddPosition($viewport) : undefined
-  $: canAddStickyNote = !!stickyNoteAddPosition
+    paneEl && $nodes ? getStickyNoteAddPosition($flowViewport) : undefined
+  $: canAddMoreStickyNotes =
+    stickyNotes.length < MAX_STICKY_NOTES_PER_AUTOMATION
+  $: canAddStickyNote = !!stickyNoteAddPosition && canAddMoreStickyNotes
+  $: addStickyNoteDisabledReason = canAddMoreStickyNotes
+    ? "Move closer to add a note"
+    : `Maximum of ${MAX_STICKY_NOTES_PER_AUTOMATION} notes reached`
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -278,6 +286,14 @@
     $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
 
+  const setSyncedViewport = (
+    viewport: Viewport,
+    options?: Parameters<typeof setViewport>[1]
+  ) => {
+    flowViewport.set(viewport)
+    setViewport(viewport, options)
+  }
+
   // Keep the trigger focused on load
   const focusOnTrigger = () => {
     if (!paneEl || $nodes.length === 0) {
@@ -295,7 +311,7 @@
     const x = nodeOffset - triggerNode.position.x
     const y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
 
-    setViewport({ x, y, zoom: 1 }, { duration: 0 })
+    setSyncedViewport({ x, y, zoom: 1 }, { duration: 0 })
   }
 
   const focusOnNode = (
@@ -321,7 +337,7 @@
       const stride = (nodeWidth + NODE_SPACING) * safeZoom
       const x = currentViewport.x - direction * stride
       const y = currentViewport.y
-      setViewport(
+      setSyncedViewport(
         { x, y, zoom: safeZoom },
         { duration: VIEWPORT_ANIMATION_DURATION }
       )
@@ -335,7 +351,7 @@
     const y =
       paneRect.height / 2 - position.y * safeZoom - (nodeHeight / 2) * safeZoom
 
-    setViewport(
+    setSyncedViewport(
       { x, y, zoom: safeZoom },
       { duration: VIEWPORT_ANIMATION_DURATION }
     )
@@ -373,6 +389,40 @@
           : undefined) ||
         DEFAULT_NODE_HEIGHT,
     }
+  }
+
+  const getAutomationViewportBounds = () => {
+    const flowNodes = getNodes()
+    const bounds: FlowBounds[] = []
+
+    if (flowNodes.length) {
+      bounds.push(getNodesBounds(flowNodes))
+    }
+    bounds.push(...stickyNotes.map(getStickyNoteBounds))
+
+    return bounds.length ? getBoundsOfFlowBounds(bounds) : undefined
+  }
+
+  const handleAutoLayout = () => {
+    if (!paneEl) {
+      return
+    }
+
+    const bounds = getAutomationViewportBounds()
+    if (!bounds) {
+      return
+    }
+
+    const rect = paneEl.getBoundingClientRect()
+    const viewport = getViewportForBounds(
+      bounds,
+      rect.width,
+      rect.height,
+      MIN_ZOOM,
+      MAX_ZOOM,
+      0.1
+    )
+    setSyncedViewport(viewport, { duration: VIEWPORT_ANIMATION_DURATION })
   }
 
   const getActionPanelTargetNodeId = (target: unknown) => {
@@ -481,7 +531,7 @@
       nextY += yUnderflow
     }
 
-    setViewport(
+    setSyncedViewport(
       {
         x: nextX,
         y: nextY,
@@ -541,6 +591,10 @@
   }
 
   const handleMove = () => {
+    const viewport = getViewport()
+    if (viewport) {
+      flowViewport.set(viewport)
+    }
     closeContextMenuOnCanvasInteraction()
   }
 
@@ -582,6 +636,10 @@
   }
 
   const handleAddNote = () => {
+    if (!canAddMoreStickyNotes) {
+      return
+    }
+
     const position = getStickyNoteAddPosition(getViewport())
     if (!position) {
       return
@@ -717,7 +775,9 @@
           bind:controlsEl={flowControlsEl}
           historyStore={automationHistoryStore}
           canAddNote={canAddStickyNote}
-          on:addnote={handleAddNote}
+          addNoteDisabledReason={addStickyNoteDisabledReason}
+          onAddNote={handleAddNote}
+          onAutoLayout={handleAutoLayout}
         />
         <div
           class="sticky-note-layer"
@@ -750,6 +810,8 @@
   .wrapper {
     position: relative;
     height: 100%;
+    overflow: hidden;
+    background-color: var(--xy-background-color);
     --automation-flow-item-background: var(--background);
     --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
@@ -780,6 +842,7 @@
     position: relative;
     width: 100%;
     height: 100%;
+    background-color: var(--xy-background-color);
   }
 
   .automation-heading {
@@ -806,6 +869,7 @@
   .root {
     height: 100%;
     width: 100%;
+    background-color: var(--xy-background-color);
   }
 
   .sticky-note-layer {
@@ -827,6 +891,10 @@
   }
 
   .root :global(.svelte-flow__pane) {
+    background-color: var(--xy-background-color);
+  }
+
+  .root :global(.svelte-flow) {
     background-color: var(--xy-background-color);
   }
 
@@ -855,7 +923,10 @@
   }
 
   :global(.svelte-flow__handle.custom-handle) {
-    background-color: var(--spectrum-global-color-gray-700);
+    background-color: var(
+      --automation-flow-handle-color,
+      var(--spectrum-global-color-gray-700)
+    );
     border-radius: 1px;
     width: 8px;
     height: 4px;

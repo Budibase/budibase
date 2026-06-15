@@ -36,7 +36,7 @@ interface LicensingState {
   isEnterprisePlan: boolean
   isBusinessPlan: boolean
   isBusinessPlusPlan: boolean
-  isEnterpriseTrial: boolean
+  isTrialPlan: boolean
   // features
   groupsEnabled: boolean
   backupsEnabled: boolean
@@ -48,6 +48,7 @@ interface LicensingState {
   customAppScriptsEnabled: boolean
   syncAutomationsEnabled: boolean
   triggerAutomationRunEnabled: boolean
+  embedAuthEnabled: boolean
   recaptchaEnabled: boolean
   pkceOidcEnabled: boolean
   pdfEnabled: boolean
@@ -86,7 +87,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       isEnterprisePlan: true,
       isBusinessPlan: true,
       isBusinessPlusPlan: true,
-      isEnterpriseTrial: false,
+      isTrialPlan: false,
       // features
       groupsEnabled: false,
       backupsEnabled: false,
@@ -98,6 +99,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       customAppScriptsEnabled: false,
       syncAutomationsEnabled: false,
       triggerAutomationRunEnabled: false,
+      embedAuthEnabled: false,
       recaptchaEnabled: false,
       pkceOidcEnabled: false,
       pdfEnabled: false,
@@ -204,8 +206,10 @@ class LicensingStore extends BudiStore<LicensingState> {
     const isBusinessPlusPlan = planType === Constants.PlanType.BUSINESS_PLUS
     const isBusinessPlan =
       planType === Constants.PlanType.BUSINESS || isBusinessPlusPlan
-    const isEnterpriseTrial =
-      planType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
+    const isTrialPlan = [
+      Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
+      Constants.PlanType.PREMIUM_PLUS_TRIAL,
+    ].includes(planType as string)
     const groupsEnabled = features.includes(Constants.Features.USER_GROUPS)
     const backupsEnabled = features.includes(
       Constants.Features.WORKSPACE_BACKUPS
@@ -227,6 +231,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const customAppScriptsEnabled = features.includes(
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
+    const embedAuthEnabled = features.includes(Constants.Features.EMBED_AUTH)
     const recaptchaEnabled = features.includes(Constants.Features.RECAPTCHA)
     const pkceOidcEnabled = features.includes(Constants.Features.PKCE_OIDC)
     const pdfEnabled = features.includes(Constants.Features.PDF)
@@ -241,7 +246,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         isFreePlan,
         isBusinessPlan,
         isBusinessPlusPlan,
-        isEnterpriseTrial,
+        isTrialPlan,
         groupsEnabled,
         backupsEnabled,
         brandingEnabled,
@@ -252,6 +257,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         enforceableSSO,
         syncAutomationsEnabled,
         triggerAutomationRunEnabled,
+        embedAuthEnabled,
         customAppScriptsEnabled,
         pdfEnabled,
         recaptchaEnabled,

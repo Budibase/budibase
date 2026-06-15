@@ -17,6 +17,7 @@ const mockKnowledgeBaseFind = jest.fn()
 const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
 const mockKnowledgeBaseRemove = jest.fn()
+const mockAssertAgentHasValidConfig = jest.fn().mockResolvedValue(undefined)
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -46,6 +47,13 @@ jest.mock("../knowledgeBase", () => ({
     mockKnowledgeBaseRemoveFile(...args),
   remove: (...args: any[]) => mockKnowledgeBaseRemove(...args),
 }))
+
+jest.mock("./utils", () => {
+  return {
+    assertAgentHasValidConfig: (...args: any[]) =>
+      mockAssertAgentHasValidConfig(...args),
+  }
+})
 
 import type { Agent, KnowledgeBase, KnowledgeBaseFile } from "@budibase/types"
 import * as agentsCrud from "./crud"
@@ -206,6 +214,25 @@ describe("agents crud", () => {
         expect.objectContaining({ name: "New Agent" })
       )
     })
+
+    it("validates the AI config before publishing a live agent", async () => {
+      mockDbPut.mockResolvedValue({ rev: "1-new" })
+      mockDbTryGet.mockResolvedValue(undefined)
+
+      await agentsCrud.create({
+        name: "Live Agent",
+        aiconfig: "cfg_1",
+        live: true,
+      })
+
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledTimes(1)
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aiconfig: "cfg_1",
+          live: true,
+        })
+      )
+    })
   })
 
   describe("update", () => {
@@ -229,6 +256,35 @@ describe("agents crud", () => {
 
       expect(mockAgentUpdated).toHaveBeenCalledWith(
         expect.objectContaining({ _id: "agent_upd", name: "Updated Name" })
+      )
+    })
+
+    it("validates the AI config before publishing an agent", async () => {
+      const existing = {
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        enabledTools: [],
+        knowledgeBases: [],
+        live: false,
+      } as Agent
+
+      mockDbTryGet.mockResolvedValue(existing)
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      await agentsCrud.update({
+        ...existing,
+        live: true,
+      })
+
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledTimes(1)
+      expect(mockAssertAgentHasValidConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _id: "agent_upd",
+          aiconfig: "cfg_1",
+          live: true,
+        })
       )
     })
   })

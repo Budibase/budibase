@@ -9,7 +9,7 @@
   const { accountPortalUpgradeUrl } = helpers
 </script>
 
-{#if !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}
+{#if !$licensing.isEnterprisePlan && !$licensing.isTrialPlan}
   {#if $admin.cloud && $auth?.user?.accountPortalAccess}
     <Button
       cta

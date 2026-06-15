@@ -40,6 +40,7 @@ import {
   FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
+  Feature,
   ImportToUpdateWorkspaceRequest,
   ImportToUpdateWorkspaceResponse,
   Layout,
@@ -58,7 +59,11 @@ import {
   OnboardingWorkspaceRequest,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
-import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
+import {
+  DEFAULT_BB_DATASOURCE_ID,
+  ObjectStoreBuckets,
+  USERS_TABLE_SCHEMA,
+} from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -69,6 +74,7 @@ import {
   generateUserMetadataID,
   generateWorkspaceID,
   getDevWorkspaceID,
+  getProdWorkspaceID,
   getLayoutParams,
   isDevWorkspaceID,
   WorkspaceStatus,
@@ -602,6 +608,14 @@ export async function fetchAppPackage(
     application.version
   )
 
+  // never expose the embed SSO secret to the browser - strip it entirely for
+  // the published client and mask the key for the builder
+  if (application.embedSSO) {
+    application.embedSSO = isBuilder
+      ? sdk.embedSSO.maskConfigForBuilder(application.embedSSO)
+      : undefined
+  }
+
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
@@ -610,6 +624,7 @@ export async function fetchAppPackage(
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
+    recaptchaEnabled: license?.features?.includes(Feature.RECAPTCHA) ?? false,
     clientCacheKey,
   }
 }
@@ -1065,7 +1080,12 @@ export async function update(
     ctx.request.body.url = url
   }
 
+  if ("embedSSO" in ctx.request.body) {
+    await features.checkFeature(Feature.EMBED_AUTH)
+  }
+
   const app = await updateWorkspacePackage(ctx.request.body, ctx.params.appId)
+  await syncRecaptchaStateToPublishedApp(ctx.params.appId, ctx.request.body)
   await events.app.updated(app)
   ctx.body = app
   builderSocket?.emitAppMetadataUpdate(ctx, {
@@ -1079,6 +1099,36 @@ export async function update(
       chainAutomations: app.automations?.chainAutomations,
     },
   })
+}
+
+const syncRecaptchaStateToPublishedApp = async (
+  workspaceId: string,
+  updates: UpdateWorkspaceRequest
+) => {
+  const recaptchaEnabled = updates.features?.recaptchaEnabled
+  if (!isDevWorkspaceID(workspaceId) || typeof recaptchaEnabled !== "boolean") {
+    return
+  }
+
+  const prodWorkspaceId = getProdWorkspaceID(workspaceId)
+  const prodMetadata = await context.doInWorkspaceContext(
+    prodWorkspaceId,
+    async () => {
+      return sdk.workspaces.metadata.tryGet()
+    }
+  )
+  if (!prodMetadata) {
+    return
+  }
+
+  await updateWorkspacePackage(
+    {
+      features: {
+        recaptchaEnabled,
+      },
+    },
+    prodWorkspaceId
+  )
 }
 
 export async function updateClient(
@@ -1409,6 +1459,25 @@ export async function updateWorkspacePackage(
     }
 
     // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
+    let deletedIconSources: string[] = []
+    const appPwaPrefix = `${getProdWorkspaceID(workspaceId)}/pwa/`
+    const pwaIconSource = (src: string) => {
+      const signedIcon = objectStore.extractBucketAndPath(src)
+      const resolvedSrc = signedIcon
+        ? signedIcon.bucket === ObjectStoreBuckets.APPS
+          ? signedIcon.path
+          : undefined
+        : src
+
+      if (!resolvedSrc?.startsWith(appPwaPrefix)) {
+        return undefined
+      }
+
+      return resolvedSrc
+    }
+    const isDefinedPwaIconSource = (src: string | undefined): src is string =>
+      src !== undefined
+
     if (workspacePackage.pwa && application.pwa) {
       if (workspacePackage.pwa.icons) {
         workspacePackage.pwa.icons = workspacePackage.pwa.icons.map(
@@ -1418,7 +1487,30 @@ export async function updateWorkspacePackage(
               ? { ...icon, src: application?.pwa?.icons?.[i].src }
               : icon
         )
+
+        const oldIconSources = new Set(
+          application.pwa.icons
+            .map(icon => pwaIconSource(icon.src))
+            .filter(isDefinedPwaIconSource)
+        )
+        const newIconSources = new Set(
+          workspacePackage.pwa.icons
+            .map(icon => pwaIconSource(icon.src))
+            .filter(isDefinedPwaIconSource)
+        )
+        deletedIconSources = [...oldIconSources].filter(
+          src => !newIconSources.has(src)
+        )
       }
+    }
+
+    // encrypt the embed SSO secret at rest (and preserve the existing secret
+    // when the builder submits the masked placeholder)
+    if (workspacePackage.embedSSO) {
+      newWorkspacePackage.embedSSO = sdk.embedSSO.encodeConfigForStorage(
+        workspacePackage.embedSSO,
+        application.embedSSO
+      )
     }
 
     // the locked by property is attached by server but generated from
@@ -1426,6 +1518,16 @@ export async function updateWorkspacePackage(
     delete newWorkspacePackage.lockedBy
 
     await db.put(newWorkspacePackage)
+    if (deletedIconSources.length > 0) {
+      try {
+        await objectStore.deleteFiles(
+          ObjectStoreBuckets.APPS,
+          deletedIconSources
+        )
+      } catch (error) {
+        console.error("Failed to delete removed PWA icons:", error)
+      }
+    }
     // remove any cached metadata, so that it will be updated
     await cache.workspace.invalidateWorkspaceMetadata(workspaceId)
     return newWorkspacePackage

@@ -401,6 +401,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+  await sdk.ai.agents.assertAgentHasValidConfig(agent)
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()

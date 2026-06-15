@@ -779,7 +779,7 @@
                           class="source-link"
                           onclick={() => openRagSource(source)}
                         >
-                          Download {source.filename}
+                          {source.filename}
                         </button>
                       {:else}
                         <span class="source-name">{source.filename}</span>

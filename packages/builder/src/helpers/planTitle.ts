@@ -21,6 +21,7 @@ export function getFormattedPlanName(userPlanType: PlanType) {
     case PlanType.ENTERPRISE:
       planName = "Enterprise"
       break
+    case PlanType.PREMIUM_PLUS_TRIAL:
     case PlanType.ENTERPRISE_BASIC_TRIAL:
       planName = "Trial"
       break
