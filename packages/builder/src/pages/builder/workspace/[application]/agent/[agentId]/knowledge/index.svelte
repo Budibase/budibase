@@ -311,7 +311,8 @@
   }
 
   async function removeFile(file: KnowledgeBaseFile) {
-    if (!agentId || !operationId || !file._id) {
+    const fileId = file._id
+    if (!agentId || !operationId || !fileId) {
       return
     }
 
@@ -324,7 +325,7 @@
           await agentsStore.removeOperationKnowledgeFile(
             agentId,
             operationId,
-            file._id!
+            fileId
           )
           await refreshDeploymentStatus()
           notifications.success("File removed")

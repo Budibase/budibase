@@ -167,14 +167,13 @@ export const toSharePointConnectionRows = ({
       const processing = snapshot?.processingCount || 0
       const completed = Math.min(synced + syncFailures, total)
       const hasFileData = total > 0
+      const isEmpty = total === 0
       const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
       const displayStatus =
         !hasCompletedSync && !hasFileData
           ? "Processing"
-          : total === 0
-            ? hasCompletedSync
-              ? "No files found"
-              : "Processing"
+          : isEmpty
+            ? "No files found"
             : `${completed}/${total} files`
       const hasSynced = hasCompletedSync || hasFileData
       return {
