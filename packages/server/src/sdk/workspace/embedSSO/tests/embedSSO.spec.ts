@@ -83,8 +83,11 @@ describe("embedSSO sdk", () => {
       expect(result).toBe(true)
       expect(getGlobalUserByEmail).toHaveBeenCalledWith("user@example.com")
       expect(createASession).toHaveBeenCalled()
-      const [name, , options] = ctx.cookies.set.mock.calls[0]
+      const [name, authToken, options] = ctx.cookies.set.mock.calls[0]
       expect(name).toBe(backendCore.constants.Cookie.Auth)
+      expect(jwt.decode(authToken)).toMatchObject({
+        exp: expect.any(Number),
+      })
       expect(options.sameSite).toBe("none")
       expect(options.secure).toBe(true)
     })
