@@ -346,7 +346,7 @@ class Orchestrator {
     this.job = job
     this.stopped = false
     this.onProgress = opts.onProgress
-    this.isTestRun = Boolean(opts.isTestRun || job.data.event.isTestRun)
+    this.isTestRun = Boolean(opts.isTestRun)
 
     // Pre-process the automation to transform legacy loops
     this.job.data.automation = automationUtils.preprocessAutomation(

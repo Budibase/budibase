@@ -274,7 +274,6 @@ export async function externalTrigger(
       ...data.event,
       appId: context.getWorkspaceId(),
       automation,
-      isTestRun,
     }
     return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
       executeInThread({ data } as AutomationJob, { onProgress, isTestRun })
