@@ -1,5 +1,9 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { getDelayMs } from "../../steps/delay"
+import {
+  getCappedTestDelayMs,
+  getDelayMs,
+  TEST_DELAY_CAP_MS,
+} from "../../steps/delay"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the delay logic", () => {
@@ -36,5 +40,12 @@ describe("test the delay logic", () => {
     expect(getDelayMs({ time: 10, unit: "minutes" })).toBe(600000)
     expect(getDelayMs({ time: 2, unit: "hours" })).toBe(7200000)
     expect(getDelayMs({ time: 3, unit: "days" })).toBe(259200000)
+  })
+
+  it("should cap test delays to three seconds", () => {
+    expect(getCappedTestDelayMs({ time: 1, unit: "days" })).toBe(
+      TEST_DELAY_CAP_MS
+    )
+    expect(getCappedTestDelayMs({ time: 2, unit: "seconds" })).toBe(2000)
   })
 })

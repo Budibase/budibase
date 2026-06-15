@@ -16,6 +16,7 @@ export interface AutomationDataEvent {
   user?: UserBindings
   timestamp?: number
   fields?: Record<string, any>
+  isTestRun?: boolean
 }
 
 export interface AutomationData {
