@@ -17,7 +17,9 @@
 {#snippet badgeContent()}
   <Badge size="S">
     <span class="operation-status-pill-content">
-      <StatusLight size="S" positive={live} negative={!live} />
+      <span class="operation-status-light">
+        <StatusLight size="S" positive={live} negative={!live} />
+      </span>
       <span>{live ? "Live" : "Stopped"}</span>
       {#if showMenuIcon}
         <Icon name="dots-three" size="XS" />
@@ -42,6 +44,9 @@
 {/if}
 
 <style>
+  .operation-status-light {
+    padding-bottom: 2px;
+  }
   .operation-live-badge.interactive {
     border: 0;
     padding: 0;
