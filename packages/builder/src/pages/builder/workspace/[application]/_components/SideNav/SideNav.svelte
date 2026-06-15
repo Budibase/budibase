@@ -729,7 +729,7 @@
             keepCollapsed()
           }}
         />
-        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isEnterpriseTrial}
+        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isTrialPlan}
           <SideNavLink
             icon="paper-plane-tilt"
             text="Email support"
