@@ -40,6 +40,16 @@ jest.mock("../../../controllers/ai/chatConversations", () => {
   }
 })
 
+jest.mock("../../../../sdk/workspace/ai/rag", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/rag")
+  >("../../../../sdk/workspace/ai/rag")
+  return {
+    ...actual,
+    getFileUrlForAgent: jest.fn(),
+  }
+})
+
 import sdk from "../../../../sdk"
 import { context, db, docIds, encryption, roles } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
@@ -59,6 +69,7 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 ) as ChatMockModule
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
+const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
 
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
@@ -106,6 +117,7 @@ describe("agent slack integration provisioning", () => {
       "test-config"
     )
     mockedWebhookChat.mockClear()
+    mockedGetFileUrlForAgent.mockReset()
     resetMockChatState()
   })
 
@@ -278,10 +290,6 @@ describe("agent slack integration provisioning", () => {
     }
 
     const getLinkPath = (linkUrl: string) => new URL(linkUrl).pathname
-
-    beforeEach(() => {
-      jest.restoreAllMocks()
-    })
 
     it(`returns a private link prompt for the /${ChatCommands.LINK} slash command`, async () => {
       const { agent, chatAppId } = await setupProvisionedSlackAgent()
@@ -669,9 +677,9 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("appends downloadable RAG source links to Slack assistant replies", async () => {
-      jest
-        .spyOn(sdk.ai.rag, "getFileUrlForAgent")
-        .mockResolvedValue("/files/signed/prod-budi-app-assets/source.pdf")
+      mockedGetFileUrlForAgent.mockResolvedValue(
+        "/files/signed/prod-budi-app-assets/source.pdf"
+      )
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
           {
@@ -720,14 +728,10 @@ describe("agent slack integration provisioning", () => {
           "- <http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf|Source One Draft.pdf>",
         ].join("\n")
       )
-      expect(sdk.ai.rag.getFileUrlForAgent).toHaveBeenCalledWith(
-        agent._id,
-        "file-1"
-      )
+      expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(agent._id, "file-1")
     })
 
     it("does not append RAG source links when downloads are disabled", async () => {
-      const getFileUrlForAgentSpy = jest.spyOn(sdk.ai.rag, "getFileUrlForAgent")
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
           {
@@ -772,11 +776,10 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages).toContain("Answer without links")
       expect(response.body.messages.join("\n")).not.toContain("Sources:")
-      expect(getFileUrlForAgentSpy).not.toHaveBeenCalled()
+      expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
     it("ignores RAG sources without file ids in Slack replies", async () => {
-      const getFileUrlForAgentSpy = jest.spyOn(sdk.ai.rag, "getFileUrlForAgent")
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
           {
@@ -818,7 +821,7 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages).toContain("Answer without source ids")
       expect(response.body.messages.join("\n")).not.toContain("Sources:")
-      expect(getFileUrlForAgentSpy).not.toHaveBeenCalled()
+      expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
     it("reuses the existing conversation for subsequent messages in the same scope", async () => {
