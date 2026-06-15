@@ -1,3 +1,4 @@
+import { JsonWebTokenError } from "jsonwebtoken"
 import { Cookie, Header } from "../constants"
 import {
   clearCookie,
@@ -128,9 +129,14 @@ export function authenticated(
       // check the actual user is authenticated first, try header or cookie
       let headerToken = getHeader(ctx, Header.TOKEN)
 
-      const authCookie =
-        getCookie<SessionCookie>(ctx, Cookie.Auth) ||
-        openJwt<SessionCookie>(headerToken)
+      const authCookie = getCookie<SessionCookie>(ctx, Cookie.Auth)
+      const authToken = authCookie || openJwt<SessionCookie>(headerToken)
+      if (authToken && !authToken.exp) {
+        if (authCookie) {
+          clearCookie(ctx, Cookie.Auth)
+        }
+        ctx.throw(401, "Session token missing expiration, please log in again")
+      }
       let apiKey = getHeader(ctx, Header.API_KEY)
 
       if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
@@ -142,9 +148,9 @@ export function authenticated(
         user: User | { tenantId: string } | undefined = undefined,
         internal = false,
         loginMethod: LoginMethod | undefined = undefined
-      if (authCookie && !apiKey) {
-        const sessionId = authCookie.sessionId
-        const userId = authCookie.userId
+      if (authToken && !apiKey) {
+        const sessionId = authToken.sessionId
+        const userId = authToken.userId
         let session
         try {
           // getting session handles error checking (if session exists etc)
@@ -240,7 +246,7 @@ export function authenticated(
     } catch (err: any) {
       console.warn(`Auth Error: ${err.message}`)
       // invalid token, clear the cookie
-      if (err?.name === "JsonWebTokenError") {
+      if (err instanceof JsonWebTokenError) {
         clearCookie(ctx, Cookie.Auth)
       } else if (err?.code === APIWarningCode.INVALID_API_KEY) {
         ctx.throw(403, err.message)
