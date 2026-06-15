@@ -18,6 +18,7 @@
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
+  import { getSequentialName } from "@/helpers/duplicate"
   import { contextMenuStore } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
@@ -118,14 +119,20 @@ Any constraints the agent must follow.
     renameModal?.hide()
   }
 
-  const createDefaultOperation = () =>
-    ({
+  const createDefaultOperation = () => {
+    const name =
+      getSequentialName(operations, "Operation ", {
+        getName: operation => operation.name,
+      }) || "Operation 1"
+
+    return {
       id: `operation_${Helpers.uuid()}`,
-      name: "Main operation",
+      name,
       live: false,
       promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
       allowKnowledgeSourceDownload: true,
-    }) satisfies AgentOperation
+    } satisfies AgentOperation
+  }
 
   const setOperationLive = async (nextLive: boolean) => {
     if (!selectedOperation || selectedOperation.live === nextLive) {
