@@ -93,7 +93,7 @@ export async function getResourcePerms(
     ? withoutPublic(permissions)
     : permissions
 
-  return Object.assign(basePermissions, mergeablePermissions)
+  return { ...basePermissions, ...mergeablePermissions }
 }
 
 export async function getDependantResources(
