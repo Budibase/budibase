@@ -16,7 +16,12 @@ export const buildDefaultAgentTestGroup = (): AgentTestGroup => ({
 
 export interface AgentTestReviewer {
   id: string
-  type: "exact_match" | "contains_text" | "llm_judge" | "tool_used"
+  type:
+    | "exact_match"
+    | "contains_text"
+    | "llm_judge"
+    | "tool_used"
+    | "operation_used"
   value: string
 }
 
@@ -84,6 +89,8 @@ export interface AgentTestCaseResult {
   status: "passed" | "failed" | "error"
   reviewerResults: AgentTestReviewerResult[]
   toolCalls: string[]
+  selectedOperationId?: string
+  selectedOperationName?: string
   sessionId: string
   requestIds: string[]
   startedAt: string

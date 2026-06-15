@@ -118,6 +118,8 @@ const buildResult = ({
   status,
   reviewerResults,
   toolCalls,
+  selectedOperationId,
+  selectedOperationName,
   error,
 }: {
   testCase: AgentTestCase
@@ -132,6 +134,8 @@ const buildResult = ({
   status: AgentTestCaseResult["status"]
   reviewerResults: AgentTestReviewerResult[]
   toolCalls: string[]
+  selectedOperationId?: string
+  selectedOperationName?: string
   error?: string
 }): AgentTestCaseResult => ({
   caseId: testCase.id,
@@ -143,6 +147,8 @@ const buildResult = ({
   status,
   reviewerResults,
   toolCalls,
+  selectedOperationId,
+  selectedOperationName,
   sessionId,
   requestIds,
   startedAt,
@@ -228,6 +234,8 @@ async function runAgentForCase({
 }): Promise<{
   response: string
   toolCalls: string[]
+  selectedOperationId?: string
+  selectedOperationName?: string
   sessionLogIndexer: SessionLogIndexer
 }> {
   const pendingToolCalls = new Set<string>()
@@ -263,6 +271,8 @@ async function runAgentForCase({
   return {
     response: text || "",
     toolCalls,
+    selectedOperationId: run.selectedOperation?.id,
+    selectedOperationName: run.selectedOperation?.name,
     sessionLogIndexer: run.sessionLogIndexer,
   }
 }
@@ -274,6 +284,7 @@ async function runReviewers({
   response,
   toolCalls,
   sessionLogIndexer,
+  selectedOperationId,
 }: {
   reviewers: AgentTestReviewer[]
   getLLM: () => Promise<TestLLM>
@@ -281,13 +292,21 @@ async function runReviewers({
   response: string
   toolCalls: string[]
   sessionLogIndexer: SessionLogIndexer
+  selectedOperationId?: string
 }): Promise<AgentTestReviewerResult[]> {
   const results: AgentTestReviewerResult[] = []
   let llm: TestLLM | undefined
 
   for (const reviewer of reviewers) {
     if (!isLLMJudgeReviewer(reviewer)) {
-      results.push(evaluateReviewer({ reviewer, response, toolCalls }))
+      results.push(
+        evaluateReviewer({
+          reviewer,
+          response,
+          toolCalls,
+          selectedOperationId,
+        })
+      )
       continue
     }
 
@@ -361,6 +380,7 @@ async function runCase({
       response: agentRun.response,
       toolCalls: agentRun.toolCalls,
       sessionLogIndexer,
+      selectedOperationId: agentRun.selectedOperationId,
     })
 
     await sessionLogIndexer.index()
@@ -384,6 +404,8 @@ async function runCase({
       status,
       reviewerResults,
       toolCalls: agentRun.toolCalls,
+      selectedOperationId: agentRun.selectedOperationId,
+      selectedOperationName: agentRun.selectedOperationName,
       error,
     })
   } catch (error) {
@@ -406,6 +428,8 @@ async function runCase({
         message,
       }),
       toolCalls: [],
+      selectedOperationId: undefined,
+      selectedOperationName: undefined,
       error: message,
     })
   }

@@ -9,6 +9,7 @@ export type ReviewerType = AgentTestReviewer["type"]
 export interface ReviewerEvaluateContext {
   response: string
   toolCalls: string[]
+  selectedOperationId?: string
 }
 
 export interface ReviewerEvaluation {
@@ -79,6 +80,23 @@ export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
         message: passed
           ? `Tool "${r.value}" was used.`
           : `Expected tool "${r.value}" to be used.`,
+      }
+    },
+  },
+  operation_used: {
+    label: "Operation used",
+    description: "Pass when a specific operation was selected for the run.",
+    inputType: "select",
+    requiredMessage: "operation is required",
+    evaluate: (r, { selectedOperationId }) => {
+      const passed = selectedOperationId === r.value
+      return {
+        passed,
+        message: passed
+          ? `Operation "${r.value}" was used.`
+          : selectedOperationId
+            ? `Expected operation "${r.value}" to be used, but "${selectedOperationId}" was selected.`
+            : `Expected operation "${r.value}" to be used.`,
       }
     },
   },

@@ -70,6 +70,25 @@ describe("agent test reviewers", () => {
     })
   })
 
+  it("evaluates operation used reviewers against the selected operation", () => {
+    expect(
+      evaluateReviewer({
+        reviewer: {
+          id: "reviewer-1",
+          type: "operation_used",
+          value: "operation_2",
+        },
+        response: "Handled it.",
+        toolCalls: [],
+        selectedOperationId: "operation_2",
+      })
+    ).toMatchObject({
+      reviewerId: "reviewer-1",
+      type: "operation_used",
+      status: "passed",
+    })
+  })
+
   it("derives case status from reviewer results", () => {
     expect(
       getCaseStatus([

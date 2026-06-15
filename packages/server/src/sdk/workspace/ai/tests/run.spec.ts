@@ -50,11 +50,10 @@ jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
     .mockReturnValue("Incomplete tool call"),
-  getLiveOperation: (agent: {
+  getLiveOperations: (agent: {
     operations?: Array<{ live?: boolean } & Record<string, unknown>>
   }) => {
-    const operation = agent.operations?.[0]
-    return operation?.live === true ? operation : undefined
+    return (agent.operations || []).filter(operation => operation.live === true)
   },
   prepareAgentChatRun: jest.fn(),
 }))
@@ -123,13 +122,16 @@ describe("agent test runner", () => {
   const mockAgentRun = ({
     response,
     toolCalls = [],
+    selectedOperation,
   }: {
     response: string
     toolCalls?: string[]
+    selectedOperation?: { id: string; name: string }
   }) => {
     prepareAgentChatRun.mockImplementation(async () => {
       const sessionLogIndexer = makeIndexer()
       return {
+        selectedOperation,
         sessionLogIndexer,
         stream: jest.fn().mockImplementation(async ({ onToolCalls }) => {
           sessionLogIndexer.addRequestId("agent-request")
@@ -185,8 +187,8 @@ describe("agent test runner", () => {
       operations: [
         {
           id: "operation_1",
-          name: "Main operation",
-          live: false,
+          name: "Operation 1",
+          live: true,
           enabledTools: [],
           knowledgeBases: [],
         },
@@ -381,6 +383,121 @@ describe("agent test runner", () => {
           type: "tool_used",
           status: "failed",
           message: 'Expected tool "search_rows" to be used.',
+        },
+      ],
+    })
+  })
+
+  it("passes an operation used reviewer when the selected operation matches", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "operation_used",
+        value: "operation_2",
+      },
+    ])
+    sdk.ai.agents.getOrThrow.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support Agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+      ],
+    })
+    mockAgentRun({
+      response: "Handled by operation 2.",
+      selectedOperation: {
+        id: "operation_2",
+        name: "Operation 2",
+      },
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "passed",
+      selectedOperationId: "operation_2",
+      selectedOperationName: "Operation 2",
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "operation_used",
+          status: "passed",
+          message: 'Operation "operation_2" was used.',
+        },
+      ],
+    })
+  })
+
+  it("fails an operation used reviewer when a different operation is selected", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "operation_used",
+        value: "operation_2",
+      },
+    ])
+    sdk.ai.agents.getOrThrow.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support Agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+      ],
+    })
+    mockAgentRun({
+      response: "Handled by operation 1.",
+      selectedOperation: {
+        id: "operation_1",
+        name: "Operation 1",
+      },
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "failed",
+      selectedOperationId: "operation_1",
+      selectedOperationName: "Operation 1",
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "operation_used",
+          status: "failed",
+          message:
+            'Expected operation "operation_2" to be used, but "operation_1" was selected.',
         },
       ],
     })
