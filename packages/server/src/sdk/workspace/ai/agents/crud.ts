@@ -30,7 +30,7 @@ type DeprecatedAgent = Agent & {
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
-const DEFAULT_OPERATION_NAME = "Operation"
+const DEFAULT_OPERATION_NAME = "Main operation"
 
 const guardName = async (name: string, id?: string) => {
   if (!name.trim()) {
