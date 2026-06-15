@@ -24,7 +24,11 @@ import {
   type ModelMessage,
 } from "ai"
 import sdk from "../../.."
-import { formatIncompleteToolCallError, prepareAgentChatRun } from "../agents"
+import {
+  formatIncompleteToolCallError,
+  getLiveOperations,
+  prepareAgentChatRun,
+} from "../agents"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -532,7 +536,7 @@ const buildRunSnapshot = async ({
   aiConfigIds,
 }: {
   agent: Agent
-  operation: AgentOperation
+  operation?: AgentOperation
   suite: AgentTestSuite
   aiConfigIds: string[]
 }): Promise<AgentTestSnapshot> => {
@@ -569,7 +573,7 @@ export async function runSuite({
   startedAt = new Date().toISOString(),
 }: {
   agentId: string
-  operationId: string
+  operationId?: string
   user: ContextUser
   caseId?: string
   groupId?: string
@@ -578,9 +582,11 @@ export async function runSuite({
   startedAt?: string
 }): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const operation = agent.operations?.find(o => o.id === operationId)
+  const operation = operationId
+    ? agent.operations?.find(o => o.id === operationId)
+    : getLiveOperations(agent)[0]
 
-  if (!operation) {
+  if (operationId && !operation) {
     throw new Error(`Operation ${operationId} not found in ${agentId}`)
   }
 
