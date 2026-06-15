@@ -44,13 +44,15 @@ export const formatSlackAssistantReply = async ({
   agentId,
   result,
   allowKnowledgeSourceDownload,
+  isDirectMessage,
 }: {
   agentId: string
   result: WebhookChatCompleteResult
   allowKnowledgeSourceDownload?: boolean
+  isDirectMessage?: boolean
 }) => {
   const assistantText = result.assistantText || ""
-  if (allowKnowledgeSourceDownload === false) {
+  if (allowKnowledgeSourceDownload === false || !isDirectMessage) {
     return assistantText
   }
 
@@ -140,6 +142,7 @@ type SlackInput = {
   content: string
   channelId: string
   externalUserId: string
+  isDirectMessage: boolean
   teamId?: string
   threadId?: string
 }
@@ -169,6 +172,7 @@ const createSlackInputHandler = ({
     content,
     channelId,
     externalUserId,
+    isDirectMessage,
     teamId,
     threadId,
   }: SlackInput) => {
@@ -218,6 +222,7 @@ const createSlackInputHandler = ({
             agentId,
             result,
             allowKnowledgeSourceDownload,
+            isDirectMessage,
           }),
         workspaceId,
         chatAppId,
@@ -267,6 +272,7 @@ const createSlackMessageHandler = (
       channelId: thread.channelId,
       threadId: thread.id || undefined,
       externalUserId: message.author.userId,
+      isDirectMessage: isSlackDirectMessage(raw),
       teamId: raw?.team_id || raw?.team,
     })
   }
@@ -345,6 +351,10 @@ export async function slackWebhook(
             content: event.text,
             channelId: raw.channel_id,
             externalUserId: event.user.userId,
+            isDirectMessage: isSlackDirectMessage({
+              type: "message",
+              channel: raw.channel_id,
+            }),
             teamId: raw.team_id,
           })
         }

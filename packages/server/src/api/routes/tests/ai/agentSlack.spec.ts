@@ -731,6 +731,52 @@ describe("agent slack integration provisioning", () => {
       expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(agent._id, "file-1")
     })
 
+    it("does not append RAG source links to Slack channel replies", async () => {
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer with private sources" }],
+          },
+        ] as any,
+        assistantText: "Answer with private sources",
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Source.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "<@U123> hello slack",
+            user: "user-1",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Answer with private sources")
+      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
+    })
+
     it("does not append RAG source links when downloads are disabled", async () => {
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
