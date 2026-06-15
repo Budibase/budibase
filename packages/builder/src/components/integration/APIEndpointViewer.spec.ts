@@ -804,6 +804,81 @@ describe("API Endpoint Viewer", () => {
       })
     })
 
+    it("saves an existing connector query with the changed datasource", async () => {
+      mockRestTemplates({
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
+      })
+
+      const githubDatasource: Datasource = {
+        ...REST_DS_WITH_URL,
+        restTemplateId: "github",
+      }
+      const otherGithubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        restTemplateId: "github",
+      }
+      await setupTwoDatasources(githubDatasource, otherGithubDatasource)
+      queries.store.update(s => ({
+        ...s,
+        list: [
+          {
+            ...SAVED_QUERY,
+            restTemplateMetadata: {
+              operationId: "getUsers",
+              originalPath: "/api/users",
+            },
+          },
+        ],
+      }))
+      vi.mocked(API).saveQuery.mockResolvedValue({
+        ...SAVED_QUERY,
+        datasourceId: REST_DS_ID_2,
+        _rev: "2-updated",
+      })
+
+      const { container, rerender } = setupDOM({
+        queryId: QUERY_ID,
+        datasourceId: REST_DS_ID,
+        restTemplateId: "github",
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("REST API 2")
+      })
+
+      await rerender({
+        queryId: QUERY_ID,
+        datasourceId: REST_DS_ID_2,
+        restTemplateId: "github",
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("Other REST API")
+      })
+
+      const nameEl = container.querySelector(
+        ".query-name-input"
+      ) as HTMLInputElement
+      await fireEvent.input(nameEl, { target: { value: "Renamed request" } })
+      await fireEvent.blur(nameEl)
+
+      const saveBtn = await waitFor(() => {
+        const btn = getSaveButton(container)
+        expect(btn?.classList.contains("is-disabled")).toBe(false)
+        return btn!
+      })
+      await fireEvent.click(saveBtn)
+
+      await waitFor(() => {
+        const saved = vi.mocked(API).saveQuery.mock.calls[0]?.[0] as Query
+        expect(saved.datasourceId).toBe(REST_DS_ID_2)
+      })
+    })
+
     it("shows inline auth config label in connection picker", async () => {
       await setupDatasources(REST_DS_WITH_AUTH)
       queries.store.update(s => ({

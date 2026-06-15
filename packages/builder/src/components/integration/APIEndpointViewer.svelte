@@ -113,6 +113,7 @@
   }
 
   let activeDatasourceId: string | undefined = datasourceId
+  let lastDatasourceId: string | undefined = datasourceId
   let connectionSelectRef: ConnectionSelect
   let panelZIndex: number = 1001
 
@@ -171,9 +172,22 @@
   $: queryDatasourceId = queryId
     ? $queries.list.find(q => q._id === queryId)?.datasourceId
     : undefined
+  $: if (datasourceId !== lastDatasourceId) {
+    activeDatasourceId = datasourceId
+    lastDatasourceId = datasourceId
+  }
+  $: if (!datasourceId && queryDatasourceId && !activeDatasourceId) {
+    activeDatasourceId = queryDatasourceId
+  }
+  $: storeQuery = queryId
+    ? resolveStoreQuery($queries.list, queryId, undefined)
+    : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
+  $: isNewQuery = !storeQuery?._id
+  $: canChangeConnection = !queryId || !!restTemplateId
   $: selectedDatasourceId =
-    queryDatasourceId ||
+    (canChangeConnection ? activeDatasourceId : queryDatasourceId) ||
     datasourceId ||
+    queryDatasourceId ||
     $workspaceConnections.draft?.query?.datasourceId ||
     resolvedConnectorDatasourceId ||
     (!$workspaceConnections.draft ? activeDatasourceId : undefined) ||
@@ -186,17 +200,6 @@
   $: isCustomMode = !hasRestTemplate(datasource)
 
   // ── QUERY INITIALISATION ─────────────────────────────────────────────────
-  $: if (!datasourceId && queryDatasourceId && !activeDatasourceId) {
-    activeDatasourceId = queryDatasourceId
-  }
-
-  $: storeQuery =
-    queryId &&
-    (activeDatasourceId || selectedDatasourceId) === queryDatasourceId
-      ? resolveStoreQuery($queries.list, queryId, undefined)
-      : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
-  $: isNewQuery = !storeQuery?._id
-  $: canChangeConnection = isNewQuery || !!restTemplateId
   $: querySourceKey = storeQuery?._id
     ? `query:${storeQuery._id}`
     : $workspaceConnections.draft
@@ -320,6 +323,7 @@
     buildQuery(
       {
         ...editableQuery,
+        datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },
       runtimeUrlQueries,
