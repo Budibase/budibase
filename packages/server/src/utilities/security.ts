@@ -41,9 +41,13 @@ export function getBasePermissions(resourceId: string): Record<string, string> {
   const isInternalTable = (Object.values(InternalTables) as string[]).includes(
     resourceId
   )
-  const type = isInternalTable
-    ? permissions.PermissionType.USER
-    : getPermissionType(resourceId)
+  if (isInternalTable) {
+    return {
+      [permissions.PermissionLevel.READ]: roles.BUILTIN_ROLE_IDS.ADMIN,
+      [permissions.PermissionLevel.WRITE]: roles.BUILTIN_ROLE_IDS.ADMIN,
+    }
+  }
+  const type = getPermissionType(resourceId)
   const basePermissions: Record<string, string> = {}
   for (let [roleId, role] of Object.entries(roles.getBuiltinRoles())) {
     if (!role.permissionId) {

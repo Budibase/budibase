@@ -5,6 +5,7 @@ import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   InternalTable,
+  roles,
   setEnv,
   tenancy,
   utils,
@@ -29,6 +30,7 @@ import {
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   JsonFieldSubType,
+  PermissionLevel,
   QuotaUsageType,
   RelationSchemaField,
   RelationshipType,
@@ -4394,8 +4396,18 @@ if (descriptions.length) {
             })
           })
 
-          it("allows POWER users to search the user table", async () => {
+          it("denies POWER users from searching the user table", async () => {
             await config.loginAsRole("POWER", async () => {
+              await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 403 }
+              )
+            })
+          })
+
+          it("allows ADMIN workspace role users to search the user table", async () => {
+            await config.loginAsRole("ADMIN", async () => {
               const { rows } = await config.api.row.search(
                 InternalTables.USER_METADATA,
                 {},
@@ -4405,8 +4417,53 @@ if (descriptions.length) {
             })
           })
 
-          it("allows ADMIN users to search the user table", async () => {
-            await config.loginAsRole("ADMIN", async () => {
+          it("allows builder users to search the user table", async () => {
+            const { rows } = await config.api.row.search(
+              InternalTables.USER_METADATA,
+              {},
+              { status: 200 }
+            )
+            expect(rows.length).toBeGreaterThan(0)
+          })
+
+          it("blocks PUBLIC access even when explicitly configured", async () => {
+            await config.api.permission.add({
+              roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+              resourceId: InternalTables.USER_METADATA,
+              level: PermissionLevel.READ,
+            })
+            await config.loginAsRole("BASIC", async () => {
+              await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 403 }
+              )
+            })
+          })
+
+          it("allows BASIC users when a builder explicitly grants access", async () => {
+            await config.api.permission.add({
+              roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+              resourceId: InternalTables.USER_METADATA,
+              level: PermissionLevel.READ,
+            })
+            await config.loginAsRole("BASIC", async () => {
+              const { rows } = await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 200 }
+              )
+              expect(rows.length).toBeGreaterThan(0)
+            })
+          })
+
+          it("allows POWER users when a builder explicitly grants access", async () => {
+            await config.api.permission.add({
+              roleId: roles.BUILTIN_ROLE_IDS.POWER,
+              resourceId: InternalTables.USER_METADATA,
+              level: PermissionLevel.READ,
+            })
+            await config.loginAsRole("POWER", async () => {
               const { rows } = await config.api.row.search(
                 InternalTables.USER_METADATA,
                 {},
