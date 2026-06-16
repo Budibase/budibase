@@ -39,7 +39,6 @@
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
-    operationId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
   }
@@ -52,7 +51,6 @@
     initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
-    operationId,
     readOnly = false,
     readOnlyReason,
   }: Props = $props()
@@ -112,13 +110,11 @@
                 selectedOperationId
               )
             ).url
-          : isAgentPreviewChat &&
-              chat?.agentId &&
-              (selectedOperationId || operationId)
+          : isAgentPreviewChat && chat?.agentId && selectedOperationId
             ? (
                 await API.fetchOperationFileUrl(
                   chat.agentId,
-                  selectedOperationId || operationId!,
+                  selectedOperationId,
                   source.fileId
                 )
               ).url
@@ -148,8 +144,7 @@
 
   const canDownloadSource = (message: UIMessage<AgentMessageMetadata>) =>
     message.metadata?.allowKnowledgeSourceDownload === true &&
-    (!!message.metadata?.selectedOperationId ||
-      (isAgentPreviewChat && !!operationId))
+    !!message.metadata?.selectedOperationId
 
   const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     reasoningTextByMessageId[message.id] || getReasoningText(message)
@@ -269,7 +264,6 @@
             _id: resolvedConversationId || chat?._id,
             chatAppId,
             agentId: chat?.agentId,
-            operationId: chat?.operationId,
             transient: !persistConversation,
             isPreview: isAgentPreviewChat,
             sessionId: stableSessionId,

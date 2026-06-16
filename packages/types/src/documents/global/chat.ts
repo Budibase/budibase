@@ -62,7 +62,6 @@ export interface ChatConversationChannel {
 export interface ChatConversationRequest extends Document {
   chatAppId: string
   agentId: string
-  operationId?: string
   title?: string
   messages: UIMessage<AgentMessageMetadata>[]
   transient?: boolean
