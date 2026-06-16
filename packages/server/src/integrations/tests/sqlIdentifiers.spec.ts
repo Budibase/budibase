@@ -1,4 +1,7 @@
-import { quotePostgresIdentifier } from "../utils/sqlIdentifiers"
+import {
+  quoteMySqlIdentifier,
+  quotePostgresIdentifier,
+} from "../utils/sqlIdentifiers"
 
 describe("sql identifiers", () => {
   it("quotes postgres identifiers", () => {
@@ -7,4 +10,9 @@ describe("sql identifiers", () => {
     )
   })
 
+  it("quotes mysql identifiers", () => {
+    expect(quoteMySqlIdentifier("safe`; SELECT SLEEP(1); --")).toBe(
+      "`safe``; SELECT SLEEP(1); --`"
+    )
+  })
 })
