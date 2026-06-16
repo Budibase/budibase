@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, notifications, Select, Button } from "@budibase/bbui"
+  import type { AgentOperation, RequiredKeys } from "@budibase/types"
   import {
     AIConfigType,
     ToolType,
@@ -43,22 +44,36 @@
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
   const AUTO_SAVE_DEBOUNCE_MS = 800
+
+  const toDraftOperation = (
+    operation: AgentOperation
+  ): RequiredKeys<AgentOperation> => ({
+    id: operation.id,
+    name: operation.name,
+    live: operation.live,
+    promptInstructions: operation.promptInstructions,
+    enabledTools: operation.enabledTools,
+    knowledgeBases: operation.knowledgeBases,
+    allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+    knowledgeSources: operation.knowledgeSources,
+  })
+
   // Agent state
   let draftAgentId: string | undefined = $state()
-  let draft = $state({
+  let draft = $state<Agent>({
     name: "",
     description: "",
     aiconfig: "",
     goal: "",
-    operationName: "",
-    promptInstructions: "",
     icon: "",
     iconColor: "",
+    operations: [],
   })
 
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
   let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
+  let preloadedKnowledgeAgentId: string | undefined = $state()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
@@ -179,10 +194,9 @@
         description: agent.description || "",
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
-        operationName: agent.operationName || "",
-        promptInstructions: agent.promptInstructions ?? "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
+        operations: agent.operations?.map(toDraftOperation) || [],
       }
       draftAgentId = agent._id
     }
@@ -208,6 +222,24 @@
       draft.aiconfig = modelOptions[0].value
       scheduleSave(true)
     }
+  })
+
+  $effect(() => {
+    const agentId = currentAgent?._id
+    if (!agentId || preloadedKnowledgeAgentId === agentId) {
+      return
+    }
+
+    agentsStore
+      .fetchAgentKnowledge(agentId)
+      .then(() => {
+        if (currentAgent?._id === agentId) {
+          preloadedKnowledgeAgentId = agentId
+        }
+      })
+      .catch(error => {
+        console.error(error)
+      })
   })
 
   function resolveAgentToolIcons(
@@ -380,66 +412,100 @@
     showNotifications = true,
   }: {
     showNotifications?: boolean
-  }) {
-    if (!currentAgent) return
-    if (saving) return
+  }): Promise<boolean> {
+    if (!currentAgent) return false
+    if (saving) return false
 
     saving = true
     try {
-      const enabledTools = getIncludedToolRuntimeBindings(
-        draft.promptInstructions,
-        readableToRuntimeBinding
-      )
+      const { operations: draftOperations, ...agentDraft } = draft
+      const operations =
+        draftOperations?.map(operation => ({
+          ...operation,
+          enabledTools: getIncludedToolRuntimeBindings(
+            operation.promptInstructions,
+            readableToRuntimeBinding
+          ),
+        })) || []
+
       await agentsStore.updateAgent({
         ...currentAgent,
-        ...draft,
-        enabledTools,
+        ...agentDraft,
       })
+
+      if (currentAgent._id) {
+        await agentsStore.syncAgentOperations(
+          currentAgent._id,
+          currentAgent.operations,
+          operations
+        )
+      }
 
       if (showNotifications) {
         notifications.success("Agent saved successfully")
       }
       await agentsStore.fetchAgents()
       await workspaceDeploymentStore.fetch()
+      return true
     } catch (error) {
       notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
+      return false
     } finally {
       saving = false
     }
   }
 
-  async function deleteOperationKnowledge() {
-    if (!currentAgent?._id) {
-      return
+  async function setOperationLive(
+    operationId: string,
+    live: boolean
+  ): Promise<boolean> {
+    if (!currentAgent) {
+      return false
     }
 
-    const agentId = currentAgent._id
-    const knowledge = await agentsStore.fetchAgentKnowledge(agentId)
-    const fileDeletes = (knowledge.files || [])
-      .map(file => file._id)
-      .filter((id): id is string => !!id)
-      .map(fileId => agentsStore.deleteAgentFile(agentId, fileId))
+    try {
+      if (!currentAgent._id) {
+        return false
+      }
 
-    const sourceDisconnects = (currentAgent.knowledgeSources || [])
-      .map(source => source.config?.site?.id)
-      .filter((id): id is string => !!id)
-      .map(siteId => agentsStore.disconnectAgentSharePointSite(agentId, siteId))
+      const updated = await agentsStore.updateAgentOperation(
+        currentAgent._id,
+        operationId,
+        { live }
+      )
 
-    await Promise.all([...fileDeletes, ...sourceDisconnects])
+      draft = {
+        ...draft,
+        name: updated.name || "",
+        description: updated.description || "",
+        aiconfig: updated.aiconfig || "",
+        goal: updated.goal || "",
+        icon: updated.icon || "",
+        iconColor: updated.iconColor || "",
+        operations: updated.operations?.map(toDraftOperation) || [],
+      }
+
+      await agentsStore.fetchAgents()
+      await workspaceDeploymentStore.fetch()
+      return true
+    } catch (error) {
+      notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
+      return false
+    }
   }
 
   const scheduleSave = (immediate = false) => {
     clearAutoSave()
 
     if (immediate) {
-      saveAgent({ showNotifications: false })
-      return
+      return saveAgent({ showNotifications: false })
     }
 
     autoSaveTimeout = setTimeout(() => {
       saveAgent({ showNotifications: false })
       autoSaveTimeout = undefined
     }, AUTO_SAVE_DEBOUNCE_MS)
+    return Promise.resolve(false)
   }
   const clearAutoSave = () => {
     if (autoSaveTimeout) {
@@ -506,6 +572,7 @@
       {:else}
         <Select
           bind:value={draft.aiconfig}
+          placeholder={false}
           options={modelOptions}
           size="S"
           on:change={() => scheduleSave(true)}
@@ -515,19 +582,21 @@
   </div>
 </div>
 
-<OperationsSection
-  bind:agent={draft}
-  {promptBindings}
-  bindingIcons={readableToIcon}
-  completions={promptCompletions}
-  {toolsLoaded}
-  {availableTools}
-  {webSearchConfigured}
-  onAddApiConnection={() => bb.settings("/connections/apis")}
-  onConfigureWebSearch={openWebSearchConfigModal}
-  onDeleteOperation={deleteOperationKnowledge}
-  onUpdated={() => scheduleSave(true)}
-/>
+{#key currentAgent?._id}
+  <OperationsSection
+    bind:agent={draft}
+    {promptBindings}
+    bindingIcons={readableToIcon}
+    completions={promptCompletions}
+    {toolsLoaded}
+    {availableTools}
+    {webSearchConfigured}
+    onAddApiConnection={() => bb.settings("/connections/apis")}
+    onConfigureWebSearch={openWebSearchConfigModal}
+    onSetOperationLive={setOperationLive}
+    onUpdated={() => scheduleSave(true)}
+  />
+{/key}
 
 <WebSearchConfigModal
   bind:this={webSearchConfigModal}

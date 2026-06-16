@@ -23,7 +23,11 @@ import {
   type ModelMessage,
 } from "ai"
 import sdk from "../../.."
-import { formatIncompleteToolCallError, prepareAgentChatRun } from "../agents"
+import {
+  formatIncompleteToolCallError,
+  getLiveOperation,
+  prepareAgentChatRun,
+} from "../agents"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -539,6 +543,8 @@ const buildRunSnapshot = async ({
     config => config.aiConfigId === agent.aiconfig
   )
 
+  const operation = getLiveOperation(agent)
+
   return {
     agentId: agent._id!,
     agentName: agent.name,
@@ -548,10 +554,10 @@ const buildRunSnapshot = async ({
     aiconfig: agent.aiconfig,
     aiConfig,
     aiConfigs,
-    promptInstructions: agent.promptInstructions,
+    promptInstructions: operation?.promptInstructions,
     goal: agent.goal,
-    enabledTools: [...(agent.enabledTools || [])],
-    knowledgeBases: [...(agent.knowledgeBases || [])],
+    enabledTools: [...(operation?.enabledTools || [])],
+    knowledgeBases: [...(operation?.knowledgeBases || [])],
   }
 }
 

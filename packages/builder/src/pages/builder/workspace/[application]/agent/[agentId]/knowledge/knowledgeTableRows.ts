@@ -117,10 +117,24 @@ export const getSharePointLastSyncLabel = (lastRunAt?: string) => {
   return `Last sync at ${formatTimestamp(lastRunAt)} - SharePoint`
 }
 
+const getSharePointSiteDisplayName = ({
+  site,
+  snapshot,
+}: {
+  site?: { id: string; name?: string; webUrl?: string }
+  snapshot?: SharePointKnowledgeSourceSnapshot
+}) => {
+  const resolvedName =
+    snapshot?.name || snapshot?.webUrl || site?.name || site?.webUrl
+  if (resolvedName) {
+    return resolvedName
+  }
+  return "Loading SharePoint site..."
+}
+
 export const toSharePointConnectionRows = ({
   sharePointSources,
   sharePointSourceSnapshots,
-  loadingSharePointSites,
   onDelete,
   onSync,
 }: {
@@ -129,7 +143,6 @@ export const toSharePointConnectionRows = ({
     config: { site?: { id: string; name?: string; webUrl?: string } }
   }>
   sharePointSourceSnapshots: SharePointKnowledgeSourceSnapshot[]
-  loadingSharePointSites: boolean
   onDelete: (siteId: string) => Promise<void>
   onSync: (sourceId: string) => Promise<void>
 }): SharePointConnectionTableRow[] => {
@@ -147,25 +160,22 @@ export const toSharePointConnectionRows = ({
       const snapshot = sharePointSourceSnapshots.find(
         s => s.sourceId === source.id
       )
-      const hasSynced = !!snapshot?.lastRunAt
+      const hasCompletedSync = !!snapshot?.lastRunAt
       const total = snapshot?.totalCount || 0
       const synced = snapshot?.syncedCount || 0
       const syncFailures = snapshot?.failedCount || 0
       const processing = snapshot?.processingCount || 0
       const completed = Math.min(synced + syncFailures, total)
-      const siteDisplayName =
-        snapshot?.name ||
-        snapshot?.webUrl ||
-        site.name ||
-        site.webUrl ||
-        (loadingSharePointSites
-          ? "Loading SharePoint site..."
-          : "SharePoint site")
-      const displayStatus = !hasSynced
-        ? "Processing"
-        : total === 0
-          ? "No files found"
-          : `${completed}/${total} files`
+      const hasFileData = total > 0
+      const isEmpty = total === 0
+      const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
+      const displayStatus =
+        !hasCompletedSync && !hasFileData
+          ? "Processing"
+          : isEmpty
+            ? "No files found"
+            : `${completed}/${total} files`
+      const hasSynced = hasCompletedSync || hasFileData
       return {
         kind: "sharepoint_connection" as const,
         __clickable: hasSynced,

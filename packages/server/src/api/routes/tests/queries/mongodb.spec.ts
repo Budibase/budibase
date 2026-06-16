@@ -386,6 +386,42 @@ if (descriptions.length) {
           ])
         })
 
+        it("a find query with a parameterised key", async () => {
+          await withCollection(collection =>
+            collection.insertOne({
+              name: "apartment",
+              accommodates: 9,
+            })
+          )
+
+          const query = await createQuery({
+            fields: {
+              json: `{
+                "{{ field }}": 9
+              }`,
+              extra: {
+                actionType: "find",
+              },
+            },
+            parameters: [
+              {
+                name: "field",
+                default: "accommodates",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!)
+
+          expect(result.data).toEqual([
+            {
+              _id: expectValidId,
+              name: "apartment",
+              accommodates: 9,
+            },
+          ])
+        })
+
         it("does not allow quoted find parameters to inject Mongo operators", async () => {
           const query = await createQuery({
             fields: {
@@ -550,6 +586,50 @@ if (descriptions.length) {
               nested: {
                 enabled: true,
               },
+            })
+          })
+        })
+
+        it("a create query with a parameterised key", async () => {
+          const query = await createQuery({
+            fields: {
+              json: [
+                {
+                  "{{ fieldName }}": "Yellow",
+                },
+              ],
+              extra: {
+                actionType: "insertMany",
+              },
+            },
+            queryVerb: "create",
+            parameters: [
+              {
+                name: "fieldName",
+                default: "defaultField",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: { fieldName: "Banana" },
+          })
+
+          expect(result.data).toEqual([
+            {
+              acknowledged: true,
+              insertedCount: 1,
+              insertedIds: {
+                "0": expectValidId,
+              },
+            },
+          ])
+
+          await withCollection(async collection => {
+            const doc = await collection.findOne({ Banana: { $eq: "Yellow" } })
+            expect(doc).toEqual({
+              _id: expectValidBsonObjectId,
+              Banana: "Yellow",
             })
           })
         })
