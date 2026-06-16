@@ -491,6 +491,52 @@ if (mainDescriptions.length) {
             response.datasource.entities?.[repeated_table_name].schema
           expect(Object.keys(schema || {}).sort()).toEqual(["id", "val1"])
         })
+
+        it("handles quoted schema names in the search path", async () => {
+          const specialSchema = `bb_${generator
+            .guid()
+            .replaceAll("-", "")
+            .substring(0, 6)}_"safe; SELECT pg_sleep(1); --`
+          const tableName = "quoted_schema_table"
+
+          try {
+            await client.schema.createSchema(specialSchema)
+            await client.schema
+              .withSchema(specialSchema)
+              .createTable(tableName, table => {
+                table.increments("id").primary()
+              })
+
+            datasource.config!.schema = specialSchema
+
+            const response = await config.api.datasource.info(datasource)
+            expect(response.tableNames).toEqual(
+              expect.arrayContaining([tableName])
+            )
+          } finally {
+            await client.schema.dropSchema(specialSchema, true)
+          }
+        })
+
+        it("does not execute SQL from schema names", async () => {
+          const markerTable = `bb_${generator
+            .guid()
+            .replaceAll("-", "")
+            .substring(0, 6)}_marker`
+          const maliciousSchema = `public"; CREATE TABLE ${markerTable} (id int); --`
+
+          try {
+            datasource.config!.schema = maliciousSchema
+
+            await config.api.datasource.info(datasource)
+
+            const markerExists = await client.schema.hasTable(markerTable)
+            expect(markerExists).toBe(false)
+          } finally {
+            datasource.config!.schema = `${schema1}, ${schema2}`
+            await client.schema.dropTableIfExists(markerTable)
+          }
+        })
       }
     )
   }
