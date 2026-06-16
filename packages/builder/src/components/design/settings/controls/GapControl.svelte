@@ -3,17 +3,22 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = "M"
+  export let options = []
+  export let units = ["rem", "px", "em", "%"]
 
   const dispatch = createEventDispatcher()
-  const units = ["rem", "px", "em", "%"]
 
-  const presetOptions = [
-    { label: "None", value: "N" },
-    { label: "Small", value: "S" },
-    { label: "Medium", value: "M" },
-    { label: "Large", value: "L" },
-    { label: "Custom", value: "custom" },
-  ]
+  // Use provided options from manifest, or default fallback
+  $: presetOptions =
+    options.length > 0
+      ? options
+      : [
+          { label: "None", value: "N" },
+          { label: "Small", value: "S" },
+          { label: "Medium", value: "M" },
+          { label: "Large", value: "L" },
+          { label: "Custom", value: "custom" },
+        ]
 
   $: isCustom = typeof value === "object"
   $: mode = isCustom ? "custom" : value
