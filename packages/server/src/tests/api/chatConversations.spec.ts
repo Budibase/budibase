@@ -404,7 +404,7 @@ describe("chat conversations authorization", () => {
     expect(res.status).toBe(404)
   })
 
-  it("fails closed when a chat app download request does not resolve to one operation", async () => {
+  it("rejects download requests for unknown operations", async () => {
     const headers = await headersForUser(userA)
     const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
 

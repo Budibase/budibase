@@ -52,18 +52,8 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
-const resolveOperationForKnowledgeSourceDownload = (
-  agent: Agent,
-  operationId?: string
-) => {
-  const liveOperations = getLiveOperations(agent)
-
-  if (operationId) {
-    return liveOperations.find(operation => operation.id === operationId)
-  }
-
-  return liveOperations.length === 1 ? liveOperations[0] : undefined
-}
+const findLiveOperation = (agent: Agent, operationId: string) =>
+  getLiveOperations(agent).find(operation => operation.id === operationId)
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
@@ -583,10 +573,7 @@ export async function fetchChatAppAgentFileUrl(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const operation = resolveOperationForKnowledgeSourceDownload(
-    agent,
-    operationId
-  )
+  const operation = findLiveOperation(agent, operationId)
 
   if (!operation) {
     throw new HTTPError("Operation not found", 404)
