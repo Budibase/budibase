@@ -53,6 +53,16 @@ jest.mock("../../../controllers/ai/chatConversations", () => {
   }
 })
 
+jest.mock("../../../../sdk/workspace/ai/rag", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/rag")
+  >("../../../../sdk/workspace/ai/rag")
+  return {
+    ...actual,
+    getFileUrlForAgent: jest.fn(),
+  }
+})
+
 import sdk from "../../../../sdk"
 import { context, docIds, roles } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
@@ -69,6 +79,7 @@ import { webhookChat } from "../../../controllers/ai/chatConversations"
 const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
   jest.requireActual("chat") as ChatMockModule
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
+const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
 
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
@@ -95,6 +106,7 @@ describe("agent teams integration provisioning", () => {
       "test-config"
     )
     mockedWebhookChat.mockClear()
+    mockedGetFileUrlForAgent.mockReset()
     resetMockChatState()
   })
 
@@ -269,12 +281,17 @@ describe("agent teams integration provisioning", () => {
     const setupProvisionedTeamsAgent = async ({
       requireUserLink,
       roleId,
+      allowKnowledgeSourceDownload,
     }: {
       requireUserLink?: boolean
       roleId?: string
+      allowKnowledgeSourceDownload?: boolean
     } = {}) => {
       const agent = await config.api.agent.create({
         name: "Teams Incoming Messages Agent",
+        ...(allowKnowledgeSourceDownload !== undefined && {
+          allowKnowledgeSourceDownload,
+        }),
         MSTeamsIntegration: {
           appId: "teams-app-id",
           appPassword: "teams-app-password",
@@ -524,6 +541,150 @@ describe("agent teams integration provisioning", () => {
       )
       expect(conversations[0]?.userId).toEqual(config.getUser()._id)
       expect(conversations[0]?.messages).toHaveLength(2)
+    })
+
+    it("appends downloadable RAG source links to Teams personal replies", async () => {
+      mockedGetFileUrlForAgent.mockResolvedValue(
+        "/files/signed/prod-budi-app-assets/source.pdf"
+      )
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer with sources" }],
+          },
+        ] as any,
+        assistantText: "Answer with sources",
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Source [One](Draft).pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-rag-personal-1",
+          type: "message",
+          text: "hello teams",
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        [
+          "Answer with sources",
+          "",
+          "Sources:",
+          "- Source One Draft .pdf: http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf",
+        ].join("\n")
+      )
+      expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(agent._id, "file-1")
+    })
+
+    it("does not append RAG source links to Teams channel replies", async () => {
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer with private sources" }],
+          },
+        ] as any,
+        assistantText: "Answer with private sources",
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Source.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-channel-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-rag-channel-1",
+          type: "message",
+          text: "hello in channel",
+          from: { id: "user-channel-1", name: "Teams User" },
+          conversation: {
+            id: "conversation-channel-1",
+            conversationType: "channel",
+          },
+          channelData: {
+            channel: { id: "channel-rag-source" },
+            team: { id: "team-1" },
+            tenant: { id: "tenant-1" },
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Answer with private sources")
+      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
+    })
+
+    it("does not append Teams RAG source links when downloads are disabled", async () => {
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer without links" }],
+          },
+        ] as any,
+        assistantText: "Answer without links",
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Source.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent({
+          allowKnowledgeSourceDownload: false,
+        })
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-rag-disabled-1",
+          type: "message",
+          text: "hello teams",
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toContain("Answer without links")
+      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
     it("replaces the channel working indicator with the assistant reply in team channels", async () => {

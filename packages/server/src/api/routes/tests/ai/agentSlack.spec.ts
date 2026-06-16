@@ -1,8 +1,10 @@
+import type {
+  ChatConversationRequest,
+  WebhookChatCompleteResult,
+} from "@budibase/types"
+
 interface MockWebhookChatPayload {
-  chat: {
-    messages: unknown[]
-    title?: string
-  }
+  chat: Pick<ChatConversationRequest, "messages" | "title">
 }
 
 interface ChatMockModule {
@@ -12,6 +14,27 @@ interface ChatMockModule {
     result: { usedFallback: boolean }
   ) => void
 }
+
+const mockWebhookChatResult = ({
+  chat,
+  assistantText = "Mock assistant response",
+  ragSources,
+}: MockWebhookChatPayload & {
+  assistantText?: string
+  ragSources?: WebhookChatCompleteResult["ragSources"]
+}): WebhookChatCompleteResult => ({
+  messages: [
+    ...chat.messages,
+    {
+      id: `assistant-${chat.messages.length + 1}`,
+      role: "assistant",
+      parts: [{ type: "text", text: assistantText }],
+    },
+  ],
+  assistantText,
+  ...(ragSources && { ragSources }),
+  title: chat.title || "Mock conversation",
+})
 
 jest.mock("@chat-adapter/slack", () => ({
   createSlackAdapter: jest.fn(() => ({})),
@@ -116,7 +139,10 @@ describe("agent slack integration provisioning", () => {
       config,
       "test-config"
     )
-    mockedWebhookChat.mockClear()
+    mockedWebhookChat.mockReset()
+    mockedWebhookChat.mockImplementation(
+      async (payload: MockWebhookChatPayload) => mockWebhookChatResult(payload)
+    )
     mockedGetFileUrlForAgent.mockReset()
     resetMockChatState()
   })
@@ -680,24 +706,19 @@ describe("agent slack integration provisioning", () => {
       mockedGetFileUrlForAgent.mockResolvedValue(
         "/files/signed/prod-budi-app-assets/source.pdf"
       )
-      mockedWebhookChat.mockResolvedValueOnce({
-        messages: [
-          {
-            id: "assistant-1",
-            role: "assistant",
-            parts: [{ type: "text", text: "Answer with sources" }],
-          },
-        ] as any,
-        assistantText: "Answer with sources",
-        ragSources: [
-          {
-            sourceId: "source-1",
-            fileId: "file-1",
-            filename: "Source <One>|Draft.pdf",
-          },
-        ],
-        title: "Mock conversation",
-      })
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) =>
+        mockWebhookChatResult({
+          chat,
+          assistantText: "Answer with sources",
+          ragSources: [
+            {
+              sourceId: "source-1",
+              fileId: "file-1",
+              filename: "Source <One>|Draft.pdf",
+            },
+          ],
+        })
+      )
 
       const { agent, chatAppId, linkExternalUser } =
         await setupProvisionedSlackAgent()
@@ -732,24 +753,19 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("does not append RAG source links to Slack channel replies", async () => {
-      mockedWebhookChat.mockResolvedValueOnce({
-        messages: [
-          {
-            id: "assistant-1",
-            role: "assistant",
-            parts: [{ type: "text", text: "Answer with private sources" }],
-          },
-        ] as any,
-        assistantText: "Answer with private sources",
-        ragSources: [
-          {
-            sourceId: "source-1",
-            fileId: "file-1",
-            filename: "Source.pdf",
-          },
-        ],
-        title: "Mock conversation",
-      })
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) =>
+        mockWebhookChatResult({
+          chat,
+          assistantText: "Answer with private sources",
+          ragSources: [
+            {
+              sourceId: "source-1",
+              fileId: "file-1",
+              filename: "Source.pdf",
+            },
+          ],
+        })
+      )
 
       const { agent, chatAppId, linkExternalUser } =
         await setupProvisionedSlackAgent()
@@ -778,24 +794,19 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("does not append RAG source links when downloads are disabled", async () => {
-      mockedWebhookChat.mockResolvedValueOnce({
-        messages: [
-          {
-            id: "assistant-1",
-            role: "assistant",
-            parts: [{ type: "text", text: "Answer without links" }],
-          },
-        ] as any,
-        assistantText: "Answer without links",
-        ragSources: [
-          {
-            sourceId: "source-1",
-            fileId: "file-1",
-            filename: "Source.pdf",
-          },
-        ],
-        title: "Mock conversation",
-      })
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) =>
+        mockWebhookChatResult({
+          chat,
+          assistantText: "Answer without links",
+          ragSources: [
+            {
+              sourceId: "source-1",
+              fileId: "file-1",
+              filename: "Source.pdf",
+            },
+          ],
+        })
+      )
 
       const { agent, chatAppId, linkExternalUser } =
         await setupProvisionedSlackAgent({
@@ -826,23 +837,18 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("ignores RAG sources without file ids in Slack replies", async () => {
-      mockedWebhookChat.mockResolvedValueOnce({
-        messages: [
-          {
-            id: "assistant-1",
-            role: "assistant",
-            parts: [{ type: "text", text: "Answer without source ids" }],
-          },
-        ] as any,
-        assistantText: "Answer without source ids",
-        ragSources: [
-          {
-            sourceId: "source-1",
-            filename: "Source.pdf",
-          },
-        ],
-        title: "Mock conversation",
-      })
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) =>
+        mockWebhookChatResult({
+          chat,
+          assistantText: "Answer without source ids",
+          ragSources: [
+            {
+              sourceId: "source-1",
+              filename: "Source.pdf",
+            },
+          ],
+        })
+      )
 
       const { agent, chatAppId, linkExternalUser } =
         await setupProvisionedSlackAgent()
