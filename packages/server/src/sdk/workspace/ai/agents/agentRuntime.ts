@@ -135,7 +135,7 @@ export const prepareAgentChatRun = async ({
     }),
     instructions: promptAndTools.systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
-    toolChoice: hasTools ? "auto" : "none",
+    ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
     providerOptions: llm.providerOptions?.(hasTools),
   })
@@ -191,7 +191,13 @@ export const prepareAgentChatRun = async ({
                 if (!source?.sourceId) {
                   continue
                 }
-                retrievedKnowledgeSourceById.set(source.sourceId, source)
+                const existing = retrievedKnowledgeSourceById.get(
+                  source.sourceId
+                )
+                retrievedKnowledgeSourceById.set(source.sourceId, {
+                  ...existing,
+                  ...source,
+                })
               }
             }
             if (

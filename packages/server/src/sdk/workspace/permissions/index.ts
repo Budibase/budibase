@@ -12,7 +12,7 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 import sdk from "../.."
-import { getRoleParams } from "../../../db/utils"
+import { getRoleParams, InternalTables } from "../../../db/utils"
 import { removeFromArray } from "../../../utilities"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
@@ -78,7 +78,22 @@ export async function getResourcePerms(
     p[level] = { role, type: PermissionSource.BASE }
     return p
   }, {})
-  return Object.assign(basePermissions, permissions)
+
+  const withoutPublic = (perms: ResourcePermissions) =>
+    Object.fromEntries(
+      Object.entries(perms).filter(
+        ([, v]) => v.role !== roles.BUILTIN_ROLE_IDS.PUBLIC
+      )
+    )
+
+  const isInternalTable = (Object.values(InternalTables) as string[]).includes(
+    resourceId
+  )
+  const mergeablePermissions = isInternalTable
+    ? withoutPublic(permissions)
+    : permissions
+
+  return { ...basePermissions, ...mergeablePermissions }
 }
 
 export async function getDependantResources(

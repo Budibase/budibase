@@ -393,6 +393,10 @@
     gap: 12px;
   }
 
+  .toolbar-row:not(.toolbar-row-filters) {
+    flex-wrap: wrap;
+  }
+
   .toolbar-row-filters {
     align-items: stretch;
   }

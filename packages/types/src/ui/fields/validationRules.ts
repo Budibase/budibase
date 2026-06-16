@@ -1,5 +1,19 @@
 import { FieldType } from "../../documents"
 
+export const URL_VALIDATION_PROTOCOLS = [
+  "http",
+  "https",
+  "ftp",
+  "mailto",
+] as const
+
+export type UrlValidationProtocol = (typeof URL_VALIDATION_PROTOCOLS)[number]
+
+export const DEFAULT_URL_VALIDATION_PROTOCOLS: UrlValidationProtocol[] = [
+  "http",
+  "https",
+]
+
 export interface UIFieldValidationRule {
   id?: string
   type: FieldType
@@ -20,6 +34,8 @@ export type FieldValidationRuleType =
   | "notEqual"
   | "regex"
   | "notRegex"
+  | "url"
+  | "email"
   | "contains"
   | "notContains"
   | "json"
@@ -42,6 +58,10 @@ export const defaultErrorForConstraint = (
   switch (constraint) {
     case "required":
       return "Required"
+    case "url":
+      return "Must be a valid URL"
+    case "email":
+      return "Must be a valid email address"
     case "minLength":
       return hasValidationValue(value)
         ? `Must be at least ${value} characters`

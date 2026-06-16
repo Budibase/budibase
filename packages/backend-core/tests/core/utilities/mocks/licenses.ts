@@ -79,6 +79,10 @@ export const useEnforceableSSO = () => {
   return useFeature(Feature.ENFORCEABLE_SSO)
 }
 
+export const useEmbedAuth = () => {
+  return useFeature(Feature.EMBED_AUTH)
+}
+
 export const useGroups = () => {
   return useFeature(Feature.USER_GROUPS)
 }

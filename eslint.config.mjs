@@ -108,6 +108,17 @@ export default [
     rules: {
       ...config.rules,
       "@typescript-eslint/consistent-type-imports": "error",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          varsIgnorePattern: "^_",
+          argsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+          caughtErrors: "none",
+        },
+      ],
 
       // Temporarily disabled during Svelte 5 migration - re-enable incrementally
       "svelte/require-each-key": "off", // 316 errors - add keys to {#each} blocks

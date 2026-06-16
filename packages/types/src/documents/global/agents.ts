@@ -78,24 +78,32 @@ export interface AgentSharePointKnowledgeSource {
 
 export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
+export interface AgentOperation {
+  id: string
+  name: string
+  live: boolean
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
+  allowKnowledgeSourceDownload: boolean
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  promptInstructions?: string
+  operations?: AgentOperation[]
   goal?: string
   live?: boolean
   publishedAt?: string
   icon?: string
   iconColor?: string
   createdBy?: string
-  enabledTools?: string[]
-  knowledgeBases?: string[]
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
   telegramIntegration?: TelegramAgentIntegration
-  knowledgeSources?: AgentKnowledgeSource[]
 }
 
 export interface AgentMessageRagSource {

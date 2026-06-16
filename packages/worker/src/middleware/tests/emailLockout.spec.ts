@@ -1,4 +1,4 @@
-import lockout from "../lockout"
+import emailLockout from "../emailLockout"
 import { cache } from "@budibase/backend-core"
 import * as userSdk from "../../sdk/users"
 import env from "../../environment"
@@ -15,7 +15,7 @@ jest.mock("../../sdk/users", () => ({
   },
 }))
 
-describe("lockout middleware", () => {
+describe("emailLockout middleware", () => {
   let ctx: any
   let next: jest.Mock
 
@@ -34,7 +34,7 @@ describe("lockout middleware", () => {
   it("should call next if no email provided", async () => {
     ctx.request.body = {}
 
-    await lockout(ctx, next)
+    await emailLockout(ctx, next)
 
     expect(next).toHaveBeenCalled()
     expect(ctx.throw).not.toHaveBeenCalled()
@@ -42,9 +42,9 @@ describe("lockout middleware", () => {
 
   it("should call next if user not found", async () => {
     ctx.request.body = { username: "test@example.com" }
-    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue(null)
+    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue(undefined)
 
-    await lockout(ctx, next)
+    await emailLockout(ctx, next)
 
     expect(next).toHaveBeenCalled()
     expect(ctx.throw).not.toHaveBeenCalled()
@@ -55,9 +55,9 @@ describe("lockout middleware", () => {
     ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({
       email: "test@example.com",
     })
-    ;(cache.get as jest.Mock).mockResolvedValue(null)
+    jest.mocked(cache.get).mockResolvedValue(undefined)
 
-    await lockout(ctx, next)
+    await emailLockout(ctx, next)
 
     expect(next).toHaveBeenCalled()
     expect(ctx.throw).not.toHaveBeenCalled()
@@ -68,16 +68,15 @@ describe("lockout middleware", () => {
     ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({
       email: "test@example.com",
     })
-    ;(cache.get as jest.Mock).mockResolvedValue("1")
+    jest.mocked(cache.get).mockResolvedValue("1")
 
-    // Mock ctx.throw to actually throw
     ctx.throw = jest.fn().mockImplementation((status, message) => {
       const error = new Error(message)
       ;(error as any).status = status
       throw error
     })
 
-    await expect(lockout(ctx, next)).rejects.toThrow(
+    await expect(emailLockout(ctx, next)).rejects.toThrow(
       "Account temporarily locked. Try again later."
     )
 
