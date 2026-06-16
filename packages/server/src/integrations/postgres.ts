@@ -24,6 +24,7 @@ import {
   finaliseExternalTables,
   checkExternalTables,
   HOST_ADDRESS,
+  quotePostgresIdentifier,
 } from "./utils"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
@@ -354,8 +355,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
     const search_path = this.config.schema
       .split(",")
-      .map(item => `"${item.trim()}"`)
-    await this.client.query(`SET search_path TO ${search_path.join(",")};`)
+      .map(item => quotePostgresIdentifier(item.trim()))
+    await this.client.query(`SET search_path TO ${search_path.join(",")}`)
     await this.client.query(`SET TIME ZONE 'UTC';`)
     this.open = true
   }
