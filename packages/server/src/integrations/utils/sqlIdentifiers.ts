@@ -5,3 +5,7 @@ export const quotePostgresIdentifier = (identifier: string) => {
 export const quoteMySqlIdentifier = (identifier: string) => {
   return `\`${identifier.replaceAll("`", "``")}\``
 }
+
+export const quoteSqlServerIdentifier = (identifier: string) => {
+  return `[${identifier.replaceAll("]", "]]")}]`
+}

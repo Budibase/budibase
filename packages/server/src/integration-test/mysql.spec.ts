@@ -157,22 +157,14 @@ if (mainDescriptions.length) {
               table.increments("id").primary()
             })
 
-            let fetchSchemaError: Error | undefined
-            const res = await config.api.datasource
-              .fetchSchema({
-                datasourceId: datasource._id!,
-                tablesFilter: [tableName],
-              })
-              .catch(error => {
-                fetchSchemaError = error
-              })
+            const res = await config.api.datasource.fetchSchema({
+              datasourceId: datasource._id!,
+              tablesFilter: [tableName],
+            })
 
             expect(await client.schema.hasTable(markerTable)).toBe(false)
-            if (fetchSchemaError) {
-              throw fetchSchemaError
-            }
 
-            const table = res!.datasource.entities![tableName]
+            const table = res.datasource.entities![tableName]
             expect(table).toBeDefined()
             expect(table.schema.id).toBeDefined()
           } finally {
