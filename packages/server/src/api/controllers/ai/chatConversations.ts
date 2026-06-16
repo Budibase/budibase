@@ -388,6 +388,8 @@ export async function webhookChat({
     messages: [...chat.messages, assistantMessage],
     assistantText: assistantText || "",
     ragSources: run.getUsedKnowledgeSourcesMetadata(),
+    allowKnowledgeSourceDownload:
+      run.selectedOperation?.allowKnowledgeSourceDownload,
     title,
   }
 }
