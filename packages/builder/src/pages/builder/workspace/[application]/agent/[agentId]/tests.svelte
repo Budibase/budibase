@@ -97,12 +97,10 @@
   let currentAgent = $derived($selectedAgent)
   let currentOperation = $derived(currentAgent?.operations?.[0])
   let operationOptions = $derived.by(() =>
-    (currentAgent?.operations || [])
-      .filter(operation => operation.live)
-      .map(operation => ({
-        label: operation.name || operation.id,
-        value: operation.id,
-      }))
+    (currentAgent?.operations || []).map(operation => ({
+      label: operation.name || operation.id,
+      value: operation.id,
+    }))
   )
   let toolOptions = $derived.by(() => {
     const enabled = new Set(currentOperation?.enabledTools ?? [])
