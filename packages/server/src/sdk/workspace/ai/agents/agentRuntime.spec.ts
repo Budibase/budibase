@@ -215,4 +215,32 @@ describe("chooseOperationForQuestion", () => {
 
     expect(result).toBeUndefined()
   })
+
+  it("returns undefined when operation routing fails", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockRejectedValue(new Error("Router unavailable"))
+
+    const result = await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "Hello",
+      llm,
+    })
+
+    expect(result).toBeUndefined()
+  })
+
+  it("returns undefined when operation routing output fails", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.reject(new Error("Invalid routing output")),
+    })
+
+    const result = await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "Hello",
+      llm,
+    })
+
+    expect(result).toBeUndefined()
+  })
 })

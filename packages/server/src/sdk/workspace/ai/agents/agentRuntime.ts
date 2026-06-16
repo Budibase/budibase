@@ -150,16 +150,24 @@ export const chooseOperationForQuestion = async ({
     output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
   })
 
-  const result = await router.stream({
-    prompt: latestQuestion,
-  })
+  try {
+    const result = await router.stream({
+      prompt: latestQuestion,
+    })
 
-  const route = (await result.output) as OperationRoute
-  if (!route?.operationId) {
+    const route = (await result.output) as OperationRoute
+    if (!route?.operationId) {
+      return undefined
+    }
+
+    return liveOperations.find(operation => operation.id === route.operationId)
+  } catch (error) {
+    console.error("Operation routing failed", {
+      agentId: agent._id,
+      error,
+    })
     return undefined
   }
-
-  return liveOperations.find(operation => operation.id === route.operationId)
 }
 
 export interface PrepareAgentRunContextParams {
