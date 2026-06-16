@@ -50,6 +50,8 @@ jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
     .mockReturnValue("Incomplete tool call"),
+  getAvailableTools: jest.fn().mockResolvedValue([]),
+  getToolDisplayNames: jest.fn().mockReturnValue({}),
   getLiveOperations: (agent: {
     operations?: Array<{ live?: boolean } & Record<string, unknown>>
   }) => {
