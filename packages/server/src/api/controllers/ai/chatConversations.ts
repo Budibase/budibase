@@ -56,13 +56,12 @@ const resolveOperationForKnowledgeSourceDownload = (
   agent: Agent,
   operationId?: string
 ) => {
+  const liveOperations = getLiveOperations(agent)
+
   if (operationId) {
-    return (agent.operations || []).find(
-      operation => operation.id === operationId
-    )
+    return liveOperations.find(operation => operation.id === operationId)
   }
 
-  const liveOperations = getLiveOperations(agent)
   return liveOperations.length === 1 ? liveOperations[0] : undefined
 }
 
