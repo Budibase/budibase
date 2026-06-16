@@ -194,7 +194,7 @@ describe("buildPromptAndTools", () => {
     expect(Reflect.get(result.tools, "search_knowledge")).toBeUndefined()
   })
 
-  it("uses the provided operation instead of the first live operation", async () => {
+  it("uses the provided operation for building the prompt and tools", async () => {
     const agent = {
       _id: "agent_4",
       name: "Support Agent",
