@@ -125,7 +125,7 @@ const chooseOperationForQuestion = async ({
   const multipleOperationsEnabled = await features.isEnabled(
     FeatureFlag.MULTIPLE_OPERATIONS
   )
-  if (!multipleOperationsEnabled || liveOperations.length === 1) {
+  if (!multipleOperationsEnabled) {
     return liveOperations[0]
   }
   if (!latestQuestion.trim()) {
