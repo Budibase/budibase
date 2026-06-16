@@ -8,18 +8,7 @@
 
   const dispatch = createEventDispatcher()
 
-  // Use provided options from manifest, or default fallback
-  $: presetOptions =
-    options.length > 0
-      ? options
-      : [
-          { label: "None", value: "N" },
-          { label: "Small", value: "S" },
-          { label: "Medium", value: "M" },
-          { label: "Large", value: "L" },
-          { label: "Custom", value: "custom" },
-        ]
-
+  $: presetOptions = options
   $: isCustom = typeof value === "object"
   $: mode = isCustom ? "custom" : value
   $: columnGap = isCustom ? value?.column || "0.5rem" : ""
