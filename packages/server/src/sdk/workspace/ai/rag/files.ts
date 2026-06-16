@@ -499,6 +499,9 @@ export const retrieveContextForOperation = async (
   }
 
   const operation = getOperationOrThrow(agent, operationId)
+  if (!operation.live) {
+    return { text: "", chunks: [], sources: [] }
+  }
   const knowledgeBases = await resolveKnowledgeBasesForOperation(operation)
   const chunks: Array<RetrievedContextChunk> = []
   const files: KnowledgeBaseFile[] = []

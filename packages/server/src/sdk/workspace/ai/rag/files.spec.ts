@@ -87,7 +87,7 @@ import {
   ensureKnowledgeBaseForAgent,
   ingestKnowledgeBaseFile,
   cleanupKnowledgeForOperation,
-  retrieveContextForAgent,
+  retrieveContextForOperation,
 } from "./files"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -340,7 +340,7 @@ describe("rag files", () => {
     })
   })
 
-  describe("retrieveContextForAgent", () => {
+  describe("retrieveContextForOperation", () => {
     const defaultKnowledgeBase: KnowledgeBase = {
       _id: "kb_123",
       name: "Knowledge Base",
@@ -361,6 +361,30 @@ describe("rag files", () => {
       ],
     } as Agent
 
+    it("throws when the operation is not found on the agent", async () => {
+      const agent = {
+        _id: "agent_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: true,
+            knowledgeBases: [defaultKnowledgeBase._id],
+          },
+        ],
+      } as Agent
+
+      await expect(
+        retrieveContextForOperation(
+          agent,
+          "missing_operation",
+          "What is Budibase?"
+        )
+      ).rejects.toThrow("Operation not found for this agent")
+      expect(mockKnowledgeBaseFind).not.toHaveBeenCalled()
+      expect(mockProcessorSearch).not.toHaveBeenCalled()
+    })
+
     it("returns empty context without searching when operation is not live", async () => {
       const agent = {
         _id: "agent_1",
@@ -374,7 +398,11 @@ describe("rag files", () => {
         ],
       } as Agent
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -401,7 +429,11 @@ describe("rag files", () => {
         ],
       } satisfies Agent
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -425,7 +457,11 @@ describe("rag files", () => {
         ],
       } as Agent
 
-      const result = await retrieveContextForAgent(agent, "  ")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "  "
+      )
 
       expect(result).toEqual({
         text: "",
@@ -448,7 +484,11 @@ describe("rag files", () => {
       } as Agent
       mockKnowledgeBaseFind.mockResolvedValue(undefined)
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -477,8 +517,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is the policy?"
       )
 
@@ -547,8 +588,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What are the details for User 991?"
       )
 
@@ -627,8 +669,9 @@ describe("rag files", () => {
       })
       mockProcessorSearch.mockResolvedValue([])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "Compare User 991 and User 992"
       )
 
@@ -670,8 +713,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -718,8 +762,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -772,8 +817,9 @@ describe("rag files", () => {
       ])
       mockProcessorSearch.mockResolvedValue([])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -809,8 +855,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -908,7 +955,11 @@ describe("rag files", () => {
           },
         ])
 
-      const result = await retrieveContextForAgent(agent, "What is policy?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is policy?"
+      )
 
       expect(result.chunks).toEqual([
         {
@@ -963,8 +1014,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
