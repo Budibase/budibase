@@ -559,14 +559,15 @@ export async function fetchChatAppAgentFileUrl(
   ctx: UserCtx<
     void,
     FetchAgentFileUrlResponse,
-    { chatAppId: string; agentId: string; fileId: string }
+    {
+      chatAppId: string
+      agentId: string
+      operationId: string
+      fileId: string
+    }
   >
 ) {
-  const { chatAppId, agentId, fileId } = ctx.params
-  const operationId =
-    typeof ctx.query.operationId === "string"
-      ? ctx.query.operationId
-      : undefined
+  const { chatAppId, agentId, operationId, fileId } = ctx.params
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
@@ -588,27 +589,22 @@ export async function fetchChatAppAgentFileUrl(
     operationId
   )
 
-  if (operationId && !operation) {
+  if (!operation) {
     throw new HTTPError("Operation not found", 404)
   }
 
-  if (agent.operations?.length && !operation) {
-    throw new HTTPError(
-      "Knowledge source downloads require a resolved operation",
-      403
-    )
-  }
-
-  if (operation && !operation.allowKnowledgeSourceDownload) {
+  if (!operation.allowKnowledgeSourceDownload) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403
     )
   }
 
-  const url = operation
-    ? await sdk.ai.rag.getFileUrlForOperation(agentId, operation.id, fileId)
-    : await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  const url = await sdk.ai.rag.getFileUrlForOperation(
+    agentId,
+    operation.id,
+    fileId
+  )
   ctx.body = { url }
   ctx.status = 200
 }

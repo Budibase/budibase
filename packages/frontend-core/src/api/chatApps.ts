@@ -43,7 +43,7 @@ export interface ChatAppEndpoints {
     chatAppId: string,
     agentId: string,
     fileId: string,
-    operationId?: string
+    operationId: string
   ) => Promise<FetchAgentFileUrlResponse>
   createChatConversation: (
     chat: CreateChatConversationRequest,
@@ -192,13 +192,13 @@ export const buildChatAppEndpoints = (
     chatAppId: string,
     agentId: string,
     fileId: string,
-    operationId?: string
+    operationId: string
   ) => {
-    const query = operationId
-      ? `?${new URLSearchParams({ operationId }).toString()}`
-      : ""
+    if (!operationId) {
+      throw new Error("operationId is required to fetch a chat app agent file")
+    }
     return await API.get<FetchAgentFileUrlResponse>({
-      url: `/api/chatapps/${chatAppId}/agents/${agentId}/files/${fileId}/url${query}`,
+      url: `/api/chatapps/${chatAppId}/agents/${agentId}/operations/${operationId}/files/${fileId}/url`,
     })
   },
 

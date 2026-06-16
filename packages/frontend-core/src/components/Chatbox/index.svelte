@@ -42,7 +42,6 @@
     operationId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
-    allowKnowledgeSourceDownload?: boolean
   }
 
   let {
@@ -56,7 +55,6 @@
     operationId,
     readOnly = false,
     readOnlyReason,
-    allowKnowledgeSourceDownload = true,
   }: Props = $props()
 
   let API = $state(
@@ -90,8 +88,7 @@
   ) => {
     const selectedOperationId = message.metadata?.selectedOperationId
     const messageAllowsDownload =
-      message.metadata?.allowKnowledgeSourceDownload ??
-      allowKnowledgeSourceDownload
+      message.metadata?.allowKnowledgeSourceDownload === true
 
     if (!messageAllowsDownload) {
       notifications.error("Source downloads are disabled for this agent")
@@ -103,7 +100,10 @@
 
     try {
       const resolvedUrl =
-        !isAgentPreviewChat && chat?.chatAppId && chat?.agentId
+        !isAgentPreviewChat &&
+        chat?.chatAppId &&
+        chat?.agentId &&
+        selectedOperationId
           ? (
               await API.fetchChatAppAgentFileUrl(
                 chat.chatAppId,
@@ -145,6 +145,11 @@
       .filter(isReasoningUIPart)
       .map(p => p.text)
       .join("")
+
+  const canDownloadSource = (message: UIMessage<AgentMessageMetadata>) =>
+    message.metadata?.allowKnowledgeSourceDownload === true &&
+    (!!message.metadata?.selectedOperationId ||
+      (isAgentPreviewChat && !!operationId))
 
   const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     reasoningTextByMessageId[message.id] || getReasoningText(message)
@@ -791,7 +796,7 @@
                 <ul>
                   {#each getVisibleRagSources(message) as source (source.fileId)}
                     <li class="source-item">
-                      {#if allowKnowledgeSourceDownload}
+                      {#if canDownloadSource(message)}
                         <button
                           type="button"
                           class="source-link"

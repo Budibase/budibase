@@ -430,13 +430,13 @@ describe("chat conversations authorization", () => {
 
     const res = await config
       .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/agents/agent-1/files/file-1/url`)
+      .get(
+        `/api/chatapps/${chatApp._id}/agents/agent-1/operations/operation_3/files/file-1/url`
+      )
       .set(headers)
 
-    expect(res.status).toBe(403)
-    expect(res.body.message).toBe(
-      "Knowledge source downloads require a resolved operation"
-    )
+    expect(res.status).toBe(404)
+    expect(res.body.message).toBe("Operation not found")
   })
 })
 
