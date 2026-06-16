@@ -183,12 +183,12 @@ describe("APIRequest", () => {
     })
 
     await fireEvent.click(screen.getByText("Open API explorer"))
+    const viewer = await screen.findByTestId("api-endpoint-viewer")
 
-    await waitFor(() => {
-      expect(
-        screen.getByTestId("api-endpoint-viewer-datasource").textContent
-      ).toBe("")
-    })
+    expect(viewer).toBeInTheDocument()
+    expect(
+      screen.getByTestId("api-endpoint-viewer-datasource").textContent
+    ).toBe("")
   })
 
   it("filters request selection to the connector template and hides add API", async () => {
@@ -260,7 +260,7 @@ describe("APIRequest", () => {
       ).toBe(".spectrum")
       expect(
         screen.getByTestId("api-endpoint-viewer-popover-z-index").textContent
-      ).toBe("9999")
+      ).toBe("")
     })
   })
 

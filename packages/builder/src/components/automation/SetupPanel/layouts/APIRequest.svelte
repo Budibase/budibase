@@ -2,9 +2,9 @@
   import {
     SourceName,
     BodyType,
+    type APIRequestStepInputs,
     type AutomationStep,
     type EnrichedBinding,
-    type RestTemplateId,
   } from "@budibase/types"
   import PropField from "../PropField.svelte"
   import { type AutomationContext } from "@/stores/builder/automations"
@@ -58,10 +58,11 @@
   $: restBindings = [...(bindings || []), ...authBindings]
 
   // The step input properties
-  $: inputData = automationStore.actions.getInputData(block)
+  $: inputData = automationStore.actions.getInputData(block) as
+    | APIRequestStepInputs
+    | undefined
   $: fieldKey = "query"
-  $: restTemplateId = (inputData as Record<string, any> | undefined)
-    ?.restTemplateId as RestTemplateId | undefined
+  $: restTemplateId = inputData?.restTemplateId
   $: {
     value = getInputValue(inputData, fieldKey)
   }
@@ -74,8 +75,6 @@
 
   $: targetSource = selectedDatasourceId || query?.datasourceId
 
-  // Source for current query, if any. Do not default to the first REST source:
-  // create-request drafts must choose their connection from the draft/template.
   $: dataSource = restSources?.find(ds => ds._id === targetSource)
 
   // The configured query
@@ -209,7 +208,6 @@
               saveAndClose={true}
               settingsLocked={true}
               connectionPopoverPortalTarget=".spectrum"
-              connectionPopoverZIndex={9999}
               on:savedQuery={handleSavedQuery}
             />
           {:else}
@@ -222,7 +220,6 @@
               redirectNewQueryOnSave={false}
               settingsLocked={true}
               connectionPopoverPortalTarget=".spectrum"
-              connectionPopoverZIndex={9999}
               on:savedQuery={handleSavedQuery}
             />
           {/if}

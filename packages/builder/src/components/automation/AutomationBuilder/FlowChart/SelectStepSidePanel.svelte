@@ -725,8 +725,8 @@
               >
                 <div class="item-body">
                   <img
-                    width={17.5}
-                    height={17.5}
+                    width={18}
+                    height={18}
                     src={template.icon}
                     alt={template.name}
                     class="external-icon"

@@ -17,7 +17,7 @@
 
   $: isAddStepPanelOpen = !!$automationStore.actionPanelBlock
 
-  const openAddStepPanel = () => {
+  const toggleAddStepPanel = () => {
     if ($automationStore.viewMode !== ViewMode.EDITOR) {
       return
     }
@@ -122,7 +122,7 @@
           tooltipPosition={TooltipPosition.Top}
           color="var(--spectrum-alias-text-color)"
           hoverColor="var(--spectrum-alias-text-color-hover)"
-          on:click={openAddStepPanel}
+          on:click={toggleAddStepPanel}
         />
       </span>
     {/if}
