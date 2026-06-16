@@ -10,7 +10,6 @@
   } from "@budibase/types"
   import {
     AutomationSelector,
-    CronBuilder,
     DateSelector,
     ExecuteScript,
     ExecuteScriptV2,
@@ -20,6 +19,7 @@
     PropField,
     QueryParamSelector,
     SchemaSetup,
+    ScheduleBuilder,
     TableSelector,
   } from "."
   import { getFieldLabel, getInputValue } from "./layouts"
@@ -174,7 +174,7 @@
       fullWidth: true,
     },
     [SchemaFieldTypes.CRON]: {
-      comp: CronBuilder,
+      comp: ScheduleBuilder,
       props: (opts: FieldProps = {} as FieldProps) => {
         const { value } = opts
         return {
