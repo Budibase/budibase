@@ -177,17 +177,6 @@ export const ensureKnowledgeBaseForOperation = async (
   return result
 }
 
-export const ensureKnowledgeBaseForAgent = async (
-  agentId: string
-): Promise<KnowledgeBase> => {
-  const agent = await agentsSdk.getOrThrow(agentId)
-  const operationId = agent.operations?.[0]?.id
-  if (!operationId) {
-    throw new HTTPError("Agent has no operations configured", 422)
-  }
-  return await ensureKnowledgeBaseForOperation(agentId, operationId)
-}
-
 export const listFilesForOperation = async (
   agentId: string,
   operationId: string
@@ -210,7 +199,7 @@ export const listFilesForOperation = async (
 export const uploadFileForOperation = async (
   agentId: string,
   operationId: string,
-  input: UploadFileForAgentInput
+  input: UploadKnowledgeFileInput
 ): Promise<KnowledgeBaseFile> => {
   const knowledgeBase = await ensureKnowledgeBaseForOperation(
     agentId,
@@ -368,32 +357,12 @@ export const listFilesForAgent = async (
   ).flat()
 }
 
-interface UploadFileForAgentInput {
+interface UploadKnowledgeFileInput {
   filename: string
   mimetype?: string
   size?: number
   buffer: Buffer
   uploadedBy: string
-}
-
-export const uploadFileForAgent = async (
-  agentId: string,
-  input: UploadFileForAgentInput
-): Promise<KnowledgeBaseFile> => {
-  const knowledgeBase = await ensureKnowledgeBaseForAgent(agentId)
-  const knowledgeBaseId = knowledgeBase._id
-  if (!knowledgeBaseId) {
-    throw new HTTPError("Failed to create agent file storage", 500)
-  }
-
-  return await knowledgeBaseSdk.uploadKnowledgeBaseFile({
-    knowledgeBaseId,
-    filename: input.filename,
-    mimetype: input.mimetype,
-    size: input.size ?? input.buffer.byteLength,
-    buffer: input.buffer,
-    uploadedBy: input.uploadedBy,
-  })
 }
 
 export const deleteFileForAgent = async (

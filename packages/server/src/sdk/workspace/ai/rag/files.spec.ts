@@ -75,8 +75,6 @@ import {
   KnowledgeBaseFile,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
-  LockName,
-  LockType,
   SEPARATOR,
 } from "@budibase/types"
 import { Readable } from "stream"
@@ -84,7 +82,6 @@ import { GeminiRagProcessor } from "./processors/gemini"
 import {
   deleteKnowledgeBaseFileChunks,
   deleteFileForAgent,
-  ensureKnowledgeBaseForAgent,
   ingestKnowledgeBaseFile,
   cleanupKnowledgeForOperation,
   retrieveContextForOperation,
@@ -97,101 +94,6 @@ describe("rag files", () => {
     mockDoWithLock.mockImplementation(async (_opts: unknown, fn: any) => ({
       result: await fn(),
     }))
-  })
-
-  describe("ensureKnowledgeBaseForAgent", () => {
-    it("returns existing KB for the agent while holding a per-operation lock", async () => {
-      const existing = {
-        _id: "kb_existing",
-        name: "Existing",
-        type: KnowledgeBaseType.GEMINI,
-        config: { googleFileStoreId: "store_1" },
-      } satisfies KnowledgeBase
-      mockAgentsGetOrThrow.mockResolvedValue({
-        _id: "agent_1",
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: ["kb_existing"],
-            allowKnowledgeSourceDownload: generator.bool(),
-          },
-        ],
-      } satisfies Partial<Agent>)
-      mockKnowledgeBaseFind.mockResolvedValue(existing)
-
-      const result = await ensureKnowledgeBaseForAgent("agent_1")
-
-      expect(result).toEqual(existing)
-      expect(mockDoWithLock).toHaveBeenCalledWith(
-        {
-          name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
-          type: LockType.AUTO_EXTEND,
-          resource: "agent_1:operation_1",
-        },
-        expect.any(Function)
-      )
-      expect(mockKnowledgeBaseCreate).not.toHaveBeenCalled()
-      expect(mockAgentsUpdate).not.toHaveBeenCalled()
-    })
-
-    it("creates and links a KB when the agent has none", async () => {
-      const agent = {
-        _id: "agent_1",
-        _rev: "1-x",
-        name: "Agent 1",
-        aiconfig: "config_1",
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: [],
-            allowKnowledgeSourceDownload: true,
-          },
-        ],
-      } as Agent
-      const created = {
-        _id: "kb_new",
-        name: "New KB",
-        type: KnowledgeBaseType.GEMINI,
-        config: { googleFileStoreId: "store_2" },
-      } satisfies KnowledgeBase
-      mockAgentsGetOrThrow.mockResolvedValue(agent)
-      mockKnowledgeBaseCreate.mockResolvedValue(created)
-      mockAgentsUpdate.mockResolvedValue({
-        ...agent,
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: [created._id],
-          },
-        ],
-      })
-
-      const result = await ensureKnowledgeBaseForAgent("agent_1")
-
-      expect(result).toEqual(created)
-      expect(mockKnowledgeBaseCreate).toHaveBeenCalledWith({
-        name: `Agent files (${agent._id}:operation_1)`,
-        type: KnowledgeBaseType.GEMINI,
-      })
-      expect(mockAgentsUpdate).toHaveBeenCalledWith({
-        ...agent,
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: [created._id],
-            allowKnowledgeSourceDownload: true,
-          },
-        ],
-      })
-    })
   })
 
   describe("ingestKnowledgeBaseFile", () => {
