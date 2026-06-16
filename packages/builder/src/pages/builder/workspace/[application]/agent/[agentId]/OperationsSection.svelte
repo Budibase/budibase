@@ -131,7 +131,7 @@ Any constraints the agent must follow.
 
   const createDefaultOperation = () => {
     const name =
-      getSequentialName(operations, "Operation ", {
+      getSequentialName(operations, "New operation ", {
         getName: operation => operation.name,
       }) || "Operation 1"
 
