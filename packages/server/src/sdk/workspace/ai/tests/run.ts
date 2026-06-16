@@ -26,7 +26,9 @@ import {
 import sdk from "../../.."
 import {
   formatIncompleteToolCallError,
+  getAvailableTools,
   getLiveOperations,
+  getToolDisplayNames,
   prepareAgentChatRun,
 } from "../agents"
 import {
@@ -386,6 +388,10 @@ async function runCase({
       aiConfigId,
     })
     sessionLogIndexer = agentRun.sessionLogIndexer
+    const toolDisplayNames = {
+      ...getToolDisplayNames(await getAvailableTools(aiConfigId)),
+      ...agentRun.toolDisplayNames,
+    }
     const reviewerResults = await runReviewers({
       reviewers: caseSnapshot.reviewers,
       getLLM: () =>
@@ -393,7 +399,7 @@ async function runCase({
       testCase,
       response: agentRun.response,
       toolCalls: agentRun.toolCalls,
-      toolDisplayNames: agentRun.toolDisplayNames,
+      toolDisplayNames,
       sessionLogIndexer,
       selectedOperationId: agentRun.selectedOperationId,
       selectedOperationName: agentRun.selectedOperationName,
