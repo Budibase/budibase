@@ -39,6 +39,7 @@
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
+    operationId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
     allowKnowledgeSourceDownload?: boolean
@@ -52,6 +53,7 @@
     initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
+    operationId,
     readOnly = false,
     readOnlyReason,
     allowKnowledgeSourceDownload = true,
@@ -103,8 +105,14 @@
                 source.fileId
               )
             ).url
-          : chat?.agentId
-            ? (await API.fetchAgentFileUrl(chat.agentId, source.fileId)).url
+          : isAgentPreviewChat && chat?.agentId && operationId
+            ? (
+                await API.fetchOperationFileUrl(
+                  chat.agentId,
+                  operationId,
+                  source.fileId
+                )
+              ).url
             : undefined
       if (!resolvedUrl) {
         notifications.error("Could not resolve source file URL")

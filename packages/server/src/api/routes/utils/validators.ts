@@ -172,6 +172,7 @@ function searchFiltersValidator() {
     empty: Joi.object().optional(),
     notEmpty: Joi.object().optional(),
     oneOf: Joi.object().optional(),
+    notOneOf: Joi.object().optional(),
     contains: Joi.object().optional(),
     notContains: Joi.object().optional(),
     containsAny: Joi.object().optional(),

@@ -847,8 +847,10 @@ describe("chat conversation transient behavior", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         tools: undefined,
-        toolChoice: "none",
       })
+    )
+    expect(jest.mocked(streamText).mock.calls[0]?.[0]).not.toHaveProperty(
+      "toolChoice"
     )
   })
 
