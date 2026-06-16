@@ -335,6 +335,30 @@
         "type": "gapControl",
         "label": "Gap",
         "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Custom",
+            "value": "custom"
+          }
+        ],
         "defaultValue": "M",
         "dependsOn": {
           "setting": "layout",

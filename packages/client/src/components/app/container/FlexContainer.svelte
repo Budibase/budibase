@@ -33,7 +33,7 @@
     .join(" ")
 
   // Merge custom gap styles with component styles to avoid conflicts with styleable action
-  $: enrichedStyles = {
+  $: gapStyles = {
     ...$component.styles,
     custom: ($component.styles?.custom || "") + customGapStyle,
   }
@@ -44,7 +44,7 @@
 <div
   class={classNames}
   class:clickable={!!onClick}
-  use:styleable={enrichedStyles}
+  use:styleable={gapStyles}
   class:wrap
   on:click={onClick}
 >
