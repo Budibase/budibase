@@ -28,10 +28,15 @@ import {
   findLatestUserQuestion,
   prepareModelMessages,
 } from "../chatConversations"
-import { updatePendingToolCalls } from "./utils"
+import {
+  updatePendingToolCalls,
+  buildPromptAndTools,
+  getLiveOperations,
+  type BuildPromptAndToolsOptions,
+} from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
-import { getLiveOperations } from "./utils"
+import tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
 interface PrepareAgentChatRunParams {
@@ -109,7 +114,7 @@ ${operations
   )
   .join("\n")}`
 
-const chooseOperationForQuestion = async ({
+export const chooseOperationForQuestion = async ({
   agent,
   latestQuestion,
   llm,
@@ -157,6 +162,57 @@ const chooseOperationForQuestion = async ({
   return liveOperations.find(operation => operation.id === route.operationId)
 }
 
+export interface PrepareAgentRunContextParams {
+  agent: Agent
+  agentId: string
+  sessionId: string
+  latestQuestion: string
+  aiConfigId?: string
+  span?: tracer.Span
+  buildPromptOptions?: BuildPromptAndToolsOptions
+}
+
+export interface AgentRunContext {
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+  selectedOperation?: AgentOperation
+  systemPrompt: string
+  tools: ToolSet
+  toolDisplayNames: Record<string, string>
+}
+
+export const prepareAgentRunContext = async ({
+  agent,
+  agentId,
+  sessionId,
+  latestQuestion,
+  aiConfigId,
+  span,
+  buildPromptOptions,
+}: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
+  const llm = await sdk.ai.llm.createLLM(
+    aiConfigId ?? agent.aiconfig,
+    sessionId,
+    span,
+    agentId
+  )
+  const selectedOperation = await chooseOperationForQuestion({
+    agent,
+    latestQuestion,
+    llm,
+  })
+  const promptAndTools = await buildPromptAndTools(
+    agent,
+    selectedOperation,
+    buildPromptOptions
+  )
+
+  return {
+    llm,
+    selectedOperation,
+    ...promptAndTools,
+  }
+}
+
 export const prepareAgentChatRun = async ({
   agent,
   agentId,
@@ -179,30 +235,22 @@ export const prepareAgentChatRun = async ({
     startedAt,
   })
 
-  const [llm, modelMessages] = await Promise.all([
-    sdk.ai.llm.createLLM(
-      aiConfigId ?? agent.aiconfig,
+  const [runContext, modelMessages] = await Promise.all([
+    prepareAgentRunContext({
+      agent,
+      agentId,
       sessionId,
-      undefined,
-      agentId
-    ),
+      latestQuestion,
+      aiConfigId,
+      buildPromptOptions: {
+        baseSystemPrompt: ai.agentSystemPrompt(user),
+        includeGoal: false,
+      },
+    }),
     providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
   ])
-  const selectedOperation = await chooseOperationForQuestion({
-    agent,
-    latestQuestion,
-    llm,
-  })
-  const promptAndTools = await sdk.ai.agents.buildPromptAndTools(
-    agent,
-    selectedOperation,
-    {
-      baseSystemPrompt: ai.agentSystemPrompt(user),
-      includeGoal: false,
-    }
-  )
-
-  const tools = promptAndTools.tools
+  const { llm, selectedOperation, tools, toolDisplayNames, systemPrompt } =
+    runContext
   const retrievedKnowledgeSourceById = new Map<
     string,
     NonNullable<AgentMessageMetadata["ragSources"]>[number]
@@ -238,7 +286,7 @@ export const prepareAgentChatRun = async ({
         tagName: "think",
       }),
     }),
-    instructions: promptAndTools.systemPrompt || undefined,
+    instructions: systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
@@ -246,7 +294,7 @@ export const prepareAgentChatRun = async ({
   })
 
   const contextUsage: AgentChatRun["contextUsage"] = {}
-  const systemPromptTokens = estimateTokens(promptAndTools.systemPrompt || "")
+  const systemPromptTokens = estimateTokens(systemPrompt || "")
 
   return {
     latestQuestion,
@@ -254,7 +302,7 @@ export const prepareAgentChatRun = async ({
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
-    toolDisplayNames: promptAndTools.toolDisplayNames,
+    toolDisplayNames,
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,
