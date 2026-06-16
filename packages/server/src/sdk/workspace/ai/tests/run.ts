@@ -12,7 +12,6 @@ import type {
   AgentTestRun,
   AgentTestSnapshot,
   ContextUser,
-  AgentOperation,
 } from "@budibase/types"
 import {
   Output,
@@ -27,7 +26,6 @@ import sdk from "../../.."
 import {
   formatIncompleteToolCallError,
   getAvailableTools,
-  getLiveOperations,
   getToolDisplayNames,
   prepareAgentChatRun,
 } from "../agents"
@@ -122,6 +120,9 @@ const buildResult = ({
   toolCalls,
   selectedOperationId,
   selectedOperationName,
+  promptInstructions,
+  enabledTools,
+  knowledgeBases,
   error,
 }: {
   testCase: AgentTestCase
@@ -138,6 +139,9 @@ const buildResult = ({
   toolCalls: string[]
   selectedOperationId?: string
   selectedOperationName?: string
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
   error?: string
 }): AgentTestCaseResult => ({
   caseId: testCase.id,
@@ -151,6 +155,9 @@ const buildResult = ({
   toolCalls,
   selectedOperationId,
   selectedOperationName,
+  promptInstructions,
+  enabledTools,
+  knowledgeBases,
   sessionId,
   requestIds,
   startedAt,
@@ -239,6 +246,9 @@ async function runAgentForCase({
   toolDisplayNames: Record<string, string>
   selectedOperationId?: string
   selectedOperationName?: string
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
   sessionLogIndexer: SessionLogIndexer
 }> {
   const pendingToolCalls = new Set<string>()
@@ -277,6 +287,13 @@ async function runAgentForCase({
     toolDisplayNames: run.toolDisplayNames,
     selectedOperationId: run.selectedOperation?.id,
     selectedOperationName: run.selectedOperation?.name,
+    promptInstructions: run.selectedOperation?.promptInstructions,
+    enabledTools: run.selectedOperation?.enabledTools
+      ? [...run.selectedOperation.enabledTools]
+      : undefined,
+    knowledgeBases: run.selectedOperation?.knowledgeBases
+      ? [...run.selectedOperation.knowledgeBases]
+      : undefined,
     sessionLogIndexer: run.sessionLogIndexer,
   }
 }
@@ -429,6 +446,9 @@ async function runCase({
       toolCalls: agentRun.toolCalls,
       selectedOperationId: agentRun.selectedOperationId,
       selectedOperationName: agentRun.selectedOperationName,
+      promptInstructions: agentRun.promptInstructions,
+      enabledTools: agentRun.enabledTools,
+      knowledgeBases: agentRun.knowledgeBases,
       error,
     })
   } catch (error) {
@@ -578,12 +598,10 @@ const buildConfigSnapshotMap = async (aiConfigIds: string[]) => {
 
 const buildRunSnapshot = async ({
   agent,
-  operation,
   suite,
   aiConfigIds,
 }: {
   agent: Agent
-  operation?: AgentOperation
   suite: AgentTestSuite
   aiConfigIds: string[]
 }): Promise<AgentTestSnapshot> => {
@@ -602,16 +620,12 @@ const buildRunSnapshot = async ({
     aiconfig: agent.aiconfig,
     aiConfig,
     aiConfigs,
-    promptInstructions: operation?.promptInstructions,
     goal: agent.goal,
-    enabledTools: [...(operation?.enabledTools || [])],
-    knowledgeBases: [...(operation?.knowledgeBases || [])],
   }
 }
 
 export async function runSuite({
   agentId,
-  operationId,
   user,
   caseId,
   groupId,
@@ -620,7 +634,6 @@ export async function runSuite({
   startedAt = new Date().toISOString(),
 }: {
   agentId: string
-  operationId?: string
   user: ContextUser
   caseId?: string
   groupId?: string
@@ -629,13 +642,6 @@ export async function runSuite({
   startedAt?: string
 }): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const operation = operationId
-    ? agent.operations?.find(o => o.id === operationId)
-    : getLiveOperations(agent)[0]
-
-  if (operationId && !operation) {
-    throw new Error(`Operation ${operationId} not found in ${agentId}`)
-  }
 
   const suite = await fetchSuite(agentId)
   const casesToRun = selectCasesToRun({ suite, caseId, groupId })
@@ -647,7 +653,6 @@ export async function runSuite({
   const configSnapshots = await buildConfigSnapshotMap(runConfigIds)
   const snapshot = await buildRunSnapshot({
     agent,
-    operation,
     suite,
     aiConfigIds: runConfigIds,
   })

@@ -73,10 +73,7 @@ export interface AgentTestSnapshot {
   aiconfig: string
   aiConfig?: AgentTestModelSnapshot
   aiConfigs?: AgentTestModelSnapshot[]
-  promptInstructions?: string
   goal?: string
-  enabledTools: string[]
-  knowledgeBases: string[]
 }
 
 export interface AgentTestCaseResult {
@@ -91,6 +88,9 @@ export interface AgentTestCaseResult {
   toolCalls: string[]
   selectedOperationId?: string
   selectedOperationName?: string
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
   sessionId: string
   requestIds: string[]
   startedAt: string

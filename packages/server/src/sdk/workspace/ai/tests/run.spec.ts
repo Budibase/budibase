@@ -128,7 +128,13 @@ describe("agent test runner", () => {
     response: string
     toolCalls?: string[]
     toolDisplayNames?: Record<string, string>
-    selectedOperation?: { id: string; name: string }
+    selectedOperation?: {
+      id: string
+      name: string
+      promptInstructions?: string
+      enabledTools?: string[]
+      knowledgeBases?: string[]
+    }
   }) => {
     prepareAgentChatRun.mockImplementation(async () => {
       const sessionLogIndexer = makeIndexer()
@@ -510,6 +516,81 @@ describe("agent test runner", () => {
             'Expected operation "Operation 2" to be used, but "Operation 1" was selected.',
         },
       ],
+    })
+  })
+
+  it("stores routed operation details on each case result instead of the run snapshot", async () => {
+    setSuite([])
+    sdk.ai.agents.getOrThrow.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support Agent",
+      aiconfig: "config-1",
+      goal: "Help users",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          promptInstructions: "First operation instructions",
+          enabledTools: ["list_tables"],
+          knowledgeBases: ["kb-1"],
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          promptInstructions: "Second operation instructions",
+          enabledTools: ["search_knowledge"],
+          knowledgeBases: ["kb-2"],
+        },
+      ],
+    })
+    mockAgentRun({
+      response: "Handled by operation 2.",
+      selectedOperation: {
+        id: "operation_2",
+        name: "Operation 2",
+        promptInstructions: "Second operation instructions",
+        enabledTools: ["search_knowledge"],
+        knowledgeBases: ["kb-2"],
+      },
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.snapshot).toEqual({
+      agentId: "agent-1",
+      agentName: "Support Agent",
+      aiconfig: "config-1",
+      aiConfig: {
+        aiConfigId: "config-1",
+        name: "Primary config",
+        provider: "openai",
+        model: "gpt-5",
+        liteLLMModelId: "openai/gpt-5",
+        reasoningEffort: "medium",
+      },
+      aiConfigs: [
+        {
+          aiConfigId: "config-1",
+          name: "Primary config",
+          provider: "openai",
+          model: "gpt-5",
+          liteLLMModelId: "openai/gpt-5",
+          reasoningEffort: "medium",
+        },
+      ],
+      goal: "Help users",
+    })
+    expect(run.results[0]).toMatchObject({
+      selectedOperationId: "operation_2",
+      selectedOperationName: "Operation 2",
+      promptInstructions: "Second operation instructions",
+      enabledTools: ["search_knowledge"],
+      knowledgeBases: ["kb-2"],
     })
   })
 
