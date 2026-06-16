@@ -259,17 +259,23 @@ describe("agent slack integration provisioning", () => {
       roleId?: string
       allowKnowledgeSourceDownload?: boolean
     } = {}) => {
-      const agent = await config.api.agent.create({
-        name: "Slack Incoming Messages Agent",
-        ...(allowKnowledgeSourceDownload !== undefined && {
-          allowKnowledgeSourceDownload,
-        }),
-        slackIntegration: {
-          botToken: "xoxb-token-3",
-          signingSecret: "slack-signing-secret-3",
-          ...(requireUserLink !== undefined && { requireUserLink }),
+      const agent = await config.api.agent.createWithOperation(
+        {
+          name: "Slack Incoming Messages Agent",
+          slackIntegration: {
+            botToken: "xoxb-token-3",
+            signingSecret: "slack-signing-secret-3",
+            ...(requireUserLink !== undefined && { requireUserLink }),
+          },
         },
-      })
+        {
+          id: "operation_1",
+          name: "Slack incoming messages",
+          live: true,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: allowKnowledgeSourceDownload ?? true,
+        }
+      )
       const channel = await config.api.agent.provisionSlackChannel(agent._id!)
       if (roleId) {
         await config.doInContext(config.getDevWorkspaceId(), async () => {

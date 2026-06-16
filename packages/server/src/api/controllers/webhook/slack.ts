@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import { Chat, type Message, type SlashCommandEvent, type Thread } from "chat"
 import sdk from "../../../sdk"
+import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -301,7 +302,8 @@ export async function slackWebhook(
           integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
           idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.slackIntegration?.requireUserLink,
-          allowKnowledgeSourceDownload: agent.allowKnowledgeSourceDownload,
+          allowKnowledgeSourceDownload:
+            getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true,
           channelEnabled:
             !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
         }
