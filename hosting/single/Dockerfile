@@ -155,7 +155,9 @@ RUN jq --arg v "$BUDIBASE_VERSION" '.version = $v' /app/package.json > /tmp/pkg.
 RUN jq --arg v "$BUDIBASE_VERSION" '.version = $v' /worker/package.json > /tmp/pkg.json && mv /tmp/pkg.json /worker/package.json
 ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
 
-HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"
+# Long start-period: the image cold-boots serially in ~2-3min; a shorter grace makes
+# health-acting orchestrators (Swarm/Easypanel) kill it mid-boot into a crash-loop.
+HEALTHCHECK --interval=15s --timeout=15s --start-period=300s CMD "/healthcheck.sh"
 
 # Must set this just before running
 ENV NODE_ENV=production
