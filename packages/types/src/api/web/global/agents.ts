@@ -2,6 +2,7 @@ import { Optional } from "../../../shared"
 import {
   Agent,
   AgentKnowledgeSourceSyncRunStatus,
+  AgentOperation,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
@@ -58,6 +59,10 @@ export interface SharePointKnowledgeSourceSnapshot {
 export interface FetchAgentKnowledgeResponse {
   files: KnowledgeBaseFile[]
   sharePointSources: SharePointKnowledgeSourceSnapshot[]
+}
+
+export interface FetchAgentKnowledgeIndexResponse {
+  operations: Record<string, FetchAgentKnowledgeResponse>
 }
 
 export interface KnowledgeSourceEntry {
@@ -118,15 +123,9 @@ export interface DisconnectAgentSharePointSiteResponse {
 }
 
 export interface FetchChatAppAgentsResponse {
-  agents: Pick<
-    Agent,
-    | "_id"
-    | "name"
-    | "icon"
-    | "iconColor"
-    | "live"
-    | "allowKnowledgeSourceDownload"
-  >[]
+  agents: (Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live"> & {
+    allowKnowledgeSourceDownload: boolean
+  })[]
 }
 
 interface ConfigureAgentDeploymentChannelRequest {
@@ -184,13 +183,7 @@ export interface ToggleAgentDeploymentResponse {
 export type CreateAgentRequest = Optional<
   Omit<
     Agent,
-    | "_id"
-    | "_rev"
-    | "createdAt"
-    | "updatedAt"
-    | "knowledgeSources"
-    | "knowledgeBases"
-    | "publishedAt"
+    "_id" | "_rev" | "createdAt" | "updatedAt" | "publishedAt" | "operations"
   >,
   "aiconfig"
 >
@@ -202,14 +195,28 @@ export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
-  | "createdAt"
-  | "updatedAt"
-  | "_deleted"
-  | "createdBy"
-  | "knowledgeSources"
-  | "knowledgeBases"
+  "createdAt" | "updatedAt" | "_deleted" | "createdBy" | "operations"
 >
 export type UpdateAgentResponse = Omit<
+  Agent,
+  "knowledgeSources" | "knowledgeBases"
+>
+
+export type AgentOperationConfigRequest = Pick<
+  AgentOperation,
+  | "name"
+  | "live"
+  | "promptInstructions"
+  | "enabledTools"
+  | "allowKnowledgeSourceDownload"
+>
+
+export type CreateAgentOperationRequest = AgentOperationConfigRequest &
+  Pick<AgentOperation, "id">
+
+export type UpdateAgentOperationRequest = Partial<AgentOperationConfigRequest>
+
+export type AgentOperationMutationResponse = Omit<
   Agent,
   "knowledgeSources" | "knowledgeBases"
 >

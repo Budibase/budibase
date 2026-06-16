@@ -80,9 +80,9 @@
 
   $: readOnlyReason = getReadOnlyReason(agentAvailability)
 
-  $: allowKnowledgeSourceDownload =
-    enabledAgentList.find(agent => agent.agentId === selectedAgentId)
-      ?.allowKnowledgeSourceDownload !== false
+  $: allowKnowledgeSourceDownload = enabledAgentList.find(
+    agent => agent.agentId === selectedAgentId
+  )?.allowKnowledgeSourceDownload
 
   const selectAgent = (agentId: string) => {
     dispatch("agentSelected", { agentId })

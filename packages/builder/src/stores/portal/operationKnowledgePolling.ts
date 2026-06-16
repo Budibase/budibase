@@ -2,52 +2,24 @@ interface PollingState {
   agentId: string
   interval: ReturnType<typeof setInterval>
   inFlight: boolean
-}
-
-interface CreateAgentPollingControllerConfig {
-  intervalMs: number
-  onPoll: (agentId: string) => Promise<void>
-  onError?: (error: unknown) => void
-}
-
-interface UnifiedPollingState extends PollingState {
   continuous: boolean
 }
 
-interface KnowledgePollingController {
+export interface OperationKnowledgePollingController {
   setContinuous: (agentId: string, enabled: boolean) => void
   stop: () => void
-  isRunning: () => boolean
 }
 
-export const coalesceAgentPollRequests = (
-  pollFn: (agentId: string) => Promise<void>
-) => {
-  let inFlight: Promise<void> | undefined
-
-  return async (agentId: string) => {
-    if (inFlight) {
-      return await inFlight
-    }
-
-    const request = pollFn(agentId)
-    inFlight = request
-    try {
-      await request
-    } finally {
-      if (inFlight === request) {
-        inFlight = undefined
-      }
-    }
-  }
-}
-
-export const createKnowledgePollingController = ({
+export const createOperationKnowledgePollingController = ({
   intervalMs,
   onPoll,
   onError,
-}: CreateAgentPollingControllerConfig): KnowledgePollingController => {
-  let state: UnifiedPollingState | undefined
+}: {
+  intervalMs: number
+  onPoll: (agentId: string) => Promise<void>
+  onError?: (error: unknown) => void
+}): OperationKnowledgePollingController => {
+  let state: PollingState | undefined
 
   const stop = () => {
     if (!state) {
@@ -57,15 +29,11 @@ export const createKnowledgePollingController = ({
     state = undefined
   }
 
-  const shouldStop = () => {
-    return !state?.continuous
-  }
-
   const tick = async (agentId: string) => {
     if (!state || state.agentId !== agentId || state.inFlight) {
       return
     }
-    if (shouldStop()) {
+    if (!state.continuous) {
       stop()
       return
     }
@@ -76,7 +44,7 @@ export const createKnowledgePollingController = ({
     } finally {
       if (state?.agentId === agentId) {
         state.inFlight = false
-        if (shouldStop()) {
+        if (!state.continuous) {
           stop()
         }
       }
@@ -110,18 +78,13 @@ export const createKnowledgePollingController = ({
       return
     }
     state.continuous = enabled
-    if (shouldStop()) {
+    if (!enabled) {
       stop()
     }
-  }
-
-  const isRunning = () => {
-    return !!state
   }
 
   return {
     setContinuous,
     stop,
-    isRunning,
   }
 }
