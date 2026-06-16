@@ -135,7 +135,7 @@ export const prepareAgentChatRun = async ({
     }),
     instructions: promptAndTools.systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
-    toolChoice: hasTools ? "auto" : "none",
+    ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
     providerOptions: llm.providerOptions?.(hasTools),
   })

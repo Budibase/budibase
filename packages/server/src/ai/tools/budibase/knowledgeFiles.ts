@@ -222,7 +222,9 @@ export const createKnowledgeFilesTool = (
       const resolvedMatchMode = matchMode || "smart"
       const resolvedCaseSensitive = caseSensitive ?? false
 
-      const files = await sdk.ai.rag.listFilesForAgent(agentId)
+      const files = await sdk.ai.rag.listFilesForAgent(agentId, {
+        liveOperationOnly: true,
+      })
       const sortedFiles = [...files].sort(
         (a, b) => toEpochMillis(b.createdAt) - toEpochMillis(a.createdAt)
       )
