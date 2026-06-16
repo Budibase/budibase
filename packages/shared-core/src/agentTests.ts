@@ -43,6 +43,11 @@ const getToolLabel = (
   toolDisplayNames?: Record<string, string>
 ) => toolDisplayNames?.[toolName] || toolName
 
+interface ReviewerLabelContext {
+  toolDisplayNames?: Record<string, string>
+  operationNamesById?: Record<string, string>
+}
+
 export const REVIEWERS = {
   exact_match: {
     label: "Exact match",
@@ -144,18 +149,8 @@ export const createReviewer = (
 ): AgentTestReviewer => ({ id, type, value })
 
 export const describeReviewer = (
-  reviewer: AgentTestReviewer
-): string | undefined => readReviewerContent(reviewer) || undefined
-
-export const describeReviewerWithLabels = (
   reviewer: AgentTestReviewer,
-  {
-    toolDisplayNames,
-    operationNamesById,
-  }: {
-    toolDisplayNames?: Record<string, string>
-    operationNamesById?: Record<string, string>
-  } = {}
+  { toolDisplayNames, operationNamesById }: ReviewerLabelContext = {}
 ): string | undefined => {
   const value = readReviewerContent(reviewer)
   if (!value) {

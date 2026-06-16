@@ -7,10 +7,7 @@
     ModalContent,
   } from "@budibase/bbui"
   import type { AgentTestCase, AgentTestCaseResult } from "@budibase/types"
-  import {
-    describeReviewerWithLabels,
-    getReviewerLabel,
-  } from "@budibase/shared-core"
+  import { describeReviewer, getReviewerLabel } from "@budibase/shared-core"
   import AnthropicLogo from "assets/llm-icons/anthropic.svg"
   import BudibaseLogo from "assets/llm-icons/bbai.svg"
   import GoogleLogo from "assets/llm-icons/google.svg"
@@ -24,17 +21,23 @@
     selectedCase: AgentTestCase | null
     latestResults: AgentTestCaseResult[]
     hasLatestRun: boolean
-    toolDisplayNames?: Record<string, string>
-    operationNamesById?: Record<string, string>
+    toolOptions?: { label: string; value: string }[]
+    operationOptions?: { label: string; value: string }[]
   }
 
   let {
     selectedCase,
     latestResults,
     hasLatestRun,
-    toolDisplayNames,
-    operationNamesById,
+    toolOptions = [],
+    operationOptions = [],
   }: Props = $props()
+
+  const toLabelMap = (options: { label: string; value: string }[]) =>
+    Object.fromEntries(options.map(option => [option.value, option.label]))
+
+  let toolDisplayNames = $derived.by(() => toLabelMap(toolOptions))
+  let operationNamesById = $derived.by(() => toLabelMap(operationOptions))
 
   const PROVIDER_LOGOS: Record<string, string> = {
     Anthropic: AnthropicLogo,
@@ -180,7 +183,7 @@
             {#if selectedCase.reviewers.length}
               <ul class="reviewer-summary-list">
                 {#each selectedCase.reviewers as reviewer (reviewer.id)}
-                  {@const summary = describeReviewerWithLabels(reviewer, {
+                  {@const summary = describeReviewer(reviewer, {
                     toolDisplayNames,
                     operationNamesById,
                   })}
