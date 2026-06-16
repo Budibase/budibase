@@ -68,7 +68,11 @@ const enrichJsonValue = (
       continue
     }
     const enrichedKey = processTemplateString(key, parameters, options)
-    enrichedQuery[enrichedKey] = enrichJsonValue(fieldValue, parameters, options)
+    enrichedQuery[enrichedKey] = enrichJsonValue(
+      fieldValue,
+      parameters,
+      options
+    )
   }
   return enrichedQuery
 }
