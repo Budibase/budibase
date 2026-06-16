@@ -71,6 +71,22 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
 
+const resetWebhookChatMock = () => {
+  mockedWebhookChat.mockReset()
+  mockedWebhookChat.mockImplementation(async ({ chat }) => ({
+    messages: [
+      ...chat.messages,
+      {
+        id: `assistant-${chat.messages.length + 1}`,
+        role: "assistant",
+        parts: [{ type: "text", text: "Mock assistant response" }],
+      },
+    ],
+    assistantText: "Mock assistant response",
+    title: chat.title || "Mock conversation",
+  }))
+}
+
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
     .flatMap(message => message.match(/https?:\/\/[^\s"\\]+/g) || [])
@@ -116,7 +132,7 @@ describe("agent slack integration provisioning", () => {
       config,
       "test-config"
     )
-    mockedWebhookChat.mockClear()
+    resetWebhookChatMock()
     mockedGetFileUrlForAgent.mockReset()
     resetMockChatState()
   })
@@ -728,6 +744,7 @@ describe("agent slack integration provisioning", () => {
           "- <http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf|Source One Draft.pdf>",
         ].join("\n")
       )
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(agent._id, "file-1")
     })
 
@@ -774,6 +791,7 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages).toContain("Answer with private sources")
       expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
@@ -822,6 +840,7 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages).toContain("Answer without links")
       expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
@@ -867,6 +886,7 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages).toContain("Answer without source ids")
       expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
