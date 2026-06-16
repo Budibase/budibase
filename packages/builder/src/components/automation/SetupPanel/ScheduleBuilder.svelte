@@ -1,14 +1,11 @@
 <script>
   import {
-    Button,
     DatePicker,
-    Divider,
     InlineAlert,
     Label,
     Layout,
     Multiselect,
     Select,
-    Stepper,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import CronBuilder from "./CronBuilder.svelte"
@@ -24,6 +21,7 @@
     { label: "Weekly", value: "weekly" },
     { label: "Monthly", value: "monthly" },
     { label: "Specific dates", value: "specificDates" },
+    { label: "Cron expression", value: "cron" },
   ]
 
   const DAYS_OF_WEEK = [
@@ -57,8 +55,19 @@
   })
 
   const TIMEZONES = [{ label: "UTC", value: "UTC" }]
-  const MIN_INTERVAL_MINUTES = 10
-  const MAX_INTERVAL_MINUTES = 720
+  const MINUTES_PER_HOUR = 60
+  const INTERVAL_OPTIONS = [
+    { label: "10 mins", value: 10 },
+    { label: "15 mins", value: 15 },
+    { label: "20 mins", value: 20 },
+    { label: "30 mins", value: 30 },
+    { label: "60 mins", value: 60 },
+    { label: "2 hrs", value: 120 },
+    { label: "3 hrs", value: 180 },
+    { label: "4 hrs", value: 240 },
+    { label: "6 hrs", value: 360 },
+    { label: "12 hrs", value: 720 },
+  ]
 
   let frequency = "daily"
   let intervalMinutes = 30
@@ -66,7 +75,6 @@
   let selectedDaysOfWeek = ["1", "2", "3", "4", "5"]
   let selectedDaysOfMonth = ["1"]
   let selectedMonths = ["1"]
-  let advanced = false
   let error
   let nextExecutions
 
@@ -111,15 +119,22 @@
   }
 
   const updateSchedule = () => {
+    if (frequency === "cron") {
+      return
+    }
+
     let expression
     const { hours, minutes } = getTimeParts(time)
 
     if (frequency === "interval") {
       const interval = Number(intervalMinutes)
-      if (interval < MAX_INTERVAL_MINUTES) {
+      if (interval < MINUTES_PER_HOUR) {
         expression = `*/${interval} * * * *`
+      } else if (interval % MINUTES_PER_HOUR === 0) {
+        expression = `0 */${interval / MINUTES_PER_HOUR} * * *`
       } else {
-        expression = "0 * * * *"
+        error = "Use advanced cron for intervals that are not whole hours"
+        return
       }
     } else if (frequency === "daily") {
       expression = `${minutes} ${hours} * * *`
@@ -146,7 +161,7 @@
     dispatchCron(expression)
   }
 
-  $: if (!advanced) {
+  $: {
     frequency,
       intervalMinutes,
       time,
@@ -166,13 +181,19 @@
   />
 
   {#if frequency === "interval"}
-    <Stepper
-      label="Minutes"
+    <Select
+      label="Interval"
       value={intervalMinutes}
-      min={MIN_INTERVAL_MINUTES}
-      max={MAX_INTERVAL_MINUTES}
+      options={INTERVAL_OPTIONS}
       on:change={e => (intervalMinutes = e.detail)}
-      updateOnChange={false}
+    />
+  {:else if frequency === "cron"}
+    <CronBuilder
+      {cronExpression}
+      on:change={e => {
+        cronExpression = e.detail
+        dispatch("change", e.detail)
+      }}
     />
   {:else}
     {#if frequency === "weekly"}
@@ -222,25 +243,11 @@
     {/if}
   {/if}
 
-  {#if nextExecutions && !advanced}
+  {#if nextExecutions && !error && frequency !== "cron"}
     <InlineAlert
       type="info"
       header="Next Executions"
       message={nextExecutions}
-    />
-  {/if}
-
-  <Divider />
-  <Button quiet on:click={() => (advanced = !advanced)}>
-    {advanced ? "Hide advanced cron" : "Advanced cron"}
-  </Button>
-  {#if advanced}
-    <CronBuilder
-      {cronExpression}
-      on:change={e => {
-        cronExpression = e.detail
-        dispatch("change", e.detail)
-      }}
     />
   {/if}
 </Layout>
