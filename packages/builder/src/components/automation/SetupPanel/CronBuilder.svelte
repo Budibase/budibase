@@ -1,23 +1,18 @@
 <script>
-  import {
-    Select,
-    InlineAlert,
-    Input,
-    Label,
-    Layout,
-    notifications,
-  } from "@budibase/bbui"
+  import { Select, Input, Label, Layout, notifications } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { flags } from "@/stores/builder"
   import { aiStore } from "@/stores/portal"
   import { API } from "@/api"
   import MagicWand from "../../../../assets/MagicWand.svelte"
+  import NextExecutionsTable from "./NextExecutionsTable.svelte"
 
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
 
   export let cronExpression
+  export let timezone
 
   let error
   let nextExecutions
@@ -30,9 +25,11 @@
   $: {
     if (cronExpression) {
       try {
-        nextExecutions = helpers.cron
-          .getNextExecutionDates(cronExpression)
-          .join("\n")
+        nextExecutions = helpers.cron.getNextExecutionDates(
+          cronExpression,
+          4,
+          timezone
+        )
       } catch (err) {
         nextExecutions = null
       }
@@ -149,11 +146,7 @@
     <Label><div class="error">Please specify a CRON expression</div></Label>
   {/if}
   {#if nextExecutions}
-    <InlineAlert
-      type="info"
-      header="Next Executions"
-      message={nextExecutions}
-    />
+    <NextExecutionsTable executions={nextExecutions} />
   {/if}
 </Layout>
 

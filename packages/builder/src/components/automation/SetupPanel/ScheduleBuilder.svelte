@@ -1,7 +1,6 @@
 <script>
   import {
     DatePicker,
-    InlineAlert,
     Label,
     Layout,
     Multiselect,
@@ -9,11 +8,13 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import CronBuilder from "./CronBuilder.svelte"
+  import NextExecutionsTable from "./NextExecutionsTable.svelte"
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
 
   export let cronExpression
+  export let timezone = "UTC"
 
   const FREQUENCIES = [
     { label: "Regular intervals", value: "interval" },
@@ -54,7 +55,24 @@
     return { label: day, value: day }
   })
 
-  const TIMEZONES = [{ label: "UTC", value: "UTC" }]
+  const TIMEZONES = [
+    { label: "UTC", value: "UTC" },
+    { label: "Europe/London", value: "Europe/London" },
+    { label: "Europe/Paris", value: "Europe/Paris" },
+    { label: "Europe/Berlin", value: "Europe/Berlin" },
+    { label: "America/New York", value: "America/New_York" },
+    { label: "America/Chicago", value: "America/Chicago" },
+    { label: "America/Denver", value: "America/Denver" },
+    { label: "America/Los Angeles", value: "America/Los_Angeles" },
+    { label: "America/Toronto", value: "America/Toronto" },
+    { label: "America/Sao Paulo", value: "America/Sao_Paulo" },
+    { label: "Asia/Dubai", value: "Asia/Dubai" },
+    { label: "Asia/Kolkata", value: "Asia/Kolkata" },
+    { label: "Asia/Singapore", value: "Asia/Singapore" },
+    { label: "Asia/Tokyo", value: "Asia/Tokyo" },
+    { label: "Australia/Sydney", value: "Australia/Sydney" },
+    { label: "Pacific/Auckland", value: "Pacific/Auckland" },
+  ]
   const MINUTES_PER_HOUR = 60
   const INTERVAL_OPTIONS = [
     { label: "10 mins", value: 10 },
@@ -77,8 +95,11 @@
   let selectedMonths = ["1"]
   let error
   let nextExecutions
+  let savedCronExpression = cronExpression
+  let savedTimezone = timezone
 
-  $: nextExecutions = getNextExecutions(cronExpression)
+  $: timezone = timezone || "UTC"
+  $: nextExecutions = getNextExecutions(cronExpression, timezone)
 
   const sortNumbers = values => values.map(Number).sort((a, b) => a - b)
 
@@ -90,12 +111,12 @@
     }
   }
 
-  const getNextExecutions = expression => {
+  const getNextExecutions = (expression, timezone) => {
     if (!expression || expression === REBOOT_CRON) {
       return null
     }
     try {
-      return helpers.cron.getNextExecutionDates(expression).join("\n")
+      return helpers.cron.getNextExecutionDates(expression, 4, timezone)
     } catch (err) {
       return null
     }
@@ -105,17 +126,18 @@
     if (!expression) {
       return
     }
-    if (expression === cronExpression) {
-      error = null
-      return
-    }
     const validation = helpers.cron.validate(expression)
     error = validation.err
     if (error) {
       return
     }
+    if (expression === savedCronExpression && timezone === savedTimezone) {
+      return
+    }
     cronExpression = expression
-    dispatch("change", expression)
+    savedCronExpression = expression
+    savedTimezone = timezone
+    dispatch("change", { cron: expression, timezone })
   }
 
   const updateSchedule = () => {
@@ -190,9 +212,9 @@
   {:else if frequency === "cron"}
     <CronBuilder
       {cronExpression}
+      {timezone}
       on:change={e => {
-        cronExpression = e.detail
-        dispatch("change", e.detail)
+        dispatchCron(e.detail)
       }}
     />
   {:else}
@@ -237,18 +259,23 @@
       timeOnly
       on:change={e => (time = e.detail)}
     />
-    <Select label="Timezone" value="UTC" options={TIMEZONES} readonly />
     {#if error}
       <Label><div class="error">{error}</div></Label>
     {/if}
   {/if}
 
+  <Select
+    label="Timezone"
+    value={timezone}
+    options={TIMEZONES}
+    on:change={e => {
+      timezone = e.detail
+      dispatchCron(cronExpression)
+    }}
+  />
+
   {#if nextExecutions && !error && frequency !== "cron"}
-    <InlineAlert
-      type="info"
-      header="Next Executions"
-      message={nextExecutions}
-    />
+    <NextExecutionsTable executions={nextExecutions} />
   {/if}
 </Layout>
 

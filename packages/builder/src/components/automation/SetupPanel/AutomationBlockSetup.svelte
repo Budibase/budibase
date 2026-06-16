@@ -992,8 +992,9 @@
               </Drawer>
             {:else if value.customType === "cron"}
               <ScheduleBuilder
-                on:change={e => onChange({ [key]: e.detail })}
+                on:change={e => onChange(e.detail)}
                 cronExpression={inputData[key]}
+                timezone={inputData.timezone || "UTC"}
               />
             {:else if value.customType === "automationFields"}
               <AutomationSelector

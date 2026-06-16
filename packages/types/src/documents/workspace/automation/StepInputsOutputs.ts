@@ -440,6 +440,7 @@ export type AppActionTriggerOutputs = {
 
 export type CronTriggerInputs = {
   cron: string
+  timezone?: string
 }
 
 export enum EmailTriggerAuthType {

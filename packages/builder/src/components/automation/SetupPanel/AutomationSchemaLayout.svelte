@@ -179,6 +179,12 @@
         const { value } = opts
         return {
           cronExpression: value,
+          timezone: getInputValue(inputData, "timezone") || "UTC",
+        }
+      },
+      onChange: (e: CustomEvent<FormUpdate>) => {
+        if (block) {
+          automationStore.actions.requestUpdate(e.detail, block)
         }
       },
     },
