@@ -1,4 +1,5 @@
 export * from "./agents"
+export * from "./agentOperations"
 export * from "./agentInstructions"
 export * from "./budibaseai"
 export * from "./budibaseai-v2"

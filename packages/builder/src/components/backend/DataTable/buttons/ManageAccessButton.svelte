@@ -21,6 +21,7 @@
   const builtins = [Roles.ADMIN, Roles.POWER, Roles.BASIC, Roles.PUBLIC]
 
   let permissions
+  let excludedRoles = []
   let showPopover = true
   let dependantsInfoMessage
 
@@ -44,6 +45,7 @@
   $: builtInRoles = builtins
     .map(roleId => $roles.find(x => x._id === roleId))
     .filter(r => !!r)
+    .filter(r => !excludedRoles.includes(r._id))
   $: customRoles = $roles
     .filter(x => !builtins.includes(x._id))
     .slice()
@@ -55,6 +57,7 @@
 
   const fetchPermissions = async id => {
     const res = await permissionsStore.forResourceDetailed(id)
+    excludedRoles = res?.excludedRoles || []
     permissions = Object.entries(res?.permissions || {}).map(([perm, info]) => {
       let enriched = {
         permission: perm,
