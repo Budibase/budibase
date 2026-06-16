@@ -3,6 +3,7 @@
     Button,
     Body,
     Icon,
+    Toggle,
     DrawerContent,
     Layout,
     Select,
@@ -110,6 +111,12 @@
     conditions = [...conditions, duplicate]
   }
 
+  const toggleCondition = (id, enabled) => {
+    conditions = conditions.map(condition =>
+      condition.id === id ? { ...condition, disabled: !enabled } : condition
+    )
+  }
+
   const handleFinalize = e => {
     updateConditions(e)
     dragDisabled = true
@@ -135,7 +142,11 @@
       Constants.OperatorOptions.NotEmpty.value,
     ]
     condition.noValue = noValueOptions.includes(newOperator)
-    if (condition.noValue || newOperator === "oneOf") {
+    if (
+      condition.noValue ||
+      newOperator === "oneOf" ||
+      newOperator === "notOneOf"
+    ) {
       condition.referenceValue = null
       condition.valueType = "string"
     }
@@ -259,7 +270,8 @@
               <ConditionValueControl
                 disabled={condition.noValue}
                 typeSelectDisabled={condition.noValue ||
-                  condition.operator === "oneOf"}
+                  condition.operator === "oneOf" ||
+                  condition.operator === "notOneOf"}
                 {bindings}
                 valueType={condition.valueType}
                 value={condition.referenceValue}
@@ -272,6 +284,12 @@
                     condition.referenceValue = e.detail.value
                   }
                 }}
+              />
+              <Toggle
+                text=""
+                noMargin
+                value={!condition.disabled}
+                on:change={e => toggleCondition(condition.id, e.detail)}
               />
               <Icon
                 name="copy"
@@ -319,14 +337,14 @@
     align-items: center;
     grid-template-columns:
       auto 150px auto minmax(140px, 1fr) 120px 100px minmax(140px, 1fr)
-      auto auto;
+      auto auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
   .condition.update {
     grid-template-columns:
       auto 150px minmax(140px, 1fr) auto minmax(140px, 1fr) auto
-      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto;
+      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto auto;
   }
   .condition:hover {
     background-color: var(--spectrum-global-color-gray-100);

@@ -25,6 +25,60 @@ describe("queries SDK", () => {
       expect(result).toEqual({ json: false })
     })
 
+    it("enriches object keys recursively", async () => {
+      const result = await enrichContext(
+        {
+          json: {
+            "{{ fieldName }}": "value",
+            nested: {
+              "{{ nestedFieldName }}": "{{ nestedValue }}",
+            },
+          },
+        },
+        {
+          fieldName: "dynamicField",
+          nestedFieldName: "dynamicNestedField",
+          nestedValue: "nested field value",
+        }
+      )
+
+      expect(result).toEqual({
+        json: {
+          dynamicField: "value",
+          nested: {
+            dynamicNestedField: "nested field value",
+          },
+        },
+      })
+    })
+
+    it("enriches parsed JSON template keys", async () => {
+      const result = await enrichContext(
+        {
+          json: `{
+            "{{ fieldName }}": 9,
+            "nested": {
+              "{{ nestedFieldName }}": "{{ nestedValue }}"
+            }
+          }`,
+        },
+        {
+          fieldName: "accommodates",
+          nestedFieldName: "label",
+          nestedValue: "Apartment",
+        }
+      )
+
+      expect(result).toEqual({
+        json: {
+          accommodates: 9,
+          nested: {
+            label: "Apartment",
+          },
+        },
+      })
+    })
+
     it("falls back to requestBody when json is blank", async () => {
       const result = await enrichContext({
         json: "",

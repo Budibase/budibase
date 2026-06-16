@@ -1476,6 +1476,38 @@ describe("/applications", () => {
         expect(prodApp.features?.recaptchaEnabled).toBe(true)
       })
     })
+
+    it("rejects embed SSO updates when the feature is unavailable", async () => {
+      mocks.licenses.useCloudFree()
+
+      await config.api.workspace.update(
+        workspace.appId,
+        {
+          embedSSO: {
+            enabled: true,
+            algorithm: "HS256",
+            key: "super-secret",
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+    })
+
+    it("allows embed SSO updates when the feature is enabled", async () => {
+      mocks.licenses.useEmbedAuth()
+
+      const updatedApp = await config.api.workspace.update(workspace.appId, {
+        embedSSO: {
+          enabled: true,
+          algorithm: "HS256",
+          key: "super-secret",
+        },
+      })
+
+      expect(updatedApp.embedSSO?.enabled).toBe(true)
+    })
   })
 
   describe("publish", () => {

@@ -2,7 +2,7 @@ import * as redis from "../redis/init"
 import { v4 as uuidv4 } from "uuid"
 import { logWarn } from "../logging"
 import env from "../environment"
-import { Duration } from "../utils"
+import { getSessionExpirySeconds } from "../utils"
 import {
   Session,
   ScannedSession,
@@ -12,9 +12,7 @@ import {
 import { MAX_SESSIONS_PER_USER } from "@budibase/shared-core"
 
 // a week expiry is the default
-const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS
-  ? parseInt(env.SESSION_EXPIRY_SECONDS)
-  : Duration.fromDays(7).toSeconds()
+const EXPIRY_SECONDS = getSessionExpirySeconds()
 
 function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
