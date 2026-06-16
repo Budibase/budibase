@@ -1528,5 +1528,43 @@ describe("/api/global/users", () => {
         .set(config.defaultHeaders())
         .expect(403)
     })
+
+    it("should reject authenticated users on self-hosted", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenantId = config.getTenantId()
+
+      const tenantUser = await config.doInTenant(async () => {
+        return await userSdk.db.save(
+          structures.users.user({
+            email: originalEmail,
+            tenantId,
+            roles: {},
+          }),
+          { requirePassword: false, isAccountHolder: true }
+        )
+      })
+
+      config.selfHosted()
+      try {
+        await config.request
+          .put(`/api/global/users/tenant/owner`)
+          .send({
+            newAccountEmail: newEmail,
+            originalEmail,
+            tenantIds: [tenantId],
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+      } finally {
+        config.cloudHosted()
+      }
+
+      const unchangedUser = await config.doInTenant(async () => {
+        return await userSdk.db.getUser(tenantUser._id!)
+      })
+
+      expect(unchangedUser!.email).toBe(originalEmail)
+    })
   })
 })
