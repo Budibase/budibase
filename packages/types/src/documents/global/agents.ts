@@ -1,5 +1,6 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
+import { EscalationRecipient } from "../workspace/escalation"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",
@@ -8,6 +9,7 @@ export enum ToolType {
   REST_QUERY = "REST_QUERY",
   DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
+  ESCALATION = "ESCALATION",
 }
 
 export interface ToolMetadata {
@@ -66,8 +68,8 @@ export interface AgentSharePointKnowledgeSource {
   id: string
   type: AgentKnowledgeSourceType.SHAREPOINT
   config: {
-    datasourceId: string
-    authConfigId: string
+    datasourceId?: string
+    authConfigId?: string
     site: {
       id: string
       name?: string
@@ -78,6 +80,12 @@ export interface AgentSharePointKnowledgeSource {
 }
 
 export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
+
+export interface AgentEscalationConfig {
+  recipients?: EscalationRecipient[]
+  // How long the escalation is kept before being marked as expired.
+  delay?: number
+}
 
 export interface Agent extends Document {
   name: string
@@ -100,6 +108,7 @@ export interface Agent extends Document {
   slackIntegration?: SlackAgentIntegration
   telegramIntegration?: TelegramAgentIntegration
   knowledgeSources?: AgentKnowledgeSource[]
+  escalation?: AgentEscalationConfig
 }
 
 export interface AgentMessageRagSource {

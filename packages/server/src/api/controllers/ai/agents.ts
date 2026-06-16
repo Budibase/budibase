@@ -327,6 +327,7 @@ export async function createAgent(
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
+    escalation: body.escalation,
     knowledgeSources: undefined,
     knowledgeBases: undefined,
   }
@@ -387,6 +388,7 @@ export async function updateAgent(
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
+    escalation: body.escalation,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

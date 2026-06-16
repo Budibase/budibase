@@ -17,6 +17,7 @@
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
+  import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
 
   let {
@@ -129,6 +130,14 @@
       return
     }
     insertToolBinding(tool.readableBinding)
+    onUpdated()
+  }
+
+  const updateRecipients = (recipients: any[]) => {
+    if (!agent) {
+      return
+    }
+    agent.escalation = { ...(agent.escalation ?? {}), recipients }
     onUpdated()
   }
 
@@ -262,7 +271,7 @@
                           <ToolIcon
                             icon={tool.icon}
                             size="S"
-                            fallbackIcon="Wrench"
+                            fallbackIcon={tool.fallbackIcon || "Wrench"}
                           />
                         </div>
                         <div class="tool-label">
@@ -290,6 +299,20 @@
                   {/each}
                 </div>
               {/if}
+            </div>
+
+            <div class="operation-panel-section">
+              <Body size="S" color="var(--spectrum-global-color-gray-900)">
+                Escalation recipients
+              </Body>
+              <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+                Who gets notified when this operation escalates for approval.
+              </Body>
+              <EscalationRecipients
+                recipients={agent?.escalation?.recipients ?? []}
+                agentId={agent?._id}
+                onChange={updateRecipients}
+              />
             </div>
 
             <Knowledge></Knowledge>
