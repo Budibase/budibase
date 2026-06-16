@@ -234,6 +234,7 @@ async function runAgentForCase({
 }): Promise<{
   response: string
   toolCalls: string[]
+  toolDisplayNames: Record<string, string>
   selectedOperationId?: string
   selectedOperationName?: string
   sessionLogIndexer: SessionLogIndexer
@@ -271,6 +272,7 @@ async function runAgentForCase({
   return {
     response: text || "",
     toolCalls,
+    toolDisplayNames: run.toolDisplayNames,
     selectedOperationId: run.selectedOperation?.id,
     selectedOperationName: run.selectedOperation?.name,
     sessionLogIndexer: run.sessionLogIndexer,
@@ -283,6 +285,7 @@ async function runReviewers({
   testCase,
   response,
   toolCalls,
+  toolDisplayNames,
   sessionLogIndexer,
   selectedOperationId,
   selectedOperationName,
@@ -293,6 +296,7 @@ async function runReviewers({
   testCase: AgentTestCase
   response: string
   toolCalls: string[]
+  toolDisplayNames?: Record<string, string>
   sessionLogIndexer: SessionLogIndexer
   selectedOperationId?: string
   selectedOperationName?: string
@@ -308,6 +312,7 @@ async function runReviewers({
           reviewer,
           response,
           toolCalls,
+          toolDisplayNames,
           selectedOperationId,
           selectedOperationName,
           operationNamesById,
@@ -388,6 +393,7 @@ async function runCase({
       testCase,
       response: agentRun.response,
       toolCalls: agentRun.toolCalls,
+      toolDisplayNames: agentRun.toolDisplayNames,
       sessionLogIndexer,
       selectedOperationId: agentRun.selectedOperationId,
       selectedOperationName: agentRun.selectedOperationName,

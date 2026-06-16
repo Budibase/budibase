@@ -9,6 +9,7 @@ export type ReviewerType = AgentTestReviewer["type"]
 export interface ReviewerEvaluateContext {
   response: string
   toolCalls: string[]
+  toolDisplayNames?: Record<string, string>
   selectedOperationId?: string
   selectedOperationName?: string
   operationNamesById?: Record<string, string>
@@ -36,6 +37,11 @@ const getOperationLabel = (
   operationId: string,
   operationNamesById?: Record<string, string>
 ) => operationNamesById?.[operationId] || operationId
+
+const getToolLabel = (
+  toolName: string,
+  toolDisplayNames?: Record<string, string>
+) => toolDisplayNames?.[toolName] || toolName
 
 export const REVIEWERS = {
   exact_match: {
@@ -80,13 +86,14 @@ export const REVIEWERS = {
     description: "Pass when a specific tool was used during the run.",
     inputType: "select",
     requiredMessage: "tool name is required",
-    evaluate: (r, { toolCalls }) => {
+    evaluate: (r, { toolCalls, toolDisplayNames }) => {
       const passed = toolCalls.includes(r.value)
+      const expectedToolLabel = getToolLabel(r.value, toolDisplayNames)
       return {
         passed,
         message: passed
-          ? `Tool "${r.value}" was used.`
-          : `Expected tool "${r.value}" to be used.`,
+          ? `Tool "${expectedToolLabel}" was used.`
+          : `Expected tool "${expectedToolLabel}" to be used.`,
       }
     },
   },
@@ -139,6 +146,32 @@ export const createReviewer = (
 export const describeReviewer = (
   reviewer: AgentTestReviewer
 ): string | undefined => readReviewerContent(reviewer) || undefined
+
+export const describeReviewerWithLabels = (
+  reviewer: AgentTestReviewer,
+  {
+    toolDisplayNames,
+    operationNamesById,
+  }: {
+    toolDisplayNames?: Record<string, string>
+    operationNamesById?: Record<string, string>
+  } = {}
+): string | undefined => {
+  const value = readReviewerContent(reviewer)
+  if (!value) {
+    return undefined
+  }
+
+  if (reviewer.type === "tool_used") {
+    return getToolLabel(value, toolDisplayNames)
+  }
+
+  if (reviewer.type === "operation_used") {
+    return getOperationLabel(value, operationNamesById)
+  }
+
+  return value
+}
 
 export const validateReviewer = (reviewer: AgentTestReviewer): string | null =>
   readReviewerContent(reviewer)

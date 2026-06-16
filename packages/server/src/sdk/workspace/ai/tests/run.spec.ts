@@ -122,16 +122,19 @@ describe("agent test runner", () => {
   const mockAgentRun = ({
     response,
     toolCalls = [],
+    toolDisplayNames = {},
     selectedOperation,
   }: {
     response: string
     toolCalls?: string[]
+    toolDisplayNames?: Record<string, string>
     selectedOperation?: { id: string; name: string }
   }) => {
     prepareAgentChatRun.mockImplementation(async () => {
       const sessionLogIndexer = makeIndexer()
       return {
         selectedOperation,
+        toolDisplayNames,
         sessionLogIndexer,
         stream: jest.fn().mockImplementation(async ({ onToolCalls }) => {
           sessionLogIndexer.addRequestId("agent-request")
@@ -336,6 +339,9 @@ describe("agent test runner", () => {
     mockAgentRun({
       response: "Found a result.",
       toolCalls: ["search_rows", "get_row"],
+      toolDisplayNames: {
+        search_rows: "Research Notes.search_rows",
+      },
     })
 
     const run = await runSuite({
@@ -351,6 +357,7 @@ describe("agent test runner", () => {
           reviewerId: "reviewer-1",
           type: "tool_used",
           status: "passed",
+          message: 'Tool "Research Notes.search_rows" was used.',
         },
       ],
     })
@@ -367,6 +374,9 @@ describe("agent test runner", () => {
     mockAgentRun({
       response: "Handled without a tool.",
       toolCalls: ["list_tables"],
+      toolDisplayNames: {
+        search_rows: "Research Notes.search_rows",
+      },
     })
 
     const run = await runSuite({
@@ -382,7 +392,7 @@ describe("agent test runner", () => {
           reviewerId: "reviewer-1",
           type: "tool_used",
           status: "failed",
-          message: 'Expected tool "search_rows" to be used.',
+          message: 'Expected tool "Research Notes.search_rows" to be used.',
         },
       ],
     })
@@ -524,6 +534,9 @@ describe("agent test runner", () => {
     mockAgentRun({
       response: "Hello there",
       toolCalls: ["get_row"],
+      toolDisplayNames: {
+        search_rows: "Research Notes.search_rows",
+      },
     })
     mockJudgeRun({
       passed: true,
@@ -555,7 +568,7 @@ describe("agent test runner", () => {
           reviewerId: "reviewer-3",
           type: "tool_used",
           status: "failed",
-          message: 'Expected tool "search_rows" to be used.',
+          message: 'Expected tool "Research Notes.search_rows" to be used.',
         },
       ],
     })

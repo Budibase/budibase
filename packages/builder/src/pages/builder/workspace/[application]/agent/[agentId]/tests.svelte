@@ -105,6 +105,14 @@
     const tools = $agentsStore.tools ?? []
     return tools.map(t => ({ label: t.readableName || t.name, value: t.name }))
   })
+  let toolDisplayNames = $derived.by(() =>
+    Object.fromEntries(toolOptions.map(option => [option.value, option.label]))
+  )
+  let operationNamesById = $derived.by(() =>
+    Object.fromEntries(
+      operationOptions.map(option => [option.value, option.label])
+    )
+  )
   let aiConfigOptions = $derived(
     $aiConfigsStore.customConfigsPerType[AIConfigType.COMPLETIONS].map(
       config => ({
@@ -702,6 +710,8 @@
         {selectedCase}
         latestResults={latestResultsForSelected}
         hasLatestRun={hasAnyLatestResult}
+        {toolDisplayNames}
+        {operationNamesById}
       />
     </div>
   </div>

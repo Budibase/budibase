@@ -43,6 +43,7 @@ export const evaluateReviewer = ({
   reviewer,
   response,
   toolCalls,
+  toolDisplayNames,
   selectedOperationId,
   selectedOperationName,
   operationNamesById,
@@ -50,6 +51,7 @@ export const evaluateReviewer = ({
   reviewer: AgentTestReviewer
   response: string
   toolCalls: string[]
+  toolDisplayNames?: Record<string, string>
   selectedOperationId?: string
   selectedOperationName?: string
   operationNamesById?: Record<string, string>
@@ -62,6 +64,7 @@ export const evaluateReviewer = ({
   const { passed, message } = def.evaluate(reviewer, {
     response,
     toolCalls,
+    toolDisplayNames,
     selectedOperationId,
     selectedOperationName,
     operationNamesById,

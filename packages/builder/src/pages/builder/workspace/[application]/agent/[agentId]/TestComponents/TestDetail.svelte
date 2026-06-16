@@ -7,7 +7,10 @@
     ModalContent,
   } from "@budibase/bbui"
   import type { AgentTestCase, AgentTestCaseResult } from "@budibase/types"
-  import { describeReviewer, getReviewerLabel } from "@budibase/shared-core"
+  import {
+    describeReviewerWithLabels,
+    getReviewerLabel,
+  } from "@budibase/shared-core"
   import AnthropicLogo from "assets/llm-icons/anthropic.svg"
   import BudibaseLogo from "assets/llm-icons/bbai.svg"
   import GoogleLogo from "assets/llm-icons/google.svg"
@@ -21,9 +24,17 @@
     selectedCase: AgentTestCase | null
     latestResults: AgentTestCaseResult[]
     hasLatestRun: boolean
+    toolDisplayNames?: Record<string, string>
+    operationNamesById?: Record<string, string>
   }
 
-  let { selectedCase, latestResults, hasLatestRun }: Props = $props()
+  let {
+    selectedCase,
+    latestResults,
+    hasLatestRun,
+    toolDisplayNames,
+    operationNamesById,
+  }: Props = $props()
 
   const PROVIDER_LOGOS: Record<string, string> = {
     Anthropic: AnthropicLogo,
@@ -169,7 +180,10 @@
             {#if selectedCase.reviewers.length}
               <ul class="reviewer-summary-list">
                 {#each selectedCase.reviewers as reviewer (reviewer.id)}
-                  {@const summary = describeReviewer(reviewer)}
+                  {@const summary = describeReviewerWithLabels(reviewer, {
+                    toolDisplayNames,
+                    operationNamesById,
+                  })}
                   <li class="reviewer-summary-row">
                     <span class="reviewer-type">
                       {getReviewerLabel(reviewer.type)}

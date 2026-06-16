@@ -62,11 +62,15 @@ describe("agent test reviewers", () => {
         },
         response: "Handled it.",
         toolCalls: ["list_tables", "search_rows"],
+        toolDisplayNames: {
+          search_rows: "Research Notes.search_rows",
+        },
       })
     ).toMatchObject({
       reviewerId: "reviewer-1",
       type: "tool_used",
       status: "passed",
+      message: 'Tool "Research Notes.search_rows" was used.',
     })
   })
 
