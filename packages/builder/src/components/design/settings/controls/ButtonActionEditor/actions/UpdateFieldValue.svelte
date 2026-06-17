@@ -6,9 +6,7 @@
   import { getActionProviders, buildFormSchema } from "@/dataBinding"
   import { findComponent } from "@/helpers/components"
 
-  export let parameters
-  export let bindings = []
-  export let nested
+  let { parameters, bindings = [], nested } = $props()
 
   const typeOptions = [
     {
@@ -66,8 +64,6 @@
       parameters.fieldValues = {}
     }
     parameters.fieldValues[fieldName] = value
-    // Trigger reactivity
-    parameters = parameters
   }
 </script>
 
@@ -94,7 +90,7 @@
       ? "Select fields to reset"
       : "Select fields to set"}
   />
-  {#if parameters.type === "set" && parameters.fields && parameters.fields.length > 0}
+  {#if parameters.type === "set" && parameters.fields?.length > 0}
     <div class="field-values">
       {#each parameters.fields as fieldName}
         <div class="field-value-pair">
