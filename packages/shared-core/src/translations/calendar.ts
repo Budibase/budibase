@@ -39,6 +39,11 @@ export const calendarTranslations = createTranslationDefinitions(category, [
     defaultValue: "Sunday",
   },
   {
+    key: "allDay",
+    name: "All day",
+    defaultValue: "All day",
+  },
+  {
     key: "january",
     name: "January",
     defaultValue: "January",

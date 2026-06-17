@@ -351,6 +351,7 @@
     },
     footerToolbar: "",
     locale,
+    allDayText: calendarLabels.allDay,
     buttonText: {
       today: todayText,
       dayGridMonth: monthText,
