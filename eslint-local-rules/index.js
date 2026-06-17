@@ -9,6 +9,17 @@ const backendCoreBarrelPaths = [
   makeBarrelPath(path.join("packages", "backend-core")),
 ]
 
+const hasTypeScriptLang = scriptElement => {
+  const attributes = scriptElement.startTag?.attributes || []
+  const langAttribute = attributes.find(
+    attribute =>
+      attribute.type === "SvelteAttribute" && attribute.key?.name === "lang"
+  )
+  const values = langAttribute?.value || []
+
+  return values.some(value => value.value === "ts")
+}
+
 module.exports = {
   "no-console-error": {
     create: function (context) {
@@ -194,6 +205,43 @@ module.exports = {
               },
             })
           }
+        },
+      }
+    },
+  },
+  "require-svelte-ts": {
+    meta: {
+      type: "suggestion",
+      docs: {
+        description:
+          "Warn when Svelte components still use non-TypeScript script blocks",
+        category: "Best Practices",
+        recommended: false,
+      },
+      schema: [],
+      messages: {
+        requireTypeScript:
+          'This Svelte component has not been migrated to TypeScript yet. Use <script lang="ts">.',
+      },
+    },
+    create(context) {
+      if (!context.getFilename().endsWith(".svelte")) {
+        return {}
+      }
+
+      let hasReported = false
+
+      return {
+        SvelteScriptElement(node) {
+          if (hasReported || hasTypeScriptLang(node)) {
+            return
+          }
+
+          hasReported = true
+          context.report({
+            node,
+            messageId: "requireTypeScript",
+          })
         },
       }
     },

@@ -120,6 +120,8 @@ export default [
         },
       ],
 
+      "local-rules/require-svelte-ts": "warn",
+
       // Temporarily disabled during Svelte 5 migration - re-enable incrementally
       "svelte/require-each-key": "off", // 316 errors - add keys to {#each} blocks
       "svelte/no-reactive-reassign": "off", // 35 errors - fix reactive value reassignments
