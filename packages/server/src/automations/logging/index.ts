@@ -3,6 +3,7 @@ import { automations } from "@budibase/pro"
 import { Automation, AutomationResults, Workspace } from "@budibase/types"
 import sizeof from "object-sizeof"
 import env from "../../environment"
+import { publishAutomationLogUpdate } from "../../utilities/automationLogEvents"
 
 const MB_IN_BYTES = 1024 * 1024
 
@@ -41,6 +42,13 @@ export async function storeLog(
       e.request.data = { message: "removed due to large size" }
     }
     logging.logAlert("Error writing automation log", e)
+    return
+  }
+
+  try {
+    await publishAutomationLogUpdate(automation)
+  } catch (e) {
+    logging.logAlert("Error publishing automation log update", e)
   }
 }
 

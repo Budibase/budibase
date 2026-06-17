@@ -148,7 +148,10 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
 export async function logSearch(
   ctx: UserCtx<SearchAutomationLogsRequest, SearchAutomationLogsResponse>
 ) {
-  ctx.body = await automations.logs.logSearch(ctx.request.body)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.appId)
+  ctx.body = await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    return await automations.logs.logSearch(ctx.request.body)
+  })
 }
 
 export async function clearLogError(

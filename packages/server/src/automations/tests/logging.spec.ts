@@ -9,6 +9,7 @@ import {
   Workspace,
 } from "@budibase/types"
 import { setEnv } from "../../environment"
+import { publishAutomationLogUpdate } from "../../utilities/automationLogEvents"
 import { checkAppMetadata, storeLog } from "../logging"
 
 jest.mock("@budibase/pro", () => ({
@@ -31,12 +32,18 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
+jest.mock("../../utilities/automationLogEvents", () => ({
+  publishAutomationLogUpdate: jest.fn(),
+}))
+
 const mockStoreLog = automations.logs.storeLog as jest.Mock
 const mockOldestLogDate = automations.logs.oldestLogDate as jest.Mock
 const mockLogAlert = logging.logAlert as jest.Mock
+const mockPublishAutomationLogUpdate = publishAutomationLogUpdate as jest.Mock
 
 const automation = {
   _id: "au_1",
+  appId: "app_1",
   name: "Test automation",
 } as Automation
 
@@ -110,6 +117,14 @@ describe("automation logging", () => {
     expect(mockStoreLog).toHaveBeenCalledWith(automation, results)
   })
 
+  it("publishes an automation log update after storing logs", async () => {
+    mockStoreLog.mockResolvedValue(undefined)
+
+    await storeLog(automation, buildResults())
+
+    expect(mockPublishAutomationLogUpdate).toHaveBeenCalledWith(automation)
+  })
+
   it("sanitises oversized logs before storing them", async () => {
     const restoreEnv = setEnv({ AUTOMATION_MAX_LOG_SIZE_MB: 0 })
     mockStoreLog.mockResolvedValue(undefined)
@@ -148,6 +163,7 @@ describe("automation logging", () => {
 
     await storeLog(automation, buildResults())
 
+    expect(mockPublishAutomationLogUpdate).not.toHaveBeenCalled()
     expect(error.request.data).toEqual({
       message: "removed due to large size",
     })
@@ -163,6 +179,7 @@ describe("automation logging", () => {
 
     await storeLog(automation, buildResults())
 
+    expect(mockPublishAutomationLogUpdate).not.toHaveBeenCalled()
     expect(mockLogAlert).toHaveBeenCalledWith(
       "Error writing automation log",
       error

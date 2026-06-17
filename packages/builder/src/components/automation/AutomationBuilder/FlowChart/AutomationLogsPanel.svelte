@@ -7,12 +7,12 @@
     Button,
     Icon,
   } from "@budibase/bbui"
+  import { onMount } from "svelte"
+  import dayjs from "dayjs"
   import Panel from "@/components/design/Panel.svelte"
   import { automationStore } from "@/stores/builder"
   import { licensing, auth } from "@/stores/portal"
   import { createPaginationStore } from "@/helpers/pagination"
-  import { onMount } from "svelte"
-  import dayjs from "dayjs"
   import StatusRenderer from "@/settings/pages/automations/_components/StatusRenderer.svelte"
   import { didRunStopWithoutBranchMatch } from "./FlowCanvas/FlowRunHelpers"
 
@@ -31,6 +31,9 @@
   let timeRange = null
   let loaded = false
   let totalLogs = 0
+  let loading = false
+  let fetchQueued = false
+  let lastLogRefreshSequence = 0
 
   const AUTOMATION_LOG_PAGE_SIZE = 10
 
@@ -90,6 +93,12 @@
     if (!force && !loaded) {
       return
     }
+    if (loading) {
+      fetchQueued = true
+      return
+    }
+    loading = true
+    fetchQueued = false
     let startDate = null
     if (timeRange) {
       const [length, units] = timeRange.split("-")
@@ -108,7 +117,25 @@
     } catch (error) {
       notifications.error("Error fetching automation logs")
       console.error(error)
+    } finally {
+      loading = false
+      if (fetchQueued) {
+        fetchLogs(automation._id, status, page, timeRange, true)
+      }
     }
+  }
+
+  const refreshLogs = async (force = false) => {
+    await fetchLogs(automation._id, status, page, timeRange, force)
+  }
+
+  $: if (
+    loaded &&
+    $automationStore.logRefreshEvent?.automationId === automation._id &&
+    $automationStore.logRefreshEvent.sequence !== lastLogRefreshSequence
+  ) {
+    lastLogRefreshSequence = $automationStore.logRefreshEvent.sequence
+    refreshLogs(true)
   }
 
   onMount(async () => {

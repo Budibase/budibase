@@ -156,6 +156,7 @@ export const isNoOpBlockMove = (
 const initialAutomationState: AutomationStoreState = {
   automations: [],
   testProgress: {},
+  logRefreshEvent: undefined,
   showTestModal: false,
   blockDefinitions: {
     TRIGGER: {},
@@ -1567,6 +1568,20 @@ const automationActions = (store: AutomationStore) => ({
       } else if (event.status === "error" && !event.blockId) {
         state.inProgressTest = undefined
         stopTestStatusPolling()
+      }
+      return state
+    })
+  },
+
+  handleLogRefresh: ({ automationId }: { automationId: string }) => {
+    if (!automationId) {
+      return
+    }
+
+    store.update(state => {
+      state.logRefreshEvent = {
+        automationId,
+        sequence: (state.logRefreshEvent?.sequence || 0) + 1,
       }
       return state
     })
