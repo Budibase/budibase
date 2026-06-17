@@ -156,13 +156,13 @@
     }
   }
 
-  const refreshLogs = async (force = false, fromRealtime = false) => {
+  const refreshLogs = async ({ fromRealtime = false } = {}) => {
     await fetchLogs(
       automation._id,
       status,
       page,
       timeRange,
-      force,
+      true,
       fromRealtime
     )
   }
@@ -176,7 +176,7 @@
     if (realtimePaused) {
       refreshPending = true
     } else {
-      refreshLogs(true, true)
+      refreshLogs({ fromRealtime: true })
     }
   }
 
@@ -188,7 +188,7 @@
     })
     if (!realtimePaused) {
       refreshPending = false
-      refreshLogs(true)
+      refreshLogs()
     }
   }
 
