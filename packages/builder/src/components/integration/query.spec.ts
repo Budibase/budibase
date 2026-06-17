@@ -109,7 +109,9 @@ describe("isValidEndpointUrl - HBS bindings", () => {
 
   it("accepts multiple bindings that each contain internal whitespace", () => {
     expect(
-      isValidEndpointUrl("https://api.example.com/{{ org_id }}/{{ contact_id }}")
+      isValidEndpointUrl(
+        "https://api.example.com/{{ org_id }}/{{ contact_id }}"
+      )
     ).toBe(true)
   })
 
