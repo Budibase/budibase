@@ -62,12 +62,17 @@ const preserveSlackLiteralSegments = (
   )
 }
 
+const markdownStrike = /~~(?=\S)([^\n]*?\S)~~/g
+const markdownItalicAsterisk = /(^|[^*])\*(?![\s*])([^*\n]*?\S)\*(?!\*)/g
+const markdownBoldAsterisk = /\*\*(?=\S)([^\n]*?\S)\*\*/g
+const markdownBoldUnderscore = /__(?=\S)([^\n]*?\S)__/g
+
 const formatSlackInlineMrkdwn = (text: string) =>
   text
-    .replace(/~~(?=\S)([^\n]*?\S)~~/g, "~$1~")
-    .replace(/(^|[^*])\*(?![\s*])([^*\n]*?\S)\*(?!\*)/g, "$1_$2_")
-    .replace(/\*\*(?=\S)([^\n]*?\S)\*\*/g, "*$1*")
-    .replace(/__(?=\S)([^\n]*?\S)__/g, "*$1*")
+    .replace(markdownStrike, "~$1~")
+    .replace(markdownItalicAsterisk, "$1_$2_")
+    .replace(markdownBoldAsterisk, "*$1*")
+    .replace(markdownBoldUnderscore, "*$1*")
 
 const formatSlackLineMrkdwn = (line: string) => {
   const heading = line.match(/^#{1,6}\s+(.+?)\s*#*\s*$/)
