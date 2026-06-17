@@ -11,7 +11,11 @@
   } from "@budibase/types"
   import LogsSessionDetail from "./LogComponents/LogsSessionDetail.svelte"
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
-  import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
+  import {
+    formatLogDateForApi,
+    formatTime,
+    parseAssistantResponse,
+  } from "./LogComponents/utils"
   import { notifications } from "@budibase/bbui"
 
   const AGENT_LOG_SESSION_LIMIT = 75
@@ -22,6 +26,7 @@
   let expandedStepId = $state<string | null>(null)
   let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
   let expandedStepLoading = $state(false)
+  let exportingSession = $state(false)
   let hasMore = $state(false)
   let nextBookmark = $state<string | undefined>(undefined)
 
@@ -238,6 +243,162 @@
     await loadStepDetail(entry)
   }
 
+  function formatTranscriptBlock(label: string, content: string | undefined) {
+    const trimmed = content?.trim()
+    if (!trimmed) {
+      return ""
+    }
+
+    return `${label}\n${trimmed}`
+  }
+
+  function formatTranscriptToolList(
+    label: string,
+    items: Array<{
+      name: string
+      displayName?: string
+      arguments?: string
+      content?: string
+      toolCallId?: string
+      id?: string
+    }>
+  ) {
+    if (!items.length) {
+      return ""
+    }
+
+    const lines = [label]
+    for (const item of items) {
+      const name = item.displayName || item.name
+      const id = item.id || item.toolCallId
+      lines.push(id ? `- ${name} (${id})` : `- ${name}`)
+      if (item.arguments) {
+        lines.push(item.arguments)
+      }
+      if (item.content) {
+        lines.push(item.content)
+      }
+    }
+
+    return lines.join("\n")
+  }
+
+  function formatTranscriptError(detail: AgentLogRequestDetail) {
+    if (!detail.error) {
+      return ""
+    }
+
+    const lines = [detail.error.message]
+    if (detail.error.code) {
+      lines.push(`Code: ${detail.error.code}`)
+    }
+    if (detail.error.errorClass) {
+      lines.push(`Class: ${detail.error.errorClass}`)
+    }
+    if (detail.error.provider) {
+      lines.push(`Provider: ${detail.error.provider}`)
+    }
+    if (detail.error.traceback) {
+      lines.push(detail.error.traceback)
+    }
+
+    return formatTranscriptBlock("Error", lines.join("\n"))
+  }
+
+  function buildSessionTranscript(
+    session: AgentLogSession,
+    details: AgentLogRequestDetail[]
+  ) {
+    const lines = [
+      "Agent Log Session",
+      "",
+      `Session ID: ${session.sessionId}`,
+      `Environment: ${session.environment}`,
+      `Trigger: ${session.trigger}`,
+      `Status: ${session.status}`,
+      `Started: ${formatTime(session.startTime)}`,
+      `First input: ${session.firstInput || "-"}`,
+      `Steps: ${session.entries.length}`,
+      "",
+    ]
+
+    details.forEach((detail, index) => {
+      const entry = session.entries.find(
+        item => item.requestId === detail.requestId
+      )
+      const assistantResponse = parseAssistantResponse(detail.response)
+      const sections = [
+        `Step ${index + 1}`,
+        `Request ID: ${detail.requestId}`,
+        `Model: ${detail.model}`,
+        `Status: ${entry?.status || "unknown"}`,
+        `Started: ${formatTime(detail.startTime)}`,
+        `Tokens: ${detail.inputTokens} in / ${detail.outputTokens} out`,
+        "",
+        "Messages sent to model",
+        ...detail.messages.map(message => {
+          const role = message.role.toUpperCase()
+          return `${role}:\n${message.content || "[empty]"}`
+        }),
+        formatTranscriptBlock(
+          "Assistant response",
+          assistantResponse.response || detail.response
+        ),
+        formatTranscriptToolList("Input tool calls", detail.inputToolCalls),
+        formatTranscriptToolList("Tool calls", detail.toolCalls),
+        formatTranscriptToolList("Tool results", detail.toolResults),
+        formatTranscriptError(detail),
+      ].filter(Boolean)
+
+      lines.push(sections.join("\n"), "", "---", "")
+    })
+
+    return lines.join("\n")
+  }
+
+  function downloadTextFile(filename: string, content: string) {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  function getTranscriptFilename(session: AgentLogSession) {
+    const sessionId = session.sessionId.replace(/[^a-zA-Z0-9-_]/g, "-")
+    return `agent-log-${sessionId}.txt`
+  }
+
+  async function exportSessionTranscript(session: AgentLogSession) {
+    const agentId = $selectedAgent?._id
+    if (!agentId || exportingSession) {
+      return
+    }
+
+    exportingSession = true
+    try {
+      const details = await Promise.all(
+        session.entries.map(entry =>
+          API.fetchAgentLogDetail(agentId, entry.requestId)
+        )
+      )
+      const transcript = buildSessionTranscript(session, details)
+      console.log("Agent log session transcript data", { session, details })
+      console.log("Agent log session transcript", transcript)
+      downloadTextFile(getTranscriptFilename(session), transcript)
+    } catch (error) {
+      console.error("Failed to export session transcript", error)
+      notifications.error("Failed to export session transcript")
+    } finally {
+      exportingSession = false
+    }
+  }
+
   $effect(() => {
     statusFilter
     dateRange
@@ -275,7 +436,9 @@
         {expandedStepId}
         {expandedStepDetail}
         {expandedStepLoading}
+        exportSessionLoading={exportingSession}
         onToggleStep={toggleStep}
+        onExportSession={exportSessionTranscript}
       />
     </div>
   </div>
