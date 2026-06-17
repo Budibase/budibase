@@ -39,6 +39,9 @@ describe("slack webhook helpers", () => {
       "# Summary",
       "This is **bold** and __also bold__.",
       "This is *italic* and ~~removed~~.",
+      "- **First** item",
+      "  * second item",
+      "+ third item",
     ].join("\n")
 
     expect(formatSlackMrkdwn(input)).toEqual(
@@ -46,6 +49,9 @@ describe("slack webhook helpers", () => {
         "*Summary*",
         "This is *bold* and *also bold*.",
         "This is _italic_ and ~removed~.",
+        "• *First* item",
+        "  • second item",
+        "• third item",
       ].join("\n")
     )
   })
@@ -58,6 +64,7 @@ describe("slack webhook helpers", () => {
       "```",
       "# code heading",
       "**code bold**",
+      "- code bullet",
       "```",
     ].join("\n")
 
@@ -69,6 +76,7 @@ describe("slack webhook helpers", () => {
         "```",
         "# code heading",
         "**code bold**",
+        "- code bullet",
         "```",
       ].join("\n")
     )

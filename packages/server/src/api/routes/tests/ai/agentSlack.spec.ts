@@ -707,13 +707,13 @@ describe("agent slack integration provisioning", () => {
             parts: [
               {
                 type: "text",
-                text: "# Summary\nUse **bold** and *italic*.\n[Leave link](https://example.com/docs)",
+                text: "# Summary\nUse **bold** and *italic*.\n- First bullet\n[Leave link](https://example.com/docs)",
               },
             ],
           },
         ] as any,
         assistantText:
-          "# Summary\nUse **bold** and *italic*.\n[Leave link](https://example.com/docs)",
+          "# Summary\nUse **bold** and *italic*.\n- First bullet\n[Leave link](https://example.com/docs)",
         title: "Mock conversation",
       })
 
@@ -739,7 +739,7 @@ describe("agent slack integration provisioning", () => {
       })
 
       expect(response.body.messages).toContain(
-        "*Summary*\nUse *bold* and _italic_.\n[Leave link](https://example.com/docs)"
+        "*Summary*\nUse *bold* and _italic_.\n• First bullet\n[Leave link](https://example.com/docs)"
       )
     })
 

@@ -72,6 +72,10 @@ const formatSlackInlineMrkdwn = (text: string) =>
 const formatSlackLineMrkdwn = (line: string) => {
   const heading = line.match(/^#{1,6}\s+(.+?)\s*#*\s*$/)
   if (!heading) {
+    const bullet = line.match(/^(\s*)[-*+]\s+(.+)$/)
+    if (bullet) {
+      return `${bullet[1]}• ${formatSlackInlineMrkdwn(bullet[2])}`
+    }
     return formatSlackInlineMrkdwn(line)
   }
 
