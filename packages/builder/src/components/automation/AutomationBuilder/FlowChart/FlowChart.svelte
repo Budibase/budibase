@@ -271,6 +271,13 @@
   $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
     $automationStore.actionPanelBlock
   )
+  $: hasRightSidePanel =
+    !!$automationStore.selectedNodeId ||
+    !!$automationStore.selectedBranchNode ||
+    !!$automationStore.actionPanelBlock
+  $: automationHeadingRightInset = hasRightSidePanel
+    ? `${getActionPanelWidth()}px`
+    : "0px"
 
   $: if (
     actionPanelTargetNodeId &&
@@ -688,7 +695,10 @@
   })
 </script>
 
-<div class="automation-heading">
+<div
+  class="automation-heading"
+  style:--automation-heading-right-inset={automationHeadingRightInset}
+>
   <div class="actions-right">
     <div class="actions-group">
       <Switcher
@@ -854,7 +864,9 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m) var(--spacing-l);
+    padding: var(--spacing-m)
+      calc(var(--spacing-l) + var(--automation-heading-right-inset, 0px))
+      var(--spacing-m) var(--spacing-l);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);

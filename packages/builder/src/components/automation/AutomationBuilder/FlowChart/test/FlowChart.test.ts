@@ -288,4 +288,38 @@ describe("FlowChart", () => {
       )
     })
   })
+
+  it("reserves space for header actions when the selected step panel is open", async () => {
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    const { container } = render(FlowChart, {
+      props: { automation },
+    })
+    const heading = container.querySelector(
+      ".automation-heading"
+    ) as HTMLElement
+
+    expect(
+      heading.style.getPropertyValue("--automation-heading-right-inset")
+    ).toBe("0px")
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      selectedNodeId: "step-1",
+    }))
+
+    await waitFor(() => {
+      expect(
+        heading.style.getPropertyValue("--automation-heading-right-inset")
+      ).toBe("480px")
+    })
+  })
 })
