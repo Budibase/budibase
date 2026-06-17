@@ -81,7 +81,7 @@ export const calendarTranslations = createTranslationDefinitions(category, [
   {
     key: "september",
     name: "September",
-    defaultValue: "",
+    defaultValue: "September",
   },
   {
     key: "october",
