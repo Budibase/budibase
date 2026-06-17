@@ -2,6 +2,7 @@
   import {
     SourceName,
     BodyType,
+    type APIRequestStepInputs,
     type AutomationStep,
     type EnrichedBinding,
   } from "@budibase/types"
@@ -34,7 +35,11 @@
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
   import QuerySelect from "./QuerySelect.svelte"
-  import { workspaceConnections } from "@/stores/builder/workspaceConnection"
+  import {
+    datasourceMatchesRestTemplate,
+    workspaceConnections,
+  } from "@/stores/builder/workspaceConnection"
+  import { tick } from "svelte"
 
   export let bindings: EnrichedBinding[] | undefined = undefined
   export let block: AutomationStep | undefined = undefined
@@ -53,8 +58,11 @@
   $: restBindings = [...(bindings || []), ...authBindings]
 
   // The step input properties
-  $: inputData = automationStore.actions.getInputData(block)
+  $: inputData = automationStore.actions.getInputData(block) as
+    | APIRequestStepInputs
+    | undefined
   $: fieldKey = "query"
+  $: restTemplateId = inputData?.restTemplateId
   $: {
     value = getInputValue(inputData, fieldKey)
   }
@@ -67,9 +75,7 @@
 
   $: targetSource = selectedDatasourceId || query?.datasourceId
 
-  // Source for current query, if any
-  $: dataSource =
-    restSources?.find(ds => ds._id === targetSource) || restSources?.[0]
+  $: dataSource = restSources?.find(ds => ds._id === targetSource)
 
   // The configured query
   $: query = $queries.list.find(query => query._id === value?.queryId)
@@ -135,8 +141,32 @@
   }
 
   const handleAddApi = () => {
-    workspaceConnections.startDraft()
+    workspaceConnections.startDraft(restTemplateId)
     modal.show()
+  }
+
+  const handleAddTemplateApi = async (blockId: string) => {
+    const templateId =
+      automationStore.actions.consumeApiRequestTemplate(blockId)
+    if (!templateId) {
+      return
+    }
+    const hasExistingQuery = restSources?.some(ds => {
+      if (!datasourceMatchesRestTemplate(ds, templateId)) {
+        return false
+      }
+      return $queries.list.some(query => query.datasourceId === ds._id)
+    })
+    if (hasExistingQuery) {
+      return
+    }
+    workspaceConnections.startDraft(templateId)
+    await tick()
+    modal.show()
+  }
+
+  $: if (block?.id) {
+    handleAddTemplateApi(block.id)
   }
 
   const handleSavedQuery = (e: CustomEvent<{ queryId: string }>) => {
@@ -177,6 +207,7 @@
               bind:this={apiViewer}
               saveAndClose={true}
               settingsLocked={true}
+              connectionPopoverPortalTarget=".spectrum"
               on:savedQuery={handleSavedQuery}
             />
           {:else}
@@ -184,7 +215,12 @@
               bind:this={apiViewer}
               datasourceId={dataSource?._id}
               queryId={query?._id}
+              {restTemplateId}
+              saveAndClose={true}
+              redirectNewQueryOnSave={false}
               settingsLocked={true}
+              connectionPopoverPortalTarget=".spectrum"
+              on:savedQuery={handleSavedQuery}
             />
           {/if}
         </div>
@@ -210,6 +246,7 @@
   {:else}
     <QuerySelect
       value={value?.queryId}
+      {restTemplateId}
       fullWidthDropdown
       onchange={q => defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
       onaddApi={handleAddApi}
