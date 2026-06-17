@@ -41,6 +41,56 @@ const toAbsoluteUrl = async (url: string) => {
 const formatSlackLinkLabel = (value: string) =>
   value.replace(/[<>|]/g, " ").replace(/\s+/g, " ").trim()
 
+const preserveSlackLiteralSegments = (
+  text: string,
+  formatter: (text: string) => string
+) => {
+  const literals: string[] = []
+  const placeholderPrefix = "\u0000SLACK_LITERAL_"
+  const placeholderSuffix = "\u0000"
+  const protectedText = text.replace(
+    /```[\s\S]*?```|`[^`\n]*`|\[[^\]\n]+\]\([^\n)]+\)/g,
+    literal => {
+      const index = literals.push(literal) - 1
+      return `${placeholderPrefix}${index}${placeholderSuffix}`
+    }
+  )
+
+  return formatter(protectedText).replace(
+    new RegExp(`${placeholderPrefix}(\\d+)${placeholderSuffix}`, "g"),
+    (_placeholder, index) => literals[Number(index)] || ""
+  )
+}
+
+const formatSlackInlineMrkdwn = (text: string) =>
+  text
+    .replace(/~~(?=\S)([^\n]*?\S)~~/g, "~$1~")
+    .replace(/(^|[^*])\*(?![\s*])([^*\n]*?\S)\*(?!\*)/g, "$1_$2_")
+    .replace(/\*\*(?=\S)([^\n]*?\S)\*\*/g, "*$1*")
+    .replace(/__(?=\S)([^\n]*?\S)__/g, "*$1*")
+
+const formatSlackLineMrkdwn = (line: string) => {
+  const heading = line.match(/^#{1,6}\s+(.+?)\s*#*\s*$/)
+  if (!heading) {
+    return formatSlackInlineMrkdwn(line)
+  }
+
+  const formattedHeading = formatSlackInlineMrkdwn(heading[1].trim())
+  if (!formattedHeading) {
+    return ""
+  }
+
+  if (formattedHeading.startsWith("*") && formattedHeading.endsWith("*")) {
+    return formattedHeading
+  }
+  return `*${formattedHeading}*`
+}
+
+export const formatSlackMrkdwn = (text: string) =>
+  preserveSlackLiteralSegments(text, value =>
+    value.split("\n").map(formatSlackLineMrkdwn).join("\n")
+  )
+
 export const formatSlackAssistantReply = async ({
   agentId,
   result,
@@ -52,7 +102,7 @@ export const formatSlackAssistantReply = async ({
   allowKnowledgeSourceDownload?: boolean
   isDirectMessage?: boolean
 }) => {
-  const assistantText = result.assistantText || ""
+  const assistantText = formatSlackMrkdwn(result.assistantText || "")
   if (allowKnowledgeSourceDownload === false || !isDirectMessage) {
     return assistantText
   }

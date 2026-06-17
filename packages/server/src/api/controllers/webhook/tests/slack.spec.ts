@@ -2,9 +2,12 @@ import {
   AgentChannelProvider,
   type ChatConversation,
   type SlackConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
 import {
   extractSlackMessageContent,
+  formatSlackAssistantReply,
+  formatSlackMrkdwn,
   isSlackDirectMessage,
   matchesSlackConversationScope,
   pickSlackConversation,
@@ -31,6 +34,62 @@ const makeChat = (
 })
 
 describe("slack webhook helpers", () => {
+  it("formats markdown emphasis and headings for Slack mrkdwn", () => {
+    const input = [
+      "# Summary",
+      "This is **bold** and __also bold__.",
+      "This is *italic* and ~~removed~~.",
+    ].join("\n")
+
+    expect(formatSlackMrkdwn(input)).toEqual(
+      [
+        "*Summary*",
+        "This is *bold* and *also bold*.",
+        "This is _italic_ and ~removed~.",
+      ].join("\n")
+    )
+  })
+
+  it("leaves markdown links and code untouched when formatting Slack mrkdwn", () => {
+    const input = [
+      "Use **bold** outside links.",
+      "Leave [**docs**](https://example.com/docs) alone.",
+      "Keep `**inline code**` alone.",
+      "```",
+      "# code heading",
+      "**code bold**",
+      "```",
+    ].join("\n")
+
+    expect(formatSlackMrkdwn(input)).toEqual(
+      [
+        "Use *bold* outside links.",
+        "Leave [**docs**](https://example.com/docs) alone.",
+        "Keep `**inline code**` alone.",
+        "```",
+        "# code heading",
+        "**code bold**",
+        "```",
+      ].join("\n")
+    )
+  })
+
+  it("formats assistant replies before returning them to Slack", async () => {
+    const result: WebhookChatCompleteResult = {
+      messages: [],
+      assistantText: "## Next steps\nUse **bold** text.",
+      title: "Mock conversation",
+    }
+
+    await expect(
+      formatSlackAssistantReply({
+        agentId: "agent-1",
+        result,
+        isDirectMessage: false,
+      })
+    ).resolves.toEqual("*Next steps*\nUse *bold* text.")
+  })
+
   it.each([
     ["<@U123> ask hello", "ask hello"],
     ["hello there", "hello there"],
