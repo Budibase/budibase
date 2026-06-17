@@ -21,6 +21,12 @@ export { temporalStore } from "./temporal"
 export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
 export { agentsStore, selectedAgent } from "./agents"
+export type {
+  OperationKnowledgePendingUpload,
+  OperationKnowledgeUploadResult,
+  OperationKnowledgeUploadState,
+} from "./agents"
+export { knowledgeConnectionsStore } from "./knowledgeConnections"
 export {
   chatAppsStore,
   currentChatApp,
@@ -33,8 +39,6 @@ export { bannerStore } from "./banners"
 export { appCreationStore } from "./appCreation"
 export { aiConfigsStore } from "./aiConfigs"
 export { translations } from "./translations"
-export { vectorDbStore } from "./vectorDbs"
-export { knowledgeBaseStore } from "./knowledgeBases"
 export { aiStore } from "./ai"
 
 export const sideBarCollapsed = writable(false)

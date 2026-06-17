@@ -1,5 +1,6 @@
 {
   "name": "@budibase/upgrade-tests",
+  "private": true,
   "version": "0.0.0",
   "description": "Budibase upgrade testing framework",
   "main": "src/index.ts",
@@ -17,15 +18,13 @@
     "test:post": "yarn build && node dist/src/cli/index.js post",
     "cli": "yarn build && node dist/src/cli/index.js",
     "build": "tsc -p tsconfig.build.json",
-    "check:types": "tsc -p tsconfig.json --noEmit"
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental"
   },
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
     "@budibase/types": "*",
     "chalk": "^4.1.2",
-    "commander": "^11.0.0",
-    "lodash": "^4.17.23",
     "ora": "^5.4.1",
     "semver": "^7.5.4",
     "uuid": "^9.0.1"

@@ -1,3 +1,4 @@
+import { findHBSBlocks } from "@budibase/string-templates"
 import restUtils from "@/helpers/data/utils"
 import {
   runtimeToReadableMap,
@@ -471,4 +472,16 @@ export function keyValueArrayToRecord(
     },
     {} as Record<string, any>
   )
+}
+
+export function isValidEndpointUrl(url: string | undefined): boolean {
+  if (!url || /\s/.test(url)) return false
+  if (!/^(https?:\/\/|\{\{)/.test(url)) return false
+  if (findHBSBlocks(url).length > 0) return true
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
 }

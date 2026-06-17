@@ -11,6 +11,7 @@
   export let fixed: boolean = false
   export let color: string | undefined = undefined
   export let noWrap: boolean = false
+  export let offset: number = 0
 
   let wrapper: HTMLElement | undefined
   let hovered = false
@@ -44,15 +45,15 @@
     // Determine where to render tooltip based on position prop
     if (position === TooltipPosition.Top) {
       left = bounds.left + bounds.width / 2
-      top = bounds.top
+      top = bounds.top + offset
     } else if (position === TooltipPosition.Right) {
-      left = bounds.left + bounds.width
+      left = bounds.left + bounds.width + offset
       top = bounds.top + bounds.height / 2
     } else if (position === TooltipPosition.Bottom) {
       left = bounds.left + bounds.width / 2
-      top = bounds.top + bounds.height
+      top = bounds.top + bounds.height + offset
     } else if (position === TooltipPosition.Left) {
-      left = bounds.left
+      left = bounds.left - offset
       top = bounds.top + bounds.height / 2
     }
   }

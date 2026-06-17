@@ -1,7 +1,5 @@
 beforeAll(async () => {
-  const processors = await import("../../../../src/events/processors")
   const events = await import("../../../../src/events")
-  jest.spyOn(processors.analyticsProcessor, "processEvent")
 
   jest.spyOn(events.identification, "identifyTenantGroup")
   jest.spyOn(events.identification, "identifyUser")
@@ -130,4 +128,8 @@ beforeAll(async () => {
   jest.spyOn(events.license, "portalOpened")
   jest.spyOn(events.license, "paymentFailed")
   jest.spyOn(events.license, "paymentRecovered")
+
+  jest.spyOn(events.workspace, "appCreated")
+  jest.spyOn(events.workspace, "appUpdated")
+  jest.spyOn(events.workspace, "appDeleted")
 })

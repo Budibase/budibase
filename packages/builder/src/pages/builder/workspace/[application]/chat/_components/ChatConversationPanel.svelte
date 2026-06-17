@@ -11,6 +11,7 @@
     name?: string
     icon?: string
     iconColor?: string
+    allowKnowledgeSourceDownload?: boolean
   }
 
   export let selectedAgentId: string | null = null
@@ -24,7 +25,6 @@
     | "ready" = "ready"
 
   export let chat: ChatConversationLike
-  export let loading: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""
 
@@ -37,7 +37,6 @@
   {enabledAgentList}
   {conversationStarters}
   {agentAvailability}
-  {loading}
   {workspaceId}
   {initialPrompt}
   {userName}

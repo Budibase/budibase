@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc --emitDeclarationOnly && rollup -c",
     "dev": "rollup -cw",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
     "test": "jest",
     "manifest": "ts-node ./scripts/gen-collection-info.ts"
   },
@@ -24,8 +24,7 @@
     "@budibase/handlebars-helpers": "^0.13.2",
     "@budibase/vm-browserify": "^1.1.4",
     "dayjs": "^1.10.8",
-    "handlebars": "^4.7.8",
-    "lodash.clonedeep": "^4.5.0"
+    "handlebars": "4.7.9"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",

@@ -5,6 +5,7 @@ import MockColorPicker from "@/test/mocks/MockColorPicker.svelte"
 import MockIconPicker from "@/test/mocks/MockIconPicker.svelte"
 import MockInput from "@/test/mocks/MockInput.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
+import MockToggle from "@/test/mocks/MockToggle.svelte"
 
 vi.mock("@budibase/bbui", () => ({
   keepOpen: Symbol("keepOpen"),
@@ -13,6 +14,7 @@ vi.mock("@budibase/bbui", () => ({
   ModalContent: MockModalContent,
   Input: MockInput,
   IconPicker: MockIconPicker,
+  Toggle: MockToggle,
 }))
 
 import CreateEditGroupModal from "./CreateEditGroupModal.svelte"

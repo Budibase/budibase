@@ -55,6 +55,7 @@
   export let readonly: boolean = false
   export let quiet: boolean = false
   export let autoWidth: boolean | undefined = false
+  export let popoverAutoWidth: boolean | undefined = false
   export let autocomplete: boolean = false
   export let sort: boolean = false
   export let searchTerm: string | null = null
@@ -77,7 +78,6 @@
   export let indeterminate: boolean = false
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
-  export let hideChevron: boolean = false
   export let wrapText: boolean = false
   export let fieldTooltip: string | null = null
 
@@ -94,6 +94,7 @@
   let virtualPaddingTop = 0
   let virtualPaddingBottom = 0
 
+  $: effectivePopoverAutoWidth = autoWidth || popoverAutoWidth
   const resolveIcon = (icon: PickerIconInput): ResolvedIcon | null => {
     if (!icon) {
       return null
@@ -236,6 +237,8 @@
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
+  class:is-readonly={readonly}
+  class:auto-width={autoWidth}
   aria-haspopup="listbox"
   on:click={onClick}
   bind:this={button}
@@ -267,7 +270,7 @@
       <span class="picker-label-subtitle">{fieldSubtitle}</span>
     {/if}
   </span>
-  {#if !hideChevron}
+  {#if !readonly}
     <Icon name="caret-down" size="S" />
   {/if}
 </button>
@@ -278,14 +281,15 @@
   align={align || PopoverAlignment.Left}
   {open}
   on:close={() => (open = false)}
-  useAnchorWidth={!autoWidth}
-  maxWidth={autoWidth ? 400 : undefined}
+  widthMode={effectivePopoverAutoWidth ? "min-to-anchor" : "fixed-to-anchor"}
+  maxWidth={effectivePopoverAutoWidth ? 400 : undefined}
   customHeight={customPopoverHeight}
   {maxHeight}
+  closeOnScroll
 >
   <div
     class="popover-content"
-    class:auto-width={autoWidth}
+    class:auto-width={effectivePopoverAutoWidth}
     class:wrap-text={wrapText}
     class:size-s={size === "S"}
     class:size-m={size === "M"}
@@ -370,7 +374,7 @@
             on:mouseenter={e => onOptionMouseenter(e, option)}
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
-            title={optionTooltip ?? undefined}
+            title={optionTooltip ?? getOptionLabel(option, idx)}
           >
             {#if optionIcon}
               <span class="option-extra icon">
@@ -440,6 +444,10 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+  }
+  .spectrum-Picker.auto-width {
+    width: auto;
+    max-width: 100%;
   }
   .spectrum-Picker.has-border {
     border: 1px solid var(--spectrum-global-color-gray-200);

@@ -1,4 +1,5 @@
 import { auth, cache, context } from "@budibase/backend-core"
+import { applyBaseUrl } from "@budibase/shared-core"
 import {
   findHBSBlocks,
   iifeWrapper,
@@ -122,13 +123,65 @@ class QueryRunner {
       )
     }
 
+    // Base URL resolution for template datasources
+    // Swap the base URL before field enrichment. Enrich config.url first so
+    // static variable bindings (e.g. {{host}}) are resolved to their actual
+    // values before being passed to applyBaseUrl.
+    if (
+      (datasourceClone.restTemplateId || datasourceClone.restTemplate) &&
+      datasourceClone.config?.url
+    ) {
+      const resolvedConfigUrl = processStringSync(
+        datasourceClone.config.url,
+        enrichedContext,
+        { noEscaping: true, noHelpers: true }
+      )
+      if (resolvedConfigUrl) {
+        fieldsClone.path = applyBaseUrl(fieldsClone.path, resolvedConfigUrl)
+      }
+    }
     let query: Record<string, any>
+
+    // Handle SQL pagination bindings
+    let paginationEnrichedContext = enrichedContext
+    if (
+      isSQL(datasourceClone) &&
+      this.pagination &&
+      fieldsClone.pagination?.enabled
+    ) {
+      // Add pagination bindings to context using the configured binding names
+      const { offsetBinding, limitBinding } = fieldsClone.pagination
+      const paginationCopy = { ...paginationEnrichedContext } as Record<
+        string,
+        any
+      >
+
+      // For SQL queries, pagination object contains { page/offset, limit }
+      if (this.pagination.limit && limitBinding) {
+        paginationCopy[limitBinding] = this.pagination.limit
+      }
+
+      // Convert page-based pagination to offset (page 1 = offset 0)
+      if (offsetBinding) {
+        let offsetValue = 0
+        if (this.pagination.page && this.pagination.limit) {
+          const pageNum = Math.max(1, this.pagination.page)
+          offsetValue = (pageNum - 1) * this.pagination.limit
+        } else if (this.pagination.offset != null) {
+          offsetValue = this.pagination.offset
+        }
+        paginationCopy[offsetBinding] = offsetValue
+      }
+
+      paginationEnrichedContext = paginationCopy
+    }
+
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
       query = await interpolateSQL(
         datasource.source,
         fieldsClone,
-        enrichedContext,
+        paginationEnrichedContext,
         // Bit hacky because currently all of our SQL datasources are
         // DatasourcePluses.
         integration as DatasourcePlus,
@@ -139,7 +192,6 @@ class QueryRunner {
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
-
     // Add pagination values for REST queries
     if (this.pagination) {
       query.paginationValues = this.pagination

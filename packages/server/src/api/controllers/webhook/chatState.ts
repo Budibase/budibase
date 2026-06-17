@@ -54,3 +54,5 @@ export const getDiscordState = () =>
   getWebhookState(AgentChannelProvider.DISCORD)
 export const getTeamsState = () => getWebhookState(AgentChannelProvider.MSTEAMS)
 export const getSlackState = () => getWebhookState(AgentChannelProvider.SLACK)
+export const getTelegramState = () =>
+  getWebhookState(AgentChannelProvider.TELEGRAM)

@@ -155,11 +155,8 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
-  layoutDirection?: LayoutDirection
   testData?: AutomationTriggerResultOutputs
 }
-
-export type LayoutDirection = "TB" | "LR"
 
 export interface BaseIOStructure {
   type?: AutomationIOType
@@ -272,6 +269,7 @@ export interface AutomationStepInputBase {
   emitter: ContextEmitter
   appId: string
   apiKey?: string
+  isTestRun?: boolean
 }
 
 export type ActionImplementation<TInputs, TOutputs> = (

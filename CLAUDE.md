@@ -25,10 +25,11 @@
 - No semicolons, double quotes, 2-space tabs (see .prettierrc.json)
 - Use TypeScript strict mode with consistent-type-imports
 - Imports: Group external imports first, then internal `@budibase/*` packages
+- Assume the target Node version from the repo root `.nvmrc` when writing or reviewing code
 - Variables: camelCase, prefix unused with `_`
 - Functions: Prefer arrow functions, use async/await over Promises
 - Error handling: Use try/catch
-- Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any.
+- Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any or unknown.
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
@@ -40,6 +41,7 @@
 - When you're writing tests, you don't need to assert or do conditional checks
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
+- Avoid adding nested ternary statements.
 
 ## Test style - packages/server
 
@@ -51,6 +53,19 @@
 - Use `TestConfiguration` in `packages/server/src/tests/TestConfiguration.ts` for every API test case -
   this can be used to access the test API under `new TestConfiguration().api`, a list of functions and
   request/response types can be found in `packages/server/src/tests/utilities/api`.
+
+## Git
+
+Never auto-commit changes unless explicitly asked to do so. You may ask permission to commit.
+Each commit requires permission.
+
+Never auto-push changes unless explicitly asked to do so. You may ask permission to push.
+Each push requires permission.
+
+Never auto-stage or add changes unless explicitly asked to do so. As a developer I want to review the changes that the LLM has made.
+Never unstage changes.
+
+For example, if I command `git add, commit, push` go ahead and do that once. Any subsequent changes will require permission. You may ask for permission on a per commit basis.
 
 ## Pull requests
 

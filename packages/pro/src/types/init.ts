@@ -10,31 +10,42 @@ export interface BackupInitOpts {
   processing: BackupProcessingOpts
 }
 
-export interface ImportAppConfig {
-  file: {
-    type: string
+export interface ImportWorkspaceConfig {
+  file?: {
+    type?: string
     path: string
+    password?: string
   }
-  key: string
+  key?: string
 }
 
-export interface ImportAppOpts {
+export interface ImportWorkspaceOpts {
   updateAttachmentColumns?: boolean
   importObjStoreContents?: boolean
   objectStoreAppId?: string
+  preserveLiteLLMConfig?: boolean
 }
 
-type ExportAppFn = (devAppId: string, opts: { tar: boolean }) => Promise<string>
-type ImportAppFn = (
+export type ExportWorkspaceFn = (
+  devWorkspaceId: string,
+  opts: {
+    tar: boolean
+    excludeRows?: boolean
+    encryptPassword?: string
+    exportPath?: string
+    filter?: string
+  }
+) => Promise<string>
+export type ImportWorkspaceFn = (
   targetWorkspaceId: string,
   destinationDb: Database,
-  config: ImportAppConfig,
-  opts?: ImportAppOpts
+  config: ImportWorkspaceConfig,
+  opts?: ImportWorkspaceOpts
 ) => Promise<string>
-type StatsFn = (devAppId: string) => Promise<WorkspaceBackupContents>
+type StatsFn = (devWorkspaceId: string) => Promise<WorkspaceBackupContents>
 
 export interface BackupProcessingOpts {
-  exportAppFn: ExportAppFn
-  importAppFn: ImportAppFn
+  exportWorkspaceFn: ExportWorkspaceFn
+  importWorkspaceFn: ImportWorkspaceFn
   statsFn: StatsFn
 }

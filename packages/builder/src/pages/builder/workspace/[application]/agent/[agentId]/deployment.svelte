@@ -11,18 +11,20 @@
     AgentChannelProvider,
     DEPLOYMENT_CHANNEL_IDS,
     DEPLOYMENT_ID_TO_PROVIDER,
-    FeatureFlag,
     type Agent,
     type DeploymentRow,
   } from "@budibase/types"
-  import { selectedAgent, agentsStore, featureFlags } from "@/stores/portal"
+  import { selectedAgent, agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
   import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
+  import TelegramConfig from "./DeploymentChannels/TelegramConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
   import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
   import SlackLogo from "assets/slack.svg"
+  import TelegramLogo from "assets/telegram.svg"
 
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling this channel."
@@ -31,6 +33,7 @@
   let discordModal: Modal
   let MSTeamsModal: Modal
   let slackModal: Modal
+  let telegramModal: Modal
   let toggling = $state(false)
 
   const discordConfigured = $derived.by(() => {
@@ -59,6 +62,11 @@
     )
   })
 
+  const telegramConfigured = $derived.by(() => {
+    const integration = currentAgent?.telegramIntegration
+    return !!integration?.botToken?.trim()
+  })
+
   const MSTeamsEnabled = $derived(
     !!currentAgent?.MSTeamsIntegration?.messagingEndpointUrl?.trim()
   )
@@ -71,8 +79,11 @@
     !!currentAgent?.slackIntegration?.messagingEndpointUrl?.trim()
   )
 
+  const telegramEnabled = $derived(
+    !!currentAgent?.telegramIntegration?.messagingEndpointUrl?.trim()
+  )
+
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
-  const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_AGENTS])
 
   const channelMetadata: Record<
     AgentChannelProvider,
@@ -95,6 +106,12 @@
       details:
         "Allow this agent to respond in Slack channels, threads, and DMs",
     },
+    [AgentChannelProvider.TELEGRAM]: {
+      name: "Telegram",
+      logo: TelegramLogo,
+      details:
+        "Allow this agent to respond in Telegram private and group chats",
+    },
   }
 
   const channelStatus = $derived.by(
@@ -103,6 +120,9 @@
         [AgentChannelProvider.DISCORD]: discordEnabled ? "Enabled" : "Disabled",
         [AgentChannelProvider.MSTEAMS]: MSTeamsEnabled ? "Enabled" : "Disabled",
         [AgentChannelProvider.SLACK]: slackEnabled ? "Enabled" : "Disabled",
+        [AgentChannelProvider.TELEGRAM]: telegramEnabled
+          ? "Enabled"
+          : "Disabled",
       }) as const
   )
 
@@ -112,6 +132,7 @@
         AgentChannelProvider.DISCORD,
         AgentChannelProvider.MSTEAMS,
         AgentChannelProvider.SLACK,
+        AgentChannelProvider.TELEGRAM,
       ] as const
     ).map(provider => ({
       id: DEPLOYMENT_CHANNEL_IDS[provider],
@@ -137,6 +158,10 @@
       slackModal?.show()
       return
     }
+    if (provider === AgentChannelProvider.TELEGRAM) {
+      telegramModal?.show()
+      return
+    }
   }
 
   const onToggleChannel = async (channel: DeploymentRow) => {
@@ -151,12 +176,15 @@
     toggling = true
     try {
       const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
+      let channelUpdated = false
       if (provider === AgentChannelProvider.DISCORD) {
         if (isChannelEnabled) {
           await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
+          channelUpdated = true
           notifications.success("Discord channel disabled")
         } else if (discordConfigured) {
           await agentsStore.toggleDiscordDeployment(currentAgent._id, true)
+          channelUpdated = true
           notifications.success("Discord channel enabled")
         } else {
           discordModal?.show()
@@ -164,9 +192,11 @@
       } else if (provider === AgentChannelProvider.MSTEAMS) {
         if (isChannelEnabled) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
+          channelUpdated = true
           notifications.success("Microsoft Teams channel disabled")
         } else if (MSTeamsConfigured) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, true)
+          channelUpdated = true
           notifications.success("Microsoft Teams channel enabled")
         } else {
           MSTeamsModal?.show()
@@ -174,13 +204,31 @@
       } else if (provider === AgentChannelProvider.SLACK) {
         if (isChannelEnabled) {
           await agentsStore.toggleSlackDeployment(currentAgent._id, false)
+          channelUpdated = true
           notifications.success("Slack channel disabled")
         } else if (slackConfigured) {
           await agentsStore.toggleSlackDeployment(currentAgent._id, true)
+          channelUpdated = true
           notifications.success("Slack channel enabled")
         } else {
           slackModal?.show()
         }
+      } else if (provider === AgentChannelProvider.TELEGRAM) {
+        if (isChannelEnabled) {
+          await agentsStore.toggleTelegramDeployment(currentAgent._id, false)
+          channelUpdated = true
+          notifications.success("Telegram channel disabled")
+        } else if (telegramConfigured) {
+          await agentsStore.toggleTelegramDeployment(currentAgent._id, true)
+          channelUpdated = true
+          notifications.success("Telegram channel enabled")
+        } else {
+          telegramModal?.show()
+        }
+      }
+
+      if (channelUpdated && currentAgent.live) {
+        await deploymentStore.publishApp()
       }
     } catch (e) {
       notifications.error(
@@ -226,13 +274,6 @@
       >
     </div>
     <div class="integration-list">
-      {#if agentChatEnabled && currentAgent?._id}
-        <AgentChatChannel
-          agentId={currentAgent._id}
-          agentName={currentAgent.name || "Agent"}
-          agentLive={!!currentAgent.live}
-        />
-      {/if}
       {#each channels as channel (channel.id)}
         <div class="integration-row">
           <div class="channel-main">
@@ -266,6 +307,13 @@
           </div>
         </div>
       {/each}
+      {#if currentAgent?._id}
+        <AgentChatChannel
+          agentId={currentAgent._id}
+          agentName={currentAgent.name || "Agent"}
+          agentLive={!!currentAgent.live}
+        />
+      {/if}
     </div>
   </section>
 </div>
@@ -351,18 +399,39 @@
   </ModalContent>
 </Modal>
 
+<Modal bind:this={telegramModal}>
+  <ModalContent
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Telegram"
+          width="24px"
+          height="24px"
+          src={TelegramLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+            >Telegram</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
+    <TelegramConfig agent={currentAgent} />
+  </ModalContent>
+</Modal>
+
 <style>
   .deployment-root {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
     min-height: 0;
-  }
-
-  .deployment-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
   }
 
   .section {
@@ -385,7 +454,7 @@
     gap: var(--spacing-m);
     padding: var(--spacing-s) var(--spacing-s);
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    height: 40px;
+    min-height: 40px;
   }
 
   .integration-row:last-child {
@@ -401,18 +470,6 @@
 
   .channel-main :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-700);
-  }
-
-  .status-chip {
-    font-weight: 500;
-  }
-
-  .status-chip.enabled {
-    color: var(--spectrum-semantic-positive-status-color);
-  }
-
-  .status-chip.disabled {
-    color: var(--spectrum-global-color-gray-600);
   }
 
   .channel-details {

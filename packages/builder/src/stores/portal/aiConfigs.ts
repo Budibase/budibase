@@ -30,12 +30,14 @@ export class AIConfigStore extends DerivedBudiStore<
           DerivedAIConfigState["customConfigsPerType"]
         >(
           (acc, config) => {
-            acc[config.configType].push(config)
+            const configs = acc[config.configType]
+            if (configs) {
+              configs.push(config)
+            }
             return acc
           },
           {
             [AIConfigType.COMPLETIONS]: [],
-            [AIConfigType.EMBEDDINGS]: [],
           }
         ),
       }))

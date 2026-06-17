@@ -69,7 +69,7 @@
       ? accountLockedModal.show
       : null
 
-  $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
+  $: updateBannerVisibility($auth.user, isOwner)
 
   $: processNavAction($navigationAction)
 
@@ -80,7 +80,7 @@
   }
 
   // Determine if the user is on a trial and show the banner.
-  const updateBannerVisibility = (user, licenseType, isOwner) => {
+  const updateBannerVisibility = (user, isOwner) => {
     if (!user && $licensing.showTrialBanner) {
       licensing.update(store => {
         store.showTrialBanner = false
@@ -89,7 +89,7 @@
     } else if (
       user &&
       !$licensing.showTrialBanner &&
-      licenseType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
+      $licensing.isTrialPlan &&
       isOwner
     ) {
       licensing.update(store => {
@@ -294,7 +294,33 @@
     }
   }
 
+  const handleSharePointConnectionRedirect = () => {
+    const currentUrl = new URL(window.location.href)
+    const microsoftConnected =
+      currentUrl.searchParams.get("microsoft_connected") === "1"
+    const microsoftConnectionReused =
+      currentUrl.searchParams.get("microsoft_connection_reused") === "1"
+    if (!microsoftConnected) {
+      return
+    }
+
+    currentUrl.searchParams.delete("microsoft_connected")
+    currentUrl.searchParams.delete("microsoft_connection_reused")
+    const query = currentUrl.searchParams.toString()
+    const path = query ? `${currentUrl.pathname}?${query}` : currentUrl.pathname
+    window.history.replaceState({}, "", path)
+    if (microsoftConnectionReused) {
+      notifications.warning(
+        "SharePoint connection already existed. Reused existing connection."
+      )
+    } else {
+      notifications.success("SharePoint connected")
+    }
+    bb.settings("/connections/apis")
+  }
+
   onMount(() => {
+    handleSharePointConnectionRedirect()
     initPromise = initBuilder()
     hasAuthenticated = !!$auth.user
   })

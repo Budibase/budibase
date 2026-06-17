@@ -8,11 +8,11 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "User action",
+  name: "On demand",
   event: AutomationEventType.APP_TRIGGER,
   icon: "cursor-click",
-  tagline: "Automation fired from the frontend",
-  description: "Trigger an automation from an action inside your app",
+  tagline: "Automation runs when invoked",
+  description: "Runs when invoked by a user or agent.",
   stepId: AutomationTriggerStepId.APP,
   inputs: {},
   schema: {

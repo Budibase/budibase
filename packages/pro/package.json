@@ -13,7 +13,6 @@
     "url": "https://github.com/Budibase/budibase-pro.git"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.79.0",
     "@budibase/backend-core": "*",
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
@@ -21,8 +20,8 @@
     "@koa/router": "15.3.0",
     "bull": "4.10.1",
     "dd-trace": "5.56.0",
-    "joi": "17.6.0",
     "jsonwebtoken": "9.0.2",
+    "isolated-vm": "^6.0.1",
     "lru-cache": "^7.14.1",
     "memorystream": "^0.3.1",
     "node-fetch": "2.6.7",
@@ -33,7 +32,6 @@
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.3",
     "@types/koa": "3.0.1",
-    "@types/koa__router": "12.0.5",
     "@types/lodash": "4.14.200",
     "@types/node-fetch": "2.6.4",
     "rimraf": "3.0.2",
@@ -45,7 +43,7 @@
     "prebuild": "rimraf dist",
     "build": "node ../../scripts/build.js && yarn build:types",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
-    "check:types": "tsc -p tsconfig.build.json --noEmit --paths null",
+    "check:types": "tsc -p tsconfig.build.json --noEmit --incremental --paths null",
     "test": "jest --runInBand",
     "test:watch": "jest --watch --runInBand",
     "license:update": "node scripts/licenses/updateLicense.js",

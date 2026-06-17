@@ -132,6 +132,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       name: workspaceApp.name,
       url: workspaceApp.url,
       navigation: workspaceApp.navigation,
+      theme: workspaceApp.theme,
+      customTheme: workspaceApp.customTheme,
       disabled: workspaceApp.disabled,
     }
 
@@ -182,7 +184,6 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
     const { deploymentStore } = await import("./deployment")
     await deploymentStore.publishApp()
-    await workspaceDeploymentStore.fetch()
   }
 
   replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {

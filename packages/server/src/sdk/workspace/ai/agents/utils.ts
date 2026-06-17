@@ -1,12 +1,17 @@
 import {
   Agent,
+  AgentOperation,
   ToolType,
   ToolMetadata,
   SourceName,
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import { getBudibaseTools } from "../../../../ai/tools/budibase"
+import {
+  createKnowledgeFilesTool,
+  createKnowledgeSearchTool,
+  getBudibaseTools,
+} from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
@@ -17,16 +22,24 @@ import {
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
+import { HTTPError } from "@budibase/backend-core"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
   "get_table",
   "list_automations",
   "get_automation",
+  "list_knowledge_files",
+  "search_knowledge",
 ])
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
+
+export const getLiveOperation = (agent: Agent): AgentOperation | undefined => {
+  const operation = agent.operations?.[0]
+  return operation?.live === true ? operation : undefined
+}
 
 export function getToolDisplayNames(
   tools: AiToolDefinition[]
@@ -142,9 +155,15 @@ export async function buildPromptAndTools(
   toolDisplayNames: Record<string, string>
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
+  const agentId = agent._id
+  if (!agentId) {
+    throw new Error("Agent _id is required")
+  }
+  const operation = getLiveOperation(agent)
+  const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const enabledToolNames = new Set(agent.enabledTools || [])
+  const enabledToolNames = new Set(operation?.enabledTools || [])
   const enabledTools = addHelperTools(
     allTools.filter(
       tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
@@ -152,15 +171,32 @@ export async function buildPromptAndTools(
     allTools
   )
 
+  if (
+    hasKnowledgeBases &&
+    !enabledTools.some(tool => tool.name === "list_knowledge_files")
+  ) {
+    enabledTools.push(createKnowledgeFilesTool(agentId))
+  }
+  if (
+    hasKnowledgeBases &&
+    !enabledTools.some(tool => tool.name === "search_knowledge")
+  ) {
+    enabledTools.push(createKnowledgeSearchTool(agentId))
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
-    promptInstructions: agent.promptInstructions,
+    promptInstructions: operation?.promptInstructions,
     includeGoal,
   })
 
+  const resolvedSystemPrompt = hasKnowledgeBases
+    ? `${systemPrompt}\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
+    : systemPrompt
+
   return {
-    systemPrompt,
+    systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools),
     toolDisplayNames: getToolDisplayNames(enabledTools),
   }
@@ -264,4 +300,21 @@ export function formatIncompleteToolCallError(
 ): string {
   const toolNames = incompleteTools.map(t => t.toolName).join(", ")
   return `The AI model failed to complete tool execution${toolNames ? ` for: ${toolNames}` : ""}. This may be due to a compatibility issue with the selected model. Please try a different model or try again.`
+}
+
+export const assertAgentHasValidConfig = async (agent: Agent) => {
+  if (!agent.aiconfig) {
+    throw new HTTPError(
+      "Agent is not properly configured: missing AI config",
+      422
+    )
+  }
+
+  const aiConfig = await sdk.ai.configs.find(agent.aiconfig)
+  if (!aiConfig) {
+    throw new HTTPError(
+      `Agent is not properly configured: AI config "${agent.aiconfig}" not found`,
+      422
+    )
+  }
 }

@@ -15,6 +15,7 @@
   export let allowAddRows = true
   export let allowEditRows = true
   export let allowDeleteRows = true
+  export let allowRowSelection = true
   export let stripeRows = false
   export let quiet = false
   export let initialFilter = null
@@ -96,6 +97,9 @@
     autoRefreshEnabled ? autoRefresh : null,
     gridContext?.rows?.actions?.refreshData
   )
+  $: if (!allowRowSelection && !allowDeleteRows) {
+    gridContext?.selectedRows?.set?.({})
+  }
 
   /**
    *
@@ -180,7 +184,7 @@
         order: idx,
         visible: !!column.active,
         conditions: enrichGridConditions(column.conditions, context),
-        format: createFormatter(column),
+        format: createFormatter(column, context),
 
         // Small hack to ensure we react to all changes, as our
         // memoization cannot compare differences in functions
@@ -193,11 +197,12 @@
     return overrides
   }
 
-  const createFormatter = column => {
+  const createFormatter = (column, context) => {
     if (typeof column.format !== "string" || !column.format.trim().length) {
       return null
     }
-    return row => processStringSync(column.format, { [id]: row })
+    const snippets = context?.snippets
+    return row => processStringSync(column.format, { [id]: row, snippets })
   }
 
   const enrichButtons = buttons => {
@@ -277,6 +282,7 @@
     canAddRows={allowAddRows}
     canEditRows={allowEditRows}
     canDeleteRows={allowDeleteRows}
+    canSelectRows={allowRowSelection || allowDeleteRows}
     canEditColumns={false}
     canExpandRows={false}
     canSaveSchema={false}

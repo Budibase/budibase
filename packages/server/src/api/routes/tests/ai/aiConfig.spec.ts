@@ -1,6 +1,6 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { db, docIds, encryption, features } from "@budibase/backend-core"
+import { db, docIds, encryption } from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
   BUDIBASE_AI_PROVIDER_ID,
@@ -8,24 +8,12 @@ import {
   WebSearchProvider,
   AIConfigType,
   CreateAIConfigRequest,
-  FeatureFlag,
   LiteLLMKeyConfig,
-  VectorDbProvider,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import environment from "../../../../environment"
 import { licensing } from "@budibase/pro"
 import { mocks } from "@budibase/backend-core/tests"
-
-jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
-  const actual = jest.requireActual(
-    "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
-  )
-  return {
-    ...actual,
-    validatePgVectorDbConfig: jest.fn().mockResolvedValue(undefined),
-  }
-})
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -71,10 +59,6 @@ const mockLiteLLMModelCostMap = () =>
     .get("/public/litellm_model_cost_map")
     .reply(200, {
       "gpt-4o-mini": { litellm_provider: "openai", mode: "chat" },
-      "text-embedding-3-small": {
-        litellm_provider: "openai",
-        mode: "embedding",
-      },
       "claude-3-5-haiku": { litellm_provider: "anthropic", mode: "chat" },
       "gpt-4o": { litellm_provider: ["openai", "azure"], mode: "responses" },
       "groq/qwen/qwen3-32b": { litellm_provider: "groq", mode: "chat" },
@@ -148,7 +132,6 @@ describe("BudibaseAI", () => {
       expect(openAIProvider).toMatchObject({
         models: {
           completions: ["gpt-4o", "gpt-4o-mini"],
-          embeddings: ["text-embedding-3-small"],
         },
       })
 
@@ -156,7 +139,6 @@ describe("BudibaseAI", () => {
       expect(groqProvider).toMatchObject({
         models: {
           completions: ["qwen/qwen3-32b"],
-          embeddings: [],
         },
       })
     })
@@ -630,6 +612,58 @@ describe("BudibaseAI", () => {
       expect(persistedAfter.model).toBe(persistedBefore.model)
     })
 
+    it("sanitizes non-2xx LiteLLM update errors", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, {
+          token_id: "key-update-fail-sanitized",
+          key: "secret-update-fail-sanitized",
+        })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-update-fail-sanitized" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "Initial Config",
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const updateFailureScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .patch(`/model/${created.liteLLMModelId}/update`)
+        .reply(400, {
+          error: {
+            message:
+              'litellm.NotFoundError: OpenAIException - The model `gpt-5-minia` does not exist or you do not have access to it. stack trace: Traceback (most recent call last): File "/usr/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 923, in acompletion',
+          },
+        })
+
+      const errorResponse: any = await config.api.ai.updateConfig(
+        {
+          ...created,
+          name: "Updated Config",
+          model: "gpt-5-minia",
+          credentialsFields: {
+            ...created.credentialsFields,
+            api_key: PASSWORD_REPLACEMENT,
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(updateFailureScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error updating configuration: The model `gpt-5-minia` does not exist or you do not have access to it."
+      )
+    })
+
     it("deletes a custom config and syncs LiteLLM models", async () => {
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
@@ -691,6 +725,34 @@ describe("BudibaseAI", () => {
       expect(configsResponse).toHaveLength(0)
     })
 
+    it("sanitizes verbose LiteLLM stack traces in validation errors", async () => {
+      const failingScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, {
+          status: "error",
+          result: {
+            error:
+              'litellm.NotFoundError: OpenAIException - The model `gpt-5-minia` does not exist or you do not have access to it. stack trace: Traceback (most recent call last): File "/usr/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 923, in acompletion',
+          },
+        })
+
+      const errorResponse: any = await config.api.ai.createConfig(
+        {
+          ...defaultRequest,
+          name: "Missing Model Config",
+          model: "gpt-5-minia",
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(failingScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error validating configuration: The model `gpt-5-minia` does not exist or you do not have access to it."
+      )
+    })
+
     it("sanitizes web search config API key", async () => {
       const liteLLMScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
@@ -735,210 +797,6 @@ describe("BudibaseAI", () => {
       expect(
         passwordMatch(webSearchApiKey, storedConfig!.webSearchConfig!.apiKey)
       ).toBeTrue()
-    })
-  })
-
-  describe("embedding provider configs", () => {
-    const defaultEmbeddingRequest = {
-      name: "Embeddings Config",
-      provider: "OpenAI",
-      model: "text-embedding-3-large",
-      credentialsFields: {
-        api_key: "sk-test-key",
-        api_base: "https://api.openai.com",
-      },
-      liteLLMModelId: "",
-      configType: AIConfigType.EMBEDDINGS,
-    }
-
-    beforeEach(async () => {
-      await config.newTenant()
-      nock.cleanAll()
-
-      mockLiteLLMProviders()
-      mockLiteLLMTeam()
-    })
-
-    it("creates an embedding config", async () => {
-      const embeddingValidationScope = nock(environment.LITELLM_URL)
-        .post("/v1/embeddings")
-        .reply(200, { data: [] })
-
-      const creationScope = nock(environment.LITELLM_URL)
-        .post("/key/generate")
-        .reply(200, { token_id: "embed-key-1", key: "embed-secret-1" })
-        .post("/model/new")
-        .reply(200, { model_id: "embed-validation-1" })
-        .post("/model/delete")
-        .reply(200, { status: "success" })
-        .post("/model/new")
-        .reply(200, { model_id: "embed-model-1" })
-        .post("/key/update")
-        .reply(200, { status: "success" })
-
-      const created = await config.api.ai.createConfig({
-        ...defaultEmbeddingRequest,
-      })
-      expect(created._id).toBeDefined()
-      expect(created.liteLLMModelId).toBe("embed-model-1")
-      expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
-      expect(
-        passwordMatch(
-          defaultEmbeddingRequest.credentialsFields.api_key,
-          (await getPersistedConfigAI(created._id)).credentialsFields.api_key
-        )
-      ).toBeTrue()
-
-      expect(creationScope.isDone()).toBe(true)
-      expect(embeddingValidationScope.isDone()).toBe(true)
-
-      const configs = await config.api.ai.fetchConfigs()
-      expect(
-        configs.filter(c => c.configType === AIConfigType.EMBEDDINGS)
-      ).toHaveLength(1)
-    })
-
-    it("updates an embedding config", async () => {
-      const creationValidationScope = nock(environment.LITELLM_URL)
-        .post("/v1/embeddings")
-        .reply(200, { data: [] })
-
-      const creationScope = nock(environment.LITELLM_URL)
-        .post("/key/generate")
-        .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
-        .post("/model/new")
-        .reply(200, { model_id: "embed-validation-2" })
-        .post("/model/delete")
-        .reply(200, { status: "success" })
-        .post("/model/new")
-        .reply(200, { model_id: "embed-model-2" })
-        .post("/key/update")
-        .reply(200, { status: "success" })
-
-      const created = await config.api.ai.createConfig({
-        ...defaultEmbeddingRequest,
-        name: "Semantic Search",
-      })
-      expect(creationScope.isDone()).toBe(true)
-      expect(creationValidationScope.isDone()).toBe(true)
-
-      const updateValidationScope = nock(environment.LITELLM_URL)
-        .post("/v1/embeddings")
-        .reply(200, { data: [] })
-
-      const updateScope = nock(environment.LITELLM_URL)
-        .post("/model/new")
-        .reply(200, { model_id: "embed-validation-3" })
-        .post("/model/delete")
-        .reply(200, { status: "success" })
-        .patch(`/model/${created.liteLLMModelId}/update`)
-        .reply(200, { status: "success" })
-        .post("/key/update")
-        .reply(200, { status: "success" })
-
-      const updated = await config.api.ai.updateConfig({
-        ...created,
-        name: "Updated Embeddings",
-        model: "text-embedding-3-small",
-      })
-      expect(updateScope.isDone()).toBe(true)
-      expect(updateValidationScope.isDone()).toBe(true)
-      expect(updated.name).toBe("Updated Embeddings")
-    })
-
-    it("deletes an embedding config and syncs LiteLLM models", async () => {
-      const creationValidationScope = nock(environment.LITELLM_URL)
-        .post("/v1/embeddings")
-        .reply(200, { data: [] })
-
-      const creationScope = nock(environment.LITELLM_URL)
-        .post("/key/generate")
-        .reply(200, { token_id: "embed-key-3", key: "embed-secret-3" })
-        .post("/model/new")
-        .reply(200, { model_id: "embed-validation-4" })
-        .post("/model/delete")
-        .reply(200, { status: "success" })
-        .post("/model/new")
-        .reply(200, { model_id: "embed-model-3" })
-        .post("/key/update")
-        .reply(200, { status: "success" })
-
-      const created = await config.api.ai.createConfig({
-        ...defaultEmbeddingRequest,
-      })
-      expect(creationScope.isDone()).toBe(true)
-      expect(creationValidationScope.isDone()).toBe(true)
-
-      const deleteScope = nock(environment.LITELLM_URL)
-        .post("/key/update", body => {
-          expect(body).toMatchObject({ models: [] })
-          return true
-        })
-        .reply(200, { status: "success" })
-
-      const { deleted } = await config.api.ai.deleteConfig(created._id!)
-      expect(deleted).toBe(true)
-      expect(deleteScope.isDone()).toBe(true)
-
-      const configsResponse = await config.api.ai.fetchConfigs()
-      expect(
-        configsResponse.filter(c => c.configType === AIConfigType.EMBEDDINGS)
-      ).toHaveLength(0)
-    })
-
-    it("rejects deleting an embedding config used by a knowledge base", async () => {
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        { [FeatureFlag.AI_RAG]: true },
-        async () => {
-          const creationValidationScope = nock(environment.LITELLM_URL)
-            .post("/v1/embeddings")
-            .reply(200, { data: [] })
-
-          const creationScope = nock(environment.LITELLM_URL)
-            .post("/key/generate")
-            .reply(200, { token_id: "embed-key-4", key: "embed-secret-4" })
-            .post("/model/new")
-            .reply(200, { model_id: "embed-validation-5" })
-            .post("/model/delete")
-            .reply(200, { status: "success" })
-            .post("/model/new")
-            .reply(200, { model_id: "embed-model-4" })
-            .post("/key/update")
-            .reply(200, { status: "success" })
-
-          const created = await config.api.ai.createConfig({
-            ...defaultEmbeddingRequest,
-          })
-          expect(creationScope.isDone()).toBe(true)
-          expect(creationValidationScope.isDone()).toBe(true)
-
-          const vectorDb = await config.api.vectorDb.create({
-            name: "Primary Vector DB",
-            provider: VectorDbProvider.PGVECTOR,
-            host: "localhost",
-            port: 5432,
-            database: "budibase",
-            user: "bb_user",
-            password: "secret",
-          })
-
-          await config.api.knowledgeBase.create({
-            name: "Support Docs",
-            embeddingModel: created._id!,
-            vectorDb: vectorDb._id!,
-          })
-
-          await config.api.ai.deleteConfig(created._id!, { status: 400 })
-
-          const configsResponse = await config.api.ai.fetchConfigs()
-          expect(
-            configsResponse.filter(
-              c => c.configType === AIConfigType.EMBEDDINGS
-            )
-          ).toHaveLength(1)
-        }
-      )
     })
   })
 

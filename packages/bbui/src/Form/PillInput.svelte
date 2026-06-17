@@ -19,7 +19,7 @@
   export let allowDuplicates = false
   export let maxItems: number | undefined = undefined
 
-  let inputValue = ""
+  export let inputValue = ""
   let focused = false
   let inputEl: HTMLInputElement | null = null
 
@@ -97,6 +97,7 @@
     }
     const target = event.target as HTMLInputElement
     inputValue = target.value
+    dispatch("input", inputValue)
     if (shouldSplit(inputValue)) {
       const pattern = getSplitPattern()
       const endsWithSeparator = new RegExp(`${pattern.source}$`).test(
@@ -125,6 +126,10 @@
 
   const handleKeydown = (event: KeyboardEvent) => {
     if (readonly || disabled) {
+      return
+    }
+    dispatch("keydown", event)
+    if (event.defaultPrevented) {
       return
     }
     if (

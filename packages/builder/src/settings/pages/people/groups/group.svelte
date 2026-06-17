@@ -9,6 +9,7 @@
     Pagination,
     Search,
     Table,
+    Toggle,
     notifications,
   } from "@budibase/bbui"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -47,12 +48,14 @@
   let workspaceSearch
   let workspacePageNumber = 0
   let previousWorkspaceSearch
+  let defaultUpdating = false
   const WORKSPACE_PAGE_SIZE = 3
 
   $: group = $groups.find(x => x._id === groupId)
   $: isScimGroup = group?.scimInfo?.isSync
   $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: readonly = !isAdmin || isScimGroup
+  $: groupReadonly = !isAdmin || isScimGroup
+  $: workspaceReadonly = !isAdmin
   $: appSchema = {
     name: {
       width: "1fr",
@@ -60,7 +63,7 @@
     role: {
       width: "1fr",
     },
-    ...(readonly
+    ...(workspaceReadonly
       ? {}
       : {
           prodAppId: {
@@ -95,7 +98,7 @@
         ...app,
         _id: prodAppId,
         prodAppId,
-        readonly,
+        readonly: workspaceReadonly,
         role: group?.builder?.apps.includes(prodAppId)
           ? Constants.Roles.CREATOR
           : group?.roles?.[prodAppId],
@@ -163,6 +166,23 @@
     }
   }
 
+  async function updateDefaultStatus(isDefault) {
+    if (!group?._id || group?.isDefault === isDefault || defaultUpdating) {
+      return
+    }
+    try {
+      defaultUpdating = true
+      await groups.save({ ...group, isDefault })
+      notifications.success(
+        isDefault ? "Default group updated" : "Default group removed"
+      )
+    } catch (error) {
+      notifications.error(error?.message || "Failed to update default group")
+    } finally {
+      defaultUpdating = false
+    }
+  }
+
   const removeApp = async app => {
     try {
       await groups.removeApp(groupId, app)
@@ -172,7 +192,7 @@
   }
 
   const openWorkspaceRoleModal = workspace => {
-    if (readonly || workspace?.__skeleton) {
+    if (workspaceReadonly || workspace?.__skeleton) {
       return
     }
     selectedWorkspace = workspace
@@ -182,7 +202,7 @@
 
   setContext("groupApps", {
     removeApp,
-    getReadonly: () => readonly,
+    getReadonly: () => workspaceReadonly,
   })
 
   onMount(async () => {
@@ -200,37 +220,50 @@
     <div class="header">
       <GroupIcon {group} size="M" />
       <Heading size="S">{group?.name}</Heading>
-      <ActionMenu align="right">
-        <span slot="control">
-          <Icon hoverable name="dots-three" />
-        </span>
-        <MenuItem
-          icon="pencil"
-          on:click={() => editModal.show()}
-          disabled={!isAdmin}
+      <div class="header-actions">
+        <div
+          class="default-toggle"
+          title={isScimGroup && "Group synced from your AD"}
         >
-          Edit
-        </MenuItem>
-        <div title={isScimGroup && "Group synced from your AD"}>
-          <MenuItem
-            icon="trash"
-            on:click={() => deleteModal.show()}
-            disabled={readonly}
-          >
-            Delete
-          </MenuItem>
+          <Toggle
+            value={!!group?.isDefault}
+            disabled={groupReadonly || defaultUpdating}
+            on:change={e => updateDefaultStatus(e.detail)}
+          />
+          <span class="default-toggle-label">Default</span>
         </div>
-      </ActionMenu>
+        <ActionMenu align="right">
+          <span slot="control">
+            <Icon hoverable name="dots-three" />
+          </span>
+          <MenuItem
+            icon="pencil"
+            on:click={() => editModal.show()}
+            disabled={!isAdmin}
+          >
+            Edit
+          </MenuItem>
+          <div title={isScimGroup && "Group synced from your AD"}>
+            <MenuItem
+              icon="trash"
+              on:click={() => deleteModal.show()}
+              disabled={groupReadonly}
+            >
+              Delete
+            </MenuItem>
+          </div>
+        </ActionMenu>
+      </div>
     </div>
 
     <Layout noPadding gap="S">
-      <GroupUsers {groupId} {readonly} {isScimGroup} />
+      <GroupUsers {groupId} readonly={groupReadonly} {isScimGroup} />
     </Layout>
 
     <Layout noPadding gap="S">
       <Heading size="S">Workspaces</Heading>
       <div class="workspace-controls">
-        {#if !readonly}
+        {#if !workspaceReadonly}
           <AssignWorkspacePicker {groupId} />
         {/if}
         <div class="workspace-controls-right">
@@ -295,7 +328,15 @@
   okText="Delete user group"
   onOk={deleteGroup}
 >
-  Are you sure you wish to delete <b>{group?.name}?</b>
+  {#if group?.isDefault}
+    <p>
+      <b>{group?.name}</b> is the default group. Deleting it will leave new users
+      without automatic group assignment until another default group is set.
+    </p>
+    <p>Are you sure you want to continue?</p>
+  {:else}
+    Are you sure you wish to delete <b>{group?.name}?</b>
+  {/if}
 </ConfirmDialog>
 
 <style>
@@ -308,6 +349,25 @@
   }
   .header :global(.spectrum-Heading) {
     flex: 1 1 auto;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .default-toggle :global(.spectrum-Switch) {
+    display: flex;
+    align-items: center;
+  }
+  .default-toggle {
+    display: flex;
+    align-items: center;
+  }
+  .default-toggle-label {
+    display: flex;
+    align-items: center;
+    line-height: 1;
+    margin-top: 1px;
   }
   .placeholder {
     width: 100%;

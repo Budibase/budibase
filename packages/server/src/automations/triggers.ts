@@ -7,6 +7,7 @@ import { context, db as dbCore, logging } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { dataFilters, sdk } from "@budibase/shared-core"
 import {
+  ActionType,
   Automation,
   AutomationData,
   AutomationEventType,
@@ -117,7 +118,7 @@ async function queueRelevantRowAutomations(
       })
       if (shouldTrigger) {
         try {
-          await quotas.addAction(() =>
+          await quotas.addAction(ActionType.AUTOMATION_STEP, () =>
             automationQueue.add({ automation, event }, JOB_OPTS)
           )
         } catch (e) {
@@ -190,6 +191,7 @@ interface AutomationTriggerParams {
 export interface ExternalTriggerOptions {
   getResponses?: boolean
   onProgress?: (event: AutomationTestProgressEvent) => void
+  isTestRun?: boolean
 }
 
 export async function externalTrigger(
@@ -205,7 +207,7 @@ export async function externalTrigger(
 export async function externalTrigger(
   automation: Automation,
   params: AutomationTriggerParams,
-  { getResponses, onProgress }: ExternalTriggerOptions = {}
+  { getResponses, onProgress, isTestRun }: ExternalTriggerOptions = {}
 ): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
@@ -234,9 +236,18 @@ export async function externalTrigger(
     sdk.automations.isRowAction(automation) ||
     sdk.automations.isWebhookAction(automation)
   ) {
+    const {
+      appId: _appId,
+      timeout: _timeout,
+      user: _user,
+      metadata: _metadata,
+      automation: _automation,
+      ...fields
+    } = params.fields || {}
+
     params = {
       ...params,
-      ...params.fields,
+      ...fields,
       fields: {},
     }
   }
@@ -264,11 +275,13 @@ export async function externalTrigger(
       appId: context.getWorkspaceId(),
       automation,
     }
-    return quotas.addAction(() =>
-      executeInThread({ data } as AutomationJob, { onProgress })
+    return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
+      executeInThread({ data } as AutomationJob, { onProgress, isTestRun })
     )
   } else {
-    return quotas.addAction(() => automationQueue.add(data, JOB_OPTS))
+    return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
+      automationQueue.add(data, JOB_OPTS)
+    )
   }
 }
 

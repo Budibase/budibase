@@ -18,7 +18,6 @@ import tracer from "dd-trace"
 import fs, { PathLike, ReadStream } from "fs"
 import fsp from "fs/promises"
 import https from "https"
-import fetch from "node-fetch"
 import { join } from "path"
 import stream, { Readable } from "stream"
 import { pipeline } from "stream/promises"
@@ -28,6 +27,7 @@ import { v4 } from "uuid"
 import zlib from "zlib"
 import { WORKSPACE_DEV_PREFIX, WORKSPACE_PREFIX } from "../db"
 import env from "../environment"
+import { fetchWithBlacklist } from "../utils/outboundFetch"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
 
 // use this as a temporary store of buckets that are being created
@@ -167,35 +167,44 @@ export async function createBucketIfNotExists(
     })
     return { created: false, exists: true }
   } catch (err: any) {
-    const statusCode = err.statusCode || err.$response?.statusCode
+    const statusCode =
+      err.statusCode ||
+      err.$response?.statusCode ||
+      err.$metadata?.httpStatusCode
     const promises: Record<string, Promise<any> | undefined> =
       STATE.bucketCreationPromises
-    const doesntExist = statusCode === 404,
-      noAccess = statusCode === 403
+
+    if (statusCode === 403) {
+      throw new Error("Access denied to object store bucket." + err)
+    }
+
     if (promises[bucketName]) {
       await promises[bucketName]
       return { created: false, exists: true }
-    } else if (doesntExist || noAccess) {
-      if (doesntExist) {
-        promises[bucketName] = client
-          .createBucket({
-            Bucket: bucketName,
-          })
-          .catch((err: any) => {
-            // bucket was created in the meantime by another process
-            if (err.Code !== "BucketAlreadyOwnedByYou") {
-              throw err
-            }
-          })
+    }
 
-        await promises[bucketName]
-        delete promises[bucketName]
-        return { created: true, exists: false }
-      } else {
-        throw new Error("Access denied to object store bucket." + err)
-      }
-    } else {
-      throw new Error("Unable to write to object store bucket.")
+    // Attempt to create the bucket for any headBucket failure that is not an
+    // explicit access denial. This covers 404 (not found) and non-standard
+    // status codes returned by S3-compatible stores such as Ceph RadosGW.
+    promises[bucketName] = client
+      .createBucket({
+        Bucket: bucketName,
+      })
+      .catch((err: any) => {
+        // bucket was created in the meantime by another process
+        if (
+          err.Code !== "BucketAlreadyOwnedByYou" &&
+          err.name !== "BucketAlreadyOwnedByYou"
+        ) {
+          throw err
+        }
+      })
+
+    try {
+      await promises[bucketName]
+      return { created: true, exists: false }
+    } finally {
+      delete promises[bucketName]
     }
   }
 }
@@ -697,10 +706,15 @@ export async function uploadDirectory(
 export async function downloadTarballDirect(
   url: string,
   path: string,
-  headers = {}
+  headers = {},
+  { followRedirects = true }: { followRedirects?: boolean } = {}
 ) {
   path = sanitizeKey(path)
-  const response = await fetch(url, { headers })
+  const response = await fetchWithBlacklist(
+    url,
+    { headers },
+    { followRedirects }
+  )
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }
@@ -715,7 +729,7 @@ export async function downloadTarball(
 ) {
   bucketName = sanitizeBucket(bucketName)
   path = sanitizeKey(path)
-  const response = await fetch(url)
+  const response = await fetchWithBlacklist(url)
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }
@@ -796,7 +810,10 @@ export async function objectExists(
     await client.headObject(params)
     return true
   } catch (err: any) {
-    const statusCode = err.statusCode || err.$response?.statusCode
+    const statusCode =
+      err.statusCode ||
+      err.$response?.statusCode ||
+      err.$metadata?.httpStatusCode
     if (statusCode === 404) {
       return false
     }

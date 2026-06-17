@@ -17,8 +17,8 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, auth, featureFlags, licensing } from "@/stores/portal"
-  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import { agentsStore, appsStore, auth, licensing } from "@/stores/portal"
+  import FreeTrialBanner from "@/components/portal/licensing/FreeTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     ActionMenu,
@@ -29,6 +29,7 @@
     MenuSeparator,
     Modal,
     type ModalAPI,
+    Notification,
     notifications,
     PopoverAlignment,
     Tag,
@@ -123,7 +124,7 @@
     if (value === "all" || value === "app" || value === "automation") {
       return value
     }
-    if (value === "agent" && $featureFlags.AI_AGENTS) {
+    if (value === "agent") {
       return value
     }
     return null
@@ -355,8 +356,8 @@
       const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
 
       const pause = {
-        icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
-        name: workspaceApp.disabled ? "Switch on" : "Switch off",
+        icon: workspaceApp.disabled ? "play-circle" : "stop",
+        name: workspaceApp.disabled ? "Set live" : "Stop",
         visible: true,
         callback: async () => {
           await workspaceAppStore.toggleDisabled(
@@ -412,8 +413,8 @@
       }
 
       const pause = {
-        icon: automation.disabled ? "play-circle" : "pause-circle",
-        name: automation.disabled ? "Switch on" : "Switch off",
+        icon: automation.disabled ? "play-circle" : "stop",
+        name: automation.disabled ? "Set live" : "Stop",
         keyBind: null,
         visible: true,
         disabled: !automation.definition.trigger,
@@ -446,9 +447,6 @@
     }
 
     if (row.type === "agent") {
-      if (!$featureFlags.AI_AGENTS) {
-        return []
-      }
       return [
         {
           icon: "pencil",
@@ -495,10 +493,6 @@
     } else if (row.type === "automation") {
       selectedAutomation = row.resource
     } else if (row.type === "agent") {
-      if (!$featureFlags.AI_AGENTS) {
-        highlightedRowId = null
-        return
-      }
       selectedAgent = row.resource
     }
 
@@ -540,13 +534,22 @@
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
     agents: $agentsStore.agents,
-    agentsEnabled: $featureFlags.AI_AGENTS,
     getFavourite,
   })
 
   $: allRows = sortHomeRows(baseRows, { sortColumn, sortOrder })
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
+  $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
+  $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
+    .filter(([, logIds]) => logIds.length > 0)
+    .map(([automationId, logIds]) => ({
+      automationId,
+      errorCount: logIds.length,
+      automation: $automationStore.automations.find(
+        automation => automation._id === automationId
+      ),
+    }))
 
   $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
@@ -555,6 +558,31 @@
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
   $: if (hasMounted) writeUrlState()
+
+  const goToAutomationError = (automationId: string) => {
+    goto(url(`../automation/${automationId}`))
+  }
+
+  const dismissAutomationError = async (automationId: string) => {
+    try {
+      await automationStore.actions.clearLogErrors({
+        automationId,
+        appId: $appStore.appId,
+      })
+      await appsStore.load()
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error dismissing automation error")
+    }
+  }
+
+  const automationErrorMessage = (
+    automationName: string | undefined,
+    errorCount: number
+  ) => {
+    const name = automationName || "Automation"
+    return `${name} - Automation error${errorCount > 1 ? ` (${errorCount})` : ""}`
+  }
 
   onMount(async () => {
     const workspaceId = $appStore.appId
@@ -579,10 +607,7 @@
     hasMounted = true
     writeUrlState()
 
-    await Promise.all([
-      $featureFlags.AI_AGENTS ? agentsStore.fetchAgents() : Promise.resolve(),
-      loadMetrics(),
-    ])
+    await Promise.all([agentsStore.fetchAgents(), loadMetrics()])
   })
 </script>
 
@@ -600,17 +625,36 @@
 
       {#if showHeaderActions}
         <div class="header-actions">
-          <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
+          <FreeTrialBanner show={$licensing.showTrialBanner} />
         </div>
       {/if}
     </div>
+
+    {#if automationErrorEntries.length}
+      <div class="automation-errors">
+        {#each automationErrorEntries as entry (entry.automationId)}
+          <Notification
+            wide
+            dismissable
+            type="error"
+            icon="Alert"
+            action={() => goToAutomationError(entry.automationId)}
+            actionMessage={entry.errorCount > 1 ? "View errors" : "View error"}
+            message={automationErrorMessage(
+              entry.automation?.name,
+              entry.errorCount
+            )}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
+          />
+        {/each}
+      </div>
+    {/if}
 
     <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     <div class="controls-row">
       <HomeControls
         {typeFilter}
-        agentsEnabled={$featureFlags.AI_AGENTS}
         on:typeChange={({ detail }) => setTypeFilter(detail)}
       />
       <div class="controls-right">
@@ -633,19 +677,17 @@
             <Button size="M" icon="plus" primary>Create</Button>
           </div>
 
-          {#if $featureFlags.AI_AGENTS}
-            <MenuItem
-              icon={getHomeTypeIcon("agent")}
-              iconColour={getHomeTypeIconColor("agent")}
-              iconWeight="fill"
-              on:click={createAgent}
-            >
-              Agent
-              <div slot="right">
-                <Tag emphasized>Beta</Tag>
-              </div>
-            </MenuItem>
-          {/if}
+          <MenuItem
+            icon={getHomeTypeIcon("agent")}
+            iconColour={getHomeTypeIconColor("agent")}
+            iconWeight="fill"
+            on:click={createAgent}
+          >
+            Agent
+            <div slot="right">
+              <Tag emphasized>Beta</Tag>
+            </div>
+          </MenuItem>
           <MenuItem
             icon={getHomeTypeIcon("automation")}
             iconColour={getHomeTypeIconColor("automation")}
@@ -678,7 +720,6 @@
     <HomeTable
       rows={filteredRows}
       allRowsCount={allRows.length}
-      agentsEnabled={$featureFlags.AI_AGENTS}
       {typeFilter}
       {searchTerm}
       {sortColumn}
@@ -713,9 +754,7 @@
   <CreateTableModal bind:name={tableName} afterSave={handleTableSave} />
 </Modal>
 
-{#if $featureFlags.AI_AGENTS}
-  <AgentModal bind:this={agentModal} />
-{/if}
+<AgentModal bind:this={agentModal} />
 
 <Modal bind:this={duplicateAutomationModal}>
   {#if selectedAutomation}
@@ -755,7 +794,7 @@
   </ConfirmDialog>
 {/if}
 
-{#if $featureFlags.AI_AGENTS && selectedAgent}
+{#if selectedAgent}
   <UpdateAgentModal agent={selectedAgent} bind:this={updateAgentModal} />
   <ConfirmDialog
     bind:this={confirmDeleteAgentDialog}
@@ -790,6 +829,12 @@
     gap: var(--spacing-xl);
   }
 
+  .automation-errors {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
   .header {
     position: sticky;
     top: 0;
@@ -805,27 +850,6 @@
     display: flex;
     gap: var(--spacing-l);
     align-items: center;
-  }
-
-  .header-link {
-    text-decoration: none;
-    color: var(--spectrum-global-color-gray-800);
-    transition: color 130ms ease-out;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .header-link:hover {
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .header-link--with-icons {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
   }
 
   .controls-row {

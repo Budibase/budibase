@@ -13,11 +13,12 @@
     AgentMessageMetadata,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
-  import { tick } from "svelte"
+  import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
   import { formatToolName } from "../../utils/aiTools"
   import ReasoningStatus from "./ReasoningStatus.svelte"
+  import ContextUsage from "./ContextUsage.svelte"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -38,8 +39,10 @@
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
+    operationId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
+    allowKnowledgeSourceDownload?: boolean
   }
 
   let {
@@ -50,8 +53,10 @@
     initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
+    operationId,
     readOnly = false,
     readOnlyReason,
+    allowKnowledgeSourceDownload = true,
   }: Props = $props()
 
   let API = $state(
@@ -71,12 +76,59 @@
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
+  let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
-
   const resetPendingResponse = () => {
     isPreparingResponse = false
+  }
+
+  const openRagSource = async (
+    source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  ) => {
+    if (!allowKnowledgeSourceDownload) {
+      notifications.error("Source downloads are disabled for this agent")
+      return
+    }
+    if (!source.fileId) {
+      return
+    }
+
+    try {
+      const resolvedUrl =
+        !isAgentPreviewChat && chat?.chatAppId && chat?.agentId
+          ? (
+              await API.fetchChatAppAgentFileUrl(
+                chat.chatAppId,
+                chat.agentId,
+                source.fileId
+              )
+            ).url
+          : isAgentPreviewChat && chat?.agentId && operationId
+            ? (
+                await API.fetchOperationFileUrl(
+                  chat.agentId,
+                  operationId,
+                  source.fileId
+                )
+              ).url
+            : undefined
+      if (!resolvedUrl) {
+        notifications.error("Could not resolve source file URL")
+        return
+      }
+
+      const link = document.createElement("a")
+      link.href = resolvedUrl
+      link.download = source.filename || "source.pdf"
+      link.target = "_blank"
+      link.rel = "noopener noreferrer"
+      link.click()
+    } catch (error) {
+      console.error("Failed to resolve knowledge source URL", error)
+      notifications.error("Failed to download source file")
+    }
   }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
@@ -84,6 +136,9 @@
       .filter(isReasoningUIPart)
       .map(p => p.text)
       .join("")
+
+  const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
+    reasoningTextByMessageId[message.id] || getReasoningText(message)
 
   const isReasoningStreaming = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(
@@ -107,7 +162,32 @@
       return true
     }
 
-    return Boolean(message.metadata?.ragSources?.length)
+    return Boolean(getVisibleRagSources(message).length)
+  }
+
+  const getVisibleRagSources = (message: UIMessage<AgentMessageMetadata>) => {
+    const ragSources = message.metadata?.ragSources || []
+    const uniqueByFileId = new Set<string>()
+    const visible: NonNullable<AgentMessageMetadata["ragSources"]> = []
+
+    for (const source of ragSources) {
+      const filename = source.filename?.trim()
+      if (!source.fileId || !filename) {
+        continue
+      }
+
+      if (uniqueByFileId.has(source.fileId)) {
+        continue
+      }
+
+      uniqueByFileId.add(source.fileId)
+      visible.push({
+        ...source,
+        filename,
+      })
+    }
+
+    return visible
   }
 
   const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
@@ -232,6 +312,11 @@
 
   let messages = $derived(chatInstance.messages)
   let lastMessage = $derived(messages[messages.length - 1])
+
+  let lastAssistantUsage = $derived(
+    messages.findLast(m => m.role === "assistant" && m.metadata?.usage)
+      ?.metadata?.usage
+  )
   let lastAssistantMessage = $derived(
     messages.findLast(message => message.role === "assistant")
   )
@@ -269,6 +354,36 @@
       }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
+      reasoningTextByMessageId = {}
+    }
+  })
+
+  $effect(() => {
+    const nextReasoningTextByMessageId = untrack(() => ({
+      ...reasoningTextByMessageId,
+    }))
+    let hasChanged = false
+
+    for (const message of messages) {
+      if (message.role !== "assistant") {
+        continue
+      }
+
+      const reasoningText = getReasoningText(message)
+      if (!reasoningText) {
+        continue
+      }
+
+      if (nextReasoningTextByMessageId[message.id] === reasoningText) {
+        continue
+      }
+
+      nextReasoningTextByMessageId[message.id] = reasoningText
+      hasChanged = true
+    }
+
+    if (hasChanged) {
+      reasoningTextByMessageId = nextReasoningTextByMessageId
     }
   })
 
@@ -513,7 +628,7 @@
           <MarkdownViewer value={getUserMessageText(message)} />
         </div>
       {:else if message.role === "assistant"}
-        {@const reasoningText = getReasoningText(message)}
+        {@const reasoningText = getCachedReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
         {@const pendingAssistant =
           isBusy &&
@@ -522,14 +637,22 @@
         {@const toolError = hasToolError(message)}
         {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
+        {@const activeAssistant =
+          isBusy && lastAssistantMessage?.id === message.id}
         {@const isThinking =
-          (reasoningStreaming || pendingAssistant) &&
+          (reasoningStreaming || pendingAssistant || activeAssistant) &&
           !toolError &&
           !messageError &&
           !message.metadata?.completedAt}
+        {@const showReasoningStatus =
+          reasoningText ||
+          pendingAssistant ||
+          activeAssistant ||
+          message.metadata?.createdAt ||
+          message.metadata?.completedAt}
         {#if hasVisibleAssistantContent(message) || pendingAssistant}
           <div class="message assistant">
-            {#if reasoningText || pendingAssistant}
+            {#if showReasoningStatus}
               <ReasoningStatus
                 thinking={isThinking}
                 label={isThinking ? "Thinking" : "Thought"}
@@ -643,21 +766,31 @@
                 </div>
               {/if}
             {/each}
-            {#if message.metadata?.ragSources?.length}
+            {#if getVisibleRagSources(message).length}
               <div class="sources">
-                <div class="sources-title">Sources</div>
+                <div class="sources-header">
+                  <span class="sources-icon">
+                    <Icon
+                      name="book-open"
+                      size="M"
+                      color="var(--spectrum-global-color-gray-600)"
+                    />
+                  </span>
+                  <span class="sources-title">Sources</span>
+                </div>
                 <ul>
-                  {#each message.metadata.ragSources as source (source.sourceId)}
+                  {#each getVisibleRagSources(message) as source (source.fileId)}
                     <li class="source-item">
-                      <span class="source-name"
-                        >{source.filename || source.sourceId}</span
-                      >
-                      {#if source.chunkCount > 0}
-                        <span class="source-count"
-                          >({source.chunkCount} chunk{source.chunkCount === 1
-                            ? ""
-                            : "s"})</span
+                      {#if allowKnowledgeSourceDownload}
+                        <button
+                          type="button"
+                          class="source-link"
+                          onclick={() => openRagSource(source)}
                         >
+                          {source.filename}
+                        </button>
+                      {:else}
+                        <span class="source-name">{source.filename}</span>
                       {/if}
                     </li>
                   {/each}
@@ -710,6 +843,9 @@
             <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
           {/if}
         </button>
+      </div>
+      <div class="input-footer">
+        <ContextUsage usage={lastAssistantUsage} />
       </div>
     </div>
   {/if}
@@ -836,6 +972,13 @@
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
+    gap: 6px;
+  }
+
+  .input-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 4px;
   }
 
   .read-only-notice {
@@ -1104,12 +1247,23 @@
     border-top: 1px solid var(--grey-3);
   }
 
+  .sources-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .sources-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .sources-title {
     font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     color: var(--spectrum-global-color-gray-600);
-    margin-bottom: var(--spacing-xs);
   }
 
   .sources ul {
@@ -1124,15 +1278,23 @@
   .source-item {
     display: flex;
     gap: 8px;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--spectrum-global-color-gray-900);
   }
 
   .source-name {
-    font-weight: 500;
+    font-weight: 400;
   }
 
-  .source-count {
-    color: var(--spectrum-global-color-gray-600);
+  .source-link {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font-weight: 400;
+    color: var(--spectrum-global-color-blue-700);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: left;
   }
 </style>

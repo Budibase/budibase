@@ -11,6 +11,7 @@
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
   import { Features } from "@/constants/backend/automations"
+  import { restTemplates } from "@/stores/builder/restTemplates"
 
   export let block
   export let open
@@ -27,12 +28,24 @@
   let typing = false
   let editing = false
   const dispatch = createEventDispatcher()
+  const minInputWidth = 10
+  const maxInputWidth = 28
 
   $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
   $: blockDefinition = $automationStore.blockDefinitions.ACTION[block.stepId]
+  $: restTemplate = block?.inputs?.restTemplateId
+    ? restTemplates.get(block.inputs.restTemplateId)
+    : undefined
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
+  $: inputWidth = `${Math.min(
+    Math.max(
+      (automationName || `Enter ${isBranch ? "branch" : "step"} name`).length,
+      minInputWidth
+    ),
+    maxInputWidth
+  )}ch`
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
   $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
@@ -121,7 +134,14 @@
 >
   <div class="splitHeader">
     <div class="center-items">
-      {#if externalActions[block.stepId]}
+      {#if restTemplate?.icon}
+        <img
+          alt={restTemplate.name}
+          width="22px"
+          height="22px"
+          src={restTemplate.icon}
+        />
+      {:else if externalActions[block.stepId]}
         <img
           alt={externalActions[block.stepId].name}
           width="22px"
@@ -159,6 +179,7 @@
             name="name"
             autocomplete="off"
             value={automationName}
+            style:width={inputWidth}
             on:input={e => {
               automationName = e.target.value.trim()
             }}
@@ -174,7 +195,7 @@
             on:blur={stopEditing}
           />
         {:else}
-          <div class="input-text">
+          <div class="input-text" style:width={inputWidth}>
             {automationName}
           </div>
         {/if}
@@ -297,10 +318,10 @@
     color: var(--ink);
     background-color: transparent;
     border: 1px solid transparent;
-    width: 230px;
     box-sizing: border-box;
     overflow: hidden;
     white-space: nowrap;
+    max-width: 100%;
   }
 
   .input-text {
@@ -309,6 +330,9 @@
     text-overflow: ellipsis;
     padding-left: 0px;
     border: 0px;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 100%;
   }
 
   input:focus {

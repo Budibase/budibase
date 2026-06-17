@@ -52,6 +52,13 @@ export interface FetchAppPackageResponse {
   clientLibPath: string
   hasLock: boolean
   recaptchaKey?: string
+  recaptchaEnabled?: boolean
+  clientCacheKey?: string
+}
+
+export interface FetchMicrofrontendBootstrapResponse {
+  appId: string
+  clientLibPath: string
   clientCacheKey?: string
 }
 

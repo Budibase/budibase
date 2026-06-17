@@ -1,4 +1,5 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
+import { ExportWorkspaceFn } from "@budibase/pro"
 import { tracer } from "dd-trace"
 import fs from "fs"
 import fsp from "fs/promises"
@@ -71,12 +72,12 @@ export async function exportDB(
     } else {
       // Stringify the dump in memory if required
       const memStream = new MemoryStream()
-      let appString = ""
+      let workspaceString = ""
       memStream.on("data", (chunk: any) => {
-        appString += chunk.toString()
+        workspaceString += chunk.toString()
       })
       await db.dump(memStream, exportOpts)
-      return appString
+      return workspaceString
     }
   })
 }
@@ -95,13 +96,16 @@ function defineFilter(excludeRows?: boolean) {
 }
 
 /**
- * Local utility to back up the database state for an app, excluding global user
+ * Local utility to back up the database state for an workspace, excluding global user
  * data or user relationships.
- * @param appId The app to back up
+ * @param workspaceId The workspace to back up
  * @param config Config to send to export DB/attachment export
  * @returns either a string or a stream of the backup
  */
-export async function exportApp(appId: string, config?: ExportOpts) {
+export const exportWorkspace: ExportWorkspaceFn = async (
+  workspaceId,
+  config
+) => {
   return await tracer.trace("exportApp", async span => {
     span.addTags({
       "config.excludeRows": config?.excludeRows,
@@ -111,8 +115,8 @@ export async function exportApp(appId: string, config?: ExportOpts) {
       "config.filter": !!config?.filter,
     })
 
-    const prodAppId = dbCore.getProdWorkspaceID(appId)
-    const appPath = `${prodAppId}/`
+    const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+    const workspacePath = `${prodWorkspaceId}/`
 
     const toExclude = [/\/\..+/]
     if (config?.excludeRows) {
@@ -121,26 +125,26 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 
     const tmpPath = await objectStore.retrieveDirectory(
       ObjectStoreBuckets.APPS,
-      appPath,
+      workspacePath,
       toExclude
     )
 
-    span.addTags({ prodAppId, tmpPath })
+    span.addTags({ prodAppId: prodWorkspaceId, tmpPath })
 
-    const downloadedPath = join(tmpPath, appPath)
+    const downloadedPath = join(tmpPath, workspacePath)
     if (fs.existsSync(downloadedPath)) {
       const allFiles = await fsp.readdir(downloadedPath)
       for (let file of allFiles) {
         const path = join(downloadedPath, file)
-        // move out of app directory, simplify structure
+        // move out of workspace directory, simplify structure
         await fsp.rename(path, join(downloadedPath, "..", file))
       }
-      // remove the old app directory created by object export
+      // remove the old workspace directory created by object export
       await fsp.rmdir(downloadedPath)
     }
-    // enforce an export of app DB to the tmp path
+    // enforce an export of workspace DB to the tmp path
     const dbPath = join(tmpPath, DB_EXPORT_FILE)
-    await exportDB(appId, {
+    await exportDB(workspaceId, {
       filter: defineFilter(config?.excludeRows),
       exportPath: dbPath,
     })
@@ -189,22 +193,22 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 }
 
 /**
- * Streams a backup of the database state for an app
- * @param appId The ID of the app which is to be backed up.
+ * Streams a backup of the database state for an workspace
+ * @param workspaceId The ID of the workspace which is to be backed up.
  * @param excludeRows Flag to state whether the export should include data.
  * @param encryptPassword password for encrypting the export.
  * @returns a readable stream of the backup which is written in real time
  */
-export async function streamExportApp({
-  appId,
+export async function streamExportWorkspace({
+  workspaceId,
   excludeRows,
   encryptPassword,
 }: {
-  appId: string
+  workspaceId: string
   excludeRows: boolean
   encryptPassword?: string
 }) {
-  const tmpPath = await exportApp(appId, {
+  const tmpPath = await exportWorkspace(workspaceId, {
     excludeRows,
     tar: true,
     encryptPassword,

@@ -297,5 +297,31 @@ describe("/screens", () => {
       expect(queryUsage.sourceType).toEqual(SourceType.QUERY)
       confirmScreen(queryUsage, screen)
     })
+
+    it("should find query usage in on load actions", async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasourcePlus().datasource
+      )
+      const query = await config.api.query.save(basicQuery(datasource._id!))
+      const screen = await config.api.screen.save({
+        ...basicScreen("/on-load-query"),
+        onLoad: [
+          {
+            "##eventHandlerType": "Execute Query",
+            id: "execute-query-on-load",
+            parameters: {
+              key: "queryId",
+              type: "query",
+              value: query._id!,
+              persist: null,
+            },
+          },
+        ],
+      })
+
+      const usage = await config.api.screen.usage(query._id!)
+      expect(usage.sourceType).toEqual(SourceType.QUERY)
+      confirmScreen(usage, screen)
+    })
   })
 })

@@ -7,10 +7,10 @@
   Budibase
 </h1>
 <h3 align="center">
-  The low code platform you'll enjoy using
+  AI Agents that run your operations
 </h3>
 <p align="center">
-  Budibase is an open-source low-code platform that saves engineers 100s of hours building forms, portals, and approval apps, securely.
+  Budibase is an open-source operations platform that saves engineers 100s of hours building Agents, Apps and Automations, securely.
 </p>
 
 <h3 align="center">
@@ -19,7 +19,7 @@
 <br>
 
 <p align="center">
-  <img alt="Budibase design ui" src="https://res.cloudinary.com/daog6scxm/image/upload/v1680181644/ui/homepage-design-ui_sizp7b.png">
+  <img alt="Budibase agent ui" src="https://res.cloudinary.com/daog6scxm/image/upload/v1775572268/github/Agent_preview.jpg">
 </p>
 
 <p align="center">
@@ -56,53 +56,40 @@
 
 ## ✨ Features
 
-### Build and ship real software
+### Run your operations on one platform
 
-Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing users with a great experience.
+Handle requests, automate workflows, manage processes, and connect your business systems - without stitching together multiple tools.
+
+Employees ask questions, request approvals, and report issues every day. Budibase agents understand these requests and handle the work automatically.
+
 <br /><br />
 
-### Open source and extensible
+### Operations your team can run with AI agents
 
-Budibase is open-source - licensed as GPL v3. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
-<br /><br />
-
-### Load data or start from scratch
-
-Budibase pulls data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MariaDB, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new datasources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+Employees ask questions, request approvals, and report issues every day. Budibase agents understand these requests and handle the work automatically.
 
 <p align="center">
-  <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1680281798/ui/data_klbuna.png">
+  <img alt="Budibase chat deploy" src="https://res.cloudinary.com/daog6scxm/image/upload/v1775573887/github/Agent_Chat.jpg">
+</p>
+
+<br /><br />
+
+### Agents that take action
+
+Budibase agents don’t just answer questions. They run workflows across your business - creating records, routing approvals, updating apps, and notifying teams automatically.
+
+<p align="center">
+  <img alt="Budibase agent actions" src="https://res.cloudinary.com/daog6scxm/image/upload/v1775572270/github/Agent_Actions.jpg">
 </p>
 <br /><br />
 
-### Design and build apps with powerful pre-made components
+### Connect the tools your business runs on
 
-Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose many of your favourite CSS styling options so you can go that extra creative mile. [Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
-
-<p align="center">
-  <img alt="Budibase design" src="https://res.cloudinary.com/daog6scxm/image/upload/v1675437167/ui/form_2x_mbli8y.png">
-</p>
-<br /><br />
-
-### Automate processes, integrate with other tools and connect to webhooks
-
-Save time by automating manual processes and workflows. From connecting to webhooks to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
-<br /><br />
-
-### Integrate with your favorite tools
-
-Budibase integrates with a number of popular tools allowing you to build apps that perfectly fit your stack.
-
-<p align="center">
-  <img alt="Budibase integrations" src="https://res.cloudinary.com/daog6scxm/image/upload/v1680195228/ui/automate_fg9z07.png">
-</p>
-<br /><br />
+Integrate with databases, AI models, and business apps so agents and automations can take action across your operations.
 
 ### Deploy with confidence and security
 
-Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user management to the group manager.
-
-- Checkout the promo video: https://youtu.be/xoljVpty_Kw
+Budibase is open-source and is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with a portal and disseminate user management to the group manager.
 
 <br />
 
@@ -112,7 +99,7 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 ## Budibase Public API
 
-As with anything that we build in Budibase, our new public API is simple to use, flexible, and introduces new extensibility. To summarize, the Budibase API enables:
+As with anything that we build in Budibase, our public API is simple to use, flexible, and introduces new extensibility. To summarize, the Budibase API enables:
 
 - Budibase as a backend
 - Interoperability
@@ -187,7 +174,7 @@ For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase
 
 ## 📝 License
 
-Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). The client and component libraries are licensed as [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - so the apps you build can be licensed however you like.
+Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). The client and component libraries are licensed as [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - so the apps you build can be licensed however you like. Budibase paid features are licensed under the [Business Source License](https://github.com/Budibase/budibase/blob/master/packages/pro/license.md),
 
 <br /><br />
 

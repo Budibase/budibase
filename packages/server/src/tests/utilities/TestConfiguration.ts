@@ -447,7 +447,9 @@ export default class TestConfiguration {
         sessionId: this.sessionIdForUser(userId),
         tenantId: this.getTenantId(),
       }
-      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
+      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret, {
+        expiresIn: utils.getSessionExpirySeconds(),
+      })
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
@@ -505,7 +507,9 @@ export default class TestConfiguration {
       sessionId: this.sessionIdForUser(user._id!),
       tenantId,
     }
-    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
+    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret, {
+      expiresIn: utils.getSessionExpirySeconds(),
+    })
 
     let cookie: (string | string[])[] = [
       `${constants.Cookie.Auth}=${authToken}`,

@@ -11,9 +11,11 @@ import type {
   Automation,
   AutomationLog,
   BlockDefinitions,
-  LayoutDirection,
   Branch,
   BranchStep,
+  AutomationStep,
+  AutomationTrigger,
+  AutomationStepResultInputs,
 } from "@budibase/types"
 import {
   AutomationActionStepId,
@@ -35,7 +37,11 @@ import {
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
 import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
-import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
+import {
+  applyBranchLaneClearance,
+  applyLoopClearance,
+  applyPostLoopBranchClearance,
+} from "./FlowCanvas/FlowLayout"
 
 // -----------------
 // Type Guards
@@ -49,6 +55,55 @@ const isLoopSubflowNode = (node: FlowNode): node is LoopSubflowNode => {
 // Blocks / Logs API
 // -----------------
 type BranchChild = { id: string; [key: string]: unknown }
+
+const getDefinitionChildren = (step: AutomationStep): AutomationStep[] => {
+  if (step.stepId === AutomationActionStepId.BRANCH) {
+    return Object.values(step.inputs?.children || {}).flat()
+  }
+
+  if (step.stepId === AutomationActionStepId.LOOP_V2) {
+    return step.inputs?.children || []
+  }
+
+  return []
+}
+
+const findStep = (
+  steps: AutomationStep[],
+  id: string
+): AutomationStep | undefined => {
+  for (const step of steps) {
+    if (step.id === id) {
+      return step
+    }
+
+    const match = findStep(getDefinitionChildren(step), id)
+    if (match) {
+      return match
+    }
+  }
+}
+
+const getLogStepInputs = (
+  definitionStep: AutomationStep | undefined,
+  logStep: AutomationLogStep
+): AutomationStepResultInputs => {
+  if (!definitionStep) {
+    return logStep.inputs || {}
+  }
+
+  if (
+    definitionStep.stepId === AutomationActionStepId.BRANCH ||
+    definitionStep.stepId === AutomationActionStepId.LOOP_V2
+  ) {
+    return {
+      ...logStep.inputs,
+      children: definitionStep.inputs.children,
+    }
+  }
+
+  return logStep.inputs || {}
+}
 
 export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
   const blockDefinitions = get(automationStore).blockDefinitions
@@ -84,12 +139,18 @@ export const processLogSteps = (
     )
     .filter((logStep: AutomationLogStep) => !branchChildStepIds.has(logStep.id))
     .forEach((logStep: AutomationLogStep) => {
+      const definitionStep = findStep(
+        automation.definition.steps || [],
+        logStep.id
+      )
       const stepDefinition = getStepDefinition(
         automation.blockDefinitions,
         logStep.stepId
       )
       blocks.push({
+        ...definitionStep,
         ...logStep,
+        inputs: getLogStepInputs(definitionStep, logStep),
         name: stepDefinition?.name || logStep.name || "",
         icon: stepDefinition?.icon || logStep.icon || "",
       })
@@ -178,6 +239,42 @@ export const getStepErrors = (step: AutomationStepResult) => {
   ]
 }
 
+export const getLogStepData = (
+  step: AutomationStep | AutomationTrigger,
+  logData?: AutomationLog | null
+) => {
+  if (!logData) return null
+  if (step.type === "TRIGGER") {
+    return logData.trigger
+  }
+
+  const directLogStep = (logData.steps || []).find(
+    logStep => logStep.id === step.id
+  )
+  if (directLogStep) {
+    return directLogStep
+  }
+
+  for (const logStep of logData.steps || []) {
+    const loopResults = logStep.outputs?.items?.[step.id]
+    if (!Array.isArray(loopResults) || loopResults.length === 0) {
+      continue
+    }
+
+    const latest = loopResults[loopResults.length - 1]
+    return {
+      ...latest,
+      outputs: {
+        ...latest.outputs,
+        iterations: loopResults.length,
+        items: loopResults,
+      },
+    }
+  }
+
+  return null
+}
+
 // Branch-specific functions
 export const summariseBranch = (branch: Branch) => {
   const groups = branch?.conditionUI?.groups || []
@@ -186,7 +283,12 @@ export const summariseBranch = (branch: Branch) => {
   const filters = groups[0]?.filters || []
   if (filters.length === 0) return ""
 
-  const { field, operator, value } = filters[0]
+  const firstFilter = filters[0]
+  if (!("field" in firstFilter)) {
+    return ""
+  }
+
+  const { field, operator, value } = firstFilter
   let summary = `${field} ${operator} ${value}`
 
   if (filters.length > 1) {
@@ -240,7 +342,7 @@ export const buildTopLevelGraph = (
         blockHeight = loopResult.containerHeight
       } else {
         deps.newNodes.push(
-          stepNode(baseId, block, deps.direction, undefined, {
+          stepNode(baseId, block, undefined, {
             x: 0,
             y: currentY,
           })
@@ -253,7 +355,6 @@ export const buildTopLevelGraph = (
       deps.newEdges.push(
         edgeAddItem(prevId, baseId, {
           block: blocks[idx - 1],
-          direction: deps.direction,
         })
       )
     }
@@ -262,7 +363,7 @@ export const buildTopLevelGraph = (
       const terminalY = currentY + blockHeight
       const terminalId = `anchor-${baseId}`
       deps.newNodes.push(
-        anchorNode(terminalId, deps.direction, undefined, {
+        anchorNode(terminalId, undefined, {
           x: 0,
           y: terminalY,
         })
@@ -270,7 +371,6 @@ export const buildTopLevelGraph = (
       deps.newEdges.push(
         edgeAddItem(baseId, terminalId, {
           block,
-          direction: deps.direction,
         })
       )
     }
@@ -298,7 +398,6 @@ export const buildTopLevelGraph = (
 // ---------
 
 export interface DagreLayoutOptions {
-  rankdir?: LayoutDirection
   ranksep?: number
   nodesep?: number
   compactLoops?: boolean
@@ -308,14 +407,13 @@ export const dagreLayoutAutomation = (
   graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
-  const rankdir = opts?.rankdir || "TB"
   const ranksep = opts?.ranksep ?? 260
   const nodesep = opts?.nodesep ?? 220
   const compactLoops = opts?.compactLoops !== false
 
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
-  dagreGraph.setGraph({ rankdir, ranksep, nodesep })
+  dagreGraph.setGraph({ rankdir: "LR", ranksep, nodesep })
 
   const nodeById: Record<string, FlowNode> = {}
   graph.nodes.forEach(n => (nodeById[n.id] = n))
@@ -333,11 +431,8 @@ export const dagreLayoutAutomation = (
       } else if (isLoopSubflowNode(node)) {
         const w = node.data?.containerWidth
         if (w > 0) width = w
-        // In horizontal (LR) layouts Dagre must know the vertical
-        // length of the loop container so it can place rows correctly.
         const h = node?.data?.containerHeight
-        const shouldUseHeight = rankdir === "LR" || !compactLoops
-        if (shouldUseHeight && h > 0) {
+        if (h > 0) {
           height = h
         }
       }
@@ -361,13 +456,8 @@ export const dagreLayoutAutomation = (
       if (!dims) return
       const width = dims.width
       const height = dims.height
-      if (rankdir === "LR") {
-        node.targetPosition = Position.Left
-        node.sourcePosition = Position.Right
-      } else {
-        node.targetPosition = Position.Top
-        node.sourcePosition = Position.Bottom
-      }
+      node.targetPosition = Position.Left
+      node.sourcePosition = Position.Right
       node.position = {
         x: Math.round(dims.x - width / 2),
         y: Math.round(dims.y - height / 2),
@@ -375,7 +465,9 @@ export const dagreLayoutAutomation = (
     })
 
   if (compactLoops) {
-    applyLoopClearance(graph, rankdir)
+    applyLoopClearance(graph)
+    applyPostLoopBranchClearance(graph)
+    applyBranchLaneClearance(graph)
   }
   return graph
 }

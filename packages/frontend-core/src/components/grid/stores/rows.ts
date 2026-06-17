@@ -1,4 +1,5 @@
 import { writable, derived, get, Writable, Readable } from "svelte/store"
+import { sessionBannerStore } from "../../../stores/sessionBanner"
 import { DataFetch, DataFetchDefinition, fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import {
@@ -10,6 +11,7 @@ import {
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
+import { redirectToLoginWithReturnUrl } from "../../../utils/login"
 import { FieldType, Row, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 import { Store as StoreContext } from "."
@@ -221,6 +223,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
+    rowChangeCache.set({})
 
     // Abandon if we don't have a valid datasource
     if (!datasource.actions.isDatasourceValid($datasource)) {
@@ -265,6 +268,17 @@ export const createActions = (context: StoreContext): RowActionStore => {
     const fetchStore = newFetch as unknown as Readable<GridFetchSnapshot>
     unsubscribe = fetchStore.subscribe(async $fetch => {
       if ($fetch.error) {
+        if ($fetch.error.status === 401 || $fetch.error.status === 403) {
+          sessionBannerStore.set({
+            text: "Session not authenticated",
+            variant: "session-not-authenticated",
+            action: {
+              label: "Log in",
+              onClick: () => redirectToLoginWithReturnUrl(),
+            },
+          })
+        }
+
         // Present a helpful error to the user
         let message = "An unknown error occurred"
         if ($fetch.error.status === 403) {

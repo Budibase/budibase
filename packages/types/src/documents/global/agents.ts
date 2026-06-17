@@ -22,6 +22,7 @@ export interface ToolMetadata {
 interface ChatAgentIntegration {
   chatAppId?: string
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }
 
 export interface DiscordAgentIntegration extends ChatAgentIntegration {
@@ -45,28 +46,87 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   messagingEndpointUrl?: string
 }
 
+export interface TelegramAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  webhookSecretToken?: string
+  botUserName?: string
+  messagingEndpointUrl?: string
+}
+
+export enum AgentKnowledgeSourceType {
+  SHAREPOINT = "sharepoint",
+}
+
+export interface AgentKnowledgeSourceFilterConfig {
+  patterns?: string[]
+}
+
+export interface AgentSharePointKnowledgeSource {
+  id: string
+  type: AgentKnowledgeSourceType.SHAREPOINT
+  config: {
+    datasourceId: string
+    authConfigId: string
+    site: {
+      id: string
+      name?: string
+      webUrl?: string
+    }
+    filters?: AgentKnowledgeSourceFilterConfig
+  }
+}
+
+export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
+
+export interface AgentOperation {
+  id: string
+  name: string
+  live: boolean
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
+  allowKnowledgeSourceDownload: boolean
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  promptInstructions?: string
+  operations?: AgentOperation[]
   goal?: string
   live?: boolean
+  publishedAt?: string
   icon?: string
   iconColor?: string
   createdBy?: string
-  enabledTools?: string[]
-  knowledgeBases?: string[]
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
+  telegramIntegration?: TelegramAgentIntegration
 }
 
 export interface AgentMessageRagSource {
   sourceId: string
   fileId?: string
   filename?: string
-  chunkCount: number
+}
+
+export type AgentMessageUsageSegmentType =
+  | "system"
+  | "input"
+  | "cachedInput"
+  | "output"
+  | "reasoning"
+
+export interface AgentMessageUsageSegment {
+  type: AgentMessageUsageSegmentType
+  tokens: number
+}
+
+export interface AgentMessageUsage {
+  maxTokens?: number
+  segments: AgentMessageUsageSegment[]
 }
 
 export interface AgentMessageMetadata {
@@ -75,6 +135,7 @@ export interface AgentMessageMetadata {
   createdAt?: number
   completedAt?: number
   error?: string
+  usage?: AgentMessageUsage
 }
 
 export interface AgentChat extends Document {

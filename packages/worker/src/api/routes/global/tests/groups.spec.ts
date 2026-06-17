@@ -62,6 +62,13 @@ describe("/api/global/groups", () => {
       )
     })
 
+    it("should allow setting isDefault when creating a group", async () => {
+      const group = { ...structures.groups.UserGroup(), isDefault: true }
+      const response = await config.api.groups.saveGroup(group, { expect: 200 })
+      const savedGroup = await config.api.groups.find(response.body._id)
+      expect(savedGroup.body.isDefault).toBe(true)
+    })
+
     describe("name max length", () => {
       const maxLength = 50
 

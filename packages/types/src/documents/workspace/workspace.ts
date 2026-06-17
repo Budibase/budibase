@@ -34,11 +34,38 @@ export interface Workspace extends Document {
   updatedBy?: string
   pwa?: PWAManifest
   scripts?: AppScript[]
+  // list of origins (e.g. https://example.com) allowed to embed this
+  // workspace's apps in an iframe. Empty/unset means any origin is allowed.
+  embedAllowedOrigins?: string[]
+  // configuration for authenticating embedded users via a signed token passed
+  // by the host site (e.g. Nextcloud). The token's identity is mapped to an
+  // existing Budibase user.
+  embedSSO?: EmbedSSOConfig
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
+  // stores a list of IDs (resources that were published while enabled/live)
+  // and when they were last deployed live (timestamp)
+  resourcesDeployedAt?: Record<string, string>
   /** @deprecated translations are configured globally via ConfigType.TRANSLATIONS */
   translationOverrides?: TranslationOverrides
+}
+
+export type EmbedSSOAlgorithm = "ES256" | "RS256" | "HS256"
+
+export interface EmbedSSOConfig {
+  enabled: boolean
+  // verification algorithm for the incoming token. ES256/RS256 use an
+  // asymmetric public key, HS256 uses a shared secret.
+  algorithm: EmbedSSOAlgorithm
+  // PEM-encoded public key (ES256/RS256) or shared secret (HS256). Stored
+  // encrypted at rest and never returned to the browser.
+  key: string
+  // optional expected issuer (the "iss" claim) to validate against.
+  issuer?: string
+  // dot-path into the token payload for the user's email, e.g. "userdata.email"
+  // for Nextcloud. Defaults to "email".
+  emailClaim?: string
 }
 
 export interface WorkspaceInstance {
@@ -50,11 +77,18 @@ export interface AppNavigation {
   title?: string
   navWidth?: string
   sticky?: boolean
+  showLoginButton?: boolean
   hideLogo?: boolean
   logoUrl?: string
   hideTitle?: boolean
   navBackground?: string
   navTextColor?: string
+  navLinkHoverTextColor?: string
+  navLinkHoverIconColor?: string
+  navLinkHoverBackground?: string
+  navLinkActiveTextColor?: string
+  navLinkActiveIconColor?: string
+  navLinkActiveBackground?: string
   banner?: AppBanner
   links?: AppNavigationLink[]
   textAlign?: "Left" | "Center" | "Right"
@@ -71,8 +105,14 @@ export interface AppNavigationLink {
   icon?: string
 }
 
+export enum AppFontFamily {
+  SOURCE_SANS = "sourceSans",
+  INTER = "inter",
+}
+
 export interface AppCustomTheme {
   buttonBorderRadius?: string
+  fontFamily?: AppFontFamily
   primaryColor?: string
   primaryColorHover?: string
 
@@ -98,6 +138,7 @@ export interface WorkspaceFeatures {
   disableUserMetadata?: boolean
   skeletonLoader?: boolean
   recaptchaEnabled?: boolean
+  suppressErrorNotifications?: boolean
 }
 
 export interface AutomationSettings {

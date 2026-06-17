@@ -3480,6 +3480,327 @@
       ]
     }
   },
+  "urlfield": {
+    "name": "URL Field",
+    "icon": "link",
+    "styles": ["size"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/string",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue",
+        "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "validation/url",
+        "label": "Validation",
+        "key": "validation",
+        "defaultValue": [
+          {
+            "id": "default-url-validation",
+            "type": "string",
+            "constraint": "url",
+            "value": ["http", "https"],
+            "error": "Must be a valid URL"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Columns",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "emailfield": {
+    "name": "Email Field",
+    "icon": "envelope",
+    "styles": ["size"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/string",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue",
+        "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "validation/email",
+        "label": "Validation",
+        "key": "validation",
+        "defaultValue": [
+          {
+            "id": "default-email-validation",
+            "type": "string",
+            "constraint": "email",
+            "error": "Must be a valid email address"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Columns",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
+  },
   "numberfield": {
     "name": "Number Field",
     "icon": "number-circle-nine",
@@ -3534,6 +3855,12 @@
         "dependsOn": "onChange",
         "info": "Trigger actions by 'input' events as well as 'change' events",
         "defaultValue": false
+      },
+      {
+        "type": "number",
+        "label": "Debounce (ms)",
+        "key": "debounceMs",
+        "defaultValue": 500
       },
       {
         "type": "boolean",
@@ -4154,6 +4481,38 @@
         "dependsOn": {
           "setting": "optionsType",
           "value": "checkbox"
+        }
+      },
+      {
+        "type": "select",
+        "label": "Box columns",
+        "key": "columns",
+        "defaultValue": 1,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 1,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 2,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 3,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ],
+        "dependsOn": {
+          "setting": "direction",
+          "value": "horizontal"
         }
       },
       {
@@ -8133,6 +8492,7 @@
     "illegalChildren": ["section", "sidepanel", "modal"],
     "showEmptyState": false,
     "draggable": false,
+    "styles": ["background"],
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
     "settings": [
       {
@@ -8140,6 +8500,28 @@
         "key": "ignoreClicksOutside",
         "label": "Ignore clicks outside",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "small",
+        "options": [
+          { "label": "Small", "value": "small" },
+          { "label": "Medium", "value": "medium" },
+          { "label": "Large", "value": "large" },
+          { "label": "Fullscreen", "value": "fullscreen" }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Position",
+        "key": "position",
+        "defaultValue": "right",
+        "options": [
+          { "label": "Left", "value": "left" },
+          { "label": "Right", "value": "right" }
+        ]
       },
       {
         "type": "event",
@@ -8529,6 +8911,16 @@
         "dependsOn": {
           "setting": "table.type",
           "value": ["table", "viewV2"]
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Row selection",
+        "key": "allowRowSelection",
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "allowDeleteRows",
+          "value": false
         }
       },
       {

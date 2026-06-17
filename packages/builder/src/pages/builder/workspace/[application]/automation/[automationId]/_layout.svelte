@@ -7,6 +7,7 @@
     automationStore,
     selectedAutomation,
   } from "@/stores/builder"
+  import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
   import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
@@ -37,9 +38,17 @@
   })
 
   onDestroy(stopSyncing)
+
+  const handleKeyDown = e => {
+    if (e.key === "Escape" && $automationStore.actionPanelBlock) {
+      automationStore.actions.closeActionPanel()
+    }
+  }
 </script>
 
-<div class="wrapper">
+<svelte:window on:keydown={handleKeyDown} />
+
+<div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
   <TopBar
     breadcrumbs={[
       { text: "Automations", url: "../" },
@@ -52,9 +61,19 @@
       <slot />
     </div>
 
-    {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
-      <div class="step-panel">
-        <StepPanel />
+    {#if (blockRefs[$automationStore.selectedNodeId] || $automationStore.selectedBranchNode) && $automationStore.selectedNodeId}
+      <div class="step-panel-container">
+        <ResizablePanel
+          storageKey="automation-side-panel-width"
+          defaultWidth={480}
+          minWidth={360}
+          maxWidthRatio={0.6}
+          position="right"
+        >
+          <div class="step-panel">
+            <StepPanel />
+          </div>
+        </ResizablePanel>
       </div>
     {/if}
 
@@ -98,13 +117,35 @@
     flex-direction: column;
     align-items: stretch;
     flex: 1 1 auto;
+    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-flow-logic-color: var(
+      --spectrum-global-color-indigo-100
+    );
+    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
+    --automation-step-icon-trigger-color: var(--color-green-200);
+    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
+    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
+  }
+  :global(.spectrum--dark) .wrapper,
+  :global(.spectrum--darkest) .wrapper,
+  :global(.spectrum--midnight) .wrapper,
+  :global(.spectrum--nord) .wrapper {
+    --automation-step-icon-data-color: var(--color-blue-600);
+    --automation-step-icon-flow-logic-color: var(--color-purple-600);
+    --automation-step-icon-code-color: var(--color-orange-600);
+    --automation-step-icon-trigger-color: var(--color-green-600);
+    --automation-step-icon-email-color: var(--color-green-600);
+    --automation-step-icon-ai-color: var(--color-brand-500);
+    --automation-step-icon-apps-color: var(--color-orange-400);
   }
   .root {
     flex: 1 1 auto;
     display: grid;
     grid-auto-flow: column dense;
-    grid-template-columns: minmax(510px, 1fr) fit-content(500px);
+    grid-template-columns: minmax(510px, 1fr);
     overflow: hidden;
+    position: relative;
   }
   .content {
     position: relative;
@@ -114,26 +155,38 @@
     align-items: stretch;
     overflow: auto;
   }
+  .step-panel-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 99;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow: hidden;
+  }
   .step-panel {
-    border-left: var(--border-light);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     background-color: var(--background);
     overflow: auto;
-    grid-column: 3;
-    width: 400px;
-    max-width: 400px;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .logs-panel-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    right: 0;
     width: 400px;
     max-width: 400px;
     overflow: hidden;
     height: 100%;
     border-left: var(--border-light);
+    z-index: 98;
   }
 
   .panels-wrapper {
@@ -169,5 +222,11 @@
     align-items: stretch;
     background-color: var(--background);
     overflow: auto;
+  }
+  .wrapper.resizing-panel {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 </style>

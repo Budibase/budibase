@@ -1138,6 +1138,14 @@ describe("/api/global/users", () => {
       await config.api.users.searchUsers({}, { status: 403, noHeaders: true })
     })
 
+    it("should throw an error if a public route is injected in the query string", async () => {
+      await config.request
+        .post("/api/global/users/search?x=/api/system/status")
+        .send({})
+        .expect("Content-Type", /json/)
+        .expect(403)
+    })
+
     it("should be able to search using logical conditions", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
@@ -1364,27 +1372,6 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("POST /api/global/users/onboard", () => {
-    it("should successfully onboard a user", async () => {
-      const response = await config.api.users.onboardUser([
-        { email: structures.users.newEmail(), userInfo: {} },
-      ])
-      expect(response.successful.length).toBe(1)
-      expect(response.unsuccessful.length).toBe(0)
-    })
-
-    it("should not onboard a user who has been invited", async () => {
-      const email = structures.users.newEmail()
-      await config.api.users.sendUserInvite(sendMailMock, email)
-
-      const response = await config.api.users.onboardUser([
-        { email, userInfo: {} },
-      ])
-      expect(response.successful.length).toBe(0)
-      expect(response.unsuccessful.length).toBe(1)
-    })
-  })
-
   describe("PUT /api/global/users/tenant/owner", () => {
     it("should successfully change tenant owner email for existing user", async () => {
       const originalEmail = `original-${structures.uuid()}@example.com`
@@ -1540,6 +1527,44 @@ describe("/api/global/users", () => {
         })
         .set(config.defaultHeaders())
         .expect(403)
+    })
+
+    it("should reject authenticated users on self-hosted", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenantId = config.getTenantId()
+
+      const tenantUser = await config.doInTenant(async () => {
+        return await userSdk.db.save(
+          structures.users.user({
+            email: originalEmail,
+            tenantId,
+            roles: {},
+          }),
+          { requirePassword: false, isAccountHolder: true }
+        )
+      })
+
+      config.selfHosted()
+      try {
+        await config.request
+          .put(`/api/global/users/tenant/owner`)
+          .send({
+            newAccountEmail: newEmail,
+            originalEmail,
+            tenantIds: [tenantId],
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+      } finally {
+        config.cloudHosted()
+      }
+
+      const unchangedUser = await config.doInTenant(async () => {
+        return await userSdk.db.getUser(tenantUser._id!)
+      })
+
+      expect(unchangedUser!.email).toBe(originalEmail)
     })
   })
 })

@@ -16,3 +16,9 @@
     <Icon name="lock-simple" />
   {/if}
 </div>
+
+<style>
+  .connection-icon {
+    display: flex;
+  }
+</style>

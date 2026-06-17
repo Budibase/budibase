@@ -7,6 +7,7 @@
     Icon,
     Drawer,
     Button,
+    Select,
   } from "@budibase/bbui"
 
   import FilterUsers from "./FilterUsers.svelte"
@@ -25,6 +26,8 @@
   export let toReadable
   export let toRuntime
   export let evaluationContext = {}
+  export let bindingValueType = Constants.FilterValueType.BINDING
+  export let useConditionValueControls = false
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions, FilterValueType } = Constants
@@ -60,7 +63,7 @@
   const onConfirmBinding = () => {
     dispatch("change", {
       value: toRuntime ? toRuntime(bindings, drawerValue) : drawerValue,
-      valueType: drawerValue ? FilterValueType.BINDING : FilterValueType.VALUE,
+      valueType: drawerValue ? bindingValueType : FilterValueType.VALUE,
     })
   }
 
@@ -177,17 +180,25 @@
         />
       {:else}
         <div>
-          {#if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI, FieldType.BARCODEQR].includes(filter.type)}
+          {#if filter.type === FieldType.NUMBER && useConditionValueControls}
+            <Input
+              type="number"
+              disabled={filter.noValue}
+              value={readableValue}
+              on:change={onChange}
+            />
+          {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI, FieldType.BARCODEQR].includes(filter.type)}
             <Input
               disabled={filter.noValue}
               value={readableValue}
               on:change={onChange}
             />
-          {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === ArrayOperator.ONE_OF)}
+          {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && (filter.operator === ArrayOperator.ONE_OF || filter.operator === ArrayOperator.NOT_ONE_OF))}
             <Multiselect
               disabled={filter.noValue}
               options={getFieldOptions(filter.field)}
               value={readableValue}
+              popoverAutoWidth
               on:change={onChange}
             />
           {:else if filter.type === FieldType.OPTIONS}
@@ -195,6 +206,20 @@
               disabled={filter.noValue}
               options={getFieldOptions(filter.field)}
               value={readableValue}
+              popoverAutoWidth
+              wrapText
+              on:change={onChange}
+            />
+          {:else if filter.type === FieldType.BOOLEAN && useConditionValueControls}
+            <Select
+              placeholder={false}
+              disabled={filter.noValue}
+              options={[
+                { label: "True", value: "true" },
+                { label: "False", value: "false" },
+              ]}
+              value={readableValue}
+              popoverAutoWidth
               on:change={onChange}
             />
           {:else if filter.type === FieldType.BOOLEAN}
@@ -205,6 +230,7 @@
                 { label: "False", value: "false" },
               ]}
               value={readableValue}
+              popoverAutoWidth
               on:change={onChange}
             />
           {:else if filter.type === FieldType.DATETIME}

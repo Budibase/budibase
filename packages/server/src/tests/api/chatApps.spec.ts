@@ -240,7 +240,15 @@ describe("chat route auth split", () => {
           icon: "robot",
           iconColor: "#6a9bcc",
           createdAt: now,
-          enabledTools: [],
+          operations: [
+            {
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              enabledTools: [],
+              allowKnowledgeSourceDownload: true,
+            },
+          ],
         }
         await db.put(agent)
         agentId = agent._id!
@@ -253,7 +261,15 @@ describe("chat route auth split", () => {
           icon: "robot",
           iconColor: "#9f8cd1",
           createdAt: now,
-          enabledTools: [],
+          operations: [
+            {
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              enabledTools: [],
+              allowKnowledgeSourceDownload: true,
+            },
+          ],
         }
         await db.put(disabledAgent)
         disabledAgentId = disabledAgent._id!
@@ -266,7 +282,15 @@ describe("chat route auth split", () => {
           icon: "robot",
           iconColor: "#a56f6f",
           createdAt: now,
-          enabledTools: [],
+          operations: [
+            {
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              enabledTools: [],
+              allowKnowledgeSourceDownload: true,
+            },
+          ],
         }
         await db.put(restrictedAgent)
         restrictedAgentId = restrictedAgent._id!
@@ -419,6 +443,7 @@ describe("chat route auth split", () => {
       icon: "robot",
       iconColor: "#6a9bcc",
       live: true,
+      allowKnowledgeSourceDownload: true,
     })
     expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
     expect(

@@ -32,7 +32,6 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
     appsStore,
-    featureFlags,
     licensing,
     enrichedApps,
     agentsStore,
@@ -441,9 +440,7 @@
 
   <WorkspaceAppModal bind:this={workspaceAppModal} workspaceApp={null} />
 
-  {#if $featureFlags.AI_AGENTS}
-    <AgentModal bind:this={agentModal} />
-  {/if}
+  <AgentModal bind:this={agentModal} />
 
   <Modal bind:this={createTableModal} closeOnOutsideClick={false}>
     <CreateTableModal bind:name={tableName} afterSave={handleTableSave} />
@@ -530,14 +527,12 @@
                   />
                 </svelte:fragment>
 
-                {#if $featureFlags.AI_AGENTS}
-                  <MenuItem icon="sparkle" on:click={openCreateAgent}>
-                    Agent
-                    <div slot="right">
-                      <Tag emphasized>Beta</Tag>
-                    </div>
-                  </MenuItem>
-                {/if}
+                <MenuItem icon="sparkle" on:click={openCreateAgent}>
+                  Agent
+                  <div slot="right">
+                    <Tag emphasized>Beta</Tag>
+                  </div>
+                </MenuItem>
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
@@ -734,7 +729,7 @@
             keepCollapsed()
           }}
         />
-        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isEnterpriseTrial}
+        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isTrialPlan}
           <SideNavLink
             icon="paper-plane-tilt"
             text="Email support"

@@ -121,7 +121,7 @@ describe("createLLM", () => {
       liteLLMModelId: "gpt-5-mini",
     } as any)
 
-    const expected = { chat: "chat", embedding: "embedding" }
+    const expected = { chat: "chat" }
     createLiteLLMOpenAIMock.mockResolvedValue(expected as any)
 
     const result = await createLLM("config-2", "session-1")

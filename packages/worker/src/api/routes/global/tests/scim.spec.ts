@@ -8,8 +8,14 @@ import {
   ScimUpdateRequest,
   ScimUserResponse,
 } from "@budibase/types"
+import {
+  context,
+  db as dbCore,
+  encryption,
+  events,
+  utils,
+} from "@budibase/backend-core"
 import { TestConfiguration } from "../../../../tests"
-import { events } from "@budibase/backend-core"
 
 jest.setTimeout(30000)
 
@@ -27,6 +33,33 @@ describe("scim", () => {
   beforeEach(setup)
 
   const config = new TestConfiguration()
+
+  async function createAPIKeyForUser(userId: string) {
+    const apiKey = encryption.encrypt(
+      `${config.tenantId}${dbCore.SEPARATOR}${utils.newid()}`
+    )
+
+    await config.doInTenant(async () => {
+      const db = context.getGlobalDB()
+      await db.put({
+        _id: dbCore.generateDevInfoID(userId),
+        userId,
+        apiKey,
+      })
+    })
+
+    return apiKey
+  }
+
+  async function withAPIKey<T>(apiKey: string, fn: () => Promise<T>) {
+    const previousAPIKey = config.apiKey
+    config.apiKey = apiKey
+    try {
+      return await fn()
+    } finally {
+      config.apiKey = previousAPIKey
+    }
+  }
 
   const unauthorisedTests = (fn: (...params: any) => Promise<any>) => {
     describe("unauthorised calls", () => {
@@ -82,6 +115,19 @@ describe("scim", () => {
   })
 
   describe("/api/global/scim/v2/users", () => {
+    describe("authorisation", () => {
+      it("returns 403 when a non-admin user API key calls SCIM", async () => {
+        const user = await config.createUser()
+        const apiKey = await createAPIKeyForUser(user._id!)
+
+        const response = await withAPIKey(apiKey, () =>
+          config.api.scimUsersAPI.get({ expect: 403 })
+        )
+
+        expect(response).toEqual(config.adminOnlyResponse())
+      })
+    })
+
     describe("GET /api/global/scim/v2/users", () => {
       const getScimUsers = config.api.scimUsersAPI.get
 
@@ -364,9 +410,12 @@ describe("scim", () => {
       })
 
       it("creating an external user that conflicts an internal one syncs the existing user", async () => {
-        const { body: internalUser } = await config.api.users.saveUser(
-          structures.users.user()
-        )
+        const workspaceId = "app_scim_sync_roles"
+        const explicitRoles = { [workspaceId]: "BASIC" }
+        const { body: internalUser } = await config.api.users.saveUser({
+          ...structures.users.user(),
+          roles: explicitRoles,
+        })
 
         const scimUserData = {
           externalId: structures.uuid(),
@@ -410,6 +459,14 @@ describe("scim", () => {
         }
 
         expect(res).toEqual(expectedScimUser)
+
+        expect(
+          (await config.api.users.getUser(internalUser._id!)).body
+        ).toEqual(
+          expect.objectContaining({
+            roles: explicitRoles,
+          })
+        )
       })
 
       it("a user cannot be SCIM synchronised with another SCIM user", async () => {
@@ -514,6 +571,46 @@ describe("scim", () => {
 
         const persistedUser = await config.api.scimUsersAPI.find(user.id)
         expect(persistedUser).toEqual(expectedScimUser)
+      })
+
+      it("preserves explicit roles when updating an existing SCIM user", async () => {
+        const workspaceId = "app_scim_patch_roles"
+        const explicitRoles = { [workspaceId]: "BASIC" }
+        const { body: internalUser } = await config.api.users.saveUser({
+          ...structures.users.user(),
+          roles: explicitRoles,
+        })
+
+        const syncedUser = await config.api.scimUsersAPI.post(
+          {
+            body: structures.scim.createUserRequest({
+              email: internalUser.email,
+            }),
+          },
+          { expect: 200 }
+        )
+
+        const newFamilyName = structures.generator.last()
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Replace",
+              path: "name.familyName",
+              value: newFamilyName,
+            },
+          ],
+        }
+
+        await patchScimUser({ id: syncedUser.id, body })
+
+        expect((await config.api.users.getUser(syncedUser.id)).body).toEqual(
+          expect.objectContaining({
+            _id: syncedUser.id,
+            lastName: newFamilyName,
+            roles: explicitRoles,
+          })
+        )
       })
 
       it.each([false, "false", "False"])(

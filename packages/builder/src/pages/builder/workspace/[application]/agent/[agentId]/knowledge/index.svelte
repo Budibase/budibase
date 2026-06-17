@@ -1,246 +1,480 @@
 <script lang="ts">
+  import { Body, Button, Layout, notifications, Toggle } from "@budibase/bbui"
+  import { bb } from "@/stores/bb"
+  import { confirm } from "@/helpers"
+  import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
-    Body,
-    Button,
-    Table,
-    notifications,
-    Layout,
-    ProgressCircle,
-  } from "@budibase/bbui"
-  import { type Agent } from "@budibase/types"
-  import EmptyStateImage from "assets/no-knowledge-bases.png"
+    AgentKnowledgeSourceType,
+    KnowledgeBaseFileStatus,
+    type Agent,
+    type AgentOperation,
+    type KnowledgeBaseFile,
+  } from "@budibase/types"
+  import { workspaceDeploymentStore } from "@/stores/builder"
   import {
     agentsStore,
-    aiConfigsStore,
-    knowledgeBaseStore,
+    knowledgeConnectionsStore,
     selectedAgent,
   } from "@/stores/portal"
-  import { bb } from "@/stores/bb"
+  import KnowledgeTable from "./KnowledgeTable.svelte"
+  import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
+  import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
   import { onDestroy, onMount } from "svelte"
-  import KnowledgeBaseManageRenderer from "./KnowledgeBaseManageRenderer.svelte"
-  import KnowledgeBaseToggleRenderer from "./KnowledgeBaseToggleRenderer.svelte"
+  import type {
+    KnowledgeTableRow,
+    SharePointSelectionMode,
+  } from "./renderers/types"
+  import {
+    toFileTableRows,
+    toSharePointConnectionRows,
+  } from "./knowledgeTableRows"
+  import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
+  import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
+  import { tick } from "svelte"
 
-  const AUTO_SAVE_DEBOUNCE_MS = 800
+  let {
+    operation = $bindable(),
+    onUpdated,
+  }: { operation: AgentOperation; onUpdated: () => Promise<boolean> } = $props()
 
-  let draftAgentId: string | undefined = $state()
-  let selectedKnowledgeBases = $state<string[]>([])
-  let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
-  let saving = $state(false)
-  let saveQueued = $state(false)
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  let knowledgeBases = $derived($knowledgeBaseStore.list || [])
-
-  const serializeKnowledgeBases = (knowledgeBaseIds: string[]) =>
-    JSON.stringify(knowledgeBaseIds)
-
-  $effect(() => {
-    const agent = currentAgent
-    if (agent && agent._id !== draftAgentId) {
-      selectedKnowledgeBases = agent.knowledgeBases || []
-      draftAgentId = agent._id
-    }
-  })
-
-  async function saveAgent({
-    showNotifications = true,
-  }: {
-    showNotifications?: boolean
-  }) {
-    if (!currentAgent) return
-    if (saving) {
-      saveQueued = true
-      return
-    }
-
-    saving = true
-    saveQueued = false
-    const knowledgeBasesToSave = [...selectedKnowledgeBases]
-    try {
-      await agentsStore.updateAgent({
-        ...currentAgent,
-        knowledgeBases: knowledgeBasesToSave,
-      })
-
-      if (showNotifications) {
-        notifications.success("Agent saved successfully")
-      }
-      await agentsStore.fetchAgents()
-    } catch (error) {
-      console.error(error)
-      notifications.error("Error saving agent")
-    } finally {
-      saving = false
-      if (
-        saveQueued ||
-        serializeKnowledgeBases(selectedKnowledgeBases) !==
-          serializeKnowledgeBases(knowledgeBasesToSave)
-      ) {
-        saveQueued = false
-        saveAgent({ showNotifications: false }).catch(console.error)
-      }
-    }
-  }
-
-  const scheduleSave = (immediate = false) => {
-    clearAutoSave()
-
-    if (immediate) {
-      saveAgent({ showNotifications: false })
-      return
-    }
-
-    autoSaveTimeout = setTimeout(() => {
-      saveAgent({ showNotifications: false })
-      autoSaveTimeout = undefined
-    }, AUTO_SAVE_DEBOUNCE_MS)
-  }
-
-  const clearAutoSave = () => {
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout)
-      autoSaveTimeout = undefined
-    }
-  }
-
-  const toggleKnowledgeBase = (knowledgeBaseId: string, enabled: boolean) => {
-    selectedKnowledgeBases = enabled
-      ? [...new Set([...selectedKnowledgeBases, knowledgeBaseId])]
-      : selectedKnowledgeBases.filter(id => id !== knowledgeBaseId)
-    scheduleSave(true)
-  }
-  let embeddingNameById = $derived(
-    new Map(
-      $aiConfigsStore.customConfigs.map(config => [
-        config._id,
-        config.name || "",
-      ])
+  let sharePointSources = $derived.by(() =>
+    (operation.knowledgeSources || []).filter(
+      source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
-  let tableRows = $derived.by(() =>
-    knowledgeBases
-      .map(knowledgeBase => ({
-        ...knowledgeBase,
-        enabled: selectedKnowledgeBases.includes(knowledgeBase._id || ""),
-        embeddingModel:
-          embeddingNameById.get(knowledgeBase.embeddingModel) ||
-          knowledgeBase.embeddingModel,
-        files: knowledgeBase.files.length,
-        onToggle: toggleKnowledgeBase,
-        onManage: (knowledgeBaseId: string) =>
-          bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}`),
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+
+  let savingAllowKnowledgeSourceDownload = $state(false)
+  let resetting = $state(false)
+  let selectedSharePointSiteId = $state("")
+  let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
+  let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
+  let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
+
+  let agentId = $derived(currentAgent?._id)
+  let operationId = $derived(operation.id)
+
+  let files = $derived.by(() => {
+    if (!agentId || !operationId) {
+      return []
+    }
+
+    // agentsStore getters use get() internally, so $derived must read $agentsStore
+    // to subscribe — otherwise polling updates never re-render these values.
+    const _store = $agentsStore
+
+    return agentsStore.getOperationKnowledge(agentId, operationId)?.files || []
+  })
+
+  let sharePointSourceSnapshots = $derived.by(() => {
+    if (!agentId || !operationId) {
+      return []
+    }
+    const _store = $agentsStore
+
+    return (
+      agentsStore.getOperationKnowledge(agentId, operationId)
+        ?.sharePointSources || []
+    )
+  })
+
+  let loading = $derived.by(() => {
+    if (!agentId || !operationId) {
+      return false
+    }
+    const _store = $agentsStore
+    return agentsStore.isOperationKnowledgeLoading(agentId, operationId)
+  })
+
+  let uploadState = $derived.by(() => {
+    if (!agentId || !operationId) {
+      return { pendingUploads: [], uploading: false, progress: "" }
+    }
+    const _store = $agentsStore
+    return agentsStore.getOperationUploadState(agentId, operationId)
+  })
+
+  let hasSharePointConnection = $derived(
+    $knowledgeConnectionsStore.connections.some(
+      connection =>
+        connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
+    )
+  )
+  let selectedSiteIds = $derived.by(() =>
+    sharePointSources
+      .map(source => source.config.site.id)
+      .filter((siteId): siteId is string => !!siteId)
+  )
+  let hasStoreAccessFailures = $derived(
+    files.some(
+      file =>
+        file.status === KnowledgeBaseFileStatus.FAILED &&
+        file.errorMessage?.includes("Reset store")
+    )
   )
 
-  const customRenderers = [
-    {
-      column: "enabled",
-      component: KnowledgeBaseToggleRenderer,
-    },
-    {
-      column: "manage",
-      component: KnowledgeBaseManageRenderer,
-    },
-  ]
+  const refreshDeploymentStatus = async () => {
+    await workspaceDeploymentStore.fetch()
+  }
+
+  const syncOperationFromStore = () => {
+    if (!agentId || !operationId) {
+      return
+    }
+    const latest = agentsStore.getAgentOperation(agentId, operationId)
+    if (!latest) {
+      return
+    }
+    operation = {
+      ...operation,
+      knowledgeBases: latest.knowledgeBases,
+      knowledgeSources: latest.knowledgeSources,
+      allowKnowledgeSourceDownload: latest.allowKnowledgeSourceDownload,
+    }
+  }
+
+  const showSharePointSyncResult = (
+    result: SyncAgentKnowledgeSourcesResponse
+  ) => {
+    const alreadySynced = result.alreadySynced
+    const deleted = result.deleted || 0
+    const discovered = result.totalDiscovered ?? result.synced + alreadySynced
+
+    if (result.synced === 0 && result.failed === 0) {
+      if (deleted > 0 || alreadySynced > 0) {
+        const details = [
+          alreadySynced > 0 ? `${alreadySynced} already synced` : "",
+          deleted > 0 ? `${deleted} removed by filters` : "",
+        ]
+          .filter(Boolean)
+          .join(", ")
+        notifications.info(
+          `SharePoint sync complete (0 new files${details ? `, ${details}` : ""})`
+        )
+        return
+      }
+      if (discovered === 0) {
+        notifications.info("No files found in selected SharePoint site(s)")
+        return
+      }
+    }
+
+    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""}${deleted > 0 ? `, ${deleted} removed by filters` : ""})`
+
+    if (result.failed > 0 && result.synced === 0) {
+      notifications.error(message)
+    } else if (result.failed > 0) {
+      notifications.warning(message)
+    } else {
+      notifications.success(message)
+    }
+  }
+
+  let fileTableRows = $derived.by(() =>
+    toFileTableRows(
+      files.filter(file => !file.source),
+      removeFile,
+      uploadState.pendingUploads
+    )
+  )
+  let sharePointConnectionRows = $derived.by(() =>
+    toSharePointConnectionRows({
+      sharePointSources,
+      sharePointSourceSnapshots,
+      onDelete: removeSharePointSite,
+      onSync: syncSharePointNow,
+    })
+  )
+  let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => [
+    ...sharePointConnectionRows,
+    ...fileTableRows,
+  ])
+
+  $effect(() => {
+    if (!agentId || !operationId) {
+      return
+    }
+    agentsStore
+      .ensureOperationKnowledgeLoaded(agentId, operationId)
+      .catch(error => {
+        console.error(error)
+        notifications.error("Failed to load knowledge")
+      })
+  })
 
   onMount(async () => {
-    if (!$agentsStore.agentsLoaded) {
-      await agentsStore.init()
+    try {
+      if (!$agentsStore.agentsLoaded) {
+        await agentsStore.init()
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to load files")
     }
-    await Promise.all([aiConfigsStore.fetch(), knowledgeBaseStore.fetch()])
   })
 
   onDestroy(() => {
-    clearAutoSave()
+    agentsStore.stopOperationKnowledgePolling()
   })
+
+  async function openSharePointFlow() {
+    if (!hasSharePointConnection) {
+      bb.settings("/connections/apis/new/microsoft-sharepoint")
+      return
+    }
+    await selectSharePointSiteModal?.show()
+  }
+
+  async function onSharePointSiteCreated(
+    siteId: string,
+    mode: SharePointSelectionMode
+  ) {
+    if (!agentId || !operationId) {
+      return
+    }
+    syncOperationFromStore()
+    selectedSharePointSiteId = siteId
+    selectSharePointSiteModal?.hide()
+    if (mode === "selective") {
+      await selectSharePointFilesModal?.show()
+    }
+  }
+
+  async function openSharePointSiteSelectionModal(siteId: string) {
+    selectedSharePointSiteId = siteId
+    await selectSharePointFilesModal?.show()
+  }
+
+  async function openSharePointSiteConfigModal(siteId: string) {
+    selectedSharePointSiteId = siteId
+    displaySharePointSiteModal?.show()
+  }
+
+  const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
+    if (row.kind !== "sharepoint_connection") {
+      return
+    }
+    openSharePointSiteConfigModal(row.siteId).catch(error => {
+      console.error(error)
+      notifications.error("Failed to load SharePoint folders/files")
+    })
+  }
+
+  async function syncSharePointNow(sourceId: string) {
+    if (!agentId || !operationId) {
+      return
+    }
+
+    try {
+      const result = await agentsStore.syncOperationKnowledgeSources(
+        agentId,
+        operationId,
+        sourceId
+      )
+      await refreshDeploymentStatus()
+      showSharePointSyncResult(result)
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to sync SharePoint")
+    }
+  }
+
+  async function removeSharePointSite(siteId: string) {
+    if (!agentId || !operationId || sharePointSources.length === 0) {
+      return
+    }
+    const siteName =
+      sharePointSources
+        .map(source => source.config.site)
+        .find(site => site?.id === siteId)?.name || "this SharePoint site"
+
+    await confirm({
+      title: "Confirm deletion",
+      body: `Are you sure you want to remove ${siteName}? This action can't be undone.`,
+      okText: "Delete",
+      onConfirm: async () => {
+        try {
+          await agentsStore.disconnectOperationSharePointSite(
+            agentId,
+            operationId,
+            siteId
+          )
+          syncOperationFromStore()
+          await refreshDeploymentStatus()
+          notifications.success("SharePoint site removed")
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to remove SharePoint site")
+        }
+      },
+    })
+  }
+
+  async function removeFile(file: KnowledgeBaseFile) {
+    const fileId = file._id
+    if (!agentId || !operationId || !fileId) {
+      return
+    }
+
+    await confirm({
+      title: "Confirm deletion",
+      body: `Are you sure you want to remove ${file.filename}? This action can't be undone.`,
+      okText: "Delete",
+      onConfirm: async () => {
+        try {
+          await agentsStore.removeOperationKnowledgeFile(
+            agentId,
+            operationId,
+            fileId
+          )
+          await refreshDeploymentStatus()
+          notifications.success("File removed")
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to remove file")
+        }
+      },
+    })
+  }
+
+  async function resetKnowledgeStore() {
+    if (!agentId || !operationId) {
+      return
+    }
+
+    await confirm({
+      title: "Reset knowledge store",
+      body: `This will recreate the underlying vector store and re-queue all sync files for ingestion. Use this if uploads are failing due to an inaccessible store.`,
+      okText: "Reset",
+      onConfirm: async () => {
+        resetting = true
+        try {
+          await agentsStore.resetOperationKnowledgeBaseStore(
+            agentId,
+            operationId
+          )
+          notifications.success(
+            "Knowledge store reset - files are re-queued for ingestion"
+          )
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to reset knowledge store")
+        } finally {
+          resetting = false
+        }
+      },
+    })
+  }
 </script>
 
 <Layout gap="S" noPadding>
-  {#if $knowledgeBaseStore.loading && !$knowledgeBaseStore.loaded}
-    <div class="loading-state">
-      <ProgressCircle size="S" />
-      <Body size="S">Loading knowledge bases...</Body>
+  <div class="section-header">
+    <Body size="S">Knowledge</Body>
+    <div class="section-header-actions">
+      {#if hasStoreAccessFailures}
+        <Button
+          quiet
+          size="S"
+          secondary
+          disabled={resetting}
+          iconColor="var(--orange)"
+          icon="cloud-rain"
+          on:click={resetKnowledgeStore}
+        >
+          Reset store
+        </Button>
+      {/if}
+      <KnowledgeAddControls
+        {agentId}
+        {operationId}
+        onUploaded={async () => {
+          syncOperationFromStore()
+          await refreshDeploymentStatus()
+        }}
+        onSharePoint={() =>
+          openSharePointFlow().catch(error => {
+            console.error(error)
+            notifications.error("Failed to fetch SharePoint sites")
+          })}
+      />
     </div>
-  {:else if knowledgeBases.length === 0 && $knowledgeBaseStore.loaded}
-    <div class="empty-state">
-      <img class="empty-state-image" src={EmptyStateImage} alt="" />
-      <div class="empty-state-copy">
-        <Body size="S">No knowledge bases attached</Body>
-        This agent currently has no access to documents. Attach a knowledge base
-        to enable document search.
-      </div>
-      <Button
-        on:click={() => bb.settings("/connections/knowledge-bases/new")}
-        size="S"
-        cta>Create knowledge base</Button
-      >
-    </div>
-  {:else if knowledgeBases.length > 0}
-    <div class="knowledge-header">
-      <Body size="XS">Knowledge bases</Body>
+  </div>
 
-      <Button
-        icon="plus"
-        size="S"
-        secondary
-        on:click={() => bb.settings("/connections/knowledge-bases/new")}
-        >Add knowledge base</Button
-      >
-    </div>
-    <Table
-      compact
-      quiet
-      rounded
-      allowClickRows={false}
-      allowEditRows={false}
-      allowEditColumns={false}
-      data={tableRows}
-      schema={{
-        enabled: { displayName: "", width: "48px" },
-        name: {},
-        embeddingModel: { displayName: "Embedding model" },
-        files: { displayName: "# Files", width: "60px" },
-        manage: { displayName: "", width: "88px" },
+  <div class="sources-access">
+    <Toggle
+      bind:value={operation.allowKnowledgeSourceDownload}
+      disabled={savingAllowKnowledgeSourceDownload || !agentId}
+      on:change={async () => {
+        savingAllowKnowledgeSourceDownload = true
+        try {
+          await tick()
+          await onUpdated()
+        } finally {
+          savingAllowKnowledgeSourceDownload = false
+        }
       }}
-      {customRenderers}
     />
-  {/if}
+    <div>
+      <Body
+        color={"var(--spectrum-global-color-gray-900)"}
+        weight="500"
+        size="XS"
+      >
+        Allow users to download knowledge source files from chat
+      </Body>
+      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
+        When disabled, chat still shows which files were used, without a
+        download link.
+      </Body>
+    </div>
+  </div>
+
+  <KnowledgeTable
+    {loading}
+    isUploading={uploadState.uploading}
+    rows={knowledgeTableRows}
+    onRowClick={handleKnowledgeRowClick}
+  />
 </Layout>
 
+<SelectSharePointSiteModal
+  bind:this={selectSharePointSiteModal}
+  agentId={agentId || ""}
+  {operationId}
+  existingSiteIds={selectedSiteIds}
+  onCreated={onSharePointSiteCreated}
+/>
+
+<DisplaySharePointSiteModal
+  bind:this={displaySharePointSiteModal}
+  {agentId}
+  {operationId}
+  siteId={selectedSharePointSiteId}
+  onEdit={openSharePointSiteSelectionModal}
+/>
+
+<SelectSharePointFilesModal
+  bind:this={selectSharePointFilesModal}
+  {agentId}
+  {operationId}
+  siteId={selectedSharePointSiteId}
+/>
+
 <style>
-  .knowledge-header {
+  .sources-access {
+    display: flex;
+  }
+
+  .section-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-m);
   }
 
-  .loading-state {
+  .section-header-actions {
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-    padding: 24px 0;
-  }
-
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 24px 16px;
-    text-align: center;
-  }
-
-  .empty-state-image {
-    width: 140px;
-    height: 140px;
-    object-fit: cover;
-  }
-
-  .empty-state-copy {
-    width: 400px;
-    max-width: 100%;
-    color: var(--spectrum-global-color-gray-600);
   }
 </style>

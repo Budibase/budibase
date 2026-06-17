@@ -4,8 +4,7 @@
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import {
-    Constants,
-    CookieUtils,
+    redirectToLoginWithReturnUrl,
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
@@ -32,6 +31,7 @@
     recaptchaStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
+  import SessionAuthBanner from "./overlay/SessionAuthBanner.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
   import InstallPrompt from "./overlay/InstallPrompt.svelte"
@@ -62,6 +62,8 @@
   import PausedChat from "./app/PausedChat.svelte"
 
   // Provide contexts
+
+  $: layoutInstance = $screenStore.activeLayout?.props
   const context = createContextStore()
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
@@ -116,9 +118,7 @@
       } else {
         // If they have no screens and are not logged in, it probably means
         // they should log in to gain access
-        const returnUrl = `${window.location.pathname}${window.location.hash}`
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
-        window.location = "/builder/auth/login"
+        redirectToLoginWithReturnUrl()
       }
     }
   }
@@ -225,10 +225,11 @@
     class="spectrum spectrum--medium {resolvedThemeClassNames}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
+    style={$themeStore.customThemeCss}
   >
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
-    {:else if $featuresStore.recaptchaEnabled && $appStore.application?.features?.recaptchaEnabled && $appStore.recaptchaKey && !$recaptchaStore.verified && !$builderStore.inBuilder}
+    {:else if $appStore.recaptchaEnabled && $appStore.application?.features?.recaptchaEnabled && $appStore.recaptchaKey && !$recaptchaStore.verified && !$builderStore.inBuilder}
       <RecaptchaV2 />
     {:else}
       <EmbedProvider>
@@ -253,11 +254,16 @@
                         class:preview={$builderStore.inBuilder}
                         class:tablet-preview={displayPreviewDevice === "tablet"}
                         class:mobile-preview={displayPreviewDevice === "mobile"}
+                        class:modal-tablet-preview={$builderStore.previewModalDevice ===
+                          "tablet"}
                         class:modal-mobile-preview={$builderStore.previewModalDevice ===
                           "mobile"}
                       >
                         <!-- Actual app -->
                         <div id="app-root">
+                          <div class="banner-container"></div>
+                          <SessionAuthBanner />
+
                           {#if showDevTools}
                             <DevToolsHeader />
                           {/if}
@@ -323,7 +329,7 @@
                                 {#key $screenStore.activeLayout._id}
                                   <Component
                                     isLayout
-                                    instance={$screenStore.activeLayout.props}
+                                    instance={layoutInstance}
                                   />
                                 {/key}
 
@@ -383,6 +389,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    font-family: var(--font-sans);
   }
   #spectrum-root.builder {
     background: transparent;
@@ -411,6 +418,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    font-family: var(--font-sans);
   }
 
   #app-body {
@@ -486,6 +494,13 @@
   }
   #clip-root.modal-mobile-preview {
     padding: 0;
+  }
+  #clip-root.modal-tablet-preview {
+    padding: 0;
+  }
+  #clip-root.modal-tablet-preview.tablet-preview {
+    width: 100%;
+    height: 100%;
   }
   #clip-root.modal-mobile-preview.mobile-preview {
     width: 100%;

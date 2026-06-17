@@ -7,11 +7,10 @@ import {
 import TestConfiguration from "./TestConfiguration"
 
 export async function setupDefaultCompletionsAIConfig(
-  config: TestConfiguration
+  config: TestConfiguration,
+  configId = docIds.generateAIConfigID()
 ): Promise<() => Promise<void>> {
   const created: { workspaceId: string; id: string; rev: string }[] = []
-
-  const configId = docIds.generateAIConfigID()
   await config.withApp(config.getDevWorkspaceId(), async () => {
     const db = context.getWorkspaceDB()
     const workspaceId = config.getDevWorkspaceId()

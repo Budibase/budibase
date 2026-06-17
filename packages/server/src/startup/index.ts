@@ -28,7 +28,7 @@ import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
-import { rag } from "../sdk/workspace/ai"
+import { rag, tests as agentTests } from "../sdk/workspace/ai"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
@@ -94,8 +94,8 @@ async function initPro() {
   await pro.init({
     backups: {
       processing: {
-        exportAppFn: sdk.backups.exportApp,
-        importAppFn: sdk.backups.importApp,
+        exportWorkspaceFn: sdk.backups.exportWorkspace,
+        importWorkspaceFn: sdk.backups.importApp,
         statsFn: sdk.backups.calculateBackupStats,
       },
     },
@@ -164,10 +164,22 @@ export async function startup(
   // get the references to the queue promises, don't await as
   // they will never end, unless the processing stops
   let queuePromises = []
-  // configure events to use the pro audit log write
+  // configure events processors with pro dependencies
   // can't integrate directly into backend-core due to cyclic issues
-  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
-  queuePromises.push(rag.queue.init())
+  queuePromises.push(
+    events.processors.init(
+      pro.sdk.auditLogs.write,
+      pro.sdk.licensing.client.getLicenseKey
+    )
+  )
+  queuePromises.push(rag.ragQueue.init())
+  queuePromises.push(rag.knowledgeSourceSyncQueue.init())
+  queuePromises.push(agentTests.init())
+  queuePromises.push(
+    rag.knowledgeSourceSyncQueue.rehydrateScheduledJobs().catch(err => {
+      console.error("Failed to rehydrate knowledge source sync jobs", err)
+    })
+  )
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())

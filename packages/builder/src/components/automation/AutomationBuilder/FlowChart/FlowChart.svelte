@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { onMount, onDestroy, setContext } from "svelte"
+  import { onMount, onDestroy, setContext, tick } from "svelte"
   import { writable, get } from "svelte/store"
   import dayjs from "dayjs"
   import {
     notifications,
     Modal,
-    Toggle,
     ActionButton,
     Switcher,
     StatusLight,
@@ -14,17 +13,20 @@
   import {
     PublishResourceState,
     AutomationStatus,
+    isBranchStep,
     type UIAutomation,
-    type LayoutDirection,
     type BlockRef,
   } from "@budibase/types"
   import {
     automationStore,
     automationHistoryStore,
+    MAX_STICKY_NOTES_PER_AUTOMATION,
     selectedAutomation,
     workspaceDeploymentStore,
     deploymentStore,
+    contextMenuStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
@@ -34,9 +36,21 @@
     dagreLayoutAutomation,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
+  import {
+    NODE_SPACING,
+    DEFAULT_NODE_WIDTH,
+    DEFAULT_NODE_HEIGHT,
+  } from "./FlowCanvas/FlowGeometry"
+  import {
+    MIN_STICKY_NOTE_WIDTH,
+    MIN_STICKY_NOTE_HEIGHT,
+    getBoundsOfFlowBounds,
+    getStickyNoteBounds,
+    clampStickyNoteToGraphBounds,
+    clampStickyNoteToViewportBounds,
+    type FlowBounds,
+  } from "./FlowCanvas/StickyNoteBounds"
 
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
   import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
@@ -44,21 +58,28 @@
   import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
   import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
   import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
+  import StickyNoteNode from "./FlowCanvas/nodes/StickyNoteNode.svelte"
 
   import {
     SvelteFlow,
-    Background,
-    BackgroundVariant,
     useSvelteFlow,
+    getViewportForBounds,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
     type EdgeTypes,
+    type Viewport,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import FlowControls from "./Controls.svelte"
 
   export let automation: UIAutomation
+
+  const VIEWPORT_ANIMATION_DURATION = 180
+  const MIN_ZOOM = 0.5
+  const MAX_ZOOM = 2.5
+  const ACTION_PANEL_DEFAULT_WIDTH = 480
+  const ACTION_PANEL_STORAGE_KEY = "automation-side-panel-width"
 
   const memoAutomation = memo(automation)
 
@@ -73,20 +94,41 @@
   }
 
   let testDataModal: Modal
-  let confirmDeleteDialog
   let blockRefs: Record<string, BlockRef> = {}
   let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
+  let flowControlsEl: HTMLDivElement | null = null
+  let paneResizeObserver: ResizeObserver | undefined
   let changingStatus = false
 
   let initialViewportApplied = false
   let preserveViewport = false
-  let layoutDirection: LayoutDirection = automation.layoutDirection || "TB"
-
+  let visibleSelectionRequest: string | undefined
+  let lastVisibleSelectionCheck: string | undefined
+  let lastVisibleActionTargetCheck: string | undefined
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
+  let flowViewport = writable<Viewport>({ x: 0, y: 0, zoom: 1 })
+  let focusNodeRequest = writable<{
+    nodeId: string
+    direction?: -1 | 1
+    zoom?: number
+    ensureVisible?: boolean
+  } | null>(null)
 
-  const { getViewport, setViewport } = useSvelteFlow()
+  const { getViewport, setViewport, getNodes, getNodesBounds } = useSvelteFlow()
+  $: stickyNotes = $selectedAutomation?.data?.uiTree?.stickyNotes || []
+  $: stickyNoteLayerTransform = `translate(${$flowViewport.x}px, ${
+    $flowViewport.y
+  }px) scale(${$flowViewport.zoom})`
+  $: stickyNoteAddPosition =
+    paneEl && $nodes ? getStickyNoteAddPosition($flowViewport) : undefined
+  $: canAddMoreStickyNotes =
+    stickyNotes.length < MAX_STICKY_NOTES_PER_AUTOMATION
+  $: canAddStickyNote = !!stickyNoteAddPosition && canAddMoreStickyNotes
+  $: addStickyNoteDisabledReason = canAddMoreStickyNotes
+    ? "Move closer to add a note"
+    : `Maximum of ${MAX_STICKY_NOTES_PER_AUTOMATION} notes reached`
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -100,13 +142,13 @@
   setContext("draggableView", view)
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
+  setContext("focusNodeRequest", focusNodeRequest)
 
-  $: updateGraph(blocks, layoutDirection)
+  $: updateGraph(blocks)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  $: displayToggleValue =
-    automation.publishStatus.state === PublishResourceState.PUBLISHED
+  $: isLive = automation.publishStatus.state === PublishResourceState.PUBLISHED
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set($selectedAutomation.data || automation)
@@ -122,15 +164,12 @@
 
   $: viewMode = $automationStore.viewMode
 
-  const updateGraph = async (
-    blocks: AutomationBlock[],
-    direction: LayoutDirection
-  ) => {
+  const updateGraph = async (blocks: AutomationBlock[]) => {
     if (!preserveViewport) {
       initialViewportApplied = false
     }
     preserveViewport = true
-    const xSpacing = 300
+    const xSpacing = 0
     const ySpacing = 340
 
     const newNodes: FlowNode[] = []
@@ -142,20 +181,35 @@
       blockRefs,
       newNodes,
       newEdges,
-      direction,
     }
 
     // Build graph via helpers
     buildTopLevelGraph(blocks, deps)
 
-    // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
-      { rankdir: direction, ranksep: 100, nodesep: 100, compactLoops: true }
+      {
+        ranksep: xSpacing,
+        nodesep: NODE_SPACING,
+        compactLoops: true,
+      }
     )
 
-    nodes.set(laidOut.nodes)
-    edges.set(laidOut.edges)
+    const selectable = viewMode === ViewMode.EDITOR
+
+    nodes.set(
+      laidOut.nodes.map(node => ({
+        ...node,
+        selected: false,
+        selectable,
+      }))
+    )
+    edges.set(
+      laidOut.edges.map(edge => ({
+        ...edge,
+        selected: false,
+      }))
+    )
   }
 
   $: if ($nodes?.length && !initialViewportApplied && paneEl) {
@@ -163,12 +217,88 @@
     initialViewportApplied = true
   }
 
+  $: if ($focusNodeRequest && paneEl && $nodes?.length) {
+    const targetNode = $nodes.find(
+      node => node.id === $focusNodeRequest?.nodeId
+    )
+    if (targetNode) {
+      if ($focusNodeRequest.ensureVisible) {
+        ensureSelectedNodeVisible($focusNodeRequest.nodeId)
+      } else {
+        focusOnNode(
+          targetNode,
+          $focusNodeRequest.direction,
+          $focusNodeRequest.zoom
+        )
+      }
+      focusNodeRequest.set(null)
+    }
+  }
+
+  $: if (
+    !$automationStore.selectedNodeId &&
+    !$automationStore.selectedBranchNode
+  ) {
+    lastVisibleSelectionCheck = undefined
+  }
+
+  $: if (
+    $automationStore.selectedNodeId &&
+    $automationStore.selectedNodeId !== lastVisibleSelectionCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleSelectionCheck = $automationStore.selectedNodeId
+    visibleSelectionRequest = $automationStore.selectedNodeId
+    ensureSelectedNodeVisible($automationStore.selectedNodeId, {
+      rightInset: getActionPanelWidth(),
+    })
+  }
+
+  $: if (
+    $automationStore.selectedBranchNode?.nodeId &&
+    $automationStore.selectedBranchNode.nodeId !== lastVisibleSelectionCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
+    visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
+    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId, {
+      rightInset: getActionPanelWidth(),
+    })
+  }
+
+  $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
+    $automationStore.actionPanelBlock
+  )
+
+  $: if (
+    actionPanelTargetNodeId &&
+    actionPanelTargetNodeId !== lastVisibleActionTargetCheck &&
+    paneEl &&
+    $nodes?.length
+  ) {
+    lastVisibleActionTargetCheck = actionPanelTargetNodeId
+    visibleSelectionRequest = actionPanelTargetNodeId
+    ensureSelectedNodeVisible(actionPanelTargetNodeId, {
+      rightInset: getActionPanelWidth(),
+    })
+  }
+
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
     $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
 
-  // Keep the trigger focused on load and when changing layout
+  const setSyncedViewport = (
+    viewport: Viewport,
+    options?: Parameters<typeof setViewport>[1]
+  ) => {
+    flowViewport.set(viewport)
+    setViewport(viewport, options)
+  }
+
+  // Keep the trigger focused on load
   const focusOnTrigger = () => {
     if (!paneEl || $nodes.length === 0) {
       return
@@ -177,26 +307,242 @@
     const triggerNode = $nodes[0]
 
     const paneRect = paneEl.getBoundingClientRect()
-    const nodeWidth = 320
-    const nodeHeight = 150
-    const nodeOffset = 100
-
-    let x, y
+    const nodeHeight = DEFAULT_NODE_HEIGHT
+    const nodeOffset = NODE_SPACING
 
     // These assume the trigger is at x=0, y=0
-    if (layoutDirection === "LR") {
-      // Center vertically with a slight left offset
-      const paneHeight = paneRect.height
-      x = nodeOffset - triggerNode.position.x
-      y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
-    } else {
-      // Vertical mode. Center horizontally, top offset
-      const paneWidth = paneRect.width
-      x = paneWidth / 2 - triggerNode.position.x - nodeWidth / 2
-      y = nodeOffset - triggerNode.position.y
+    const paneHeight = paneRect.height
+    const x = nodeOffset - triggerNode.position.x
+    const y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
+
+    setSyncedViewport({ x, y, zoom: 1 }, { duration: 0 })
+  }
+
+  const focusOnNode = (
+    targetNode: FlowNode,
+    direction?: -1 | 1,
+    zoom?: number
+  ) => {
+    if (!paneEl) {
+      return
     }
 
-    setViewport({ x, y, zoom: 1 }, { duration: 0 })
+    const currentViewport = getViewport()
+    if (!currentViewport) {
+      return
+    }
+
+    const nodeWidth = targetNode.width || DEFAULT_NODE_WIDTH
+    const nodeHeight = targetNode.height || DEFAULT_NODE_HEIGHT
+    const desiredZoom = zoom ?? currentViewport.zoom ?? 1
+    const safeZoom = Math.min(Math.max(desiredZoom, MIN_ZOOM), MAX_ZOOM)
+
+    if (direction === -1 || direction === 1) {
+      const stride = (nodeWidth + NODE_SPACING) * safeZoom
+      const x = currentViewport.x - direction * stride
+      const y = currentViewport.y
+      setSyncedViewport(
+        { x, y, zoom: safeZoom },
+        { duration: VIEWPORT_ANIMATION_DURATION }
+      )
+      return
+    }
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const position = getAbsoluteNodePosition(targetNode)
+    const x =
+      paneRect.width / 2 - position.x * safeZoom - (nodeWidth / 2) * safeZoom
+    const y =
+      paneRect.height / 2 - position.y * safeZoom - (nodeHeight / 2) * safeZoom
+
+    setSyncedViewport(
+      { x, y, zoom: safeZoom },
+      { duration: VIEWPORT_ANIMATION_DURATION }
+    )
+  }
+
+  const getAbsoluteNodePosition = (node: FlowNode) => {
+    const position = { ...node.position }
+    let parentId = node.parentId
+    while (parentId) {
+      const parent = get(nodes).find(n => n.id === parentId)
+      if (!parent) {
+        break
+      }
+      position.x += parent.position.x
+      position.y += parent.position.y
+      parentId = parent.parentId
+    }
+    return position
+  }
+
+  const getNodeDimensions = (node: FlowNode) => {
+    const data = node.data as Record<string, unknown> | undefined
+    return {
+      width:
+        node.width ||
+        (typeof data?.laneWidth === "number" ? data.laneWidth : undefined) ||
+        (typeof data?.containerWidth === "number"
+          ? data.containerWidth
+          : undefined) ||
+        DEFAULT_NODE_WIDTH,
+      height:
+        node.height ||
+        (typeof data?.containerHeight === "number"
+          ? data.containerHeight
+          : undefined) ||
+        DEFAULT_NODE_HEIGHT,
+    }
+  }
+
+  const getAutomationViewportBounds = () => {
+    const flowNodes = getNodes()
+    const bounds: FlowBounds[] = []
+
+    if (flowNodes.length) {
+      bounds.push(getNodesBounds(flowNodes))
+    }
+    bounds.push(...stickyNotes.map(getStickyNoteBounds))
+
+    return bounds.length ? getBoundsOfFlowBounds(bounds) : undefined
+  }
+
+  const handleAutoLayout = () => {
+    if (!paneEl) {
+      return
+    }
+
+    const bounds = getAutomationViewportBounds()
+    if (!bounds) {
+      return
+    }
+
+    const rect = paneEl.getBoundingClientRect()
+    const viewport = getViewportForBounds(
+      bounds,
+      rect.width,
+      rect.height,
+      MIN_ZOOM,
+      MAX_ZOOM,
+      0.1
+    )
+    setSyncedViewport(viewport, { duration: VIEWPORT_ANIMATION_DURATION })
+  }
+
+  const getActionPanelTargetNodeId = (target: unknown) => {
+    if (!target || typeof target !== "object") {
+      lastVisibleActionTargetCheck = undefined
+      return undefined
+    }
+
+    const block = target as Record<string, unknown>
+    if (block.branchNode) {
+      const branchStepId =
+        typeof block.branchStepId === "string" ? block.branchStepId : undefined
+      const branchIdx =
+        typeof block.branchIdx === "number" ? block.branchIdx : undefined
+      if (!branchStepId || branchIdx == null) {
+        return undefined
+      }
+
+      const branchStep = automationStore.actions.getBlockByRef(
+        $selectedAutomation.data,
+        $selectedAutomation.blockRefs?.[branchStepId]
+      )
+      if (!branchStep || !isBranchStep(branchStep)) {
+        return undefined
+      }
+
+      const branchId = branchStep.inputs.branches?.[branchIdx]?.id
+      return branchId
+        ? `branch-${branchStepId}-${branchIdx}-${branchId}`
+        : undefined
+    }
+
+    if (typeof block.id === "string") {
+      const anchorNodeId = `anchor-${block.id}`
+      return get(nodes).some(node => node.id === anchorNodeId)
+        ? anchorNodeId
+        : block.id
+    }
+
+    return undefined
+  }
+
+  const getActionPanelWidth = () => {
+    const storedWidth = Number(localStorage?.getItem(ACTION_PANEL_STORAGE_KEY))
+    return Number.isFinite(storedWidth) && storedWidth > 0
+      ? storedWidth
+      : ACTION_PANEL_DEFAULT_WIDTH
+  }
+
+  const ensureSelectedNodeVisible = async (
+    nodeId: string,
+    options: { rightInset?: number } = {}
+  ) => {
+    await tick()
+    if (visibleSelectionRequest !== nodeId || !paneEl) {
+      return
+    }
+
+    const targetNode = get(nodes).find(node => node.id === nodeId)
+    const currentViewport = getViewport()
+    if (!targetNode || !currentViewport) {
+      return
+    }
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const { width: nodeWidth, height: nodeHeight } =
+      getNodeDimensions(targetNode)
+    const position = getAbsoluteNodePosition(targetNode)
+    const margin = 24
+    const rightInset = options.rightInset ?? 0
+    const visiblePaneWidth = Math.max(paneRect.width - rightInset, 0)
+    const nodeRight =
+      position.x * currentViewport.zoom +
+      currentViewport.x +
+      nodeWidth * currentViewport.zoom
+    const nodeLeft = position.x * currentViewport.zoom + currentViewport.x
+    const nodeBottom =
+      position.y * currentViewport.zoom +
+      currentViewport.y +
+      nodeHeight * currentViewport.zoom
+    const nodeTop = position.y * currentViewport.zoom + currentViewport.y
+    const xOverflow = nodeRight + margin - visiblePaneWidth
+    const xUnderflow = margin - nodeLeft
+    const yOverflow = nodeBottom + margin - paneRect.height
+    const yUnderflow = margin - nodeTop
+
+    if (
+      xOverflow <= 0 &&
+      xUnderflow <= 0 &&
+      yOverflow <= 0 &&
+      yUnderflow <= 0
+    ) {
+      return
+    }
+
+    let nextX = currentViewport.x
+    let nextY = currentViewport.y
+    if (xOverflow > 0) {
+      nextX -= xOverflow
+    } else if (xUnderflow > 0) {
+      nextX += xUnderflow
+    }
+    if (yOverflow > 0) {
+      nextY -= yOverflow
+    } else if (yUnderflow > 0) {
+      nextY += yUnderflow
+    }
+
+    setSyncedViewport(
+      {
+        x: nextX,
+        y: nextY,
+        zoom: currentViewport.zoom,
+      },
+      { duration: VIEWPORT_ANIMATION_DURATION }
+    )
   }
 
   const refresh = () => {
@@ -204,33 +550,11 @@
     blockRefs = $selectedAutomation.blockRefs
   }
 
-  const deleteAutomation = async () => {
-    try {
-      await automationStore.actions.delete(automation)
-    } catch (error) {
-      notifications.error("Error deleting automation")
-    }
-  }
-
   const publishChanges = async () => {
     try {
       await deploymentStore.publishApp()
     } catch (error) {
       notifications.error("Error publishing changes")
-    }
-  }
-
-  const saveDirectionChange = async (direction: LayoutDirection) => {
-    layoutDirection = direction
-    preserveViewport = false
-    try {
-      await automationStore.actions.save({
-        ...automation,
-        layoutDirection,
-      })
-      focusOnTrigger()
-    } catch (error) {
-      notifications.error("Unable to save layout direction")
     }
   }
 
@@ -253,12 +577,85 @@
     automationStore.actions.setViewMode(ViewMode.EDITOR)
   }
 
-  const handleToggleChange = async () => {
+  const handleToggleLive = async () => {
     try {
       changingStatus = true
-      await automationStore.actions.toggleDisabled(automation._id!)
+      await automationStore.actions.toggleDisabled(automation._id!, {
+        publish: true,
+      })
     } finally {
       changingStatus = false
+    }
+  }
+
+  const closeContextMenuOnCanvasInteraction = () => {
+    if (get(contextMenuStore).visible) {
+      contextMenuStore.close()
+    }
+  }
+
+  const handleMove = () => {
+    const viewport = getViewport()
+    if (viewport) {
+      flowViewport.set(viewport)
+    }
+    closeContextMenuOnCanvasInteraction()
+  }
+
+  const getStickyNoteAddPosition = (viewport: Viewport | undefined) => {
+    if (!paneEl || !viewport) {
+      return undefined
+    }
+    const rect = paneEl.getBoundingClientRect()
+    const toolbarRect = flowControlsEl?.getBoundingClientRect()
+    const toolbarTop = toolbarRect ? toolbarRect.top - rect.top : rect.height
+    const margin = 40
+    const toolbarTopFlowY = (toolbarTop - viewport.y) / viewport.zoom
+    const position = {
+      x: (rect.width / 2 - viewport.x) / viewport.zoom,
+      y: toolbarTopFlowY - MIN_STICKY_NOTE_HEIGHT - margin,
+    }
+    const flowNodes = getNodes()
+    const graphPosition = flowNodes.length
+      ? clampStickyNoteToGraphBounds(position, getNodesBounds(flowNodes), {
+          width: MIN_STICKY_NOTE_WIDTH,
+          height: MIN_STICKY_NOTE_HEIGHT,
+        })
+      : position
+
+    const viewportPosition = clampStickyNoteToViewportBounds(
+      graphPosition,
+      viewport,
+      { width: rect.width, height: rect.height },
+      {
+        width: MIN_STICKY_NOTE_WIDTH,
+        height: MIN_STICKY_NOTE_HEIGHT,
+      }
+    )
+
+    return graphPosition.x === viewportPosition.x &&
+      graphPosition.y === viewportPosition.y
+      ? graphPosition
+      : undefined
+  }
+
+  const handleAddNote = () => {
+    if (!canAddMoreStickyNotes) {
+      return
+    }
+
+    const position = getStickyNoteAddPosition(getViewport())
+    if (!position) {
+      return
+    }
+
+    automationStore.actions.addStickyNote(position)
+  }
+
+  const handleCanvasPointerMove = (e: PointerEvent) => {
+    dnd.handlePointerMove(e)
+    if (e.buttons > 0) {
+      closeContextMenuOnCanvasInteraction()
     }
   }
 
@@ -276,10 +673,17 @@
       console.error(error)
     }
     dnd.setPaneEl(paneEl)
+    paneResizeObserver = new ResizeObserver(() => {
+      dnd.updatePaneRect()
+    })
+    if (paneEl) {
+      paneResizeObserver.observe(paneEl)
+    }
     dnd.initDnD()
   })
 
   onDestroy(() => {
+    paneResizeObserver?.disconnect()
     dnd.destroyDnD()
   })
 </script>
@@ -323,7 +727,6 @@
     </div>
 
     <ActionButton
-      icon="play"
       quiet
       disabled={!automation?.definition?.trigger}
       on:click={() => {
@@ -333,15 +736,11 @@
       Run test
     </ActionButton>
 
-    <PublishStatusBadge
-      status={automation.publishStatus.state}
-      loading={changingStatus}
-    />
     <div class="toggle-active setting-spacing">
-      <Toggle
-        on:change={handleToggleChange}
+      <LiveToggleButton
+        live={isLive}
         disabled={!automation?.definition?.trigger || changingStatus}
-        value={displayToggleValue}
+        on:click={handleToggleLive}
       />
     </div>
   </div>
@@ -350,45 +749,56 @@
 <div class="main-flow">
   <div class="root">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="wrapper"
       bind:this={paneEl}
-      on:mousemove={dnd.handlePointerMove}
-      on:mousedown={dnd.updatePaneRect}
+      on:pointermove={handleCanvasPointerMove}
+      on:mousedown={() => {
+        dnd.updatePaneRect()
+      }}
     >
       <SvelteFlow
         {nodes}
         {nodeTypes}
         {edges}
         {edgeTypes}
+        viewport={flowViewport}
         colorMode="system"
-        nodesDraggable={false}
-        minZoom={0.4}
-        maxZoom={1}
+        nodesDraggable={true}
+        elementsSelectable={viewMode === ViewMode.EDITOR}
+        minZoom={MIN_ZOOM}
+        maxZoom={MAX_ZOOM}
         deleteKey={null}
         proOptions={{ hideAttribution: true }}
+        onMoveStart={closeContextMenuOnCanvasInteraction}
+        onMove={handleMove}
+        on:paneclick={closeContextMenuOnCanvasInteraction}
       >
         <FlowControls
+          bind:controlsEl={flowControlsEl}
           historyStore={automationHistoryStore}
-          {layoutDirection}
-          onChangeDirection={saveDirectionChange}
+          canAddNote={canAddStickyNote}
+          addNoteDisabledReason={addStickyNoteDisabledReason}
+          onAddNote={handleAddNote}
+          onAutoLayout={handleAutoLayout}
         />
-        <Background variant={BackgroundVariant.Dots} gap={25} />
+        <div
+          class="sticky-note-layer"
+          style:transform={stickyNoteLayerTransform}
+        >
+          {#each stickyNotes as note (note.id)}
+            <StickyNoteNode
+              data={{ note }}
+              positionAbsoluteX={note.x}
+              positionAbsoluteY={note.y}
+            />
+          {/each}
+        </div>
       </SvelteFlow>
     </div>
   </div>
 </div>
-
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  okText="Delete Automation"
-  onOk={deleteAutomation}
-  title="Confirm Deletion"
->
-  Are you sure you wish to delete the automation
-  <i>{automation.name}?</i>
-  This action cannot be undone.
-</ConfirmDialog>
 
 <Modal
   bind:this={testDataModal}
@@ -404,6 +814,9 @@
   .wrapper {
     position: relative;
     height: 100%;
+    overflow: hidden;
+    background-color: var(--xy-background-color);
+    --automation-flow-item-background: var(--background);
     --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
     --xy-node-background-color: var(--background);
@@ -419,13 +832,21 @@
     --xy-controls-button-background-color: var(
       --spectrum-global-color-gray-200
     );
-    --xy-edge-stroke: var(--spectrum-global-color-gray-400);
+    --xy-edge-stroke: var(--spectrum-global-color-gray-300);
+  }
+
+  :global(.spectrum--dark) .wrapper,
+  :global(.spectrum--darkest) .wrapper,
+  :global(.spectrum--midnight) .wrapper,
+  :global(.spectrum--nord) .wrapper {
+    --automation-flow-item-background: var(--spectrum-global-color-gray-200);
   }
 
   .main-flow {
     position: relative;
     width: 100%;
     height: 100%;
+    background-color: var(--xy-background-color);
   }
 
   .automation-heading {
@@ -452,11 +873,33 @@
   .root {
     height: 100%;
     width: 100%;
+    background-color: var(--xy-background-color);
+  }
+
+  .sticky-note-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: top left;
+    pointer-events: none;
+    z-index: 1002;
   }
 
   .root :global(.svelte-flow__edgelabel-renderer) {
     z-index: 4;
     pointer-events: none;
+  }
+
+  .root :global(.svelte-flow__edge-interaction) {
+    stroke-width: 12;
+  }
+
+  .root :global(.svelte-flow__pane) {
+    background-color: var(--xy-background-color);
+  }
+
+  .root :global(.svelte-flow) {
+    background-color: var(--xy-background-color);
   }
 
   .root :global(.block) {
@@ -467,7 +910,8 @@
   }
 
   .root :global(.blockSection) {
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     box-sizing: border-box;
   }
 
@@ -483,7 +927,10 @@
   }
 
   :global(.svelte-flow__handle.custom-handle) {
-    background-color: var(--spectrum-global-color-gray-700);
+    background-color: var(
+      --automation-flow-handle-color,
+      var(--spectrum-global-color-gray-700)
+    );
     border-radius: 1px;
     width: 8px;
     height: 4px;

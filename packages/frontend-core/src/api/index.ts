@@ -47,6 +47,7 @@ import { buildMigrationEndpoints } from "./migrations"
 import { buildRowActionEndpoints } from "./rowActions"
 import { buildOAuth2Endpoints } from "./oauth2"
 import { buildAgentEndpoints } from "./agents"
+import { buildAgentTestEndpoints } from "./agentTests"
 import { buildAgentLogEndpoints } from "./agentLogs"
 import { buildChatAppEndpoints } from "./chatApps"
 import { buildFeatureFlagEndpoints } from "./features"
@@ -58,8 +59,6 @@ import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
-import { buildVectorDbEndpoints } from "./vectorDbs"
-import { buildKnowledgeBaseEndpoints } from "./knowledgeBases"
 
 export type { APIClient } from "./types"
 
@@ -158,7 +157,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       headers["Content-Type"] = "application/json"
     }
     if (config?.attachHeaders) {
-      config.attachHeaders(headers)
+      config.attachHeaders(headers, { url, method })
     }
 
     // Build request body
@@ -319,6 +318,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildLogsEndpoints(API),
     ...buildMigrationEndpoints(API),
     ...buildAgentEndpoints(API),
+    ...buildAgentTestEndpoints(API),
     ...buildAgentLogEndpoints(API),
     ...buildChatAppEndpoints(API),
     ...buildFeatureFlagEndpoints(API),
@@ -333,7 +333,5 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     resource: buildResourceEndpoints(API),
     recaptcha: buildRecaptchaEndpoints(API),
     aiConfig: buildAIConfigEndpoints(API),
-    vectorDb: buildVectorDbEndpoints(API),
-    knowledgeBase: buildKnowledgeBaseEndpoints(API),
   }
 }

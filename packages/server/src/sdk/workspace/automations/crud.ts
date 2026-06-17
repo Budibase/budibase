@@ -7,8 +7,9 @@ import {
 import { automations as sharedAutomations } from "@budibase/shared-core"
 import {
   Automation,
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
   MetadataType,
-  PASSWORD_REPLACEMENT,
   RequiredKeys,
   Webhook,
   WebhookActionType,
@@ -19,13 +20,18 @@ import cloneDeep from "lodash/cloneDeep"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { deleteAutomationMailboxState } from "../../../automations/email/state"
+import { isMaskedPassword, PASSWORD_DISPLAY_MASK } from "./utils"
 
 export interface PersistedAutomation extends Automation {
   _id: string
   _rev: string
 }
 
-const PASSWORD_DISPLAY_MASK = "********"
+const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
+function getEmailTriggerAuthType(inputs?: EmailTriggerInputs) {
+  return inputs?.authType || EmailTriggerAuthType.PASSWORD
+}
 
 function getDb() {
   return context.getWorkspaceDB()
@@ -113,6 +119,7 @@ export async function find(ids: string[], opts?: { allowMissing?: boolean }) {
 
 export async function create(automation: Automation) {
   automation = trimUnexpectedObjectFields(automation)
+  validateStickyNoteLimit(automation)
   const db = getDb()
 
   // Respect existing IDs if recreating a deleted automation
@@ -139,6 +146,7 @@ export async function create(automation: Automation) {
 
 export async function update(automation: Automation) {
   automation = trimUnexpectedObjectFields(automation)
+  validateStickyNoteLimit(automation)
   if (!automation._id || !automation._rev) {
     throw new HTTPError("_id or _rev fields missing", 400)
   }
@@ -269,7 +277,7 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
     // but the trigger endpoint will always be used in production
     const prodAppId = dbCore.getProdWorkspaceID(appId)
     newTrigger.inputs = {
-      schemaUrl: `api/webhooks/schema/${appId}/${id}`,
+      schemaUrl: `api/webhooks/schema/${appId}/${id}/${webhook.schemaToken}`,
       triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,
     }
   }
@@ -305,6 +313,19 @@ function guardInvalidUpdatesAndThrow(
   }
 }
 
+function validateStickyNoteLimit(automation: Automation) {
+  const stickyNotes = automation.uiTree?.stickyNotes
+  if (
+    Array.isArray(stickyNotes) &&
+    stickyNotes.length > MAX_STICKY_NOTES_PER_AUTOMATION
+  ) {
+    throw new HTTPError(
+      `Automations cannot have more than ${MAX_STICKY_NOTES_PER_AUTOMATION} sticky notes`,
+      400
+    )
+  }
+}
+
 function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
   // This will ensure all the automation fields (and nothing else) is mapped to the result
   const allRequired: RequiredKeys<Omit<Automation, "_deleted">> = {
@@ -322,7 +343,6 @@ function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
     testData: automation.testData,
     createdAt: automation.createdAt,
     updatedAt: automation.updatedAt,
-    layoutDirection: automation.layoutDirection,
   }
   const result = { ...allRequired } as T
   for (const key in result) {
@@ -340,6 +360,15 @@ function hydrateAutomationSecrets(
   const trigger = automation.definition?.trigger
   if (!trigger || !isEmailTrigger(trigger) || !trigger.inputs) {
     return automation
+  }
+
+  if (getEmailTriggerAuthType(trigger.inputs) === EmailTriggerAuthType.OAUTH2) {
+    const hydratedAutomation = cloneDeep(automation)
+    const hydratedTrigger = hydratedAutomation.definition?.trigger
+    if (isEmailTrigger(hydratedTrigger)) {
+      delete hydratedTrigger.inputs.password
+    }
+    return hydratedAutomation
   }
 
   if (!isMaskedPassword(trigger.inputs.password)) {
@@ -366,12 +395,12 @@ function hydrateAutomationSecrets(
 
 function maskAutomationSecrets<T extends Automation>(automation: T): T {
   const trigger = automation.definition?.trigger
-  if (isEmailTrigger(trigger) && trigger.inputs?.password) {
+  if (
+    isEmailTrigger(trigger) &&
+    getEmailTriggerAuthType(trigger.inputs) === EmailTriggerAuthType.PASSWORD &&
+    trigger.inputs?.password
+  ) {
     trigger.inputs.password = PASSWORD_DISPLAY_MASK
   }
   return automation
-}
-
-function isMaskedPassword(value?: string) {
-  return value === PASSWORD_REPLACEMENT || value === PASSWORD_DISPLAY_MASK
 }

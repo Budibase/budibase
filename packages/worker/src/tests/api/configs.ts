@@ -72,6 +72,21 @@ export class ConfigAPI extends TestAPI {
     return resp.body as SaveConfigResponse
   }
 
+  uploadOIDCLogo = (name: string, buffer: Buffer, filename: string) => {
+    return this.request
+      .post(`/api/global/configs/upload/${ConfigType.OIDC_LOGOS}/${name}`)
+      .set(this.config.defaultHeaders())
+      .attach("file", buffer, filename)
+  }
+
+  uploadOIDCLogoMultiple = (name: string) => {
+    return this.request
+      .post(`/api/global/configs/upload/${ConfigType.OIDC_LOGOS}/${name}`)
+      .set(this.config.defaultHeaders())
+      .attach("file", Buffer.from("a"), "a.png")
+      .attach("file", Buffer.from("b"), "b.png")
+  }
+
   OIDCCallback = (configId: string, preAuthRes: any) => {
     const cookie = this.config.cookieHeader(preAuthRes.get("set-cookie"))
     const setKoaSession = cookie.Cookie.find((c: string) =>

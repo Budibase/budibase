@@ -10,12 +10,17 @@ export class LicenseAPI extends TestAPI {
       .post("/api/global/license/refresh")
       .set(this.config.defaultHeaders())
   }
-  getUsage = async () => {
+  getUsage = async (status = 200) => {
     return this.request
       .get("/api/global/license/usage")
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(200)
+      .expect(status)
+  }
+  getInstallInfo = async () => {
+    return this.request
+      .get("/api/global/install")
+      .set(this.config.defaultHeaders())
   }
   activateLicenseKey = async (body: ActivateLicenseKeyRequest) => {
     return this.request

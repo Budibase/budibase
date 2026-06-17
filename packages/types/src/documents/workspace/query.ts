@@ -1,6 +1,7 @@
 import { Document } from "../document"
 import { RestAuthType } from "./datasource"
 import { Row } from "./row"
+import type { RestTemplateId } from "../../ui"
 
 export interface QuerySchema {
   name?: string
@@ -34,14 +35,16 @@ export interface ImportEndpoint {
   queryString?: string
 }
 
+export type QueryFields = RestQueryFields &
+  SQLQueryFields &
+  MongoQueryFields &
+  GoogleSheetsQueryFields
+
 export interface Query extends Document {
   datasourceId: string
   name: string
   parameters: QueryParameter[]
-  fields: RestQueryFields &
-    SQLQueryFields &
-    MongoQueryFields &
-    GoogleSheetsQueryFields
+  fields: QueryFields
   transformer: string | null
   schema: Record<string, QuerySchema | string>
   nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
@@ -93,6 +96,7 @@ export interface RestQueryFields {
 }
 export interface SQLQueryFields {
   sql?: string
+  pagination?: PaginationConfig
 }
 
 export interface MongoQueryFields {
@@ -107,6 +111,7 @@ export interface MongoQueryFields {
       | "count"
       | "distinct"
       | "insertOne"
+      | "insertMany"
       | "deleteOne"
       | "deleteMany"
   }
@@ -120,11 +125,16 @@ export interface GoogleSheetsQueryFields {
 }
 
 export interface PaginationConfig {
+  // REST query pagination
   type?: string
   location?: string
   pageParam?: string
   sizeParam?: string
   responseParam?: string
+  // SQL query pagination
+  enabled?: boolean
+  offsetBinding?: string
+  limitBinding?: string
 }
 
 export interface PaginationValues {
@@ -149,6 +159,7 @@ export interface RestTemplateQueryMetadata {
   originalPath?: string
   originalRequestBody?: unknown
   defaultBindings?: Record<string, string>
+  restTemplateId?: RestTemplateId
 }
 
 // OpenAPI Security Scheme types

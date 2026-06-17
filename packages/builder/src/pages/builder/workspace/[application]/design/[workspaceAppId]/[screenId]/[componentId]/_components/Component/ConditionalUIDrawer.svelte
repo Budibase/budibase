@@ -3,15 +3,16 @@
     Button,
     Body,
     Icon,
+    Toggle,
     DrawerContent,
     Layout,
     Select,
-    DatePicker,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import ConditionValueControl from "@/components/common/ConditionValueControl.svelte"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { selectedComponent, componentStore } from "@/stores/builder"
   import { getComponentForSetting } from "@/components/design/settings/componentSettingsRegistry"
@@ -38,25 +39,6 @@
       value: "update",
     },
   ]
-  const valueTypeOptions = [
-    {
-      value: "string",
-      label: "Binding",
-    },
-    {
-      value: "number",
-      label: "Number",
-    },
-    {
-      value: "datetime",
-      label: "Date",
-    },
-    {
-      value: "boolean",
-      label: "Boolean",
-    },
-  ]
-
   let dragDisabled = true
 
   $: finalActionOptions = actionOptions ?? defaultActionOptions
@@ -78,7 +60,21 @@
     if (!link.id) {
       link.id = generate()
     }
+    if (link.valueType === "Binding") {
+      link.valueType = "string"
+    }
+    normaliseBooleanReferenceValue(link)
   })
+
+  const normaliseBooleanReferenceValue = condition => {
+    if (condition.valueType === "boolean") {
+      if (condition.referenceValue === "True") {
+        condition.referenceValue = "true"
+      } else if (condition.referenceValue === "False") {
+        condition.referenceValue = "false"
+      }
+    }
+  }
 
   const makeLabel = setting => {
     const { section, label } = setting
@@ -115,6 +111,12 @@
     conditions = [...conditions, duplicate]
   }
 
+  const toggleCondition = (id, enabled) => {
+    conditions = conditions.map(condition =>
+      condition.id === id ? { ...condition, disabled: !enabled } : condition
+    )
+  }
+
   const handleFinalize = e => {
     updateConditions(e)
     dragDisabled = true
@@ -125,7 +127,13 @@
   }
 
   const getOperatorOptions = condition => {
-    return QueryUtils.getValidOperatorsForType({ type: condition.valueType })
+    return QueryUtils.getValidOperatorsForType({
+      type: getEffectiveValueType(condition),
+    })
+  }
+
+  const getEffectiveValueType = condition => {
+    return condition.valueType === "Binding" ? "string" : condition.valueType
   }
 
   const onOperatorChange = (condition, newOperator) => {
@@ -134,7 +142,11 @@
       Constants.OperatorOptions.NotEmpty.value,
     ]
     condition.noValue = noValueOptions.includes(newOperator)
-    if (condition.noValue || newOperator === "oneOf") {
+    if (
+      condition.noValue ||
+      newOperator === "oneOf" ||
+      newOperator === "notOneOf"
+    ) {
       condition.referenceValue = null
       condition.valueType = "string"
     }
@@ -142,6 +154,9 @@
 
   const onValueTypeChange = (condition, newType) => {
     condition.referenceValue = null
+    if (newType === "boolean") {
+      condition.referenceValue = "true"
+    }
 
     // Ensure a valid operator is set
     const validOperators = QueryUtils.getValidOperatorsForType({
@@ -207,12 +222,14 @@
                 placeholder={false}
                 options={finalActionOptions}
                 bind:value={condition.action}
+                popoverAutoWidth
               />
               {#if condition.action === "update"}
                 <Select
                   options={settingOptions}
                   bind:value={condition.setting}
                   on:change={e => onSettingChange(e, condition)}
+                  popoverAutoWidth
                 />
                 <div>TO</div>
                 {#if definition}
@@ -248,36 +265,32 @@
                 options={getOperatorOptions(condition)}
                 bind:value={condition.operator}
                 on:change={e => onOperatorChange(condition, e.detail)}
+                popoverAutoWidth
               />
-              <Select
-                disabled={condition.noValue || condition.operator === "oneOf"}
-                options={valueTypeOptions}
-                bind:value={condition.valueType}
-                placeholder={false}
-                on:change={e => onValueTypeChange(condition, e.detail)}
+              <ConditionValueControl
+                disabled={condition.noValue}
+                typeSelectDisabled={condition.noValue ||
+                  condition.operator === "oneOf" ||
+                  condition.operator === "notOneOf"}
+                {bindings}
+                valueType={condition.valueType}
+                value={condition.referenceValue}
+                on:change={e => {
+                  if ("valueType" in e.detail) {
+                    condition.valueType = e.detail.valueType
+                    onValueTypeChange(condition, e.detail.valueType)
+                  }
+                  if ("value" in e.detail) {
+                    condition.referenceValue = e.detail.value
+                  }
+                }}
               />
-              {#if ["string", "number"].includes(condition.valueType)}
-                <DrawerBindableInput
-                  disabled={condition.noValue}
-                  {bindings}
-                  placeholder="Value"
-                  value={condition.referenceValue}
-                  on:change={e => (condition.referenceValue = e.detail)}
-                />
-              {:else if condition.valueType === "datetime"}
-                <DatePicker
-                  placeholder="Value"
-                  disabled={condition.noValue}
-                  bind:value={condition.referenceValue}
-                />
-              {:else if condition.valueType === "boolean"}
-                <Select
-                  placeholder="Value"
-                  disabled={condition.noValue}
-                  options={["True", "False"]}
-                  bind:value={condition.referenceValue}
-                />
-              {/if}
+              <Toggle
+                text=""
+                noMargin
+                value={!condition.disabled}
+                on:change={e => toggleCondition(condition.id, e.detail)}
+              />
               <Icon
                 name="copy"
                 hoverable
@@ -324,14 +337,14 @@
     align-items: center;
     grid-template-columns:
       auto 150px auto minmax(140px, 1fr) 120px 100px minmax(140px, 1fr)
-      auto auto;
+      auto auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
   .condition.update {
     grid-template-columns:
       auto 150px minmax(140px, 1fr) auto minmax(140px, 1fr) auto
-      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto;
+      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto auto;
   }
   .condition:hover {
     background-color: var(--spectrum-global-color-gray-100);

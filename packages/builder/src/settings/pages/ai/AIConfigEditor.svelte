@@ -65,7 +65,7 @@
         } satisfies RequiredKeys<UpdateAIConfigRequest>)
       : ({
           provider: provider ?? "",
-          name: isManagedProvider ? "bbai" : "",
+          name: isManagedProvider ? "Budibase AI" : "",
           model: isManagedProvider ? "budibase/v1" : "",
           configType,
           credentialsFields: {},
@@ -235,7 +235,7 @@
       model={draft.model}
       {providers}
       disabled={disableProviderOnEdit && isEdit}
-      on:providerChange={event => (draft.provider = event.detail)}
+      on:providerChange={event => (draft.provider = event.detail || "")}
       on:modelChange={event => (draft.model = event.detail)}
     />
 

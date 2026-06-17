@@ -1,15 +1,12 @@
 <script lang="ts">
   import { ActionButton, Body, Toggle, notifications } from "@budibase/bbui"
+  import { helpers } from "@budibase/shared-core"
   import type { ConversationStarter } from "@budibase/types"
+  import { params } from "@roxi/routify"
+  import { confirm } from "@/helpers"
   import { appStore, deploymentStore } from "@/stores/builder"
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
-  import { AGENT_CHAT_MIN_CLIENT_VERSION } from "@/constants"
-  import { isVersionAtLeast } from "@/helpers/version"
-  import { helpers } from "@budibase/shared-core"
-  import { params } from "@roxi/routify"
-  import AgentChatVersionModal from "./AgentChatVersionModal.svelte"
   import AgentSettingsModal from "../../../chat/_components/AgentSettingsModal.svelte"
-  import BudibaseLogo from "assets/bb-emblem.svg"
 
   const CHAT_UPDATE_ERROR_MESSAGE = "Could not update chat"
   const CHAT_LOAD_ERROR_MESSAGE = "Failed to load agent chat status"
@@ -22,7 +19,9 @@
     "Agent chat settings saved and published"
   const AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE =
     "Failed to save agent chat settings"
-  type ShowUI = { show: () => void }
+  const AGENT_CHAT_DEPRECATION_TITLE = "Agent Chat is deprecated"
+  const AGENT_CHAT_DEPRECATION_MESSAGE =
+    "Agent Chat will be removed in a future release. We recommend deploying your agent to Slack, Microsoft Teams, or Discord instead."
 
   export let agentId: string
   export let agentName: string
@@ -33,7 +32,6 @@
   let attemptedWorkspaceId: string | undefined
   let currentWorkspaceId: string | undefined
   let settingsOpen = false
-  let versionModal: ShowUI | undefined
 
   interface ChatAppAgentConfig {
     agentId: string
@@ -88,11 +86,6 @@
   )?.agentId
   $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
   $: disabled = toggling || loadingChatApp || !workspaceId
-  $: isChatRouteSupported = isVersionAtLeast(
-    $appStore.version,
-    AGENT_CHAT_MIN_CLIENT_VERSION
-  )
-  $: requiresClientUpdate = !isChatRouteSupported
 
   $: chatUrl = $appStore.url
     ? `${helpers.appChatUrl($appStore.url)}/agent/${encodeURIComponent(agentId)}`
@@ -144,6 +137,19 @@
     toggling = true
     const wasEnabled = enabled
     try {
+      if (!wasEnabled) {
+        const shouldEnable = await confirm({
+          title: AGENT_CHAT_DEPRECATION_TITLE,
+          body: AGENT_CHAT_DEPRECATION_MESSAGE,
+          okText: "Enable anyway",
+          cancelText: "Cancel",
+          warning: true,
+        })
+        if (!shouldEnable) {
+          return
+        }
+      }
+
       const result = await chatAppsStore.toggleAgentDeploymentInChat(
         agentId,
         targetWorkspaceId
@@ -231,40 +237,24 @@
       notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
     }
   }
-
-  const onOpenChat = (event: MouseEvent) => {
-    if (isChatRouteSupported) {
-      return
-    }
-
-    event.preventDefault()
-    versionModal?.show()
-  }
 </script>
 
 <div class="integration-row">
   <div class="channel-main">
-    <img alt="Agent Chat" width="22px" height="22px" src={BudibaseLogo} />
+    <div class="logo-placeholder" aria-hidden="true"></div>
     <div class="channel-details">
       <Body color={"var(--spectrum-global-color-gray-900)"} size="XS"
         >Agent Chat</Body
       >
-      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
-        >An out-of-the-box chat application for AI agents</Body
+      <Body color={"var(--spectrum-global-color-orange-900)"} size="XS"
+        >Deprecated: Agent Chat will be removed in a future release.</Body
       >
     </div>
   </div>
   <div class="row-action">
     {#if enabled && chatUrl}
-      <a
-        class="chat-link"
-        class:update-link={requiresClientUpdate}
-        href={chatUrl}
-        target="_blank"
-        rel="noreferrer"
-        on:click={onOpenChat}
-      >
-        {requiresClientUpdate ? "Requires update" : "Open chat"}
+      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
+        Open chat
       </a>
     {/if}
     <ActionButton
@@ -294,8 +284,6 @@
   }}
 />
 
-<AgentChatVersionModal bind:this={versionModal} />
-
 <style>
   .integration-row {
     display: grid;
@@ -303,8 +291,8 @@
     align-items: center;
     gap: var(--spacing-m);
     padding: var(--spacing-s) var(--spacing-s);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    height: 40px;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    min-height: 40px;
   }
 
   .channel-main {
@@ -314,9 +302,16 @@
     min-width: 0;
   }
 
+  .logo-placeholder {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
   .channel-details {
     display: flex;
     flex-direction: column;
+    gap: 2px;
     margin-left: var(--spacing-m);
   }
 
@@ -338,14 +333,5 @@
   .chat-link:hover {
     color: var(--spectrum-global-color-gray-900);
     text-decoration: underline;
-  }
-
-  .chat-link.update-link {
-    color: var(--spectrum-global-color-blue-600);
-    font-weight: 500;
-  }
-
-  .chat-link.update-link:hover {
-    color: var(--spectrum-global-color-blue-700);
   }
 </style>

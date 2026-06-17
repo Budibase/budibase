@@ -2,6 +2,7 @@ import {
   context,
   db,
   docIds,
+  events,
   HTTPError,
   objectStore,
 } from "@budibase/backend-core"
@@ -9,9 +10,11 @@ import {
   DocumentType,
   KnowledgeBase,
   KnowledgeBaseFile,
+  KnowledgeBaseFileSource,
   KnowledgeBaseFileStatus,
   RequiredKeys,
   ToDocCreateMetadata,
+  WithRequired,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
 import { deleteKnowledgeBaseFileChunks } from "../rag/files"
@@ -19,25 +22,29 @@ import { deleteKnowledgeBaseFileChunks } from "../rag/files"
 interface CreateKnowledgeBaseFileOptions {
   id: string
   knowledgeBaseId: string
+  source?: KnowledgeBaseFileSource
   filename: string
   mimetype?: string
   size?: number
   uploadedBy: string
   objectStoreKey: string
+  ragSourceId?: string
 }
 
 export const createKnowledgeBaseFile = async (
   options: CreateKnowledgeBaseFileOptions
-): Promise<KnowledgeBaseFile> => {
+): Promise<WithRequired<KnowledgeBaseFile, "_id">> => {
   const db = context.getWorkspaceDB()
   const {
     id,
     knowledgeBaseId,
+    source,
     filename,
     mimetype,
     size,
     uploadedBy,
     objectStoreKey,
+    ragSourceId,
   } = options
   const _id = id || docIds.generateKnowledgeBaseFileID(knowledgeBaseId)
   if (!docIds.isKnowledgeBaseFileID(_id)) {
@@ -47,14 +54,14 @@ export const createKnowledgeBaseFile = async (
   const doc: RequiredKeys<ToDocCreateMetadata<KnowledgeBaseFile>> = {
     _id,
     knowledgeBaseId,
+    source,
     filename,
     mimetype,
     size,
     objectStoreKey,
-    ragSourceId: _id,
+    ragSourceId: ragSourceId || _id,
     status: KnowledgeBaseFileStatus.PROCESSING,
     uploadedBy,
-    chunkCount: 0,
     errorMessage: undefined,
     processedAt: undefined,
   }
@@ -126,7 +133,9 @@ export const removeKnowledgeBaseFile = async (
   }
 
   if (!isFileInProduction) {
-    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
+    if (file.ragSourceId) {
+      await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
+    }
   }
 
   if (file.objectStoreKey) {
@@ -141,4 +150,10 @@ export const removeKnowledgeBaseFile = async (
   }
 
   await context.getWorkspaceDB().remove(file)
+
+  events.ai.ragFileDeleted({
+    knowledgeBaseId: file.knowledgeBaseId,
+    fileId: file._id!,
+    sourceType: file.source?.type,
+  })
 }

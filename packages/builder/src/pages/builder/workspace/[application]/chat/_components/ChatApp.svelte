@@ -57,6 +57,7 @@
     isDefault?: boolean
     icon?: string
     iconColor?: string
+    allowKnowledgeSourceDownload?: boolean
   }[] = []
   let agentAvailability:
     | "no_selection"
@@ -134,6 +135,8 @@
         isDefault: agent.isDefault,
         icon: getAgentIcon(agent.agentId),
         iconColor: getAgentIconColor(agent.agentId, index),
+        allowKnowledgeSourceDownload: getAgent(agent.agentId)?.operations?.[0]
+          ?.allowKnowledgeSourceDownload,
       }))
       .filter(agent => Boolean(agent.name))
 
@@ -400,8 +403,7 @@
     height: 100%;
     width: 100%;
     min-width: 0;
-    --chat-font-sans: "Inter", sans-serif;
-    --font-sans: var(--chat-font-sans);
+    --chat-font-sans: var(--font-sans);
     --font-serif: var(--chat-font-sans);
     --font-accent: var(--chat-font-sans);
     --spectrum-alias-body-text-font-family: var(--chat-font-sans);

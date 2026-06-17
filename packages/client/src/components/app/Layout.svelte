@@ -1,15 +1,18 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { Heading, Icon, clickOutside } from "@budibase/bbui"
+  import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
   import {
+    getEnabledConditions,
     getActiveConditions,
     reduceConditionActions,
   } from "@/utils/conditions"
+  import { authStore } from "@/stores/auth"
+  import { currentRole } from "@/stores/derived/currentRole.js"
 
   const sdk = getContext("sdk")
   const {
@@ -37,6 +40,12 @@
   // New props from new design UI
   export let navBackground
   export let navTextColor
+  export let navLinkHoverTextColor
+  export let navLinkHoverIconColor
+  export let navLinkHoverBackground
+  export let navLinkActiveTextColor
+  export let navLinkActiveIconColor
+  export let navLinkActiveBackground
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
@@ -45,8 +54,13 @@
   export let textAlign
   export let embedded = false
   export let banner
+  export let showLoginButton = true
 
   export let collapsible = false
+
+  export let screenBackground
+  export let screenGradient
+  export let screenCustomCss
 
   const NavigationClasses = {
     Top: "top",
@@ -68,6 +82,11 @@
   let mobileOpen = false
   let navCollapsed = false
 
+  // When a developer uses devtools to "view as public", hide the user menu and
+  // show the login button instead so it accurately previews the public UX.
+  $: isPublicPreview =
+    $authStore != null && $currentRole === Constants.Roles.PUBLIC
+
   // Set some layout context. This isn't used in bindings but can be used
   // determine things about the current app layout.
   $: mobile = $context.device.mobile
@@ -78,13 +97,19 @@
   })
   setContext("layout", store)
 
-  $: enrichedNavItems = enrichNavItems(links, $roleStore)
+  $: enrichedNavItems = enrichNavItems(links, $roleStore, $routeStore.routes)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
   $: navStyle = getNavStyle(
     navBackground,
     navTextColor,
+    navLinkHoverTextColor,
+    navLinkHoverIconColor,
+    navLinkHoverBackground,
+    navLinkActiveTextColor,
+    navLinkActiveIconColor,
+    navLinkActiveBackground,
     logoHeight,
     $context.device.width,
     $context.device.height
@@ -99,6 +124,39 @@
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
     !$sidePanelStore.ignoreClicksOutside
+  $: sidePanelPosition = $sidePanelStore.position || "right"
+
+  // When the position anchor (left/right) changes, suppress the CSS
+  // transition so the panel snaps to the new off-screen position instantly.
+  // Without this the browser sees a transform change (e.g. translateX(100%)
+  // → translateX(-100%)) and animates through the center of the screen.
+  //
+  // This block runs inside Svelte's update cycle BEFORE the DOM is patched,
+  // so we must toggle the position classes directly on the element first,
+  // force a reflow to commit the snapped position, then re-enable the
+  // transition. Svelte's subsequent DOM patch will see the same classes and
+  // treat them as a no-op, while adding the "open" class triggers the
+  // correct slide-in animation.
+  let sidePanelContainer
+  let prevSidePanelPosition = null
+  $: if (sidePanelContainer && sidePanelPosition !== prevSidePanelPosition) {
+    if (prevSidePanelPosition != null) {
+      sidePanelContainer.style.transition = "none"
+      sidePanelContainer.classList.toggle(
+        "position--left",
+        sidePanelPosition === "left"
+      )
+      sidePanelContainer.classList.toggle(
+        "position--right",
+        sidePanelPosition !== "left"
+      )
+      // Force a synchronous reflow so the browser commits the snapped
+      // position before we re-enable the transition on the next line.
+      const _reflow = sidePanelContainer.offsetHeight
+      sidePanelContainer.style.transition = ""
+    }
+    prevSidePanelPosition = sidePanelPosition
+  }
 
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
@@ -116,10 +174,37 @@
     }
   }
 
-  const enrichNavItems = (navItems, userRoleHierarchy) => {
+  const getRouteWithoutQueryParams = route => {
+    if (!route) {
+      return route
+    }
+    try {
+      return new URL(route, "http://localhost").pathname
+    } catch (error) {
+      return route
+    }
+  }
+
+  const canAccessSubLink = (subLink, accessibleRoutes) => {
+    const url = subLink?.url
+    if (!url) {
+      return false
+    }
+
+    // We can only reliably validate static internal routes here.
+    if (!isInternal(url) || url.includes("{{")) {
+      return true
+    }
+
+    return accessibleRoutes.has(getRouteWithoutQueryParams(url))
+  }
+
+  const enrichNavItems = (navItems, userRoleHierarchy, routeEntries = []) => {
     if (!navItems?.length) {
       return []
     }
+    const accessibleRoutes = new Set(routeEntries.map(route => route.path))
+
     return navItems
       .filter(navItem => {
         // Strip nav items without text
@@ -140,23 +225,30 @@
         const enrichedNavItem = enrichNavItem(navItem)
         if (navItem.type === "sublinks" && navItem.subLinks?.length) {
           enrichedNavItem.subLinks = navItem.subLinks
-            .filter(subLink => subLink.text && subLink.url)
+            .filter(
+              subLink =>
+                subLink.text && canAccessSubLink(subLink, accessibleRoutes)
+            )
             .map(enrichNavItem)
         }
         return enrichedNavItem
       })
+      .filter(
+        navItem => navItem.type !== "sublinks" || navItem.subLinks?.length > 0
+      )
   }
 
   function evaluateNavItemConditions(conditions = []) {
     if (!conditions?.length) return true
+    const enabledConditions = getEnabledConditions(conditions)
 
     // Get only the active (matching) conditions
-    const activeConditions = getActiveConditions(conditions)
+    const activeConditions = getActiveConditions(enabledConditions)
     const { visible } = reduceConditionActions(activeConditions)
 
     if (visible == null) {
       // If any show condition exists, default to hidden unless one matches
-      const hasShow = conditions.some(cond => cond.action === "show")
+      const hasShow = enabledConditions.some(cond => cond.action === "show")
       return hasShow ? false : true
     }
     return visible
@@ -190,6 +282,12 @@
   const getNavStyle = (
     backgroundColor,
     textColor,
+    linkHoverTextColor,
+    linkHoverIconColor,
+    linkHoverBackground,
+    linkActiveTextColor,
+    linkActiveIconColor,
+    linkActiveBackground,
     logoHeight,
     width,
     height
@@ -200,6 +298,24 @@
     }
     if (textColor) {
       style += `--navTextColor:${textColor};`
+    }
+    if (linkHoverTextColor) {
+      style += `--navLinkHoverTextColor:${linkHoverTextColor};`
+    }
+    if (linkHoverIconColor) {
+      style += `--navLinkHoverIconColor:${linkHoverIconColor};`
+    }
+    if (linkHoverBackground) {
+      style += `--navLinkHoverBackground:${linkHoverBackground};`
+    }
+    if (linkActiveTextColor) {
+      style += `--navLinkActiveTextColor:${linkActiveTextColor};`
+    }
+    if (linkActiveIconColor) {
+      style += `--navLinkActiveIconColor:${linkActiveIconColor};`
+    }
+    if (linkActiveBackground) {
+      style += `--navLinkActiveBackground:${linkActiveBackground};`
     }
     style += `--logoHeight:${logoHeight || 24}px;`
     return style
@@ -219,6 +335,25 @@
     return style
   }
 
+  const getScreenStyle = (background, gradient, customCss) => {
+    let style = ""
+    if (gradient) {
+      style += `background: ${gradient};`
+    } else if (background) {
+      style += `background-color: ${background};`
+    }
+    if (customCss) {
+      style += customCss
+    }
+    return style || undefined
+  }
+
+  $: screenStyle = getScreenStyle(
+    screenBackground,
+    screenGradient,
+    screenCustomCss
+  )
+
   const getSanitizedUrl = (url, openInNewTab) => {
     if (!isInternal(url)) {
       return ensureExternal(url)
@@ -233,6 +368,12 @@
     mobileOpen = false
     sidePanelStore.actions.close()
     modalStore.actions.close()
+  }
+
+  const handleBannerActionClick = () => {
+    if (typeof banner?.action?.onClick === "function") {
+      banner.action.onClick()
+    }
   }
 </script>
 
@@ -249,7 +390,14 @@
   <div class="screen-wrapper layout-body">
     {#if showBanner && (typeClass !== "left" || mobile)}
       <div class="banner" style={bannerStyle}>
-        <div class="banner-content">{banner?.text}</div>
+        <div class="banner-content">
+          {banner?.text}
+          {#if banner?.action}
+            <Button cta on:click={handleBannerActionClick}>
+              {banner.action.label}
+            </Button>
+          {/if}
+        </div>
       </div>
     {/if}
     <div class="layout-content">
@@ -330,7 +478,7 @@
                 {/if}
                 {#if !embedded}
                   <div class="user top">
-                    <UserMenu compact />
+                    <UserMenu compact {showLoginButton} {isPublicPreview} />
                   </div>
                 {/if}
               </div>
@@ -365,7 +513,11 @@
 
               {#if !embedded}
                 <div class="user left" class:collapsed={navCollapsed}>
-                  <UserMenu collapsed={navCollapsed} />
+                  <UserMenu
+                    collapsed={navCollapsed}
+                    {showLoginButton}
+                    {isPublicPreview}
+                  />
                   {#if logoPosition === "bottom"}
                     <div>
                       <Logo
@@ -388,6 +540,7 @@
       {/if}
       <div
         class="main-wrapper"
+        style={screenStyle}
         on:click={() => {
           if ($builderStore.inBuilder) {
             builderStore.actions.selectComponent(screenId)
@@ -397,7 +550,14 @@
         <div class="main-content-area">
           {#if showBanner && typeClass === "left" && !mobile}
             <div class="banner" style={bannerStyle}>
-              <div class="banner-content">{banner?.text}</div>
+              <div class="banner-content">
+                {banner?.text}
+                {#if banner?.action}
+                  <Button cta on:click={handleBannerActionClick}>
+                    {banner.action.label}
+                  </Button>
+                {/if}
+              </div>
             </div>
           {/if}
           <div class="main size--{pageWidthClass}">
@@ -409,17 +569,28 @@
   </div>
   <div
     id="side-panel-container"
+    bind:this={sidePanelContainer}
     class:open={$sidePanelStore.open}
     use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
     class:builder={$builderStore.inBuilder}
+    class={"size--" + ($sidePanelStore.size || "small")}
+    class:position--left={sidePanelPosition === "left"}
+    class:position--right={sidePanelPosition !== "left"}
   >
-    <div class="side-panel-header">
-      <Icon
-        color="var(--spectrum-global-color-gray-600)"
-        name="caret-line-right"
-        hoverable
+    <div class="side-panel-header" class:left={sidePanelPosition === "left"}>
+      <button
+        type="button"
+        class="side-panel-close-button"
+        aria-label="Close side panel"
         on:click={sidePanelStore.actions.close}
-      />
+      >
+        <Icon
+          color="currentColor"
+          name={sidePanelPosition === "left"
+            ? "caret-line-left"
+            : "caret-line-right"}
+        />
+      </button>
     </div>
   </div>
   <div class="modal-container"></div>
@@ -478,6 +649,13 @@
     max-width: 1200px;
     margin: 0 auto;
     word-break: break-word;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+  }
+
+  .banner-content :global(.spectrum-Button) {
+    margin-left: 1em;
   }
 
   .nav-wrapper {
@@ -544,10 +722,33 @@
     overflow-x: hidden;
     transition: transform 130ms ease-out;
     position: absolute;
-    width: 400px;
-    right: 0;
-    transform: translateX(100%);
+    /* default width matches modal medium */
+    width: 600px;
     height: 100%;
+  }
+  #side-panel-container.position--right {
+    right: 0;
+    left: auto;
+    transform: translateX(100%);
+  }
+  #side-panel-container.position--left {
+    left: 0;
+    right: auto;
+    transform: translateX(-100%);
+  }
+  /* Side panel size variants */
+  #side-panel-container.size--small {
+    width: 400px;
+  }
+  #side-panel-container.size--medium {
+    width: 500px;
+  }
+  #side-panel-container.size--large {
+    width: 625px;
+  }
+  #side-panel-container.size--fullscreen {
+    width: calc(100vw - 40px);
+    max-width: calc(100vw - 40px);
   }
   #side-panel-container.builder {
     transform: translateX(0);
@@ -566,6 +767,29 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+  }
+  .side-panel-header.left {
+    justify-content: flex-start;
+  }
+  .side-panel-close-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--spectrum-alias-border-color);
+    background: var(--spectrum-alias-background-color-default);
+    color: var(--spectrum-alias-text-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .side-panel-close-button:hover {
+    background: var(--spectrum-alias-background-color-secondary);
+  }
+  .side-panel-close-button:focus-visible {
+    outline: 2px solid var(--spectrum-alias-border-color-focus);
+    outline-offset: 2px;
   }
 
   .main-wrapper {
@@ -593,6 +817,9 @@
     align-self: center;
     flex: 1;
   }
+  .main.size--max {
+    padding: 0;
+  }
   .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
     padding: calc(32px - var(--grid-spacing) * 2px);
   }
@@ -615,11 +842,7 @@
   .size--max {
     width: 100%;
   }
-  .main.size--max {
-    padding: 0;
-  }
-
-  /*  Nav components */
+  /* Note: size variants are defined earlier; keep those as the source of width values. */
   .nav-toggle {
     display: flex;
     align-items: center;
@@ -778,7 +1001,7 @@
     padding: 16px;
   }
   .mobile:not(.layout--none)
-    .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    .main:not(.size--max):has(:global(.screenslot-dom > .component > .grid)) {
     padding: 6px;
   }
   .mobile .main.size--max {

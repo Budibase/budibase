@@ -1,76 +1,20 @@
-import { auth } from "@budibase/backend-core"
 import { middleware } from "@budibase/pro"
-import { aiRagEnabled } from "../../middleware/aiRagEnabled"
 import * as ai from "../controllers/ai"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
-import {
-  createAgentValidator,
-  provisionAgentSlackChannelValidator,
-  provisionAgentMSTeamsChannelValidator,
-  syncAgentDiscordCommandsValidator,
-  toggleAgentDiscordDeploymentValidator,
-  toggleAgentMSTeamsDeploymentValidator,
-  toggleAgentSlackDeploymentValidator,
-  updateAgentValidator,
-} from "./utils/validators/agent"
+import { generateAgentInstructionsValidator } from "./utils/validators/agent"
 import {
   createAIConfigValidator,
   updateAIConfigValidator,
 } from "./utils/validators/aiConfig"
-import {
-  createVectorDbValidator,
-  updateVectorDbValidator,
-} from "./utils/validators/vectorDb"
-import {
-  createKnowledgeBaseValidator,
-  updateKnowledgeBaseValidator,
-} from "./utils/validators/knowledgeBase"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
 builderAdminRoutes
-  .get("/api/agent", ai.fetchAgents)
-  .post("/api/agent", createAgentValidator(), ai.createAgent)
-  .put("/api/agent", updateAgentValidator(), ai.updateAgent)
-  .post("/api/agent/:agentId/duplicate", ai.duplicateAgent)
-  .delete("/api/agent/:agentId", ai.deleteAgent)
   .post(
-    "/api/agent/:agentId/discord/sync",
-    syncAgentDiscordCommandsValidator(),
-    ai.syncAgentDiscordCommands
+    "/api/ai/agent-instructions",
+    generateAgentInstructionsValidator(),
+    ai.generateAgentInstructions
   )
-  .post(
-    "/api/agent/:agentId/discord/toggle",
-    toggleAgentDiscordDeploymentValidator(),
-    ai.toggleAgentDiscordDeployment
-  )
-  .post(
-    "/api/agent/:agentId/ms-teams/provision",
-    provisionAgentMSTeamsChannelValidator(),
-    ai.provisionAgentMSTeamsChannel
-  )
-  .post(
-    "/api/agent/:agentId/ms-teams/toggle",
-    toggleAgentMSTeamsDeploymentValidator(),
-    ai.toggleAgentMSTeamsDeployment
-  )
-  .post(
-    "/api/agent/:agentId/slack/toggle",
-    toggleAgentSlackDeploymentValidator(),
-    ai.toggleAgentSlackDeployment
-  )
-  .post(
-    "/api/agent/:agentId/slack/provision",
-    provisionAgentSlackChannelValidator(),
-    ai.provisionAgentSlackChannel
-  )
-
-  .get("/api/agent/tools", ai.fetchTools)
-  .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
-  .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
-  .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
-
-builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
@@ -78,36 +22,6 @@ builderAdminRoutes
   .delete("/api/configs/:id", ai.deleteAIConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
-
-const aiRagBuilderAdminRoutes = endpointGroupList
-  .group(auth.builderOrAdmin)
-  .addGroupMiddleware(aiRagEnabled)
-aiRagBuilderAdminRoutes
-  .get("/api/knowledge-base/:knowledgeBaseId/files", ai.fetchKnowledgeBaseFiles)
-  .post(
-    "/api/knowledge-base/:knowledgeBaseId/files",
-    ai.uploadKnowledgeBaseFile
-  )
-  .delete(
-    "/api/knowledge-base/:knowledgeBaseId/files/:fileId",
-    ai.deleteKnowledgeBaseFile
-  )
-  .get("/api/vectordb", ai.fetchVectorDbConfigs)
-  .post("/api/vectordb", createVectorDbValidator(), ai.createVectorDbConfig)
-  .put("/api/vectordb", updateVectorDbValidator(), ai.updateVectorDbConfig)
-  .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
-  .get("/api/knowledge-base", ai.fetchKnowledgeBases)
-  .post(
-    "/api/knowledge-base",
-    createKnowledgeBaseValidator(),
-    ai.createKnowledgeBase
-  )
-  .put(
-    "/api/knowledge-base",
-    updateKnowledgeBaseValidator(),
-    ai.updateKnowledgeBase
-  )
-  .delete("/api/knowledge-base/:id", ai.deleteKnowledgeBase)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 

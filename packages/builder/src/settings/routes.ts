@@ -1,9 +1,5 @@
 import { sdk, helpers } from "@budibase/shared-core"
-import {
-  AIConfigType,
-  FeatureFlag,
-  GetGlobalSelfResponse,
-} from "@budibase/types"
+import { AIConfigType, GetGlobalSelfResponse } from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
 import { Target, type Route } from "@/types/routing"
@@ -12,12 +8,7 @@ import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
-import { featureFlag } from "@/helpers"
-import {
-  aiConfigsStore,
-  knowledgeBaseStore,
-  vectorDbStore,
-} from "@/stores/portal"
+import { aiConfigsStore } from "@/stores/portal"
 import { get } from "svelte/store"
 
 const getPathId = (path: string | undefined) => {
@@ -318,7 +309,7 @@ export const workspaceRoutes = (
         },
         {
           path: AIConfigType.COMPLETIONS,
-          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI models" : "",
+          title: "AI models",
           component: Pages.get("ai_configs"),
           routes: [
             {
@@ -335,107 +326,6 @@ export const workspaceRoutes = (
                   )?.name ?? "AI config"
                 )
               },
-            },
-          ],
-        },
-        {
-          path: "knowledge-bases",
-          title: "Knowledge bases",
-          access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
-          component: Pages.get("knowledgeBases"),
-          routes: [
-            {
-              path: "embedding",
-              routes: [
-                {
-                  path: ":configId",
-                  title: (path: string | undefined) => {
-                    const id = getPathId(path)
-                    if (!id) {
-                      return "New embedding model"
-                    }
-                    return (
-                      get(aiConfigsStore).customConfigs.find(c => c._id === id)
-                        ?.name ?? "Embedding model"
-                    )
-                  },
-                  component: Pages.get("embedding_model"),
-                },
-              ],
-            },
-            {
-              path: "vectordb",
-              routes: [
-                {
-                  path: ":id",
-                  title: (path: string | undefined) => {
-                    const id = getPathId(path)
-                    if (!id) {
-                      return "New vector database"
-                    }
-                    return (
-                      get(vectorDbStore).configs.find(db => db._id === id)
-                        ?.name ?? "Vector database"
-                    )
-                  },
-                  component: Pages.get("vector_database"),
-                },
-              ],
-            },
-            {
-              path: ":knowledgeBaseId",
-              component: Pages.get("knowledgeBase"),
-              title: (path: string | undefined) => {
-                const id = getPathId(path)
-                if (!id) {
-                  return "New"
-                }
-                return (
-                  get(knowledgeBaseStore).list.find(k => k._id === id)?.name ??
-                  "Knowledge base"
-                )
-              },
-              routes: [
-                {
-                  path: "embedding",
-                  routes: [
-                    {
-                      path: ":configId",
-                      title: (path: string | undefined) => {
-                        const id = getPathId(path)
-                        if (!id) {
-                          return "New embedding model"
-                        }
-                        return (
-                          get(aiConfigsStore).customConfigs.find(
-                            c => c._id === id
-                          )?.name ?? "Embedding model"
-                        )
-                      },
-                      component: Pages.get("embedding_model"),
-                    },
-                  ],
-                },
-                {
-                  path: "vectordb",
-                  routes: [
-                    {
-                      path: ":id",
-                      title: (path: string | undefined) => {
-                        const id = getPathId(path)
-                        if (!id) {
-                          return "New vector database"
-                        }
-                        return (
-                          get(vectorDbStore).configs.find(db => db._id === id)
-                            ?.name ?? "Vector database"
-                        )
-                      },
-                      component: Pages.get("vector_database"),
-                    },
-                  ],
-                },
-              ],
             },
           ],
         },

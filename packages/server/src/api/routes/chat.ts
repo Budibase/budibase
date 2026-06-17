@@ -23,11 +23,19 @@ publicRoutes.get(
   "/api/chat-links/:instance/:token/handoff",
   ai.handoffChatLinkSession
 )
+publicRoutes.post(
+  "/api/chat-links/:instance/:token/handoff",
+  ai.confirmChatLinkSession
+)
 
 userRoutes
   .get("/api/chatapps", ai.fetchChatApp)
   .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
   .get("/api/chatapps/:chatAppId/agents", ai.fetchChatAppAgents)
+  .get(
+    "/api/chatapps/:chatAppId/agents/:agentId/files/:fileId/url",
+    ai.fetchChatAppAgentFileUrl
+  )
   .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
   .get(
     "/api/chatapps/:chatAppId/conversations/:chatConversationId",

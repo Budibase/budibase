@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type EasyMDE from "easymde"
+  import { onDestroy } from "svelte"
   import SpectrumMDE from "./SpectrumMDE.svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -14,26 +16,53 @@
   const dispatch = createEventDispatcher()
 
   let latestValue: string | null
-  let mde: any
+  interface EditorInstance extends EasyMDE {
+    togglePreview: () => void
+    value: (_value?: string) => string
+  }
+  let mde: EditorInstance | null = null
+  let blurBoundTo: EditorInstance | null = null
+
+  const bindBlurHandler = (editor: EditorInstance) => {
+    if (blurBoundTo === editor) {
+      return
+    }
+    if (blurBoundTo) {
+      blurBoundTo.codemirror.off("blur", update)
+    }
+    editor.codemirror.on("blur", update)
+    blurBoundTo = editor
+  }
 
   // Ensure the value is updated if the value prop changes outside the editor's
   // control
-  $: checkValue(value)
-  $: mde?.codemirror.on("blur", update)
-  $: if (readonly || disabled) {
-    mde?.togglePreview()
+  $: checkValue(mde, value)
+  $: if (mde) {
+    bindBlurHandler(mde)
+  }
+  $: if ((readonly || disabled) && mde) {
+    mde.togglePreview?.()
   }
 
-  const checkValue = (val: string | null) => {
-    if (mde && val !== latestValue) {
-      mde.value(val)
+  const checkValue = (editor: EditorInstance | null, val: string | null) => {
+    if (editor && val !== latestValue) {
+      editor.value(val ?? "")
     }
   }
 
   const update = () => {
+    if (!mde) {
+      return
+    }
     latestValue = mde.value()
     dispatch("change", latestValue)
   }
+
+  onDestroy(() => {
+    if (blurBoundTo) {
+      blurBoundTo.codemirror.off("blur", update)
+    }
+  })
 </script>
 
 {#key height}
@@ -47,8 +76,8 @@
     easyMDEOptions={{
       initialValue: value,
       placeholder,
-      toolbar: disabled || readonly ? false : undefined,
       ...easyMDEOptions,
+      toolbar: disabled || readonly ? false : easyMDEOptions?.toolbar,
     }}
   />
 {/key}

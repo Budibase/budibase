@@ -79,6 +79,10 @@ export const useEnforceableSSO = () => {
   return useFeature(Feature.ENFORCEABLE_SSO)
 }
 
+export const useEmbedAuth = () => {
+  return useFeature(Feature.EMBED_AUTH)
+}
+
 export const useGroups = () => {
   return useFeature(Feature.USER_GROUPS)
 }
@@ -129,6 +133,10 @@ export const useBudibaseAI = (opts?: { monthlyQuota?: number }) => {
 
 export const useAICustomConfigs = () => {
   return useFeature(Feature.AI_CUSTOM_CONFIGS)
+}
+
+export const useMicrofrontend = () => {
+  return useFeature(Feature.MICROFRONTEND)
 }
 
 // QUOTAS

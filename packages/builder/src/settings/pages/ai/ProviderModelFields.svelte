@@ -2,11 +2,11 @@
   import { createEventDispatcher } from "svelte"
 
   import { Combobox, Select } from "@budibase/bbui"
-  import type { LLMProvider } from "@budibase/types"
+  import { type AIConfigType, type LLMProvider } from "@budibase/types"
 
   interface Props {
-    configType: "completions" | "embeddings"
-    provider: string
+    configType: AIConfigType
+    provider: string | undefined
     model: string
     providers?: LLMProvider[]
     disabled?: boolean
@@ -18,7 +18,7 @@
   }
 
   const dispatch = createEventDispatcher<{
-    providerChange: string
+    providerChange: string | undefined
     modelChange: string
   }>()
 
@@ -45,7 +45,9 @@
     }, {})
   )
 
-  let selectedProvider = $derived(providersMap?.[provider])
+  let selectedProvider = $derived(
+    provider ? providersMap?.[provider] : undefined
+  )
 
   let modelOptions = $derived.by(() => {
     const models = selectedProvider?.models?.[configType] || []
@@ -74,7 +76,7 @@
     return modelOptions.length ? "Select or type a model" : "Type a model"
   })
 
-  function handleProviderChange(event: CustomEvent<string>) {
+  function handleProviderChange(event: CustomEvent<string | undefined>) {
     const nextProvider = event.detail
     provider = nextProvider
     dispatch("providerChange", nextProvider)

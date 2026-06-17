@@ -14,12 +14,14 @@ export function getFormattedPlanName(userPlanType: PlanType) {
       planName = "Premium"
       break
     case PlanType.BUSINESS:
+    case PlanType.BUSINESS_PLUS:
       planName = "Business"
       break
     case PlanType.ENTERPRISE_BASIC:
     case PlanType.ENTERPRISE:
       planName = "Enterprise"
       break
+    case PlanType.PREMIUM_PLUS_TRIAL:
     case PlanType.ENTERPRISE_BASIC_TRIAL:
       planName = "Trial"
       break

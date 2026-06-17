@@ -16,6 +16,7 @@ import {
 } from "@/stores"
 import { mount, unmount } from "svelte"
 import { get } from "svelte/store"
+import { push } from "svelte-spa-router"
 import { initWebsocket } from "@/websocket"
 import {
   Screen,
@@ -109,7 +110,13 @@ export interface MountBudibaseAppOptions {
   target: HTMLElement
   appUrl: string
   appId?: string
-  embedded?: boolean
+  initialPath?: string
+  onNavigate?: (path: string) => void
+}
+
+export type BudibaseMountHandle = (() => void) & {
+  navigate: (path: string) => ReturnType<typeof navigateToPath>
+  getCurrentPath: () => string
 }
 
 interface LoadBudibaseOptions {
@@ -166,6 +173,30 @@ const resolveAppIdFromPath = async (appPath: string) => {
     throw new Error(`Could not resolve Budibase app for path: ${appPath}`)
   }
   return matched.prodId
+}
+
+const normalizeRoutePath = (path: string) => {
+  if (!path) {
+    return "/"
+  }
+  const [pathname = "/", query = ""] = path.split("?")
+  const normalizedPathname = pathname.startsWith("/")
+    ? pathname
+    : `/${pathname}`
+  if (!query) {
+    return normalizedPathname
+  }
+  return `${normalizedPathname}?${query}`
+}
+
+const getCurrentPath = () => {
+  const hash = window.location.hash || ""
+  const route = hash.startsWith("#") ? hash.slice(1) : hash
+  return normalizeRoutePath(route || "/")
+}
+
+const navigateToPath = (path: string) => {
+  return push(normalizeRoutePath(path))
 }
 
 const loadBudibase = async (options: LoadBudibaseOptions = {}) => {
@@ -285,7 +316,8 @@ export const mountBudibaseApp = async ({
   target,
   appUrl,
   appId,
-  embedded = true,
+  initialPath,
+  onNavigate,
 }: MountBudibaseAppOptions) => {
   if (!target || !(target instanceof HTMLElement)) {
     throw new Error("mountBudibaseApp requires a target HTMLElement")
@@ -300,11 +332,16 @@ export const mountBudibaseApp = async ({
   const resolvedAppId = appId || (await resolveAppIdFromPath(appPath))
 
   window["##BUDIBASE_APP_ID##"] = resolvedAppId
-  window["##BUDIBASE_APP_EMBEDDED##"] = String(embedded)
   window["##BUDIBASE_EMBED_LOCATION##"] = appPath
 
-  if (appHash && window.location.hash !== appHash) {
-    window.location.hash = appHash
+  const resolvedInitialPath = initialPath
+    ? normalizeRoutePath(initialPath)
+    : appHash
+      ? normalizeRoutePath(appHash.replace(/^#/, ""))
+      : undefined
+
+  if (resolvedInitialPath && getCurrentPath() !== resolvedInitialPath) {
+    await navigateToPath(resolvedInitialPath)
   }
 
   if (app) {
@@ -312,12 +349,34 @@ export const mountBudibaseApp = async ({
       "Budibase is already mounted. Unmount the existing instance before mounting again."
     )
   }
-  await loadBudibase({ target })
+  await loadBudibase({
+    target,
+  })
 
-  return () => {
+  const notifyNavigation = onNavigate
+    ? () => onNavigate(getCurrentPath())
+    : undefined
+  if (notifyNavigation) {
+    window.addEventListener("hashchange", notifyNavigation)
+    notifyNavigation()
+  }
+
+  const handle = (() => {
+    if (notifyNavigation) {
+      window.removeEventListener("hashchange", notifyNavigation)
+    }
     if (app) {
       unmount(app)
       app = undefined
     }
+  }) as BudibaseMountHandle
+
+  handle.navigate = path => {
+    return navigateToPath(path)
   }
+  handle.getCurrentPath = () => {
+    return getCurrentPath()
+  }
+
+  return handle
 }

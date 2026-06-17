@@ -126,6 +126,12 @@
             }}
           />
         {/if}
+        <PropertyControl
+          label="Show log in"
+          control={Checkbox}
+          value={$nav.showLoginButton !== false}
+          onChange={show => update("showLoginButton", show)}
+        />
         {#if $nav.navigation === "Left"}
           <PropertyControl
             label="Logo position"
@@ -157,6 +163,65 @@
           control={ColorPicker}
           onChange={color => update("navTextColor", color)}
           value={$nav.navTextColor || DefaultAppTheme.navTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+      </div>
+    </DetailSummary>
+
+    <DetailSummary name="Link states" initiallyShow collapsible={false}>
+      <div class="settings">
+        <PropertyControl
+          label="Hover text"
+          control={ColorPicker}
+          onChange={color => update("navLinkHoverTextColor", color)}
+          value={$nav.navLinkHoverTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Hover icon"
+          control={ColorPicker}
+          onChange={color => update("navLinkHoverIconColor", color)}
+          value={$nav.navLinkHoverIconColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Hover background"
+          control={ColorPicker}
+          onChange={color => update("navLinkHoverBackground", color)}
+          value={$nav.navLinkHoverBackground}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Active text"
+          control={ColorPicker}
+          onChange={color => update("navLinkActiveTextColor", color)}
+          value={$nav.navLinkActiveTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Active icon"
+          control={ColorPicker}
+          onChange={color => update("navLinkActiveIconColor", color)}
+          value={$nav.navLinkActiveIconColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Active background"
+          control={ColorPicker}
+          onChange={color => update("navLinkActiveBackground", color)}
+          value={$nav.navLinkActiveBackground}
           props={{
             spectrumTheme: $themeStore.theme,
           }}

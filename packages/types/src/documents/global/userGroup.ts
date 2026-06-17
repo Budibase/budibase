@@ -5,6 +5,7 @@ export interface UserGroup extends Document {
   name: string
   icon: string
   color: string
+  isDefault?: boolean
   users?: GroupUser[]
   roles?: UserGroupRoles
   // same structure as users

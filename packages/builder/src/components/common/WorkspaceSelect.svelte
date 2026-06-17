@@ -4,7 +4,10 @@
   import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
+  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
+  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems"
   import { appStore } from "@/stores/builder"
+  import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
   import { appsStore, sortBy } from "@/stores/portal/apps"
@@ -34,6 +37,15 @@
   let filterInput: HTMLInputElement | null = null
   let activeIndex = -1
   let itemEls: (HTMLElement | null)[] = []
+  let selectedWorkspaceForMenu: EnrichedApp | null = null
+  let appContextMenuModals:
+    | {
+        showDuplicateModal: () => void
+        showExportDevModal: () => void
+        showExportProdModal: () => void
+        showDeleteModal: () => void
+      }
+    | undefined
 
   $: apps = $enrichedApps
   $: appId = $appStore.appId
@@ -54,6 +66,7 @@
   }
 
   const navigateToWorkspace = (ws: EnrichedApp) => {
+    contextMenuStore.close()
     const wsUrl = getWorkspaceUrl(ws)
     if (!ws.editable) {
       window.open(wsUrl, "_blank")
@@ -84,10 +97,68 @@
     }
   }
 
-  const getWorkspaceUrl = (app: any) => {
+  const getWorkspaceUrl = (app: EnrichedApp) => {
     return app.editable
       ? `/builder/workspace/${app.devId}/home`
       : `/app${app.url}`
+  }
+
+  const openWorkspaceContextMenu = (
+    ws: EnrichedApp,
+    position: { x: number; y: number }
+  ) => {
+    if (!ws.editable) {
+      return
+    }
+    selectedWorkspaceForMenu = ws
+
+    const items = getAppContextMenuItems({
+      app: ws,
+      onDuplicate: () => appContextMenuModals?.showDuplicateModal(),
+      onExportDev: () => appContextMenuModals?.showExportDevModal(),
+      onExportProd: () => appContextMenuModals?.showExportProdModal(),
+      onDelete: () => appContextMenuModals?.showDeleteModal(),
+    })
+
+    contextMenuStore.open(`workspace-select-${ws.appId}`, items, {
+      x: position.x,
+      y: position.y,
+    })
+  }
+
+  const openWorkspaceContextMenuFromMouse = (
+    e: MouseEvent,
+    ws: EnrichedApp
+  ) => {
+    if (!ws.editable) {
+      return
+    }
+    e.preventDefault()
+    e.stopPropagation()
+    openWorkspaceContextMenu(ws, {
+      x: e.clientX,
+      y: e.clientY,
+    })
+  }
+
+  const onWorkspaceItemKeydown = (
+    e: KeyboardEvent,
+    ws: EnrichedApp,
+    itemEl: HTMLElement | null
+  ) => {
+    const isContextMenuKey = e.key === "ContextMenu"
+
+    if (!isContextMenuKey || !itemEl || !ws.editable) {
+      return
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+    const rect = itemEl.getBoundingClientRect()
+    openWorkspaceContextMenu(ws, {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    })
   }
 
   const matchesFilter = (name: string, term: string) =>
@@ -99,6 +170,7 @@
   }
 
   const onMenuClose = () => {
+    contextMenuStore.close()
     open = false
     sortOpen = false
   }
@@ -233,7 +305,12 @@
           on:click={() => {
             navigateToWorkspace(ws)
           }}
-          on:auxclick={() => {
+          on:contextmenu={e => openWorkspaceContextMenuFromMouse(e, ws)}
+          on:keydown={e => onWorkspaceItemKeydown(e, ws, itemEls[i])}
+          on:auxclick={e => {
+            if (e.button !== 1) {
+              return
+            }
             window.open(getWorkspaceUrl(ws), "_blank")
           }}
         >
@@ -278,6 +355,13 @@
     {/each}
   </div>
 </ActionMenu>
+
+{#if selectedWorkspaceForMenu}
+  <AppContextMenuModals
+    app={selectedWorkspaceForMenu}
+    bind:this={appContextMenuModals}
+  />
+{/if}
 
 <style>
   .app-items {

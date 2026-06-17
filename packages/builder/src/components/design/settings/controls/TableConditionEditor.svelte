@@ -10,6 +10,7 @@
     DatePicker,
     Combobox,
     Multiselect,
+    Toggle,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
@@ -98,6 +99,7 @@
       metadataKey: conditionOptions[0].value,
       operator: operatorOptions[0]?.value,
       valueType: FieldType.STRING,
+      disabled: false,
     }
     tempValue = [...tempValue, condition]
   }
@@ -183,11 +185,13 @@
                   placeholder={null}
                   options={targetOptions}
                   bind:value={condition.target}
+                  popoverAutoWidth
                 />
                 <Select
                   placeholder={null}
                   options={conditionOptions}
                   bind:value={condition.metadataKey}
+                  popoverAutoWidth
                 />
                 <span>to</span>
                 <ColorPicker
@@ -200,6 +204,7 @@
                   options={operatorOptions}
                   bind:value={condition.operator}
                   on:change={e => onOperatorChange(condition, e.detail)}
+                  popoverAutoWidth
                 />
                 {#if hasValueOption}
                   <Select
@@ -208,6 +213,7 @@
                     bind:value={condition.valueType}
                     placeholder={null}
                     on:change={() => onValueTypeChange(condition)}
+                    popoverAutoWidth
                   />
                 {/if}
                 {#if type === FieldType.DATETIME && condition.valueType === type}
@@ -222,6 +228,7 @@
                     disabled={condition.noValue}
                     options={["True", "False"]}
                     bind:value={condition.referenceValue}
+                    popoverAutoWidth
                   />
                 {:else if (type === FieldType.OPTIONS || type === FieldType.ARRAY) && condition.valueType === type}
                   {#if condition.operator === Constants.OperatorOptions.In.value}
@@ -231,6 +238,7 @@
                         componentInstance.field
                       ]?.constraints?.inclusion || []}
                       bind:value={condition.referenceValue}
+                      popoverAutoWidth
                     />
                   {:else}
                     <Combobox
@@ -239,6 +247,8 @@
                         componentInstance.field
                       ]?.constraints?.inclusion || []}
                       bind:value={condition.referenceValue}
+                      popoverAutoWidth
+                      wrapText
                     />
                   {/if}
                 {:else if (type === FieldType.BB_REFERENCE || type === FieldType.BB_REFERENCE_SINGLE) && condition.valueType === type}
@@ -263,18 +273,28 @@
                     on:change={e => (condition.referenceValue = e.detail)}
                   />
                 {/if}
-                <Icon
-                  name="copy"
-                  hoverable
-                  size="S"
-                  on:click={() => duplicateCondition(condition)}
-                />
-                <Icon
-                  name="x"
-                  hoverable
-                  size="S"
-                  on:click={() => removeCondition(condition)}
-                />
+                <div class="condition-actions">
+                  <Toggle
+                    noMargin
+                    text=""
+                    value={!condition.disabled}
+                    on:change={e => {
+                      condition.disabled = !e.detail
+                    }}
+                  />
+                  <Icon
+                    name="copy"
+                    hoverable
+                    size="S"
+                    on:click={() => duplicateCondition(condition)}
+                  />
+                  <Icon
+                    name="x"
+                    hoverable
+                    size="S"
+                    on:click={() => removeCondition(condition)}
+                  />
+                </div>
               </div>
             {/each}
           </div>
@@ -302,11 +322,16 @@
   }
   .condition {
     display: grid;
-    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr auto auto;
+    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr auto;
     align-items: center;
     grid-column-gap: var(--spacing-l);
   }
   .condition.with-value-option {
-    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr 1fr auto;
+  }
+  .condition-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-l);
   }
 </style>

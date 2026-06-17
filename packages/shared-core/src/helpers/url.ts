@@ -1,4 +1,47 @@
-import { ACCOUNT_PORTAL_PATHS, BUILDER_URLS } from "../constants/urls"
+import { ACCOUNT_PORTAL_PATHS, BUILDER_URLS } from "../constants"
+
+const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
+
+export function applyBaseUrl(currentUrl: string, newBase: string): string {
+  if (!newBase) {
+    return currentUrl
+  }
+  const blocks: string[] = currentUrl.match(FIND_ANY_HBS_REGEX) ?? []
+  const portBlocks: string[] = []
+
+  // Substitute HBS blocks in port position with ':0' so new URL() can parse it
+  let parseable = currentUrl
+  for (const block of blocks) {
+    const portPattern = `:${block}`
+    if (parseable.includes(portPattern)) {
+      portBlocks.push(block)
+      parseable = parseable.replace(portPattern, ":0")
+    }
+  }
+
+  const placeholder = (i: number) => `__hbs${i}__`
+  const pathBlocks = blocks.filter(b => !portBlocks.includes(b))
+  parseable = pathBlocks.reduce(
+    (s, block, i) => s.replace(block, placeholder(i)),
+    parseable
+  )
+
+  const restore = (s: string) =>
+    pathBlocks.reduce((r, block, i) => r.replace(placeholder(i), block), s)
+
+  const base = newBase.replace(/\/$/, "")
+  try {
+    const parsed = new URL(parseable)
+    const path = parsed.pathname === "/" ? "" : parsed.pathname
+    return base + restore(path + parsed.search + parsed.hash)
+  } catch {
+    const restored = restore(parseable)
+    if (restored.startsWith("/")) {
+      return base + restored
+    }
+    return base
+  }
+}
 
 const normalizePath = (path?: string) => {
   if (!path) {
@@ -34,8 +77,31 @@ const normalizeAppUrl = (appUrl: string) =>
 export const accountPortalAccountUrl = (accountPortalUrl?: string | null) =>
   joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.ACCOUNT)
 
-export const accountPortalBillingUrl = (accountPortalUrl?: string | null) =>
-  joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.BILLING)
+export const accountPortalBillingUrl = (
+  accountPortalUrl?: string | null,
+  options?:
+    | { tenantId?: string | null; purchasePrepaidAiCredits?: boolean }
+    | string
+    | null
+) => {
+  const resolvedOptions =
+    typeof options === "string" || options == null
+      ? { tenantId: options }
+      : options
+
+  const base = joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.BILLING)
+  const params = new URLSearchParams()
+
+  if (resolvedOptions?.tenantId) {
+    params.set("tenantId", resolvedOptions.tenantId)
+  }
+  if (resolvedOptions?.purchasePrepaidAiCredits) {
+    params.set("purchasePrepaidAiCredits", "1")
+  }
+
+  const query = params.toString()
+  return query ? `${base}?${query}` : base
+}
 
 export const accountPortalUpgradeUrl = (
   accountPortalUrl?: string | null,

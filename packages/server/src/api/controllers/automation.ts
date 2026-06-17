@@ -16,6 +16,8 @@ import {
   CreateAutomationRequest,
   CreateAutomationResponse,
   DeleteAutomationResponse,
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
   FetchAutomationResponse,
   FindAutomationResponse,
   GetAutomationActionDefinitionsResponse,
@@ -26,13 +28,17 @@ import {
   Table,
   TestAutomationRequest,
   TestAutomationResponse,
+  TestEmailConnectionRequest,
+  TestEmailConnectionResponse,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
   UpdateAutomationRequest,
   UpdateAutomationResponse,
   UserCtx,
   Workspace,
+  isEmailTrigger,
 } from "@budibase/types"
+import { testConnection } from "../../automations/email"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import * as triggers from "../../automations/triggers"
 import {
@@ -45,6 +51,7 @@ import { updateTestHistory } from "../../automations/utils"
 import { DocumentType } from "../../db/utils"
 import env from "../../environment"
 import sdk from "../../sdk"
+import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
@@ -186,6 +193,77 @@ export async function getDefinitionList(
   }
 }
 
+async function hydrateEmailConnectionPassword(
+  inputs: TestEmailConnectionRequest
+): Promise<EmailTriggerInputs> {
+  const { automationId, ...emailInputs } = inputs
+  if (emailInputs.authType === EmailTriggerAuthType.OAUTH2) {
+    delete emailInputs.password
+    return emailInputs
+  }
+
+  if (!isMaskedPassword(emailInputs.password)) {
+    return emailInputs
+  }
+
+  if (!automationId) {
+    throw new HTTPError(
+      "Automation ID is required to test a saved password",
+      400
+    )
+  }
+
+  const automation = await context
+    .getWorkspaceDB()
+    .tryGet<Automation>(automationId)
+  if (!automation) {
+    throw new HTTPError("Automation not found", 404)
+  }
+
+  const trigger = automation.definition.trigger
+  if (!trigger) {
+    throw new HTTPError("No trigger found for automation", 400)
+  }
+  if (!isEmailTrigger(trigger)) {
+    throw new HTTPError("Automation trigger is not an email trigger", 400)
+  }
+  if (!trigger.inputs.password) {
+    throw new HTTPError("IMAP password is required", 400)
+  }
+
+  const stored = trigger.inputs
+  const connectionMatches =
+    emailInputs.host === stored.host &&
+    emailInputs.port === stored.port &&
+    emailInputs.username === stored.username &&
+    emailInputs.secure === stored.secure
+  if (!connectionMatches) {
+    throw new HTTPError(
+      "IMAP password is required when connection details change",
+      400
+    )
+  }
+
+  return {
+    ...emailInputs,
+    password: stored.password,
+  }
+}
+
+export async function testEmailConnection(
+  ctx: UserCtx<TestEmailConnectionRequest, TestEmailConnectionResponse>
+) {
+  try {
+    await testConnection(await hydrateEmailConnectionPassword(ctx.request.body))
+    ctx.body = { valid: true }
+  } catch (err: any) {
+    ctx.body = {
+      valid: false,
+      message: err?.message || "Unable to connect to IMAP server",
+    }
+  }
+}
+
 /*********************
  *                   *
  *   API FUNCTIONS   *
@@ -228,7 +306,11 @@ export async function trigger(
       }
     }
   } else {
-    if (ctx.appId && !dbCore.isProdWorkspaceID(ctx.appId)) {
+    if (
+      ctx.appId &&
+      !dbCore.isProdWorkspaceID(ctx.appId) &&
+      !env.ALLOW_DEV_AUTOMATIONS
+    ) {
       ctx.throw(400, "Only apps in production support this endpoint")
     }
     await triggers.externalTrigger(automation, {
@@ -312,7 +394,7 @@ export async function test(
       return await triggers.externalTrigger(
         { ...automation, disabled: false },
         { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
-        { getResponses: true, onProgress: emitProgress }
+        { getResponses: true, onProgress: emitProgress, isTestRun: true }
       )
     })
     await events.automation.tested(automation)

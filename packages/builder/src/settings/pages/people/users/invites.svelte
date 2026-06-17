@@ -130,10 +130,3 @@
     rowCount={8}
   />
 </Layout>
-
-<style>
-  .delete-btn {
-    justify-content: end;
-    display: flex;
-  }
-</style>

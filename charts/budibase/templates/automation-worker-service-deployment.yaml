@@ -33,6 +33,10 @@ spec:
 {{ end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.automationWorkers.terminationGracePeriodSeconds }}
+      {{- if .Values.services.automationWorkers.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.automationWorkers.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT
@@ -237,8 +241,12 @@ spec:
               key: {{ .secretKey | quote }}
         {{- end}}
 
-        image: {{ .Values.globals.dockerRegistry }}budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+        image: {{ .Values.services.automationWorkers.image | default (printf "%sbudibase/apps:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
         imagePullPolicy: Always
+        {{- with .Values.services.automationWorkers.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if .Values.services.automationWorkers.startupProbe }}
         {{- with .Values.services.automationWorkers.startupProbe }}
         startupProbe:
@@ -272,6 +280,10 @@ spec:
         args:
         {{- toYaml .Values.services.automationWorkers.args | nindent 10 }}
         {{ end }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.services.automationWorkers.preStopDelaySeconds }}"]
         {{ if .Values.services.automationWorkers.extraVolumeMounts }}
         volumeMounts:
         {{- toYaml .Values.services.automationWorkers.extraVolumeMounts | nindent 10 }}

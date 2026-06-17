@@ -3,6 +3,8 @@ import { quotas } from "@budibase/pro"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
 import {
+  ActionFailureReason,
+  ActionType,
   ContextUser,
   CreateDatasourceRequest,
   Datasource,
@@ -454,7 +456,7 @@ async function execute(
     const { rows, pagination, extra, info } =
       query.queryVerb === "read" || opts.isAutomation
         ? await Runner.run<QueryResponse>(inputs)
-        : await quotas.addAction(async () => {
+        : await quotas.addAction(ActionType.CRUD, async () => {
             const response = await Runner.run<QueryResponse>(inputs)
             events.action.crudExecuted({ type: query.queryVerb })
             return response
@@ -469,6 +471,10 @@ async function execute(
       ctx.body = { data: rows, pagination, ...extra, ...info }
     }
   } catch (err: any) {
+    events.action.crudFailed({
+      type: query.queryVerb,
+      reason: ActionFailureReason.ERROR,
+    })
     ctx.throw(400, err)
   }
 }

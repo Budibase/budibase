@@ -5,6 +5,7 @@ import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   InternalTable,
+  roles,
   setEnv,
   tenancy,
   utils,
@@ -29,6 +30,7 @@ import {
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   JsonFieldSubType,
+  PermissionLevel,
   QuotaUsageType,
   RelationSchemaField,
   RelationshipType,
@@ -881,6 +883,27 @@ if (descriptions.length) {
                 expect(row.user).toEqual(config.getUser()._id)
               })
 
+              it("can bind the current user full name", async () => {
+                const table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      userFullName: {
+                        name: "userFullName",
+                        type: FieldType.STRING,
+                        default: `{{ [Current User].[fullName] }}`,
+                      },
+                    },
+                  })
+                )
+                const currentUser = config.getUser()
+                const row = await config.api.row.save(table._id!, {})
+                const expectedFullName =
+                  [currentUser.firstName, currentUser.lastName]
+                    .filter(part => !!part)
+                    .join(" ") || currentUser.email
+                expect(row.userFullName).toEqual(expectedFullName)
+              })
+
               it("cannot access current user password", async () => {
                 const table = await config.api.table.save(
                   saveTableRequest({
@@ -1080,12 +1103,13 @@ if (descriptions.length) {
               InternalTables.USER_METADATA,
               config.userMetadataId!
             )
+            const { roles: _roles, ...userWithoutRoles } = config.getUser()
 
             expect(res).toEqual({
-              ...config.getUser(),
+              ...userWithoutRoles,
+              fullName: expect.any(String),
               _id: config.userMetadataId!,
               _rev: expect.any(String),
-              roles: undefined,
               roleId: "ADMIN",
               tableId: InternalTables.USER_METADATA,
             })
@@ -3048,6 +3072,7 @@ if (descriptions.length) {
             email: row.email,
             firstName: row.firstName,
             lastName: row.lastName,
+            fullName: expect.any(String),
           }),
         ],
       ])("links - %s", (__, relSchema, dataGenerator, resultMapper) => {
@@ -4355,6 +4380,97 @@ if (descriptions.length) {
             expect(rows.length).toBe(1)
             const row = rows[0]
             expect(row["nameWithSpace "]).toBeDefined()
+          })
+        })
+      }
+
+      if (isInternal) {
+        describe("user table (ta_users) access control", () => {
+          it("denies BASIC users from searching the user table", async () => {
+            await config.loginAsRole("BASIC", async () => {
+              await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 403 }
+              )
+            })
+          })
+
+          it("denies POWER users from searching the user table", async () => {
+            await config.loginAsRole("POWER", async () => {
+              await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 403 }
+              )
+            })
+          })
+
+          it("allows ADMIN workspace role users to search the user table", async () => {
+            await config.loginAsRole("ADMIN", async () => {
+              const { rows } = await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 200 }
+              )
+              expect(rows.length).toBeGreaterThan(0)
+            })
+          })
+
+          it("allows builder users to search the user table", async () => {
+            const { rows } = await config.api.row.search(
+              InternalTables.USER_METADATA,
+              {},
+              { status: 200 }
+            )
+            expect(rows.length).toBeGreaterThan(0)
+          })
+
+          it("blocks PUBLIC access even when explicitly configured", async () => {
+            await config.api.permission.add({
+              roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+              resourceId: InternalTables.USER_METADATA,
+              level: PermissionLevel.READ,
+            })
+            await config.loginAsRole("BASIC", async () => {
+              await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 403 }
+              )
+            })
+          })
+
+          it("allows BASIC users when a builder explicitly grants access", async () => {
+            await config.api.permission.add({
+              roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+              resourceId: InternalTables.USER_METADATA,
+              level: PermissionLevel.READ,
+            })
+            await config.loginAsRole("BASIC", async () => {
+              const { rows } = await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 200 }
+              )
+              expect(rows.length).toBeGreaterThan(0)
+            })
+          })
+
+          it("allows POWER users when a builder explicitly grants access", async () => {
+            await config.api.permission.add({
+              roleId: roles.BUILTIN_ROLE_IDS.POWER,
+              resourceId: InternalTables.USER_METADATA,
+              level: PermissionLevel.READ,
+            })
+            await config.loginAsRole("POWER", async () => {
+              const { rows } = await config.api.row.search(
+                InternalTables.USER_METADATA,
+                {},
+                { status: 200 }
+              )
+              expect(rows.length).toBeGreaterThan(0)
+            })
           })
         })
       }

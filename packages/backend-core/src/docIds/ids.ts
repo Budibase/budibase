@@ -133,8 +133,27 @@ export const generateChatConversationID = () => {
   return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${newid()}`
 }
 
+export const getAgentTestSuiteID = (agentId: string) => {
+  return `${DocumentType.AGENT_TEST_SUITE}${SEPARATOR}${agentId}`
+}
+
+export const getAgentTestRunID = (agentId: string, runId: string) => {
+  return `${getAgentTestSuiteID(agentId)}${SEPARATOR}${DocumentType.AGENT_TEST_RUN}${SEPARATOR}${runId}`
+}
+
 export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
+}
+
+export const generateAgentKnowledgeSourceSyncStateID = (
+  agentId: string,
+  sourceId: string
+) => {
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_SYNC_STATE}${SEPARATOR}${agentId}${SEPARATOR}${encodeURIComponent(sourceId)}`
+}
+
+export const generateAgentKnowledgeSourceConnectionID = () => {
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION}${SEPARATOR}${newid()}`
 }
 
 export const generateKnowledgeBaseFileID = (knowledgeBaseId: string) => {
@@ -161,10 +180,6 @@ export const generateWorkspaceAppID = () => {
 
 export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
-}
-
-export const generateVectorDbID = () => {
-  return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
 }
 
 export const generateKnowledgeBaseID = () => {

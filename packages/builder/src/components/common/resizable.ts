@@ -6,6 +6,7 @@ interface ResizeActionsConfig {
   elementDimension: "width" | "height"
   mouseCoordinate: "pageX" | "pageY"
   clientDimension: "clientWidth" | "clientHeight"
+  directionMultiplier?: 1 | -1
   initialValue?: number
   setValue?: (value: number) => void
   onResizeStart?: () => void
@@ -15,6 +16,7 @@ const getResizeActions = ({
   elementDimension,
   mouseCoordinate,
   clientDimension: elementProperty,
+  directionMultiplier = 1,
   initialValue,
   setValue = noop,
   onResizeStart = noop,
@@ -44,7 +46,7 @@ const getResizeActions = ({
       e.preventDefault()
       if (!element || startProperty == null || startPosition == null) return
 
-      const change = e[mouseCoordinate] - startPosition
+      const change = (e[mouseCoordinate] - startPosition) * directionMultiplier
       const newValue = startProperty + change
       element.style[elementDimension] = `${newValue}px`
     }
@@ -156,12 +158,14 @@ export const getVerticalResizeActions = (
 export const getHorizontalResizeActions = (
   initialValue?: number,
   setValue?: (value: number) => void,
-  onResizeStart?: () => void
+  onResizeStart?: () => void,
+  panelPosition: "left" | "right" = "left"
 ) => {
   return getResizeActions({
     elementDimension: "width",
     mouseCoordinate: "pageX",
     clientDimension: "clientWidth",
+    directionMultiplier: panelPosition === "right" ? -1 : 1,
     initialValue,
     setValue,
     onResizeStart,

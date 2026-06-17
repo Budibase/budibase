@@ -177,6 +177,32 @@ describe("API REST request", () => {
     expect(response.autoEnv).toBe("b")
   })
 
+  it("should stop after a failed API request by default", async () => {
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .apiRequest({ query: { queryId: "missing-query" } })
+      .serverLog({ text: "This should not run" })
+      .test({ fields: {} })
+
+    expect(steps).toHaveLength(1)
+    expect(steps[0].outputs.success).toBe(false)
+  })
+
+  it("should continue after a failed API request when continue on error is enabled", async () => {
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .apiRequest({
+        query: { queryId: "missing-query" },
+        continueOnError: true,
+      })
+      .serverLog({ text: "This should run" })
+      .test({ fields: {} })
+
+    expect(steps).toHaveLength(2)
+    expect(steps[0].outputs.success).toBe(false)
+    expect(steps[1].outputs.success).toBe(true)
+  })
+
   it("should be able to execute a query and relay the results - for the old execute query steps", async () => {
     mockRestResponse({ count: 1234 })
 

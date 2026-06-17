@@ -35,34 +35,12 @@
   const ConfigTypes = {
     OIDC: "oidc",
   }
-
   const HasSpacesRegex = /[\\"\s]/
-
-  $: enforcedSSO = $organisation.isSSOEnforced
-
   const pkceOptions = [
     { label: "S256 (recommended)", value: PKCEMethod.S256 },
     { label: "Plain", value: PKCEMethod.PLAIN },
   ]
-
-  $: OIDCConfigFields = {
-    Oidc: [
-      { name: "configUrl", label: "Config URL" },
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client Secret" },
-      {
-        name: "callbackURL",
-        readonly: true,
-        tooltip: $admin.cloud
-          ? null
-          : "Vist the organisation page to update the platform URL",
-        label: "Callback URL",
-        placeholder: $organisation.oidcCallbackUrl,
-        copyButton: true,
-      },
-    ],
-  }
-
+  let defaultScopes = ["profile", "email", "offline_access"]
   let iconDropdownOptions = [
     {
       label: "Microsoft",
@@ -97,34 +75,62 @@
 
   let fileinput
   let image
-
   let google
   let oidc
-  const providers = { google, oidc }
+  let providers = { google, oidc }
 
   // control the state of the save button depending on whether form has changed
   let originalOidcDoc
   let oidcSaveButtonDisabled
-  $: {
-    // delete the callback url which is never saved to the oidc
-    // config doc, to ensure an accurate comparison
-    delete providers.oidc?.config.configs[0].callbackURL
 
-    isEqual(providers.oidc?.config, originalOidcDoc?.config)
-      ? (oidcSaveButtonDisabled = true)
-      : (oidcSaveButtonDisabled = false)
+  let scopesFields = [
+    {
+      editing: true,
+      inputText: null,
+      error: null,
+    },
+  ]
+  $: enforcedSSO = $organisation.isSSOEnforced
+
+  $: oidcConfig = providers?.oidc?.config?.configs?.[0]
+
+  $: OIDCConfigFields = {
+    Oidc: [
+      { name: "configUrl", label: "Config URL" },
+      { name: "clientID", label: "Client ID" },
+      { name: "clientSecret", label: "Client Secret" },
+      {
+        name: "callbackURL",
+        readonly: true,
+        tooltip: $admin.cloud
+          ? null
+          : "Vist the organisation page to update the platform URL",
+        label: "Callback URL",
+        placeholder: $organisation.oidcCallbackUrl,
+        copyButton: true,
+      },
+    ],
+  }
+
+  $: {
+    const current = normaliseOidcConfig({ configs: [oidcConfig] })
+    const original = normaliseOidcConfig({
+      configs: [originalOidcDoc?.config?.configs?.[0]],
+    })
+    oidcSaveButtonDisabled = isEqual(current, original)
   }
 
   $: oidcComplete = !!(
-    providers.oidc?.config?.configs[0].configUrl &&
-    providers.oidc?.config?.configs[0].clientID &&
-    providers.oidc?.config?.configs[0].clientSecret
+    oidcConfig?.configUrl &&
+    oidcConfig?.clientID &&
+    oidcConfig?.clientSecret
   )
 
   const onFileSelected = e => {
     let fileName = e.target.files[0].name
     image = e.target.files[0]
     providers.oidc.config.configs[0].logo = fileName
+    providers = providers
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
   }
 
@@ -187,20 +193,57 @@
     originalOidcDoc = cloneDeep(providers.oidc)
   }
 
-  let defaultScopes = ["profile", "email", "offline_access"]
+  const RENDER_INJECTED_FIELDS = ["callbackURL", "pkce"]
 
-  const refreshScopes = idx => {
-    providers.oidc.config.configs[idx]["scopes"] =
-      providers.oidc.config.configs[idx]["scopes"]
+  const normaliseOidcConfig = config => {
+    if (!config?.configs) return config
+    return {
+      ...config,
+      configs: config.configs.map(c =>
+        c
+          ? Object.fromEntries(
+              Object.entries(c).filter(
+                ([k, v]) =>
+                  !RENDER_INJECTED_FIELDS.includes(k) ||
+                  (v !== undefined && v !== null)
+              )
+            )
+          : c
+      ),
+    }
   }
 
-  let scopesFields = [
-    {
-      editing: true,
-      inputText: null,
-      error: null,
-    },
-  ]
+  const setOidcScopes = scopes => {
+    providers.oidc.config.configs[0].scopes = scopes
+    providers = providers
+  }
+
+  const onScopeKeyup = e => {
+    const field = scopesFields[0]
+    if (!field.inputText) {
+      field.error = null
+    }
+
+    if (e.key !== "Enter" && e.keyCode !== 13) {
+      return
+    }
+
+    const update = field.inputText?.trim() ?? ""
+    const scopes = oidcConfig.scopes ?? [...defaultScopes]
+
+    if (!update.length) {
+      field.inputText = null
+      field.error = null
+    } else if (HasSpacesRegex.test(update)) {
+      field.error =
+        "Auth scopes cannot contain spaces, double quotes or backslashes"
+    } else if (scopes.indexOf(update) > -1) {
+      field.error = "Auth scope already exists"
+    } else {
+      scopesFields[0] = { ...field, error: null, inputText: null }
+      setOidcScopes([...scopes, update])
+    }
+  }
 
   const copyToClipboard = async value => {
     await Helpers.copyToClipboard(value)
@@ -251,9 +294,13 @@
         config: { configs: [{ activated: false, scopes: defaultScopes }] },
       }
     } else {
-      originalOidcDoc = cloneDeep(oidcDoc)
+      if (!oidcDoc.config.configs[0].scopes) {
+        oidcDoc.config.configs[0].scopes = [...defaultScopes]
+      }
       providers.oidc = oidcDoc
     }
+    originalOidcDoc = cloneDeep(providers.oidc)
+    delete originalOidcDoc?.config?.configs[0]?.callbackURL
   })
 </script>
 
@@ -323,7 +370,7 @@
           <div class="inputContainer">
             <div class="input">
               <Input
-                bind:value={providers.oidc.config.configs[0][field.name]}
+                bind:value={oidcConfig[field.name]}
                 readonly={field.readonly}
                 placeholder={field.placeholder}
               />
@@ -346,13 +393,13 @@
       </Body>
       <div class="form-row">
         <Label size="L">Name</Label>
-        <Input bind:value={providers.oidc.config.configs[0].name} />
+        <Input bind:value={oidcConfig.name} />
       </div>
       <div class="form-row">
         <Label size="L">Icon</Label>
         <Select
           label=""
-          bind:value={providers.oidc.config.configs[0].logo}
+          bind:value={oidcConfig.logo}
           useOptionIconImage
           options={iconDropdownOptions}
           on:change={e => e.detail === "Upload" && fileinput.click()}
@@ -374,7 +421,7 @@
         {#if $licensing.pkceOidcEnabled}
           <Select
             placeholder="None"
-            bind:value={providers.oidc.config.configs[0].pkce}
+            bind:value={oidcConfig.pkce}
             options={pkceOptions}
           />
         {:else}
@@ -385,10 +432,7 @@
       </div>
       <div class="form-row">
         <Label size="L">Activated</Label>
-        <Toggle
-          text=""
-          bind:value={providers.oidc.config.configs[0].activated}
-        />
+        <Toggle text="" bind:value={oidcConfig.activated} />
       </div>
     </Layout>
 
@@ -399,7 +443,7 @@
           secondary
           size="S"
           on:click={() => {
-            providers.oidc.config.configs[0]["scopes"] = [...defaultScopes]
+            setOidcScopes([...defaultScopes])
           }}
         >
           Restore Defaults
@@ -418,58 +462,18 @@
           error={scopesFields[0].error}
           placeholder={"New Scope"}
           bind:value={scopesFields[0].inputText}
-          on:keyup={e => {
-            if (!scopesFields[0].inputText) {
-              scopesFields[0].error = null
-            }
-            if (
-              e.key === "Enter" ||
-              e.keyCode === 13 ||
-              e.code == "Space" ||
-              e.keyCode == 32
-            ) {
-              let scopes = providers.oidc.config.configs[0]["scopes"]
-                ? providers.oidc.config.configs[0]["scopes"]
-                : [...defaultScopes]
-
-              let update = scopesFields[0].inputText.trim()
-
-              if (HasSpacesRegex.test(update)) {
-                scopesFields[0].error =
-                  "Auth scopes cannot contain spaces, double quotes or backslashes"
-                return
-              } else if (scopes.indexOf(update) > -1) {
-                scopesFields[0].error = "Auth scope already exists"
-                return
-              } else if (!update.length) {
-                scopesFields[0].inputText = null
-                scopesFields[0].error = null
-                return
-              } else {
-                scopesFields[0].error = null
-                scopes.push(update)
-                providers.oidc.config.configs[0]["scopes"] = scopes
-                scopesFields[0].inputText = null
-              }
-            }
-          }}
+          on:keyup={onScopeKeyup}
         />
       </div>
       <div class="form-row">
         <span></span>
         <Tags>
           <Tag closable={false}>openid</Tag>
-          {#each providers.oidc.config.configs[0]["scopes"] || [...defaultScopes] as tag, idx}
+          {#each oidcConfig.scopes || [...defaultScopes] as tag, idx}
             <Tag
               closable={scopesFields[0].editing}
-              on:click={() => {
-                let idxScopes = providers.oidc.config.configs[0]["scopes"]
-                if (idxScopes.length == 1) {
-                  idxScopes.pop()
-                } else {
-                  idxScopes.splice(idx, 1)
-                  refreshScopes(0)
-                }
+              on:remove={() => {
+                setOidcScopes(oidcConfig.scopes.filter((_, i) => i !== idx))
               }}
             >
               {tag}

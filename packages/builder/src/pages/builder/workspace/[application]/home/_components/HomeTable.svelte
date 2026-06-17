@@ -3,7 +3,6 @@
   import { Body, Icon } from "@budibase/bbui"
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import type {
     HomeRow,
@@ -13,6 +12,7 @@
   } from "@budibase/types"
   import HomeEmptyState from "./HomeEmptyState.svelte"
   import { getTypeLabel } from "./rows"
+  import { getAgentStatusLabel, getPublishResourceStatusLabel } from "./status"
 
   dayjs.extend(relativeTime)
 
@@ -23,7 +23,6 @@
   export let searchTerm = ""
   export let sortColumn: HomeSortColumn
   export let sortOrder: HomeSortOrder
-  export let agentsEnabled = false
 
   const dispatch = createEventDispatcher<{
     openRow: HomeRow
@@ -48,6 +47,28 @@
 
   const handleRowClick = (row: HomeRow) => {
     dispatch("openRow", row)
+  }
+
+  const getRowStatusLabel = (row: HomeRow) => {
+    if (row.type === "app" || row.type === "automation") {
+      return getPublishResourceStatusLabel(row.resource.publishStatus)
+    }
+
+    if (row.type === "agent") {
+      return getAgentStatusLabel(row.resource)
+    }
+
+    return "-"
+  }
+
+  const getStatusColor = (status: string) => {
+    if (status === "Live") {
+      return "var(--color-green-500)"
+    }
+    if (status === "Stopped") {
+      return "var(--color-orange-400)"
+    }
+    return "var(--spectrum-global-color-gray-600)"
   }
 
   export let highlightedRowId: string | null = null
@@ -176,22 +197,9 @@
           </div>
 
           <div class="cell">
-            {#if row.type === "app" || row.type === "automation"}
-              <PublishStatusBadge status={row.status} />
-            {:else if row.type === "agent"}
-              <Body
-                size="S"
-                color={row.live
-                  ? "#8CA171"
-                  : "var(--spectrum-global-color-gray-600)"}
-              >
-                {row.live ? "Live" : "Draft"}
-              </Body>
-            {:else}
-              <Body size="S" color="var(--spectrum-global-color-gray-600)"
-                >-</Body
-              >
-            {/if}
+            <Body size="S" color={getStatusColor(getRowStatusLabel(row))}>
+              {getRowStatusLabel(row)}
+            </Body>
           </div>
 
           <div class="cell">
@@ -227,7 +235,6 @@
             {typeFilter}
             {searchTerm}
             {allRowsCount}
-            {agentsEnabled}
             filteredRowsCount={rows.length}
             on:clearSearch={() => dispatch("clearSearch")}
             on:resetFilters={() => dispatch("resetFilters")}

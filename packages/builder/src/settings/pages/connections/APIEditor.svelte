@@ -43,6 +43,7 @@
   } from "@budibase/bbui"
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
+  import { confirm } from "@/helpers"
   import HTTPAuthEditor from "./HTTPAuthEditor.svelte"
   import OAuth2Editor from "./OAuth2Editor.svelte"
   import ServerUrlInput from "./ServerUrlInput.svelte"
@@ -56,8 +57,12 @@
     OAuth2GrantType,
   } from "@budibase/types"
 
+  import { tick, onDestroy } from "svelte"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
-  import { keyValueArrayToRecord } from "@/components/integration/query"
+  import {
+    keyValueArrayToRecord,
+    isValidEndpointUrl,
+  } from "@/components/integration/query"
   import ViewDynamicVariables from "@/pages/builder/workspace/[application]/data/datasource/[datasourceId]/_components/panels/Variables/ViewDynamicVariables.svelte"
   import DeleteDataConfirmationModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
@@ -88,6 +93,8 @@
   let mode: Mode = "auth"
   let errors: Record<string, string> = {}
   let openApiInfo: ImportRestQueryInfoResponse | undefined
+  let loadingOpenApiInfo = false
+  let selectedChildId: string | undefined
   let addHeader: KeyValueBuilder<unknown>
   let addVariable: KeyValueBuilder<unknown>
   let addQueryParam: KeyValueBuilder<unknown>
@@ -99,16 +106,14 @@
   let deleteModal: DeleteDataConfirmationModal
   let restBindings: EnrichedBinding[] = []
 
-  $: {
-    $environment
-    $licensing
-    restBindings = getRestBindings()
-  }
+  // Connection state
   $: datasource =
     selected?.source === "datasource"
       ? $datasources.list.find(ds => ds._id === selected.sourceId)
       : undefined
-
+  $: isDatasource = selected?.source === "datasource"
+  $: isNewConnection = isDatasource && !datasource
+  $: isOAuth2 = selected?.source === "oauth2"
   $: if (
     isDatasource &&
     !isNewConnection &&
@@ -118,41 +123,64 @@
     bb.settings("/connections/apis")
   }
 
-  $: templateStaticVariableKeys = getTemplateStaticVariableKeys(
-    datasource,
-    openApiInfo
-  )
-
-  $: restIntegration = ($integrations || []).find(
-    i => i.name === IntegrationTypes.REST
-  )
-  $: isDatasource = selected?.source === "datasource"
-  $: isNewConnection = isDatasource && !datasource
-  $: hasChanges =
-    isNewConnection || (initialised && !isEqual(data, originalData))
-
-  $: isOAuth2 = selected?.source === "oauth2"
-  $: oauth2Cfg = isOAuth2
-    ? $oauth2.configs.find(c => c._id === selected?.sourceId)
-    : undefined
-
+  // Template
+  // Resolve template and child selection
   $: template =
     restTemplates.get(getRestTemplateIdentifier(datasource)) ||
     (selected?.templateId
       ? restTemplates.getById(selected.templateId)
       : undefined)
-  $: spec = template?.specs?.[0]
+  $: isIndependentCollection =
+    template?.connectionMode === "independent" &&
+    (template.templates?.length ?? 0) > 0
+  $: showChildPicker =
+    isIndependentCollection && (template?.templates?.length ?? 0) > 1
+  $: autoSelectSingleChild(isIndependentCollection, template?.templates)
+  $: childTemplate =
+    isIndependentCollection && selectedChildId
+      ? template?.templates?.find(t => t.id === selectedChildId)
+      : undefined
+  $: spec = (childTemplate ?? template)?.specs?.[0]
 
-  $: if (spec?.url && !openApiInfo) {
-    ;(async () => {
-      openApiInfo = await loadOpenApiInfo()
-    })()
+  // Fetch OpenAPI info from the active spec, then seed derived values from it
+  // selectedChildId is referenced here to re-trigger when the child selection changes
+  $: if (spec?.url) {
+    selectedChildId
+    fetchOpenApiInfo()
+  }
+  $: serverOptions = openApiInfo?.servers?.length
+    ? openApiInfo.servers
+    : (template?.mixin?.servers ?? [])
+  $: templateStaticVariableKeys = getTemplateStaticVariableKeys(
+    datasource,
+    openApiInfo
+  )
+  $: seedTemplateStaticVariables(openApiInfo)
+
+  // Save state
+  $: hasChanges =
+    isNewConnection || (initialised && !isEqual(data, originalData))
+  $: hasDraft = !!$workspaceConnections.draft
+  $: hasErrors = Object.keys(errors).length > 0
+  $: childPickerIncomplete =
+    showChildPicker && isNewConnection && !selectedChildId
+  $: saveDisabled = !hasChanges || saving || hasErrors || childPickerIncomplete
+
+  // OAuth2
+  $: oauth2Cfg = isOAuth2
+    ? $oauth2.configs.find(c => c._id === selected?.sourceId)
+    : undefined
+
+  // Initialisation
+  $: init(initialised, selected)
+  $: {
+    // Reset child selection when navigating to a different connection
+    selected
+    selectedChildId = undefined
+    openApiInfo = undefined
   }
 
-  $: seedTemplateStaticVariables(openApiInfo)
-  $: init(initialised, selected)
-
-  // Unified auth config list and type options based on source
+  // Auth
   $: authConfigs = data.authConfigs || []
   $: authTypeOptions = AUTH_TYPE_OPTIONS.filter(
     o => o.value !== RestAuthType.API_KEY
@@ -161,8 +189,28 @@
     canAddConfig = true
   }
 
+  // Bindings / display
+  $: {
+    $environment
+    $licensing
+    restBindings = getRestBindings()
+  }
+  $: restIntegration = ($integrations || []).find(
+    i => i.name === IntegrationTypes.REST
+  )
   $: parsedHeaders = runtimeToReadableMap(restBindings, data.defaultHeaders)
   $: parsedQueryParams = runtimeToReadableMap(restBindings, data.queryParams)
+
+  const autoSelectSingleChild = (
+    isIndependent: boolean,
+    children: { id: string; name: string }[] | undefined
+  ) => {
+    if (!isIndependent || children?.length !== 1 || selectedChildId) return
+    selectedChildId = children[0].id
+    if (isNewConnection && !data.name) {
+      data = { ...data, name: children[0].name }
+    }
+  }
 
   const init = (
     isInitialised: boolean,
@@ -171,23 +219,21 @@
     if (isInitialised || !connection) {
       return
     }
-    initialised = true
 
     let authConfigs: RestAuthConfig[]
     if (connection.source === "oauth2") {
       const cfg = $oauth2.configs.find(c => c._id === connection.sourceId)
-      authConfigs = cfg
-        ? [
-            cloneDeep({
-              ...cfg,
-              type: RestAuthType.OAUTH2,
-            }) as RestAuthConfig,
-          ]
-        : []
+      // If oauth2 configs haven't loaded yet, don't mark initialised —
+      // the reactive dependency on $oauth2.configs will retry once they arrive
+      if (!cfg) return
+      authConfigs = [
+        cloneDeep({ ...cfg, type: RestAuthType.OAUTH2 }) as RestAuthConfig,
+      ]
     } else {
-      const existingAuth = cloneDeep(connection.auth || []) as RestAuthConfig[]
-      authConfigs = existingAuth
+      authConfigs = cloneDeep(connection.auth || []) as RestAuthConfig[]
     }
+
+    initialised = true
 
     const ds =
       connection.source === "datasource"
@@ -211,9 +257,13 @@
     queryParamFieldsCount = Object.keys(initial.queryParams || {}).length
   }
 
-  async function loadOpenApiInfo() {
-    if (spec?.url) {
-      return API.getImportInfo({ url: spec.url })
+  async function fetchOpenApiInfo() {
+    if (!spec?.url) return
+    loadingOpenApiInfo = true
+    try {
+      openApiInfo = await API.getImportInfo({ url: spec.url })
+    } finally {
+      loadingOpenApiInfo = false
     }
   }
 
@@ -334,7 +384,7 @@
     const ds = await datasources.create({
       integration: restIntegration,
       config: {
-        url: data.baseUrl || "",
+        url: normaliseBaseUrl(data.baseUrl || "") ?? "",
         authConfigs: data.authConfigs || [],
         staticVariables: data.staticVariables || {},
         defaultHeaders: data.defaultHeaders || {},
@@ -343,11 +393,21 @@
         downloadImages: data.downloadImages ?? true,
       },
       name: data.name,
-      restTemplateId: selected?.templateId as RestTemplateId | undefined,
+      restTemplateId: (selectedChildId ?? selected?.templateId) as
+        | RestTemplateId
+        | undefined,
     })
     originalData = cloneDeep(data)
     notifications.success("Connection created")
-    workspaceConnections.select(ds._id!)
+    if ($workspaceConnections.draft) {
+      workspaceConnections.updateDraft({
+        templateId: ds.restTemplateId,
+        query: { datasourceId: ds._id },
+      })
+      bb.hideSettings(`/connections/apis/${ds._id}`)
+    } else {
+      bb.settings(`/connections/apis/${ds._id}`)
+    }
   }
 
   const updateDatasource = async () => {
@@ -360,7 +420,7 @@
       name: data.name!,
       config: {
         ...datasource.config,
-        url: data.baseUrl,
+        url: normaliseBaseUrl(data.baseUrl ?? "") ?? data.baseUrl,
         authConfigs: data.authConfigs,
         staticVariables: data.staticVariables,
         defaultHeaders: data.defaultHeaders,
@@ -372,7 +432,8 @@
 
     const resp = await API.updateDatasource(updatedDatasource)
     datasources.replaceDatasource(resp.datasource._id!, resp.datasource)
-    originalData = cloneDeep(data)
+    await tick()
+    init(false, selected)
     notifications.success("API updated")
   }
 
@@ -402,8 +463,20 @@
     notifications.success("Settings saved")
   }
 
-  const validateName = () => {
-    const newErrors = { ...errors }
+  const normaliseBaseUrl = (url: string) => {
+    if (!isValidEndpointUrl(url)) return null
+    return url.replace(/\/$/, "")
+  }
+
+  const validateBaseUrl = (newErrors: Record<string, string>) => {
+    if (data.baseUrl && normaliseBaseUrl(data.baseUrl) === null) {
+      newErrors.baseUrl = "Must be a valid http or https URL"
+    } else {
+      delete newErrors.baseUrl
+    }
+  }
+
+  const validateName = (newErrors: Record<string, string>) => {
     if (!data.name) {
       newErrors.name = "Name is required"
     } else if (
@@ -415,13 +488,19 @@
     } else {
       delete newErrors.name
     }
-    errors = newErrors
   }
 
   const onSave = async () => {
-    validateName()
-    errors = { ...errors }
-    if (Object.keys(errors).length > 0 || !validateAuth()) {
+    const newErrors = { ...errors }
+    validateName(newErrors)
+    validateBaseUrl(newErrors)
+    if (childPickerIncomplete) {
+      newErrors.childId = "Please select an API"
+    } else {
+      delete newErrors.childId
+    }
+    errors = newErrors
+    if (hasErrors || !validateAuth()) {
       return
     }
     saving = true
@@ -489,6 +568,34 @@
     data = { ...data }
   }
 
+  const unregister = bb.registerBeforeClose(async () => {
+    const ok = await confirmIfDirty()
+    if (ok) unregister()
+    return ok
+  })
+  onDestroy(unregister)
+
+  export async function confirmIfDirty(): Promise<boolean> {
+    if (!hasChanges) return true
+    return confirm({
+      title: "Your changes are not saved",
+      body: "Your changes are not yet saved. Do you want to save them before leaving?",
+      okText: "Save and continue",
+      cancelText: "Discard and continue",
+      size: "M",
+      onConfirm: async () => {
+        try {
+          await onSave()
+          return true
+        } catch {
+          return false
+        }
+      },
+      onCancel: () => true,
+      onClose: () => false,
+    })
+  }
+
   const getTemplateStaticVariableKeys = (
     ds: Datasource | UIInternalDatasource | undefined,
     apiInfo: ImportRestQueryInfoResponse | undefined
@@ -508,34 +615,91 @@
   <Layout gap="S" noPadding>
     <RouteActions>
       <div class="route-buttons">
-        {#if isDatasource && !isNewConnection}
-          <Button on:click={() => deleteModal.show()} quiet overBackground
-            >Delete</Button
+        {#if !$bb.settings.locked}
+          {#if isDatasource && !isNewConnection}
+            <Button on:click={() => deleteModal.show()} quiet overBackground>
+              Delete
+            </Button>
+            {#if !hasDraft}
+              <Button size="M" on:click={openInApiEditor} secondary>
+                Open in API Editor
+              </Button>
+            {/if}
+          {/if}
+        {/if}
+        {#if $bb.settings.locked && saveDisabled}
+          <Button
+            secondary
+            size="M"
+            on:click={async () => {
+              const ok = await confirmIfDirty()
+              if (ok) bb.clearSettings()
+            }}
           >
-          <Button size="M" on:click={openInApiEditor} secondary>
-            Open in API Editor
+            Close
+          </Button>
+        {:else}
+          <Button size="M" disabled={saveDisabled} on:click={onSave} cta>
+            {hasDraft && isNewConnection ? "Save and close" : "Save"}
           </Button>
         {/if}
-        <Button size="M" disabled={!hasChanges || saving} on:click={onSave} cta>
-          Save
-        </Button>
       </div>
     </RouteActions>
     <div class="details-box">
-      <div class="details-box-name">
-        <Input
-          label="Display name"
-          placeholder="Type here..."
-          value={data.name}
+      <Input
+        label="Display name"
+        placeholder="Type here..."
+        value={data.name}
+        on:change={e => {
+          data.name = e.detail
+          data = { ...data }
+        }}
+        on:blur={() => {
+          const e = { ...errors }
+          validateName(e)
+          errors = e
+        }}
+        error={errors.name}
+        required
+      />
+      {#if showChildPicker && isNewConnection}
+        <Select
+          label="API"
+          placeholder="Select an API..."
+          value={selectedChildId}
+          options={template?.templates ?? []}
+          getOptionValue={t => t.id}
+          getOptionLabel={t => t.name}
+          error={errors.childId}
           on:change={e => {
-            data.name = e.detail
-            data = { ...data }
+            selectedChildId = e.detail
+            openApiInfo = undefined
+            const { childId: _, ...rest } = errors
+            errors = rest
+            const child = template?.templates?.find(t => t.id === e.detail)
+            if (child) {
+              data = { ...data, name: child.name }
+            }
           }}
-          on:blur={validateName}
-          error={errors.name}
           required
         />
-      </div>
+      {/if}
+      <ServerUrlInput
+        label="Base URL"
+        value={data.baseUrl ?? ""}
+        servers={serverOptions}
+        disabled={childPickerIncomplete || loadingOpenApiInfo}
+        error={errors.baseUrl}
+        on:change={e => {
+          data.baseUrl = e.detail
+          data = { ...data }
+        }}
+        on:blur={() => {
+          const e = { ...errors }
+          validateBaseUrl(e)
+          errors = e
+        }}
+      />
     </div>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -635,7 +799,7 @@
           {/if}
         </Layout>
       {:else if mode === "advanced"}
-        <div class="details-box">
+        <div class="details-box details-box--no-padding">
           <div class="settings-item first">
             <div class="settings-item-text">
               <span>Reject Unauthorized</span>
@@ -671,15 +835,6 @@
       {:else}
         <Layout gap="M" noPadding>
           <Divider noMargin noGrid size="S" />
-          <ServerUrlInput
-            label="Base URL"
-            value={data.baseUrl ?? ""}
-            servers={openApiInfo?.servers ?? []}
-            on:change={e => {
-              data.baseUrl = e.detail
-              data = { ...data }
-            }}
-          />
           <Layout gap="XXS" noPadding>
             <div class="prop-table-header">
               <Label>URL parameters</Label>
@@ -846,16 +1001,18 @@
   .details-box {
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-m);
-    overflow: hidden;
   }
 
-  .details-box-name {
-    padding: var(--spacing-l);
+  .details-box--no-padding {
+    padding: 0;
+    gap: 0;
   }
 
-  .details-box-name :global(label) {
+  .details-box :global(label) {
     margin-top: 0;
     padding-top: 0;
   }

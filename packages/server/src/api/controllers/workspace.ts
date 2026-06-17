@@ -13,9 +13,10 @@ import {
   users,
   utils,
 } from "@budibase/backend-core"
-import { groups, licensing, quotas } from "@budibase/pro"
+import { features, groups, licensing, quotas } from "@budibase/pro"
 import {
   DefaultAppTheme,
+  DefaultNewAppFontFamily,
   helpers,
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
@@ -34,10 +35,12 @@ import {
   APIWarningCode,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
+  FetchMicrofrontendBootstrapResponse,
   FetchPublishedAppsResponse,
   FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
+  Feature,
   ImportToUpdateWorkspaceRequest,
   ImportToUpdateWorkspaceResponse,
   Layout,
@@ -56,7 +59,11 @@ import {
   OnboardingWorkspaceRequest,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
-import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
+import {
+  DEFAULT_BB_DATASOURCE_ID,
+  ObjectStoreBuckets,
+  USERS_TABLE_SCHEMA,
+} from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -67,6 +74,7 @@ import {
   generateUserMetadataID,
   generateWorkspaceID,
   getDevWorkspaceID,
+  getProdWorkspaceID,
   getLayoutParams,
   isDevWorkspaceID,
   WorkspaceStatus,
@@ -217,8 +225,27 @@ async function createInstance(appId: string, template: AppTemplate) {
     }
     await sdk.backups.importApp(appId, db, template, opts)
   } else {
+    // Re-construct USERS_TABLE_SCHEMA because we need to exclude the POWER role
+    // if we are not importing a workspace.
+    const usersTable = {
+      ...USERS_TABLE_SCHEMA,
+      schema: {
+        ...USERS_TABLE_SCHEMA.schema,
+        roleId: {
+          ...USERS_TABLE_SCHEMA.schema.roleId,
+          constraints: {
+            ...USERS_TABLE_SCHEMA.schema.roleId.constraints,
+            inclusion: [
+              roles.BUILTIN_ROLE_IDS.ADMIN,
+              roles.BUILTIN_ROLE_IDS.BASIC,
+              roles.BUILTIN_ROLE_IDS.PUBLIC,
+            ],
+          },
+        },
+      },
+    }
     // create the users table
-    await db.put(USERS_TABLE_SCHEMA)
+    await db.put(usersTable)
   }
 
   return { _id: appId }
@@ -560,6 +587,13 @@ export async function fetchAppPackage(
         s => s.workspaceAppId === matchedWorkspaceApp._id
       )
       application.navigation = matchedWorkspaceApp.navigation
+      application.theme = matchedWorkspaceApp.theme ?? application.theme
+      application.customTheme = matchedWorkspaceApp.customTheme
+        ? {
+            ...(application.customTheme || {}),
+            ...matchedWorkspaceApp.customTheme,
+          }
+        : application.customTheme
     } else {
       screens = []
     }
@@ -574,6 +608,14 @@ export async function fetchAppPackage(
     application.version
   )
 
+  // never expose the embed SSO secret to the browser - strip it entirely for
+  // the published client and mask the key for the builder
+  if (application.embedSSO) {
+    application.embedSSO = isBuilder
+      ? sdk.embedSSO.maskConfigForBuilder(application.embedSSO)
+      : undefined
+  }
+
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
@@ -582,8 +624,106 @@ export async function fetchAppPackage(
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
+    recaptchaEnabled: license?.features?.includes(Feature.RECAPTCHA) ?? false,
     clientCacheKey,
   }
+}
+
+const parseMicrofrontendAppPath = (value: unknown) => {
+  if (typeof value !== "string") {
+    return undefined
+  }
+  const normalizedPath = value.trim().split("?")[0].replace(/\/$/, "")
+  if (
+    !normalizedPath.startsWith("/app/") &&
+    !normalizedPath.startsWith("/app-chat/")
+  ) {
+    return undefined
+  }
+
+  const parts = normalizedPath.split("/")
+  if (!parts[2]) {
+    return undefined
+  }
+
+  return normalizedPath
+}
+
+const resolveProdWorkspaceIdFromAppPath = async (appPath: string) => {
+  const workspaceUrl = appPath.split("/")[2]
+  if (!workspaceUrl) {
+    return undefined
+  }
+
+  const possibleUrl = `/${workspaceUrl.toLowerCase()}`
+  const workspaces = await dbCore.getAllWorkspaces({ dev: false })
+  const workspace = workspaces.find(
+    app => app.url?.toLowerCase() === possibleUrl
+  )
+  return workspace?.appId
+}
+
+export async function fetchMicrofrontendBootstrap(
+  ctx: UserCtx<void, FetchMicrofrontendBootstrapResponse>
+) {
+  const license = await licensing.cache.getCachedLicense()
+  if (!(await features.isMicrofrontendFeatureEnabled(license))) {
+    ctx.throw(
+      403,
+      "Microfrontend bootstrap is only available when the microfrontend feature is enabled."
+    )
+  }
+
+  const appPath = parseMicrofrontendAppPath(ctx.query.appPath)
+  if (!appPath) {
+    ctx.throw(
+      400,
+      "Invalid appPath. Provide /app/<workspace-url> or /app-chat/<workspace-url>."
+    )
+  }
+
+  const workspaceId = await resolveProdWorkspaceIdFromAppPath(appPath)
+  if (!workspaceId) {
+    ctx.throw(404, `No matching workspace app found for URL path: ${appPath}`)
+  }
+
+  const isChatRoute =
+    appPath === "/app-chat" || appPath.startsWith("/app-chat/")
+
+  const bootstrap = await context.doInWorkspaceContext(
+    workspaceId,
+    async () => {
+      const matchedWorkspaceApp =
+        await sdk.workspaceApps.getMatchedWorkspaceApp(appPath)
+
+      if (
+        !isChatRoute &&
+        (!matchedWorkspaceApp || matchedWorkspaceApp.disabled)
+      ) {
+        ctx.throw(
+          404,
+          `No matching workspace app found for URL path: ${appPath}`
+        )
+      }
+
+      const appInfo = await sdk.workspaces.metadata.get()
+      const clientLibPath = await objectStore.clientLibraryUrl(
+        workspaceId,
+        appInfo.version
+      )
+      const clientCacheKey = await objectStore.getClientCacheKey(
+        appInfo.version
+      )
+
+      return {
+        appId: workspaceId,
+        clientLibPath,
+        clientCacheKey,
+      }
+    }
+  )
+
+  ctx.body = bootstrap
 }
 
 async function performWorkspaceCreate(
@@ -644,6 +784,7 @@ async function performWorkspaceCreate(
     const instance = await createInstance(workspaceId, instanceConfig)
     const db = context.getWorkspaceDB()
     const isImport = !!instanceConfig.file
+    const isTemplate = !!instanceConfig.useTemplate && !isImport
 
     await addCreatorToUsersTable(ctx)
 
@@ -672,6 +813,7 @@ async function performWorkspaceCreate(
         primaryColor: "var(--spectrum-global-color-blue-700)",
         primaryColorHover: "var(--spectrum-global-color-blue-600)",
         buttonBorderRadius: "16px",
+        fontFamily: DefaultNewAppFontFamily,
       },
       features: {
         componentValidation: true,
@@ -693,7 +835,6 @@ async function performWorkspaceCreate(
         "_rev",
         "navigation",
         "theme",
-        "customTheme",
         "icon",
         "snippets",
         "scripts",
@@ -705,6 +846,18 @@ async function performWorkspaceCreate(
           newWorkspace[key] = existing[key]
         }
       })
+
+      if (existing.customTheme) {
+        newWorkspace.customTheme = isTemplate
+          ? {
+              ...existing.customTheme,
+              fontFamily:
+                existing.customTheme.fontFamily || DefaultNewAppFontFamily,
+            }
+          : existing.customTheme
+      } else if (isImport) {
+        newWorkspace.customTheme = undefined
+      }
 
       // Keep existing feature flags
       if (!existing.features?.componentValidation) {
@@ -927,7 +1080,12 @@ export async function update(
     ctx.request.body.url = url
   }
 
+  if ("embedSSO" in ctx.request.body) {
+    await features.checkFeature(Feature.EMBED_AUTH)
+  }
+
   const app = await updateWorkspacePackage(ctx.request.body, ctx.params.appId)
+  await syncRecaptchaStateToPublishedApp(ctx.params.appId, ctx.request.body)
   await events.app.updated(app)
   ctx.body = app
   builderSocket?.emitAppMetadataUpdate(ctx, {
@@ -941,6 +1099,36 @@ export async function update(
       chainAutomations: app.automations?.chainAutomations,
     },
   })
+}
+
+const syncRecaptchaStateToPublishedApp = async (
+  workspaceId: string,
+  updates: UpdateWorkspaceRequest
+) => {
+  const recaptchaEnabled = updates.features?.recaptchaEnabled
+  if (!isDevWorkspaceID(workspaceId) || typeof recaptchaEnabled !== "boolean") {
+    return
+  }
+
+  const prodWorkspaceId = getProdWorkspaceID(workspaceId)
+  const prodMetadata = await context.doInWorkspaceContext(
+    prodWorkspaceId,
+    async () => {
+      return sdk.workspaces.metadata.tryGet()
+    }
+  )
+  if (!prodMetadata) {
+    return
+  }
+
+  await updateWorkspacePackage(
+    {
+      features: {
+        recaptchaEnabled,
+      },
+    },
+    prodWorkspaceId
+  )
 }
 
 export async function updateClient(
@@ -1204,7 +1392,7 @@ export async function duplicateWorkspace(
   const url = sdk.workspaces.getAppUrl({ name: appName, url: possibleUrl })
   checkWorkspaceUrl(ctx, workspaces, url)
 
-  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
+  const tmpPath = await sdk.backups.exportWorkspace(sourceAppId, {
     excludeRows: false,
     tar: false,
   })
@@ -1271,6 +1459,25 @@ export async function updateWorkspacePackage(
     }
 
     // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
+    let deletedIconSources: string[] = []
+    const appPwaPrefix = `${getProdWorkspaceID(workspaceId)}/pwa/`
+    const pwaIconSource = (src: string) => {
+      const signedIcon = objectStore.extractBucketAndPath(src)
+      const resolvedSrc = signedIcon
+        ? signedIcon.bucket === ObjectStoreBuckets.APPS
+          ? signedIcon.path
+          : undefined
+        : src
+
+      if (!resolvedSrc?.startsWith(appPwaPrefix)) {
+        return undefined
+      }
+
+      return resolvedSrc
+    }
+    const isDefinedPwaIconSource = (src: string | undefined): src is string =>
+      src !== undefined
+
     if (workspacePackage.pwa && application.pwa) {
       if (workspacePackage.pwa.icons) {
         workspacePackage.pwa.icons = workspacePackage.pwa.icons.map(
@@ -1280,7 +1487,30 @@ export async function updateWorkspacePackage(
               ? { ...icon, src: application?.pwa?.icons?.[i].src }
               : icon
         )
+
+        const oldIconSources = new Set(
+          application.pwa.icons
+            .map(icon => pwaIconSource(icon.src))
+            .filter(isDefinedPwaIconSource)
+        )
+        const newIconSources = new Set(
+          workspacePackage.pwa.icons
+            .map(icon => pwaIconSource(icon.src))
+            .filter(isDefinedPwaIconSource)
+        )
+        deletedIconSources = [...oldIconSources].filter(
+          src => !newIconSources.has(src)
+        )
       }
+    }
+
+    // encrypt the embed SSO secret at rest (and preserve the existing secret
+    // when the builder submits the masked placeholder)
+    if (workspacePackage.embedSSO) {
+      newWorkspacePackage.embedSSO = sdk.embedSSO.encodeConfigForStorage(
+        workspacePackage.embedSSO,
+        application.embedSSO
+      )
     }
 
     // the locked by property is attached by server but generated from
@@ -1288,6 +1518,16 @@ export async function updateWorkspacePackage(
     delete newWorkspacePackage.lockedBy
 
     await db.put(newWorkspacePackage)
+    if (deletedIconSources.length > 0) {
+      try {
+        await objectStore.deleteFiles(
+          ObjectStoreBuckets.APPS,
+          deletedIconSources
+        )
+      } catch (error) {
+        console.error("Failed to delete removed PWA icons:", error)
+      }
+    }
     // remove any cached metadata, so that it will be updated
     await cache.workspace.invalidateWorkspaceMetadata(workspaceId)
     return newWorkspacePackage

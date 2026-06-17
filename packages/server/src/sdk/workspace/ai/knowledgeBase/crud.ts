@@ -1,29 +1,21 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { AIConfigType, DocumentType, KnowledgeBase } from "@budibase/types"
-import * as configSdk from "../configs"
-import * as knowledgeBaseFileSdk from "./files"
-import * as vectorDbSdk from "../vectorDb"
+import {
+  CreateKnowledgeBaseRequest,
+  DocumentType,
+  GeminiKnowledgeBase,
+  KnowledgeBase,
+  KnowledgeBaseType,
+  UpdateKnowledgeBaseRequest,
+} from "@budibase/types"
+import {
+  createGeminiFileStore,
+  deleteGeminiVectorStore,
+} from "./geminiFileStore"
+import { syncKeyVectorStores } from "../configs/litellm"
+import { utils } from "@budibase/shared-core"
 
 const normalizeKnowledgeBaseName = (name: string | undefined) =>
   name?.trim().toLowerCase() || ""
-
-const validateReferences = async ({
-  embeddingModel,
-  vectorDb,
-}: Pick<KnowledgeBase, "embeddingModel" | "vectorDb">) => {
-  const embeddingConfig = await configSdk.find(embeddingModel)
-  if (!embeddingConfig) {
-    throw new HTTPError("Embedding model not found", 404)
-  }
-  if (embeddingConfig.configType !== AIConfigType.EMBEDDINGS) {
-    throw new HTTPError("Embedding model must be an embeddings config", 400)
-  }
-
-  const vectorDbConfig = await vectorDbSdk.find(vectorDb)
-  if (!vectorDbConfig) {
-    throw new HTTPError("Vector store config not found", 404)
-  }
-}
 
 export async function fetch(): Promise<KnowledgeBase[]> {
   const db = context.getWorkspaceDB()
@@ -36,24 +28,6 @@ export async function fetch(): Promise<KnowledgeBase[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is KnowledgeBase => !!doc)
-}
-
-export async function findByEmbeddingModel(
-  embeddingModelId: string
-): Promise<KnowledgeBase[]> {
-  const knowledgeBases = await fetch()
-  return knowledgeBases.filter(
-    knowledgeBase => knowledgeBase.embeddingModel === embeddingModelId
-  )
-}
-
-export async function findByVectorDb(
-  vectorDbId: string
-): Promise<KnowledgeBase[]> {
-  const knowledgeBases = await fetch()
-  return knowledgeBases.filter(
-    knowledgeBase => knowledgeBase.vectorDb === vectorDbId
-  )
 }
 
 export async function find(id: string): Promise<KnowledgeBase | undefined> {
@@ -82,25 +56,57 @@ const ensureUniqueName = async (
   }
 }
 
-export async function create(config: KnowledgeBase): Promise<KnowledgeBase> {
+export async function create(
+  config: CreateKnowledgeBaseRequest
+): Promise<KnowledgeBase> {
   const db = context.getWorkspaceDB()
-  await validateReferences(config)
+  const knowledgeBaseType = config.type
   await ensureUniqueName(config.name)
 
-  const newConfig: KnowledgeBase = {
-    _id: docIds.generateKnowledgeBaseID(),
-    name: config.name.trim(),
-    embeddingModel: config.embeddingModel,
-    vectorDb: config.vectorDb,
+  let newConfig: KnowledgeBase
+  let createdGeminiStoreId: string | undefined
+  switch (knowledgeBaseType) {
+    case KnowledgeBaseType.GEMINI: {
+      const googleFileStoreId = await createGeminiFileStore(config.name.trim())
+      createdGeminiStoreId = googleFileStoreId
+      newConfig = {
+        _id: docIds.generateKnowledgeBaseID(),
+        name: config.name.trim(),
+        type: KnowledgeBaseType.GEMINI,
+        config: {
+          googleFileStoreId,
+        },
+      } satisfies GeminiKnowledgeBase
+      break
+    }
+    default:
+      throw utils.unreachable(knowledgeBaseType)
   }
 
-  const { rev } = await db.put(newConfig)
-  newConfig._rev = rev
+  try {
+    const { rev } = await db.put(newConfig)
+    newConfig._rev = rev
+  } catch (error) {
+    if (createdGeminiStoreId) {
+      await deleteGeminiVectorStore(createdGeminiStoreId).catch(
+        cleanupError => {
+          console.log(
+            "Failed to cleanup Gemini vector store after knowledge base create failure",
+            cleanupError
+          )
+        }
+      )
+    }
+    throw error
+  }
+  await syncKeyVectorStores()
 
   return newConfig
 }
 
-export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
+export async function update(
+  config: UpdateKnowledgeBaseRequest
+): Promise<KnowledgeBase> {
   if (!config._id || !config._rev) {
     throw new HTTPError("id and rev required", 400)
   }
@@ -111,26 +117,34 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
     throw new HTTPError("Knowledge base not found", 404)
   }
 
-  const updated: KnowledgeBase = {
-    ...existing,
-    ...config,
-  }
-
-  const referencesChanged =
-    existing.embeddingModel !== updated.embeddingModel ||
-    existing.vectorDb !== updated.vectorDb
-
-  if (referencesChanged) {
-    const files = await knowledgeBaseFileSdk.listKnowledgeBaseFiles(config._id)
-    if (files.length > 0) {
-      throw new HTTPError(
-        "Embedding model and vector database cannot be changed after files are added",
-        400
-      )
+  let updated: KnowledgeBase
+  const knowledgeBaseType = config.type
+  switch (knowledgeBaseType) {
+    case KnowledgeBaseType.GEMINI: {
+      if (knowledgeBaseType !== existing.type) {
+        throw new HTTPError("Knowledge base type cannot be changed", 400)
+      }
+      updated = {
+        ...existing,
+        ...config,
+        type: KnowledgeBaseType.GEMINI,
+        config: { googleFileStoreId: existing.config.googleFileStoreId },
+      } satisfies GeminiKnowledgeBase
+      break
     }
+    default:
+      throw utils.unreachable(knowledgeBaseType)
   }
 
-  await validateReferences(updated)
+  if (
+    updated.type === KnowledgeBaseType.GEMINI &&
+    !updated.config.googleFileStoreId
+  ) {
+    throw new HTTPError(
+      "Google knowledge base is missing its file store configuration",
+      400
+    )
+  }
   await ensureUniqueName(updated.name, updated._id)
   updated.name = updated.name.trim()
 
@@ -145,4 +159,5 @@ export async function remove(id: string) {
 
   const existing = await db.get<KnowledgeBase>(id)
   await db.remove(existing)
+  await syncKeyVectorStores()
 }

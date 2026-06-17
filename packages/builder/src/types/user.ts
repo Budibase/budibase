@@ -5,7 +5,7 @@ export interface UserInfo {
   email: string
   password: string
   forceResetPassword?: boolean
-  role: keyof typeof Constants.BudibaseRoles
+  role: (typeof Constants.BudibaseRoles)[keyof typeof Constants.BudibaseRoles]
   appRole?: (typeof Constants.Roles)[keyof typeof Constants.Roles]
 }
 

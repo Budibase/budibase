@@ -1,10 +1,18 @@
 import { Document } from "../.."
 
-export interface KnowledgeBase extends Document {
-  name: string
-  embeddingModel: string
-  vectorDb: string
+export enum KnowledgeBaseType {
+  GEMINI = "gemini",
 }
+
+export interface GeminiKnowledgeBase extends Document {
+  name: string
+  type: KnowledgeBaseType.GEMINI
+  config: {
+    googleFileStoreId: string
+  }
+}
+
+export type KnowledgeBase = GeminiKnowledgeBase
 
 export enum KnowledgeBaseFileStatus {
   PROCESSING = "processing",
@@ -12,15 +20,34 @@ export enum KnowledgeBaseFileStatus {
   FAILED = "failed",
 }
 
+export enum KnowledgeBaseFileSourceType {
+  SHAREPOINT = "sharepoint",
+}
+
+export interface SharePointKnowledgeBaseFileSource {
+  type: KnowledgeBaseFileSourceType.SHAREPOINT
+  knowledgeSourceId: string
+  siteId: string
+  driveId: string
+  itemId: string
+  path: string
+  externalId?: string
+  etag?: string
+  lastModifiedAt?: string
+  remoteSize?: number
+}
+
+export type KnowledgeBaseFileSource = SharePointKnowledgeBaseFileSource
+
 export interface KnowledgeBaseFile extends Document {
   knowledgeBaseId: string
+  source?: KnowledgeBaseFileSource
   filename: string
   mimetype?: string
   size?: number
   objectStoreKey: string
-  ragSourceId: string
+  ragSourceId?: string
   status: KnowledgeBaseFileStatus
-  chunkCount: number
   uploadedBy: string
   errorMessage?: string
   processedAt?: string

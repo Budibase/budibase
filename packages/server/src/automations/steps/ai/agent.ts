@@ -1,7 +1,9 @@
 import * as automationUtils from "../../automationUtils"
-import { getErrorMessage } from "@budibase/backend-core"
+import { events, getErrorMessage } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  ActionFailureReason,
+  ActionType,
   AgentStepInputs,
   AgentStepOutputs,
   AutomationStepInputBase,
@@ -144,7 +146,7 @@ export async function run({
               }
             }
             for (const _toolResult of toolResults) {
-              await quotas.addAction(async () => {})
+              await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
           },
         })
@@ -224,6 +226,8 @@ export async function run({
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
 
+        events.action.aiAgentExecuted({ agentId })
+
         return {
           success: true,
           response: responseText,
@@ -249,6 +253,12 @@ export async function run({
           appId,
           liteLLMUrl: env.LITELLM_URL,
           errorName: err?.name,
+          errorMessage,
+        })
+
+        events.action.aiAgentFailed({
+          agentId,
+          reason: ActionFailureReason.ERROR,
           errorMessage,
         })
 

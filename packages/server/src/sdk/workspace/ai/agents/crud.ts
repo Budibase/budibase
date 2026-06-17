@@ -1,15 +1,36 @@
-import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  encryption,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
 import type {
   Agent,
-  CreateAgentRequest,
-  UpdateAgentRequest,
+  AgentKnowledgeSource,
+  AgentOperation,
+  Optional,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
+import * as knowledgeBaseSdk from "../knowledgeBase"
+import { assertAgentHasValidConfig } from "./utils"
+import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
+
+// TODO: this will eventually go away, after a grace period
+type DeprecatedAgent = Agent & {
+  promptInstructions?: string
+  operationName?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
+  allowKnowledgeSourceDownload?: boolean
+}
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
+const DEFAULT_OPERATION_NAME = "Main operation"
 
 const guardName = async (name: string, id?: string) => {
   if (!name.trim()) {
@@ -99,14 +120,92 @@ const decodeSlackIntegrationSecrets = (
   }
 }
 
-const withAgentDefaults = (agent: Agent): Agent => ({
-  ...agent,
-  live: agent.live ?? false,
-  enabledTools: agent.enabledTools || [],
-  knowledgeBases: agent.knowledgeBases || [],
-  discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
-  slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
-})
+const encodeTelegramIntegrationSecrets = (
+  telegramIntegration?: Agent["telegramIntegration"]
+) => {
+  if (!telegramIntegration) {
+    return telegramIntegration
+  }
+
+  return {
+    ...telegramIntegration,
+    botToken: encodeSecret(telegramIntegration.botToken),
+    webhookSecretToken: encodeSecret(telegramIntegration.webhookSecretToken),
+  }
+}
+
+const decodeTelegramIntegrationSecrets = (
+  telegramIntegration?: Agent["telegramIntegration"]
+) => {
+  if (!telegramIntegration) {
+    return telegramIntegration
+  }
+
+  return {
+    ...telegramIntegration,
+    botToken: decodeSecret(telegramIntegration.botToken),
+    webhookSecretToken: decodeSecret(telegramIntegration.webhookSecretToken),
+  }
+}
+
+const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
+  const {
+    promptInstructions: _promptInstructions,
+    operationName: _operationName,
+    enabledTools: _enabledTools,
+    knowledgeBases: _knowledgeBases,
+    knowledgeSources: _knowledgeSources,
+    allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
+    ...agent
+  } = raw
+  return agent as Agent
+}
+
+const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
+  const legacyKnowledgeSources = raw.knowledgeSources
+  const legacyAllowKnowledgeSourceDownload = raw.allowKnowledgeSourceDownload
+
+  if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
+    return raw.operations || []
+  }
+
+  if (
+    raw.promptInstructions ||
+    raw.operationName ||
+    raw.enabledTools?.length ||
+    raw.knowledgeBases?.length ||
+    legacyKnowledgeSources?.length
+  ) {
+    return [
+      {
+        id: "operation_default",
+        name: raw.operationName || DEFAULT_OPERATION_NAME,
+        live: true,
+        promptInstructions: raw.promptInstructions || "",
+        enabledTools: raw.enabledTools || [],
+        knowledgeBases: raw.knowledgeBases || [],
+        knowledgeSources: legacyKnowledgeSources || [],
+        allowKnowledgeSourceDownload:
+          legacyAllowKnowledgeSourceDownload ?? true,
+      },
+    ]
+  }
+
+  return []
+}
+
+const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
+  return {
+    ...stripDeprecatedAgentFields(raw),
+    live: raw.live ?? false,
+    operations: migrateOperations(raw),
+    discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
+    slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
+    telegramIntegration: decodeTelegramIntegrationSecrets(
+      raw.telegramIntegration
+    ),
+  }
+}
 
 const mergeDiscordIntegration = ({
   existing,
@@ -194,9 +293,42 @@ const mergeSlackIntegration = ({
   return merged
 }
 
+const mergeTelegramIntegration = ({
+  existing,
+  incoming,
+}: {
+  existing?: Agent["telegramIntegration"]
+  incoming?: Agent["telegramIntegration"]
+}) => {
+  if (incoming === undefined) {
+    return existing
+  }
+  if (!incoming) {
+    return incoming
+  }
+
+  const merged = {
+    ...(existing || {}),
+    ...incoming,
+  }
+
+  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
+    merged.botToken = existing.botToken
+  }
+
+  if (
+    incoming.webhookSecretToken === SECRET_MASK &&
+    existing?.webhookSecretToken
+  ) {
+    merged.webhookSecretToken = existing.webhookSecretToken
+  }
+
+  return merged
+}
+
 export async function fetch(): Promise<Agent[]> {
   const db = context.getWorkspaceDB()
-  const result = await db.allDocs<Agent>(
+  const result = await db.allDocs<DeprecatedAgent>(
     docIds.getDocParams(DocumentType.AGENT, undefined, {
       include_docs: true,
     })
@@ -204,7 +336,7 @@ export async function fetch(): Promise<Agent[]> {
 
   return result.rows
     .map(row => row.doc)
-    .filter((doc): doc is Agent => !!doc)
+    .filter(doc => !!doc)
     .map(withAgentDefaults)
 }
 
@@ -215,7 +347,7 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
 
   const db = context.getWorkspaceDB()
 
-  const agent = await db.tryGet<Agent>(agentId)
+  const agent = await db.tryGet<DeprecatedAgent>(agentId)
   if (!agent) {
     throw new HTTPError("Agent not found", 404)
   }
@@ -223,7 +355,12 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
   return withAgentDefaults(agent)
 }
 
-export async function create(request: CreateAgentRequest): Promise<Agent> {
+export async function create(
+  request: Optional<
+    Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt" | "publishedAt">,
+    "aiconfig"
+  >
+): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
 
@@ -234,18 +371,22 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
-    promptInstructions: request.promptInstructions,
+    operations: request.operations,
     live: request.live ?? false,
+    publishedAt: request.live ? now : undefined,
     icon: request.icon,
     iconColor: request.iconColor,
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
-    enabledTools: request.enabledTools || [],
-    knowledgeBases: request.knowledgeBases || [],
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
+    telegramIntegration: request.telegramIntegration,
+  }
+
+  if (agent.live) {
+    await assertAgentHasValidConfig(agent)
   }
 
   const { rev } = await db.put({
@@ -254,9 +395,14 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
       agent.discordIntegration
     ),
     slackIntegration: encodeSlackIntegrationSecrets(agent.slackIntegration),
+    telegramIntegration: encodeTelegramIntegrationSecrets(
+      agent.telegramIntegration
+    ),
   })
   agent._rev = rev
-  return withAgentDefaults(agent)
+  const result = withAgentDefaults(agent)
+  events.ai.agentCreated(result)
+  return result
 }
 
 export async function duplicate(
@@ -273,42 +419,48 @@ export async function duplicate(
     name,
     description: source.description,
     aiconfig: source.aiconfig,
-    promptInstructions: source.promptInstructions,
     goal: source.goal,
     icon: source.icon,
     iconColor: source.iconColor,
     live: source.live,
     _deleted: false,
     createdBy,
-    enabledTools: source.enabledTools || [],
-    knowledgeBases: source.knowledgeBases || [],
+    operations: source.operations,
   })
 }
 
-export async function update(agent: UpdateAgentRequest): Promise<Agent> {
+export async function update(agent: Agent): Promise<Agent> {
   const { _id, _rev } = agent
   if (!_id || !_rev) {
     throw new HTTPError("_id and _rev are required", 400)
   }
 
   const db = context.getWorkspaceDB()
-  const existingRaw = await db.tryGet<Agent>(_id)
-  const existing = existingRaw ? withAgentDefaults(existingRaw) : undefined
-  const normalizedName = helpers.normalizeForComparison(agent.name)
-  const normalizedExistingName = helpers.normalizeForComparison(
-    existing?.name || ""
-  )
+  const existing = await getOrThrow(_id)
 
-  if (existing && normalizedName !== normalizedExistingName) {
-    await guardName(agent.name, _id)
+  const incomingName = agent.name ?? existing.name
+  const normalizedName = helpers.normalizeForComparison(incomingName)
+  const normalizedExistingName = helpers.normalizeForComparison(existing.name)
+
+  if (normalizedName !== normalizedExistingName) {
+    await guardName(incomingName, _id)
   }
 
-  const updated: Agent = {
+  const now = new Date().toISOString()
+  const incomingOperations = agent.operations ?? existing.operations ?? []
+  const removedOperations = (existing.operations ?? []).filter(
+    existingOperation =>
+      existingOperation.id &&
+      !incomingOperations.some(
+        incomingOperation => incomingOperation.id === existingOperation.id
+      )
+  )
+
+  const updated = stripDeprecatedAgentFields({
     ...existing,
     ...agent,
-    updatedAt: new Date().toISOString(),
-    enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
-    knowledgeBases: agent.knowledgeBases ?? existing?.knowledgeBases ?? [],
+    updatedAt: now,
+    operations: incomingOperations,
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
@@ -321,7 +473,27 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
       existing: existing?.slackIntegration,
       incoming: agent.slackIntegration,
     }),
+    telegramIntegration: mergeTelegramIntegration({
+      existing: existing?.telegramIntegration,
+      incoming: agent.telegramIntegration,
+    }),
+  } satisfies Agent)
+
+  if (updated.live) {
+    await assertAgentHasValidConfig(updated)
   }
+
+  if (removedOperations.length > 0) {
+    for (const removedOperation of removedOperations) {
+      await cleanupKnowledgeForOperation(_id, removedOperation.id!)
+    }
+  }
+
+  const hasBeenPublished =
+    !!existing?.publishedAt || existing?.live === true || updated.live === true
+  updated.publishedAt = hasBeenPublished
+    ? existing?.publishedAt || now
+    : undefined
 
   const { rev } = await db.put({
     ...updated,
@@ -329,14 +501,64 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
       updated.discordIntegration
     ),
     slackIntegration: encodeSlackIntegrationSecrets(updated.slackIntegration),
+    telegramIntegration: encodeTelegramIntegrationSecrets(
+      updated.telegramIntegration
+    ),
   })
   updated._rev = rev
-  return withAgentDefaults(updated)
+  const result = withAgentDefaults(updated)
+  if (removedOperations.length > 0) {
+    await knowledgeSourceSyncQueue.reconcileAgentJobs(result)
+  }
+  events.ai.agentUpdated(result)
+  return result
 }
 
 export async function remove(agentId: string) {
   const db = context.getWorkspaceDB()
   const agent = await getOrThrow(agentId)
 
+  const knowledgeBaseIds = agent.operations?.flatMap(
+    operation => operation.knowledgeBases || []
+  )
+
+  if (knowledgeBaseIds?.length) {
+    for (const knowledgeBaseId of knowledgeBaseIds) {
+      const knowledgeBase = await knowledgeBaseSdk.find(knowledgeBaseId)
+      if (!knowledgeBase) {
+        continue
+      }
+
+      const files =
+        await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
+      for (const file of files) {
+        try {
+          await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+        } catch (error) {
+          console.log(
+            "Failed to remove knowledge base file for agent deletion",
+            {
+              agentId,
+              knowledgeBaseId,
+              fileId: file._id,
+              error,
+            }
+          )
+        }
+      }
+
+      try {
+        await knowledgeBaseSdk.remove(knowledgeBaseId)
+      } catch (error) {
+        console.log("Failed to remove knowledge base for agent deletion", {
+          agentId,
+          knowledgeBaseId,
+          error,
+        })
+      }
+    }
+  }
+
   await db.remove(agent)
+  events.ai.agentDeleted(agent)
 }

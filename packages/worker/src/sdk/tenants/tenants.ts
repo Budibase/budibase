@@ -23,31 +23,30 @@ export async function unlockTenant(tenantId: string) {
 }
 
 export async function setActivation(tenantId: string, active: boolean) {
-  const db = tenancy.getTenantDB(tenantId)
-  const settingsConfig = await db.tryGet<SettingsConfig>(
-    configs.generateConfigID(ConfigType.SETTINGS)
-  )
-  if (!settingsConfig?.config) {
-    throw new Error(
-      `Cannot set activation. Settings config not found for tenant ${tenantId}`
-    )
-  }
+  const { db, settingsConfig } = await getOrCreateSettingsConfig(tenantId)
   settingsConfig.config.active = active
   await db.put(settingsConfig)
 }
 
 async function setLock(tenantId: string, lockReason?: LockReason) {
-  const db = tenancy.getTenantDB(tenantId)
-  const settingsConfig = await db.tryGet<SettingsConfig>(
-    configs.generateConfigID(ConfigType.SETTINGS)
-  )
-  if (!settingsConfig?.config) {
-    throw new Error(
-      `Cannot lock. Settings config not found for tenant ${tenantId}`
-    )
-  }
+  const { db, settingsConfig } = await getOrCreateSettingsConfig(tenantId)
   settingsConfig.config.lockedBy = lockReason
   await db.put(settingsConfig)
+}
+
+async function getOrCreateSettingsConfig(tenantId: string) {
+  const db = tenancy.getTenantDB(tenantId)
+  const settingsConfig = (await db.tryGet<SettingsConfig>(
+    configs.generateConfigID(ConfigType.SETTINGS)
+  )) || {
+    _id: configs.generateConfigID(ConfigType.SETTINGS),
+    type: ConfigType.SETTINGS,
+    config: {},
+  }
+
+  settingsConfig.config ||= {}
+
+  return { db, settingsConfig }
 }
 
 async function removeGlobalDB(tenantId: string) {

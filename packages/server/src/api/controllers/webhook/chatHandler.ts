@@ -4,7 +4,9 @@ import {
   context,
   docIds,
   HTTPError,
+  logging,
   redis,
+  roles,
 } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { RedisClient } from "@budibase/backend-core"
@@ -14,6 +16,7 @@ import type {
   ChatConversationChannel,
   ChatConversationRequest,
   ContextUser,
+  WebhookChatCompleteResult,
 } from "@budibase/types"
 import { AgentChannelProvider, DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -21,15 +24,13 @@ import { getGlobalUser } from "../../../utilities/global"
 import { canAccessChatAppAgentForUser } from "../ai/chatApps"
 import {
   webhookChat,
-  prepareChatConversationForSave,
-  truncateTitle,
+  type WebhookAssistantStream,
 } from "../ai/chatConversations"
 import {
   isConversationExpired,
   pickLatestConversation,
   touchConversationCache,
 } from "./utils"
-
 const DEFAULT_IDLE_TIMEOUT_MS = 45 * 60 * 1000
 const DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const CONVERSATION_SCOPE_CACHE_KEY_PREFIX = "chatConversationScope"
@@ -261,6 +262,14 @@ const matchesScope = ({
     )
   }
 
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return (
+      ch?.channelId === scope.channelId &&
+      (ch?.threadId || undefined) === scope.threadId &&
+      ch?.externalUserId === scope.externalUserId
+    )
+  }
+
   return false
 }
 
@@ -353,11 +362,17 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 
 export interface HandleChatMessageParams {
   reply: (text: string) => Promise<void>
+  replyWithAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
+  formatAssistantReply?: (
+    result: WebhookChatCompleteResult
+  ) => Promise<string> | string
+  beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
   chatAppId: string
   agentId: string
   provider: AgentChannelProvider
+  channelEnabled: boolean
   command: SupportedChatCommand
   content: string
   user: {
@@ -367,6 +382,7 @@ export interface HandleChatMessageParams {
   channel: ChatConversationChannel
   scope: ConversationScope
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }
 
 const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
@@ -376,6 +392,9 @@ const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
   }
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return "Telegram"
+  }
   return "Slack"
 }
 
@@ -384,19 +403,78 @@ const getLinkCommand = (provider: HandleChatMessageParams["provider"]) =>
     ? `${ChatCommands.LINK} or /${ChatCommands.LINK}`
     : `/${ChatCommands.LINK}`
 
+const getSyntheticUserId = ({
+  provider,
+  channel,
+  externalUserId,
+}: {
+  provider: AgentChannelProvider
+  channel: ChatConversationChannel
+  externalUserId: string
+}) => {
+  if (provider === AgentChannelProvider.SLACK) {
+    return channel.teamId
+      ? `slack:${channel.teamId}:${externalUserId}`
+      : `slack:${externalUserId}`
+  }
+
+  if (provider === AgentChannelProvider.MSTEAMS) {
+    return channel.tenantId
+      ? `msteams:${channel.tenantId}:${externalUserId}`
+      : `msteams:${externalUserId}`
+  }
+
+  if (provider === AgentChannelProvider.DISCORD) {
+    return channel.guildId
+      ? `discord:${channel.guildId}:${externalUserId}`
+      : `discord:${externalUserId}`
+  }
+
+  return `${provider}:${externalUserId}`
+}
+
+const createTransientPublicUser = ({
+  userId,
+  displayName,
+}: {
+  userId: string
+  displayName?: string
+}): ContextUser => {
+  const publicRoleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+  const workspaceId = context.getWorkspaceId()
+
+  return {
+    _id: userId,
+    globalId: userId,
+    userId,
+    tenantId: context.getTenantId(),
+    email: `${encodeURIComponent(userId)}@chat.budibase.local`,
+    firstName: displayName,
+    roleId: publicRoleId,
+    roles: {
+      ...(workspaceId && { [workspaceId]: publicRoleId }),
+    },
+  }
+}
+
 export const handleChatMessage = async ({
   reply,
+  replyWithAssistantStream,
+  formatAssistantReply,
+  beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
   chatAppId,
   agentId,
   provider,
+  channelEnabled,
   command,
   content,
   user,
   channel,
   scope,
   idleTimeoutMinutes,
+  requireUserLink,
 }: HandleChatMessageParams): Promise<void> => {
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
@@ -407,11 +485,15 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (
-      !chatApp.agents?.some(
-        agent => agent.agentId === agentId && agent.isEnabled
-      )
-    ) {
+    if (!channelEnabled) {
+      await reply("Agent is not enabled for this chat app.")
+      return
+    }
+
+    const chatAgentConfig = chatApp.agents?.find(
+      agent => agent.agentId === agentId
+    )
+    if (!chatAgentConfig) {
       await reply("Agent is not enabled for this chat app.")
       return
     }
@@ -465,66 +547,92 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (!existingLink) {
+    const linkingRequired = requireUserLink !== false
+    let chatUser: ContextUser
+    let userId: string
+
+    if (existingLink) {
+      try {
+        chatUser = await getGlobalUser(existingLink.globalUserId)
+      } catch (error) {
+        console.error("Failed to resolve linked chat identity user", error)
+        await reply(
+          `Your ${providerDisplayName(provider)} account link is stale. Run ${getLinkCommand(
+            provider
+          )} to reconnect it.`
+        )
+        return
+      }
+
+      const linkedUserId = chatUser._id
+      if (!linkedUserId) {
+        await reply(
+          `Your ${providerDisplayName(provider)} account link is invalid. Run ${getLinkCommand(
+            provider
+          )} to reconnect it.`
+        )
+        return
+      }
+      userId = linkedUserId
+    } else if (linkingRequired) {
+      if (provider === AgentChannelProvider.MSTEAMS) {
+        const providerScopeKey = channel.tenantId || channel.teamId
+        const linkIdTried = `${DocumentType.CHAT_IDENTITY_LINK}_${encodeURIComponent(
+          context.getTenantId()
+        )}_${provider}${
+          providerScopeKey ? `_${encodeURIComponent(providerScopeKey)}` : ""
+        }_${encodeURIComponent(user.externalUserId)}`
+
+        logging.logWarn("chat_link_lookup_miss", {
+          workspaceId,
+          chatAppId,
+          agentId,
+          provider,
+          externalUserIdTried: user.externalUserId,
+          linkIdTried,
+          providerTenantId: channel.tenantId,
+          teamId: channel.teamId,
+        })
+      }
+
       const prompt = await createLinkPromptMessage({
         linkedAlready: false,
         prefix: `Your ${providerDisplayName(provider)} account is not linked yet.`,
       })
       await replyLinkPrompt(prompt)
       return
-    }
-
-    let linkedUser: ContextUser
-    try {
-      linkedUser = await getGlobalUser(existingLink.globalUserId)
-    } catch (error) {
-      console.error("Failed to resolve linked chat identity user", error)
-      await reply(
-        `Your ${providerDisplayName(provider)} account link is stale. Run ${getLinkCommand(
-          provider
-        )} to reconnect it.`
-      )
-      return
-    }
-
-    const linkedUserId = linkedUser._id
-    if (!linkedUserId) {
-      await reply(
-        `Your ${providerDisplayName(provider)} account link is invalid. Run ${getLinkCommand(
-          provider
-        )} to reconnect it.`
-      )
-      return
-    }
-
-    const chatAgentConfig = chatApp.agents?.find(
-      agent => agent.agentId === agentId
-    )
-    if (!chatAgentConfig) {
-      await reply("Agent is not enabled for this chat app.")
-      return
+    } else {
+      userId = getSyntheticUserId({
+        provider,
+        channel,
+        externalUserId: user.externalUserId,
+      })
+      chatUser = createTransientPublicUser({
+        userId,
+        displayName: user.displayName,
+      })
     }
 
     const hasAccess = await canAccessChatAppAgentForUser(
       {
-        user: linkedUser,
-        roleId: linkedUser.roleId ?? undefined,
+        user: chatUser,
+        roleId: chatUser.roleId ?? undefined,
       },
       chatAgentConfig
     )
     if (!hasAccess) {
       await reply(
-        "Your linked Budibase account does not have access to this agent."
+        existingLink
+          ? "Your linked Budibase account does not have access to this agent."
+          : "This agent is not available to unlinked users."
       )
       return
     }
 
-    const userId = linkedUserId
-
     if (command === ChatCommands.NEW && !content) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
-        prepareChatConversationForSave({
+        sdk.ai.chatConversations.prepareChatConversationForSave({
           chatId,
           chatAppId,
           userId,
@@ -584,14 +692,22 @@ export const handleChatMessage = async ({
       _id: chatId,
       chatAppId,
       agentId,
-      title: existingChat?.title || truncateTitle(content),
+      title:
+        existingChat?.title || sdk.ai.chatConversations.truncateTitle(content),
       messages: [...(existingChat?.messages || []), userMessage],
       channel,
     }
 
     let result: Awaited<ReturnType<typeof webhookChat>>
     try {
-      result = await webhookChat({ chat: draftChat, user: linkedUser })
+      await beforeAssistantWebhook?.()
+      result = await webhookChat({
+        chat: draftChat,
+        user: chatUser,
+        ...(replyWithAssistantStream
+          ? { onAssistantStream: replyWithAssistantStream }
+          : {}),
+      })
     } catch (error) {
       const message =
         error instanceof HTTPError
@@ -602,7 +718,7 @@ export const handleChatMessage = async ({
     }
 
     await db.put(
-      prepareChatConversationForSave({
+      sdk.ai.chatConversations.prepareChatConversationForSave({
         chatId,
         chatAppId,
         userId,
@@ -618,6 +734,11 @@ export const handleChatMessage = async ({
       idleTimeoutMs,
     })
 
-    await reply(result.assistantText || "No response generated.")
+    if (!replyWithAssistantStream) {
+      const assistantReply = formatAssistantReply
+        ? await formatAssistantReply(result)
+        : result.assistantText
+      await reply(assistantReply || "No response generated.")
+    }
   })
 }

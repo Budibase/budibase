@@ -5,6 +5,7 @@ import {
   ConfigType,
   GetPublicSettingsResponse,
   PKCEMethod,
+  SCIMConfig,
   TranslationsConfig,
 } from "@budibase/types"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
@@ -402,6 +403,71 @@ describe("configs", () => {
     })
   })
 
+  describe("scim", () => {
+    const scimConfig = (enabled: boolean, disableAction?: string): SCIMConfig =>
+      ({
+        type: ConfigType.SCIM,
+        config: { enabled, ...(disableAction ? { disableAction } : {}) },
+      }) as SCIMConfig
+
+    beforeEach(async () => {
+      await config.deleteConfig(ConfigType.SCIM)
+      jest.clearAllMocks()
+      mocks.pro.scimUsers.handleDisable.mockResolvedValue(undefined)
+    })
+
+    afterEach(async () => {
+      await config.deleteConfig(ConfigType.SCIM)
+    })
+
+    it("calls handleDisable with 'remove' when SCIM is disabled with remove action", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      jest.clearAllMocks()
+
+      await config.api.configs.saveConfig(scimConfig(false, "remove"))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledTimes(1)
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledWith("remove")
+    })
+
+    it("calls handleDisable with 'convert' when SCIM is disabled with convert action", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      jest.clearAllMocks()
+
+      await config.api.configs.saveConfig(scimConfig(false, "convert"))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledTimes(1)
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledWith("convert")
+    })
+
+    it("does not call handleDisable when SCIM is disabled without a disableAction", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      jest.clearAllMocks()
+
+      await config.api.configs.saveConfig(scimConfig(false))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).not.toHaveBeenCalled()
+    })
+
+    it("does not call handleDisable when SCIM is being enabled", async () => {
+      await config.api.configs.saveConfig(scimConfig(true, "remove"))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).not.toHaveBeenCalled()
+    })
+
+    it("does not persist disableAction to the saved config", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      await config.api.configs.saveConfig(scimConfig(false, "remove"))
+
+      const saved = await config.api.configs.getConfig(ConfigType.SCIM)
+      expect(saved.config).not.toHaveProperty("disableAction")
+    })
+  })
+
   describe("GET /api/global/configs/checklist", () => {
     it("should return the correct checklist", async () => {
       await config.saveSmtpConfig()
@@ -451,6 +517,30 @@ describe("configs", () => {
       }
       delete body._rev
       expect(body).toEqual(expected)
+    })
+  })
+
+  describe("POST /api/global/configs/upload/:type/:name", () => {
+    it("should upload an OIDC logo and store the key in config", async () => {
+      const logoName = "test-logo.png"
+      const res = await config.api.configs
+        .uploadOIDCLogo(logoName, Buffer.from("fake-png-data"), logoName)
+        .expect(200)
+
+      expect(res.body.message).toBe(
+        "File has been uploaded and url stored to config."
+      )
+
+      const oidcLogosConfig = await config.api.configs.getConfig(
+        ConfigType.OIDC_LOGOS
+      )
+      expect(oidcLogosConfig.config[logoName]).toBeDefined()
+    })
+
+    it("should return 400 when multiple files are uploaded", async () => {
+      await config.api.configs
+        .uploadOIDCLogoMultiple("test-logo.png")
+        .expect(400)
     })
   })
 

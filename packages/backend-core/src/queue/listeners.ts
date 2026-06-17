@@ -93,6 +93,8 @@ enum QueueEventType {
   BATCH_USER_SYNC_PROCESSOR = "batch-user-sync-processor",
   RAG_INGESTION_PROCESSOR = "rag-ingestion-processor",
   AGENT_LOG_INDEXING_PROCESSOR = "agent-log-indexing-processor",
+  AGENT_TEST_RUN_PROCESSOR = "agent-test-run-processor",
+  KNOWLEDGE_SOURCE_SYNC_PROCESSOR = "knowledge-source-sync-processor",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -107,6 +109,9 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
     QueueEventType.BATCH_USER_SYNC_PROCESSOR,
   [JobQueue.RAG_INGESTION]: QueueEventType.RAG_INGESTION_PROCESSOR,
   [JobQueue.AGENT_LOG_INDEXING]: QueueEventType.AGENT_LOG_INDEXING_PROCESSOR,
+  [JobQueue.AGENT_TEST_RUN]: QueueEventType.AGENT_TEST_RUN_PROCESSOR,
+  [JobQueue.KNOWLEDGE_SOURCE_SYNC]:
+    QueueEventType.KNOWLEDGE_SOURCE_SYNC_PROCESSOR,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {

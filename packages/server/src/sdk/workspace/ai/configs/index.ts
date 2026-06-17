@@ -3,6 +3,7 @@ import {
   docIds,
   encryption,
   env,
+  events,
   HTTPError,
 } from "@budibase/backend-core"
 import { licensing } from "@budibase/pro"
@@ -17,8 +18,8 @@ import {
   RequiredKeys,
 } from "@budibase/types"
 import * as liteLLM from "./litellm"
-import * as knowledgeBaseSdk from "../knowledgeBase"
 import { processEnvironmentVariable } from "../../../utils"
+import { IMPORT_PENDING_LITELLM_MODEL_ID } from "../../backups/constants"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
@@ -219,7 +220,6 @@ export async function create(
       provider: config.provider,
       model: config.model,
       credentialFields: resolvedCredentialFields,
-      configType: config.configType,
       reasoningEffort: config.reasoningEffort,
     })
   } else {
@@ -254,6 +254,7 @@ export async function create(
   }
 
   await liteLLM.syncKeyModels()
+  events.ai.configCreated(newConfig)
 
   return newConfig
 }
@@ -365,7 +366,6 @@ export async function update(
         provider: updatedConfig.provider,
         name: updatedConfig.model,
         credentialFields: resolvedCredentialFields,
-        configType: updatedConfig.configType,
         reasoningEffort: updatedConfig.reasoningEffort,
       })
       await liteLLM.syncKeyModels()
@@ -380,25 +380,125 @@ export async function update(
     }
   }
 
+  events.ai.configUpdated(updatedConfig)
+
   return updatedConfig
 }
 
 export async function remove(id: string) {
-  const dependentKnowledgeBases =
-    await knowledgeBaseSdk.findByEmbeddingModel(id)
-  if (dependentKnowledgeBases.length > 0) {
-    throw new HTTPError(
-      "Embedding model cannot be deleted while it is used by a knowledge base",
-      400
-    )
-  }
-
   const db = context.getWorkspaceDB()
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)
+  events.ai.configDeleted(existing)
 
   await liteLLM.syncKeyModels()
+}
+
+export async function reconcileLiteLLMModels() {
+  const workspaceId = context.getWorkspaceId()
+  const status = await getLiteLLMStatus()
+  if (status === liteLLM.LiteLLMStatus.NOT_CONFIGURED) {
+    console.log("Skipping LiteLLM reconciliation: LiteLLM is not configured", {
+      workspaceId,
+    })
+    return
+  }
+
+  const db = context.getWorkspaceDB()
+  const existingConfigs = await fetch()
+  const isSelfhost = env.SELF_HOSTED
+  console.log("Starting LiteLLM reconciliation", {
+    workspaceId,
+    configCount: existingConfigs.length,
+    isSelfhost: !!isSelfhost,
+  })
+
+  for (const existingConfig of existingConfigs) {
+    if (!existingConfig._id) {
+      continue
+    }
+
+    const isBBAI = existingConfig.provider === BUDIBASE_AI_PROVIDER_ID
+    if (isBBAI && !isSelfhost) {
+      console.log("Skipping Budibase AI config reconciliation in cloud", {
+        workspaceId,
+        configId: existingConfig._id,
+      })
+      continue
+    }
+
+    const resolvedCredentialFields = await resolveCredentialFields(
+      existingConfig.credentialsFields
+    )
+    const currentModelId = existingConfig.liteLLMModelId
+    let modelId = currentModelId
+
+    let modelAlreadyExisted = false
+
+    if (currentModelId !== IMPORT_PENDING_LITELLM_MODEL_ID) {
+      try {
+        await liteLLM.updateModel({
+          configId: existingConfig._id,
+          llmModelId: currentModelId,
+          provider: existingConfig.provider,
+          name: existingConfig.model,
+          credentialFields: resolvedCredentialFields,
+          reasoningEffort: existingConfig.reasoningEffort,
+        })
+        modelAlreadyExisted = true
+        console.log("Refreshed the existing LiteLLM model", {
+          workspaceId,
+          configId: existingConfig._id,
+          modelId: currentModelId,
+        })
+      } catch (e: any) {
+        if (e.status !== 404) {
+          throw e
+        }
+        console.log("LiteLLM model not found, creating a new one", {
+          workspaceId,
+          configId: existingConfig._id,
+          modelId: currentModelId,
+        })
+      }
+    } else {
+      console.log("Config marked as pending model creation", {
+        workspaceId,
+        configId: existingConfig._id,
+      })
+    }
+
+    if (!modelAlreadyExisted) {
+      modelId = await liteLLM.addModel({
+        configId: existingConfig._id,
+        provider: existingConfig.provider,
+        model: existingConfig.model,
+        credentialFields: resolvedCredentialFields,
+        reasoningEffort: existingConfig.reasoningEffort,
+      })
+      console.log("Created LiteLLM model", {
+        workspaceId,
+        configId: existingConfig._id,
+        modelId,
+      })
+    }
+
+    if (modelId !== currentModelId) {
+      const updatedConfig: CustomAIProviderConfig = {
+        ...existingConfig,
+        liteLLMModelId: modelId,
+      }
+      const encodedConfig: CustomAIProviderConfig = {
+        ...updatedConfig,
+        ...(await encodeConfigSecrets(updatedConfig)),
+      }
+      await db.put(encodedConfig)
+    }
+  }
+
+  await liteLLM.syncKeyModels()
+  console.log("Finished LiteLLM reconciliation", { workspaceId })
 }
 
 let liteLLMProviders: LLMProvider[]
@@ -413,7 +513,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
     liteLLMProviders = providers.map(provider => {
       const modelsByType = Object.entries(modelCostMap).reduce<{
         completions: string[]
-        embeddings: string[]
       }>(
         (acc, [modelId, metadata]) => {
           const modelProvider = metadata?.litellm_provider
@@ -444,10 +543,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
             mode.trim().toLowerCase()
           )
 
-          if (normalizedModes.includes("embedding")) {
-            acc.embeddings.push(normalizedModelId)
-          }
-
           if (
             !normalizedModes.length ||
             normalizedModes.some(mode =>
@@ -459,14 +554,11 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
 
           return acc
         },
-        { completions: [], embeddings: [] }
+        { completions: [] }
       )
 
       const models = {
         completions: [...new Set(modelsByType.completions)].sort((a, b) =>
-          a.localeCompare(b)
-        ),
-        embeddings: [...new Set(modelsByType.embeddings)].sort((a, b) =>
           a.localeCompare(b)
         ),
       }
@@ -499,7 +591,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       externalProvider: "custom_openai",
       models: {
         completions: ["budibase/v1"],
-        embeddings: [],
       },
       credentialFields: [
         { key: "api_key", label: "api_key", field_type: "password" },

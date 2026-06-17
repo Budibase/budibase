@@ -9,10 +9,10 @@
   } from "@budibase/bbui"
   import { keyUtils } from "@/helpers/keyUtils"
 
-  export let title: string
+  export let title: string | undefined = undefined
   export let placeholder: string = ""
   export let value: string | undefined = undefined
-  export let onAdd: (_e: Event) => void
+  export let onAdd: ((_e: Event) => void) | undefined = undefined
   export let search: boolean = false
   export let searchable = true
   export let showAddIcon = true
@@ -33,7 +33,7 @@
   }
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
+    if (e.key === "Escape" && search && title) {
       closeSearch()
     }
   }
@@ -42,7 +42,7 @@
     if (search && !alwaysShowAdd) {
       closeSearch()
     } else {
-      onAdd(e)
+      onAdd?.(e)
     }
   }
 </script>
@@ -86,7 +86,7 @@
     </div>
   {/if}
 
-  {#if showAddIcon}
+  {#if showAddIcon || (searchable && search)}
     <AbsTooltip
       text={tooltip}
       position={TooltipPosition.Top}

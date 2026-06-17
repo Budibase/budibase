@@ -43,7 +43,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-import { events } from "@budibase/backend-core"
+import { blacklist, events, setEnv as setCoreEnv } from "@budibase/backend-core"
 import nock from "nock"
 import { BodyType, Datasource, SourceName } from "@budibase/types"
 import fs from "fs"
@@ -747,6 +747,7 @@ describe("Rest Importer", () => {
 
 describe("Importer caching", () => {
   const specUrl = "https://example.com/spec.json"
+  let restoreBlacklistEnv: (() => void) | undefined
 
   const buildMinimalOpenApiSpec = () =>
     JSON.stringify({
@@ -773,13 +774,50 @@ describe("Importer caching", () => {
       .reply(200, spec)
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    restoreBlacklistEnv = setCoreEnv({
+      BLACKLIST_IPS: undefined,
+      SELF_HOSTED: false,
+    })
+    await blacklist.refreshBlacklist()
     nock.cleanAll()
     cacheMocks.reset()
   })
 
+  afterEach(async () => {
+    restoreBlacklistEnv?.()
+    restoreBlacklistEnv = undefined
+    await blacklist.refreshBlacklist()
+  })
+
   afterAll(() => {
     nock.cleanAll()
+  })
+
+  it("blocks blacklisted urls for url imports", async () => {
+    await expect(
+      createImporter({ url: "http://169.254.169.254/metadata/v1/" })
+    ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+  })
+
+  it("blocks redirects to blacklisted urls for url imports", async () => {
+    const initialScope = nock("https://example.com")
+      .get("/redirect.json")
+      .reply(302, undefined, {
+        location: "http://169.254.169.254/metadata/v1/",
+      })
+
+    await expect(
+      createImporter({ url: "https://example.com/redirect.json" })
+    ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+
+    expect(initialScope.isDone()).toBe(true)
+  })
+
+  it("rejects non-http url schemes for url imports", async () => {
+    await expect(createImporter({ url: "file:///etc/passwd" })).rejects.toThrow(
+      "Only HTTP(S) URLs are allowed for query import"
+    )
   })
 
   it("caches fetched specs for url imports", async () => {
