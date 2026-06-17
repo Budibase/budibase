@@ -96,6 +96,7 @@ import {
   AutomationLog,
   BlockRef,
   isLoopV2Step,
+  type RestTemplateId,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -3020,6 +3021,25 @@ const automationActions = (store: AutomationStore) => ({
         actionPanelToolbarFlowEnd: false,
       }
     })
+  },
+
+  openApiRequestTemplate(blockId: string, templateId: RestTemplateId) {
+    store.update(state => ({
+      ...state,
+      pendingApiRequestTemplate: { blockId, templateId },
+    }))
+  },
+
+  consumeApiRequestTemplate(blockId: string) {
+    const pending = get(store).pendingApiRequestTemplate
+    if (!pending || pending.blockId !== blockId) {
+      return undefined
+    }
+    store.update(state => ({
+      ...state,
+      pendingApiRequestTemplate: undefined,
+    }))
+    return pending.templateId
   },
 
   selectBranchNode: async (selection: {
