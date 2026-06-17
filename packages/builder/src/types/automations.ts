@@ -217,6 +217,7 @@ export interface AutomationStoreState<T extends Automation = Automation> {
     automationId: string
     sequence: number
   }
+  pausedLogRefreshes?: Record<string, boolean>
   showLogsPanel?: boolean
   showLogDetailsPanel?: boolean
   viewMode: ViewMode

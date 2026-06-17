@@ -1,6 +1,5 @@
 <script>
   import {
-    ActionButton,
     Body,
     Select,
     notifications,
@@ -8,7 +7,7 @@
     Button,
     Icon,
   } from "@budibase/bbui"
-  import { onMount } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
   import Panel from "@/components/design/Panel.svelte"
   import { automationStore } from "@/stores/builder"
@@ -33,10 +32,12 @@
   let loaded = false
   let totalLogs = 0
   let loading = false
-  let fetchQueued = false
+  let queuedFetch = null
   let realtimePaused = false
   let refreshPending = false
   let lastLogRefreshSequence = 0
+  let lastFilterKey = null
+  let lastFetchKey = null
 
   const AUTOMATION_LOG_PAGE_SIZE = 10
 
@@ -81,27 +82,41 @@
     { value: STOPPED_ERROR, label: "Stopped - Error" },
   ]
 
-  // Reset the page every time that a filter gets updated
-  $: pageInfo.reset(), status, timeRange
+  $: filterKey = `${status || ""}:${timeRange || ""}`
+  $: if (filterKey !== lastFilterKey) {
+    lastFilterKey = filterKey
+    lastFetchKey = null
+    pageInfo.reset()
+  }
+
   $: page = $pageInfo.page
-  $: fetchLogs(automation._id, status, page, timeRange)
+  $: fetchKey = `${automation._id}:${filterKey}:${page || ""}`
+  $: if (loaded && fetchKey !== lastFetchKey) {
+    lastFetchKey = fetchKey
+    fetchLogs(automation._id, status, page, timeRange)
+  }
 
   async function fetchLogs(
     automationId,
     status,
     page,
     timeRange,
-    force = false
+    force = false,
+    fromRealtime = false
   ) {
+    if (fromRealtime && realtimePaused) {
+      refreshPending = true
+      return
+    }
     if (!force && !loaded) {
       return
     }
     if (loading) {
-      fetchQueued = true
+      queuedFetch = { force, fromRealtime }
       return
     }
     loading = true
-    fetchQueued = false
+    queuedFetch = null
     let startDate = null
     if (timeRange) {
       const [length, units] = timeRange.split("-")
@@ -114,6 +129,10 @@
         page,
         startDate,
       })
+      if (fromRealtime && realtimePaused) {
+        refreshPending = true
+        return
+      }
       pageInfo.fetched(response.hasNextPage, response.nextPage)
       totalLogs = response.totalLogs
       runHistory = response.data
@@ -122,14 +141,30 @@
       console.error(error)
     } finally {
       loading = false
-      if (fetchQueued) {
-        fetchLogs(automation._id, status, page, timeRange, true)
+      if (queuedFetch) {
+        const nextFetch = queuedFetch
+        queuedFetch = null
+        fetchLogs(
+          automation._id,
+          status,
+          page,
+          timeRange,
+          nextFetch.force,
+          nextFetch.fromRealtime
+        )
       }
     }
   }
 
-  const refreshLogs = async (force = false) => {
-    await fetchLogs(automation._id, status, page, timeRange, force)
+  const refreshLogs = async (force = false, fromRealtime = false) => {
+    await fetchLogs(
+      automation._id,
+      status,
+      page,
+      timeRange,
+      force,
+      fromRealtime
+    )
   }
 
   $: if (
@@ -141,21 +176,36 @@
     if (realtimePaused) {
       refreshPending = true
     } else {
-      refreshLogs(true)
+      refreshLogs(true, true)
     }
   }
 
   const toggleRealtimeUpdates = () => {
     realtimePaused = !realtimePaused
-    if (!realtimePaused && refreshPending) {
+    automationStore.actions.setLogRefreshPaused({
+      automationId: automation._id,
+      paused: realtimePaused,
+    })
+    if (!realtimePaused) {
       refreshPending = false
       refreshLogs(true)
     }
   }
 
   onMount(async () => {
+    automationStore.actions.setLogRefreshPaused({
+      automationId: automation._id,
+      paused: realtimePaused,
+    })
     await fetchLogs(automation._id, status, 0, timeRange, true)
     loaded = true
+  })
+
+  onDestroy(() => {
+    automationStore.actions.setLogRefreshPaused({
+      automationId: automation._id,
+      paused: false,
+    })
   })
 
   const getLogStatus = log => {
@@ -212,8 +262,8 @@
             class:live-dot={!realtimePaused}
             class:paused-dot={realtimePaused}
           ></div>
-          <ActionButton
-            size="M"
+          <Button
+            size="S"
             quiet
             icon={realtimePaused ? "play" : "Pause"}
             on:click={toggleRealtimeUpdates}
