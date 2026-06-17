@@ -388,8 +388,6 @@
         )
       )
       const transcript = buildSessionTranscript(session, details)
-      console.log("Agent log session transcript data", { session, details })
-      console.log("Agent log session transcript", transcript)
       downloadTextFile(getTranscriptFilename(session), transcript)
     } catch (error) {
       console.error("Failed to export session transcript", error)
