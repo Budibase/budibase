@@ -21,7 +21,12 @@
   import Container from "../container/Container.svelte"
   import { getAction } from "@/utils/getAction"
   import { ActionTypes } from "@/constants"
-  import { QueryUtils, fetchData, memo } from "@budibase/frontend-core"
+  import {
+    QueryUtils,
+    fetchData,
+    loadTranslationsByGroup,
+    memo,
+  } from "@budibase/frontend-core"
   import FilterButton from "./FilterButton.svelte"
   import { onDestroy } from "svelte"
   import { uiStateStore } from "@/stores"
@@ -44,6 +49,7 @@
 
   const rowCache = writable({})
   setContext("rows", rowCache)
+  const filterLabels = loadTranslationsByGroup("filter")
 
   // Core filter template
   const baseFilter: UISearchFilter = {
@@ -158,19 +164,24 @@
     )
 
     const isDateTime = fieldType === FieldType.DATETIME
-    // Label mixins. Override the display text
-    const opToDisplay: Record<string, any> = {
-      rangeHigh: isDateTime ? "Before" : undefined,
-      rangeLow: isDateTime ? "After" : undefined,
-      [FilterType.EQUAL]: "Is",
-      [FilterType.NOT_EQUAL]: "Is not",
+    const opToDisplay: Record<string, string> = {
+      equal: filterLabels.is,
+      notEqual: filterLabels.isNot,
+      string: filterLabels.startsWith,
+      fuzzy: filterLabels.like,
+      empty: filterLabels.empty,
+      notEmpty: filterLabels.notEmpty,
+      oneOf: filterLabels.isIn,
+      notOneOf: filterLabels.notOneOf,
+      rangeLow: filterLabels.moreThanOrEqualTo,
+      rangeHigh: filterLabels.lessThanOrEqualTo,
     }
 
     // Add in the range operator for datetime fields
     coreOperators = [
       ...coreOperators,
       ...(fieldType === FieldType.DATETIME
-        ? [{ value: RangeOperator.RANGE, label: "Between" }]
+        ? [{ value: RangeOperator.RANGE, label: filterLabels.between }]
         : []),
     ]
 
