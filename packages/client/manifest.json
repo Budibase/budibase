@@ -250,6 +250,12 @@
             "value": "stretch",
             "barIcon": "MoveLeftRight",
             "barTitle": "Align stretched horizontally"
+          },
+          {
+            "label": "Space Around",
+            "value": "space-around",
+            "barIcon": "arrows-out-line-horizontal",
+            "barTitle": "Align space around horizontally"
           }
         ],
         "defaultValue": "stretch",
