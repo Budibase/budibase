@@ -269,6 +269,7 @@ export interface AutomationStepInputBase {
   emitter: ContextEmitter
   appId: string
   apiKey?: string
+  isTestRun?: boolean
 }
 
 export type ActionImplementation<TInputs, TOutputs> = (
