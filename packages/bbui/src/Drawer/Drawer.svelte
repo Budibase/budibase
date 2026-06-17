@@ -169,7 +169,7 @@
 
   // Use a custom svelte transition here because the built-in slide
   // transition has a horrible overshoot
-  const drawerSlide = (): TransitionConfig => {
+  const drawerSlide = (_node: Element): TransitionConfig => {
     return {
       duration: 260,
       css: (t: number) => {
@@ -185,7 +185,7 @@
 
   // Custom fade transition because the default svelte one doesn't work any more
   // with svelte 4
-  const drawerFade = (): TransitionConfig => {
+  const drawerFade = (_node: Element): TransitionConfig => {
     return {
       duration: 260,
       css: (t: number) => {
