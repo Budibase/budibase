@@ -295,6 +295,12 @@
             "value": "stretch",
             "barIcon": "MoveUpDown",
             "barTitle": "Align stretched vertically"
+          },
+          {
+            "label": "Space Around",
+            "value": "space-around",
+            "barIcon": "arrows-out-line-vertical",
+            "barTitle": "Align space around vertically"
           }
         ],
         "defaultValue": "top",

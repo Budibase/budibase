@@ -82,7 +82,8 @@
   .direction-column.vAlign-stretch {
     justify-content: space-between;
   }
-.direction-row.hAlign-space-around {
+  .direction-row.hAlign-space-around,
+  .direction-column.vAlign-space-around {
     justify-content: space-around;
   }
 
