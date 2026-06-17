@@ -870,6 +870,14 @@ describe("/datasources", () => {
       })
     })
 
+    it("should apply authorization to get endpoint", async () => {
+      await checkBuilderEndpoint({
+        config,
+        method: "GET",
+        url: `/api/datasources/${datasource._id}`,
+      })
+    })
+
     it("should apply authorization to delete endpoint", async () => {
       await checkBuilderEndpoint({
         config,
