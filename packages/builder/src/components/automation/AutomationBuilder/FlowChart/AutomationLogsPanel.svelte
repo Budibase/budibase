@@ -387,7 +387,7 @@
   }
 
   .paused-dot {
-    background: var(--spectrum-global-color-orange-500);
+    background: var(--spectrum-global-color-gray-600);
   }
 
   .plan-message {
