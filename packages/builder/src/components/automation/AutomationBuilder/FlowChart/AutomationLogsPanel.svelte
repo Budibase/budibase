@@ -1,5 +1,6 @@
 <script>
   import {
+    ActionButton,
     Body,
     Select,
     notifications,
@@ -33,6 +34,8 @@
   let totalLogs = 0
   let loading = false
   let fetchQueued = false
+  let realtimePaused = false
+  let refreshPending = false
   let lastLogRefreshSequence = 0
 
   const AUTOMATION_LOG_PAGE_SIZE = 10
@@ -135,7 +138,19 @@
     $automationStore.logRefreshEvent.sequence !== lastLogRefreshSequence
   ) {
     lastLogRefreshSequence = $automationStore.logRefreshEvent.sequence
-    refreshLogs(true)
+    if (realtimePaused) {
+      refreshPending = true
+    } else {
+      refreshLogs(true)
+    }
+  }
+
+  const toggleRealtimeUpdates = () => {
+    realtimePaused = !realtimePaused
+    if (!realtimePaused && refreshPending) {
+      refreshPending = false
+      refreshLogs(true)
+    }
   }
 
   onMount(async () => {
@@ -188,6 +203,21 @@
               Get more history
             </Button>
           {/if}
+        </div>
+        <div class="realtime-controls">
+          <Body size="S">
+            {"Live updates"}
+          </Body>
+          <div
+            class:live-dot={!realtimePaused}
+            class:paused-dot={realtimePaused}
+          ></div>
+          <ActionButton
+            size="M"
+            quiet
+            icon={realtimePaused ? "play" : "Pause"}
+            on:click={toggleRealtimeUpdates}
+          />
         </div>
       {/if}
 
@@ -282,6 +312,32 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .realtime-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding-right: var(--spacing-m);
+    color: var(--spectrum-global-color-gray-700);
+    margin-bottom: 16px;
+  }
+
+  .live-dot,
+  .paused-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+
+  .live-dot {
+    background: var(--spectrum-global-color-green-600);
+  }
+
+  .paused-dot {
+    background: var(--spectrum-global-color-orange-500);
   }
 
   .plan-message {
