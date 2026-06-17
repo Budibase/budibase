@@ -7,6 +7,7 @@ import { portalTranslations } from "./portal"
 import { loginTranslations } from "./login"
 import { forgotPasswordTranslations } from "./forgotPassword"
 import { validationTranslations } from "./validation"
+import { calendarTranslations } from "./calendar"
 import type {
   TranslationCategory,
   TranslationDefinition,
@@ -24,6 +25,7 @@ export {
   loginTranslations,
   forgotPasswordTranslations,
   validationTranslations,
+  calendarTranslations,
 }
 
 const translationModules = [
@@ -36,6 +38,7 @@ const translationModules = [
   loginTranslations,
   forgotPasswordTranslations,
   validationTranslations,
+  calendarTranslations,
 ]
 
 export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
@@ -49,6 +52,7 @@ export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
     login: "Login",
     forgotPassword: "Forgot password",
     validation: "Validation",
+    calendar: "Calendar",
   }
 
 // Central export of all translation definitions across modules.
