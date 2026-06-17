@@ -40,7 +40,7 @@ const toAbsoluteUrl = async (url: string) => {
 
 const formatTeamsLinkLabel = (value: string) =>
   value
-    .replace(/[\[\]\n\r]/g, " ")
+    .replace(/\[|]|\n|\r/g, " ")
     .replace(/\s+/g, " ")
     .trim()
 
