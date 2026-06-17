@@ -21,7 +21,6 @@
     { label: "Daily", value: "daily" },
     { label: "Weekly", value: "weekly" },
     { label: "Monthly", value: "monthly" },
-    { label: "Specific dates", value: "specificDates" },
     { label: "Cron expression", value: "cron" },
   ]
 
@@ -33,21 +32,6 @@
     { label: "Friday", value: "5" },
     { label: "Saturday", value: "6" },
     { label: "Sunday", value: "0" },
-  ]
-
-  const MONTHS = [
-    { label: "January", value: "1" },
-    { label: "February", value: "2" },
-    { label: "March", value: "3" },
-    { label: "April", value: "4" },
-    { label: "May", value: "5" },
-    { label: "June", value: "6" },
-    { label: "July", value: "7" },
-    { label: "August", value: "8" },
-    { label: "September", value: "9" },
-    { label: "October", value: "10" },
-    { label: "November", value: "11" },
-    { label: "December", value: "12" },
   ]
 
   const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, idx) => {
@@ -92,7 +76,6 @@
   let time = "09:00"
   let selectedDaysOfWeek = ["1", "2", "3", "4", "5"]
   let selectedDaysOfMonth = ["1"]
-  let selectedMonths = ["1"]
   let error
   let nextExecutions
   let savedCronExpression = cronExpression
@@ -172,12 +155,6 @@
         return
       }
       expression = `${minutes} ${hours} ${sortNumbers(selectedDaysOfMonth).join(",")} * *`
-    } else if (frequency === "specificDates") {
-      if (!selectedMonths.length || !selectedDaysOfMonth.length) {
-        error = "Please select at least one month and day"
-        return
-      }
-      expression = `${minutes} ${hours} ${sortNumbers(selectedDaysOfMonth).join(",")} ${sortNumbers(selectedMonths).join(",")} *`
     }
 
     dispatchCron(expression)
@@ -189,7 +166,6 @@
       time,
       selectedDaysOfWeek,
       selectedDaysOfMonth,
-      selectedMonths,
       updateSchedule()
   }
 </script>
@@ -229,19 +205,7 @@
           on:change={e => (selectedDaysOfWeek = e.detail)}
         />
       </div>
-    {:else if frequency === "monthly" || frequency === "specificDates"}
-      {#if frequency === "specificDates"}
-        <div>
-          <Label>Months of the year</Label>
-          <Multiselect
-            value={selectedMonths}
-            options={MONTHS}
-            getOptionLabel={option => option.label}
-            getOptionValue={option => option.value}
-            on:change={e => (selectedMonths = e.detail)}
-          />
-        </div>
-      {/if}
+    {:else if frequency === "monthly"}
       <div>
         <Label>Days of the month</Label>
         <Multiselect
