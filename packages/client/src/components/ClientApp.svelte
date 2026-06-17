@@ -207,6 +207,23 @@
       document.getElementById("clientAppSkeletonLoader")?.remove()
     }
   }
+
+  // In the builder, switching screens does not trigger a hashchange (the event
+  // that closes any open side panel at runtime), so a side panel opened on one
+  // screen would otherwise remain visible as a blank panel after navigating to
+  // a screen without one. Close it whenever the active screen changes inside
+  // the builder. A side panel belonging to the new screen will be re-opened by
+  // SidePanel.svelte when its component is in the selected path.
+  let lastBuilderScreenId
+  const closeSidePanelOnScreenChange = screenId => {
+    if (get(builderStore).inBuilder) {
+      if (lastBuilderScreenId != null && screenId !== lastBuilderScreenId) {
+        sidePanelStore.actions.close()
+      }
+      lastBuilderScreenId = screenId
+    }
+  }
+  $: closeSidePanelOnScreenChange($screenStore.activeScreen?._id)
 </script>
 
 <svelte:head>
