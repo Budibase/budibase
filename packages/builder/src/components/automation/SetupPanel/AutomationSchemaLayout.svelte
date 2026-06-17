@@ -175,6 +175,7 @@
     },
     [SchemaFieldTypes.CRON]: {
       comp: ScheduleBuilder,
+      wrapped: false,
       props: (opts: FieldProps = {} as FieldProps) => {
         const { value } = opts
         return {

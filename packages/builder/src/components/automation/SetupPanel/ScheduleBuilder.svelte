@@ -196,7 +196,7 @@
 
 <Layout noPadding gap="S">
   <Select
-    label="Run every"
+    label="Period"
     value={frequency}
     options={FREQUENCIES}
     on:change={e => (frequency = e.detail)}
