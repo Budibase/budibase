@@ -61,6 +61,9 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       svelte({
+        compilerOptions: {
+          runes: false,
+        },
         emitCss: true,
         preprocess: vitePreprocess({ script: true }),
         onwarn: (warning, handler) => {

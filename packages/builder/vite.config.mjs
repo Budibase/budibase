@@ -91,6 +91,9 @@ export default defineConfig(({ mode }) => {
       svelte({
         // Ensure this package's Svelte config is used
         configFile: path.resolve(__dirname, "svelte.config.mjs"),
+        compilerOptions: {
+          runes: false,
+        },
         emitCss: true,
         // HMR is enabled automatically in dev; prefer compilerOptions.hmr (see svelte.config.mjs)
         onwarn: (warning, handler) => {
