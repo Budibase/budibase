@@ -140,7 +140,6 @@ fi
 sync_couch_env_aliases
 
 # Randomize any unset sensitive environment variables using uuidgen
-env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
 generated_vars=()
 for var in "${env_vars[@]}"; do
     if [[ -z "${!var}" ]]; then
@@ -203,12 +202,29 @@ ensure_env_var() {
 upsert_env_var() {
     local name="$1"
     local value="$2"
-    local file="${DATA_DIR}/.env"
-    if grep -q "^${name}=" "${file}"; then
-        grep -v "^${name}=" "${file}" > "${file}.tmp"
-        mv "${file}.tmp" "${file}"
-    fi
-    echo "${name}=${value}" >> "${file}"
+    local env_file="${DATA_DIR}/.env"
+    local temp_file
+    temp_file="$(mktemp)"
+
+    awk -v name="$name" -v value="$value" '
+index($0, name "=") == 1 {
+    if (!updated) {
+        print name "=" value
+        updated = 1
+    }
+    next
+}
+{
+    print
+}
+END {
+    if (!updated) {
+        print name "=" value
+    }
+}
+' "${env_file}" > "${temp_file}"
+
+    mv "${temp_file}" "${env_file}"
 }
 
 ensure_env_var "LITELLM_DB_NAME" "${LITELLM_DB_NAME}"
@@ -355,34 +371,6 @@ if [[ -z "${LITELLM_MASTER_KEY}" || -z "${LITELLM_SALT_KEY}" ]]; then
 fi
 
 export USE_PRISMA_MIGRATE="True"
-
-upsert_env_var() {
-    local name="$1"
-    local value="$2"
-    local env_file="${DATA_DIR}/.env"
-    local temp_file
-    temp_file="$(mktemp)"
-
-    awk -v name="$name" -v value="$value" '
-index($0, name "=") == 1 {
-    if (!updated) {
-        print name "=" value
-        updated = 1
-    }
-    next
-}
-{
-    print
-}
-END {
-    if (!updated) {
-        print name "=" value
-    }
-}
-' "${env_file}" > "${temp_file}"
-
-    mv "${temp_file}" "${env_file}"
-}
 
 upsert_env_var "LITELLM_INTERNAL_DB" "${LITELLM_INTERNAL_DB}"
 upsert_env_var "DATABASE_URL" "${DATABASE_URL}"
