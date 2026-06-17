@@ -71,7 +71,7 @@
     { label: "12 hrs", value: 720 },
   ]
 
-  let frequency = "daily"
+  let frequency = cronExpression ? "cron" : "daily"
   let intervalMinutes = 30
   let time = "09:00"
   let selectedDaysOfWeek = ["1", "2", "3", "4", "5"]
@@ -109,7 +109,10 @@
     if (!expression) {
       return
     }
-    const validation = helpers.cron.validate(expression)
+    const validation =
+      expression === REBOOT_CRON
+        ? { valid: true }
+        : helpers.cron.validate(expression)
     error = validation.err
     if (error) {
       return
