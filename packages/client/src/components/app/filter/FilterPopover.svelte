@@ -239,7 +239,7 @@
               })
             }}
           />
-        {:else if (editableFilter?.type && editableFilter?.type === FieldType.ARRAY) || (editableFilter.type === FieldType.OPTIONS && editableFilter.operator === ArrayOperator.ONE_OF)}
+        {:else if (editableFilter?.type && editableFilter?.type === FieldType.ARRAY) || (editableFilter.type === FieldType.OPTIONS && (editableFilter.operator === ArrayOperator.ONE_OF || editableFilter.operator === ArrayOperator.NOT_ONE_OF))}
           {@const isMulti = isArrayOperator(editableFilter.operator)}
           {@const type = isMulti ? CoreCheckboxGroup : CoreRadioGroup}
           {#key type}

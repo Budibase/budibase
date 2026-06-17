@@ -3,6 +3,7 @@ import { helpers } from "@budibase/shared-core"
 import fetch from "node-fetch"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
+import { getLiteLLMSessionId } from "../llm/requestSession"
 
 interface CreateVectorStoreResponse {
   id?: string
@@ -259,6 +260,7 @@ export async function searchGeminiFileStore({
   query: string
 }): Promise<RagSearchResultItem[]> {
   const geminiApiKey = getGeminiApiKey()
+  const sessionId = getLiteLLMSessionId()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
@@ -271,6 +273,12 @@ export async function searchGeminiFileStore({
           query,
           custom_llm_provider: "gemini",
           ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+          ...(sessionId
+            ? {
+                litellm_session_id: sessionId,
+                metadata: { session_id: sessionId },
+              }
+            : {}),
         }),
       }
     )

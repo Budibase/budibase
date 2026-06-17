@@ -8,13 +8,12 @@ import {
 import { matchesConfiguredPatterns } from "@budibase/shared-core"
 import {
   type Agent,
+  type AgentOperation,
   type AgentKnowledgeSourceFilterConfig,
   type AgentKnowledgeSourceSyncState,
   AgentKnowledgeSourceSyncRunStatus,
-  AgentKnowledgeSourceType,
   LockName,
   LockType,
-  type AgentKnowledgeSource,
   DocumentType,
   type FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
@@ -36,10 +35,11 @@ import {
   getSharePointBearerToken,
   listSharePointDrives,
 } from "../../../knowledgeSources/sharepoint"
+import { findOperationIdForKnowledgeSource } from "../../../agents/knowledgeConfig"
 import {
-  deleteFileForAgent,
-  ensureKnowledgeBaseForAgent,
-  listFilesForAgent,
+  deleteFileForOperation,
+  ensureKnowledgeBaseForOperation,
+  listFilesForOperation,
 } from "../../files"
 
 export const getSharePointFileDedupKey = ({
@@ -52,11 +52,23 @@ export const getSharePointFileDedupKey = ({
   itemId: string
 }) => `${siteId}:${driveId}:${itemId}`
 
-const getSharePointSources = (agent: Agent): AgentKnowledgeSource[] => {
-  return (agent.knowledgeSources || []).filter(
-    source => source.type === AgentKnowledgeSourceType.SHAREPOINT
+const getOperationOrThrow = (
+  agent: Agent,
+  operationId: string
+): AgentOperation => {
+  const operation = agent.operations?.find(
+    operation => operation.id === operationId
   )
+  if (!operation) {
+    throw new HTTPError("Operation not found for this agent", 404)
+  }
+  return operation
 }
+
+const getSharePointSourcesForOperation = (agent: Agent, operationId: string) =>
+  (getOperationOrThrow(agent, operationId).knowledgeSources || []).filter(
+    source => source.type === "sharepoint"
+  )
 
 const getSharePointSyncRunStatus = (
   synced: number,
@@ -230,16 +242,20 @@ const hasSharePointFileMetadataChanged = ({
   return false
 }
 
-export const fetchAllSharePointEntriesForAgent = async (
+export const fetchAllSharePointEntriesForOperation = async (
   agentId: string,
+  operationId: string,
   siteId: string
 ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
   const agent = await agentsSdk.getOrThrow(agentId)
-  const source = getSharePointSources(agent).find(
+  const source = getSharePointSourcesForOperation(agent, operationId).find(
     source => source.config.site.id === siteId
   )
   if (!source) {
-    throw new HTTPError("SharePoint site is not connected for this agent", 404)
+    throw new HTTPError(
+      "SharePoint site is not connected for this operation",
+      404
+    )
   }
 
   const { datasourceId, authConfigId } = source.config
@@ -299,6 +315,38 @@ export const fetchKnowledgeSourceSyncStateForAgent = async (
   return { runs }
 }
 
+export const getSharePointSourceIdPrefixForOperation = (operationId: string) =>
+  `sharepoint_site_${operationId.replace(/[^a-zA-Z0-9_-]/g, "_")}_`
+
+export const deleteKnowledgeSourceSyncStateForOperation = async (
+  agentId: string,
+  operationId: string
+) => {
+  const sourceIdPrefix = getSharePointSourceIdPrefixForOperation(operationId)
+  const db = context.getWorkspaceDB()
+  const result = await db.allDocs<AgentKnowledgeSourceSyncState>(
+    docIds.getDocParams(
+      DocumentType.AGENT_KNOWLEDGE_SOURCE_SYNC_STATE,
+      `${agentId}_`,
+      { include_docs: true }
+    )
+  )
+  const docsToDelete = result.rows
+    .map(row => row.doc)
+    .filter(
+      (doc): doc is AgentKnowledgeSourceSyncState => !!doc?._id && !!doc._rev
+    )
+    .filter(doc => doc.sourceId?.startsWith(sourceIdPrefix))
+    .map(doc => ({
+      ...doc,
+      _deleted: true,
+    }))
+
+  if (docsToDelete.length > 0) {
+    await db.bulkDocs(docsToDelete)
+  }
+}
+
 export const deleteKnowledgeSourceSyncStateForAgent = async (
   agentId: string,
   sourceId?: string
@@ -327,34 +375,34 @@ export const deleteKnowledgeSourceSyncStateForAgent = async (
   }
 }
 
-const runSharePointSourcesForAgent = async (
+const runSharePointSourcesForOperation = async (
   agentId: string,
+  operationId: string,
   sourceId: string
 ): Promise<SyncAgentKnowledgeSourcesResponse> => {
   const lastRunAt = new Date().toISOString()
   const agent = await agentsSdk.getOrThrow(agentId)
-  const sharepointSources = getSharePointSources(agent)
+  const sharepointSources = getSharePointSourcesForOperation(agent, operationId)
   if (sharepointSources.length === 0) {
-    throw new HTTPError("SharePoint is not connected for this agent", 400)
+    throw new HTTPError("SharePoint is not connected for this operation", 400)
   }
 
-  const site = agent.knowledgeSources?.find(s => s.id === sourceId)?.config.site
-  const sourceDatasourceId = agent.knowledgeSources?.find(
-    s => s.id === sourceId
-  )?.config.datasourceId
-  const sourceAuthConfigId = agent.knowledgeSources?.find(
-    s => s.id === sourceId
-  )?.config.authConfigId
+  const knowledgeSource = getSharePointSourcesForOperation(
+    agent,
+    operationId
+  ).find(source => source.id === sourceId)
+  const site = knowledgeSource?.config.site
+  const sourceDatasourceId = knowledgeSource?.config.datasourceId
+  const sourceAuthConfigId = knowledgeSource?.config.authConfigId
   if (!site) {
     throw new HTTPError(
-      "Specified SharePoint site is not connected for this agent",
+      "Specified SharePoint site is not connected for this operation",
       400
     )
   }
 
   const siteId = site.id
-  const sourceFilters = agent.knowledgeSources?.find(s => s.id === sourceId)
-    ?.config.filters
+  const sourceFilters = knowledgeSource?.config.filters
 
   console.log("Starting SharePoint sync for agent", {
     agentId,
@@ -371,7 +419,10 @@ const runSharePointSourcesForAgent = async (
     sourceDatasourceId,
     sourceAuthConfigId
   )
-  const knowledgeBase = await ensureKnowledgeBaseForAgent(agentId)
+  const knowledgeBase = await ensureKnowledgeBaseForOperation(
+    agentId,
+    operationId
+  )
   const knowledgeBaseId = knowledgeBase._id
   if (!knowledgeBaseId) {
     throw new HTTPError("Failed to create agent file storage", 500)
@@ -444,7 +495,9 @@ const runSharePointSourcesForAgent = async (
     .filter((fileId): fileId is string => !!fileId)
   if (filteredOutFileIds.length > 0) {
     const deleteResults = await Promise.allSettled(
-      filteredOutFileIds.map(fileId => deleteFileForAgent(agentId, fileId))
+      filteredOutFileIds.map(fileId =>
+        deleteFileForOperation(agentId, operationId, fileId)
+      )
     )
     deleted = deleteResults.filter(
       result => result.status === "fulfilled"
@@ -555,7 +608,11 @@ const runSharePointSourcesForAgent = async (
 
           if (existingEntry?.fileId && isOwnedByCurrentSource) {
             try {
-              await deleteFileForAgent(agentId, existingEntry.fileId)
+              await deleteFileForOperation(
+                agentId,
+                operationId,
+                existingEntry.fileId
+              )
               deleted++
             } catch (error) {
               console.error(
@@ -638,7 +695,9 @@ const runSharePointSourcesForAgent = async (
 
     if (staleFileIds.length > 0) {
       const staleDeleteResults = await Promise.allSettled(
-        staleFileIds.map(fileId => deleteFileForAgent(agentId, fileId))
+        staleFileIds.map(fileId =>
+          deleteFileForOperation(agentId, operationId, fileId)
+        )
       )
       const staleDeleted = staleDeleteResults.filter(
         result => result.status === "fulfilled"
@@ -709,8 +768,9 @@ const runSharePointSourcesForAgent = async (
   }
 }
 
-export const syncSharePointSourcesForAgent = async (
+export const syncSharePointSourcesForOperation = async (
   agentId: string,
+  operationId: string,
   sourceId: string
 ): Promise<SyncAgentKnowledgeSourcesResponse> => {
   const { result } = await locks.doWithLock(
@@ -719,17 +779,35 @@ export const syncSharePointSourcesForAgent = async (
       type: LockType.AUTO_EXTEND,
       resource: `${agentId}:${sourceId}:sharepoint_sync`,
     },
-    async () => await runSharePointSourcesForAgent(agentId, sourceId)
+    async () =>
+      await runSharePointSourcesForOperation(agentId, operationId, sourceId)
   )
 
   return result
 }
 
-export const deleteSharePointFilesForAgentSite = async (
+export const syncSharePointSourcesForAgent = async (
   agentId: string,
+  sourceId: string
+): Promise<SyncAgentKnowledgeSourcesResponse> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  const operationId = findOperationIdForKnowledgeSource(agent, sourceId)
+  if (!operationId) {
+    throw new HTTPError(
+      "Specified SharePoint site is not connected for this agent",
+      400
+    )
+  }
+
+  return await syncSharePointSourcesForOperation(agentId, operationId, sourceId)
+}
+
+export const deleteSharePointFilesForOperationSite = async (
+  agentId: string,
+  operationId: string,
   siteId: string
 ) => {
-  const files = await listFilesForAgent(agentId)
+  const files = await listFilesForOperation(agentId, operationId)
   const fileIdsToDelete = files
     .filter(
       file =>
@@ -738,9 +816,10 @@ export const deleteSharePointFilesForAgentSite = async (
     )
     .map(file => file._id)
     .filter((fileId): fileId is string => !!fileId)
-
   const results = await Promise.allSettled(
-    fileIdsToDelete.map(fileId => deleteFileForAgent(agentId, fileId))
+    fileIdsToDelete.map(fileId =>
+      deleteFileForOperation(agentId, operationId, fileId)
+    )
   )
   const failed = results.filter(result => result.status === "rejected").length
   console.log("SharePoint file cleanup completed for site", {

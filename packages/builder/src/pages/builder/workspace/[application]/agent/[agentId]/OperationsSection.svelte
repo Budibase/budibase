@@ -2,18 +2,21 @@
   import {
     Body,
     Button,
+    Helpers,
     Icon,
     Input,
     Modal,
     ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import type { Agent, EnrichedBinding } from "@budibase/types"
+  import type { Agent, AgentOperation, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
   import { contextMenuStore } from "@/stores/builder"
+  import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
+
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
 What is this agent responsible for?
 
@@ -42,7 +45,7 @@ Any constraints the agent must follow.
     webSearchConfigured = false,
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
-    onDeleteOperation = async () => {},
+    onSetOperationLive = async () => false,
     onUpdated,
   }: {
     agent?: Agent
@@ -54,16 +57,21 @@ Any constraints the agent must follow.
     webSearchConfigured?: boolean
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
-    onDeleteOperation?: () => Promise<void>
-    onUpdated: () => void
+    onSetOperationLive?: (
+      operationId: string,
+      live: boolean
+    ) => Promise<boolean>
+    onUpdated: () => Promise<boolean>
   } = $props()
 
   let operationPanelOpen = $state(false)
   let renameModal: Modal | undefined = $state()
   let renameDraft = $state("")
   let isRenameValid = $derived(Boolean(renameDraft.trim()))
-  let operationName = $derived(agent?.operationName?.trim())
-  let hasOperation = $derived(Boolean(agent?.operationName?.trim()))
+
+  let operationName = $derived(agent?.operations?.[0]?.name?.trim())
+  let hasOperation = $derived(Boolean(agent?.operations?.[0]?.name?.trim()))
+  let operationLive = $derived(agent?.operations?.[0]?.live === true)
 
   const openOperationPanel = () => {
     operationPanelOpen = true
@@ -74,12 +82,12 @@ Any constraints the agent must follow.
   }
 
   const openRenameModal = () => {
-    renameDraft = agent?.operationName || ""
+    renameDraft = agent?.operations?.[0]?.name || ""
     renameModal?.show()
   }
 
   const saveRename = () => {
-    if (!agent) {
+    if (!agent?.operations?.[0]) {
       return
     }
     const trimmedName = renameDraft.trim()
@@ -87,9 +95,34 @@ Any constraints the agent must follow.
       notifications.error("Operation name is required.")
       return
     }
-    agent.operationName = trimmedName
+    agent.operations[0].name = trimmedName
     onUpdated()
     renameModal?.hide()
+  }
+
+  const createDefaultOperation = () =>
+    ({
+      id: `operation_${Helpers.uuid()}`,
+      name: "Main operation",
+      live: false,
+      promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+      allowKnowledgeSourceDownload: true,
+    }) satisfies AgentOperation
+
+  const setOperationLive = async (nextLive: boolean) => {
+    if (!agent?.operations?.[0] || agent.operations[0].live === nextLive) {
+      return
+    }
+    const currentOperation = agent.operations[0]
+    const previousLive = currentOperation.live
+    currentOperation.live = nextLive
+    const saveSucceeded = await onSetOperationLive(
+      currentOperation.id,
+      nextLive
+    )
+    if (saveSucceeded === false) {
+      currentOperation.live = previousLive
+    }
   }
 
   const handleAddOperation = () => {
@@ -97,10 +130,10 @@ Any constraints the agent must follow.
       notifications.info("Only one operation is supported at the moment.")
       return
     }
-    if (agent) {
-      agent.operationName = "Main operation"
-      agent.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
+    if (!agent) {
+      return
     }
+    agent.operations = [createDefaultOperation()]
     onUpdated()
     openOperationPanel()
   }
@@ -110,7 +143,6 @@ Any constraints the agent must follow.
       return
     }
 
-    const safeAgent = agent
     confirm({
       title: "Confirm deletion",
       body: "Delete this operation? This will clear instructions and selected tools.",
@@ -118,11 +150,8 @@ Any constraints the agent must follow.
       warning: true,
       onConfirm: async () => {
         try {
-          await onDeleteOperation()
-          safeAgent.promptInstructions = ""
-          safeAgent.enabledTools = []
-          safeAgent.operationName = ""
-          onUpdated()
+          agent.operations = []
+          await onUpdated()
           closeOperationPanel()
           notifications.success("Operation deleted.")
         } catch (error) {
@@ -140,6 +169,12 @@ Any constraints the agent must follow.
     contextMenuStore.open(
       "agent-operation",
       [
+        {
+          icon: operationLive ? "stop" : "play",
+          name: operationLive ? "Stop" : "Set live",
+          visible: true,
+          callback: async () => await setOperationLive(!operationLive),
+        },
         {
           icon: "pencil",
           name: "Edit",
@@ -183,6 +218,9 @@ Any constraints the agent must follow.
           oncontextmenu={openOperationContextMenu}
         >
           <span class="operation-name">{operationName}</span>
+          <span class="status-indicator">
+            <OperationLiveBadge live={operationLive} />
+          </span>
         </button>
 
         <button
@@ -203,20 +241,23 @@ Any constraints the agent must follow.
   {/if}
 </div>
 
-<OperationSidePanel
-  open={operationPanelOpen}
-  bind:agent
-  {promptBindings}
-  {bindingIcons}
-  {completions}
-  {toolsLoaded}
-  {availableTools}
-  {webSearchConfigured}
-  {onAddApiConnection}
-  {onConfigureWebSearch}
-  {onUpdated}
-  onClose={closeOperationPanel}
-/>
+{#if agent?.operations?.[0]}
+  <OperationSidePanel
+    open={operationPanelOpen}
+    bind:operation={agent.operations[0]}
+    {promptBindings}
+    {bindingIcons}
+    {completions}
+    {toolsLoaded}
+    {availableTools}
+    {webSearchConfigured}
+    {onAddApiConnection}
+    {onConfigureWebSearch}
+    {onSetOperationLive}
+    {onUpdated}
+    onClose={closeOperationPanel}
+  />
+{/if}
 
 <Modal bind:this={renameModal}>
   <ModalContent
@@ -277,15 +318,23 @@ Any constraints the agent must follow.
   }
 
   .operation-open-button {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     min-height: 36px;
-    padding: 8px 12px;
+    padding: 8px 0 8px 12px;
     border: 0;
     background: transparent;
     color: inherit;
     text-align: left;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+  }
+
+  .status-indicator {
+    pointer-events: none;
   }
 
   .operation-name {

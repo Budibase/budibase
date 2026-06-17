@@ -6,7 +6,7 @@ import {
   CreateAgentResponse,
   DisconnectAgentSharePointSiteResponse,
   DuplicateAgentResponse,
-  FetchAgentKnowledgeResponse,
+  FetchAgentKnowledgeIndexResponse,
   FetchAgentFileUrlResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -28,6 +28,9 @@ import {
   UpdateAgentSharePointSiteResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  CreateAgentOperationRequest,
+  UpdateAgentOperationRequest,
+  AgentOperationMutationResponse,
 } from "@budibase/types"
 
 import { BaseAPIClient } from "./types"
@@ -35,8 +38,24 @@ import { BaseAPIClient } from "./types"
 export interface AgentEndpoints {
   fetchTools: (aiconfigId?: string) => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
+  fetchAgentKnowledge: (
+    agentId: string
+  ) => Promise<FetchAgentKnowledgeIndexResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
+  createAgentOperation: (
+    agentId: string,
+    operation: CreateAgentOperationRequest
+  ) => Promise<AgentOperationMutationResponse>
+  updateAgentOperation: (
+    agentId: string,
+    operationId: string,
+    operation: UpdateAgentOperationRequest
+  ) => Promise<AgentOperationMutationResponse>
+  deleteAgentOperation: (
+    agentId: string,
+    operationId: string
+  ) => Promise<AgentOperationMutationResponse>
   duplicateAgent: (agentId: string) => Promise<DuplicateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
   syncAgentDiscordCommands: (
@@ -71,45 +90,55 @@ export interface AgentEndpoints {
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
-  fetchAgentKnowledge: (agentId: string) => Promise<FetchAgentKnowledgeResponse>
-  uploadAgentFile: (
+  uploadOperationFile: (
     agentId: string,
+    operationId: string,
     file: File
   ) => Promise<AgentFileUploadResponse>
-  deleteAgentFile: (
+  deleteOperationFile: (
     agentId: string,
+    operationId: string,
     fileId: string
   ) => Promise<{ deleted: true }>
-  fetchAgentFileUrl: (
+  fetchOperationFileUrl: (
     agentId: string,
+    operationId: string,
     fileId: string
   ) => Promise<FetchAgentFileUrlResponse>
   fetchAgentKnowledgeSourceOptions: (
     datasourceId: string,
     authConfigId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
-  fetchAgentKnowledgeSourceAllEntries: (
+  fetchOperationKnowledgeSourceAllEntries: (
     agentId: string,
+    operationId: string,
     siteId: string
   ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
-  connectAgentSharePointSite: (
+  connectOperationSharePointSite: (
     agentId: string,
+    operationId: string,
     body: ConnectAgentSharePointSiteRequest
   ) => Promise<ConnectAgentSharePointSiteResponse>
-  updateAgentSharePointSite: (
+  updateOperationSharePointSite: (
     agentId: string,
+    operationId: string,
     siteId: string,
     body: UpdateAgentSharePointSiteRequest
   ) => Promise<UpdateAgentSharePointSiteResponse>
-  disconnectAgentSharePointSite: (
+  disconnectOperationSharePointSite: (
     agentId: string,
+    operationId: string,
     siteId: string
   ) => Promise<DisconnectAgentSharePointSiteResponse>
-  syncAgentKnowledgeSources: (
+  syncOperationKnowledgeSources: (
     agentId: string,
+    operationId: string,
     sourceId: string
   ) => Promise<SyncAgentKnowledgeSourcesResponse>
-  resetAgentKnowledgeBaseStore: (agentId: string) => Promise<void>
+  resetOperationKnowledgeBaseStore: (
+    agentId: string,
+    operationId: string
+  ) => Promise<void>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -127,6 +156,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  fetchAgentKnowledge: async (agentId: string) => {
+    return await API.get<FetchAgentKnowledgeIndexResponse>({
+      url: `/api/agent/${agentId}/knowledge`,
+    })
+  },
+
   createAgent: async (agent: CreateAgentRequest) => {
     return await API.post({
       url: "/api/agent",
@@ -138,6 +173,26 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     return await API.put({
       url: "/api/agent",
       body: agent,
+    })
+  },
+
+  createAgentOperation: async (agentId, operation) => {
+    return await API.post({
+      url: `/api/agent/${agentId}/operations`,
+      body: operation,
+    })
+  },
+
+  updateAgentOperation: async (agentId, operationId, operation) => {
+    return await API.put({
+      url: `/api/agent/${agentId}/operations/${operationId}`,
+      body: operation,
+    })
+  },
+
+  deleteAgentOperation: async (agentId, operationId) => {
+    return await API.delete({
+      url: `/api/agent/${agentId}/operations/${operationId}`,
     })
   },
 
@@ -233,31 +288,37 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentKnowledge: async (agentId: string) => {
-    return await API.get<FetchAgentKnowledgeResponse>({
-      url: `/api/agent/${agentId}/knowledge`,
-    })
-  },
-
-  uploadAgentFile: async (agentId: string, file: File) => {
+  uploadOperationFile: async (
+    agentId: string,
+    operationId: string,
+    file: File
+  ) => {
     const formData = new FormData()
     formData.append("file", file)
     return await API.post<FormData, AgentFileUploadResponse>({
-      url: `/api/agent/${agentId}/files`,
+      url: `/api/agent/${agentId}/operations/${operationId}/files`,
       body: formData,
       json: false,
     })
   },
 
-  deleteAgentFile: async (agentId: string, fileId: string) => {
+  deleteOperationFile: async (
+    agentId: string,
+    operationId: string,
+    fileId: string
+  ) => {
     return await API.delete({
-      url: `/api/agent/${agentId}/files/${fileId}`,
+      url: `/api/agent/${agentId}/operations/${operationId}/files/${fileId}`,
     })
   },
 
-  fetchAgentFileUrl: async (agentId: string, fileId: string) => {
+  fetchOperationFileUrl: async (
+    agentId: string,
+    operationId: string,
+    fileId: string
+  ) => {
     return await API.get<FetchAgentFileUrlResponse>({
-      url: `/api/agent/${agentId}/files/${fileId}/url`,
+      url: `/api/agent/${agentId}/operations/${operationId}/files/${fileId}/url`,
     })
   },
 
@@ -270,54 +331,75 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchAgentKnowledgeSourceAllEntries: async (
+  fetchOperationKnowledgeSourceAllEntries: async (
     agentId: string,
+    operationId: string,
     siteId: string
   ) => {
     const query = new URLSearchParams({ siteId })
     return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
-      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/entries/all?${query.toString()}`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/entries/all?${query.toString()}`,
     })
   },
 
-  connectAgentSharePointSite: async (agentId: string, body) => {
+  connectOperationSharePointSite: async (
+    agentId: string,
+    operationId: string,
+    body
+  ) => {
     return await API.post<
       ConnectAgentSharePointSiteRequest,
       ConnectAgentSharePointSiteResponse
     >({
-      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/sites`,
       body,
     })
   },
 
-  updateAgentSharePointSite: async (agentId: string, siteId: string, body) => {
+  updateOperationSharePointSite: async (
+    agentId: string,
+    operationId: string,
+    siteId: string,
+    body
+  ) => {
     return await API.patch<
       UpdateAgentSharePointSiteRequest,
       UpdateAgentSharePointSiteResponse
     >({
-      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
       body,
     })
   },
 
-  disconnectAgentSharePointSite: async (agentId: string, siteId: string) => {
+  disconnectOperationSharePointSite: async (
+    agentId: string,
+    operationId: string,
+    siteId: string
+  ) => {
     return await API.delete<void, DisconnectAgentSharePointSiteResponse>({
-      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
     })
   },
 
-  syncAgentKnowledgeSources: async (agentId: string, sourceId: string) => {
+  syncOperationKnowledgeSources: async (
+    agentId: string,
+    operationId: string,
+    sourceId: string
+  ) => {
     return await API.post<
       SyncAgentKnowledgeSourcesRequest | undefined,
       SyncAgentKnowledgeSourcesResponse
     >({
-      url: `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
     })
   },
 
-  resetAgentKnowledgeBaseStore: async (agentId: string) => {
+  resetOperationKnowledgeBaseStore: async (
+    agentId: string,
+    operationId: string
+  ) => {
     await API.post({
-      url: `/api/agent/${agentId}/knowledge/store/reset`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge/store/reset`,
     })
   },
 })

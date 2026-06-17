@@ -21,95 +21,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-
-const SECRET_MASK = "********"
-
-const maskSecretFields = <T extends object>(obj: T, fields: (keyof T)[]): T => {
-  const result = { ...obj }
-  for (const field of fields) {
-    if (result[field]) {
-      result[field] = SECRET_MASK as T[typeof field]
-    }
-  }
-  return result
-}
-
-const obfuscateAgentSecrets = (agent: Agent): Agent => ({
-  ...agent,
-  ...(agent.discordIntegration && {
-    discordIntegration: maskSecretFields(agent.discordIntegration, [
-      "publicKey",
-      "botToken",
-    ]),
-  }),
-  ...(agent.MSTeamsIntegration && {
-    MSTeamsIntegration: maskSecretFields(agent.MSTeamsIntegration, [
-      "appPassword",
-    ]),
-  }),
-  ...(agent.slackIntegration && {
-    slackIntegration: maskSecretFields(agent.slackIntegration, [
-      "botToken",
-      "signingSecret",
-    ]),
-  }),
-  ...(agent.telegramIntegration && {
-    telegramIntegration: maskSecretFields(agent.telegramIntegration, [
-      "botToken",
-      "webhookSecretToken",
-    ]),
-  }),
-})
-
-const withoutKnowledgeConfig = <T extends Agent>(agent: T) => {
-  const {
-    knowledgeSources: _knowledgeSources,
-    knowledgeBases: _knowledgeBases,
-    ...rest
-  } = agent
-  return rest
-}
-
-const stableSerialize = (value: unknown): string => {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableSerialize).join(",")}]`
-  }
-  if (value && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>).sort(
-      ([a], [b]) => a.localeCompare(b)
-    )
-    return `{${entries
-      .map(([key, item]) => `${JSON.stringify(key)}:${stableSerialize(item)}`)
-      .join(",")}}`
-  }
-  return JSON.stringify(value)
-}
-
-const normalizeKnowledgeBases = (value: unknown): string[] =>
-  Array.isArray(value)
-    ? value
-        .map(item => (typeof item === "string" ? item.trim() : ""))
-        .filter(Boolean)
-        .sort()
-    : []
-
-const normalizeKnowledgeSources = (value: unknown): unknown[] =>
-  Array.isArray(value)
-    ? value
-        .map(item => {
-          const source = item as Record<string, unknown>
-          return {
-            id: source?.id,
-            type: source?.type,
-            config: source?.config,
-          }
-        })
-        .sort((a, b) => {
-          const keyA = `${a.id ?? ""}:${a.type ?? ""}`
-          const keyB = `${b.id ?? ""}:${b.type ?? ""}`
-          return keyA.localeCompare(keyB)
-        })
-    : []
+import { toAgentResponse } from "./agentResponse"
 
 const parseOptionalChatAppId = (value: unknown) => {
   if (typeof value !== "string") {
@@ -295,7 +207,7 @@ export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
   const agents = await sdk.ai.agents.fetch()
-  ctx.body = { agents: agents.map(obfuscateAgentSecrets) }
+  ctx.body = { agents: agents.map(toAgentResponse) }
 }
 
 export async function createAgent(
@@ -305,33 +217,25 @@ export async function createAgent(
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
-  const createRequest: RequiredKeys<
-    Parameters<typeof sdk.ai.agents.create>[0]
-  > = {
+  const createRequest: Parameters<typeof sdk.ai.agents.create>[number] = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    promptInstructions: body.promptInstructions,
-    operationName: body.operationName,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
     live: body.live,
     _deleted: false,
     createdBy: globalId,
-    enabledTools: body.enabledTools,
-    allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
-    knowledgeSources: undefined,
-    knowledgeBases: undefined,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
 
-  ctx.body = withoutKnowledgeConfig(obfuscateAgentSecrets(agent))
+  ctx.body = toAgentResponse(agent)
   ctx.status = 201
 }
 
@@ -339,30 +243,7 @@ export async function updateAgent(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
-  const rawBody = ctx.request.body as Record<string, unknown>
   const existing = await sdk.ai.agents.getOrThrow(body._id)
-
-  if (Object.prototype.hasOwnProperty.call(rawBody, "knowledgeSources")) {
-    const incoming = normalizeKnowledgeSources(rawBody.knowledgeSources)
-    const current = normalizeKnowledgeSources(existing.knowledgeSources || [])
-    if (stableSerialize(incoming) !== stableSerialize(current)) {
-      throw new HTTPError(
-        "knowledgeSources cannot be updated from this endpoint",
-        400
-      )
-    }
-  }
-
-  if (Object.prototype.hasOwnProperty.call(rawBody, "knowledgeBases")) {
-    const incoming = normalizeKnowledgeBases(rawBody.knowledgeBases)
-    const current = normalizeKnowledgeBases(existing.knowledgeBases || [])
-    if (stableSerialize(incoming) !== stableSerialize(current)) {
-      throw new HTTPError(
-        "knowledgeBases cannot be updated from this endpoint",
-        400
-      )
-    }
-  }
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -370,26 +251,23 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    promptInstructions: body.promptInstructions,
-    operationName: body.operationName,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
-    enabledTools: body.enabledTools,
-    allowKnowledgeSourceDownload:
-      body.allowKnowledgeSourceDownload ??
-      existing.allowKnowledgeSourceDownload,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
     telegramIntegration: body.telegramIntegration,
   }
 
-  const agent = await sdk.ai.agents.update(updateRequest)
+  const agent = await sdk.ai.agents.update({
+    ...existing,
+    ...updateRequest,
+  })
 
-  ctx.body = withoutKnowledgeConfig(obfuscateAgentSecrets(agent))
+  ctx.body = toAgentResponse(agent)
   ctx.status = 200
 }
 
@@ -720,7 +598,7 @@ export async function duplicateAgent(
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
   const duplicated = await sdk.ai.agents.duplicate(sourceAgent, globalId)
 
-  ctx.body = obfuscateAgentSecrets(duplicated)
+  ctx.body = toAgentResponse(duplicated)
   ctx.status = 201
 }
 

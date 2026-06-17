@@ -288,4 +288,44 @@ describe("SQL filter parameterization", () => {
       'delete from "tbl" where exists (select 1 from "reltable" as "reltable" where "reltable"."id" = "tbl"."rel") returning *'
     )
   })
+
+  it("builds Postgres oneOf filters with whereIn", () => {
+    const table = buildTable({
+      kind: {
+        name: "kind",
+        type: FieldType.STRING,
+        externalType: "text",
+        constraints: baseConstraints,
+      },
+    })
+    const query = buildQuery(table, {
+      oneOf: { kind: ["a", "b"] },
+    })
+
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql.toLowerCase()).toContain('"kind" in ($1, $2)')
+    expect(result.sql.toLowerCase()).not.toContain("is null")
+    expect(result.bindings).toEqual(expect.arrayContaining(["a", "b"]))
+  })
+
+  it("builds Postgres notOneOf filters with whereNotIn and includes empty rows", () => {
+    const table = buildTable({
+      kind: {
+        name: "kind",
+        type: FieldType.STRING,
+        externalType: "text",
+        constraints: baseConstraints,
+      },
+    })
+    const query = buildQuery(table, {
+      notOneOf: { kind: ["a", "b"] },
+    })
+
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql.toLowerCase()).toContain('"kind" not in ($1, $2)')
+    expect(result.sql.toLowerCase()).toContain('"kind" is null')
+    expect(result.bindings).toEqual(expect.arrayContaining(["a", "b"]))
+  })
 })
