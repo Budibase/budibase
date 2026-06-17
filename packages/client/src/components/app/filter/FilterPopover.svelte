@@ -16,6 +16,7 @@
     FilterValueType,
     OperatorOptions,
   } from "@budibase/frontend-core/src/constants"
+  import { loadTranslationsByGroup } from "@budibase/frontend-core"
   import {
     type FieldSchema,
     type FilterConfig,
@@ -54,6 +55,7 @@
 
   const dispatch = createEventDispatcher()
   const rowCache: Writable<Record<string, any>> = getContext("rows")
+  const filterLabels = loadTranslationsByGroup("filter")
 
   let popover: PopoverAPI | undefined
   let anchor: HTMLElement | undefined
@@ -326,8 +328,8 @@
             value={editableFilter.value}
             disabled={editableFilter.noValue}
             options={[
-              { label: "True", value: "true" },
-              { label: "False", value: "false" },
+              { label: filterLabels.true, value: "true" },
+              { label: filterLabels.false, value: "false" },
             ]}
             on:change={e => {
               if (!editableFilter) return
