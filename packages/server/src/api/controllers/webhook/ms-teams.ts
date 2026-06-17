@@ -1,15 +1,17 @@
-import { context, HTTPError } from "@budibase/backend-core"
-import { ChatCommands, SupportedChatCommand } from "@budibase/shared-core"
+import { configs, context, HTTPError } from "@budibase/backend-core"
+import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
   type ChatConversationChannel,
   type Ctx,
   type MSTeamsActivity,
   type MSTeamsConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
 import { Chat, type Thread, type Message, type SentMessage } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
+import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 import { handleChatMessage } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -19,6 +21,72 @@ const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 const TEAMS_PROCESSING_MESSAGE = "Thinking..."
 const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
+
+const isAbsoluteUrl = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://")
+
+const toAbsoluteUrl = async (url: string) => {
+  if (isAbsoluteUrl(url)) {
+    return url
+  }
+
+  if (!url.startsWith("/")) {
+    return url
+  }
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  return `${platformUrl.replace(/\/$/, "")}${url}`
+}
+
+const formatTeamsLinkLabel = (value: string) =>
+  value
+    .replace(/[\[\]\n\r]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+export const formatTeamsAssistantReply = async ({
+  agentId,
+  result,
+  allowKnowledgeSourceDownload,
+  isPersonalConversation,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  allowKnowledgeSourceDownload?: boolean
+  isPersonalConversation?: boolean
+}) => {
+  const assistantText = result.assistantText || ""
+  if (allowKnowledgeSourceDownload === false || !isPersonalConversation) {
+    return assistantText
+  }
+
+  const sources = result.ragSources || []
+  const sourceLinks: string[] = []
+  for (const source of sources) {
+    if (!source.fileId) {
+      continue
+    }
+
+    try {
+      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
+        agentId,
+        source.fileId
+      )
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      const label =
+        formatTeamsLinkLabel(source.filename || "") || "Knowledge source"
+      sourceLinks.push(`- [${label}](${absoluteUrl})`)
+    } catch (error) {
+      console.error("Failed to generate Teams RAG source link", error)
+    }
+  }
+
+  if (!sourceLinks.length) {
+    return assistantText
+  }
+
+  return `${assistantText}\n\nSources:\n${sourceLinks.join("\n")}`
+}
 
 export const stripTeamsMentions = (
   text: string,
@@ -140,6 +208,7 @@ const createTeamsMessageHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
+  allowKnowledgeSourceDownload,
 }: {
   workspaceId: string
   chatAppId: string
@@ -147,6 +216,7 @@ const createTeamsMessageHandler = ({
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
+  allowKnowledgeSourceDownload?: boolean
 }) => {
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as MSTeamsActivity | undefined
@@ -213,6 +283,7 @@ const createTeamsMessageHandler = ({
 
     const shouldPostChannelWorkingIndicator =
       shouldShowProgress && !isTeamsPersonalConversation(conversationType)
+    const isPersonalConversation = isTeamsPersonalConversation(conversationType)
 
     let progressMessage: SentMessage | undefined
     let hasUsedProgressMessage = false
@@ -292,6 +363,13 @@ const createTeamsMessageHandler = ({
           }
           await editOrPostTextReply("I sent you a private Budibase link.")
         },
+        formatAssistantReply: async result =>
+          await formatTeamsAssistantReply({
+            agentId,
+            result,
+            allowKnowledgeSourceDownload,
+            isPersonalConversation,
+          }),
         workspaceId,
         chatAppId,
         agentId,
@@ -335,6 +413,7 @@ export async function MSTeamsWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
+        allowKnowledgeSourceDownload,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
@@ -342,6 +421,8 @@ export async function MSTeamsWebhook(
             sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
           idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.MSTeamsIntegration?.requireUserLink,
+          allowKnowledgeSourceDownload:
+            getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true,
           channelEnabled:
             !!agent.MSTeamsIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -370,6 +451,7 @@ export async function MSTeamsWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
+        allowKnowledgeSourceDownload,
       })
       chat.onDirectMessage(async (thread, message) => {
         await handler(thread, message)
