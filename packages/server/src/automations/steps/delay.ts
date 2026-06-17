@@ -1,21 +1,16 @@
+import { Duration } from "@budibase/backend-core"
 import type { DelayStepInputs, DelayStepOutputs } from "@budibase/types"
+import { DurationType } from "@budibase/types"
 
 import { wait } from "../../utilities"
 
 export const TEST_DELAY_CAP_MS = 3000
 
-type DelayUnit = NonNullable<DelayStepInputs["unit"]>
-
-const delayUnitToMs: Record<DelayUnit, number> = {
-  milliseconds: 1,
-  seconds: 1000,
-  minutes: 60 * 1000,
-  hours: 60 * 60 * 1000,
-  days: 24 * 60 * 60 * 1000,
-}
-
 export const getDelayMs = (inputs: DelayStepInputs) => {
-  return inputs.time * delayUnitToMs[inputs.unit || "milliseconds"]
+  return Duration.from(
+    inputs.unit || DurationType.MILLISECONDS,
+    inputs.time
+  ).toMs()
 }
 
 export const getCappedTestDelayMs = (inputs: DelayStepInputs) => {

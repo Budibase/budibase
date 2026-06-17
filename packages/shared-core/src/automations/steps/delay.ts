@@ -3,22 +3,15 @@ import {
   AutomationIOType,
   AutomationStepDefinition,
   AutomationStepType,
+  DurationType,
 } from "@budibase/types"
 
-enum DelayUnit {
-  MILLISECONDS = "milliseconds",
-  SECONDS = "seconds",
-  MINUTES = "minutes",
-  HOURS = "hours",
-  DAYS = "days",
-}
-
 const DelayUnitPretty = {
-  [DelayUnit.MILLISECONDS]: "Milliseconds",
-  [DelayUnit.SECONDS]: "Seconds",
-  [DelayUnit.MINUTES]: "Minutes",
-  [DelayUnit.HOURS]: "Hours",
-  [DelayUnit.DAYS]: "Days",
+  [DurationType.MILLISECONDS]: "Milliseconds",
+  [DurationType.SECONDS]: "Seconds",
+  [DurationType.MINUTES]: "Minutes",
+  [DurationType.HOURS]: "Hours",
+  [DurationType.DAYS]: "Days",
 }
 
 export const definition: AutomationStepDefinition = {
@@ -31,7 +24,7 @@ export const definition: AutomationStepDefinition = {
   features: {},
   inputs: {
     time: 10,
-    unit: DelayUnit.SECONDS,
+    unit: DurationType.SECONDS,
   },
   schema: {
     inputs: {
@@ -43,7 +36,7 @@ export const definition: AutomationStepDefinition = {
         unit: {
           type: AutomationIOType.STRING,
           title: "Unit",
-          enum: Object.values(DelayUnit),
+          enum: Object.values(DurationType),
           pretty: Object.values(DelayUnitPretty),
         },
       },

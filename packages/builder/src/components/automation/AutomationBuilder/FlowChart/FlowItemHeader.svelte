@@ -11,6 +11,7 @@
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
   import { Features } from "@/constants/backend/automations"
+  import { restTemplates } from "@/stores/builder/restTemplates"
 
   export let block
   export let open
@@ -34,6 +35,9 @@
   $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
   $: blockDefinition = $automationStore.blockDefinitions.ACTION[block.stepId]
+  $: restTemplate = block?.inputs?.restTemplateId
+    ? restTemplates.get(block.inputs.restTemplateId)
+    : undefined
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: inputWidth = `${Math.min(
     Math.max(
@@ -130,7 +134,14 @@
 >
   <div class="splitHeader">
     <div class="center-items">
-      {#if externalActions[block.stepId]}
+      {#if restTemplate?.icon}
+        <img
+          alt={restTemplate.name}
+          width="22px"
+          height="22px"
+          src={restTemplate.icon}
+        />
+      {:else if externalActions[block.stepId]}
         <img
           alt={externalActions[block.stepId].name}
           width="22px"
