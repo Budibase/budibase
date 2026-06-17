@@ -90,6 +90,34 @@ describe("isValidEndpointUrl - HBS bindings", () => {
   it("rejects a malformed binding with no closing braces", () => {
     expect(isValidEndpointUrl("{{derp")).toBe(false)
   })
+
+  it("accepts a binding containing internal whitespace", () => {
+    expect(
+      isValidEndpointUrl("https://api.example.com/{{ contact_id }}/users")
+    ).toBe(true)
+  })
+
+  it("accepts a URL that is entirely a binding with internal whitespace", () => {
+    expect(isValidEndpointUrl("{{ env.API_URL }}")).toBe(true)
+  })
+
+  it("rejects whitespace outside of a binding", () => {
+    expect(
+      isValidEndpointUrl("https://api.example.com/{{ contact_id }} /users")
+    ).toBe(false)
+  })
+
+  it("accepts multiple bindings that each contain internal whitespace", () => {
+    expect(
+      isValidEndpointUrl("https://api.example.com/{{ org_id }}/{{ contact_id }}")
+    ).toBe(true)
+  })
+
+  it("rejects whitespace between two bindings", () => {
+    expect(isValidEndpointUrl("https://api.example.com/{{ a }} {{ b }}")).toBe(
+      false
+    )
+  })
 })
 
 describe("convertPathVariables", () => {
