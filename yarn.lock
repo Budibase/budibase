@@ -6464,6 +6464,16 @@
     obug "^2.1.0"
     vitefu "^1.1.1"
 
+"@sveltejs/vite-plugin-svelte@^7.1.2":
+  version "7.1.2"
+  resolved "https://registry.yarnpkg.com/@sveltejs/vite-plugin-svelte/-/vite-plugin-svelte-7.1.2.tgz#23f513f7d65449f88276d27b36f3281a4a0049b5"
+  integrity sha512-DrUBA2UXRfDmUX/ZTiEopd3X40yavsJF1FX2RygcuIScHL7o5YX1fMvoYnDhjeJQC4weCOklirpNWlcb2NiSeA==
+  dependencies:
+    deepmerge "^4.3.1"
+    magic-string "^0.30.21"
+    obug "^2.1.0"
+    vitefu "^1.1.2"
+
 "@swc/core-darwin-arm64@1.13.5":
   version "1.13.5"
   resolved "https://registry.yarnpkg.com/@swc/core-darwin-arm64/-/core-darwin-arm64-1.13.5.tgz#7638c073946f9297753ed9a2eb198d07b2336a24"
@@ -12175,9 +12185,9 @@ esquery@^1.4.2, esquery@^1.5.0:
     estraverse "^5.1.0"
 
 esrap@^2.1.0:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/esrap/-/esrap-2.2.3.tgz#cbc5a6aad5349697b78ef7af62704e733a50d2c1"
-  integrity sha512-8fOS+GIGCQZl/ZIlhl59htOlms6U8NvX6ZYgYHpRU/b6tVSh3uHkOHZikl3D4cMbYM0JlpBe+p/BkZEi8J9XIQ==
+  version "2.2.11"
+  resolved "https://registry.yarnpkg.com/esrap/-/esrap-2.2.11.tgz#8cdff4ea4f7132dadb4da896f7af858b281c5a5e"
+  integrity sha512-gPdx+I+BjYEinNMQaBXFjbaJVyoPMU4ZODg5mE+M4DqVG9VusAVHHjcBX+zqyITlI0DIARwDMMzZwAWj36dRoQ==
   dependencies:
     "@jridgewell/sourcemap-codec" "^1.4.15"
 
@@ -23637,6 +23647,11 @@ vitefu@^1.1.1:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vitefu/-/vitefu-1.1.2.tgz#b63fcf3b606170702318b8c432663a3b9030f51d"
   integrity sha512-zpKATdUbzbsycPFBN71nS2uzBUQiVnFoOrr2rvqv34S1lcAgMKKkjWleLGeiJlZ8lwCXvtWaRn7R3ZC16SYRuw==
+
+vitefu@^1.1.2:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/vitefu/-/vitefu-1.1.3.tgz#59b9885b1c200856319d7e9ceb0e99a065430009"
+  integrity sha512-ub4okH7Z5KLjb6hDyjqrGXqWtWvoYdU3IGm/NorpgHncKoLTCfRIbvlhBm7r0YstIaQRYlp4yEbFqDcKSzXSSg==
 
 vitest@^4.1.0:
   version "4.1.0"
