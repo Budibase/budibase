@@ -9,11 +9,18 @@
     ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import type { Agent, AgentOperation, EnrichedBinding } from "@budibase/types"
+  import {
+    FeatureFlag,
+    type Agent,
+    type AgentOperation,
+    type EnrichedBinding,
+  } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
+  import { getSequentialName } from "@/helpers/duplicate"
   import { contextMenuStore } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
 
@@ -64,30 +71,44 @@ Any constraints the agent must follow.
     onUpdated: () => Promise<boolean>
   } = $props()
 
+  let selectedOperationId = $state<string | undefined>(undefined)
   let operationPanelOpen = $state(false)
   let renameModal: Modal | undefined = $state()
   let renameDraft = $state("")
+  let renameOperationId = $state<string | undefined>(undefined)
   let isRenameValid = $derived(Boolean(renameDraft.trim()))
 
-  let operationName = $derived(agent?.operations?.[0]?.name?.trim())
-  let hasOperation = $derived(Boolean(agent?.operations?.[0]?.name?.trim()))
-  let operationLive = $derived(agent?.operations?.[0]?.live === true)
+  let operations = $derived(agent?.operations || [])
+  let selectedOperation = $derived(
+    operations.find(operation => operation.id === selectedOperationId)
+  )
+  let hasOperation = $derived(operations.length > 0)
+  let multipleOperationsEnabled = $derived(
+    $featureFlags[FeatureFlag.MULTIPLE_OPERATIONS]
+  )
+  let canAddOperation = $derived(
+    multipleOperationsEnabled || operations.length === 0
+  )
+  let operationLive = $derived(selectedOperation?.live === true)
 
-  const openOperationPanel = () => {
+  const openOperationPanel = (operationId: string) => {
+    selectedOperationId = operationId
     operationPanelOpen = true
   }
 
   const closeOperationPanel = () => {
+    selectedOperationId = undefined
     operationPanelOpen = false
   }
 
   const openRenameModal = () => {
-    renameDraft = agent?.operations?.[0]?.name || ""
+    renameOperationId = selectedOperation?.id
+    renameDraft = selectedOperation?.name || ""
     renameModal?.show()
   }
 
-  const saveRename = () => {
-    if (!agent?.operations?.[0]) {
+  const saveRename = async () => {
+    if (!agent || !renameOperationId) {
       return
     }
     const trimmedName = renameDraft.trim()
@@ -95,25 +116,39 @@ Any constraints the agent must follow.
       notifications.error("Operation name is required.")
       return
     }
-    agent.operations[0].name = trimmedName
-    onUpdated()
+    const operation = operations.find(
+      operation => operation.id === renameOperationId
+    )
+    if (!operation) {
+      return
+    }
+
+    operation.name = trimmedName
+    await onUpdated()
     renameModal?.hide()
+    renameOperationId = undefined
   }
 
-  const createDefaultOperation = () =>
-    ({
+  const createDefaultOperation = () => {
+    const name =
+      getSequentialName(operations, "New operation ", {
+        getName: operation => operation.name,
+      }) || "Operation 1"
+
+    return {
       id: `operation_${Helpers.uuid()}`,
-      name: "Main operation",
+      name,
       live: false,
       promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
       allowKnowledgeSourceDownload: true,
-    }) satisfies AgentOperation
+    } satisfies AgentOperation
+  }
 
   const setOperationLive = async (nextLive: boolean) => {
-    if (!agent?.operations?.[0] || agent.operations[0].live === nextLive) {
+    if (!selectedOperation || selectedOperation.live === nextLive) {
       return
     }
-    const currentOperation = agent.operations[0]
+    const currentOperation = selectedOperation
     const previousLive = currentOperation.live
     currentOperation.live = nextLive
     const saveSucceeded = await onSetOperationLive(
@@ -126,22 +161,25 @@ Any constraints the agent must follow.
   }
 
   const handleAddOperation = () => {
-    if (hasOperation) {
+    if (!canAddOperation) {
       notifications.info("Only one operation is supported at the moment.")
       return
     }
     if (!agent) {
       return
     }
-    agent.operations = [createDefaultOperation()]
+    const operation = createDefaultOperation()
+    agent.operations = [...(agent.operations || []), operation]
+    selectedOperationId = operation.id
     onUpdated()
-    openOperationPanel()
+    openOperationPanel(operation.id)
   }
 
   const deleteOperation = async () => {
-    if (!agent) {
+    if (!agent || !selectedOperationId) {
       return
     }
+    const operationIdToDelete = selectedOperationId
 
     confirm({
       title: "Confirm deletion",
@@ -150,9 +188,13 @@ Any constraints the agent must follow.
       warning: true,
       onConfirm: async () => {
         try {
-          agent.operations = []
+          agent.operations = (agent.operations || []).filter(
+            operation => operation.id !== operationIdToDelete
+          )
           await onUpdated()
-          closeOperationPanel()
+          if (selectedOperationId === operationIdToDelete) {
+            closeOperationPanel()
+          }
           notifications.success("Operation deleted.")
         } catch (error) {
           console.error(error)
@@ -188,7 +230,12 @@ Any constraints the agent must follow.
           callback: deleteOperation,
         },
       ],
-      { x: event.clientX, y: event.clientY }
+      { x: event.clientX, y: event.clientY },
+      () => {
+        if (!operationPanelOpen) {
+          selectedOperationId = undefined
+        }
+      }
     )
   }
 </script>
@@ -210,41 +257,54 @@ Any constraints the agent must follow.
 
   {#if hasOperation}
     <div class="operation-list">
-      <div class="operation-row">
-        <button
-          class="operation-open-button"
-          type="button"
-          onclick={() => openOperationPanel()}
-          oncontextmenu={openOperationContextMenu}
+      {#each operations as operation (operation.id)}
+        <div
+          class="operation-row"
+          class:selected={selectedOperationId === operation.id}
         >
-          <span class="operation-name">{operationName}</span>
-          <span class="status-indicator">
-            <OperationLiveBadge live={operationLive} />
-          </span>
-        </button>
+          <button
+            class="operation-open-button"
+            type="button"
+            onclick={() => openOperationPanel(operation.id)}
+            oncontextmenu={event => {
+              selectedOperationId = operation.id
+              openOperationContextMenu(event)
+            }}
+          >
+            <span class="operation-name"
+              >{operation.name?.trim() || "Untitled operation"}</span
+            >
+            <span class="status-indicator">
+              <OperationLiveBadge live={operation.live === true} />
+            </span>
+          </button>
 
-        <button
-          class="operation-menu-trigger"
-          type="button"
-          aria-label="Operation actions"
-          onclick={openOperationContextMenu}
-        >
-          <Icon
-            name="dots-three"
-            size="S"
-            color="var(--spectrum-global-color-gray-600)"
-            hoverable
-          />
-        </button>
-      </div>
+          <button
+            class="operation-menu-trigger"
+            type="button"
+            aria-label="Operation actions"
+            onclick={event => {
+              selectedOperationId = operation.id
+              openOperationContextMenu(event)
+            }}
+          >
+            <Icon
+              name="dots-three"
+              size="S"
+              color="var(--spectrum-global-color-gray-600)"
+              hoverable
+            />
+          </button>
+        </div>
+      {/each}
     </div>
   {/if}
 </div>
 
-{#if agent?.operations?.[0]}
+{#if agent && selectedOperation}
   <OperationSidePanel
     open={operationPanelOpen}
-    bind:operation={agent.operations[0]}
+    bind:operation={selectedOperation}
     {promptBindings}
     {bindingIcons}
     {completions}
@@ -298,7 +358,7 @@ Any constraints the agent must follow.
   .operation-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
 
   .operation-row {
@@ -314,6 +374,11 @@ Any constraints the agent must follow.
 
   .operation-row:hover {
     background: var(--spectrum-global-color-gray-100);
+    border-color: var(--spectrum-global-color-gray-300);
+  }
+
+  .operation-row.selected {
+    background: var(--spectrum-global-color-blue-100);
     border-color: var(--spectrum-global-color-gray-300);
   }
 

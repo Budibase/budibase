@@ -56,7 +56,7 @@ export const updateOperationKnowledgeSources = (
     return [
       {
         id: targetOperationId,
-        name: "Operation",
+        name: "New operation",
         live: false,
         knowledgeSources: updater([]),
         allowKnowledgeSourceDownload: true,

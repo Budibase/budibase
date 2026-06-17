@@ -1,13 +1,19 @@
+import { features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import {
   ActionType,
   Agent,
+  AgentOperation,
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
+  FeatureFlag,
 } from "@budibase/types"
 import {
+  Output,
   extractReasoningMiddleware,
+  jsonSchema,
   stepCountIs,
   ToolLoopAgent,
   type LanguageModelUsage,
@@ -22,9 +28,16 @@ import {
   findLatestUserQuestion,
   prepareModelMessages,
 } from "../chatConversations"
-import { updatePendingToolCalls } from "./utils"
+import {
+  updatePendingToolCalls,
+  buildPromptAndTools,
+  getLiveOperations,
+  type BuildPromptAndToolsOptions,
+} from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
+import tracer from "dd-trace"
+import { withLiteLLMSessionId } from "../llm/requestSession"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -41,6 +54,7 @@ interface PrepareAgentChatRunParams {
 
 export interface AgentChatRun {
   latestQuestion: string
+  selectedOperation?: AgentOperation
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -59,6 +73,152 @@ export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
   onToolCalls?: (toolNames: string[]) => void
   pendingToolCalls?: Set<string>
+}
+
+interface OperationRoute {
+  operationId?: string
+  reason?: string
+}
+
+const OPERATION_ROUTER_SCHEMA =
+  helpers.structuredOutput.normalizeSchemaForStructuredOutput({
+    type: "object",
+    properties: {
+      operationId: {
+        anyOf: [{ type: "string" }, { type: "null" }],
+      },
+      reason: { type: "string" },
+    },
+    required: ["operationId", "reason"],
+  })
+
+const buildOperationRoutingInstructions = (
+  operations: AgentOperation[]
+) => `You route a user request to one Budibase agent operation.
+
+Choose exactly one live operation only when it is clearly the best match for the latest user request.
+If the request does not fit any operation, return operationId as null.
+Be conservative. If the request is ambiguous, too broad, or unrelated, return null.
+Use the operation name, instructions, tools, and knowledge setup as signals.
+Return only the structured output.
+
+Live operations:
+${operations
+  .map(
+    operation => `- id: ${operation.id}
+  name: ${operation.name}
+  tools: ${(operation.enabledTools || []).length}
+  hasKnowledge: ${operation.knowledgeBases?.length ? "yes" : "no"}
+  instructions:
+  ${(operation.promptInstructions || "None").trim() || "None"}`
+  )
+  .join("\n")}`
+
+export const chooseOperationForQuestion = async ({
+  agent,
+  latestQuestion,
+  llm,
+}: {
+  agent: Agent
+  latestQuestion: string
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+}): Promise<AgentOperation | undefined> => {
+  const liveOperations = getLiveOperations(agent)
+  if (liveOperations.length === 0) {
+    return undefined
+  }
+  const multipleOperationsEnabled = await features.isEnabled(
+    FeatureFlag.MULTIPLE_OPERATIONS
+  )
+  if (!multipleOperationsEnabled) {
+    return liveOperations[0]
+  }
+  if (!latestQuestion.trim()) {
+    return undefined
+  }
+
+  const router = new ToolLoopAgent({
+    model: wrapLanguageModel({
+      model: llm.chat,
+      middleware: extractReasoningMiddleware({
+        tagName: "think",
+      }),
+    }),
+    instructions: buildOperationRoutingInstructions(liveOperations),
+    stopWhen: stepCountIs(1),
+    providerOptions: llm.providerOptions?.(false),
+    output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
+  })
+
+  try {
+    const result = await router.stream({
+      prompt: latestQuestion,
+    })
+
+    const route = (await result.output) as OperationRoute
+    if (!route?.operationId) {
+      return undefined
+    }
+
+    return liveOperations.find(operation => operation.id === route.operationId)
+  } catch (error) {
+    console.error("Operation routing failed", {
+      agentId: agent._id,
+      error,
+    })
+    return undefined
+  }
+}
+
+export interface PrepareAgentRunContextParams {
+  agent: Agent
+  agentId: string
+  sessionId: string
+  latestQuestion: string
+  aiConfigId?: string
+  span?: tracer.Span
+  buildPromptOptions?: BuildPromptAndToolsOptions
+}
+
+export interface AgentRunContext {
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+  selectedOperation?: AgentOperation
+  systemPrompt: string
+  tools: ToolSet
+  toolDisplayNames: Record<string, string>
+}
+
+export const prepareAgentRunContext = async ({
+  agent,
+  agentId,
+  sessionId,
+  latestQuestion,
+  aiConfigId,
+  span,
+  buildPromptOptions,
+}: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
+  const llm = await sdk.ai.llm.createLLM(
+    aiConfigId ?? agent.aiconfig,
+    sessionId,
+    span,
+    agentId
+  )
+  const selectedOperation = await chooseOperationForQuestion({
+    agent,
+    latestQuestion,
+    llm,
+  })
+  const promptAndTools = await buildPromptAndTools(
+    agent,
+    selectedOperation,
+    buildPromptOptions
+  )
+
+  return {
+    llm,
+    selectedOperation,
+    ...promptAndTools,
+  }
 }
 
 export const prepareAgentChatRun = async ({
@@ -83,21 +243,22 @@ export const prepareAgentChatRun = async ({
     startedAt,
   })
 
-  const [promptAndTools, llm, modelMessages] = await Promise.all([
-    sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(user),
-      includeGoal: false,
-    }),
-    sdk.ai.llm.createLLM(
-      aiConfigId ?? agent.aiconfig,
+  const [runContext, modelMessages] = await Promise.all([
+    prepareAgentRunContext({
+      agent,
+      agentId,
       sessionId,
-      undefined,
-      agentId
-    ),
+      latestQuestion,
+      aiConfigId,
+      buildPromptOptions: {
+        baseSystemPrompt: ai.agentSystemPrompt(user),
+        includeGoal: false,
+      },
+    }),
     providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
   ])
-
-  const tools = promptAndTools.tools
+  const { llm, selectedOperation, tools, toolDisplayNames, systemPrompt } =
+    runContext
   const retrievedKnowledgeSourceById = new Map<
     string,
     NonNullable<AgentMessageMetadata["ragSources"]>[number]
@@ -133,7 +294,7 @@ export const prepareAgentChatRun = async ({
         tagName: "think",
       }),
     }),
-    instructions: promptAndTools.systemPrompt || undefined,
+    instructions: systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
@@ -141,91 +302,94 @@ export const prepareAgentChatRun = async ({
   })
 
   const contextUsage: AgentChatRun["contextUsage"] = {}
-  const systemPromptTokens = estimateTokens(promptAndTools.systemPrompt || "")
+  const systemPromptTokens = estimateTokens(systemPrompt || "")
 
   return {
     latestQuestion,
+    selectedOperation,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
-    toolDisplayNames: promptAndTools.toolDisplayNames,
+    toolDisplayNames,
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,
     stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
-      await agentRunner.stream({
-        messages: modelMessages,
-        async onStepFinish({
-          content,
-          toolCalls,
-          toolResults,
-          response,
-          usage,
-        }) {
-          if (!contextUsage.input) {
-            contextUsage.input = usage
-          }
-          contextUsage.output = usage
-          sessionLogIndexer.addRequestId(response?.id)
-          if (onToolCalls) {
-            const toolNames = toolCalls
-              .map(toolCall => toolCall.toolName)
-              .filter(Boolean)
-            if (toolNames.length) {
-              onToolCalls(toolNames)
+      await withLiteLLMSessionId(sessionId, () =>
+        agentRunner.stream({
+          messages: modelMessages,
+          async onStepFinish({
+            content,
+            toolCalls,
+            toolResults,
+            response,
+            usage,
+          }) {
+            if (!contextUsage.input) {
+              contextUsage.input = usage
             }
-          }
-          if (pendingToolCalls) {
-            updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
-          }
-
-          for (const toolResult of toolResults) {
-            if (
-              toolResult.toolName === "search_knowledge" &&
-              !toolResult.preliminary
-            ) {
-              const output = toolResult.output as
-                | { sources?: AgentMessageMetadata["ragSources"] }
-                | undefined
-              for (const source of output?.sources || []) {
-                if (!source?.sourceId) {
-                  continue
-                }
-                const existing = retrievedKnowledgeSourceById.get(
-                  source.sourceId
-                )
-                retrievedKnowledgeSourceById.set(source.sourceId, {
-                  ...existing,
-                  ...source,
-                })
+            contextUsage.output = usage
+            sessionLogIndexer.addRequestId(response?.id)
+            if (onToolCalls) {
+              const toolNames = toolCalls
+                .map(toolCall => toolCall.toolName)
+                .filter(Boolean)
+              if (toolNames.length) {
+                onToolCalls(toolNames)
               }
             }
-            if (
-              toolResult.toolName === "report_used_sources" &&
-              !toolResult.preliminary
-            ) {
-              const output = toolResult.output as
-                | { accepted?: AgentMessageMetadata["ragSources"] }
-                | undefined
-              setUsedKnowledgeSources(output?.accepted)
+            if (pendingToolCalls) {
+              updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
             }
-            await quotas.addAction(ActionType.AI_AGENT, async () => {})
-          }
 
-          if (!pendingToolCalls) {
-            return
-          }
-
-          for (const part of content) {
-            if (part.type === "tool-error") {
-              pendingToolCalls.delete(part.toolCallId)
+            for (const toolResult of toolResults) {
+              if (
+                toolResult.toolName === "search_knowledge" &&
+                !toolResult.preliminary
+              ) {
+                const output = toolResult.output as
+                  | { sources?: AgentMessageMetadata["ragSources"] }
+                  | undefined
+                for (const source of output?.sources || []) {
+                  if (!source?.sourceId) {
+                    continue
+                  }
+                  const existing = retrievedKnowledgeSourceById.get(
+                    source.sourceId
+                  )
+                  retrievedKnowledgeSourceById.set(source.sourceId, {
+                    ...existing,
+                    ...source,
+                  })
+                }
+              }
+              if (
+                toolResult.toolName === "report_used_sources" &&
+                !toolResult.preliminary
+              ) {
+                const output = toolResult.output as
+                  | { accepted?: AgentMessageMetadata["ragSources"] }
+                  | undefined
+                setUsedKnowledgeSources(output?.accepted)
+              }
+              await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
-          }
-        },
-        async onFinish({ response }) {
-          sessionLogIndexer.addRequestId(response?.id)
-          await onFinish?.(response?.id)
-        },
-      }),
+
+            if (!pendingToolCalls) {
+              return
+            }
+
+            for (const part of content) {
+              if (part.type === "tool-error") {
+                pendingToolCalls.delete(part.toolCallId)
+              }
+            }
+          },
+          async onFinish({ response }) {
+            sessionLogIndexer.addRequestId(response?.id)
+            await onFinish?.(response?.id)
+          },
+        })
+      ),
   }
 }
