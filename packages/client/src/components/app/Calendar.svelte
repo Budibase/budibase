@@ -6,16 +6,66 @@
   import dayGridPlugin from "@fullcalendar/daygrid"
   import timeGridPlugin from "@fullcalendar/timegrid"
   import listPlugin from "@fullcalendar/list"
-  import type { EventClickArg } from "@fullcalendar/core"
+  import {
+    formatDate,
+    type DayHeaderContentArg,
+    type EventClickArg,
+    type FormatterInput,
+  } from "@fullcalendar/core"
   import type { Row, UIFieldDataProviderContext } from "@budibase/types"
+  import { loadTranslationsByGroup } from "@budibase/frontend-core"
 
   type CalendarView =
     | "dayGridMonth"
     | "dayGridWeek"
     | "timeGridDay"
     | "listWeek"
+  type YearTitleFormat = "hidden" | "numeric" | "2-digit"
+  type MonthTitleFormat = "hidden" | "numeric" | "2-digit" | "short" | "long"
+  type DayTitleFormat = "hidden" | "numeric" | "2-digit"
   type TitleDateLocale = "en-gb" | "en-us"
   type CalendarButtonType = "action" | "primary"
+  type WeekdayFormat = "long" | "short" | "narrow"
+  type WeekdayTitleFormat = "hidden" | WeekdayFormat
+  interface CalendarDateFormat extends Intl.DateTimeFormatOptions {
+    omitCommas?: boolean
+  }
+  type CalendarTitleFormatter = Exclude<
+    FormatterInput,
+    string | Intl.DateTimeFormatOptions
+  >
+  type WeekdayTranslationKey =
+    | "sunday"
+    | "monday"
+    | "tuesday"
+    | "wednesday"
+    | "thursday"
+    | "friday"
+    | "saturday"
+
+  const weekdayTranslationKeys: WeekdayTranslationKey[] = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ]
+
+  const formatTranslatedWeekday = (label: string, format: WeekdayFormat) => {
+    if (format === "narrow") {
+      return label.slice(0, 1)
+    }
+    if (format === "short") {
+      return label.slice(0, 3)
+    }
+    return label
+  }
+
+  const isWeekdayFormat = (format: string): format is WeekdayFormat =>
+    ["long", "short", "narrow"].includes(format)
+
   interface CalendarEventPayload {
     row_id?: string
     title: string
@@ -38,10 +88,10 @@
   export let agendaText: string = "Agenda"
   export let showTitleDate: boolean = true
   export let locale: TitleDateLocale = "en-gb"
-  export let yearTitleFormat: string
-  export let monthTitleFormat: string
-  export let dayTitleFormat: string
-  export let weekdayTitleFormat: string
+  export let yearTitleFormat: YearTitleFormat
+  export let monthTitleFormat: MonthTitleFormat
+  export let dayTitleFormat: DayTitleFormat
+  export let weekdayTitleFormat: WeekdayTitleFormat
   export let emptyAgendaText: string = "No events found"
   export let openOnDate: string = "{{ now }}"
   export let calendarType: CalendarView = "dayGridMonth"
@@ -49,6 +99,7 @@
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
+  const calendarLabels = loadTranslationsByGroup("calendar")
   let calendarRef: FullCalendar | null = null
   let calendarContainer: HTMLDivElement | null = null
   let resizeObserver: ResizeObserver | null = null
@@ -65,10 +116,12 @@
       : {}
   $: dayTitleFormatProps =
     dayTitleFormat && dayTitleFormat !== "hidden" ? { day: dayTitleFormat } : {}
-  $: weekdayTitleFormatProps =
-    weekdayTitleFormat && weekdayTitleFormat !== "hidden"
-      ? { weekday: weekdayTitleFormat }
-      : {}
+  $: timeGridDayTitleDateFormat = {
+    ...yearTitleFormatProps,
+    ...dayTitleFormatProps,
+    ...monthTitleFormatProps,
+    omitCommas: true,
+  }
 
   $: events =
     dataProvider?.rows?.map((row: Row) => ({
@@ -108,6 +161,47 @@
     onClick?.({ title, start, end, row_id })
   }
 
+  const getTranslatedWeekday = (date: Date, format: WeekdayFormat) => {
+    const key = weekdayTranslationKeys[date.getUTCDay()]
+    return formatTranslatedWeekday(calendarLabels[key], format)
+  }
+
+  const buildDayHeaderContent =
+    (weekdayFormat: WeekdayFormat, dateFormat?: CalendarDateFormat) =>
+    (arg: DayHeaderContentArg) => {
+      const weekday = getTranslatedWeekday(arg.date, weekdayFormat)
+      const date = dateFormat
+        ? formatDate(arg.date, { ...dateFormat, locale })
+        : undefined
+
+      return date ? `${weekday} ${date}` : weekday
+    }
+
+  const buildTranslatedWeekdayTitleFormat =
+    (
+      weekdayFormat: WeekdayFormat,
+      dateFormat: CalendarDateFormat
+    ): CalendarTitleFormatter =>
+    arg => {
+      const date = arg.date.marker
+      const weekday = getTranslatedWeekday(date, weekdayFormat)
+      const hasDateFormat =
+        dateFormat.year || dateFormat.month || dateFormat.day
+      const formattedDate = hasDateFormat
+        ? formatDate(date, { ...dateFormat, locale })
+        : undefined
+
+      return formattedDate ? `${weekday} ${formattedDate}` : weekday
+    }
+
+  $: timeGridDayTitleFormat =
+    weekdayTitleFormat && isWeekdayFormat(weekdayTitleFormat)
+      ? buildTranslatedWeekdayTitleFormat(
+          weekdayTitleFormat,
+          timeGridDayTitleDateFormat
+        )
+      : timeGridDayTitleDateFormat
+
   $: options = {
     headerToolbar: {
       left: showButtons ? "dayGridMonth,dayGridWeek,timeGridDay,listWeek" : "",
@@ -132,6 +226,9 @@
           ...monthTitleFormatProps,
         },
         dayHeaders: showDayNames,
+        dayHeaderContent: showDayNames
+          ? buildDayHeaderContent("short")
+          : undefined,
       },
       dayGridWeek: {
         titleFormat: {
@@ -142,18 +239,24 @@
         dayHeaderFormat: showDayNames
           ? { weekday: "short", day: "numeric", month: "numeric" }
           : { day: "numeric", month: "numeric" },
+        dayHeaderContent: showDayNames
+          ? buildDayHeaderContent("short", {
+              day: "numeric",
+              month: "numeric",
+            })
+          : undefined,
       },
       timeGridDay: {
-        titleFormat: {
-          ...yearTitleFormatProps,
-          ...dayTitleFormatProps,
-          ...monthTitleFormatProps,
-          ...weekdayTitleFormatProps,
-          omitCommas: true,
-        },
+        titleFormat: timeGridDayTitleFormat,
         dayHeaderFormat: showDayNames
           ? { weekday: "short", day: "numeric", month: "numeric" }
           : { day: "numeric", month: "numeric" },
+        dayHeaderContent: showDayNames
+          ? buildDayHeaderContent("short", {
+              day: "numeric",
+              month: "numeric",
+            })
+          : undefined,
       },
       listWeek: {
         titleFormat: {
@@ -162,6 +265,9 @@
           ...monthTitleFormatProps,
         },
         listDayFormat: showDayNames ? { weekday: "long" } : false,
+        dayHeaderContent: showDayNames
+          ? buildDayHeaderContent("long")
+          : undefined,
         noEventsContent: emptyAgendaText,
       },
     },
