@@ -476,11 +476,22 @@ export function keyValueArrayToRecord(
 
 export function isValidEndpointUrl(url: string | undefined): boolean {
   if (!url || /\s/.test(url)) return false
-  if (!/^(https?:\/\/|\{\{)/.test(url)) return false
+  // Relative paths can't be reached on their own
+  if (url.startsWith("/")) return false
+  // Reject explicit non-http(s) schemes (e.g. ftp://, https:foo). A colon
+  // followed by digits is a port not a scheme, so "google.com:8080" is allowed.
+  const scheme = url.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/)
+  const hasScheme = !!scheme && !/^\d/.test(url.slice(scheme[0].length))
+  if (hasScheme && !/^https?:\/\//.test(url)) return false
   if (findHBSBlocks(url).length > 0) return true
+  // Any remaining handlebars markers are a malformed binding, not a host
+  if (/[{}]/.test(url)) return false
+  // Scheme-less hosts (e.g. "google.com") are valid - the server defaults a
+  // missing protocol to http, so accept them rather than disabling Save.
+  const candidate = /^https?:\/\//.test(url) ? url : `https://${url}`
   try {
-    new URL(url)
-    return true
+    const { protocol, hostname } = new URL(candidate)
+    return (protocol === "http:" || protocol === "https:") && hostname !== ""
   } catch {
     return false
   }

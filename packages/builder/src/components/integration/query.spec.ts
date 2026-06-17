@@ -33,6 +33,18 @@ describe("isValidEndpointUrl", () => {
     expect(isValidEndpointUrl("https://someurl")).toBe(true)
   })
 
+  it("accepts a scheme-less host (e.g. google.com)", () => {
+    expect(isValidEndpointUrl("google.com")).toBe(true)
+  })
+
+  it("accepts a scheme-less host with a path", () => {
+    expect(isValidEndpointUrl("google.com/search")).toBe(true)
+  })
+
+  it("accepts a scheme-less host with a port", () => {
+    expect(isValidEndpointUrl("google.com:8080")).toBe(true)
+  })
+
   it("accepts localhost with a port", () => {
     expect(isValidEndpointUrl("http://localhost:4001")).toBe(true)
   })

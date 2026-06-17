@@ -1325,6 +1325,22 @@ describe("API Endpoint Viewer", () => {
       })
     })
 
+    // #18798: a scheme-less URL is accepted by the server (it defaults to
+    // http), so Save must enable for it just like it does for "https://...".
+    it("Save button is enabled for a scheme-less URL", async () => {
+      const { container } = setupDOM({ datasourceId: REST_DS_ID })
+      await waitFor(() =>
+        expect(container.querySelector(".url-input")).not.toBeNull()
+      )
+      const urlInput = container.querySelector(".url-input") as HTMLInputElement
+      await fireEvent.input(urlInput, { target: { value: "google.com" } })
+      await waitFor(() => {
+        expect(
+          getSaveButton(container)?.classList.contains("is-disabled")
+        ).toBe(false)
+      })
+    })
+
     it("loads the stored full URL into the URL input", async () => {
       queries.store.update(s => ({ ...s, list: [CUSTOM_QUERY] }))
       const { container } = setupDOM({ queryId: QUERY_ID })
