@@ -202,7 +202,14 @@ describe("agentLogs", () => {
         icon: "robot",
         iconColor: "#6a9bcc",
         createdAt: now,
-        enabledTools: [],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            enabledTools: [],
+          },
+        ],
       }
       const response = await context.getWorkspaceDB().put(agent)
       return {

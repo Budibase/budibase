@@ -1,3 +1,4 @@
+import type { Agent } from "@budibase/types"
 import type {
   Tool,
   ToolSet,
@@ -9,6 +10,7 @@ import { ToolType } from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
+  getLiveOperation,
   getToolDisplayNames,
   IncompleteToolCall,
   updatePendingToolCalls,
@@ -40,6 +42,43 @@ describe("getToolDisplayNames", () => {
     ).toEqual({
       ta_123_list_rows: "Research Notes.list_rows",
     })
+  })
+})
+
+describe("getLiveOperation", () => {
+  it("returns the first operation when it is live", () => {
+    const operation = {
+      id: "operation_1",
+      name: "Main operation",
+      live: true,
+      promptInstructions: "Live instructions",
+    }
+    const agent = {
+      _id: "agent_1",
+      name: "Support Agent",
+      live: false,
+      operations: [operation],
+    } as Agent
+
+    expect(getLiveOperation(agent)).toEqual(operation)
+  })
+
+  it("returns undefined when the first operation is not live", () => {
+    const agent = {
+      _id: "agent_1",
+      name: "Support Agent",
+      live: true,
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          promptInstructions: "Draft instructions",
+        },
+      ],
+    } as Agent
+
+    expect(getLiveOperation(agent)).toBeUndefined()
   })
 })
 

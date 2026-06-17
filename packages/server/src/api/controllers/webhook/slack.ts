@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { configs, context, HTTPError } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
@@ -8,9 +8,11 @@ import {
   type ChatConversationChannel,
   type Ctx,
   type SlackConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
 import { Chat, type Message, type SlashCommandEvent, type Thread } from "chat"
 import sdk from "../../../sdk"
+import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -19,6 +21,69 @@ import { pickLatestConversation } from "./utils"
 
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
+
+const isAbsoluteUrl = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://")
+
+const toAbsoluteUrl = async (url: string) => {
+  if (isAbsoluteUrl(url)) {
+    return url
+  }
+
+  if (!url.startsWith("/")) {
+    return url
+  }
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  return `${platformUrl.replace(/\/$/, "")}${url}`
+}
+
+const formatSlackLinkLabel = (value: string) =>
+  value.replace(/[<>|]/g, " ").replace(/\s+/g, " ").trim()
+
+export const formatSlackAssistantReply = async ({
+  agentId,
+  result,
+  allowKnowledgeSourceDownload,
+  isDirectMessage,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  allowKnowledgeSourceDownload?: boolean
+  isDirectMessage?: boolean
+}) => {
+  const assistantText = result.assistantText || ""
+  if (allowKnowledgeSourceDownload === false || !isDirectMessage) {
+    return assistantText
+  }
+
+  const sources = result.ragSources || []
+  const sourceLinks: string[] = []
+  for (const source of sources) {
+    if (!source.fileId) {
+      continue
+    }
+
+    try {
+      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
+        agentId,
+        source.fileId
+      )
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      const label =
+        formatSlackLinkLabel(source.filename || "") || "Knowledge source"
+      sourceLinks.push(`- <${absoluteUrl}|${label}>`)
+    } catch (error) {
+      console.error("Failed to generate Slack RAG source link", error)
+    }
+  }
+
+  if (!sourceLinks.length) {
+    return assistantText
+  }
+
+  return `${assistantText}\n\nSources:\n${sourceLinks.join("\n")}`
+}
 
 export const isSlackDirectMessage = (event?: SlackEvent) =>
   event?.channel_type === "im" || !!event?.channel?.startsWith("D")
@@ -78,6 +143,7 @@ type SlackInput = {
   content: string
   channelId: string
   externalUserId: string
+  isDirectMessage: boolean
   teamId?: string
   threadId?: string
 }
@@ -89,6 +155,7 @@ const createSlackInputHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
+  allowKnowledgeSourceDownload,
 }: {
   workspaceId: string
   chatAppId: string
@@ -96,6 +163,7 @@ const createSlackInputHandler = ({
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
+  allowKnowledgeSourceDownload?: boolean
 }) => {
   return async ({
     target,
@@ -105,6 +173,7 @@ const createSlackInputHandler = ({
     content,
     channelId,
     externalUserId,
+    isDirectMessage,
     teamId,
     threadId,
   }: SlackInput) => {
@@ -149,6 +218,13 @@ const createSlackInputHandler = ({
             )
           }
         },
+        formatAssistantReply: async result =>
+          await formatSlackAssistantReply({
+            agentId,
+            result,
+            allowKnowledgeSourceDownload,
+            isDirectMessage,
+          }),
         workspaceId,
         chatAppId,
         agentId,
@@ -197,6 +273,7 @@ const createSlackMessageHandler = (
       channelId: thread.channelId,
       threadId: thread.id || undefined,
       externalUserId: message.author.userId,
+      isDirectMessage: isSlackDirectMessage(raw),
       teamId: raw?.team_id || raw?.team,
     })
   }
@@ -218,12 +295,15 @@ export async function slackWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
+        allowKnowledgeSourceDownload,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
           integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
           idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.slackIntegration?.requireUserLink,
+          allowKnowledgeSourceDownload:
+            getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true,
           channelEnabled:
             !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -253,6 +333,7 @@ export async function slackWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
+        allowKnowledgeSourceDownload,
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 
@@ -272,6 +353,10 @@ export async function slackWebhook(
             content: event.text,
             channelId: raw.channel_id,
             externalUserId: event.user.userId,
+            isDirectMessage: isSlackDirectMessage({
+              type: "message",
+              channel: raw.channel_id,
+            }),
             teamId: raw.team_id,
           })
         }

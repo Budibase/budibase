@@ -83,8 +83,16 @@ describe("buildPromptAndTools", () => {
       _id: "agent_1",
       name: "Support Agent",
       aiconfig: "",
-      enabledTools: [],
-      knowledgeBases: ["kb_1"],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: ["kb_1"],
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
     } as Agent
 
     const result = await buildPromptAndTools(agent)
@@ -110,8 +118,16 @@ describe("buildPromptAndTools", () => {
       _id: "agent_2",
       name: "Support Agent",
       aiconfig: "",
-      enabledTools: [],
-      knowledgeBases: [],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
     } as Agent
 
     const result = await buildPromptAndTools(agent)
@@ -125,12 +141,49 @@ describe("buildPromptAndTools", () => {
     const agent = {
       name: "Support Agent",
       aiconfig: "",
-      enabledTools: [],
-      knowledgeBases: ["kb_1"],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: ["kb_1"],
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
     } as Agent
 
     await expect(buildPromptAndTools(agent)).rejects.toThrow(
       "Agent _id is required"
     )
+  })
+
+  it("ignores operation prompt, tools, and knowledge when not live", async () => {
+    const agent = {
+      _id: "agent_3",
+      name: "Support Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          promptInstructions: "Draft instructions",
+          enabledTools: ["draft_tool"],
+          knowledgeBases: ["kb_1"],
+        },
+      ],
+    } as Agent
+
+    const { ai } = jest.requireMock("@budibase/pro")
+    const result = await buildPromptAndTools(agent)
+
+    expect(ai.composeAutomationAgentSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptInstructions: undefined,
+      })
+    )
+    expect(createKnowledgeFilesTool as jest.Mock).not.toHaveBeenCalled()
+    expect(Reflect.get(result.tools, "search_knowledge")).toBeUndefined()
   })
 })
