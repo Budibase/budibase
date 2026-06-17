@@ -250,7 +250,9 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedNodeId
     visibleSelectionRequest = $automationStore.selectedNodeId
-    ensureSelectedNodeVisible($automationStore.selectedNodeId)
+    ensureSelectedNodeVisible($automationStore.selectedNodeId, {
+      rightInset: getActionPanelWidth(),
+    })
   }
 
   $: if (
@@ -261,7 +263,9 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
     visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
-    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
+    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId, {
+      rightInset: getActionPanelWidth(),
+    })
   }
 
   $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
