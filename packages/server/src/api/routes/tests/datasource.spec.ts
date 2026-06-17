@@ -128,6 +128,54 @@ describe("/datasources", () => {
     })
   })
 
+  describe("secret redaction", () => {
+    it("should redact and preserve MongoDB connection strings", async () => {
+      const connectionString =
+        "mongodb://leakuser:SuperSecretPw123@prod-db.internal:27017/payments"
+      const mongoDatasource = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.MONGODB,
+        config: {
+          connectionString,
+          db: "payments",
+        },
+      })
+
+      expect(mongoDatasource.config!.connectionString).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const fetchedDatasource = await config.api.datasource.get(
+        mongoDatasource._id!
+      )
+      expect(fetchedDatasource.config!.connectionString).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const datasources = await config.api.datasource.fetch()
+      expect(datasources).toContainEqual(
+        expect.objectContaining({
+          _id: mongoDatasource._id,
+          config: expect.objectContaining({
+            connectionString: PASSWORD_REPLACEMENT,
+          }),
+        })
+      )
+
+      await config.api.datasource.update(fetchedDatasource)
+
+      const storedConnectionString = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const ds = await sdk.datasources.get(mongoDatasource._id!)
+          return ds.config!.connectionString
+        }
+      )
+      expect(storedConnectionString).toBe(connectionString)
+    })
+  })
+
   describe("dynamic variables", () => {
     it("should invalidate changed or removed variables", async () => {
       nock("http://www.example.com")
