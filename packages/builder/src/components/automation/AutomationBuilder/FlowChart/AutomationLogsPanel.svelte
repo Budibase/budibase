@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Body,
     Select,
@@ -8,7 +8,13 @@
     Icon,
   } from "@budibase/bbui"
   import { onDestroy, onMount } from "svelte"
+  import type { ManipulateType } from "dayjs"
   import dayjs from "dayjs"
+  import {
+    AutomationStatus,
+    type AutomationLog,
+    type UIAutomation,
+  } from "@budibase/types"
   import Panel from "@/components/design/Panel.svelte"
   import { automationStore } from "@/stores/builder"
   import { licensing, auth } from "@/stores/portal"
@@ -16,32 +22,60 @@
   import StatusRenderer from "@/settings/pages/automations/_components/StatusRenderer.svelte"
   import { didRunStopWithoutBranchMatch } from "./FlowCanvas/FlowRunHelpers"
 
-  export let automation
-  export let onSelectLog = () => {}
-  export let selectedLog = null
+  export let automation: UIAutomation
+  export let onSelectLog: (log: AutomationLog) => void = () => {}
+  export let selectedLog: AutomationLog | null = null
 
-  const ERROR = "error",
-    SUCCESS = "success",
-    STOPPED = "stopped",
-    STOPPED_ERROR = "stopped_error"
+  type StatusFilter =
+    | AutomationStatus.SUCCESS
+    | AutomationStatus.ERROR
+    | AutomationStatus.STOPPED
+    | AutomationStatus.STOPPED_ERROR
+
+  type TimeRange =
+    | "90-d"
+    | "30-d"
+    | "1-w"
+    | "1-d"
+    | "1-h"
+    | "15-m"
+    | "5-m"
+
+  interface SelectOption<T extends string> {
+    value: T
+    label: string
+  }
+
+  interface QueuedFetch {
+    force: boolean
+    fromRealtime: boolean
+  }
+
+  interface RefreshLogsOptions {
+    fromRealtime?: boolean
+  }
+
+  const ERROR = AutomationStatus.ERROR,
+    SUCCESS = AutomationStatus.SUCCESS,
+    STOPPED = AutomationStatus.STOPPED,
+    STOPPED_ERROR = AutomationStatus.STOPPED_ERROR
 
   let pageInfo = createPaginationStore()
-  let runHistory = null
-  let status = null
-  let timeRange = null
+  let runHistory: AutomationLog[] | null = null
+  let status: StatusFilter | null = null
+  let timeRange: TimeRange | null = null
   let loaded = false
   let totalLogs = 0
   let loading = false
-  let queuedFetch = null
+  let queuedFetch: QueuedFetch | null = null
   let realtimePaused = false
-  let refreshPending = false
   let lastLogRefreshSequence = 0
-  let lastFilterKey = null
-  let lastFetchKey = null
+  let lastFilterKey: string | null = null
+  let lastFetchKey: string | null = null
 
   const AUTOMATION_LOG_PAGE_SIZE = 10
 
-  const allTimeOptions = [
+  const allTimeOptions: SelectOption<TimeRange>[] = [
     { value: "90-d", label: "Past 90 days" },
     { value: "30-d", label: "Past 30 days" },
     { value: "1-w", label: "Past week" },
@@ -75,7 +109,7 @@
   $: showUpgradeButton =
     !$licensing.isEnterprisePlan && $auth?.user?.accountPortalAccess
 
-  const statusOptions = [
+  const statusOptions: SelectOption<StatusFilter>[] = [
     { value: SUCCESS, label: "Success" },
     { value: ERROR, label: "Error" },
     { value: STOPPED, label: "Stopped" },
@@ -91,23 +125,25 @@
 
   $: page = $pageInfo.page
   $: fetchKey = `${automation._id}:${filterKey}:${page || ""}`
-  $: if (loaded && fetchKey !== lastFetchKey) {
+  $: if (loaded && automation._id && fetchKey !== lastFetchKey) {
     lastFetchKey = fetchKey
     fetchLogs(automation._id, status, page, timeRange)
   }
 
+  const consumeQueuedFetch = (): QueuedFetch | null => {
+    const nextFetch = queuedFetch
+    queuedFetch = null
+    return nextFetch
+  }
+
   async function fetchLogs(
-    automationId,
-    status,
-    page,
-    timeRange,
+    automationId: string,
+    status: StatusFilter | null,
+    page: string | null | undefined,
+    timeRange: TimeRange | null,
     force = false,
     fromRealtime = false
   ) {
-    if (fromRealtime && realtimePaused) {
-      refreshPending = true
-      return
-    }
     if (!force && !loaded) {
       return
     }
@@ -117,23 +153,21 @@
     }
     loading = true
     queuedFetch = null
-    let startDate = null
+    let startDate: string | undefined
     if (timeRange) {
       const [length, units] = timeRange.split("-")
-      startDate = dayjs().subtract(length, units)
+      startDate = dayjs()
+        .subtract(Number(length), units as ManipulateType)
+        .toISOString()
     }
     try {
       const response = await automationStore.actions.getLogs({
         automationId,
-        status,
-        page,
+        status: status ?? undefined,
+        page: page ?? undefined,
         startDate,
       })
-      if (fromRealtime && realtimePaused) {
-        refreshPending = true
-        return
-      }
-      pageInfo.fetched(response.hasNextPage, response.nextPage)
+      pageInfo.fetched(response.hasNextPage, response.nextPage ?? "")
       totalLogs = response.totalLogs
       runHistory = response.data
     } catch (error) {
@@ -141,11 +175,10 @@
       console.error(error)
     } finally {
       loading = false
-      if (queuedFetch) {
-        const nextFetch = queuedFetch
-        queuedFetch = null
+      const nextFetch = consumeQueuedFetch()
+      if (nextFetch) {
         fetchLogs(
-          automation._id,
+          automationId,
           status,
           page,
           timeRange,
@@ -156,59 +189,65 @@
     }
   }
 
-  const refreshLogs = async ({ fromRealtime = false } = {}) => {
-    await fetchLogs(
-      automation._id,
-      status,
-      page,
-      timeRange,
-      true,
-      fromRealtime
-    )
+  const refreshLogs = async ({
+    fromRealtime = false,
+  }: RefreshLogsOptions = {}) => {
+    if (!automation._id) {
+      return
+    }
+    await fetchLogs(automation._id, status, page, timeRange, true, fromRealtime)
   }
 
-  $: if (
-    loaded &&
-    $automationStore.logRefreshEvent?.automationId === automation._id &&
-    $automationStore.logRefreshEvent.sequence !== lastLogRefreshSequence
-  ) {
-    lastLogRefreshSequence = $automationStore.logRefreshEvent.sequence
-    if (realtimePaused) {
-      refreshPending = true
-    } else {
+  $: {
+    const logRefreshEvent = $automationStore.logRefreshEvent
+    if (
+      loaded &&
+      logRefreshEvent &&
+      logRefreshEvent.automationId === automation._id &&
+      logRefreshEvent.sequence !== lastLogRefreshSequence
+    ) {
+      lastLogRefreshSequence = logRefreshEvent.sequence
       refreshLogs({ fromRealtime: true })
     }
   }
 
   const toggleRealtimeUpdates = () => {
     realtimePaused = !realtimePaused
-    automationStore.actions.setLogRefreshPaused({
-      automationId: automation._id,
-      paused: realtimePaused,
-    })
+    if (automation._id) {
+      automationStore.actions.setLogRefreshPaused({
+        automationId: automation._id,
+        paused: realtimePaused,
+      })
+    }
     if (!realtimePaused) {
-      refreshPending = false
       refreshLogs()
     }
   }
 
   onMount(async () => {
+    if (!automation._id) {
+      loaded = true
+      return
+    }
     automationStore.actions.setLogRefreshPaused({
       automationId: automation._id,
       paused: realtimePaused,
     })
-    await fetchLogs(automation._id, status, 0, timeRange, true)
+    await fetchLogs(automation._id, status, undefined, timeRange, true)
     loaded = true
   })
 
   onDestroy(() => {
+    if (!automation._id) {
+      return
+    }
     automationStore.actions.setLogRefreshPaused({
       automationId: automation._id,
       paused: false,
     })
   })
 
-  const getLogStatus = log => {
+  const getLogStatus = (log: AutomationLog) => {
     return didRunStopWithoutBranchMatch(log) ? STOPPED : log.status
   }
 </script>
@@ -249,7 +288,7 @@
             </Body>
           </div>
           {#if showUpgradeButton}
-            <Button size="S" cta on:click={$licensing.goToUpgradePage}>
+            <Button size="S" cta on:click={licensing.goToUpgradePage}>
               Get more history
             </Button>
           {/if}
