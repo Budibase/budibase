@@ -9,6 +9,7 @@
     Button,
   } from "@budibase/bbui"
   import { queries, datasources } from "@/stores/builder"
+  import { datasourceMatchesRestTemplate } from "@/stores/builder/workspaceConnection"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import {
     restTemplates,
@@ -19,12 +20,13 @@
     customQueryIconColor,
     customQueryIconText,
   } from "@/helpers/data/utils"
-  import type { Query, Datasource } from "@budibase/types"
+  import type { Query, Datasource, RestTemplateId } from "@budibase/types"
 
   interface Props {
     value?: string
     disabled?: boolean
     fullWidthDropdown?: boolean
+    restTemplateId?: RestTemplateId
     onchange?: (_: Query) => void
     onaddApi?: () => void
   }
@@ -33,6 +35,7 @@
     value = undefined,
     disabled = false,
     fullWidthDropdown = false,
+    restTemplateId = undefined,
     onchange,
     onaddApi,
   }: Props = $props()
@@ -44,6 +47,11 @@
   const restDatasources = $derived(
     ($datasources.list || [])
       .filter((ds): ds is Datasource => ds.source === "REST")
+      .filter(ds =>
+        restTemplateId
+          ? datasourceMatchesRestTemplate(ds, restTemplateId)
+          : true
+      )
       .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
   )
 
@@ -187,29 +195,31 @@
       style={fullWidthDropdown ? "width: 100%" : undefined}
     >
       <div class="query-fixed-top">
-        <Button
-          secondary
-          on:click={() => {
-            menuRef?.hide()
-            onaddApi?.()
-          }}
-        >
-          <div class="add-api-btn-content">
-            <Icon name="plus" size="S" />
-            <span>Add new API</span>
-            <div class="featured-icons">
-              {#each featuredIcons as icon, i}
-                <img
-                  src={icon}
-                  alt=""
-                  height={16}
-                  width={16}
-                  style="z-index:{i}; margin-left:{i === 0 ? 0 : -2}px"
-                />
-              {/each}
+        {#if !restTemplateId}
+          <Button
+            secondary
+            on:click={() => {
+              menuRef?.hide()
+              onaddApi?.()
+            }}
+          >
+            <div class="add-api-btn-content">
+              <Icon name="plus" size="S" />
+              <span>Add new API</span>
+              <div class="featured-icons">
+                {#each featuredIcons as icon, i}
+                  <img
+                    src={icon}
+                    alt=""
+                    height={16}
+                    width={16}
+                    style="z-index:{i}; margin-left:{i === 0 ? 0 : -2}px"
+                  />
+                {/each}
+              </div>
             </div>
-          </div>
-        </Button>
+          </Button>
+        {/if}
       </div>
       <div class="query-scrollable">
         {#if filtered.length === 0}
