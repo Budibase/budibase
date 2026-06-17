@@ -32,14 +32,7 @@
     | AutomationStatus.STOPPED
     | AutomationStatus.STOPPED_ERROR
 
-  type TimeRange =
-    | "90-d"
-    | "30-d"
-    | "1-w"
-    | "1-d"
-    | "1-h"
-    | "15-m"
-    | "5-m"
+  type TimeRange = "90-d" | "30-d" | "1-w" | "1-d" | "1-h" | "15-m" | "5-m"
 
   interface SelectOption<T extends string> {
     value: T
