@@ -1,25 +1,34 @@
-<script context="module">
-  import { get, writable } from "svelte/store"
+<script lang="ts" context="module">
+  import { get, writable, type Writable } from "svelte/store"
 
   // Observe this class name if possible in order to know how to size the
   // drawer. If this doesn't exist we'll use a fixed size.
   const drawerContainer = "drawer-container"
 
   // Context level stores to keep drawers in sync
-  const openDrawers = writable([])
-  const modal = writable(false)
-  const resizable = writable(true)
-  const drawerLeft = writable(null)
-  const drawerWidth = writable(null)
+  const openDrawers = writable<string[]>([])
+  const modal = writable<boolean>(false)
+  const resizable = writable<boolean>(true)
+  const drawerLeft = writable<number | null>(null)
+  const drawerWidth = writable<number | null>(null)
 
   // Resize observer to keep track of size changes
-  let observer
+  let observer: ResizeObserver | null = null
+
+  interface DrawerContext {
+    hide: () => void
+    show: () => void
+    modal: Writable<boolean>
+    resizable: Writable<boolean>
+  }
 
   // Starts observing the target node to watching to size changes.
   // Invoked when the first drawer of a chain is rendered.
   const observe = () => {
-    const target = document.getElementsByClassName(drawerContainer)[0]
-    if (observer || !target) {
+    const target = document.getElementsByClassName(drawerContainer)[0] as
+      | Element
+      | undefined
+    if (observer || !(target instanceof HTMLElement)) {
       return
     }
     observer = new ResizeObserver(entries => {
@@ -56,9 +65,10 @@
   }
 </script>
 
-<script>
+<script lang="ts">
   import { generate } from "shortid"
   import { createEventDispatcher, onDestroy, setContext } from "svelte"
+  import type { TransitionConfig } from "svelte/transition"
   import Portal from "svelte-portal"
   import ActionButton from "../ActionButton/ActionButton.svelte"
   import Button from "../Button/Button.svelte"
@@ -70,15 +80,24 @@
     BASE_Z_INDEX,
   } from "../Modal/overlayStack"
 
-  export let title = ""
-  export let forceModal = false
-  export let zIndex = undefined
+  interface DrawerEvents {
+    drawerShow: string
+    drawerHide: string
+  }
 
-  const dispatch = createEventDispatcher()
+  export let title: string = ""
+  export let forceModal: boolean = false
+  export let zIndex: number | undefined = undefined
+
+  const dispatch = createEventDispatcher<DrawerEvents>()
   const spacing = 11
 
-  let visible = false
-  let drawerId = generate()
+  let visible: boolean = false
+  let drawerId: string = generate()
+  let depth: number = 0
+  let stackIndex: number = -1
+  let computedZIndex: number = BASE_Z_INDEX
+  let style: string = ""
 
   $: depth = $openDrawers.length - $openDrawers.indexOf(drawerId) - 1
   $: stackIndex = $overlayStack.indexOf(drawerId)
@@ -86,7 +105,13 @@
     zIndex ?? (stackIndex === -1 ? BASE_Z_INDEX : BASE_Z_INDEX + stackIndex)
   $: style = getStyle(depth, $drawerLeft, $drawerWidth, $modal, computedZIndex)
 
-  const getStyle = (depth, left, width, modal, zIndex) => {
+  const getStyle = (
+    depth: number,
+    left: number | null,
+    width: number | null,
+    modal: boolean,
+    zIndex: number | undefined
+  ): string => {
     let style = `
       --scale-factor: ${getScaleFactor(depth)};
       --spacing: ${spacing}px;
@@ -105,7 +130,7 @@
     `
   }
 
-  export function show() {
+  export function show(): void {
     if (visible) {
       return
     }
@@ -120,7 +145,7 @@
     addOverlay(drawerId)
   }
 
-  export function hide() {
+  export function hide(): void {
     if (!visible) {
       return
     }
@@ -131,23 +156,23 @@
     unobserve()
   }
 
-  setContext("drawer", {
+  setContext<DrawerContext>("drawer", {
     hide,
     show,
     modal,
     resizable,
   })
 
-  const easeInOutQuad = x => {
+  const easeInOutQuad = (x: number): number => {
     return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
   }
 
   // Use a custom svelte transition here because the built-in slide
   // transition has a horrible overshoot
-  const drawerSlide = () => {
+  const drawerSlide = (_node: Element): TransitionConfig => {
     return {
       duration: 260,
-      css: t => {
+      css: (t: number) => {
         const f = easeInOutQuad(t)
         const yOffset = (1 - f) * 200
         return `
@@ -160,16 +185,16 @@
 
   // Custom fade transition because the default svelte one doesn't work any more
   // with svelte 4
-  const drawerFade = () => {
+  const drawerFade = (_node: Element): TransitionConfig => {
     return {
       duration: 260,
-      css: t => {
+      css: (t: number) => {
         return `opacity: ${easeInOutQuad(t)};`
       },
     }
   }
 
-  const getScaleFactor = depth => {
+  const getScaleFactor = (depth: number): number => {
     // Quadratic function approaching a limit of 1 as depth tends to infinity
     const lim = 1 - 1 / (depth * depth + 1)
     // Scale drawers between 1 and 0.9 as depth approaches infinity
