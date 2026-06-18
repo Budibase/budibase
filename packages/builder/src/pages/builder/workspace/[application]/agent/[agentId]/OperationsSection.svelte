@@ -69,6 +69,13 @@ Any constraints this operation must follow.
   let renameOperationModal: OperationNameModal | undefined = $state()
 
   let operations = $derived(agent?.operations || [])
+  let sortedOperations = $derived.by(() =>
+    [...operations].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, {
+        sensitivity: "base",
+      })
+    )
+  )
   let selectedOperation = $derived(
     operations.find(operation => operation.id === selectedOperationId)
   )
@@ -263,7 +270,7 @@ Any constraints this operation must follow.
 
   {#if hasOperation}
     <div class="operation-list">
-      {#each operations as operation (operation.id)}
+      {#each sortedOperations as operation (operation.id)}
         <div
           class="operation-row"
           class:selected={selectedOperationId === operation.id}
