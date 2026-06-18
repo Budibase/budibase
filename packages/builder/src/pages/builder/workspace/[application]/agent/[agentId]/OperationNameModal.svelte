@@ -2,6 +2,7 @@
   import { Input, keepOpen, Modal, ModalContent } from "@budibase/bbui"
 
   let modal: Modal
+  let modalContent: ModalContent
   let name = $state("")
   let touched = $state(false)
   let submitting = $state(false)
@@ -59,17 +60,29 @@
 
 <Modal bind:this={modal}>
   <ModalContent
+    bind:this={modalContent}
     {title}
     {confirmText}
     disabled={!trimmedName || !!nameError || submitting}
     onConfirm={submit}
   >
-    <Input
-      label="Name"
-      bind:value={name}
-      error={nameError}
-      on:input={() => (touched = true)}
-      {placeholder}
-    />
+    <form
+      onsubmit={event => {
+        event.preventDefault()
+        if (!trimmedName || nameError || submitting) {
+          touched = true
+          return
+        }
+        modalContent.confirm()
+      }}
+    >
+      <Input
+        label="Name"
+        bind:value={name}
+        error={nameError}
+        on:input={() => (touched = true)}
+        {placeholder}
+      />
+    </form>
   </ModalContent>
 </Modal>
