@@ -4,6 +4,7 @@
   let modal: Modal
   let name = $state("")
   let touched = $state(false)
+  let submitting = $state(false)
 
   let {
     title,
@@ -21,7 +22,7 @@
 
   let trimmedName = $derived(name.trim())
   let nameError = $derived(
-    touched
+    touched && !submitting
       ? !trimmedName
         ? "Operation name is required"
         : validateName(trimmedName)
@@ -31,10 +32,12 @@
   export const show = (initialName = "") => {
     name = initialName
     touched = false
+    submitting = false
     modal?.show()
   }
 
   export const hide = () => {
+    submitting = false
     modal?.hide()
   }
 
@@ -44,8 +47,13 @@
       return keepOpen
     }
 
-    await onConfirm(trimmedName)
-    modal?.hide()
+    submitting = true
+    try {
+      await onConfirm(trimmedName)
+      modal?.hide()
+    } finally {
+      submitting = false
+    }
   }
 </script>
 
@@ -53,7 +61,7 @@
   <ModalContent
     {title}
     {confirmText}
-    disabled={!trimmedName || !!nameError}
+    disabled={!trimmedName || !!nameError || submitting}
     onConfirm={submit}
   >
     <Input
