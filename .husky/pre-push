@@ -1,3 +1,33 @@
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+before_lint_status="$(mktemp)"
+after_lint_status="$(mktemp)"
+before_lint_diff="$(mktemp)"
+after_lint_diff="$(mktemp)"
+before_lint_cached_diff="$(mktemp)"
+after_lint_cached_diff="$(mktemp)"
+trap 'rm -f "$before_lint_status" "$after_lint_status" "$before_lint_diff" "$after_lint_diff" "$before_lint_cached_diff" "$after_lint_cached_diff"' EXIT
+
+git status --porcelain > "$before_lint_status"
+git diff --binary > "$before_lint_diff"
+git diff --cached --binary > "$before_lint_cached_diff"
+
+yarn lint:fix || {
+  printf >&2 "\n%s\n\n" "Linting failed. Push halted."
+  exit 1
+}
+
+git status --porcelain > "$after_lint_status"
+git diff --binary > "$after_lint_diff"
+git diff --cached --binary > "$after_lint_cached_diff"
+
+if ! cmp -s "$before_lint_status" "$after_lint_status" ||
+  ! cmp -s "$before_lint_diff" "$after_lint_diff" ||
+  ! cmp -s "$before_lint_cached_diff" "$after_lint_cached_diff"; then
+  printf >&2 "\n%s\n\n" "Lint fixes were applied. Review and commit the changes before pushing."
+  exit 1
+fi
+
 command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'pre-push' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }
 git lfs pre-push "$@"
