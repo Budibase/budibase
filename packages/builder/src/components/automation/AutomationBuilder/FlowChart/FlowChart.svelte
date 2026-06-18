@@ -78,8 +78,6 @@
   const VIEWPORT_ANIMATION_DURATION = 180
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 2.5
-  const ACTION_PANEL_DEFAULT_WIDTH = 480
-  const ACTION_PANEL_STORAGE_KEY = "automation-side-panel-width"
 
   const memoAutomation = memo(automation)
 
@@ -250,9 +248,7 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedNodeId
     visibleSelectionRequest = $automationStore.selectedNodeId
-    ensureSelectedNodeVisible($automationStore.selectedNodeId, {
-      rightInset: getActionPanelWidth(),
-    })
+    ensureSelectedNodeVisible($automationStore.selectedNodeId)
   }
 
   $: if (
@@ -263,22 +259,12 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
     visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
-    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId, {
-      rightInset: getActionPanelWidth(),
-    })
+    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
   }
 
   $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
     $automationStore.actionPanelBlock
   )
-  $: hasRightSidePanel =
-    !!$automationStore.selectedNodeId ||
-    !!$automationStore.selectedBranchNode ||
-    !!$automationStore.actionPanelBlock
-  $: automationHeadingRightInset = hasRightSidePanel
-    ? `${getActionPanelWidth()}px`
-    : "0px"
-
   $: if (
     actionPanelTargetNodeId &&
     actionPanelTargetNodeId !== lastVisibleActionTargetCheck &&
@@ -287,9 +273,7 @@
   ) {
     lastVisibleActionTargetCheck = actionPanelTargetNodeId
     visibleSelectionRequest = actionPanelTargetNodeId
-    ensureSelectedNodeVisible(actionPanelTargetNodeId, {
-      rightInset: getActionPanelWidth(),
-    })
+    ensureSelectedNodeVisible(actionPanelTargetNodeId)
   }
 
   // Check if automation has unpublished changes
@@ -474,13 +458,6 @@
     }
 
     return undefined
-  }
-
-  const getActionPanelWidth = () => {
-    const storedWidth = Number(localStorage?.getItem(ACTION_PANEL_STORAGE_KEY))
-    return Number.isFinite(storedWidth) && storedWidth > 0
-      ? storedWidth
-      : ACTION_PANEL_DEFAULT_WIDTH
   }
 
   const ensureSelectedNodeVisible = async (
@@ -695,10 +672,7 @@
   })
 </script>
 
-<div
-  class="automation-heading"
-  style:--automation-heading-right-inset={automationHeadingRightInset}
->
+<div class="automation-heading">
   <div class="actions-right">
     <div class="actions-group">
       <Switcher
@@ -864,9 +838,7 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m)
-      calc(var(--spacing-l) + var(--automation-heading-right-inset, 0px))
-      var(--spacing-m) var(--spacing-l);
+    padding: var(--spacing-m) var(--spacing-l) var(--spacing-m) var(--spacing-l);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
@@ -935,6 +907,7 @@
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
+    justify-content: flex-end;
     flex: 1 1 auto;
   }
 

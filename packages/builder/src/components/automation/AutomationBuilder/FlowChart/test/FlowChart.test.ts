@@ -1,5 +1,6 @@
 import { render, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { tick } from "svelte"
 import { writable } from "svelte/store"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
 import { automationWithSteps, serverLogStep } from "@/test/automationFixtures"
@@ -221,8 +222,6 @@ describe("FlowChart", () => {
     vi.restoreAllMocks()
     mocks.viewport = { x: 0, y: 0, zoom: 1 }
     mocks.setViewport.mockClear()
-    localStorage.clear()
-    localStorage.setItem("automation-side-panel-width", "480")
     setPaneSize(1000, 600)
     global.ResizeObserver = class {
       observe = vi.fn()
@@ -253,7 +252,7 @@ describe("FlowChart", () => {
     })
   })
 
-  it("shifts a selected step fully into the unobscured viewport beside the side panel", async () => {
+  it("does not add a side panel overlay offset when a selected step is already visible", async () => {
     const automation = {
       ...automationWithSteps([serverLogStep("step-1")]),
       _id: "automation-1",
@@ -281,45 +280,7 @@ describe("FlowChart", () => {
       selectedNodeId: "step-1",
     }))
 
-    await waitFor(() => {
-      expect(mocks.setViewport).toHaveBeenLastCalledWith(
-        { x: -304, y: 240, zoom: 1 },
-        { duration: 180 }
-      )
-    })
-  })
-
-  it("reserves space for header actions when the selected step panel is open", async () => {
-    const automation = {
-      ...automationWithSteps([serverLogStep("step-1")]),
-      _id: "automation-1",
-      publishStatus: {
-        published: false,
-        name: "Automation",
-        state: PublishResourceState.DISABLED,
-      },
-    }
-
-    const { container } = render(FlowChart, {
-      props: { automation },
-    })
-    const heading = container.querySelector(
-      ".automation-heading"
-    ) as HTMLElement
-
-    expect(
-      heading.style.getPropertyValue("--automation-heading-right-inset")
-    ).toBe("0px")
-
-    mocks.automationStore.update(state => ({
-      ...state,
-      selectedNodeId: "step-1",
-    }))
-
-    await waitFor(() => {
-      expect(
-        heading.style.getPropertyValue("--automation-heading-right-inset")
-      ).toBe("480px")
-    })
+    await tick()
+    expect(mocks.setViewport).not.toHaveBeenCalled()
   })
 })

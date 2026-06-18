@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onDestroy } from "svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import * as routify from "@roxi/routify"
@@ -39,7 +39,7 @@
 
   onDestroy(stopSyncing)
 
-  const handleKeyDown = e => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape" && $automationStore.actionPanelBlock) {
       automationStore.actions.closeActionPanel()
     }
@@ -143,7 +143,7 @@
     flex: 1 1 auto;
     display: grid;
     grid-auto-flow: column dense;
-    grid-template-columns: minmax(510px, 1fr);
+    grid-template-columns: minmax(510px, 1fr) auto;
     overflow: hidden;
     position: relative;
   }
@@ -154,11 +154,10 @@
     justify-content: flex-start;
     align-items: stretch;
     overflow: auto;
+    min-width: 0;
   }
   .step-panel-container {
-    position: absolute;
-    top: 0;
-    right: 0;
+    position: relative;
     z-index: 99;
     height: 100%;
     display: flex;
