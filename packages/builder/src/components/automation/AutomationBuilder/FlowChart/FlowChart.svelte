@@ -475,10 +475,7 @@
       ACTION_PANEL_MIN_WIDTH,
       Math.floor(window.innerWidth * ACTION_PANEL_MAX_WIDTH_RATIO)
     )
-    return Math.max(
-      ACTION_PANEL_MIN_WIDTH,
-      Math.min(rawWidth, maxWidth)
-    )
+    return Math.max(ACTION_PANEL_MIN_WIDTH, Math.min(rawWidth, maxWidth))
   }
 
   const ensureSelectedNodeVisible = async (
@@ -583,7 +580,12 @@
     const yOverflow = nodeBottom + margin - paneRect.height
     const yUnderflow = margin - nodeTop
 
-    if (xOverflow <= 0 && xUnderflow <= 0 && yOverflow <= 0 && yUnderflow <= 0) {
+    if (
+      xOverflow <= 0 &&
+      xUnderflow <= 0 &&
+      yOverflow <= 0 &&
+      yUnderflow <= 0
+    ) {
       return
     }
 
