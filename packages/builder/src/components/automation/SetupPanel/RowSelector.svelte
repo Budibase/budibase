@@ -7,6 +7,8 @@
     TooltipPosition,
     TooltipType,
     ActionGroup,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { AutoReason, FieldType } from "@budibase/types"
@@ -52,7 +54,10 @@
   ]
 
   let customPopover
+  let modalPopover
+  let fieldsModal
   let popoverAnchor
+  let modalPopoverAnchor
   let editableRow = {}
   let editableFields = {}
 
@@ -280,6 +285,13 @@
             >
               Clear
             </ActionButton>
+            <ActionButton
+              on:click={() => {
+                fieldsModal.show()
+              }}
+            >
+              <Icon name="arrows-out-simple" size="S" />
+            </ActionButton>
           {/if}
         </ActionGroup>
       </div>
@@ -393,7 +405,124 @@
   </ul>
 </Popover>
 
+<Modal bind:this={fieldsModal}>
+  <ModalContent
+    title="Edit fields"
+    size="XL"
+    showCancelButton={false}
+    showConfirmButton={false}
+  >
+    <div class="modal-fields">
+      <div class="modal-actions" bind:this={modalPopoverAnchor}>
+        <ActionGroup>
+          <ActionButton
+            on:click={() => {
+              modalPopover.show()
+            }}
+            disabled={!schemaFields}
+          >
+            Edit fields
+          </ActionButton>
+          {#if schemaFields?.length}
+            <ActionButton
+              on:click={() => {
+                dispatch("change", {
+                  meta: { fields: {} },
+                  row: {},
+                })
+              }}
+            >
+              Clear
+            </ActionButton>
+          {/if}
+        </ActionGroup>
+      </div>
+
+      {#each schemaFields || [] as [field, schema]}
+        {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
+          <PropField label={field} fullWidth={true} {componentWidth}>
+            <div class="prop-control-wrap">
+              <RowSelectorTypes
+                isTestModal={true}
+                {field}
+                {schema}
+                bindings={parsedBindings}
+                value={editableRow}
+                meta={{
+                  fields: editableFields,
+                }}
+                {onChange}
+                {context}
+              />
+            </div>
+          </PropField>
+        {/if}
+      {/each}
+    </div>
+
+    <Popover
+      align="left"
+      bind:this={modalPopover}
+      anchor={editableFields ? modalPopoverAnchor : null}
+      widthMode="fixed-to-anchor"
+      maxHeight={500}
+      resizable={false}
+    >
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <ul class="spectrum-Menu" role="listbox">
+        {#each schemaFields || [] as [field, schema]}
+          {#if !isAutoincrement(schema)}
+            <li
+              class="table_field spectrum-Menu-item"
+              class:is-selected={Object.hasOwn(editableFields, field)}
+              on:click={() => {
+                if (Object.hasOwn(editableFields, field)) {
+                  delete editableFields[field]
+                  onChange({
+                    meta: { fields: editableFields },
+                    row: { [field]: null },
+                  })
+                } else {
+                  editableFields[field] = {}
+                  onChange({ meta: { fields: editableFields } })
+                }
+              }}
+            >
+              <Icon
+                name={typeToField?.[schema.type]?.icon}
+                color={"var(--spectrum-global-color-gray-600)"}
+                tooltip={capitalise(schema.type)}
+                tooltipType={TooltipType.Info}
+                tooltipPosition={TooltipPosition.Left}
+              />
+              <div class="field_name spectrum-Menu-itemLabel">{field}</div>
+              <div class="check">
+                <Icon name="check" />
+              </div>
+            </li>
+          {/if}
+        {/each}
+      </ul>
+    </Popover>
+  </ModalContent>
+</Modal>
+
 <style>
+  .modal-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: var(--spacing-s);
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
   .table_field {
     display: flex;
     padding: var(--spacing-s) var(--spacing-l);
