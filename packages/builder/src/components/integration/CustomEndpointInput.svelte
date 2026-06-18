@@ -15,7 +15,7 @@
   export let url: string = ""
   export let baseUrlOptions: { label: string; url: string }[] = []
   export let disabled: boolean = false
-  export let showProtocolWarning: boolean = false
+  export let activeWarningMessage: string | undefined = undefined
 
   const verbOptions = Object.entries(QUERY_VERB_MAP).map(([value, label]) => ({
     value,
@@ -66,13 +66,9 @@
   <div class="divider"></div>
 
   <div class="url-section" class:has-globe={baseUrlOptions.length > 0}>
-    {#if showProtocolWarning}
+    {#if activeWarningMessage}
       <div class="protocol-warning-anchor">
-        <Tooltip
-          textWrapping
-          direction="top"
-          text="http(s) protocol required in the URL"
-        />
+        <Tooltip textWrapping direction="top" text={activeWarningMessage} />
       </div>
     {/if}
     <input

@@ -410,8 +410,10 @@
 
   // ── SAVE / RUN STATE ──────────────────────────────────────────────────────
   $: isValidCustomUrl = !isCustomMode || isValidEndpointUrl(requestUrl)
-  $: showProtocolWarning =
+  $: protocolMissingWarningMessage =
     isCustomMode && isValidEndpointUrlMissingProtocol(requestUrl)
+      ? "http(s) protocol required in the URL"
+      : undefined
   $: existingQueryUnchanged = !isNewQuery && !queryDirty
   $: newQueryIncomplete =
     isNewQuery && (isCustomMode ? !requestUrl : !selectedEndpointOption)
@@ -1082,7 +1084,7 @@
               verb={editableQuery?.queryVerb ?? "read"}
               url={customUrl}
               {baseUrlOptions}
-              {showProtocolWarning}
+              activeWarningMessage={protocolMissingWarningMessage}
               on:verbChange={e => {
                 if (editableQuery) {
                   editableQuery.queryVerb = e.detail
