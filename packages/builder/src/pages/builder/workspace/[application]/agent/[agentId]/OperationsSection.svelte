@@ -12,10 +12,9 @@
   import { getSequentialName } from "@/helpers/duplicate"
   import { contextMenuStore } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
-  import CreateOperationModal from "./CreateOperationModal.svelte"
+  import OperationNameModal from "./OperationNameModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
-  import RenameOperationModal from "./RenameOperationModal.svelte"
 
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Operation role**
 What is this operation responsible for?
@@ -67,8 +66,8 @@ Any constraints this operation must follow.
   let selectedOperationId = $state<string | undefined>(undefined)
   let operationPanelOpen = $state(false)
   let renameOperationId = $state<string | undefined>(undefined)
-  let createOperationModal: CreateOperationModal | undefined = $state()
-  let renameOperationModal: RenameOperationModal | undefined = $state()
+  let createOperationModal: OperationNameModal | undefined = $state()
+  let renameOperationModal: OperationNameModal | undefined = $state()
 
   let operations = $derived(agent?.operations || [])
   let selectedOperation = $derived(
@@ -83,6 +82,8 @@ Any constraints this operation must follow.
   )
   let operationLive = $derived(selectedOperation?.live === true)
 
+  const normalizeName = (value: string) => value.trim().toLowerCase()
+
   const openOperationPanel = (operationId: string) => {
     selectedOperationId = operationId
     operationPanelOpen = true
@@ -96,6 +97,27 @@ Any constraints this operation must follow.
   const openRenameModal = () => {
     renameOperationId = selectedOperation?.id
     renameOperationModal?.show(selectedOperation?.name || "")
+  }
+
+  const validateCreateOperationName = (name: string) => {
+    const normalizedName = normalizeName(name)
+    return operations.some(operation => {
+      return normalizeName(operation.name || "") === normalizedName
+    })
+      ? "An operation with this name already exists"
+      : undefined
+  }
+
+  const validateRenameOperationName = (name: string) => {
+    const normalizedName = normalizeName(name)
+    return operations.some(operation => {
+      return (
+        operation.id !== renameOperationId &&
+        normalizeName(operation.name || "") === normalizedName
+      )
+    })
+      ? "An operation with this name already exists"
+      : undefined
   }
 
   const saveRename = async (name: string) => {
@@ -290,8 +312,12 @@ Any constraints this operation must follow.
   {/if}
 </div>
 
-<CreateOperationModal
+<OperationNameModal
   bind:this={createOperationModal}
+  title="New operation"
+  confirmText="Create"
+  placeholder="Customer support"
+  validateName={validateCreateOperationName}
   onConfirm={createOperation}
 />
 
@@ -313,7 +339,13 @@ Any constraints this operation must follow.
   />
 {/if}
 
-<RenameOperationModal bind:this={renameOperationModal} onConfirm={saveRename} />
+<OperationNameModal
+  bind:this={renameOperationModal}
+  title="Rename operation"
+  confirmText="Save"
+  validateName={validateRenameOperationName}
+  onConfirm={saveRename}
+/>
 
 <style>
   .operations-section {

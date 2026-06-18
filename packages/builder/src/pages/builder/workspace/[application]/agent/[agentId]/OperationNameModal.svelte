@@ -5,21 +5,31 @@
   let name = $state("")
   let touched = $state(false)
 
-  let trimmedName = $derived(name.trim())
-  let nameError = $derived(
-    touched && !trimmedName ? "Operation name is required" : undefined
-  )
-
   let {
-    initialName = "",
+    title,
+    confirmText,
+    placeholder = "",
+    validateName = () => undefined,
     onConfirm,
   }: {
-    initialName?: string
+    title: string
+    confirmText: string
+    placeholder?: string
+    validateName?: (name: string) => string | undefined
     onConfirm: (name: string) => Promise<void> | void
   } = $props()
 
-  export const show = (nextName = initialName) => {
-    name = nextName
+  let trimmedName = $derived(name.trim())
+  let nameError = $derived(
+    touched
+      ? !trimmedName
+        ? "Operation name is required"
+        : validateName(trimmedName)
+      : undefined
+  )
+
+  export const show = (initialName = "") => {
+    name = initialName
     touched = false
     modal?.show()
   }
@@ -28,9 +38,9 @@
     modal?.hide()
   }
 
-  const createOperation = async () => {
+  const submit = async () => {
     touched = true
-    if (!trimmedName) {
+    if (!trimmedName || nameError) {
       return keepOpen
     }
 
@@ -41,17 +51,17 @@
 
 <Modal bind:this={modal}>
   <ModalContent
-    title="New operation"
-    confirmText="Create"
-    disabled={!trimmedName}
-    onConfirm={createOperation}
+    {title}
+    {confirmText}
+    disabled={!trimmedName || !!nameError}
+    onConfirm={submit}
   >
     <Input
       label="Name"
       bind:value={name}
       error={nameError}
       on:input={() => (touched = true)}
-      placeholder="Customer support"
+      {placeholder}
     />
   </ModalContent>
 </Modal>
