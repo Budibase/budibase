@@ -1,14 +1,5 @@
 <script lang="ts">
-  import {
-    Body,
-    Button,
-    Helpers,
-    Icon,
-    Input,
-    Modal,
-    ModalContent,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, Button, Helpers, Icon, notifications } from "@budibase/bbui"
   import {
     FeatureFlag,
     type Agent,
@@ -21,8 +12,10 @@
   import { getSequentialName } from "@/helpers/duplicate"
   import { contextMenuStore } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
+  import CreateOperationModal from "./CreateOperationModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
+  import RenameOperationModal from "./RenameOperationModal.svelte"
 
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Operation role**
 What is this operation responsible for?
@@ -73,10 +66,9 @@ Any constraints this operation must follow.
 
   let selectedOperationId = $state<string | undefined>(undefined)
   let operationPanelOpen = $state(false)
-  let renameModal: Modal | undefined = $state()
-  let renameDraft = $state("")
   let renameOperationId = $state<string | undefined>(undefined)
-  let isRenameValid = $derived(Boolean(renameDraft.trim()))
+  let createOperationModal: CreateOperationModal | undefined = $state()
+  let renameOperationModal: RenameOperationModal | undefined = $state()
 
   let operations = $derived(agent?.operations || [])
   let selectedOperation = $derived(
@@ -103,17 +95,11 @@ Any constraints this operation must follow.
 
   const openRenameModal = () => {
     renameOperationId = selectedOperation?.id
-    renameDraft = selectedOperation?.name || ""
-    renameModal?.show()
+    renameOperationModal?.show(selectedOperation?.name || "")
   }
 
-  const saveRename = async () => {
+  const saveRename = async (name: string) => {
     if (!agent || !renameOperationId) {
-      return
-    }
-    const trimmedName = renameDraft.trim()
-    if (!trimmedName) {
-      notifications.error("Operation name is required.")
       return
     }
     const operation = operations.find(
@@ -123,18 +109,12 @@ Any constraints this operation must follow.
       return
     }
 
-    operation.name = trimmedName
+    operation.name = name
     await onUpdated()
-    renameModal?.hide()
     renameOperationId = undefined
   }
 
-  const createDefaultOperation = () => {
-    const name =
-      getSequentialName(operations, "New operation ", {
-        getName: operation => operation.name,
-      }) || "Operation 1"
-
+  const createDefaultOperation = (name: string) => {
     return {
       id: `operation_${Helpers.uuid()}`,
       name,
@@ -165,13 +145,22 @@ Any constraints this operation must follow.
       notifications.info("Only one operation is supported at the moment.")
       return
     }
+    const suggestedName =
+      getSequentialName(operations, "New operation ", {
+        getName: operation => operation.name,
+      }) || "Operation 1"
+    createOperationModal?.show(suggestedName)
+  }
+
+  const createOperation = async (name: string) => {
     if (!agent) {
       return
     }
-    const operation = createDefaultOperation()
+
+    const operation = createDefaultOperation(name)
     agent.operations = [...(agent.operations || []), operation]
     selectedOperationId = operation.id
-    onUpdated()
+    await onUpdated()
     openOperationPanel(operation.id)
   }
 
@@ -301,6 +290,11 @@ Any constraints this operation must follow.
   {/if}
 </div>
 
+<CreateOperationModal
+  bind:this={createOperationModal}
+  onConfirm={createOperation}
+/>
+
 {#if agent && selectedOperation}
   <OperationSidePanel
     open={operationPanelOpen}
@@ -319,16 +313,7 @@ Any constraints this operation must follow.
   />
 {/if}
 
-<Modal bind:this={renameModal}>
-  <ModalContent
-    title="Rename operation"
-    confirmText="Save"
-    disabled={!isRenameValid}
-    onConfirm={saveRename}
-  >
-    <Input label="Name" bind:value={renameDraft} />
-  </ModalContent>
-</Modal>
+<RenameOperationModal bind:this={renameOperationModal} onConfirm={saveRename} />
 
 <style>
   .operations-section {

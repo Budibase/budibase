@@ -1,0 +1,87 @@
+import { fireEvent, render, screen } from "@testing-library/svelte"
+import type { Agent } from "@budibase/types"
+import { writable } from "svelte/store"
+import { describe, expect, it, vi } from "vitest"
+import MockBody from "@/test/mocks/MockBody.svelte"
+import MockButton from "@/test/mocks/MockButton.svelte"
+import MockControllableModal from "@/test/mocks/MockControllableModal.svelte"
+import MockInput from "@/test/mocks/MockInput.svelte"
+import MockModalContent from "@/test/mocks/MockModalContent.svelte"
+
+vi.mock("@budibase/bbui", () => ({
+  Body: MockBody,
+  Button: MockButton,
+  Helpers: { uuid: () => "123" },
+  Icon: "div",
+  Input: MockInput,
+  keepOpen: Symbol("keepOpen"),
+  Modal: MockControllableModal,
+  ModalContent: MockModalContent,
+  notifications: {
+    error: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+  },
+}))
+
+vi.mock("@/helpers/confirm", () => ({
+  confirm: vi.fn(),
+}))
+
+vi.mock("@/stores/builder", () => ({
+  contextMenuStore: {
+    open: vi.fn(),
+  },
+}))
+
+vi.mock("@/stores/portal", () => ({
+  featureFlags: writable({}),
+}))
+
+vi.mock("./OperationLiveBadge.svelte", () => ({
+  default: "div",
+}))
+
+vi.mock("./OperationSidePanel.svelte", () => ({
+  default: "div",
+}))
+
+import OperationsSection from "./OperationsSection.svelte"
+
+describe("OperationsSection", () => {
+  it("opens a create modal before adding an operation", async () => {
+    const onUpdated = vi.fn(async () => true)
+    const agent: Agent = {
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [],
+    }
+
+    render(OperationsSection, {
+      props: {
+        agent,
+        onUpdated,
+      },
+    })
+
+    expect(screen.queryByText("New operation")).not.toBeInTheDocument()
+
+    await fireEvent.click(screen.getByText("Add operation"))
+
+    expect(screen.getByText("New operation")).toBeInTheDocument()
+    expect(agent.operations).toHaveLength(0)
+
+    await fireEvent.input(screen.getByLabelText("Name"), {
+      target: { value: "Customer support" },
+    })
+    await fireEvent.click(screen.getByText("Create"))
+
+    expect(onUpdated).toHaveBeenCalledTimes(1)
+    expect(agent.operations).toHaveLength(1)
+    expect(agent.operations[0]).toMatchObject({
+      id: "operation_123",
+      name: "Customer support",
+      live: false,
+    })
+  })
+})
