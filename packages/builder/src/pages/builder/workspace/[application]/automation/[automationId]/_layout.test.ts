@@ -2,6 +2,31 @@ import { render, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
 
+interface BuilderStoreState {
+  isResizingPanel: boolean
+}
+
+interface AutomationStoreState {
+  actionPanelBlock?: { id: string }
+  automations: Array<{ _id: string }>
+  selectedNodeId?: string
+  selectedBranchNode?: { branchStepId: string }
+  showLogsPanel: boolean
+  showLogDetailsPanel: boolean
+  selectedLog?: { _id: string }
+}
+
+interface BlockRef {
+  pathTo: Array<{ stepIdx: number; id: string }>
+}
+
+interface SelectedAutomationState {
+  data: { _id: string; name: string }
+  blockRefs: Record<string, BlockRef>
+}
+
+type TestResizeObserverCallback = (entries: never[], observer: object) => void
+
 const mocks = vi.hoisted(() => {
   const store = <T>(initial: T) => {
     let value = initial
@@ -14,7 +39,9 @@ const mocks = vi.hoisted(() => {
       subscribe: (run: (value: T) => void) => {
         subscribers.add(run)
         run(value)
-        return () => subscribers.delete(run)
+        return () => {
+          subscribers.delete(run)
+        }
       },
       update: (updater: (value: T) => T) => {
         value = updater(value)
@@ -23,17 +50,17 @@ const mocks = vi.hoisted(() => {
     }
   }
 
-  const builderStore = store({ isResizingPanel: false })
-  const automationStore = store({
-    actionPanelBlock: undefined as unknown,
+  const builderStore = store<BuilderStoreState>({ isResizingPanel: false })
+  const automationStore = store<AutomationStoreState>({
+    actionPanelBlock: undefined,
     automations: [{ _id: "automation-1" }],
-    selectedNodeId: undefined as string | undefined,
-    selectedBranchNode: undefined as unknown,
+    selectedNodeId: undefined,
+    selectedBranchNode: undefined,
     showLogsPanel: false,
     showLogDetailsPanel: false,
-    selectedLog: undefined as unknown,
+    selectedLog: undefined,
   })
-  const selectedAutomation = store({
+  const selectedAutomation = store<SelectedAutomationState>({
     data: { _id: "automation-1", name: "Automation" },
     blockRefs: {},
   })
@@ -45,7 +72,7 @@ const mocks = vi.hoisted(() => {
     selectResource: vi.fn(),
     closeActionPanel: vi.fn(),
     select: vi.fn(),
-    resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
+    resizeObserverCallback: undefined as TestResizeObserverCallback | undefined,
   }
 })
 
@@ -145,13 +172,13 @@ describe("Automation layout", () => {
     mocks.select.mockClear()
     mocks.resizeObserverCallback = undefined
     global.ResizeObserver = class {
-      constructor(callback: ResizeObserverCallback) {
+      constructor(callback: TestResizeObserverCallback) {
         mocks.resizeObserverCallback = callback
       }
       observe = vi.fn()
       unobserve = vi.fn()
       disconnect = vi.fn()
-    }
+    } as typeof globalThis.ResizeObserver
   })
 
   it("overlays the add-step panel and pushes automation header actions left", async () => {
@@ -173,9 +200,7 @@ describe("Automation layout", () => {
     ) as HTMLElement
 
     expect(actionPanel).toBeTruthy()
-    expect(container.querySelector(".content")).toHaveClass(
-      "action-panel-open"
-    )
+    expect(container.querySelector(".content")).toHaveClass("action-panel-open")
     await waitFor(() => {
       expect(
         (
@@ -184,11 +209,10 @@ describe("Automation layout", () => {
       ).toBe("520px")
     })
 
-    actionPanel.getBoundingClientRect = () =>
-      ({
-        width: 640,
-      }) as DOMRect
-    mocks.resizeObserverCallback?.([], {} as ResizeObserver)
+    const resizedRect = actionPanel.getBoundingClientRect()
+    Object.defineProperty(resizedRect, "width", { value: 640 })
+    actionPanel.getBoundingClientRect = () => resizedRect
+    mocks.resizeObserverCallback?.([], {})
 
     await waitFor(() => {
       expect(
