@@ -15,6 +15,9 @@
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
   import type { AutomationLog } from "@budibase/types"
 
+  const SIDE_PANEL_STORAGE_KEY = "automation-side-panel-width"
+  const SIDE_PANEL_DEFAULT_WIDTH = 480
+
   const { goto, params, url, redirect, isActive, page, layout } = routify
   $goto
   $params
@@ -24,9 +27,17 @@
   $page
   $layout
 
+  let actionPanelContainer: HTMLDivElement | undefined
+  let observedActionPanel: HTMLDivElement | undefined
+  let actionPanelResizeObserver: ResizeObserver | undefined
+  let actionPanelWidth = 0
+
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
   $: selectedNodeId = $automationStore.selectedNodeId
+  $: actionPanelOpen =
+    !!$automationStore.actionPanelBlock && !$automationStore.selectedNodeId
+  $: syncActionPanelWidth(actionPanelOpen, actionPanelContainer)
   $: if (automationId) {
     builderStore.selectResource(automationId)
   }
@@ -43,12 +54,51 @@
 
   onDestroy(() => {
     stopSyncing?.()
+    actionPanelResizeObserver?.disconnect()
   })
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape" && $automationStore.actionPanelBlock) {
       automationStore.actions.closeActionPanel()
     }
+  }
+
+  const getSidePanelWidth = () => {
+    const saved = localStorage.getItem(SIDE_PANEL_STORAGE_KEY)
+    const parsedWidth = saved ? parseInt(saved, 10) : SIDE_PANEL_DEFAULT_WIDTH
+    return Number.isFinite(parsedWidth) && parsedWidth > 0
+      ? parsedWidth
+      : SIDE_PANEL_DEFAULT_WIDTH
+  }
+
+  const syncActionPanelWidth = (
+    isOpen: boolean,
+    panel: HTMLDivElement | undefined
+  ) => {
+    if (!isOpen || !panel) {
+      actionPanelResizeObserver?.disconnect()
+      actionPanelResizeObserver = undefined
+      observedActionPanel = undefined
+      actionPanelWidth = 0
+      return
+    }
+
+    if (panel === observedActionPanel) {
+      return
+    }
+
+    actionPanelResizeObserver?.disconnect()
+    observedActionPanel = panel
+    actionPanelWidth = getPanelWidth(panel)
+    actionPanelResizeObserver = new ResizeObserver(() => {
+      actionPanelWidth = getPanelWidth(panel)
+    })
+    actionPanelResizeObserver.observe(panel)
+  }
+
+  const getPanelWidth = (panel: HTMLDivElement) => {
+    const width = panel.getBoundingClientRect().width
+    return width > 0 ? width : getSidePanelWidth()
   }
 </script>
 
@@ -63,7 +113,11 @@
     icon="path"
   />
   <div class="root">
-    <div class="content drawer-container">
+    <div
+      class="content drawer-container"
+      class:action-panel-open={actionPanelOpen}
+      style:--automation-action-panel-width={`${actionPanelWidth}px`}
+    >
       <slot />
     </div>
 
@@ -83,11 +137,13 @@
       </div>
     {/if}
 
-    {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
-      <SelectStepSidePanel
-        block={$automationStore.actionPanelBlock}
-        onClose={() => automationStore.actions.closeActionPanel()}
-      />
+    {#if actionPanelOpen}
+      <div class="action-panel-container" bind:this={actionPanelContainer}>
+        <SelectStepSidePanel
+          block={$automationStore.actionPanelBlock}
+          onClose={() => automationStore.actions.closeActionPanel()}
+        />
+      </div>
     {/if}
 
     {#if $automationStore.showLogsPanel && $selectedAutomation?.data}
@@ -162,6 +218,11 @@
     overflow: auto;
     min-width: 0;
   }
+  .content.action-panel-open :global(.automation-heading) {
+    padding-right: calc(
+      var(--spacing-l) + var(--automation-action-panel-width)
+    );
+  }
   .step-panel-container {
     position: relative;
     z-index: 99;
@@ -170,6 +231,16 @@
     flex-direction: row;
     align-items: stretch;
     overflow: hidden;
+  }
+  .action-panel-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 99;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
   }
   .step-panel {
     display: flex;

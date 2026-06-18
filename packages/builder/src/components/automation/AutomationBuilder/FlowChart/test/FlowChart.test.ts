@@ -9,6 +9,14 @@ import { PublishResourceState } from "@budibase/types"
 
 const mocks = vi.hoisted(() => {
   type StoreValue = Record<string, unknown>
+  type MockNode = {
+    id: string
+    type: string
+    data: { block: unknown }
+    position: { x: number; y: number }
+    width: number
+    height: number
+  }
 
   const store = <T>(initial: T) => {
     let value = initial
@@ -32,6 +40,7 @@ const mocks = vi.hoisted(() => {
 
   return {
     viewport: { x: 0, y: 0, zoom: 1 },
+    mockNodes: [] as MockNode[],
     setViewport: vi.fn((viewport: { x: number; y: number; zoom: number }) => {
       mocks.viewport = viewport
     }),
@@ -144,7 +153,7 @@ vi.mock("@xyflow/svelte", () => ({
   useSvelteFlow: () => ({
     getViewport: () => mocks.viewport,
     setViewport: mocks.setViewport,
-    getNodes: () => [],
+    getNodes: () => mocks.mockNodes,
     getNodesBounds: () => ({ x: 0, y: 0, width: 0, height: 0 }),
   }),
 }))
@@ -217,10 +226,21 @@ const setPaneSize = (width: number, height: number) => {
   )
 }
 
+const setInnerWidth = (value: number) => {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    writable: true,
+    value,
+  })
+}
+
 describe("FlowChart", () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    localStorage.clear()
+    setInnerWidth(1000)
     mocks.viewport = { x: 0, y: 0, zoom: 1 }
+    mocks.mockNodes = []
     mocks.setViewport.mockClear()
     setPaneSize(1000, 600)
     global.ResizeObserver = class {
@@ -282,5 +302,155 @@ describe("FlowChart", () => {
 
     await tick()
     expect(mocks.setViewport).not.toHaveBeenCalled()
+  })
+
+  it("moves the canvas left when opening the add-step panel would hide the target on the right", async () => {
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, {
+      props: { automation },
+    })
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: 100, y: 240, zoom: 1 },
+        { duration: 0 }
+      )
+    })
+    mocks.setViewport.mockClear()
+    mocks.viewport = { x: 300, y: 240, zoom: 1 }
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      actionPanelBlock: { id: "step-1" },
+    }))
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -304, y: 240, zoom: 1 },
+        { duration: 180 }
+      )
+    })
+  })
+
+  it("clamps the stored add-step panel width before calculating the viewport offset", async () => {
+    localStorage.setItem("automation-side-panel-width", "9999")
+
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, {
+      props: { automation },
+    })
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: 100, y: 240, zoom: 1 },
+        { duration: 0 }
+      )
+    })
+    mocks.setViewport.mockClear()
+    mocks.viewport = { x: 300, y: 240, zoom: 1 }
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      actionPanelBlock: { id: "step-1" },
+    }))
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -424, y: 240, zoom: 1 },
+        { duration: 180 }
+      )
+    })
+  })
+
+  it("vertically pans when opening the add-step panel would hide the target vertically", async () => {
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, {
+      props: { automation },
+    })
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: 100, y: 240, zoom: 1 },
+        { duration: 0 }
+      )
+    })
+    mocks.setViewport.mockClear()
+    mocks.viewport = { x: -305, y: 540, zoom: 1 }
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      actionPanelBlock: { id: "step-1" },
+    }))
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -305, y: 456, zoom: 1 },
+        { duration: 180 }
+      )
+    })
+  })
+
+  it("pans right when the add-step target is hidden off the left edge", async () => {
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, {
+      props: { automation },
+    })
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: 100, y: 240, zoom: 1 },
+        { duration: 0 }
+      )
+    })
+    mocks.setViewport.mockClear()
+    mocks.viewport = { x: -700, y: 240, zoom: 1 }
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      actionPanelBlock: { id: "step-1" },
+    }))
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -576, y: 240, zoom: 1 },
+        { duration: 180 }
+      )
+    })
   })
 })
