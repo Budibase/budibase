@@ -1,6 +1,18 @@
 # Contributing
 
-From opening a bug report to creating a pull request: every contribution is appreciated and welcome. If you're planning to implement a new feature or change the api please [create an issue](https://github.com/Budibase/budibase/issues/new/choose) first. This way we can ensure that your precious work is not in vain.
+Thank you for taking the time to contribute!
+
+It is worth noting that a contribution isn't just a PR.
+
+Bringing attention to a bug is very valuable, and with good reproduction steps is always appreciated!
+
+Feature requests allow us to improve the product. Even if we do not ultimately accept the enhancement, the feedback is still helpful.
+
+Smaller "quality of life" requests are more likely to be accepted and implemented, whereas larger features require more input from the product team and may not align with our goals.
+
+You can raise a bug or feature request [here](https://github.com/Budibase/budibase/issues/new/choose).
+
+If you do plan to raise a pull request, please take a look at the guide below.
 
 ## Table of contents
 
@@ -13,15 +25,15 @@ From opening a bug report to creating a pull request: every contribution is appr
 
 Budibase is a low-code web application builder that creates svelte-based web applications.
 
-Budibase is a monorepo managed by [lerna](https://github.com/lerna/lerna). Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up budibase.
+Budibase is a monorepo managed by [lerna](https://github.com/lerna/lerna). Lerna manages the building and publishing of the Budibase packages. At a high level, here are the packages that make up Budibase.
 
-- **packages/builder** - contains code for the budibase builder client side svelte application.
+- **packages/builder** - contains code for the Budibase builder client side svelte application.
 
 - **packages/client** - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
 
-- **packages/server** - The budibase server. This [Koa](https://koajs.com/) app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
+- **packages/server** - The Budibase server. This [Koa](https://koajs.com/) app is responsible for serving the JS for the builder and Budibase apps, as well as providing the API for interaction with the database and file system.
 
-- **packages/worker** - This [Koa](https://koajs.com/) app is responsible for providing global apis for managing your budibase installation. Authentication, Users, Email, Org and Auth configs are all provided by the worker.
+- **packages/worker** - This [Koa](https://koajs.com/) app is responsible for providing global apis for managing your Budibase installation. Authentication, Users, Email, Org and Auth configs are all provided by the worker.
 
 ## Contributor License Agreement (CLA)
 
@@ -36,43 +48,59 @@ with the following text to agree our CLA: "I have read the CLA Document and I he
 
 ## Glossary of Terms
 
-To understand the budibase API, it can be helpful to understand the top level entities that make up Budibase.
+To understand the Budibase API, it can be helpful to understand the top level entities that make up Budibase.
 
-### Client
+### Tenant
 
-A client represents a single budibase customer. Each budibase client will have 1 or more budibase servers. Every client is assigned a unique ID.
+A tenant is the top-level isolation boundary for users, configuration and workspaces. Self-hosted development normally uses the default tenant, while cloud and multi-tenant environments can contain many tenants.
 
-### App
+### Workspace
 
-A client can have one or more budibase applications. Budibase applications would be things like "Developer Inventory Management" or "Goat Herder CRM". Think of a budibase application as a tree.
+The primary organizational unit for building and publishing solutions. A workspace encompasses all data resources, automations, UI definitions, theme settings, plugins, and deployment metadata.
 
-### Database
+### Workspace App
 
-An App can have one or more databases. Keeping with our [dendrology](https://en.wikipedia.org/wiki/Dendrology) analogy - think of an database as a branch on the tree. Databases are used to keep data separate for different instances of your app. For example, if you had a CRM app, you may create a database for your US office, and a database for your Australian office. Databases allow us to support [multitenancy](https://www.gartner.com/en/information-technology/glossary/multitenancy) in budibase applications.
+Each workspace app manages its own navigation, routing, and access settings. Multiple apps can exist within a single workspace, and each can be independently enabled, disabled, or designated as the default entry point.
 
 ### Table
 
-Tables in budibase are almost akin to tables in relational databases. A table may be a "Car" or an "Employee". They are the main building blocks for the creation and management of backend data in budibase.
+Tables define structured data in a workspace. A table can be internal, backed by Budibase CouchDB storage, or an external datasource. Tables have a schema, rows, views and metadata such as a primary display field.
+
+### Datasource
+
+A datasource represents a configured external data source such as SQL, REST, MongoDB or Google Sheets. Datasources can expose entities as tables and can also contain queries for custom data operations.
+
+### Query
+
+A query is a reusable operation against a datasource. Queries define inputs, request details, transformers and response schema, and can be used by apps, automations and other workspace features.
 
 ### View
 
-A View is an advanced feature in budibase that allows you to write a custom query using [MapReduce](https://pouchdb.com/guides/queries.html) queries. Views enable powerful query functionality and calculations, allowing you to do more with your data.
-
-### Page
-
-A page in budibase is actually a single, self contained svelte web app. There are only 2 pages in budibase. The **login** page and the **main** page.
+A view is a saved representation of table data. Views can apply filters, sorting, calculations and schema metadata so data can be reused consistently across the builder, APIs and app screens.
 
 ### Screen
 
-A screen is a component within a single page. Generally, screens represent client side routes, and can be switched without refreshing the page.
+A screen is a routed UI interface within a workspace app. It points at a layout, has route and role metadata, and contains the root component tree for that route.
+
+### Layout
+
+A layout is shared UI structure used by screens. Layouts commonly define navigation, page framing and shared component structure.
 
 ### Component
 
-A component is the basic frontend building block of a budibase app.
+A component is the basic frontend building block used in screens and layouts. Components store their type, settings, styles, children and conditional behaviour.
 
 ### Component Library
 
 Component libraries are collections of components as well as the definition of their props contained in a file called `components.json`.
+
+### Automation
+
+An automation is a workflow in a workspace. Automations have a trigger, one or more action steps, status, metadata and execution logs.
+
+### Budibase Agent
+
+A Budibase agent is an AI assistant configured in a workspace. Agents define goals, operations, tools, knowledge sources and chat integrations so users can interact with workspace data and workflows conversationally.
 
 ## Contributing to Budibase
 
@@ -146,13 +174,13 @@ The following commands can be executed to manually get Budibase up and running (
 
 `yarn` to install project dependencies
 
-`yarn build` will build all budibase packages.
+`yarn build` will build all Budibase packages.
 
 If you have access to the `@budibase/pro` submodule then please follow the Pro section of this guide before running the above commands.
 
 #### 4. Running
 
-To run the budibase server and builder in dev mode (i.e. with live reloading):
+To run the Budibase server and builder in dev mode (i.e. with live reloading):
 
 1. Open a new console
 2. `yarn dev` (from root)
@@ -162,12 +190,12 @@ This will enable watch mode for both the builder app, server, client library and
 
 #### 5. Debugging using VS Code
 
-To debug the budibase server and worker a VS Code launch configuration has been provided.
+To debug the Budibase server and worker a VS Code launch configuration has been provided.
 
 Visit the debug window and select `Budibase Server` or `Budibase Worker` to debug the respective component.
 Alternatively to start both components simultaneously select `Start Budibase`.
 
-In addition to the above, the remaining budibase components may be run in dev mode using: `yarn dev:noserver`.
+In addition to the above, the remaining Budibase components may be run in dev mode using: `yarn dev:noserver`.
 
 #### 6. Cleanup
 
@@ -182,18 +210,18 @@ For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apa
 
 ### Data Storage
 
-When you are running locally, budibase stores data on disk using docker volumes. The volumes and the types of data associated with each are:
+When you are running locally, Budibase stores data on disk using docker volumes. The volumes and the types of data associated with each are:
 
 - `redis_data`
   - Sessions, email tokens
 - `couchdb3_data`
   - Global and app databases
 - `minio_data`
-  - App manifest, budibase client, static assets
+  - App manifest, Budibase client, static assets
 
 ### Development Modes
 
-A combination of environment variables controls the mode budibase runs in.
+A combination of environment variables controls the mode Budibase runs in.
 
 | **NOTE**: You need to clean your browser cookies when you change between different modes.
 
@@ -233,38 +261,9 @@ yarn mode:account
 
 An overview of the CI pipelines can be found [here](../.github/workflows/README.md)
 
-### Pro
-
-@budibase/pro is the closed source package that supports licensed features in budibase. By default the package will be pulled from NPM and will not normally need to be touched in local development. If you need to make an update to pro and have access to the repo, then you can update your submodule within the mono-repo by running `git submodule update --init` - from here you can use normal submodule flow to develop a change within pro.
-
-Once you have updated to use the pro submodule, it will be linked into all of your local dependencies by NX as with all other monorepo packages. If you have been using the NPM version of `@budibase/pro` then you may need to run a `git reset --hard` to fix all of the pro versions back to `0.0.0` to be monorepo aware.
-
-From here - to develop a change in pro, you can follow the below flow:
-
-```
-# enter the pro submodule
-cd packages/pro
-# get the base branch you are working from (same as monorepo)
-git fetch
-git checkout master
-# create a branch, named the same as the branch in your monorepo
-git checkout -b <some branch>
-... make changes
-# commit the changes you've made, with a message for pro
-git commit <something>
-# within the monorepo, add the pro reference to your branch, commit it with a message like "Update pro ref"
-cd ../..
-git add packages/pro
-git commit <add the new reference to main repo>
-```
-
-From here, you will have created a branch in the pro repository and commited the reference to your branch on the monorepo. When you eventually PR this work back into the mainline branch, you will need to first merge your pro PR to the pro mainline, then go into your PR in the monorepo and update the reference again to the new mainline.
-
-Note that only budibase maintainers will be able to access the pro repo.
-
 ### Troubleshooting
 
-Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above to create a fresh Budibase installation.
+Sometimes, things go wrong. This can be due to incompatible updates on the Budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above to create a fresh Budibase installation.
 
 ### Running tests
 
@@ -279,8 +278,6 @@ yarn test
 ### Other Useful Information
 
 - The contributors are listed in [AUTHORS.md](https://github.com/Budibase/budibase/blob/master/.github/AUTHORS.md) (add yourself).
-
-- This project uses a modified version of the MPLv2 license, see [LICENSE](https://github.com/budibase/server/blob/master/LICENSE).
 
 - We use the [C4 (Collective Code Construction Contract)](https://rfc.zeromq.org/spec:42/C4/) process for contributions.
   Please read this if you are unfamiliar with it.
