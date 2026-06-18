@@ -36,7 +36,7 @@ import {
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
-import tracer from "dd-trace"
+import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
 interface PrepareAgentChatRunParams {
@@ -153,6 +153,9 @@ export const chooseOperationForQuestion = async ({
   try {
     const result = await router.stream({
       prompt: latestQuestion,
+      headers: {
+        "x-litellm-tags": "bb-operation-routing",
+      },
     })
 
     const route = (await result.output) as OperationRoute

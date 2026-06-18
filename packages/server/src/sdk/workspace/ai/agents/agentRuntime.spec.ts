@@ -177,6 +177,9 @@ describe("chooseOperationForQuestion", () => {
     expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
     expect(mockRouterStream).toHaveBeenCalledWith({
       prompt: "Book time off",
+      headers: {
+        "x-litellm-tags": "bb-operation-routing",
+      },
     })
   })
 
