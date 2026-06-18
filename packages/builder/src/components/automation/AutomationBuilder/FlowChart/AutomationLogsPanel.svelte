@@ -22,25 +22,15 @@
     type UIAutomation,
   } from "@budibase/types"
 
-  type LogStatus =
-    | AutomationStatus.SUCCESS
-    | AutomationStatus.ERROR
-    | "stopped"
-    | "stopped_error"
   type TimeRange = `${number}-${ManipulateType}`
 
   export let automation: UIAutomation
   export let onSelectLog: (log: AutomationLog) => void = () => {}
   export let selectedLog: AutomationLog | undefined = undefined
 
-  const ERROR = AutomationStatus.ERROR,
-    SUCCESS = AutomationStatus.SUCCESS,
-    STOPPED = "stopped",
-    STOPPED_ERROR = "stopped_error"
-
   let pageInfo = createPaginationStore()
   let runHistory: AutomationLog[] | null = null
-  let status: LogStatus | null = null
+  let status: AutomationStatus | undefined
   let timeRange: TimeRange | null = null
   let loaded = false
   let totalLogs = 0
@@ -82,10 +72,10 @@
     !$licensing.isEnterprisePlan && $auth?.user?.accountPortalAccess
 
   const statusOptions = [
-    { value: SUCCESS, label: "Success" },
-    { value: ERROR, label: "Error" },
-    { value: STOPPED, label: "Stopped" },
-    { value: STOPPED_ERROR, label: "Stopped - Error" },
+    { value: AutomationStatus.SUCCESS, label: "Success" },
+    { value: AutomationStatus.ERROR, label: "Error" },
+    { value: AutomationStatus.STOPPED, label: "Stopped" },
+    { value: AutomationStatus.STOPPED_ERROR, label: "Stopped - Error" },
   ]
 
   // Reset the page every time that a filter gets updated
@@ -95,7 +85,7 @@
 
   async function fetchLogs(
     automationId: string | undefined,
-    status: LogStatus | null,
+    status: AutomationStatus | undefined,
     page: string | null | undefined,
     timeRange: TimeRange | null,
     force = false
@@ -113,11 +103,7 @@
     try {
       const response = await automationStore.actions.getLogs({
         automationId,
-        status:
-          status === AutomationStatus.SUCCESS ||
-          status === AutomationStatus.ERROR
-            ? status
-            : undefined,
+        status,
         page: page || undefined,
         startDate,
       })
@@ -136,7 +122,9 @@
   })
 
   const getLogStatus = (log: AutomationLog) => {
-    return didRunStopWithoutBranchMatch(log) ? STOPPED : log.status
+    return didRunStopWithoutBranchMatch(log)
+      ? AutomationStatus.STOPPED
+      : log.status
   }
 </script>
 
