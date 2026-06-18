@@ -28,7 +28,7 @@ export async function lock(ctx: UserCtx<LockRequest, void>) {
     ctx.throw(403, "Only internal user can lock a tenant")
   }
 
-  const { reason } = ctx.request.body
+  const { reason, deactivationScheduledAt } = ctx.request.body
   if (reason !== undefined && !Object.values(LockReason).includes(reason)) {
     ctx.throw(
       400,
@@ -36,11 +36,20 @@ export async function lock(ctx: UserCtx<LockRequest, void>) {
     )
   }
 
+  if (reason) {
+    if (!deactivationScheduledAt) {
+      ctx.throw(400, "deactivationScheduledAt is required when locking")
+    }
+    if (Number.isNaN(Date.parse(deactivationScheduledAt))) {
+      ctx.throw(400, "deactivationScheduledAt must be a valid ISO 8601 date")
+    }
+  }
+
   const tenantId = ctx.params.tenantId
 
   try {
     if (reason) {
-      await tenantSdk.lockTenant(tenantId, reason)
+      await tenantSdk.lockTenant(tenantId, reason, deactivationScheduledAt!)
     } else {
       await tenantSdk.unlockTenant(tenantId)
     }
