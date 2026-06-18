@@ -40,6 +40,10 @@
   }
 
   interface QueuedFetch {
+    automationId: string
+    status: StatusFilter | null
+    page: string | null | undefined
+    timeRange: TimeRange | null
     force: boolean
     fromRealtime: boolean
   }
@@ -141,7 +145,14 @@
       return
     }
     if (loading) {
-      queuedFetch = { force, fromRealtime }
+      queuedFetch = {
+        automationId,
+        status,
+        page,
+        timeRange,
+        force,
+        fromRealtime,
+      }
       return
     }
     loading = true
@@ -171,10 +182,10 @@
       const nextFetch = consumeQueuedFetch()
       if (nextFetch) {
         fetchLogs(
-          automationId,
-          status,
-          page,
-          timeRange,
+          nextFetch.automationId,
+          nextFetch.status,
+          nextFetch.page,
+          nextFetch.timeRange,
           nextFetch.force,
           nextFetch.fromRealtime
         )
@@ -286,22 +297,22 @@
             </Button>
           {/if}
         </div>
-        <div class="realtime-controls">
-          <Body size="S">
-            {"Live updates"}
-          </Body>
-          <div
-            class:live-dot={!realtimePaused}
-            class:paused-dot={realtimePaused}
-          ></div>
-          <Button
-            size="S"
-            quiet
-            icon={realtimePaused ? "play" : "Pause"}
-            on:click={toggleRealtimeUpdates}
-          />
-        </div>
       {/if}
+      <div class="realtime-controls">
+        <Body size="S">
+          {"Live updates"}
+        </Body>
+        <div
+          class:live-dot={!realtimePaused}
+          class:paused-dot={realtimePaused}
+        ></div>
+        <Button
+          size="S"
+          quiet
+          icon={realtimePaused ? "play" : "Pause"}
+          on:click={toggleRealtimeUpdates}
+        />
+      </div>
 
       {#if runHistory}
         <div class="logs-list">
