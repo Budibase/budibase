@@ -46,7 +46,7 @@ Any constraints this operation must follow.
     onSetOperationLive = async () => false,
     onUpdated,
   }: {
-    agent?: Agent
+    agent: Agent
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -68,7 +68,7 @@ Any constraints this operation must follow.
   let createOperationModal: OperationNameModal | undefined = $state()
   let renameOperationModal: OperationNameModal | undefined = $state()
 
-  let operations = $derived(agent?.operations || [])
+  let operations = $derived(agent.operations || [])
   let sortedOperations = $derived.by(() =>
     [...operations].sort((a, b) =>
       a.name.localeCompare(b.name, undefined, {
@@ -127,7 +127,7 @@ Any constraints this operation must follow.
   }
 
   const saveRename = async (name: string) => {
-    if (!agent || !renameOperationId) {
+    if (!renameOperationId) {
       return
     }
     const operation = operations.find(
@@ -177,10 +177,6 @@ Any constraints this operation must follow.
   }
 
   const createOperation = async (name: string) => {
-    if (!agent) {
-      return
-    }
-
     const operation = createDefaultOperation(name)
     agent.operations = [...(agent.operations || []), operation]
     selectedOperationId = operation.id
@@ -189,7 +185,7 @@ Any constraints this operation must follow.
   }
 
   const deleteOperation = async () => {
-    if (!agent || !selectedOperationId) {
+    if (!selectedOperationId) {
       return
     }
     const operationIdToDelete = selectedOperationId
@@ -323,7 +319,7 @@ Any constraints this operation must follow.
   onConfirm={createOperation}
 />
 
-{#if agent && selectedOperation}
+{#if selectedOperation}
   <OperationSidePanel
     open={operationPanelOpen}
     bind:operation={selectedOperation}
