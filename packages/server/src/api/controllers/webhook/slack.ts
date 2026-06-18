@@ -288,76 +288,77 @@ export async function slackWebhook(
       // Make these a set? "escalation_approve", "escalation_reject"
       // Could these be collated and fetched?
       // Can this be wrapped or seed from a global action list
-      chat.onAction(
-        ["escalation_approve", "escalation_reject"],
-        async (event: ActionEvent) => {
-          console.log("DEAN - ACTION RESP", {
-            actionId: event.actionId,
-            value: event.value,
-            user: event.user,
-            messageId: event.messageId,
-            threadId: event.threadId,
-            channel: (event.raw as any)?.channel,
-          })
-          let parsed: {
-            escalationId: string
-            notificationDocId: string
-            appId: string
-          }
-          try {
-            parsed = JSON.parse(event.value ?? "")
-          } catch {
-            console.error(
-              "Escalation action: invalid button value",
-              event.value
-            )
-            return
-          }
-          const { escalationId, notificationDocId, appId } = parsed
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
 
-          const slackResponse = {
-            actionId: event.actionId,
-            user: event.user,
-            messageId: event.messageId,
-            threadId: event.threadId,
-            channel: (event.raw as any)?.channel,
-          }
+        console.log("DEAN - ACTION RESP", {
+          actionId: event.actionId,
+          value: event.value,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+          channel: (event.raw as any)?.channel,
+        })
+        let parsed: {
+          escalationId: string
+          notificationDocId: string
+          appId: string
+        }
+        try {
+          parsed = JSON.parse(event.value ?? "")
+        } catch {
+          console.error(
+            "Escalation action: invalid button value",
+            event.value
+          )
+          return
+        }
+        const { escalationId, notificationDocId, appId } = parsed
 
-          try {
-            const result = await context.doInContext(appId, async () => {
-              // We can respond with closed or
-              return sdk.escalations.respond(
-                escalationId,
-                notificationDocId,
-                slackResponse,
-                (id, response) => escalationProcessor.resolve(id, response)
-              )
-            })
-            // DEAN!
-            // Can this response be wayyyyyy more complex right?
-            // Could say (4/5) people confirmed, please respond by Wednesday
-            // ALLLLSO, do we send a follow-up when its resolved??
+        const slackResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+          channel: (event.raw as any)?.channel,
+        }
 
-            if (event.thread) {
-              const msg =
-                result.status === "closed"
-                  ? "Escalation already closed."
-                  : "Response recorded."
-              await event.thread.post(msg)
-            }
-          } catch (error) {
-            console.error("Escalation action: failed to record response", {
+        try {
+          const result = await context.doInContext(appId, async () => {
+            // We can respond with closed or
+            return sdk.escalations.respond(
               escalationId,
               notificationDocId,
-              appId,
-              message: error instanceof Error ? error.message : String(error),
-            })
-            if (event.thread) {
-              await event.thread.post("Failed to record response.")
-            }
+              slackResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+          // DEAN!
+          // Can this response be wayyyyyy more complex right?
+          // Could say (4/5) people confirmed, please respond by Wednesday
+          // ALLLLSO, do we send a follow-up when its resolved??
+
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Escalation action: failed to record response", {
+            escalationId,
+            notificationDocId,
+            appId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
           }
         }
-      )
+      })
 
       chat.onNewMention(handler)
       chat.onSubscribedMessage(handler)

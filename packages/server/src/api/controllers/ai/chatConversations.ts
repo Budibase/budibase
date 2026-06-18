@@ -51,15 +51,16 @@ const buildEscalationConfig = (
   agent: Agent,
   chat: ChatConversationRequest
 ): OperationEscalationConfig | undefined => {
-  const recipients = agent.escalation?.recipients
-  if (!recipients?.length) {
+  const operation = getLiveOperation(agent)
+  const recipients = operation?.escalation?.recipients
+  if (!operation || !recipients?.length) {
     return undefined
   }
   return {
-    operationId: agent.operationName || "operation",
+    operationId: operation.id,
     recipients,
     delayMs:
-      (agent.escalation?.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
+      (operation.escalation?.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
     channel: chat.channel,
   }
 }
