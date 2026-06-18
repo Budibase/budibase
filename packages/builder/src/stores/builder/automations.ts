@@ -7,6 +7,7 @@ import {
   getSchemaForDatasourcePlus,
   getSettingBindings,
   getUserBindings,
+  makeReadableKeyPropSafe,
   migrateReferencesInObject,
 } from "@/dataBinding"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
@@ -95,6 +96,7 @@ import {
   AutomationLog,
   BlockRef,
   isLoopV2Step,
+  type RestTemplateId,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -106,6 +108,8 @@ import { contextMenuStore } from "./contextMenu"
 export interface AutomationSaveOptions {
   skipUnpublishedChanges?: boolean
 }
+
+export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
 
 const sameMoveContainer = (
   sourcePath: BlockPath[],
@@ -221,6 +225,13 @@ export const getToolbarFlowEndInsertion = (
 
   const r = blockRefs[cursor.id]
   return r?.pathTo?.length ? { targetPath: r.pathTo, anchorRef: r } : fallback()
+}
+
+const getReadableAutomationBinding = (
+  bindingName: string,
+  ...path: string[]
+) => {
+  return ["steps", bindingName, ...path].map(makeReadableKeyPropSafe).join(".")
 }
 
 let testStatusTimer: NodeJS.Timeout | undefined
@@ -1032,14 +1043,18 @@ const automationActions = (store: AutomationStore) => ({
         if (name === "currentItem") {
           defaultReadable = "loop.currentItem"
         } else if (name?.startsWith?.("items.") && opts?.readableChildName) {
-          defaultReadable = `steps.${bindingName}.items.${opts.readableChildName}`
+          defaultReadable = getReadableAutomationBinding(
+            bindingName,
+            "items",
+            opts.readableChildName
+          )
         } else {
-          defaultReadable = `steps.${bindingName}.${name}`
+          defaultReadable = getReadableAutomationBinding(bindingName, name)
         }
       } else {
         defaultReadable =
           bindingName && isStep
-            ? `steps.${bindingName}.${name}`
+            ? getReadableAutomationBinding(bindingName, name)
             : runtimeBinding
       }
 
@@ -2374,6 +2389,7 @@ const automationActions = (store: AutomationStore) => ({
     }
     store.update(state => {
       state.selectedAutomationId = id
+      state.viewMode = ViewMode.EDITOR
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
@@ -2659,6 +2675,10 @@ const automationActions = (store: AutomationStore) => ({
     if (!auto) return
 
     const notes = auto.uiTree?.stickyNotes || []
+    if (notes.length >= MAX_STICKY_NOTES_PER_AUTOMATION) {
+      return
+    }
+
     const newNote = {
       id: generate(),
       title: "Note",
@@ -2675,6 +2695,20 @@ const automationActions = (store: AutomationStore) => ({
     await automationStore.actions.save(updated, {
       skipUnpublishedChanges: true,
     })
+  },
+
+  saveStickyNoteUpdate: async (updated: Automation, previous: Automation) => {
+    store.actions.replace(updated._id!, updated)
+    store.actions.select(updated._id!)
+    try {
+      await automationStore.actions.save(updated, {
+        skipUnpublishedChanges: true,
+      })
+    } catch (error) {
+      store.actions.replace(previous._id!, previous)
+      store.actions.select(previous._id!)
+      throw error
+    }
   },
 
   updateStickyNote: async (
@@ -2698,9 +2732,7 @@ const automationActions = (store: AutomationStore) => ({
         n.id === noteId ? { ...n, ...updates } : n
       ),
     }
-    await automationStore.actions.save(updated, {
-      skipUnpublishedChanges: true,
-    })
+    await automationStore.actions.saveStickyNoteUpdate(updated, auto)
   },
 
   updateStickyNotePosition: async (
@@ -2717,9 +2749,7 @@ const automationActions = (store: AutomationStore) => ({
         n.id === noteId ? { ...n, x: position.x, y: position.y } : n
       ),
     }
-    await automationStore.actions.save(updated, {
-      skipUnpublishedChanges: true,
-    })
+    await automationStore.actions.saveStickyNoteUpdate(updated, auto)
   },
 
   removeStickyNote: async (noteId: string) => {
@@ -2991,6 +3021,25 @@ const automationActions = (store: AutomationStore) => ({
         actionPanelToolbarFlowEnd: false,
       }
     })
+  },
+
+  openApiRequestTemplate(blockId: string, templateId: RestTemplateId) {
+    store.update(state => ({
+      ...state,
+      pendingApiRequestTemplate: { blockId, templateId },
+    }))
+  },
+
+  consumeApiRequestTemplate(blockId: string) {
+    const pending = get(store).pendingApiRequestTemplate
+    if (!pending || pending.blockId !== blockId) {
+      return undefined
+    }
+    store.update(state => ({
+      ...state,
+      pendingApiRequestTemplate: undefined,
+    }))
+    return pending.templateId
   },
 
   selectBranchNode: async (selection: {

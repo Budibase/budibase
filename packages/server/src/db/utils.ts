@@ -48,6 +48,7 @@ export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
 export const generateWorkspaceID = dbCore.generateWorkspaceID
 export const getDevWorkspaceID = dbCore.getDevWorkspaceID
+export const getProdWorkspaceID = dbCore.getProdWorkspaceID
 export const generateRoleID = dbCore.generateRoleID
 export const getRoleParams = dbCore.getRoleParams
 export const getQueryIndex = dbCore.getQueryIndex

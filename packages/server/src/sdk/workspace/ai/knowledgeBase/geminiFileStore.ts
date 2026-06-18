@@ -3,6 +3,7 @@ import { helpers } from "@budibase/shared-core"
 import fetch from "node-fetch"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
+import { getLiteLLMSessionId } from "../llm/requestSession"
 
 interface CreateVectorStoreResponse {
   id?: string
@@ -16,16 +17,41 @@ interface RagIngestResponse {
   error?: string
 }
 
+interface RagSearchRetrievedContext {
+  text?: string
+  title?: string
+  uri?: string
+  pageNumber?: number | string | null
+  page_number?: number | string | null
+  fileSearchStore?: string
+  file_search_store?: string
+  mediaId?: string
+  media_id?: string
+  customMetadata?: unknown
+  custom_metadata?: unknown
+}
+
 interface RagSearchContent {
-  text: string
-  type: "text"
+  text?: string
+  type?: "text" | string
+  retrievedContext?: RagSearchRetrievedContext
+  retrieved_context?: RagSearchRetrievedContext
+  [key: string]: unknown
 }
 
 interface RagSearchResultItem {
+  id?: string | null
   file_id?: string | null
   filename?: string
-  score: number | null
-  content: RagSearchContent[]
+  score?: number | null
+  content?: RagSearchContent[] | string | null
+  attributes?: Record<string, unknown> | Record<string, unknown>[] | string
+  metadata?: Record<string, unknown>
+  retrievedContext?: RagSearchRetrievedContext
+  retrieved_context?: RagSearchRetrievedContext
+  groundingMetadata?: Record<string, unknown>
+  grounding_metadata?: Record<string, unknown>
+  [key: string]: unknown
 }
 
 interface RagSearchResponse {
@@ -201,6 +227,21 @@ export async function ingestGeminiFile({
 
   const payload = (await response.json()) as RagIngestResponse
   if (payload.status === "failed" && payload.error) {
+    console.error("Gemini ingest failed", { error: payload.error })
+    if (payload.error.includes("fileSearchStores")) {
+      if (payload.error.includes("403")) {
+        throw new HTTPError(
+          "Gemini file store is inaccessible (403 Forbidden). Use 'Reset store' to recreate it.",
+          403
+        )
+      }
+      if (payload.error.includes("404")) {
+        throw new HTTPError(
+          "Gemini file store was not found (404). Use 'Reset store' to recreate it.",
+          404
+        )
+      }
+    }
     throw new HTTPError(payload.error, 500)
   }
   if (!payload.file_id) {
@@ -219,6 +260,7 @@ export async function searchGeminiFileStore({
   query: string
 }): Promise<RagSearchResultItem[]> {
   const geminiApiKey = getGeminiApiKey()
+  const sessionId = getLiteLLMSessionId()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
@@ -231,6 +273,12 @@ export async function searchGeminiFileStore({
           query,
           custom_llm_provider: "gemini",
           ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+          ...(sessionId
+            ? {
+                litellm_session_id: sessionId,
+                metadata: { session_id: sessionId },
+              }
+            : {}),
         }),
       }
     )

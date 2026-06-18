@@ -191,6 +191,7 @@ interface AutomationTriggerParams {
 export interface ExternalTriggerOptions {
   getResponses?: boolean
   onProgress?: (event: AutomationTestProgressEvent) => void
+  isTestRun?: boolean
 }
 
 export async function externalTrigger(
@@ -206,7 +207,7 @@ export async function externalTrigger(
 export async function externalTrigger(
   automation: Automation,
   params: AutomationTriggerParams,
-  { getResponses, onProgress }: ExternalTriggerOptions = {}
+  { getResponses, onProgress, isTestRun }: ExternalTriggerOptions = {}
 ): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
@@ -235,9 +236,18 @@ export async function externalTrigger(
     sdk.automations.isRowAction(automation) ||
     sdk.automations.isWebhookAction(automation)
   ) {
+    const {
+      appId: _appId,
+      timeout: _timeout,
+      user: _user,
+      metadata: _metadata,
+      automation: _automation,
+      ...fields
+    } = params.fields || {}
+
     params = {
       ...params,
-      ...params.fields,
+      ...fields,
       fields: {},
     }
   }
@@ -266,7 +276,7 @@ export async function externalTrigger(
       automation,
     }
     return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
-      executeInThread({ data } as AutomationJob, { onProgress })
+      executeInThread({ data } as AutomationJob, { onProgress, isTestRun })
     )
   } else {
     return quotas.addAction(ActionType.AUTOMATION_STEP, () =>

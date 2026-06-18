@@ -1,6 +1,9 @@
 import { context } from "@budibase/backend-core"
-import { processStringSync } from "@budibase/string-templates"
-import { Query, QuerySchema } from "@budibase/types"
+import {
+  processJsonStringSync,
+  processStringSync,
+} from "@budibase/string-templates"
+import type { JSONValue, Query, QuerySchema } from "@budibase/types"
 import { BaseQueryVerbs } from "../../../constants"
 import { getQueryParams, isProdWorkspaceID } from "../../../db/utils"
 import { getEnvironmentVariables } from "../../utils"
@@ -12,6 +15,100 @@ export interface EnrichContextOpts {
 const DEFAULT_ENRICH_CONTEXT_OPTS: Required<EnrichContextOpts> = {
   escapeNewlines: true,
 }
+
+const JSON_TEMPLATE_FIELDS = new Set(["json", "customData", "requestBody"])
+type EnrichableRecord = Record<string, JSONValue | undefined>
+
+const processTemplateString = (
+  value: string,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+) => {
+  return processStringSync(value, parameters, {
+    noEscaping: true,
+    noHelpers: true,
+    escapeNewlines: options.escapeNewlines,
+  })
+}
+
+const enrichJsonTemplate = (
+  template: string,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+) =>
+  enrichJsonValue(
+    processJsonStringSync(template, parameters, {
+      noEscaping: true,
+      noHelpers: true,
+      escapeNewlines: options.escapeNewlines,
+    }) as JSONValue,
+    parameters,
+    options
+  )
+
+const enrichJsonValue = (
+  value: JSONValue,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+): JSONValue => {
+  if (Array.isArray(value)) {
+    return value.map(item => enrichJsonValue(item, parameters, options))
+  }
+
+  if (value === null || typeof value !== "object") {
+    return typeof value === "string"
+      ? processTemplateString(value, parameters, options)
+      : value
+  }
+
+  const enrichedQuery: Record<string, JSONValue> = {}
+  for (const key of Object.keys(value)) {
+    const fieldValue = value[key]
+    if (fieldValue == null) {
+      continue
+    }
+    const enrichedKey = processTemplateString(key, parameters, options)
+    enrichedQuery[enrichedKey] = enrichJsonValue(
+      fieldValue,
+      parameters,
+      options
+    )
+  }
+  return enrichedQuery
+}
+
+const enrichContextObject = async (
+  fields: EnrichableRecord,
+  parameters: object,
+  options: Required<EnrichContextOpts>
+): Promise<Record<string, JSONValue>> => {
+  const enrichedQuery: Record<string, JSONValue> = {}
+  for (const key of Object.keys(fields)) {
+    const fieldValue = fields[key]
+    if (fieldValue == null) {
+      continue
+    }
+    const enrichedKey = processTemplateString(key, parameters, options)
+    if (typeof fieldValue === "string") {
+      enrichedQuery[enrichedKey] = JSON_TEMPLATE_FIELDS.has(enrichedKey)
+        ? enrichJsonTemplate(fieldValue, parameters, options)
+        : processTemplateString(fieldValue, parameters, options)
+    } else {
+      enrichedQuery[enrichedKey] = enrichJsonValue(
+        fieldValue,
+        parameters,
+        options
+      )
+    }
+  }
+  return enrichedQuery
+}
+
+const isBlankJsonField = (value: any) =>
+  typeof value === "string" && value.trim() === ""
+
+const parseJsonField = (value: any) =>
+  typeof value === "string" ? JSON.parse(value) : value
 
 function updateSchema(query: Query): Query {
   if (!query.schema) {
@@ -99,49 +196,29 @@ export async function enrichContext(
     ...DEFAULT_ENRICH_CONTEXT_OPTS,
     ...opts,
   }
-  const enrichedQuery: Record<string, any> = {}
   if (!fields || !inputs) {
-    return enrichedQuery
+    return {}
   }
   if (Array.isArray(fields)) {
     return enrichArrayContext(fields, inputs, options)
   }
   const env = await getEnvironmentVariables()
   const parameters = { ...inputs, env }
-  // enrich the fields with dynamic parameters
-  for (let key of Object.keys(fields)) {
-    if (fields[key] == null) {
+  const enrichedQuery = await enrichContextObject(fields, parameters, options)
+  for (const key of ["json", "customData", "requestBody"]) {
+    if (
+      !Object.hasOwn(enrichedQuery, key) ||
+      isBlankJsonField(enrichedQuery[key])
+    ) {
       continue
     }
-    if (typeof fields[key] === "object") {
-      // enrich nested fields object
-      enrichedQuery[key] = await enrichContext(fields[key], parameters, options)
-    } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      enrichedQuery[key] = processStringSync(fields[key], parameters, {
-        noEscaping: true,
-        noHelpers: true,
-        escapeNewlines: options.escapeNewlines,
-      })
-    } else {
-      enrichedQuery[key] = fields[key]
-    }
-  }
-  if (
-    enrichedQuery.json ||
-    enrichedQuery.customData ||
-    enrichedQuery.requestBody
-  ) {
     try {
-      enrichedQuery.json = JSON.parse(
-        enrichedQuery.json ||
-          enrichedQuery.customData ||
-          enrichedQuery.requestBody
-      )
+      enrichedQuery.json = parseJsonField(enrichedQuery[key])
+      delete enrichedQuery.customData
+      break
     } catch (err) {
       // no json found, ignore
     }
-    delete enrichedQuery.customData
   }
   return enrichedQuery
 }

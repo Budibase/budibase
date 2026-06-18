@@ -17,18 +17,23 @@
 
   export interface Props {
     agentId?: string
+    operationId: string
     siteId?: string
     onEdit?: (_siteId: string) => Promise<void> | void
   }
 
-  let { agentId, siteId, onEdit }: Props = $props()
+  let { agentId, operationId, siteId, onEdit }: Props = $props()
   let modal = $state<Modal>()
 
   const sharePointSource = $derived.by(() => {
     if (!siteId) {
       return undefined
     }
-    return $selectedAgent?.knowledgeSources?.find(
+    const sources =
+      $selectedAgent?.operations?.find(
+        operation => operation.id === operationId
+      )?.knowledgeSources || []
+    return sources.find(
       source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
         source.config.site.id === siteId
@@ -43,10 +48,12 @@
   )
 
   const sharePointFiles = $derived.by(() => {
-    if (!agentId || !sharePointSource?.id) {
+    if (!agentId || !operationId || !sharePointSource?.id) {
       return [] as KnowledgeBaseFile[]
     }
-    const files = $agentsStore.knowledgeByAgent?.[agentId]?.files || []
+    const _store = $agentsStore
+    const files =
+      agentsStore.getOperationKnowledge(agentId, operationId)?.files || []
     return files.filter(
       file =>
         file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&

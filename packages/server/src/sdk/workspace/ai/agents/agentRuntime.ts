@@ -25,6 +25,7 @@ import {
 import { updatePendingToolCalls } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
+import { withLiteLLMSessionId } from "../llm/requestSession"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -135,7 +136,7 @@ export const prepareAgentChatRun = async ({
     }),
     instructions: promptAndTools.systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
-    toolChoice: hasTools ? "auto" : "none",
+    ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
     providerOptions: llm.providerOptions?.(hasTools),
   })
@@ -153,73 +154,81 @@ export const prepareAgentChatRun = async ({
     systemPromptTokens,
     contextUsage,
     stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
-      await agentRunner.stream({
-        messages: modelMessages,
-        async onStepFinish({
-          content,
-          toolCalls,
-          toolResults,
-          response,
-          usage,
-        }) {
-          if (!contextUsage.input) {
-            contextUsage.input = usage
-          }
-          contextUsage.output = usage
-          sessionLogIndexer.addRequestId(response?.id)
-          if (onToolCalls) {
-            const toolNames = toolCalls
-              .map(toolCall => toolCall.toolName)
-              .filter(Boolean)
-            if (toolNames.length) {
-              onToolCalls(toolNames)
+      await withLiteLLMSessionId(sessionId, () =>
+        agentRunner.stream({
+          messages: modelMessages,
+          async onStepFinish({
+            content,
+            toolCalls,
+            toolResults,
+            response,
+            usage,
+          }) {
+            if (!contextUsage.input) {
+              contextUsage.input = usage
             }
-          }
-          if (pendingToolCalls) {
-            updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
-          }
-
-          for (const toolResult of toolResults) {
-            if (
-              toolResult.toolName === "search_knowledge" &&
-              !toolResult.preliminary
-            ) {
-              const output = toolResult.output as
-                | { sources?: AgentMessageMetadata["ragSources"] }
-                | undefined
-              for (const source of output?.sources || []) {
-                if (!source?.sourceId) {
-                  continue
-                }
-                retrievedKnowledgeSourceById.set(source.sourceId, source)
+            contextUsage.output = usage
+            sessionLogIndexer.addRequestId(response?.id)
+            if (onToolCalls) {
+              const toolNames = toolCalls
+                .map(toolCall => toolCall.toolName)
+                .filter(Boolean)
+              if (toolNames.length) {
+                onToolCalls(toolNames)
               }
             }
-            if (
-              toolResult.toolName === "report_used_sources" &&
-              !toolResult.preliminary
-            ) {
-              const output = toolResult.output as
-                | { accepted?: AgentMessageMetadata["ragSources"] }
-                | undefined
-              setUsedKnowledgeSources(output?.accepted)
+            if (pendingToolCalls) {
+              updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
             }
-            await quotas.addAction(ActionType.AI_AGENT, async () => {})
-          }
 
-          if (!pendingToolCalls) {
-            return
-          }
-
-          for (const part of content) {
-            if (part.type === "tool-error") {
-              pendingToolCalls.delete(part.toolCallId)
+            for (const toolResult of toolResults) {
+              if (
+                toolResult.toolName === "search_knowledge" &&
+                !toolResult.preliminary
+              ) {
+                const output = toolResult.output as
+                  | { sources?: AgentMessageMetadata["ragSources"] }
+                  | undefined
+                for (const source of output?.sources || []) {
+                  if (!source?.sourceId) {
+                    continue
+                  }
+                  const existing = retrievedKnowledgeSourceById.get(
+                    source.sourceId
+                  )
+                  retrievedKnowledgeSourceById.set(source.sourceId, {
+                    ...existing,
+                    ...source,
+                  })
+                }
+              }
+              if (
+                toolResult.toolName === "report_used_sources" &&
+                !toolResult.preliminary
+              ) {
+                const output = toolResult.output as
+                  | { accepted?: AgentMessageMetadata["ragSources"] }
+                  | undefined
+                setUsedKnowledgeSources(output?.accepted)
+              }
+              await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
-          }
-        },
-        async onFinish({ response }) {
-          sessionLogIndexer.addRequestId(response?.id)
-          await onFinish?.(response?.id)
-        },
-      }),
+
+            if (!pendingToolCalls) {
+              return
+            }
+
+            for (const part of content) {
+              if (part.type === "tool-error") {
+                pendingToolCalls.delete(part.toolCallId)
+              }
+            }
+          },
+          async onFinish({ response }) {
+            sessionLogIndexer.addRequestId(response?.id)
+            await onFinish?.(response?.id)
+          },
+        })
+      ),
   }
 }

@@ -8,11 +8,12 @@
 
   export interface Props {
     loading: boolean
+    isUploading?: boolean
     rows: KnowledgeTableRow[]
     onRowClick?: (_row: KnowledgeTableRow) => void
   }
 
-  let { loading, rows, onRowClick }: Props = $props()
+  let { loading, isUploading = false, rows, onRowClick }: Props = $props()
 
   const customRenderers = [
     { column: "icon", component: KnowledgeIconRenderer },
@@ -26,51 +27,42 @@
   }
 </script>
 
-<div class="section">
-  {#if loading}
-    <div class="loading-state">
-      <ProgressCircle size="S" />
-      <Body size="S">Loading knowledge...</Body>
-    </div>
-  {:else if rows.length === 0}
-    <div class="empty-state">
-      <Body size="S">No files uploaded yet</Body>
-    </div>
-  {:else}
-    <Table
-      compact
-      quiet
-      rounded
-      hideHeader
-      allowClickRows={false}
-      allowEditRows={false}
-      allowEditColumns={false}
-      on:click={handleRowClick}
-      data={rows}
-      schema={{
-        icon: { width: "36px" },
-        filename: { displayName: "Name", width: "minmax(0, 2fr)" },
-        displayStatus: { displayName: "Status", width: "130px" },
-        actions: {
-          displayName: "",
-          width: "90px",
-          align: "Right",
-          preventSelectRow: true,
-        },
-      }}
-      {customRenderers}
-    />
-  {/if}
-</div>
+{#if loading}
+  <div class="loading-state">
+    <ProgressCircle size="S" />
+    <Body size="XS">Loading knowledge...</Body>
+  </div>
+{:else if rows.length === 0 && !isUploading}
+  <div class="empty-state">
+    <Body size="XS">No files uploaded yet</Body>
+  </div>
+{:else}
+  <Table
+    compact
+    quiet
+    rounded
+    hideHeader
+    allowClickRows={false}
+    allowEditRows={false}
+    allowEditColumns={false}
+    on:click={handleRowClick}
+    data={rows}
+    schema={{
+      icon: { width: "36px" },
+      filename: { displayName: "Name", width: "minmax(0, 2fr)" },
+      displayStatus: { displayName: "Status", width: "130px" },
+      actions: {
+        displayName: "",
+        width: "90px",
+        align: "Right",
+        preventSelectRow: true,
+      },
+    }}
+    {customRenderers}
+  />
+{/if}
 
 <style>
-  .section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    margin-top: var(--spacing-m);
-  }
-
   .loading-state {
     display: flex;
     flex-direction: column;

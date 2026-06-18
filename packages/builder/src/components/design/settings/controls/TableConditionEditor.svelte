@@ -10,6 +10,7 @@
     DatePicker,
     Combobox,
     Multiselect,
+    Toggle,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
@@ -98,6 +99,7 @@
       metadataKey: conditionOptions[0].value,
       operator: operatorOptions[0]?.value,
       valueType: FieldType.STRING,
+      disabled: false,
     }
     tempValue = [...tempValue, condition]
   }
@@ -271,18 +273,28 @@
                     on:change={e => (condition.referenceValue = e.detail)}
                   />
                 {/if}
-                <Icon
-                  name="copy"
-                  hoverable
-                  size="S"
-                  on:click={() => duplicateCondition(condition)}
-                />
-                <Icon
-                  name="x"
-                  hoverable
-                  size="S"
-                  on:click={() => removeCondition(condition)}
-                />
+                <div class="condition-actions">
+                  <Toggle
+                    noMargin
+                    text=""
+                    value={!condition.disabled}
+                    on:change={e => {
+                      condition.disabled = !e.detail
+                    }}
+                  />
+                  <Icon
+                    name="copy"
+                    hoverable
+                    size="S"
+                    on:click={() => duplicateCondition(condition)}
+                  />
+                  <Icon
+                    name="x"
+                    hoverable
+                    size="S"
+                    on:click={() => removeCondition(condition)}
+                  />
+                </div>
               </div>
             {/each}
           </div>
@@ -310,11 +322,16 @@
   }
   .condition {
     display: grid;
-    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr auto auto;
+    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr auto;
     align-items: center;
     grid-column-gap: var(--spacing-l);
   }
   .condition.with-value-option {
-    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr 1fr auto;
+  }
+  .condition-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-l);
   }
 </style>

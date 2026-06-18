@@ -11,11 +11,22 @@ import type { LanguageModelUsage, ModelMessage, ToolSet } from "ai"
 import { convertToModelMessages, pruneMessages, streamText } from "ai"
 import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../utilities/aiConfig"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV3 } from "ai/test"
+
+const mockAiConfigsFind = jest.fn()
+
+jest.mock("../../sdk/workspace/ai/configs", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/configs")
+  return {
+    ...actual,
+    find: (...args: any[]) => mockAiConfigsFind(...args),
+  }
+})
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -135,6 +146,7 @@ const createChatTestLanguageModel = () =>
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
   let userA: User
   let userB: User
   let chatApp: ChatApp
@@ -147,6 +159,7 @@ describe("chat conversations authorization", () => {
 
   beforeAll(async () => {
     await config.init("chat-conversation-scope")
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
     userA = config.getUser()
     userB = await config.createUser({
       roles: {
@@ -238,7 +251,8 @@ describe("chat conversations authorization", () => {
     )
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await cleanupAIConfig?.()
     config.end()
   })
 
@@ -708,6 +722,7 @@ describe("chat conversation transient behavior", () => {
       providerOptions: jest.fn(),
       uploadFile: jest.fn(),
     })
+    mockAiConfigsFind.mockResolvedValue({ _id: "config-1" } as any)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
@@ -832,8 +847,10 @@ describe("chat conversation transient behavior", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         tools: undefined,
-        toolChoice: "none",
       })
+    )
+    expect(jest.mocked(streamText).mock.calls[0]?.[0]).not.toHaveProperty(
+      "toolChoice"
     )
   })
 
@@ -1157,13 +1174,23 @@ describe("Agent chat tool call tracking", () => {
     })
   }
 
-  function makeWebhookStreamTextMock(toolResults: { toolCallId: string }[]) {
+  function makeWebhookStreamTextMock(
+    toolResults: Array<{
+      toolCallId: string
+      toolName?: string
+      output?: unknown
+      preliminary?: boolean
+    }>
+  ) {
     return (options: any) => ({
       text: (async () => {
         if (options.onStepFinish) {
           await options.onStepFinish({
             content: [],
-            toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
+            toolCalls: toolResults.map(r => ({
+              toolCallId: r.toolCallId,
+              toolName: r.toolName,
+            })),
             toolResults,
           })
         }
@@ -1236,6 +1263,7 @@ describe("Agent chat tool call tracking", () => {
       providerOptions: jest.fn().mockReturnValue({}),
       uploadFile: jest.fn(),
     })
+    mockAiConfigsFind.mockResolvedValue({ _id: "config-1" } as any)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
@@ -1591,6 +1619,71 @@ describe("Agent chat tool call tracking", () => {
       )
 
       expect(addActionMock).toHaveBeenCalledTimes(3)
+    })
+
+    it("returns RAG sources reported by the agent", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock([
+          {
+            toolCallId: "call-1",
+            toolName: "search_knowledge",
+            output: {
+              sources: [
+                {
+                  sourceId: "pricing-source",
+                  fileId: "file-1",
+                  filename: "Budibase Enterprise Pricing V8.pdf",
+                },
+                {
+                  sourceId: "faq-source",
+                  fileId: "file-2",
+                  filename: "FAQ.md",
+                },
+              ],
+            },
+          },
+          {
+            toolCallId: "call-2",
+            toolName: "report_used_sources",
+            output: {
+              accepted: [
+                {
+                  sourceId: "pricing-source",
+                  fileId: "file-1",
+                  filename: "Budibase Enterprise Pricing V8.pdf",
+                },
+              ],
+            },
+          },
+        ]) as any
+      )
+
+      const result = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () =>
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "summarize pricing" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+      )
+
+      expect(result.ragSources).toEqual([
+        {
+          sourceId: "pricing-source",
+          fileId: "file-1",
+          filename: "Budibase Enterprise Pricing V8.pdf",
+        },
+      ])
     })
 
     it("counts zero actions when the agent makes no tool calls", async () => {

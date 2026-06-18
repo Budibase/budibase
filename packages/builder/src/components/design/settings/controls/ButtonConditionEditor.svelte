@@ -8,6 +8,7 @@
     Layout,
     Select,
     Icon,
+    Toggle,
     DatePicker,
   } from "@budibase/bbui"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
@@ -153,6 +154,12 @@
     conditions = [...conditions, duplicate]
   }
 
+  const toggleCondition = (id: string, enabled: boolean) => {
+    conditions = conditions.map(condition =>
+      condition.id === id ? { ...condition, disabled: !enabled } : condition
+    )
+  }
+
   const handleFinalize = (e: CustomEvent) => {
     updateConditions(e)
     dragDisabled = true
@@ -204,7 +211,11 @@
       Constants.OperatorOptions.NotEmpty.value,
     ]
     condition.noValue = noValueOptions.includes(newOperator)
-    if (condition.noValue || newOperator === "oneOf") {
+    if (
+      condition.noValue ||
+      newOperator === "oneOf" ||
+      newOperator === "notOneOf"
+    ) {
       condition.referenceValue = null
       condition.valueType = "string"
       condition.type = FieldType.STRING
@@ -382,7 +393,9 @@
                   popoverAutoWidth
                 />
                 <Select
-                  disabled={condition.noValue || condition.operator === "oneOf"}
+                  disabled={condition.noValue ||
+                    condition.operator === "oneOf" ||
+                    condition.operator === "notOneOf"}
                   options={valueTypeOptions}
                   bind:value={condition.valueType}
                   placeholder={false}
@@ -439,6 +452,12 @@
                     />
                   </DrawerBindableSlot>
                 {/if}
+                <Toggle
+                  text=""
+                  noMargin={true}
+                  value={!condition.disabled}
+                  on:change={e => toggleCondition(condition.id, e.detail)}
+                />
                 <Icon
                   name="copy"
                   hoverable
@@ -486,14 +505,14 @@
     align-items: center;
     grid-template-columns:
       auto 150px auto minmax(140px, 1fr) 120px 100px minmax(140px, 1fr)
-      auto auto;
+      auto auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
   .condition.update {
     grid-template-columns:
       auto 150px minmax(140px, 1fr) auto minmax(140px, 1fr) auto
-      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto;
+      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto auto;
   }
   .condition:hover {
     background-color: var(--spectrum-global-color-gray-100);

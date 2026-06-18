@@ -72,7 +72,7 @@ vi.mock("@xyflow/svelte", () => {
   }
 })
 
-import StickyNoteNode from "./StickyNoteNode.svelte"
+import StickyNoteNode from "../FlowCanvas/nodes/StickyNoteNode.svelte"
 
 const setTextareaSize = (
   textarea: HTMLTextAreaElement,

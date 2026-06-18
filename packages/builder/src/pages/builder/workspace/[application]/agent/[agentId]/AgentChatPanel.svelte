@@ -10,9 +10,16 @@
   type Props = {
     agentId?: string
     workspaceId: string
+    operationId?: string
+    allowKnowledgeSourceDownload?: boolean
   }
 
-  let { agentId, workspaceId }: Props = $props()
+  let {
+    agentId,
+    workspaceId,
+    operationId,
+    allowKnowledgeSourceDownload = true,
+  }: Props = $props()
 
   const INITIAL_CHAT: DraftChat = {
     title: "",
@@ -30,11 +37,11 @@
       ...INITIAL_CHAT,
       agentId: nextAgentId || "",
     }
+    refreshKey += 1
   }
 
   const refreshChat = () => {
     resetChat(agentId)
-    refreshKey += 1
   }
 
   $effect(() => {
@@ -66,6 +73,8 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
+        {operationId}
+        {allowKnowledgeSourceDownload}
       />
     {/key}
   </div>

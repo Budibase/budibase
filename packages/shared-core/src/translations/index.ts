@@ -2,6 +2,7 @@ import { userMenuTranslations } from "./userMenu"
 import { profileModalTranslations } from "./profileModal"
 import { passwordModalTranslations } from "./passwordModal"
 import { pickerTranslations } from "./picker"
+import { filterTranslations } from "./filter"
 import { recaptchaTranslations } from "./recaptcha"
 import { portalTranslations } from "./portal"
 import { loginTranslations } from "./login"
@@ -19,6 +20,7 @@ export {
   profileModalTranslations,
   passwordModalTranslations,
   pickerTranslations,
+  filterTranslations,
   recaptchaTranslations,
   portalTranslations,
   loginTranslations,
@@ -31,6 +33,7 @@ const translationModules = [
   profileModalTranslations,
   passwordModalTranslations,
   pickerTranslations,
+  filterTranslations,
   recaptchaTranslations,
   portalTranslations,
   loginTranslations,
@@ -44,6 +47,7 @@ export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
     profileModal: "Profile modal",
     passwordModal: "Password modal",
     picker: "Picker",
+    filter: "Filter",
     recaptcha: "reCAPTCHA",
     portal: "Portal",
     login: "Login",

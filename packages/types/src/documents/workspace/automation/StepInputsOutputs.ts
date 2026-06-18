@@ -1,12 +1,10 @@
 import { Table } from "@budibase/types"
 import type { UIMessage, LanguageModelUsage } from "ai"
 import { SortOrder } from "../../../api"
-import {
-  SearchFilters,
-  EmptyFilterOption,
-  BasicOperator,
-  LogicalOperator,
-} from "../../../sdk"
+import { EmptyFilterOption, SearchFilters } from "../../../sdk"
+import { DurationType } from "../../../shared"
+import type { UISearchFilter } from "../../../api"
+import type { RestTemplateId } from "../../../ui/rest"
 import { HttpMethod } from "../query"
 import { Row, RowAttachment } from "../row"
 import {
@@ -71,6 +69,7 @@ export type CreateRowStepOutputs = BaseAutomationOutputs & {
 
 export type DelayStepInputs = {
   time: number
+  unit?: DurationType
 }
 
 export type DelayStepOutputs = BaseAutomationOutputs
@@ -109,6 +108,7 @@ export type APIRequestStepInputs = {
     queryId: string
     [key: string]: any
   }
+  restTemplateId?: RestTemplateId
   continueOnError?: boolean
 }
 
@@ -168,24 +168,10 @@ export type Branch = {
   id: any
   name: string
   condition: BranchSearchFilters
-  conditionUI?: {
-    groups?: {
-      filters?: {
-        field: string
-        operator: BasicOperator
-        value: any
-      }[]
-    }[]
-  }
+  conditionUI?: UISearchFilter
 }
 
-export type BranchSearchFilters = Pick<
-  SearchFilters,
-  | BasicOperator.EQUAL
-  | BasicOperator.NOT_EQUAL
-  | LogicalOperator.AND
-  | LogicalOperator.OR
->
+export type BranchSearchFilters = SearchFilters
 
 export type MakeIntegrationInputs = {
   url: string

@@ -8,6 +8,7 @@ import {
 import { v4 } from "uuid"
 import {
   ActionFailureReason,
+  Agent,
   ChatAgentRequest,
   ChatApp,
   ChatConversation,
@@ -15,6 +16,7 @@ import {
   CreateChatConversationRequest,
   DocumentType,
   FetchAgentHistoryResponse,
+  FetchAgentFileUrlResponse,
   ContextUser,
   UserCtx,
   WebhookChatCompleteResult,
@@ -29,6 +31,7 @@ import sdk from "../../../sdk"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
+  getLiveOperation,
   prepareAgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
@@ -48,6 +51,9 @@ const getGlobalUserId = (ctx: UserCtx) => {
   }
   return userId as string
 }
+
+const allowsKnowledgeSourceDownload = (agent: Agent) =>
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
@@ -381,6 +387,7 @@ export async function webhookChat({
   return {
     messages: [...chat.messages, assistantMessage],
     assistantText: assistantText || "",
+    ragSources: run.getUsedKnowledgeSourcesMetadata(),
     title,
   }
 }
@@ -399,6 +406,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+  await sdk.ai.agents.assertAgentHasValidConfig(agent)
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
@@ -526,6 +534,42 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     )
     ctx.res.end()
   }
+}
+
+export async function fetchChatAppAgentFileUrl(
+  ctx: UserCtx<
+    void,
+    FetchAgentFileUrlResponse,
+    { chatAppId: string; agentId: string; fileId: string }
+  >
+) {
+  const { chatAppId, agentId, fileId } = ctx.params
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
+
+  const chatAgentConfig = chatApp.agents?.find(
+    agent => agent.agentId === agentId
+  )
+  if (!chatAgentConfig?.isEnabled) {
+    throw new HTTPError("chat agent not found", 404)
+  }
+
+  if (!(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))) {
+    throw new HTTPError("Forbidden", 403)
+  }
+
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  if (!allowsKnowledgeSourceDownload(agent)) {
+    throw new HTTPError(
+      "Knowledge source downloads are disabled for this agent",
+      403
+    )
+  }
+
+  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  ctx.body = { url }
+  ctx.status = 200
 }
 
 export async function createChatConversation(

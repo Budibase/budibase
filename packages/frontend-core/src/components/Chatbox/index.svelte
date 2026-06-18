@@ -39,8 +39,10 @@
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
+    operationId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
+    allowKnowledgeSourceDownload?: boolean
   }
 
   let {
@@ -51,8 +53,10 @@
     initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
+    operationId,
     readOnly = false,
     readOnlyReason,
+    allowKnowledgeSourceDownload = true,
   }: Props = $props()
 
   let API = $state(
@@ -76,9 +80,55 @@
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
-
   const resetPendingResponse = () => {
     isPreparingResponse = false
+  }
+
+  const openRagSource = async (
+    source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  ) => {
+    if (!allowKnowledgeSourceDownload) {
+      notifications.error("Source downloads are disabled for this agent")
+      return
+    }
+    if (!source.fileId) {
+      return
+    }
+
+    try {
+      const resolvedUrl =
+        !isAgentPreviewChat && chat?.chatAppId && chat?.agentId
+          ? (
+              await API.fetchChatAppAgentFileUrl(
+                chat.chatAppId,
+                chat.agentId,
+                source.fileId
+              )
+            ).url
+          : isAgentPreviewChat && chat?.agentId && operationId
+            ? (
+                await API.fetchOperationFileUrl(
+                  chat.agentId,
+                  operationId,
+                  source.fileId
+                )
+              ).url
+            : undefined
+      if (!resolvedUrl) {
+        notifications.error("Could not resolve source file URL")
+        return
+      }
+
+      const link = document.createElement("a")
+      link.href = resolvedUrl
+      link.download = source.filename || "source.pdf"
+      link.target = "_blank"
+      link.rel = "noopener noreferrer"
+      link.click()
+    } catch (error) {
+      console.error("Failed to resolve knowledge source URL", error)
+      notifications.error("Failed to download source file")
+    }
   }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
@@ -112,7 +162,32 @@
       return true
     }
 
-    return Boolean(message.metadata?.ragSources?.length)
+    return Boolean(getVisibleRagSources(message).length)
+  }
+
+  const getVisibleRagSources = (message: UIMessage<AgentMessageMetadata>) => {
+    const ragSources = message.metadata?.ragSources || []
+    const uniqueByFileId = new Set<string>()
+    const visible: NonNullable<AgentMessageMetadata["ragSources"]> = []
+
+    for (const source of ragSources) {
+      const filename = source.filename?.trim()
+      if (!source.fileId || !filename) {
+        continue
+      }
+
+      if (uniqueByFileId.has(source.fileId)) {
+        continue
+      }
+
+      uniqueByFileId.add(source.fileId)
+      visible.push({
+        ...source,
+        filename,
+      })
+    }
+
+    return visible
   }
 
   const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
@@ -691,7 +766,7 @@
                 </div>
               {/if}
             {/each}
-            {#if message.metadata?.ragSources?.length}
+            {#if getVisibleRagSources(message).length}
               <div class="sources">
                 <div class="sources-header">
                   <span class="sources-icon">
@@ -704,11 +779,19 @@
                   <span class="sources-title">Sources</span>
                 </div>
                 <ul>
-                  {#each message.metadata.ragSources as source (source.sourceId)}
+                  {#each getVisibleRagSources(message) as source (source.fileId)}
                     <li class="source-item">
-                      <span class="source-name"
-                        >{source.filename || source.sourceId}</span
-                      >
+                      {#if allowKnowledgeSourceDownload}
+                        <button
+                          type="button"
+                          class="source-link"
+                          onclick={() => openRagSource(source)}
+                        >
+                          {source.filename}
+                        </button>
+                      {:else}
+                        <span class="source-name">{source.filename}</span>
+                      {/if}
                     </li>
                   {/each}
                 </ul>
@@ -1201,5 +1284,17 @@
 
   .source-name {
     font-weight: 400;
+  }
+
+  .source-link {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font-weight: 400;
+    color: var(--spectrum-global-color-blue-700);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: left;
   }
 </style>

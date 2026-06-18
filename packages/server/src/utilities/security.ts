@@ -1,5 +1,5 @@
 import { DocumentType, permissions, roles } from "@budibase/backend-core"
-import { VirtualDocumentType } from "../db/utils"
+import { InternalTables, VirtualDocumentType } from "../db/utils"
 import { getDocumentType, getVirtualDocumentType } from "@budibase/shared-core"
 
 export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
@@ -38,6 +38,15 @@ export function getPermissionType(resourceId: string) {
  *  works out the basic permissions based on builtin roles for a resource, using its ID
  */
 export function getBasePermissions(resourceId: string): Record<string, string> {
+  const isInternalTable = (Object.values(InternalTables) as string[]).includes(
+    resourceId
+  )
+  if (isInternalTable) {
+    return {
+      [permissions.PermissionLevel.READ]: roles.BUILTIN_ROLE_IDS.ADMIN,
+      [permissions.PermissionLevel.WRITE]: roles.BUILTIN_ROLE_IDS.ADMIN,
+    }
+  }
   const type = getPermissionType(resourceId)
   const basePermissions: Record<string, string> = {}
   for (let [roleId, role] of Object.entries(roles.getBuiltinRoles())) {

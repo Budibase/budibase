@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
-  import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
@@ -10,16 +8,21 @@
   import type { AutomationSaveOptions } from "@/stores/builder/automations"
   import type { Automation } from "@budibase/types"
 
-  const dispatch = createEventDispatcher()
-
   export let historyStore: HistoryStore<Automation, AutomationSaveOptions>
   export let canAddNote = true
+  export let addNoteDisabledReason = "Move closer to add a note"
   export let controlsEl: HTMLDivElement | null = null
+  export let onAddNote = () => {}
+  export let onAutoLayout = () => {}
 
-  const flow = useSvelteFlow()
+  $: isAddStepPanelOpen = !!$automationStore.actionPanelBlock
 
-  const openAddStepPanel = () => {
+  const toggleAddStepPanel = () => {
     if ($automationStore.viewMode !== ViewMode.EDITOR) {
+      return
+    }
+    if ($automationStore.actionPanelBlock) {
+      automationStore.actions.closeActionPanel()
       return
     }
     const automation = $selectedAutomation?.data
@@ -85,16 +88,16 @@
         tooltipPosition={TooltipPosition.Top}
         color="var(--spectrum-alias-text-color)"
         hoverColor="var(--spectrum-alias-text-color-hover)"
-        on:click={() => flow.fitView()}
+        on:click={onAutoLayout}
       />
     </span>
     {#if $automationStore.viewMode === ViewMode.EDITOR}
       <span class="icon-btn-wrap" class:disabled={!canAddNote}>
         <Icon
-          name="chat"
+          name="note-blank"
           size="L"
           hoverable={canAddNote}
-          tooltip={canAddNote ? "Add a note" : "Move closer to add a note"}
+          tooltip={canAddNote ? "Add a note" : addNoteDisabledReason}
           tooltipPosition={TooltipPosition.Top}
           color={canAddNote
             ? "var(--spectrum-alias-text-color)"
@@ -102,14 +105,14 @@
           hoverColor="var(--spectrum-alias-text-color-hover)"
           on:click={() => {
             if (canAddNote) {
-              dispatch("addnote")
+              onAddNote()
             }
           }}
         />
       </span>
     {/if}
     {#if $automationStore.viewMode === ViewMode.EDITOR}
-      <span class="add-step-wrap">
+      <span class="add-step-wrap" class:active={isAddStepPanelOpen}>
         <Icon
           name="plus"
           size="L"
@@ -119,7 +122,7 @@
           tooltipPosition={TooltipPosition.Top}
           color="var(--spectrum-alias-text-color)"
           hoverColor="var(--spectrum-alias-text-color-hover)"
-          on:click={openAddStepPanel}
+          on:click={toggleAddStepPanel}
         />
       </span>
     {/if}
@@ -129,7 +132,7 @@
 <style>
   .controls {
     position: absolute;
-    z-index: 10;
+    z-index: 1003;
     left: 50%;
     bottom: var(--spacing-l);
     transform: translateX(-50%);
@@ -259,6 +262,7 @@
     border-radius: 50%;
     /* Matches data-step icon tiles (FlowChart `.wrapper` --automation-step-icon-data-color) */
     background: var(--automation-step-icon-data-color);
+    transition: transform ease-out 300ms;
   }
 
   .add-step-wrap:hover {
@@ -268,6 +272,10 @@
       black
     );
     border-radius: 50%;
+  }
+
+  .add-step-wrap.active {
+    transform: rotate(45deg);
   }
 
   .icon-btn-wrap {
