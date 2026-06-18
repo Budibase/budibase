@@ -78,6 +78,8 @@
   const VIEWPORT_ANIMATION_DURATION = 180
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 2.5
+  const ACTION_PANEL_DEFAULT_WIDTH = 480
+  const ACTION_PANEL_STORAGE_KEY = "automation-side-panel-width"
 
   const memoAutomation = memo(automation)
 
@@ -273,7 +275,7 @@
   ) {
     lastVisibleActionTargetCheck = actionPanelTargetNodeId
     visibleSelectionRequest = actionPanelTargetNodeId
-    ensureSelectedNodeVisible(actionPanelTargetNodeId)
+    ensureActionPanelTargetVisible(actionPanelTargetNodeId)
   }
 
   // Check if automation has unpublished changes
@@ -460,6 +462,13 @@
     return undefined
   }
 
+  const getActionPanelWidth = () => {
+    const storedWidth = Number(localStorage.getItem(ACTION_PANEL_STORAGE_KEY))
+    return Number.isFinite(storedWidth) && storedWidth > 0
+      ? storedWidth
+      : ACTION_PANEL_DEFAULT_WIDTH
+  }
+
   const ensureSelectedNodeVisible = async (
     nodeId: string,
     options: { rightInset?: number } = {}
@@ -522,6 +531,58 @@
     setSyncedViewport(
       {
         x: nextX,
+        y: nextY,
+        zoom: currentViewport.zoom,
+      },
+      { duration: VIEWPORT_ANIMATION_DURATION }
+    )
+  }
+
+  const ensureActionPanelTargetVisible = async (nodeId: string) => {
+    await tick()
+    if (visibleSelectionRequest !== nodeId || !paneEl) {
+      return
+    }
+
+    const targetNode = get(nodes).find(node => node.id === nodeId)
+    const currentViewport = getViewport()
+    if (!targetNode || !currentViewport) {
+      return
+    }
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const { width: nodeWidth, height: nodeHeight } =
+      getNodeDimensions(targetNode)
+    const position = getAbsoluteNodePosition(targetNode)
+    const margin = 24
+    const visiblePaneWidth = Math.max(paneRect.width - getActionPanelWidth(), 0)
+    const nodeRight =
+      position.x * currentViewport.zoom +
+      currentViewport.x +
+      nodeWidth * currentViewport.zoom
+    const nodeBottom =
+      position.y * currentViewport.zoom +
+      currentViewport.y +
+      nodeHeight * currentViewport.zoom
+    const nodeTop = position.y * currentViewport.zoom + currentViewport.y
+    const xOverflow = nodeRight + margin - visiblePaneWidth
+    const yOverflow = nodeBottom + margin - paneRect.height
+    const yUnderflow = margin - nodeTop
+
+    if (xOverflow <= 0 && yOverflow <= 0 && yUnderflow <= 0) {
+      return
+    }
+
+    let nextY = currentViewport.y
+    if (yOverflow > 0) {
+      nextY -= yOverflow
+    } else if (yUnderflow > 0) {
+      nextY += yUnderflow
+    }
+
+    setSyncedViewport(
+      {
+        x: xOverflow > 0 ? currentViewport.x - xOverflow : currentViewport.x,
         y: nextY,
         zoom: currentViewport.zoom,
       },
