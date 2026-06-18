@@ -1,4 +1,4 @@
-import { createTranslationDefinitions } from "./types"
+import { createTranslationDefinitions } from "../types"
 
 const category = "calendar"
 

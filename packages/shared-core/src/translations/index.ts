@@ -8,7 +8,7 @@ import { portalTranslations } from "./portal"
 import { loginTranslations } from "./login"
 import { forgotPasswordTranslations } from "./forgotPassword"
 import { validationTranslations } from "./validation"
-import { calendarTranslations } from "./calendar"
+import { calendarTranslations } from "./appcomponents/calendar"
 import type {
   TranslationCategory,
   TranslationDefinition,
