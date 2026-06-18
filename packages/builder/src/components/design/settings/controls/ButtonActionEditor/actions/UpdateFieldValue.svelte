@@ -19,17 +19,18 @@
     },
   ]
 
-  $: formComponent = getFormComponent(
-    $selectedScreen.props,
-    parameters.componentId
+  const formComponent = $derived(
+    getFormComponent($selectedScreen.props, parameters.componentId)
   )
-  $: formSchema = buildFormSchema(formComponent)
-  $: fieldOptions = Object.keys(formSchema || {})
-  $: actionProviders = getActionProviders(
-    $selectedScreen,
-    $componentStore.selectedComponentId,
-    "ValidateForm",
-    { includeSelf: nested }
+  const formSchema = $derived(buildFormSchema(formComponent))
+  const fieldOptions = $derived(Object.keys(formSchema || {}))
+  const actionProviders = $derived(
+    getActionProviders(
+      $selectedScreen,
+      $componentStore.selectedComponentId,
+      "ValidateForm",
+      { includeSelf: nested }
+    )
   )
 
   const getFormComponent = (asset, id) => {
