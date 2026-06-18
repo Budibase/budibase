@@ -1,68 +1,43 @@
-const hue2rgb = (p: number, q: number, t: number): number => {
-  if (t < 0) t += 1
-  if (t > 1) t -= 1
-  if (t < 1 / 6) return p + (q - p) * 6 * t
-  if (t < 1 / 2) return q
-  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
-  return p
-}
-
 /**
- * Given a CSS background color string (hsla, hsl, #rrggbb, #rgb), returns
- * "#1d1d1d" or "#ffffff" depending on which provides better contrast.
- * Returns null for unrecognised formats.
+ * Converts a hex color to HSL format with transparency for consistent theme blending.
+ * E.g., "#FF5733" becomes "hsla(9, 100%, 60%, 0.3)"
+ * Returns the input unchanged if it's not a valid hex color.
  */
-export const getContrastTextColor = (bgColor: string): string | null => {
-  if (!bgColor) return null
-  let r: number | undefined, g: number | undefined, b: number | undefined
-  let a = 1
+export const hexToHsla = (hex: string): string => {
+  if (!hex || !hex.startsWith("#")) return hex
 
-  const hslaMatch = bgColor.match(
-    /hsla?\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%(?:,\s*(\d+(?:\.\d+)?))?\)/
-  )
-  if (hslaMatch) {
-    const h = parseFloat(hslaMatch[1]) / 360
-    const s = parseFloat(hslaMatch[2]) / 100
-    const l = parseFloat(hslaMatch[3]) / 100
-    a = hslaMatch[4] != null ? parseFloat(hslaMatch[4]) : 1
-    if (s === 0) {
-      r = g = b = l
-    } else {
-      const q2 = l < 0.5 ? l * (1 + s) : l + s - l * s
-      const p2 = 2 * l - q2
-      r = hue2rgb(p2, q2, h + 1 / 3)
-      g = hue2rgb(p2, q2, h)
-      b = hue2rgb(p2, q2, h - 1 / 3)
+  // Parse hex to RGB
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+
+  // Convert RGB to HSL
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0,
+    s = 0,
+    l = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        h = ((b - r) / d + 2) / 6
+        break
+      case b:
+        h = ((r - g) / d + 4) / 6
+        break
     }
   }
 
-  const hexMatch = bgColor.match(/^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-  if (hexMatch) {
-    r = parseInt(hexMatch[1], 16) / 255
-    g = parseInt(hexMatch[2], 16) / 255
-    b = parseInt(hexMatch[3], 16) / 255
-    a = 1
-  }
+  const hDeg = Math.round(h * 360)
+  const sPercent = Math.round(s * 100)
+  const lPercent = Math.round(l * 100)
 
-  const shortHexMatch = bgColor.match(/^#([a-f\d])([a-f\d])([a-f\d])$/i)
-  if (shortHexMatch) {
-    r = parseInt(shortHexMatch[1] + shortHexMatch[1], 16) / 255
-    g = parseInt(shortHexMatch[2] + shortHexMatch[2], 16) / 255
-    b = parseInt(shortHexMatch[3] + shortHexMatch[3], 16) / 255
-    a = 1
-  }
-
-  if (r == null || g == null || b == null) return null
-
-  // Blend with white to account for transparency
-  r = r * a + (1 - a)
-  g = g * a + (1 - a)
-  b = b * a + (1 - a)
-
-  const toLinear = (c: number) =>
-    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
-  const luminance =
-    0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
-
-  return luminance > 0.179 ? "#1d1d1d" : "#ffffff"
+  return `hsla(${hDeg}, ${sPercent}%, ${lPercent}%, 0.5)`
 }

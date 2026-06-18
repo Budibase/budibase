@@ -3,7 +3,7 @@
   import { onMount } from "svelte"
   import GridPopover from "../overlays/GridPopover.svelte"
   import { OptionColours } from "../../../constants"
-  import { getContrastTextColor } from "../../../utils"
+  import { hexToHsla } from "../../../utils"
 
   export let value
   export let schema
@@ -46,6 +46,12 @@
       return InvalidColor
     }
     return OptionColours[idx % OptionColours.length]
+  }
+
+  const resolveColor = color => {
+    // If color is hex, convert to HSL with transparency for theme blending
+    // Otherwise return as-is (already HSL with transparency)
+    return color?.startsWith("#") ? hexToHsla(color) : color
   }
 
   const toggleOption = option => {
@@ -104,11 +110,9 @@
   >
     {#each values as val}
       {@const color = optionColors[val] || getOptionColor(val)}
+      {@const resolvedColor = resolveColor(color)}
       {#if color}
-        <div
-          class="badge text"
-          style="--color: {color}; color: {getContrastTextColor(color)}"
-        >
+        <div class="badge text" style="--color: {resolvedColor}">
           <span>
             {val}
           </span>
@@ -132,6 +136,7 @@
     <div class="options">
       {#each options as option, idx}
         {@const color = optionColors[option] || getOptionColor(option)}
+        {@const resolvedColor = resolveColor(color)}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
@@ -140,10 +145,7 @@
           class:focused={focusedOptionIdx === idx}
           on:mouseenter={() => (focusedOptionIdx = idx)}
         >
-          <div
-            class="badge text"
-            style="--color: {color}; color: {getContrastTextColor(color)}"
-          >
+          <div class="badge text" style="--color: {resolvedColor}">
             <span>
               {option}
             </span>
