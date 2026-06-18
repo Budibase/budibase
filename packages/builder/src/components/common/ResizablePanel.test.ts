@@ -56,6 +56,9 @@ describe("ResizablePanel", () => {
     expect(panel).toHaveClass("resizing-panel")
 
     await fireEvent.mouseMove(window, { clientX: 100 })
+    expect(panel).toHaveStyle("width: 100px")
+    expect(localStorage.getItem("panel-width")).toBeNull()
+
     await fireEvent.mouseUp(window, { clientX: 100 })
 
     await waitFor(() => {
