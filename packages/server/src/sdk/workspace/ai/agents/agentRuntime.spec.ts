@@ -175,11 +175,15 @@ describe("chooseOperationForQuestion", () => {
 
     expect(result).toEqual(operation2)
     expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: {
+          "x-litellm-tags": "bb-operation-routing",
+        },
+      })
+    )
     expect(mockRouterStream).toHaveBeenCalledWith({
       prompt: "Book time off",
-      headers: {
-        "x-litellm-tags": "bb-operation-routing",
-      },
     })
   })
 
