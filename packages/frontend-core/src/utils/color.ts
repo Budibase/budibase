@@ -1,6 +1,7 @@
 /**
  * Converts a hex color to HSL format with transparency for consistent theme blending.
- * E.g., "#FF5733" becomes "hsla(9, 100%, 60%, 0.3)"
+ * Normalizes saturation to 90% and lightness to 75% to match default color behavior.
+ * E.g., "#FF5733" becomes "hsla(9, 90%, 75%, 0.3)"
  * Returns the input unchanged if it's not a valid hex color.
  */
 export const hexToHsla = (hex: string): string => {
@@ -11,17 +12,13 @@ export const hexToHsla = (hex: string): string => {
   const g = parseInt(hex.slice(3, 5), 16) / 255
   const b = parseInt(hex.slice(5, 7), 16) / 255
 
-  // Convert RGB to HSL
+  // Convert RGB to HSL (just need hue; saturation/lightness will be normalized)
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
-  let h = 0,
-    s = 0,
-    l = (max + min) / 2
+  let h = 0
 
   if (max !== min) {
     const d = max - min
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-
     switch (max) {
       case r:
         h = ((g - b) / d + (g < b ? 6 : 0)) / 6
@@ -36,8 +33,7 @@ export const hexToHsla = (hex: string): string => {
   }
 
   const hDeg = Math.round(h * 360)
-  const sPercent = Math.round(s * 100)
-  const lPercent = Math.round(l * 100)
 
-  return `hsla(${hDeg}, ${sPercent}%, ${lPercent}%, 0.5)`
+  // Normalize saturation and lightness to match default colors
+  return `hsla(${hDeg}, 90%, 75%, 0.3)`
 }
