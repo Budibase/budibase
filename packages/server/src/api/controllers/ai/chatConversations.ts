@@ -31,6 +31,7 @@ import sdk from "../../../sdk"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
+  getLiveOperation,
   prepareAgentChatRun,
   type OperationEscalationConfig,
 } from "../../../sdk/workspace/ai/agents"
@@ -70,6 +71,9 @@ const getGlobalUserId = (ctx: UserCtx) => {
   }
   return userId as string
 }
+
+const allowsKnowledgeSourceDownload = (agent: Agent) =>
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
@@ -577,7 +581,7 @@ export async function fetchChatAppAgentFileUrl(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (agent.allowKnowledgeSourceDownload === false) {
+  if (!allowsKnowledgeSourceDownload(agent)) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403

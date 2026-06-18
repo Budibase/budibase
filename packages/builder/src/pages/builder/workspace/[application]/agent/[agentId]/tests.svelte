@@ -95,8 +95,9 @@
   let deleteGroupDialog: ConfirmDialog
 
   let currentAgent = $derived($selectedAgent)
+  let currentOperation = $derived(currentAgent?.operations?.[0])
   let toolOptions = $derived.by(() => {
-    const enabled = new Set(currentAgent?.enabledTools ?? [])
+    const enabled = new Set(currentOperation?.enabledTools ?? [])
     const tools = $agentsStore.tools ?? []
     return tools
       .filter(t => enabled.has(t.name))

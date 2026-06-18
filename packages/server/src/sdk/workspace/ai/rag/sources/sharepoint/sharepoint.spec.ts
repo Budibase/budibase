@@ -8,8 +8,8 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseUploadFile = jest.fn()
 const mockRetryKnowledgeBaseFileIngestion = jest.fn()
 const mockGetSharePointBearerToken = jest.fn()
-const mockEnsureKnowledgeBaseForAgent = jest.fn()
-const mockDeleteFileForAgent = jest.fn()
+const mockEnsureKnowledgeBaseForOperation = jest.fn()
+const mockDeleteFileForOperation = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -57,9 +57,10 @@ jest.mock("../../../knowledgeSources/sharepoint", () => {
 
 jest.mock("../../files", () => {
   return {
-    ensureKnowledgeBaseForAgent: (...args: any[]) =>
-      mockEnsureKnowledgeBaseForAgent(...args),
-    deleteFileForAgent: (...args: any[]) => mockDeleteFileForAgent(...args),
+    ensureKnowledgeBaseForOperation: (...args: any[]) =>
+      mockEnsureKnowledgeBaseForOperation(...args),
+    deleteFileForOperation: (...args: any[]) =>
+      mockDeleteFileForOperation(...args),
   }
 })
 
@@ -68,10 +69,12 @@ import {
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
+  type AgentOperation,
   type Agent,
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import { syncSharePointSourcesForAgent } from "./sharepoint"
+import { generator } from "@budibase/backend-core/tests"
 
 const toArrayBuffer = (value: string) => {
   const buffer = Buffer.from(value)
@@ -90,17 +93,27 @@ const makeSharePointAgent = (
 ): Agent =>
   ({
     _id: "agent_1",
-    knowledgeSources: [
+    name: "Agent",
+    aiconfig: "default",
+    operations: [
       {
-        id: sourceId,
-        type: AgentKnowledgeSourceType.SHAREPOINT,
-        config: {
-          datasourceId,
-          authConfigId,
-          site: { id: siteId },
-          ...(patterns ? { filters: { patterns } } : {}),
-        },
-      },
+        id: "operation_1",
+        name: "Main operation",
+        live: false,
+        knowledgeSources: [
+          {
+            id: sourceId,
+            type: AgentKnowledgeSourceType.SHAREPOINT,
+            config: {
+              datasourceId,
+              authConfigId,
+              site: { id: siteId },
+              ...(patterns ? { filters: { patterns } } : {}),
+            },
+          },
+        ],
+        allowKnowledgeSourceDownload: generator.bool(),
+      } satisfies AgentOperation,
     ],
   }) as Agent
 
@@ -180,7 +193,7 @@ describe("rag/sharepoint sync deduplication", () => {
         result: await handler(),
       })
     )
-    mockEnsureKnowledgeBaseForAgent.mockResolvedValue({
+    mockEnsureKnowledgeBaseForOperation.mockResolvedValue({
       _id: "kb_1",
       name: "KB 1",
       type: KnowledgeBaseType.GEMINI,
@@ -188,7 +201,7 @@ describe("rag/sharepoint sync deduplication", () => {
         googleFileStoreId: "store_1",
       },
     })
-    mockDeleteFileForAgent.mockResolvedValue(undefined)
+    mockDeleteFileForOperation.mockResolvedValue(undefined)
     mockRetryKnowledgeBaseFileIngestion.mockResolvedValue(undefined)
   })
 
@@ -315,9 +328,10 @@ describe("rag/sharepoint sync deduplication", () => {
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
     expect(fetchMock).toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).toHaveBeenCalledTimes(1)
-    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+    expect(mockDeleteFileForOperation).toHaveBeenCalledTimes(1)
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
       "agent_1",
+      "operation_1",
       "existing_filtered_out"
     )
     expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
@@ -513,9 +527,10 @@ describe("rag/sharepoint sync deduplication", () => {
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
     expect(fetchMock).toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).toHaveBeenCalledTimes(1)
-    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+    expect(mockDeleteFileForOperation).toHaveBeenCalledTimes(1)
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
       "agent_1",
+      "operation_1",
       "existing_removed"
     )
     expect(result).toMatchObject({
@@ -589,8 +604,9 @@ describe("rag/sharepoint sync deduplication", () => {
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
     expect(fetchMock).toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
       "agent_1",
+      "operation_1",
       "existing_changed"
     )
     expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
@@ -672,8 +688,9 @@ describe("rag/sharepoint sync deduplication", () => {
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
     expect(fetchMock).toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
       "agent_1",
+      "operation_1",
       "existing_changed"
     )
     expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
@@ -744,8 +761,9 @@ describe("rag/sharepoint sync deduplication", () => {
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
     expect(fetchMock).toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).toHaveBeenCalledWith(
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
       "agent_1",
+      "operation_1",
       "existing_legacy"
     )
     expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
@@ -805,7 +823,7 @@ describe("rag/sharepoint sync deduplication", () => {
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
     expect(fetchMock).toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).not.toHaveBeenCalled()
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
     expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
     expect(result).toMatchObject({
       synced: 0,
@@ -870,7 +888,7 @@ describe("rag/sharepoint sync deduplication", () => {
     expect(mockRetryKnowledgeBaseFileIngestion).toHaveBeenCalledWith(
       "existing_failed"
     )
-    expect(mockDeleteFileForAgent).not.toHaveBeenCalled()
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
     expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
     expect(result).toMatchObject({
       agentId: "agent_1",
@@ -935,7 +953,7 @@ describe("rag/sharepoint sync deduplication", () => {
 
     expect(fetchMock).toHaveBeenCalled()
     expect(mockRetryKnowledgeBaseFileIngestion).not.toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).not.toHaveBeenCalled()
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
     expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
     expect(result).toMatchObject({
       agentId: "agent_1",
@@ -1000,7 +1018,7 @@ describe("rag/sharepoint sync deduplication", () => {
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
     expect(fetchMock).toHaveBeenCalled()
-    expect(mockDeleteFileForAgent).not.toHaveBeenCalled()
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
     expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
     expect(result).toMatchObject({
       agentId: "agent_1",

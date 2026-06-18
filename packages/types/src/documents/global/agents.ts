@@ -87,28 +87,33 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+export interface AgentOperation {
+  id: string
+  name: string
+  live: boolean
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
+  allowKnowledgeSourceDownload: boolean
+  escalation?: AgentEscalationConfig
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  promptInstructions?: string
-  operationName?: string
+  operations?: AgentOperation[]
   goal?: string
   live?: boolean
   publishedAt?: string
   icon?: string
   iconColor?: string
   createdBy?: string
-  enabledTools?: string[]
-  knowledgeBases?: string[]
-  /** When false, chat users cannot download knowledge source files. Default is allowed. */
-  allowKnowledgeSourceDownload?: boolean
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
   telegramIntegration?: TelegramAgentIntegration
-  knowledgeSources?: AgentKnowledgeSource[]
-  escalation?: AgentEscalationConfig
 }
 
 export interface AgentMessageRagSource {

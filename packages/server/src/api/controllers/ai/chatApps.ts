@@ -1,5 +1,6 @@
 import { HTTPError, roles } from "@budibase/backend-core"
 import {
+  Agent,
   ChatApp,
   ChatAppAgent,
   FetchChatAppAgentsResponse,
@@ -8,6 +9,7 @@ import {
 } from "@budibase/types"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 
 export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
   const isCreator = usersSdk.users.isCreator(ctx.user)
@@ -15,6 +17,9 @@ export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
     throw new HTTPError("Chat app is not live", 403)
   }
 }
+
+const getAllowKnowledgeSourceDownload = (agent: Agent) =>
+  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
 
 export type ChatAgentAccessContext = Pick<UserCtx, "user" | "roleId">
 
@@ -139,7 +144,7 @@ export async function fetchChatAppAgents(
       icon: agent.icon,
       iconColor: agent.iconColor,
       live: agent.live,
-      allowKnowledgeSourceDownload: agent.allowKnowledgeSourceDownload,
+      allowKnowledgeSourceDownload: getAllowKnowledgeSourceDownload(agent),
     }))
 
   ctx.body = { agents }
