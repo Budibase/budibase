@@ -129,6 +129,28 @@ describe("/api/global/tenants", () => {
       expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
     })
 
+    it("rejects deactivationScheduledAt in the past", async () => {
+      const user = await config.createTenant()
+
+      const status = 400
+      const res = await config.api.tenants.lock(
+        user.tenantId,
+        {
+          reason: LockReason.FREE_TIER,
+          deactivationScheduledAt: "2020-01-01T00:00:00.000Z",
+        },
+        {
+          status,
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(res.body.message).toContain(
+        "deactivationScheduledAt must be a date in the future"
+      )
+      expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
+    })
+
     it("rejects invalid lock reason", async () => {
       const user = await config.createTenant()
 

@@ -43,6 +43,9 @@ export async function lock(ctx: UserCtx<LockRequest, void>) {
     if (Number.isNaN(Date.parse(deactivationScheduledAt))) {
       ctx.throw(400, "deactivationScheduledAt must be a valid ISO 8601 date")
     }
+    if (new Date(deactivationScheduledAt) <= new Date()) {
+      ctx.throw(400, "deactivationScheduledAt must be a date in the future")
+    }
   }
 
   const tenantId = ctx.params.tenantId
