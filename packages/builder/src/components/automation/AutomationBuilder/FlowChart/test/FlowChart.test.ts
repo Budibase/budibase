@@ -226,10 +226,19 @@ const setPaneSize = (width: number, height: number) => {
   )
 }
 
+const setInnerWidth = (value: number) => {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    writable: true,
+    value,
+  })
+}
+
 describe("FlowChart", () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     localStorage.clear()
+    setInnerWidth(1000)
     mocks.viewport = { x: 0, y: 0, zoom: 1 }
     mocks.mockNodes = []
     mocks.setViewport.mockClear()
@@ -332,6 +341,45 @@ describe("FlowChart", () => {
     })
   })
 
+  it("clamps the stored add-step panel width before calculating the viewport offset", async () => {
+    localStorage.setItem("automation-side-panel-width", "9999")
+
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, {
+      props: { automation },
+    })
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: 100, y: 240, zoom: 1 },
+        { duration: 0 }
+      )
+    })
+    mocks.setViewport.mockClear()
+    mocks.viewport = { x: 300, y: 240, zoom: 1 }
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      actionPanelBlock: { id: "step-1" },
+    }))
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -424, y: 240, zoom: 1 },
+        { duration: 180 }
+      )
+    })
+  })
+
   it("vertically pans when opening the add-step panel would hide the target vertically", async () => {
     const automation = {
       ...automationWithSteps([serverLogStep("step-1")]),
@@ -364,6 +412,43 @@ describe("FlowChart", () => {
     await waitFor(() => {
       expect(mocks.setViewport).toHaveBeenCalledWith(
         { x: -305, y: 456, zoom: 1 },
+        { duration: 180 }
+      )
+    })
+  })
+
+  it("pans right when the add-step target is hidden off the left edge", async () => {
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, {
+      props: { automation },
+    })
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: 100, y: 240, zoom: 1 },
+        { duration: 0 }
+      )
+    })
+    mocks.setViewport.mockClear()
+    mocks.viewport = { x: -700, y: 240, zoom: 1 }
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      actionPanelBlock: { id: "step-1" },
+    }))
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -576, y: 240, zoom: 1 },
         { duration: 180 }
       )
     })
