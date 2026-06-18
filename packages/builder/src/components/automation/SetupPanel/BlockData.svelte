@@ -67,6 +67,8 @@
 
   let dataMode: DataMode = DataMode.INPUT
   let issues: BlockStatus[] = []
+  let lastSelectedNodeId: string | undefined
+  let lastSelectedNodeMode: DataMode | undefined
 
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
@@ -78,8 +80,14 @@
     : undefined
   $: loopBlock = automationStore.actions.getBlockByRef(automation, loopRef)
 
-  $: if ($automationStore.selectedNodeId) {
+  $: if (
+    $automationStore.selectedNodeId &&
+    ($automationStore.selectedNodeId !== lastSelectedNodeId ||
+      $automationStore.selectedNodeMode !== lastSelectedNodeMode)
+  ) {
     dataMode = $automationStore.selectedNodeMode || DataMode.INPUT
+    lastSelectedNodeId = $automationStore.selectedNodeId
+    lastSelectedNodeMode = $automationStore.selectedNodeMode
   }
 
   $: testResults = $automationStore.testResults as TestAutomationResponse
