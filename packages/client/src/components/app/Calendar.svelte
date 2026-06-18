@@ -126,6 +126,7 @@
   export let monthTitleFormat: MonthTitleFormat
   export let dayTitleFormat: DayTitleFormat
   export let weekdayTitleFormat: WeekdayTitleFormat
+  export let weekdayHeaderFormat: WeekdayFormat = "short"
   export let emptyAgendaText: string = "No events found"
   export let openOnDate: string = "{{ now }}"
   export let calendarType: CalendarView = "dayGridMonth"
@@ -366,16 +367,16 @@
         titleFormat: dayGridMonthTitleFormat,
         dayHeaders: showDayNames,
         dayHeaderContent: showDayNames
-          ? buildDayHeaderContent("short")
+          ? buildDayHeaderContent(weekdayHeaderFormat)
           : undefined,
       },
       dayGridWeek: {
         titleFormat: dayGridWeekTitleFormat,
         dayHeaderFormat: showDayNames
-          ? { weekday: "short", day: "numeric", month: "numeric" }
+          ? { weekday: weekdayHeaderFormat, day: "numeric", month: "numeric" }
           : { day: "numeric", month: "numeric" },
         dayHeaderContent: showDayNames
-          ? buildDayHeaderContent("short", {
+          ? buildDayHeaderContent(weekdayHeaderFormat, {
               day: "numeric",
               month: "numeric",
             })
@@ -384,10 +385,10 @@
       timeGridDay: {
         titleFormat: timeGridDayTitleFormat,
         dayHeaderFormat: showDayNames
-          ? { weekday: "short", day: "numeric", month: "numeric" }
+          ? { weekday: weekdayHeaderFormat, day: "numeric", month: "numeric" }
           : { day: "numeric", month: "numeric" },
         dayHeaderContent: showDayNames
-          ? buildDayHeaderContent("short", {
+          ? buildDayHeaderContent(weekdayHeaderFormat, {
               day: "numeric",
               month: "numeric",
             })

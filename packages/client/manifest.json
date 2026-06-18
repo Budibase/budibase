@@ -10152,6 +10152,18 @@
               { "label": "Long", "value": "long" },
               { "label": "Narrow", "value": "narrow" }
             ]
+          },
+          {
+            "type": "select",
+            "label": "Weekday header format",
+            "key": "weekdayHeaderFormat",
+            "dependsOn": "showDayNames",
+            "options": [
+              { "label": "Narrow", "value": "narrow" },
+              { "label": "Short", "value": "short" },
+              { "label": "Long", "value": "long" }
+            ],
+            "defaultValue": "short"
           }
         ]
       },
