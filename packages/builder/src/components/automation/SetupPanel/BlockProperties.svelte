@@ -13,6 +13,7 @@
   import { type SchemaConfigProps } from "@/types/automations"
   import { writable } from "svelte/store"
   import { getCustomStepLayout } from "./layouts"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import AutomationSchemaLayout from "./AutomationSchemaLayout.svelte"
   import AutomationCustomLayout from "./AutomationCustomLayout.svelte"
 
@@ -73,6 +74,7 @@
   $: continueOnError = Boolean(
     inputData && "continueOnError" in inputData && inputData.continueOnError
   )
+  $: showDelayTestCapNote = block?.stepId === AutomationActionStepId.DELAY
 
   const updateContinueOnError = (value: boolean) => {
     if (!block || block.type !== AutomationStepType.ACTION) {
@@ -82,6 +84,12 @@
   }
 </script>
 
+{#if showDelayTestCapNote}
+  <InfoDisplay
+    icon="info"
+    body="Tests runs are capped to 3 seconds. Published automations will wait for the full configured duration."
+  />
+{/if}
 {#if customLayout}
   <!-- Render 1 or more components in a custom layout -->
   <AutomationCustomLayout {context} {bindings} {block} layout={customLayout} />
