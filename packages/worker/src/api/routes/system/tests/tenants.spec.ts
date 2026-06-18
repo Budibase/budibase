@@ -108,25 +108,25 @@ describe("/api/global/tenants", () => {
       expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
     })
 
-    it("rejects lock without deactivationScheduledAt", async () => {
+    it("allows locking tenant without deactivationScheduledAt", async () => {
       const user = await config.createTenant()
 
-      const status = 400
-      const res = await config.api.tenants.lock(
+      await config.api.tenants.lock(
         user.tenantId,
         {
           reason: LockReason.FREE_TIER,
         },
         {
-          status,
           headers: config.internalAPIHeaders(),
         }
       )
 
-      expect(res.body.message).toContain(
-        "deactivationScheduledAt is required when locking"
+      expect(tenantSdk.lockTenant).toHaveBeenCalledWith(
+        user.tenantId,
+        LockReason.FREE_TIER,
+        undefined
       )
-      expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
+      expect(tenantSdk.unlockTenant).not.toHaveBeenCalled()
     })
 
     it("rejects deactivationScheduledAt in the past", async () => {

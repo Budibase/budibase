@@ -36,10 +36,7 @@ export async function lock(ctx: UserCtx<LockRequest, void>) {
     )
   }
 
-  if (reason) {
-    if (!deactivationScheduledAt) {
-      ctx.throw(400, "deactivationScheduledAt is required when locking")
-    }
+  if (deactivationScheduledAt) {
     if (Number.isNaN(Date.parse(deactivationScheduledAt))) {
       ctx.throw(400, "deactivationScheduledAt must be a valid ISO 8601 date")
     }
@@ -52,7 +49,7 @@ export async function lock(ctx: UserCtx<LockRequest, void>) {
 
   try {
     if (reason) {
-      await tenantSdk.lockTenant(tenantId, reason, deactivationScheduledAt!)
+      await tenantSdk.lockTenant(tenantId, reason, deactivationScheduledAt)
     } else {
       await tenantSdk.unlockTenant(tenantId)
     }

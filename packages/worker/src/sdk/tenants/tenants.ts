@@ -17,7 +17,7 @@ export async function deleteTenant(tenantId: string) {
 export async function lockTenant(
   tenantId: string,
   lockReason: LockReason,
-  deactivationScheduledAt: string
+  deactivationScheduledAt?: string
 ) {
   return await setLock(tenantId, lockReason, deactivationScheduledAt)
 }
