@@ -9,7 +9,6 @@
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
-  import { getSequentialName } from "@/helpers/duplicate"
   import { contextMenuStore } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import OperationNameModal from "./OperationNameModal.svelte"
@@ -167,11 +166,7 @@ Any constraints this operation must follow.
       notifications.info("Only one operation is supported at the moment.")
       return
     }
-    const suggestedName =
-      getSequentialName(operations, "New operation ", {
-        getName: operation => operation.name,
-      }) || "Operation 1"
-    createOperationModal?.show(suggestedName)
+    createOperationModal?.show()
   }
 
   const createOperation = async (name: string) => {
