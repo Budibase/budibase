@@ -6,5 +6,9 @@ import { ArrayOperator } from "@budibase/types"
  * @param op
  */
 export function isArrayOperator(op: Operator): op is ArrayOperator {
-  return op === ArrayOperator.CONTAINS_ANY || op === ArrayOperator.ONE_OF
+  return (
+    op === ArrayOperator.CONTAINS_ANY ||
+    op === ArrayOperator.ONE_OF ||
+    op === ArrayOperator.NOT_ONE_OF
+  )
 }

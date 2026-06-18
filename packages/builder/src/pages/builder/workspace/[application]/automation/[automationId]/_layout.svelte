@@ -38,7 +38,15 @@
   })
 
   onDestroy(stopSyncing)
+
+  const handleKeyDown = e => {
+    if (e.key === "Escape" && $automationStore.actionPanelBlock) {
+      automationStore.actions.closeActionPanel()
+    }
+  }
 </script>
+
+<svelte:window on:keydown={handleKeyDown} />
 
 <div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
   <TopBar
@@ -135,8 +143,9 @@
     flex: 1 1 auto;
     display: grid;
     grid-auto-flow: column dense;
-    grid-template-columns: minmax(510px, 1fr) fit-content(500px);
+    grid-template-columns: minmax(510px, 1fr);
     overflow: hidden;
+    position: relative;
   }
   .content {
     position: relative;
@@ -147,7 +156,9 @@
     overflow: auto;
   }
   .step-panel-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    right: 0;
     z-index: 99;
     height: 100%;
     display: flex;
@@ -167,12 +178,15 @@
   }
 
   .logs-panel-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    right: 0;
     width: 400px;
     max-width: 400px;
     overflow: hidden;
     height: 100%;
     border-left: var(--border-light);
+    z-index: 98;
   }
 
   .panels-wrapper {

@@ -51,6 +51,7 @@ export class QueryBuilder<T> {
       empty: {},
       notEmpty: {},
       oneOf: {},
+      notOneOf: {},
       contains: {},
       notContains: {},
       containsAny: {},
@@ -174,6 +175,11 @@ export class QueryBuilder<T> {
 
   addOneOf(key: string, value: any) {
     this.#query.oneOf![key] = value
+    return this
+  }
+
+  addNotOneOf(key: string, value: any) {
+    this.#query.notOneOf![key] = value
     return this
   }
 
@@ -351,6 +357,29 @@ export class QueryBuilder<T> {
       return `${key}:(${orStatement})`
     }
 
+    const notOneOf = (key: string, value: any) => {
+      if (isEmpty(value)) {
+        return null
+      }
+      if (!Array.isArray(value)) {
+        if (typeof value === "string") {
+          value = value.split(",")
+        } else {
+          return ""
+        }
+      }
+      let orStatement = `${builder.preprocess(value[0], allPreProcessingOpts)}`
+      for (let i = 1; i < value.length; i++) {
+        orStatement += ` OR ${builder.preprocess(
+          value[i],
+          allPreProcessingOpts
+        )}`
+      }
+      // Exclude rows matching any of the values. Rows where the field is empty
+      // do not match and so are returned, matching the "show empty" behaviour.
+      return `(*:* -${key}:(${orStatement}))`
+    }
+
     function build(
       structure: any,
       queryFn: (key: string, value: any) => string | null,
@@ -459,6 +488,9 @@ export class QueryBuilder<T> {
     }
     if (this.#query.oneOf) {
       build(this.#query.oneOf, oneOf)
+    }
+    if (this.#query.notOneOf) {
+      build(this.#query.notOneOf, notOneOf)
     }
     if (this.#query.contains) {
       build(this.#query.contains, contains)

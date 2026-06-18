@@ -50,6 +50,12 @@ jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
     .mockReturnValue("Incomplete tool call"),
+  getLiveOperation: (agent: {
+    operations?: Array<{ live?: boolean } & Record<string, unknown>>
+  }) => {
+    const operation = agent.operations?.[0]
+    return operation?.live === true ? operation : undefined
+  },
   prepareAgentChatRun: jest.fn(),
 }))
 
@@ -176,8 +182,15 @@ describe("agent test runner", () => {
       _id: "agent-1",
       name: "Support Agent",
       aiconfig: "config-1",
-      enabledTools: [],
-      knowledgeBases: [],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+      ],
     })
     sdk.ai.agents.buildPromptAndTools.mockResolvedValue({
       systemPrompt: "You are a helpful assistant.",
@@ -454,8 +467,15 @@ describe("agent test runner", () => {
       _id: "agent-1",
       name: "Support Agent",
       aiconfig: "config-1",
-      enabledTools: [],
-      knowledgeBases: ["kb-1"],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          enabledTools: [],
+          knowledgeBases: ["kb-1"],
+        },
+      ],
     })
     mockAgentRun({ response: "The policy is 30 days." })
 
@@ -469,7 +489,11 @@ describe("agent test runner", () => {
         agent: expect.objectContaining({
           _id: "agent-1",
           aiconfig: "config-1",
-          knowledgeBases: ["kb-1"],
+          operations: [
+            expect.objectContaining({
+              knowledgeBases: ["kb-1"],
+            }),
+          ],
         }),
         aiConfigId: "config-1",
         errorLabel: "agent test",

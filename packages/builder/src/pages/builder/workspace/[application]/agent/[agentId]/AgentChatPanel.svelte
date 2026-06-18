@@ -10,12 +10,14 @@
   type Props = {
     agentId?: string
     workspaceId: string
+    operationId?: string
     allowKnowledgeSourceDownload?: boolean
   }
 
   let {
     agentId,
     workspaceId,
+    operationId,
     allowKnowledgeSourceDownload = true,
   }: Props = $props()
 
@@ -71,6 +73,7 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
+        {operationId}
         {allowKnowledgeSourceDownload}
       />
     {/key}
