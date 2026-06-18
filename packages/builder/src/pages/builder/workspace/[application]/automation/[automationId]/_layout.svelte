@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onDestroy } from "svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import * as routify from "@roxi/routify"
@@ -13,6 +13,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
+  import type { AutomationLog } from "@budibase/types"
 
   const { goto, params, url, redirect, isActive, page, layout } = routify
   $goto
@@ -25,7 +26,10 @@
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
-  $: builderStore.selectResource(automationId)
+  $: selectedNodeId = $automationStore.selectedNodeId
+  $: if (automationId) {
+    builderStore.selectResource(automationId)
+  }
 
   const stopSyncing = syncURLToState({
     urlParam: "automationId",
@@ -37,9 +41,11 @@
     routify,
   })
 
-  onDestroy(stopSyncing)
+  onDestroy(() => {
+    stopSyncing?.()
+  })
 
-  const handleKeyDown = e => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape" && $automationStore.actionPanelBlock) {
       automationStore.actions.closeActionPanel()
     }
@@ -61,7 +67,7 @@
       <slot />
     </div>
 
-    {#if (blockRefs[$automationStore.selectedNodeId] || $automationStore.selectedBranchNode) && $automationStore.selectedNodeId}
+    {#if selectedNodeId && (blockRefs[selectedNodeId] || $automationStore.selectedBranchNode)}
       <div class="step-panel-container">
         <ResizablePanel
           storageKey="automation-side-panel-width"
@@ -90,7 +96,7 @@
           <div class="logs-panel">
             <AutomationLogsPanel
               automation={$selectedAutomation.data}
-              onSelectLog={log =>
+              onSelectLog={(log: AutomationLog) =>
                 automationStore.actions.selectLogForDetails(log)}
               selectedLog={$automationStore.selectedLog}
             />
@@ -143,7 +149,7 @@
     flex: 1 1 auto;
     display: grid;
     grid-auto-flow: column dense;
-    grid-template-columns: minmax(510px, 1fr);
+    grid-template-columns: minmax(510px, 1fr) auto;
     overflow: hidden;
     position: relative;
   }
@@ -154,11 +160,10 @@
     justify-content: flex-start;
     align-items: stretch;
     overflow: auto;
+    min-width: 0;
   }
   .step-panel-container {
-    position: absolute;
-    top: 0;
-    right: 0;
+    position: relative;
     z-index: 99;
     height: 100%;
     display: flex;

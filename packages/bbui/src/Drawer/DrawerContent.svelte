@@ -1,5 +1,5 @@
-<script>
-  export let padding = true
+<script lang="ts">
+  export let padding: boolean = true
 </script>
 
 <div class="drawer-contents" class:padding>
