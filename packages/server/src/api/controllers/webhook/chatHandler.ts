@@ -16,6 +16,7 @@ import type {
   ChatConversationChannel,
   ChatConversationRequest,
   ContextUser,
+  WebhookChatCompleteResult,
 } from "@budibase/types"
 import { AgentChannelProvider, DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -362,6 +363,9 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 export interface HandleChatMessageParams {
   reply: (text: string) => Promise<void>
   replyWithAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
+  formatAssistantReply?: (
+    result: WebhookChatCompleteResult
+  ) => Promise<string> | string
   beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
@@ -456,6 +460,7 @@ const createTransientPublicUser = ({
 export const handleChatMessage = async ({
   reply,
   replyWithAssistantStream,
+  formatAssistantReply,
   beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
@@ -731,7 +736,10 @@ export const handleChatMessage = async ({
     })
 
     if (!replyWithAssistantStream) {
-      await reply(result.assistantText || "No response generated.")
+      const assistantReply = formatAssistantReply
+        ? await formatAssistantReply(result)
+        : result.assistantText
+      await reply(assistantReply || "No response generated.")
     }
   })
 }

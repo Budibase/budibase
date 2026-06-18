@@ -18,7 +18,11 @@
   import { configFromIntegration } from "@/stores/selectors"
   import { IntegrationTypes } from "@/constants/backend"
   import { notifications } from "@budibase/bbui"
-  import { RestAuthType, type RestAuthConfig } from "@budibase/types"
+  import {
+    RestAuthType,
+    type RestAuthConfig,
+    type RestTemplateId,
+  } from "@budibase/types"
 
   type AuthConfigType = RestAuthConfig["type"]
 
@@ -36,13 +40,18 @@
   }
 
   export let authConfigId: string | undefined
-  export let restTemplateId: string | undefined = undefined
+  export let restTemplateId: RestTemplateId | undefined = undefined
   export let datasourceId: string | undefined = undefined
   export let disabled: boolean = false
   export let editText: string | undefined = "Edit"
   export let settingsLocked: boolean = false
+  export let restrictToRestTemplate: boolean = false
+  export let popoverPortalTarget: string | undefined = undefined
+  export let popoverZIndex: number | undefined = undefined
 
   $: lockedMode = settingsLocked ? ("subtree" as const) : undefined
+  $: activeTemplateFilter =
+    restrictToRestTemplate && restTemplateId ? restTemplateId : undefined
 
   const dispatch = createEventDispatcher()
 
@@ -58,10 +67,17 @@
   $: featuredItems = featuredTemplates
     .map(id => restTemplates.flatTemplates.find(t => t.id === id))
     .filter(t => t != null)
+  $: preferredTemplate = restTemplateId
+    ? restTemplates.flatTemplates.find(t => t.id === restTemplateId)
+    : undefined
 
-  $: savedConnections = $workspaceConnections.list
+  $: savedConnections = activeTemplateFilter
+    ? $workspaceConnections.list.filter(
+        connection => connection.templateId === activeTemplateFilter
+      )
+    : $workspaceConnections.list
   $: connection = selectedDatasourceId
-    ? $workspaceConnections.list.find(c => c.sourceId === selectedDatasourceId)
+    ? savedConnections.find(c => c.sourceId === selectedDatasourceId)
     : undefined
 
   $: authOptions = savedConnections.flatMap(connectionToAuthOptions)
@@ -85,17 +101,25 @@
   // When search yields no saved connections, suggest matching templates to create
   $: suggestedTemplates =
     searchQuery && sortedAuthOptions.length === 0
-      ? restTemplates.flatTemplates
-          .filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
-          .slice(0, 5)
+      ? activeTemplateFilter && preferredTemplate
+        ? preferredTemplate.name
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+          ? [preferredTemplate]
+          : []
+        : restTemplates.flatTemplates
+            .filter(t =>
+              t.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .slice(0, 5)
       : []
 
   $: hasSavedConnections = sortedAuthOptions.length > 0
   $: hasSuggestions = suggestedTemplates.length > 0
+  $: showFeaturedTemplates =
+    !activeTemplateFilter && !searchQuery && featuredItems.length > 0
   $: isEmptyState =
-    !hasSavedConnections &&
-    !hasSuggestions &&
-    !(searchQuery === "" && featuredItems.length > 0)
+    !hasSavedConnections && !hasSuggestions && !showFeaturedTemplates
 
   $: selectedAuth = authOptions.find(
     opt =>
@@ -107,7 +131,11 @@
 
   $: buttonLabel = (() => {
     if (selectedAuth) return getAuthLabel(selectedAuth)
-    if (authConfigId && isLegacyOAuth2Id(authConfigId)) {
+    if (
+      !activeTemplateFilter &&
+      authConfigId &&
+      isLegacyOAuth2Id(authConfigId)
+    ) {
       const name = $workspaceConnections.list.find(
         c => c.sourceId === authConfigId
       )?.name
@@ -165,6 +193,10 @@
   }
 
   export const open = () => menuRef?.show()
+
+  export const addConnection = (templateId?: string) => {
+    addNewConnection(templateId ?? restTemplateId)
+  }
 
   const focusSearch = async () => {
     await tick()
@@ -256,6 +288,8 @@
   on:open={focusSearch}
   align="right"
   roundedPopover
+  portalTarget={popoverPortalTarget}
+  customZIndex={popoverZIndex}
   {disabled}
 >
   <svelte:fragment slot="control" let:open>
@@ -307,11 +341,30 @@
     <div class="auth-menu-content">
       <div class="auth-fixed-top">
         <div class="auth-section">
-          {#if !searchQuery}
+          {#if !searchQuery && !activeTemplateFilter}
             <MenuItem on:click={createCustomConnection}>
               <div class="auth-item">
                 <Icon name="globe-simple" size="S" />
                 <span class="auth-item-label">Custom API connection</span>
+              </div>
+            </MenuItem>
+          {/if}
+          {#if !searchQuery && preferredTemplate && !connection}
+            <MenuItem on:click={() => addNewConnection(preferredTemplate.id)}>
+              <div class="auth-item">
+                {#if preferredTemplate.icon}
+                  <img
+                    src={preferredTemplate.icon}
+                    alt={preferredTemplate.name}
+                    height={16}
+                    width={16}
+                  />
+                {:else}
+                  <Icon name="globe-simple" size="S" />
+                {/if}
+                <span class="auth-item-label">
+                  Add connection - {preferredTemplate.name}
+                </span>
               </div>
             </MenuItem>
           {/if}
@@ -398,7 +451,7 @@
           </div>
         {/if}
       </div>
-      {#if !searchQuery && featuredItems.length > 0}
+      {#if showFeaturedTemplates}
         <div class="auth-fixed-bottom">
           <Divider noMargin />
           <div class="auth-section-header">

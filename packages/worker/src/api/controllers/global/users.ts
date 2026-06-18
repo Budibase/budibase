@@ -109,6 +109,10 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
 export const changeTenantOwnerEmail = async (
   ctx: Ctx<ChangeTenantOwnerEmailRequest, void>
 ) => {
+  if (!ctx.internal) {
+    ctx.throw(403, "Unauthorized")
+  }
+
   const { newAccountEmail, originalEmail, tenantIds } = ctx.request.body
   try {
     for (const tenantId of tenantIds) {

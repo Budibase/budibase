@@ -1,8 +1,9 @@
 import { it, expect, describe, vi } from "vitest"
 import { writable } from "svelte/store"
-import { render, waitFor, fireEvent } from "@testing-library/svelte"
+import { render, waitFor, fireEvent, screen } from "@testing-library/svelte"
 import { notifications } from "@budibase/bbui"
 import APIEndpointViewer from "./APIEndpointViewer.svelte"
+import APIEndpointViewerEventHarness from "@/test/APIEndpointViewerEventHarness.svelte"
 import { API } from "@/api"
 import * as queryModule from "./query"
 import {
@@ -10,6 +11,8 @@ import {
   SourceName,
   type Datasource,
   type Query,
+  type RestTemplate,
+  type RestTemplateId,
   type UIInternalDatasource,
 } from "@budibase/types"
 
@@ -22,6 +25,11 @@ if (!Element.prototype.animate) {
 // bbui Popover mounts its content into .spectrum via svelte-portal.
 // Ensure the element exists before each test so portal renders don't throw.
 beforeEach(() => {
+  if (!document.querySelector(".modal-container")) {
+    const el = document.createElement("div")
+    el.classList.add("modal-container")
+    document.body.appendChild(el)
+  }
   if (!document.querySelector(".spectrum")) {
     const el = document.createElement("div")
     el.classList.add("spectrum")
@@ -213,9 +221,39 @@ import { oauth2 } from "@/stores/builder/oauth2"
 import { screenStore } from "@/stores/builder"
 import { workspaceConnections } from "@/stores/builder/workspaceConnection"
 import { confirm } from "@/helpers"
+import { bb } from "@/stores/bb"
 
 const REST_DS_ID = "datasource_c190e3055ae643b4b3bb66ee15ad12c9"
 const REST_DS_ID_2 = "datasource_aaaabbbbccccdddd1111222233334444"
+
+const mockRestTemplates = (
+  templates: Partial<
+    Record<RestTemplateId, Pick<RestTemplate, "id" | "name" | "icon">>
+  >
+) => {
+  const fullTemplates = Object.fromEntries(
+    Object.entries(templates).map(([id, template]) => [
+      id,
+      {
+        description: "",
+        operationsCount: 0,
+        ...template,
+      },
+    ])
+  ) as Partial<Record<RestTemplateId, RestTemplate>>
+
+  vi.mocked(restTemplates.get).mockImplementation((templateId?: string) => {
+    if (!templateId) {
+      return undefined
+    }
+    return fullTemplates[templateId as RestTemplateId]
+  })
+  restTemplates.flatTemplates.splice(
+    0,
+    restTemplates.flatTemplates.length,
+    ...Object.values(fullTemplates)
+  )
+}
 const QUERY_ID = "query_abc123"
 
 const REST_DS: Datasource = {
@@ -357,6 +395,8 @@ beforeEach(async () => {
     screens: [],
   } as any)
   queries.store.update(s => ({ ...s, list: [], selectedQueryId: null }))
+  workspaceConnections.discardDraft()
+  bb.reset()
   await setupDatasources()
 })
 
@@ -409,6 +449,210 @@ describe("API Endpoint Viewer", () => {
           container.querySelector(".picker-button")?.textContent
         ).toContain("My Bearer")
       })
+    })
+
+    it("resets stale unsaved query state when switching connector drafts", async () => {
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr",
+        config: {
+          ...REST_DS.config,
+          url: "https://{{companyDomain}}.bamboohr.com",
+        },
+      }
+      const githubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds",
+        name: "GitHub",
+        restTemplateId: "github",
+        config: {
+          ...REST_DS_2_WITH_URL.config,
+          url: "https://api.github.com",
+        },
+      }
+      await setupTwoDatasources(bamboohrDatasource, githubDatasource)
+
+      workspaceConnections.startDraft("bamboohr")
+      const { container } = setupDOM({ saveAndClose: true })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+        expect(container.querySelector(".cm-content")?.textContent).toContain(
+          "bamboohr.com"
+        )
+      })
+
+      workspaceConnections.startDraft("github")
+
+      await waitFor(() => {
+        const selectedConnection =
+          container.querySelector(".picker-button")?.textContent
+        expect(selectedConnection).toContain("GitHub")
+        expect(selectedConnection).not.toContain("BambooHR")
+        expect(container.querySelector(".cm-content")?.textContent).toContain(
+          "api.github.com"
+        )
+      })
+    })
+
+    it("filters connection selection to the connector template for connector drafts", async () => {
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
+      })
+
+      const internalDs: UIInternalDatasource = {
+        _id: "bb_internal",
+        type: "budibase",
+        name: "Budibase DB",
+        source: SourceName.BUDIBASE,
+        config: {},
+        entities: [],
+      }
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr",
+      }
+      const githubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds",
+        name: "GitHub",
+        restTemplateId: "github",
+      }
+      const githubDatasource2: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds_2",
+        name: "GitHub 2",
+        restTemplateId: "github",
+      }
+      vi.mocked(API).getDatasources.mockResolvedValue([
+        internalDs,
+        bamboohrDatasource,
+        githubDatasource,
+        githubDatasource2,
+      ] as Datasource[])
+      await datasources.init()
+
+      workspaceConnections.startDraft("github")
+      const { baseElement } = setupDOM({ saveAndClose: true })
+
+      await waitFor(() => {
+        expect(baseElement.textContent).toContain("GitHub - No auth")
+        expect(baseElement.textContent).toContain("GitHub 2 - No auth")
+        expect(baseElement.textContent).not.toContain("BambooHR - No auth")
+      })
+    })
+
+    it("does not automatically open the connection menu when a connector draft selects a connection", async () => {
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr",
+      }
+      await setupDatasources(bamboohrDatasource)
+
+      workspaceConnections.startDraft("bamboohr")
+      const { container, baseElement } = setupDOM({ saveAndClose: true })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 250))
+
+      expect(baseElement.textContent).not.toContain("Saved API connections")
+    })
+
+    it("selects the only matching connector connection when datasources load after the draft starts", async () => {
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr",
+      }
+
+      workspaceConnections.startDraft("bamboohr")
+      const { container, baseElement } = setupDOM({ saveAndClose: true })
+      await setupDatasources(bamboohrDatasource)
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 250))
+
+      expect(baseElement.textContent).not.toContain("Saved API connections")
+    })
+
+    it("selects the only matching connection when opened for a connector template without a draft", async () => {
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr",
+      }
+      await setupDatasources(bamboohrDatasource)
+
+      const { container, baseElement } = setupDOM({
+        restTemplateId: "bamboohr",
+        saveAndClose: true,
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("BambooHR")
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 250))
+
+      expect(baseElement.textContent).not.toContain("Saved API connections")
+    })
+
+    it("opens the connection menu when a connector draft has no saved connection", async () => {
+      const settingsSpy = vi.spyOn(bb, "settings")
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+      })
+
+      workspaceConnections.startDraft("bamboohr")
+      const { baseElement } = setupDOM({
+        saveAndClose: true,
+        settingsLocked: true,
+      })
+
+      await waitFor(() => {
+        expect(baseElement.textContent).toContain("Add connection - BambooHR")
+      })
+      expect(settingsSpy).not.toHaveBeenCalled()
     })
 
     it("saves with authConfigId set when connection is changed on a new query", async () => {
@@ -492,6 +736,146 @@ describe("API Endpoint Viewer", () => {
             "[aria-label='ChevronDown'], [aria-label='ChevronUp'], .ph-caret-down, .ph-caret-up"
           )
         expect(chevron).toBeNull()
+      })
+    })
+
+    it("uses the existing query datasource ahead of draft connection state", async () => {
+      await setupTwoDatasources(REST_DS_WITH_URL, REST_DS_2_WITH_URL)
+      workspaceConnections.startDraft()
+      workspaceConnections.updateDraftQuery({ datasourceId: REST_DS_ID_2 })
+
+      const { container } = setupDOM({ queryId: QUERY_ID })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("REST API 2")
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).not.toContain("Other REST API")
+      })
+    })
+
+    it("filters existing query connection selection to the provided connector template", async () => {
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
+      })
+
+      const bamboohrDatasource: Datasource = {
+        ...REST_DS,
+        _id: "bamboohr_ds",
+        name: "BambooHR",
+        restTemplateId: "bamboohr",
+      }
+      const githubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        _id: "github_ds",
+        name: "GitHub",
+        restTemplateId: "github",
+      }
+      await setupTwoDatasources(bamboohrDatasource, githubDatasource)
+      queries.store.update(s => ({
+        ...s,
+        list: [
+          {
+            ...SAVED_QUERY,
+            datasourceId: "github_ds",
+          },
+        ],
+      }))
+
+      const { container, baseElement } = setupDOM({
+        queryId: QUERY_ID,
+        datasourceId: "github_ds",
+        restTemplateId: "github",
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("GitHub")
+      })
+      await fireEvent.click(container.querySelector(".picker-button")!)
+
+      await waitFor(() => {
+        expect(baseElement.textContent).toContain("GitHub - No auth")
+        expect(baseElement.textContent).not.toContain("BambooHR - No auth")
+      })
+    })
+
+    it("saves an existing connector query with the changed datasource", async () => {
+      mockRestTemplates({
+        github: { id: "github", name: "GitHub", icon: "github.svg" },
+      })
+
+      const githubDatasource: Datasource = {
+        ...REST_DS_WITH_URL,
+        restTemplateId: "github",
+      }
+      const otherGithubDatasource: Datasource = {
+        ...REST_DS_2_WITH_URL,
+        restTemplateId: "github",
+      }
+      await setupTwoDatasources(githubDatasource, otherGithubDatasource)
+      queries.store.update(s => ({
+        ...s,
+        list: [
+          {
+            ...SAVED_QUERY,
+            restTemplateMetadata: {
+              operationId: "getUsers",
+              originalPath: "/api/users",
+            },
+          },
+        ],
+      }))
+      vi.mocked(API).saveQuery.mockResolvedValue({
+        ...SAVED_QUERY,
+        datasourceId: REST_DS_ID_2,
+        _rev: "2-updated",
+      })
+
+      const { container, rerender } = setupDOM({
+        queryId: QUERY_ID,
+        datasourceId: REST_DS_ID,
+        restTemplateId: "github",
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("REST API 2")
+      })
+
+      await rerender({
+        queryId: QUERY_ID,
+        datasourceId: REST_DS_ID_2,
+        restTemplateId: "github",
+      })
+
+      await waitFor(() => {
+        expect(
+          container.querySelector(".picker-button")?.textContent
+        ).toContain("Other REST API")
+      })
+
+      const nameEl = container.querySelector(
+        ".query-name-input"
+      ) as HTMLInputElement
+      await fireEvent.input(nameEl, { target: { value: "Renamed request" } })
+      await fireEvent.blur(nameEl)
+
+      const saveBtn = await waitFor(() => {
+        const btn = getSaveButton(container)
+        expect(btn?.classList.contains("is-disabled")).toBe(false)
+        return btn!
+      })
+      await fireEvent.click(saveBtn)
+
+      await waitFor(() => {
+        const saved = vi.mocked(API).saveQuery.mock.calls[0]?.[0] as Query
+        expect(saved.datasourceId).toBe(REST_DS_ID_2)
       })
     })
 
@@ -861,6 +1245,38 @@ describe("API Endpoint Viewer", () => {
         expect(notifications.success).toHaveBeenCalledWith(
           "Request saved successfully"
         )
+      })
+    })
+
+    it("emits savedQuery for an existing query when saveAndClose is enabled", async () => {
+      vi.mocked(API).saveQuery.mockResolvedValue({
+        ...DIRTY_QUERY,
+        _rev: "2-updated",
+      })
+      const { container } = render(APIEndpointViewerEventHarness, {
+        props: {
+          queryId: QUERY_ID,
+          saveAndClose: true,
+        },
+      })
+
+      await waitFor(() =>
+        expect(container.querySelector(".query-name-input")).not.toBeNull()
+      )
+      const nameEl = container.querySelector(
+        ".query-name-input"
+      ) as HTMLInputElement
+      await fireEvent.input(nameEl, { target: { value: "New name" } })
+      await fireEvent.blur(nameEl)
+      const saveBtn = await waitFor(() => {
+        const btn = getSaveButton(container)
+        expect(btn?.classList.contains("is-disabled")).toBe(false)
+        return btn!
+      })
+      await fireEvent.click(saveBtn)
+
+      await waitFor(() => {
+        expect(screen.getByTestId("saved-query-id").textContent).toBe(QUERY_ID)
       })
     })
 

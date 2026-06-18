@@ -2,7 +2,9 @@ import { Table } from "@budibase/types"
 import type { UIMessage, LanguageModelUsage } from "ai"
 import { SortOrder } from "../../../api"
 import { EmptyFilterOption, SearchFilters } from "../../../sdk"
+import { DurationType } from "../../../shared"
 import type { UISearchFilter } from "../../../api"
+import type { RestTemplateId } from "../../../ui/rest"
 import { HttpMethod } from "../query"
 import { Row, RowAttachment } from "../row"
 import {
@@ -68,6 +70,7 @@ export type CreateRowStepOutputs = BaseAutomationOutputs & {
 
 export type DelayStepInputs = {
   time: number
+  unit?: DurationType
 }
 
 export type DelayStepOutputs = BaseAutomationOutputs
@@ -106,6 +109,7 @@ export type APIRequestStepInputs = {
     queryId: string
     [key: string]: any
   }
+  restTemplateId?: RestTemplateId
   continueOnError?: boolean
 }
 

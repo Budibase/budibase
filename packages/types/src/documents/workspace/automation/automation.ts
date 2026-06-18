@@ -274,6 +274,7 @@ export interface AutomationStepInputBase {
   apiKey?: string
   automationId?: string
   stepId?: string
+  isTestRun?: boolean
 }
 
 export type ActionImplementation<TInputs, TOutputs> = (

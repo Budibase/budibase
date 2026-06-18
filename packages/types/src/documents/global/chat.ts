@@ -74,6 +74,7 @@ export interface ChatConversationRequest extends Document {
 export interface WebhookChatCompleteResult {
   messages: ChatConversation["messages"]
   assistantText: string
+  ragSources?: AgentMessageMetadata["ragSources"]
   title?: string
 }
 
