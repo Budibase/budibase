@@ -28,7 +28,7 @@ export async function generateAgentInstructions({
   goal,
   toolReferences,
 }: GenerateAgentInstructionsRequest) {
-  const request = ai.generateAgentInstructionsPrompt({
+  const request = ai.generateOperationInstructionsPrompt({
     prompt,
     agentName,
     goal,

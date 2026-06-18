@@ -24,14 +24,14 @@
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
 
-  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
-What is this agent responsible for?
+  const DEFAULT_PROMPT_INSTRUCTIONS = `**Operation role**
+What is this operation responsible for?
 
 **Inputs**
-What information does the agent receive?
+What information does this operation receive?
 
 **Actions**
-- What should the agent do?
+- What should this operation do?
 - When should it use tools or APIs?
 
 **Output**
@@ -39,7 +39,7 @@ What information does the agent receive?
 - Include any structure, formatting, or fields required.
 
 **Rules**
-Any constraints the agent must follow.
+Any constraints this operation must follow.
 `
 
   let {
