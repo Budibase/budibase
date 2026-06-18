@@ -148,14 +148,14 @@ export const chooseOperationForQuestion = async ({
     stopWhen: stepCountIs(1),
     providerOptions: llm.providerOptions?.(false),
     output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
+    headers: {
+      "x-litellm-tags": "bb-operation-routing",
+    },
   })
 
   try {
     const result = await router.stream({
       prompt: latestQuestion,
-      headers: {
-        "x-litellm-tags": "bb-operation-routing",
-      },
     })
 
     const route = (await result.output) as OperationRoute
