@@ -13,6 +13,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
+  import type { AutomationLog } from "@budibase/types"
 
   const { goto, params, url, redirect, isActive, page, layout } = routify
   $goto
@@ -25,7 +26,10 @@
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
-  $: builderStore.selectResource(automationId)
+  $: selectedNodeId = $automationStore.selectedNodeId
+  $: if (automationId) {
+    builderStore.selectResource(automationId)
+  }
 
   const stopSyncing = syncURLToState({
     urlParam: "automationId",
@@ -37,7 +41,9 @@
     routify,
   })
 
-  onDestroy(stopSyncing)
+  onDestroy(() => {
+    stopSyncing?.()
+  })
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape" && $automationStore.actionPanelBlock) {
@@ -61,7 +67,7 @@
       <slot />
     </div>
 
-    {#if (blockRefs[$automationStore.selectedNodeId] || $automationStore.selectedBranchNode) && $automationStore.selectedNodeId}
+    {#if selectedNodeId && (blockRefs[selectedNodeId] || $automationStore.selectedBranchNode)}
       <div class="step-panel-container">
         <ResizablePanel
           storageKey="automation-side-panel-width"
@@ -90,7 +96,7 @@
           <div class="logs-panel">
             <AutomationLogsPanel
               automation={$selectedAutomation.data}
-              onSelectLog={log =>
+              onSelectLog={(log: AutomationLog) =>
                 automationStore.actions.selectLogForDetails(log)}
               selectedLog={$automationStore.selectedLog}
             />
