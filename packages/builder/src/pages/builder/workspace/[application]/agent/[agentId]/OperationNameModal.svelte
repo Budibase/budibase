@@ -6,6 +6,7 @@
   let name = $state("")
   let touched = $state(false)
   let submitting = $state(false)
+  let submitError = $state<string | undefined>(undefined)
 
   let {
     title,
@@ -22,29 +23,47 @@
   } = $props()
 
   let trimmedName = $derived(name.trim())
-  let nameError = $derived(
-    touched && !submitting
-      ? !trimmedName
-        ? "Operation name is required"
-        : validateName(trimmedName)
-      : undefined
-  )
+  let nameError = $derived.by(() => {
+    if (submitError) {
+      return submitError
+    }
+
+    if (!touched || submitting) {
+      return undefined
+    }
+
+    if (!trimmedName) {
+      return "Operation name is required"
+    }
+
+    return validateName(trimmedName)
+  })
+
+  const resetState = () => {
+    touched = false
+    submitting = false
+    submitError = undefined
+  }
+
+  const cannotSubmit = () => {
+    return !trimmedName || !!nameError || submitting
+  }
 
   export const show = (initialName = "") => {
     name = initialName
-    touched = false
-    submitting = false
+    resetState()
     modal?.show()
   }
 
   export const hide = () => {
-    submitting = false
+    resetState()
     modal?.hide()
   }
 
   const submit = async () => {
     touched = true
-    if (!trimmedName || nameError) {
+    submitError = undefined
+    if (cannotSubmit()) {
       return keepOpen
     }
 
@@ -52,6 +71,9 @@
     try {
       await onConfirm(trimmedName)
       modal?.hide()
+    } catch (error) {
+      submitError = error instanceof Error ? error.message : "Failed to save"
+      return keepOpen
     } finally {
       submitting = false
     }
@@ -63,13 +85,14 @@
     bind:this={modalContent}
     {title}
     {confirmText}
-    disabled={!trimmedName || !!nameError || submitting}
+    disabled={cannotSubmit()}
     onConfirm={submit}
   >
     <form
       onsubmit={event => {
         event.preventDefault()
-        if (!trimmedName || nameError || submitting) {
+        submitError = undefined
+        if (cannotSubmit()) {
           touched = true
           return
         }
