@@ -99,7 +99,7 @@ describe("OperationsSection", () => {
 
     expect(onUpdated).toHaveBeenCalledTimes(1)
     expect(agent.operations).toHaveLength(1)
-    expect(agent.operations[0]).toMatchObject({
+    expect(agent.operations?.[0]).toMatchObject({
       id: "operation_123",
       name: "Customer support",
       live: false,

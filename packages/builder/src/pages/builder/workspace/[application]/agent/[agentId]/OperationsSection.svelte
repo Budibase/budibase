@@ -225,7 +225,7 @@ Any constraints this operation must follow.
         },
         {
           icon: "pencil",
-          name: "Edit",
+          name: "Rename",
           visible: true,
           callback: openRenameModal,
         },
@@ -328,6 +328,7 @@ Any constraints this operation must follow.
     {webSearchConfigured}
     {onAddApiConnection}
     {onConfigureWebSearch}
+    onRenameOperation={openRenameModal}
     {onSetOperationLive}
     {onUpdated}
     onClose={closeOperationPanel}
