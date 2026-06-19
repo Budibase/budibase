@@ -17,6 +17,7 @@
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
   import { formatToolName } from "../../utils/aiTools"
+  import { getNextActiveToolPopover, isToolPopoverOpen } from "./toolPopover"
   import ReasoningStatus from "./ReasoningStatus.svelte"
   import ContextUsage from "./ContextUsage.svelte"
   import {
@@ -74,6 +75,7 @@
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
+  let activeToolId = $state<string | null>(null)
   let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
@@ -346,6 +348,7 @@
       }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
+      activeToolId = null
       reasoningTextByMessageId = {}
     }
   })
@@ -526,7 +529,7 @@
   }
 
   const toggleTool = (toolId: string) => {
-    expandedTools = { ...expandedTools, [toolId]: !expandedTools[toolId] }
+    activeToolId = getNextActiveToolPopover(activeToolId, toolId)
   }
 
   const formatToolOutput = (output: unknown): string =>
@@ -676,13 +679,16 @@
                 <div class="tool-part" class:tool-running={isRunning}>
                   <button
                     class="tool-header"
-                    class:tool-header-expanded={expandedTools[toolId]}
+                    class:tool-header-expanded={isToolPopoverOpen(
+                      activeToolId,
+                      toolId
+                    )}
                     type="button"
                     onclick={() => toggleTool(toolId)}
                   >
                     <span
                       class="tool-chevron"
-                      class:expanded={expandedTools[toolId]}
+                      class:expanded={isToolPopoverOpen(activeToolId, toolId)}
                     >
                       <span class="tool-chevron-icon tool-chevron-icon-default">
                         <Icon
@@ -729,7 +735,7 @@
                       </span>
                     {/if}
                   </button>
-                  {#if expandedTools[toolId]}
+                  {#if isToolPopoverOpen(activeToolId, toolId)}
                     <div class="tool-details">
                       {#if part.input}
                         <div class="tool-section">
@@ -1173,9 +1179,6 @@
   }
 
   .tool-details {
-    position: absolute;
-    top: 100%;
-    left: 0;
     margin-top: var(--spacing-m);
     width: 100%;
     max-width: 100%;
@@ -1188,7 +1191,6 @@
     border-radius: 6px;
     padding: var(--spacing-m);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    z-index: 1;
     overflow-x: hidden;
     min-width: 0;
   }
