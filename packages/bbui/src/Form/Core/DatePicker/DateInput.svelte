@@ -71,16 +71,19 @@
   /* Date label overrides */
   .spectrum-Textfield-input {
     pointer-events: none;
+    min-width: 0;
   }
   .spectrum-Textfield:not(.is-disabled):hover {
     cursor: pointer;
   }
   .spectrum-Datepicker {
     width: 100%;
+    min-width: 0;
     overflow: hidden;
   }
   .spectrum-Datepicker .spectrum-Textfield {
     width: 100%;
+    min-width: 0;
   }
   .is-disabled {
     pointer-events: none !important;
