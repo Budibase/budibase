@@ -394,7 +394,7 @@ export async function test(
       return await triggers.externalTrigger(
         { ...automation, disabled: false },
         { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
-        { getResponses: true, onProgress: emitProgress }
+        { getResponses: true, onProgress: emitProgress, isTestRun: true }
       )
     })
     await events.automation.tested(automation)

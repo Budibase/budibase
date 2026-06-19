@@ -376,15 +376,15 @@
       return customType
     }
 
+    // Enum Field
+    if (field.type === AutomationIOType.STRING && field.enum) {
+      return SchemaFieldTypes.ENUM
+    }
+
     // Direct type map
     const fieldType = field.type && typeToSchema[field.type]
     if (fieldType) {
       return fieldType
-    }
-
-    // Enum Field
-    if (field.type === AutomationIOType.STRING && field.enum) {
-      return SchemaFieldTypes.ENUM
     }
 
     // JS V2
