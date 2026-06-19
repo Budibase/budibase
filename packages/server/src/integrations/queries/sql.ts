@@ -70,9 +70,7 @@ export async function interpolateSQL(
       arrays.push(binding)
       // determine the length of the array
       const value = (
-        await sdk.queries.enrichContext([binding], parameters, {
-          escapeNewlines: false,
-        })
+        await sdk.queries.enrichContext([binding], parameters)
       )[0]
         .split(",")
         .map((val: string) => val.trim())
@@ -92,13 +90,7 @@ export async function interpolateSQL(
   }
   // replicate the knex structure
   fields.sql = sql
-  fields.bindings = await sdk.queries.enrichArrayContext(
-    variables,
-    parameters,
-    {
-      escapeNewlines: false,
-    }
-  )
+  fields.bindings = await sdk.queries.enrichArrayContext(variables, parameters)
   if (opts.nullDefaultSupport) {
     for (let index in fields.bindings) {
       if (fields.bindings[index] === "") {
