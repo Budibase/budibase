@@ -4938,6 +4938,16 @@
         "defaultValue": false
       },
       {
+        "type": "select",
+        "label": "Time format",
+        "key": "timeFormat",
+        "defaultValue": "24h",
+        "options": [
+          { "label": "24 hour (14:30)", "value": "24h" },
+          { "label": "12 hour (02:30 PM)", "value": "12h" }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",

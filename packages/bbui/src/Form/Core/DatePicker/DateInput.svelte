@@ -13,8 +13,13 @@
   export let icon
   export let enableTime
   export let timeOnly
+  export let time24hr = true
 
-  $: displayValue = getDateDisplayValue(value, { enableTime, timeOnly })
+  $: displayValue = getDateDisplayValue(value, {
+    enableTime,
+    timeOnly,
+    time24hr,
+  })
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

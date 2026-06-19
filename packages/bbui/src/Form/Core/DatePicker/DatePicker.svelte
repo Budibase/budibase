@@ -19,6 +19,7 @@
   export let value: V | null = null
   export let placeholder: string | null = null
   export let timeOnly = false
+  export let time24hr = true
   export let ignoreTimezones = false
   export let useKeyboardShortcuts = true
   export let appendTo = undefined
@@ -62,6 +63,7 @@
   {id}
   {enableTime}
   {timeOnly}
+  {time24hr}
   focused={isOpen}
   value={parsedValue}
   on:click={popover?.show}
@@ -86,6 +88,7 @@
       {ignoreTimezones}
       {enableTime}
       {timeOnly}
+      {time24hr}
       startDayOfWeek={resolvedStartDayOfWeek}
       value={parsedValue}
       on:change

@@ -9,7 +9,7 @@
   export let readonly = false
   export let enableTime = true
   export let timeOnly = false
-  export let time24hr = false
+  export let timeFormat = "24h"
   export let ignoreTimezones = false
   export let startDayOfWeek = "Monday"
   export let validation
@@ -21,6 +21,8 @@
 
   let fieldState
   let fieldApi
+
+  $: time24hr = timeFormat !== "12h"
 
   const handleChange = e => {
     let value = e.detail

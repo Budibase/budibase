@@ -212,7 +212,7 @@ const localeDateFormat = new Intl.DateTimeFormat()
 // Formats a dayjs date according to schema flags
 export const getDateDisplayValue = (
   value: dayjs.Dayjs | string | null | undefined,
-  { enableTime = true, timeOnly = false } = {}
+  { enableTime = true, timeOnly = false, time24hr = true } = {}
 ): string => {
   if (typeof value === "string") {
     value = dayjs(value)
@@ -220,12 +220,13 @@ export const getDateDisplayValue = (
   if (!value?.isValid()) {
     return ""
   }
+  const timeFormat = time24hr ? "HH:mm" : "hh:mm A"
   if (timeOnly) {
-    return value.format("HH:mm")
+    return value.format(timeFormat)
   } else if (!enableTime) {
     return value.format(localeDateFormat)
   } else {
-    return value.format(`${localeDateFormat} HH:mm`)
+    return value.format(`${localeDateFormat} ${timeFormat}`)
   }
 }
 

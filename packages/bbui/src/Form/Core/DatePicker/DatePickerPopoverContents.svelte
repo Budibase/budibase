@@ -10,6 +10,7 @@
   export let ignoreTimezones
   export let enableTime
   export let timeOnly
+  export let time24hr = true
   export let value
   export let startDayOfWeek = "Monday"
 
@@ -63,7 +64,7 @@
   {/if}
   <div class="footer" class:spaced={showCalendar}>
     {#if showTime}
-      <TimePicker {value} on:change={e => handleChange(e.detail)} />
+      <TimePicker {value} {time24hr} on:change={e => handleChange(e.detail)} />
     {/if}
     <div class="actions">
       <ActionButton
