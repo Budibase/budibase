@@ -30,7 +30,7 @@ const SCHEMA: Integration = {
       required: true,
     },
     privateKey: {
-      type: DatasourceFieldType.STRING,
+      type: DatasourceFieldType.SENSITIVE_LONGFORM,
       display: "Private Key",
       required: true,
     },
