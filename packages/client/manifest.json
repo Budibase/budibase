@@ -6016,6 +6016,11 @@
         "nested": true
       },
       {
+        "type": "text",
+        "label": "Extensions",
+        "key": "extensions"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -6028,6 +6033,12 @@
       },
       {
         "type": "boolean",
+        "label": "Compact",
+        "key": "compact",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -6036,6 +6047,41 @@
         "type": "validation/attachment",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "section": true,
+        "name": "Uploader Text Settings",
+        "dependsOn": [
+          {
+            "setting": "disabled",
+            "value": false
+          }
+        ],
+        "settings": [
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText"
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          }
+        ]
       }
     ],
     "context": {
