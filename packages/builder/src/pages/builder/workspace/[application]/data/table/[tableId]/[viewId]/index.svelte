@@ -150,8 +150,8 @@
           {#if !calculation}
             <GridColumnsSettingButton />
             <GridRowActionsButton />
-            <GridScreensButton on:generate={() => generateButton?.show()} />
           {/if}
+          <GridScreensButton on:generate={() => generateButton?.show()} />
           <GridGenerateButton bind:this={generateButton} />
         {/if}
       </svelte:fragment>
