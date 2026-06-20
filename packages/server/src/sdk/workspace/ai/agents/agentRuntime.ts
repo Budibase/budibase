@@ -88,6 +88,7 @@ export const prepareAgentChatRun = async ({
     sdk.ai.agents.buildPromptAndTools(agent, {
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
+      timezone: chat?.timezone,
     }),
     sdk.ai.llm.createLLM(
       aiConfigId ?? agent.aiconfig,

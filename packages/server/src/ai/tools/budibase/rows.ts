@@ -13,6 +13,7 @@ import {
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import { applyTimezoneToToolResult } from "./dateFormatting"
 import type { BudibaseToolDefinition } from "."
 
 const PLAIN_TEXT_WARNING =
@@ -331,6 +332,7 @@ export const createRowTools = ({
   tableSchema,
   sourceLabel,
   sourceIconType,
+  timezone,
 }: {
   tableId: string
   tableName: string
@@ -338,6 +340,7 @@ export const createRowTools = ({
   tableSchema: TableSchema
   sourceLabel?: string
   sourceIconType?: string
+  timezone?: string
 }): BudibaseToolDefinition[] => {
   const isExternal = tableSourceType === TableSourceType.EXTERNAL
   const resolvedSourceType = isExternal
@@ -378,7 +381,10 @@ export const createRowTools = ({
       tool: tool({
         description,
         inputSchema,
-        execute: async input => def.execute(tableId, input),
+        execute: async input => {
+          const result = await def.execute(tableId, input)
+          return applyTimezoneToToolResult(result, tableSchema, timezone)
+        },
       }),
     }
   })

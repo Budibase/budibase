@@ -68,6 +68,8 @@ export interface ChatConversationRequest extends Document {
   isPreview?: boolean
   sessionId?: string
   channel?: ChatConversationChannel
+  // IANA timezone of the user's browser, e.g. "Europe/London"
+  timezone?: string
 }
 
 export interface WebhookChatCompleteResult {

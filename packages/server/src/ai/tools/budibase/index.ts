@@ -27,7 +27,8 @@ export const getBudibaseTools = (
   tables: Table[] = [],
   datasourceNamesById: Record<string, string> = {},
   datasourceIconTypesById: Record<string, string> = {},
-  automations: Automation[] = []
+  automations: Automation[] = [],
+  timezone?: string
 ): BudibaseToolDefinition[] => {
   const baseTools = [...createAutomationTools(automations), ...TABLE_TOOLS]
 
@@ -46,6 +47,7 @@ export const getBudibaseTools = (
         sourceIconType: isExternal
           ? datasourceIconTypesById[table.sourceId]
           : undefined,
+        timezone,
       })
     })
 

@@ -61,6 +61,7 @@ import sdk from "../../.."
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
+  getBudibaseTools,
 } from "../../../../ai/tools/budibase"
 import { buildPromptAndTools } from "./utils"
 
@@ -135,6 +136,45 @@ describe("buildPromptAndTools", () => {
     expect(createKnowledgeFilesTool as jest.Mock).not.toHaveBeenCalled()
     expect(Reflect.get(result.tools, "list_knowledge_files")).toBeUndefined()
     expect(result.systemPrompt).toBe("system prompt")
+  })
+
+  it("appends a timezone note and passes the timezone to the tools", async () => {
+    const agent = {
+      _id: "agent_3",
+      name: "Support Agent",
+      aiconfig: "",
+      enabledTools: [],
+      knowledgeBases: [],
+    } as Agent
+
+    const result = await buildPromptAndTools(agent, {
+      timezone: "Europe/London",
+    })
+
+    expect(result.systemPrompt).toContain(
+      "The user's timezone is Europe/London"
+    )
+    expect(getBudibaseTools as jest.Mock).toHaveBeenCalledWith(
+      [],
+      {},
+      {},
+      [],
+      "Europe/London"
+    )
+  })
+
+  it("does not add a timezone note when no timezone is provided", async () => {
+    const agent = {
+      _id: "agent_4",
+      name: "Support Agent",
+      aiconfig: "",
+      enabledTools: [],
+      knowledgeBases: [],
+    } as Agent
+
+    const result = await buildPromptAndTools(agent)
+
+    expect(result.systemPrompt).not.toContain("The user's timezone")
   })
 
   it("throws when agent id is missing", async () => {

@@ -63,7 +63,8 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
 }
 
 export async function getAvailableTools(
-  aiconfigId?: string
+  aiconfigId?: string,
+  timezone?: string
 ): Promise<AiToolDefinition[]> {
   const [queries, datasources, aiConfig, tables, automations] =
     await Promise.all([
@@ -118,7 +119,8 @@ export async function getAvailableTools(
       tables,
       datasourceNamesById,
       datasourceIconTypesById,
-      automations
+      automations,
+      timezone
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
@@ -144,6 +146,7 @@ export async function getAvailableToolsMetadata(
 export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
+  timezone?: string
 }
 
 export async function buildPromptAndTools(
@@ -154,7 +157,7 @@ export async function buildPromptAndTools(
   tools: ToolSet
   toolDisplayNames: Record<string, string>
 }> {
-  const { baseSystemPrompt, includeGoal = true } = options
+  const { baseSystemPrompt, includeGoal = true, timezone } = options
   const agentId = agent._id
   if (!agentId) {
     throw new Error("Agent _id is required")
@@ -162,7 +165,7 @@ export async function buildPromptAndTools(
   const operation = getLiveOperation(agent)
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
-  const allTools = await getAvailableTools(agent.aiconfig)
+  const allTools = await getAvailableTools(agent.aiconfig, timezone)
   const enabledToolNames = new Set(operation?.enabledTools || [])
   const enabledTools = addHelperTools(
     allTools.filter(
@@ -191,9 +194,13 @@ export async function buildPromptAndTools(
     includeGoal,
   })
 
-  const resolvedSystemPrompt = hasKnowledgeBases
+  const knowledgePrompt = hasKnowledgeBases
     ? `${systemPrompt}\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
     : systemPrompt
+
+  const resolvedSystemPrompt = timezone
+    ? `${knowledgePrompt}\n\nThe user's timezone is ${timezone}. Datetime values returned by tools are already expressed in this timezone with a UTC offset (for example 2025-05-01T10:00:00+01:00). When mentioning dates or times to the user, present them in this timezone exactly as returned and do not convert them back to UTC.`
+    : knowledgePrompt
 
   return {
     systemPrompt: resolvedSystemPrompt,

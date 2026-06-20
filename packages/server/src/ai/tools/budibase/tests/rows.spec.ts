@@ -1,3 +1,4 @@
+import { FieldType } from "@budibase/types"
 import { BudibaseToolDefinition, getBudibaseTools } from ".."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { basicRow, basicTable } from "../../../../tests/utilities/structures"
@@ -251,5 +252,103 @@ describe("AI Tools - Rows", () => {
     expect(result.rows).toHaveLength(2)
     expect(result.rows[0].name).toBe("Alice")
     expect(result.rows[1].name).toBe("Bob")
+  })
+
+  describe("datetime timezone handling", () => {
+    // 09:00 UTC === 10:00 BST (Europe/London is UTC+1 in May)
+    const UTC_VALUE = "2025-05-01T09:00:00.000Z"
+
+    const tableWithDate = () =>
+      basicTable(undefined, {
+        schema: {
+          eventTime: {
+            type: FieldType.DATETIME,
+            name: "eventTime",
+          },
+        },
+      })
+
+    it("returns datetime values in the user's timezone when provided", async () => {
+      const table = await config.api.table.save(tableWithDate())
+      const createdRow = await config.api.row.save(table._id!, {
+        ...basicRow(table._id!),
+        eventTime: UTC_VALUE,
+      })
+
+      const tools = getBudibaseTools([table], {}, {}, [], "Europe/London")
+      const getTool = tools.find(tool => tool.name === `${table._id}_get_row`)
+      if (!getTool) {
+        throw new Error("get_row tool not found")
+      }
+
+      const result = await executeTool(getTool, { rowId: createdRow._id! })
+
+      expect(result.row.eventTime).toBe("2025-05-01T10:00:00+01:00")
+    })
+
+    it("keeps raw UTC values when no timezone is provided", async () => {
+      const table = await config.api.table.save(tableWithDate())
+      const createdRow = await config.api.row.save(table._id!, {
+        ...basicRow(table._id!),
+        eventTime: UTC_VALUE,
+      })
+
+      const tools = getBudibaseTools([table])
+      const getTool = tools.find(tool => tool.name === `${table._id}_get_row`)
+      if (!getTool) {
+        throw new Error("get_row tool not found")
+      }
+
+      const result = await executeTool(getTool, { rowId: createdRow._id! })
+
+      expect(result.row.eventTime).toBe(UTC_VALUE)
+    })
+
+    it("returns datetime values written by the agent in the user's timezone", async () => {
+      const table = await config.api.table.save(tableWithDate())
+
+      const tools = getBudibaseTools([table], {}, {}, [], "Europe/London")
+      const createTool = tools.find(
+        tool => tool.name === `${table._id}_create_row`
+      )
+      if (!createTool) {
+        throw new Error("create_row tool not found")
+      }
+
+      const created = await executeTool(createTool, {
+        data: {
+          name: "Agent meeting",
+          eventTime: UTC_VALUE,
+        },
+      })
+
+      expect(created.row.eventTime).toBe("2025-05-01T10:00:00+01:00")
+
+      // The displayed value must represent the same instant stored in the table.
+      const persistedRow = await config.api.row.get(
+        table._id!,
+        created.row._id!
+      )
+      expect(new Date(persistedRow.eventTime).toISOString()).toBe(UTC_VALUE)
+      expect(new Date(created.row.eventTime).toISOString()).toBe(UTC_VALUE)
+    })
+
+    it("expresses datetime values with a +00:00 offset for UTC users", async () => {
+      const table = await config.api.table.save(tableWithDate())
+      const createdRow = await config.api.row.save(table._id!, {
+        ...basicRow(table._id!),
+        eventTime: UTC_VALUE,
+      })
+
+      const tools = getBudibaseTools([table], {}, {}, [], "UTC")
+      const getTool = tools.find(tool => tool.name === `${table._id}_get_row`)
+      if (!getTool) {
+        throw new Error("get_row tool not found")
+      }
+
+      const result = await executeTool(getTool, { rowId: createdRow._id! })
+
+      expect(result.row.eventTime).toBe("2025-05-01T09:00:00+00:00")
+    })
   })
 })

@@ -54,6 +54,14 @@ export interface ChatAppEndpoints {
   >
 }
 
+const getBrowserTimezone = (): string | undefined => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined
+  } catch {
+    return undefined
+  }
+}
+
 const throwOnErrorChunk = () =>
   new TransformStream<UIMessageChunk, UIMessageChunk>({
     transform(chunk, controller) {
@@ -81,7 +89,10 @@ export const buildChatAppEndpoints = (
       throw new Error("chatAppId is required to stream a chat conversation")
     }
 
-    const body: ChatAgentRequest = chat
+    const body: ChatAgentRequest = {
+      ...chat,
+      timezone: chat.timezone ?? getBrowserTimezone(),
+    }
     const conversationId = chat._id || "new"
 
     const response = await fetch(
