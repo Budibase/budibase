@@ -90,13 +90,16 @@ export async function analyzeAgentRequestLink({
     const agent = await sdk.ai.agents.getOrThrow(agentId)
     const llm = await sdk.ai.llm.createLLM(
       agent.aiconfig,
-      `agent-request-link:${sessionId}`,
+      sessionId,
       undefined,
       agentId
     )
     result = await generateText({
       model: llm.chat,
       providerOptions: llm.providerOptions?.(false),
+      headers: {
+        "x-litellm-tags": "bb-agent-request-link",
+      },
       messages: [
         {
           role: "system",

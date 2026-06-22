@@ -111,6 +111,19 @@ describe("analyzeAgentRequestLink", () => {
       requestId: "agentrequest_thread_1",
       entryAction: "append_latest_entry",
     })
+    expect(createLLMMock).toHaveBeenCalledWith(
+      "config_1",
+      "session_2",
+      undefined,
+      "agent_1"
+    )
+    expect(generateTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: {
+          "x-litellm-tags": "bb-agent-request-link",
+        },
+      })
+    )
   })
 
   it("throws when the model returns an unknown request id", async () => {
