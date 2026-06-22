@@ -71,6 +71,7 @@ import {
   DocumentType,
   type Agent,
   type ChatConversation,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
@@ -547,6 +548,40 @@ describe("agent teams integration provisioning", () => {
       )
       expect(conversations[0]?.userId).toEqual(config.getUser()._id)
       expect(conversations[0]?.messages).toHaveLength(2)
+    })
+
+    it("sends a fallback message when the assistant returns an empty response", async () => {
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "" }],
+          },
+        ],
+        assistantText: "",
+        title: "Mock conversation",
+      } satisfies WebhookChatCompleteResult)
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-ask-1",
+          type: "message",
+          text: "hello teams",
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toEqual(["No response generated."])
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
     })
 
     it("appends downloadable RAG source links to Teams personal replies", async () => {

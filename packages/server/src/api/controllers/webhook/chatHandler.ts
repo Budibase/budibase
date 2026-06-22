@@ -36,6 +36,7 @@ const DEFAULT_IDLE_TIMEOUT_MS = 45 * 60 * 1000
 const DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const CONVERSATION_SCOPE_CACHE_KEY_PREFIX = "chatConversationScope"
 const REDIS_CACHE_INIT_RETRY_MS = 30 * 1000
+export const NO_ASSISTANT_RESPONSE_MESSAGE = "No response generated."
 
 const conversationCache = new Map<string, string>()
 let conversationCacheClient: RedisClient | undefined
@@ -746,9 +747,11 @@ export const handleChatMessage = async ({
     const assistantReply = formatAssistantReply
       ? await formatAssistantReply(result)
       : result.assistantText
-    const finalReply = assistantReply || "No response generated."
+    const finalReply = assistantReply || NO_ASSISTANT_RESPONSE_MESSAGE
     if (streamedAssistantMessage) {
-      if (finalReply !== (result.assistantText || "No response generated.")) {
+      if (
+        finalReply !== (result.assistantText || NO_ASSISTANT_RESPONSE_MESSAGE)
+      ) {
         await streamedAssistantMessage.edit(finalReply)
       }
     } else {

@@ -12,7 +12,7 @@ import { Chat, type Thread, type Message, type SentMessage } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
 import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
-import { handleChatMessage } from "./chatHandler"
+import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -138,7 +138,7 @@ export const splitTeamsMessage = (
   content: string,
   maxLength = 3500
 ): string[] => {
-  const normalized = content || "No response generated."
+  const normalized = content || NO_ASSISTANT_RESPONSE_MESSAGE
   if (normalized.length <= maxLength) {
     return [normalized]
   }
@@ -291,7 +291,7 @@ const createTeamsMessageHandler = ({
 
     const editOrPostTextReply = async (text: string) => {
       const chunks = splitTeamsMessage(text)
-      const firstChunk = chunks[0] || "No response generated."
+      const firstChunk = chunks[0] || NO_ASSISTANT_RESPONSE_MESSAGE
       const remainingChunks = chunks.slice(1)
       if (!(await editProgressMessage(firstChunk))) {
         await thread.post(firstChunk)
