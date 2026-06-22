@@ -2,6 +2,7 @@
   import { Select } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
   import { featureFlags, projectsStore } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
 
   interface ProjectOption {
     label: string
@@ -18,10 +19,11 @@
   let fetchError: string | undefined
 
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: workspaceId = $appStore.appId
 
-  $: if (projectsEnabled) {
+  $: if (projectsEnabled && workspaceId) {
     fetchError = undefined
-    projectsStore.ensureFetched().catch(() => {
+    projectsStore.ensureFetched(workspaceId).catch(() => {
       fetchError = "Projects could not be loaded."
     })
   }

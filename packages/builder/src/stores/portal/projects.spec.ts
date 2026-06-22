@@ -87,6 +87,27 @@ describe("ProjectsStore", () => {
     await expect(ensuredFetch).resolves.toEqual([project("project_1")])
   })
 
+  it("does not expose projects from the previous workspace", async () => {
+    const store = new ProjectsStore()
+    const firstWorkspace = defer<FetchProjectsResponse>()
+    const secondWorkspace = defer<FetchProjectsResponse>()
+
+    fetchProjects
+      .mockReturnValueOnce(firstWorkspace.promise)
+      .mockReturnValueOnce(secondWorkspace.promise)
+
+    const firstFetch = store.fetch("app_workspace_1")
+    const secondFetch = store.ensureFetched("app_workspace_2")
+
+    firstWorkspace.resolve({ projects: [project("first_project")] })
+    await firstFetch
+    expect(getProjects(store)).toEqual([])
+
+    secondWorkspace.resolve({ projects: [project("second_project")] })
+    await secondFetch
+    expect(getProjects(store)).toEqual([project("second_project")])
+  })
+
   it("returns the import response when the post-import refresh fails", async () => {
     const store = new ProjectsStore()
     const response: ImportProjectResponse = {

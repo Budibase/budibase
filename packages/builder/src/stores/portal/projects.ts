@@ -13,16 +13,29 @@ import { get } from "svelte/store"
 export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   private loaded = false
   private fetchPromise: Promise<ProjectResponse[]> | undefined
+  private workspaceId: string | undefined
 
   constructor() {
     super([])
   }
 
-  fetch = async () => {
+  private selectWorkspace = (workspaceId?: string) => {
+    if (workspaceId === this.workspaceId) {
+      return
+    }
+
+    this.workspaceId = workspaceId
+    this.loaded = false
+    this.fetchPromise = undefined
+    this.set([])
+  }
+
+  fetch = async (workspaceId?: string) => {
+    this.selectWorkspace(workspaceId)
     const promise = API.projects
       .fetch()
       .then(({ projects }) => {
-        if (this.fetchPromise === promise) {
+        if (this.fetchPromise === promise && this.workspaceId === workspaceId) {
           this.loaded = true
           this.set(projects)
         }
@@ -37,14 +50,15 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     return await promise
   }
 
-  ensureFetched = async () => {
+  ensureFetched = async (workspaceId?: string) => {
+    this.selectWorkspace(workspaceId)
     if (this.fetchPromise) {
       return await this.fetchPromise
     }
     if (this.loaded) {
       return get(this.store)
     }
-    return await this.fetch()
+    return await this.fetch(workspaceId)
   }
 
   hasFetched = () => this.loaded
@@ -76,7 +90,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   ): Promise<ImportProjectResponse> => {
     const response = await API.projects.importBundle(file, body)
     try {
-      await this.fetch()
+      await this.fetch(this.workspaceId)
     } catch (err) {
       console.warn("Failed to refresh projects after import", err)
     }
