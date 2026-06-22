@@ -1,14 +1,12 @@
 <script>
-  import { Select, Label, Combobox } from "@budibase/bbui"
+  import { Select, Label, Multiselect } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { selectedScreen, componentStore } from "@/stores/builder"
   import { getActionProviders, buildFormSchema } from "@/dataBinding"
   import { findComponent } from "@/helpers/components"
 
-  export let parameters
-  export let bindings = []
-  export let nested
+  let { parameters, bindings = [], nested } = $props()
 
   const typeOptions = [
     {
@@ -21,17 +19,18 @@
     },
   ]
 
-  $: formComponent = getFormComponent(
-    $selectedScreen.props,
-    parameters.componentId
+  const formComponent = $derived(
+    getFormComponent($selectedScreen.props, parameters.componentId)
   )
-  $: formSchema = buildFormSchema(formComponent)
-  $: fieldOptions = Object.keys(formSchema || {})
-  $: actionProviders = getActionProviders(
-    $selectedScreen,
-    $componentStore.selectedComponentId,
-    "ValidateForm",
-    { includeSelf: nested }
+  const formSchema = $derived(buildFormSchema(formComponent))
+  const fieldOptions = $derived(Object.keys(formSchema || {}))
+  const actionProviders = $derived(
+    getActionProviders(
+      $selectedScreen,
+      $componentStore.selectedComponentId,
+      "ValidateForm",
+      { includeSelf: nested }
+    )
   )
 
   const getFormComponent = (asset, id) => {
@@ -51,6 +50,22 @@
       parameters.type = "set"
     }
   })
+
+  const handleFieldChange = e => {
+    // Convert from single field to multi-select format
+    parameters.fields = e.detail || []
+    // Initialize fieldValues for new fields
+    if (!parameters.fieldValues) {
+      parameters.fieldValues = {}
+    }
+  }
+
+  const handleFieldValueChange = (fieldName, value) => {
+    if (!parameters.fieldValues) {
+      parameters.fieldValues = {}
+    }
+    parameters.fieldValues[fieldName] = value
+  }
 </script>
 
 <div class="root">
@@ -67,16 +82,31 @@
     bind:value={parameters.type}
     options={typeOptions}
   />
-  <Label small>Field</Label>
-  <Combobox bind:value={parameters.field} options={fieldOptions} />
-  {#if parameters.type === "set"}
-    <Label small>Value</Label>
-    <DrawerBindableInput
-      title="Field value"
-      {bindings}
-      value={parameters.value}
-      on:change={e => (parameters.value = e.detail)}
-    />
+  <Label small>Fields</Label>
+  <Multiselect
+    value={parameters.fields || []}
+    on:change={handleFieldChange}
+    options={fieldOptions}
+    placeholder={parameters.type === "reset"
+      ? "Select fields to reset"
+      : "Select fields to set"}
+  />
+  {#if parameters.type === "set" && parameters.fields?.length > 0}
+    <div class="field-values">
+      {#each parameters.fields as fieldName}
+        <div class="field-value-pair">
+          <div class="label-col">{fieldName}</div>
+          <div class="input-col">
+            <DrawerBindableInput
+              title="Value for {fieldName}"
+              {bindings}
+              value={parameters.fieldValues?.[fieldName]}
+              on:change={e => handleFieldValueChange(fieldName, e.detail)}
+            />
+          </div>
+        </div>
+      {/each}
+    </div>
   {/if}
 </div>
 
@@ -85,9 +115,43 @@
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 90px 1fr;
     align-items: center;
     max-width: 400px;
     margin: 0 auto;
+  }
+
+  .field-values {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .field-value-pair {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    column-gap: var(--spacing-m);
+    align-items: center;
+    padding: var(--spacing-m) 0;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .field-value-pair:last-child {
+    border-bottom: none;
+  }
+
+  .label-col {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-700);
+    padding: 0 var(--spacing-l);
+  }
+
+  .input-col {
+    padding: 0 var(--spacing-l) 0 0;
   }
 </style>

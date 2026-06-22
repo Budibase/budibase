@@ -56,6 +56,9 @@ describe("ResizablePanel", () => {
     expect(panel).toHaveClass("resizing-panel")
 
     await fireEvent.mouseMove(window, { clientX: 100 })
+    expect(panel).toHaveStyle("width: 100px")
+    expect(localStorage.getItem("panel-width")).toBeNull()
+
     await fireEvent.mouseUp(window, { clientX: 100 })
 
     await waitFor(() => {
@@ -63,6 +66,30 @@ describe("ResizablePanel", () => {
     })
     expect(panel).not.toHaveClass("resizing-panel")
     expect(localStorage.getItem("panel-width")).toBe("250")
+  })
+
+  it("keeps double-click reset at the default width when the initial animation starts from min width", async () => {
+    localStorage.setItem("panel-width", "360")
+
+    const { container, getByRole } = render(ResizablePanel, {
+      storageKey: "panel-width",
+      defaultWidth: 480,
+      minWidth: 300,
+      maxWidthRatio: 0.6,
+    })
+
+    const panel = container.querySelector(".resizable-panel") as HTMLElement
+    const resizeHandle = getByRole("separator")
+
+    await waitFor(() => {
+      expect(panel).toHaveStyle("width: 360px")
+    })
+
+    await fireEvent.dblClick(resizeHandle)
+
+    await waitFor(() => {
+      expect(panel).toHaveStyle("width: 480px")
+    })
   })
 
   it("recomputes max width on window resize and clamps current width", async () => {

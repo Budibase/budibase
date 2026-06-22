@@ -137,7 +137,9 @@ describe("AI Tools - Knowledge files", () => {
       }>
     }
 
-    expect(listFilesSpy).toHaveBeenCalledWith("agent_123")
+    expect(listFilesSpy).toHaveBeenCalledWith("agent_123", {
+      liveOperationOnly: true,
+    })
     expect(result.matchedCount).toBe(3)
     expect(result.totalFiles).toBe(3)
     expect(result.ambiguous).toBe(false)

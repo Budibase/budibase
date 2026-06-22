@@ -12,6 +12,7 @@
 
   export interface Props {
     agentId: string
+    operationId: string
     existingSiteIds?: string[]
     onCreated?: (
       _siteId: string,
@@ -19,7 +20,12 @@
     ) => Promise<void> | void
   }
 
-  let { agentId, existingSiteIds = [], onCreated }: Props = $props()
+  let {
+    agentId,
+    operationId,
+    existingSiteIds = [],
+    onCreated,
+  }: Props = $props()
 
   let sharePointSites = $state<KnowledgeSourceOption[]>([])
   let sharePointConnectionOptions = $state<SharePointConnectionOption[]>([])
@@ -119,12 +125,12 @@
   }
 
   const handleSelect = async (mode: SharePointSelectionMode) => {
-    if (!agentId || !selectedSiteId) {
+    if (!agentId || !operationId || !selectedSiteId) {
       return
     }
     saving = true
     try {
-      await agentsStore.connectAgentSharePointSite(agentId, {
+      await agentsStore.connectOperationSharePointSite(agentId, operationId, {
         datasourceId: selectedDatasourceId,
         authConfigId: selectedAuthConfigId,
         siteId: selectedSiteId,

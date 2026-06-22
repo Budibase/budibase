@@ -23,6 +23,7 @@ import {
   finaliseExternalTables,
   checkExternalTables,
   HOST_ADDRESS,
+  quoteMySqlIdentifier,
 } from "./utils"
 import { isDate, NUMBER_REGEX } from "../utilities"
 import { MySQLColumn } from "./base/types"
@@ -302,7 +303,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         const primaryKeys = []
         const schema: TableSchema = {}
         const descResp: MySQLColumn[] = await this.internalQuery(
-          { sql: `DESCRIBE \`${tableName}\`;` },
+          { sql: `DESCRIBE ${quoteMySqlIdentifier(tableName)}` },
           { connect: false }
         )
         for (let column of descResp) {

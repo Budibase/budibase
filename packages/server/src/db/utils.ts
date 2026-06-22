@@ -43,6 +43,7 @@ export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.Inte
 export const LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
 export const AUTOMATION_LOG_PREFIX = `${DocumentType.AUTOMATION_LOG}${SEPARATOR}`
+export const AGENT_LOG_SESSION_PREFIX = `${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}`
 export const ViewName = dbCore.ViewName
 export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
