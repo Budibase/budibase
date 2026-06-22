@@ -54,6 +54,7 @@ export interface SettingsInnerConfig {
   isSSOEnforced?: boolean
   createdVersion?: string
   lockedBy?: LockReason
+  deactivationScheduledAt?: string // ISO 8601; when the tenant will be deactivated (set by account-portal on lock)
   active?: boolean
   liteLLM?: { keyId: string; secretKey: string }
 }

@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { Modal, ModalContent, Body } from "@budibase/bbui"
   import { LockReason } from "@budibase/types"
 
-  let modal
+  let modal: Modal
 
-  export let lockedBy
-  export let onConfirm
+  export let lockedBy: LockReason | undefined
+  export let onConfirm: () => void
 
   export function show() {
     modal.show()
