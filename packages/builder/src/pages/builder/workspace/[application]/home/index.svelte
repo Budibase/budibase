@@ -73,6 +73,7 @@
     filterHomeRows,
     sortHomeRows,
   } from "./_components/rows"
+  import { buildHomeUrl, type HomeUrlState } from "./_components/urlState"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -206,47 +207,15 @@
     return { q, type, project, sort, order }
   }
 
-  const writeUrlState = () => {
+  const writeUrlState = (state: HomeUrlState) => {
     if (!hasMounted || typeof window === "undefined") {
       return
     }
-
-    const params = new URLSearchParams(window.location.search)
-
-    params.delete("create")
-    const q = searchTerm.trim()
-    if (!q) {
-      params.delete("q")
-    } else {
-      params.set("q", q)
-    }
-
-    if (typeFilter === "all") {
-      params.delete("type")
-    } else {
-      params.set("type", typeFilter)
-    }
-
-    if (!projectsEnabled || !selectedProjectId) {
-      params.delete("project")
-    } else {
-      params.set("project", selectedProjectId)
-    }
-
-    const defaultSortColumn: HomeSortColumn = "updated"
-    const defaultSortOrder: HomeSortOrder = "desc"
-    const isDefaultSort =
-      sortColumn === defaultSortColumn && sortOrder === defaultSortOrder
-    if (isDefaultSort) {
-      params.delete("sort")
-      params.delete("order")
-    } else {
-      params.set("sort", sortColumn)
-      params.set("order", sortOrder)
-    }
-
-    const query = params.toString()
-    const next = `${window.location.pathname}${query ? `?${query}` : ""}`
+    const next = buildHomeUrl(
+      window.location.pathname,
+      window.location.search,
+      state
+    )
     history.replaceState({}, "", next)
   }
 
@@ -890,7 +859,16 @@
     loadProjects($appStore.appId)
   }
 
-  $: if (hasMounted) writeUrlState()
+  $: if (hasMounted) {
+    writeUrlState({
+      searchTerm,
+      typeFilter,
+      selectedProjectId,
+      sortColumn,
+      sortOrder,
+      projectsEnabled,
+    })
+  }
 
   const goToAutomationError = (automationId: string) => {
     goto(url(`../automation/${automationId}`))
@@ -941,7 +919,14 @@
     }
 
     hasMounted = true
-    writeUrlState()
+    writeUrlState({
+      searchTerm,
+      typeFilter,
+      selectedProjectId,
+      sortColumn,
+      sortOrder,
+      projectsEnabled,
+    })
 
     await Promise.all([
       agentsStore.fetchAgents(),
