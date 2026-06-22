@@ -18,16 +18,19 @@
   } from "@budibase/shared-core"
 
   type ToolOption = { label: string; value: string }
+  type OperationOption = { label: string; value: string }
 
   type Props = {
     selectedCase: AgentTestCase
     toolOptions: ToolOption[]
+    operationOptions: OperationOption[]
     onUpdateCase: (
       _updater: (_testCase: AgentTestCase) => AgentTestCase
     ) => void
   }
 
-  let { selectedCase, toolOptions, onUpdateCase }: Props = $props()
+  let { selectedCase, toolOptions, operationOptions, onUpdateCase }: Props =
+    $props()
 
   const reviewerTypeOptions = REVIEWER_TYPES.map(type => ({
     label: REVIEWERS[type].label,
@@ -39,6 +42,7 @@
     contains_text: "Required text",
     llm_judge: "Expected behaviour",
     tool_used: "Expected tool",
+    operation_used: "Expected operation",
   }
 
   const FIELD_PLACEHOLDER: Record<ReviewerType, string> = {
@@ -46,6 +50,7 @@
     contains_text: "Enter the phrase that should appear in the response.",
     llm_judge: "Describe what a good answer should include, avoid, or explain.",
     tool_used: "Choose a tool",
+    operation_used: "Choose an operation",
   }
 
   const updateReviewerField =
@@ -89,8 +94,10 @@
 
           const previousValue = readReviewerContent(reviewer).trim()
           const nextValue =
-            nextType === "tool_used" &&
-            !toolOptions.some(option => option.value === previousValue)
+            ["tool_used", "operation_used"].includes(nextType) &&
+            !(nextType === "tool_used" ? toolOptions : operationOptions).some(
+              option => option.value === previousValue
+            )
               ? ""
               : previousValue
 
@@ -158,7 +165,9 @@
           <Select
             {label}
             {value}
-            options={toolOptions}
+            options={reviewer.type === "tool_used"
+              ? toolOptions
+              : operationOptions}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
             {placeholder}
