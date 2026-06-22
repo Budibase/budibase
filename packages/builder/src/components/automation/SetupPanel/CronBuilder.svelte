@@ -109,7 +109,9 @@
       cronExpression = response.message
       onchange?.(response.message)
     } catch (err) {
-      notifications.error(err instanceof Error ? err.message : "Error generating cron expression")
+      notifications.error(
+        err instanceof Error ? err.message : "Error generating cron expression"
+      )
     } finally {
       loadingAICronExpression = false
     }

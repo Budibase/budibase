@@ -216,11 +216,7 @@
       }}
     />
   {:else if frequency === "cron"}
-    <CronBuilder
-      {cronExpression}
-      {timezone}
-      onchange={dispatchCron}
-    />
+    <CronBuilder {cronExpression} {timezone} onchange={dispatchCron} />
   {:else}
     {#if frequency === "weekly"}
       <div>
