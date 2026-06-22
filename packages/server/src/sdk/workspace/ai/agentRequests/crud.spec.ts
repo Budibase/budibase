@@ -3,7 +3,6 @@ import {
   createOrUpdateRequestForPrompt,
   fetchThread,
   fetchRequestsByAgent,
-  markLatestCompletedBySession,
 } from "./crud"
 import { analyzeAgentRequestLink } from "./helpers"
 
@@ -125,31 +124,6 @@ describe("agentRequests crud", () => {
       expect(second?.request.requestCount).toEqual(2)
       expect(second?.request.entries[1].operationName).toEqual("Comms")
       expect(second?.request.entries[1].source).toEqual("Slack")
-    })
-  })
-
-  it("marks the latest session entry as completed", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
-        decision: "new_thread",
-      })
-      const created = await createOrUpdateRequestForPrompt({
-        agentId: "agent_1",
-        sessionId: "session_1",
-        latestPrompt: "Show me the holidays company policy",
-        operationName: "Support",
-        source: "Chat",
-        userId: "user_1",
-      })
-
-      const completed = await markLatestCompletedBySession({
-        agentId: "agent_1",
-        sessionId: "session_1",
-      })
-
-      expect(completed?.requestId).toEqual(created?.request.requestId)
-      expect(completed?.entries[0].status).toEqual("completed")
-      expect(completed?.latestCompletedAt).toBeDefined()
     })
   })
 

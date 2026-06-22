@@ -27,7 +27,7 @@ const buildEntry = ({
     source,
     promptHistory: [latestPrompt],
     interactionCount: 1,
-    status: "waiting",
+    status: "completed",
     createdAt: now,
     updatedAt: now,
   }
@@ -216,7 +216,7 @@ export async function createOrUpdateRequestForPrompt({
       source: resolvedSource,
       promptHistory: [...latestEntry.promptHistory, prompt],
       interactionCount: latestEntry.interactionCount + 1,
-      status: "waiting",
+      status: "completed",
       updatedAt: now,
     }
   } else {
@@ -248,52 +248,6 @@ export async function createOrUpdateRequestForPrompt({
     }),
     created: false,
   }
-}
-
-export async function markLatestCompletedBySession({
-  agentId,
-  sessionId,
-}: {
-  agentId: string
-  sessionId: string
-}): Promise<AgentRequest | undefined> {
-  const requests = await fetchRequestsByAgent(agentId)
-  const request = sortRequests(
-    requests.filter(candidate => candidate.sessionIds.includes(sessionId))
-  )[0]
-  if (!request || request.entries.length === 0) {
-    return undefined
-  }
-
-  const latestIndex = [...request.entries]
-    .map((entry, index) => ({ entry, index }))
-    .filter(({ entry }) => entry.sessionId === sessionId)
-    .sort(
-      (a, b) =>
-        new Date(b.entry.updatedAt || b.entry.createdAt).getTime() -
-        new Date(a.entry.updatedAt || a.entry.createdAt).getTime()
-    )[0]?.index
-
-  if (latestIndex == null) {
-    return undefined
-  }
-
-  const now = nowIso()
-  const nextEntries = [...request.entries]
-  nextEntries[latestIndex] = {
-    ...nextEntries[latestIndex],
-    status: "completed",
-    updatedAt: now,
-  }
-  const latestEntry = nextEntries[nextEntries.length - 1]
-
-  return await saveRequest({
-    ...request,
-    entries: nextEntries,
-    status: latestEntry.status,
-    updatedAt: now,
-    latestCompletedAt: now,
-  })
 }
 
 export async function generateAndSaveRequestTitle({

@@ -1,6 +1,6 @@
 import { Document } from "../../"
 
-export type AgentRequestStatus = "waiting" | "completed"
+export type AgentRequestStatus = "completed"
 
 export interface AgentRequestEntry {
   entryId: string

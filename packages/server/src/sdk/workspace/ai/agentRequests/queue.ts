@@ -3,7 +3,6 @@ import { FeatureFlag } from "@budibase/types"
 import {
   createOrUpdateRequestForPrompt,
   generateAndSaveRequestTitle,
-  markLatestCompletedBySession,
 } from "./crud"
 import { determineTrigger } from "../agentLogs/shared"
 
@@ -24,12 +23,6 @@ type AgentRequestTrackingJob =
       agentId: string
       sessionId: string
       requestId: string
-    }
-  | {
-      workspaceId: string
-      type: "complete"
-      agentId: string
-      sessionId: string
     }
 
 const DEFAULT_CONCURRENCY = 1
@@ -102,11 +95,6 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           await generateAndSaveRequestTitle(data)
           return
         }
-
-        await markLatestCompletedBySession({
-          agentId: data.agentId,
-          sessionId: data.sessionId,
-        })
       })
     })
   } catch (error) {
@@ -150,28 +138,5 @@ export async function enqueueRequestTrackingStart({
     operationName,
     source: determineTrigger(sessionId),
     userId,
-  })
-}
-
-export async function enqueueRequestTrackingComplete({
-  agentId,
-  sessionId,
-}: {
-  agentId: string
-  sessionId: string
-}) {
-  if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
-    return
-  }
-  const workspaceId = context.getWorkspaceId()
-  if (!workspaceId) {
-    throw new Error("workspaceId is required")
-  }
-
-  await enqueue({
-    workspaceId,
-    type: "complete",
-    agentId,
-    sessionId,
   })
 }

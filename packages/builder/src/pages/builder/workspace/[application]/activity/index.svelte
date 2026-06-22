@@ -81,15 +81,10 @@
   let userNames = $state<Record<string, string>>({})
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
-  const requestStatusMeta: Record<
-    RequestRow["statusTone"],
-    { label: string; icon: string }
-  > = {
-    completed: { label: "Completed", icon: "check-circle" },
-    processing: { label: "Processing", icon: "circle" },
-    "needs-input": { label: "Needs input", icon: "warning" },
-    failed: { label: "Failed", icon: "warning" },
-  }
+  const requestStatusMeta: Record<RequestRow["statusTone"], { label: string }> =
+    {
+      completed: { label: "Completed" },
+    }
 
   let agentOptions = $derived.by(() => {
     const options = ($agentsStore.agents || []).map(agent => ({
@@ -112,15 +107,7 @@
     const requests = filteredRequests
     return [
       { label: "All actions", value: requests.length },
-      {
-        label: "Completed",
-        value: requests.filter(request => request.status === "completed")
-          .length,
-      },
-      {
-        label: "Processing",
-        value: requests.filter(request => request.status === "waiting").length,
-      },
+      { label: "Completed", value: requests.length },
       { label: "Needs input", value: 0 },
       { label: "Failed", value: 0 },
     ]

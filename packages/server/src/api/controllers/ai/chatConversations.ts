@@ -520,12 +520,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
-        if (context.isProdWorkspace()) {
-          await sdk.ai.agentRequests.enqueueRequestTrackingComplete({
-            agentId,
-            sessionId,
-          })
-        }
         events.action.aiAgentExecuted({ agentId })
 
         if (chat.transient || !chatAppId) {
