@@ -992,7 +992,7 @@
               </Drawer>
             {:else if value.customType === "cron"}
               <ScheduleBuilder
-                on:change={e => onChange(e.detail)}
+                onchange={onChange}
                 cronExpression={inputData[key]}
                 timezone={inputData.timezone || "UTC"}
               />

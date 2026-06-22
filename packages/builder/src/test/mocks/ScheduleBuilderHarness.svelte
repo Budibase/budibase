@@ -6,10 +6,10 @@
 
   let changes: Array<{ cron: string; timezone: string }> = []
 
-  const onChange = (event: CustomEvent<{ cron: string; timezone: string }>) => {
-    changes = [...changes, event.detail]
+  const onChange = (update: { cron: string; timezone: string }) => {
+    changes = [...changes, update]
   }
 </script>
 
-<ScheduleBuilder {cronExpression} {timezone} on:change={onChange} />
+<ScheduleBuilder {cronExpression} {timezone} onchange={onChange} />
 <output data-testid="changes">{JSON.stringify(changes)}</output>

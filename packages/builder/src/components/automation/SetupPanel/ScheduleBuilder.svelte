@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     DatePicker,
     Label,
@@ -6,17 +6,29 @@
     Multiselect,
     Select,
   } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import NextExecutionsTable from "./NextExecutionsTable.svelte"
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
-  const dispatch = createEventDispatcher()
+  interface Option<T extends string | number> {
+    label: string
+    value: T
+  }
 
-  export let cronExpression
+  type Frequency = "interval" | "daily" | "weekly" | "monthly" | "cron"
+  type ScheduleError = string | string[] | undefined
+
+  interface ScheduleUpdate {
+    cron: string
+    timezone: string
+  }
+
+  export let cronExpression: string | undefined
   export let timezone = "UTC"
+  export let onchange: ((update: ScheduleUpdate) => void) | undefined =
+    undefined
 
-  const FREQUENCIES = [
+  const FREQUENCIES: Option<Frequency>[] = [
     { label: "Regular intervals", value: "interval" },
     { label: "Daily", value: "daily" },
     { label: "Weekly", value: "weekly" },
@@ -24,7 +36,7 @@
     { label: "Cron expression", value: "cron" },
   ]
 
-  const DAYS_OF_WEEK = [
+  const DAYS_OF_WEEK: Option<string>[] = [
     { label: "Monday", value: "1" },
     { label: "Tuesday", value: "2" },
     { label: "Wednesday", value: "3" },
@@ -34,12 +46,15 @@
     { label: "Sunday", value: "0" },
   ]
 
-  const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, idx) => {
-    const day = `${idx + 1}`
-    return { label: day, value: day }
-  })
+  const DAYS_OF_MONTH: Option<string>[] = Array.from(
+    { length: 31 },
+    (_, idx) => {
+      const day = `${idx + 1}`
+      return { label: day, value: day }
+    }
+  )
 
-  const TIMEZONES = [
+  const TIMEZONES: Option<string>[] = [
     { label: "UTC", value: "UTC" },
     { label: "Europe/London", value: "Europe/London" },
     { label: "Europe/Paris", value: "Europe/Paris" },
@@ -58,7 +73,7 @@
     { label: "Pacific/Auckland", value: "Pacific/Auckland" },
   ]
   const MINUTES_PER_HOUR = 60
-  const INTERVAL_OPTIONS = [
+  const INTERVAL_OPTIONS: Option<number>[] = [
     { label: "10 mins", value: 10 },
     { label: "15 mins", value: 15 },
     { label: "20 mins", value: 20 },
@@ -71,22 +86,23 @@
     { label: "12 hrs", value: 720 },
   ]
 
-  let frequency = cronExpression ? "cron" : "daily"
+  let frequency: Frequency = cronExpression ? "cron" : "daily"
   let intervalMinutes = 30
-  let time = "09:00"
+  let time: string | undefined = "09:00"
   let selectedDaysOfWeek = ["1", "2", "3", "4", "5"]
   let selectedDaysOfMonth = ["1"]
-  let error
-  let nextExecutions
+  let error: ScheduleError
+  let nextExecutions: string[] | null
   let savedCronExpression = cronExpression
   let savedTimezone = timezone
 
   $: timezone = timezone || "UTC"
   $: nextExecutions = getNextExecutions(cronExpression, timezone)
 
-  const sortNumbers = values => values.map(Number).sort((a, b) => a - b)
+  const sortNumbers = (values: string[]) =>
+    values.map(Number).sort((a, b) => a - b)
 
-  const getTimeParts = value => {
+  const getTimeParts = (value: string | undefined) => {
     const [hours = "09", minutes = "00"] = (value || "09:00").split(":")
     return {
       hours: Number(hours),
@@ -94,7 +110,10 @@
     }
   }
 
-  const getNextExecutions = (expression, timezone) => {
+  const getNextExecutions = (
+    expression: string | undefined,
+    timezone: string
+  ): string[] | null => {
     if (!expression || expression === REBOOT_CRON) {
       return null
     }
@@ -105,7 +124,7 @@
     }
   }
 
-  const dispatchCron = expression => {
+  const dispatchCron = (expression: string | undefined) => {
     if (!expression) {
       return
     }
@@ -113,7 +132,7 @@
       expression === REBOOT_CRON
         ? { valid: true }
         : helpers.cron.validate(expression)
-    error = validation.err
+    error = "err" in validation ? validation.err : undefined
     if (error) {
       return
     }
@@ -123,7 +142,7 @@
     cronExpression = expression
     savedCronExpression = expression
     savedTimezone = timezone
-    dispatch("change", { cron: expression, timezone })
+    onchange?.({ cron: expression, timezone })
   }
 
   const updateSchedule = () => {
@@ -131,7 +150,7 @@
       return
     }
 
-    let expression
+    let expression: string | undefined
     const { hours, minutes } = getTimeParts(time)
 
     if (frequency === "interval") {
@@ -178,7 +197,11 @@
     label="Period"
     value={frequency}
     options={FREQUENCIES}
-    on:change={e => (frequency = e.detail)}
+    on:change={(event: CustomEvent<Frequency | undefined>) => {
+      if (event.detail) {
+        frequency = event.detail
+      }
+    }}
   />
 
   {#if frequency === "interval"}
@@ -186,15 +209,17 @@
       label="Interval"
       value={intervalMinutes}
       options={INTERVAL_OPTIONS}
-      on:change={e => (intervalMinutes = e.detail)}
+      on:change={(event: CustomEvent<number | undefined>) => {
+        if (event.detail) {
+          intervalMinutes = event.detail
+        }
+      }}
     />
   {:else if frequency === "cron"}
     <CronBuilder
       {cronExpression}
       {timezone}
-      on:change={e => {
-        dispatchCron(e.detail)
-      }}
+      onchange={dispatchCron}
     />
   {:else}
     {#if frequency === "weekly"}
@@ -205,7 +230,9 @@
           options={DAYS_OF_WEEK}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          on:change={e => (selectedDaysOfWeek = e.detail)}
+          on:change={(event: CustomEvent<string[]>) => {
+            selectedDaysOfWeek = event.detail
+          }}
         />
       </div>
     {:else if frequency === "monthly"}
@@ -216,16 +243,16 @@
           options={DAYS_OF_MONTH}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          on:change={e => (selectedDaysOfMonth = e.detail)}
+          on:change={(event: CustomEvent<string[]>) => {
+            selectedDaysOfMonth = event.detail
+          }}
         />
       </div>
     {/if}
-    <DatePicker
-      label="Time"
-      value={time}
-      timeOnly
-      on:change={e => (time = e.detail)}
-    />
+    <div>
+      <Label>Time</Label>
+      <DatePicker bind:value={time} timeOnly />
+    </div>
     {#if error}
       <Label><div class="error">{error}</div></Label>
     {/if}
@@ -235,9 +262,11 @@
     label="Timezone"
     value={timezone}
     options={TIMEZONES}
-    on:change={e => {
-      timezone = e.detail
-      dispatchCron(cronExpression)
+    on:change={(event: CustomEvent<string | undefined>) => {
+      if (event.detail) {
+        timezone = event.detail
+        dispatchCron(cronExpression)
+      }
     }}
   />
 

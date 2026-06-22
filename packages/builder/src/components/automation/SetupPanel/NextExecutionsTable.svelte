@@ -1,13 +1,17 @@
-<script>
+<script lang="ts">
   import { InlineAlert } from "@budibase/bbui"
 
-  export let executions = []
+  interface ExecutionRow {
+    day: string
+    date: string
+    time: string
+  }
 
-  $: rows = Array.isArray(executions)
-    ? executions.map(execution => parseExecution(execution))
-    : []
+  export let executions: string[] = []
 
-  const parseExecution = execution => {
+  $: rows = executions.map(execution => parseExecution(execution))
+
+  const parseExecution = (execution: string): ExecutionRow => {
     const [day = "", date = "", time = ""] = execution.split(", ")
     return { day, date, time }
   }

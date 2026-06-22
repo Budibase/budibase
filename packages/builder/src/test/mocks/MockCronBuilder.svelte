@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { REBOOT_CRON } from "@budibase/shared-core"
 
   export let cronExpression: string | undefined
-
-  const dispatch = createEventDispatcher()
+  export let onchange: ((cronExpression: string) => void) | undefined =
+    undefined
 
   const selectRebootCron = () => {
-    dispatch("change", REBOOT_CRON)
+    onchange?.(REBOOT_CRON)
   }
 </script>
 

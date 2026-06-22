@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   import { Select, Input, Label, Layout, notifications } from "@budibase/bbui"
-  import { onMount, createEventDispatcher } from "svelte"
+  import { onMount } from "svelte"
   import { flags } from "@/stores/builder"
   import { aiStore } from "@/stores/portal"
   import { API } from "@/api"
@@ -9,15 +9,21 @@
 
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
-  const dispatch = createEventDispatcher()
+  interface CronOption {
+    label: string
+    value: string
+  }
 
-  export let cronExpression
-  export let timezone
+  type CronError = string | undefined
 
-  let error
-  let nextExecutions
+  export let cronExpression: string | undefined
+  export let timezone = "UTC"
+  export let onchange: ((cronExpression: string) => void) | undefined =
+    undefined
 
-  // AI prompt
+  let error: CronError
+  let nextExecutions: string[] | null
+
   let aiCronPrompt = ""
   let loadingAICronExpression = false
 
@@ -36,33 +42,39 @@
     }
   }
 
-  const onChange = e => {
-    if (e.detail !== REBOOT_CRON) {
-      error = helpers.cron.validate(e.detail).err
+  const onChange = (value: string | undefined) => {
+    if (!value) {
+      return
     }
-    if (e.detail === cronExpression || error) {
+    if (value !== REBOOT_CRON) {
+      const validation = helpers.cron.validate(value)
+      error = "err" in validation ? validation.err.join(". ") : undefined
+    } else {
+      error = undefined
+    }
+    if (value === cronExpression || error) {
       return
     }
 
-    cronExpression = e.detail
-    dispatch("change", e.detail)
+    cronExpression = value
+    onchange?.(value)
   }
 
-  const updatePreset = e => {
+  const updatePreset = (event: CustomEvent<string | undefined>) => {
     aiCronPrompt = ""
-    onChange(e)
+    onChange(event.detail)
   }
 
-  const updateCronExpression = e => {
+  const updateCronExpression = (event: CustomEvent<string | undefined>) => {
     aiCronPrompt = ""
-    cronExpression = null
+    cronExpression = undefined
     nextExecutions = null
-    onChange(e)
+    onChange(event.detail)
   }
 
   let touched = false
 
-  const CRON_EXPRESSIONS = [
+  const CRON_EXPRESSIONS: CronOption[] = [
     {
       label: "Every Minute",
       value: "* * * * *",
@@ -95,9 +107,9 @@
     try {
       const response = await API.generateCronExpression(aiCronPrompt)
       cronExpression = response.message
-      dispatch("change", response.message)
+      onchange?.(response.message)
     } catch (err) {
-      notifications.error(err.message)
+      notifications.error(err instanceof Error ? err.message : "Error generating cron expression")
     } finally {
       loadingAICronExpression = false
     }
@@ -110,8 +122,6 @@
   <Select
     on:change={updatePreset}
     value={cronExpression || "Custom"}
-    secondary
-    extraThin
     label="Use a Preset (Optional)"
     options={CRON_EXPRESSIONS}
   />
@@ -120,7 +130,6 @@
       <Input
         bind:value={aiCronPrompt}
         label="Generate Cron Expression with AI"
-        size="S"
         placeholder="Run every hour between 1pm to 4pm everyday of the week"
       />
       {#if aiCronPrompt}

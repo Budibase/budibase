@@ -42,6 +42,7 @@
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
 - Avoid adding nested ternary statements.
+- Prefer a svelte5 approach over svelte4.
 
 ## Test style - packages/server
 
