@@ -118,7 +118,9 @@
         <Button cta on:click={onConfirm}>
           {isOwner ? "Upgrade plan" : "View plans"}
         </Button>
-        <Button secondary on:click={handleExport}>Export workspace</Button>
+        {#if appId}
+          <Button secondary on:click={handleExport}>Export workspace</Button>
+        {/if}
         <Link
           href={SELF_HOST_DOCS_URL}
           target="_blank"
