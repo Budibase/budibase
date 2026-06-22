@@ -35,12 +35,14 @@
     licensing,
     enrichedApps,
     agentsStore,
+    featureFlags,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
   import {
     type Datasource,
+    FeatureFlag,
     type Query,
     type Table,
     type UIAutomation,
@@ -509,13 +511,15 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              <SideNavLink
-                icon="pulse"
-                text="Activity"
-                url={$url("./activity")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
+              {#if $featureFlags[FeatureFlag.AI_AGENT_ACTIVITY]}
+                <SideNavLink
+                  icon="pulse"
+                  text="Activity"
+                  url={$url("./activity")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                />
+              {/if}
 
               <ActionMenu
                 align={PopoverAlignment.RightContextMenu}

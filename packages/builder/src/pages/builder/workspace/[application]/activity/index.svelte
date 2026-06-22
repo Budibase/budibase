@@ -1,9 +1,10 @@
 <script lang="ts">
   import { API } from "@/api"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, featureFlags } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
   import { Pagination, Select, Table, notifications } from "@budibase/bbui"
-  import type { AgentRequest } from "@budibase/types"
+  import { FeatureFlag, type AgentRequest } from "@budibase/types"
+  import { goto } from "@roxi/routify"
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
   import ActivityActionsRenderer from "./ActivityActionsRenderer.svelte"
@@ -67,6 +68,7 @@
   let currentPage = $state(1)
   let allRequests = $state<AgentRequest[]>([])
   let userNames = $state<Record<string, string>>({})
+  let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
   const requestStatusMeta: Record<
     RequestRow["statusTone"],
@@ -252,6 +254,11 @@
   }
 
   $effect(() => {
+    if (!activityEnabled) {
+      $goto("../home")
+      return
+    }
+
     const currentAgentIds = ($agentsStore.agents || []).map(agent => agent._id)
     if (!currentAgentIds.length) {
       return

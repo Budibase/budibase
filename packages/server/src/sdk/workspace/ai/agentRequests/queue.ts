@@ -1,4 +1,5 @@
-import { context, queue } from "@budibase/backend-core"
+import { context, features, queue } from "@budibase/backend-core"
+import { FeatureFlag } from "@budibase/types"
 import {
   createOrUpdateRequestForPrompt,
   markLatestCompletedBySession,
@@ -69,6 +70,9 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
     return getQueue().process(concurrency, async job => {
       const { workspaceId, ...data } = job.data
       await context.doInWorkspaceContext(workspaceId, async () => {
+        if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
+          return
+        }
         if (data.type === "start") {
           await createOrUpdateRequestForPrompt(data)
           return
@@ -102,6 +106,9 @@ export async function enqueueRequestTrackingStart({
   latestPrompt: string
   userId: string
 }) {
+  if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
+    return
+  }
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
     throw new Error("workspaceId is required")
@@ -124,6 +131,9 @@ export async function enqueueRequestTrackingComplete({
   agentId: string
   sessionId: string
 }) {
+  if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
+    return
+  }
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
     throw new Error("workspaceId is required")
