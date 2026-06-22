@@ -245,6 +245,7 @@ Any constraints the agent must follow.
   <OperationSidePanel
     open={operationPanelOpen}
     bind:operation={agent.operations[0]}
+    agentId={agent._id}
     {promptBindings}
     {bindingIcons}
     {completions}
