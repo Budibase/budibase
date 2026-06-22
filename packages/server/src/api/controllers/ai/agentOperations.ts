@@ -1,12 +1,23 @@
-import { HTTPError } from "@budibase/backend-core"
+import { features, HTTPError } from "@budibase/backend-core"
 import {
   AgentOperationMutationResponse,
   CreateAgentOperationRequest,
+  FeatureFlag,
   UpdateAgentOperationRequest,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { toAgentResponse } from "./agentResponse"
+
+const assertMultipleOperationsAllowed = async (agentId: string) => {
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  if ((agent.operations?.length ?? 0) === 0) {
+    return
+  }
+  if (!(await features.isEnabled(FeatureFlag.MULTIPLE_OPERATIONS))) {
+    throw new HTTPError("Multiple operations are not enabled", 403)
+  }
+}
 
 export async function createAgentOperation(
   ctx: UserCtx<
@@ -17,6 +28,8 @@ export async function createAgentOperation(
 ) {
   const { agentId } = ctx.params
   const body = ctx.request.body
+
+  await assertMultipleOperationsAllowed(agentId)
 
   const agent = await sdk.ai.agents.createOperation(agentId, {
     id: body.id,

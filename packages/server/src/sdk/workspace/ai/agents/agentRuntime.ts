@@ -1,15 +1,19 @@
+import { features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import {
   ActionType,
   Agent,
+  AgentOperation,
   AgentMessageMetadata,
-  ChatConversationChannel,
   ChatConversationRequest,
   ContextUser,
-  EscalationRecipient,
+  FeatureFlag,
 } from "@budibase/types"
 import {
+  Output,
   extractReasoningMiddleware,
+  jsonSchema,
   stepCountIs,
   ToolLoopAgent,
   type LanguageModelUsage,
@@ -24,22 +28,24 @@ import {
   findLatestUserQuestion,
   prepareModelMessages,
 } from "../chatConversations"
-import { updatePendingToolCalls } from "./utils"
+import {
+  updatePendingToolCalls,
+  buildPromptAndTools,
+  getLiveOperations,
+  type BuildPromptAndToolsOptions,
+} from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import {
   createEscalateTool,
   createResolvedEscalateTool,
 } from "../../../../ai/tools/budibase/escalate"
+import tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
-export interface OperationEscalationConfig {
-  operationId: string
-  recipients: EscalationRecipient[]
-  // How long to wait for a human response before the escalation expires, in ms.
-  delayMs: number
-  channel?: ChatConversationChannel
-}
+// How long to wait for a human response before the escalation expires, in
+// seconds, when the operation doesn't specify its own delay.
+const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -52,7 +58,6 @@ interface PrepareAgentChatRunParams {
   sessionId: string
   user: ContextUser
   startedAt?: string
-  escalation?: OperationEscalationConfig
   // On resume swap escalate for a resolved stub so the model can't trigger a fresh escalation
   escalationResolved?: boolean
   // Appended to the system prompt - a trusted channel for run-time directives
@@ -62,6 +67,7 @@ interface PrepareAgentChatRunParams {
 
 export interface AgentChatRun {
   latestQuestion: string
+  selectedOperation?: AgentOperation
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -82,6 +88,152 @@ export interface AgentChatStreamOptions {
   pendingToolCalls?: Set<string>
 }
 
+interface OperationRoute {
+  operationId?: string
+  reason?: string
+}
+
+const OPERATION_ROUTER_SCHEMA =
+  helpers.structuredOutput.normalizeSchemaForStructuredOutput({
+    type: "object",
+    properties: {
+      operationId: {
+        anyOf: [{ type: "string" }, { type: "null" }],
+      },
+      reason: { type: "string" },
+    },
+    required: ["operationId", "reason"],
+  })
+
+const buildOperationRoutingInstructions = (
+  operations: AgentOperation[]
+) => `You route a user request to one Budibase agent operation.
+
+Choose exactly one live operation only when it is clearly the best match for the latest user request.
+If the request does not fit any operation, return operationId as null.
+Be conservative. If the request is ambiguous, too broad, or unrelated, return null.
+Use the operation name, instructions, tools, and knowledge setup as signals.
+Return only the structured output.
+
+Live operations:
+${operations
+  .map(
+    operation => `- id: ${operation.id}
+  name: ${operation.name}
+  tools: ${(operation.enabledTools || []).length}
+  hasKnowledge: ${operation.knowledgeBases?.length ? "yes" : "no"}
+  instructions:
+  ${(operation.promptInstructions || "None").trim() || "None"}`
+  )
+  .join("\n")}`
+
+export const chooseOperationForQuestion = async ({
+  agent,
+  latestQuestion,
+  llm,
+}: {
+  agent: Agent
+  latestQuestion: string
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+}): Promise<AgentOperation | undefined> => {
+  const liveOperations = getLiveOperations(agent)
+  if (liveOperations.length === 0) {
+    return undefined
+  }
+  const multipleOperationsEnabled = await features.isEnabled(
+    FeatureFlag.MULTIPLE_OPERATIONS
+  )
+  if (!multipleOperationsEnabled) {
+    return liveOperations[0]
+  }
+  if (!latestQuestion.trim()) {
+    return undefined
+  }
+
+  const router = new ToolLoopAgent({
+    model: wrapLanguageModel({
+      model: llm.chat,
+      middleware: extractReasoningMiddleware({
+        tagName: "think",
+      }),
+    }),
+    instructions: buildOperationRoutingInstructions(liveOperations),
+    stopWhen: stepCountIs(1),
+    providerOptions: llm.providerOptions?.(false),
+    output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
+  })
+
+  try {
+    const result = await router.stream({
+      prompt: latestQuestion,
+    })
+
+    const route = (await result.output) as OperationRoute
+    if (!route?.operationId) {
+      return undefined
+    }
+
+    return liveOperations.find(operation => operation.id === route.operationId)
+  } catch (error) {
+    console.error("Operation routing failed", {
+      agentId: agent._id,
+      error,
+    })
+    return undefined
+  }
+}
+
+export interface PrepareAgentRunContextParams {
+  agent: Agent
+  agentId: string
+  sessionId: string
+  latestQuestion: string
+  aiConfigId?: string
+  span?: tracer.Span
+  buildPromptOptions?: BuildPromptAndToolsOptions
+}
+
+export interface AgentRunContext {
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+  selectedOperation?: AgentOperation
+  systemPrompt: string
+  tools: ToolSet
+  toolDisplayNames: Record<string, string>
+}
+
+export const prepareAgentRunContext = async ({
+  agent,
+  agentId,
+  sessionId,
+  latestQuestion,
+  aiConfigId,
+  span,
+  buildPromptOptions,
+}: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
+  const llm = await sdk.ai.llm.createLLM(
+    aiConfigId ?? agent.aiconfig,
+    sessionId,
+    span,
+    agentId
+  )
+  const selectedOperation = await chooseOperationForQuestion({
+    agent,
+    latestQuestion,
+    llm,
+  })
+  const promptAndTools = await buildPromptAndTools(
+    agent,
+    selectedOperation,
+    buildPromptOptions
+  )
+
+  return {
+    llm,
+    selectedOperation,
+    ...promptAndTools,
+  }
+}
+
 export const prepareAgentChatRun = async ({
   agent,
   agentId,
@@ -93,7 +245,6 @@ export const prepareAgentChatRun = async ({
   sessionId,
   user,
   startedAt,
-  escalation,
   escalationResolved,
   additionalInstructions,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
@@ -107,21 +258,27 @@ export const prepareAgentChatRun = async ({
     startedAt,
   })
 
-  const [promptAndTools, llm, modelMessages] = await Promise.all([
-    sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(user),
-      includeGoal: false,
-    }),
-    sdk.ai.llm.createLLM(
-      aiConfigId ?? agent.aiconfig,
+  const [runContext, modelMessages] = await Promise.all([
+    prepareAgentRunContext({
+      agent,
+      agentId,
       sessionId,
-      undefined,
-      agentId
-    ),
+      latestQuestion,
+      aiConfigId,
+      buildPromptOptions: {
+        baseSystemPrompt: ai.agentSystemPrompt(user),
+        includeGoal: false,
+      },
+    }),
     providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
   ])
-
-  const tools = promptAndTools.tools
+  const {
+    llm,
+    selectedOperation,
+    tools,
+    toolDisplayNames,
+    systemPrompt: baseSystemPrompt,
+  } = runContext
   const retrievedKnowledgeSourceById = new Map<
     string,
     NonNullable<AgentMessageMetadata["ragSources"]>[number]
@@ -150,27 +307,33 @@ export const prepareAgentChatRun = async ({
   }
 
   if (tools.escalate) {
+    const recipients = selectedOperation?.escalation?.recipients
     if (escalationResolved) {
       // Resumed run: replace with a no-op so the model can't re-escalate.
       // The prior escalate call is in the message history, so the tool must
       // remain in the schema or the model will see an unresolved tool call.
       tools.escalate = createResolvedEscalateTool()
-    } else if (escalation) {
-      // Fresh run
+    } else if (selectedOperation && recipients?.length) {
+      // Fresh run: escalation is configured per operation, so resolve it from
+      // the operation this run actually selected - never a different one.
       tools.escalate = createEscalateTool({
         agentId,
-        operationId: escalation.operationId,
+        operationId: selectedOperation.id,
         sessionId,
-        recipients: escalation.recipients,
-        delayMs: escalation.delayMs,
-        channel: escalation.channel,
+        recipients,
+        delayMs:
+          (selectedOperation.escalation?.delay ??
+            DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
+        channel: chat?.channel,
         userId: user?._id,
         getMessages: () => modelMessages,
       })
     }
+    // Otherwise the operation references escalate but has no reviewers - leave
+    // the placeholder tool in place so the model is told it's unavailable.
   }
 
-  const systemPrompt = [promptAndTools.systemPrompt, additionalInstructions]
+  const systemPrompt = [baseSystemPrompt, additionalInstructions]
     .filter(Boolean)
     .join("\n\n")
 
@@ -190,14 +353,15 @@ export const prepareAgentChatRun = async ({
   })
 
   const contextUsage: AgentChatRun["contextUsage"] = {}
-  const systemPromptTokens = estimateTokens(systemPrompt)
+  const systemPromptTokens = estimateTokens(systemPrompt || "")
 
   return {
     latestQuestion,
+    selectedOperation,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
-    toolDisplayNames: promptAndTools.toolDisplayNames,
+    toolDisplayNames,
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,

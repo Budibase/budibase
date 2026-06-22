@@ -31,7 +31,7 @@ import sdk from "../../../sdk"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
-  getLiveOperation,
+  getLiveOperations,
   prepareAgentChatRun,
   type OperationEscalationConfig,
 } from "../../../sdk/workspace/ai/agents"
@@ -73,8 +73,8 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
-const allowsKnowledgeSourceDownload = (agent: Agent) =>
-  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
+const findLiveOperation = (agent: Agent, operationId: string) =>
+  getLiveOperations(agent).find(operation => operation.id === operationId)
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
@@ -410,6 +410,8 @@ export async function webhookChat({
     messages: [...chat.messages, assistantMessage],
     assistantText: assistantText || "",
     ragSources: run.getUsedKnowledgeSourcesMetadata(),
+    allowKnowledgeSourceDownload:
+      run.selectedOperation?.allowKnowledgeSourceDownload,
     title,
   }
 }
@@ -458,6 +460,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const sharedMetadata = {
       ...(Object.keys(run.toolDisplayNames).length > 0
         ? { toolDisplayNames: run.toolDisplayNames }
+        : {}),
+      ...(run.selectedOperation
+        ? {
+            selectedOperationId: run.selectedOperation.id,
+            selectedOperationName: run.selectedOperation.name,
+            allowKnowledgeSourceDownload:
+              run.selectedOperation.allowKnowledgeSourceDownload,
+          }
         : {}),
     }
     result.pipeUIMessageStreamToResponse(ctx.res, {
@@ -563,10 +573,15 @@ export async function fetchChatAppAgentFileUrl(
   ctx: UserCtx<
     void,
     FetchAgentFileUrlResponse,
-    { chatAppId: string; agentId: string; fileId: string }
+    {
+      chatAppId: string
+      agentId: string
+      operationId: string
+      fileId: string
+    }
   >
 ) {
-  const { chatAppId, agentId, fileId } = ctx.params
+  const { chatAppId, agentId, operationId, fileId } = ctx.params
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
@@ -583,14 +598,24 @@ export async function fetchChatAppAgentFileUrl(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (!allowsKnowledgeSourceDownload(agent)) {
+  const operation = findLiveOperation(agent, operationId)
+
+  if (!operation) {
+    throw new HTTPError("Operation not found", 404)
+  }
+
+  if (!operation.allowKnowledgeSourceDownload) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403
     )
   }
 
-  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  const url = await sdk.ai.rag.getFileUrlForOperation(
+    agentId,
+    operation.id,
+    fileId
+  )
   ctx.body = { url }
   ctx.status = 200
 }

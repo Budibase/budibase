@@ -75,6 +75,7 @@ export interface WebhookChatCompleteResult {
   messages: ChatConversation["messages"]
   assistantText: string
   ragSources?: AgentMessageMetadata["ragSources"]
+  allowKnowledgeSourceDownload?: boolean
   title?: string
 }
 

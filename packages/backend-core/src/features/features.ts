@@ -249,6 +249,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.AI_RAG_SHAREPOINT]: false,
   [FeatureFlag.AI_AGENT_INSTRUCTIONS]: false,
   [FeatureFlag.AI_TESTS]: false,
+  [FeatureFlag.MULTIPLE_OPERATIONS]: false,
   [FeatureFlag.FRONT_COMPANION]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,

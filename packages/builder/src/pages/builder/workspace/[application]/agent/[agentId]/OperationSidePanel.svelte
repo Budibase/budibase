@@ -36,6 +36,7 @@
     onUpdated,
     onAddApiConnection,
     onConfigureWebSearch,
+    onRenameOperation,
     onSetOperationLive,
   }: {
     open?: boolean
@@ -51,6 +52,7 @@
     onUpdated: () => Promise<boolean>
     onAddApiConnection: () => void
     onConfigureWebSearch: () => void
+    onRenameOperation: () => void
     onSetOperationLive: (operationId: string, live: boolean) => Promise<boolean>
   } = $props()
 
@@ -193,6 +195,12 @@
           name: operationLive ? "Stop" : "Set live",
           visible: true,
           callback: async () => await setOperationLive(!operationLive),
+        },
+        {
+          icon: "pencil",
+          name: "Rename",
+          visible: true,
+          callback: onRenameOperation,
         },
       ],
       { x: event.clientX, y: event.clientY }
