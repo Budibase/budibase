@@ -385,36 +385,46 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  getDefinitionSQL(tableName: string, schemaName: string) {
-    return `select *
+  getDefinitionSQL(tableName: string, schemaName: string): SqlQuery {
+    return {
+      sql: `select *
             from INFORMATION_SCHEMA.COLUMNS
-            where TABLE_NAME='${tableName}' AND TABLE_SCHEMA='${schemaName}'`
+            where TABLE_NAME=@p0 AND TABLE_SCHEMA=@p1`,
+      bindings: [tableName, schemaName],
+    }
   }
 
-  getConstraintsSQL(tableName: string) {
-    return `SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC 
+  getConstraintsSQL(tableName: string, schemaName: string): SqlQuery {
+    return {
+      sql: `SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC
             INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU
               ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' 
               AND TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME 
-              AND KU.table_name='${tableName}'
+              AND TC.TABLE_SCHEMA = KU.TABLE_SCHEMA
+            WHERE KU.TABLE_NAME=@p0 AND KU.TABLE_SCHEMA=@p1
             ORDER BY 
               KU.TABLE_NAME,
-              KU.ORDINAL_POSITION;`
+              KU.ORDINAL_POSITION`,
+      bindings: [tableName, schemaName],
+    }
   }
 
-  getAutoColumnsSQL(tableName: string) {
-    return `SELECT 
-            COLUMNPROPERTY(OBJECT_ID(TABLE_SCHEMA+'.'+TABLE_NAME),COLUMN_NAME,'IsComputed') 
+  getAutoColumnsSQL(tableName: string, schemaName: string): SqlQuery {
+    return {
+      sql: `SELECT
+            COLUMNPROPERTY(OBJECT_ID(QUOTENAME(TABLE_SCHEMA)+'.'+QUOTENAME(TABLE_NAME)),COLUMN_NAME,'IsComputed')
               AS IS_COMPUTED,
-            COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity')
+            COLUMNPROPERTY(OBJECT_ID(QUOTENAME(TABLE_SCHEMA)+'.'+QUOTENAME(TABLE_NAME)), COLUMN_NAME, 'IsIdentity')
               AS IS_IDENTITY,
             *
             FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME='${tableName}'`
+            WHERE TABLE_NAME=@p0 AND TABLE_SCHEMA=@p1`,
+      bindings: [tableName, schemaName],
+    }
   }
 
-  async runSQL(sql: string) {
-    return (await this.internalQuery(getSqlQuery(sql))).recordset
+  async runSQL(query: SqlQuery | string) {
+    return (await this.internalQuery(getSqlQuery(query))).recordset
   }
 
   /**
@@ -445,10 +455,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         this.getDefinitionSQL(tableName, schemaName)
       )
       // find primary key constraints
-      const constraints = await this.runSQL(this.getConstraintsSQL(tableName))
+      const constraints = await this.runSQL(
+        this.getConstraintsSQL(tableName, schemaName)
+      )
       // find the computed and identity columns (auto columns)
       const columns: MSSQLColumn[] = await this.runSQL(
-        this.getAutoColumnsSQL(tableName)
+        this.getAutoColumnsSQL(tableName, schemaName)
       )
       const primaryKeys = constraints
         .filter(

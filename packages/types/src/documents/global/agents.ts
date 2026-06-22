@@ -78,27 +78,32 @@ export interface AgentSharePointKnowledgeSource {
 
 export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
+export interface AgentOperation {
+  id: string
+  name: string
+  live: boolean
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
+  allowKnowledgeSourceDownload: boolean
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  promptInstructions?: string
-  operationName?: string
+  operations?: AgentOperation[]
   goal?: string
   live?: boolean
   publishedAt?: string
   icon?: string
   iconColor?: string
   createdBy?: string
-  enabledTools?: string[]
-  knowledgeBases?: string[]
-  /** When false, chat users cannot download knowledge source files. Default is allowed. */
-  allowKnowledgeSourceDownload?: boolean
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
   telegramIntegration?: TelegramAgentIntegration
-  knowledgeSources?: AgentKnowledgeSource[]
 }
 
 export interface AgentMessageRagSource {
@@ -127,6 +132,9 @@ export interface AgentMessageUsage {
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>
+  selectedOperationId?: string
+  selectedOperationName?: string
+  allowKnowledgeSourceDownload?: boolean
   createdAt?: number
   completedAt?: number
   error?: string

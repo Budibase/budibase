@@ -1055,6 +1055,37 @@ if (descriptions.length) {
                   })
               })
 
+              describe("notOneOf", () => {
+                it("successfully finds rows not in the list", async () => {
+                  await expectQuery({
+                    notOneOf: { name: ["foo"] },
+                  }).toContainExactly([{ name: "bar" }])
+                })
+
+                it("returns all rows when none match the list", async () => {
+                  await expectQuery({
+                    notOneOf: { name: ["none"] },
+                  }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+                })
+
+                it("can exclude multiple values for same column", async () => {
+                  await expectQuery({
+                    notOneOf: {
+                      name: ["foo", "bar"],
+                    },
+                  }).toFindNothing()
+                })
+
+                it("splits comma separated strings", async () => {
+                  await expectQuery({
+                    notOneOf: {
+                      // @ts-ignore
+                      name: "foo,bar",
+                    },
+                  }).toFindNothing()
+                })
+              })
+
               describe("fuzzy", () => {
                 it("successfully finds a row", async () => {
                   await expectQuery({ fuzzy: { name: "oo" } }).toContainExactly(

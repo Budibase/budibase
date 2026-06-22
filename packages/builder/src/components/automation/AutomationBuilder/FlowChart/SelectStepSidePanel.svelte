@@ -25,6 +25,8 @@
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { getAutomationStepIconColor } from "./AutomationStepCategories"
+  import { restTemplates } from "@/stores/builder/restTemplates"
+  import type { RestTemplate } from "@budibase/types"
 
   export let block
   export let onClose = () => {}
@@ -35,8 +37,13 @@
   let searchRef: HTMLInputElement | undefined = undefined
   let panelContainerRef: HTMLDivElement | undefined = undefined
   let selectedIndex: number | null = null
-  let navigableActions: AutomationStepDefinition[] = []
+  type NavigableItem =
+    | { type: "action"; action: AutomationStepDefinition }
+    | { type: "connector"; template: RestTemplate }
+
+  let navigableItems: NavigableItem[] = []
   let actionOrderMap: Record<string, number> = {}
+  let connectorOrderMap: Record<string, number> = {}
   let isSelectingAction = false
   let actionSelectionLocked = false
   type BranchPathLike = Array<{ branchIdx?: number | null }>
@@ -319,6 +326,26 @@
   $: filteredPlugins = Object.entries(plugins).filter(([_, action]) =>
     matchesSearch(action, searchString)
   )
+  $: connectorTemplates = ($restTemplates?.templates || []).filter(
+    template => template.icon
+  )
+  $: filteredConnectorTemplates = connectorTemplates
+    .filter(template => matchesTemplateSearch(template, searchString))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const matchesTemplateSearch = (template: RestTemplate, term: string) => {
+    const lowerTerm = term.trim().toLowerCase()
+    if (!lowerTerm) return true
+    return (
+      template.name.toLowerCase().includes(lowerTerm) ||
+      (template.description || "").toLowerCase().includes(lowerTerm) ||
+      template.templates?.some(
+        child =>
+          child.name.toLowerCase().includes(lowerTerm) ||
+          (child.description || "").toLowerCase().includes(lowerTerm)
+      )
+    )
+  }
 
   $: {
     const categoryActions = filteredCategories.flatMap(category =>
@@ -330,28 +357,52 @@
         .map(([_, action]) => action)
     )
     const pluginActions = filteredPlugins.map(([_, action]) => action)
-    navigableActions = [...categoryActions, ...pluginActions]
-    actionOrderMap = navigableActions.reduce<Record<string, number>>(
-      (acc, action, idx) => {
+    navigableItems = [
+      ...categoryActions.map(action => ({ type: "action" as const, action })),
+      ...pluginActions.map(action => ({ type: "action" as const, action })),
+      ...filteredConnectorTemplates.map(template => ({
+        type: "connector" as const,
+        template,
+      })),
+    ]
+    actionOrderMap = navigableItems.reduce<Record<string, number>>(
+      (acc, item, idx) => {
+        if (item.type !== "action") {
+          return acc
+        }
+        const { action } = item
         acc[action.stepId] = idx
         return acc
       },
       {}
     )
+    connectorOrderMap = navigableItems.reduce<Record<string, number>>(
+      (acc, item, idx) => {
+        if (item.type !== "connector") {
+          return acc
+        }
+        acc[item.template.id] = idx
+        return acc
+      },
+      {}
+    )
 
-    if (!navigableActions.length) {
+    if (!navigableItems.length) {
       selectedIndex = null
     } else if (searchString && selectedIndex == null) {
       selectedIndex = 0
     } else if (
       selectedIndex != null &&
-      selectedIndex >= navigableActions.length
+      selectedIndex >= navigableItems.length
     ) {
       selectedIndex = 0
     }
   }
 
-  const selectAction = async (action: AutomationStepDefinition) => {
+  const selectAction = async (
+    action: AutomationStepDefinition,
+    restTemplateId?: RestTemplate["id"]
+  ) => {
     if (isSelectingAction || actionSelectionLocked) {
       return
     }
@@ -360,11 +411,26 @@
     isSelectingAction = true
     let stepInserted = false
     try {
+      const restTemplate =
+        restTemplateId && action.stepId === AutomationActionStepId.API_REQUEST
+          ? restTemplates.get(restTemplateId)
+          : undefined
       const newBlock = automationStore.actions.constructBlock(
         BlockDefinitionTypes.ACTION,
         action.stepId,
-        action
+        restTemplate
+          ? { ...action, name: `${restTemplate.name} request` }
+          : action
       )
+      if (
+        restTemplateId &&
+        action.stepId === AutomationActionStepId.API_REQUEST
+      ) {
+        newBlock.inputs = {
+          ...newBlock.inputs,
+          restTemplateId,
+        }
+      }
       if (
         insideLoopV2 &&
         loopStepId &&
@@ -384,6 +450,15 @@
 
       // Determine presence of the block before focusing
       await automationStore.actions.selectNode(newBlock.id)
+      if (
+        restTemplateId &&
+        action.stepId === AutomationActionStepId.API_REQUEST
+      ) {
+        automationStore.actions.openApiRequestTemplate(
+          newBlock.id,
+          restTemplateId
+        )
+      }
 
       automationStore.actions.closeActionPanel()
       onClose()
@@ -400,6 +475,22 @@
 
   const getExternalAction = (stepId: string) => {
     return externalActions[stepId as keyof typeof externalActions]
+  }
+
+  const selectConnector = async (template: RestTemplate) => {
+    const apiRequestAction = allActions[AutomationActionStepId.API_REQUEST]
+    if (!apiRequestAction) {
+      return
+    }
+    await selectAction(apiRequestAction, template.id)
+  }
+
+  const selectNavigableItem = async (item: NavigableItem) => {
+    if (item.type === "action") {
+      await selectAction(item.action)
+      return
+    }
+    await selectConnector(item.template)
   }
 
   const handleActionKeydown = async (
@@ -422,7 +513,7 @@
       return
     }
 
-    if (!navigableActions.length) {
+    if (!navigableItems.length) {
       return
     }
 
@@ -437,8 +528,8 @@
         const direction =
           e.key === "ArrowUp" || (e.key === "Tab" && e.shiftKey) ? -1 : 1
         selectedIndex =
-          (selectedIndex + direction + navigableActions.length) %
-          navigableActions.length
+          (selectedIndex + direction + navigableItems.length) %
+          navigableItems.length
       }
       e.preventDefault()
       e.stopPropagation()
@@ -446,9 +537,9 @@
     }
 
     if (e.key === "Enter" && selectedIndex != null) {
-      const action = navigableActions[selectedIndex]
-      if (action) {
-        await selectAction(action)
+      const item = navigableItems[selectedIndex]
+      if (item) {
+        await selectNavigableItem(item)
       }
       e.preventDefault()
       e.stopPropagation()
@@ -606,6 +697,52 @@
             {/each}
           </div>
         {/if}
+        {#if filteredConnectorTemplates.length}
+          <div class="section-divider"></div>
+          <div class="section-header">
+            <Detail size="M" weight={700}>Connectors</Detail>
+          </div>
+          <div class="item-list">
+            {#each filteredConnectorTemplates as template (template.id)}
+              <div
+                class="item"
+                class:selected={selectedIndex ===
+                  connectorOrderMap[template.id]}
+                role="button"
+                tabindex={0}
+                on:click={() => selectConnector(template)}
+                on:mouseenter={() => (selectedIndex = null)}
+                on:keydown={e => {
+                  if (
+                    e.key === "Enter" &&
+                    !isSelectingAction &&
+                    !actionSelectionLocked
+                  ) {
+                    e.preventDefault()
+                    selectConnector(template)
+                  }
+                }}
+              >
+                <div class="item-body">
+                  <img
+                    width={18}
+                    height={18}
+                    src={template.icon}
+                    alt={template.name}
+                    class="external-icon"
+                  />
+                  <Body
+                    size="S"
+                    weight="500"
+                    color="var(--spectrum-global-color-gray-900)"
+                  >
+                    {template.name}
+                  </Body>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
       </div>
     </Panel>
   </ResizablePanel>
@@ -613,10 +750,9 @@
 
 <style>
   .container {
-    position: fixed;
-    right: 0;
+    position: relative;
     z-index: 99;
-    height: calc(100% - var(--top-bar-height, 51px));
+    height: 100%;
     display: flex;
     flex-direction: row;
     align-items: stretch;

@@ -158,7 +158,7 @@
       title={generatedInstructions
         ? "Review Generated Instructions"
         : "Generate Instructions"}
-      size="M"
+      size="L"
       showCloseIcon
       showConfirmButton={false}
       showCancelButton={false}

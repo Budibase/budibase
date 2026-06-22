@@ -2,6 +2,7 @@ import { cache, context, sessions, utils } from "@budibase/backend-core"
 import { loginUser, resetUpdate } from "../auth"
 import { generator, structures } from "@budibase/backend-core/tests"
 import { TestConfiguration } from "../../../tests"
+import jwt from "jsonwebtoken"
 
 describe("auth", () => {
   const config = new TestConfiguration()
@@ -86,6 +87,19 @@ describe("auth", () => {
         expect(loginResult4.invalidatedSessionCount).toBe(1)
 
         expect(await sessions.getSessionsForUser(user._id!)).toHaveLength(3)
+      })
+    })
+
+    it("loginUser should return an auth token with an expiry", async () => {
+      await context.doInTenant(structures.tenant.id(), async () => {
+        const user = await config.createUser()
+
+        const loginResult = await loginUser(user)
+        const decodedToken = jwt.decode(loginResult.token)
+
+        expect(decodedToken).toMatchObject({
+          exp: expect.any(Number),
+        })
       })
     })
   })

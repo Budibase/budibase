@@ -95,10 +95,7 @@ async function passportCallback(
   const loginResult = await authSdk.loginUser(user)
 
   // set a cookie for browser access
-  setCookie(ctx, loginResult.token, Cookie.Auth, {
-    sign: false,
-    httpOnly: true,
-  })
+  utilsCore.setAuthCookie(ctx, loginResult.token)
   // set the token in a header as well for APIs
   ctx.set(Header.TOKEN, loginResult.token)
 
