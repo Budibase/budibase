@@ -126,12 +126,14 @@ export async function authenticateEmbedUser(
   })
   const authToken = jwt.sign(
     { userId: user._id, sessionId, tenantId, email: user.email },
-    coreEnv.JWT_SECRET!
+    coreEnv.JWT_SECRET!,
+    { expiresIn: coreUtils.getSessionExpirySeconds() }
   )
   coreUtils.setCookie(ctx, authToken, constants.Cookie.Auth, {
     sign: false,
     httpOnly: true,
     sameSite: "none",
+    expires: coreUtils.getSessionExpiryDate(),
   })
   return true
 }

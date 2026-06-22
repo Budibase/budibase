@@ -133,7 +133,9 @@ export const removeKnowledgeBaseFile = async (
   }
 
   if (!isFileInProduction) {
-    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
+    if (file.ragSourceId) {
+      await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
+    }
   }
 
   if (file.objectStoreKey) {

@@ -7,6 +7,7 @@ import {
   getSchemaForDatasourcePlus,
   getSettingBindings,
   getUserBindings,
+  makeReadableKeyPropSafe,
   migrateReferencesInObject,
 } from "@/dataBinding"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
@@ -95,6 +96,7 @@ import {
   AutomationLog,
   BlockRef,
   isLoopV2Step,
+  type RestTemplateId,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -223,6 +225,13 @@ export const getToolbarFlowEndInsertion = (
 
   const r = blockRefs[cursor.id]
   return r?.pathTo?.length ? { targetPath: r.pathTo, anchorRef: r } : fallback()
+}
+
+const getReadableAutomationBinding = (
+  bindingName: string,
+  ...path: string[]
+) => {
+  return ["steps", bindingName, ...path].map(makeReadableKeyPropSafe).join(".")
 }
 
 let testStatusTimer: NodeJS.Timeout | undefined
@@ -1034,14 +1043,18 @@ const automationActions = (store: AutomationStore) => ({
         if (name === "currentItem") {
           defaultReadable = "loop.currentItem"
         } else if (name?.startsWith?.("items.") && opts?.readableChildName) {
-          defaultReadable = `steps.${bindingName}.items.${opts.readableChildName}`
+          defaultReadable = getReadableAutomationBinding(
+            bindingName,
+            "items",
+            opts.readableChildName
+          )
         } else {
-          defaultReadable = `steps.${bindingName}.${name}`
+          defaultReadable = getReadableAutomationBinding(bindingName, name)
         }
       } else {
         defaultReadable =
           bindingName && isStep
-            ? `steps.${bindingName}.${name}`
+            ? getReadableAutomationBinding(bindingName, name)
             : runtimeBinding
       }
 
@@ -2376,6 +2389,7 @@ const automationActions = (store: AutomationStore) => ({
     }
     store.update(state => {
       state.selectedAutomationId = id
+      state.viewMode = ViewMode.EDITOR
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
@@ -3007,6 +3021,25 @@ const automationActions = (store: AutomationStore) => ({
         actionPanelToolbarFlowEnd: false,
       }
     })
+  },
+
+  openApiRequestTemplate(blockId: string, templateId: RestTemplateId) {
+    store.update(state => ({
+      ...state,
+      pendingApiRequestTemplate: { blockId, templateId },
+    }))
+  },
+
+  consumeApiRequestTemplate(blockId: string) {
+    const pending = get(store).pendingApiRequestTemplate
+    if (!pending || pending.blockId !== blockId) {
+      return undefined
+    }
+    store.update(state => ({
+      ...state,
+      pendingApiRequestTemplate: undefined,
+    }))
+    return pending.templateId
   },
 
   selectBranchNode: async (selection: {

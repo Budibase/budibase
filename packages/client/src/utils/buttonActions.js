@@ -240,14 +240,14 @@ const triggerAutomationHandler = async action => {
   }
 }
 const navigationHandler = action => {
-  let { url, peek, externalNewTab, type } = action.parameters
+  let { url, peek, externalNewTab, screenNewTab, type } = action.parameters
 
   // Ensure in-app navigation starts with a slash
   if (type === "screen" && url && !url.startsWith("/")) {
     url = `/${url}`
   }
 
-  routeStore.actions.navigate(url, peek, externalNewTab)
+  routeStore.actions.navigate(url, peek, externalNewTab, screenNewTab)
   closeSidePanelHandler()
 }
 

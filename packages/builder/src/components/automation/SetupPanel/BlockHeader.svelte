@@ -12,6 +12,7 @@
     externalActions,
   } from "@/components/automation/AutomationBuilder/FlowChart/ExternalActions"
   import { getAutomationStepIconColor } from "@/components/automation/AutomationBuilder/FlowChart/AutomationStepCategories"
+  import { restTemplates } from "@/stores/builder/restTemplates"
   import { createEventDispatcher } from "svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
@@ -31,6 +32,11 @@
   $: stepNames = automation?.definition.stepNames || {}
   $: blockHeading = getHeading(itemName, block) || ""
   $: blockNameError = getStepNameError(blockHeading)
+  $: blockInputs = block?.inputs as { restTemplateId?: string } | undefined
+  $: restTemplate =
+    block && isActionStep(block) && blockInputs?.restTemplateId
+      ? restTemplates.get(blockInputs.restTemplateId)
+      : undefined
 
   const getHeading = (
     itemName?: string,
@@ -106,7 +112,11 @@
 
 <div class="block-details" class:compact>
   {#if block}
-    {#if externalAction}
+    {#if restTemplate?.icon}
+      <div class="external-icon" class:compact>
+        <img alt={restTemplate.name} src={restTemplate.icon} />
+      </div>
+    {:else if externalAction}
       <div class="external-icon" class:compact>
         <img alt={externalAction.name} src={externalAction.icon} />
       </div>

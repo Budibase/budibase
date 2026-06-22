@@ -15,9 +15,11 @@ import {
   type Workspace,
   AppFontFamily,
   BuiltinPermissionID,
+  DocumentType,
   Feature,
   PermissionLevel,
   Screen,
+  SEPARATOR,
   Theme,
   WorkspaceApp,
 } from "@budibase/types"
@@ -41,6 +43,59 @@ import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 const generateAppName = () => {
   return structures.generator.word({ length: 10 })
+}
+
+const seedAgentWithLogs = async (appId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const now = new Date().toISOString()
+    const agentId = `${DocumentType.AGENT}${SEPARATOR}${uuid.v4()}`
+    await workspaceDb.put({
+      _id: agentId,
+      name: "Support Agent",
+      aiconfig: "",
+      live: true,
+      goal: "Help the user",
+      createdAt: now,
+    })
+    const sessionId = "chat:session-1"
+    const logId = `${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}${encodeURIComponent(
+      agentId
+    )}${SEPARATOR}${encodeURIComponent(sessionId)}`
+    await workspaceDb.put({
+      _id: logId,
+      type: "agent_log_session",
+      agentId,
+      sessionId,
+      trigger: "Chat",
+      isPreview: false,
+      firstInput: "Hello",
+      requestIds: JSON.stringify(["req-1"]),
+      operations: 1,
+      status: "success",
+      startTime: now,
+      lastActivityAt: now,
+      createdAt: now,
+      updatedAt: now,
+    })
+    return { agentId, logId }
+  })
+}
+
+const getAgentArtifacts = async (appId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const [agents, logs] = await Promise.all([
+      workspaceDb.allDocs(db.getDocParams(DocumentType.AGENT, null)),
+      workspaceDb.allDocs(
+        db.getDocParams(DocumentType.AGENT_LOG_SESSION, null)
+      ),
+    ])
+    return {
+      agentIds: agents.rows.map(row => row.id),
+      logIds: logs.rows.map(row => row.id),
+    }
+  })
 }
 
 describe("/applications", () => {
@@ -589,6 +644,28 @@ describe("/applications", () => {
         location: "Body",
         html: "<script>window.__testBody = true</script>",
       })
+    })
+
+    it("preserves agents but not agent logs when creating from an import", async () => {
+      const sourceWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+      const { agentId, logId } = await seedAgentWithLogs(sourceWorkspace.appId)
+
+      const exportPath = await sdk.backups.exportWorkspace(
+        sourceWorkspace.appId,
+        { tar: true }
+      )
+
+      const newWorkspace = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: exportPath,
+      })
+
+      const imported = await getAgentArtifacts(newWorkspace.appId)
+      expect(imported.agentIds).toContain(agentId)
+      expect(imported.logIds).not.toContain(logId)
+      expect(imported.logIds).toHaveLength(0)
     })
   })
 
@@ -1476,6 +1553,38 @@ describe("/applications", () => {
         expect(prodApp.features?.recaptchaEnabled).toBe(true)
       })
     })
+
+    it("rejects embed SSO updates when the feature is unavailable", async () => {
+      mocks.licenses.useCloudFree()
+
+      await config.api.workspace.update(
+        workspace.appId,
+        {
+          embedSSO: {
+            enabled: true,
+            algorithm: "HS256",
+            key: "super-secret",
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+    })
+
+    it("allows embed SSO updates when the feature is enabled", async () => {
+      mocks.licenses.useEmbedAuth()
+
+      const updatedApp = await config.api.workspace.update(workspace.appId, {
+        embedSSO: {
+          enabled: true,
+          algorithm: "HS256",
+          key: "super-secret",
+        },
+      })
+
+      expect(updatedApp.embedSSO?.enabled).toBe(true)
+    })
   })
 
   describe("publish", () => {
@@ -1848,6 +1957,26 @@ describe("/applications", () => {
       expect(resp.duplicateAppId).toBeDefined()
       expect(resp.sourceAppId).toEqual(workspace.appId)
       expect(resp.duplicateAppId).not.toEqual(workspace.appId)
+    })
+
+    it("preserves agents but not agent logs when duplicating", async () => {
+      const { agentId, logId } = await seedAgentWithLogs(workspace.appId)
+
+      const resp = await config.api.workspace.duplicateWorkspace(
+        workspace.appId,
+        {
+          name: "agent-dupe copy",
+          url: "/agent-dupe-copy",
+        },
+        {
+          status: 200,
+        }
+      )
+
+      const duplicated = await getAgentArtifacts(resp.duplicateAppId)
+      expect(duplicated.agentIds).toContain(agentId)
+      expect(duplicated.logIds).not.toContain(logId)
+      expect(duplicated.logIds).toHaveLength(0)
     })
 
     it("should reject an unknown app id with a 404", async () => {

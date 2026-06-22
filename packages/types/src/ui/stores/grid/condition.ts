@@ -8,6 +8,7 @@ export interface UICondition {
   metadataKey: string
   metadataValue: string
   target: string
+  disabled?: boolean
   // Button-specific condition fields
   buttonIndex?: number
   newValue?: unknown

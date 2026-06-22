@@ -31,6 +31,7 @@ import {
   generateScreenID,
   generateTableID,
 } from "../../../../db/utils"
+import { isExternalTableID } from "../../../../integrations/utils"
 import { decryptFiles, untarFile } from "../../backups/imports"
 import sdk from "../../.."
 import {
@@ -53,6 +54,9 @@ const IMPORT_ORDER: ResourceType[] = [
 ]
 
 const ALLOWED_IMPORT_TYPES = new Set(IMPORT_ORDER)
+
+const isAllowedImportType = (value: unknown): value is ResourceType =>
+  typeof value === "string" && IMPORT_ORDER.some(type => type === value)
 
 const MAX_ARCHIVE_SIZE_BYTES = 50 * 1024 * 1024
 const MAX_EXTRACTED_SIZE_BYTES = 100 * 1024 * 1024
@@ -99,7 +103,27 @@ interface ProjectPackageTarEntry {
 }
 
 const readJsonFile = async <T>(filePath: string): Promise<T> => {
-  return JSON.parse(await fsp.readFile(filePath, "utf8"))
+  try {
+    return JSON.parse(await fsp.readFile(filePath, "utf8"))
+  } catch {
+    throw new HTTPError(
+      `Project package contains invalid JSON in '${basename(filePath)}'.`,
+      400
+    )
+  }
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+
+const isSafeArchivePath = (path: string) => {
+  const segments = path.split(/[\\/]/)
+  return (
+    !path.startsWith("/") &&
+    !path.startsWith("\\") &&
+    !/^[A-Za-z]:/.test(path) &&
+    segments.every(segment => segment !== ".." && segment !== ".")
+  )
 }
 
 const readDirectoryRecursively = async (
@@ -113,6 +137,9 @@ const readDirectoryRecursively = async (
   for (const entry of entries) {
     const fullPath = join(dirPath, entry.name)
     const relPath = relative(rootPath, fullPath)
+    if (!isSafeArchivePath(relPath)) {
+      throw new HTTPError("Project package contains unsafe paths.", 400)
+    }
     if (relPath.split(/[\\/]/).length > MAX_PATH_SEGMENTS) {
       throw new HTTPError(
         "Project package contains paths that are too deep.",
@@ -148,6 +175,7 @@ const validateProjectPackageBeforeExtraction = async (file: {
 }) => {
   const totals = { files: 0, bytes: 0 }
   const fileTypes = new Set(["File", "OldFile", "ContiguousFile"])
+  const directoryTypes = new Set(["Directory", "GNUDumpDir"])
   const linkTypes = new Set(["Link", "SymbolicLink"])
   const stream = fs.createReadStream(file.path)
   let validationError: HTTPError | undefined
@@ -160,6 +188,10 @@ const validateProjectPackageBeforeExtraction = async (file: {
   const parser = new tar.Parser({
     onReadEntry: (entry: ProjectPackageTarEntry) => {
       if (validationError) {
+        return
+      }
+      if (!isSafeArchivePath(entry.path)) {
+        fail(new HTTPError("Project package contains unsafe paths.", 400))
         return
       }
       if (
@@ -175,6 +207,16 @@ const validateProjectPackageBeforeExtraction = async (file: {
       }
       if (entry.type && linkTypes.has(entry.type)) {
         fail(new HTTPError("Project package contains unsupported links.", 400))
+        return
+      }
+      if (
+        entry.type &&
+        !fileTypes.has(entry.type) &&
+        !directoryTypes.has(entry.type)
+      ) {
+        fail(
+          new HTTPError("Project package contains unsupported entries.", 400)
+        )
         return
       }
       if (!entry.type || fileTypes.has(entry.type)) {
@@ -270,18 +312,34 @@ const remapObjectKeys = <T>(
   )
 }
 
-const remapValue = (value: unknown, idMap: Map<string, string>): unknown => {
+type IdMapping = [string, string]
+
+const remapValue = (
+  value: unknown,
+  idMap: Map<string, string>,
+  mappings: IdMapping[] = [...idMap.entries()].sort(
+    ([a], [b]) => b.length - a.length
+  )
+): unknown => {
   if (typeof value === "string") {
-    return idMap.get(value) || value
+    const exact = idMap.get(value)
+    if (exact) {
+      return exact
+    }
+    return mappings.reduce(
+      (remapped, [sourceId, destinationId]) =>
+        remapped.split(sourceId).join(destinationId),
+      value
+    )
   }
   if (Array.isArray(value)) {
-    return value.map(item => remapValue(item, idMap))
+    return value.map(item => remapValue(item, idMap, mappings))
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
         key,
-        remapValue(nestedValue, idMap),
+        remapValue(nestedValue, idMap, mappings),
       ])
     )
   }
@@ -391,6 +449,9 @@ const generateImportedId = (
 }
 
 const validateManifest = (manifest: ProjectPackageManifest) => {
+  if (!isRecord(manifest)) {
+    throw new HTTPError("Project package manifest is invalid.", 400)
+  }
   if (manifest.artifactType !== "project") {
     throw new HTTPError("Supplied file is not a Project package.", 400)
   }
@@ -408,6 +469,74 @@ const validateManifest = (manifest: ProjectPackageManifest) => {
       "Project package does not support additive import.",
       400
     )
+  }
+  if (
+    !isRecord(manifest.sourceWorkspace) ||
+    typeof manifest.sourceWorkspace.id !== "string" ||
+    !isRecord(manifest.resourcesByType) ||
+    !Array.isArray(manifest.unsupportedContent)
+  ) {
+    throw new HTTPError("Project package manifest is invalid.", 400)
+  }
+  for (const count of Object.values(manifest.resourcesByType)) {
+    if (!Number.isInteger(count) || Number(count) < 0) {
+      throw new HTTPError("Project package manifest is invalid.", 400)
+    }
+  }
+  for (const unsupported of manifest.unsupportedContent) {
+    if (
+      !isRecord(unsupported) ||
+      typeof unsupported.type !== "string" ||
+      !Number.isInteger(unsupported.count) ||
+      Number(unsupported.count) < 0 ||
+      typeof unsupported.reason !== "string"
+    ) {
+      throw new HTTPError("Project package manifest is invalid.", 400)
+    }
+  }
+}
+
+const validateProject = (project: Project) => {
+  if (
+    !isRecord(project) ||
+    typeof project._id !== "string" ||
+    typeof project.name !== "string"
+  ) {
+    throw new HTTPError("Project package project.json is invalid.", 400)
+  }
+}
+
+const validateUsedResource = (value: unknown) => {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    isAllowedImportType(value.type) &&
+    ALLOWED_IMPORT_TYPES.has(value.type)
+  )
+}
+
+const validateDependencyIndexShape = (
+  dependencyIndex: ProjectPackageDependencyIndex
+) => {
+  if (
+    !isRecord(dependencyIndex) ||
+    typeof dependencyIndex.rootProjectId !== "string" ||
+    !Array.isArray(dependencyIndex.directMembers) ||
+    !dependencyIndex.directMembers.every(validateUsedResource) ||
+    !isRecord(dependencyIndex.resources)
+  ) {
+    throw new HTTPError("Project package dependency index is invalid.", 400)
+  }
+
+  for (const resource of Object.values(dependencyIndex.resources)) {
+    if (
+      !isRecord(resource) ||
+      !Array.isArray(resource.dependencies) ||
+      !resource.dependencies.every(validateUsedResource)
+    ) {
+      throw new HTTPError("Project package dependency index is invalid.", 400)
+    }
   }
 }
 
@@ -536,6 +665,28 @@ const assignImportedIds = (docs: ImportedDoc[], idMap: Map<string, string>) => {
           )
         }
       }
+
+      if (resourceType === ResourceType.DATASOURCE) {
+        const sourceDatasourceId = importedDoc.doc._id!
+        const destinationDatasourceId = idMap.get(sourceDatasourceId)!
+        const datasource = importedDoc.doc as Datasource
+        for (const entity of Object.values(datasource.entities || {})) {
+          if (!entity._id || !isExternalTableID(entity._id)) {
+            continue
+          }
+          const externalTablePrefix = `${sourceDatasourceId}__`
+          if (!entity._id.startsWith(externalTablePrefix)) {
+            throw new HTTPError(
+              `Project import could not remap external table '${entity._id}'.`,
+              400
+            )
+          }
+          idMap.set(
+            entity._id,
+            `${destinationDatasourceId}${entity._id.slice(sourceDatasourceId.length)}`
+          )
+        }
+      }
     }
   }
 }
@@ -589,7 +740,11 @@ async function extractProjectPackage(
   const tmpPath = await untarFile(file)
   try {
     if (encryptPassword) {
-      await decryptFiles(tmpPath, encryptPassword)
+      try {
+        await decryptFiles(tmpPath, encryptPassword)
+      } catch {
+        throw new HTTPError("Project package could not be decrypted.", 400)
+      }
     }
 
     const packageFiles = await readDirectoryRecursively(tmpPath)
@@ -646,6 +801,10 @@ async function extractProjectPackage(
       readJsonFile<ProjectPackageDependencyIndex>(dependencyIndexPath),
     ])
 
+    validateManifest(manifest)
+    validateProject(project)
+    validateDependencyIndexShape(dependencyIndex)
+
     const docFiles = await fsp
       .access(docsPath)
       .then(() =>
@@ -663,16 +822,23 @@ async function extractProjectPackage(
       )
     }
 
-    validateManifest(manifest)
-
     const docs = await Promise.all(
       docFiles
         .filter(filePath => filePath.endsWith(".json"))
-        .map(async filePath => ({
-          path: filePath,
-          resourceType: getResourceTypeForDocPath(tmpPath, filePath),
-          doc: await readJsonFile<AnyDocument>(filePath),
-        }))
+        .map(async filePath => {
+          const doc = await readJsonFile<AnyDocument>(filePath)
+          if (!isRecord(doc) || typeof doc._id !== "string") {
+            throw new HTTPError(
+              `Project package contains an invalid doc in '${basename(filePath)}'.`,
+              400
+            )
+          }
+          return {
+            path: filePath,
+            resourceType: getResourceTypeForDocPath(tmpPath, filePath),
+            doc,
+          }
+        })
     )
 
     validateDependencyIndex(project, dependencyIndex, docs, manifest)
@@ -750,6 +916,7 @@ export async function importProject(
 
     const idMap = new Map<string, string>([
       [extracted.project._id!, importedProject._id!],
+      [extracted.manifest.sourceWorkspace.id, workspaceId],
     ])
 
     assignImportedIds(extracted.docs, idMap)

@@ -8,7 +8,7 @@
 
 <label>
   <span>{label}</span>
-  <input aria-label={label} bind:value {disabled} {readonly} />
+  <input aria-label={label} bind:value {disabled} {readonly} on:input />
   {#if error}
     <span>{error}</span>
   {/if}

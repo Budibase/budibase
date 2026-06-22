@@ -17,6 +17,7 @@ if (descriptions.length) {
     ({ config, dsProvider }) => {
       let collection: string
       let datasource: Datasource
+      let rawDatasource: Datasource
 
       async function createQuery(query: Partial<Query>): Promise<Query> {
         const defaultQuery: Query = {
@@ -43,7 +44,7 @@ if (descriptions.length) {
       async function withClient<T>(
         callback: (client: MongoClient) => Promise<T>
       ): Promise<T> {
-        const client = new MongoClient(datasource.config!.connectionString)
+        const client = new MongoClient(rawDatasource.config!.connectionString)
         await client.connect()
         try {
           return await callback(client)
@@ -54,7 +55,7 @@ if (descriptions.length) {
 
       async function withDb<T>(callback: (db: Db) => Promise<T>): Promise<T> {
         return await withClient(async client => {
-          return await callback(client.db(datasource.config!.db))
+          return await callback(client.db(rawDatasource.config!.db))
         })
       }
 
@@ -68,6 +69,7 @@ if (descriptions.length) {
 
       beforeAll(async () => {
         const ds = await dsProvider()
+        rawDatasource = ds.rawDatasource!
         datasource = ds.datasource!
       })
 
@@ -386,6 +388,42 @@ if (descriptions.length) {
           ])
         })
 
+        it("a find query with a parameterised key", async () => {
+          await withCollection(collection =>
+            collection.insertOne({
+              name: "apartment",
+              accommodates: 9,
+            })
+          )
+
+          const query = await createQuery({
+            fields: {
+              json: `{
+                "{{ field }}": 9
+              }`,
+              extra: {
+                actionType: "find",
+              },
+            },
+            parameters: [
+              {
+                name: "field",
+                default: "accommodates",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!)
+
+          expect(result.data).toEqual([
+            {
+              _id: expectValidId,
+              name: "apartment",
+              accommodates: 9,
+            },
+          ])
+        })
+
         it("does not allow quoted find parameters to inject Mongo operators", async () => {
           const query = await createQuery({
             fields: {
@@ -550,6 +588,50 @@ if (descriptions.length) {
               nested: {
                 enabled: true,
               },
+            })
+          })
+        })
+
+        it("a create query with a parameterised key", async () => {
+          const query = await createQuery({
+            fields: {
+              json: [
+                {
+                  "{{ fieldName }}": "Yellow",
+                },
+              ],
+              extra: {
+                actionType: "insertMany",
+              },
+            },
+            queryVerb: "create",
+            parameters: [
+              {
+                name: "fieldName",
+                default: "defaultField",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: { fieldName: "Banana" },
+          })
+
+          expect(result.data).toEqual([
+            {
+              acknowledged: true,
+              insertedCount: 1,
+              insertedIds: {
+                "0": expectValidId,
+              },
+            },
+          ])
+
+          await withCollection(async collection => {
+            const doc = await collection.findOne({ Banana: { $eq: "Yellow" } })
+            expect(doc).toEqual({
+              _id: expectValidBsonObjectId,
+              Banana: "Yellow",
             })
           })
         })

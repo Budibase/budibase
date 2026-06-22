@@ -7,7 +7,7 @@ import {
   MAX_STICKY_NOTES_PER_AUTOMATION,
   selectedAutomation,
 } from "../automations"
-import { type AutomationBlockRef } from "@/types/automations"
+import { type AutomationBlockRef, ViewMode } from "@/types/automations"
 import {
   automationTrigger,
   branchStep,
@@ -17,11 +17,13 @@ import {
 } from "@/test/automationFixtures"
 import {
   AutomationActionStepId,
+  AutomationIOType,
   AutomationStepType,
   isBranchStep,
   isLoopV2Step,
   type Automation,
   type BranchStep,
+  type AutomationStep,
 } from "@budibase/types"
 
 vi.mock("@/stores/builder", () => {
@@ -39,6 +41,41 @@ interface TestBlockRef extends AutomationBlockRef {
 }
 
 describe("automation store", () => {
+  it("selects new automations in editor mode", () => {
+    const existingAutomation: Automation = {
+      _id: "existing-automation",
+      name: "Existing automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+    }
+    const newAutomation: Automation = {
+      _id: "new-automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      disabled: true,
+      definition: {
+        trigger: automationTrigger,
+        steps: [],
+      },
+    }
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [existingAutomation, newAutomation],
+      selectedAutomationId: existingAutomation._id!,
+      viewMode: ViewMode.LOGS,
+    }))
+
+    automationStore.actions.select(newAutomation._id!)
+
+    expect(get(automationStore).viewMode).toBe(ViewMode.EDITOR)
+  })
+
   it("traverses branch steps inside Loop V2 subflows", () => {
     const { automation } = nestedLoopBranchAutomation()
     const blockRefs: Record<string, TestBlockRef> = {}
@@ -225,6 +262,66 @@ describe("automation store", () => {
     ]
 
     expect(isNoOpBlockMove(sourcePath, destPath)).toBe(true)
+  })
+
+  it("uses app readable binding escaping for automation step bindings", () => {
+    const queryRowsStep: AutomationStep = {
+      id: "queryRows",
+      stepId: AutomationActionStepId.QUERY_ROWS,
+      type: AutomationStepType.ACTION,
+      name: "Query rows",
+      tagline: "",
+      icon: "",
+      description: "",
+      inputs: {
+        tableId: "",
+      },
+      schema: {
+        inputs: {
+          required: [],
+          properties: {},
+        },
+        outputs: {
+          required: [],
+          properties: {
+            rows: {
+              type: AutomationIOType.ARRAY,
+            },
+          },
+        },
+      },
+    }
+    const branch = branchStep()
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [queryRowsStep, branch],
+      },
+    }
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    const bindings = automationStore.actions.getAvailableBindings(
+      get(selectedAutomation).blockRefs[branch.id],
+      automation
+    )
+
+    expect(bindings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          readableBinding: "steps.[Query rows].rows",
+          runtimeBinding: "steps.queryRows.rows",
+        }),
+      ])
+    )
   })
 
   it("deletes a linear Loop V2 child without deleting the following branch", async () => {

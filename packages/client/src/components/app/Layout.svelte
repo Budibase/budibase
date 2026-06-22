@@ -7,6 +7,7 @@
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
   import {
+    getEnabledConditions,
     getActiveConditions,
     reduceConditionActions,
   } from "@/utils/conditions"
@@ -40,8 +41,10 @@
   export let navBackground
   export let navTextColor
   export let navLinkHoverTextColor
+  export let navLinkHoverIconColor
   export let navLinkHoverBackground
   export let navLinkActiveTextColor
+  export let navLinkActiveIconColor
   export let navLinkActiveBackground
   export let navWidth
   export let pageWidth
@@ -54,6 +57,10 @@
   export let showLoginButton = true
 
   export let collapsible = false
+
+  export let screenBackground
+  export let screenGradient
+  export let screenCustomCss
 
   const NavigationClasses = {
     Top: "top",
@@ -98,8 +105,10 @@
     navBackground,
     navTextColor,
     navLinkHoverTextColor,
+    navLinkHoverIconColor,
     navLinkHoverBackground,
     navLinkActiveTextColor,
+    navLinkActiveIconColor,
     navLinkActiveBackground,
     logoHeight,
     $context.device.width,
@@ -231,14 +240,15 @@
 
   function evaluateNavItemConditions(conditions = []) {
     if (!conditions?.length) return true
+    const enabledConditions = getEnabledConditions(conditions)
 
     // Get only the active (matching) conditions
-    const activeConditions = getActiveConditions(conditions)
+    const activeConditions = getActiveConditions(enabledConditions)
     const { visible } = reduceConditionActions(activeConditions)
 
     if (visible == null) {
       // If any show condition exists, default to hidden unless one matches
-      const hasShow = conditions.some(cond => cond.action === "show")
+      const hasShow = enabledConditions.some(cond => cond.action === "show")
       return hasShow ? false : true
     }
     return visible
@@ -273,8 +283,10 @@
     backgroundColor,
     textColor,
     linkHoverTextColor,
+    linkHoverIconColor,
     linkHoverBackground,
     linkActiveTextColor,
+    linkActiveIconColor,
     linkActiveBackground,
     logoHeight,
     width,
@@ -290,11 +302,17 @@
     if (linkHoverTextColor) {
       style += `--navLinkHoverTextColor:${linkHoverTextColor};`
     }
+    if (linkHoverIconColor) {
+      style += `--navLinkHoverIconColor:${linkHoverIconColor};`
+    }
     if (linkHoverBackground) {
       style += `--navLinkHoverBackground:${linkHoverBackground};`
     }
     if (linkActiveTextColor) {
       style += `--navLinkActiveTextColor:${linkActiveTextColor};`
+    }
+    if (linkActiveIconColor) {
+      style += `--navLinkActiveIconColor:${linkActiveIconColor};`
     }
     if (linkActiveBackground) {
       style += `--navLinkActiveBackground:${linkActiveBackground};`
@@ -316,6 +334,25 @@
     }
     return style
   }
+
+  const getScreenStyle = (background, gradient, customCss) => {
+    let style = ""
+    if (gradient) {
+      style += `background: ${gradient};`
+    } else if (background) {
+      style += `background-color: ${background};`
+    }
+    if (customCss) {
+      style += customCss
+    }
+    return style || undefined
+  }
+
+  $: screenStyle = getScreenStyle(
+    screenBackground,
+    screenGradient,
+    screenCustomCss
+  )
 
   const getSanitizedUrl = (url, openInNewTab) => {
     if (!isInternal(url)) {
@@ -503,6 +540,7 @@
       {/if}
       <div
         class="main-wrapper"
+        style={screenStyle}
         on:click={() => {
           if ($builderStore.inBuilder) {
             builderStore.actions.selectComponent(screenId)

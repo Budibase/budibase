@@ -153,7 +153,9 @@ export async function update(
       ? workspaceApp.customTheme
       : persisted.customTheme,
     disabled: workspaceApp.disabled,
-    projectId: workspaceApp.projectId,
+    projectId: hasOwn(workspaceApp, "projectId")
+      ? workspaceApp.projectId
+      : persisted.projectId,
 
     // Immutable properties
     createdAt: persisted.createdAt,

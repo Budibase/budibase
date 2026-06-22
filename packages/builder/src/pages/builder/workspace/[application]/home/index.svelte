@@ -18,7 +18,7 @@
   } from "@/stores/builder"
   import { API } from "@/api"
   import { agentsStore, appsStore, auth, licensing } from "@/stores/portal"
-  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import FreeTrialBanner from "@/components/portal/licensing/FreeTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     ActionMenu,
@@ -273,6 +273,12 @@
       return
     }
     window.open(liveUrl, "_blank", "noopener,noreferrer")
+  }
+
+  const CONTACT_SALES_URL = "https://budibase.com/contact/"
+
+  const openContactSales = () => {
+    window.open(CONTACT_SALES_URL, "_blank", "noopener,noreferrer")
   }
 
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {
@@ -623,11 +629,14 @@
         >
       </div>
 
-      {#if showHeaderActions}
-        <div class="header-actions">
-          <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
-        </div>
-      {/if}
+      <div class="header-actions">
+        {#if showHeaderActions}
+          <FreeTrialBanner show={$licensing.showTrialBanner} />
+        {/if}
+        <Button size="M" secondary on:click={openContactSales}>
+          Contact sales
+        </Button>
+      </div>
     </div>
 
     {#if automationErrorEntries.length}
