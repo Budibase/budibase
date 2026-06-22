@@ -711,7 +711,8 @@ export const handleChatMessage = async ({
         ...(replyWithAssistantStream
           ? {
               onAssistantStream: async stream => {
-                streamedAssistantMessage = await replyWithAssistantStream(stream)
+                streamedAssistantMessage =
+                  await replyWithAssistantStream(stream)
               },
             }
           : {}),
