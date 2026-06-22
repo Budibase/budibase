@@ -91,12 +91,14 @@ function makeToolLoopAgentMock(
       })
       return {
         toUIMessageStream: jest.fn().mockReturnValue({}),
-        response: overrides.response ?? Promise.resolve({
-          id: "gen-test",
-          headers: {
-            "x-litellm-response-cost": "0.0001",
-          },
-        }),
+        response:
+          overrides.response ??
+          Promise.resolve({
+            id: "gen-test",
+            headers: {
+              "x-litellm-response-cost": "0.0001",
+            },
+          }),
         text: overrides.text ?? Promise.resolve("Agent response"),
         usage: overrides.usage ?? Promise.resolve({ totalTokens: 50 }),
         output: overrides.output ?? Promise.resolve(undefined),
