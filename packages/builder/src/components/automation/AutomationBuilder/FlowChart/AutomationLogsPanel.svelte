@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Body,
     Select,
@@ -13,22 +13,25 @@
   import { createPaginationStore } from "@/helpers/pagination"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
+  import type { ManipulateType } from "dayjs"
   import StatusRenderer from "@/settings/pages/automations/_components/StatusRenderer.svelte"
   import { didRunStopWithoutBranchMatch } from "./FlowCanvas/FlowRunHelpers"
+  import {
+    AutomationStatus,
+    type AutomationLog,
+    type UIAutomation,
+  } from "@budibase/types"
 
-  export let automation
-  export let onSelectLog = () => {}
-  export let selectedLog = null
+  type TimeRange = `${number}-${ManipulateType}`
 
-  const ERROR = "error",
-    SUCCESS = "success",
-    STOPPED = "stopped",
-    STOPPED_ERROR = "stopped_error"
+  export let automation: UIAutomation
+  export let onSelectLog: (log: AutomationLog) => void = () => {}
+  export let selectedLog: AutomationLog | undefined = undefined
 
   let pageInfo = createPaginationStore()
-  let runHistory = null
-  let status = null
-  let timeRange = null
+  let runHistory: AutomationLog[] | null = null
+  let status: AutomationStatus | undefined
+  let timeRange: TimeRange | null = null
   let loaded = false
   let totalLogs = 0
 
@@ -69,10 +72,10 @@
     !$licensing.isEnterprisePlan && $auth?.user?.accountPortalAccess
 
   const statusOptions = [
-    { value: SUCCESS, label: "Success" },
-    { value: ERROR, label: "Error" },
-    { value: STOPPED, label: "Stopped" },
-    { value: STOPPED_ERROR, label: "Stopped - Error" },
+    { value: AutomationStatus.SUCCESS, label: "Success" },
+    { value: AutomationStatus.ERROR, label: "Error" },
+    { value: AutomationStatus.STOPPED, label: "Stopped" },
+    { value: AutomationStatus.STOPPED_ERROR, label: "Stopped - Error" },
   ]
 
   // Reset the page every time that a filter gets updated
@@ -81,28 +84,30 @@
   $: fetchLogs(automation._id, status, page, timeRange)
 
   async function fetchLogs(
-    automationId,
-    status,
-    page,
-    timeRange,
+    automationId: string | undefined,
+    status: AutomationStatus | undefined,
+    page: string | null | undefined,
+    timeRange: TimeRange | null,
     force = false
   ) {
-    if (!force && !loaded) {
+    if (!automationId || (!force && !loaded)) {
       return
     }
-    let startDate = null
+    let startDate: string | undefined
     if (timeRange) {
       const [length, units] = timeRange.split("-")
-      startDate = dayjs().subtract(length, units)
+      startDate = dayjs()
+        .subtract(Number(length), units as ManipulateType)
+        .toISOString()
     }
     try {
       const response = await automationStore.actions.getLogs({
         automationId,
         status,
-        page,
+        page: page || undefined,
         startDate,
       })
-      pageInfo.fetched(response.hasNextPage, response.nextPage)
+      pageInfo.fetched(response.hasNextPage, response.nextPage || "")
       totalLogs = response.totalLogs
       runHistory = response.data
     } catch (error) {
@@ -112,12 +117,14 @@
   }
 
   onMount(async () => {
-    await fetchLogs(automation._id, status, 0, timeRange, true)
+    await fetchLogs(automation._id, status, undefined, timeRange, true)
     loaded = true
   })
 
-  const getLogStatus = log => {
-    return didRunStopWithoutBranchMatch(log) ? STOPPED : log.status
+  const getLogStatus = (log: AutomationLog) => {
+    return didRunStopWithoutBranchMatch(log)
+      ? AutomationStatus.STOPPED
+      : log.status
   }
 </script>
 
@@ -157,7 +164,7 @@
             </Body>
           </div>
           {#if showUpgradeButton}
-            <Button size="S" cta on:click={$licensing.goToUpgradePage}>
+            <Button size="S" cta on:click={licensing.goToUpgradePage}>
               Get more history
             </Button>
           {/if}
