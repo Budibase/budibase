@@ -421,11 +421,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId,
       user: ctx.user,
     })
-    if (context.isProdWorkspace()) {
+    if (context.isProdWorkspace() && run.selectedOperation) {
       await sdk.ai.agentRequests.enqueueRequestTrackingStart({
         agentId,
         sessionId,
         latestPrompt: run.latestQuestion,
+        operationName: run.selectedOperation.name,
         userId,
       })
     }

@@ -5,6 +5,8 @@ export type AgentRequestStatus = "waiting" | "completed"
 export interface AgentRequestEntry {
   entryId: string
   sessionId: string
+  operationName: string
+  source: string
   promptHistory: string[]
   interactionCount: number
   status: AgentRequestStatus

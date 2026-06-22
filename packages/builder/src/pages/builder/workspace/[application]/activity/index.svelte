@@ -12,7 +12,6 @@
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
   import {
     type ActivityStatusTone,
-    getLatestEntry,
     getRequestDisplayId,
     getRequestTitle,
     getRequestTone,

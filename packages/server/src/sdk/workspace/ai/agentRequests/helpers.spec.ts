@@ -28,6 +28,8 @@ const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
     {
       entryId: "entry_1",
       sessionId: "session_1",
+      operationName: "Support",
+      source: "Chat",
       promptHistory: ["Show me the holidays company policy"],
       interactionCount: 1,
       status: "completed",

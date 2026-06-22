@@ -35,12 +35,16 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Show me the holidays company policy",
+        operationName: "Support",
+        source: "Chat",
         userId: "user_1",
       })
 
       expect(created?.request._id).toContain("agentrequest_")
       expect(created?.request.entries).toHaveLength(1)
       expect(created?.request.sessionIds).toEqual(["session_1"])
+      expect(created?.request.entries[0].operationName).toEqual("Support")
+      expect(created?.request.entries[0].source).toEqual("Chat")
       expect(created?.created).toEqual(true)
     })
   })
@@ -55,6 +59,8 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Show me the holidays company policy",
+        operationName: "Support",
+        source: "Chat",
         userId: "user_1",
       })
 
@@ -68,6 +74,8 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_2",
         latestPrompt: "summarise it in 50 words",
+        operationName: "Support",
+        source: "Slack",
         userId: "user_1",
       })
 
@@ -77,6 +85,8 @@ describe("agentRequests crud", () => {
         "Show me the holidays company policy",
         "summarise it in 50 words",
       ])
+      expect(second?.request.entries[0].operationName).toEqual("Support")
+      expect(second?.request.entries[0].source).toEqual("Slack")
       expect(second?.request.sessionIds).toEqual(["session_1", "session_2"])
       expect(second?.created).toEqual(false)
     })
@@ -91,6 +101,8 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Show me the holidays company policy",
+        operationName: "Support",
+        source: "Chat",
         userId: "user_1",
       })
 
@@ -103,12 +115,16 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_2",
         latestPrompt: "turn it into an email",
+        operationName: "Comms",
+        source: "Slack",
         userId: "user_1",
       })
 
       expect(second?.request.requestId).toEqual(first?.request.requestId)
       expect(second?.request.entries).toHaveLength(2)
       expect(second?.request.requestCount).toEqual(2)
+      expect(second?.request.entries[1].operationName).toEqual("Comms")
+      expect(second?.request.entries[1].source).toEqual("Slack")
     })
   })
 
@@ -121,6 +137,8 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Show me the holidays company policy",
+        operationName: "Support",
+        source: "Chat",
         userId: "user_1",
       })
 
@@ -144,6 +162,8 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Show me the holidays company policy",
+        operationName: "Support",
+        source: "Chat",
         userId: "user_1",
       })
 
@@ -166,6 +186,8 @@ describe("agentRequests crud", () => {
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Prod request",
+        operationName: "Support",
+        source: "Chat",
         userId: "user_1",
       })
     })

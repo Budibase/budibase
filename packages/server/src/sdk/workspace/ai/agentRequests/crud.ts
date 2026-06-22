@@ -11,14 +11,20 @@ const nowIso = () => new Date().toISOString()
 const buildEntry = ({
   sessionId,
   latestPrompt,
+  operationName,
+  source,
 }: {
   sessionId: string
   latestPrompt: string
+  operationName: string
+  source: string
 }): AgentRequestEntry => {
   const now = nowIso()
   return {
     entryId: docIds.generateAgentRequestID().split("_").slice(1).join("_"),
     sessionId,
+    operationName,
+    source,
     promptHistory: [latestPrompt],
     interactionCount: 1,
     status: "waiting",
@@ -125,15 +131,21 @@ export async function createOrUpdateRequestForPrompt({
   agentId,
   sessionId,
   latestPrompt,
+  operationName,
+  source,
   userId,
 }: {
   agentId: string
   sessionId: string
   latestPrompt: string
+  operationName: string
+  source: string
   userId: string
 }): Promise<{ request: AgentRequest; created: boolean } | undefined> {
   const prompt = latestPrompt.trim()
-  if (!prompt) {
+  const resolvedOperationName = operationName?.trim()
+  const resolvedSource = source?.trim()
+  if (!prompt || !resolvedOperationName || !resolvedSource) {
     return undefined
   }
 
@@ -155,6 +167,8 @@ export async function createOrUpdateRequestForPrompt({
           entry: buildEntry({
             sessionId,
             latestPrompt: prompt,
+            operationName: resolvedOperationName,
+            source: resolvedSource,
           }),
         })
       ),
@@ -175,6 +189,8 @@ export async function createOrUpdateRequestForPrompt({
           entry: buildEntry({
             sessionId,
             latestPrompt: prompt,
+            operationName: resolvedOperationName,
+            source: resolvedSource,
           }),
         })
       ),
@@ -196,6 +212,8 @@ export async function createOrUpdateRequestForPrompt({
     nextEntries[nextEntries.length - 1] = {
       ...latestEntry,
       sessionId,
+      operationName: resolvedOperationName,
+      source: resolvedSource,
       promptHistory: [...latestEntry.promptHistory, prompt],
       interactionCount: latestEntry.interactionCount + 1,
       status: "waiting",
@@ -206,6 +224,8 @@ export async function createOrUpdateRequestForPrompt({
       buildEntry({
         sessionId,
         latestPrompt: prompt,
+        operationName: resolvedOperationName,
+        source: resolvedSource,
       })
     )
   }

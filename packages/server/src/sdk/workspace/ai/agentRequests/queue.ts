@@ -5,6 +5,7 @@ import {
   generateAndSaveRequestTitle,
   markLatestCompletedBySession,
 } from "./crud"
+import { determineTrigger } from "../agentLogs/shared"
 
 type AgentRequestTrackingJob =
   | {
@@ -13,6 +14,8 @@ type AgentRequestTrackingJob =
       agentId: string
       sessionId: string
       latestPrompt: string
+      operationName: string
+      source: string
       userId: string
     }
   | {
@@ -121,11 +124,13 @@ export async function enqueueRequestTrackingStart({
   agentId,
   sessionId,
   latestPrompt,
+  operationName,
   userId,
 }: {
   agentId: string
   sessionId: string
   latestPrompt: string
+  operationName: string
   userId: string
 }) {
   if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
@@ -142,6 +147,8 @@ export async function enqueueRequestTrackingStart({
     agentId,
     sessionId,
     latestPrompt,
+    operationName,
+    source: determineTrigger(sessionId),
     userId,
   })
 }

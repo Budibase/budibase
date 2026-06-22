@@ -26,9 +26,7 @@ export const getRequestTitle = (request: AgentRequest) => {
   )
 }
 
-export const getRequestTone = (
-  request: AgentRequest
-): ActivityStatusTone => {
+export const getRequestTone = (request: AgentRequest): ActivityStatusTone => {
   if (request.status === "completed") {
     return "completed"
   }

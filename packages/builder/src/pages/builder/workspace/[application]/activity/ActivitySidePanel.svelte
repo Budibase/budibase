@@ -24,8 +24,14 @@
 
   let panelRoot: HTMLDivElement | undefined = $state(undefined)
 
-  let latestEntry = $derived(request ? getLatestEntry(request) : undefined)
-  let requestActions = $derived(latestEntry?.promptHistory || [])
+  let latestEntry = $derived.by(() => {
+    if (!request) {
+      return undefined
+    }
+
+    return getLatestEntry(request)
+  })
+  let requestActions = $derived(latestEntry ? latestEntry.promptHistory : [])
   let details = $derived([
     {
       label: "Agent",
@@ -36,7 +42,7 @@
     },
     {
       label: "Operation",
-      value: "TODO",
+      value: latestEntry?.operationName,
       icon: "gear",
       highlight: false,
       underline: false,
@@ -50,7 +56,7 @@
     },
     {
       label: "Source",
-      value: "TODO",
+      value: latestEntry?.source,
       icon: "circle",
       highlight: false,
       underline: false,
@@ -58,7 +64,7 @@
   ])
 </script>
 
-{#if open}
+{#if open && request && latestEntry}
   <div
     class="activity-panel-overlay"
     role="presentation"
