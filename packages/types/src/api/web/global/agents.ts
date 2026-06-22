@@ -123,9 +123,7 @@ export interface DisconnectAgentSharePointSiteResponse {
 }
 
 export interface FetchChatAppAgentsResponse {
-  agents: (Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live"> & {
-    allowKnowledgeSourceDownload: boolean
-  })[]
+  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
 }
 
 interface ConfigureAgentDeploymentChannelRequest {

@@ -24,8 +24,8 @@ jest.mock("../../../../sdk", () => ({
         getOrThrow: jest.fn(),
       },
       rag: {
-        listFilesForAgent: jest.fn(),
-        retrieveContextForAgent: jest.fn(),
+        listFilesForOperation: jest.fn(),
+        retrieveContextForOperation: jest.fn(),
       },
     },
   },
@@ -37,9 +37,10 @@ const executeTool = async (
     filename?: string
     matchMode?: "smart" | "exact" | "contains"
     caseSensitive?: boolean
-  } = {}
+  } = {},
+  operationId = "operation_1"
 ) => {
-  const toolDef = createKnowledgeFilesTool(agentId)
+  const toolDef = createKnowledgeFilesTool(agentId, operationId)
   if (!toolDef.tool.execute) {
     throw new Error("tool.execute is not a function")
   }
@@ -52,9 +53,10 @@ const executeTool = async (
 
 const executeSearchTool = async (
   agentId: string,
-  input: { question: string }
+  input: { question: string },
+  operationId = "operation_1"
 ) => {
-  const toolDef = createKnowledgeSearchTool(agentId)
+  const toolDef = createKnowledgeSearchTool(agentId, operationId)
   if (!toolDef.tool.execute) {
     throw new Error("tool.execute is not a function")
   }
@@ -72,7 +74,7 @@ describe("AI Tools - Knowledge files", () => {
 
   it("returns file metadata and status summary", async () => {
     const listFilesSpy = jest
-      .spyOn(sdk.ai.rag, "listFilesForAgent")
+      .spyOn(sdk.ai.rag, "listFilesForOperation")
       .mockResolvedValue([
         {
           _id: "file_1",
@@ -137,9 +139,7 @@ describe("AI Tools - Knowledge files", () => {
       }>
     }
 
-    expect(listFilesSpy).toHaveBeenCalledWith("agent_123", {
-      liveOperationOnly: true,
-    })
+    expect(listFilesSpy).toHaveBeenCalledWith("agent_123", "operation_1")
     expect(result.matchedCount).toBe(3)
     expect(result.totalFiles).toBe(3)
     expect(result.ambiguous).toBe(false)
@@ -167,7 +167,7 @@ describe("AI Tools - Knowledge files", () => {
   })
 
   it("returns an empty response when agent has no files", async () => {
-    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([])
+    jest.spyOn(sdk.ai.rag, "listFilesForOperation").mockResolvedValue([])
 
     const result = (await executeTool("agent_456")) as {
       matchedCount: number
@@ -199,7 +199,7 @@ describe("AI Tools - Knowledge files", () => {
   })
 
   it("uses smart matching by default and resolves basename without extension", async () => {
-    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
+    jest.spyOn(sdk.ai.rag, "listFilesForOperation").mockResolvedValue([
       {
         _id: "file_1",
         knowledgeBaseId: "kb_1",
@@ -253,7 +253,7 @@ describe("AI Tools - Knowledge files", () => {
   })
 
   it("returns best guess and alternatives for ambiguous smart matches", async () => {
-    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
+    jest.spyOn(sdk.ai.rag, "listFilesForOperation").mockResolvedValue([
       {
         _id: "file_1",
         knowledgeBaseId: "kb_1",
@@ -304,7 +304,7 @@ describe("AI Tools - Knowledge files", () => {
   })
 
   it("supports contains matching", async () => {
-    jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
+    jest.spyOn(sdk.ai.rag, "listFilesForOperation").mockResolvedValue([
       {
         _id: "file_1",
         knowledgeBaseId: "kb_1",
@@ -363,7 +363,7 @@ describe("AI Tools - Knowledge search", () => {
       .spyOn(sdk.ai.agents, "getOrThrow")
       .mockResolvedValue({ _id: "agent_1" } as any)
     jest
-      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
+      .spyOn(sdk.ai.rag, "retrieveContextForOperation")
       .mockRejectedValue({ status: 503, message: "upstream unavailable" })
 
     await expect(
@@ -378,7 +378,7 @@ describe("AI Tools - Knowledge search", () => {
       .spyOn(sdk.ai.agents, "getOrThrow")
       .mockResolvedValue({ _id: "agent_1" } as any)
     jest
-      .spyOn(sdk.ai.rag, "retrieveContextForAgent")
+      .spyOn(sdk.ai.rag, "retrieveContextForOperation")
       .mockRejectedValue(new Error("Failed to map source metadata"))
 
     await expect(
