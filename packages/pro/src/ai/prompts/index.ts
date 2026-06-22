@@ -57,19 +57,19 @@ If not possible, return only 'Error generating cron:' followed by a short explan
   )
 }
 
-interface GenerateAgentInstructionsOptions {
+interface GenerateOperationInstructionsOptions {
   prompt: string
   agentName?: string
   goal?: string
   toolReferences: string[]
 }
 
-export function generateAgentInstructionsPrompt({
+export function generateOperationInstructionsPrompt({
   prompt,
   agentName,
   goal,
   toolReferences = [],
-}: GenerateAgentInstructionsOptions) {
+}: GenerateOperationInstructionsOptions) {
   const toolsSection =
     toolReferences.length > 0
       ? `Enabled tools (use these exact Handlebars references when mentioning tools):\n${toolReferences
@@ -78,7 +78,7 @@ export function generateAgentInstructionsPrompt({
       : "Enabled tools:\n- None"
 
   return new LLMRequest()
-    .addSystemMessage(`You write instruction prompts for Budibase agents.
+    .addSystemMessage(`You write instruction prompts for Budibase agent operations.
 
 Return only the final instructions text.
 Do not include explanations, preamble, commentary, or markdown code fences.
@@ -90,7 +90,7 @@ If no tools are enabled, do not instruct the agent to use tools.
 
 The output must use exactly these sections and headings:
 
-**Agent role**
+**Operation role**
 <short paragraph>
 
 **Inputs**
@@ -108,9 +108,9 @@ The output must use exactly these sections and headings:
 - <bullet>
 - <bullet>
 
-Write concise, practical instructions that help the agent behave well in Budibase.
+Write concise, practical instructions that help the operation behave well in Budibase.
 Prefer clear operational guidance over abstract advice.`)
-    .addUserMessage(`Generate instructions for a Budibase agent using this request:
+    .addUserMessage(`Generate instructions for a Budibase agent operation using this request:
 
 Prompt:
 ${prompt.trim()}

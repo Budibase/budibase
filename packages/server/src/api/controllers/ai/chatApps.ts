@@ -139,7 +139,6 @@ export async function fetchChatAppAgents(
       icon: agent.icon,
       iconColor: agent.iconColor,
       live: agent.live,
-      allowKnowledgeSourceDownload: agent.allowKnowledgeSourceDownload,
     }))
 
   ctx.body = { agents }

@@ -11,7 +11,7 @@
   export let position: "left" | "right" = "left"
   export let onResizeStart: () => void = () => {}
 
-  let width = defaultWidth
+  let width = minWidth
   let computedMaxWidth = defaultWidth
 
   const clampWidth = (value: number) =>
@@ -56,7 +56,7 @@
   }
 
   const [resizable, resizableHandle] = getHorizontalResizeActions(
-    defaultWidth,
+    minWidth,
     nextWidth => {
       if (!Number.isFinite(nextWidth)) {
         return
@@ -68,7 +68,8 @@
       }
     },
     onResizeStart,
-    position
+    position,
+    defaultWidth
   )
 
   onMount(() => {

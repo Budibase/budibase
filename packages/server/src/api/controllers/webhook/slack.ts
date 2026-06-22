@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { configs, context, HTTPError } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
@@ -8,6 +8,7 @@ import {
   type ChatConversationChannel,
   type Ctx,
   type SlackConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
 import { Chat, type Message, type SlashCommandEvent, type Thread } from "chat"
 import sdk from "../../../sdk"
@@ -19,6 +20,126 @@ import { pickLatestConversation } from "./utils"
 
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
+
+const isAbsoluteUrl = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://")
+
+const toAbsoluteUrl = async (url: string) => {
+  if (isAbsoluteUrl(url)) {
+    return url
+  }
+
+  if (!url.startsWith("/")) {
+    return url
+  }
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  return `${platformUrl.replace(/\/$/, "")}${url}`
+}
+
+const formatSlackLinkLabel = (value: string) =>
+  value.replace(/[<>|]/g, " ").replace(/\s+/g, " ").trim()
+
+const preserveSlackLiteralSegments = (
+  text: string,
+  formatter: (text: string) => string
+) => {
+  const literals: string[] = []
+  const placeholderPrefix = "\u0000SLACK_LITERAL_"
+  const placeholderSuffix = "\u0000"
+  const protectedText = text.replace(
+    /```[\s\S]*?```|`[^`\n]*`|\[[^\]\n]+\]\([^\n)]+\)/g,
+    literal => {
+      const index = literals.push(literal) - 1
+      return `${placeholderPrefix}${index}${placeholderSuffix}`
+    }
+  )
+
+  return formatter(protectedText).replace(
+    new RegExp(`${placeholderPrefix}(\\d+)${placeholderSuffix}`, "g"),
+    (_placeholder, index) => literals[Number(index)] || ""
+  )
+}
+
+const markdownStrike = /~~(?=\S)([^\n]*?\S)~~/g
+const markdownItalicAsterisk = /(^|[^*])\*(?![\s*])([^*\n]*?\S)\*(?!\*)/g
+const markdownBoldAsterisk = /\*\*(?=\S)([^\n]*?\S)\*\*/g
+const markdownBoldUnderscore = /__(?=\S)([^\n]*?\S)__/g
+
+const formatSlackInlineMrkdwn = (text: string) =>
+  text
+    .replace(markdownStrike, "~$1~")
+    .replace(markdownItalicAsterisk, "$1_$2_")
+    .replace(markdownBoldAsterisk, "*$1*")
+    .replace(markdownBoldUnderscore, "*$1*")
+
+const formatSlackLineMrkdwn = (line: string) => {
+  const heading = line.match(/^#{1,6}\s+(.+?)\s*#*\s*$/)
+  if (!heading) {
+    const bullet = line.match(/^(\s*)[-*+]\s+(.+)$/)
+    if (bullet) {
+      return `${bullet[1]}• ${formatSlackInlineMrkdwn(bullet[2])}`
+    }
+    return formatSlackInlineMrkdwn(line)
+  }
+
+  const formattedHeading = formatSlackInlineMrkdwn(heading[1].trim())
+  if (!formattedHeading) {
+    return ""
+  }
+
+  if (formattedHeading.startsWith("*") && formattedHeading.endsWith("*")) {
+    return formattedHeading
+  }
+  return `*${formattedHeading}*`
+}
+
+export const formatSlackMrkdwn = (text: string) =>
+  preserveSlackLiteralSegments(text, value =>
+    value.split("\n").map(formatSlackLineMrkdwn).join("\n")
+  )
+
+export const formatSlackAssistantReply = async ({
+  agentId,
+  result,
+  isDirectMessage,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  isDirectMessage?: boolean
+}) => {
+  const assistantText = formatSlackMrkdwn(result.assistantText || "")
+  if (result.allowKnowledgeSourceDownload === false || !isDirectMessage) {
+    return assistantText
+  }
+
+  const sources = result.ragSources || []
+  const sourceLinks: string[] = []
+  for (const source of sources) {
+    if (!source.fileId) {
+      continue
+    }
+
+    try {
+      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
+        agentId,
+        source.fileId
+      )
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      const label =
+        formatSlackLinkLabel(source.filename || "") || "Knowledge source"
+      sourceLinks.push(`- <${absoluteUrl}|${label}>`)
+    } catch (error) {
+      console.error("Failed to generate Slack RAG source link", error)
+    }
+  }
+
+  if (!sourceLinks.length) {
+    return assistantText
+  }
+
+  return `${assistantText}\n\nSources:\n${sourceLinks.join("\n")}`
+}
 
 export const isSlackDirectMessage = (event?: SlackEvent) =>
   event?.channel_type === "im" || !!event?.channel?.startsWith("D")
@@ -78,6 +199,7 @@ type SlackInput = {
   content: string
   channelId: string
   externalUserId: string
+  isDirectMessage: boolean
   teamId?: string
   threadId?: string
 }
@@ -105,6 +227,7 @@ const createSlackInputHandler = ({
     content,
     channelId,
     externalUserId,
+    isDirectMessage,
     teamId,
     threadId,
   }: SlackInput) => {
@@ -149,6 +272,12 @@ const createSlackInputHandler = ({
             )
           }
         },
+        formatAssistantReply: async result =>
+          await formatSlackAssistantReply({
+            agentId,
+            result,
+            isDirectMessage,
+          }),
         workspaceId,
         chatAppId,
         agentId,
@@ -197,6 +326,7 @@ const createSlackMessageHandler = (
       channelId: thread.channelId,
       threadId: thread.id || undefined,
       externalUserId: message.author.userId,
+      isDirectMessage: isSlackDirectMessage(raw),
       teamId: raw?.team_id || raw?.team,
     })
   }
@@ -272,6 +402,10 @@ export async function slackWebhook(
             content: event.text,
             channelId: raw.channel_id,
             externalUserId: event.user.userId,
+            isDirectMessage: isSlackDirectMessage({
+              type: "message",
+              channel: raw.channel_id,
+            }),
             teamId: raw.team_id,
           })
         }

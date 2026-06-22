@@ -6,8 +6,10 @@ import {
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
+  FetchAgentFileUrlResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentTelegramChannelRequest,
@@ -22,6 +24,9 @@ import {
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  CreateAgentOperationRequest,
+  UpdateAgentOperationRequest,
+  AgentOperationMutationResponse,
   FetchAgentTestSuiteResponse,
   RunAgentTestSuiteRequest,
   RunAgentTestSuiteResponse,
@@ -50,6 +55,15 @@ export class AgentAPI extends TestAPI {
     })
   }
 
+  createWithOperation = async (
+    agent: CreateAgentRequest,
+    operation: CreateAgentOperationRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentResponse> => {
+    const created = await this.create(agent, expectations)
+    return await this.createOperation(created._id!, operation)
+  }
+
   update = async (
     body: UpdateAgentRequest,
     expectations?: Expectations
@@ -58,6 +72,51 @@ export class AgentAPI extends TestAPI {
       body,
       expectations,
     })
+  }
+
+  createOperation = async (
+    agentId: string,
+    body: CreateAgentOperationRequest,
+    expectations?: Expectations
+  ): Promise<AgentOperationMutationResponse> => {
+    return await this._post<AgentOperationMutationResponse>(
+      `/api/agent/${agentId}/operations`,
+      {
+        body,
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 201,
+        },
+      }
+    )
+  }
+
+  updateOperation = async (
+    agentId: string,
+    operationId: string,
+    body: UpdateAgentOperationRequest,
+    expectations?: Expectations
+  ): Promise<AgentOperationMutationResponse> => {
+    return await this._put<AgentOperationMutationResponse>(
+      `/api/agent/${agentId}/operations/${operationId}`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  deleteOperation = async (
+    agentId: string,
+    operationId: string,
+    expectations?: Expectations
+  ): Promise<AgentOperationMutationResponse> => {
+    return await this._delete<AgentOperationMutationResponse>(
+      `/api/agent/${agentId}/operations/${operationId}`,
+      {
+        expectations,
+      }
+    )
   }
 
   remove = async (
@@ -210,9 +269,22 @@ export class AgentAPI extends TestAPI {
 
   fetchFiles = async (
     agentId: string,
+    operationId: string,
     expectations?: Expectations
   ): Promise<FetchAgentKnowledgeResponse> => {
-    return await this._get<FetchAgentKnowledgeResponse>(
+    const { operations } = await this.fetchKnowledge(agentId, expectations)
+    const knowledge = operations?.[operationId]
+    if (!knowledge) {
+      throw new Error(`Knowledge not found for operation ${operationId}`)
+    }
+    return knowledge
+  }
+
+  fetchKnowledge = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentKnowledgeIndexResponse> => {
+    return await this._get<FetchAgentKnowledgeIndexResponse>(
       `/api/agent/${agentId}/knowledge`,
       {
         expectations,
@@ -222,11 +294,12 @@ export class AgentAPI extends TestAPI {
 
   uploadFile = async (
     agentId: string,
+    operationId: string,
     file: AttachedFile,
     expectations?: Expectations
   ): Promise<AgentFileUploadResponse> => {
     return await this._post<AgentFileUploadResponse>(
-      `/api/agent/${agentId}/files`,
+      `/api/agent/${agentId}/operations/${operationId}/files`,
       {
         files: { file },
         expectations: {
@@ -239,11 +312,26 @@ export class AgentAPI extends TestAPI {
 
   removeFile = async (
     agentId: string,
+    operationId: string,
     fileId: string,
     expectations?: Expectations
   ): Promise<{ deleted: true }> => {
     return await this._delete<{ deleted: true }>(
-      `/api/agent/${agentId}/files/${fileId}`,
+      `/api/agent/${agentId}/operations/${operationId}/files/${fileId}`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  fetchFileUrl = async (
+    agentId: string,
+    operationId: string,
+    fileId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentFileUrlResponse> => {
+    return await this._get<FetchAgentFileUrlResponse>(
+      `/api/agent/${agentId}/operations/${operationId}/files/${fileId}/url`,
       {
         expectations,
       }
@@ -265,11 +353,12 @@ export class AgentAPI extends TestAPI {
 
   connectSharePointSite = async (
     agentId: string,
+    operationId: string,
     body: ConnectAgentSharePointSiteRequest,
     expectations?: Expectations
   ): Promise<ConnectAgentSharePointSiteResponse> => {
     return await this._post<ConnectAgentSharePointSiteResponse>(
-      `/api/agent/${agentId}/knowledge-sources/sharepoint/sites`,
+      `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/sites`,
       {
         body,
         expectations,
@@ -279,11 +368,12 @@ export class AgentAPI extends TestAPI {
 
   disconnectSharePointSite = async (
     agentId: string,
+    operationId: string,
     siteId: string,
     expectations?: Expectations
   ): Promise<DisconnectAgentSharePointSiteResponse> => {
     return await this._delete<DisconnectAgentSharePointSiteResponse>(
-      `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+      `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
       {
         expectations,
       }
@@ -292,12 +382,13 @@ export class AgentAPI extends TestAPI {
 
   syncKnowledgeSources = async (
     agentId: string,
+    operationId: string,
     sourceId: string,
     body?: SyncAgentKnowledgeSourcesRequest,
     expectations?: Expectations
   ): Promise<SyncAgentKnowledgeSourcesResponse> => {
     return await this._post<SyncAgentKnowledgeSourcesResponse>(
-      `/api/agent/${agentId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
+      `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/${encodeURIComponent(sourceId)}/sync`,
       {
         body,
         expectations,

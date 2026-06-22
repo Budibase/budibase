@@ -28,10 +28,11 @@
 
   export interface Props {
     agentId?: string
+    operationId: string
     siteId?: string
   }
 
-  let { agentId, siteId }: Props = $props()
+  let { agentId, operationId, siteId }: Props = $props()
 
   let selectedEntryPaths = $state<string[]>([])
   let loadingEntries = $state(false)
@@ -44,7 +45,11 @@
     if (!siteId) {
       return undefined
     }
-    return $selectedAgent?.knowledgeSources?.find(
+    const sources =
+      $selectedAgent?.operations?.find(
+        operation => operation.id === operationId
+      )?.knowledgeSources || []
+    return sources.find(
       source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
         source.config.site.id === siteId
@@ -80,17 +85,19 @@
   )
 
   const loadAllEntries = async () => {
-    if (!agentId || !siteId) {
+    if (!agentId || !operationId || !siteId) {
       return false
     }
     loadingEntries = true
     loadEntriesError = null
     allEntries = []
     try {
-      const response = await agentsStore.fetchAgentKnowledgeSourceAllEntries(
-        agentId,
-        siteId
-      )
+      const response =
+        await agentsStore.fetchOperationKnowledgeSourceAllEntries(
+          agentId,
+          operationId,
+          siteId
+        )
       allEntries = response.entries
       return true
     } catch (error) {
@@ -140,7 +147,7 @@
   }
 
   const handleConfirm = async () => {
-    if (!agentId || !siteId) {
+    if (!agentId || !operationId || !siteId) {
       return keepOpen
     }
     if (selectedEntryPaths.length === 0) {
@@ -157,11 +164,20 @@
     )
 
     try {
-      await agentsStore.applyAgentSharePointSiteFilters(agentId, siteId, {
-        filters,
-      })
+      await agentsStore.applyOperationSharePointSiteFilters(
+        agentId,
+        operationId,
+        siteId,
+        {
+          filters,
+        }
+      )
       if (sourceId) {
-        await agentsStore.syncAgentKnowledgeSources(agentId, sourceId)
+        await agentsStore.syncOperationKnowledgeSources(
+          agentId,
+          operationId,
+          sourceId
+        )
       }
       await Promise.all([
         agentsStore.fetchAgentKnowledge(agentId),
