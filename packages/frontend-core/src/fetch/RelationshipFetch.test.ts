@@ -57,8 +57,12 @@ describe("RelationshipFetch fallback behavior", () => {
 
   it("falls back to searchTable when fetchRelationshipData fails", async () => {
     const mockAPI = {
-      fetchRelationshipData: vi.fn().mockRejectedValue(new Error("Row not found")),
-      fetchTableDefinition: vi.fn().mockResolvedValue(mockParentTableDefinition),
+      fetchRelationshipData: vi
+        .fn()
+        .mockRejectedValue(new Error("Row not found")),
+      fetchTableDefinition: vi
+        .fn()
+        .mockResolvedValue(mockParentTableDefinition),
       searchTable: vi.fn().mockResolvedValue({ rows: [{ _id: "row2" }] }),
     } as unknown as APIClient
 
