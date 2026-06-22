@@ -10,6 +10,16 @@
   import ActivityActionsRenderer from "./ActivityActionsRenderer.svelte"
   import ActivitySidePanel from "./ActivitySidePanel.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
+  import {
+    type ActivityStatusTone,
+    getLatestEntry,
+    getRequestDisplayId,
+    getRequestTitle,
+    getRequestTone,
+    getRequestUpdatedAt,
+    getTriggeredByLabel,
+    sortRequestsByLatestActivity,
+  } from "./utils"
 
   dayjs.extend(relativeTime)
 
@@ -19,7 +29,7 @@
     agentName: string
     triggeredBy: string
     statusLabel: string
-    statusTone: "completed" | "processing" | "needs-input" | "failed"
+    statusTone: ActivityStatusTone
     actionCount: number
     updatedLabel: string
     actions: string
@@ -91,51 +101,12 @@
     return options.filter(option => option.value)
   })
 
-  const getLatestEntry = (request: AgentRequest) =>
-    request.entries[request.entries.length - 1]
-
-  const getRequestTitle = (request: AgentRequest) => {
-    if (request.title) {
-      return request.title
-    }
-
-    const latestEntry = getLatestEntry(request)
-    if (!latestEntry) {
-      return "Untitled request"
-    }
-
-    return (
-      latestEntry.promptHistory[0] ||
-      latestEntry.promptHistory[latestEntry.promptHistory.length - 1] ||
-      "Untitled request"
-    )
-  }
-
-  const getRequestTone = (request: AgentRequest): RequestRow["statusTone"] => {
-    if (request.status === "completed") {
-      return "completed"
-    }
-    return "processing"
-  }
-
-  const getTriggeredBy = (request: AgentRequest) => {
-    const userName = userNames[request.userId]
-    if (userName) {
-      return `User: ${userName}`
-    }
-    return request.userId ? "User" : "Unknown"
-  }
-
   let filteredRequests = $derived.by(() => {
     const requests = !selectedAgentFilter
       ? allRequests
       : allRequests.filter(request => request.agentId === selectedAgentFilter)
 
-    return [...requests].sort((a, b) => {
-      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime()
-      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime()
-      return bTime - aTime
-    })
+    return sortRequestsByLatestActivity(requests)
   })
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
@@ -164,27 +135,17 @@
     const start = (currentPage - 1) * PAGE_SIZE
     return filteredRequests.slice(start, start + PAGE_SIZE).map(request => {
       const tone = getRequestTone(request)
-      const latestEntry = getLatestEntry(request)
-      const updatedAt = new Date(
-        request.latestPromptAt ||
-          latestEntry?.updatedAt ||
-          request.updatedAt ||
-          request.createdAt ||
-          0
-      )
+      const updatedAt = getRequestUpdatedAt(request)
       const updatedTime = updatedAt.getTime()
       const agentName =
         $agentsStore.agents.find(agent => agent._id === request.agentId)
           ?.name || "Unknown agent"
 
       return {
-        id:
-          request._id ||
-          request.requestId ||
-          `${request.agentId}-${request.latestSessionId}`,
+        id: getRequestDisplayId(request),
         title: getRequestTitle(request),
         agentName,
-        triggeredBy: getTriggeredBy(request),
+        triggeredBy: getTriggeredByLabel(request, userNames),
         statusLabel: requestStatusMeta[tone].label,
         statusTone: tone,
         actionCount: request.interactionCount,
@@ -197,13 +158,28 @@
 
   let selectedRequest = $derived.by(() =>
     allRequests.find(request => {
-      const requestId =
-        request._id ||
-        request.requestId ||
-        `${request.agentId}-${request.latestSessionId}`
-      return requestId === selectedRequestId
+      return getRequestDisplayId(request) === selectedRequestId
     })
   )
+
+  let selectedRequestAgentName = $derived.by(() => {
+    if (!selectedRequest) {
+      return "Unknown agent"
+    }
+
+    return (
+      $agentsStore.agents.find(agent => agent._id === selectedRequest.agentId)
+        ?.name || "Unknown agent"
+    )
+  })
+
+  let selectedRequestTriggeredBy = $derived.by(() => {
+    if (!selectedRequest) {
+      return "Unknown"
+    }
+
+    return getTriggeredByLabel(selectedRequest, userNames)
+  })
 
   let paginationLabel = $derived.by(() => {
     if (!filteredRequests.length) {
@@ -358,6 +334,9 @@
   <ActivitySidePanel
     open={!!selectedRequest}
     title={selectedRequest ? getRequestTitle(selectedRequest) : "Request"}
+    request={selectedRequest}
+    agentName={selectedRequestAgentName}
+    triggeredBy={selectedRequestTriggeredBy}
     onClose={closeRequestPanel}
   />
 </div>
