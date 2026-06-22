@@ -1,5 +1,57 @@
 import { helpers } from "@budibase/shared-core"
 import dayjs from "dayjs"
+import customParseFormat from "dayjs/plugin/customParseFormat"
+
+dayjs.extend(customParseFormat)
+
+// Time formats we accept as user input, independent of the chosen display
+// format. Both 24h and 12h (AM/PM) variants are allowed so users can type
+// whichever they find natural.
+const timeInputFormats = [
+  "HH:mm",
+  "H:mm",
+  "hh:mm A",
+  "h:mm A",
+  "h:mmA",
+  "hh:mmA",
+]
+
+// Strictly parses a user-entered time string, returning a dayjs object only
+// when the text is a real time (e.g. "8:00" or "23:00"). Returns null for
+// empty or invalid input so callers can reject anything that isn't a time.
+export const parseTimeInput = (raw: string): dayjs.Dayjs | null => {
+  const trimmed = raw?.trim()
+  if (!trimmed) {
+    return null
+  }
+  const parsed = dayjs(trimmed.toUpperCase(), timeInputFormats, true)
+  return parsed.isValid() ? parsed : null
+}
+
+// Matches a 12h time as it is being typed, e.g. "", "1", "12", "12:3",
+// "12:30", "12:30 P", "12:30 PM" - hours 01-12, minutes 00-59, optional AM/PM.
+const partial12hr = /^(0[1-9]?|1[0-2]?)(:([0-5]\d?)?( ([AP]M?)?)?)?$/i
+
+// Determines whether a string is a valid time, or a valid prefix of one as the
+// user types. This lets an input reject any keystroke that couldn't form a real
+// time (e.g. "687:09090", "99:99" or "nope") rather than only validating on
+// blur. 24h enforces a two digit HH (00-23) and mm (00-59).
+export const isPartialTimeInput = (raw: string, time24hr = true): boolean => {
+  if (raw === "") {
+    return true
+  }
+  if (!time24hr) {
+    return partial12hr.test(raw)
+  }
+  if (!raw.includes(":")) {
+    return /^([01]\d?|2[0-3]?)$/.test(raw)
+  }
+  if (raw.indexOf(":") !== raw.lastIndexOf(":")) {
+    return false
+  }
+  const [hours, minutes] = raw.split(":")
+  return /^([01]\d|2[0-3])$/.test(hours) && /^([0-5]\d?)?$/.test(minutes)
+}
 
 export const deepGet = helpers.deepGet
 

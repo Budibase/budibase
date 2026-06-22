@@ -1,13 +1,8 @@
 <script>
   import dayjs from "dayjs"
-  import customParseFormat from "dayjs/plugin/customParseFormat"
   import NumberInput from "./NumberInput.svelte"
+  import { parseTimeInput, isPartialTimeInput } from "../../../helpers"
   import { createEventDispatcher } from "svelte"
-
-  dayjs.extend(customParseFormat)
-
-  // Accepted input formats, regardless of the display format chosen
-  const inputFormats = ["HH:mm", "H:mm", "hh:mm A", "h:mm A"]
 
   export let value
   export let time24hr = true
@@ -16,17 +11,34 @@
 
   $: format = time24hr ? "HH:mm" : "hh:mm A"
   $: displayValue = value?.format(format)
+  // Tracks the last accepted text. Resyncs whenever the value changes
+  // externally (e.g. picking a date), but is left untouched while typing since
+  // displayValue only changes on commit.
+  $: lastValid = displayValue ?? ""
+
+  // Reject any keystroke that couldn't form a real time, so the field can never
+  // hold arbitrary or out-of-range text like "687:09090", "99:99" or "nope".
+  const handleInput = e => {
+    const input = e.target
+    if (isPartialTimeInput(input.value, time24hr)) {
+      lastValid = input.value
+    } else {
+      input.value = lastValid
+      input.setSelectionRange(lastValid.length, lastValid.length)
+    }
+  }
 
   const handleChange = e => {
     const raw = e.target.value
-    if (!raw) {
+    if (!raw.trim()) {
       dispatch("change", undefined)
       return
     }
 
-    const parsed = dayjs(raw, inputFormats)
-    if (!parsed.isValid()) {
-      // Restore the last valid value so we never leave invalid text behind
+    const parsed = parseTimeInput(raw)
+    if (!parsed) {
+      // Reject invalid times by restoring the last valid value, so the field
+      // only ever holds a properly formatted time
       e.target.value = displayValue ?? ""
       return
     }
@@ -38,6 +50,8 @@
         .second(0)
         .millisecond(0)
     )
+    // Normalise the displayed text to the chosen format
+    e.target.value = parsed.format(format)
   }
 </script>
 
@@ -46,6 +60,7 @@
     hideArrows
     type="text"
     value={displayValue}
+    on:input={handleInput}
     on:change={handleChange}
   />
 </div>
