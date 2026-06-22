@@ -201,4 +201,26 @@ describe("Agent step tool call tracking", () => {
       sessionId: expect.any(String),
     })
   })
+
+  it("returns a controlled failure when usage metadata has no generated output", async () => {
+    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
+      makeToolLoopAgentMock([], {
+        text: Promise.resolve(""),
+        usage: Promise.reject(makeNoOutputError()),
+      })
+    )
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
+      appId: "test",
+      context: {},
+      emitter: {} as any,
+    })
+
+    expect(result).toMatchObject({
+      success: false,
+      response: "No output generated. Check the stream for errors.",
+      sessionId: expect.any(String),
+    })
+  })
 })
