@@ -14,6 +14,9 @@ export type AgentOperationConfig = Pick<
 export type CreateAgentOperationInput = AgentOperationConfig &
   Pick<AgentOperation, "id">
 
+const normalizeOperationName = (name: string | undefined) =>
+  name?.trim().toLowerCase() || ""
+
 const getOperationOrThrow = (agent: Agent, operationId: string) => {
   const operation = agent.operations?.find(
     candidate => candidate.id === operationId
@@ -35,6 +38,31 @@ const mergeOperationConfig = (
   knowledgeSources: existing.knowledgeSources,
 })
 
+const assertUniqueOperationName = (
+  agent: Agent,
+  operationName: string | undefined,
+  excludedOperationId?: string
+) => {
+  const normalizedName = normalizeOperationName(operationName)
+  if (!normalizedName) {
+    return
+  }
+
+  const hasDuplicateName = (agent.operations ?? []).some(operation => {
+    return (
+      operation.id !== excludedOperationId &&
+      normalizeOperationName(operation.name) === normalizedName
+    )
+  })
+
+  if (hasDuplicateName) {
+    throw new HTTPError(
+      `Operation with name '${operationName?.trim()}' already exists.`,
+      400
+    )
+  }
+}
+
 export async function createOperation(
   agentId: string,
   operation: CreateAgentOperationInput
@@ -43,6 +71,7 @@ export async function createOperation(
   if (existing.operations?.some(candidate => candidate.id === operation.id)) {
     throw new HTTPError("Operation already exists", 400)
   }
+  assertUniqueOperationName(existing, operation.name)
 
   return update({
     ...existing,
@@ -57,6 +86,7 @@ export async function updateOperation(
 ): Promise<Agent> {
   const existing = await getOrThrow(agentId)
   getOperationOrThrow(existing, operationId)
+  assertUniqueOperationName(existing, updateRequest.name, operationId)
 
   return update({
     ...existing,

@@ -1,0 +1,27 @@
+name: QA bot LGTM Slack notification
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  notify-slack:
+    if: github.event.label.name == 'qa-bot-lgtm'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_COMMUNITY_PR_WEBHOOK_URL }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          payload=$(jq -n \
+            --arg text "QA bot found no issues with PR #${PR_NUMBER}: ${PR_TITLE}. It is good for human review: ${PR_URL}" \
+            '{text: $text}')
+
+          curl --fail --show-error --silent \
+            --request POST \
+            --header "Content-type: application/json" \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"
