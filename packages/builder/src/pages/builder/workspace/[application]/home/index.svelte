@@ -125,6 +125,7 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
+  let projectsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
@@ -793,6 +794,17 @@
     }
   }
 
+  const loadProjects = async (workspaceId: string) => {
+    projectsRequestedForWorkspace = workspaceId
+    try {
+      await projectsStore.fetch(workspaceId)
+    } catch (error) {
+      if ($appStore.appId === workspaceId && projectsEnabled) {
+        notifications.error(getErrorMessage(error) || "Unable to load projects")
+      }
+    }
+  }
+
   $: baseRows = buildHomeRows({
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
@@ -869,6 +881,15 @@
   $: showBudibaseAIMetric =
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
+  $: if (
+    hasMounted &&
+    projectsEnabled &&
+    $appStore.appId &&
+    projectsRequestedForWorkspace !== $appStore.appId
+  ) {
+    loadProjects($appStore.appId)
+  }
+
   $: if (hasMounted) writeUrlState()
 
   const goToAutomationError = (automationId: string) => {
@@ -924,7 +945,7 @@
 
     await Promise.all([
       agentsStore.fetchAgents(),
-      projectsEnabled ? projectsStore.fetch() : Promise.resolve(),
+      projectsEnabled ? loadProjects(workspaceId) : Promise.resolve(),
       loadMetrics(),
     ])
   })
@@ -1041,7 +1062,9 @@
 
           {#if projectsEnabled}
             <MenuSeparator />
-            <MenuItem icon="stack" on:click={createProject}>Project</MenuItem>
+            <MenuItem icon="stack" on:click={createProject}>
+              Create project
+            </MenuItem>
             <MenuItem
               icon="pencil"
               on:click={editProject}

@@ -38,4 +38,34 @@ describe("CreateProjectModal", () => {
       color: undefined,
     })
   })
+
+  it("edits an existing project", async () => {
+    const onConfirm = vi.fn()
+
+    render(CreateProjectModal, {
+      props: {
+        project: {
+          _id: "project_1",
+          _rev: "1-rev",
+          name: "Operations",
+          description: "Original description",
+          color: "#8CA171",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+        onConfirm,
+      },
+    })
+
+    expect(screen.getByLabelText("Name")).toHaveValue("Operations")
+    await fireEvent.input(screen.getByLabelText("Description"), {
+      target: { value: "Updated description" },
+    })
+    await fireEvent.click(screen.getByText("Save"))
+
+    expect(onConfirm).toHaveBeenCalledWith({
+      name: "Operations",
+      description: "Updated description",
+      color: "#8CA171",
+    })
+  })
 })
