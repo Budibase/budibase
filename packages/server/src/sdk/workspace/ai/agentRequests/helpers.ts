@@ -98,7 +98,7 @@ export async function analyzeAgentRequestLink({
       model: llm.chat,
       providerOptions: llm.providerOptions?.(false),
       headers: {
-        "x-litellm-tags": "bb-agent-request-link",
+        "x-litellm-tags": "bb-agent-request-analyser",
       },
       messages: [
         {

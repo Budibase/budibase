@@ -120,7 +120,7 @@ describe("analyzeAgentRequestLink", () => {
     expect(generateTextMock).toHaveBeenCalledWith(
       expect.objectContaining({
         headers: {
-          "x-litellm-tags": "bb-agent-request-link",
+          "x-litellm-tags": "bb-agent-request-analyser",
         },
       })
     )
