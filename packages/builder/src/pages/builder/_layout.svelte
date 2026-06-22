@@ -329,6 +329,9 @@
 <AccountLockedModal
   bind:this={accountLockedModal}
   lockedBy={$auth.user?.lockedBy}
+  deactivationScheduledAt={$auth.user?.deactivationScheduledAt}
+  appId={$enrichedApps.find(app => app.editable)?.devId}
+  {isOwner}
   onConfirm={() =>
     isOwner ? licensing.goToUpgradePage() : licensing.goToPricingPage()}
 />

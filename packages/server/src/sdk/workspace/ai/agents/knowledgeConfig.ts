@@ -45,27 +45,13 @@ export const findOperationIdForKnowledgeSource = (
 
 export const updateOperationKnowledgeSources = (
   agent: Agent,
-  operationId: string | undefined,
+  operationId: string,
   updater: (sources: AgentKnowledgeSource[]) => AgentKnowledgeSource[]
 ): AgentOperation[] => {
   const operations = agent.operations ?? []
-  const targetOperationId =
-    operationId || operations[0]?.id || "operation_default"
-
-  if (operations.length === 0) {
-    return [
-      {
-        id: targetOperationId,
-        name: "Operation",
-        live: false,
-        knowledgeSources: updater([]),
-        allowKnowledgeSourceDownload: true,
-      },
-    ]
-  }
 
   return operations.map(operation =>
-    operation.id === targetOperationId
+    operation.id === operationId
       ? {
           ...operation,
           knowledgeSources: updater(operation.knowledgeSources ?? []),

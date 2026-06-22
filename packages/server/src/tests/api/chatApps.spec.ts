@@ -443,7 +443,6 @@ describe("chat route auth split", () => {
       icon: "robot",
       iconColor: "#6a9bcc",
       live: true,
-      allowKnowledgeSourceDownload: true,
     })
     expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
     expect(

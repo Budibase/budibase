@@ -43,17 +43,32 @@ export const evaluateReviewer = ({
   reviewer,
   response,
   toolCalls,
+  toolDisplayNames,
+  selectedOperationId,
+  selectedOperationName,
+  operationNamesById,
 }: {
   reviewer: AgentTestReviewer
   response: string
   toolCalls: string[]
+  toolDisplayNames?: Record<string, string>
+  selectedOperationId?: string
+  selectedOperationName?: string
+  operationNamesById?: Record<string, string>
 }): AgentTestReviewerResult => {
   const def: ReviewerDefinition = REVIEWERS[reviewer.type]
   if (def.evaluate === "async") {
     throw new Error(`${reviewer.type} cannot be evaluated synchronously`)
   }
 
-  const { passed, message } = def.evaluate(reviewer, { response, toolCalls })
+  const { passed, message } = def.evaluate(reviewer, {
+    response,
+    toolCalls,
+    toolDisplayNames,
+    selectedOperationId,
+    selectedOperationName,
+    operationNamesById,
+  })
   return {
     reviewerId: reviewer.id,
     type: reviewer.type,
