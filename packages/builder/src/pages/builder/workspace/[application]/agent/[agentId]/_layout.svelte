@@ -49,10 +49,7 @@
     if ($isActive("./logs")) {
       return "Logs"
     }
-    if ($isActive("./config")) {
-      return "Configuration"
-    }
-    return "Overview"
+    return "Configuration"
   })
   let currentAgent = $derived($selectedAgent)
   let hasPublishedUnpublishedChanges = $derived.by(() => {
@@ -142,13 +139,6 @@
     <div class="filter">
       <ActionButton
         quiet
-        selected={activeTab === "Overview"}
-        on:click={() => $goto("./")}
-      >
-        Overview
-      </ActionButton>
-      <ActionButton
-        quiet
         selected={activeTab === "Configuration"}
         on:click={() => $goto("./config")}
       >
@@ -207,19 +197,15 @@
   </div>
   <div
     class="config-page"
-    class:full-width={activeTab === "Logs" ||
-      activeTab === "Tests" ||
-      activeTab === "Overview"}
+    class:full-width={activeTab === "Logs" || activeTab === "Tests"}
   >
     <div
       class="config-content"
-      class:full-width={activeTab === "Logs" ||
-        activeTab === "Tests" ||
-        activeTab === "Overview"}
+      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
       class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
     >
       <div class="config-form">
-        {#if activeTab === "Logs" || activeTab === "Tests" || activeTab === "Overview"}
+        {#if activeTab === "Logs" || activeTab === "Tests"}
           <!-- svelte-ignore slot_element_deprecated -->
           <slot />
         {:else}
@@ -230,7 +216,7 @@
         {/if}
       </div>
     </div>
-    {#if activeTab === "Configuration"}
+    {#if activeTab !== "Logs" && activeTab !== "Tests"}
       <div class="config-preview">
         <AgentChatPanel
           agentId={currentAgent?._id}

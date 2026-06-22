@@ -522,7 +522,7 @@
       return
     }
     if (row.type === "agent") {
-      goto(url(`../agent/${row.id}`))
+      goto(url(`../agent/${row.id}/config`))
       return
     }
   }
