@@ -34,6 +34,12 @@
     return environment === "production" ? "Production" : "Development"
   }
 
+  const sessionMeta = $derived(
+    selectedSession
+      ? `${selectedSession.trigger} | ${formatEnvironment(selectedSession.environment)} | ${formatTime(selectedSession.startTime)}`
+      : null
+  )
+
   function handleKeydown(event: KeyboardEvent) {
     if (open && event.key === "Escape") {
       onClose()
@@ -58,11 +64,9 @@
           >
             Session log
           </Body>
-          {#if selectedSession}
+          {#if sessionMeta}
             <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-              {selectedSession.trigger} | {formatEnvironment(
-                selectedSession.environment
-              )} | {formatTime(selectedSession.startTime)}
+              {sessionMeta}
             </Body>
           {/if}
         </div>
