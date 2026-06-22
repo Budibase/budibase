@@ -9,6 +9,26 @@ type ProjectUpdate = Pick<Project, "_id" | "_rev"> &
 type AssignmentRollback = () => Promise<unknown>
 type AssignmentUpdate = () => Promise<AssignmentRollback>
 
+const PROJECT_COLOR_PATTERNS = [
+  /^(?:#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8})$/i,
+  /^[a-z]+$/i,
+  /^rgba?\([0-9.%+\-\s,/]+\)$/i,
+  /^hsla?\([0-9.%+\-\s,/]*(?:deg|grad|rad|turn)?[0-9.%+\-\s,/]*\)$/i,
+  /^var\(--spectrum-global-color-[a-z0-9-]+\)$/i,
+]
+
+const validateProjectColor = (color?: string) => {
+  if (color == null || color.trim() === "") {
+    return undefined
+  }
+
+  const value = color.trim()
+  if (!PROJECT_COLOR_PATTERNS.some(pattern => pattern.test(value))) {
+    throw new HTTPError("Project color is invalid.", 400)
+  }
+  return value
+}
+
 export async function fetch(): Promise<Project[]> {
   const db = context.getWorkspaceDB()
   const docs = await db.allDocs<Project>(
@@ -35,6 +55,7 @@ export async function create(
   const response = await db.put(
     {
       ...project,
+      color: validateProjectColor(project.color),
       _id: docIds.generateProjectID(),
       createdAt: now,
       updatedAt: now,
@@ -63,6 +84,9 @@ export async function update(project: ProjectUpdate): Promise<Project> {
     {
       ...persisted,
       ...project,
+      ...(Object.prototype.hasOwnProperty.call(project, "color")
+        ? { color: validateProjectColor(project.color) }
+        : {}),
       _rev: project._rev,
       createdAt: persisted.createdAt,
       updatedAt: new Date().toISOString(),
