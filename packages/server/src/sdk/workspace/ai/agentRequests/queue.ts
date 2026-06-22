@@ -2,6 +2,7 @@ import { context, features, queue } from "@budibase/backend-core"
 import { FeatureFlag } from "@budibase/types"
 import {
   createOrUpdateRequestForPrompt,
+  generateAndSaveRequestTitle,
   markLatestCompletedBySession,
 } from "./crud"
 
@@ -9,10 +10,17 @@ type AgentRequestTrackingJob =
   | {
       workspaceId: string
       type: "start"
+    agentId: string
+    sessionId: string
+    latestPrompt: string
+    userId: string
+    }
+  | {
+      workspaceId: string
+      type: "title"
       agentId: string
       sessionId: string
-      latestPrompt: string
-      userId: string
+      requestId: string
     }
   | {
       workspaceId: string
@@ -74,7 +82,21 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           return
         }
         if (data.type === "start") {
-          await createOrUpdateRequestForPrompt(data)
+          const result = await createOrUpdateRequestForPrompt(data)
+          if (result?.created) {
+            await enqueue({
+              workspaceId,
+              type: "title",
+              agentId: data.agentId,
+              sessionId: data.sessionId,
+              requestId: result.request.requestId,
+            })
+          }
+          return
+        }
+
+        if (data.type === "title") {
+          await generateAndSaveRequestTitle(data)
           return
         }
 

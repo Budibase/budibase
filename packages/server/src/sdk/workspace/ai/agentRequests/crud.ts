@@ -1,7 +1,10 @@
 import { context, docIds } from "@budibase/backend-core"
 import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
-import { analyzeAgentRequestLink } from "./helpers"
+import {
+  analyzeAgentRequestLink,
+  generateAgentRequestTitle,
+} from "./helpers"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -42,6 +45,7 @@ const buildThread = ({
   return {
     _id: requestId,
     requestId,
+    title: undefined,
     agentId,
     userId,
     sessionIds: [sessionId],
@@ -125,7 +129,7 @@ export async function createOrUpdateRequestForPrompt({
   sessionId: string
   latestPrompt: string
   userId: string
-}): Promise<AgentRequest | undefined> {
+}): Promise<{ request: AgentRequest; created: boolean } | undefined> {
   const prompt = latestPrompt.trim()
   if (!prompt) {
     return undefined
@@ -140,34 +144,40 @@ export async function createOrUpdateRequestForPrompt({
   })
 
   if (linkDecision.decision === "new_thread" || !linkDecision.requestId) {
-    return await saveRequest(
-      buildThread({
-        agentId,
-        sessionId,
-        userId,
-        entry: buildEntry({
+    return {
+      request: await saveRequest(
+        buildThread({
+          agentId,
           sessionId,
-          latestPrompt: prompt,
-        }),
-      })
-    )
+          userId,
+          entry: buildEntry({
+            sessionId,
+            latestPrompt: prompt,
+          }),
+        })
+      ),
+      created: true,
+    }
   }
 
   const request = candidateRequests.find(
     candidate => candidate.requestId === linkDecision.requestId
   )
   if (!request) {
-    return await saveRequest(
-      buildThread({
-        agentId,
-        sessionId,
-        userId,
-        entry: buildEntry({
+    return {
+      request: await saveRequest(
+        buildThread({
+          agentId,
           sessionId,
-          latestPrompt: prompt,
-        }),
-      })
-    )
+          userId,
+          entry: buildEntry({
+            sessionId,
+            latestPrompt: prompt,
+          }),
+        })
+      ),
+      created: true,
+    }
   }
 
   const now = nowIso()
@@ -199,20 +209,23 @@ export async function createOrUpdateRequestForPrompt({
   }
 
   const latestEntry = nextEntries[nextEntries.length - 1]
-  return await saveRequest({
-    ...request,
-    sessionIds: nextSessionIds,
-    entries: nextEntries,
-    status: latestEntry.status,
-    requestCount: nextEntries.length,
-    interactionCount: nextEntries.reduce(
-      (total, entry) => total + entry.interactionCount,
-      0
-    ),
-    updatedAt: now,
-    latestPromptAt: latestEntry.updatedAt,
-    latestSessionId: sessionId,
-  })
+  return {
+    request: await saveRequest({
+      ...request,
+      sessionIds: nextSessionIds,
+      entries: nextEntries,
+      status: latestEntry.status,
+      requestCount: nextEntries.length,
+      interactionCount: nextEntries.reduce(
+        (total, entry) => total + entry.interactionCount,
+        0
+      ),
+      updatedAt: now,
+      latestPromptAt: latestEntry.updatedAt,
+      latestSessionId: sessionId,
+    }),
+    created: false,
+  }
 }
 
 export async function markLatestCompletedBySession({
@@ -258,5 +271,32 @@ export async function markLatestCompletedBySession({
     status: latestEntry.status,
     updatedAt: now,
     latestCompletedAt: now,
+  })
+}
+
+export async function generateAndSaveRequestTitle({
+  requestId,
+  agentId,
+  sessionId,
+}: {
+  requestId: string
+  agentId: string
+  sessionId: string
+}): Promise<AgentRequest | undefined> {
+  const request = await fetchThread(requestId)
+  if (!request || request.title) {
+    return request
+  }
+
+  const title = await generateAgentRequestTitle({
+    request,
+    agentId,
+    sessionId,
+  })
+
+  return await saveRequest({
+    ...request,
+    title,
+    updatedAt: nowIso(),
   })
 }

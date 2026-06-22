@@ -93,6 +93,10 @@
     request.entries[request.entries.length - 1]
 
   const getRequestTitle = (request: AgentRequest) => {
+    if (request.title) {
+      return request.title
+    }
+
     const latestEntry = getLatestEntry(request)
     if (!latestEntry) {
       return "Untitled request"

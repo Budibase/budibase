@@ -38,9 +38,10 @@ describe("agentRequests crud", () => {
         userId: "user_1",
       })
 
-      expect(created?._id).toContain("agentrequest_")
-      expect(created?.entries).toHaveLength(1)
-      expect(created?.sessionIds).toEqual(["session_1"])
+      expect(created?.request._id).toContain("agentrequest_")
+      expect(created?.request.entries).toHaveLength(1)
+      expect(created?.request.sessionIds).toEqual(["session_1"])
+      expect(created?.created).toEqual(true)
     })
   })
 
@@ -59,7 +60,7 @@ describe("agentRequests crud", () => {
 
       analyzeAgentRequestLinkMock.mockResolvedValueOnce({
         decision: "existing_thread",
-        requestId: first!.requestId,
+        requestId: first!.request.requestId,
         entryAction: "append_latest_entry",
       })
 
@@ -70,13 +71,14 @@ describe("agentRequests crud", () => {
         userId: "user_1",
       })
 
-      expect(second?.requestId).toEqual(first?.requestId)
-      expect(second?.entries).toHaveLength(1)
-      expect(second?.entries[0].promptHistory).toEqual([
+      expect(second?.request.requestId).toEqual(first?.request.requestId)
+      expect(second?.request.entries).toHaveLength(1)
+      expect(second?.request.entries[0].promptHistory).toEqual([
         "Show me the holidays company policy",
         "summarise it in 50 words",
       ])
-      expect(second?.sessionIds).toEqual(["session_1", "session_2"])
+      expect(second?.request.sessionIds).toEqual(["session_1", "session_2"])
+      expect(second?.created).toEqual(false)
     })
   })
 
@@ -94,7 +96,7 @@ describe("agentRequests crud", () => {
 
       analyzeAgentRequestLinkMock.mockResolvedValueOnce({
         decision: "existing_thread",
-        requestId: first!.requestId,
+        requestId: first!.request.requestId,
         entryAction: "create_new_entry",
       })
       const second = await createOrUpdateRequestForPrompt({
@@ -104,9 +106,9 @@ describe("agentRequests crud", () => {
         userId: "user_1",
       })
 
-      expect(second?.requestId).toEqual(first?.requestId)
-      expect(second?.entries).toHaveLength(2)
-      expect(second?.requestCount).toEqual(2)
+      expect(second?.request.requestId).toEqual(first?.request.requestId)
+      expect(second?.request.entries).toHaveLength(2)
+      expect(second?.request.requestCount).toEqual(2)
     })
   })
 
@@ -127,7 +129,7 @@ describe("agentRequests crud", () => {
         sessionId: "session_1",
       })
 
-      expect(completed?.requestId).toEqual(created?.requestId)
+      expect(completed?.requestId).toEqual(created?.request.requestId)
       expect(completed?.entries[0].status).toEqual("completed")
       expect(completed?.latestCompletedAt).toBeDefined()
     })
@@ -145,9 +147,9 @@ describe("agentRequests crud", () => {
         userId: "user_1",
       })
 
-      const thread = await fetchThread(created!.requestId)
+      const thread = await fetchThread(created!.request.requestId)
 
-      expect(thread?.requestId).toEqual(created?.requestId)
+      expect(thread?.requestId).toEqual(created?.request.requestId)
       expect(thread?.entries).toHaveLength(1)
       expect(thread?.entries[0].promptHistory).toEqual([
         "Show me the holidays company policy",

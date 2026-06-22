@@ -14,6 +14,7 @@ export interface AgentRequestEntry {
 
 export interface AgentRequest extends Document {
   requestId: string
+  title?: string
   agentId: string
   userId: string
   sessionIds: string[]

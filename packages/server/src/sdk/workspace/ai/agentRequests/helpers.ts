@@ -14,6 +14,9 @@ export interface AgentRequestLinkAnalysis {
   entryAction?: NonNullable<AgentRequestLinkDecision["entryAction"]>
 }
 
+const normalizeTitle = (value: string) =>
+  value.replace(/^["'\s]+|["'\s]+$/g, "").replace(/\s+/g, " ").trim()
+
 const normalizePrompt = (prompt: string) => prompt.trim().replace(/\s+/g, " ")
 
 const extractJson = (value: string): AgentRequestLinkDecision | undefined => {
@@ -144,4 +147,54 @@ export async function analyzeAgentRequestLink({
     requestId: decision.requestId,
     entryAction: decision.entryAction,
   }
+}
+
+export async function generateAgentRequestTitle({
+  request,
+  agentId,
+  sessionId,
+}: {
+  request: AgentRequest
+  agentId: string
+  sessionId: string
+}): Promise<string> {
+  const latestEntry = request.entries[request.entries.length - 1]
+  if (!latestEntry) {
+    throw new Error("Cannot generate title without request entries")
+  }
+
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const llm = await sdk.ai.llm.createLLM(
+    agent.aiconfig,
+    sessionId,
+    undefined,
+    agentId
+  )
+  const result = await generateText({
+    model: llm.chat,
+    providerOptions: llm.providerOptions?.(false),
+    headers: {
+      "x-litellm-tags": "bb-agent-request-title",
+    },
+    messages: [
+      {
+        role: "system",
+        content:
+          "Write a short UI title for a user request. Return plain text only. Use 3 to 8 words, no quotes, no punctuation unless necessary.",
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          promptHistory: latestEntry.promptHistory,
+        }),
+      },
+    ],
+  })
+
+  const title = normalizeTitle(result.text || "")
+  if (!title) {
+    throw new Error("Invalid agent request title response")
+  }
+
+  return title
 }
