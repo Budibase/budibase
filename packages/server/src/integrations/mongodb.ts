@@ -50,7 +50,7 @@ const getSchema = () => {
     },
     datasource: {
       connectionString: {
-        type: DatasourceFieldType.STRING,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
         default: `mongodb://${HOST_ADDRESS}:27017`,
         display: "Connection string",
