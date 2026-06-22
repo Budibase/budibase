@@ -863,6 +863,7 @@ describe("agent slack integration provisioning", () => {
             filename: "Source.pdf",
           },
         ],
+        allowKnowledgeSourceDownload: false,
         title: "Mock conversation",
       })
 

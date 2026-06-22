@@ -11,6 +11,7 @@ import {
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
+  prepareAgentRunContext,
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
   updatePendingToolCalls,
@@ -93,21 +94,28 @@ export async function run({
           }
         }
 
-        const { systemPrompt, tools } =
-          await sdk.ai.agents.buildPromptAndTools(agentConfig)
+        const { llm, selectedOperation, systemPrompt, tools } =
+          await prepareAgentRunContext({
+            agent: agentConfig,
+            agentId,
+            sessionId,
+            latestQuestion: prompt,
+            span: agentSpan,
+          })
 
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
             toolCount: Object.keys(tools).length,
+            ...(selectedOperation
+              ? {
+                  operationId: selectedOperation.id,
+                  operationName: selectedOperation.name,
+                }
+              : {}),
           },
         })
 
-        const { chat, providerOptions } = await sdk.ai.llm.createLLM(
-          agentConfig.aiconfig,
-          sessionId,
-          agentSpan,
-          agentId
-        )
+        const { chat, providerOptions } = llm
 
         let outputOption = undefined
         if (

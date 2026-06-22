@@ -33,7 +33,7 @@ userRoutes
   .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
   .get("/api/chatapps/:chatAppId/agents", ai.fetchChatAppAgents)
   .get(
-    "/api/chatapps/:chatAppId/agents/:agentId/files/:fileId/url",
+    "/api/chatapps/:chatAppId/agents/:agentId/operations/:operationId/files/:fileId/url",
     ai.fetchChatAppAgentFileUrl
   )
   .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
