@@ -57,7 +57,6 @@
     isDefault?: boolean
     icon?: string
     iconColor?: string
-    allowKnowledgeSourceDownload?: boolean
   }[] = []
   let agentAvailability:
     | "no_selection"
@@ -135,8 +134,6 @@
         isDefault: agent.isDefault,
         icon: getAgentIcon(agent.agentId),
         iconColor: getAgentIconColor(agent.agentId, index),
-        allowKnowledgeSourceDownload: getAgent(agent.agentId)?.operations?.[0]
-          ?.allowKnowledgeSourceDownload,
       }))
       .filter(agent => Boolean(agent.name))
 

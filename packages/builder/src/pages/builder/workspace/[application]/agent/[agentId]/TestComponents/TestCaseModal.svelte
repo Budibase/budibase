@@ -7,10 +7,12 @@
   import TestReviewersEditor from "./TestReviewersEditor.svelte"
 
   type ToolOption = { label: string; value: string }
+  type OperationOption = { label: string; value: string }
   type AIConfigOption = { label: string; value: string }
 
   type Props = {
     toolOptions: ToolOption[]
+    operationOptions: OperationOption[]
     groupOptions: ToolOption[]
     aiConfigOptions: AIConfigOption[]
     defaultAiConfigId?: string
@@ -21,6 +23,7 @@
 
   let {
     toolOptions,
+    operationOptions,
     groupOptions,
     aiConfigOptions,
     defaultAiConfigId,
@@ -206,6 +209,7 @@
           <TestReviewersEditor
             selectedCase={draftCase}
             {toolOptions}
+            {operationOptions}
             onUpdateCase={updateDraftCase}
           />
         </section>

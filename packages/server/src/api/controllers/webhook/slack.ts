@@ -12,7 +12,6 @@ import {
 } from "@budibase/types"
 import { Chat, type Message, type SlashCommandEvent, type Thread } from "chat"
 import sdk from "../../../sdk"
-import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -87,16 +86,14 @@ export const formatSlackMrkdwn = (text: string) =>
 export const formatSlackAssistantReply = async ({
   agentId,
   result,
-  allowKnowledgeSourceDownload,
   isDirectMessage,
 }: {
   agentId: string
   result: WebhookChatCompleteResult
-  allowKnowledgeSourceDownload?: boolean
   isDirectMessage?: boolean
 }) => {
   const assistantText = formatSlackMrkdwn(result.assistantText || "")
-  if (allowKnowledgeSourceDownload === false || !isDirectMessage) {
+  if (result.allowKnowledgeSourceDownload === false || !isDirectMessage) {
     return assistantText
   }
 
@@ -198,7 +195,6 @@ const createSlackInputHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
-  allowKnowledgeSourceDownload,
 }: {
   workspaceId: string
   chatAppId: string
@@ -206,7 +202,6 @@ const createSlackInputHandler = ({
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
-  allowKnowledgeSourceDownload?: boolean
 }) => {
   return async ({
     target,
@@ -265,7 +260,6 @@ const createSlackInputHandler = ({
           await formatSlackAssistantReply({
             agentId,
             result,
-            allowKnowledgeSourceDownload,
             isDirectMessage,
           }),
         workspaceId,
@@ -338,15 +332,12 @@ export async function slackWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
-        allowKnowledgeSourceDownload,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
           integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
           idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.slackIntegration?.requireUserLink,
-          allowKnowledgeSourceDownload:
-            getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true,
           channelEnabled:
             !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -376,7 +367,6 @@ export async function slackWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
-        allowKnowledgeSourceDownload,
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 
