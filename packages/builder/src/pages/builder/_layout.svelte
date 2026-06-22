@@ -69,7 +69,7 @@
       ? accountLockedModal.show
       : null
 
-  $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
+  $: updateBannerVisibility($auth.user, isOwner)
 
   $: processNavAction($navigationAction)
 
@@ -80,7 +80,7 @@
   }
 
   // Determine if the user is on a trial and show the banner.
-  const updateBannerVisibility = (user, licenseType, isOwner) => {
+  const updateBannerVisibility = (user, isOwner) => {
     if (!user && $licensing.showTrialBanner) {
       licensing.update(store => {
         store.showTrialBanner = false
@@ -89,7 +89,7 @@
     } else if (
       user &&
       !$licensing.showTrialBanner &&
-      licenseType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
+      $licensing.isTrialPlan &&
       isOwner
     ) {
       licensing.update(store => {
@@ -329,6 +329,9 @@
 <AccountLockedModal
   bind:this={accountLockedModal}
   lockedBy={$auth.user?.lockedBy}
+  deactivationScheduledAt={$auth.user?.deactivationScheduledAt}
+  appId={$enrichedApps.find(app => app.editable)?.devId}
+  {isOwner}
   onConfirm={() =>
     isOwner ? licensing.goToUpgradePage() : licensing.goToPricingPage()}
 />

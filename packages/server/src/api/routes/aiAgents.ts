@@ -8,6 +8,7 @@ import {
 } from "./endpointGroups"
 import {
   connectAgentSharePointSiteValidator,
+  createAgentOperationValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
   provisionAgentTelegramChannelValidator,
@@ -20,6 +21,7 @@ import {
   runAgentTestSuiteValidator,
   toggleAgentTelegramDeploymentValidator,
   updateAgentSharePointSiteValidator,
+  updateAgentOperationValidator,
   updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -28,6 +30,20 @@ builderAdminRoutes
   .get("/api/agent", ai.fetchAgents)
   .post("/api/agent", createAgentValidator(), ai.createAgent)
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
+  .post(
+    "/api/agent/:agentId/operations",
+    createAgentOperationValidator(),
+    ai.createAgentOperation
+  )
+  .put(
+    "/api/agent/:agentId/operations/:operationId",
+    updateAgentOperationValidator(),
+    ai.updateAgentOperation
+  )
+  .delete(
+    "/api/agent/:agentId/operations/:operationId",
+    ai.deleteAgentOperation
+  )
   .post("/api/agent/:agentId/duplicate", ai.duplicateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
   .post(
@@ -97,36 +113,46 @@ builderAdminRoutes
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
   )
-  .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledge)
-  .post("/api/agent/:agentId/files", ai.uploadAgentFile)
-  .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
-  .get("/api/agent/:agentId/files/:fileId/url", ai.fetchAgentFileUrl)
+  .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledgeIndex)
+  .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
+  .delete(
+    "/api/agent/:agentId/operations/:operationId/files/:fileId",
+    ai.deleteAgentFile
+  )
+  .get(
+    "/api/agent/:agentId/operations/:operationId/files/:fileId/url",
+    ai.fetchAgentFileUrl
+  )
   .get(
     "/api/knowledge-sources/:datasourceId/:authConfigId/options",
     ai.fetchAgentKnowledgeSourceOptions
   )
   .get(
-    "/api/agent/:agentId/knowledge-sources/sharepoint/entries/all",
+    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/entries/all",
     ai.fetchAgentKnowledgeSourceAllEntries
   )
   .post(
-    "/api/agent/:agentId/knowledge-sources/sharepoint/sites",
+    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/sites",
     connectAgentSharePointSiteValidator(),
     ai.connectAgentSharePointSite
   )
   .patch(
-    "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
+    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/sites/:siteId",
     updateAgentSharePointSiteValidator(),
     ai.updateAgentSharePointSite
   )
   .delete(
-    "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
+    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/sites/:siteId",
     ai.disconnectAgentSharePointSite
   )
   .post(
-    "/api/agent/:agentId/knowledge-sources/:sourceId/sync",
+    "/api/agent/:agentId/operations/:operationId/knowledge-sources/:sourceId/sync",
     syncAgentKnowledgeSourcesValidator(),
     ai.syncAgentKnowledgeSource
+  )
+  .post(
+    "/api/agent/:agentId/operations/:operationId/knowledge/store/reset",
+    ai.resetAgentKnowledgeBaseStore
   )
 
 publicRoutes.get(

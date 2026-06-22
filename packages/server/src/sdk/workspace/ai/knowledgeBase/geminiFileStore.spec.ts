@@ -11,6 +11,7 @@ jest.mock("../configs/litellm", () => ({
 }))
 
 import { setEnv, withEnv } from "../../../../environment"
+import { withLiteLLMSessionId } from "../llm/requestSession"
 import {
   createGeminiFileStore,
   deleteGeminiFileFromStore,
@@ -134,6 +135,68 @@ describe("geminiFileStore", () => {
     })
   })
 
+  it("throws 403 with a friendly message when the file store is inaccessible", async () => {
+    await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
+      mockFetch.mockResolvedValue(
+        response({
+          ok: true,
+          status: 200,
+          json: {
+            id: "ingest-1",
+            status: "failed",
+            vector_store_id: "",
+            file_id: "",
+            error:
+              "Client error '403 Forbidden' for url 'https://generativelanguage.googleapis.com/upload/v1beta/fileSearchStores/agent-files-abc:uploadToFileSearchStore'",
+          },
+        })
+      )
+
+      await expect(
+        ingestGeminiFile({
+          vectorStoreId: "agent-files-abc",
+          filename: "notes.txt",
+          buffer: Buffer.from("hello"),
+        })
+      ).rejects.toMatchObject({
+        status: 403,
+        message:
+          "Gemini file store is inaccessible (403 Forbidden). Use 'Reset store' to recreate it.",
+      })
+    })
+  })
+
+  it("throws 404 with a friendly message when the file store does not exist", async () => {
+    await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
+      mockFetch.mockResolvedValue(
+        response({
+          ok: true,
+          status: 200,
+          json: {
+            id: "ingest-1",
+            status: "failed",
+            vector_store_id: "",
+            file_id: "",
+            error:
+              "Client error '404 Not Found' for url 'https://generativelanguage.googleapis.com/upload/v1beta/fileSearchStores/agent-files-missing:uploadToFileSearchStore'",
+          },
+        })
+      )
+
+      await expect(
+        ingestGeminiFile({
+          vectorStoreId: "agent-files-missing",
+          filename: "notes.txt",
+          buffer: Buffer.from("hello"),
+        })
+      ).rejects.toMatchObject({
+        status: 404,
+        message:
+          "Gemini file store was not found (404). Use 'Reset store' to recreate it.",
+      })
+    })
+  })
+
   it("does not throw when deleting a file that already does not exist", async () => {
     await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
       mockFetch.mockResolvedValue(
@@ -186,6 +249,31 @@ describe("geminiFileStore", () => {
         },
       ])
       expect(mockFetch).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  it("includes litellm_session_id when a session context is active", async () => {
+    await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
+      let requestBody: Record<string, unknown> | undefined
+      mockFetch.mockResolvedValueOnce(
+        response({
+          ok: true,
+          status: 200,
+          json: { data: [] },
+        })
+      )
+
+      await withLiteLLMSessionId("chatconvo_123", async () =>
+        searchGeminiFileStore({
+          vectorStoreId: "vector-store-1",
+          query: "hello",
+        })
+      )
+
+      const [, init] = mockFetch.mock.calls[0]
+      requestBody = JSON.parse(String(init?.body))
+      expect(requestBody?.litellm_session_id).toBe("chatconvo_123")
+      expect(requestBody?.metadata).toEqual({ session_id: "chatconvo_123" })
     })
   })
 

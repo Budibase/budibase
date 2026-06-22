@@ -95,12 +95,15 @@
   let deleteGroupDialog: ConfirmDialog
 
   let currentAgent = $derived($selectedAgent)
+  let operationOptions = $derived.by(() =>
+    (currentAgent?.operations || []).map(operation => ({
+      label: operation.name || operation.id,
+      value: operation.id,
+    }))
+  )
   let toolOptions = $derived.by(() => {
-    const enabled = new Set(currentAgent?.enabledTools ?? [])
     const tools = $agentsStore.tools ?? []
-    return tools
-      .filter(t => enabled.has(t.name))
-      .map(t => ({ label: t.readableName || t.name, value: t.name }))
+    return tools.map(t => ({ label: t.readableName || t.name, value: t.name }))
   })
   let aiConfigOptions = $derived(
     $aiConfigsStore.customConfigsPerType[AIConfigType.COMPLETIONS].map(
@@ -699,6 +702,8 @@
         {selectedCase}
         latestResults={latestResultsForSelected}
         hasLatestRun={hasAnyLatestResult}
+        {toolOptions}
+        {operationOptions}
       />
     </div>
   </div>
@@ -706,6 +711,7 @@
   <TestCaseModal
     bind:this={testCaseModal}
     {toolOptions}
+    {operationOptions}
     {groupOptions}
     {aiConfigOptions}
     defaultAiConfigId={currentAgent?.aiconfig}

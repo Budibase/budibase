@@ -16,15 +16,34 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 
-const toProjectResponse = (project: Project): ProjectResponse => ({
-  _id: project._id!,
-  _rev: project._rev!,
-  name: project.name,
-  description: project.description,
-  color: project.color,
-  createdAt: String(project.createdAt),
-  updatedAt: project.updatedAt,
-})
+const toTimestamp = (timestamp?: string | number) => {
+  if (timestamp == null) {
+    return undefined
+  }
+  const date = new Date(timestamp)
+  if (Number.isNaN(date.getTime())) {
+    return undefined
+  }
+  return date.toISOString()
+}
+
+export const toProjectResponse = (project: Project): ProjectResponse => {
+  const fallbackTimestamp = new Date().toISOString()
+  const createdAt =
+    toTimestamp(project.createdAt) ??
+    toTimestamp(project.updatedAt) ??
+    fallbackTimestamp
+  const updatedAt = toTimestamp(project.updatedAt) ?? createdAt
+  return {
+    _id: project._id!,
+    _rev: project._rev!,
+    name: project.name,
+    description: project.description,
+    color: project.color,
+    createdAt,
+    updatedAt,
+  }
+}
 
 export async function fetch(ctx: Ctx<void, FetchProjectsResponse>) {
   const projects = await sdk.projects.fetch()

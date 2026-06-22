@@ -22,6 +22,11 @@ export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
 export { projectsStore } from "./projects"
 export { agentsStore, selectedAgent } from "./agents"
+export type {
+  OperationKnowledgePendingUpload,
+  OperationKnowledgeUploadResult,
+  OperationKnowledgeUploadState,
+} from "./agents"
 export { knowledgeConnectionsStore } from "./knowledgeConnections"
 export {
   chatAppsStore,

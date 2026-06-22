@@ -6,6 +6,11 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseCreate = jest.fn()
 const mockKnowledgeBaseGetFileOrThrow = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
+const mockKnowledgeBaseRemove = jest.fn()
+const mockDeleteSharePointFilesForOperationSite = jest.fn()
+const mockDeleteKnowledgeSourceSyncStateForOperation = jest.fn()
+const mockReconcileAgentJobs = jest.fn()
+const mockObjectStoreGetReadStream = jest.fn()
 
 const mockProcessorIngest = jest.fn()
 const mockProcessorSearch = jest.fn()
@@ -18,6 +23,10 @@ jest.mock("@budibase/backend-core", () => {
     locks: {
       ...actual.locks,
       doWithLock: (...args: any[]) => mockDoWithLock(...args),
+    },
+    objectStore: {
+      ...actual.objectStore,
+      getReadStream: (...args: any[]) => mockObjectStoreGetReadStream(...args),
     },
   }
 })
@@ -36,7 +45,19 @@ jest.mock("..", () => ({
       mockKnowledgeBaseGetFileOrThrow(...args),
     removeKnowledgeBaseFile: (...args: any[]) =>
       mockKnowledgeBaseRemoveFile(...args),
+    remove: (...args: any[]) => mockKnowledgeBaseRemove(...args),
   },
+}))
+
+jest.mock("./sources/sharepoint/sharepoint", () => ({
+  deleteSharePointFilesForOperationSite: (...args: any[]) =>
+    mockDeleteSharePointFilesForOperationSite(...args),
+  deleteKnowledgeSourceSyncStateForOperation: (...args: any[]) =>
+    mockDeleteKnowledgeSourceSyncStateForOperation(...args),
+}))
+
+jest.mock("./sources/knowledgeSourceSyncQueue", () => ({
+  reconcileAgentJobs: (...args: any[]) => mockReconcileAgentJobs(...args),
 }))
 
 jest.mock("./processors/gemini", () => ({
@@ -54,18 +75,18 @@ import {
   KnowledgeBaseFile,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
-  LockName,
-  LockType,
   SEPARATOR,
 } from "@budibase/types"
+import { Readable } from "stream"
 import { GeminiRagProcessor } from "./processors/gemini"
 import {
   deleteKnowledgeBaseFileChunks,
   deleteFileForAgent,
-  ensureKnowledgeBaseForAgent,
   ingestKnowledgeBaseFile,
-  retrieveContextForAgent,
+  cleanupKnowledgeForOperation,
+  retrieveContextForOperation,
 } from "./files"
+import { generator } from "@budibase/backend-core/tests"
 
 describe("rag files", () => {
   beforeEach(() => {
@@ -73,70 +94,6 @@ describe("rag files", () => {
     mockDoWithLock.mockImplementation(async (_opts: unknown, fn: any) => ({
       result: await fn(),
     }))
-  })
-
-  describe("ensureKnowledgeBaseForAgent", () => {
-    it("returns existing KB for the agent while holding a per-agent lock", async () => {
-      const existing = {
-        _id: "kb_existing",
-        name: "Existing",
-        type: KnowledgeBaseType.GEMINI,
-        config: { googleFileStoreId: "store_1" },
-      } satisfies KnowledgeBase
-      mockAgentsGetOrThrow.mockResolvedValue({
-        _id: "agent_1",
-        knowledgeBases: ["kb_existing"],
-      } satisfies Partial<Agent>)
-      mockKnowledgeBaseFind.mockResolvedValue(existing)
-
-      const result = await ensureKnowledgeBaseForAgent("agent_1")
-
-      expect(result).toEqual(existing)
-      expect(mockDoWithLock).toHaveBeenCalledWith(
-        {
-          name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
-          type: LockType.AUTO_EXTEND,
-          resource: "agent_1",
-        },
-        expect.any(Function)
-      )
-      expect(mockKnowledgeBaseCreate).not.toHaveBeenCalled()
-      expect(mockAgentsUpdate).not.toHaveBeenCalled()
-    })
-
-    it("creates and links a KB when the agent has none", async () => {
-      const agent = {
-        _id: "agent_1",
-        _rev: "1-x",
-        name: "Agent 1",
-        aiconfig: "config_1",
-        knowledgeBases: [],
-      } as Agent
-      const created = {
-        _id: "kb_new",
-        name: "New KB",
-        type: KnowledgeBaseType.GEMINI,
-        config: { googleFileStoreId: "store_2" },
-      } satisfies KnowledgeBase
-      mockAgentsGetOrThrow.mockResolvedValue(agent)
-      mockKnowledgeBaseCreate.mockResolvedValue(created)
-      mockAgentsUpdate.mockResolvedValue({
-        ...agent,
-        knowledgeBases: [created._id],
-      })
-
-      const result = await ensureKnowledgeBaseForAgent("agent_1")
-
-      expect(result).toEqual(created)
-      expect(mockKnowledgeBaseCreate).toHaveBeenCalledWith({
-        name: `Agent files (${agent._id})`,
-        type: KnowledgeBaseType.GEMINI,
-      })
-      expect(mockAgentsUpdate).toHaveBeenCalledWith({
-        ...agent,
-        knowledgeBases: [created._id],
-      })
-    })
   })
 
   describe("ingestKnowledgeBaseFile", () => {
@@ -265,7 +222,14 @@ describe("rag files", () => {
       mockKnowledgeBaseGetFileOrThrow.mockResolvedValue(file)
       mockAgentsGetOrThrow.mockResolvedValue({
         _id: "agent_1",
-        knowledgeBases: [knowledgeBaseId],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: [knowledgeBaseId],
+          },
+        ],
       } as Partial<Agent>)
       mockKnowledgeBaseFind.mockResolvedValue(knowledgeBase)
 
@@ -278,7 +242,7 @@ describe("rag files", () => {
     })
   })
 
-  describe("retrieveContextForAgent", () => {
+  describe("retrieveContextForOperation", () => {
     const defaultKnowledgeBase: KnowledgeBase = {
       _id: "kb_123",
       name: "Knowledge Base",
@@ -289,18 +253,89 @@ describe("rag files", () => {
     }
     const defaultAgent = {
       _id: "agent_1",
-      knowledgeBases: [defaultKnowledgeBase._id],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: true,
+          knowledgeBases: [defaultKnowledgeBase._id],
+        },
+      ],
     } as Agent
+
+    it("throws when the operation is not found on the agent", async () => {
+      const agent = {
+        _id: "agent_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: true,
+            knowledgeBases: [defaultKnowledgeBase._id],
+          },
+        ],
+      } as Agent
+
+      await expect(
+        retrieveContextForOperation(
+          agent,
+          "missing_operation",
+          "What is Budibase?"
+        )
+      ).rejects.toThrow("Operation not found for this agent")
+      expect(mockKnowledgeBaseFind).not.toHaveBeenCalled()
+      expect(mockProcessorSearch).not.toHaveBeenCalled()
+    })
+
+    it("returns empty context without searching when operation is not live", async () => {
+      const agent = {
+        _id: "agent_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: [defaultKnowledgeBase._id],
+          },
+        ],
+      } as Agent
+
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
+
+      expect(result).toEqual({
+        text: "",
+        chunks: [],
+        sources: [],
+      })
+      expect(mockKnowledgeBaseFind).not.toHaveBeenCalled()
+      expect(mockProcessorSearch).not.toHaveBeenCalled()
+    })
 
     it("returns empty context without searching when no knowledge bases are configured", async () => {
       const agent = {
         _id: "agent_1",
         name: "agent_name",
         aiconfig: "config",
-        knowledgeBases: [],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: true,
+            knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+        ],
       } satisfies Agent
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -314,10 +349,21 @@ describe("rag files", () => {
     it("returns empty context for an empty question", async () => {
       const agent = {
         _id: "agent_1",
-        knowledgeBases: ["kb_1"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: ["kb_1"],
+          },
+        ],
       } as Agent
 
-      const result = await retrieveContextForAgent(agent, "  ")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "  "
+      )
 
       expect(result).toEqual({
         text: "",
@@ -329,11 +375,22 @@ describe("rag files", () => {
     it("returns empty context when knowledge base ids are invalid", async () => {
       const agent = {
         _id: "agent_1",
-        knowledgeBases: ["missing_1", "missing_2"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: true,
+            knowledgeBases: ["missing_1", "missing_2"],
+          },
+        ],
       } as Agent
       mockKnowledgeBaseFind.mockResolvedValue(undefined)
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -362,8 +419,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is the policy?"
       )
 
@@ -379,6 +437,157 @@ describe("rag files", () => {
           sourceId: "source-1",
           fileId: "file_1",
           filename: "policy.md",
+        },
+      ])
+    })
+
+    it("returns exact tabular row matches and continues searching other sources", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "users.csv",
+          mimetype: "text/csv",
+          objectStoreKey: "objects/users.csv",
+          ragSourceId: "source-users",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+        {
+          _id: "file_2",
+          knowledgeBaseId: "kb_123",
+          filename: "policy.md",
+          objectStoreKey: "objects/policy.md",
+          ragSourceId: "source-policy",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+      mockObjectStoreGetReadStream.mockResolvedValue({
+        stream: Readable.from([
+          Buffer.from(
+            [
+              "Name,Age,Favorite number,Is admin",
+              "User 99,75,63,0",
+              "User 991,40,66,1",
+            ].join("\n")
+          ),
+        ]),
+      })
+      mockProcessorSearch.mockResolvedValue([
+        {
+          source: "users.csv",
+          chunkText: "Name: User 99\nAge: 75",
+        },
+        {
+          source: "users.csv",
+          chunkText: "Sheet notes: Favorite number is a seeded random field.",
+        },
+        {
+          source: "policy.md",
+          chunkText: "Admins can approve workspace requests.",
+        },
+      ])
+
+      const result = await retrieveContextForOperation(
+        defaultAgent,
+        "operation_1",
+        "What are the details for User 991?"
+      )
+
+      expect(mockObjectStoreGetReadStream).toHaveBeenCalledWith(
+        expect.any(String),
+        "objects/users.csv"
+      )
+      expect(mockProcessorSearch).toHaveBeenCalledWith(
+        "What are the details for User 991?"
+      )
+      expect(result.text).toContain("Exact tabular match from File: users.csv")
+      expect(result.text).toContain("Row 3 in users.csv")
+      expect(result.text).toContain("Name: User 991")
+      expect(result.text).toContain("Age: 40")
+      expect(result.text).toContain("Favorite number: 66")
+      expect(result.text).toContain("Is admin: 1")
+      expect(result.text).toContain(
+        "Sheet notes: Favorite number is a seeded random field."
+      )
+      expect(result.text).toContain("Admins can approve workspace requests.")
+      expect(result.text).not.toContain("Age: 75")
+      const exactChunk = result.chunks[0]
+      expect(result.chunks).toEqual([
+        {
+          source: "source-users",
+          chunkText: exactChunk.chunkText,
+        },
+        {
+          source: "source-users",
+          chunkText: "Sheet notes: Favorite number is a seeded random field.",
+        },
+        {
+          source: "source-policy",
+          chunkText: "Admins can approve workspace requests.",
+        },
+      ])
+      expect(result.sources).toEqual([
+        {
+          sourceId: "source-users",
+          fileId: "file_1",
+          filename: "users.csv",
+        },
+        {
+          sourceId: "source-policy",
+          fileId: "file_2",
+          filename: "policy.md",
+        },
+      ])
+    })
+
+    it("keeps multiple exact tabular matches from the same file", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "users.csv",
+          mimetype: "text/csv",
+          objectStoreKey: "objects/users.csv",
+          ragSourceId: "source-users",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+      mockObjectStoreGetReadStream.mockResolvedValue({
+        stream: Readable.from([
+          Buffer.from(
+            [
+              "Name,Age,Favorite number,Is admin",
+              "User 990,61,40,1",
+              "User 991,40,66,1",
+              "User 992,37,79,1",
+            ].join("\n")
+          ),
+        ]),
+      })
+      mockProcessorSearch.mockResolvedValue([])
+
+      const result = await retrieveContextForOperation(
+        defaultAgent,
+        "operation_1",
+        "Compare User 991 and User 992"
+      )
+
+      expect(result.chunks).toHaveLength(2)
+      expect(result.text).toContain("Name: User 991")
+      expect(result.text).toContain("Age: 40")
+      expect(result.text).toContain("Name: User 992")
+      expect(result.text).toContain("Age: 37")
+      expect(result.text).not.toContain("Name: User 990")
+      expect(result.sources).toEqual([
+        {
+          sourceId: "source-users",
+          fileId: "file_1",
+          filename: "users.csv",
         },
       ])
     })
@@ -406,8 +615,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -454,8 +664,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -508,8 +719,9 @@ describe("rag files", () => {
       ])
       mockProcessorSearch.mockResolvedValue([])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -545,8 +757,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -585,7 +798,14 @@ describe("rag files", () => {
       }
       const agent = {
         _id: "agent_1",
-        knowledgeBases: [knowledgeBaseOne._id, knowledgeBaseTwo._id],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: true,
+            knowledgeBases: [knowledgeBaseOne._id, knowledgeBaseTwo._id],
+          },
+        ],
       } as Agent
 
       mockKnowledgeBaseFind.mockImplementation(async (id: string) => {
@@ -637,7 +857,11 @@ describe("rag files", () => {
           },
         ])
 
-      const result = await retrieveContextForAgent(agent, "What is policy?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is policy?"
+      )
 
       expect(result.chunks).toEqual([
         {
@@ -692,8 +916,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -702,6 +927,55 @@ describe("rag files", () => {
         chunks: [],
         sources: [],
       })
+    })
+  })
+
+  describe("cleanupKnowledgeForOperation", () => {
+    it("removes knowledge base files and deletes the knowledge base", async () => {
+      const agent = {
+        _id: "agent_1",
+        _rev: "1-abc",
+        name: "Support Agent",
+        aiconfig: "cfg_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: ["kb_1"],
+            knowledgeSources: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+        ],
+      } satisfies Agent
+      const knowledgeBase = {
+        _id: "kb_1",
+        name: "Agent files (agent_1:operation_1)",
+      } as KnowledgeBase
+      const files = [
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_1",
+          filename: "notes.txt",
+        },
+      ] as KnowledgeBaseFile[]
+
+      mockAgentsGetOrThrow.mockResolvedValue(agent)
+      mockKnowledgeBaseFind.mockResolvedValue(knowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue(files)
+
+      await cleanupKnowledgeForOperation("agent_1", "operation_1")
+
+      expect(mockKnowledgeBaseRemoveFile).toHaveBeenCalledWith(
+        knowledgeBase,
+        files[0]
+      )
+      expect(mockKnowledgeBaseRemove).toHaveBeenCalledWith("kb_1")
+      expect(
+        mockDeleteKnowledgeSourceSyncStateForOperation
+      ).toHaveBeenCalledWith("agent_1", "operation_1")
+      expect(mockAgentsUpdate).not.toHaveBeenCalled()
+      expect(mockReconcileAgentJobs).not.toHaveBeenCalled()
     })
   })
 })

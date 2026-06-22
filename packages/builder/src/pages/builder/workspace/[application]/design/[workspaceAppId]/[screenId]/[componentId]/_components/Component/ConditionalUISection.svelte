@@ -42,9 +42,16 @@
   }
 
   $: conditionCount = componentInstance?._conditions?.length
-  $: conditionText = `${conditionCount || "No"} condition${
+  $: disabledConditionCount =
+    componentInstance?._conditions?.filter(condition => condition.disabled)
+      .length || 0
+  $: baseConditionText = `${conditionCount || "No"} condition${
     conditionCount !== 1 ? "s" : ""
   } set`
+  $: conditionText =
+    disabledConditionCount > 0
+      ? `${baseConditionText}, ${disabledConditionCount} disabled`
+      : baseConditionText
 </script>
 
 <!--

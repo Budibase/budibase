@@ -4,6 +4,7 @@ import { mocks, utils } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
 import {
   type Agent,
+  type AgentOperation,
   AgentKnowledgeSourceType,
   KnowledgeBaseFileStatus,
   RestAuthType,
@@ -40,6 +41,12 @@ describe("agent files", () => {
   })
 
   const fileBuffer = Buffer.from("Hello from Budibase")
+  const operation = {
+    id: "operation_1",
+    name: "Main operation",
+    live: false,
+    allowKnowledgeSourceDownload: false,
+  }
 
   const mockLiteLLMProviders = () =>
     nock(environment.LITELLM_URL)
@@ -106,15 +113,24 @@ describe("agent files", () => {
       const agentDoc = await db.tryGet<Agent>(agentId)
       await db.put({
         ...agentDoc!,
-        knowledgeSources: siteIds.map(siteId => ({
-          id: `sharepoint_site_${siteId}`,
-          type: AgentKnowledgeSourceType.SHAREPOINT,
-          config: {
-            datasourceId,
-            authConfigId,
-            site: { id: siteId },
+        operations: [
+          {
+            ...(agentDoc?.operations?.[0] || {
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+            }),
+            knowledgeSources: siteIds.map(siteId => ({
+              id: `sharepoint_site_${siteId}`,
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId,
+                authConfigId,
+                site: { id: siteId },
+              },
+            })),
           },
-        })),
+        ],
       })
     })
   }
@@ -205,90 +221,197 @@ describe("agent files", () => {
   }
 
   it("uploads and lists files attached to an agent", async () => {
-    const created = await config.api.agent.create({
-      name: "Support Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Support Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
 
     const autoKbScope = mockAutoKnowledgeBaseCreate()
     const ingestScope = mockGeminiIngest("gemini-file-1")
 
-    const upload = await config.api.agent.uploadFile(created._id!, {
-      file: fileBuffer,
-      name: "notes.txt",
-    })
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "notes.txt",
+      }
+    )
     expect(upload.file.status).toBe(KnowledgeBaseFileStatus.PROCESSING)
 
     await utils.queue.processMessages(getQueue().getBullQueue())
     expect(ingestScope.isDone()).toBe(true)
     expect(autoKbScope.isDone()).toBe(true)
 
-    const { files } = await config.api.agent.fetchFiles(created._id!)
+    const { files } = await config.api.agent.fetchFiles(
+      created._id!,
+      operationId
+    )
     expect(files).toHaveLength(1)
     expect(files[0].status).toBe(KnowledgeBaseFileStatus.READY)
     expect(files[0].filename).toBe("notes.txt")
 
     const refreshed = await config.api.agent.fetch()
     const saved = refreshed.agents.find(agent => agent._id === created._id)
-    expect(saved?.knowledgeBases?.length).toBe(1)
+    expect(saved?.operations?.[0]?.knowledgeBases?.length).toBe(1)
   })
 
   it("deletes an uploaded agent file", async () => {
-    const created = await config.api.agent.create({
-      name: "Support Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Support Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
 
     mockAutoKnowledgeBaseCreate()
     const ingestScope = mockGeminiIngest("gemini-file-2")
     const deleteScope = mockGeminiFileDelete("vector-store-1", "gemini-file-2")
 
-    const upload = await config.api.agent.uploadFile(created._id!, {
-      file: fileBuffer,
-      name: "docs.txt",
-    })
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "docs.txt",
+      }
+    )
 
     await utils.queue.processMessages(getQueue().getBullQueue())
     expect(ingestScope.isDone()).toBe(true)
 
     const response = await config.api.agent.removeFile(
       created._id!,
+      operationId,
       upload.file._id!
     )
     expect(response.deleted).toBe(true)
     expect(deleteScope.isDone()).toBe(true)
 
-    const { files } = await config.api.agent.fetchFiles(created._id!)
+    const { files } = await config.api.agent.fetchFiles(
+      created._id!,
+      operationId
+    )
     expect(files).toHaveLength(0)
   })
 
+  it("returns 403 when knowledge source downloads are disabled for the operation", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Restricted Downloads Agent",
+        aiconfig: "default",
+      },
+      {
+        ...operation,
+        allowKnowledgeSourceDownload: false,
+      }
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    mockGeminiIngest("gemini-file-download-blocked")
+
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "restricted.txt",
+      }
+    )
+
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    await config.api.agent.fetchFileUrl(
+      created._id!,
+      operationId,
+      upload.file._id!,
+      {
+        status: 403,
+        body: {
+          message: "Knowledge source downloads are disabled for this operation",
+        },
+      }
+    )
+  })
+
+  it("returns a file url when knowledge source downloads are allowed", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Allowed Downloads Agent",
+        aiconfig: "default",
+      },
+      { ...operation, allowKnowledgeSourceDownload: true }
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    mockGeminiIngest("gemini-file-download-allowed")
+
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "allowed.txt",
+      }
+    )
+
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    const response = await config.api.agent.fetchFileUrl(
+      created._id!,
+      operationId,
+      upload.file._id!
+    )
+
+    expect(response.url).toEqual(expect.any(String))
+    expect(response.url.length).toBeGreaterThan(0)
+  })
+
   it("returns 400 when syncing SharePoint without a connected source", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
 
     await config.api.agent.syncKnowledgeSources(
       created._id!,
+      operationId,
       "site-1",
       undefined,
       {
         status: 400,
         body: {
-          message: "SharePoint is not connected for this agent",
+          message: "SharePoint is not connected for this operation",
         },
       }
     )
   })
 
   it("returns 400 when connecting a SharePoint site without a connected source", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Set Sites Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Set Sites Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
 
     await config.api.agent.connectSharePointSite(
       created._id!,
+      operationId,
       {
         siteId: "site-1",
         datasourceId: "datasource-1",
@@ -304,10 +427,13 @@ describe("agent files", () => {
   })
 
   it("returns empty SharePoint sites for a connection without sites", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Sites Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Sites Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
     const connection = await setupSharePointKnowledgeOptionsFixture(
       created._id!,
       []
@@ -322,10 +448,13 @@ describe("agent files", () => {
   })
 
   it("returns only options for connection-scoped knowledge source options", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Options Shape Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Options Shape Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
     const connection = await setupSharePointKnowledgeOptionsFixture(
       created._id!,
       []
@@ -340,54 +469,78 @@ describe("agent files", () => {
   })
 
   it("sync SharePoint with wrong source ids returns no-connection error", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Sync Empty Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Sync Empty Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
 
     await config.api.agent.syncKnowledgeSources(
       created._id!,
+      operationId,
       "wrongId",
       undefined,
       { status: 400 }
     )
   })
 
-  it("rejects changing knowledge sources via generic agent update", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Agent Update Guard",
-      aiconfig: "default",
-    })
-
-    await config.api.agent.update(
+  it("ignores knowledge source changes via generic agent update", async () => {
+    const created = await config.api.agent.createWithOperation(
       {
-        ...created,
+        name: "SharePoint Agent Update Guard",
+        aiconfig: "default",
+      },
+      operation
+    )
+
+    await setSharePointSourceInAgent(created._id!, ["site-1"])
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const workspaceDb = context.getWorkspaceDB()
+      const current = await workspaceDb.tryGet<Agent>(created._id!)
+      expect(current).toBeDefined()
+
+      const updated = await config.api.agent.update({
+        ...current!,
+        name: "SharePoint Agent Update Guard 2",
         knowledgeSources: [
           {
             id: "sharepoint_site_test",
             type: AgentKnowledgeSourceType.SHAREPOINT,
             config: {
               site: {
-                id: "site-1",
+                id: "site-2",
               },
             },
           },
         ],
-      } as any,
-      {
-        status: 400,
-        body: {
-          message: "knowledgeSources cannot be updated from this endpoint",
-        },
-      }
-    )
+      } as any)
+
+      expect(updated.name).toBe("SharePoint Agent Update Guard 2")
+
+      const saved = await workspaceDb.tryGet<Agent>(created._id!)
+      const siteIds = (saved?.operations || [])
+        .flatMap(
+          (operation: AgentOperation) => operation.knowledgeSources || []
+        )
+        .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
+        .map(source => source.config.site.id)
+        .filter((id): id is string => !!id)
+      expect(siteIds).toEqual(["site-1"])
+    })
   })
 
   it("allows generic agent update when knowledge sources are unchanged", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Agent Update No Change",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Agent Update No Change",
+        aiconfig: "default",
+      },
+      operation
+    )
 
     await setSharePointSourceInAgent(created._id!, ["site-1"])
 
@@ -399,24 +552,27 @@ describe("agent files", () => {
       const updated = await config.api.agent.update({
         ...current!,
         name: "SharePoint Agent Update No Change 2",
-        knowledgeSources: current!.knowledgeSources,
-        knowledgeBases: current!.knowledgeBases,
-      } as any)
+      } satisfies Agent)
 
       expect(updated.name).toBe("SharePoint Agent Update No Change 2")
     })
   })
 
   it("disconnect endpoint returns success and removes one SharePoint source", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Disconnect Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Disconnect Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
 
     await setSharePointSourceInAgent(created._id!, ["site-1", "site-2"])
 
     const response = await config.api.agent.disconnectSharePointSite(
       created._id!,
+      operationId,
       "site-1"
     )
     expect(response).toEqual({
@@ -428,7 +584,10 @@ describe("agent files", () => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       const db = context.getWorkspaceDB()
       const updated = await db.tryGet<Agent>(created._id!)
-      const siteIds = (updated?.knowledgeSources || [])
+      const siteIds = (updated?.operations || [])
+        .flatMap(
+          (operation: AgentOperation) => operation.knowledgeSources || []
+        )
         .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
         .map(source => source.config.site.id)
         .filter((id): id is string => !!id)
@@ -437,10 +596,13 @@ describe("agent files", () => {
   })
 
   it("returns SharePoint options with displayName and webUrl", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Options Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Options Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
 
     const connection = await setupSharePointKnowledgeOptionsFixture(
       created._id!,
@@ -469,14 +631,22 @@ describe("agent files", () => {
   })
 
   it("disconnect endpoint enqueues cleanup for the removed site", async () => {
-    const created = await config.api.agent.create({
-      name: "SharePoint Disconnect Queue Agent",
-      aiconfig: "default",
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Disconnect Queue Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
     await setSharePointSourceInAgent(created._id!, ["site-1", "site-2"])
     const queueAddSpy = jest.spyOn(knowledgeSourceSyncQueue.getQueue(), "add")
 
-    await config.api.agent.disconnectSharePointSite(created._id!, "site-1")
+    await config.api.agent.disconnectSharePointSite(
+      created._id!,
+      operationId,
+      "site-1"
+    )
 
     const hasDisconnectJob = queueAddSpy.mock.calls.some(([data]) => {
       return (

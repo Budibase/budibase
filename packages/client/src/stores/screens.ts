@@ -143,10 +143,17 @@ const createScreenStore = () => {
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
       if (!activeLayout) {
-        let layoutSettings: Partial<Layout> = {
+        let layoutSettings: Partial<Layout> &
+          Pick<
+            Screen,
+            "screenBackground" | "screenGradient" | "screenCustomCss"
+          > = {
           navigation: "None",
           pageWidth: activeScreen?.width || "Large",
           embedded: $appStore.embedded,
+          screenBackground: activeScreen?.screenBackground,
+          screenGradient: activeScreen?.screenGradient,
+          screenCustomCss: activeScreen?.screenCustomCss,
         }
         if (activeScreen?.showNavigation) {
           const navigationSettings = {

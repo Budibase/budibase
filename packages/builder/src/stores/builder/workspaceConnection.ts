@@ -3,12 +3,13 @@ import type {
   Datasource,
   OAuth2Config,
   Query,
+  RestTemplateId,
   UIInternalDatasource,
 } from "@budibase/types"
 import { SourceName } from "@budibase/types"
 import type { UIWorkspaceConnection } from "@/types"
 import type { Writable } from "svelte/store"
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { oauth2 } from "./oauth2"
 import { datasources } from "./datasources"
 import { queries } from "./queries"
@@ -18,7 +19,7 @@ export interface DraftConnection {
   datasource: Partial<Datasource>
   query: Partial<Query>
   key: number
-  templateId?: string
+  templateId?: RestTemplateId
   dirty: boolean
 }
 
@@ -26,7 +27,7 @@ export interface DraftDatasource {
   _id: string
   name: string
   source: string
-  restTemplateId?: string
+  restTemplateId?: RestTemplateId
   selected: boolean
   containsSelected: boolean
   open: boolean
@@ -134,6 +135,8 @@ const fromRESTDatasource = (
     source: "datasource" as const,
     sourceId: ds._id!,
     name: ds.name || "REST Datasource",
+    templateId: template?.id,
+    templateVersion: ds.restTemplateVersion,
     icon: template?.icon
       ? { type: "asset", value: template.icon }
       : { type: "icon", value: "globe-simple" },
@@ -150,6 +153,19 @@ const filterRESTDatasources = (
   sources: (Datasource | UIInternalDatasource)[]
 ) => {
   return (sources || []).filter(d => d.source === "REST")
+}
+
+export const datasourceMatchesRestTemplate = (
+  datasource: Datasource | UIInternalDatasource,
+  templateId: RestTemplateId
+) => {
+  if (datasource.source !== SourceName.REST) {
+    return false
+  }
+  if (datasource.restTemplateId === templateId) {
+    return true
+  }
+  return restTemplates.get(datasource.restTemplate)?.id === templateId
 }
 
 export class WorkspaceConnectionStore extends DerivedBudiStore<
@@ -213,13 +229,28 @@ export class WorkspaceConnectionStore extends DerivedBudiStore<
     })
   }
 
-  startDraft() {
+  startDraft(templateId?: RestTemplateId) {
+    const template = templateId ? restTemplates.get(templateId) : undefined
+    const matchingDatasources = templateId
+      ? get(datasources).list.filter(datasource =>
+          datasourceMatchesRestTemplate(datasource, templateId)
+        )
+      : []
+    const matchingDatasource =
+      matchingDatasources.length === 1 ? matchingDatasources[0] : undefined
     this.store.update(s => ({
       ...s,
       draft: {
-        datasource: { source: SourceName.REST, name: "New API" },
-        query: { name: "Untitled request" },
+        datasource: {
+          source: SourceName.REST,
+          name: template?.name || "New API",
+        },
+        query: {
+          name: "Untitled request",
+          datasourceId: matchingDatasource?._id,
+        },
         key: Date.now(),
+        templateId,
         dirty: false,
       },
     }))

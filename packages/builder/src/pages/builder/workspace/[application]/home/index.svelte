@@ -29,7 +29,7 @@
     licensing,
     projectsStore,
   } from "@/stores/portal"
-  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import FreeTrialBanner from "@/components/portal/licensing/FreeTrialBanner.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
@@ -104,10 +104,13 @@
   let selectedRow: HomeRow | null = null
 
   let createProjectModal: ModalAPI
+  let editProjectModal: ModalAPI
+  let confirmDeleteProjectDialog: Pick<ModalAPI, "show" | "hide">
   let assignProjectModal: ModalAPI
   let exportProjectModal: ModalAPI
   let importProjectModal: ModalAPI
   let createProjectModalKey = 0
+  let editProjectModalKey = 0
   let exportProjectModalKey = 0
   let importProjectModalKey = 0
 
@@ -294,6 +297,14 @@
     createProjectModal?.show()
   }
 
+  const editProject = () => {
+    if (!selectedProject) {
+      return
+    }
+    editProjectModalKey += 1
+    editProjectModal?.show()
+  }
+
   const exportProject = () => {
     exportProjectModalKey += 1
     exportProjectModal?.show()
@@ -337,6 +348,12 @@
       return
     }
     window.open(liveUrl, "_blank", "noopener,noreferrer")
+  }
+
+  const CONTACT_SALES_URL = "https://budibase.com/contact/"
+
+  const openContactSales = () => {
+    window.open(CONTACT_SALES_URL, "_blank", "noopener,noreferrer")
   }
 
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {
@@ -461,6 +478,55 @@
     }
   }
 
+  const handleUpdateProject = async (
+    project: Pick<ProjectResponse, "name" | "description" | "color">
+  ) => {
+    if (!selectedProject) {
+      return keepOpen
+    }
+
+    try {
+      await projectsStore.updateProject({
+        _id: selectedProject._id,
+        _rev: selectedProject._rev,
+        ...project,
+      })
+      notifications.success("Project updated successfully")
+      editProjectModal?.hide()
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Unable to update project")
+      return keepOpen
+    }
+  }
+
+  const deleteProject = async () => {
+    if (!selectedProject) {
+      return
+    }
+
+    const projectName = selectedProject.name
+    try {
+      await projectsStore.deleteProject(
+        selectedProject._id,
+        selectedProject._rev
+      )
+      selectedProjectId = ""
+      notifications.success(`Project '${projectName}' deleted successfully`)
+
+      const refreshes = await Promise.allSettled([
+        appStore.refresh(),
+        agentsStore.fetchAgents(),
+      ])
+      if (refreshes.some(result => result.status === "rejected")) {
+        notifications.warning(
+          "Project deleted, but some resources could not be refreshed. Reload the workspace to see all changes."
+        )
+      }
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Unable to delete project")
+    }
+  }
+
   const handleExportProject = async ({
     id,
     encryptPassword,
@@ -507,10 +573,20 @@
       const response = await projectsStore.importProject(file, {
         encryptPassword,
       })
-      await Promise.all([appStore.refresh(), loadMetrics()])
       importProjectModal?.hide()
       notifications.success(`Imported project '${response.project.name}'`)
       notifyImportFollowUps(response)
+
+      const refreshes = await Promise.allSettled([
+        appStore.refresh(),
+        agentsStore.fetchAgents(),
+        loadMetrics(),
+      ])
+      if (refreshes.some(result => result.status === "rejected")) {
+        notifications.warning(
+          "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
+        )
+      }
     } catch (error) {
       console.error(error)
       notifications.error(getErrorMessage(error) || "Unable to import project")
@@ -734,6 +810,9 @@
   $: selectedProjectName = selectedProjectId
     ? projectLookup[selectedProjectId]?.name || ""
     : ""
+  $: selectedProject = selectedProjectId
+    ? projectLookup[selectedProjectId]
+    : undefined
   $: if (
     projectsEnabled &&
     selectedProjectId &&
@@ -863,11 +942,14 @@
         >
       </div>
 
-      {#if showHeaderActions}
-        <div class="header-actions">
-          <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
-        </div>
-      {/if}
+      <div class="header-actions">
+        {#if showHeaderActions}
+          <FreeTrialBanner show={$licensing.showTrialBanner} />
+        {/if}
+        <Button size="M" secondary on:click={openContactSales}>
+          Contact sales
+        </Button>
+      </div>
     </div>
 
     {#if automationErrorEntries.length}
@@ -960,6 +1042,20 @@
           {#if projectsEnabled}
             <MenuSeparator />
             <MenuItem icon="stack" on:click={createProject}>Project</MenuItem>
+            <MenuItem
+              icon="pencil"
+              on:click={editProject}
+              disabled={!selectedProject}
+            >
+              Edit selected project
+            </MenuItem>
+            <MenuItem
+              icon="trash"
+              on:click={() => confirmDeleteProjectDialog?.show()}
+              disabled={!selectedProject}
+            >
+              Delete selected project
+            </MenuItem>
             <MenuItem icon="upload-simple" on:click={importProject}>
               Import project
             </MenuItem>
@@ -1024,6 +1120,27 @@
       onConfirm={assignProject}
     />
   </Modal>
+
+  <Modal bind:this={editProjectModal}>
+    {#key editProjectModalKey}
+      <CreateProjectModal
+        project={selectedProject}
+        onConfirm={handleUpdateProject}
+      />
+    {/key}
+  </Modal>
+
+  {#if selectedProject}
+    <ConfirmDialog
+      bind:this={confirmDeleteProjectDialog}
+      okText="Delete Project"
+      onOk={deleteProject}
+      title="Confirm Deletion"
+    >
+      Deleting <b>{selectedProject.name}</b> will clear its resource assignments.
+      The resources themselves will not be deleted. Are you sure?
+    </ConfirmDialog>
+  {/if}
 
   <Modal bind:this={exportProjectModal}>
     {#key exportProjectModalKey}

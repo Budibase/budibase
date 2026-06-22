@@ -7,6 +7,7 @@
     ModalContent,
     TextArea,
   } from "@budibase/bbui"
+  import type { ProjectResponse } from "@budibase/types"
 
   interface ConfirmPayload {
     name: string
@@ -15,10 +16,11 @@
   }
 
   export let onConfirm: (_payload: ConfirmPayload) => unknown = () => {}
+  export let project: ProjectResponse | undefined = undefined
 
-  let name = ""
-  let description = ""
-  let color: string | undefined = "#8CA171"
+  let name = project?.name || ""
+  let description = project?.description || ""
+  let color: string | undefined = project?.color || "#8CA171"
   let nameError: string | undefined = undefined
 
   $: if (name.trim()) {
@@ -40,8 +42,8 @@
 </script>
 
 <ModalContent
-  title="Create project"
-  confirmText="Create"
+  title={project ? "Edit project" : "Create project"}
+  confirmText={project ? "Save" : "Create"}
   size="M"
   onConfirm={confirm}
 >

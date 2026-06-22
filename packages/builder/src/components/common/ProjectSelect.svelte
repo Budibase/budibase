@@ -15,11 +15,15 @@
   export let emptyLabel = "No project"
 
   let options: ProjectOption[] = []
+  let fetchError: string | undefined
 
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
 
   $: if (projectsEnabled) {
-    projectsStore.ensureFetched().catch(console.error)
+    fetchError = undefined
+    projectsStore.ensureFetched().catch(() => {
+      fetchError = "Projects could not be loaded."
+    })
   }
 
   $: options = [
@@ -42,5 +46,7 @@
     getOptionLabel={option => option.label}
     getOptionValue={option => option.value}
     getOptionColour={option => option.color}
+    error={fetchError}
+    disabled={!!fetchError}
   />
 {/if}

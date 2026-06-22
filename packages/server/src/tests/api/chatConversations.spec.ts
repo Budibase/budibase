@@ -256,6 +256,10 @@ describe("chat conversations authorization", () => {
     config.end()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   const headersForUser = async (user: User) =>
     await config.withUser(user, async () => config.defaultHeaders({}, true))
 
@@ -398,6 +402,76 @@ describe("chat conversations authorization", () => {
       .set(headers)
 
     expect(res.status).toBe(404)
+  })
+
+  it("rejects download requests for unknown operations", async () => {
+    const headers = await headersForUser(userA)
+    const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
+
+    getAgentSpy.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    } as Agent)
+
+    const res = await config
+      .getRequest()!
+      .get(
+        `/api/chatapps/${chatApp._id}/agents/agent-1/operations/operation_3/files/file-1/url`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(404)
+    expect(res.body.message).toBe("Operation not found")
+  })
+
+  it("rejects download requests for draft operations", async () => {
+    const headers = await headersForUser(userA)
+    const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
+
+    getAgentSpy.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: false,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    } as Agent)
+
+    const res = await config
+      .getRequest()!
+      .get(
+        `/api/chatapps/${chatApp._id}/agents/agent-1/operations/operation_2/files/file-1/url`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(404)
+    expect(res.body.message).toBe("Operation not found")
   })
 })
 
@@ -847,8 +921,10 @@ describe("chat conversation transient behavior", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         tools: undefined,
-        toolChoice: "none",
       })
+    )
+    expect(jest.mocked(streamText).mock.calls[0]?.[0]).not.toHaveProperty(
+      "toolChoice"
     )
   })
 
@@ -1172,13 +1248,23 @@ describe("Agent chat tool call tracking", () => {
     })
   }
 
-  function makeWebhookStreamTextMock(toolResults: { toolCallId: string }[]) {
+  function makeWebhookStreamTextMock(
+    toolResults: Array<{
+      toolCallId: string
+      toolName?: string
+      output?: unknown
+      preliminary?: boolean
+    }>
+  ) {
     return (options: any) => ({
       text: (async () => {
         if (options.onStepFinish) {
           await options.onStepFinish({
             content: [],
-            toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
+            toolCalls: toolResults.map(r => ({
+              toolCallId: r.toolCallId,
+              toolName: r.toolName,
+            })),
             toolResults,
           })
         }
@@ -1607,6 +1693,71 @@ describe("Agent chat tool call tracking", () => {
       )
 
       expect(addActionMock).toHaveBeenCalledTimes(3)
+    })
+
+    it("returns RAG sources reported by the agent", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock([
+          {
+            toolCallId: "call-1",
+            toolName: "search_knowledge",
+            output: {
+              sources: [
+                {
+                  sourceId: "pricing-source",
+                  fileId: "file-1",
+                  filename: "Budibase Enterprise Pricing V8.pdf",
+                },
+                {
+                  sourceId: "faq-source",
+                  fileId: "file-2",
+                  filename: "FAQ.md",
+                },
+              ],
+            },
+          },
+          {
+            toolCallId: "call-2",
+            toolName: "report_used_sources",
+            output: {
+              accepted: [
+                {
+                  sourceId: "pricing-source",
+                  fileId: "file-1",
+                  filename: "Budibase Enterprise Pricing V8.pdf",
+                },
+              ],
+            },
+          },
+        ]) as any
+      )
+
+      const result = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () =>
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "summarize pricing" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+      )
+
+      expect(result.ragSources).toEqual([
+        {
+          sourceId: "pricing-source",
+          fileId: "file-1",
+          filename: "Budibase Enterprise Pricing V8.pdf",
+        },
+      ])
     })
 
     it("counts zero actions when the agent makes no tool calls", async () => {

@@ -2028,7 +2028,7 @@ const splunkRestTemplateGroup: RestTemplate = {
       id: "splunk-mission-control-automation",
       name: "Splunk Mission Control Automation",
       description:
-        "Mission Control Automation API for SOAR project integrations.",
+        "Mission Control Automation API for SOAR playbook integrations.",
       specs: [
         {
           version: "3.1.0",
