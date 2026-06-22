@@ -17,7 +17,7 @@
     stepDetailCache: Record<string, AgentLogRequestDetail>
     expandedStepLoading: boolean
     onClose: () => void
-    onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
+    onToggleStep: (entry: AgentLogEntry) => void | Promise<void>
   }
 
   let {

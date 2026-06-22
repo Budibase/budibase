@@ -13,7 +13,7 @@
     expandedStepId: string | null
     stepDetailCache: Record<string, AgentLogRequestDetail>
     expandedStepLoading: boolean
-    onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
+    onToggleStep: (entry: AgentLogEntry) => void | Promise<void>
   }
 
   let {

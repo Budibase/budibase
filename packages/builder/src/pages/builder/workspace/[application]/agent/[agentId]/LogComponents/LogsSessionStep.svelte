@@ -20,7 +20,7 @@
     expanded: boolean
     detail?: AgentLogRequestDetail
     loadingStep: boolean
-    onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
+    onToggleStep: (entry: AgentLogEntry) => void | Promise<void>
   }
 
   let { entry, index, expanded, detail, loadingStep, onToggleStep }: Props =
