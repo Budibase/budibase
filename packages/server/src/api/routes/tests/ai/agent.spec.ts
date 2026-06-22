@@ -1,3 +1,5 @@
+import { features } from "@budibase/backend-core"
+import { FeatureFlag } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 
@@ -18,6 +20,14 @@ describe("agent duplicate", () => {
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
   })
+
+  const withMultipleOperationsEnabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.MULTIPLE_OPERATIONS]: true },
+      f
+    )
+  }
 
   it("duplicates an agent with a unique copy name", async () => {
     const created = await config.api.agent.createWithOperation(
@@ -120,6 +130,81 @@ describe("agent duplicate", () => {
     expect(
       removed.operations?.find(operation => operation.id === "operation_2")
     ).toBeUndefined()
+  })
+
+  it("rejects creating an operation with a duplicate name for the same agent", async () => {
+    await withMultipleOperationsEnabled(async () => {
+      const created = await config.api.agent.createWithOperation(
+        {
+          name: "Duplicate Operation Agent",
+          aiconfig: "default",
+        },
+        {
+          id: "operation_1",
+          name: "Customer support",
+          live: false,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+
+      await config.api.agent.createOperation(
+        created._id!,
+        {
+          id: "operation_2",
+          name: "  customer SUPPORT  ",
+          live: false,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Operation with name 'customer SUPPORT' already exists.",
+          },
+        }
+      )
+    })
+  })
+
+  it("rejects renaming an operation to a duplicate name for the same agent", async () => {
+    await withMultipleOperationsEnabled(async () => {
+      const created = await config.api.agent.createWithOperation(
+        {
+          name: "Duplicate Rename Agent",
+          aiconfig: "default",
+        },
+        {
+          id: "operation_1",
+          name: "Customer support",
+          live: false,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+
+      await config.api.agent.createOperation(created._id!, {
+        id: "operation_2",
+        name: "Escalation flow",
+        live: false,
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+      })
+
+      await config.api.agent.updateOperation(
+        created._id!,
+        "operation_2",
+        {
+          name: " customer support ",
+        },
+        {
+          status: 400,
+          body: {
+            message: "Operation with name 'customer support' already exists.",
+          },
+        }
+      )
+    })
   })
 
   it("returns 404 for unknown agent", async () => {

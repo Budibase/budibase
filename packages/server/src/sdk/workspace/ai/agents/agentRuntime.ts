@@ -36,7 +36,7 @@ import {
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
-import tracer from "dd-trace"
+import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
 interface PrepareAgentChatRunParams {
@@ -148,6 +148,9 @@ export const chooseOperationForQuestion = async ({
     stopWhen: stepCountIs(1),
     providerOptions: llm.providerOptions?.(false),
     output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
+    headers: {
+      "x-litellm-tags": "bb-operation-routing",
+    },
   })
 
   try {

@@ -1,14 +1,5 @@
 <script lang="ts">
-  import {
-    Body,
-    Button,
-    Helpers,
-    Icon,
-    Input,
-    Modal,
-    ModalContent,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, Button, Helpers, Icon, notifications } from "@budibase/bbui"
   import {
     FeatureFlag,
     type Agent,
@@ -18,20 +9,20 @@
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
-  import { getSequentialName } from "@/helpers/duplicate"
   import { contextMenuStore } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
+  import OperationNameModal from "./OperationNameModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
 
-  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
-What is this agent responsible for?
+  const DEFAULT_PROMPT_INSTRUCTIONS = `**Operation role**
+What is this operation responsible for?
 
 **Inputs**
-What information does the agent receive?
+What information does this operation receive?
 
 **Actions**
-- What should the agent do?
+- What should this operation do?
 - When should it use tools or APIs?
 
 **Output**
@@ -39,7 +30,7 @@ What information does the agent receive?
 - Include any structure, formatting, or fields required.
 
 **Rules**
-Any constraints the agent must follow.
+Any constraints this operation must follow.
 `
 
   let {
@@ -55,7 +46,7 @@ Any constraints the agent must follow.
     onSetOperationLive = async () => false,
     onUpdated,
   }: {
-    agent?: Agent
+    agent: Agent
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -73,12 +64,18 @@ Any constraints the agent must follow.
 
   let selectedOperationId = $state<string | undefined>(undefined)
   let operationPanelOpen = $state(false)
-  let renameModal: Modal | undefined = $state()
-  let renameDraft = $state("")
   let renameOperationId = $state<string | undefined>(undefined)
-  let isRenameValid = $derived(Boolean(renameDraft.trim()))
+  let createOperationModal: OperationNameModal | undefined = $state()
+  let renameOperationModal: OperationNameModal | undefined = $state()
 
-  let operations = $derived(agent?.operations || [])
+  let operations = $derived(agent.operations || [])
+  let sortedOperations = $derived.by(() =>
+    [...operations].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, {
+        sensitivity: "base",
+      })
+    )
+  )
   let selectedOperation = $derived(
     operations.find(operation => operation.id === selectedOperationId)
   )
@@ -90,6 +87,8 @@ Any constraints the agent must follow.
     multipleOperationsEnabled || operations.length === 0
   )
   let operationLive = $derived(selectedOperation?.live === true)
+
+  const normalizeName = (value: string) => value.trim().toLowerCase()
 
   const openOperationPanel = (operationId: string) => {
     selectedOperationId = operationId
@@ -103,17 +102,32 @@ Any constraints the agent must follow.
 
   const openRenameModal = () => {
     renameOperationId = selectedOperation?.id
-    renameDraft = selectedOperation?.name || ""
-    renameModal?.show()
+    renameOperationModal?.show(selectedOperation?.name || "")
   }
 
-  const saveRename = async () => {
-    if (!agent || !renameOperationId) {
-      return
-    }
-    const trimmedName = renameDraft.trim()
-    if (!trimmedName) {
-      notifications.error("Operation name is required.")
+  const validateCreateOperationName = (name: string) => {
+    const normalizedName = normalizeName(name)
+    return operations.some(operation => {
+      return normalizeName(operation.name || "") === normalizedName
+    })
+      ? "An operation with this name already exists"
+      : undefined
+  }
+
+  const validateRenameOperationName = (name: string) => {
+    const normalizedName = normalizeName(name)
+    return operations.some(operation => {
+      return (
+        operation.id !== renameOperationId &&
+        normalizeName(operation.name || "") === normalizedName
+      )
+    })
+      ? "An operation with this name already exists"
+      : undefined
+  }
+
+  const saveRename = async (name: string) => {
+    if (!renameOperationId) {
       return
     }
     const operation = operations.find(
@@ -123,18 +137,12 @@ Any constraints the agent must follow.
       return
     }
 
-    operation.name = trimmedName
+    operation.name = name
     await onUpdated()
-    renameModal?.hide()
     renameOperationId = undefined
   }
 
-  const createDefaultOperation = () => {
-    const name =
-      getSequentialName(operations, "New operation ", {
-        getName: operation => operation.name,
-      }) || "Operation 1"
-
+  const createDefaultOperation = (name: string) => {
     return {
       id: `operation_${Helpers.uuid()}`,
       name,
@@ -165,18 +173,19 @@ Any constraints the agent must follow.
       notifications.info("Only one operation is supported at the moment.")
       return
     }
-    if (!agent) {
-      return
-    }
-    const operation = createDefaultOperation()
+    createOperationModal?.show()
+  }
+
+  const createOperation = async (name: string) => {
+    const operation = createDefaultOperation(name)
     agent.operations = [...(agent.operations || []), operation]
     selectedOperationId = operation.id
-    onUpdated()
+    await onUpdated()
     openOperationPanel(operation.id)
   }
 
   const deleteOperation = async () => {
-    if (!agent || !selectedOperationId) {
+    if (!selectedOperationId) {
       return
     }
     const operationIdToDelete = selectedOperationId
@@ -219,7 +228,7 @@ Any constraints the agent must follow.
         },
         {
           icon: "pencil",
-          name: "Edit",
+          name: "Rename",
           visible: true,
           callback: openRenameModal,
         },
@@ -257,7 +266,7 @@ Any constraints the agent must follow.
 
   {#if hasOperation}
     <div class="operation-list">
-      {#each operations as operation (operation.id)}
+      {#each sortedOperations as operation (operation.id)}
         <div
           class="operation-row"
           class:selected={selectedOperationId === operation.id}
@@ -301,7 +310,16 @@ Any constraints the agent must follow.
   {/if}
 </div>
 
-{#if agent && selectedOperation}
+<OperationNameModal
+  bind:this={createOperationModal}
+  title="New operation"
+  confirmText="Create"
+  placeholder="Customer support"
+  validateName={validateCreateOperationName}
+  onConfirm={createOperation}
+/>
+
+{#if selectedOperation}
   <OperationSidePanel
     open={operationPanelOpen}
     bind:operation={selectedOperation}
@@ -313,22 +331,20 @@ Any constraints the agent must follow.
     {webSearchConfigured}
     {onAddApiConnection}
     {onConfigureWebSearch}
+    onRenameOperation={openRenameModal}
     {onSetOperationLive}
     {onUpdated}
     onClose={closeOperationPanel}
   />
 {/if}
 
-<Modal bind:this={renameModal}>
-  <ModalContent
-    title="Rename operation"
-    confirmText="Save"
-    disabled={!isRenameValid}
-    onConfirm={saveRename}
-  >
-    <Input label="Name" bind:value={renameDraft} />
-  </ModalContent>
-</Modal>
+<OperationNameModal
+  bind:this={renameOperationModal}
+  title="Rename operation"
+  confirmText="Save"
+  validateName={validateRenameOperationName}
+  onConfirm={saveRename}
+/>
 
 <style>
   .operations-section {
