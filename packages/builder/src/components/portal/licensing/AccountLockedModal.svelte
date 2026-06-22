@@ -71,7 +71,6 @@
   $: removalNoticeMessage = showRemovalNotice
     ? `Your data will be removed on ${formattedDeactivationDate} (${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining).`
     : ""
-
 </script>
 
 <Modal bind:this={modal}>
