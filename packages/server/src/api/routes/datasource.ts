@@ -1,20 +1,6 @@
 import * as datasourceController from "../controllers/datasource"
-import { authorizedMiddleware as authorized } from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
 import { datasourceValidator } from "./utils/validators"
-import recaptcha from "../../middleware/recaptcha"
-import { builderRoutes, endpointGroupList } from "./endpointGroups"
-
-const authorizedRoutes = endpointGroupList.group(
-  {
-    middleware: authorized(
-      permissions.PermissionType.TABLE,
-      permissions.PermissionLevel.READ
-    ),
-    first: false,
-  },
-  recaptcha
-)
+import { builderRoutes } from "./endpointGroups"
 
 builderRoutes
   .get("/api/datasources", datasourceController.fetch)
@@ -29,11 +15,7 @@ builderRoutes
     "/api/datasources/:datasourceId/schema",
     datasourceController.buildSchemaFromSource
   )
+  .get("/api/datasources/:datasourceId", datasourceController.find)
   .put("/api/datasources/:datasourceId", datasourceController.update)
   .post("/api/datasources", datasourceValidator(), datasourceController.save)
   .delete("/api/datasources/:datasourceId/:revId", datasourceController.destroy)
-
-authorizedRoutes.get(
-  "/api/datasources/:datasourceId",
-  datasourceController.find
-)
