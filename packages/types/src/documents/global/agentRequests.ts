@@ -2,11 +2,26 @@ import { Document } from "../../"
 
 export type AgentRequestStatus = "waiting" | "completed"
 
-export interface AgentRequest extends Document {
-  agentId: string
+export interface AgentRequestEntry {
+  entryId: string
   sessionId: string
-  userId: string
   promptHistory: string[]
-  status: AgentRequestStatus
   interactionCount: number
+  status: AgentRequestStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AgentRequest extends Document {
+  requestId: string
+  agentId: string
+  userId: string
+  sessionIds: string[]
+  entries: AgentRequestEntry[]
+  status: AgentRequestStatus
+  requestCount: number
+  interactionCount: number
+  latestPromptAt: string
+  latestCompletedAt?: string
+  latestSessionId: string
 }

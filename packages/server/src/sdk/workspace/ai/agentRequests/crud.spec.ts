@@ -1,25 +1,23 @@
-import { context } from "@budibase/backend-core"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import {
-  appendToRequest,
-  createRequest,
   createOrUpdateRequestForPrompt,
-  fetchByAgent,
-  fetchBySession,
-  fetchLatestBySession,
-  markCompleted,
+  fetchThread,
+  fetchRequestsByAgent,
+  markLatestCompletedBySession,
 } from "./crud"
-import { analyzeAgentRequestBoundary } from "./helpers"
+import { analyzeAgentRequestLink } from "./helpers"
 
 jest.mock("./helpers", () => ({
-  analyzeAgentRequestBoundary: jest.fn(),
+  analyzeAgentRequestLink: jest.fn(),
 }))
 
 describe("agentRequests crud", () => {
   const config = new TestConfiguration()
 
+  const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
+
   beforeEach(async () => {
-    ;(analyzeAgentRequestBoundary as jest.Mock).mockReset()
+    analyzeAgentRequestLinkMock.mockReset()
     await config.newTenant()
   })
 
@@ -27,78 +25,28 @@ describe("agentRequests crud", () => {
     config.end()
   })
 
-  it("appends a follow-up prompt to an existing request", async () => {
+  it("creates one thread document for the first prompt", async () => {
+    analyzeAgentRequestLinkMock.mockResolvedValue({
+      decision: "new_thread",
+    })
+
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const first = await createRequest({
+      const created = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Show me the holidays company policy",
         userId: "user_1",
       })
 
-      const completed = await markCompleted(first!._id!)
-
-      const second = await appendToRequest({
-        request: completed!,
-        latestPrompt: "summarise it in 50 words",
-      })
-
-      expect(second?._id).toEqual(first?._id)
-      expect(second?.interactionCount).toEqual(2)
-      expect(second?.promptHistory).toEqual([
-        "Show me the holidays company policy",
-        "summarise it in 50 words",
-      ])
-      expect(second?.status).toEqual("waiting")
+      expect(created?._id).toContain("agentrequest_")
+      expect(created?.entries).toHaveLength(1)
+      expect(created?.sessionIds).toEqual(["session_1"])
     })
   })
 
-  it("creates a new request document", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const first = await createRequest({
-        agentId: "agent_1",
-        sessionId: "session_1",
-        latestPrompt: "Show me the holidays company policy",
-        userId: "user_1",
-      })
-
-      await markCompleted(first!._id!)
-
-      const second = await createRequest({
-        agentId: "agent_1",
-        sessionId: "session_1",
-        latestPrompt: "I need a new laptop",
-        userId: "user_1",
-      })
-
-      const requests = await fetchBySession("agent_1", "session_1")
-
-      expect(second?._id).not.toEqual(first?._id)
-      expect(requests).toHaveLength(2)
-      expect(requests.map(request => request.interactionCount)).toEqual([1, 1])
-    })
-  })
-
-  it("marks a request as completed", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const request = await createRequest({
-        agentId: "agent_1",
-        sessionId: "session_1",
-        latestPrompt: "Show me the holidays company policy",
-        userId: "user_1",
-      })
-
-      await markCompleted(request!._id!)
-      const latest = await fetchLatestBySession("agent_1", "session_1")
-
-      expect(latest?.status).toEqual("completed")
-      expect(await context.getWorkspaceDB().tryGet(latest!._id!)).toBeDefined()
-    })
-  })
-
-  it("creates a new request when the sdk boundary analysis says new request", async () => {
-    ;(analyzeAgentRequestBoundary as jest.Mock).mockResolvedValue({
-      decision: "new_request",
+  it("appends a follow-up prompt to the latest entry", async () => {
+    analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+      decision: "new_thread",
     })
 
     await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -109,44 +57,64 @@ describe("agentRequests crud", () => {
         userId: "user_1",
       })
 
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "existing_thread",
+        requestId: first!.requestId,
+        entryAction: "append_latest_entry",
+      })
+
       const second = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
-        sessionId: "session_1",
-        latestPrompt: "I need a new laptop",
+        sessionId: "session_2",
+        latestPrompt: "summarise it in 50 words",
         userId: "user_1",
       })
 
-      expect(first?._id).not.toEqual(second?._id)
+      expect(second?.requestId).toEqual(first?.requestId)
+      expect(second?.entries).toHaveLength(1)
+      expect(second?.entries[0].promptHistory).toEqual([
+        "Show me the holidays company policy",
+        "summarise it in 50 words",
+      ])
+      expect(second?.sessionIds).toEqual(["session_1", "session_2"])
     })
   })
 
-  it("appends to the existing request when the sdk boundary analysis says same request", async () => {
-    ;(analyzeAgentRequestBoundary as jest.Mock).mockResolvedValue({
-      decision: "same_request",
-    })
-
+  it("creates a new entry in the same thread when requested", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const first = await createRequest({
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+      const first = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Show me the holidays company policy",
         userId: "user_1",
       })
 
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "existing_thread",
+        requestId: first!.requestId,
+        entryAction: "create_new_entry",
+      })
       const second = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
-        sessionId: "session_1",
-        latestPrompt: "summarise it in 50 words",
+        sessionId: "session_2",
+        latestPrompt: "turn it into an email",
         userId: "user_1",
       })
 
-      expect(second?._id).toEqual(first?._id)
-      expect(second?.interactionCount).toEqual(2)
+      expect(second?.requestId).toEqual(first?.requestId)
+      expect(second?.entries).toHaveLength(2)
+      expect(second?.requestCount).toEqual(2)
     })
   })
 
-  it("can store requests when called directly in development workspaces", async () => {
-    await config.doInContext(config.getDevWorkspaceId(), async () => {
+  it("marks the latest session entry as completed", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
       const created = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
@@ -154,16 +122,45 @@ describe("agentRequests crud", () => {
         userId: "user_1",
       })
 
-      const requests = await fetchBySession("agent_1", "session_1")
+      const completed = await markLatestCompletedBySession({
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
 
-      expect(created?._id).toBeDefined()
-      expect(requests).toHaveLength(1)
+      expect(completed?.requestId).toEqual(created?.requestId)
+      expect(completed?.entries[0].status).toEqual("completed")
+      expect(completed?.latestCompletedAt).toBeDefined()
     })
   })
 
-  it("always fetches agent requests for display from the production db", async () => {
+  it("fetches thread details", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      await createRequest({
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+      const created = await createOrUpdateRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestPrompt: "Show me the holidays company policy",
+        userId: "user_1",
+      })
+
+      const thread = await fetchThread(created!.requestId)
+
+      expect(thread?.requestId).toEqual(created?.requestId)
+      expect(thread?.entries).toHaveLength(1)
+      expect(thread?.entries[0].promptHistory).toEqual([
+        "Show me the holidays company policy",
+      ])
+    })
+  })
+
+  it("lists threads from production db for display", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+      await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
         latestPrompt: "Prod request",
@@ -172,10 +169,9 @@ describe("agentRequests crud", () => {
     })
 
     await config.doInContext(config.getDevWorkspaceId(), async () => {
-      const requests = await fetchByAgent("agent_1")
-
+      const requests = await fetchRequestsByAgent("agent_1")
       expect(requests).toHaveLength(1)
-      expect(requests[0].promptHistory).toEqual(["Prod request"])
+      expect(requests[0].entries[0].promptHistory).toEqual(["Prod request"])
     })
   })
 })

@@ -32,7 +32,7 @@ export async function fetchAgentRequests(
 
   await sdk.ai.agents.getOrThrow(agentId)
 
-  const requests = await sdk.ai.agentRequests.fetchByAgent(agentId)
+  const requests = await sdk.ai.agentRequests.fetchRequestsByAgent(agentId)
   ctx.body = {
     requests: requests.slice(0, sanitizeLimitQuery(limit)),
   }

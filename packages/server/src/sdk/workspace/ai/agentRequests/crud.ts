@@ -1,86 +1,80 @@
 import { context, docIds } from "@budibase/backend-core"
-import type { AgentRequest } from "@budibase/types"
+import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
-import { analyzeAgentRequestBoundary } from "./helpers"
+import { analyzeAgentRequestLink } from "./helpers"
 
-const buildAgentRequest = ({
-  _id,
-  _rev,
-  agentId,
+const THREAD_CANDIDATE_LIMIT = 10
+const THREAD_LOOKBACK_DAYS = 30
+
+const nowIso = () => new Date().toISOString()
+
+const buildEntry = ({
   sessionId,
-  userId,
-  promptHistory,
-  interactionCount,
-  status,
-  createdAt,
+  latestPrompt,
 }: {
-  _id: string
-  _rev?: string
-  agentId: string
   sessionId: string
-  userId: string
-  promptHistory: string[]
-  interactionCount: number
-  status: AgentRequest["status"]
-  createdAt?: string | number
-}): AgentRequest => {
-  const now = new Date().toISOString()
-
+  latestPrompt: string
+}): AgentRequestEntry => {
+  const now = nowIso()
   return {
-    _id,
-    ...(_rev ? { _rev } : {}),
-    agentId,
+    entryId: docIds.generateAgentRequestID().split("_").slice(1).join("_"),
     sessionId,
-    userId,
-    promptHistory,
-    interactionCount,
-    status,
-    createdAt: createdAt || now,
+    promptHistory: [latestPrompt],
+    interactionCount: 1,
+    status: "waiting",
+    createdAt: now,
     updatedAt: now,
   }
 }
 
-export async function fetch(
-  agentRequestId: string
-): Promise<AgentRequest | undefined> {
-  return await context.getWorkspaceDB().tryGet<AgentRequest>(agentRequestId)
+const buildThread = ({
+  agentId,
+  sessionId,
+  userId,
+  entry,
+}: {
+  agentId: string
+  sessionId: string
+  userId: string
+  entry: AgentRequestEntry
+}): AgentRequest => {
+  const requestId = docIds.generateAgentRequestID()
+  return {
+    _id: requestId,
+    requestId,
+    agentId,
+    userId,
+    sessionIds: [sessionId],
+    entries: [entry],
+    status: entry.status,
+    requestCount: 1,
+    interactionCount: entry.interactionCount,
+    createdAt: entry.createdAt,
+    updatedAt: entry.updatedAt,
+    latestPromptAt: entry.updatedAt,
+    latestCompletedAt: undefined,
+    latestSessionId: sessionId,
+  }
 }
 
-export async function fetchBySession(
-  agentId: string,
-  sessionId: string
-): Promise<AgentRequest[]> {
-  const db = context.getWorkspaceDB()
-  const prefix = docIds.getAgentRequestPrefix(agentId, sessionId)
-  const response = await db.allDocs<AgentRequest>({
-    startkey: prefix,
-    endkey: `${prefix}\ufff0`,
-    include_docs: true,
+const sortRequests = (requests: AgentRequest[]) =>
+  requests.sort((a, b) => {
+    const aTime = new Date(
+      a.latestPromptAt || a.updatedAt || a.createdAt || 0
+    ).getTime()
+    const bTime = new Date(
+      b.latestPromptAt || b.updatedAt || b.createdAt || 0
+    ).getTime()
+    return bTime - aTime
   })
 
-  return response.rows
-    .map(row => row.doc)
-    .filter((doc): doc is AgentRequest => !!doc)
-}
-
-export async function fetchLatestBySession(
-  agentId: string,
-  sessionId: string
+export async function fetchThread(
+  requestId: string
 ): Promise<AgentRequest | undefined> {
-  const db = context.getWorkspaceDB()
-  const prefix = docIds.getAgentRequestPrefix(agentId, sessionId)
-  const response = await db.allDocs<AgentRequest>({
-    startkey: `${prefix}\ufff0`,
-    endkey: prefix,
-    descending: true,
-    limit: 1,
-    include_docs: true,
-  })
-
-  return response.rows[0]?.doc || undefined
+  return await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
 }
 
-export async function save(request: AgentRequest): Promise<AgentRequest> {
+async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   const response = await context.getWorkspaceDB().put(request)
   return {
     ...request,
@@ -88,60 +82,37 @@ export async function save(request: AgentRequest): Promise<AgentRequest> {
   }
 }
 
-export async function createRequest({
-  agentId,
-  sessionId,
-  latestPrompt,
-  userId,
-}: {
+export async function fetchRequestsByAgent(
   agentId: string
-  sessionId: string
-  latestPrompt: string
-  userId: string
-}): Promise<AgentRequest | undefined> {
-  const prompt = latestPrompt.trim()
-  if (!prompt) {
-    return undefined
-  }
+): Promise<AgentRequest[]> {
+  const db = context.getProdWorkspaceDB()
+  const response = await db.allDocs<AgentRequest>({
+    ...docIds.getDocParams(DocumentType.AGENT_REQUEST, undefined, {
+      include_docs: true,
+    }),
+  })
 
-  return await save(
-    buildAgentRequest({
-      _id: docIds.generateAgentRequestID(agentId, sessionId),
-      agentId,
-      sessionId,
-      userId,
-      promptHistory: [prompt],
-      interactionCount: 1,
-      status: "waiting",
-    })
+  return sortRequests(
+    response.rows
+      .map(row => row.doc)
+      .filter((doc): doc is AgentRequest => !!doc && doc.agentId === agentId)
   )
 }
 
-export async function appendToRequest({
-  request,
-  latestPrompt,
-}: {
-  request: AgentRequest
-  latestPrompt: string
-}): Promise<AgentRequest | undefined> {
-  const prompt = latestPrompt.trim()
-  if (!prompt) {
-    return request
-  }
-
-  return await save(
-    buildAgentRequest({
-      _id: request._id!,
-      _rev: request._rev,
-      agentId: request.agentId,
-      sessionId: request.sessionId,
-      userId: request.userId,
-      promptHistory: [...request.promptHistory, prompt],
-      interactionCount: request.interactionCount + 1,
-      status: "waiting",
-      createdAt: request.createdAt,
-    })
-  )
+export async function fetchRequestsByAgentAndUser(
+  agentId: string,
+  userId: string
+): Promise<AgentRequest[]> {
+  const requests = await fetchRequestsByAgent(agentId)
+  const cutoff = Date.now() - THREAD_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
+  return requests
+    .filter(request => request.userId === userId)
+    .filter(
+      request =>
+        new Date(request.latestPromptAt || request.updatedAt || 0).getTime() >=
+        cutoff
+    )
+    .slice(0, THREAD_CANDIDATE_LIMIT)
 }
 
 export async function createOrUpdateRequestForPrompt({
@@ -155,55 +126,92 @@ export async function createOrUpdateRequestForPrompt({
   latestPrompt: string
   userId: string
 }): Promise<AgentRequest | undefined> {
-  const currentRequest = await fetchLatestBySession(agentId, sessionId)
-
-  if (!currentRequest) {
-    return await createRequest({
-      agentId,
-      sessionId,
-      latestPrompt,
-      userId,
-    })
+  const prompt = latestPrompt.trim()
+  if (!prompt) {
+    return undefined
   }
 
-  const requestBoundary = await analyzeAgentRequestBoundary({
-    latestPrompt,
-    currentRequest,
+  const candidateRequests = await fetchRequestsByAgentAndUser(agentId, userId)
+  const linkDecision = await analyzeAgentRequestLink({
+    latestPrompt: prompt,
+    candidateRequests,
     agentId,
     sessionId,
   })
 
-  if (requestBoundary.decision === "new_request") {
-    return await createRequest({
-      agentId,
+  if (linkDecision.decision === "new_thread" || !linkDecision.requestId) {
+    return await saveRequest(
+      buildThread({
+        agentId,
+        sessionId,
+        userId,
+        entry: buildEntry({
+          sessionId,
+          latestPrompt: prompt,
+        }),
+      })
+    )
+  }
+
+  const request = candidateRequests.find(
+    candidate => candidate.requestId === linkDecision.requestId
+  )
+  if (!request) {
+    return await saveRequest(
+      buildThread({
+        agentId,
+        sessionId,
+        userId,
+        entry: buildEntry({
+          sessionId,
+          latestPrompt: prompt,
+        }),
+      })
+    )
+  }
+
+  const now = nowIso()
+  const nextSessionIds = request.sessionIds.includes(sessionId)
+    ? request.sessionIds
+    : [...request.sessionIds, sessionId]
+
+  let nextEntries = [...request.entries]
+  if (
+    linkDecision.entryAction === "append_latest_entry" &&
+    nextEntries.length > 0
+  ) {
+    const latestEntry = nextEntries[nextEntries.length - 1]
+    nextEntries[nextEntries.length - 1] = {
+      ...latestEntry,
       sessionId,
-      latestPrompt,
-      userId,
-    })
+      promptHistory: [...latestEntry.promptHistory, prompt],
+      interactionCount: latestEntry.interactionCount + 1,
+      status: "waiting",
+      updatedAt: now,
+    }
+  } else {
+    nextEntries.push(
+      buildEntry({
+        sessionId,
+        latestPrompt: prompt,
+      })
+    )
   }
 
-  return await appendToRequest({
-    request: currentRequest,
-    latestPrompt,
-  })
-}
-
-export async function markCompleted(
-  agentRequestId: string
-): Promise<AgentRequest | undefined> {
-  const existing = await fetch(agentRequestId)
-  if (!existing) {
-    return undefined
-  }
-
-  if (existing.status === "completed") {
-    return existing
-  }
-
-  return await save({
-    ...existing,
-    status: "completed",
-    updatedAt: new Date().toISOString(),
+  const latestEntry = nextEntries[nextEntries.length - 1]
+  return await saveRequest({
+    ...request,
+    sessionIds: nextSessionIds,
+    entries: nextEntries,
+    status: latestEntry.status,
+    requestCount: nextEntries.length,
+    interactionCount: nextEntries.reduce(
+      (total, entry) => total + entry.interactionCount,
+      0
+    ),
+    updatedAt: now,
+    latestPromptAt: latestEntry.updatedAt,
+    latestSessionId: sessionId,
   })
 }
 
@@ -214,28 +222,41 @@ export async function markLatestCompletedBySession({
   agentId: string
   sessionId: string
 }): Promise<AgentRequest | undefined> {
-  const latest = await fetchLatestBySession(agentId, sessionId)
-  if (!latest?._id) {
+  const requests = await fetchRequestsByAgent(agentId)
+  const request = sortRequests(
+    requests.filter(candidate => candidate.sessionIds.includes(sessionId))
+  )[0]
+  if (!request || request.entries.length === 0) {
     return undefined
   }
 
-  return await markCompleted(latest._id)
-}
+  const latestIndex = [...request.entries]
+    .map((entry, index) => ({ entry, index }))
+    .filter(({ entry }) => entry.sessionId === sessionId)
+    .sort(
+      (a, b) =>
+        new Date(b.entry.updatedAt || b.entry.createdAt).getTime() -
+        new Date(a.entry.updatedAt || a.entry.createdAt).getTime()
+    )[0]?.index
 
-export async function fetchByAgent(agentId: string): Promise<AgentRequest[]> {
-  const db = context.getProdWorkspaceDB()
-  const response = await db.allDocs<AgentRequest>({
-    ...docIds.getDocParams(DocumentType.AGENT_REQUEST, undefined, {
-      include_docs: true,
-    }),
+  if (latestIndex == null) {
+    return undefined
+  }
+
+  const now = nowIso()
+  const nextEntries = [...request.entries]
+  nextEntries[latestIndex] = {
+    ...nextEntries[latestIndex],
+    status: "completed",
+    updatedAt: now,
+  }
+  const latestEntry = nextEntries[nextEntries.length - 1]
+
+  return await saveRequest({
+    ...request,
+    entries: nextEntries,
+    status: latestEntry.status,
+    updatedAt: now,
+    latestCompletedAt: now,
   })
-
-  return response.rows
-    .map(row => row.doc)
-    .filter((doc): doc is AgentRequest => !!doc && doc.agentId === agentId)
-    .sort((a, b) => {
-      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime()
-      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime()
-      return bTime - aTime
-    })
 }
