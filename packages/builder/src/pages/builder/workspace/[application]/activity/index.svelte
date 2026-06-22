@@ -63,7 +63,7 @@
   ]
 
   let loading = $state(false)
-  let selectedAgentFilter = $state("all")
+  let selectedAgentFilter = $state("")
   let currentPage = $state(1)
   let allRequests = $state<AgentRequest[]>([])
   let userNames = $state<Record<string, string>>({})
@@ -84,9 +84,7 @@
       value: agent._id || "",
     }))
 
-    return [{ label: "All agents", value: "all" }, ...options].filter(
-      option => option.value
-    )
+    return options.filter(option => option.value)
   })
 
   const getLatestEntry = (request: AgentRequest) =>
@@ -121,12 +119,11 @@
   }
 
   let filteredRequests = $derived.by(() => {
-    const requests =
-      selectedAgentFilter === "all"
-        ? allRequests
-        : allRequests.filter(request => request.agentId === selectedAgentFilter)
+    const requests = !selectedAgentFilter
+      ? allRequests
+      : allRequests.filter(request => request.agentId === selectedAgentFilter)
 
-    return requests.sort((a, b) => {
+    return [...requests].sort((a, b) => {
       const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime()
       const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime()
       return bTime - aTime
@@ -291,6 +288,7 @@
     <Select
       bind:value={selectedAgentFilter}
       options={agentOptions}
+      placeholder="All agents"
       size="S"
       bordered
     />
