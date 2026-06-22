@@ -43,6 +43,7 @@
   against, provided there are no type errors.
 - Avoid adding nested ternary statements.
 - Prefer a svelte5 approach over svelte4.
+- Don't use // @ts-nocheck when asked to fix type errors.
 
 ## Test style - packages/server
 

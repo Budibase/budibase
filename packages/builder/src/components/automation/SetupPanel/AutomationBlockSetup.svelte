@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import TableSelector from "./TableSelector.svelte"
   import FieldSelector from "./FieldSelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
