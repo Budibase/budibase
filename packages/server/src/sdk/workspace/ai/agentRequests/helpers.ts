@@ -1,8 +1,6 @@
 import { generateText } from "ai"
 import type { AgentRequest } from "@budibase/types"
-import { createBBAIClient } from "../llm/bbai"
-
-const BBAI_DEFAULT_MODEL = "budibase/v1"
+import sdk from "../../.."
 
 interface AgentRequestLinkDecision {
   decision: "existing_thread" | "new_thread"
@@ -87,47 +85,55 @@ export async function analyzeAgentRequestLink({
     }
   }
 
-  const llm = await createBBAIClient(
-    BBAI_DEFAULT_MODEL,
-    `agent-request-link:${sessionId}`,
-    undefined,
-    "low",
-    agentId
-  )
-  const result = await generateText({
-    model: llm.chat,
-    providerOptions: llm.providerOptions?.(false),
-    messages: [
-      {
-        role: "system",
-        content:
-          'You decide whether a user message belongs to an existing agent request or should start a new one. Reply with JSON only. For a new request, use {"decision":"new_thread"}. For an existing request, use {"decision":"existing_thread","requestId":"<requestId>","entryAction":"append_latest_entry"} when the message is a follow-up to the latest entry, or {"decision":"existing_thread","requestId":"<requestId>","entryAction":"create_new_entry"} when it belongs to the same overall request but starts a distinct sub-request.',
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          currentSessionId: sessionId,
-          latestPrompt: normalizedPrompt,
-          candidateRequests: candidateRequests.map(buildCandidateSummary),
-        }),
-      },
-    ],
-  })
+  let result
+  try {
+    const agent = await sdk.ai.agents.getOrThrow(agentId)
+    const llm = await sdk.ai.llm.createLLM(
+      agent.aiconfig,
+      `agent-request-link:${sessionId}`,
+      undefined,
+      agentId
+    )
+    result = await generateText({
+      model: llm.chat,
+      providerOptions: llm.providerOptions?.(false),
+      messages: [
+        {
+          role: "system",
+          content:
+            'You decide whether a user message belongs to an existing agent request or should start a new one. Reply with JSON only. For a new request, use {"decision":"new_thread"}. For an existing request, use {"decision":"existing_thread","requestId":"<requestId>","entryAction":"append_latest_entry"} when the message is a follow-up to the latest entry, or {"decision":"existing_thread","requestId":"<requestId>","entryAction":"create_new_entry"} when it belongs to the same overall request but starts a distinct sub-request.',
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            currentSessionId: sessionId,
+            latestPrompt: normalizedPrompt,
+            candidateRequests: candidateRequests.map(buildCandidateSummary),
+          }),
+        },
+      ],
+    })
+  } catch (error) {
+    console.error("Failed to analyze agent request link", {
+      agentId,
+      sessionId,
+      error,
+    })
+    throw error
+  }
 
   const decision = extractJson(result.text || "")
   if (!decision) {
-    return {
-      decision: "new_thread",
-    }
+    throw new Error("Invalid agent request link response")
   }
 
   if (
     decision.decision === "existing_thread" &&
     !candidateRequests.some(request => request.requestId === decision.requestId)
   ) {
-    return {
-      decision: "new_thread",
-    }
+    throw new Error(
+      `Invalid agent request link response: unknown requestId "${decision.requestId}"`
+    )
   }
 
   return {
