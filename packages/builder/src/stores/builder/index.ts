@@ -13,6 +13,7 @@ import { workspaceDeploymentStore } from "./workspaceDeployment"
 import {
   automationStore,
   selectedAutomation,
+  selectedAutomationNode,
   automationHistoryStore,
   evaluationContext,
   MAX_STICKY_NOTES_PER_AUTOMATION,
@@ -63,6 +64,7 @@ export {
   previewStore,
   automationStore,
   selectedAutomation,
+  selectedAutomationNode,
   automationHistoryStore,
   MAX_STICKY_NOTES_PER_AUTOMATION,
   sortedScreens,

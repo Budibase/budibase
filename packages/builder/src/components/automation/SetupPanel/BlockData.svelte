@@ -33,7 +33,11 @@
     AutomationActionStepId,
   } from "@budibase/types"
   import Count from "./Count.svelte"
-  import { automationStore, selectedAutomation } from "@/stores/builder"
+  import {
+    automationStore,
+    selectedAutomation,
+    selectedAutomationNode,
+  } from "@/stores/builder"
   import {
     type BlockStatus,
     BlockStatusSource,
@@ -67,8 +71,6 @@
 
   let dataMode: DataMode = DataMode.INPUT
   let issues: BlockStatus[] = []
-  let lastSelectedNodeId: string | undefined
-  let lastSelectedNodeMode: DataMode | undefined
 
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
@@ -80,14 +82,8 @@
     : undefined
   $: loopBlock = automationStore.actions.getBlockByRef(automation, loopRef)
 
-  $: if (
-    $automationStore.selectedNodeId &&
-    ($automationStore.selectedNodeId !== lastSelectedNodeId ||
-      $automationStore.selectedNodeMode !== lastSelectedNodeMode)
-  ) {
-    dataMode = $automationStore.selectedNodeMode || DataMode.INPUT
-    lastSelectedNodeId = $automationStore.selectedNodeId
-    lastSelectedNodeMode = $automationStore.selectedNodeMode
+  $: if ($selectedAutomationNode.nodeId) {
+    dataMode = $selectedAutomationNode.mode || DataMode.INPUT
   }
 
   $: testResults = $automationStore.testResults as TestAutomationResponse

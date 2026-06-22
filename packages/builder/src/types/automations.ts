@@ -226,6 +226,11 @@ export interface SelectedAutomationState {
   blockRefs: Record<string, BlockRef>
 }
 
+export interface SelectedAutomationNodeState {
+  nodeId?: string
+  mode?: DataMode
+}
+
 /**
  * BlockProperties - Direct mapping of customType to SchemaFieldTypes
  */

@@ -28,6 +28,7 @@ import {
   DerivedAutomationStoreState,
   FilterableRowTriggers,
   RowTriggers,
+  SelectedAutomationNodeState,
   SelectedAutomationState,
   ViewMode,
   type FlowBlockPath,
@@ -3211,6 +3212,43 @@ class SelectedAutomationStore extends DerivedBudiStore<
   }
 }
 
+class SelectedAutomationNodeStore extends DerivedBudiStore<
+  AutomationStoreState,
+  SelectedAutomationNodeState
+> {
+  constructor(automationStore: AutomationStore) {
+    const makeDerivedStore = () => {
+      return readable<SelectedAutomationNodeState>(
+        {
+          nodeId: undefined,
+          mode: undefined,
+        },
+        set => {
+          let previous: SelectedAutomationNodeState = {}
+          return automationStore.subscribe($store => {
+            const next = {
+              nodeId: $store.selectedNodeId,
+              mode: $store.selectedNodeMode,
+            }
+
+            if (
+              next.nodeId === previous.nodeId &&
+              next.mode === previous.mode
+            ) {
+              return
+            }
+
+            previous = next
+            set(next)
+          })
+        }
+      )
+    }
+
+    super(initialAutomationState, makeDerivedStore)
+  }
+}
+
 class AutomationStore extends DerivedBudiStore<
   AutomationStoreState,
   DerivedAutomationStoreState
@@ -3218,6 +3256,7 @@ class AutomationStore extends DerivedBudiStore<
   history: HistoryStore<Automation, AutomationSaveOptions>
   actions: ReturnType<typeof automationActions>
   selected: SelectedAutomationStore
+  selectedNode: SelectedAutomationNodeStore
 
   constructor() {
     const makeDerivedStore = (store: Readable<AutomationStoreState>) => {
@@ -3252,6 +3291,7 @@ class AutomationStore extends DerivedBudiStore<
     this.actions.delete = this.history.wrapDeleteDoc(originalDelete)
 
     this.selected = new SelectedAutomationStore(this)
+    this.selectedNode = new SelectedAutomationNodeStore(this)
   }
 }
 
@@ -3259,6 +3299,7 @@ export const automationStore = new AutomationStore()
 
 export const automationHistoryStore = automationStore.history
 export const selectedAutomation = automationStore.selected
+export const selectedAutomationNode = automationStore.selectedNode
 
 /**
  * Pad out a base default context for subscribers
