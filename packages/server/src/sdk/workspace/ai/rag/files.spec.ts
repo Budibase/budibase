@@ -75,8 +75,6 @@ import {
   KnowledgeBaseFile,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
-  LockName,
-  LockType,
   SEPARATOR,
 } from "@budibase/types"
 import { Readable } from "stream"
@@ -84,10 +82,9 @@ import { GeminiRagProcessor } from "./processors/gemini"
 import {
   deleteKnowledgeBaseFileChunks,
   deleteFileForAgent,
-  ensureKnowledgeBaseForAgent,
   ingestKnowledgeBaseFile,
   cleanupKnowledgeForOperation,
-  retrieveContextForAgent,
+  retrieveContextForOperation,
 } from "./files"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -97,101 +94,6 @@ describe("rag files", () => {
     mockDoWithLock.mockImplementation(async (_opts: unknown, fn: any) => ({
       result: await fn(),
     }))
-  })
-
-  describe("ensureKnowledgeBaseForAgent", () => {
-    it("returns existing KB for the agent while holding a per-operation lock", async () => {
-      const existing = {
-        _id: "kb_existing",
-        name: "Existing",
-        type: KnowledgeBaseType.GEMINI,
-        config: { googleFileStoreId: "store_1" },
-      } satisfies KnowledgeBase
-      mockAgentsGetOrThrow.mockResolvedValue({
-        _id: "agent_1",
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: ["kb_existing"],
-            allowKnowledgeSourceDownload: generator.bool(),
-          },
-        ],
-      } satisfies Partial<Agent>)
-      mockKnowledgeBaseFind.mockResolvedValue(existing)
-
-      const result = await ensureKnowledgeBaseForAgent("agent_1")
-
-      expect(result).toEqual(existing)
-      expect(mockDoWithLock).toHaveBeenCalledWith(
-        {
-          name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
-          type: LockType.AUTO_EXTEND,
-          resource: "agent_1:operation_1",
-        },
-        expect.any(Function)
-      )
-      expect(mockKnowledgeBaseCreate).not.toHaveBeenCalled()
-      expect(mockAgentsUpdate).not.toHaveBeenCalled()
-    })
-
-    it("creates and links a KB when the agent has none", async () => {
-      const agent = {
-        _id: "agent_1",
-        _rev: "1-x",
-        name: "Agent 1",
-        aiconfig: "config_1",
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: [],
-            allowKnowledgeSourceDownload: true,
-          },
-        ],
-      } as Agent
-      const created = {
-        _id: "kb_new",
-        name: "New KB",
-        type: KnowledgeBaseType.GEMINI,
-        config: { googleFileStoreId: "store_2" },
-      } satisfies KnowledgeBase
-      mockAgentsGetOrThrow.mockResolvedValue(agent)
-      mockKnowledgeBaseCreate.mockResolvedValue(created)
-      mockAgentsUpdate.mockResolvedValue({
-        ...agent,
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: [created._id],
-          },
-        ],
-      })
-
-      const result = await ensureKnowledgeBaseForAgent("agent_1")
-
-      expect(result).toEqual(created)
-      expect(mockKnowledgeBaseCreate).toHaveBeenCalledWith({
-        name: `Agent files (${agent._id}:operation_1)`,
-        type: KnowledgeBaseType.GEMINI,
-      })
-      expect(mockAgentsUpdate).toHaveBeenCalledWith({
-        ...agent,
-        operations: [
-          {
-            id: "operation_1",
-            name: "Main operation",
-            live: false,
-            knowledgeBases: [created._id],
-            allowKnowledgeSourceDownload: true,
-          },
-        ],
-      })
-    })
   })
 
   describe("ingestKnowledgeBaseFile", () => {
@@ -340,7 +242,7 @@ describe("rag files", () => {
     })
   })
 
-  describe("retrieveContextForAgent", () => {
+  describe("retrieveContextForOperation", () => {
     const defaultKnowledgeBase: KnowledgeBase = {
       _id: "kb_123",
       name: "Knowledge Base",
@@ -361,6 +263,30 @@ describe("rag files", () => {
       ],
     } as Agent
 
+    it("throws when the operation is not found on the agent", async () => {
+      const agent = {
+        _id: "agent_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: true,
+            knowledgeBases: [defaultKnowledgeBase._id],
+          },
+        ],
+      } as Agent
+
+      await expect(
+        retrieveContextForOperation(
+          agent,
+          "missing_operation",
+          "What is Budibase?"
+        )
+      ).rejects.toThrow("Operation not found for this agent")
+      expect(mockKnowledgeBaseFind).not.toHaveBeenCalled()
+      expect(mockProcessorSearch).not.toHaveBeenCalled()
+    })
+
     it("returns empty context without searching when operation is not live", async () => {
       const agent = {
         _id: "agent_1",
@@ -374,7 +300,11 @@ describe("rag files", () => {
         ],
       } as Agent
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -401,7 +331,11 @@ describe("rag files", () => {
         ],
       } satisfies Agent
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -425,7 +359,11 @@ describe("rag files", () => {
         ],
       } as Agent
 
-      const result = await retrieveContextForAgent(agent, "  ")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "  "
+      )
 
       expect(result).toEqual({
         text: "",
@@ -448,7 +386,11 @@ describe("rag files", () => {
       } as Agent
       mockKnowledgeBaseFind.mockResolvedValue(undefined)
 
-      const result = await retrieveContextForAgent(agent, "What is Budibase?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is Budibase?"
+      )
 
       expect(result).toEqual({
         text: "",
@@ -477,8 +419,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is the policy?"
       )
 
@@ -547,8 +490,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What are the details for User 991?"
       )
 
@@ -627,8 +571,9 @@ describe("rag files", () => {
       })
       mockProcessorSearch.mockResolvedValue([])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "Compare User 991 and User 992"
       )
 
@@ -670,8 +615,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -718,8 +664,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -772,8 +719,9 @@ describe("rag files", () => {
       ])
       mockProcessorSearch.mockResolvedValue([])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -809,8 +757,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 
@@ -908,7 +857,11 @@ describe("rag files", () => {
           },
         ])
 
-      const result = await retrieveContextForAgent(agent, "What is policy?")
+      const result = await retrieveContextForOperation(
+        agent,
+        "operation_1",
+        "What is policy?"
+      )
 
       expect(result.chunks).toEqual([
         {
@@ -963,8 +916,9 @@ describe("rag files", () => {
         },
       ])
 
-      const result = await retrieveContextForAgent(
+      const result = await retrieveContextForOperation(
         defaultAgent,
+        "operation_1",
         "What is policy?"
       )
 

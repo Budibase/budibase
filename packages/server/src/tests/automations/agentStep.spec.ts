@@ -2,6 +2,14 @@ import { quotas } from "@budibase/pro"
 import { ActionType } from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
 
+jest.mock("../../sdk/workspace/ai/agents", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/agents")
+  return {
+    ...actual,
+    prepareAgentRunContext: jest.fn(),
+  }
+})
+
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
   return {
@@ -95,15 +103,54 @@ describe("Agent step tool call tracking", () => {
   const addActionMock = quotas.addAction as jest.MockedFunction<
     typeof quotas.addAction
   >
+  const { prepareAgentRunContext } = jest.requireMock(
+    "../../sdk/workspace/ai/agents"
+  )
+  const liveOperation = {
+    id: "operation_1",
+    name: "Main operation",
+    live: true,
+    enabledTools: [],
+    knowledgeBases: ["kb_1"],
+    allowKnowledgeSourceDownload: true,
+  }
 
   beforeEach(() => {
     addActionMock.mockClear()
+    prepareAgentRunContext.mockResolvedValue({
+      llm: { chat: {}, providerOptions: undefined },
+      selectedOperation: liveOperation,
+      systemPrompt: "You are a helpful assistant",
+      tools: { queryTable: {}, callApi: {} },
+      toolDisplayNames: {},
+    })
     jest.mocked(require("ai").ToolLoopAgent).mockClear()
     jest.spyOn(console, "error").mockImplementation(() => {})
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
+  })
+
+  it("prepares agent run context before executing the automation agent", async () => {
+    jest
+      .mocked(require("ai").ToolLoopAgent)
+      .mockImplementationOnce(makeToolLoopAgentMock([]))
+
+    await run({
+      inputs: { agentId: "agent-id", prompt: "Find the answer in knowledge" },
+      appId: "test",
+      context: {},
+      emitter: {} as any,
+    })
+
+    expect(prepareAgentRunContext).toHaveBeenCalledWith({
+      agent: expect.objectContaining({ _id: "agent-id" }),
+      agentId: "agent-id",
+      sessionId: expect.any(String),
+      latestQuestion: "Find the answer in knowledge",
+      span: expect.any(Object),
+    })
   })
 
   it("counts each completed tool call as one action", async () => {

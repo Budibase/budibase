@@ -39,10 +39,8 @@
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
-    operationId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
-    allowKnowledgeSourceDownload?: boolean
   }
 
   let {
@@ -53,10 +51,8 @@
     initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
-    operationId,
     readOnly = false,
     readOnlyReason,
-    allowKnowledgeSourceDownload = true,
   }: Props = $props()
 
   let API = $state(
@@ -85,9 +81,14 @@
   }
 
   const openRagSource = async (
+    message: UIMessage<AgentMessageMetadata>,
     source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
   ) => {
-    if (!allowKnowledgeSourceDownload) {
+    const selectedOperationId = message.metadata?.selectedOperationId
+    const messageAllowsDownload =
+      message.metadata?.allowKnowledgeSourceDownload === true
+
+    if (!messageAllowsDownload) {
       notifications.error("Source downloads are disabled for this agent")
       return
     }
@@ -97,19 +98,23 @@
 
     try {
       const resolvedUrl =
-        !isAgentPreviewChat && chat?.chatAppId && chat?.agentId
+        !isAgentPreviewChat &&
+        chat?.chatAppId &&
+        chat?.agentId &&
+        selectedOperationId
           ? (
               await API.fetchChatAppAgentFileUrl(
                 chat.chatAppId,
                 chat.agentId,
-                source.fileId
+                source.fileId,
+                selectedOperationId
               )
             ).url
-          : isAgentPreviewChat && chat?.agentId && operationId
+          : isAgentPreviewChat && chat?.agentId && selectedOperationId
             ? (
                 await API.fetchOperationFileUrl(
                   chat.agentId,
-                  operationId,
+                  selectedOperationId,
                   source.fileId
                 )
               ).url
@@ -136,6 +141,10 @@
       .filter(isReasoningUIPart)
       .map(p => p.text)
       .join("")
+
+  const canDownloadSource = (message: UIMessage<AgentMessageMetadata>) =>
+    message.metadata?.allowKnowledgeSourceDownload === true &&
+    !!message.metadata?.selectedOperationId
 
   const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     reasoningTextByMessageId[message.id] || getReasoningText(message)
@@ -781,11 +790,11 @@
                 <ul>
                   {#each getVisibleRagSources(message) as source (source.fileId)}
                     <li class="source-item">
-                      {#if allowKnowledgeSourceDownload}
+                      {#if canDownloadSource(message)}
                         <button
                           type="button"
                           class="source-link"
-                          onclick={() => openRagSource(source)}
+                          onclick={() => openRagSource(message, source)}
                         >
                           {source.filename}
                         </button>

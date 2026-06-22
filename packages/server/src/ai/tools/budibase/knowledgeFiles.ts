@@ -190,7 +190,8 @@ const getRankedMatches = (
 }
 
 export const createKnowledgeFilesTool = (
-  agentId: string
+  agentId: string,
+  operationId: string
 ): BudibaseToolDefinition => ({
   name: "list_knowledge_files",
   sourceType: ToolType.INTERNAL_TABLE,
@@ -222,9 +223,7 @@ export const createKnowledgeFilesTool = (
       const resolvedMatchMode = matchMode || "smart"
       const resolvedCaseSensitive = caseSensitive ?? false
 
-      const files = await sdk.ai.rag.listFilesForAgent(agentId, {
-        liveOperationOnly: true,
-      })
+      const files = await sdk.ai.rag.listFilesForOperation(agentId, operationId)
       const sortedFiles = [...files].sort(
         (a, b) => toEpochMillis(b.createdAt) - toEpochMillis(a.createdAt)
       )
@@ -282,7 +281,8 @@ export const createKnowledgeFilesTool = (
 })
 
 export const createKnowledgeSearchTool = (
-  agentId: string
+  agentId: string,
+  operationId: string
 ): BudibaseToolDefinition => ({
   name: "search_knowledge",
   sourceType: ToolType.INTERNAL_TABLE,
@@ -298,7 +298,11 @@ export const createKnowledgeSearchTool = (
     execute: async ({ question }) => {
       const agent = await sdk.ai.agents.getOrThrow(agentId)
       try {
-        const result = await sdk.ai.rag.retrieveContextForAgent(agent, question)
+        const result = await sdk.ai.rag.retrieveContextForOperation(
+          agent,
+          operationId,
+          question
+        )
         return {
           context: result.text,
           sources: result.sources,
