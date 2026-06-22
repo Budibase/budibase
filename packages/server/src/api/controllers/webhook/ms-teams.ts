@@ -1,4 +1,4 @@
-import { configs, context, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -16,27 +16,12 @@ import { handleChatMessage } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
+import { toAbsoluteUrl } from "./utils"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 const TEAMS_PROCESSING_MESSAGE = "Thinking..."
 const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
-
-const isAbsoluteUrl = (url: string) =>
-  url.startsWith("http://") || url.startsWith("https://")
-
-const toAbsoluteUrl = async (url: string) => {
-  if (isAbsoluteUrl(url)) {
-    return url
-  }
-
-  if (!url.startsWith("/")) {
-    return url
-  }
-
-  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
-  return `${platformUrl.replace(/\/$/, "")}${url}`
-}
 
 const formatTeamsLinkLabel = (value: string) =>
   value

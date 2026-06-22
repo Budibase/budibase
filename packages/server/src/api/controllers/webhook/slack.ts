@@ -1,4 +1,4 @@
-import { configs, context, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
@@ -17,26 +17,10 @@ import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
-import { pickLatestConversation } from "./utils"
+import { pickLatestConversation, toAbsoluteUrl } from "./utils"
 
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
-
-const isAbsoluteUrl = (url: string) =>
-  url.startsWith("http://") || url.startsWith("https://")
-
-const toAbsoluteUrl = async (url: string) => {
-  if (isAbsoluteUrl(url)) {
-    return url
-  }
-
-  if (!url.startsWith("/")) {
-    return url
-  }
-
-  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
-  return `${platformUrl.replace(/\/$/, "")}${url}`
-}
 
 const formatSlackLinkLabel = (value: string) =>
   value.replace(/[<>|]/g, " ").replace(/\s+/g, " ").trim()
