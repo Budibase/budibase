@@ -509,6 +509,13 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
+              <SideNavLink
+                icon="pulse"
+                text="Activity"
+                url={$url("./activity")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
 
               <ActionMenu
                 align={PopoverAlignment.RightContextMenu}
