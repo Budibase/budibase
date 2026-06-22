@@ -335,7 +335,7 @@ const createTeamsMessageHandler = ({
         replyWithAssistantStream: shouldPostChannelWorkingIndicator
           ? undefined
           : async stream => {
-              await thread.post(stream)
+              return await thread.post(stream)
             },
         beforeAssistantWebhook: shouldPostChannelWorkingIndicator
           ? async () => {

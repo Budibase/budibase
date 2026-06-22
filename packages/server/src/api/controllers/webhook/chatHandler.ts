@@ -1,4 +1,5 @@
 import { v4 } from "uuid"
+import type { SentMessage } from "chat"
 import {
   configs,
   context,
@@ -362,7 +363,9 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 
 export interface HandleChatMessageParams {
   reply: (text: string) => Promise<void>
-  replyWithAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
+  replyWithAssistantStream?: (
+    stream: WebhookAssistantStream
+  ) => Promise<SentMessage | void>
   formatAssistantReply?: (
     result: WebhookChatCompleteResult
   ) => Promise<string> | string
@@ -699,13 +702,18 @@ export const handleChatMessage = async ({
     }
 
     let result: Awaited<ReturnType<typeof webhookChat>>
+    let streamedAssistantMessage: SentMessage | void
     try {
       await beforeAssistantWebhook?.()
       result = await webhookChat({
         chat: draftChat,
         user: chatUser,
         ...(replyWithAssistantStream
-          ? { onAssistantStream: replyWithAssistantStream }
+          ? {
+              onAssistantStream: async stream => {
+                streamedAssistantMessage = await replyWithAssistantStream(stream)
+              },
+            }
           : {}),
       })
     } catch (error) {
@@ -734,11 +742,16 @@ export const handleChatMessage = async ({
       idleTimeoutMs,
     })
 
-    if (!replyWithAssistantStream) {
-      const assistantReply = formatAssistantReply
-        ? await formatAssistantReply(result)
-        : result.assistantText
-      await reply(assistantReply || "No response generated.")
+    const assistantReply = formatAssistantReply
+      ? await formatAssistantReply(result)
+      : result.assistantText
+    const finalReply = assistantReply || "No response generated."
+    if (streamedAssistantMessage) {
+      if (finalReply !== (result.assistantText || "No response generated.")) {
+        await streamedAssistantMessage.edit(finalReply)
+      }
+    } else {
+      await reply(finalReply)
     }
   })
 }
