@@ -89,10 +89,21 @@
     )
   })
 
-  const getRequestTitle = (request: AgentRequest) =>
-    request.promptHistory[0] ||
-    request.promptHistory[request.promptHistory.length - 1] ||
-    "Untitled request"
+  const getLatestEntry = (request: AgentRequest) =>
+    request.entries[request.entries.length - 1]
+
+  const getRequestTitle = (request: AgentRequest) => {
+    const latestEntry = getLatestEntry(request)
+    if (!latestEntry) {
+      return "Untitled request"
+    }
+
+    return (
+      latestEntry.promptHistory[0] ||
+      latestEntry.promptHistory[latestEntry.promptHistory.length - 1] ||
+      "Untitled request"
+    )
+  }
 
   const getRequestTone = (request: AgentRequest): RequestRow["statusTone"] => {
     if (request.status === "completed") {
@@ -148,14 +159,24 @@
     const start = (currentPage - 1) * PAGE_SIZE
     return filteredRequests.slice(start, start + PAGE_SIZE).map(request => {
       const tone = getRequestTone(request)
-      const updatedAt = new Date(request.updatedAt || request.createdAt || 0)
+      const latestEntry = getLatestEntry(request)
+      const updatedAt = new Date(
+        request.latestPromptAt ||
+          latestEntry?.updatedAt ||
+          request.updatedAt ||
+          request.createdAt ||
+          0
+      )
       const updatedTime = updatedAt.getTime()
       const agentName =
         $agentsStore.agents.find(agent => agent._id === request.agentId)
           ?.name || "Unknown agent"
 
       return {
-        id: request._id || `${request.agentId}-${request.sessionId}`,
+        id:
+          request._id ||
+          request.requestId ||
+          `${request.agentId}-${request.latestSessionId}`,
         title: getRequestTitle(request),
         agentName,
         triggeredBy: getTriggeredBy(request),
