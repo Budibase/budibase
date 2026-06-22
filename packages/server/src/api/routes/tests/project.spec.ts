@@ -268,6 +268,42 @@ describe("/projects", () => {
     })
   })
 
+  it.each([
+    "red; background-image: url(https://example.com/tracker)",
+    "url(https://example.com/tracker)",
+  ])("rejects unsafe project color '%s'", async color => {
+    await withProjectsEnabled(async () => {
+      await config.api.project.create(
+        {
+          name: "Unsafe color",
+          color,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Project color is invalid.",
+          },
+        }
+      )
+    })
+  })
+
+  it.each([
+    "#8CA171",
+    "rgb(140, 161, 113)",
+    "hsl(93deg 22% 54%)",
+    "var(--spectrum-global-color-green-500)",
+  ])("accepts safe project color '%s'", async color => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Safe color",
+        color,
+      })
+
+      expect(project.color).toBe(color)
+    })
+  })
+
   it("rejects path and body project id mismatches on update", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
