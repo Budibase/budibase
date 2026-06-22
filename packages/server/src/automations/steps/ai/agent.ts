@@ -247,11 +247,22 @@ export async function run({
           return returnStreamingFailure(usageError)
         }
 
+        let output: AgentStepOutputs["output"] | undefined
+        let outputError: string | undefined
+        if (outputOption) {
+          try {
+            output = (await streamResult.output) as AgentStepOutputs["output"]
+          } catch (err) {
+            outputError = getErrorMessage(err)
+          }
+        }
+
+        if (outputError) {
+          return returnStreamingFailure(outputError)
+        }
+
         sessionLogIndexer.addRequestId(requestId)
         await sessionLogIndexer.index()
-        const output: AgentStepOutputs["output"] = outputOption
-          ? ((await streamResult.output) as AgentStepOutputs["output"])
-          : undefined
 
         tracer.llmobs.annotate(agentSpan, {
           outputData: responseText,

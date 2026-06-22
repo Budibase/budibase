@@ -270,4 +270,31 @@ describe("Agent step tool call tracking", () => {
       sessionId: expect.any(String),
     })
   })
+
+  it("returns a controlled failure when structured output has no generated output", async () => {
+    jest.mocked(require("ai").Output.object).mockReturnValueOnce({})
+    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
+      makeToolLoopAgentMock([], {
+        output: Promise.reject(makeNoOutputError()),
+      })
+    )
+
+    const result = await run({
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Evaluate data",
+        useStructuredOutput: true,
+        outputSchema: { sentiment: "string" },
+      },
+      appId: "test",
+      context: {},
+      emitter: {} as any,
+    })
+
+    expect(result).toMatchObject({
+      success: false,
+      response: "No output generated. Check the stream for errors.",
+      sessionId: expect.any(String),
+    })
+  })
 })
