@@ -702,7 +702,7 @@ export const handleChatMessage = async ({
     }
 
     let result: Awaited<ReturnType<typeof webhookChat>>
-    let streamedAssistantMessage: SentMessage | void
+    let streamedAssistantMessage: SentMessage | undefined
     try {
       await beforeAssistantWebhook?.()
       result = await webhookChat({
@@ -712,7 +712,7 @@ export const handleChatMessage = async ({
           ? {
               onAssistantStream: async stream => {
                 streamedAssistantMessage =
-                  await replyWithAssistantStream(stream)
+                  (await replyWithAssistantStream(stream)) || undefined
               },
             }
           : {}),
