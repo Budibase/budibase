@@ -172,11 +172,15 @@ export async function run({
         const incompleteTools = assistantMessage
           ? findIncompleteToolCalls([assistantMessage])
           : []
-        const responseMetadata = {
-          requestId: (await streamResult.response).id ?? undefined,
+        let requestId: string | undefined
+        let responseMetadataError: string | undefined
+        try {
+          requestId = (await streamResult.response).id ?? undefined
+        } catch (err) {
+          responseMetadataError = getErrorMessage(err)
         }
         if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
-          sessionLogIndexer.addRequestId(responseMetadata.requestId)
+          sessionLogIndexer.addRequestId(requestId)
           const errorMessage = formatIncompleteToolCallError(incompleteTools)
           await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
@@ -200,26 +204,64 @@ export async function run({
         }
 
         const error = streamingError || textExtractionError
-        if (error && !responseText) {
-          sessionLogIndexer.addRequestId(responseMetadata.requestId)
+        const streamError = error || responseMetadataError
+        if (streamError && !responseText) {
+          sessionLogIndexer.addRequestId(requestId)
           await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
-            outputData: error,
+            outputData: streamError,
             tags: { error: "1", "error.type": "StreamingError" },
           })
           return {
             success: false,
-            response: error,
+            response: streamError,
             message: assistantMessage,
             sessionId,
           }
         }
-        const usage = await streamResult.usage
-        sessionLogIndexer.addRequestId(responseMetadata.requestId)
+        let usage: Awaited<typeof streamResult.usage> | undefined
+        let usageError: string | undefined
+        try {
+          usage = await streamResult.usage
+        } catch (err) {
+          usageError = getErrorMessage(err)
+        }
+
+        if (usageError && !responseText) {
+          sessionLogIndexer.addRequestId(requestId)
+          await sessionLogIndexer.index()
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: usageError,
+            tags: { error: "1", "error.type": "StreamingError" },
+          })
+          return {
+            success: false,
+            response: usageError,
+            message: assistantMessage,
+            sessionId,
+          }
+        }
+
+        sessionLogIndexer.addRequestId(requestId)
         await sessionLogIndexer.index()
-        const output = outputOption
-          ? ((await streamResult.output) as Record<string, any>)
-          : undefined
+        let output: Record<string, any> | undefined
+        if (outputOption) {
+          try {
+            output = (await streamResult.output) as Record<string, any>
+          } catch (err) {
+            const outputError = getErrorMessage(err)
+            tracer.llmobs.annotate(agentSpan, {
+              outputData: outputError,
+              tags: { error: "1", "error.type": "StreamingError" },
+            })
+            return {
+              success: false,
+              response: outputError,
+              message: assistantMessage,
+              sessionId,
+            }
+          }
+        }
 
         tracer.llmobs.annotate(agentSpan, {
           outputData: responseText,
