@@ -751,10 +751,9 @@
 
 <style>
   .container {
-    position: fixed;
-    right: 0;
+    position: relative;
     z-index: 99;
-    height: calc(100% - var(--top-bar-height, 51px));
+    height: 100%;
     display: flex;
     flex-direction: row;
     align-items: stretch;
