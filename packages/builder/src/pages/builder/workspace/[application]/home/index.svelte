@@ -278,9 +278,6 @@
   const CONTACT_SALES_URL = "https://budibase.com/contact/"
 
   const openContactSales = () => {
-    if (typeof window === "undefined") {
-      return
-    }
     window.open(CONTACT_SALES_URL, "_blank", "noopener,noreferrer")
   }
 
