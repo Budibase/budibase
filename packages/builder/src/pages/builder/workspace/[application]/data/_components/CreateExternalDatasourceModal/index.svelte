@@ -14,7 +14,6 @@
 
   $goto
 
-  export let loading = false
   const store = createDatasourceCreationStore()
   const onGoogleAuth = createOnGoogleAuthStore()
   let modal
