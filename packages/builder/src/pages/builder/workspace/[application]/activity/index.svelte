@@ -8,6 +8,7 @@
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
   import ActivityActionsRenderer from "./ActivityActionsRenderer.svelte"
+  import ActivitySidePanel from "./ActivitySidePanel.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
 
   dayjs.extend(relativeTime)
@@ -66,6 +67,7 @@
   let loading = $state(false)
   let selectedAgentFilter = $state("")
   let currentPage = $state(1)
+  let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
   let userNames = $state<Record<string, string>>({})
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
@@ -193,6 +195,16 @@
     })
   })
 
+  let selectedRequest = $derived.by(() =>
+    allRequests.find(request => {
+      const requestId =
+        request._id ||
+        request.requestId ||
+        `${request.agentId}-${request.latestSessionId}`
+      return requestId === selectedRequestId
+    })
+  )
+
   let paginationLabel = $derived.by(() => {
     if (!filteredRequests.length) {
       return "Showing 0 items"
@@ -253,6 +265,14 @@
     currentPage = Math.min(Math.max(1, nextPage), totalPages)
   }
 
+  function selectRequest(row: RequestRow) {
+    selectedRequestId = row.id
+  }
+
+  function closeRequestPanel() {
+    selectedRequestId = null
+  }
+
   $effect(() => {
     if (!activityEnabled) {
       $goto("../home")
@@ -270,6 +290,7 @@
   $effect(() => {
     selectedAgentFilter
     currentPage = 1
+    selectedRequestId = null
   })
 
   $effect(() => {
@@ -306,7 +327,7 @@
       quiet
       compact
       {loading}
-      allowClickRows={false}
+      allowClickRows
       allowEditRows={false}
       allowEditColumns={false}
       allowSelectRows={false}
@@ -314,6 +335,7 @@
       schema={tableSchema}
       {customRenderers}
       placeholderText="No agent actions tracked yet."
+      on:click={({ detail }) => selectRequest(detail)}
     />
 
     {#if paginatedRows.length > 0}
@@ -332,6 +354,12 @@
       </div>
     {/if}
   </section>
+
+  <ActivitySidePanel
+    open={!!selectedRequest}
+    title={selectedRequest ? getRequestTitle(selectedRequest) : "Request"}
+    onClose={closeRequestPanel}
+  />
 </div>
 
 <style>
@@ -383,6 +411,7 @@
   .requests-table-panel {
     background: transparent;
     display: flex;
+    min-width: 0;
     flex-direction: column;
     min-height: 0;
   }
