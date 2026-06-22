@@ -132,6 +132,9 @@ export interface AgentMessageUsage {
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>
+  selectedOperationId?: string
+  selectedOperationName?: string
+  allowKnowledgeSourceDownload?: boolean
   createdAt?: number
   completedAt?: number
   error?: string

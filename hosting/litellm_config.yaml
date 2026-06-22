@@ -4,6 +4,9 @@ general_settings:
 
 litellm_settings:
   drop_params: true
+  extra_spend_tag_headers:
+    - "x-litellm-tags"
+  disable_add_user_agent_to_request_tags: true
   num_retries: 3
   retry_after: 5
   retry_policy:
