@@ -18,7 +18,6 @@
     name?: string
     icon?: string
     iconColor?: string
-    allowKnowledgeSourceDownload?: boolean
   }
 
   export let selectedAgentId: string | null = null
@@ -80,10 +79,6 @@
 
   $: readOnlyReason = getReadOnlyReason(agentAvailability)
 
-  $: allowKnowledgeSourceDownload =
-    enabledAgentList.find(agent => agent.agentId === selectedAgentId)
-      ?.allowKnowledgeSourceDownload !== false
-
   const selectAgent = (agentId: string) => {
     dispatch("agentSelected", { agentId })
   }
@@ -132,7 +127,6 @@
       {workspaceId}
       {conversationStarters}
       {initialPrompt}
-      {allowKnowledgeSourceDownload}
       readOnly={Boolean(readOnlyReason)}
       {readOnlyReason}
       onchatsaved={event => dispatch("chatSaved", event.detail)}

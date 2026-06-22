@@ -4,7 +4,9 @@ import {
   FeatureFlag,
   KnowledgeBaseFileStatus,
   type Agent,
+  type Datasource,
   type KnowledgeBaseFile,
+  type Project,
   type ProjectPackageDependencyIndex,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
@@ -16,6 +18,8 @@ import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import sdk from "../../../sdk"
 import { listAssignedAgentFiles } from "../../../sdk/workspace/projects/backups/exports"
+import { toProjectResponse } from "../../controllers/project"
+import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
@@ -208,6 +212,39 @@ describe("/projects", () => {
       const { projects } = await config.api.project.fetch()
       expect(projects.map(existing => existing._id)).toContain(project._id)
     })
+  })
+
+  it("returns valid timestamps for projects with invalid persisted timestamps", async () => {
+    await withProjectsEnabled(async () => {
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          _id: "project_legacy",
+          name: "Legacy project",
+          createdAt: "invalid",
+        })
+      })
+
+      const { projects } = await config.api.project.fetch()
+      const project = projects.find(
+        existing => existing._id === "project_legacy"
+      )
+
+      expect(project!.createdAt).toBe(project!.updatedAt)
+    })
+  })
+
+  it("uses the created timestamp when the updated timestamp is invalid", () => {
+    const createdAt = "2026-06-08T10:00:00.000Z"
+    const project = toProjectResponse({
+      _id: "project_legacy",
+      _rev: "1-test",
+      name: "Legacy project",
+      createdAt,
+      updatedAt: "invalid",
+    } as Project)
+
+    expect(project.createdAt).toBe(createdAt)
+    expect(project.updatedAt).toBe(createdAt)
   })
 
   it("updates projects without client timestamps", async () => {
@@ -419,6 +456,123 @@ describe("/projects", () => {
     )
   })
 
+  it("validates external table project assignments on datasource updates", async () => {
+    await withProjectsEnabled(async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const externalTable = basicTable(datasource, {
+        _id: buildExternalTableId(datasource._id!, "TestTable"),
+        projectId: "project_missing",
+      })
+
+      await config.api.datasource.update(
+        {
+          ...datasource,
+          entities: {
+            [externalTable.name]: externalTable,
+          },
+        },
+        {
+          status: 404,
+          body: {
+            message: "Project 'project_missing' not found.",
+          },
+        }
+      )
+
+      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+      expect(fetchedDatasource.entities).toBeUndefined()
+    })
+  })
+
+  it.each([null, "invalid", []])(
+    "rejects malformed datasource entities",
+    async value => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const entities = {
+        TestTable: value,
+      } as unknown as NonNullable<Datasource["entities"]>
+
+      await config.api.datasource.update(
+        {
+          ...datasource,
+          entities,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Datasource entity 'TestTable' must be an object.",
+          },
+        }
+      )
+    }
+  )
+
+  it("rejects external table project assignments while disabled", async () => {
+    const datasource = await config.api.datasource.create(
+      basicDatasource().datasource
+    )
+    const externalTable = basicTable(datasource, {
+      _id: buildExternalTableId(datasource._id!, "TestTable"),
+      projectId: "project_1",
+    })
+
+    await config.api.datasource.update(
+      {
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
+      },
+      {
+        status: 404,
+        body: {
+          message: "Projects feature is not enabled.",
+        },
+      }
+    )
+  })
+
+  it("preserves omitted external table project assignments", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const externalTable = basicTable(datasource, {
+        _id: buildExternalTableId(datasource._id!, "TestTable"),
+        projectId: project._id,
+      })
+      const assignedDatasource = await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
+      })
+      const { projectId: _projectId, ...tableUpdate } =
+        assignedDatasource.entities![externalTable.name]
+
+      const updatedDatasource = await config.api.datasource.update({
+        ...assignedDatasource,
+        entities: {
+          [externalTable.name]: {
+            ...tableUpdate,
+            name: "Updated table",
+          },
+        },
+      })
+
+      expect(updatedDatasource.entities![externalTable.name].projectId).toBe(
+        project._id
+      )
+    })
+  })
+
   it("clears assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -495,6 +649,38 @@ describe("/projects", () => {
     })
   })
 
+  it("clears datasource and external table assignments together", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        projectId: project._id,
+      })
+      const entityKey = "TestTable"
+      const externalTable = basicTable(datasource, {
+        _id: buildExternalTableId(datasource._id!, entityKey),
+        name: "Updated table",
+        projectId: project._id,
+      })
+      await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [entityKey]: externalTable,
+        },
+      })
+
+      await config.api.project.delete(project._id, project._rev)
+
+      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+      expect(fetchedDatasource.projectId).toBeUndefined()
+      expect(fetchedDatasource.entities![entityKey].projectId).toBeUndefined()
+      expect(fetchedDatasource.entities![externalTable.name]).toBeUndefined()
+      expect(Object.keys(fetchedDatasource.entities!)).toEqual([entityKey])
+    })
+  })
+
   it("does not clear assignments when deleting with a stale rev", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -512,6 +698,135 @@ describe("/projects", () => {
         status: 409,
       })
 
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+    })
+  })
+
+  it("does not clear assignments when project deletion fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectId: project._id,
+        })
+      )
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const remove = jest
+          .spyOn(Object.getPrototypeOf(db), "remove")
+          .mockRejectedValueOnce(new Error("Project deletion failed"))
+
+        try {
+          await expect(
+            sdk.projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Project deletion failed")
+        } finally {
+          remove.mockRestore()
+        }
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+    })
+  })
+
+  it("continues restoring assignments when a rollback fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectId: project._id,
+        })
+      )
+      const automation = await config.createAutomation()
+      const { automation: assignedAutomation } =
+        await config.api.automation.update({
+          ...automation,
+          projectId: project._id,
+        })
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const remove = jest
+          .spyOn(Object.getPrototypeOf(db), "remove")
+          .mockRejectedValueOnce(new Error("Project deletion failed"))
+        const originalUpdateAutomation = sdk.automations.update
+        const updateAutomation = jest
+          .spyOn(sdk.automations, "update")
+          .mockImplementation(async update => {
+            if (update.projectId === project._id) {
+              throw new Error("Automation rollback failed")
+            }
+            return await originalUpdateAutomation(update)
+          })
+
+        try {
+          await expect(
+            sdk.projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Project deletion failed")
+        } finally {
+          remove.mockRestore()
+          updateAutomation.mockRestore()
+        }
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+      const fetchedAutomation = await config.api.automation.get(
+        assignedAutomation._id!
+      )
+      expect(fetchedAutomation.projectId).toBeUndefined()
+    })
+  })
+
+  it("does not delete a project when assignment cleanup fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectId: project._id,
+        })
+      )
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const put = jest
+          .spyOn(Object.getPrototypeOf(db), "put")
+          .mockRejectedValueOnce(new Error("Assignment cleanup failed"))
+
+        try {
+          await expect(
+            sdk.projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Assignment cleanup failed")
+        } finally {
+          put.mockRestore()
+        }
+      })
+
+      const fetchedProject = await config.api.project.fetch()
+      expect(fetchedProject.projects.map(existing => existing._id)).toContain(
+        project._id
+      )
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
@@ -555,17 +870,20 @@ describe("/projects", () => {
         projectId: project._id,
       })
 
-      const { workspaceApp: updatedWorkspaceApp } =
-        await config.api.workspaceApp.update({
-          _id: workspaceApp._id,
-          _rev: workspaceApp._rev,
-          name: "Ops app updated",
-          url: workspaceApp.url,
-          navigation: workspaceApp.navigation,
-          theme: workspaceApp.theme,
-          customTheme: workspaceApp.customTheme,
-          disabled: workspaceApp.disabled,
-        })
+      const updatedWorkspaceApp = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () =>
+          await sdk.workspaceApps.update({
+            _id: workspaceApp._id,
+            _rev: workspaceApp._rev,
+            name: "Ops app updated",
+            url: workspaceApp.url,
+            navigation: workspaceApp.navigation,
+            theme: workspaceApp.theme,
+            customTheme: workspaceApp.customTheme,
+            disabled: workspaceApp.disabled,
+          })
+      )
 
       const { projectId: _automationProjectId, ...automationUpdate } =
         assignedAutomation
@@ -834,6 +1152,64 @@ describe("/projects", () => {
           expect(imported.resources).toEqual({
             project: [imported.project._id],
           })
+        }
+      )
+    })
+  })
+
+  it("exports and remaps assigned external tables through their datasource", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "External data",
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const externalTableId = buildExternalTableId(datasource._id!, "TestTable")
+      const externalTable = basicTable(datasource, {
+        _id: externalTableId,
+        name: "TestTable",
+        primaryDisplay: `{{ ${externalTableId}.name }}`,
+        projectId: project._id,
+      })
+      await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
+      })
+
+      const body = await config.api.project.export(project._id)
+      const files = await readTarEntries(body)
+      const dependencyIndex = JSON.parse(
+        files.get("dependency-index.json")!.toString()
+      ) as ProjectPackageDependencyIndex
+      expect(dependencyIndex.directMembers.map(member => member.id)).toEqual([
+        datasource._id,
+      ])
+
+      const destinationWorkspace = await config.api.workspace.create({
+        name: "Imported external data",
+      })
+      await config.withHeaders(
+        { [Header.APP_ID]: destinationWorkspace.appId },
+        async () => {
+          const imported = await config.api.project.import(body)
+          const importedDatasourceId = imported.resources.datasource?.[0]!
+          const importedDatasource =
+            await config.api.datasource.get(importedDatasourceId)
+          const importedExternalTable =
+            importedDatasource.entities![externalTable.name]
+          const importedExternalTableId = buildExternalTableId(
+            importedDatasourceId,
+            "TestTable"
+          )
+
+          expect(importedExternalTable._id).toBe(importedExternalTableId)
+          expect(importedExternalTable.projectId).toBe(imported.project._id)
+          expect(importedExternalTable.primaryDisplay).toBe(
+            `{{ ${importedExternalTableId}.name }}`
+          )
         }
       )
     })
@@ -1140,6 +1516,28 @@ describe("/projects", () => {
     })
   })
 
+  it("rejects encrypted project imports with an incorrect password", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const body = await config.api.project.export(project._id, {
+        encryptPassword: "correct-password",
+      })
+
+      await config.api.project.import(
+        body,
+        { encryptPassword: "incorrect-password" },
+        {
+          status: 400,
+          body: {
+            message: "Project package could not be decrypted.",
+          },
+        }
+      )
+    })
+  })
+
   it.each([
     ["missing", undefined],
     ["non-array", "additiveImport"],
@@ -1161,6 +1559,37 @@ describe("/projects", () => {
           body: {
             message: "Project package does not support additive import.",
           },
+        })
+      })
+    }
+  )
+
+  it.each([
+    ["manifest", "manifest.json", null, "Project package manifest is invalid."],
+    [
+      "project",
+      "project.json",
+      null,
+      "Project package project.json is invalid.",
+    ],
+    [
+      "dependency index",
+      "dependency-index.json",
+      null,
+      "Project package dependency index is invalid.",
+    ],
+  ])(
+    "rejects an invalid %s shape",
+    async (_label, fileName, value, message) => {
+      await withProjectsEnabled(async () => {
+        const packageBuffer = await createTarPackage({
+          ...createMinimalPackageEntries(),
+          [fileName]: value,
+        })
+
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: { message },
         })
       })
     }

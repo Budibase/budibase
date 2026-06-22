@@ -3,6 +3,7 @@ import {
   Agent,
   AnyDocument,
   Datasource,
+  INTERNAL_TABLE_SOURCE_ID,
   KnowledgeBaseFile,
   Project,
   ProjectPackageDependencyIndex,
@@ -19,6 +20,7 @@ import { v4 as uuid } from "uuid"
 import sdk from "../../.."
 import { budibaseTempDir } from "../../../../utilities/budibaseDir"
 import { streamFile } from "../../../../utilities/fileSystem"
+import { isExternalTableID } from "../../../../integrations/utils"
 import {
   PROJECT_ATTACHMENTS_DIRECTORY,
   PROJECT_DEPENDENCY_INDEX_FILE,
@@ -46,6 +48,11 @@ async function tarFilesToTmp(tmpDir: string, files: string[]) {
 function getExportDirectoryName(resourceType: ResourceType) {
   return resourceType
 }
+
+const sortResources = (resources: UsedResource[]) =>
+  [...resources].sort(
+    (a, b) => a.type.localeCompare(b.type) || a.id.localeCompare(b.id)
+  )
 
 export async function listAssignedAgentFiles(
   projectId: string,
@@ -93,12 +100,21 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
     type,
   })
 
-  return [
+  return sortResources([
     ...datasources
-      .filter(datasource => datasource.projectId === projectId)
+      .filter(
+        datasource =>
+          datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
+          (datasource.projectId === projectId ||
+            Object.values(datasource.entities || {}).some(
+              entity => entity.projectId === projectId
+            ))
+      )
       .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
     ...tables
-      .filter(table => table.projectId === projectId)
+      .filter(
+        table => table.projectId === projectId && !isExternalTableID(table._id!)
+      )
       .map(table => asUsedResource(table, ResourceType.TABLE)),
     ...queries
       .filter(query => query.projectId === projectId)
@@ -114,7 +130,7 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
       .map(workspaceApp =>
         asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
       ),
-  ]
+  ])
 }
 
 async function getUnsupportedContent(
@@ -287,13 +303,15 @@ export async function exportProject(
   }
 
   const graph = await sdk.resources.getResourcesInfo()
-  const projectDependencies = Array.from(
-    new Map(
-      (graph[projectId]?.dependencies || []).map(resource => [
-        resource.id,
-        resource,
-      ])
-    ).values()
+  const projectDependencies = sortResources(
+    Array.from(
+      new Map(
+        (graph[projectId]?.dependencies || []).map(resource => [
+          resource.id,
+          resource,
+        ])
+      ).values()
+    )
   )
   const directMembers = await getDirectMembers(projectId)
   const unsupportedContent = await getUnsupportedContent(projectId)
@@ -312,9 +330,14 @@ export async function exportProject(
     rootProjectId: projectId,
     directMembers,
     resources: {
-      [projectId]: graph[projectId] || { dependencies: [] },
+      [projectId]: {
+        dependencies: sortResources(graph[projectId]?.dependencies || []),
+      },
       ...Object.fromEntries(
-        docsToExport.map(id => [id, graph[id] || { dependencies: [] }])
+        docsToExport.map(id => [
+          id,
+          { dependencies: sortResources(graph[id]?.dependencies || []) },
+        ])
       ),
     },
   }

@@ -1,10 +1,4 @@
-export enum DurationType {
-  MILLISECONDS = "milliseconds",
-  SECONDS = "seconds",
-  MINUTES = "minutes",
-  HOURS = "hours",
-  DAYS = "days",
-}
+import { DurationType } from "@budibase/types"
 
 const conversion: Record<DurationType, number> = {
   milliseconds: 1,

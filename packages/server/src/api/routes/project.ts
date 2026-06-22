@@ -17,7 +17,7 @@ builderRoutes
     projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
-        encryptPassword: Joi.string().optional().allow(""),
+        encryptPassword: Joi.string().max(1024).optional().allow(""),
       }),
       {
         allowUnknown: false,
@@ -30,7 +30,7 @@ builderRoutes
     projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
-        encryptPassword: Joi.string().optional().allow(""),
+        encryptPassword: Joi.string().max(1024).optional().allow(""),
       }),
       {
         allowUnknown: false,

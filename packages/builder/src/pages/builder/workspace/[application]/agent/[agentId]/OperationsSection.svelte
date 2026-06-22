@@ -1,27 +1,28 @@
 <script lang="ts">
+  import { Body, Button, Helpers, Icon, notifications } from "@budibase/bbui"
   import {
-    Body,
-    Button,
-    Icon,
-    Input,
-    Modal,
-    ModalContent,
-    notifications,
-  } from "@budibase/bbui"
-  import type { Agent, EnrichedBinding } from "@budibase/types"
+    FeatureFlag,
+    type Agent,
+    type AgentOperation,
+    type EnrichedBinding,
+  } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
   import { contextMenuStore } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
+  import OperationNameModal from "./OperationNameModal.svelte"
+  import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
-  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
-What is this agent responsible for?
+
+  const DEFAULT_PROMPT_INSTRUCTIONS = `**Operation role**
+What is this operation responsible for?
 
 **Inputs**
-What information does the agent receive?
+What information does this operation receive?
 
 **Actions**
-- What should the agent do?
+- What should this operation do?
 - When should it use tools or APIs?
 
 **Output**
@@ -29,7 +30,7 @@ What information does the agent receive?
 - Include any structure, formatting, or fields required.
 
 **Rules**
-Any constraints the agent must follow.
+Any constraints this operation must follow.
 `
 
   let {
@@ -42,10 +43,10 @@ Any constraints the agent must follow.
     webSearchConfigured = false,
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
-    onDeleteOperation = async () => {},
+    onSetOperationLive = async () => false,
     onUpdated,
   }: {
-    agent?: Agent
+    agent: Agent
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -54,63 +55,141 @@ Any constraints the agent must follow.
     webSearchConfigured?: boolean
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
-    onDeleteOperation?: () => Promise<void>
-    onUpdated: () => void
+    onSetOperationLive?: (
+      operationId: string,
+      live: boolean
+    ) => Promise<boolean>
+    onUpdated: () => Promise<boolean>
   } = $props()
 
+  let selectedOperationId = $state<string | undefined>(undefined)
   let operationPanelOpen = $state(false)
-  let renameModal: Modal | undefined = $state()
-  let renameDraft = $state("")
-  let isRenameValid = $derived(Boolean(renameDraft.trim()))
-  let operationName = $derived(agent?.operationName?.trim())
-  let hasOperation = $derived(Boolean(agent?.operationName?.trim()))
+  let renameOperationId = $state<string | undefined>(undefined)
+  let createOperationModal: OperationNameModal | undefined = $state()
+  let renameOperationModal: OperationNameModal | undefined = $state()
 
-  const openOperationPanel = () => {
+  let operations = $derived(agent.operations || [])
+  let sortedOperations = $derived.by(() =>
+    [...operations].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, {
+        sensitivity: "base",
+      })
+    )
+  )
+  let selectedOperation = $derived(
+    operations.find(operation => operation.id === selectedOperationId)
+  )
+  let hasOperation = $derived(operations.length > 0)
+  let multipleOperationsEnabled = $derived(
+    $featureFlags[FeatureFlag.MULTIPLE_OPERATIONS]
+  )
+  let canAddOperation = $derived(
+    multipleOperationsEnabled || operations.length === 0
+  )
+  let operationLive = $derived(selectedOperation?.live === true)
+
+  const normalizeName = (value: string) => value.trim().toLowerCase()
+
+  const openOperationPanel = (operationId: string) => {
+    selectedOperationId = operationId
     operationPanelOpen = true
   }
 
   const closeOperationPanel = () => {
+    selectedOperationId = undefined
     operationPanelOpen = false
   }
 
   const openRenameModal = () => {
-    renameDraft = agent?.operationName || ""
-    renameModal?.show()
+    renameOperationId = selectedOperation?.id
+    renameOperationModal?.show(selectedOperation?.name || "")
   }
 
-  const saveRename = () => {
-    if (!agent) {
+  const validateCreateOperationName = (name: string) => {
+    const normalizedName = normalizeName(name)
+    return operations.some(operation => {
+      return normalizeName(operation.name || "") === normalizedName
+    })
+      ? "An operation with this name already exists"
+      : undefined
+  }
+
+  const validateRenameOperationName = (name: string) => {
+    const normalizedName = normalizeName(name)
+    return operations.some(operation => {
+      return (
+        operation.id !== renameOperationId &&
+        normalizeName(operation.name || "") === normalizedName
+      )
+    })
+      ? "An operation with this name already exists"
+      : undefined
+  }
+
+  const saveRename = async (name: string) => {
+    if (!renameOperationId) {
       return
     }
-    const trimmedName = renameDraft.trim()
-    if (!trimmedName) {
-      notifications.error("Operation name is required.")
+    const operation = operations.find(
+      operation => operation.id === renameOperationId
+    )
+    if (!operation) {
       return
     }
-    agent.operationName = trimmedName
-    onUpdated()
-    renameModal?.hide()
+
+    operation.name = name
+    await onUpdated()
+    renameOperationId = undefined
+  }
+
+  const createDefaultOperation = (name: string) => {
+    return {
+      id: `operation_${Helpers.uuid()}`,
+      name,
+      live: false,
+      promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+      allowKnowledgeSourceDownload: true,
+    } satisfies AgentOperation
+  }
+
+  const setOperationLive = async (nextLive: boolean) => {
+    if (!selectedOperation || selectedOperation.live === nextLive) {
+      return
+    }
+    const currentOperation = selectedOperation
+    const previousLive = currentOperation.live
+    currentOperation.live = nextLive
+    const saveSucceeded = await onSetOperationLive(
+      currentOperation.id,
+      nextLive
+    )
+    if (saveSucceeded === false) {
+      currentOperation.live = previousLive
+    }
   }
 
   const handleAddOperation = () => {
-    if (hasOperation) {
+    if (!canAddOperation) {
       notifications.info("Only one operation is supported at the moment.")
       return
     }
-    if (agent) {
-      agent.operationName = "Main operation"
-      agent.promptInstructions = DEFAULT_PROMPT_INSTRUCTIONS
-    }
-    onUpdated()
-    openOperationPanel()
+    createOperationModal?.show()
+  }
+
+  const createOperation = async (name: string) => {
+    const operation = createDefaultOperation(name)
+    agent.operations = [...(agent.operations || []), operation]
+    selectedOperationId = operation.id
+    await onUpdated()
+    openOperationPanel(operation.id)
   }
 
   const deleteOperation = async () => {
-    if (!agent) {
+    if (!selectedOperationId) {
       return
     }
+    const operationIdToDelete = selectedOperationId
 
-    const safeAgent = agent
     confirm({
       title: "Confirm deletion",
       body: "Delete this operation? This will clear instructions and selected tools.",
@@ -118,12 +197,13 @@ Any constraints the agent must follow.
       warning: true,
       onConfirm: async () => {
         try {
-          await onDeleteOperation()
-          safeAgent.promptInstructions = ""
-          safeAgent.enabledTools = []
-          safeAgent.operationName = ""
-          onUpdated()
-          closeOperationPanel()
+          agent.operations = (agent.operations || []).filter(
+            operation => operation.id !== operationIdToDelete
+          )
+          await onUpdated()
+          if (selectedOperationId === operationIdToDelete) {
+            closeOperationPanel()
+          }
           notifications.success("Operation deleted.")
         } catch (error) {
           console.error(error)
@@ -141,8 +221,14 @@ Any constraints the agent must follow.
       "agent-operation",
       [
         {
+          icon: operationLive ? "stop" : "play",
+          name: operationLive ? "Stop" : "Set live",
+          visible: true,
+          callback: async () => await setOperationLive(!operationLive),
+        },
+        {
           icon: "pencil",
-          name: "Edit",
+          name: "Rename",
           visible: true,
           callback: openRenameModal,
         },
@@ -153,7 +239,12 @@ Any constraints the agent must follow.
           callback: deleteOperation,
         },
       ],
-      { x: event.clientX, y: event.clientY }
+      { x: event.clientX, y: event.clientY },
+      () => {
+        if (!operationPanelOpen) {
+          selectedOperationId = undefined
+        }
+      }
     )
   }
 </script>
@@ -175,59 +266,85 @@ Any constraints the agent must follow.
 
   {#if hasOperation}
     <div class="operation-list">
-      <div class="operation-row">
-        <button
-          class="operation-open-button"
-          type="button"
-          onclick={() => openOperationPanel()}
-          oncontextmenu={openOperationContextMenu}
+      {#each sortedOperations as operation (operation.id)}
+        <div
+          class="operation-row"
+          class:selected={selectedOperationId === operation.id}
         >
-          <span class="operation-name">{operationName}</span>
-        </button>
+          <button
+            class="operation-open-button"
+            type="button"
+            onclick={() => openOperationPanel(operation.id)}
+            oncontextmenu={event => {
+              selectedOperationId = operation.id
+              openOperationContextMenu(event)
+            }}
+          >
+            <span class="operation-name"
+              >{operation.name?.trim() || "Untitled operation"}</span
+            >
+            <span class="status-indicator">
+              <OperationLiveBadge live={operation.live === true} />
+            </span>
+          </button>
 
-        <button
-          class="operation-menu-trigger"
-          type="button"
-          aria-label="Operation actions"
-          onclick={openOperationContextMenu}
-        >
-          <Icon
-            name="dots-three"
-            size="S"
-            color="var(--spectrum-global-color-gray-600)"
-            hoverable
-          />
-        </button>
-      </div>
+          <button
+            class="operation-menu-trigger"
+            type="button"
+            aria-label="Operation actions"
+            onclick={event => {
+              selectedOperationId = operation.id
+              openOperationContextMenu(event)
+            }}
+          >
+            <Icon
+              name="dots-three"
+              size="S"
+              color="var(--spectrum-global-color-gray-600)"
+              hoverable
+            />
+          </button>
+        </div>
+      {/each}
     </div>
   {/if}
 </div>
 
-<OperationSidePanel
-  open={operationPanelOpen}
-  bind:agent
-  {promptBindings}
-  {bindingIcons}
-  {completions}
-  {toolsLoaded}
-  {availableTools}
-  {webSearchConfigured}
-  {onAddApiConnection}
-  {onConfigureWebSearch}
-  {onUpdated}
-  onClose={closeOperationPanel}
+<OperationNameModal
+  bind:this={createOperationModal}
+  title="New operation"
+  confirmText="Create"
+  placeholder="Customer support"
+  validateName={validateCreateOperationName}
+  onConfirm={createOperation}
 />
 
-<Modal bind:this={renameModal}>
-  <ModalContent
-    title="Rename operation"
-    confirmText="Save"
-    disabled={!isRenameValid}
-    onConfirm={saveRename}
-  >
-    <Input label="Name" bind:value={renameDraft} />
-  </ModalContent>
-</Modal>
+{#if selectedOperation}
+  <OperationSidePanel
+    open={operationPanelOpen}
+    bind:operation={selectedOperation}
+    {promptBindings}
+    {bindingIcons}
+    {completions}
+    {toolsLoaded}
+    {availableTools}
+    {webSearchConfigured}
+    {onAddApiConnection}
+    {onConfigureWebSearch}
+    onRenameOperation={openRenameModal}
+    {onSetOperationLive}
+    {onUpdated}
+    onClose={closeOperationPanel}
+  />
+{/if}
+
+<OperationNameModal
+  bind:this={renameOperationModal}
+  title="Rename operation"
+  confirmText="Save"
+  validateName={validateRenameOperationName}
+  onConfirm={saveRename}
+/>
 
 <style>
   .operations-section {
@@ -257,7 +374,7 @@ Any constraints the agent must follow.
   .operation-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
 
   .operation-row {
@@ -276,16 +393,29 @@ Any constraints the agent must follow.
     border-color: var(--spectrum-global-color-gray-300);
   }
 
+  .operation-row.selected {
+    background: var(--spectrum-global-color-blue-100);
+    border-color: var(--spectrum-global-color-gray-300);
+  }
+
   .operation-open-button {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     min-height: 36px;
-    padding: 8px 12px;
+    padding: 8px 0 8px 12px;
     border: 0;
     background: transparent;
     color: inherit;
     text-align: left;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+  }
+
+  .status-indicator {
+    pointer-events: none;
   }
 
   .operation-name {

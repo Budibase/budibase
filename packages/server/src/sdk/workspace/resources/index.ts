@@ -254,8 +254,6 @@ export async function getResourcesInfo(): Promise<
   }
 
   if (projects.length) {
-    const allTables = await sdk.tables.getAllTables()
-
     const buildUsedResource = (
       doc: { _id?: string; name?: string },
       type: ResourceType
@@ -271,11 +269,18 @@ export async function getResourcesInfo(): Promise<
     )) {
       const directMembers: UsedResource[] = [
         ...datasources
-          .filter(datasource => datasource.projectId === project._id)
+          .filter(
+            datasource =>
+              datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
+              (datasource.projectId === project._id ||
+                Object.values(datasource.entities || {}).some(
+                  table => table.projectId === project._id
+                ))
+          )
           .map(datasource =>
             buildUsedResource(datasource, ResourceType.DATASOURCE)
           ),
-        ...allTables
+        ...internalTables
           .filter(table => table.projectId === project._id)
           .map(table => buildUsedResource(table, ResourceType.TABLE)),
         ...queries
@@ -347,12 +352,28 @@ function isAutomation(doc: AnyDocument): doc is Automation {
   return type === ResourceType.AUTOMATION
 }
 
+function isAgent(doc: AnyDocument): doc is Agent {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.AGENT
+}
+
 function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
   if (!doc._id) {
     return false
   }
   const type = getResourceType(doc._id)
   return type === ResourceType.WORKSPACE_APP
+}
+
+function isDatasource(doc: AnyDocument): doc is Datasource {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.DATASOURCE
 }
 
 function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
@@ -718,7 +739,12 @@ export async function duplicateResourcesToWorkspace(
   const referencedProjectIds = Array.from(
     new Set(
       docsToInsert
-        .map(doc => doc.projectId)
+        .flatMap(doc => [
+          doc.projectId,
+          ...(isDatasource(doc)
+            ? Object.values(doc.entities || {}).map(entity => entity.projectId)
+            : []),
+        ])
         .filter((projectId): projectId is string => !!projectId)
     )
   )
@@ -740,10 +766,32 @@ export async function duplicateResourcesToWorkspace(
   if (!fromWorkspace) {
     throw new Error("Could not get workspaceId")
   }
+
+  const hasAvailableProject = (projectId: string | undefined) => {
+    return (
+      projectsEnabled &&
+      !!projectId &&
+      (resourceIds.has(projectId) || destinationProjectIds.has(projectId))
+    )
+  }
+
+  const sanitizeProjectAssignment = (doc: object) => {
+    if (
+      "projectId" in doc &&
+      typeof doc.projectId === "string" &&
+      !hasAvailableProject(doc.projectId)
+    ) {
+      delete doc.projectId
+    }
+  }
+
   if (docsToInsert.length) {
     await destinationDb.bulkDocs(
       docsToInsert.map<AnyDocument>(doc => {
-        const sanitizedDoc: AnyDocument = { ...doc, fromWorkspace }
+        const sanitizedDoc: AnyDocument = {
+          ...(isAgent(doc) ? sdk.ai.agents.sanitiseAgentForExport(doc) : doc),
+          fromWorkspace,
+        }
         delete sanitizedDoc._rev
         delete sanitizedDoc.createdAt
         delete sanitizedDoc.updatedAt
@@ -753,13 +801,15 @@ export async function duplicateResourcesToWorkspace(
         if (isAutomation(sanitizedDoc)) {
           sanitizedDoc.appId = toWorkspace
         }
-        if (
-          !projectsEnabled ||
-          (sanitizedDoc.projectId &&
-            !resourceIds.has(sanitizedDoc.projectId) &&
-            !destinationProjectIds.has(sanitizedDoc.projectId))
-        ) {
-          delete sanitizedDoc.projectId
+        sanitizeProjectAssignment(sanitizedDoc)
+        if (isDatasource(sanitizedDoc) && sanitizedDoc.entities) {
+          sanitizedDoc.entities = Object.fromEntries(
+            Object.entries(sanitizedDoc.entities).map(([name, entity]) => {
+              const sanitizedEntity = { ...entity }
+              sanitizeProjectAssignment(sanitizedEntity)
+              return [name, sanitizedEntity]
+            })
+          )
         }
         return sanitizedDoc
       })
