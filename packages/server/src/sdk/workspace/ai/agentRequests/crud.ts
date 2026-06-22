@@ -1,10 +1,7 @@
 import { context, docIds } from "@budibase/backend-core"
 import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
-import {
-  analyzeAgentRequestLink,
-  generateAgentRequestTitle,
-} from "./helpers"
+import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -86,9 +83,7 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   }
 }
 
-export async function fetchRequestsByAgent(
-  agentId: string
-): Promise<AgentRequest[]> {
+export async function fetchRequests(): Promise<AgentRequest[]> {
   const db = context.getProdWorkspaceDB()
   const response = await db.allDocs<AgentRequest>({
     ...docIds.getDocParams(DocumentType.AGENT_REQUEST, undefined, {
@@ -99,8 +94,15 @@ export async function fetchRequestsByAgent(
   return sortRequests(
     response.rows
       .map(row => row.doc)
-      .filter((doc): doc is AgentRequest => !!doc && doc.agentId === agentId)
+      .filter((doc): doc is AgentRequest => !!doc)
   )
+}
+
+export async function fetchRequestsByAgent(
+  agentId: string
+): Promise<AgentRequest[]> {
+  const requests = await fetchRequests()
+  return requests.filter(request => request.agentId === agentId)
 }
 
 export async function fetchRequestsByAgentAndUser(

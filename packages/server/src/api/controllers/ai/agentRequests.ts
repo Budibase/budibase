@@ -23,16 +23,8 @@ const sanitizeLimitQuery = (limit?: string): number => {
 export async function fetchAgentRequests(
   ctx: UserCtx<void, FetchAgentRequestsResponse>
 ) {
-  const { agentId } = ctx.params
   const { limit } = ctx.query as Record<string, string>
-
-  if (!agentId) {
-    throw new HTTPError("agentId is required", 400)
-  }
-
-  await sdk.ai.agents.getOrThrow(agentId)
-
-  const requests = await sdk.ai.agentRequests.fetchRequestsByAgent(agentId)
+  const requests = await sdk.ai.agentRequests.fetchRequests()
   ctx.body = {
     requests: requests.slice(0, sanitizeLimitQuery(limit)),
   }

@@ -204,19 +204,15 @@
   })
 
   async function loadRequests() {
-    const agents = ($agentsStore.agents || []).filter(agent => agent._id)
-    if (!agents.length) {
+    if (!($agentsStore.agents || []).length) {
       allRequests = []
       return
     }
 
     loading = true
     try {
-      const responses = await Promise.all(
-        agents.map(agent => API.fetchAgentRequests(agent._id!, { limit: 100 }))
-      )
-
-      allRequests = responses.flatMap(response => response.requests)
+      const response = await API.fetchAgentRequests({ limit: 100 })
+      allRequests = response.requests
       await hydrateUserNames(allRequests)
     } catch (error) {
       console.error("Failed to fetch agent requests", error)

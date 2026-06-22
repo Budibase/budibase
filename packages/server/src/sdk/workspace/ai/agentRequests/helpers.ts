@@ -15,7 +15,10 @@ export interface AgentRequestLinkAnalysis {
 }
 
 const normalizeTitle = (value: string) =>
-  value.replace(/^["'\s]+|["'\s]+$/g, "").replace(/\s+/g, " ").trim()
+  value
+    .replace(/^["'\s]+|["'\s]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
 
 const normalizePrompt = (prompt: string) => prompt.trim().replace(/\s+/g, " ")
 

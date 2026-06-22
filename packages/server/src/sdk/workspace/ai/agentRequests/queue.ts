@@ -10,10 +10,10 @@ type AgentRequestTrackingJob =
   | {
       workspaceId: string
       type: "start"
-    agentId: string
-    sessionId: string
-    latestPrompt: string
-    userId: string
+      agentId: string
+      sessionId: string
+      latestPrompt: string
+      userId: string
     }
   | {
       workspaceId: string
