@@ -40,7 +40,7 @@ import {
   createEscalateTool,
   createResolvedEscalateTool,
 } from "../../../../ai/tools/budibase/escalate"
-import tracer from "dd-trace"
+import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
 // How long to wait for a human response before the escalation expires, in
@@ -161,6 +161,9 @@ export const chooseOperationForQuestion = async ({
     stopWhen: stepCountIs(1),
     providerOptions: llm.providerOptions?.(false),
     output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
+    headers: {
+      "x-litellm-tags": "bb-operation-routing",
+    },
   })
 
   try {
