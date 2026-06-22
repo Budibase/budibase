@@ -112,8 +112,7 @@ function getToolLabel(name: string, displayName?: string): string {
 }
 
 export function getStepFlow(
-  detail: AgentLogRequestDetail | undefined,
-  _loadingStep: boolean
+  detail: AgentLogRequestDetail | undefined
 ): StepFlow {
   if (!detail) {
     return {

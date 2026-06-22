@@ -25,7 +25,7 @@
 
   let { entry, index, expanded, detail, loadingStep, onToggleStep }: Props =
     $props()
-  let flow = $derived(getStepFlow(detail, loadingStep))
+  let flow = $derived(getStepFlow(detail))
 
   const formatTokenLabel = (count: number): string => {
     const tokenLabel = count === 1 ? "token" : "tokens"
