@@ -107,7 +107,7 @@ export async function analyzeAgentRequestLink({
         {
           role: "system",
           content:
-            'You decide whether a user message belongs to an existing agent request or should start a new one. Reply with JSON only. For a new request, use {"decision":"new_thread"}. For an existing request, use {"decision":"existing_thread","requestId":"<requestId>","entryAction":"append_latest_entry"} when the message is a follow-up to the latest entry, or {"decision":"existing_thread","requestId":"<requestId>","entryAction":"create_new_entry"} when it belongs to the same overall request but starts a distinct sub-request.',
+            'You decide whether a user message belongs to an existing agent request or should start a new one. Reply with JSON only. For a new request, use {"decision":"new_thread"}. For an existing request, use {"decision":"existing_thread","requestId":"<requestId>","entryAction":"append_latest_entry"} when the message is a follow-up to the latest entry, or {"decision":"existing_thread","requestId":"<requestId>","entryAction":"create_new_entry"} when it belongs to the same overall request but starts a distinct sub-request. Treat a new concrete ask for a different item, resource, or deliverable as a new request, even if the user phrases it as "also need", "also want", or a related follow-up.',
         },
         {
           role: "user",
