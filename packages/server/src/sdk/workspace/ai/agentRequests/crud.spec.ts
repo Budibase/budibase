@@ -1,8 +1,10 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import {
+  continueRequestForPrompt,
   createOrUpdateRequestForPrompt,
   fetchThread,
   fetchRequestsByAgent,
+  startRequestForPrompt,
 } from "./crud"
 import { analyzeAgentRequestLink } from "./helpers"
 
@@ -247,6 +249,148 @@ describe("agentRequests crud", () => {
           ],
         },
       ])
+    })
+  })
+
+  it("appends a follow-up to an existing request even when no operation is selected", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+      const first = await createOrUpdateRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestUserPrompt: "I need a new laptop",
+        operation: {
+          name: "IT support",
+          prompt: "Create and track IT support requests.",
+        },
+        source: "Chat",
+        userId: "user_1",
+      })
+
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "existing_thread",
+        requestId: first!.request._id,
+        entryAction: "append_latest_entry",
+      })
+
+      const second = await createOrUpdateRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestUserPrompt: "Is there any ETA?",
+        operation: undefined,
+        source: "Chat",
+        userId: "user_1",
+      })
+
+      expect(second?.request._id).toEqual(first?.request._id)
+      expect(second?.request.entries).toHaveLength(1)
+      expect(second?.request.entries[0].promptHistory).toEqual([
+        {
+          message: "I need a new laptop",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "IT support",
+              prompt: "Create and track IT support requests.",
+            },
+          ],
+        },
+        {
+          message: "Is there any ETA?",
+          date: expect.any(String),
+        },
+      ])
+    })
+  })
+
+  it("does not create a new request when no operation is selected", async () => {
+    analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+      decision: "new_thread",
+    })
+
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const created = await createOrUpdateRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestUserPrompt: "Is there any ETA?",
+        operation: undefined,
+        source: "Chat",
+        userId: "user_1",
+      })
+
+      expect(created).toBeUndefined()
+    })
+  })
+
+  it("continue only appends to an existing request", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+      const first = await startRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestUserPrompt: "I need a new laptop",
+        operation: {
+          name: "IT support",
+          prompt: "Create and track IT support requests.",
+        },
+        source: "Chat",
+        userId: "user_1",
+      })
+
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "existing_thread",
+        requestId: first!.request._id,
+        entryAction: "append_latest_entry",
+      })
+
+      const continued = await continueRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestUserPrompt: "Is there any ETA?",
+        source: "Chat",
+        userId: "user_1",
+      })
+
+      expect(continued?._id).toEqual(first?.request._id)
+      expect(continued?.entries).toHaveLength(1)
+      expect(continued?.entries[0].promptHistory).toEqual([
+        {
+          message: "I need a new laptop",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "IT support",
+              prompt: "Create and track IT support requests.",
+            },
+          ],
+        },
+        {
+          message: "Is there any ETA?",
+          date: expect.any(String),
+        },
+      ])
+    })
+  })
+
+  it("continue does not create a new request", async () => {
+    analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+      decision: "new_thread",
+    })
+
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const continued = await continueRequestForPrompt({
+        agentId: "agent_1",
+        sessionId: "session_1",
+        latestUserPrompt: "Is there any ETA?",
+        source: "Chat",
+        userId: "user_1",
+      })
+
+      expect(continued).toBeUndefined()
     })
   })
 })

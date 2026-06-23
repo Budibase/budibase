@@ -149,10 +149,15 @@ export async function generateAgentRequestTitle({
   request,
   agentId,
   sessionId,
+  operation,
 }: {
   request: AgentRequest
   agentId: string
   sessionId: string
+  operation?: {
+    name: string
+    prompt: string
+  }
 }): Promise<string> {
   const latestEntry = request.entries[request.entries.length - 1]
   if (!latestEntry) {
@@ -181,6 +186,7 @@ export async function generateAgentRequestTitle({
       {
         role: "user",
         content: JSON.stringify({
+          operation,
           latestPrompt:
             latestEntry.promptHistory[latestEntry.promptHistory.length - 1],
           promptHistory: latestEntry.promptHistory,

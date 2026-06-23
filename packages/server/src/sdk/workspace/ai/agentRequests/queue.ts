@@ -1,32 +1,21 @@
 import { context, features, queue } from "@budibase/backend-core"
 import { FeatureFlag } from "@budibase/types"
-import {
-  createOrUpdateRequestForPrompt,
-  generateAndSaveRequestTitle,
-} from "./crud"
+import { createOrUpdateRequestForPrompt } from "./crud"
 import { determineTrigger } from "../agentLogs/shared"
 
-type AgentRequestTrackingJob =
-  | {
-      workspaceId: string
-      type: "start"
-      agentId: string
-      sessionId: string
-      latestUserPrompt: string
-      operation: {
-        name: string
-        prompt: string
-      }
-      source: string
-      userId: string
-    }
-  | {
-      workspaceId: string
-      type: "title"
-      agentId: string
-      sessionId: string
-      requestId: string
-    }
+type AgentRequestTrackingJob = {
+  workspaceId: string
+  type: "track"
+  agentId: string
+  sessionId: string
+  latestUserPrompt: string
+  operation?: {
+    name: string
+    prompt: string
+  }
+  source: string
+  userId: string
+}
 
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_BACKOFF_MS = 5000
@@ -80,24 +69,7 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
         if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
           return
         }
-        if (data.type === "start") {
-          const result = await createOrUpdateRequestForPrompt(data)
-          if (result?.created) {
-            await enqueue({
-              workspaceId,
-              type: "title",
-              agentId: data.agentId,
-              sessionId: data.sessionId,
-              requestId: result.request._id!,
-            })
-          }
-          return
-        }
-
-        if (data.type === "title") {
-          await generateAndSaveRequestTitle(data)
-          return
-        }
+        await createOrUpdateRequestForPrompt(data)
       })
     })
   } catch (error) {
@@ -111,7 +83,7 @@ async function enqueue(job: AgentRequestTrackingJob) {
   return await getQueue().add(job)
 }
 
-export async function enqueueRequestTrackingStart({
+export async function enqueueRequestTracking({
   agentId,
   sessionId,
   latestUserPrompt,
@@ -121,7 +93,7 @@ export async function enqueueRequestTrackingStart({
   agentId: string
   sessionId: string
   latestUserPrompt: string
-  operation: {
+  operation?: {
     name: string
     prompt: string
   }
@@ -137,7 +109,7 @@ export async function enqueueRequestTrackingStart({
 
   await enqueue({
     workspaceId,
-    type: "start",
+    type: "track",
     agentId,
     sessionId,
     latestUserPrompt,

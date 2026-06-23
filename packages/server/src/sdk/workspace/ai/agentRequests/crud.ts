@@ -15,25 +15,30 @@ const nowIso = () => new Date().toISOString()
 const buildEntry = ({
   sessionId,
   latestPrompt,
-  operationName,
-  operationPrompt,
+  operation,
   source,
 }: {
   sessionId: string
   latestPrompt: string
-  operationName: string
-  operationPrompt: string
+  operation?: {
+    name: string
+    prompt: string
+  }
   source: string
 }): AgentRequestEntry => {
   const promptHistoryItem: AgentRequestPromptHistoryItem = {
     message: latestPrompt,
     date: nowIso(),
-    operations: [
-      {
-        name: operationName,
-        prompt: operationPrompt,
-      },
-    ],
+    ...(operation
+      ? {
+          operations: [
+            {
+              name: operation.name,
+              prompt: operation.prompt,
+            },
+          ],
+        }
+      : {}),
   }
 
   return {
@@ -93,6 +98,47 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   }
 }
 
+async function maybeGenerateAndSaveRequestTitle({
+  request,
+  agentId,
+  sessionId,
+  operation,
+}: {
+  request: AgentRequest
+  agentId: string
+  sessionId: string
+  operation?: {
+    name: string
+    prompt: string
+  }
+}): Promise<AgentRequest> {
+  if (request.title) {
+    return request
+  }
+
+  try {
+    const title = await generateAgentRequestTitle({
+      request,
+      agentId,
+      sessionId,
+      operation,
+    })
+
+    return await saveRequest({
+      ...request,
+      title,
+    })
+  } catch (error) {
+    console.error("Failed to generate agent request title", {
+      agentId,
+      sessionId,
+      requestId: request._id,
+      error,
+    })
+    return request
+  }
+}
+
 export async function fetchRequests(): Promise<AgentRequest[]> {
   const db = context.getProdWorkspaceDB()
   const response = await db.allDocs<AgentRequest>({
@@ -142,7 +188,7 @@ export async function createOrUpdateRequestForPrompt({
   agentId: string
   sessionId: string
   latestUserPrompt: string
-  operation: {
+  operation?: {
     name: string
     prompt: string
   }
@@ -150,10 +196,14 @@ export async function createOrUpdateRequestForPrompt({
   userId: string
 }): Promise<{ request: AgentRequest; created: boolean } | undefined> {
   const prompt = latestUserPrompt.trim()
-  const resolvedOperationName = operation.name.trim()
-  const resolvedOperationPrompt = operation.prompt.trim()
+  const resolvedOperation = operation
+    ? {
+        name: operation.name.trim(),
+        prompt: operation.prompt.trim(),
+      }
+    : undefined
   const resolvedSource = source?.trim()
-  if (!prompt || !resolvedOperationName || !resolvedSource) {
+  if (!prompt || !resolvedSource) {
     return undefined
   }
 
@@ -166,20 +216,30 @@ export async function createOrUpdateRequestForPrompt({
   })
 
   if (linkDecision.decision === "new_thread" || !linkDecision.requestId) {
+    if (!resolvedOperation?.name) {
+      return undefined
+    }
+
+    const createdRequest = await saveRequest(
+      buildThread({
+        agentId,
+        userId,
+        entry: buildEntry({
+          sessionId,
+          latestPrompt: prompt,
+          operation: resolvedOperation,
+          source: resolvedSource,
+        }),
+      })
+    )
+
     return {
-      request: await saveRequest(
-        buildThread({
-          agentId,
-          userId,
-          entry: buildEntry({
-            sessionId,
-            latestPrompt: prompt,
-            operationName: resolvedOperationName,
-            operationPrompt: resolvedOperationPrompt,
-            source: resolvedSource,
-          }),
-        })
-      ),
+      request: await maybeGenerateAndSaveRequestTitle({
+        request: createdRequest,
+        agentId,
+        sessionId,
+        operation: resolvedOperation,
+      }),
       created: true,
     }
   }
@@ -188,20 +248,30 @@ export async function createOrUpdateRequestForPrompt({
     candidate => candidate._id === linkDecision.requestId
   )
   if (!request) {
+    if (!resolvedOperation?.name) {
+      return undefined
+    }
+
+    const createdRequest = await saveRequest(
+      buildThread({
+        agentId,
+        userId,
+        entry: buildEntry({
+          sessionId,
+          latestPrompt: prompt,
+          operation: resolvedOperation,
+          source: resolvedSource,
+        }),
+      })
+    )
+
     return {
-      request: await saveRequest(
-        buildThread({
-          agentId,
-          userId,
-          entry: buildEntry({
-            sessionId,
-            latestPrompt: prompt,
-            operationName: resolvedOperationName,
-            operationPrompt: resolvedOperationPrompt,
-            source: resolvedSource,
-          }),
-        })
-      ),
+      request: await maybeGenerateAndSaveRequestTitle({
+        request: createdRequest,
+        agentId,
+        sessionId,
+        operation: resolvedOperation,
+      }),
       created: true,
     }
   }
@@ -215,12 +285,16 @@ export async function createOrUpdateRequestForPrompt({
     const nextPromptHistoryItem: AgentRequestPromptHistoryItem = {
       message: prompt,
       date: nowIso(),
-      operations: [
-        {
-          name: resolvedOperationName,
-          prompt: resolvedOperationPrompt,
-        },
-      ],
+      ...(resolvedOperation
+        ? {
+            operations: [
+              {
+                name: resolvedOperation.name,
+                prompt: resolvedOperation.prompt,
+              },
+            ],
+          }
+        : {}),
     }
     nextEntries[nextEntries.length - 1] = {
       ...latestEntry,
@@ -235,8 +309,7 @@ export async function createOrUpdateRequestForPrompt({
         sessionId,
         latestPrompt: prompt,
         source: resolvedSource,
-        operationName: resolvedOperationName,
-        operationPrompt: resolvedOperationPrompt,
+        operation: resolvedOperation,
       })
     )
   }
@@ -249,6 +322,49 @@ export async function createOrUpdateRequestForPrompt({
     }),
     created: false,
   }
+}
+
+export async function startRequestForPrompt(params: {
+  agentId: string
+  sessionId: string
+  latestUserPrompt: string
+  operation: {
+    name: string
+    prompt: string
+  }
+  source: string
+  userId: string
+}): Promise<{ request: AgentRequest; created: boolean } | undefined> {
+  return await createOrUpdateRequestForPrompt(params)
+}
+
+export async function continueRequestForPrompt({
+  agentId,
+  sessionId,
+  latestUserPrompt,
+  source,
+  userId,
+}: {
+  agentId: string
+  sessionId: string
+  latestUserPrompt: string
+  source: string
+  userId: string
+}): Promise<AgentRequest | undefined> {
+  const result = await createOrUpdateRequestForPrompt({
+    agentId,
+    sessionId,
+    latestUserPrompt,
+    operation: undefined,
+    source,
+    userId,
+  })
+
+  if (!result || result.created) {
+    return undefined
+  }
+
+  return result.request
 }
 
 export async function generateAndSaveRequestTitle({
@@ -265,14 +381,9 @@ export async function generateAndSaveRequestTitle({
     return request
   }
 
-  const title = await generateAgentRequestTitle({
+  return await maybeGenerateAndSaveRequestTitle({
     request,
     agentId,
     sessionId,
-  })
-
-  return await saveRequest({
-    ...request,
-    title,
   })
 }

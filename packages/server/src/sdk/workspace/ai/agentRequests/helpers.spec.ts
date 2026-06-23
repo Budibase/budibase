@@ -219,6 +219,11 @@ describe("generateAgentRequestTitle", () => {
         request,
         agentId: "agent_1",
         sessionId: "session_1",
+        operation: {
+          name: "Personalized Laptop Recommendation Search",
+          prompt:
+            "Help the user choose a suitable laptop based on their needs.",
+        },
       })
     ).resolves.toEqual("Laptop recommendation")
 
@@ -237,6 +242,11 @@ describe("generateAgentRequestTitle", () => {
           expect.objectContaining({
             role: "user",
             content: JSON.stringify({
+              operation: {
+                name: "Personalized Laptop Recommendation Search",
+                prompt:
+                  "Help the user choose a suitable laptop based on their needs.",
+              },
               latestPrompt: {
                 message: "I need a new laptop",
                 date: "2026-01-01T00:00:00.000Z",
