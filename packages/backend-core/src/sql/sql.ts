@@ -627,7 +627,33 @@ class InternalBuilder {
             subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
           }
 
-          if (isBareRelationshipFilter && operation === BasicOperator.EMPTY) {
+          if (
+            isBareRelationshipFilter &&
+            operation !== BasicOperator.EMPTY &&
+            operation !== BasicOperator.NOT_EMPTY
+          ) {
+            const throughAlias =
+              aliases?.[manyToMany.through] || relationship.through
+            let throughTable = this.tableNameWithSchema(manyToMany.through, {
+              alias: throughAlias,
+              schema,
+            })
+            const fromKey = `${throughAlias}.${manyToMany.from}`
+            const mainKey = `${fromAlias}.${manyToMany.fromPrimary}`
+            let subQuery = this.knex
+              .select(this.knex.raw(1))
+              .from(throughTable)
+              .where(fromKey, "=", this.rawQuotedIdentifier(mainKey))
+            if (this.client === SqlClient.SQL_LITE) {
+              subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
+            }
+            query = query.whereExists(
+              whereCb(`${throughAlias}.${manyToMany.to}`, subQuery)
+            )
+          } else if (
+            isBareRelationshipFilter &&
+            operation === BasicOperator.EMPTY
+          ) {
             query = query.whereNotExists(subQuery)
           } else if (
             isBareRelationshipFilter &&
@@ -660,7 +686,16 @@ class InternalBuilder {
             this.rawQuotedIdentifier(foreignKey)
           )
 
-          if (isBareRelationshipFilter && operation === BasicOperator.EMPTY) {
+          if (
+            isBareRelationshipFilter &&
+            operation !== BasicOperator.EMPTY &&
+            operation !== BasicOperator.NOT_EMPTY
+          ) {
+            query = whereCb(`${fromAlias}.${relationship.from}`, query)
+          } else if (
+            isBareRelationshipFilter &&
+            operation === BasicOperator.EMPTY
+          ) {
             query = query.whereNotExists(subQuery)
           } else if (
             isBareRelationshipFilter &&

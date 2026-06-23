@@ -328,4 +328,75 @@ describe("SQL filter parameterization", () => {
     expect(result.sql.toLowerCase()).toContain('"kind" is null')
     expect(result.bindings).toEqual(expect.arrayContaining(["a", "b"]))
   })
+
+  it("builds bare relationship equal filter without junction table directly on foreign key", () => {
+    const table = buildTable({
+      rel: {
+        name: "rel",
+        type: FieldType.LINK,
+        constraints: baseConstraints,
+        fieldName: "rel",
+        tableId: "relTableId",
+        relationshipType: RelationshipType.MANY_TO_ONE,
+      },
+    })
+    const query = buildQuery(table, {
+      equal: { rel: "temp-uuid-123" },
+    })
+    const relTable = buildTable({})
+    relTable.name = "relTable"
+    relTable._id = "relTableId"
+    query.tables = { ...query.tables, relTable }
+    query.relationships = [
+      {
+        tableName: "relTable",
+        column: "rel",
+        from: "rel",
+        to: "id",
+      },
+    ]
+
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql.toLowerCase()).toContain('"tbl"."rel" = $1')
+    expect(result.bindings).toEqual(["temp-uuid-123", 25])
+  })
+
+  it("builds bare relationship equal filter with junction table directly on junction table", () => {
+    const table = buildTable({
+      rel: {
+        name: "rel",
+        type: FieldType.LINK,
+        constraints: baseConstraints,
+        fieldName: "rel",
+        tableId: "relTableId",
+        relationshipType: RelationshipType.MANY_TO_MANY,
+      },
+    })
+    const query = buildQuery(table, {
+      equal: { rel: "temp-uuid-123" },
+    })
+    const relTable = buildTable({})
+    relTable.name = "relTable"
+    relTable._id = "relTableId"
+    query.tables = { ...query.tables, relTable }
+    query.relationships = [
+      {
+        tableName: "relTable",
+        column: "rel",
+        through: "tbl_relTable",
+        from: "tbl_id",
+        to: "relTable_id",
+        fromPrimary: "id",
+        toPrimary: "id",
+      },
+    ]
+
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql.toLowerCase()).toContain(
+      'exists (select 1 from "tbl_reltable" as "tbl_reltable" where "tbl_reltable"."tbl_id" = "tbl"."id" and (coalesce("tbl_reltable"."reltable_id" = $1, false)))'
+    )
+    expect(result.bindings).toEqual(["temp-uuid-123", 25])
+  })
 })
