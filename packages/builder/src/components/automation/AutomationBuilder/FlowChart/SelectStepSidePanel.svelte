@@ -825,15 +825,15 @@
     width: 100%;
   }
   .external-icon {
-    width: 17.5px;
-    height: 17.5px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--spectrum-global-color-gray-100);
     border: 0.5px solid var(--spectrum-global-color-gray-200);
     padding: 4px;
-    border-radius: 5px;
+    border-radius: 8px;
   }
   .item-label {
     font-size: 15px;

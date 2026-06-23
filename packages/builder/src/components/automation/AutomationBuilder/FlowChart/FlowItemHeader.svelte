@@ -135,19 +135,16 @@
   <div class="splitHeader">
     <div class="center-items">
       {#if restTemplate?.icon}
-        <img
-          alt={restTemplate.name}
-          width="22px"
-          height="22px"
-          src={restTemplate.icon}
-        />
+        <div class="external-icon">
+          <img alt={restTemplate.name} src={restTemplate.icon} />
+        </div>
       {:else if externalActions[block.stepId]}
-        <img
-          alt={externalActions[block.stepId].name}
-          width="22px"
-          height="22px"
-          src={externalActions[block.stepId].icon}
-        />
+        <div class="external-icon">
+          <img
+            alt={externalActions[block.stepId].name}
+            src={externalActions[block.stepId].icon}
+          />
+        </div>
       {:else}
         <Icon
           name={block.icon}
@@ -292,6 +289,25 @@
     display: flex;
     align-items: center;
   }
+  .external-icon {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+    background: var(--spectrum-global-color-gray-100);
+  }
+
+  .external-icon img {
+    width: 28px;
+    height: 28px;
+  }
+
   .splitHeader {
     display: flex;
     justify-content: space-between;
