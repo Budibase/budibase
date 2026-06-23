@@ -10,6 +10,9 @@ metadata:
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthcheck-path: '/health'
     alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds={{ .Values.awsAlbIngress.deregistrationDelay }}
+    {{- if .Values.awsAlbIngress.accessLogs.enabled }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: access_logs.s3.enabled=true,access_logs.s3.bucket={{ .Values.awsAlbIngress.accessLogs.bucket }},access_logs.s3.prefix={{ .Values.awsAlbIngress.accessLogs.prefix }}
+    {{- end }}
     {{- if .Values.awsAlbIngress.certificateArn }}
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
