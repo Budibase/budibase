@@ -1,6 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { clickOutside, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
+  import {
+    clickOutside,
+    Icon,
+    ActionMenu,
+    MenuItem,
+    Tooltip,
+  } from "@budibase/bbui"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
   import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
   import { applyBaseUrl } from "@budibase/shared-core"
@@ -9,6 +15,7 @@
   export let url: string = ""
   export let baseUrlOptions: { label: string; url: string }[] = []
   export let disabled: boolean = false
+  export let activeWarningMessage: string | undefined = undefined
 
   const verbOptions = Object.entries(QUERY_VERB_MAP).map(([value, label]) => ({
     value,
@@ -59,6 +66,11 @@
   <div class="divider"></div>
 
   <div class="url-section" class:has-globe={baseUrlOptions.length > 0}>
+    {#if activeWarningMessage}
+      <div class="protocol-warning-anchor">
+        <Tooltip textWrapping direction="top" text={activeWarningMessage} />
+      </div>
+    {/if}
     <input
       bind:this={urlInputEl}
       class="url-input"
@@ -135,6 +147,7 @@
     min-width: 0;
     container-type: inline-size;
     position: relative;
+    z-index: 2;
     transition: border-color 130ms ease-out;
   }
   .input-wrap:focus-within {
@@ -175,7 +188,7 @@
     flex: 1;
     min-width: 0;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     height: 100%;
   }
 
@@ -225,6 +238,16 @@
   }
   .url-section:focus-within .globe-icon::before {
     opacity: 0;
+  }
+
+  .protocol-warning-anchor {
+    position: absolute;
+    left: var(--spacing-m);
+    bottom: calc(100% - 12px);
+    z-index: 1000;
+  }
+  .protocol-warning-anchor :global(.spectrum-Tooltip-tip) {
+    left: var(--spacing-m);
   }
 
   .dropdown {
