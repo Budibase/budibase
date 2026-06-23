@@ -1,4 +1,4 @@
-import { context, docIds } from "@budibase/backend-core"
+import { context, docIds, Duration } from "@budibase/backend-core"
 import type {
   AgentRequest,
   AgentRequestEntry,
@@ -6,11 +6,10 @@ import type {
 } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
+import { queryRequestsByAgent } from "./views"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
-
-const nowIso = () => new Date().toISOString()
 
 const buildEntry = ({
   sessionId,
@@ -28,7 +27,7 @@ const buildEntry = ({
 }): AgentRequestEntry => {
   const promptHistoryItem: AgentRequestPromptHistoryItem = {
     message: latestPrompt,
-    date: nowIso(),
+    date: new Date().toISOString(),
     ...(operation
       ? {
           operations: [
@@ -208,8 +207,8 @@ export async function fetchRequests({
 export async function fetchRequestsByAgent(
   agentId: string
 ): Promise<AgentRequest[]> {
-  const requests = await fetchRequests({ limit: 1000, page: 1 })
-  return requests.filter(request => request.agentId === agentId)
+  const requests = await queryRequestsByAgent(agentId)
+  return sortRequests(requests)
 }
 
 export async function fetchRequestsByAgentAndUser(
@@ -217,7 +216,7 @@ export async function fetchRequestsByAgentAndUser(
   userId: string
 ): Promise<AgentRequest[]> {
   const requests = await fetchRequestsByAgent(agentId)
-  const cutoff = Date.now() - THREAD_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
+  const cutoff = Date.now() - THREAD_LOOKBACK_DAYS * Duration.fromDays(1).toMs()
   return requests
     .filter(request => request.userId === userId)
     .filter(
@@ -321,7 +320,7 @@ export async function createOrUpdateRequestForPrompt({
     const latestEntry = nextEntries[nextEntries.length - 1]
     const nextPromptHistoryItem: AgentRequestPromptHistoryItem = {
       message: prompt,
-      date: nowIso(),
+      date: new Date().toISOString(),
       ...(resolvedOperation
         ? {
             operations: [
