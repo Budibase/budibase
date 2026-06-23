@@ -32,6 +32,12 @@
     return getLatestEntry(request)
   })
   let requestActions = $derived(latestEntry ? latestEntry.promptHistory : [])
+  let latestPromptOperations = $derived(
+    latestEntry
+      ? latestEntry.promptHistory[latestEntry.promptHistory.length - 1]
+          ?.operations || []
+      : []
+  )
   let details = $derived([
     {
       label: "Agent",
@@ -42,7 +48,9 @@
     },
     {
       label: "Operation",
-      value: latestEntry?.operationName,
+      value:
+        latestPromptOperations.map(operation => operation.name).join(", ") ||
+        undefined,
       icon: "gear",
       highlight: false,
       underline: false,
@@ -141,7 +149,7 @@
                       <Icon name="lightning" size="S" color="#99c200" />
                     </span>
                     <div class="action-text">
-                      {index + 1}: {action}
+                      {index + 1}: {action.message}
                     </div>
                   </div>
                 {/each}

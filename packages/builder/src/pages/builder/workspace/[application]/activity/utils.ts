@@ -16,8 +16,8 @@ export const getRequestTitle = (request: AgentRequest) => {
   }
 
   return (
-    latestEntry.promptHistory[0] ||
-    latestEntry.promptHistory[latestEntry.promptHistory.length - 1] ||
+    latestEntry.promptHistory[0]?.message ||
+    latestEntry.promptHistory[latestEntry.promptHistory.length - 1]?.message ||
     "Untitled request"
   )
 }
@@ -28,18 +28,14 @@ export const getRequestTone = (_request: AgentRequest): ActivityStatusTone =>
 export const getRequestStatusLabel = (_request: AgentRequest) => "Completed"
 
 export const getRequestDisplayId = (request: AgentRequest) =>
-  request._id ||
-  request.requestId ||
-  `${request.agentId}-${request.latestSessionId}`
+  request._id || `${request.agentId}-${request.userId}`
 
 export const getRequestUpdatedAt = (request: AgentRequest) => {
   const latestEntry = getLatestEntry(request)
+  const latestPrompt =
+    latestEntry?.promptHistory[latestEntry.promptHistory.length - 1]
   return new Date(
-    request.latestPromptAt ||
-      latestEntry?.updatedAt ||
-      request.updatedAt ||
-      request.createdAt ||
-      0
+    latestPrompt?.date || request.updatedAt || request.createdAt || 0
   )
 }
 

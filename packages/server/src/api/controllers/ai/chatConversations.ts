@@ -425,8 +425,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       await sdk.ai.agentRequests.enqueueRequestTrackingStart({
         agentId,
         sessionId,
-        latestPrompt: run.latestQuestion,
-        operationName: run.selectedOperation.name,
+        latestUserPrompt: run.latestQuestion,
+        operation: {
+          name: run.selectedOperation.name,
+          prompt: run.selectedOperation.promptInstructions || "",
+        },
         userId,
       })
     }

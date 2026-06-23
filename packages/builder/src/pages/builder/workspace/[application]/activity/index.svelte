@@ -123,6 +123,10 @@
       const tone = getRequestTone(request)
       const updatedAt = getRequestUpdatedAt(request)
       const updatedTime = updatedAt.getTime()
+      const actionCount = request.entries.reduce(
+        (total, entry) => total + entry.promptHistory.length,
+        0
+      )
       const agentName =
         $agentsStore.agents.find(agent => agent._id === request.agentId)
           ?.name || "Unknown agent"
@@ -134,7 +138,7 @@
         triggeredBy: getTriggeredByLabel(request, userNames),
         statusLabel: requestStatusMeta[tone].label,
         statusTone: tone,
-        actionCount: request.interactionCount,
+        actionCount,
         updatedLabel:
           updatedTime > 0 ? dayjs(updatedAt).fromNow() : "Unknown time",
         actions: "",

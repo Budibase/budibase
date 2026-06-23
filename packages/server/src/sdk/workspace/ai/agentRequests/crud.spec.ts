@@ -33,17 +33,30 @@ describe("agentRequests crud", () => {
       const created = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
-        latestPrompt: "Show me the holidays company policy",
-        operationName: "Support",
+        latestUserPrompt: "Show me the holidays company policy",
+        operation: {
+          name: "Support",
+          prompt: "Help users with company policy questions.",
+        },
         source: "Chat",
         userId: "user_1",
       })
 
       expect(created?.request._id).toContain("agentrequest_")
       expect(created?.request.entries).toHaveLength(1)
-      expect(created?.request.sessionIds).toEqual(["session_1"])
-      expect(created?.request.entries[0].operationName).toEqual("Support")
       expect(created?.request.entries[0].source).toEqual("Chat")
+      expect(created?.request.entries[0].promptHistory).toEqual([
+        {
+          message: "Show me the holidays company policy",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "Support",
+              prompt: "Help users with company policy questions.",
+            },
+          ],
+        },
+      ])
       expect(created?.created).toEqual(true)
     })
   })
@@ -57,36 +70,58 @@ describe("agentRequests crud", () => {
       const first = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
-        latestPrompt: "Show me the holidays company policy",
-        operationName: "Support",
+        latestUserPrompt: "Show me the holidays company policy",
+        operation: {
+          name: "Support",
+          prompt: "Help users with company policy questions.",
+        },
         source: "Chat",
         userId: "user_1",
       })
 
       analyzeAgentRequestLinkMock.mockResolvedValueOnce({
         decision: "existing_thread",
-        requestId: first!.request.requestId,
+        requestId: first!.request._id,
         entryAction: "append_latest_entry",
       })
 
       const second = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_2",
-        latestPrompt: "summarise it in 50 words",
-        operationName: "Support",
+        latestUserPrompt: "summarise it in 50 words",
+        operation: {
+          name: "Support",
+          prompt: "Summarise company policies clearly.",
+        },
         source: "Slack",
         userId: "user_1",
       })
 
-      expect(second?.request.requestId).toEqual(first?.request.requestId)
+      expect(second?.request._id).toEqual(first?.request._id)
       expect(second?.request.entries).toHaveLength(1)
       expect(second?.request.entries[0].promptHistory).toEqual([
-        "Show me the holidays company policy",
-        "summarise it in 50 words",
+        {
+          message: "Show me the holidays company policy",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "Support",
+              prompt: "Help users with company policy questions.",
+            },
+          ],
+        },
+        {
+          message: "summarise it in 50 words",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "Support",
+              prompt: "Summarise company policies clearly.",
+            },
+          ],
+        },
       ])
-      expect(second?.request.entries[0].operationName).toEqual("Support")
       expect(second?.request.entries[0].source).toEqual("Slack")
-      expect(second?.request.sessionIds).toEqual(["session_1", "session_2"])
       expect(second?.created).toEqual(false)
     })
   })
@@ -99,31 +134,47 @@ describe("agentRequests crud", () => {
       const first = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
-        latestPrompt: "Show me the holidays company policy",
-        operationName: "Support",
+        latestUserPrompt: "Show me the holidays company policy",
+        operation: {
+          name: "Support",
+          prompt: "Help users with company policy questions.",
+        },
         source: "Chat",
         userId: "user_1",
       })
 
       analyzeAgentRequestLinkMock.mockResolvedValueOnce({
         decision: "existing_thread",
-        requestId: first!.request.requestId,
+        requestId: first!.request._id,
         entryAction: "create_new_entry",
       })
       const second = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_2",
-        latestPrompt: "turn it into an email",
-        operationName: "Comms",
+        latestUserPrompt: "turn it into an email",
+        operation: {
+          name: "Comms",
+          prompt: "Turn requested information into a polished email.",
+        },
         source: "Slack",
         userId: "user_1",
       })
 
-      expect(second?.request.requestId).toEqual(first?.request.requestId)
+      expect(second?.request._id).toEqual(first?.request._id)
       expect(second?.request.entries).toHaveLength(2)
-      expect(second?.request.requestCount).toEqual(2)
-      expect(second?.request.entries[1].operationName).toEqual("Comms")
       expect(second?.request.entries[1].source).toEqual("Slack")
+      expect(second?.request.entries[1].promptHistory).toEqual([
+        {
+          message: "turn it into an email",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "Comms",
+              prompt: "Turn requested information into a polished email.",
+            },
+          ],
+        },
+      ])
     })
   })
 
@@ -135,18 +186,30 @@ describe("agentRequests crud", () => {
       const created = await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
-        latestPrompt: "Show me the holidays company policy",
-        operationName: "Support",
+        latestUserPrompt: "Show me the holidays company policy",
+        operation: {
+          name: "Support",
+          prompt: "Help users with company policy questions.",
+        },
         source: "Chat",
         userId: "user_1",
       })
 
-      const thread = await fetchThread(created!.request.requestId)
+      const thread = await fetchThread(created!.request._id!)
 
-      expect(thread?.requestId).toEqual(created?.request.requestId)
+      expect(thread?._id).toEqual(created?.request._id)
       expect(thread?.entries).toHaveLength(1)
       expect(thread?.entries[0].promptHistory).toEqual([
-        "Show me the holidays company policy",
+        {
+          message: "Show me the holidays company policy",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "Support",
+              prompt: "Help users with company policy questions.",
+            },
+          ],
+        },
       ])
     })
   })
@@ -159,8 +222,11 @@ describe("agentRequests crud", () => {
       await createOrUpdateRequestForPrompt({
         agentId: "agent_1",
         sessionId: "session_1",
-        latestPrompt: "Prod request",
-        operationName: "Support",
+        latestUserPrompt: "Prod request",
+        operation: {
+          name: "Support",
+          prompt: "Help users with company policy questions.",
+        },
         source: "Chat",
         userId: "user_1",
       })
@@ -169,7 +235,18 @@ describe("agentRequests crud", () => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       const requests = await fetchRequestsByAgent("agent_1")
       expect(requests).toHaveLength(1)
-      expect(requests[0].entries[0].promptHistory).toEqual(["Prod request"])
+      expect(requests[0].entries[0].promptHistory).toEqual([
+        {
+          message: "Prod request",
+          date: expect.any(String),
+          operations: [
+            {
+              name: "Support",
+              prompt: "Help users with company policy questions.",
+            },
+          ],
+        },
+      ])
     })
   })
 })

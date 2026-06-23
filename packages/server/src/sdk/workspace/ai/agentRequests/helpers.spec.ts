@@ -1,7 +1,7 @@
 import { generateText } from "ai"
 import type { Agent, AgentRequest, LLMResponse } from "@budibase/types"
 import sdk from "../../.."
-import { analyzeAgentRequestLink } from "./helpers"
+import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
 
 jest.mock("ai", () => ({
   generateText: jest.fn(),
@@ -20,31 +20,28 @@ jest.mock("../../..", () => ({
 
 const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
   _id: "agentrequest_thread_1",
-  requestId: "agentrequest_thread_1",
   agentId: "agent_1",
   userId: "user_1",
-  sessionIds: ["session_1"],
   entries: [
     {
-      entryId: "entry_1",
       sessionId: "session_1",
-      operationName: "Support",
       source: "Chat",
-      promptHistory: ["Show me the holidays company policy"],
-      interactionCount: 1,
+      promptHistory: [
+        {
+          message: "Show me the holidays company policy",
+          date: "2026-01-01T00:00:00.000Z",
+          operations: [
+            {
+              name: "Support",
+              prompt: "Help users with company policy questions.",
+            },
+          ],
+        },
+      ],
       status: "completed",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
     },
   ],
   status: "completed",
-  requestCount: 1,
-  interactionCount: 1,
-  createdAt: "2026-01-01T00:00:00.000Z",
-  updatedAt: "2026-01-01T00:00:00.000Z",
-  latestPromptAt: "2026-01-01T00:00:00.000Z",
-  latestCompletedAt: "2026-01-01T00:00:00.000Z",
-  latestSessionId: "session_1",
   ...overrides,
 })
 
@@ -175,5 +172,99 @@ describe("analyzeAgentRequestLink", () => {
         sessionId: "session_2",
       })
     ).rejects.toThrow("Invalid agent request link response")
+  })
+})
+
+describe("generateAgentRequestTitle", () => {
+  const generateTextMock = jest.mocked(generateText)
+  const getOrThrowMock = jest.mocked(sdk.ai.agents.getOrThrow)
+  const createLLMMock = jest.mocked(sdk.ai.llm.createLLM)
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    getOrThrowMock.mockResolvedValue(buildAgent())
+    createLLMMock.mockResolvedValue(buildLLMResponse())
+  })
+
+  it("uses the operation as context while grounding the title in the user prompt", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult("Laptop recommendation")
+    )
+
+    const request = buildThread({
+      entries: [
+        {
+          sessionId: "session_1",
+          source: "Chat",
+          promptHistory: [
+            {
+              message: "I need a new laptop",
+              date: "2026-01-01T00:00:00.000Z",
+              operations: [
+                {
+                  name: "Personalized Laptop Recommendation Search",
+                  prompt:
+                    "Help the user choose a suitable laptop based on their needs.",
+                },
+              ],
+            },
+          ],
+          status: "completed",
+        },
+      ],
+    })
+
+    await expect(
+      generateAgentRequestTitle({
+        request,
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual("Laptop recommendation")
+
+    expect(generateTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: {
+          "x-litellm-tags": "bb-agent-request-title",
+        },
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: "system",
+            content: expect.stringContaining(
+              "Base it primarily on the user's actual ask"
+            ),
+          }),
+          expect.objectContaining({
+            role: "user",
+            content: JSON.stringify({
+              latestPrompt: {
+                message: "I need a new laptop",
+                date: "2026-01-01T00:00:00.000Z",
+                operations: [
+                  {
+                    name: "Personalized Laptop Recommendation Search",
+                    prompt:
+                      "Help the user choose a suitable laptop based on their needs.",
+                  },
+                ],
+              },
+              promptHistory: [
+                {
+                  message: "I need a new laptop",
+                  date: "2026-01-01T00:00:00.000Z",
+                  operations: [
+                    {
+                      name: "Personalized Laptop Recommendation Search",
+                      prompt:
+                        "Help the user choose a suitable laptop based on their needs.",
+                    },
+                  ],
+                },
+              ],
+            }),
+          }),
+        ]),
+      })
+    )
   })
 })

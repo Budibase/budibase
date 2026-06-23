@@ -1,5 +1,9 @@
 import { context, docIds } from "@budibase/backend-core"
-import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
+import type {
+  AgentRequest,
+  AgentRequestEntry,
+  AgentRequestPromptHistoryItem,
+} from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
 
@@ -12,66 +16,66 @@ const buildEntry = ({
   sessionId,
   latestPrompt,
   operationName,
+  operationPrompt,
   source,
 }: {
   sessionId: string
   latestPrompt: string
   operationName: string
+  operationPrompt: string
   source: string
 }): AgentRequestEntry => {
-  const now = nowIso()
+  const promptHistoryItem: AgentRequestPromptHistoryItem = {
+    message: latestPrompt,
+    date: nowIso(),
+    operations: [
+      {
+        name: operationName,
+        prompt: operationPrompt,
+      },
+    ],
+  }
+
   return {
-    entryId: docIds.generateAgentRequestID().split("_").slice(1).join("_"),
     sessionId,
-    operationName,
     source,
-    promptHistory: [latestPrompt],
-    interactionCount: 1,
+    promptHistory: [promptHistoryItem],
     status: "completed",
-    createdAt: now,
-    updatedAt: now,
   }
 }
 
 const buildThread = ({
   agentId,
-  sessionId,
   userId,
   entry,
 }: {
   agentId: string
-  sessionId: string
   userId: string
   entry: AgentRequestEntry
 }): AgentRequest => {
-  const requestId = docIds.generateAgentRequestID()
   return {
-    _id: requestId,
-    requestId,
+    _id: docIds.generateAgentRequestID(),
     title: undefined,
     agentId,
     userId,
-    sessionIds: [sessionId],
     entries: [entry],
     status: entry.status,
-    requestCount: 1,
-    interactionCount: entry.interactionCount,
-    createdAt: entry.createdAt,
-    updatedAt: entry.updatedAt,
-    latestPromptAt: entry.updatedAt,
-    latestCompletedAt: undefined,
-    latestSessionId: sessionId,
   }
+}
+
+const getLatestPromptHistoryItem = (request: AgentRequest) => {
+  const latestEntry = request.entries[request.entries.length - 1]
+  if (!latestEntry) {
+    return undefined
+  }
+
+  return latestEntry.promptHistory[latestEntry.promptHistory.length - 1]
 }
 
 const sortRequests = (requests: AgentRequest[]) =>
   requests.sort((a, b) => {
-    const aTime = new Date(
-      a.latestPromptAt || a.updatedAt || a.createdAt || 0
-    ).getTime()
-    const bTime = new Date(
-      b.latestPromptAt || b.updatedAt || b.createdAt || 0
-    ).getTime()
+    const aTime = new Date(getLatestPromptHistoryItem(a)?.date || 0).getTime()
+    const bTime = new Date(getLatestPromptHistoryItem(b)?.date || 0).getTime()
     return bTime - aTime
   })
 
@@ -121,7 +125,7 @@ export async function fetchRequestsByAgentAndUser(
     .filter(request => request.userId === userId)
     .filter(
       request =>
-        new Date(request.latestPromptAt || request.updatedAt || 0).getTime() >=
+        new Date(getLatestPromptHistoryItem(request)?.date || 0).getTime() >=
         cutoff
     )
     .slice(0, THREAD_CANDIDATE_LIMIT)
@@ -130,20 +134,24 @@ export async function fetchRequestsByAgentAndUser(
 export async function createOrUpdateRequestForPrompt({
   agentId,
   sessionId,
-  latestPrompt,
-  operationName,
+  latestUserPrompt,
+  operation,
   source,
   userId,
 }: {
   agentId: string
   sessionId: string
-  latestPrompt: string
-  operationName: string
+  latestUserPrompt: string
+  operation: {
+    name: string
+    prompt: string
+  }
   source: string
   userId: string
 }): Promise<{ request: AgentRequest; created: boolean } | undefined> {
-  const prompt = latestPrompt.trim()
-  const resolvedOperationName = operationName?.trim()
+  const prompt = latestUserPrompt.trim()
+  const resolvedOperationName = operation.name.trim()
+  const resolvedOperationPrompt = operation.prompt.trim()
   const resolvedSource = source?.trim()
   if (!prompt || !resolvedOperationName || !resolvedSource) {
     return undefined
@@ -162,12 +170,12 @@ export async function createOrUpdateRequestForPrompt({
       request: await saveRequest(
         buildThread({
           agentId,
-          sessionId,
           userId,
           entry: buildEntry({
             sessionId,
             latestPrompt: prompt,
             operationName: resolvedOperationName,
+            operationPrompt: resolvedOperationPrompt,
             source: resolvedSource,
           }),
         })
@@ -177,19 +185,19 @@ export async function createOrUpdateRequestForPrompt({
   }
 
   const request = candidateRequests.find(
-    candidate => candidate.requestId === linkDecision.requestId
+    candidate => candidate._id === linkDecision.requestId
   )
   if (!request) {
     return {
       request: await saveRequest(
         buildThread({
           agentId,
-          sessionId,
           userId,
           entry: buildEntry({
             sessionId,
             latestPrompt: prompt,
             operationName: resolvedOperationName,
+            operationPrompt: resolvedOperationPrompt,
             source: resolvedSource,
           }),
         })
@@ -198,53 +206,46 @@ export async function createOrUpdateRequestForPrompt({
     }
   }
 
-  const now = nowIso()
-  const nextSessionIds = request.sessionIds.includes(sessionId)
-    ? request.sessionIds
-    : [...request.sessionIds, sessionId]
-
   let nextEntries = [...request.entries]
   if (
     linkDecision.entryAction === "append_latest_entry" &&
     nextEntries.length > 0
   ) {
     const latestEntry = nextEntries[nextEntries.length - 1]
+    const nextPromptHistoryItem: AgentRequestPromptHistoryItem = {
+      message: prompt,
+      date: nowIso(),
+      operations: [
+        {
+          name: resolvedOperationName,
+          prompt: resolvedOperationPrompt,
+        },
+      ],
+    }
     nextEntries[nextEntries.length - 1] = {
       ...latestEntry,
       sessionId,
-      operationName: resolvedOperationName,
       source: resolvedSource,
-      promptHistory: [...latestEntry.promptHistory, prompt],
-      interactionCount: latestEntry.interactionCount + 1,
+      promptHistory: [...latestEntry.promptHistory, nextPromptHistoryItem],
       status: "completed",
-      updatedAt: now,
     }
   } else {
     nextEntries.push(
       buildEntry({
         sessionId,
         latestPrompt: prompt,
-        operationName: resolvedOperationName,
         source: resolvedSource,
+        operationName: resolvedOperationName,
+        operationPrompt: resolvedOperationPrompt,
       })
     )
   }
 
-  const latestEntry = nextEntries[nextEntries.length - 1]
   return {
     request: await saveRequest({
       ...request,
-      sessionIds: nextSessionIds,
       entries: nextEntries,
-      status: latestEntry.status,
-      requestCount: nextEntries.length,
-      interactionCount: nextEntries.reduce(
-        (total, entry) => total + entry.interactionCount,
-        0
-      ),
-      updatedAt: now,
-      latestPromptAt: latestEntry.updatedAt,
-      latestSessionId: sessionId,
+      status: "completed",
     }),
     created: false,
   }
@@ -273,6 +274,5 @@ export async function generateAndSaveRequestTitle({
   return await saveRequest({
     ...request,
     title,
-    updatedAt: nowIso(),
   })
 }

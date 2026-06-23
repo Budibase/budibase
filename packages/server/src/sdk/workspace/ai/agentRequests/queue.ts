@@ -12,8 +12,11 @@ type AgentRequestTrackingJob =
       type: "start"
       agentId: string
       sessionId: string
-      latestPrompt: string
-      operationName: string
+      latestUserPrompt: string
+      operation: {
+        name: string
+        prompt: string
+      }
       source: string
       userId: string
     }
@@ -85,7 +88,7 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
               type: "title",
               agentId: data.agentId,
               sessionId: data.sessionId,
-              requestId: result.request.requestId,
+              requestId: result.request._id!,
             })
           }
           return
@@ -111,14 +114,17 @@ async function enqueue(job: AgentRequestTrackingJob) {
 export async function enqueueRequestTrackingStart({
   agentId,
   sessionId,
-  latestPrompt,
-  operationName,
+  latestUserPrompt,
+  operation,
   userId,
 }: {
   agentId: string
   sessionId: string
-  latestPrompt: string
-  operationName: string
+  latestUserPrompt: string
+  operation: {
+    name: string
+    prompt: string
+  }
   userId: string
 }) {
   if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
@@ -134,8 +140,8 @@ export async function enqueueRequestTrackingStart({
     type: "start",
     agentId,
     sessionId,
-    latestPrompt,
-    operationName,
+    latestUserPrompt,
+    operation,
     source: determineTrigger(sessionId),
     userId,
   })

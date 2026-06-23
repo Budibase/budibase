@@ -50,20 +50,13 @@ const extractJson = (value: string): AgentRequestLinkDecision | undefined => {
 }
 
 const buildCandidateSummary = (request: AgentRequest) => ({
-  requestId: request.requestId,
-  sessionIds: request.sessionIds,
-  latestSessionId: request.latestSessionId,
-  latestPromptAt: request.latestPromptAt,
-  latestCompletedAt: request.latestCompletedAt,
+  requestId: request._id,
   status: request.status,
   recentEntries: request.entries.slice(-3).map(entry => ({
-    entryId: entry.entryId,
     sessionId: entry.sessionId,
     promptHistory: entry.promptHistory,
-    interactionCount: entry.interactionCount,
     status: entry.status,
-    createdAt: entry.createdAt,
-    updatedAt: entry.updatedAt,
+    source: entry.source,
   })),
 })
 
@@ -138,7 +131,7 @@ export async function analyzeAgentRequestLink({
 
   if (
     decision.decision === "existing_thread" &&
-    !candidateRequests.some(request => request.requestId === decision.requestId)
+    !candidateRequests.some(request => request._id === decision.requestId)
   ) {
     throw new Error(
       `Invalid agent request link response: unknown requestId "${decision.requestId}"`
@@ -183,14 +176,15 @@ export async function generateAgentRequestTitle({
       {
         role: "system",
         content:
-          "Write a short UI title for a user request. Return plain text only. Use 3 to 8 words, no quotes, no punctuation unless necessary.",
+          "Write a short UI title for a tracked user request. Base it primarily on the user's actual ask, and use the selected operation only as supporting context. Do not invent internal workflow names, implementation details, or analysis phrasing. Prefer concrete user-facing nouns like the requested item, task, or deliverable. Return plain text only. Use 3 to 8 words, no quotes, no punctuation unless necessary.",
       },
-      {
-        role: "user",
-        content: JSON.stringify({
-          promptHistory: latestEntry.promptHistory,
-        }),
-      },
+        {
+          role: "user",
+          content: JSON.stringify({
+            latestPrompt: latestEntry.promptHistory[latestEntry.promptHistory.length - 1],
+            promptHistory: latestEntry.promptHistory,
+          }),
+        },
     ],
   })
 
