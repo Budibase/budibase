@@ -1,5 +1,14 @@
-// @vitest-environment jsdom
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
+
+vi.mock("@budibase/bbui", () => {
+  return {
+    Helpers: {
+      cloneDeep: (x: any) => JSON.parse(JSON.stringify(x)),
+      uuid: () => "mock-uuid",
+    },
+  }
+})
+
 import CustomFetch from "./CustomFetch"
 import { CustomDatasource } from "@budibase/types"
 

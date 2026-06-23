@@ -17,6 +17,14 @@ export default defineConfig(() => {
           find: "@budibase/shared-core",
           replacement: path.resolve("../shared-core/src"),
         },
+        {
+          find: "@budibase/bbui",
+          replacement: path.resolve("../bbui/src"),
+        },
+        {
+          find: "@budibase/string-templates",
+          replacement: path.resolve("../string-templates/src"),
+        },
       ],
     },
   }
