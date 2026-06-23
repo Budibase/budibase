@@ -5,6 +5,7 @@
     type APIRequestStepInputs,
     type AutomationStep,
     type EnrichedBinding,
+    type RestTemplateId,
   } from "@budibase/types"
   import PropField from "../PropField.svelte"
   import { type AutomationContext } from "@/stores/builder/automations"
@@ -65,8 +66,9 @@
   $: fieldKey = "query"
   $: restTemplateId = inputData?.restTemplateId
   $: restTemplate = restTemplateId
-    ? restTemplates.flatTemplates.find(t => t.id === restTemplateId)
+    ? restTemplates.get(restTemplateId)
     : undefined
+  $: connectionTemplateId = restTemplate?.id || restTemplateId
   $: {
     value = getInputValue(inputData, fieldKey)
   }
@@ -85,8 +87,10 @@
   $: query = $queries.list.find(query => query._id === value?.queryId)
 
   $: hasTemplateConnection =
-    !!restTemplateId &&
-    !!restSources?.some(ds => datasourceMatchesRestTemplate(ds, restTemplateId))
+    !!connectionTemplateId &&
+    !!restSources?.some(ds =>
+      datasourceMatchesRestTemplate(ds, connectionTemplateId)
+    )
   $: showConnectToTemplate = !!restTemplateId && !hasTemplateConnection
 
   // QUERY DETAILS
@@ -154,14 +158,19 @@
     modal.show()
   }
 
+  const getConnectionTemplateId = (templateId: RestTemplateId) => {
+    return restTemplates.get(templateId)?.id || templateId
+  }
+
   const handleAddTemplateApi = async (blockId: string) => {
     const templateId =
       automationStore.actions.consumeApiRequestTemplate(blockId)
     if (!templateId) {
       return
     }
+    const connectionTemplateId = getConnectionTemplateId(templateId)
     const hasExistingQuery = restSources?.some(ds => {
-      if (!datasourceMatchesRestTemplate(ds, templateId)) {
+      if (!datasourceMatchesRestTemplate(ds, connectionTemplateId)) {
         return false
       }
       return $queries.list.some(query => query.datasourceId === ds._id)
@@ -257,7 +266,7 @@
     {#if !showConnectToTemplate}
       <QuerySelect
         value={value?.queryId}
-        {restTemplateId}
+        restTemplateId={connectionTemplateId}
         fullWidthDropdown
         onchange={q => defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
         onaddApi={handleAddApi}
