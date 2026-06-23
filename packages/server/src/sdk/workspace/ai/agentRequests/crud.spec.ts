@@ -44,11 +44,12 @@ describe("agentRequests crud", () => {
 
       expect(created?.request._id).toContain("agentrequest_")
       expect(created?.request.entries).toHaveLength(1)
-      expect(created?.request.entries[0].source).toEqual("Chat")
       expect(created?.request.entries[0].promptHistory).toEqual([
         {
           message: "Show me the holidays company policy",
           date: expect.any(String),
+          sessionId: "session_1",
+          source: "Chat",
           operations: [
             {
               name: "Support",
@@ -103,6 +104,8 @@ describe("agentRequests crud", () => {
         {
           message: "Show me the holidays company policy",
           date: expect.any(String),
+          sessionId: "session_1",
+          source: "Chat",
           operations: [
             {
               name: "Support",
@@ -113,6 +116,8 @@ describe("agentRequests crud", () => {
         {
           message: "summarise it in 50 words",
           date: expect.any(String),
+          sessionId: "session_2",
+          source: "Slack",
           operations: [
             {
               name: "Support",
@@ -121,7 +126,6 @@ describe("agentRequests crud", () => {
           ],
         },
       ])
-      expect(second?.request.entries[0].source).toEqual("Slack")
       expect(second?.created).toEqual(false)
     })
   })
@@ -162,11 +166,12 @@ describe("agentRequests crud", () => {
 
       expect(second?.request._id).toEqual(first?.request._id)
       expect(second?.request.entries).toHaveLength(2)
-      expect(second?.request.entries[1].source).toEqual("Slack")
       expect(second?.request.entries[1].promptHistory).toEqual([
         {
           message: "turn it into an email",
           date: expect.any(String),
+          sessionId: "session_2",
+          source: "Slack",
           operations: [
             {
               name: "Comms",
@@ -203,6 +208,8 @@ describe("agentRequests crud", () => {
         {
           message: "Show me the holidays company policy",
           date: expect.any(String),
+          sessionId: "session_1",
+          source: "Chat",
           operations: [
             {
               name: "Support",
@@ -239,6 +246,8 @@ describe("agentRequests crud", () => {
         {
           message: "Prod request",
           date: expect.any(String),
+          sessionId: "session_1",
+          source: "Chat",
           operations: [
             {
               name: "Support",
@@ -288,6 +297,8 @@ describe("agentRequests crud", () => {
         {
           message: "I need a new laptop",
           date: expect.any(String),
+          sessionId: "session_1",
+          source: "Chat",
           operations: [
             {
               name: "IT support",
@@ -298,6 +309,8 @@ describe("agentRequests crud", () => {
         {
           message: "Is there any ETA?",
           date: expect.any(String),
+          sessionId: "session_1",
+          source: "Chat",
         },
       ])
     })

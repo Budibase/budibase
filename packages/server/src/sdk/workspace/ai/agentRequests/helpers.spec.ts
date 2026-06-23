@@ -24,12 +24,12 @@ const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
   userId: "user_1",
   entries: [
     {
-      sessionId: "session_1",
-      source: "Chat",
       promptHistory: [
         {
           message: "Show me the holidays company policy",
           date: "2026-01-01T00:00:00.000Z",
+          sessionId: "session_1",
+          source: "Chat",
           operations: [
             {
               name: "Support",
@@ -153,11 +153,12 @@ describe("analyzeAgentRequestLink", () => {
                   status: "completed",
                   recentEntries: [
                     {
-                      sessionId: "session_1",
                       promptHistory: [
                         {
                           message: "Show me the holidays company policy",
                           date: "2026-01-01T00:00:00.000Z",
+                          sessionId: "session_1",
+                          source: "Chat",
                           operations: [
                             {
                               name: "Support",
@@ -168,7 +169,6 @@ describe("analyzeAgentRequestLink", () => {
                         },
                       ],
                       status: "completed",
-                      source: "Chat",
                     },
                   ],
                 },
@@ -249,12 +249,12 @@ describe("generateAgentRequestTitle", () => {
     const request = buildThread({
       entries: [
         {
-          sessionId: "session_1",
-          source: "Chat",
           promptHistory: [
             {
               message: "I need a new laptop",
               date: "2026-01-01T00:00:00.000Z",
+              sessionId: "session_1",
+              source: "Chat",
               operations: [
                 {
                   name: "Personalized Laptop Recommendation Search",
@@ -305,6 +305,8 @@ describe("generateAgentRequestTitle", () => {
               latestPrompt: {
                 message: "I need a new laptop",
                 date: "2026-01-01T00:00:00.000Z",
+                sessionId: "session_1",
+                source: "Chat",
                 operations: [
                   {
                     name: "Personalized Laptop Recommendation Search",
@@ -317,6 +319,8 @@ describe("generateAgentRequestTitle", () => {
                 {
                   message: "I need a new laptop",
                   date: "2026-01-01T00:00:00.000Z",
+                  sessionId: "session_1",
+                  source: "Chat",
                   operations: [
                     {
                       name: "Personalized Laptop Recommendation Search",

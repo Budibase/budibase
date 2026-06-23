@@ -58,10 +58,8 @@ const buildCandidateSummary = (request: AgentRequest) => ({
   requestId: request._id,
   status: request.status,
   recentEntries: request.entries.slice(-3).map(entry => ({
-    sessionId: entry.sessionId,
     promptHistory: entry.promptHistory,
     status: entry.status,
-    source: entry.source,
   })),
 })
 

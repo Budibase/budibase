@@ -10,12 +10,12 @@ interface AgentRequestPromptOperation {
 export interface AgentRequestPromptHistoryItem {
   message: string
   date: string
+  sessionId: string
+  source: string
   operations?: AgentRequestPromptOperation[]
 }
 
 export interface AgentRequestEntry {
-  sessionId: string
-  source: string
   promptHistory: AgentRequestPromptHistoryItem[]
   status: AgentRequestStatus
 }

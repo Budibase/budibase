@@ -28,6 +28,8 @@ const buildEntry = ({
   const promptHistoryItem: AgentRequestPromptHistoryItem = {
     message: latestPrompt,
     date: new Date().toISOString(),
+    sessionId,
+    source,
     ...(operation
       ? {
           operations: [
@@ -41,8 +43,6 @@ const buildEntry = ({
   }
 
   return {
-    sessionId,
-    source,
     promptHistory: [promptHistoryItem],
     status: "completed",
   }
@@ -321,6 +321,8 @@ export async function createOrUpdateRequestForPrompt({
     const nextPromptHistoryItem: AgentRequestPromptHistoryItem = {
       message: prompt,
       date: new Date().toISOString(),
+      sessionId,
+      source: resolvedSource,
       ...(resolvedOperation
         ? {
             operations: [
@@ -334,8 +336,6 @@ export async function createOrUpdateRequestForPrompt({
     }
     nextEntries[nextEntries.length - 1] = {
       ...latestEntry,
-      sessionId,
-      source: resolvedSource,
       promptHistory: [...latestEntry.promptHistory, nextPromptHistoryItem],
       status: "completed",
     }

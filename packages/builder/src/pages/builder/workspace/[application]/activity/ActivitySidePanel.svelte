@@ -31,6 +31,11 @@
     return request.entries[request.entries.length - 1]
   })
   let requestActions = $derived(latestEntry ? latestEntry.promptHistory : [])
+  let latestPrompt = $derived(
+    latestEntry
+      ? latestEntry.promptHistory[latestEntry.promptHistory.length - 1]
+      : undefined
+  )
   let requestOperations = $derived.by(() => {
     if (!latestEntry) {
       return []
@@ -75,7 +80,7 @@
     },
     {
       label: "Source",
-      value: latestEntry?.source,
+      value: latestPrompt?.source,
       icon: "circle",
       highlight: false,
       underline: false,
