@@ -32,12 +32,25 @@
     return getLatestEntry(request)
   })
   let requestActions = $derived(latestEntry ? latestEntry.promptHistory : [])
-  let latestPromptOperations = $derived(
-    latestEntry
-      ? latestEntry.promptHistory[latestEntry.promptHistory.length - 1]
-          ?.operations || []
-      : []
-  )
+  let requestOperations = $derived.by(() => {
+    if (!latestEntry) {
+      return []
+    }
+
+    const operations = latestEntry.promptHistory.flatMap(
+      prompt => prompt.operations || []
+    )
+    const seen = new Set<string>()
+
+    return operations.filter(operation => {
+      const key = `${operation.name}::${operation.prompt || ""}`
+      if (seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+  })
   let details = $derived([
     {
       label: "Agent",
@@ -48,9 +61,7 @@
     },
     {
       label: "Operation",
-      value:
-        latestPromptOperations.map(operation => operation.name).join(", ") ||
-        undefined,
+      value: requestOperations.map(operation => operation.name).join(", ") || "",
       icon: "gear",
       highlight: false,
       underline: false,
