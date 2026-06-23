@@ -655,6 +655,27 @@ describe("API Endpoint Viewer", () => {
       expect(settingsSpy).not.toHaveBeenCalled()
     })
 
+    it("opens the add connection settings when requested for a connector draft with no saved connection", async () => {
+      const settingsSpy = vi.spyOn(bb, "settings")
+      mockRestTemplates({
+        bamboohr: { id: "bamboohr", name: "BambooHR", icon: "bamboohr.svg" },
+      })
+
+      workspaceConnections.startDraft("bamboohr")
+      setupDOM({
+        saveAndClose: true,
+        settingsLocked: true,
+        openAddConnectionOnMount: true,
+      })
+
+      await waitFor(() => {
+        expect(settingsSpy).toHaveBeenCalledWith(
+          "/connections/apis/new/bamboohr",
+          { locked: "subtree" }
+        )
+      })
+    })
+
     it("saves with authConfigId set when connection is changed on a new query", async () => {
       await setupDatasources(REST_DS_WITH_AUTH)
       vi.mocked(API).saveQuery.mockResolvedValue({

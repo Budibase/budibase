@@ -102,6 +102,7 @@
   export let settingsLocked: boolean = false
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
+  export let openAddConnectionOnMount: boolean = false
 
   $beforeUrlChange
   $: goto = $gotoStore
@@ -972,7 +973,20 @@
     if (!$environment.loaded) {
       environment.loadVariables()
     }
-    if (connectorRestTemplateId && !datasourceId && !selectedDatasourceId) {
+    if (
+      openAddConnectionOnMount &&
+      connectorRestTemplateId &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
+      openConnectionMenuTimer = setTimeout(() => {
+        connectionSelectRef?.addConnection(connectorRestTemplateId)
+      }, 200)
+    } else if (
+      connectorRestTemplateId &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
       openConnectionMenuTimer = setTimeout(() => {
         connectionSelectRef?.open()
       }, 200)

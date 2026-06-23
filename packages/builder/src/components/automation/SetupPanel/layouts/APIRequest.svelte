@@ -39,6 +39,7 @@
     datasourceMatchesRestTemplate,
     workspaceConnections,
   } from "@/stores/builder/workspaceConnection"
+  import { restTemplates } from "@/stores/builder/restTemplates"
   import { tick } from "svelte"
 
   export let bindings: EnrichedBinding[] | undefined = undefined
@@ -63,6 +64,9 @@
     | undefined
   $: fieldKey = "query"
   $: restTemplateId = inputData?.restTemplateId
+  $: restTemplate = restTemplateId
+    ? restTemplates.flatTemplates.find(t => t.id === restTemplateId)
+    : undefined
   $: {
     value = getInputValue(inputData, fieldKey)
   }
@@ -79,6 +83,11 @@
 
   // The configured query
   $: query = $queries.list.find(query => query._id === value?.queryId)
+
+  $: hasTemplateConnection =
+    !!restTemplateId &&
+    !!restSources?.some(ds => datasourceMatchesRestTemplate(ds, restTemplateId))
+  $: showConnectToTemplate = !!restTemplateId && !hasTemplateConnection
 
   // QUERY DETAILS
 
@@ -207,6 +216,7 @@
               bind:this={apiViewer}
               saveAndClose={true}
               settingsLocked={true}
+              openAddConnectionOnMount={true}
               connectionPopoverPortalTarget=".spectrum"
               on:savedQuery={handleSavedQuery}
             />
@@ -244,20 +254,29 @@
       </Layout>
     </div>
   {:else}
-    <QuerySelect
-      value={value?.queryId}
-      {restTemplateId}
-      fullWidthDropdown
-      onchange={q => defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
-      onaddApi={handleAddApi}
-    />
+    {#if !showConnectToTemplate}
+      <QuerySelect
+        value={value?.queryId}
+        {restTemplateId}
+        fullWidthDropdown
+        onchange={q =>
+          defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
+        onaddApi={handleAddApi}
+      />
+    {/if}
     <div class="explorer-btn">
       <Button
         on:click={() => {
-          modal.show()
+          if (showConnectToTemplate) {
+            handleAddApi()
+          } else {
+            modal.show()
+          }
         }}
       >
-        Open API explorer
+        {showConnectToTemplate
+          ? `Connect to ${restTemplate?.name || "connector"}`
+          : "Open API explorer"}
       </Button>
     </div>
     {#if value?.queryId}

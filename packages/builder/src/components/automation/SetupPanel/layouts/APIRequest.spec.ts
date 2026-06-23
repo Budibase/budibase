@@ -88,7 +88,12 @@ vi.mock("@/stores/builder/workspaceConnection", () => ({
 
 vi.mock("@/stores/builder/restTemplates", () => ({
   restTemplates: {
-    flatTemplates: [],
+    flatTemplates: [
+      {
+        id: "github",
+        name: "GitHub",
+      },
+    ],
   },
   featuredTemplates: [],
 }))
@@ -167,6 +172,21 @@ describe("APIRequest", () => {
       list: [],
       selectedConnectionId: null,
     })
+    vi.mocked(workspaceConnections.startDraft).mockImplementation(
+      (templateId?: RestTemplateId) => {
+        testState.workspaceConnectionStore.set({
+          draft: {
+            key: templateId ?? "__custom__",
+            templateId,
+            datasource: {},
+            query: {},
+            dirty: false,
+          },
+          list: [],
+          selectedConnectionId: null,
+        })
+      }
+    )
     testState.datasourceStore.set({
       list: [bamboohrDatasource, githubDatasource],
     })
@@ -222,6 +242,45 @@ describe("APIRequest", () => {
       expect(screen.queryByText("BambooHR employees")).toBeNull()
       expect(screen.queryByText("Add new API")).toBeNull()
     })
+  })
+
+  it("shows a connector CTA when the connector template has no connection", async () => {
+    testState.inputData = { restTemplateId: "github" }
+    testState.datasourceStore.set({
+      list: [bamboohrDatasource],
+    })
+
+    render(APIRequest, {
+      props: {
+        block: makeBlock("step_1"),
+        context: undefined,
+      },
+    })
+
+    expect(screen.queryByText("Select a request")).toBeNull()
+    expect(screen.queryByText("No REST requests available.")).toBeNull()
+
+    await fireEvent.click(screen.getByText("Connect to GitHub"))
+
+    expect(workspaceConnections.startDraft).toHaveBeenCalledWith("github")
+    expect(
+      screen.getByTestId("api-endpoint-viewer-open-add-connection").textContent
+    ).toBe("true")
+  })
+
+  it("keeps the explorer available when the connector template has a connection but no requests", async () => {
+    testState.inputData = { restTemplateId: "github" }
+
+    render(APIRequest, {
+      props: {
+        block: makeBlock("step_1"),
+        context: undefined,
+      },
+    })
+
+    expect(screen.getByText("Select a request")).toBeInTheDocument()
+    expect(screen.getByText("Open API explorer")).toBeInTheDocument()
+    expect(screen.queryByText("Connect to GitHub")).toBeNull()
   })
 
   it("passes the connector template into the API explorer for existing connector requests", async () => {
