@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import {
     Icon,
@@ -12,17 +12,19 @@
   import { createEventDispatcher } from "svelte"
   import { Features } from "@/constants/backend/automations"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import type { Automation, AutomationStep } from "@budibase/types"
+  import type { AutomationBlock } from "@/types/automations"
 
-  export let block
-  export let open
+  export let block: AutomationBlock
+  export let open: boolean
   export let showTestStatus = false
-  export let testResult
-  export let isTrigger
-  export let addLooping
-  export let deleteStep
+  export let testResult: Record<string, any> | undefined = undefined
+  export let isTrigger: boolean
+  export let addLooping: () => void
+  export let deleteStep: () => void
   export let enableNaming = true
-  export let itemName
-  export let automation
+  export let itemName: string | undefined = undefined
+  export let automation: Automation | undefined = undefined
 
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
@@ -62,14 +64,14 @@
   $: blockRef = blockRefs[block.id]
   $: isLooped = blockRef?.looped
 
-  async function onSelect(block) {
+  async function onSelect(block: AutomationBlock) {
     automationStore.update(state => {
       state.selectedBlock = block
       return state
     })
   }
 
-  function updateStatus(results) {
+  function updateStatus(results?: Record<string, any>) {
     if (!results) {
       return {}
     }
@@ -82,7 +84,7 @@
       return { negative: true, message: "Error" }
     }
   }
-  const getAutomationNameError = name => {
+  const getAutomationNameError = (name: string) => {
     const duplicateError =
       "This name already exists, please enter a unique name"
     if (editing) {
@@ -92,7 +94,7 @@
         }
       }
 
-      for (const step of allSteps) {
+      for (const step of allSteps as AutomationStep[]) {
         if (step.id !== block.id && name === step.name) {
           return duplicateError
         }
