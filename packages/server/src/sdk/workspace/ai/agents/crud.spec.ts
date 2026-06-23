@@ -18,6 +18,20 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseRemoveFile = jest.fn()
 const mockKnowledgeBaseRemove = jest.fn()
 const mockAssertAgentHasValidConfig = jest.fn().mockResolvedValue(undefined)
+const mockCleanupKnowledgeForOperation = jest.fn().mockResolvedValue(undefined)
+const mockReconcileAgentJobs = jest.fn().mockResolvedValue({
+  clearedSchedules: 0,
+  enabledSchedules: 0,
+})
+
+jest.mock("../rag/files", () => ({
+  cleanupKnowledgeForOperation: (...args: any[]) =>
+    mockCleanupKnowledgeForOperation(...args),
+}))
+
+jest.mock("../rag/sources/knowledgeSourceSyncQueue", () => ({
+  reconcileAgentJobs: (...args: any[]) => mockReconcileAgentJobs(...args),
+}))
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -57,10 +71,113 @@ jest.mock("./utils", () => {
 
 import type { Agent, KnowledgeBase, KnowledgeBaseFile } from "@budibase/types"
 import * as agentsCrud from "./crud"
+import { generator } from "@budibase/backend-core/tests"
 
 describe("agents crud", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe("fetch", () => {
+    it("migrates legacy promptInstructions into the default operation", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "agent_legacy",
+              _rev: "1-abc",
+              name: "Legacy Agent",
+              aiconfig: "cfg_1",
+              promptInstructions: "Legacy instructions",
+            },
+          },
+        ],
+      })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents).toEqual([
+        expect.objectContaining({
+          _id: "agent_legacy",
+          name: "Legacy Agent",
+          operations: [
+            expect.objectContaining({
+              id: "operation_default",
+              name: "Main operation",
+              live: true,
+              promptInstructions: "Legacy instructions",
+            }),
+          ],
+        }),
+      ])
+      expect(agents[0]).not.toHaveProperty("promptInstructions")
+    })
+
+    it("keeps existing operation promptInstructions when already migrated", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "agent_migrated",
+              _rev: "1-abc",
+              name: "Migrated Agent",
+              aiconfig: "cfg_1",
+              operations: [
+                {
+                  id: "operation_1",
+                  name: "Primary",
+                  live: false,
+                  promptInstructions: "Keep me",
+                },
+              ],
+            },
+          },
+        ],
+      })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents).toEqual([
+        expect.objectContaining({
+          _id: "agent_migrated",
+          name: "Migrated Agent",
+          operations: [
+            expect.objectContaining({
+              id: "operation_1",
+              name: "Primary",
+              live: false,
+              promptInstructions: "Keep me",
+            }),
+          ],
+        }),
+      ])
+      expect(agents[0]).not.toHaveProperty("promptInstructions")
+    })
+
+    it("returns no operations when operations is explicitly empty", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "agent_blank",
+              _rev: "1-abc",
+              name: "Blank Agent",
+              aiconfig: "cfg_1",
+              operations: [],
+            },
+          },
+        ],
+      })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents).toEqual([
+        expect.objectContaining({
+          _id: "agent_blank",
+          operations: [],
+        }),
+      ])
+    })
   })
 
   describe("remove", () => {
@@ -69,7 +186,14 @@ describe("agents crud", () => {
         _id: "agent_1",
         _rev: "1-abc",
         name: "Agent 1",
-        knowledgeBases: ["kb_1"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: ["kb_1"],
+          },
+        ],
       } as Agent
       const knowledgeBase = {
         _id: "kb_1",
@@ -113,7 +237,14 @@ describe("agents crud", () => {
           _id: agent._id,
           _rev: agent._rev,
           name: agent.name,
-          knowledgeBases: agent.knowledgeBases,
+          operations: [
+            expect.objectContaining({
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              knowledgeBases: ["kb_1"],
+            }),
+          ],
         })
       )
     })
@@ -123,7 +254,14 @@ describe("agents crud", () => {
         _id: "agent_2",
         _rev: "1-def",
         name: "Agent 2",
-        knowledgeBases: ["kb_missing"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: ["kb_missing"],
+          },
+        ],
       } as Agent
 
       mockDbTryGet.mockResolvedValue(agent)
@@ -139,7 +277,14 @@ describe("agents crud", () => {
           _id: agent._id,
           _rev: agent._rev,
           name: agent.name,
-          knowledgeBases: agent.knowledgeBases,
+          operations: [
+            expect.objectContaining({
+              id: "operation_1",
+              name: "Main operation",
+              live: false,
+              knowledgeBases: ["kb_missing"],
+            }),
+          ],
         })
       )
     })
@@ -149,7 +294,14 @@ describe("agents crud", () => {
         _id: "agent_del",
         _rev: "1-abc",
         name: "Delete Me",
-        knowledgeBases: [] as string[],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: [] as string[],
+          },
+        ],
       } as Agent
 
       mockDbTryGet.mockResolvedValue(agent)
@@ -166,7 +318,14 @@ describe("agents crud", () => {
         _id: "agent_3",
         _rev: "1-ghi",
         name: "Agent 3",
-        knowledgeBases: ["kb_3"],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            knowledgeBases: ["kb_3"],
+          },
+        ],
       } as Agent
       const knowledgeBase = {
         _id: "kb_3",
@@ -242,8 +401,16 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        enabledTools: [],
-        knowledgeBases: [],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            enabledTools: [],
+            knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+        ],
       } as Agent
 
       mockDbTryGet.mockResolvedValue(existing)
@@ -265,8 +432,16 @@ describe("agents crud", () => {
         _rev: "1-abc",
         name: "Original Name",
         aiconfig: "cfg_1",
-        enabledTools: [],
-        knowledgeBases: [],
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main operation",
+            live: false,
+            enabledTools: [],
+            knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+        ],
         live: false,
       } as Agent
 
@@ -286,6 +461,112 @@ describe("agents crud", () => {
           live: true,
         })
       )
+    })
+
+    it("persists an explicitly empty operations array", async () => {
+      const existing = {
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Primary",
+            live: false,
+            promptInstructions: "Do work",
+            enabledTools: [],
+            knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+        ],
+      } as Agent
+
+      mockDbTryGet.mockResolvedValue(existing)
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      const updated = await agentsCrud.update({
+        ...existing,
+        operations: [],
+      })
+
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operations: [],
+        })
+      )
+      expect(updated.operations).toEqual([])
+      expect(mockCleanupKnowledgeForOperation).toHaveBeenCalledWith(
+        "agent_upd",
+        "operation_1"
+      )
+      expect(mockReconcileAgentJobs).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _id: "agent_upd",
+          operations: [],
+        })
+      )
+    })
+
+    it("persists multiple operations without collapsing them", async () => {
+      const existing = {
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Primary",
+            live: false,
+            promptInstructions: "Do work",
+            enabledTools: [],
+            knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+        ],
+      } as Agent
+
+      mockDbTryGet.mockResolvedValue(existing)
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      const updated = await agentsCrud.update({
+        ...existing,
+        operations: [
+          {
+            id: "operation_1",
+            name: "Primary",
+            live: false,
+            promptInstructions: "Do work",
+            enabledTools: [],
+            knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+          {
+            id: "operation_2",
+            name: "Secondary",
+            live: false,
+            promptInstructions: "Then do more",
+            enabledTools: [],
+            knowledgeBases: [],
+            allowKnowledgeSourceDownload: generator.bool(),
+          },
+        ],
+      })
+
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operations: expect.arrayContaining([
+            expect.objectContaining({
+              id: "operation_1",
+            }),
+            expect.objectContaining({
+              id: "operation_2",
+            }),
+          ]),
+        })
+      )
+      expect(updated.operations).toHaveLength(2)
     })
   })
 })

@@ -11,6 +11,7 @@ jest.mock("../configs/litellm", () => ({
 }))
 
 import { setEnv, withEnv } from "../../../../environment"
+import { withLiteLLMSessionId } from "../llm/requestSession"
 import {
   createGeminiFileStore,
   deleteGeminiFileFromStore,
@@ -248,6 +249,31 @@ describe("geminiFileStore", () => {
         },
       ])
       expect(mockFetch).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  it("includes litellm_session_id when a session context is active", async () => {
+    await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
+      let requestBody: Record<string, unknown> | undefined
+      mockFetch.mockResolvedValueOnce(
+        response({
+          ok: true,
+          status: 200,
+          json: { data: [] },
+        })
+      )
+
+      await withLiteLLMSessionId("chatconvo_123", async () =>
+        searchGeminiFileStore({
+          vectorStoreId: "vector-store-1",
+          query: "hello",
+        })
+      )
+
+      const [, init] = mockFetch.mock.calls[0]
+      requestBody = JSON.parse(String(init?.body))
+      expect(requestBody?.litellm_session_id).toBe("chatconvo_123")
+      expect(requestBody?.metadata).toEqual({ session_id: "chatconvo_123" })
     })
   })
 

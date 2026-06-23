@@ -23,7 +23,12 @@ import {
   type ModelMessage,
 } from "ai"
 import sdk from "../../.."
-import { formatIncompleteToolCallError, prepareAgentChatRun } from "../agents"
+import {
+  formatIncompleteToolCallError,
+  getAvailableTools,
+  getToolDisplayNames,
+  prepareAgentChatRun,
+} from "../agents"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -113,6 +118,11 @@ const buildResult = ({
   status,
   reviewerResults,
   toolCalls,
+  selectedOperationId,
+  selectedOperationName,
+  promptInstructions,
+  enabledTools,
+  knowledgeBases,
   error,
 }: {
   testCase: AgentTestCase
@@ -127,6 +137,11 @@ const buildResult = ({
   status: AgentTestCaseResult["status"]
   reviewerResults: AgentTestReviewerResult[]
   toolCalls: string[]
+  selectedOperationId?: string
+  selectedOperationName?: string
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
   error?: string
 }): AgentTestCaseResult => ({
   caseId: testCase.id,
@@ -138,6 +153,11 @@ const buildResult = ({
   status,
   reviewerResults,
   toolCalls,
+  selectedOperationId,
+  selectedOperationName,
+  promptInstructions,
+  enabledTools,
+  knowledgeBases,
   sessionId,
   requestIds,
   startedAt,
@@ -223,6 +243,12 @@ async function runAgentForCase({
 }): Promise<{
   response: string
   toolCalls: string[]
+  toolDisplayNames: Record<string, string>
+  selectedOperationId?: string
+  selectedOperationName?: string
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
   sessionLogIndexer: SessionLogIndexer
 }> {
   const pendingToolCalls = new Set<string>()
@@ -258,6 +284,16 @@ async function runAgentForCase({
   return {
     response: text || "",
     toolCalls,
+    toolDisplayNames: run.toolDisplayNames,
+    selectedOperationId: run.selectedOperation?.id,
+    selectedOperationName: run.selectedOperation?.name,
+    promptInstructions: run.selectedOperation?.promptInstructions,
+    enabledTools: run.selectedOperation?.enabledTools
+      ? [...run.selectedOperation.enabledTools]
+      : undefined,
+    knowledgeBases: run.selectedOperation?.knowledgeBases
+      ? [...run.selectedOperation.knowledgeBases]
+      : undefined,
     sessionLogIndexer: run.sessionLogIndexer,
   }
 }
@@ -268,21 +304,39 @@ async function runReviewers({
   testCase,
   response,
   toolCalls,
+  toolDisplayNames,
   sessionLogIndexer,
+  selectedOperationId,
+  selectedOperationName,
+  operationNamesById,
 }: {
   reviewers: AgentTestReviewer[]
   getLLM: () => Promise<TestLLM>
   testCase: AgentTestCase
   response: string
   toolCalls: string[]
+  toolDisplayNames?: Record<string, string>
   sessionLogIndexer: SessionLogIndexer
+  selectedOperationId?: string
+  selectedOperationName?: string
+  operationNamesById?: Record<string, string>
 }): Promise<AgentTestReviewerResult[]> {
   const results: AgentTestReviewerResult[] = []
   let llm: TestLLM | undefined
 
   for (const reviewer of reviewers) {
     if (!isLLMJudgeReviewer(reviewer)) {
-      results.push(evaluateReviewer({ reviewer, response, toolCalls }))
+      results.push(
+        evaluateReviewer({
+          reviewer,
+          response,
+          toolCalls,
+          toolDisplayNames,
+          selectedOperationId,
+          selectedOperationName,
+          operationNamesById,
+        })
+      )
       continue
     }
 
@@ -335,6 +389,9 @@ async function runCase({
   const startedAtMs = Date.now()
   const sessionId = `test:${runId}:${testCase.id}:${aiConfigId}`
   let sessionLogIndexer: SessionLogIndexer | undefined
+  const operationNamesById = Object.fromEntries(
+    (agent.operations || []).map(operation => [operation.id, operation.name])
+  )
 
   try {
     const messages = buildTestMessages({ testCase })
@@ -348,6 +405,10 @@ async function runCase({
       aiConfigId,
     })
     sessionLogIndexer = agentRun.sessionLogIndexer
+    const toolDisplayNames = {
+      ...getToolDisplayNames(await getAvailableTools(aiConfigId)),
+      ...agentRun.toolDisplayNames,
+    }
     const reviewerResults = await runReviewers({
       reviewers: caseSnapshot.reviewers,
       getLLM: () =>
@@ -355,7 +416,11 @@ async function runCase({
       testCase,
       response: agentRun.response,
       toolCalls: agentRun.toolCalls,
+      toolDisplayNames,
       sessionLogIndexer,
+      selectedOperationId: agentRun.selectedOperationId,
+      selectedOperationName: agentRun.selectedOperationName,
+      operationNamesById,
     })
 
     await sessionLogIndexer.index()
@@ -379,6 +444,11 @@ async function runCase({
       status,
       reviewerResults,
       toolCalls: agentRun.toolCalls,
+      selectedOperationId: agentRun.selectedOperationId,
+      selectedOperationName: agentRun.selectedOperationName,
+      promptInstructions: agentRun.promptInstructions,
+      enabledTools: agentRun.enabledTools,
+      knowledgeBases: agentRun.knowledgeBases,
       error,
     })
   } catch (error) {
@@ -401,6 +471,8 @@ async function runCase({
         message,
       }),
       toolCalls: [],
+      selectedOperationId: undefined,
+      selectedOperationName: undefined,
       error: message,
     })
   }
@@ -548,10 +620,7 @@ const buildRunSnapshot = async ({
     aiconfig: agent.aiconfig,
     aiConfig,
     aiConfigs,
-    promptInstructions: agent.promptInstructions,
     goal: agent.goal,
-    enabledTools: [...(agent.enabledTools || [])],
-    knowledgeBases: [...(agent.knowledgeBases || [])],
   }
 }
 
@@ -573,6 +642,7 @@ export async function runSuite({
   startedAt?: string
 }): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+
   const suite = await fetchSuite(agentId)
   const casesToRun = selectCasesToRun({ suite, caseId, groupId })
   const runConfigIds = uniqueConfigIds(

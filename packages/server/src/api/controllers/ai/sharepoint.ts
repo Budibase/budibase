@@ -1,16 +1,14 @@
 import {
   Agent,
   AgentKnowledgeSource,
-  AgentKnowledgeSourceType,
   KnowledgeBaseFile,
   KnowledgeBaseFileSourceType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { getSharePointKnowledgeSources } from "../../../sdk/workspace/ai/agents/knowledgeConfig"
 
 export const getSharePointSources = (agent?: Agent): AgentKnowledgeSource[] =>
-  (agent?.knowledgeSources || []).filter(
-    item => item.type === AgentKnowledgeSourceType.SHAREPOINT
-  )
+  agent ? getSharePointKnowledgeSources(agent) : []
 
 export const getSharePointSiteIds = (agent?: Agent): Set<string> => {
   const ids = getSharePointSources(agent)

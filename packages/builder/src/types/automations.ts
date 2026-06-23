@@ -13,6 +13,7 @@ import {
   type SelfResponse,
   type TestAutomationResponse,
   type UISearchFilter,
+  type RestTemplateId,
   AutomationActionStepId,
   AutomationCustomIOType,
   AutomationIOType,
@@ -206,6 +207,10 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   actionPanelBlock?: BlockRef | FlowBlockContext
   /** Toolbar + opened the step picker (append at flow tail). */
   actionPanelToolbarFlowEnd?: boolean
+  pendingApiRequestTemplate?: {
+    blockId: string
+    templateId: RestTemplateId
+  }
   selectedLog?: AutomationLog
   selectedLogStepData?: any
   showLogsPanel?: boolean

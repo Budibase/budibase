@@ -32,6 +32,57 @@ describe("knowledgeTableRows", () => {
     expect(formatTimestamp(undefined)).toBe("—")
   })
 
+  it("includes pending upload rows", () => {
+    const rows = toFileTableRows(
+      [makeFile({ filename: "a.md" })],
+      async () => {},
+      [
+        {
+          tempId: "pending-1",
+          filename: "b.md",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+      ]
+    )
+
+    expect(rows.map(row => row.filename)).toEqual(["a.md", "b.md"])
+    expect(rows.find(row => row.filename === "b.md")?.displayStatus).toBe(
+      "Uploading"
+    )
+  })
+
+  it("shows pending uploads even when another file has the same filename", () => {
+    const rows = toFileTableRows(
+      [
+        makeFile({
+          filename: "notes.txt",
+          status: KnowledgeBaseFileStatus.PROCESSING,
+        }),
+      ],
+      async () => {},
+      [
+        {
+          tempId: "pending-1",
+          filename: "notes.txt",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          tempId: "pending-2",
+          filename: "notes.txt",
+          createdAt: "2026-01-01T00:00:01.000Z",
+        },
+      ]
+    )
+
+    expect(rows).toHaveLength(3)
+    expect(
+      rows.filter(row => row.displayStatus === "Uploading").map(row => row._id)
+    ).toEqual(["pending-1", "pending-2"])
+    expect(rows.find(row => row._id === "file_1")?.displayStatus).toBe(
+      "Processing"
+    )
+  })
+
   it("builds and sorts file rows", async () => {
     const onDelete = vi.fn(async () => {})
     const rows = toFileTableRows(
@@ -124,7 +175,6 @@ describe("knowledgeTableRows", () => {
           lastRunAt: "2026-04-08T10:00:00.000Z",
         },
       ],
-      loadingSharePointSites: false,
       onDelete: async () => {},
       onSync: async () => {},
     })
@@ -132,6 +182,58 @@ describe("knowledgeTableRows", () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
     expect(rows[0].displayStatus).toBe("0/1 files")
+  })
+
+  it("shows file counts while sync is still running", () => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: {
+            site: {
+              id: "site-1",
+              name: "confluence",
+              webUrl: "https://example.sharepoint.com/sites/confluence",
+            },
+          },
+        },
+      ],
+      sharePointSourceSnapshots: [
+        {
+          sourceId: "source-1",
+          name: "confluence",
+          webUrl: "https://example.sharepoint.com/sites/confluence",
+          syncedCount: 18,
+          failedCount: 0,
+          processingCount: 107,
+          totalCount: 125,
+        },
+      ],
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows[0].displayStatus).toBe("18/125 files")
+    expect(rows[0].hasSynced).toBe(true)
+    expect(rows[0].__clickable).toBe(true)
+  })
+
+  it("shows loading label when site metadata is not available yet", () => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: { site: { id: "site-1" } },
+        },
+      ],
+      sharePointSourceSnapshots: [],
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].filename).toBe("Loading SharePoint site...")
+    expect(rows[0].displayStatus).toBe("Processing")
   })
 
   it("shows completed counts once syncing is done", () => {
@@ -154,7 +256,6 @@ describe("knowledgeTableRows", () => {
           lastRunAt: "2026-04-08T10:00:00.000Z",
         },
       ],
-      loadingSharePointSites: false,
       onDelete: async () => {},
       onSync: async () => {},
     })

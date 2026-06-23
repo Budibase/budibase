@@ -10,7 +10,7 @@ jobs:
   trigger-deploy-to-qa-env:
     runs-on: ubuntu-latest
     steps:
-      - uses: peter-evans/repository-dispatch@v2
+      - uses: peter-evans/repository-dispatch@bf47d102fdb849e755b0b0023ea3e81a44b6f570  # v2
         with:
           repository: budibase/budibase-deploys
           event-type: budicloud-qa-deploy
