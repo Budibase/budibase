@@ -347,6 +347,7 @@ export async function webhookChat({
   const result = await run.stream()
 
   const uiMessageStream = result.toUIMessageStream({
+    generateMessageId: v4,
     sendReasoning: true,
   })
   let assistantStreamForCapture: ReadableStream<UIMessageChunk> =

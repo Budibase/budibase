@@ -1288,9 +1288,22 @@ describe("Agent chat tool call tracking", () => {
       }
 
       return {
-        toUIMessageStream: jest
-          .fn()
-          .mockReturnValue(aiActual.simulateReadableStream({ chunks })),
+        toUIMessageStream: jest.fn().mockImplementation(
+          (streamOptions: { generateMessageId?: () => string } = {}) => {
+            const streamChunks = chunks.map(chunk =>
+              chunk.type === "start" &&
+              !("messageId" in chunk) &&
+              streamOptions.generateMessageId
+                ? {
+                    ...chunk,
+                    messageId: streamOptions.generateMessageId(),
+                  }
+                : chunk
+            )
+
+            return aiActual.simulateReadableStream({ chunks: streamChunks })
+          }
+        ),
         text: Promise.resolve(text),
         response: Promise.resolve({
           id: "gen-test",
@@ -1827,6 +1840,34 @@ describe("Agent chat tool call tracking", () => {
 
       expect(streamedText).toBe("Mock response")
       expect(result.assistantText).toBe("Mock response")
+    })
+
+    it("generates an assistant message id for webhook responses", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock({}))
+
+      const result = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () =>
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+      )
+
+      expect(result.messages[1].id).toEqual(expect.any(String))
+      expect(result.messages[1].id).not.toBe("")
     })
 
     it("keeps assistant tool context in the returned webhook conversation", async () => {
