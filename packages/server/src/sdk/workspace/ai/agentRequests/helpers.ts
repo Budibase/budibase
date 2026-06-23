@@ -178,13 +178,14 @@ export async function generateAgentRequestTitle({
         content:
           "Write a short UI title for a tracked user request. Base it primarily on the user's actual ask, and use the selected operation only as supporting context. Do not invent internal workflow names, implementation details, or analysis phrasing. Prefer concrete user-facing nouns like the requested item, task, or deliverable. Return plain text only. Use 3 to 8 words, no quotes, no punctuation unless necessary.",
       },
-        {
-          role: "user",
-          content: JSON.stringify({
-            latestPrompt: latestEntry.promptHistory[latestEntry.promptHistory.length - 1],
-            promptHistory: latestEntry.promptHistory,
-          }),
-        },
+      {
+        role: "user",
+        content: JSON.stringify({
+          latestPrompt:
+            latestEntry.promptHistory[latestEntry.promptHistory.length - 1],
+          promptHistory: latestEntry.promptHistory,
+        }),
+      },
     ],
   })
 
