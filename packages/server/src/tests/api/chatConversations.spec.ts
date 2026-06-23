@@ -1845,7 +1845,9 @@ describe("Agent chat tool call tracking", () => {
     })
 
     it("generates an assistant message id for webhook responses", async () => {
-      jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock({}) as any)
 
       const result = await context.doInWorkspaceContext(
         config.getProdWorkspaceId(),
