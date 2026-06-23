@@ -10,6 +10,7 @@ import { ToolType } from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
+  getLiveOperation,
   getLiveOperations,
   getToolDisplayNames,
   IncompleteToolCall,
@@ -86,6 +87,36 @@ describe("getLiveOperations", () => {
     } as Agent
 
     expect(getLiveOperations(agent)).toEqual([])
+  })
+})
+
+describe("getLiveOperation", () => {
+  it("returns the first live operation", () => {
+    const firstLiveOperation = {
+      id: "operation_2",
+      name: "Main operation",
+      live: true,
+    }
+    const agent = {
+      _id: "agent_1",
+      name: "Support Agent",
+      live: true,
+      operations: [
+        {
+          id: "operation_1",
+          name: "Draft operation",
+          live: false,
+        },
+        firstLiveOperation,
+        {
+          id: "operation_3",
+          name: "Secondary operation",
+          live: true,
+        },
+      ],
+    } as Agent
+
+    expect(getLiveOperation(agent)).toEqual(firstLiveOperation)
   })
 })
 
