@@ -186,7 +186,7 @@
 
     loading = true
     try {
-      const response = await API.fetchAgentRequests({ limit: 100 })
+      const response = await API.fetchAgentRequests()
       allRequests = response.requests
       await hydrateUserNames(allRequests)
     } catch (error) {

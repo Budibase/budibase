@@ -139,6 +139,49 @@ async function maybeGenerateAndSaveRequestTitle({
   }
 }
 
+async function createNewRequest({
+  agentId,
+  sessionId,
+  latestPrompt,
+  operation,
+  source,
+  userId,
+}: {
+  agentId: string
+  sessionId: string
+  latestPrompt: string
+  operation?: {
+    name: string
+    prompt: string
+  }
+  source: string
+  userId: string
+}): Promise<AgentRequest | undefined> {
+  if (!operation?.name) {
+    return undefined
+  }
+
+  const createdRequest = await saveRequest(
+    buildThread({
+      agentId,
+      userId,
+      entry: buildEntry({
+        sessionId,
+        latestPrompt,
+        operation,
+        source,
+      }),
+    })
+  )
+
+  return await maybeGenerateAndSaveRequestTitle({
+    request: createdRequest,
+    agentId,
+    sessionId,
+    operation,
+  })
+}
+
 export async function fetchRequests(): Promise<AgentRequest[]> {
   const db = context.getProdWorkspaceDB()
   const response = await db.allDocs<AgentRequest>({
@@ -216,30 +259,20 @@ export async function createOrUpdateRequestForPrompt({
   })
 
   if (linkDecision.decision === "new_thread" || !linkDecision.requestId) {
-    if (!resolvedOperation?.name) {
+    const createdRequest = await createNewRequest({
+      agentId,
+      sessionId,
+      latestPrompt: prompt,
+      operation: resolvedOperation,
+      source: resolvedSource,
+      userId,
+    })
+    if (!createdRequest) {
       return undefined
     }
 
-    const createdRequest = await saveRequest(
-      buildThread({
-        agentId,
-        userId,
-        entry: buildEntry({
-          sessionId,
-          latestPrompt: prompt,
-          operation: resolvedOperation,
-          source: resolvedSource,
-        }),
-      })
-    )
-
     return {
-      request: await maybeGenerateAndSaveRequestTitle({
-        request: createdRequest,
-        agentId,
-        sessionId,
-        operation: resolvedOperation,
-      }),
+      request: createdRequest,
       created: true,
     }
   }
@@ -248,30 +281,20 @@ export async function createOrUpdateRequestForPrompt({
     candidate => candidate._id === linkDecision.requestId
   )
   if (!request) {
-    if (!resolvedOperation?.name) {
+    const createdRequest = await createNewRequest({
+      agentId,
+      sessionId,
+      latestPrompt: prompt,
+      operation: resolvedOperation,
+      source: resolvedSource,
+      userId,
+    })
+    if (!createdRequest) {
       return undefined
     }
 
-    const createdRequest = await saveRequest(
-      buildThread({
-        agentId,
-        userId,
-        entry: buildEntry({
-          sessionId,
-          latestPrompt: prompt,
-          operation: resolvedOperation,
-          source: resolvedSource,
-        }),
-      })
-    )
-
     return {
-      request: await maybeGenerateAndSaveRequestTitle({
-        request: createdRequest,
-        agentId,
-        sessionId,
-        operation: resolvedOperation,
-      }),
+      request: createdRequest,
       created: true,
     }
   }
@@ -322,68 +345,4 @@ export async function createOrUpdateRequestForPrompt({
     }),
     created: false,
   }
-}
-
-export async function startRequestForPrompt(params: {
-  agentId: string
-  sessionId: string
-  latestUserPrompt: string
-  operation: {
-    name: string
-    prompt: string
-  }
-  source: string
-  userId: string
-}): Promise<{ request: AgentRequest; created: boolean } | undefined> {
-  return await createOrUpdateRequestForPrompt(params)
-}
-
-export async function continueRequestForPrompt({
-  agentId,
-  sessionId,
-  latestUserPrompt,
-  source,
-  userId,
-}: {
-  agentId: string
-  sessionId: string
-  latestUserPrompt: string
-  source: string
-  userId: string
-}): Promise<AgentRequest | undefined> {
-  const result = await createOrUpdateRequestForPrompt({
-    agentId,
-    sessionId,
-    latestUserPrompt,
-    operation: undefined,
-    source,
-    userId,
-  })
-
-  if (!result || result.created) {
-    return undefined
-  }
-
-  return result.request
-}
-
-export async function generateAndSaveRequestTitle({
-  requestId,
-  agentId,
-  sessionId,
-}: {
-  requestId: string
-  agentId: string
-  sessionId: string
-}): Promise<AgentRequest | undefined> {
-  const request = await fetchThread(requestId)
-  if (!request || request.title) {
-    return request
-  }
-
-  return await maybeGenerateAndSaveRequestTitle({
-    request,
-    agentId,
-    sessionId,
-  })
 }

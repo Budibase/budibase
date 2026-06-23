@@ -1,16 +1,17 @@
 <script lang="ts">
   import { Badge, Icon } from "@budibase/bbui"
+  import type { AgentRequestStatus } from "@budibase/types"
 
   export let row: {
     statusLabel: string
-    statusTone: "completed"
+    status: AgentRequestStatus
   }
 
-  const iconByTone = {
+  const iconByStatus = {
     completed: "check-circle",
   } as const
 
-  const badgeColors = {
+  const badgeColorsByStatus = {
     completed: {
       backgroundColor: "#4d6300",
       textColor: "#f5ffbe",
@@ -20,12 +21,12 @@
 
 <Badge
   size="S"
-  backgroundColor={badgeColors[row.statusTone].backgroundColor}
-  textColor={badgeColors[row.statusTone].textColor}
+  backgroundColor={badgeColorsByStatus[row.status].backgroundColor}
+  textColor={badgeColorsByStatus[row.status].textColor}
 >
   {row.statusLabel}
   <span class="status-icon">
-    <Icon size="XS" name={iconByTone[row.statusTone]} color="currentColor" />
+    <Icon size="XS" name={iconByStatus[row.status]} color="currentColor" />
   </span>
 </Badge>
 

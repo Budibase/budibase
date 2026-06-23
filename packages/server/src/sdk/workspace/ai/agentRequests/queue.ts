@@ -5,7 +5,6 @@ import { determineTrigger } from "../agentLogs/shared"
 
 type AgentRequestTrackingJob = {
   workspaceId: string
-  type: "track"
   agentId: string
   sessionId: string
   latestUserPrompt: string
@@ -47,7 +46,7 @@ export function getQueue() {
             workspaceId: data.workspaceId,
             agentId: data.agentId,
             sessionId: data.sessionId,
-            type: data.type,
+            type: "track",
           }),
         }
       )
@@ -109,7 +108,6 @@ export async function enqueueRequestTracking({
 
   await enqueue({
     workspaceId,
-    type: "track",
     agentId,
     sessionId,
     latestUserPrompt,
