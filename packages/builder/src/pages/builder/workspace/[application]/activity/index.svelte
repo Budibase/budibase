@@ -2,7 +2,7 @@
   import { API } from "@/api"
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
-  import { Pagination, Select, Table, notifications } from "@budibase/bbui"
+  import { Pagination, Table, notifications } from "@budibase/bbui"
   import type { AgentRequestStatus } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
@@ -55,7 +55,6 @@
   ]
 
   let loading = $state(false)
-  let selectedAgentFilter = $state("")
   let currentPage = $state(1)
   let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
@@ -93,21 +92,8 @@
     return `Agent: ${agentName}`
   }
 
-  let agentOptions = $derived.by(() => {
-    const options = ($agentsStore.agents || []).map(agent => ({
-      label: agent.name || "Untitled agent",
-      value: agent._id || "",
-    }))
-
-    return options.filter(option => option.value)
-  })
-
   let filteredRequests = $derived.by(() =>
-    sortRequestsByLatestActivity(
-      !selectedAgentFilter
-        ? allRequests
-        : allRequests.filter(request => request.agentId === selectedAgentFilter)
-    )
+    sortRequestsByLatestActivity(allRequests)
   )
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
@@ -172,7 +158,7 @@
       return "Showing 0 items"
     }
 
-    return `Showing ${start}-${end}`
+    return `Showing ${start} to ${end} items`
   })
 
   async function loadRequests(page = currentPage) {
@@ -268,7 +254,6 @@
   })
 
   $effect(() => {
-    selectedAgentFilter
     if (!activityEnabled) {
       return
     }
@@ -297,17 +282,6 @@
       </section>
     {/each}
   </div>
-
-  <div class="filter-control">
-    <Select
-      bind:value={selectedAgentFilter}
-      options={agentOptions}
-      placeholder="All agents"
-      size="S"
-      bordered
-    />
-  </div>
-
   <section class="requests-table-panel">
     <Table
       quiet
@@ -393,11 +367,6 @@
   .metric-value {
     font-size: 26px;
   }
-
-  .filter-control {
-    width: 240px;
-  }
-
   .requests-table-panel {
     background: transparent;
     display: flex;
@@ -472,10 +441,6 @@
   @media (max-width: 720px) {
     .agent-actions-page {
       padding: 20px 16px 24px;
-    }
-
-    .filter-control {
-      width: 100%;
     }
 
     .table-footer {
