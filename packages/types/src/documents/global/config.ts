@@ -38,7 +38,9 @@ export interface SettingsBrandingConfig {
 }
 
 export enum LockReason {
-  FREE_TIER = "free_tier", // Locked because grace period in free tier has ended
+  FREE_TIER = "free_tier", // Post-trial removal grace period
+  MIGRATION = "migration", // Free tier cloud deprecation (migration flow)
+  PAID_TO_FREE = "paid_to_free", // Paid subscription ended; tenant in removal flow
 }
 
 export interface SettingsInnerConfig {
@@ -52,6 +54,7 @@ export interface SettingsInnerConfig {
   isSSOEnforced?: boolean
   createdVersion?: string
   lockedBy?: LockReason
+  deactivationScheduledAt?: string // ISO 8601; when the tenant will be deactivated (set by account-portal on lock)
   active?: boolean
   liteLLM?: { keyId: string; secretKey: string }
 }

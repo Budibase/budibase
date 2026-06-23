@@ -14,8 +14,12 @@ export async function deleteTenant(tenantId: string) {
   await removeGlobalDB(tenantId)
 }
 
-export async function lockTenant(tenantId: string, lockReason: LockReason) {
-  return await setLock(tenantId, lockReason)
+export async function lockTenant(
+  tenantId: string,
+  lockReason: LockReason,
+  deactivationScheduledAt?: string
+) {
+  return await setLock(tenantId, lockReason, deactivationScheduledAt)
 }
 
 export async function unlockTenant(tenantId: string) {
@@ -28,9 +32,18 @@ export async function setActivation(tenantId: string, active: boolean) {
   await db.put(settingsConfig)
 }
 
-async function setLock(tenantId: string, lockReason?: LockReason) {
+async function setLock(
+  tenantId: string,
+  lockReason?: LockReason,
+  deactivationScheduledAt?: string
+) {
   const { db, settingsConfig } = await getOrCreateSettingsConfig(tenantId)
   settingsConfig.config.lockedBy = lockReason
+  if (lockReason) {
+    settingsConfig.config.deactivationScheduledAt = deactivationScheduledAt
+  } else {
+    delete settingsConfig.config.deactivationScheduledAt
+  }
   await db.put(settingsConfig)
 }
 

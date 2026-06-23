@@ -1,12 +1,28 @@
-<script>
+<script lang="ts">
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { selectedScreen, componentStore } from "@/stores/builder"
   import { getActionProviders, buildFormSchema } from "@/dataBinding"
   import { findComponent } from "@/helpers/components"
+  import type { Component } from "@budibase/types"
 
-  let { parameters, bindings = [], nested } = $props()
+  type UpdateFieldValueType = "set" | "reset"
+
+  interface Parameters {
+    componentId?: string
+    type?: UpdateFieldValueType
+    fields?: string[]
+    fieldValues?: Record<string, string>
+  }
+
+  interface Props {
+    parameters: Parameters
+    bindings?: unknown[]
+    nested?: boolean
+  }
+
+  let { parameters, bindings = [], nested }: Props = $props()
 
   const typeOptions = [
     {
@@ -19,21 +35,13 @@
     },
   ]
 
-  const formComponent = $derived(
-    getFormComponent($selectedScreen.props, parameters.componentId)
-  )
-  const formSchema = $derived(buildFormSchema(formComponent))
-  const fieldOptions = $derived(Object.keys(formSchema || {}))
-  const actionProviders = $derived(
-    getActionProviders(
-      $selectedScreen,
-      $componentStore.selectedComponentId,
-      "ValidateForm",
-      { includeSelf: nested }
-    )
-  )
-
-  const getFormComponent = (asset, id) => {
+  const getFormComponent = (
+    asset: Component | undefined,
+    id: string | undefined
+  ) => {
+    if (!id) {
+      return null
+    }
     let component = findComponent(asset, id)
     if (component) {
       return component
@@ -45,13 +53,28 @@
     return null
   }
 
+  const formComponent = $derived(
+    getFormComponent($selectedScreen?.props, parameters.componentId)
+  )
+  const formSchema = $derived(buildFormSchema(formComponent))
+  const fieldOptions = $derived(Object.keys(formSchema || {}))
+  const selectedFields = $derived(parameters.fields || [])
+  const actionProviders = $derived(
+    getActionProviders(
+      $selectedScreen,
+      $componentStore.selectedComponentId,
+      "ValidateForm",
+      { includeSelf: nested || false }
+    )
+  )
+
   onMount(() => {
     if (!parameters.type) {
       parameters.type = "set"
     }
   })
 
-  const handleFieldChange = e => {
+  const handleFieldChange = (e: CustomEvent<string[]>) => {
     // Convert from single field to multi-select format
     parameters.fields = e.detail || []
     // Initialize fieldValues for new fields
@@ -60,7 +83,7 @@
     }
   }
 
-  const handleFieldValueChange = (fieldName, value) => {
+  const handleFieldValueChange = (fieldName: string, value: string) => {
     if (!parameters.fieldValues) {
       parameters.fieldValues = {}
     }
@@ -69,36 +92,36 @@
 </script>
 
 <div class="root">
-  <Label small>Form</Label>
+  <Label size="S">Form</Label>
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}
     getOptionLabel={x => x.readableBinding}
     getOptionValue={x => x.runtimeBinding}
   />
-  <Label small>Type</Label>
+  <Label size="S">Type</Label>
   <Select
-    placeholder={null}
+    placeholder={false}
     bind:value={parameters.type}
     options={typeOptions}
   />
-  <Label small>Fields</Label>
+  <Label size="S">Fields</Label>
   <Multiselect
-    value={parameters.fields || []}
+    value={selectedFields}
     on:change={handleFieldChange}
     options={fieldOptions}
     placeholder={parameters.type === "reset"
       ? "Select fields to reset"
       : "Select fields to set"}
   />
-  {#if parameters.type === "set" && parameters.fields?.length > 0}
+  {#if parameters.type === "set" && selectedFields.length > 0}
     <div class="field-values">
-      {#each parameters.fields as fieldName}
+      {#each selectedFields as fieldName}
         <div class="field-value-pair">
           <div class="label-col">{fieldName}</div>
           <div class="input-col">
             <DrawerBindableInput
-              title="Value for {fieldName}"
+              title={`Value for ${fieldName}`}
               {bindings}
               value={parameters.fieldValues?.[fieldName]}
               on:change={e => handleFieldValueChange(fieldName, e.detail)}

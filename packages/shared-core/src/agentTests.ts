@@ -9,6 +9,10 @@ export type ReviewerType = AgentTestReviewer["type"]
 export interface ReviewerEvaluateContext {
   response: string
   toolCalls: string[]
+  toolDisplayNames?: Record<string, string>
+  selectedOperationId?: string
+  selectedOperationName?: string
+  operationNamesById?: Record<string, string>
 }
 
 export interface ReviewerEvaluation {
@@ -29,7 +33,22 @@ export interface ReviewerDefinition {
     | "async"
 }
 
-export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
+const getOperationLabel = (
+  operationId: string,
+  operationNamesById?: Record<string, string>
+) => operationNamesById?.[operationId] || operationId
+
+const getToolLabel = (
+  toolName: string,
+  toolDisplayNames?: Record<string, string>
+) => toolDisplayNames?.[toolName] || toolName
+
+interface ReviewerLabelContext {
+  toolDisplayNames?: Record<string, string>
+  operationNamesById?: Record<string, string>
+}
+
+export const REVIEWERS = {
   exact_match: {
     label: "Exact match",
     description: "Require the final response to exactly match some text.",
@@ -72,17 +91,46 @@ export const REVIEWERS: Record<ReviewerType, ReviewerDefinition> = {
     description: "Pass when a specific tool was used during the run.",
     inputType: "select",
     requiredMessage: "tool name is required",
-    evaluate: (r, { toolCalls }) => {
+    evaluate: (r, { toolCalls, toolDisplayNames }) => {
       const passed = toolCalls.includes(r.value)
+      const expectedToolLabel = getToolLabel(r.value, toolDisplayNames)
       return {
         passed,
         message: passed
-          ? `Tool "${r.value}" was used.`
-          : `Expected tool "${r.value}" to be used.`,
+          ? `Tool "${expectedToolLabel}" was used.`
+          : `Expected tool "${expectedToolLabel}" to be used.`,
       }
     },
   },
-}
+  operation_used: {
+    label: "Operation used",
+    description: "Pass when a specific operation was selected for the run.",
+    inputType: "select",
+    requiredMessage: "operation is required",
+    evaluate: (
+      r,
+      { selectedOperationId, selectedOperationName, operationNamesById }
+    ) => {
+      const passed = selectedOperationId === r.value
+      const expectedOperationLabel = getOperationLabel(
+        r.value,
+        operationNamesById
+      )
+      const selectedOperationLabel =
+        selectedOperationId &&
+        (selectedOperationName ||
+          getOperationLabel(selectedOperationId, operationNamesById))
+      return {
+        passed,
+        message: passed
+          ? `Operation "${expectedOperationLabel}" was used.`
+          : selectedOperationLabel
+            ? `Expected operation "${expectedOperationLabel}" to be used, but "${selectedOperationLabel}" was selected.`
+            : `Expected operation "${expectedOperationLabel}" to be used.`,
+      }
+    },
+  },
+} satisfies Record<ReviewerType, ReviewerDefinition>
 
 export const REVIEWER_TYPES = Object.keys(REVIEWERS) as ReviewerType[]
 
@@ -101,8 +149,24 @@ export const createReviewer = (
 ): AgentTestReviewer => ({ id, type, value })
 
 export const describeReviewer = (
-  reviewer: AgentTestReviewer
-): string | undefined => readReviewerContent(reviewer) || undefined
+  reviewer: AgentTestReviewer,
+  { toolDisplayNames, operationNamesById }: ReviewerLabelContext = {}
+): string | undefined => {
+  const value = readReviewerContent(reviewer)
+  if (!value) {
+    return undefined
+  }
+
+  if (reviewer.type === "tool_used") {
+    return getToolLabel(value, toolDisplayNames)
+  }
+
+  if (reviewer.type === "operation_used") {
+    return getOperationLabel(value, operationNamesById)
+  }
+
+  return value
+}
 
 export const validateReviewer = (reviewer: AgentTestReviewer): string | null =>
   readReviewerContent(reviewer)
