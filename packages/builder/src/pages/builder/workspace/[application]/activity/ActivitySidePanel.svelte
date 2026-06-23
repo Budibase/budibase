@@ -215,7 +215,7 @@
   .activity-panel-title {
     min-width: 0;
     flex: 1 1 auto;
-    color: #f3f3f3;
+    color: var(--spectrum-alias-text-color);
     font-size: 18px;
     line-height: 1.2;
     font-weight: 500;
@@ -243,7 +243,7 @@
   }
 
   .section-title {
-    color: #f3f3f3;
+    color: var(--spectrum-alias-text-color);
     font-size: 15px;
     line-height: 1.3;
     font-weight: 500;
@@ -263,7 +263,7 @@
   }
 
   .detail-label {
-    color: #848a98;
+    color: var(--spectrum-global-color-gray-600);
     font-size: 15px;
     line-height: 1.35;
   }
@@ -276,7 +276,7 @@
   }
 
   .detail-text {
-    color: #f3f3f3;
+    color: var(--spectrum-alias-text-color);
     font-size: 15px;
     line-height: 1.35;
     min-width: 0;
@@ -300,8 +300,8 @@
     min-height: 32px;
     padding: 8px 16px;
     border-radius: 6px;
-    border: 1px solid #343434;
-    background: #1d1d1d;
+    border: 1px solid var(--spectrum-alias-border-color);
+    background: var(--background);
     display: flex;
     align-items: center;
     gap: 11px;
@@ -312,7 +312,7 @@
   }
 
   .empty-text {
-    color: #848a98;
+    color: var(--spectrum-global-color-gray-600);
     font-size: 15px;
     line-height: 1.35;
   }
