@@ -28,7 +28,7 @@
     value: number
   }
 
-  const PAGE_SIZE = 20
+  const PAGE_SIZE = 40
   const tableSchema = {
     title: {
       type: "string",
@@ -60,6 +60,7 @@
   let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
   let userNames = $state<Record<string, string>>({})
+  let hasNextPage = $state(false)
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
   const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
@@ -101,13 +102,13 @@
     return options.filter(option => option.value)
   })
 
-  let filteredRequests = $derived.by(() => {
-    const requests = !selectedAgentFilter
-      ? allRequests
-      : allRequests.filter(request => request.agentId === selectedAgentFilter)
-
-    return sortRequestsByLatestActivity(requests)
-  })
+  let filteredRequests = $derived.by(() =>
+    sortRequestsByLatestActivity(
+      !selectedAgentFilter
+        ? allRequests
+        : allRequests.filter(request => request.agentId === selectedAgentFilter)
+    )
+  )
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
     const requests = filteredRequests
@@ -120,13 +121,8 @@
     ]
   })
 
-  let totalPages = $derived.by(() =>
-    Math.max(1, Math.ceil(filteredRequests.length / PAGE_SIZE))
-  )
-
   let paginatedRows = $derived.by<RequestRow[]>(() => {
-    const start = (currentPage - 1) * PAGE_SIZE
-    return filteredRequests.slice(start, start + PAGE_SIZE).map(request => {
+    return filteredRequests.map(request => {
       const updatedAt = getRequestUpdatedAt(request)
       const updatedTime = updatedAt.getTime()
 
@@ -170,25 +166,36 @@
 
   let paginationLabel = $derived.by(() => {
     const start = (currentPage - 1) * PAGE_SIZE + 1
-    const end = Math.min(currentPage * PAGE_SIZE, filteredRequests.length)
-    return `Showing ${start}-${end} of ${filteredRequests.length} items`
+    const end = start + paginatedRows.length - 1
+
+    if (!paginatedRows.length) {
+      return "Showing 0 items"
+    }
+
+    return `Showing ${start}-${end}`
   })
 
-  async function loadRequests() {
+  async function loadRequests(page = currentPage) {
     if (!($agentsStore.agents || []).length) {
       allRequests = []
+      hasNextPage = false
       return
     }
 
     loading = true
     try {
-      const response = await API.fetchAgentRequests()
+      const response = await API.fetchAgentRequests({
+        limit: PAGE_SIZE,
+        page,
+      })
       allRequests = response.requests
+      hasNextPage = response.requests.length === PAGE_SIZE
       await hydrateUserNames(response.requests)
     } catch (error) {
       console.error("Failed to fetch agent requests", error)
       notifications.error("Failed to load agent actions")
       allRequests = []
+      hasNextPage = false
     } finally {
       loading = false
     }
@@ -221,7 +228,14 @@
   }
 
   function changePage(nextPage: number) {
-    currentPage = Math.min(Math.max(1, nextPage), totalPages)
+    const resolvedPage = Math.max(1, nextPage)
+    if (resolvedPage === currentPage) {
+      return
+    }
+
+    currentPage = resolvedPage
+    selectedRequestId = null
+    loadRequests(resolvedPage)
   }
 
   function selectRequest(row: RequestRow) {
@@ -237,25 +251,24 @@
       $goto("../home")
       return
     }
-
-    const currentAgentIds = ($agentsStore.agents || []).map(agent => agent._id)
-    if (!currentAgentIds.length) {
-      return
-    }
-
-    loadRequests()
   })
 
   $effect(() => {
     selectedAgentFilter
+    if (!activityEnabled) {
+      return
+    }
+
+    const currentAgentIds = ($agentsStore.agents || []).map(agent => agent._id)
+    if (!currentAgentIds.length) {
+      allRequests = []
+      hasNextPage = false
+      return
+    }
+
     currentPage = 1
     selectedRequestId = null
-  })
-
-  $effect(() => {
-    if (currentPage > totalPages) {
-      currentPage = totalPages
-    }
+    loadRequests(1)
   })
 </script>
 
@@ -301,13 +314,13 @@
       <div class="table-footer">
         <div class="footer-copy">{paginationLabel}</div>
 
-        {#if totalPages > 1}
+        {#if currentPage > 1 || hasNextPage}
           <Pagination
             page={currentPage}
             goToPrevPage={() => changePage(currentPage - 1)}
             goToNextPage={() => changePage(currentPage + 1)}
             hasPrevPage={currentPage > 1}
-            hasNextPage={currentPage < totalPages && !!paginatedRows.length}
+            {hasNextPage}
           />
         {/if}
       </div>

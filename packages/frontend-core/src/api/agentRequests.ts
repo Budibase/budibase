@@ -4,6 +4,7 @@ import type { BaseAPIClient } from "./types"
 export interface AgentRequestEndpoints {
   fetchAgentRequests: (opts?: {
     limit?: number
+    page?: number
   }) => Promise<FetchAgentRequestsResponse>
 }
 
@@ -14,6 +15,9 @@ export const buildAgentRequestEndpoints = (
     const params = new URLSearchParams()
     if (opts.limit !== undefined) {
       params.set("limit", String(opts.limit))
+    }
+    if (opts.page !== undefined) {
+      params.set("page", String(opts.page))
     }
 
     const query = params.toString()
