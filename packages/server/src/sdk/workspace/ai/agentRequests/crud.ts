@@ -56,7 +56,8 @@ const buildThread = ({
 const sortRequests = (requests: AgentRequest[]) =>
   requests.sort(
     (a, b) =>
-      new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+      new Date(b.updatedAt || 0).getTime() -
+      new Date(a.updatedAt || 0).getTime()
   )
 
 async function saveRequest(request: AgentRequest): Promise<AgentRequest> {

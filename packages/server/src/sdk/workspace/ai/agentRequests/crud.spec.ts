@@ -1,8 +1,5 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import {
-  createOrUpdateRequestForPrompt,
-  fetchRequestsByAgent,
-} from "./crud"
+import { createOrUpdateRequestForPrompt, fetchRequestsByAgent } from "./crud"
 import { analyzeAgentRequestLink } from "./helpers"
 
 jest.mock("./helpers", () => ({
