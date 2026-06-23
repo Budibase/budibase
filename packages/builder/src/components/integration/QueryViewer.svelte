@@ -521,6 +521,12 @@
     color: var(--ink);
   }
 
+  .controls :global(.disabled) {
+    pointer-events: none;
+    background-color: transparent;
+    color: var(--grey-3);
+  }
+
   .controls :global(span) {
     display: flex;
     align-items: center;
