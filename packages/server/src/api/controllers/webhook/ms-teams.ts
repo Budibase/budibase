@@ -7,9 +7,10 @@ import {
   type MSTeamsActivity,
   type MSTeamsConversationScope,
 } from "@budibase/types"
-import { Chat, type Thread, type Message, type SentMessage } from "chat"
+import { Chat, type ActionEvent, type Thread, type Message, type SentMessage } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
+import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -172,6 +173,7 @@ const createTeamsMessageHandler = ({
     const tenantId =
       raw?.channelData?.tenant?.id?.trim() || raw?.from?.tenantId?.trim()
     const conversationType = raw?.conversation?.conversationType?.trim()
+    const serviceUrl = raw?.serviceUrl?.trim()
 
     if (!conversationId) {
       await thread.post("Missing Teams conversation information.")
@@ -196,6 +198,7 @@ const createTeamsMessageHandler = ({
       tenantId,
       externalUserId,
       externalUserName: displayName,
+      serviceUrl,
     }
 
     const scope: MSTeamsConversationScope = {
@@ -371,6 +374,60 @@ export async function MSTeamsWebhook(
         idleTimeoutMinutes,
         requireUserLink,
       })
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
+
+        let parsed: {
+          escalationId: string
+          notificationDocId: string
+          appId: string
+        }
+        try {
+          parsed = JSON.parse(event.value ?? "")
+        } catch {
+          console.error("Teams escalation action: invalid button value", event.value)
+          return
+        }
+        const { escalationId, notificationDocId, appId } = parsed
+
+        const teamsResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+        }
+
+        try {
+          const result = await context.doInContext(appId, async () => {
+            return sdk.escalations.respond(
+              escalationId,
+              notificationDocId,
+              teamsResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Teams escalation action: failed to record response", {
+            escalationId,
+            notificationDocId,
+            appId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
+
       chat.onDirectMessage(async (thread, message) => {
         await handler(thread, message)
       })
