@@ -61,7 +61,8 @@
     },
     {
       label: "Operation",
-      value: requestOperations.map(operation => operation.name).join(", ") || "",
+      value:
+        requestOperations.map(operation => operation.name).join(", ") || "",
       icon: "gear",
       highlight: false,
       underline: false,
