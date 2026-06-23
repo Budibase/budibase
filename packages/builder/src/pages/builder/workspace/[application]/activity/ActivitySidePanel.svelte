@@ -30,12 +30,13 @@
 
     return request.entries[request.entries.length - 1]
   })
-  let requestActions = $derived(latestEntry ? latestEntry.promptHistory : [])
   let latestPrompt = $derived(
     latestEntry
       ? latestEntry.promptHistory[latestEntry.promptHistory.length - 1]
       : undefined
   )
+  const getCreatedByLabel = (value: string) =>
+    value.replace(/^User:\s*/, "").trim() || value
   let requestOperations = $derived.by(() => {
     if (!latestEntry) {
       return []
@@ -86,6 +87,23 @@
       underline: false,
     },
   ])
+  let timelineEvents = $derived.by(() => {
+    if (!request) {
+      return []
+    }
+
+    const firstPrompt = request.entries[0]?.promptHistory[0]
+    if (!firstPrompt) {
+      return []
+    }
+
+    return [
+      {
+        id: "request-created",
+        label: `Request created by ${getCreatedByLabel(triggeredBy)}`,
+      },
+    ]
+  })
 </script>
 
 {#if open && request && latestEntry}
@@ -115,12 +133,7 @@
       <Panel resizable noHeaderBorder>
         <div slot="panel-header-content" class="activity-panel-header">
           <div class="activity-panel-title">{title}</div>
-          <Icon
-            name="x"
-            hoverable
-            color="var(--spectrum-global-color-gray-400)"
-            on:click={onClose}
-          />
+          <Icon name="x" hoverable on:click={onClose} />
         </div>
 
         <div class="activity-panel-content">
@@ -133,21 +146,21 @@
                   <div class="detail-label">{detail.label}</div>
 
                   <div class="detail-value">
-                    <span class="detail-icon">
-                      <Icon
-                        size="S"
-                        name={detail.icon}
-                        color={detail.highlight
-                          ? "var(--spectrum-global-color-blue-400)"
-                          : "var(--spectrum-global-color-gray-400)"}
-                        weight={detail.highlight ? "fill" : "regular"}
-                      />
+                    <Icon
+                      size="S"
+                      name={detail.icon}
+                      color={detail.highlight
+                        ? "var(--spectrum-global-color-blue-400)"
+                        : "var(--spectrum-global-color-gray-400)"}
+                      weight={detail.highlight ? "fill" : "regular"}
+                    />
+
+                    <span
+                      class="detail-text"
+                      class:underlined={detail.underline}
+                    >
+                      {detail.value}
                     </span>
-                    <div class="detail-text">
-                      <span class:underlined={detail.underline}>
-                        {detail.value}
-                      </span>
-                    </div>
                   </div>
                 </div>
               {/each}
@@ -155,22 +168,17 @@
           </section>
 
           <section class="activity-panel-section">
-            <div class="section-title">Actions</div>
+            <div class="section-title">Timeline</div>
 
-            <div class="actions-list">
-              {#if requestActions.length > 0}
-                {#each requestActions as action, index}
-                  <div class="action-row">
-                    <span class="action-icon">
-                      <Icon name="lightning" size="S" color="#99c200" />
-                    </span>
-                    <div class="action-text">
-                      {index + 1}: {action.message}
-                    </div>
+            <div class="timeline-table">
+              {#if timelineEvents.length > 0}
+                {#each timelineEvents as event}
+                  <div class="timeline-row">
+                    {event.label}
                   </div>
                 {/each}
               {:else}
-                <div class="action-row empty">
+                <div class="timeline-row empty">
                   <div class="empty-text">No actions recorded yet.</div>
                 </div>
               {/if}
@@ -194,7 +202,6 @@
     position: fixed;
     inset: 0 0 0 auto;
     z-index: 99;
-    background: var(--background-alt);
   }
 
   .activity-panel-header {
@@ -278,58 +285,30 @@
     white-space: nowrap;
   }
 
-  .detail-icon {
-    width: 16px;
-    height: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 16px;
-  }
-
   .underlined {
     text-decoration: underline;
     text-underline-offset: 2px;
   }
 
-  .actions-list {
+  .timeline-table {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
 
-  .action-row {
-    min-height: 40px;
-    border: 1px solid #343434;
+  .timeline-row {
+    min-height: 32px;
+    padding: 8px 16px;
     border-radius: 6px;
-    padding: 0 16px;
+    border: 1px solid #343434;
+    background: #1d1d1d;
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: #202020;
+    gap: 11px;
   }
 
-  .action-row.empty {
+  .timeline-row.empty {
     justify-content: center;
-  }
-
-  .action-icon {
-    width: 20px;
-    height: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 20px;
-  }
-
-  .action-text {
-    color: #f3f3f3;
-    font-size: 15px;
-    line-height: 1.35;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .empty-text {
