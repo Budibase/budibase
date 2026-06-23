@@ -1,7 +1,6 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import {
   createOrUpdateRequestForPrompt,
-  fetchThread,
   fetchRequestsByAgent,
 } from "./crud"
 import { analyzeAgentRequestLink } from "./helpers"
@@ -149,38 +148,6 @@ describe("agentRequests crud", () => {
         sessionId: "session_2",
         source: "Slack",
         operationNames: ["Comms"],
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
-        status: "completed",
-      })
-    })
-  })
-
-  it("fetches thread details", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
-        decision: "new_thread",
-      })
-      const created = await createOrUpdateRequestForPrompt({
-        agentId: "agent_1",
-        sessionId: "session_1",
-        latestUserPrompt: "Show me the holidays company policy",
-        operation: {
-          name: "Support",
-          prompt: "Help users with company policy questions.",
-        },
-        source: "Chat",
-        userId: "user_1",
-      })
-
-      const thread = await fetchThread(created!.request._id!)
-
-      expect(thread?._id).toEqual(created?.request._id)
-      expect(thread?.entries).toHaveLength(1)
-      expect(thread?.entries[0]).toEqual({
-        sessionId: "session_1",
-        source: "Chat",
-        operationNames: ["Support"],
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
         status: "completed",

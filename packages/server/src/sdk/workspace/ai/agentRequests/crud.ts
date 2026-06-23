@@ -53,25 +53,11 @@ const buildThread = ({
   }
 }
 
-const getLatestEntry = (request: AgentRequest) =>
-  request.entries[request.entries.length - 1]
-
 const sortRequests = (requests: AgentRequest[]) =>
-  requests.sort((a, b) => {
-    const aTime = new Date(
-      a.updatedAt || getLatestEntry(a)?.updatedAt || 0
-    ).getTime()
-    const bTime = new Date(
-      b.updatedAt || getLatestEntry(b)?.updatedAt || 0
-    ).getTime()
-    return bTime - aTime
-  })
-
-export async function fetchThread(
-  requestId: string
-): Promise<AgentRequest | undefined> {
-  return await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
-}
+  requests.sort(
+    (a, b) =>
+      new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+  )
 
 async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   const response = await context.getWorkspaceDB().put(request)

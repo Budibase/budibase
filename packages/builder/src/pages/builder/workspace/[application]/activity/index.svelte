@@ -77,13 +77,6 @@
     return new Date(request.updatedAt || request.createdAt || 0)
   }
 
-  const sortRequestsByLatestActivity = (requests: AgentRequest[]) =>
-    [...requests].sort((a, b) => {
-      const aTime = getRequestUpdatedAt(a).getTime()
-      const bTime = getRequestUpdatedAt(b).getTime()
-      return bTime - aTime
-    })
-
   const getSourceLabel = (request: AgentRequest) => {
     const agentName =
       $agentsStore.agents.find(agent => agent._id === request.agentId)?.name ||
@@ -92,9 +85,7 @@
     return `Agent: ${agentName}`
   }
 
-  let filteredRequests = $derived.by(() =>
-    sortRequestsByLatestActivity(allRequests)
-  )
+  let filteredRequests = $derived(allRequests)
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
     const requests = filteredRequests
