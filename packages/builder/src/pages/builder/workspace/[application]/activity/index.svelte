@@ -3,6 +3,7 @@
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
   import { Pagination, Select, Table, notifications } from "@budibase/bbui"
+  import type { AgentRequestStatus } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import dayjs from "dayjs"
@@ -11,10 +12,8 @@
   import ActivitySidePanel from "./ActivitySidePanel.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
   import {
-    type ActivityStatusTone,
     getRequestDisplayId,
     getRequestTitle,
-    getRequestTone,
     getRequestUpdatedAt,
     getTriggeredByLabel,
     sortRequestsByLatestActivity,
@@ -28,7 +27,7 @@
     agentName: string
     triggeredBy: string
     statusLabel: string
-    statusTone: ActivityStatusTone
+    status: AgentRequestStatus
     actionCount: number
     updatedLabel: string
     actions: string
@@ -81,10 +80,9 @@
   let userNames = $state<Record<string, string>>({})
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
-  const requestStatusMeta: Record<RequestRow["statusTone"], { label: string }> =
-    {
-      completed: { label: "Completed" },
-    }
+  const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
+    completed: { label: "Completed" },
+  }
 
   let agentOptions = $derived.by(() => {
     const options = ($agentsStore.agents || []).map(agent => ({
@@ -120,7 +118,6 @@
   let paginatedRows = $derived.by<RequestRow[]>(() => {
     const start = (currentPage - 1) * PAGE_SIZE
     return filteredRequests.slice(start, start + PAGE_SIZE).map(request => {
-      const tone = getRequestTone(request)
       const updatedAt = getRequestUpdatedAt(request)
       const updatedTime = updatedAt.getTime()
       const actionCount = request.entries.reduce(
@@ -136,8 +133,8 @@
         title: getRequestTitle(request),
         agentName,
         triggeredBy: getTriggeredByLabel(request, userNames),
-        statusLabel: requestStatusMeta[tone].label,
-        statusTone: tone,
+        statusLabel: requestStatusMeta[request.status].label,
+        status: request.status,
         actionCount,
         updatedLabel:
           updatedTime > 0 ? dayjs(updatedAt).fromNow() : "Unknown time",

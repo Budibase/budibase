@@ -1,6 +1,6 @@
 import { Document } from "../../"
 
-type AgentRequestStatus = "completed"
+export type AgentRequestStatus = "completed"
 
 interface AgentRequestPromptOperation {
   name: string

@@ -1,7 +1,5 @@
 import type { AgentRequest } from "@budibase/types"
 
-export type ActivityStatusTone = "completed"
-
 export const getLatestEntry = (request: AgentRequest) =>
   request.entries[request.entries.length - 1]
 
@@ -21,11 +19,6 @@ export const getRequestTitle = (request: AgentRequest) => {
     "Untitled request"
   )
 }
-
-export const getRequestTone = (_request: AgentRequest): ActivityStatusTone =>
-  "completed"
-
-export const getRequestStatusLabel = (_request: AgentRequest) => "Completed"
 
 export const getRequestDisplayId = (request: AgentRequest) =>
   request._id || `${request.agentId}-${request.userId}`
