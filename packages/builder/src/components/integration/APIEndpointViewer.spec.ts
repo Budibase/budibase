@@ -1692,6 +1692,44 @@ describe("API Endpoint Viewer", () => {
       })
     })
 
+    it("Send button is disabled and shows a warning for a valid domain without a protocol", async () => {
+      const { container } = setupDOM({ datasourceId: REST_DS_ID })
+      await waitFor(() =>
+        expect(container.querySelector(".url-input")).not.toBeNull()
+      )
+      const urlInput = container.querySelector(".url-input") as HTMLInputElement
+      await fireEvent.input(urlInput, {
+        target: { value: "example.com" },
+      })
+
+      await waitFor(() => {
+        expect(
+          getSendButton(container)?.classList.contains("is-disabled")
+        ).toBe(true)
+        expect(
+          container.querySelector(".protocol-warning-anchor")?.textContent
+        ).toContain("http(s) protocol required in the URL")
+      })
+    })
+
+    it("does not show the protocol warning for an invalid relative path", async () => {
+      const { container } = setupDOM({ datasourceId: REST_DS_ID })
+      await waitFor(() =>
+        expect(container.querySelector(".url-input")).not.toBeNull()
+      )
+      const urlInput = container.querySelector(".url-input") as HTMLInputElement
+      await fireEvent.input(urlInput, {
+        target: { value: "api/v1/users" },
+      })
+
+      await waitFor(() => {
+        expect(
+          getSendButton(container)?.classList.contains("is-disabled")
+        ).toBe(true)
+        expect(container.querySelector(".protocol-warning-anchor")).toBeNull()
+      })
+    })
+
     it("Save button is disabled for a new query without a path", async () => {
       const { container } = setupDOM({ datasourceId: REST_DS_ID })
       await waitFor(() => {
