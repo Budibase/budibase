@@ -547,7 +547,7 @@
   }
 
   onMount(() => {
-    searchRef?.focus()
+    searchRef?.focus({ preventScroll: true })
     window.addEventListener("keydown", handleKeyDown)
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
