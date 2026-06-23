@@ -87,11 +87,7 @@
       return "Untitled request"
     }
 
-    return (
-      latestEntry.promptHistory[0]?.message ||
-      latestEntry.promptHistory[latestEntry.promptHistory.length - 1]?.message ||
-      "Untitled request"
-    )
+    return latestEntry.promptHistory[0]?.message || "Untitled request"
   }
 
   const getRequestDisplayId = (request: AgentRequest) =>
@@ -209,10 +205,6 @@
   })
 
   let paginationLabel = $derived.by(() => {
-    if (!filteredRequests.length) {
-      return "Showing 0 items"
-    }
-
     const start = (currentPage - 1) * PAGE_SIZE + 1
     const end = Math.min(currentPage * PAGE_SIZE, filteredRequests.length)
     return `Showing ${start}-${end} of ${filteredRequests.length} items`
