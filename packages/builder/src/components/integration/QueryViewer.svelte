@@ -2,7 +2,6 @@
   import { goto as gotoStore } from "@roxi/routify"
   import { datasources, integrations, queries } from "@/stores/builder"
   import {
-    Icon,
     Select,
     Input,
     Label,
@@ -10,7 +9,6 @@
     Heading,
     Body,
     Divider,
-    Button,
     ActionButton,
     Checkbox,
   } from "@budibase/bbui"
@@ -259,7 +257,8 @@
           Run query
         </ActionButton>
         <div class="tooltip" title="Run your query to enable saving">
-          <Button
+          <ActionButton
+            icon="floppy-disk"
             on:click={async () => {
               const response = await saveQuery()
 
@@ -277,11 +276,9 @@
               nameError ||
               rows.length === 0
             )}
-            overBackground
           >
-            <Icon size="S" name="floppy-disk" />
             Save
-          </Button>
+          </ActionButton>
         </div>
       </div>
     </div>
@@ -524,19 +521,9 @@
     color: var(--ink);
   }
 
-  .controls :global(.is-disabled) {
-    pointer-events: none;
-    background-color: transparent;
-    color: var(--grey-3);
-  }
-
   .controls :global(span) {
     display: flex;
     align-items: center;
-  }
-
-  .controls :global(.icon) {
-    margin-right: 8px;
   }
 
   .configField {
