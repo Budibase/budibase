@@ -16,6 +16,5 @@ export interface AgentRequest extends Document {
   agentId: string
   userId: string
   entries: AgentRequestEntry[]
-  latestSessionId: string
   status: AgentRequestStatus
 }

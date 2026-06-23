@@ -52,7 +52,6 @@ describe("agentRequests crud", () => {
         updatedAt: expect.any(String),
         status: "completed",
       })
-      expect(created?.request.latestSessionId).toEqual("session_1")
       expect(created?.request.createdAt).toEqual(expect.any(String))
       expect(created?.request.updatedAt).toEqual(expect.any(String))
       expect(created?.created).toEqual(true)
@@ -105,7 +104,6 @@ describe("agentRequests crud", () => {
         updatedAt: expect.any(String),
         status: "completed",
       })
-      expect(second?.request.latestSessionId).toEqual("session_2")
       expect(second?.request.updatedAt).toEqual(expect.any(String))
       expect(second?.created).toEqual(false)
     })

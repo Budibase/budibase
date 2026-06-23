@@ -17,11 +17,9 @@
   interface RequestRow {
     id: string
     title: string
-    agentName: string
-    triggeredBy: string
+    sourceLabel: string
     statusLabel: string
     status: AgentRequestStatus
-    actionCount: number
     updatedLabel: string
     actions: string
   }
@@ -38,19 +36,12 @@
       displayName: "Requests",
       width: "minmax(280px, 1.8fr)",
     },
-    agentName: { type: "string", displayName: "Agent", width: "180px" },
-    triggeredBy: {
+    sourceLabel: {
       type: "string",
-      displayName: "Triggered by",
+      displayName: "Source",
       width: "200px",
     },
     statusLabel: { type: "string", displayName: "Status", width: "170px" },
-    actionCount: {
-      type: "number",
-      displayName: "Actions",
-      width: "90px",
-      align: "Left",
-    },
     updatedLabel: { type: "string", displayName: "Updated", width: "130px" },
     actions: {
       type: "string",
@@ -106,6 +97,14 @@
     return request.userId ? "User" : "Unknown"
   }
 
+  const getSourceLabel = (request: AgentRequest) => {
+    const agentName =
+      $agentsStore.agents.find(agent => agent._id === request.agentId)?.name ||
+      "Unknown agent"
+
+    return `Agent: ${agentName}`
+  }
+
   let agentOptions = $derived.by(() => {
     const options = ($agentsStore.agents || []).map(agent => ({
       label: agent.name || "Untitled agent",
@@ -128,6 +127,7 @@
     return [
       { label: "All actions", value: requests.length },
       { label: "Completed", value: requests.length },
+      { label: "Processing", value: 0 },
       { label: "Needs input", value: 0 },
       { label: "Failed", value: 0 },
     ]
@@ -142,19 +142,13 @@
     return filteredRequests.slice(start, start + PAGE_SIZE).map(request => {
       const updatedAt = getRequestUpdatedAt(request)
       const updatedTime = updatedAt.getTime()
-      const actionCount = request.entries.length
-      const agentName =
-        $agentsStore.agents.find(agent => agent._id === request.agentId)
-          ?.name || "Unknown agent"
 
       return {
         id: getRequestDisplayId(request),
         title: getRequestTitle(request),
-        agentName,
-        triggeredBy: getTriggeredByLabel(request, userNames),
+        sourceLabel: getSourceLabel(request),
         statusLabel: requestStatusMeta[request.status].label,
         status: request.status,
-        actionCount,
         updatedLabel:
           updatedTime > 0 ? dayjs(updatedAt).fromNow() : "Unknown time",
         actions: "",
@@ -354,9 +348,10 @@
   }
 
   .page-title {
-    font-size: 24px;
-    font-weight: 500;
-    color: var(--spectrum-global-color-gray-900);
+    font-size: 13px;
+    line-height: 17px;
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .metrics-grid {
@@ -437,8 +432,7 @@
   }
 
   .requests-table-panel :global(.spectrum-Table-cell:nth-child(2)),
-  .requests-table-panel :global(.spectrum-Table-cell:nth-child(3)),
-  .requests-table-panel :global(.spectrum-Table-cell:nth-child(6)) {
+  .requests-table-panel :global(.spectrum-Table-cell:nth-child(4)) {
     color: var(--spectrum-global-color-gray-600);
   }
 

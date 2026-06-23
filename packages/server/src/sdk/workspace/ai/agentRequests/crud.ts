@@ -52,7 +52,6 @@ const buildThread = ({
     entries: [entry],
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
-    latestSessionId: sessionId,
     status: entry.status,
   }
 }
@@ -334,7 +333,6 @@ export async function createOrUpdateRequestForPrompt({
       ...request,
       entries: nextEntries,
       updatedAt: timestamp,
-      latestSessionId: sessionId,
       status: "completed",
     }),
     created: false,
