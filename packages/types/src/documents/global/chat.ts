@@ -76,7 +76,6 @@ export interface WebhookChatCompleteResult {
   ragSources?: AgentMessageMetadata["ragSources"]
   allowKnowledgeSourceDownload?: boolean
   title?: string
-  ragSources?: AgentMessageMetadata["ragSources"]
 }
 
 export type CreateChatConversationRequest = Pick<
