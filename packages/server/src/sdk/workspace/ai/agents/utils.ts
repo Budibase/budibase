@@ -40,6 +40,9 @@ const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
 export const getLiveOperations = (agent: Agent): AgentOperation[] =>
   (agent.operations || []).filter(operation => operation.live === true)
 
+export const getLiveOperation = (agent: Agent): AgentOperation | undefined =>
+  getLiveOperations(agent)[0]
+
 export function getToolDisplayNames(
   tools: AiToolDefinition[]
 ): Record<string, string> {
