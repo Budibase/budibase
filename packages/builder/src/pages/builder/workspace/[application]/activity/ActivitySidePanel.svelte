@@ -2,20 +2,33 @@
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { Icon } from "@budibase/bbui"
-  import type { AgentRequest } from "@budibase/types"
+  import type { AgentRequest, AgentRequestStatus } from "@budibase/types"
+  import dayjs from "dayjs"
   import { fly } from "svelte/transition"
+  import ActivityStatusBadge from "./ActivityStatusBadge.svelte"
+
+  interface DetailRow {
+    label: string
+    value: string | undefined
+    icon?: string
+    highlight?: boolean
+    underline?: boolean
+    type?: "text" | "status-badge"
+  }
 
   let {
     open,
     title,
     request,
     agentName,
+    createdBy,
     onClose,
   }: {
     open: boolean
     title: string
     request?: AgentRequest
     agentName: string
+    createdBy: string
     onClose: () => void
   } = $props()
 
@@ -28,7 +41,13 @@
 
     return request.entries[request.entries.length - 1]
   })
-  let latestPrompt = $derived(latestEntry)
+  let firstEntry = $derived.by(() => {
+    if (!request) {
+      return undefined
+    }
+
+    return request.entries[0]
+  })
   let requestOperations = $derived.by(() => {
     if (!latestEntry) {
       return []
@@ -36,27 +55,39 @@
 
     return latestEntry.operationNames
   })
-  let details = $derived([
+  let details = $derived<DetailRow[]>([
     {
-      label: "Agent",
+      label: "Status",
+      value: request?.status,
+      type: "status-badge",
+    },
+    {
+      label: "Source",
       value: agentName,
       icon: "sparkle",
       highlight: true,
-      underline: false,
     },
     {
       label: "Operation",
       value: requestOperations.join(", ") || "",
       icon: "gear",
-      highlight: false,
-      underline: false,
     },
     {
-      label: "Source",
-      value: latestPrompt?.source,
+      label: "Created by",
+      value: createdBy,
+      icon: "user",
+    },
+    {
+      label: "Channel",
+      value: firstEntry?.source,
       icon: "circle",
-      highlight: false,
-      underline: false,
+    },
+    {
+      label: "Created at",
+      value: request?.createdAt
+        ? dayjs(request.createdAt).format("MMM D, YYYY h:mm A")
+        : undefined,
+      icon: "calendar",
     },
   ])
   let timelineEvents = $derived.by(() => {
@@ -117,21 +148,29 @@
                   <div class="detail-label">{detail.label}</div>
 
                   <div class="detail-value">
-                    <Icon
-                      size="S"
-                      name={detail.icon}
-                      color={detail.highlight
-                        ? "var(--spectrum-global-color-blue-400)"
-                        : "var(--spectrum-global-color-gray-400)"}
-                      weight={detail.highlight ? "fill" : "regular"}
-                    />
+                    {#if detail.type === "status-badge" && detail.value}
+                      <ActivityStatusBadge
+                        status={detail.value as AgentRequestStatus}
+                      />
+                    {:else}
+                      {#if detail.icon}
+                        <Icon
+                          size="S"
+                          name={detail.icon}
+                          color={detail.highlight
+                            ? "var(--spectrum-global-color-blue-400)"
+                            : "var(--spectrum-global-color-gray-400)"}
+                          weight={detail.highlight ? "fill" : "regular"}
+                        />
+                      {/if}
 
-                    <span
-                      class="detail-text"
-                      class:underlined={detail.underline}
-                    >
-                      {detail.value}
-                    </span>
+                      <span
+                        class="detail-text"
+                        class:underlined={detail.underline}
+                      >
+                        {detail.value}
+                      </span>
+                    {/if}
                   </div>
                 </div>
               {/each}
