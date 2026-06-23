@@ -102,6 +102,16 @@ describe("analyzeAgentRequestLink", () => {
       analyzeAgentRequestLink({
         latestPrompt: "summarise it in 50 words",
         candidateRequests: [buildThread()],
+        recentChatContext: [
+          {
+            role: "user",
+            content: "Show me the holidays company policy",
+          },
+          {
+            role: "assistant",
+            content: "Here is the policy summary.",
+          },
+        ],
         agentId: "agent_1",
         sessionId: "session_2",
       })
@@ -121,6 +131,51 @@ describe("analyzeAgentRequestLink", () => {
         headers: {
           "x-litellm-tags": "bb-agent-request-analyser",
         },
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: "user",
+            content: JSON.stringify({
+              currentSessionId: "session_2",
+              latestPrompt: "summarise it in 50 words",
+              recentChatContext: [
+                {
+                  role: "user",
+                  content: "Show me the holidays company policy",
+                },
+                {
+                  role: "assistant",
+                  content: "Here is the policy summary.",
+                },
+              ],
+              candidateRequests: [
+                {
+                  requestId: "agentrequest_thread_1",
+                  status: "completed",
+                  recentEntries: [
+                    {
+                      sessionId: "session_1",
+                      promptHistory: [
+                        {
+                          message: "Show me the holidays company policy",
+                          date: "2026-01-01T00:00:00.000Z",
+                          operations: [
+                            {
+                              name: "Support",
+                              prompt:
+                                "Help users with company policy questions.",
+                            },
+                          ],
+                        },
+                      ],
+                      status: "completed",
+                      source: "Chat",
+                    },
+                  ],
+                },
+              ],
+            }),
+          }),
+        ]),
       })
     )
   })

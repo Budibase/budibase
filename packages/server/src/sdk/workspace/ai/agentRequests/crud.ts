@@ -224,6 +224,7 @@ export async function createOrUpdateRequestForPrompt({
   agentId,
   sessionId,
   latestUserPrompt,
+  recentChatContext,
   operation,
   source,
   userId,
@@ -231,6 +232,10 @@ export async function createOrUpdateRequestForPrompt({
   agentId: string
   sessionId: string
   latestUserPrompt: string
+  recentChatContext?: Array<{
+    role: "user" | "assistant"
+    content: string
+  }>
   operation?: {
     name: string
     prompt: string
@@ -254,6 +259,7 @@ export async function createOrUpdateRequestForPrompt({
   const linkDecision = await analyzeAgentRequestLink({
     latestPrompt: prompt,
     candidateRequests,
+    recentChatContext,
     agentId,
     sessionId,
   })

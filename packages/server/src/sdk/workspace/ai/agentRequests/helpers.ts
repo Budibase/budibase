@@ -14,6 +14,11 @@ export interface AgentRequestLinkAnalysis {
   entryAction?: NonNullable<AgentRequestLinkDecision["entryAction"]>
 }
 
+interface AgentRequestChatContextMessage {
+  role: "user" | "assistant"
+  content: string
+}
+
 const normalizeTitle = (value: string) =>
   value
     .replace(/^["'\s]+|["'\s]+$/g, "")
@@ -63,11 +68,13 @@ const buildCandidateSummary = (request: AgentRequest) => ({
 export async function analyzeAgentRequestLink({
   latestPrompt,
   candidateRequests,
+  recentChatContext,
   agentId,
   sessionId,
 }: {
   latestPrompt: string
   candidateRequests: AgentRequest[]
+  recentChatContext?: AgentRequestChatContextMessage[]
   agentId: string
   sessionId: string
 }): Promise<AgentRequestLinkAnalysis> {
@@ -110,6 +117,7 @@ export async function analyzeAgentRequestLink({
           content: JSON.stringify({
             currentSessionId: sessionId,
             latestPrompt: normalizedPrompt,
+            recentChatContext,
             candidateRequests: candidateRequests.map(buildCandidateSummary),
           }),
         },

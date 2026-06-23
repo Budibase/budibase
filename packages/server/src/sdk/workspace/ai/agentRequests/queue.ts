@@ -8,6 +8,10 @@ type AgentRequestTrackingJob = {
   agentId: string
   sessionId: string
   latestUserPrompt: string
+  recentChatContext?: Array<{
+    role: "user" | "assistant"
+    content: string
+  }>
   operation?: {
     name: string
     prompt: string
@@ -86,12 +90,17 @@ export async function enqueueRequestTracking({
   agentId,
   sessionId,
   latestUserPrompt,
+  recentChatContext,
   operation,
   userId,
 }: {
   agentId: string
   sessionId: string
   latestUserPrompt: string
+  recentChatContext?: Array<{
+    role: "user" | "assistant"
+    content: string
+  }>
   operation?: {
     name: string
     prompt: string
@@ -111,6 +120,7 @@ export async function enqueueRequestTracking({
     agentId,
     sessionId,
     latestUserPrompt,
+    recentChatContext,
     operation,
     source: determineTrigger(sessionId),
     userId,

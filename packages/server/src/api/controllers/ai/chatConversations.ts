@@ -52,6 +52,36 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
+const getRecentChatContext = (
+  messages: ChatConversation["messages"],
+  limit = 6
+) => {
+  return messages
+    .flatMap(message => {
+      if (message.role !== "user" && message.role !== "assistant") {
+        return []
+      }
+
+      const content = (message.parts || [])
+        .filter(
+          (
+            part
+          ): part is Extract<(typeof message.parts)[number], { type: "text" }> =>
+            part.type === "text"
+        )
+        .map(part => part.text)
+        .join("\n")
+        .trim()
+
+      if (!content) {
+        return []
+      }
+
+      return [{ role: message.role, content }]
+    })
+    .slice(-limit)
+}
+
 const findLiveOperation = (agent: Agent, operationId: string) =>
   getLiveOperations(agent).find(operation => operation.id === operationId)
 
@@ -426,6 +456,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         agentId,
         sessionId,
         latestUserPrompt: run.latestQuestion,
+        recentChatContext: getRecentChatContext(chat.messages),
         operation: run.selectedOperation
           ? {
               name: run.selectedOperation.name,
