@@ -182,12 +182,20 @@ async function createNewRequest({
   })
 }
 
-export async function fetchRequests(): Promise<AgentRequest[]> {
+export async function fetchRequests({
+  limit,
+  page,
+}: {
+  limit: number
+  page: number
+}): Promise<AgentRequest[]> {
   const db = context.getProdWorkspaceDB()
   const response = await db.allDocs<AgentRequest>({
     ...docIds.getDocParams(DocumentType.AGENT_REQUEST, undefined, {
       include_docs: true,
     }),
+    limit,
+    skip: (page - 1) * limit,
   })
 
   return sortRequests(
@@ -200,7 +208,7 @@ export async function fetchRequests(): Promise<AgentRequest[]> {
 export async function fetchRequestsByAgent(
   agentId: string
 ): Promise<AgentRequest[]> {
-  const requests = await fetchRequests()
+  const requests = await fetchRequests({ limit: 1000, page: 1 })
   return requests.filter(request => request.agentId === agentId)
 }
 
