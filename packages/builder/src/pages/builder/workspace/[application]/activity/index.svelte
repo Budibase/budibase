@@ -190,7 +190,11 @@
       })
       allRequests = response.requests
       hasNextPage = response.requests.length === PAGE_SIZE
-      await hydrateUserNames(response.requests)
+      try {
+        await hydrateUserNames(response.requests)
+      } catch (error) {
+        console.error("Failed to hydrate agent request user names", error)
+      }
     } catch (error) {
       console.error("Failed to fetch agent requests", error)
       notifications.error("Failed to load agent actions")
@@ -212,12 +216,22 @@
 
     const entries = await Promise.all(
       missingUserIds.map(async userId => {
-        const user = await users.get(userId)
-        const name =
-          [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-          user?.email ||
-          "Unknown user"
-        return [userId, name] as const
+        try {
+          const user = await users.get(userId)
+          const name =
+            [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+            user?.email ||
+            "Unknown user"
+
+          return [userId, name] as const
+        } catch (error) {
+          console.error("Failed to load agent request user", {
+            userId,
+            error,
+          })
+
+          return [userId, "Unknown user"] as const
+        }
       })
     )
 
