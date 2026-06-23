@@ -62,8 +62,12 @@ const getLatestEntry = (request: AgentRequest) =>
 
 const sortRequests = (requests: AgentRequest[]) =>
   requests.sort((a, b) => {
-    const aTime = new Date(a.updatedAt || getLatestEntry(a)?.updatedAt || 0).getTime()
-    const bTime = new Date(b.updatedAt || getLatestEntry(b)?.updatedAt || 0).getTime()
+    const aTime = new Date(
+      a.updatedAt || getLatestEntry(a)?.updatedAt || 0
+    ).getTime()
+    const bTime = new Date(
+      b.updatedAt || getLatestEntry(b)?.updatedAt || 0
+    ).getTime()
     return bTime - aTime
   })
 

@@ -30,9 +30,7 @@
 
     return request.entries[request.entries.length - 1]
   })
-  let latestPrompt = $derived(
-    latestEntry
-  )
+  let latestPrompt = $derived(latestEntry)
   const getCreatedByLabel = (value: string) =>
     value.replace(/^User:\s*/, "").trim() || value
   let requestOperations = $derived.by(() => {
