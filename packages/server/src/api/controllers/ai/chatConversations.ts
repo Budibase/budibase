@@ -453,21 +453,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId,
       user: ctx.user,
     })
-    if (context.isProdWorkspace()) {
-      await sdk.ai.agentRequests.enqueueRequestTracking({
-        agentId,
-        sessionId,
-        latestUserPrompt: run.latestQuestion,
-        recentChatContext: getRecentChatContext(chat.messages),
-        operation: run.selectedOperation
-          ? {
-              name: run.selectedOperation.name,
-              prompt: run.selectedOperation.promptInstructions || "",
-            }
-          : undefined,
-        userId,
-      })
-    }
+    await sdk.ai.agentRequests.enqueueRequestTracking({
+      agentId,
+      sessionId,
+      latestUserPrompt: run.latestQuestion,
+      recentChatContext: getRecentChatContext(chat.messages),
+      operation: run.selectedOperation
+        ? {
+            name: run.selectedOperation.name,
+            prompt: run.selectedOperation.promptInstructions || "",
+          }
+        : undefined,
+      userId,
+    })
 
     const pendingToolCalls = new Set<string>()
 

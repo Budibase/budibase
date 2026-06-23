@@ -110,6 +110,9 @@ export async function enqueueRequestTracking({
   if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
     return
   }
+  if (!context.isProdWorkspace()) {
+    return
+  }
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
     throw new Error("workspaceId is required")
