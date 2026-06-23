@@ -1,7 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
   import { agentsStore, featureFlags } from "@/stores/portal"
-  import { users } from "@/stores/portal/users"
   import { Pagination, Select, Table, notifications } from "@budibase/bbui"
   import type { AgentRequestStatus } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
@@ -48,7 +47,6 @@
       displayName: "",
       width: "40px",
       sortable: false,
-      preventSelectRow: true,
     },
   }
   const customRenderers = [
@@ -61,7 +59,6 @@
   let currentPage = $state(1)
   let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
-  let userNames = $state<Record<string, string>>({})
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
   const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
@@ -85,17 +82,6 @@
       const bTime = getRequestUpdatedAt(b).getTime()
       return bTime - aTime
     })
-
-  const getTriggeredByLabel = (
-    request: AgentRequest,
-    resolvedUserNames: Record<string, string>
-  ) => {
-    const userName = resolvedUserNames[request.userId]
-    if (userName) {
-      return `User: ${userName}`
-    }
-    return request.userId ? "User" : "Unknown"
-  }
 
   const getSourceLabel = (request: AgentRequest) => {
     const agentName =
@@ -173,14 +159,6 @@
     )
   })
 
-  let selectedRequestTriggeredBy = $derived.by(() => {
-    if (!selectedRequest) {
-      return "Unknown"
-    }
-
-    return getTriggeredByLabel(selectedRequest, userNames)
-  })
-
   let paginationLabel = $derived.by(() => {
     const start = (currentPage - 1) * PAGE_SIZE + 1
     const end = Math.min(currentPage * PAGE_SIZE, filteredRequests.length)
@@ -197,39 +175,12 @@
     try {
       const response = await API.fetchAgentRequests()
       allRequests = response.requests
-      await hydrateUserNames(allRequests)
     } catch (error) {
       console.error("Failed to fetch agent requests", error)
       notifications.error("Failed to load agent actions")
       allRequests = []
     } finally {
       loading = false
-    }
-  }
-
-  async function hydrateUserNames(requests: AgentRequest[]) {
-    const missingUserIds = [...new Set(requests.map(request => request.userId))]
-      .filter(Boolean)
-      .filter(userId => !userNames[userId])
-
-    if (!missingUserIds.length) {
-      return
-    }
-
-    const entries = await Promise.all(
-      missingUserIds.map(async userId => {
-        const user = await users.get(userId)
-        const name =
-          [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-          user?.email ||
-          "User"
-        return [userId, name] as const
-      })
-    )
-
-    userNames = {
-      ...userNames,
-      ...Object.fromEntries(entries),
     }
   }
 
@@ -332,7 +283,6 @@
     title={selectedRequest ? getRequestTitle(selectedRequest) : "Request"}
     request={selectedRequest}
     agentName={selectedRequestAgentName}
-    triggeredBy={selectedRequestTriggeredBy}
     onClose={closeRequestPanel}
   />
 </div>

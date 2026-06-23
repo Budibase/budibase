@@ -36,12 +36,10 @@ const buildEntry = ({
 const buildThread = ({
   agentId,
   userId,
-  sessionId,
   entry,
 }: {
   agentId: string
   userId: string
-  sessionId: string
   entry: AgentRequestEntry
 }): AgentRequest => {
   return {
@@ -153,7 +151,6 @@ async function createNewRequest({
     buildThread({
       agentId,
       userId,
-      sessionId,
       entry: buildEntry({
         sessionId,
         operation,

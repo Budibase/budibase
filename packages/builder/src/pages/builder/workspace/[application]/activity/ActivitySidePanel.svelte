@@ -10,14 +10,12 @@
     title,
     request,
     agentName,
-    triggeredBy,
     onClose,
   }: {
     open: boolean
     title: string
     request?: AgentRequest
     agentName: string
-    triggeredBy: string
     onClose: () => void
   } = $props()
 
@@ -31,8 +29,6 @@
     return request.entries[request.entries.length - 1]
   })
   let latestPrompt = $derived(latestEntry)
-  const getCreatedByLabel = (value: string) =>
-    value.replace(/^User:\s*/, "").trim() || value
   let requestOperations = $derived.by(() => {
     if (!latestEntry) {
       return []
@@ -56,13 +52,6 @@
       underline: false,
     },
     {
-      label: "Triggered by",
-      value: triggeredBy,
-      icon: "user",
-      highlight: false,
-      underline: true,
-    },
-    {
       label: "Source",
       value: latestPrompt?.source,
       icon: "circle",
@@ -82,7 +71,7 @@
     return [
       {
         id: "request-created",
-        label: `Request created by ${getCreatedByLabel(triggeredBy)}`,
+        label: "Request created",
       },
     ]
   })
