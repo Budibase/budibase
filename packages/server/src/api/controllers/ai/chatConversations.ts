@@ -25,8 +25,8 @@ import {
   consumeStream,
   readUIMessageStream,
   type LanguageModelUsage,
-  type UIMessageChunk,
   type UIMessage,
+  type UIMessageChunk,
 } from "ai"
 import sdk from "../../../sdk"
 import {
@@ -273,11 +273,10 @@ const resolveChatStreamRequest = async (
 
 export type WebhookAssistantStream = AsyncIterable<string>
 
-const getAssistantMessageText = (
-  assistantMessage?: UIMessage
-) => assistantMessage?.parts?.flatMap(part =>
-  part.type === "text" ? [part.text] : []
-).join("") || ""
+const getAssistantMessageText = (assistantMessage?: UIMessage) =>
+  assistantMessage?.parts
+    ?.flatMap(part => (part.type === "text" ? [part.text] : []))
+    .join("") || ""
 
 const createAssistantTextStream = async function* (
   stream: ReadableStream<UIMessageChunk>
@@ -350,14 +349,13 @@ export async function webhookChat({
   const uiMessageStream = result.toUIMessageStream({
     sendReasoning: true,
   })
-  let assistantStreamForCapture: ReadableStream<UIMessageChunk> = uiMessageStream
+  let assistantStreamForCapture: ReadableStream<UIMessageChunk> =
+    uiMessageStream
   let streamTask: Promise<void> = Promise.resolve()
   if (onAssistantStream) {
     const [deliveryStream, captureStream] = uiMessageStream.tee()
     assistantStreamForCapture = captureStream
-    streamTask = onAssistantStream(
-      createAssistantTextStream(deliveryStream)
-    )
+    streamTask = onAssistantStream(createAssistantTextStream(deliveryStream))
   }
 
   const assistantMessageTask = (async () => {
@@ -372,15 +370,12 @@ export async function webhookChat({
     return assistantMessage
   })()
 
-  const [
-    assistantMessageResult,
-    responseResult,
-    streamOutcome,
-  ] = await Promise.allSettled([
-    assistantMessageTask,
-    result.response,
-    streamTask,
-  ])
+  const [assistantMessageResult, responseResult, streamOutcome] =
+    await Promise.allSettled([
+      assistantMessageTask,
+      result.response,
+      streamTask,
+    ])
 
   if (streamOutcome.status === "rejected") {
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
@@ -430,11 +425,12 @@ export async function webhookChat({
   events.action.aiAgentExecuted({ agentId })
 
   const finalAssistantMessage =
-    assistantMessageResult.value || {
+    assistantMessageResult.value ||
+    ({
       id: v4(),
       role: "assistant",
       parts: [{ type: "text", text: "" }],
-    }
+    } satisfies ChatConversation["messages"][number])
   const assistantText = getAssistantMessageText(finalAssistantMessage)
   const assistantMessage: ChatConversation["messages"][number] = {
     ...finalAssistantMessage,
