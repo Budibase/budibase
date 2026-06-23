@@ -11,13 +11,6 @@
   import ActivityActionsRenderer from "./ActivityActionsRenderer.svelte"
   import ActivitySidePanel from "./ActivitySidePanel.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
-  import {
-    getRequestDisplayId,
-    getRequestTitle,
-    getRequestUpdatedAt,
-    getTriggeredByLabel,
-    sortRequestsByLatestActivity,
-  } from "./utils"
 
   dayjs.extend(relativeTime)
 
@@ -82,6 +75,53 @@
 
   const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
     completed: { label: "Completed" },
+  }
+
+  const getRequestTitle = (request: AgentRequest) => {
+    if (request.title) {
+      return request.title
+    }
+
+    const latestEntry = request.entries[request.entries.length - 1]
+    if (!latestEntry) {
+      return "Untitled request"
+    }
+
+    return (
+      latestEntry.promptHistory[0]?.message ||
+      latestEntry.promptHistory[latestEntry.promptHistory.length - 1]?.message ||
+      "Untitled request"
+    )
+  }
+
+  const getRequestDisplayId = (request: AgentRequest) =>
+    request._id || `${request.agentId}-${request.userId}`
+
+  const getRequestUpdatedAt = (request: AgentRequest) => {
+    const latestEntry = request.entries[request.entries.length - 1]
+    const latestPrompt =
+      latestEntry?.promptHistory[latestEntry.promptHistory.length - 1]
+    return new Date(
+      latestPrompt?.date || request.updatedAt || request.createdAt || 0
+    )
+  }
+
+  const sortRequestsByLatestActivity = (requests: AgentRequest[]) =>
+    [...requests].sort((a, b) => {
+      const aTime = getRequestUpdatedAt(a).getTime()
+      const bTime = getRequestUpdatedAt(b).getTime()
+      return bTime - aTime
+    })
+
+  const getTriggeredByLabel = (
+    request: AgentRequest,
+    resolvedUserNames: Record<string, string>
+  ) => {
+    const userName = resolvedUserNames[request.userId]
+    if (userName) {
+      return `User: ${userName}`
+    }
+    return request.userId ? "User" : "Unknown"
   }
 
   let agentOptions = $derived.by(() => {

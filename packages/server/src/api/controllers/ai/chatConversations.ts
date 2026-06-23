@@ -66,8 +66,10 @@ const getRecentChatContext = (
         .filter(
           (
             part
-          ): part is Extract<(typeof message.parts)[number], { type: "text" }> =>
-            part.type === "text"
+          ): part is Extract<
+            (typeof message.parts)[number],
+            { type: "text" }
+          > => part.type === "text"
         )
         .map(part => part.text)
         .join("\n")

@@ -4,7 +4,6 @@
   import { Icon } from "@budibase/bbui"
   import type { AgentRequest } from "@budibase/types"
   import { fly } from "svelte/transition"
-  import { getLatestEntry } from "./utils"
 
   let {
     open,
@@ -29,7 +28,7 @@
       return undefined
     }
 
-    return getLatestEntry(request)
+    return request.entries[request.entries.length - 1]
   })
   let requestActions = $derived(latestEntry ? latestEntry.promptHistory : [])
   let requestOperations = $derived.by(() => {
