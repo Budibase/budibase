@@ -6050,7 +6050,7 @@
       },
       {
         "section": true,
-        "name": "Uploader Text Settings",
+        "name": "Dropzone settings",
         "dependsOn": [
           {
             "setting": "disabled",
