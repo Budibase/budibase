@@ -1,8 +1,7 @@
 import { context, docIds, Duration } from "@budibase/backend-core"
 import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
-import { DocumentType } from "@budibase/types"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
-import { queryRequestsByAgent } from "./views"
+import { queryRequestsByAgent, queryRequestsByUpdatedAt } from "./views"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -175,20 +174,10 @@ export async function fetchRequests({
   limit: number
   page: number
 }): Promise<AgentRequest[]> {
-  const db = context.getProdWorkspaceDB()
-  const response = await db.allDocs<AgentRequest>({
-    ...docIds.getDocParams(DocumentType.AGENT_REQUEST, undefined, {
-      include_docs: true,
-    }),
+  return await queryRequestsByUpdatedAt({
     limit,
-    skip: (page - 1) * limit,
+    page,
   })
-
-  return sortRequests(
-    response.rows
-      .map(row => row.doc)
-      .filter((doc): doc is AgentRequest => !!doc)
-  )
 }
 
 export async function fetchRequestsByAgent(
