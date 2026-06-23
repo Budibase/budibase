@@ -78,28 +78,14 @@
   }
 
   const getRequestTitle = (request: AgentRequest) => {
-    if (request.title) {
-      return request.title
-    }
-
-    const latestEntry = request.entries[request.entries.length - 1]
-    if (!latestEntry) {
-      return "Untitled request"
-    }
-
-    return latestEntry.promptHistory[0]?.message || "Untitled request"
+    return request.title || "Untitled request"
   }
 
   const getRequestDisplayId = (request: AgentRequest) =>
     request._id || `${request.agentId}-${request.userId}`
 
   const getRequestUpdatedAt = (request: AgentRequest) => {
-    const latestEntry = request.entries[request.entries.length - 1]
-    const latestPrompt =
-      latestEntry?.promptHistory[latestEntry.promptHistory.length - 1]
-    return new Date(
-      latestPrompt?.date || request.updatedAt || request.createdAt || 0
-    )
+    return new Date(request.updatedAt || request.createdAt || 0)
   }
 
   const sortRequestsByLatestActivity = (requests: AgentRequest[]) =>
@@ -156,10 +142,7 @@
     return filteredRequests.slice(start, start + PAGE_SIZE).map(request => {
       const updatedAt = getRequestUpdatedAt(request)
       const updatedTime = updatedAt.getTime()
-      const actionCount = request.entries.reduce(
-        (total, entry) => total + entry.promptHistory.length,
-        0
-      )
+      const actionCount = request.entries.length
       const agentName =
         $agentsStore.agents.find(agent => agent._id === request.agentId)
           ?.name || "Unknown agent"

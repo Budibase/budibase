@@ -44,20 +44,17 @@ describe("agentRequests crud", () => {
 
       expect(created?.request._id).toContain("agentrequest_")
       expect(created?.request.entries).toHaveLength(1)
-      expect(created?.request.entries[0].promptHistory).toEqual([
-        {
-          message: "Show me the holidays company policy",
-          date: expect.any(String),
-          sessionId: "session_1",
-          source: "Chat",
-          operations: [
-            {
-              name: "Support",
-              prompt: "Help users with company policy questions.",
-            },
-          ],
-        },
-      ])
+      expect(created?.request.entries[0]).toEqual({
+        sessionId: "session_1",
+        source: "Chat",
+        operationNames: ["Support"],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        status: "completed",
+      })
+      expect(created?.request.latestSessionId).toEqual("session_1")
+      expect(created?.request.createdAt).toEqual(expect.any(String))
+      expect(created?.request.updatedAt).toEqual(expect.any(String))
       expect(created?.created).toEqual(true)
     })
   })
@@ -100,32 +97,16 @@ describe("agentRequests crud", () => {
 
       expect(second?.request._id).toEqual(first?.request._id)
       expect(second?.request.entries).toHaveLength(1)
-      expect(second?.request.entries[0].promptHistory).toEqual([
-        {
-          message: "Show me the holidays company policy",
-          date: expect.any(String),
-          sessionId: "session_1",
-          source: "Chat",
-          operations: [
-            {
-              name: "Support",
-              prompt: "Help users with company policy questions.",
-            },
-          ],
-        },
-        {
-          message: "summarise it in 50 words",
-          date: expect.any(String),
-          sessionId: "session_2",
-          source: "Slack",
-          operations: [
-            {
-              name: "Support",
-              prompt: "Summarise company policies clearly.",
-            },
-          ],
-        },
-      ])
+      expect(second?.request.entries[0]).toEqual({
+        sessionId: "session_2",
+        source: "Slack",
+        operationNames: ["Support"],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        status: "completed",
+      })
+      expect(second?.request.latestSessionId).toEqual("session_2")
+      expect(second?.request.updatedAt).toEqual(expect.any(String))
       expect(second?.created).toEqual(false)
     })
   })
@@ -166,20 +147,14 @@ describe("agentRequests crud", () => {
 
       expect(second?.request._id).toEqual(first?.request._id)
       expect(second?.request.entries).toHaveLength(2)
-      expect(second?.request.entries[1].promptHistory).toEqual([
-        {
-          message: "turn it into an email",
-          date: expect.any(String),
-          sessionId: "session_2",
-          source: "Slack",
-          operations: [
-            {
-              name: "Comms",
-              prompt: "Turn requested information into a polished email.",
-            },
-          ],
-        },
-      ])
+      expect(second?.request.entries[1]).toEqual({
+        sessionId: "session_2",
+        source: "Slack",
+        operationNames: ["Comms"],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        status: "completed",
+      })
     })
   })
 
@@ -204,20 +179,14 @@ describe("agentRequests crud", () => {
 
       expect(thread?._id).toEqual(created?.request._id)
       expect(thread?.entries).toHaveLength(1)
-      expect(thread?.entries[0].promptHistory).toEqual([
-        {
-          message: "Show me the holidays company policy",
-          date: expect.any(String),
-          sessionId: "session_1",
-          source: "Chat",
-          operations: [
-            {
-              name: "Support",
-              prompt: "Help users with company policy questions.",
-            },
-          ],
-        },
-      ])
+      expect(thread?.entries[0]).toEqual({
+        sessionId: "session_1",
+        source: "Chat",
+        operationNames: ["Support"],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        status: "completed",
+      })
     })
   })
 
@@ -242,20 +211,14 @@ describe("agentRequests crud", () => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       const requests = await fetchRequestsByAgent("agent_1")
       expect(requests).toHaveLength(1)
-      expect(requests[0].entries[0].promptHistory).toEqual([
-        {
-          message: "Prod request",
-          date: expect.any(String),
-          sessionId: "session_1",
-          source: "Chat",
-          operations: [
-            {
-              name: "Support",
-              prompt: "Help users with company policy questions.",
-            },
-          ],
-        },
-      ])
+      expect(requests[0].entries[0]).toEqual({
+        sessionId: "session_1",
+        source: "Chat",
+        operationNames: ["Support"],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        status: "completed",
+      })
     })
   })
 
@@ -293,26 +256,14 @@ describe("agentRequests crud", () => {
 
       expect(second?.request._id).toEqual(first?.request._id)
       expect(second?.request.entries).toHaveLength(1)
-      expect(second?.request.entries[0].promptHistory).toEqual([
-        {
-          message: "I need a new laptop",
-          date: expect.any(String),
-          sessionId: "session_1",
-          source: "Chat",
-          operations: [
-            {
-              name: "IT support",
-              prompt: "Create and track IT support requests.",
-            },
-          ],
-        },
-        {
-          message: "Is there any ETA?",
-          date: expect.any(String),
-          sessionId: "session_1",
-          source: "Chat",
-        },
-      ])
+      expect(second?.request.entries[0]).toEqual({
+        sessionId: "session_1",
+        source: "Chat",
+        operationNames: ["IT support"],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        status: "completed",
+      })
     })
   })
 

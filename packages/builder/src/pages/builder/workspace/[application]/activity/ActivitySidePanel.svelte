@@ -32,8 +32,6 @@
   })
   let latestPrompt = $derived(
     latestEntry
-      ? latestEntry.promptHistory[latestEntry.promptHistory.length - 1]
-      : undefined
   )
   const getCreatedByLabel = (value: string) =>
     value.replace(/^User:\s*/, "").trim() || value
@@ -42,19 +40,7 @@
       return []
     }
 
-    const operations = latestEntry.promptHistory.flatMap(
-      prompt => prompt.operations || []
-    )
-    const seen = new Set<string>()
-
-    return operations.filter(operation => {
-      const key = `${operation.name}::${operation.prompt || ""}`
-      if (seen.has(key)) {
-        return false
-      }
-      seen.add(key)
-      return true
-    })
+    return latestEntry.operationNames
   })
   let details = $derived([
     {
@@ -66,8 +52,7 @@
     },
     {
       label: "Operation",
-      value:
-        requestOperations.map(operation => operation.name).join(", ") || "",
+      value: requestOperations.join(", ") || "",
       icon: "gear",
       highlight: false,
       underline: false,
@@ -92,8 +77,7 @@
       return []
     }
 
-    const firstPrompt = request.entries[0]?.promptHistory[0]
-    if (!firstPrompt) {
+    if (!request.createdAt) {
       return []
     }
 

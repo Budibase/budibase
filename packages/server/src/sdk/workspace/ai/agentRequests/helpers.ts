@@ -56,9 +56,15 @@ const extractJson = (value: string): AgentRequestLinkDecision | undefined => {
 
 const buildCandidateSummary = (request: AgentRequest) => ({
   requestId: request._id,
+  title: request.title,
   status: request.status,
+  updatedAt: request.updatedAt,
   recentEntries: request.entries.slice(-3).map(entry => ({
-    promptHistory: entry.promptHistory,
+    sessionId: entry.sessionId,
+    source: entry.source,
+    operationNames: entry.operationNames,
+    createdAt: entry.createdAt,
+    updatedAt: entry.updatedAt,
     status: entry.status,
   })),
 })
@@ -152,12 +158,12 @@ export async function analyzeAgentRequestLink({
 }
 
 export async function generateAgentRequestTitle({
-  request,
+  latestPrompt,
   agentId,
   sessionId,
   operation,
 }: {
-  request: AgentRequest
+  latestPrompt: string
   agentId: string
   sessionId: string
   operation?: {
@@ -165,11 +171,6 @@ export async function generateAgentRequestTitle({
     prompt: string
   }
 }): Promise<string> {
-  const latestEntry = request.entries[request.entries.length - 1]
-  if (!latestEntry) {
-    throw new Error("Cannot generate title without request entries")
-  }
-
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const llm = await sdk.ai.llm.createLLM(
     agent.aiconfig,
@@ -193,9 +194,7 @@ export async function generateAgentRequestTitle({
         role: "user",
         content: JSON.stringify({
           operation,
-          latestPrompt:
-            latestEntry.promptHistory[latestEntry.promptHistory.length - 1],
-          promptHistory: latestEntry.promptHistory,
+          latestPrompt,
         }),
       },
     ],

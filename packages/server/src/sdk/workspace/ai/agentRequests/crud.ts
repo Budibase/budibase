@@ -1,9 +1,5 @@
 import { context, docIds, Duration } from "@budibase/backend-core"
-import type {
-  AgentRequest,
-  AgentRequestEntry,
-  AgentRequestPromptHistoryItem,
-} from "@budibase/types"
+import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
 import { queryRequestsByAgent } from "./views"
@@ -11,39 +7,28 @@ import { queryRequestsByAgent } from "./views"
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
 
+const nowIso = () => new Date().toISOString()
+
 const buildEntry = ({
   sessionId,
-  latestPrompt,
   operation,
   source,
 }: {
   sessionId: string
-  latestPrompt: string
   operation?: {
     name: string
     prompt: string
   }
   source: string
 }): AgentRequestEntry => {
-  const promptHistoryItem: AgentRequestPromptHistoryItem = {
-    message: latestPrompt,
-    date: new Date().toISOString(),
-    sessionId,
-    source,
-    ...(operation
-      ? {
-          operations: [
-            {
-              name: operation.name,
-              prompt: operation.prompt,
-            },
-          ],
-        }
-      : {}),
-  }
+  const timestamp = nowIso()
 
   return {
-    promptHistory: [promptHistoryItem],
+    sessionId,
+    source,
+    operationNames: operation?.name ? [operation.name] : [],
+    createdAt: timestamp,
+    updatedAt: timestamp,
     status: "completed",
   }
 }
@@ -51,10 +36,12 @@ const buildEntry = ({
 const buildThread = ({
   agentId,
   userId,
+  sessionId,
   entry,
 }: {
   agentId: string
   userId: string
+  sessionId: string
   entry: AgentRequestEntry
 }): AgentRequest => {
   return {
@@ -63,23 +50,20 @@ const buildThread = ({
     agentId,
     userId,
     entries: [entry],
+    createdAt: entry.createdAt,
+    updatedAt: entry.updatedAt,
+    latestSessionId: sessionId,
     status: entry.status,
   }
 }
 
-const getLatestPromptHistoryItem = (request: AgentRequest) => {
-  const latestEntry = request.entries[request.entries.length - 1]
-  if (!latestEntry) {
-    return undefined
-  }
-
-  return latestEntry.promptHistory[latestEntry.promptHistory.length - 1]
-}
+const getLatestEntry = (request: AgentRequest) =>
+  request.entries[request.entries.length - 1]
 
 const sortRequests = (requests: AgentRequest[]) =>
   requests.sort((a, b) => {
-    const aTime = new Date(getLatestPromptHistoryItem(a)?.date || 0).getTime()
-    const bTime = new Date(getLatestPromptHistoryItem(b)?.date || 0).getTime()
+    const aTime = new Date(a.updatedAt || getLatestEntry(a)?.updatedAt || 0).getTime()
+    const bTime = new Date(b.updatedAt || getLatestEntry(b)?.updatedAt || 0).getTime()
     return bTime - aTime
   })
 
@@ -101,11 +85,13 @@ async function maybeGenerateAndSaveRequestTitle({
   request,
   agentId,
   sessionId,
+  latestPrompt,
   operation,
 }: {
   request: AgentRequest
   agentId: string
   sessionId: string
+  latestPrompt: string
   operation?: {
     name: string
     prompt: string
@@ -117,7 +103,7 @@ async function maybeGenerateAndSaveRequestTitle({
 
   try {
     const title = await generateAgentRequestTitle({
-      request,
+      latestPrompt,
       agentId,
       sessionId,
       operation,
@@ -164,9 +150,9 @@ async function createNewRequest({
     buildThread({
       agentId,
       userId,
+      sessionId,
       entry: buildEntry({
         sessionId,
-        latestPrompt,
         operation,
         source,
       }),
@@ -177,6 +163,7 @@ async function createNewRequest({
     request: createdRequest,
     agentId,
     sessionId,
+    latestPrompt,
     operation,
   })
 }
@@ -207,8 +194,7 @@ export async function fetchRequests({
 export async function fetchRequestsByAgent(
   agentId: string
 ): Promise<AgentRequest[]> {
-  const requests = await queryRequestsByAgent(agentId)
-  return sortRequests(requests)
+  return sortRequests(await queryRequestsByAgent(agentId))
 }
 
 export async function fetchRequestsByAgentAndUser(
@@ -217,13 +203,10 @@ export async function fetchRequestsByAgentAndUser(
 ): Promise<AgentRequest[]> {
   const requests = await fetchRequestsByAgent(agentId)
   const cutoff = Date.now() - THREAD_LOOKBACK_DAYS * Duration.fromDays(1).toMs()
+
   return requests
     .filter(request => request.userId === userId)
-    .filter(
-      request =>
-        new Date(getLatestPromptHistoryItem(request)?.date || 0).getTime() >=
-        cutoff
-    )
+    .filter(request => new Date(request.updatedAt || 0).getTime() >= cutoff)
     .slice(0, THREAD_CANDIDATE_LIMIT)
 }
 
@@ -312,38 +295,30 @@ export async function createOrUpdateRequestForPrompt({
     }
   }
 
+  const timestamp = nowIso()
   let nextEntries = [...request.entries]
   if (
     linkDecision.entryAction === "append_latest_entry" &&
     nextEntries.length > 0
   ) {
     const latestEntry = nextEntries[nextEntries.length - 1]
-    const nextPromptHistoryItem: AgentRequestPromptHistoryItem = {
-      message: prompt,
-      date: new Date().toISOString(),
-      sessionId,
-      source: resolvedSource,
-      ...(resolvedOperation
-        ? {
-            operations: [
-              {
-                name: resolvedOperation.name,
-                prompt: resolvedOperation.prompt,
-              },
-            ],
-          }
-        : {}),
+    const operationNames = new Set(latestEntry.operationNames)
+    if (resolvedOperation?.name) {
+      operationNames.add(resolvedOperation.name)
     }
+
     nextEntries[nextEntries.length - 1] = {
       ...latestEntry,
-      promptHistory: [...latestEntry.promptHistory, nextPromptHistoryItem],
+      sessionId,
+      source: resolvedSource,
+      operationNames: [...operationNames],
+      updatedAt: timestamp,
       status: "completed",
     }
   } else {
     nextEntries.push(
       buildEntry({
         sessionId,
-        latestPrompt: prompt,
         source: resolvedSource,
         operation: resolvedOperation,
       })
@@ -354,6 +329,8 @@ export async function createOrUpdateRequestForPrompt({
     request: await saveRequest({
       ...request,
       entries: nextEntries,
+      updatedAt: timestamp,
+      latestSessionId: sessionId,
       status: "completed",
     }),
     created: false,

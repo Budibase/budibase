@@ -24,23 +24,17 @@ const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
   userId: "user_1",
   entries: [
     {
-      promptHistory: [
-        {
-          message: "Show me the holidays company policy",
-          date: "2026-01-01T00:00:00.000Z",
-          sessionId: "session_1",
-          source: "Chat",
-          operations: [
-            {
-              name: "Support",
-              prompt: "Help users with company policy questions.",
-            },
-          ],
-        },
-      ],
+      sessionId: "session_1",
+      source: "Chat",
+      operationNames: ["Support"],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
       status: "completed",
     },
   ],
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
+  latestSessionId: "session_1",
   status: "completed",
   ...overrides,
 })
@@ -150,24 +144,16 @@ describe("analyzeAgentRequestLink", () => {
               candidateRequests: [
                 {
                   requestId: "agentrequest_thread_1",
+                  title: undefined,
                   status: "completed",
+                  updatedAt: "2026-01-01T00:00:00.000Z",
                   recentEntries: [
                     {
-                      promptHistory: [
-                        {
-                          message: "Show me the holidays company policy",
-                          date: "2026-01-01T00:00:00.000Z",
-                          sessionId: "session_1",
-                          source: "Chat",
-                          operations: [
-                            {
-                              name: "Support",
-                              prompt:
-                                "Help users with company policy questions.",
-                            },
-                          ],
-                        },
-                      ],
+                      sessionId: "session_1",
+                      source: "Chat",
+                      operationNames: ["Support"],
+                      createdAt: "2026-01-01T00:00:00.000Z",
+                      updatedAt: "2026-01-01T00:00:00.000Z",
                       status: "completed",
                     },
                   ],
@@ -246,32 +232,9 @@ describe("generateAgentRequestTitle", () => {
       buildGenerateTextResult("Laptop recommendation")
     )
 
-    const request = buildThread({
-      entries: [
-        {
-          promptHistory: [
-            {
-              message: "I need a new laptop",
-              date: "2026-01-01T00:00:00.000Z",
-              sessionId: "session_1",
-              source: "Chat",
-              operations: [
-                {
-                  name: "Personalized Laptop Recommendation Search",
-                  prompt:
-                    "Help the user choose a suitable laptop based on their needs.",
-                },
-              ],
-            },
-          ],
-          status: "completed",
-        },
-      ],
-    })
-
     await expect(
       generateAgentRequestTitle({
-        request,
+        latestPrompt: "I need a new laptop",
         agentId: "agent_1",
         sessionId: "session_1",
         operation: {
@@ -302,34 +265,7 @@ describe("generateAgentRequestTitle", () => {
                 prompt:
                   "Help the user choose a suitable laptop based on their needs.",
               },
-              latestPrompt: {
-                message: "I need a new laptop",
-                date: "2026-01-01T00:00:00.000Z",
-                sessionId: "session_1",
-                source: "Chat",
-                operations: [
-                  {
-                    name: "Personalized Laptop Recommendation Search",
-                    prompt:
-                      "Help the user choose a suitable laptop based on their needs.",
-                  },
-                ],
-              },
-              promptHistory: [
-                {
-                  message: "I need a new laptop",
-                  date: "2026-01-01T00:00:00.000Z",
-                  sessionId: "session_1",
-                  source: "Chat",
-                  operations: [
-                    {
-                      name: "Personalized Laptop Recommendation Search",
-                      prompt:
-                        "Help the user choose a suitable laptop based on their needs.",
-                    },
-                  ],
-                },
-              ],
+              latestPrompt: "I need a new laptop",
             }),
           }),
         ]),

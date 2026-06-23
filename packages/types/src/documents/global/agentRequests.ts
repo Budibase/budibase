@@ -2,21 +2,12 @@ import { Document } from "../../"
 
 export type AgentRequestStatus = "completed"
 
-interface AgentRequestPromptOperation {
-  name: string
-  prompt: string
-}
-
-export interface AgentRequestPromptHistoryItem {
-  message: string
-  date: string
+export interface AgentRequestEntry {
   sessionId: string
   source: string
-  operations?: AgentRequestPromptOperation[]
-}
-
-export interface AgentRequestEntry {
-  promptHistory: AgentRequestPromptHistoryItem[]
+  operationNames: string[]
+  createdAt: string
+  updatedAt: string
   status: AgentRequestStatus
 }
 
@@ -25,5 +16,6 @@ export interface AgentRequest extends Document {
   agentId: string
   userId: string
   entries: AgentRequestEntry[]
+  latestSessionId: string
   status: AgentRequestStatus
 }
