@@ -1288,22 +1288,24 @@ describe("Agent chat tool call tracking", () => {
       }
 
       return {
-        toUIMessageStream: jest.fn().mockImplementation(
-          (streamOptions: { generateMessageId?: () => string } = {}) => {
-            const streamChunks = chunks.map(chunk =>
-              chunk.type === "start" &&
-              !("messageId" in chunk) &&
-              streamOptions.generateMessageId
-                ? {
-                    ...chunk,
-                    messageId: streamOptions.generateMessageId(),
-                  }
-                : chunk
-            )
+        toUIMessageStream: jest
+          .fn()
+          .mockImplementation(
+            (streamOptions: { generateMessageId?: () => string } = {}) => {
+              const streamChunks = chunks.map(chunk =>
+                chunk.type === "start" &&
+                !("messageId" in chunk) &&
+                streamOptions.generateMessageId
+                  ? {
+                      ...chunk,
+                      messageId: streamOptions.generateMessageId(),
+                    }
+                  : chunk
+              )
 
-            return aiActual.simulateReadableStream({ chunks: streamChunks })
-          }
-        ),
+              return aiActual.simulateReadableStream({ chunks: streamChunks })
+            }
+          ),
         text: Promise.resolve(text),
         response: Promise.resolve({
           id: "gen-test",
@@ -1843,9 +1845,7 @@ describe("Agent chat tool call tracking", () => {
     })
 
     it("generates an assistant message id for webhook responses", async () => {
-      jest
-        .mocked(streamText)
-        .mockImplementation(makeWebhookStreamTextMock({}))
+      jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
 
       const result = await context.doInWorkspaceContext(
         config.getProdWorkspaceId(),
