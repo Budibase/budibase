@@ -494,10 +494,13 @@ export function isValidEndpointUrlMissingProtocol(
   if (!url) return false
   if (/^(https?:\/\/|\{\{)/.test(url)) return false
   if (url.startsWith("/") || /\s/.test(url)) return false
-  if (/^[a-z][a-z\d+.-]*:/i.test(url)) return false
+  if (/^[a-z][a-z\d+.-]*:\/\//i.test(url)) return false
   try {
     const parsed = new URL(`https://${url}`)
-    return /^[^/?#]+\.[^/?#]+/.test(parsed.hostname)
+    return (
+      parsed.hostname === "localhost" ||
+      /^[^/?#]+\.[^/?#]+/.test(parsed.hostname)
+    )
   } catch {
     return false
   }

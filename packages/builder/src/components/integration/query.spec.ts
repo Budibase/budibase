@@ -68,6 +68,14 @@ describe("isValidEndpointUrlMissingProtocol", () => {
     expect(isValidEndpointUrlMissingProtocol("example.com")).toBe(true)
   })
 
+  it("accepts localhost without a protocol", () => {
+    expect(isValidEndpointUrlMissingProtocol("localhost")).toBe(true)
+  })
+
+  it("accepts localhost with a port without a protocol", () => {
+    expect(isValidEndpointUrlMissingProtocol("localhost:4001")).toBe(true)
+  })
+
   it("accepts a valid domain and path without a protocol", () => {
     expect(isValidEndpointUrlMissingProtocol("example.com/api/users")).toBe(
       true
