@@ -259,8 +259,7 @@
         value={value?.queryId}
         {restTemplateId}
         fullWidthDropdown
-        onchange={q =>
-          defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
+        onchange={q => defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
         onaddApi={handleAddApi}
       />
     {/if}
