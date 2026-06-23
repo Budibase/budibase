@@ -7,18 +7,31 @@
     StatusLight,
     Tags,
     Tag,
+    TooltipType,
   } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
-  import { Features } from "@/constants/backend/automations"
   import { restTemplates } from "@/stores/builder/restTemplates"
-  import type { Automation, AutomationStep } from "@budibase/types"
-  import type { AutomationBlock } from "@/types/automations"
+  import {
+    AutomationActionStepId,
+    AutomationFeature,
+    AutomationStepType,
+    isTrigger as isTriggerBlock,
+  } from "@budibase/types"
+  import type {
+    Automation,
+    AutomationStep,
+    AutomationStepResult,
+    AutomationTrigger,
+    AutomationTriggerResult,
+  } from "@budibase/types"
 
-  export let block: AutomationBlock
+  type TestResult = AutomationStepResult | AutomationTriggerResult
+
+  export let block: AutomationStep | AutomationTrigger
   export let open: boolean
   export let showTestStatus = false
-  export let testResult: Record<string, any> | undefined = undefined
+  export let testResult: TestResult | undefined = undefined
   export let isTrigger: boolean
   export let addLooping: () => void
   export let deleteStep: () => void
@@ -36,9 +49,16 @@
   $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
-  $: blockDefinition = $automationStore.blockDefinitions.ACTION[block.stepId]
-  $: restTemplate = block?.inputs?.restTemplateId
-    ? restTemplates.get(block.inputs.restTemplateId)
+  $: actionStepId = isTriggerBlock(block) ? undefined : block.stepId
+  $: blockDefinition = actionStepId
+    ? $automationStore.blockDefinitions.ACTION[actionStepId]
+    : undefined
+  $: restTemplateId =
+    actionStepId === AutomationActionStepId.API_REQUEST
+      ? getRestTemplateId(block.inputs)
+      : undefined
+  $: restTemplate = restTemplateId
+    ? restTemplates.get(restTemplateId)
     : undefined
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: inputWidth = `${Math.min(
@@ -50,12 +70,14 @@
   )}ch`
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
-  $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
+  $: isHeaderTrigger = isTrigger || block.type === AutomationStepType.TRIGGER
   $: isBranch = block.stepId === "BRANCH"
 
   $: {
     if (!testResult) {
-      testResult = $automationStore.testResults?.steps?.filter(step =>
+      const results = $automationStore.testResults
+      const testSteps = results && "steps" in results ? results.steps : []
+      testResult = testSteps?.filter((step: TestResult) =>
         block.id ? step.id === block.id : step.stepId === block.stepId
       )?.[0]
     }
@@ -64,14 +86,16 @@
   $: blockRef = blockRefs[block.id]
   $: isLooped = blockRef?.looped
 
-  async function onSelect(block: AutomationBlock) {
+  async function onSelect(block: AutomationStep | AutomationTrigger) {
     automationStore.update(state => {
-      state.selectedBlock = block
-      return state
+      return {
+        ...state,
+        selectedBlock: block,
+      }
     })
   }
 
-  function updateStatus(results?: Record<string, any>) {
+  function updateStatus(results?: TestResult) {
     if (!results) {
       return {}
     }
@@ -84,6 +108,17 @@
       return { negative: true, message: "Error" }
     }
   }
+
+  const getRestTemplateId = (inputs: object | void | undefined) => {
+    if (
+      inputs &&
+      "restTemplateId" in inputs &&
+      typeof inputs.restTemplateId === "string"
+    ) {
+      return inputs.restTemplateId
+    }
+  }
+
   const getAutomationNameError = (name: string) => {
     const duplicateError =
       "This name already exists, please enter a unique name"
@@ -140,11 +175,11 @@
         <div class="external-icon">
           <img alt={restTemplate.name} src={restTemplate.icon} />
         </div>
-      {:else if externalActions[block.stepId]}
+      {:else if actionStepId && externalActions[actionStepId]}
         <div class="external-icon">
           <img
-            alt={externalActions[block.stepId].name}
-            src={externalActions[block.stepId].icon}
+            alt={externalActions[actionStepId].name}
+            src={externalActions[actionStepId].icon}
           />
         </div>
       {:else}
@@ -161,7 +196,7 @@
           <Body size="XS">
             <div style="display: flex; gap: 0.5rem; align-items: center;">
               <b>{isBranch ? "Branch" : "Step"}</b>
-              {#if blockDefinition.deprecated}
+              {#if blockDefinition?.deprecated}
                 <Tags>
                   <Tag invalid>Deprecated</Tag>
                 </Tags>
@@ -180,7 +215,7 @@
             value={automationName}
             style:width={inputWidth}
             on:input={e => {
-              automationName = e.target.value.trim()
+              automationName = e.currentTarget.value.trim()
             }}
             on:click={e => {
               e.stopPropagation()
@@ -213,7 +248,6 @@
             </StatusLight>
           </div>
           <Icon
-            e.stopPropagation()
             on:click={e => {
               e.stopPropagation()
               dispatch("toggle")
@@ -232,13 +266,13 @@
       >
         <slot name="custom-actions" />
         {#if !showTestStatus}
-          {#if !isHeaderTrigger && !isLooped && !isBranch && (block?.features?.[Features.LOOPING] || !block.features)}
-            <AbsTooltip type="info" text="Add looping">
+          {#if actionStepId && !isLooped && !isBranch && (block.features?.[AutomationFeature.LOOPING] || !block.features)}
+            <AbsTooltip type={TooltipType.Info} text="Add looping">
               <Icon on:click={addLooping} hoverable name="arrow-clockwise" />
             </AbsTooltip>
           {/if}
           {#if !isHeaderTrigger}
-            <AbsTooltip type="negative" text="Delete step">
+            <AbsTooltip type={TooltipType.Negative} text="Delete step">
               <Icon on:click={deleteStep} hoverable name="trash" />
             </AbsTooltip>
           {/if}
@@ -259,7 +293,7 @@
       </div>
       {#if automationNameError && editing}
         <div class="error-container">
-          <AbsTooltip type="negative" text={automationNameError}>
+          <AbsTooltip type={TooltipType.Negative} text={automationNameError}>
             <div class="error-icon">
               <Icon size="S" name="warning" />
             </div>
