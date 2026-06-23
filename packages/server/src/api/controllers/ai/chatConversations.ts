@@ -423,6 +423,7 @@ export async function webhookChat({
   }
 
   events.action.aiAgentExecuted({ agentId })
+  const ragSources = run.getUsedKnowledgeSourcesMetadata()
 
   const finalAssistantMessage =
     assistantMessageResult.value ||
@@ -443,6 +444,7 @@ export async function webhookChat({
     allowKnowledgeSourceDownload:
       run.selectedOperation?.allowKnowledgeSourceDownload,
     title,
+    ...(ragSources?.length ? { ragSources } : {}),
   }
 }
 
