@@ -937,11 +937,7 @@
       projectsEnabled,
     })
 
-    await Promise.all([
-      agentsStore.fetchAgents(),
-      projectsEnabled ? loadProjects(workspaceId) : Promise.resolve(),
-      loadMetrics(),
-    ])
+    await Promise.all([agentsStore.fetchAgents(), loadMetrics()])
   })
 </script>
 
