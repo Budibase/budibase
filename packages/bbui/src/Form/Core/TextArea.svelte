@@ -25,7 +25,6 @@
 
   $: heightString = getStyleString("height", height)
   $: minHeightString = getStyleString("min-height", minHeight)
-  $: minHeightVar = getStyleString("--textarea-min-height", minHeight)
   $: dispatch("scrollable", scrollable)
 
   export function focus() {
@@ -71,7 +70,7 @@
 </script>
 
 <div
-  style={`${heightString}${minHeightString}${minHeightVar}`}
+  style={`${heightString}${minHeightString}`}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-disabled={disabled}
   class:is-focused={isFocused}
@@ -101,6 +100,6 @@
   }
   textarea {
     resize: vertical;
-    min-height: var(--textarea-min-height, 80px) !important;
+    min-height: 38px !important;
   }
 </style>

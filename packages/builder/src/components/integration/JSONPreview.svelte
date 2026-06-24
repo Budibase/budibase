@@ -3,7 +3,7 @@
 
   export let data
   export let height
-  export let minHeight = "120px"
+  export let minHeight = "120"
 
   $: string = JSON.stringify(data || {}, null, 2)
 </script>
