@@ -527,6 +527,10 @@
     color: var(--grey-3);
   }
 
+  .controls :global(.disabled i) {
+    color: var(--grey-3);
+  }
+
   .controls :global(span) {
     display: flex;
     align-items: center;
