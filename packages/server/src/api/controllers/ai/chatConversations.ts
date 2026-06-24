@@ -33,7 +33,6 @@ import {
   formatIncompleteToolCallError,
   getLiveOperations,
   prepareAgentChatRun,
-  type OperationEscalationConfig,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import {
@@ -44,26 +43,6 @@ import {
   prepareChatConversationForSave,
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
-
-const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
-
-const buildEscalationConfig = (
-  agent: Agent,
-  chat: ChatConversationRequest
-): OperationEscalationConfig | undefined => {
-  const operation = getLiveOperation(agent)
-  const recipients = operation?.escalation?.recipients
-  if (!operation || !recipients?.length) {
-    return undefined
-  }
-  return {
-    operationId: operation.id,
-    recipients,
-    delayMs:
-      (operation.escalation?.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
-    channel: chat.channel,
-  }
-}
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -334,7 +313,6 @@ export async function webhookChat({
     errorLabel: "webhook chat",
     sessionId,
     user,
-    escalation: buildEscalationConfig(agent, chat),
   })
   const title = run.latestQuestion
     ? truncateTitle(run.latestQuestion)
@@ -442,7 +420,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       errorLabel: "chat stream",
       sessionId,
       user: ctx.user,
-      escalation: buildEscalationConfig(agent, chat),
     })
 
     const pendingToolCalls = new Set<string>()
