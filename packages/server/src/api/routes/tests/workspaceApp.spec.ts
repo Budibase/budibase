@@ -284,7 +284,7 @@ describe("/workspaceApp", () => {
       expect(updated.customTheme?.fontFamily).toBe(AppFontFamily.SOURCE_SANS)
     })
 
-    it("clears project assignments when projectIds is null", async () => {
+    it("clears project assignments when projectIds is empty", async () => {
       await features.testutils.withFeatureFlags(
         testConfig.getTenantId(),
         { [FeatureFlag.PROJECTS]: true },
@@ -307,7 +307,7 @@ describe("/workspaceApp", () => {
             url: workspaceApp.url,
             navigation: workspaceApp.navigation,
             disabled: workspaceApp.disabled,
-            projectIds: null,
+            projectIds: [],
           })
 
           expect(updated.projectIds).toBeUndefined()

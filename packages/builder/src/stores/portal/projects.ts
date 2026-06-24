@@ -92,6 +92,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     try {
       await this.fetch(this.workspaceId)
     } catch (err) {
+      this.loaded = false
       console.warn("Failed to refresh projects after import", err)
     }
     return response
