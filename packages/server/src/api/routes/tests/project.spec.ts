@@ -78,7 +78,10 @@ describe("/projects", () => {
     return files
   }
 
-  const createTarPackage = async (entries: Record<string, unknown>) => {
+  const createTarPackage = async (
+    entries: Record<string, unknown>,
+    beforeCreate?: (_tmpPath: string) => Promise<void>
+  ) => {
     const tmpPath = await fsp.mkdtemp(join(tmpdir(), "project-package-"))
     const tarPath = join(tmpPath, "project-export.tar.gz")
 
@@ -90,6 +93,7 @@ describe("/projects", () => {
           await fsp.writeFile(fullPath, JSON.stringify(value, null, 2))
         })
       )
+      await beforeCreate?.(tmpPath)
       await tar.create(
         {
           gzip: true,
@@ -114,30 +118,12 @@ describe("/projects", () => {
         },
       },
     })
-    const tmpPath = await fsp.mkdtemp(join(tmpdir(), "project-package-"))
-    const tarPath = join(tmpPath, "project-export.tar.gz")
 
-    try {
-      await Promise.all(
-        Object.entries(entries).map(async ([entryPath, value]) => {
-          const fullPath = join(tmpPath, entryPath)
-          await fsp.mkdir(join(fullPath, ".."), { recursive: true })
-          await fsp.writeFile(fullPath, JSON.stringify(value, null, 2))
-        })
-      )
-      await fsp.truncate(join(tmpPath, oversizedEntryPath), 101 * 1024 * 1024)
-      await tar.create(
-        {
-          gzip: true,
-          file: tarPath,
-          cwd: tmpPath,
-        },
-        Object.keys(entries)
-      )
-      return await fsp.readFile(tarPath)
-    } finally {
-      await fsp.rm(tmpPath, { recursive: true, force: true })
-    }
+    return await createTarPackage(
+      entries,
+      async tmpPath =>
+        await fsp.truncate(join(tmpPath, oversizedEntryPath), 101 * 1024 * 1024)
+    )
   }
 
   const createMinimalPackageEntries = (
