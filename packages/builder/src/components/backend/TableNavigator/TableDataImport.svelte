@@ -221,8 +221,9 @@
     if (!field) {
       return
     }
+    const { subtype: _subtype, ...fieldWithoutSubtype } = field
     schema[name] = {
-      ...field,
+      ...fieldWithoutSubtype,
       ...option.config,
     } as FieldSchema
     schema = schema
