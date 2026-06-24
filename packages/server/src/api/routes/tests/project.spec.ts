@@ -241,7 +241,7 @@ describe("/projects", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          projectId: "project_missing",
+          projectIds: ["project_missing"],
         }),
         {
           status: 404,
@@ -255,7 +255,7 @@ describe("/projects", () => {
       await config.api.automation.update(
         {
           ...automation,
-          projectId: "project_missing",
+          projectIds: ["project_missing"],
         },
         {
           status: 404,
@@ -269,7 +269,7 @@ describe("/projects", () => {
         {
           name: "Ops agent",
           aiconfig: "default",
-          projectId: "project_missing",
+          projectIds: ["project_missing"],
         },
         {
           status: 404,
@@ -282,7 +282,7 @@ describe("/projects", () => {
       await config.api.table.save(
         {
           ...basicTable(),
-          projectId: "project_missing",
+          projectIds: ["project_missing"],
         },
         {
           status: 404,
@@ -295,7 +295,7 @@ describe("/projects", () => {
       await config.api.query.save(
         {
           ...basicQuery(datasource._id!),
-          projectId: "project_missing",
+          projectIds: ["project_missing"],
         },
         {
           status: 404,
@@ -308,7 +308,7 @@ describe("/projects", () => {
       await config.api.datasource.create(
         {
           ...basicDatasource().datasource,
-          projectId: "project_missing",
+          projectIds: ["project_missing"],
         },
         {
           status: 404,
@@ -325,7 +325,7 @@ describe("/projects", () => {
       structures.workspaceApps.createRequest({
         name: "Ops app",
         url: "/ops-app",
-        projectId: "project_1",
+        projectIds: ["project_1"],
       }),
       {
         status: 404,
@@ -343,7 +343,7 @@ describe("/projects", () => {
       )
       const externalTable = basicTable(datasource, {
         _id: buildExternalTableId(datasource._id!, "TestTable"),
-        projectId: "project_missing",
+        projectIds: ["project_missing"],
       })
 
       await config.api.datasource.update(
@@ -397,7 +397,7 @@ describe("/projects", () => {
     )
     const externalTable = basicTable(datasource, {
       _id: buildExternalTableId(datasource._id!, "TestTable"),
-      projectId: "project_1",
+      projectIds: ["project_1"],
     })
 
     await config.api.datasource.update(
@@ -426,7 +426,7 @@ describe("/projects", () => {
       )
       const externalTable = basicTable(datasource, {
         _id: buildExternalTableId(datasource._id!, "TestTable"),
-        projectId: project._id,
+        projectIds: [project._id],
       })
       const assignedDatasource = await config.api.datasource.update({
         ...datasource,
@@ -434,7 +434,7 @@ describe("/projects", () => {
           [externalTable.name]: externalTable,
         },
       })
-      const { projectId: _projectId, ...tableUpdate } =
+      const { projectIds: _projectIds, ...tableUpdate } =
         assignedDatasource.entities![externalTable.name]
 
       const updatedDatasource = await config.api.datasource.update({
@@ -447,9 +447,9 @@ describe("/projects", () => {
         },
       })
 
-      expect(updatedDatasource.entities![externalTable.name].projectId).toBe(
+      expect(updatedDatasource.entities![externalTable.name].projectIds).toEqual([
         project._id
-      )
+      ])
     })
   })
 
@@ -463,7 +463,7 @@ describe("/projects", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          projectId: project._id,
+          projectIds: [project._id],
         })
       )
 
@@ -471,30 +471,30 @@ describe("/projects", () => {
       const { automation: updatedAutomation } =
         await config.api.automation.update({
           ...automation,
-          projectId: project._id,
+          projectIds: [project._id],
         })
 
       const agent = await config.api.agent.create({
         name: "Ops agent",
         aiconfig: "default",
-        projectId: project._id,
+        projectIds: [project._id],
       })
 
       const table = await config.api.table.save({
         ...basicTable(),
-        projectId: project._id,
+        projectIds: [project._id],
       })
 
       const datasource = await config.api.datasource.create({
         ...basicDatasource().datasource,
-        projectId: project._id,
+        projectIds: [project._id],
       })
 
       const queryRequest = basicQuery(datasource._id!)
       delete (queryRequest as Partial<typeof queryRequest>).readable
       const query = await config.api.query.save({
         ...queryRequest,
-        projectId: project._id,
+        projectIds: [project._id],
       })
 
       await config.api.project.delete(project._id, project._rev)
@@ -502,25 +502,25 @@ describe("/projects", () => {
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
-      expect(fetchedWorkspaceApp.projectId).toBeUndefined()
+      expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
 
       const fetchedAutomation = await config.api.automation.get(
         updatedAutomation._id!
       )
-      expect(fetchedAutomation.projectId).toBeUndefined()
+      expect(fetchedAutomation.projectIds).toBeUndefined()
 
       const { agents } = await config.api.agent.fetch()
       const fetchedAgent = agents.find(existing => existing._id === agent._id)
-      expect(fetchedAgent?.projectId).toBeUndefined()
+      expect(fetchedAgent?.projectIds).toBeUndefined()
 
       const fetchedTable = await config.api.table.get(table._id!)
-      expect(fetchedTable.projectId).toBeUndefined()
+      expect(fetchedTable.projectIds).toBeUndefined()
 
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
-      expect(fetchedDatasource.projectId).toBeUndefined()
+      expect(fetchedDatasource.projectIds).toBeUndefined()
 
       const fetchedQuery = await config.api.query.get(query._id!)
-      expect(fetchedQuery.projectId).toBeUndefined()
+      expect(fetchedQuery.projectIds).toBeUndefined()
 
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const rawQuery = await context.getWorkspaceDB().get(query._id!)
@@ -536,13 +536,13 @@ describe("/projects", () => {
       })
       const datasource = await config.api.datasource.create({
         ...basicDatasource().datasource,
-        projectId: project._id,
+        projectIds: [project._id],
       })
       const entityKey = "TestTable"
       const externalTable = basicTable(datasource, {
         _id: buildExternalTableId(datasource._id!, entityKey),
         name: "Updated table",
-        projectId: project._id,
+        projectIds: [project._id],
       })
       await config.api.datasource.update({
         ...datasource,
@@ -554,8 +554,8 @@ describe("/projects", () => {
       await config.api.project.delete(project._id, project._rev)
 
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
-      expect(fetchedDatasource.projectId).toBeUndefined()
-      expect(fetchedDatasource.entities![entityKey].projectId).toBeUndefined()
+      expect(fetchedDatasource.projectIds).toBeUndefined()
+      expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
       expect(fetchedDatasource.entities![externalTable.name]).toBeUndefined()
       expect(Object.keys(fetchedDatasource.entities!)).toEqual([entityKey])
     })
@@ -570,7 +570,7 @@ describe("/projects", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          projectId: project._id,
+          projectIds: [project._id],
         })
       )
 
@@ -581,7 +581,7 @@ describe("/projects", () => {
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
-      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
     })
   })
 
@@ -594,7 +594,7 @@ describe("/projects", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          projectId: project._id,
+          projectIds: [project._id],
         })
       )
 
@@ -616,7 +616,7 @@ describe("/projects", () => {
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
-      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
     })
   })
 
@@ -629,14 +629,14 @@ describe("/projects", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          projectId: project._id,
+          projectIds: [project._id],
         })
       )
       const automation = await config.createAutomation()
       const { automation: assignedAutomation } =
         await config.api.automation.update({
           ...automation,
-          projectId: project._id,
+          projectIds: [project._id],
         })
 
       await config.doInContext(config.getDevWorkspaceId(), async () => {
@@ -648,7 +648,7 @@ describe("/projects", () => {
         const updateAutomation = jest
           .spyOn(sdk.automations, "update")
           .mockImplementation(async update => {
-            if (update.projectId === project._id) {
+            if (update.projectIds?.includes(project._id)) {
               throw new Error("Automation rollback failed")
             }
             return await originalUpdateAutomation(update)
@@ -667,11 +667,11 @@ describe("/projects", () => {
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
-      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
       const fetchedAutomation = await config.api.automation.get(
         assignedAutomation._id!
       )
-      expect(fetchedAutomation.projectId).toBeUndefined()
+      expect(fetchedAutomation.projectIds).toBeUndefined()
     })
   })
 
@@ -684,7 +684,7 @@ describe("/projects", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          projectId: project._id,
+          projectIds: [project._id],
         })
       )
 
@@ -710,7 +710,7 @@ describe("/projects", () => {
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
         workspaceApp._id!
       )
-      expect(fetchedWorkspaceApp.projectId).toBe(project._id)
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
     })
   })
 
@@ -723,31 +723,31 @@ describe("/projects", () => {
         structures.workspaceApps.createRequest({
           name: "Ops app",
           url: "/ops-app",
-          projectId: project._id,
+          projectIds: [project._id],
         })
       )
       const automation = await config.createAutomation()
       const { automation: assignedAutomation } =
         await config.api.automation.update({
           ...automation,
-          projectId: project._id,
+          projectIds: [project._id],
         })
       const agent = await config.api.agent.create({
         name: "Ops agent",
         aiconfig: "default",
-        projectId: project._id,
+        projectIds: [project._id],
       })
       const table = await config.api.table.save({
         ...basicTable(),
-        projectId: project._id,
+        projectIds: [project._id],
       })
       const datasource = await config.api.datasource.create({
         ...basicDatasource().datasource,
-        projectId: project._id,
+        projectIds: [project._id],
       })
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
-        projectId: project._id,
+        projectIds: [project._id],
       })
 
       const updatedWorkspaceApp = await config.doInContext(
@@ -765,7 +765,7 @@ describe("/projects", () => {
           })
       )
 
-      const { projectId: _automationProjectId, ...automationUpdate } =
+      const { projectIds: _automationProjectIds, ...automationUpdate } =
         assignedAutomation
       const { automation: updatedAutomation } =
         await config.api.automation.update({
@@ -773,37 +773,37 @@ describe("/projects", () => {
           name: "Ops automation updated",
         })
 
-      const { projectId: _agentProjectId, ...agentUpdate } = agent
+      const { projectIds: _agentProjectIds, ...agentUpdate } = agent
       const updatedAgent = await config.api.agent.update({
         ...agentUpdate,
         name: "Ops agent updated",
       })
 
-      const { projectId: _tableProjectId, ...tableUpdate } = table
+      const { projectIds: _tableProjectIds, ...tableUpdate } = table
       const updatedTable = await config.api.table.save({
         ...tableUpdate,
         name: "Ops table updated",
       })
 
-      const { projectId: _datasourceProjectId, ...datasourceUpdate } =
+      const { projectIds: _datasourceProjectIds, ...datasourceUpdate } =
         datasource
       const updatedDatasource = await config.api.datasource.update({
         ...datasourceUpdate,
         name: "Ops datasource updated",
       })
 
-      const { projectId: _queryProjectId, ...queryUpdate } = query
+      const { projectIds: _queryProjectIds, ...queryUpdate } = query
       const updatedQuery = await config.api.query.save({
         ...queryUpdate,
         name: "Ops query updated",
       })
 
-      expect(updatedWorkspaceApp.projectId).toBe(project._id)
-      expect(updatedAutomation.projectId).toBe(project._id)
-      expect(updatedAgent.projectId).toBe(project._id)
-      expect(updatedTable.projectId).toBe(project._id)
-      expect(updatedDatasource.projectId).toBe(project._id)
-      expect(updatedQuery.projectId).toBe(project._id)
+      expect(updatedWorkspaceApp.projectIds).toEqual([project._id])
+      expect(updatedAutomation.projectIds).toEqual([project._id])
+      expect(updatedAgent.projectIds).toEqual([project._id])
+      expect(updatedTable.projectIds).toEqual([project._id])
+      expect(updatedDatasource.projectIds).toEqual([project._id])
+      expect(updatedQuery.projectIds).toEqual([project._id])
     })
   })
 })

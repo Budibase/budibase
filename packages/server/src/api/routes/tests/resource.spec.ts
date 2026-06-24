@@ -766,7 +766,7 @@ describe("/api/resources/usage", () => {
           )
           const externalTable = basicTable(datasource, {
             _id: buildExternalTableId(datasource._id!, "TestTable"),
-            projectId: project._id,
+            projectIds: [project._id],
           })
           const assignedDatasource = await config.api.datasource.update({
             ...datasource,
@@ -776,7 +776,7 @@ describe("/api/resources/usage", () => {
           })
           const internalTable = await createInternalTable({
             name: "Internal project table",
-            projectId: project._id,
+            projectIds: [project._id],
           })
           const destination = await config.api.workspace.create({
             name: `Destination ${generator.natural()}`,
@@ -804,7 +804,7 @@ describe("/api/resources/usage", () => {
             destinationDb.get(internalTable._id!)
           ).resolves.toBeDefined()
           expect(
-            duplicatedDatasource.entities![externalTable.name].projectId
+            duplicatedDatasource.entities![externalTable.name].projectIds
           ).toBe(project._id)
         }
       )
@@ -823,7 +823,7 @@ describe("/api/resources/usage", () => {
           )
           const externalTable = basicTable(datasource, {
             _id: buildExternalTableId(datasource._id!, "TestTable"),
-            projectId: project._id,
+            projectIds: [project._id],
           })
           const assignedDatasource = await config.api.datasource.update({
             ...datasource,
@@ -861,10 +861,10 @@ describe("/api/resources/usage", () => {
           )
 
           expect(
-            datasourceWithoutProject.entities![externalTable.name].projectId
+            datasourceWithoutProject.entities![externalTable.name].projectIds
           ).toBeUndefined()
           expect(
-            datasourceWithProject.entities![externalTable.name].projectId
+            datasourceWithProject.entities![externalTable.name].projectIds
           ).toBe(project._id)
         }
       )
