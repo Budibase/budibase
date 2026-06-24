@@ -9,7 +9,7 @@
     AgentLogRequestDetail,
     AgentLogSession,
   } from "@budibase/types"
-  import LogsSessionDetailPanel from "./LogComponents/LogsSessionDetailPanel.svelte"
+  import LogsSessionDetail from "./LogComponents/LogsSessionDetail.svelte"
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
   import {
     formatLogDateForApi,
@@ -23,10 +23,9 @@
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
   let selectedSession = $state<AgentLogSession | null>(null)
-  let detailPanelOpen = $state(false)
   let expandedStepId = $state<string | null>(null)
-  let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
-  let expandedStepLoading = $state(false)
+  let stepDetailCache = $state<Record<string, AgentLogRequestDetail>>({})
+  let loadingStepIds = $state<Record<string, boolean>>({})
   let exportingSession = $state(false)
   let hasMore = $state(false)
   let nextBookmark = $state<string | undefined>(undefined)
@@ -92,7 +91,6 @@
       hasMore = false
       nextBookmark = undefined
       selectedSession = null
-      detailPanelOpen = false
       resetDetailState()
       return
     }
@@ -138,7 +136,6 @@
 
       if (!append && !selectedStillExists) {
         selectedSession = null
-        detailPanelOpen = false
         resetDetailState()
       }
     } catch (error) {
@@ -148,7 +145,6 @@
         hasMore = false
         nextBookmark = undefined
         selectedSession = null
-        detailPanelOpen = false
         resetDetailState()
       }
     } finally {
@@ -224,7 +220,6 @@
       if (!isCurrentSelection()) return
       notifications.error("Failed to fetch full session detail")
       selectedSession = null
-      detailPanelOpen = false
       resetDetailState()
     }
   }
@@ -241,14 +236,8 @@
         item.sessionId === row.sessionId && item.environment === row.environment
     )
     if (session) {
-      detailPanelOpen = true
       selectSession(session)
     }
-  }
-
-  function closeDetailPanel() {
-    detailPanelOpen = false
-    resetDetailState()
   }
 
   async function loadMoreSessions() {
@@ -458,7 +447,7 @@
       <LogsSessionDetail
         selectedSession={visibleSelectedSession}
         {expandedStepId}
-        {expandedStepDetail}
+        {stepDetailCache}
         {expandedStepLoading}
         exportSessionLoading={exportingSession}
         onToggleStep={toggleStep}
