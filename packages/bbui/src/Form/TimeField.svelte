@@ -92,10 +92,12 @@
     <TimePicker
       value={parsedValue}
       {disableClearing}
+      {disabled}
+      {readonly}
       on:change={handleChange}
     />
     {#if name}
-      <input type="hidden" {name} value={value ?? ""} />
+      <input type="hidden" {name} value={value ?? ""} {disabled} />
     {/if}
   </div>
 </Field>

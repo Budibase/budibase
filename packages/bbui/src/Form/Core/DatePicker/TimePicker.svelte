@@ -6,12 +6,18 @@
 
   export let value: Dayjs | undefined
   export let disableClearing = false
+  export let disabled = false
+  export let readonly = false
 
   const dispatch = createEventDispatcher<{ change: Dayjs | undefined }>()
 
   $: displayValue = value?.format("HH:mm")
 
   const handleChange = async (e: Event) => {
+    if (disabled || readonly) {
+      return
+    }
+
     const target = e.target as HTMLInputElement
     if (!target.value) {
       if (disableClearing) {
@@ -35,6 +41,8 @@
     hideArrows
     type={"time"}
     value={displayValue}
+    {disabled}
+    {readonly}
     on:input={handleChange}
     on:change={handleChange}
   />

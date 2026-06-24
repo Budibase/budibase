@@ -5,6 +5,8 @@
   export let hideArrows = false
   export let width = undefined
   export let type = "number"
+  export let disabled = false
+  export let readonly = false
 
   $: style = width ? `width:${width}px;` : ""
 
@@ -18,6 +20,8 @@
   {value}
   {min}
   {max}
+  {disabled}
+  {readonly}
   on:click={selectAll}
   on:change
   on:input
