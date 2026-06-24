@@ -2,6 +2,7 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { Datasource, Project, WithoutDocMetadata } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../.."
+import { addProjectId, hasProject, removeProjectId } from "./utils"
 
 type ProjectUpdate = Pick<Project, "_id" | "_rev"> &
   Partial<Pick<Project, "name" | "description" | "color">>
@@ -147,58 +148,56 @@ async function clearAssignments(projectId: string) {
   const db = context.getWorkspaceDB()
   const updates: AssignmentUpdate[] = [
     ...workspaceApps
-      .filter(workspaceApp => workspaceApp.projectId === projectId)
+      .filter(workspaceApp => hasProject(workspaceApp, projectId))
       .map(workspaceApp => async () => {
-        const updated = await sdk.workspaceApps.update({
-          ...workspaceApp,
-          projectId: undefined,
-        })
+        const updated = await sdk.workspaceApps.update(
+          removeProjectId(workspaceApp, projectId)
+        )
         return async () =>
-          await sdk.workspaceApps.update({ ...updated, projectId })
+          await sdk.workspaceApps.update(addProjectId(updated, projectId))
       }),
     ...automations
-      .filter(automation => automation.projectId === projectId)
+      .filter(automation => hasProject(automation, projectId))
       .map(automation => async () => {
-        const updated = await sdk.automations.update({
-          ...automation,
-          projectId: undefined,
-        })
+        const updated = await sdk.automations.update(
+          removeProjectId(automation, projectId)
+        )
         return async () =>
-          await sdk.automations.update({ ...updated, projectId })
+          await sdk.automations.update(addProjectId(updated, projectId))
       }),
     ...agents
-      .filter(agent => agent.projectId === projectId)
+      .filter(agent => hasProject(agent, projectId))
       .map(agent => async () => {
-        const updated = await sdk.ai.agents.update({
-          ...agent,
-          projectId: undefined,
-        })
-        return async () => await sdk.ai.agents.update({ ...updated, projectId })
+        const updated = await sdk.ai.agents.update(
+          removeProjectId(agent, projectId)
+        )
+        return async () =>
+          await sdk.ai.agents.update(addProjectId(updated, projectId))
       }),
     ...tables
       .filter(
-        table => table.projectId === projectId && !isExternalTableID(table._id!)
+        table => hasProject(table, projectId) && !isExternalTableID(table._id!)
       )
       .map(table => async () => {
-        const updated = await sdk.tables.saveTable({
-          ...table,
-          projectId: undefined,
-        })
-        return async () => await sdk.tables.saveTable({ ...updated, projectId })
+        const updated = await sdk.tables.saveTable(
+          removeProjectId(table, projectId)
+        )
+        return async () =>
+          await sdk.tables.saveTable(addProjectId(updated, projectId))
       }),
     ...queries
-      .filter(query => query.projectId === projectId)
+      .filter(query => hasProject(query, projectId))
       .map(query => async () => {
-        const response = await db.put({ ...query, projectId: undefined })
+        const response = await db.put(removeProjectId(query, projectId))
         return async () =>
-          await db.put({ ...query, _rev: response.rev, projectId })
+          await db.put(addProjectId({ ...query, _rev: response.rev }, projectId))
       }),
     ...datasources.flatMap(datasource => {
       const entityKeys = Object.entries(datasource.entities || {})
-        .filter(([_, entity]) => entity.projectId === projectId)
+        .filter(([_, entity]) => hasProject(entity, projectId))
         .map(([key]) => key)
-      const clearDatasourceProjectId = datasource.projectId === projectId
-      if (!clearDatasourceProjectId && !entityKeys.length) {
+      const clearDatasourceProjectIds = hasProject(datasource, projectId)
+      if (!clearDatasourceProjectIds && !entityKeys.length) {
         return []
       }
 
@@ -209,12 +208,11 @@ async function clearAssignments(projectId: string) {
           for (const key of entityKeys) {
             const entity = entities[key]
             if (entity) {
-              entities[key] = { ...entity, projectId: undefined }
+              entities[key] = removeProjectId(entity, projectId)
             }
           }
           await db.put({
-            ...current,
-            projectId: clearDatasourceProjectId ? undefined : current.projectId,
+            ...removeProjectId(current, projectId),
             entities,
           })
           return async () => {
@@ -223,14 +221,14 @@ async function clearAssignments(projectId: string) {
             for (const key of entityKeys) {
               const entity = restoredEntities[key]
               if (entity) {
-                restoredEntities[key] = { ...entity, projectId }
+                restoredEntities[key] = addProjectId(entity, projectId)
               }
             }
+            const restoredDatasource = clearDatasourceProjectIds
+              ? addProjectId(updated, projectId)
+              : updated
             await db.put({
-              ...updated,
-              projectId: clearDatasourceProjectId
-                ? projectId
-                : updated.projectId,
+              ...restoredDatasource,
               entities: restoredEntities,
             })
           }

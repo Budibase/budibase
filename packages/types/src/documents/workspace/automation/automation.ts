@@ -151,7 +151,7 @@ export interface Automation extends Document {
   uiTree?: any
   appId: string
   live?: boolean
-  projectId?: string
+  projectIds?: string[]
   name: string
   internal?: boolean
   type?: string
