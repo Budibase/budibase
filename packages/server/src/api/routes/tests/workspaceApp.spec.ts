@@ -279,6 +279,34 @@ describe("/workspaceApp", () => {
       expect(updated.customTheme?.fontFamily).toBe(AppFontFamily.SOURCE_SANS)
     })
 
+    it("clears project assignments when projectIds is null", async () => {
+      const { project } = await api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Project app",
+          url: "/project-app",
+          projectIds: [project._id],
+        })
+      )
+
+      const { workspaceApp: updated } = await api.workspaceApp.update({
+        _id: workspaceApp._id,
+        _rev: workspaceApp._rev,
+        name: workspaceApp.name,
+        url: workspaceApp.url,
+        navigation: workspaceApp.navigation,
+        disabled: workspaceApp.disabled,
+        projectIds: null,
+      })
+
+      expect(updated.projectIds).toBeUndefined()
+
+      const fetched = await api.workspaceApp.find(workspaceApp._id)
+      expect(fetched.projectIds).toBeUndefined()
+    })
+
     it("rejects invalid theme settings", async () => {
       const { workspaceApp } = await api.workspaceApp.create(
         structures.workspaceApps.createRequest({
