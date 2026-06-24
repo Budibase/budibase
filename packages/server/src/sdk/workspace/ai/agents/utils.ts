@@ -36,10 +36,11 @@ const HELPER_TOOL_NAMES = new Set([
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
 
-export const getLiveOperation = (agent: Agent): AgentOperation | undefined => {
-  const operation = agent.operations?.[0]
-  return operation?.live === true ? operation : undefined
-}
+export const getLiveOperations = (agent: Agent): AgentOperation[] =>
+  (agent.operations || []).filter(operation => operation.live === true)
+
+export const getLiveOperation = (agent: Agent): AgentOperation | undefined =>
+  getLiveOperations(agent)[0]
 
 export function getToolDisplayNames(
   tools: AiToolDefinition[]
@@ -148,6 +149,7 @@ export interface BuildPromptAndToolsOptions {
 
 export async function buildPromptAndTools(
   agent: Agent,
+  operation?: AgentOperation,
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
@@ -159,7 +161,6 @@ export async function buildPromptAndTools(
   if (!agentId) {
     throw new Error("Agent _id is required")
   }
-  const operation = getLiveOperation(agent)
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
@@ -172,22 +173,28 @@ export async function buildPromptAndTools(
   )
 
   if (
+    operation &&
     hasKnowledgeBases &&
     !enabledTools.some(tool => tool.name === "list_knowledge_files")
   ) {
-    enabledTools.push(createKnowledgeFilesTool(agentId))
+    enabledTools.push(createKnowledgeFilesTool(agentId, operation.id))
   }
   if (
+    operation &&
     hasKnowledgeBases &&
     !enabledTools.some(tool => tool.name === "search_knowledge")
   ) {
-    enabledTools.push(createKnowledgeSearchTool(agentId))
+    enabledTools.push(createKnowledgeSearchTool(agentId, operation.id))
   }
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
-    promptInstructions: operation?.promptInstructions,
+    promptInstructions: operation
+      ? [`Current operation: ${operation.name}`, operation.promptInstructions]
+          .filter(Boolean)
+          .join("\n\n")
+      : undefined,
     includeGoal,
   })
 

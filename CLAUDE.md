@@ -42,6 +42,7 @@
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
 - Avoid adding nested ternary statements.
+- When writing tests involving a URL, use example.com as the domain.
 
 ## Test style - packages/server
 

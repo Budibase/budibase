@@ -275,6 +275,12 @@
     window.open(liveUrl, "_blank", "noopener,noreferrer")
   }
 
+  const CONTACT_SALES_URL = "https://budibase.com/contact/"
+
+  const openContactSales = () => {
+    window.open(CONTACT_SALES_URL, "_blank", "noopener,noreferrer")
+  }
+
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {
     isDuplicatingWorkspaceApp = true
     try {
@@ -550,6 +556,14 @@
         automation => automation._id === automationId
       ),
     }))
+  $: automationStopEntries = Object.entries(targetApp?.automationStops || {})
+    .filter(([, logIds]) => logIds.length > 0)
+    .map(([automationId]) => ({
+      automationId,
+      automation: $automationStore.automations.find(
+        automation => automation._id === automationId
+      ),
+    }))
 
   $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
@@ -582,6 +596,11 @@
   ) => {
     const name = automationName || "Automation"
     return `${name} - Automation error${errorCount > 1 ? ` (${errorCount})` : ""}`
+  }
+
+  const automationStopMessage = (automationName: string | undefined) => {
+    const name = automationName || "Automation"
+    return `${name} - Automation stopped`
   }
 
   onMount(async () => {
@@ -623,11 +642,14 @@
         >
       </div>
 
-      {#if showHeaderActions}
-        <div class="header-actions">
+      <div class="header-actions">
+        {#if showHeaderActions}
           <FreeTrialBanner show={$licensing.showTrialBanner} />
-        </div>
-      {/if}
+        {/if}
+        <Button size="M" secondary on:click={openContactSales}>
+          Contact sales
+        </Button>
+      </div>
     </div>
 
     {#if automationErrorEntries.length}
@@ -644,6 +666,23 @@
               entry.automation?.name,
               entry.errorCount
             )}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
+          />
+        {/each}
+      </div>
+    {/if}
+
+    {#if automationStopEntries.length}
+      <div class="automation-errors">
+        {#each automationStopEntries as entry (entry.automationId)}
+          <Notification
+            wide
+            dismissable
+            type="warning"
+            icon="Alert"
+            action={() => goToAutomationError(entry.automationId)}
+            actionMessage="View"
+            message={automationStopMessage(entry.automation?.name)}
             on:dismiss={() => dismissAutomationError(entry.automationId)}
           />
         {/each}
