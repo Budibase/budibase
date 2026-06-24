@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
   import { integrationForDatasource } from "@/stores/selectors"
   import { datasources, integrations } from "@/stores/builder"

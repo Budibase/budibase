@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Modal, keepOpen, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "@/constants/backend"

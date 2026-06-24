@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { cloneDeep } from "lodash/fp"
   import { get } from "svelte/store"
   import { tables, datasources } from "@/stores/builder"

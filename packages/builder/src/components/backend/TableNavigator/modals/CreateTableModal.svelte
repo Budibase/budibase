@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { goto as gotoStore, url } from "@roxi/routify"
   import { DataEnvironmentMode, FieldType } from "@budibase/types"
   import { notifications, Input, ModalContent } from "@budibase/bbui"
