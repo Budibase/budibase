@@ -14,8 +14,8 @@ import {
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
 import {
-  resolveProjectId,
-  resolveUpdatedProjectId,
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
 } from "../../utilities/projects"
 
 const hasOwn = (obj: object, key: string) =>
@@ -36,7 +36,7 @@ function toWorkspaceAppResponse(
     createdAt: workspaceApp.createdAt as string,
     updatedAt: workspaceApp.updatedAt!,
     disabled: workspaceApp.disabled,
-    projectId: workspaceApp.projectId,
+    projectIds: workspaceApp.projectIds,
   }
 }
 
@@ -79,12 +79,12 @@ export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const projectId = await resolveProjectId(body.projectId)
+  const projectIds = await resolveProjectIds(body.projectIds)
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
     disabled: body.disabled,
-    projectId,
+    projectIds,
     navigation: defaultAppNavigator(body.name),
     customTheme: {
       fontFamily: DefaultNewAppFontFamily,
@@ -113,9 +113,9 @@ export async function edit(
     ctx.throw(404)
   }
 
-  const projectId = await resolveUpdatedProjectId(
-    body.projectId,
-    existingWorkspaceApp.projectId
+  const projectIds = await resolveUpdatedProjectIds(
+    body.projectIds,
+    existingWorkspaceApp.projectIds
   )
 
   const workspaceApp = await sdk.workspaceApps.update({
@@ -125,7 +125,7 @@ export async function edit(
     url: body.url,
     navigation: body.navigation,
     disabled: body.disabled,
-    projectId,
+    projectIds,
     ...(hasOwn(body, "theme") ? { theme: body.theme } : {}),
     ...(hasOwn(body, "customTheme") ? { customTheme: body.customTheme } : {}),
   })

@@ -41,8 +41,8 @@ import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
 import {
-  resolveProjectId,
-  resolveUpdatedProjectId,
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
 } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
@@ -229,12 +229,12 @@ const resolveDatasourceEntityProjectIds = async (
       throw new HTTPError(`Datasource entity '${name}' must be an object.`, 400)
     }
 
-    entity.projectId = existingDatasource
-      ? await resolveUpdatedProjectId(
-          entity.projectId,
-          existingDatasource.entities?.[name]?.projectId
+    entity.projectIds = existingDatasource
+      ? await resolveUpdatedProjectIds(
+          entity.projectIds,
+          existingDatasource.entities?.[name]?.projectIds
         )
-      : await resolveProjectId(entity.projectId)
+      : await resolveProjectIds(entity.projectIds)
   }
 }
 
@@ -261,9 +261,9 @@ export async function update(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
-  datasource.projectId = await resolveUpdatedProjectId(
-    ctx.request.body.projectId,
-    baseDatasource.projectId
+  datasource.projectIds = await resolveUpdatedProjectIds(
+    ctx.request.body.projectIds,
+    baseDatasource.projectIds
   )
   await resolveDatasourceEntityProjectIds(datasource, baseDatasource)
 
@@ -316,7 +316,7 @@ export async function save(
     fetchSchema,
     tablesFilter,
   } = ctx.request.body
-  datasourceData.projectId = await resolveProjectId(datasourceData.projectId)
+  datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
   await resolveDatasourceEntityProjectIds(datasourceData)
   const { datasource, errors } = await sdk.datasources.save(datasourceData, {
     fetchSchema,

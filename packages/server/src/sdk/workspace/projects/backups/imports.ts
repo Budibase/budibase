@@ -41,6 +41,7 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
+import { getProjectIds } from "../utils"
 
 const IMPORT_ORDER: ResourceType[] = [
   ResourceType.AGENT,
@@ -346,11 +347,45 @@ const remapValue = (
   return value
 }
 
+const sanitizeImportedProjectAssignments = (
+  doc: AnyDocument,
+  resourceType: ResourceType,
+  importedProjectId: string
+) => {
+  if (getProjectIds(doc).includes(importedProjectId)) {
+    doc.projectIds = [importedProjectId]
+  } else {
+    delete doc.projectIds
+  }
+
+  if (resourceType !== ResourceType.DATASOURCE) {
+    return
+  }
+
+  const datasource = doc as Datasource
+  if (!datasource.entities) {
+    return
+  }
+
+  datasource.entities = Object.fromEntries(
+    Object.entries(datasource.entities).map(([key, entity]) => {
+      const sanitizedEntity = { ...entity }
+      if (getProjectIds(sanitizedEntity).includes(importedProjectId)) {
+        sanitizedEntity.projectIds = [importedProjectId]
+      } else {
+        delete sanitizedEntity.projectIds
+      }
+      return [key, sanitizedEntity]
+    })
+  )
+}
+
 const sanitizeImportedDoc = (
   doc: AnyDocument,
   resourceType: ResourceType,
   idMap: Map<string, string>,
-  workspaceId: string
+  workspaceId: string,
+  importedProjectId: string
 ): AnyDocument => {
   const remapped = remapValue(structuredClone(doc), idMap) as AnyDocument
   delete remapped._rev
@@ -380,6 +415,11 @@ const sanitizeImportedDoc = (
         }
       )
     )
+    sanitizeImportedProjectAssignments(
+      rowActions,
+      resourceType,
+      importedProjectId
+    )
     return rowActions
   }
 
@@ -397,6 +437,11 @@ const sanitizeImportedDoc = (
     remapped.isDefault = false
   }
 
+  sanitizeImportedProjectAssignments(
+    remapped,
+    resourceType,
+    importedProjectId
+  )
   return remapped
 }
 
@@ -913,9 +958,10 @@ export async function importProject(
       description: extracted.project.description,
       color: extracted.project.color,
     })
+    const importedProjectId = importedProject._id!
 
     const idMap = new Map<string, string>([
-      [extracted.project._id!, importedProject._id!],
+      [extracted.project._id!, importedProjectId],
       [extracted.manifest.sourceWorkspace.id, workspaceId],
     ])
 
@@ -934,7 +980,8 @@ export async function importProject(
             { ...doc, _id: newId },
             resourceType,
             idMap,
-            workspaceId
+            workspaceId,
+            importedProjectId
           )
           return remappedDoc
         })

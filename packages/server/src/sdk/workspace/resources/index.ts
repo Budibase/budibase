@@ -33,6 +33,12 @@ import {
 import sdk from "../.."
 import { ObjectStoreBuckets } from "../../../constants"
 import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
+import {
+  getProjectIds,
+  hasProject,
+  type ProjectAssignable,
+  withProjectIds,
+} from "../projects/utils"
 
 export async function getResourcesInfo(): Promise<
   Record<string, { dependencies: UsedResource[] }>
@@ -272,30 +278,30 @@ export async function getResourcesInfo(): Promise<
           .filter(
             datasource =>
               datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
-              (datasource.projectId === project._id ||
+              (hasProject(datasource, project._id) ||
                 Object.values(datasource.entities || {}).some(
-                  table => table.projectId === project._id
+                  table => hasProject(table, project._id)
                 ))
           )
           .map(datasource =>
             buildUsedResource(datasource, ResourceType.DATASOURCE)
           ),
         ...internalTables
-          .filter(table => table.projectId === project._id)
+          .filter(table => hasProject(table, project._id))
           .map(table => buildUsedResource(table, ResourceType.TABLE)),
         ...queries
-          .filter(query => query.projectId === project._id)
+          .filter(query => hasProject(query, project._id))
           .map(query => buildUsedResource(query, ResourceType.QUERY)),
         ...automations
-          .filter(automation => automation.projectId === project._id)
+          .filter(automation => hasProject(automation, project._id))
           .map(automation =>
             buildUsedResource(automation, ResourceType.AUTOMATION)
           ),
         ...agents
-          .filter(agent => agent.projectId === project._id)
+          .filter(agent => hasProject(agent, project._id))
           .map(agent => buildUsedResource(agent, ResourceType.AGENT)),
         ...workspaceApps
-          .filter(workspaceApp => workspaceApp.projectId === project._id)
+          .filter(workspaceApp => hasProject(workspaceApp, project._id))
           .map(workspaceApp =>
             buildUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
           ),
@@ -740,9 +746,11 @@ export async function duplicateResourcesToWorkspace(
     new Set(
       docsToInsert
         .flatMap(doc => [
-          doc.projectId,
+          ...getProjectIds(doc),
           ...(isDatasource(doc)
-            ? Object.values(doc.entities || {}).map(entity => entity.projectId)
+            ? Object.values(doc.entities || {}).flatMap(entity =>
+                getProjectIds(entity)
+              )
             : []),
         ])
         .filter((projectId): projectId is string => !!projectId)
@@ -767,31 +775,26 @@ export async function duplicateResourcesToWorkspace(
     throw new Error("Could not get workspaceId")
   }
 
-  const hasAvailableProject = (projectId: string | undefined) => {
-    return (
-      projectsEnabled &&
-      !!projectId &&
-      (resourceIds.has(projectId) || destinationProjectIds.has(projectId))
-    )
-  }
+  const hasAvailableProject = (projectId: string) =>
+    projectsEnabled &&
+    (resourceIds.has(projectId) || destinationProjectIds.has(projectId))
 
-  const sanitizeProjectAssignment = (doc: object) => {
-    if (
-      "projectId" in doc &&
-      typeof doc.projectId === "string" &&
-      !hasAvailableProject(doc.projectId)
-    ) {
-      delete doc.projectId
-    }
+  const sanitizeProjectAssignment = <T extends ProjectAssignable>(
+    doc: T
+  ) => {
+    return withProjectIds(
+      doc,
+      getProjectIds(doc).filter(projectId => hasAvailableProject(projectId))
+    )
   }
 
   if (docsToInsert.length) {
     await destinationDb.bulkDocs(
       docsToInsert.map<AnyDocument>(doc => {
-        const sanitizedDoc: AnyDocument = {
+        const sanitizedDoc = sanitizeProjectAssignment({
           ...(isAgent(doc) ? sdk.ai.agents.sanitiseAgentForExport(doc) : doc),
           fromWorkspace,
-        }
+        })
         delete sanitizedDoc._rev
         delete sanitizedDoc.createdAt
         delete sanitizedDoc.updatedAt
@@ -801,12 +804,10 @@ export async function duplicateResourcesToWorkspace(
         if (isAutomation(sanitizedDoc)) {
           sanitizedDoc.appId = toWorkspace
         }
-        sanitizeProjectAssignment(sanitizedDoc)
         if (isDatasource(sanitizedDoc) && sanitizedDoc.entities) {
           sanitizedDoc.entities = Object.fromEntries(
             Object.entries(sanitizedDoc.entities).map(([name, entity]) => {
-              const sanitizedEntity = { ...entity }
-              sanitizeProjectAssignment(sanitizedEntity)
+              const sanitizedEntity = sanitizeProjectAssignment({ ...entity })
               return [name, sanitizedEntity]
             })
           )

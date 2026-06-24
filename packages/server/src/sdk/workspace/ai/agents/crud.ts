@@ -16,6 +16,7 @@ import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import { assertAgentHasValidConfig } from "./utils"
 import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
+import { getValidProjectIdsForDuplication } from "../../projects/utils"
 
 // TODO: this will eventually go away, after a grace period
 type DeprecatedAgent = Agent & {
@@ -411,7 +412,7 @@ export async function create(
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
-    projectId: request.projectId,
+    projectIds: request.projectIds,
     operations: request.operations,
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
@@ -460,7 +461,7 @@ export async function duplicate(
     name,
     description: source.description,
     aiconfig: source.aiconfig,
-    projectId: source.projectId,
+    projectIds: await getValidProjectIdsForDuplication(source.projectIds),
     goal: source.goal,
     icon: source.icon,
     iconColor: source.iconColor,

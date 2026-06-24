@@ -2,6 +2,7 @@ import { context, docIds, events, HTTPError } from "@budibase/backend-core"
 import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 import { helpers } from "@budibase/shared-core"
+import { getValidProjectIdsForDuplication } from "../projects/utils"
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
@@ -62,7 +63,7 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
     theme: workspaceApp.theme,
     customTheme: workspaceApp.customTheme,
     isDefault: false,
-    projectId: workspaceApp.projectId,
+    projectIds: await getValidProjectIdsForDuplication(workspaceApp.projectIds),
   }
 
   return sdk.workspaceApps.create(duplicatedAppData)
@@ -153,9 +154,9 @@ export async function update(
       ? workspaceApp.customTheme
       : persisted.customTheme,
     disabled: workspaceApp.disabled,
-    projectId: hasOwn(workspaceApp, "projectId")
-      ? workspaceApp.projectId
-      : persisted.projectId,
+    projectIds: hasOwn(workspaceApp, "projectIds")
+      ? workspaceApp.projectIds
+      : persisted.projectIds,
 
     // Immutable properties
     createdAt: persisted.createdAt,

@@ -22,8 +22,8 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import {
-  resolveProjectId,
-  resolveUpdatedProjectId,
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
 } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
@@ -220,13 +220,13 @@ export async function createAgent(
   const body = ctx.request.body
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
-  const projectId = await resolveProjectId(body.projectId)
+  const projectIds = await resolveProjectIds(body.projectIds)
 
   const createRequest: Parameters<typeof sdk.ai.agents.create>[number] = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    projectId,
+    projectIds,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
@@ -250,9 +250,9 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
   const existing = await sdk.ai.agents.getOrThrow(body._id)
-  const projectId = await resolveUpdatedProjectId(
-    body.projectId,
-    existing.projectId
+  const projectIds = await resolveUpdatedProjectIds(
+    body.projectIds,
+    existing.projectIds
   )
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
@@ -261,7 +261,7 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    projectId,
+    projectIds,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,

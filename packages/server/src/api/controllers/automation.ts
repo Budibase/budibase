@@ -54,8 +54,8 @@ import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
 import {
-  resolveProjectId,
-  resolveUpdatedProjectId,
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
 } from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
@@ -77,7 +77,7 @@ export async function create(
     return
   }
 
-  automation.projectId = await resolveProjectId(automation.projectId)
+  automation.projectIds = await resolveProjectIds(automation.projectIds)
   automation.appId = ctx.appId
 
   let createdAutomation: Automation
@@ -122,9 +122,9 @@ export async function update(
   }
 
   const existingAutomation = await sdk.automations.get(automation._id)
-  automation.projectId = await resolveUpdatedProjectId(
-    automation.projectId,
-    existingAutomation.projectId
+  automation.projectIds = await resolveUpdatedProjectIds(
+    automation.projectIds,
+    existingAutomation.projectIds
   )
 
   const updatedAutomation = await sdk.automations.update(automation)

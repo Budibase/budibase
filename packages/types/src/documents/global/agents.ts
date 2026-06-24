@@ -93,7 +93,7 @@ export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  projectId?: string
+  projectIds?: string[]
   operations?: AgentOperation[]
   goal?: string
   live?: boolean
