@@ -5524,17 +5524,6 @@
         "key": "helpText"
       },
       {
-        "type": "text",
-        "label": "Extensions",
-        "key": "extensions"
-      },
-      {
-        "type": "number",
-        "label": "Max attachments",
-        "key": "maximum",
-        "min": 1
-      },
-      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -5544,12 +5533,6 @@
             "key": "value"
           }
         ]
-      },
-      {
-        "type": "boolean",
-        "label": "Compact",
-        "key": "compact",
-        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -5593,7 +5576,7 @@
       },
       {
         "section": true,
-        "name": "Uploader Text Settings",
+        "name": "Dropzone settings",
         "dependsOn": [
           {
             "setting": "disabled",
@@ -5601,6 +5584,23 @@
           }
         ],
         "settings": [
+          {
+            "type": "text",
+            "label": "Extensions",
+            "key": "extensions"
+          },
+          {
+            "type": "number",
+            "label": "Max attachments",
+            "key": "maximum",
+            "min": 1
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact",
+            "defaultValue": false
+          },
           {
             "type": "text",
             "label": "Title Text",
@@ -5656,11 +5656,6 @@
         "key": "helpText"
       },
       {
-        "type": "text",
-        "label": "Extensions",
-        "key": "extensions"
-      },
-      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -5670,12 +5665,6 @@
             "key": "value"
           }
         ]
-      },
-      {
-        "type": "boolean",
-        "label": "Compact",
-        "key": "compact",
-        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -5719,7 +5708,7 @@
       },
       {
         "section": true,
-        "name": "Uploader Text Settings",
+        "name": "Dropzone settings",
         "dependsOn": [
           {
             "setting": "disabled",
@@ -5727,6 +5716,17 @@
           }
         ],
         "settings": [
+          {
+            "type": "text",
+            "label": "Extensions",
+            "key": "extensions"
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact",
+            "defaultValue": false
+          },
           {
             "type": "text",
             "label": "Title Text",
@@ -6016,11 +6016,6 @@
         "nested": true
       },
       {
-        "type": "text",
-        "label": "Extensions",
-        "key": "extensions"
-      },
-      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -6030,12 +6025,6 @@
             "key": "value"
           }
         ]
-      },
-      {
-        "type": "boolean",
-        "label": "Compact",
-        "key": "compact",
-        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -6050,7 +6039,7 @@
       },
       {
         "section": true,
-        "name": "Uploader Text Settings",
+        "name": "Dropzone settings",
         "dependsOn": [
           {
             "setting": "disabled",
@@ -6058,6 +6047,17 @@
           }
         ],
         "settings": [
+          {
+            "type": "text",
+            "label": "Extensions",
+            "key": "extensions"
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact",
+            "defaultValue": false
+          },
           {
             "type": "text",
             "label": "Title Text",
