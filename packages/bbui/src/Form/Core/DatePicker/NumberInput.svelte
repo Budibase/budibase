@@ -1,9 +1,9 @@
 <script>
   export let value
-  export let min
-  export let max
+  export let min = undefined
+  export let max = undefined
   export let hideArrows = false
-  export let width
+  export let width = undefined
   export let type = "number"
 
   $: style = width ? `width:${width}px;` : ""
