@@ -27,7 +27,11 @@ export const withProjectIds = <T extends ProjectAssignable>(
 export const removeProjectId = <T extends ProjectAssignable>(
   doc: T,
   projectId: string
-): T => withProjectIds(doc, getProjectIds(doc).filter(id => id !== projectId))
+): T =>
+  withProjectIds(
+    doc,
+    getProjectIds(doc).filter(id => id !== projectId)
+  )
 
 export const addProjectId = <T extends ProjectAssignable>(
   doc: T,
@@ -38,14 +42,16 @@ export const addProjectId = <T extends ProjectAssignable>(
 export const getValidProjectIdsForDuplication = async (
   projectIds?: string[]
 ) => {
-  if (!projectIds?.length || !(await features.isEnabled(FeatureFlag.PROJECTS))) {
+  if (
+    !projectIds?.length ||
+    !(await features.isEnabled(FeatureFlag.PROJECTS))
+  ) {
     return undefined
   }
 
-  const projects = await context.getWorkspaceDB().getMultiple<Project>(
-    projectIds,
-    { allowMissing: true }
-  )
+  const projects = await context
+    .getWorkspaceDB()
+    .getMultiple<Project>(projectIds, { allowMissing: true })
   const validProjectIds = new Set(projects.map(project => project._id))
   const ids = projectIds.filter(projectId => validProjectIds.has(projectId))
   return ids.length ? ids : undefined

@@ -279,8 +279,8 @@ export async function getResourcesInfo(): Promise<
             datasource =>
               datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
               (hasProject(datasource, project._id) ||
-                Object.values(datasource.entities || {}).some(
-                  table => hasProject(table, project._id)
+                Object.values(datasource.entities || {}).some(table =>
+                  hasProject(table, project._id)
                 ))
           )
           .map(datasource =>
@@ -779,9 +779,7 @@ export async function duplicateResourcesToWorkspace(
     projectsEnabled &&
     (resourceIds.has(projectId) || destinationProjectIds.has(projectId))
 
-  const sanitizeProjectAssignment = <T extends ProjectAssignable>(
-    doc: T
-  ) => {
+  const sanitizeProjectAssignment = <T extends ProjectAssignable>(doc: T) => {
     return withProjectIds(
       doc,
       getProjectIds(doc).filter(projectId => hasAvailableProject(projectId))
