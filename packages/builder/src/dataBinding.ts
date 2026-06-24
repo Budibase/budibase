@@ -303,8 +303,20 @@ const asSchema = (value: unknown): DataBindingSchema => {
     (acc, [key, field]) => {
       if (typeof field === "string") {
         acc[key] = { type: field }
-      } else if (isDataBindingObject(field) && typeof field.type === "string") {
-        acc[key] = field as DataBindingFieldSchema
+      } else if (isDataBindingObject(field)) {
+        const fieldType =
+          typeof field.type === "string"
+            ? field.type
+            : "calculationType" in field
+              ? "number"
+              : null
+
+        if (fieldType) {
+          acc[key] = {
+            ...field,
+            type: fieldType,
+          } as DataBindingFieldSchema
+        }
       }
       return acc
     },
