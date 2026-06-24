@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Select } from "@budibase/bbui"
+  import { Multiselect } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
   import { featureFlags, projectsStore } from "@/stores/portal"
   import { appStore } from "@/stores/builder"
@@ -10,16 +10,15 @@
     color?: string
   }
 
-  export let value = ""
-  export let label = "Project"
-  export let includeEmptyOption = true
-  export let emptyLabel = "No project"
+  export let value: string[] = []
+  export let label = "Projects"
 
   let options: ProjectOption[] = []
   let fetchError: string | undefined
 
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: workspaceId = $appStore.appId
+  $: value = Array.isArray(value) ? value : []
 
   $: if (projectsEnabled && workspaceId) {
     fetchError = undefined
@@ -28,26 +27,21 @@
     })
   }
 
-  $: options = [
-    ...(includeEmptyOption
-      ? [{ label: emptyLabel, value: "", color: undefined }]
-      : []),
-    ...$projectsStore.map(project => ({
-      label: project.name,
-      value: project._id,
-      color: project.color,
-    })),
-  ]
+  $: options = $projectsStore.map(project => ({
+    label: project.name,
+    value: project._id,
+    color: project.color,
+  }))
 </script>
 
 {#if projectsEnabled}
-  <Select
+  <Multiselect
     {label}
+    placeholder="No projects"
     bind:value
     {options}
     getOptionLabel={option => option.label}
     getOptionValue={option => option.value}
-    getOptionColour={option => option.color}
     error={fetchError}
     disabled={!!fetchError}
   />

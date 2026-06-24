@@ -42,8 +42,8 @@ import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import {
-  resolveProjectId,
-  resolveUpdatedProjectId,
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
 } from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
@@ -183,7 +183,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
 
   let eventFn
   if (!query._id && !query._rev) {
-    query.projectId = await resolveProjectId(query.projectId)
+    query.projectIds = await resolveProjectIds(query.projectIds)
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
     query.nullDefaultSupport = true
@@ -195,9 +195,9 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
-    query.projectId = await resolveUpdatedProjectId(
-      query.projectId,
-      existingQuery.projectId
+    query.projectIds = await resolveUpdatedProjectIds(
+      query.projectIds,
+      existingQuery.projectIds
     )
     eventFn = () => events.query.updated(datasource, query)
   }

@@ -1028,7 +1028,7 @@
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
             <div class="project">
-              <ProjectSelect bind:value={editableQuery.projectId} />
+              <ProjectSelect bind:value={editableQuery.projectIds} />
             </div>
           {/if}
           {#if endpointDocs}

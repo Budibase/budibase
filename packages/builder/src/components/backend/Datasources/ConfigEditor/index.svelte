@@ -13,18 +13,18 @@
   export let onSubmit: (_value: {
     config: Record<string, any>
     name: string
-    projectId?: string
+    projectIds?: string[]
   }) => Promise<void> | void = () => {}
   export let showNameField: boolean = false
   export let nameFieldValue: string = ""
   export let showProjectField: boolean = false
-  export let projectIdValue: string = ""
+  export let projectIdsValue: string[] = []
 
-  let projectId = ""
+  let projectIds: string[] = []
 
   $: configStore = createValidatedConfigStore(integration, config)
   $: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
-  $: projectId = projectIdValue || ""
+  $: projectIds = projectIdsValue || []
 
   const handleConfirm = async () => {
     configStore.markAllFieldsActive()
@@ -36,7 +36,7 @@
       return onSubmit({
         config,
         name,
-        projectId: projectId || undefined,
+        projectIds: projectIds.length ? projectIds : undefined,
       })
     }
 
@@ -77,7 +77,7 @@
   {/if}
 
   {#if showProjectField}
-    <ProjectSelect bind:value={projectId} />
+    <ProjectSelect bind:value={projectIds} />
   {/if}
 
   {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}

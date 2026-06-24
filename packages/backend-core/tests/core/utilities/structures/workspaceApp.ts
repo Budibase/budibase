@@ -20,7 +20,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   > = {
     name: generator.guid(),
     url: `/${generator.guid().replace(/-/g, "")}`,
-    projectId: undefined,
+    projectIds: undefined,
 
     _id: undefined,
     _rev: undefined,
@@ -45,7 +45,7 @@ export function createRequest(
     name: workspace.name,
     url: workspace.url,
     disabled: workspace.disabled,
-    projectId: workspace.projectId,
+    projectIds: workspace.projectIds,
   }
   return result
 }

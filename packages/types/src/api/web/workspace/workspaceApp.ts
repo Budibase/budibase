@@ -12,14 +12,14 @@ export interface WorkspaceAppResponse {
   createdAt: string
   updatedAt: string
   disabled?: boolean
-  projectId?: string
+  projectIds?: string[]
 }
 
 export interface InsertWorkspaceAppRequest {
   name: string
   url: string
   disabled?: boolean
-  projectId?: string
+  projectIds?: string[]
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -39,7 +39,7 @@ export interface UpdateWorkspaceAppRequest {
   theme?: Theme
   customTheme?: AppCustomTheme
   disabled?: boolean
-  projectId?: string
+  projectIds?: string[]
 }
 
 export interface UpdateWorkspaceAppResponse {

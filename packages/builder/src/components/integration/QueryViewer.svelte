@@ -57,7 +57,7 @@
   let scrolling = false
   let showSidePanel = false
   let nameError: string | null = null
-  let projectId = ""
+  let projectIds: string[] = []
   let canSaveQuery = false
 
   let newQuery: Query
@@ -95,7 +95,7 @@
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
-    projectId = newQuery.projectId || ""
+    projectIds = newQuery.projectIds || []
 
     // Initialize pagination for SQL Read queries
     if (newQuery.queryVerb === "read" && schemaType === "sql") {
@@ -126,7 +126,7 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   $: if (newQuery) {
-    newQuery.projectId = projectId || undefined
+    newQuery.projectIds = projectIds.length ? projectIds : undefined
   }
 
   $: debouncedCheckIsModified(newQuery)
@@ -321,7 +321,7 @@
             }}
             error={nameError || undefined}
           />
-          <ProjectSelect bind:value={projectId} />
+          <ProjectSelect bind:value={projectIds} />
           {#if integration.query}
             <Label>Function</Label>
             <Select

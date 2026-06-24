@@ -212,14 +212,14 @@ export class DatasourceStore extends DerivedBudiStore<
     integration,
     config,
     name,
-    projectId,
+    projectIds,
     restTemplateId,
     restTemplateVersion,
   }: {
     integration: UIIntegration
     config: Record<string, any>
     name?: string
-    projectId?: string
+    projectIds?: string[]
     restTemplateId?: RestTemplateId
     restTemplateVersion?: RestTemplateSpecVersion
   }) {
@@ -231,7 +231,7 @@ export class DatasourceStore extends DerivedBudiStore<
       source: integration.name as SourceName,
       config,
       name: `${name || integration.friendlyName}${nameModifier}`,
-      projectId,
+      projectIds,
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
       ...(restTemplateId && { restTemplateId }),

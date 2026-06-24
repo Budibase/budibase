@@ -29,6 +29,7 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
+import { hasProject } from "../utils"
 
 async function tarFilesToTmp(tmpDir: string, files: string[]) {
   const fileName = `${uuid()}.tar.gz`
@@ -105,28 +106,28 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
       .filter(
         datasource =>
           datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
-          (datasource.projectId === projectId ||
+          (hasProject(datasource, projectId) ||
             Object.values(datasource.entities || {}).some(
-              entity => entity.projectId === projectId
+              entity => hasProject(entity, projectId)
             ))
       )
       .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
     ...tables
       .filter(
-        table => table.projectId === projectId && !isExternalTableID(table._id!)
+        table => hasProject(table, projectId) && !isExternalTableID(table._id!)
       )
       .map(table => asUsedResource(table, ResourceType.TABLE)),
     ...queries
-      .filter(query => query.projectId === projectId)
+      .filter(query => hasProject(query, projectId))
       .map(query => asUsedResource(query, ResourceType.QUERY)),
     ...automations
-      .filter(automation => automation.projectId === projectId)
+      .filter(automation => hasProject(automation, projectId))
       .map(automation => asUsedResource(automation, ResourceType.AUTOMATION)),
     ...agents
-      .filter(agent => agent.projectId === projectId)
+      .filter(agent => hasProject(agent, projectId))
       .map(agent => asUsedResource(agent, ResourceType.AGENT)),
     ...workspaceApps
-      .filter(workspaceApp => workspaceApp.projectId === projectId)
+      .filter(workspaceApp => hasProject(workspaceApp, projectId))
       .map(workspaceApp =>
         asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
       ),
@@ -138,9 +139,9 @@ async function getUnsupportedContent(
 ): Promise<ProjectPackageUnsupportedContent[]> {
   const agents = await sdk.ai.agents.fetch()
   const workspaceApps = await sdk.workspaceApps.fetch()
-  const assignedAgents = agents.filter(agent => agent.projectId === projectId)
+  const assignedAgents = agents.filter(agent => hasProject(agent, projectId))
   const assignedWorkspaceApps = workspaceApps.filter(
-    workspaceApp => workspaceApp.projectId === projectId
+    workspaceApp => hasProject(workspaceApp, projectId)
   )
   const assignedWorkspaceAppIds = new Set(
     assignedWorkspaceApps.map(workspaceApp => workspaceApp._id)

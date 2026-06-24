@@ -284,20 +284,20 @@ describe("/api/resources/usage", () => {
         })
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const query = await config.api.query.save({
           ...basicQuery(datasource._id!),
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const table = await config.api.table.save({
           ...basicTable(),
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const { workspaceApp } = await config.api.workspaceApp.create({
           name: "Operations app",
           url: "/operations-app",
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const screen = await config.api.screen.save({
           ...createQueryScreen(datasource._id!, query),
@@ -307,12 +307,12 @@ describe("/api/resources/usage", () => {
         const automation = await config.createAutomation()
         await config.api.automation.update({
           ...automation,
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const agent = await config.api.agent.create({
           name: "Ops agent",
           aiconfig: "default",
-          projectId: project._id,
+          projectIds: [project._id],
         })
 
         const result = await config.api.resource.getResourceDependencies()
@@ -374,7 +374,7 @@ describe("/api/resources/usage", () => {
           url: defaultWorkspaceApp.url,
           disabled: defaultWorkspaceApp.disabled,
           navigation: defaultWorkspaceApp.navigation,
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const screen = await config.api.screen.save({
           ...basicScreen("/operations"),
@@ -415,7 +415,7 @@ describe("/api/resources/usage", () => {
         })
         await config.api.datasource.create({
           ...basicDatasource().datasource,
-          projectId: project._id,
+          projectIds: [project._id],
         })
         return { project }
       })
@@ -781,7 +781,7 @@ describe("/api/resources/usage", () => {
         })
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
-          projectId: project._id,
+          projectIds: [project._id],
         })
         return { datasource }
       })
@@ -797,7 +797,7 @@ describe("/api/resources/usage", () => {
           const copiedDatasource = await config.api.datasource.get(
             datasource._id!
           )
-          expect(copiedDatasource.projectId).toBeUndefined()
+          expect(copiedDatasource.projectIds).toBeUndefined()
         }
       )
     })
@@ -809,7 +809,7 @@ describe("/api/resources/usage", () => {
         })
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const newWorkspace = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
@@ -823,7 +823,7 @@ describe("/api/resources/usage", () => {
             const copiedDatasource = await config.api.datasource.get(
               datasource._id!
             )
-            expect(copiedDatasource.projectId).toBeUndefined()
+            expect(copiedDatasource.projectIds).toBeUndefined()
           }
         )
       })
@@ -836,7 +836,7 @@ describe("/api/resources/usage", () => {
         })
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
-          projectId: project._id,
+          projectIds: [project._id],
         })
         const newWorkspace = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
@@ -851,7 +851,7 @@ describe("/api/resources/usage", () => {
             const copiedDatasource = await config.api.datasource.get(
               datasource._id!
             )
-            expect(copiedDatasource.projectId).toBe(project._id)
+            expect(copiedDatasource.projectIds).toEqual([project._id])
           }
         )
       })
@@ -1010,7 +1010,7 @@ describe("/api/resources/usage", () => {
           )
           const externalTable = basicTable(datasource, {
             _id: buildExternalTableId(datasource._id!, "TestTable"),
-            projectId: project._id,
+            projectIds: [project._id],
           })
           const assignedDatasource = await config.api.datasource.update({
             ...datasource,
@@ -1020,7 +1020,7 @@ describe("/api/resources/usage", () => {
           })
           const internalTable = await createInternalTable({
             name: "Internal project table",
-            projectId: project._id,
+            projectIds: [project._id],
           })
           const destination = await config.api.workspace.create({
             name: `Destination ${generator.natural()}`,
@@ -1048,8 +1048,8 @@ describe("/api/resources/usage", () => {
             destinationDb.get(internalTable._id!)
           ).resolves.toBeDefined()
           expect(
-            duplicatedDatasource.entities![externalTable.name].projectId
-          ).toBe(project._id)
+            duplicatedDatasource.entities![externalTable.name].projectIds
+          ).toEqual([project._id])
         }
       )
     })
@@ -1067,7 +1067,7 @@ describe("/api/resources/usage", () => {
           )
           const externalTable = basicTable(datasource, {
             _id: buildExternalTableId(datasource._id!, "TestTable"),
-            projectId: project._id,
+            projectIds: [project._id],
           })
           const assignedDatasource = await config.api.datasource.update({
             ...datasource,
@@ -1105,11 +1105,11 @@ describe("/api/resources/usage", () => {
           )
 
           expect(
-            datasourceWithoutProject.entities![externalTable.name].projectId
+            datasourceWithoutProject.entities![externalTable.name].projectIds
           ).toBeUndefined()
           expect(
-            datasourceWithProject.entities![externalTable.name].projectId
-          ).toBe(project._id)
+            datasourceWithProject.entities![externalTable.name].projectIds
+          ).toEqual([project._id])
         }
       )
     })
