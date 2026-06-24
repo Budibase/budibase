@@ -78,7 +78,11 @@
     class:is-readonly={readonly}
     aria-disabled={disabled}
   >
-    <TimePicker value={parsedValue} {disableClearing} on:change={handleChange} />
+    <TimePicker
+      value={parsedValue}
+      {disableClearing}
+      on:change={handleChange}
+    />
     {#if name}
       <input type="hidden" {name} value={value ?? ""} />
     {/if}

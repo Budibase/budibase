@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    Label,
-    Layout,
-    Multiselect,
-    Select,
-    TimeField,
-  } from "@budibase/bbui"
+  import { Label, Layout, Multiselect, Select, TimeField } from "@budibase/bbui"
   import CronBuilder from "./CronBuilder.svelte"
   import NextExecutionsTable from "./NextExecutionsTable.svelte"
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
