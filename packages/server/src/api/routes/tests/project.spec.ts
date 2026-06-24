@@ -122,11 +122,8 @@ describe("/projects", () => {
     return await createTarPackage(
       entries,
       async tmpPath =>
-        await fsp.truncate(
-          join(tmpPath, oversizedEntryPath),
-          101 * 1024 * 1024
-        )
-      )
+        await fsp.truncate(join(tmpPath, oversizedEntryPath), 101 * 1024 * 1024)
+    )
   }
 
   const createMinimalPackageEntries = (
