@@ -8,7 +8,7 @@ import {
   clampStickyNoteToViewportBounds,
   getBoundsOfFlowBounds,
   getStickyNoteBounds,
-} from "./StickyNoteBounds"
+} from "../FlowCanvas/StickyNoteBounds"
 
 describe("StickyNoteBounds", () => {
   const nodeBounds = {

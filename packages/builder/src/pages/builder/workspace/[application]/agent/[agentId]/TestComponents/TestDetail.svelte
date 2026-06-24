@@ -21,9 +21,23 @@
     selectedCase: AgentTestCase | null
     latestResults: AgentTestCaseResult[]
     hasLatestRun: boolean
+    toolOptions?: { label: string; value: string }[]
+    operationOptions?: { label: string; value: string }[]
   }
 
-  let { selectedCase, latestResults, hasLatestRun }: Props = $props()
+  let {
+    selectedCase,
+    latestResults,
+    hasLatestRun,
+    toolOptions = [],
+    operationOptions = [],
+  }: Props = $props()
+
+  const toLabelMap = (options: { label: string; value: string }[]) =>
+    Object.fromEntries(options.map(option => [option.value, option.label]))
+
+  let toolDisplayNames = $derived.by(() => toLabelMap(toolOptions))
+  let operationNamesById = $derived.by(() => toLabelMap(operationOptions))
 
   const PROVIDER_LOGOS: Record<string, string> = {
     Anthropic: AnthropicLogo,
@@ -169,7 +183,10 @@
             {#if selectedCase.reviewers.length}
               <ul class="reviewer-summary-list">
                 {#each selectedCase.reviewers as reviewer (reviewer.id)}
-                  {@const summary = describeReviewer(reviewer)}
+                  {@const summary = describeReviewer(reviewer, {
+                    toolDisplayNames,
+                    operationNamesById,
+                  })}
                   <li class="reviewer-summary-row">
                     <span class="reviewer-type">
                       {getReviewerLabel(reviewer.type)}

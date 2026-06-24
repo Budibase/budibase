@@ -53,6 +53,14 @@ awsAlbIngress:
   # -- Time in seconds ALB waits for in-flight requests during target deregistration.
   # This allows graceful connection draining during pod rollouts.
   deregistrationDelay: 30
+  # -- ALB access logging to S3.
+  # The bucket must already exist in the same region as the ALB, with a bucket policy
+  # allowing the regional ELB log-delivery principal to write to it.
+  accessLogs:
+    enabled: false
+    bucket: ""
+    # -- Object key prefix within the bucket (logs land under <prefix>/AWSLogs/...).
+    prefix: ""
 
 # -- Sets the tolerations for all pods created by this chart. Should not ordinarily need to be changed.
 # See <https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/> for more information
@@ -170,6 +178,13 @@ services:
     port: 10000
     # -- The number of proxy replicas to run.
     replicaCount: 2
+    # -- The DNS resolver the nginx proxy uses to resolve upstreams at request time.
+    # MUST be an IP address (nginx resolves this once at config-load and exits fatally
+    # if it is an unresolvable DNS name). Leave empty to auto-detect the kube-dns
+    # ClusterIP at install/upgrade time; only set this if auto-detection cannot run
+    # (e.g. restricted RBAC for `lookup`) — then use your cluster's DNS ClusterIP,
+    # e.g. `kubectl -n kube-system get svc kube-dns -o jsonpath='{.spec.clusterIP}'`.
+    resolver: ""
     # @ignore (you should never need to change this)
     upstreams:
       apps: "http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}"
@@ -330,7 +345,9 @@ services:
       # @ignore
       periodSeconds: 3
       # @ignore
-      failureThreshold: 1
+      failureThreshold: 3
+      # @ignore
+      timeoutSeconds: 5
     # -- Liveness probe configuration for apps pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -342,9 +359,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 3
+      failureThreshold: 5
       # @ignore
       periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 5
     autoscaling:
       # -- Whether to enable horizontal pod autoscaling for the apps service.
       enabled: false
@@ -439,7 +458,9 @@ services:
       # @ignore
       periodSeconds: 3
       # @ignore
-      failureThreshold: 1
+      failureThreshold: 3
+      # @ignore
+      timeoutSeconds: 5
     # -- Liveness probe configuration for automation worker pods. You shouldn't
     # need to change this, but if you want to you can find more information
     # here:
@@ -452,9 +473,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 3
+      failureThreshold: 5
       # @ignore
       periodSeconds: 30
+      # @ignore
+      timeoutSeconds: 5
     autoscaling:
       # -- Whether to enable horizontal pod autoscaling for the apps service.
       enabled: false
@@ -550,6 +573,8 @@ services:
       periodSeconds: 5
       # @ignore
       failureThreshold: 3
+      # @ignore
+      timeoutSeconds: 5
     # -- Liveness probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -561,9 +586,11 @@ services:
         port: 4003
         scheme: HTTP
       # @ignore
-      failureThreshold: 3
+      failureThreshold: 5
       # @ignore
       periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 5
     autoscaling:
       # -- Whether to enable horizontal pod autoscaling for the worker service.
       enabled: false
@@ -721,6 +748,9 @@ services:
         store_prompts_in_spend_logs: true
       litellm_settings:
         drop_params: true
+        extra_spend_tag_headers:
+          - "x-litellm-tags"
+        disable_add_user_agent_to_request_tags: true
         num_retries: 3
         retry_after: 5
         retry_policy:

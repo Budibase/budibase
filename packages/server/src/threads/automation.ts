@@ -334,14 +334,19 @@ class Orchestrator {
   private emitter: ContextEmitter
   private stopped: boolean
   private readonly onProgress?: (event: AutomationTestProgressEvent) => void
+  private readonly isTestRun: boolean
 
   constructor(
     job: Readonly<AutomationJob>,
-    opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
+    opts: {
+      onProgress?: (event: AutomationTestProgressEvent) => void
+      isTestRun?: boolean
+    } = {}
   ) {
     this.job = job
     this.stopped = false
     this.onProgress = opts.onProgress
+    this.isTestRun = Boolean(opts.isTestRun)
 
     // Pre-process the automation to transform legacy loops
     this.job.data.automation = automationUtils.preprocessAutomation(
@@ -1019,6 +1024,7 @@ class Orchestrator {
             appId: this.appId,
             emitter: this.emitter,
             context: ctx,
+            isTestRun: this.isTestRun,
           })
         )
       } catch (err: any) {
@@ -1095,7 +1101,10 @@ export async function execute(
 
 export async function executeInThread(
   job: Job<AutomationData>,
-  opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
+  opts: {
+    onProgress?: (event: AutomationTestProgressEvent) => void
+    isTestRun?: boolean
+  } = {}
 ): Promise<AutomationResults> {
   const workspaceId = job.data.event.appId
   if (!workspaceId) {

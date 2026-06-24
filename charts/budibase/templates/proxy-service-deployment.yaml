@@ -89,11 +89,13 @@ spec:
           value: {{ .Values.services.proxy.proxyRateLimitApiPerSecond | quote }}
         {{ end }}
         - name: RESOLVER
-          {{ if .Values.services.proxy.resolver }}
-          value: {{ .Values.services.proxy.resolver }}
-          {{ else }}
-          value: kube-dns.kube-system.svc.{{ .Values.services.dns }}
-          {{ end }}
+          {{- if .Values.services.proxy.resolver }}
+          value: {{ .Values.services.proxy.resolver | quote }}
+          {{- else if (lookup "v1" "Service" "kube-system" "kube-dns") }}
+          value: {{ (lookup "v1" "Service" "kube-system" "kube-dns").spec.clusterIP | quote }}
+          {{- else }}
+          value: {{ printf "kube-dns.kube-system.svc.%s" .Values.services.dns | quote }}
+          {{- end }}
         {{ with .Values.services.proxy.resources }}
         resources:
         {{- toYaml . | nindent 10 }}
@@ -119,7 +121,7 @@ spec:
     {{- end }}
       {{ if .Values.schedulerName }}
       schedulerName: {{ .Values.schedulerName | quote }}
-      {{ end }} 
+      {{ end }}
       {{ if .Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml .Values.imagePullSecrets | nindent 6 }}

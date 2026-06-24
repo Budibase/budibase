@@ -8,6 +8,7 @@ interface ResizeActionsConfig {
   clientDimension: "clientWidth" | "clientHeight"
   directionMultiplier?: 1 | -1
   initialValue?: number
+  resetValue?: number
   setValue?: (value: number) => void
   onResizeStart?: () => void
 }
@@ -18,6 +19,7 @@ const getResizeActions = ({
   clientDimension: elementProperty,
   directionMultiplier = 1,
   initialValue,
+  resetValue = initialValue,
   setValue = noop,
   onResizeStart = noop,
 }: ResizeActionsConfig) => {
@@ -124,7 +126,7 @@ const getResizeActions = ({
     const handleDoubleClick = () => {
       if (element) {
         element.style.removeProperty(elementDimension)
-        setValue(initialValue || 0)
+        setValue(resetValue || 0)
       }
     }
 
@@ -144,13 +146,15 @@ const getResizeActions = ({
 
 export const getVerticalResizeActions = (
   initialValue?: number,
-  setValue?: (value: number) => void
+  setValue?: (value: number) => void,
+  resetValue?: number
 ) => {
   return getResizeActions({
     elementDimension: "height",
     mouseCoordinate: "pageY",
     clientDimension: "clientHeight",
     initialValue,
+    resetValue,
     setValue,
   })
 }
@@ -159,7 +163,8 @@ export const getHorizontalResizeActions = (
   initialValue?: number,
   setValue?: (value: number) => void,
   onResizeStart?: () => void,
-  panelPosition: "left" | "right" = "left"
+  panelPosition: "left" | "right" = "left",
+  resetValue?: number
 ) => {
   return getResizeActions({
     elementDimension: "width",
@@ -167,6 +172,7 @@ export const getHorizontalResizeActions = (
     clientDimension: "clientWidth",
     directionMultiplier: panelPosition === "right" ? -1 : 1,
     initialValue,
+    resetValue,
     setValue,
     onResizeStart,
   })

@@ -6,7 +6,7 @@ const mockRemoveJobs = jest.fn()
 const mockDoInWorkspaceContext = jest.fn()
 const mockSyncSharePointSourcesForAgent = jest.fn()
 const mockDeleteFileForAgent = jest.fn()
-const mockDeleteSharePointFilesForAgentSite = jest.fn()
+const mockDeleteSharePointFilesForOperationSite = jest.fn()
 const mockDeleteKnowledgeSourceSyncStateForAgent = jest.fn()
 const mockGetAllWorkspaces = jest.fn()
 const mockWorkspaceAllDocs = jest.fn()
@@ -57,8 +57,8 @@ jest.mock("@budibase/backend-core", () => {
 jest.mock("./sharepoint/sharepoint", () => ({
   syncSharePointSourcesForAgent: (...args: any[]) =>
     mockSyncSharePointSourcesForAgent(...args),
-  deleteSharePointFilesForAgentSite: (...args: any[]) =>
-    mockDeleteSharePointFilesForAgentSite(...args),
+  deleteSharePointFilesForOperationSite: (...args: any[]) =>
+    mockDeleteSharePointFilesForOperationSite(...args),
   deleteKnowledgeSourceSyncStateForAgent: (...args: any[]) =>
     mockDeleteKnowledgeSourceSyncStateForAgent(...args),
 }))
@@ -67,7 +67,11 @@ jest.mock("../files", () => ({
   deleteFileForAgent: (...args: any[]) => mockDeleteFileForAgent(...args),
 }))
 
-import { AgentKnowledgeSourceType, type Agent } from "@budibase/types"
+import {
+  AgentKnowledgeSourceType,
+  type Agent,
+  type AgentOperation,
+} from "@budibase/types"
 import {
   enqueueAgentJobs,
   reconcileAgentJobs,
@@ -76,6 +80,7 @@ import {
   scheduleJob,
 } from "./knowledgeSourceSyncQueue"
 import { withEnv } from "../../../../../environment"
+import { generator } from "@budibase/backend-core/tests"
 
 describe("knowledgeSourceSyncQueue", () => {
   beforeEach(() => {
@@ -132,25 +137,33 @@ describe("knowledgeSourceSyncQueue", () => {
       _id: "agent_1",
       name: "Agent",
       aiconfig: "default",
-      knowledgeSources: [
+      operations: [
         {
-          id: "sharepoint_site_site_1",
-          type: AgentKnowledgeSourceType.SHAREPOINT,
-          config: {
-            datasourceId: "datasource_1",
-            authConfigId: "auth_1",
-            site: { id: "site_1" },
-          },
-        },
-        {
-          id: "sharepoint_site_site_2",
-          type: AgentKnowledgeSourceType.SHAREPOINT,
-          config: {
-            datasourceId: "datasource_1",
-            authConfigId: "auth_1",
-            site: { id: "site_2" },
-          },
-        },
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          knowledgeSources: [
+            {
+              id: "sharepoint_site_site_1",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId: "datasource_1",
+                authConfigId: "auth_1",
+                site: { id: "site_1" },
+              },
+            },
+            {
+              id: "sharepoint_site_site_2",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId: "datasource_1",
+                authConfigId: "auth_1",
+                site: { id: "site_2" },
+              },
+            },
+          ],
+          allowKnowledgeSourceDownload: generator.bool(),
+        } satisfies AgentOperation,
       ],
     }
 
@@ -242,6 +255,7 @@ describe("knowledgeSourceSyncQueue", () => {
         workspaceId: "app_dev_test",
         agentId: "agent_1",
         jobType: "disconnect_sharepoint_site",
+        operationId: "operation_1",
         sourceId: "sharepoint_site_site_1",
         siteId: "site_1",
       },
@@ -251,8 +265,9 @@ describe("knowledgeSourceSyncQueue", () => {
       "app_dev_test",
       expect.any(Function)
     )
-    expect(mockDeleteSharePointFilesForAgentSite).toHaveBeenCalledWith(
+    expect(mockDeleteSharePointFilesForOperationSite).toHaveBeenCalledWith(
       "agent_1",
+      "operation_1",
       "site_1"
     )
     expect(mockDeleteKnowledgeSourceSyncStateForAgent).toHaveBeenCalledWith(
@@ -293,16 +308,24 @@ describe("knowledgeSourceSyncQueue", () => {
             _id: "agent_1",
             name: "Agent",
             aiconfig: "default",
-            knowledgeSources: [
+            operations: [
               {
-                id: "sharepoint_site_site_1",
-                type: AgentKnowledgeSourceType.SHAREPOINT,
-                config: {
-                  datasourceId: "datasource_1",
-                  authConfigId: "auth_1",
-                  site: { id: "site_1" },
-                },
-              },
+                id: "operation_1",
+                name: "Main operation",
+                live: false,
+                knowledgeSources: [
+                  {
+                    id: "sharepoint_site_site_1",
+                    type: AgentKnowledgeSourceType.SHAREPOINT,
+                    config: {
+                      datasourceId: "datasource_1",
+                      authConfigId: "auth_1",
+                      site: { id: "site_1" },
+                    },
+                  },
+                ],
+                allowKnowledgeSourceDownload: generator.bool(),
+              } satisfies AgentOperation,
             ],
           } satisfies Agent,
         },
