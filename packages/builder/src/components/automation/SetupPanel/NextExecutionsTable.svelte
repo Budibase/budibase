@@ -7,14 +7,18 @@
     time: string
   }
 
-  export let executions: string[] = []
+  interface Props {
+    executions?: string[]
+  }
 
-  $: rows = executions.map(execution => parseExecution(execution))
+  let { executions = [] }: Props = $props()
 
   const parseExecution = (execution: string): ExecutionRow => {
     const [day = "", date = "", time = ""] = execution.split(", ")
     return { day, date, time }
   }
+
+  let rows = $derived(executions.map(execution => parseExecution(execution)))
 </script>
 
 <InlineAlert type="info" header="Next executions">

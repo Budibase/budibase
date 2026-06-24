@@ -9,6 +9,7 @@
   import CronBuilder from "./CronBuilder.svelte"
   import NextExecutionsTable from "./NextExecutionsTable.svelte"
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
+  import { range } from "lodash"
 
   interface Option<T extends string | number> {
     label: string
@@ -23,10 +24,17 @@
     timezone: string
   }
 
-  export let cronExpression: string | undefined
-  export let timezone = "UTC"
-  export let onchange: ((update: ScheduleUpdate) => void) | undefined =
-    undefined
+  interface Props {
+    cronExpression?: string
+    timezone?: string
+    onchange?: (update: ScheduleUpdate) => void
+  }
+
+  let {
+    cronExpression = $bindable(),
+    timezone = $bindable("UTC"),
+    onchange,
+  }: Props = $props()
 
   const FREQUENCIES: Option<Frequency>[] = [
     { label: "Regular intervals", value: "interval" },
@@ -46,13 +54,10 @@
     { label: "Sunday", value: "0" },
   ]
 
-  const DAYS_OF_MONTH: Option<string>[] = Array.from(
-    { length: 31 },
-    (_, idx) => {
-      const day = `${idx + 1}`
-      return { label: day, value: day }
-    }
-  )
+  const DAYS_OF_MONTH: Option<string>[] = range(1, 32).map(day => ({
+    label: `${day}`,
+    value: `${day}`,
+  }))
 
   const TIMEZONES: Option<string>[] = [
     { label: "UTC", value: "UTC" },
@@ -86,18 +91,16 @@
     { label: "12 hrs", value: 720 },
   ]
 
-  let frequency: Frequency = cronExpression ? "cron" : "daily"
-  let intervalMinutes = 30
-  let time: string | undefined = "09:00"
-  let selectedDaysOfWeek = ["1", "2", "3", "4", "5"]
-  let selectedDaysOfMonth = ["1"]
-  let error: ScheduleError
-  let nextExecutions: string[] | null
-  let savedCronExpression = cronExpression
-  let savedTimezone = timezone
+  let frequency: Frequency = $state(cronExpression ? "cron" : "daily")
+  let intervalMinutes = $state(30)
+  let time: string | undefined = $state("09:00")
+  let selectedDaysOfWeek = $state(["1", "2", "3", "4", "5"])
+  let selectedDaysOfMonth = $state(["1"])
+  let error: ScheduleError = $state()
+  let savedCronExpression = $state(cronExpression)
+  let savedTimezone = $state(timezone)
 
-  $: timezone = timezone || "UTC"
-  $: nextExecutions = getNextExecutions(cronExpression, timezone)
+  let resolvedTimezone = $derived(timezone || "UTC")
 
   const sortNumbers = (values: string[]) =>
     values.map(Number).sort((a, b) => a - b)
@@ -124,6 +127,10 @@
     }
   }
 
+  let nextExecutions = $derived(
+    getNextExecutions(cronExpression, resolvedTimezone)
+  )
+
   const dispatchCron = (expression: string | undefined) => {
     if (!expression) {
       return
@@ -136,13 +143,16 @@
     if (error) {
       return
     }
-    if (expression === savedCronExpression && timezone === savedTimezone) {
+    if (
+      expression === savedCronExpression &&
+      resolvedTimezone === savedTimezone
+    ) {
       return
     }
     cronExpression = expression
     savedCronExpression = expression
-    savedTimezone = timezone
-    onchange?.({ cron: expression, timezone })
+    savedTimezone = resolvedTimezone
+    onchange?.({ cron: expression, timezone: resolvedTimezone })
   }
 
   const updateSchedule = () => {
@@ -182,14 +192,14 @@
     dispatchCron(expression)
   }
 
-  $: {
-    frequency,
-      intervalMinutes,
-      time,
-      selectedDaysOfWeek,
-      selectedDaysOfMonth,
-      updateSchedule()
-  }
+  $effect(() => {
+    frequency
+    intervalMinutes
+    time
+    selectedDaysOfWeek
+    selectedDaysOfMonth
+    updateSchedule()
+  })
 </script>
 
 <Layout noPadding gap="S">

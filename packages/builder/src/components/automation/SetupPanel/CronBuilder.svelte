@@ -16,31 +16,34 @@
 
   type CronError = string | undefined
 
-  export let cronExpression: string | undefined
-  export let timezone = "UTC"
-  export let onchange: ((cronExpression: string) => void) | undefined =
-    undefined
-
-  let error: CronError
-  let nextExecutions: string[] | null
-
-  let aiCronPrompt = ""
-  let loadingAICronExpression = false
-
-  $: aiEnabled = $aiStore.aiEnabled
-  $: {
-    if (cronExpression) {
-      try {
-        nextExecutions = helpers.cron.getNextExecutionDates(
-          cronExpression,
-          4,
-          timezone
-        )
-      } catch (err) {
-        nextExecutions = null
-      }
-    }
+  interface Props {
+    cronExpression?: string
+    timezone?: string
+    onchange?: (cronExpression: string) => void
   }
+
+  let {
+    cronExpression = $bindable(),
+    timezone = "UTC",
+    onchange,
+  }: Props = $props()
+
+  let error: CronError = $state()
+  let aiCronPrompt = $state("")
+  let loadingAICronExpression = $state(false)
+  let touched = $state(false)
+
+  let aiEnabled = $derived($aiStore.aiEnabled)
+  let nextExecutions = $derived.by(() => {
+    if (!cronExpression || cronExpression === REBOOT_CRON) {
+      return null
+    }
+    try {
+      return helpers.cron.getNextExecutionDates(cronExpression, 4, timezone)
+    } catch (err) {
+      return null
+    }
+  })
 
   const onChange = (value: string | undefined) => {
     if (!value) {
@@ -68,11 +71,8 @@
   const updateCronExpression = (event: CustomEvent<string | undefined>) => {
     aiCronPrompt = ""
     cronExpression = undefined
-    nextExecutions = null
     onChange(event.detail)
   }
-
-  let touched = false
 
   const CRON_EXPRESSIONS: CronOption[] = [
     {
@@ -118,8 +118,6 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <Layout noPadding gap="S">
   <Select
     on:change={updatePreset}
@@ -135,13 +133,14 @@
         placeholder="Run every hour between 1pm to 4pm everyday of the week"
       />
       {#if aiCronPrompt}
-        <div
+        <button
+          type="button"
           class="icon"
           class:pulsing-text={loadingAICronExpression}
-          on:click={generateAICronExpression}
+          onclick={generateAICronExpression}
         >
           <MagicWand height="17" width="17" />
-        </div>
+        </button>
       {/if}
     </div>
   {/if}
@@ -176,6 +175,9 @@
     flex-direction: row;
     box-sizing: border-box;
     border-left: 1px solid var(--spectrum-alias-border-color);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
     border-top-right-radius: var(--spectrum-alias-border-radius-regular);
     border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
     width: 31px;
@@ -186,6 +188,7 @@
       box-shadow var(--spectrum-global-animation-duration-100, 130ms),
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);
+    padding: 0;
   }
 
   .icon:hover {

@@ -1,9 +1,12 @@
 <script lang="ts">
   import { REBOOT_CRON } from "@budibase/shared-core"
 
-  export let cronExpression: string | undefined
-  export let onchange: ((cronExpression: string) => void) | undefined =
-    undefined
+  interface Props {
+    cronExpression?: string
+    onchange?: (cronExpression: string) => void
+  }
+
+  let { cronExpression, onchange }: Props = $props()
 
   const selectRebootCron = () => {
     onchange?.(REBOOT_CRON)
@@ -13,7 +16,7 @@
 <button
   type="button"
   data-cron-expression={cronExpression}
-  on:click={selectRebootCron}
+  onclick={selectRebootCron}
 >
   Select reboot cron
 </button>

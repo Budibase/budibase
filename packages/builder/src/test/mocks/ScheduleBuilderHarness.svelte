@@ -1,10 +1,14 @@
 <script lang="ts">
   import ScheduleBuilder from "@/components/automation/SetupPanel/ScheduleBuilder.svelte"
 
-  export let cronExpression: string
-  export let timezone = "UTC"
+  interface Props {
+    cronExpression: string
+    timezone?: string
+  }
 
-  let changes: Array<{ cron: string; timezone: string }> = []
+  let { cronExpression, timezone = "UTC" }: Props = $props()
+
+  let changes: Array<{ cron: string; timezone: string }> = $state([])
 
   const onChange = (update: { cron: string; timezone: string }) => {
     changes = [...changes, update]
