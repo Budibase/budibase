@@ -173,9 +173,11 @@ async function clearAssignments(projectId: string) {
     ...agents
       .filter(agent => hasProject(agent, projectId))
       .map(agent => async () => {
-        const updated = await sdk.ai.agents.update(
-          removeProjectId(agent, projectId)
-        )
+        const agentWithoutProject = removeProjectId(agent, projectId)
+        const updated = await sdk.ai.agents.update({
+          ...agentWithoutProject,
+          projectIds: agentWithoutProject.projectIds,
+        })
         return async () =>
           await sdk.ai.agents.update(addProjectId(updated, projectId))
       }),
