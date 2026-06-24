@@ -25,6 +25,7 @@
   let manualEncrypted = $state(false)
   let encryptPassword = $state("")
   let file = $state<File | undefined>(undefined)
+  let fileError = $state<string | undefined>(undefined)
 
   const encrypted = $derived(
     manualEncrypted || !!file?.name?.endsWith(".enc.tar.gz")
@@ -38,8 +39,22 @@
   })
 
   const handleFileChange = (event: CustomEvent<Array<UIFile | File>>) => {
+    if (event.detail.length > 1) {
+      file = undefined
+      fileError = "Choose one project export."
+      manualEncrypted = false
+      return
+    }
+
     const nextFile = event.detail?.[0]
     file = nextFile instanceof File ? nextFile : undefined
+    fileError = undefined
+    manualEncrypted = false
+  }
+
+  const handleTooManyFiles = () => {
+    file = undefined
+    fileError = "Choose one project export."
     manualEncrypted = false
   }
 </script>
@@ -66,6 +81,9 @@
     <Dropzone
       gallery={false}
       label="Project export"
+      maximum={1}
+      error={fileError}
+      {handleTooManyFiles}
       on:change={handleFileChange}
     />
     <Toggle
