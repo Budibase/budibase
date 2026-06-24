@@ -39,13 +39,12 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
 export function createRequest(
   props?: Partial<InsertWorkspaceAppRequest>
 ): InsertWorkspaceAppRequest {
-  const workspace = workspaceApp(props)
-
   const result: RequiredKeys<InsertWorkspaceAppRequest> = {
-    name: workspace.name,
-    url: workspace.url,
-    disabled: workspace.disabled,
-    projectIds: workspace.projectIds,
+    name: generator.guid(),
+    url: `/${generator.guid().replace(/-/g, "")}`,
+    disabled: false,
+    projectIds: undefined,
+    ...props,
   }
   return result
 }
