@@ -150,9 +150,14 @@ async function clearAssignments(projectId: string) {
     ...workspaceApps
       .filter(workspaceApp => hasProject(workspaceApp, projectId))
       .map(workspaceApp => async () => {
-        const updated = await sdk.workspaceApps.update(
-          removeProjectId(workspaceApp, projectId)
+        const workspaceAppWithoutProject = removeProjectId(
+          workspaceApp,
+          projectId
         )
+        const updated = await sdk.workspaceApps.update({
+          ...workspaceAppWithoutProject,
+          projectIds: workspaceAppWithoutProject.projectIds,
+        })
         return async () =>
           await sdk.workspaceApps.update(addProjectId(updated, projectId))
       }),

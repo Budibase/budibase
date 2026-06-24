@@ -805,7 +805,7 @@ describe("/api/resources/usage", () => {
           ).resolves.toBeDefined()
           expect(
             duplicatedDatasource.entities![externalTable.name].projectIds
-          ).toBe(project._id)
+          ).toEqual([project._id])
         }
       )
     })
@@ -865,7 +865,7 @@ describe("/api/resources/usage", () => {
           ).toBeUndefined()
           expect(
             datasourceWithProject.entities![externalTable.name].projectIds
-          ).toBe(project._id)
+          ).toEqual([project._id])
         }
       )
     })
