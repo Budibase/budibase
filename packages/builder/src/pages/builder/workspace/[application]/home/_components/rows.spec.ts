@@ -168,4 +168,44 @@ describe("sortHomeRows", () => {
 
     expect(result.map(row => row.name)).toEqual(["Alpha", "Bravo"])
   })
+
+  it("sorts by createdAt descending", () => {
+    const rows = [
+      buildAgentRow({
+        id: "a",
+        name: "Older",
+        createdAt: "2024-01-01T00:00:00.000Z",
+      }),
+      buildAgentRow({
+        id: "b",
+        name: "Newer",
+        createdAt: "2025-01-01T00:00:00.000Z",
+      }),
+    ]
+
+    const result = sortHomeRows(rows, {
+      sortColumn: "created",
+      sortOrder: "desc",
+    })
+
+    expect(result.map(row => row._id)).toEqual(["b", "a"])
+  })
+
+  it("sorts by project count descending", () => {
+    const rows = [
+      buildAgentRow({ id: "a", name: "Unassigned" }),
+      {
+        ...buildAgentRow({ id: "b", name: "Assigned" }),
+        projectIds: ["project_1"],
+        projectCount: 1,
+      },
+    ]
+
+    const result = sortHomeRows(rows, {
+      sortColumn: "projects",
+      sortOrder: "desc",
+    })
+
+    expect(result.map(row => row._id)).toEqual(["b", "a"])
+  })
 })

@@ -36,8 +36,9 @@ export const buildHomeUrl = (
     params.set("project", state.selectedProjectId)
   }
 
+  const defaultSortColumn = state.projectsEnabled ? "created" : "updated"
   const isDefaultSort =
-    state.sortColumn === "updated" && state.sortOrder === "desc"
+    state.sortColumn === defaultSortColumn && state.sortOrder === "desc"
   if (isDefaultSort) {
     params.delete("sort")
     params.delete("order")

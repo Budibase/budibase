@@ -25,6 +25,17 @@ describe("buildHomeUrl", () => {
     )
   })
 
+  it("omits default created sort when projects are enabled", () => {
+    const result = buildHomeUrl("/builder/workspace/home", "", {
+      ...defaultState,
+      sortColumn: "created",
+      sortOrder: "desc",
+      projectsEnabled: true,
+    })
+
+    expect(result).toBe("/builder/workspace/home")
+  })
+
   it("removes project state when projects are disabled", () => {
     const result = buildHomeUrl(
       "/builder/workspace/home",

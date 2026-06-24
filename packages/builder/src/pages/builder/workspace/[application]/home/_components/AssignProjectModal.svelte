@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Body, ModalContent, Select } from "@budibase/bbui"
+  import { Body, ModalContent, Multiselect } from "@budibase/bbui"
   import type { HomeRow, ProjectResponse } from "@budibase/types"
 
   export let row: HomeRow | null = null
   export let projects: ProjectResponse[] = []
-  export let onConfirm: (_projectId: string | undefined) => unknown = () => {}
+  export let onConfirm: (_projectIds: string[] | undefined) => unknown = () => {}
 
   interface ProjectOption {
     label: string
@@ -12,38 +12,36 @@
     color?: string
   }
 
-  let selectedProjectId = ""
+  let selectedProjectIds: string[] = []
   let projectOptions: ProjectOption[] = []
 
-  $: selectedProjectId = row?.projectId || ""
-  $: projectOptions = [
-    { label: "No project", value: "", color: undefined },
-    ...projects.map(project => ({
-      label: project.name,
-      value: project._id,
-      color: project.color,
-    })),
-  ] satisfies ProjectOption[]
+  $: selectedProjectIds = row?.projectIds || []
+  $: projectOptions = projects.map(project => ({
+    label: project.name,
+    value: project._id,
+    color: project.color,
+  }))
 </script>
 
 <ModalContent
   title={`Assign project${row ? ` to ${row.name}` : ""}`}
   confirmText="Save"
   size="M"
-  onConfirm={() => onConfirm(selectedProjectId || undefined)}
+  onConfirm={() =>
+    onConfirm(selectedProjectIds.length ? selectedProjectIds : undefined)}
 >
   {#if row}
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Choose which project this {row.type} belongs to.
+      Choose which projects this {row.type} belongs to.
     </Body>
   {/if}
 
-  <Select
-    label="Project"
-    bind:value={selectedProjectId}
+  <Multiselect
+    label="Projects"
+    placeholder="No projects"
+    bind:value={selectedProjectIds}
     options={projectOptions}
     getOptionLabel={option => option.label}
     getOptionValue={option => option.value}
-    getOptionColour={option => option.color}
   />
 </ModalContent>

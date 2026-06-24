@@ -73,8 +73,7 @@ export const getTypeLabel = (type: HomeRowType) => {
   }
 }
 
-const getUpdatedTimestamp = (row: HomeRow) => {
-  const value = row.updatedAt
+const getTimestamp = (value?: string) => {
   if (!value) {
     return 0
   }
@@ -86,6 +85,13 @@ const getUpdatedTimestamp = (row: HomeRow) => {
   const parsed = Date.parse(value)
   return Number.isNaN(parsed) ? 0 : parsed
 }
+
+const getUpdatedTimestamp = (row: HomeRow) => getTimestamp(row.updatedAt)
+
+const getCreatedTimestamp = (row: HomeRow) => getTimestamp(row.createdAt)
+
+const getProjectCount = (row: HomeRow) =>
+  row.projectCount ?? row.projectIds?.length ?? 0
 
 const getStatusSortValue = (row: HomeRow) => {
   if (row.type === "app" || row.type === "automation") {
@@ -102,6 +108,10 @@ const getSortValue = (row: HomeRow, column: HomeSortColumn) => {
       return getTypeLabel(row.type).toLowerCase()
     case "status":
       return getStatusSortValue(row)
+    case "projects":
+      return getProjectCount(row)
+    case "created":
+      return getCreatedTimestamp(row)
     case "updated":
       return getUpdatedTimestamp(row)
   }
@@ -184,7 +194,7 @@ export const buildHomeRows = ({
       id,
       name: app.name,
       type: "app",
-      projectId: app.projectId,
+      projectIds: app.projectIds,
       status: app.publishStatus.state,
       updatedAt: app.updatedAt,
       createdAt: app.createdAt ? String(app.createdAt) : undefined,
@@ -202,7 +212,7 @@ export const buildHomeRows = ({
       id,
       name: automation.name,
       type: "automation",
-      projectId: automation.projectId,
+      projectIds: automation.projectIds,
       status: automation.publishStatus.state,
       updatedAt: automation.updatedAt,
       createdAt: automation.createdAt
@@ -222,7 +232,7 @@ export const buildHomeRows = ({
       id,
       name: agent.name,
       type: "agent",
-      projectId: agent.projectId,
+      projectIds: agent.projectIds,
       live: agent.live === true,
       updatedAt: agent.updatedAt,
       createdAt: agent.createdAt ? String(agent.createdAt) : undefined,

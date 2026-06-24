@@ -6,7 +6,13 @@ import type { UIWorkspaceApp } from "../workspaceApps"
 export type HomeType = "all" | "app" | "automation" | "agent"
 export type HomeRowType = "app" | "automation" | "agent"
 
-export type HomeSortColumn = "name" | "type" | "status" | "updated"
+export type HomeSortColumn =
+  | "name"
+  | "type"
+  | "projects"
+  | "status"
+  | "created"
+  | "updated"
 export type HomeSortOrder = "asc" | "desc"
 
 interface HomeRowBase {
@@ -14,9 +20,10 @@ interface HomeRowBase {
   id: string
   name: string
   type: HomeRowType
-  projectId?: string
+  projectIds?: string[]
   projectName?: string
   projectColor?: string
+  projectCount?: number
   updatedAt?: string
   createdAt?: string
   favourite: WorkspaceFavourite
