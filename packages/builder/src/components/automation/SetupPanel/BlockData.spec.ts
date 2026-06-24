@@ -31,32 +31,6 @@ const mocks = vi.hoisted(() => {
     }
   }
 
-  const selectedAutomationNode = createStore<{
-    nodeId?: string
-    mode?: string
-  }>({
-    nodeId: "step1",
-    mode: "data_in",
-  })
-
-  const syncSelectedAutomationNode = (state: {
-    selectedNodeId?: string
-    selectedNodeMode?: string
-  }) => {
-    selectedAutomationNode.update(current => {
-      const next = {
-        nodeId: state.selectedNodeId,
-        mode: state.selectedNodeMode,
-      }
-
-      if (current.nodeId === next.nodeId && current.mode === next.mode) {
-        return current
-      }
-
-      return next
-    })
-  }
-
   const automationStore = createStore({
     selectedNodeId: "step1",
     selectedNodeMode: "data_in",
@@ -67,8 +41,6 @@ const mocks = vi.hoisted(() => {
 
   return {
     automationStore,
-    selectedAutomationNode,
-    syncSelectedAutomationNode,
     appStore: createStore({}),
     deploymentStore: createStore({}),
     permissions: createStore({}),
@@ -98,7 +70,6 @@ vi.mock("@/stores/builder", () => ({
   deploymentStore: mocks.deploymentStore,
   permissions: mocks.permissions,
   selectedAutomation: mocks.selectedAutomation,
-  selectedAutomationNode: mocks.selectedAutomationNode,
   tables: mocks.tables,
   workspaceDeploymentStore: mocks.workspaceDeploymentStore,
 }))
@@ -189,10 +160,6 @@ describe("BlockData", () => {
       testResults: undefined,
       testProgress: {},
       blockDefinitions: {},
-    })
-    mocks.syncSelectedAutomationNode({
-      selectedNodeId: "step1",
-      selectedNodeMode: DataMode.INPUT,
     })
   })
 
