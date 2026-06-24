@@ -99,7 +99,11 @@
 </script>
 
 <div class="table-wrapper" class:table-wrapper--panel={variant === "panel"}>
-  <div class="table" class:table--loading={loading} style="--grid-columns: {gridColumns}">
+  <div
+    class="table"
+    class:table--loading={loading}
+    style="--grid-columns: {gridColumns}"
+  >
     {#if allRowsCount > 0}
       <div class="table-header" role="row">
         <button

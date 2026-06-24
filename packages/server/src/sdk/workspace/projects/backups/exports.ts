@@ -107,8 +107,8 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
         datasource =>
           datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
           (hasProject(datasource, projectId) ||
-            Object.values(datasource.entities || {}).some(
-              entity => hasProject(entity, projectId)
+            Object.values(datasource.entities || {}).some(entity =>
+              hasProject(entity, projectId)
             ))
       )
       .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
@@ -140,8 +140,8 @@ async function getUnsupportedContent(
   const agents = await sdk.ai.agents.fetch()
   const workspaceApps = await sdk.workspaceApps.fetch()
   const assignedAgents = agents.filter(agent => hasProject(agent, projectId))
-  const assignedWorkspaceApps = workspaceApps.filter(
-    workspaceApp => hasProject(workspaceApp, projectId)
+  const assignedWorkspaceApps = workspaceApps.filter(workspaceApp =>
+    hasProject(workspaceApp, projectId)
   )
   const assignedWorkspaceAppIds = new Set(
     assignedWorkspaceApps.map(workspaceApp => workspaceApp._id)

@@ -190,7 +190,9 @@ async function clearAssignments(projectId: string) {
       .map(query => async () => {
         const response = await db.put(removeProjectId(query, projectId))
         return async () =>
-          await db.put(addProjectId({ ...query, _rev: response.rev }, projectId))
+          await db.put(
+            addProjectId({ ...query, _rev: response.rev }, projectId)
+          )
       }),
     ...datasources.flatMap(datasource => {
       const entityKeys = Object.entries(datasource.entities || {})

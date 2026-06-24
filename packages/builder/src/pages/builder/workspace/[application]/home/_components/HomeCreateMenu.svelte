@@ -19,11 +19,7 @@
   export let onCreateApi: () => void = () => {}
 </script>
 
-<ActionMenu
-  align={PopoverAlignment.Right}
-  {portalTarget}
-  animate={false}
->
+<ActionMenu align={PopoverAlignment.Right} {portalTarget} animate={false}>
   <div
     slot="control"
     class="create-menu-control"

@@ -247,8 +247,7 @@
       return
     }
     sortColumn = column
-    sortOrder =
-      column === "updated" || column === "created" ? "desc" : "asc"
+    sortOrder = column === "updated" || column === "created" ? "desc" : "asc"
   }
 
   const createApp = () => {
@@ -955,7 +954,9 @@
           weight="500"
           color="var(--spectrum-global-color-gray-900)"
         >
-          {projectsEnabled ? "Welcome to Budibase" : $appStore.name || "Workspace"}
+          {projectsEnabled
+            ? "Welcome to Budibase"
+            : $appStore.name || "Workspace"}
         </Body>
       </div>
 

@@ -4,7 +4,9 @@
 
   export let row: HomeRow | null = null
   export let projects: ProjectResponse[] = []
-  export let onConfirm: (_projectIds: string[] | undefined) => unknown = () => {}
+  export let onConfirm: (
+    _projectIds: string[] | undefined
+  ) => unknown = () => {}
 
   interface ProjectOption {
     label: string

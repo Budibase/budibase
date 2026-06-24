@@ -1,11 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import {
-    ActionMenu,
-    Icon,
-    MenuItem,
-    PopoverAlignment,
-  } from "@budibase/bbui"
+  import { ActionMenu, Icon, MenuItem, PopoverAlignment } from "@budibase/bbui"
   import type { ProjectResponse } from "@budibase/types"
 
   export let projects: ProjectResponse[] = []
