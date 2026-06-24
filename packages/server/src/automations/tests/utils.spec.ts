@@ -532,6 +532,31 @@ describe("automation utils process helpers", () => {
     expect(mockRemoveRepeatableByKey).toHaveBeenCalledWith("job_1:key")
   })
 
+  it("does not disable a repeatable cron when the workspace database is temporarily unavailable", async () => {
+    const automation = buildCronAutomation("job_1")
+    const job = buildJob(automation, { appId: "app_prod" }, { repeat: {} })
+    mockRunnerRun.mockRejectedValue({
+      reason: "Database does not exist.",
+    })
+    const mockRemoveRepeatableByKey = jest.fn()
+    mockGetBullQueue.mockReturnValue({
+      getRepeatableJobs: jest.fn().mockResolvedValue([
+        { id: "job_1", key: "job_1:key" },
+        { id: "other", key: "other:key" },
+      ]),
+      removeRepeatableByKey: mockRemoveRepeatableByKey,
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
+    const consoleWarn = jest.spyOn(console, "warn").mockImplementation()
+    const consoleLog = jest.spyOn(console, "log").mockImplementation()
+
+    const result = await processEvent(job)
+
+    consoleWarn.mockRestore()
+    consoleLog.mockRestore()
+    expect(result.err).toEqual({ reason: "Database does not exist." })
+    expect(mockRemoveRepeatableByKey).not.toHaveBeenCalled()
+  })
+
   it("updates test history metadata", async () => {
     const automation = buildCronAutomation()
     const history = { occurredAt: 1, fields: {} } as any
