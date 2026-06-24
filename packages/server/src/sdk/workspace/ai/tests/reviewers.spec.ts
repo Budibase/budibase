@@ -62,11 +62,39 @@ describe("agent test reviewers", () => {
         },
         response: "Handled it.",
         toolCalls: ["list_tables", "search_rows"],
+        toolDisplayNames: {
+          search_rows: "Research Notes.search_rows",
+        },
       })
     ).toMatchObject({
       reviewerId: "reviewer-1",
       type: "tool_used",
       status: "passed",
+      message: 'Tool "Research Notes.search_rows" was used.',
+    })
+  })
+
+  it("evaluates operation used reviewers against the selected operation", () => {
+    expect(
+      evaluateReviewer({
+        reviewer: {
+          id: "reviewer-1",
+          type: "operation_used",
+          value: "operation_2",
+        },
+        response: "Handled it.",
+        toolCalls: [],
+        selectedOperationId: "operation_2",
+        selectedOperationName: "Operation 2",
+        operationNamesById: {
+          operation_2: "Operation 2",
+        },
+      })
+    ).toMatchObject({
+      reviewerId: "reviewer-1",
+      type: "operation_used",
+      status: "passed",
+      message: 'Operation "Operation 2" was used.',
     })
   })
 

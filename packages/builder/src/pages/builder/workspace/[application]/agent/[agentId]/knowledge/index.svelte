@@ -125,12 +125,9 @@
     if (!latest) {
       return
     }
-    operation = {
-      ...operation,
-      knowledgeBases: latest.knowledgeBases,
-      knowledgeSources: latest.knowledgeSources,
-      allowKnowledgeSourceDownload: latest.allowKnowledgeSourceDownload,
-    }
+    operation.knowledgeBases = latest.knowledgeBases
+    operation.knowledgeSources = latest.knowledgeSources
+    operation.allowKnowledgeSourceDownload = latest.allowKnowledgeSourceDownload
   }
 
   const showSharePointSyncResult = (
