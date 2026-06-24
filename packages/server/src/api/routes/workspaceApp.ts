@@ -11,7 +11,7 @@ const baseSchema = {
     .required()
     .regex(/^\/[\w-]*$/),
   disabled: Joi.boolean().optional(),
-  projectId: Joi.string().optional().allow(null, ""),
+  projectIds: Joi.array().items(Joi.string()).optional().allow(null),
 }
 
 const insertSchema = Joi.object({
