@@ -31,10 +31,7 @@ import { updateEntityMetadata } from "../../utilities"
 import type { MockedFunction } from "jest-mock"
 
 let mockRunnerRun = jest.fn()
-const mockGetAllWorkspaces = jest.fn<
-  Promise<string[]>,
-  [{ idsOnly: true; efficient?: boolean }]
->()
+const mockDbExists = jest.fn<Promise<boolean>, [string]>()
 
 jest.mock("../../features", () => ({
   automationsEnabled: () => true,
@@ -79,9 +76,8 @@ jest.mock("@budibase/backend-core", () => {
     ...actual,
     db: {
       ...actual.db,
+      dbExists: (workspaceId: string) => mockDbExists(workspaceId),
       doWithDB: jest.fn(),
-      getAllWorkspaces: (opts: { idsOnly: true; efficient?: boolean }) =>
-        mockGetAllWorkspaces(opts),
     },
     context: {
       ...actual.context,
@@ -519,7 +515,7 @@ describe("automation utils process helpers", () => {
     mockRunnerRun.mockRejectedValue({
       reason: "Database does not exist.",
     })
-    mockGetAllWorkspaces.mockResolvedValue(["app_prod_other"])
+    mockDbExists.mockResolvedValue(false)
     const mockRemoveRepeatableByKey = jest.fn()
     mockGetBullQueue.mockReturnValue({
       getRepeatableJobs: jest.fn().mockResolvedValue([
@@ -536,6 +532,7 @@ describe("automation utils process helpers", () => {
     consoleWarn.mockRestore()
     consoleLog.mockRestore()
     expect(result.err).toEqual({ reason: "Database does not exist." })
+    expect(mockDbExists).toHaveBeenCalledWith("app_prod")
     expect(mockRemoveRepeatableByKey).toHaveBeenCalledWith("job_1:key")
   })
 
@@ -545,7 +542,7 @@ describe("automation utils process helpers", () => {
     mockRunnerRun.mockRejectedValue({
       reason: "Database does not exist.",
     })
-    mockGetAllWorkspaces.mockResolvedValue(["app_prod"])
+    mockDbExists.mockResolvedValue(true)
     const mockRemoveRepeatableByKey = jest.fn()
     mockGetBullQueue.mockReturnValue({
       getRepeatableJobs: jest.fn().mockResolvedValue([
@@ -562,6 +559,7 @@ describe("automation utils process helpers", () => {
     consoleWarn.mockRestore()
     consoleLog.mockRestore()
     expect(result.err).toEqual({ reason: "Database does not exist." })
+    expect(mockDbExists).toHaveBeenCalledWith("app_prod")
     expect(mockRemoveRepeatableByKey).not.toHaveBeenCalled()
   })
 
@@ -571,7 +569,7 @@ describe("automation utils process helpers", () => {
     mockRunnerRun.mockRejectedValue({
       reason: "Database does not exist.",
     })
-    mockGetAllWorkspaces.mockRejectedValue(new Error("couch unavailable"))
+    mockDbExists.mockRejectedValue(new Error("couch unavailable"))
     const mockRemoveRepeatableByKey = jest.fn()
     mockGetBullQueue.mockReturnValue({
       getRepeatableJobs: jest.fn().mockResolvedValue([
@@ -588,6 +586,7 @@ describe("automation utils process helpers", () => {
     consoleWarn.mockRestore()
     consoleLog.mockRestore()
     expect(result.err).toEqual({ reason: "Database does not exist." })
+    expect(mockDbExists).toHaveBeenCalledWith("app_prod")
     expect(mockRemoveRepeatableByKey).not.toHaveBeenCalled()
   })
 

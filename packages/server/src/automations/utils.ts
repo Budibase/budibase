@@ -44,11 +44,7 @@ function isWorkspaceDatabaseMissing(err: unknown) {
 
 async function workspaceExists(workspaceId: string) {
   try {
-    const workspaceIds = await dbCore.getAllWorkspaces({
-      idsOnly: true,
-      efficient: true,
-    })
-    return workspaceIds.includes(workspaceId)
+    return await dbCore.dbExists(workspaceId)
   } catch (err) {
     console.log("Failed to check workspace existence", { workspaceId, err })
     return true
