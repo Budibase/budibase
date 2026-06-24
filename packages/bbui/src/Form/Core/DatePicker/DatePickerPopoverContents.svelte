@@ -10,6 +10,7 @@
   export let ignoreTimezones
   export let enableTime
   export let timeOnly
+  export let disableClear = false
   export let value
   export let startDayOfWeek = "Monday"
 
@@ -33,6 +34,9 @@
   }
 
   const clearDateOnBackspace = event => {
+    if (disableClear) {
+      return
+    }
     // Ignore if we're typing a value
     if (document.activeElement?.tagName.toLowerCase() === "input") {
       return
@@ -63,16 +67,22 @@
   {/if}
   <div class="footer" class:spaced={showCalendar}>
     {#if showTime}
-      <TimePicker {value} on:change={e => handleChange(e.detail)} />
+      <TimePicker
+        {value}
+        {disableClear}
+        on:change={e => handleChange(e.detail)}
+      />
     {/if}
     <div class="actions">
-      <ActionButton
-        disabled={!value}
-        size="S"
-        on:click={() => dispatch("change", null)}
-      >
-        Clear
-      </ActionButton>
+      {#if !disableClear}
+        <ActionButton
+          disabled={!value}
+          size="S"
+          on:click={() => dispatch("change", null)}
+        >
+          Clear
+        </ActionButton>
+      {/if}
       <ActionButton size="S" on:click={setToNow}>
         {showTime ? "Now" : "Today"}
       </ActionButton>

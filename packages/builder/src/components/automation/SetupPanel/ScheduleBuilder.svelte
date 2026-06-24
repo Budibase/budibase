@@ -247,7 +247,7 @@
     {/if}
     <div>
       <Label>Time</Label>
-      <DatePicker bind:value={time} timeOnly />
+      <DatePicker bind:value={time} timeOnly disableClear />
     </div>
     {#if error}
       <Label><div class="error">{error}</div></Label>

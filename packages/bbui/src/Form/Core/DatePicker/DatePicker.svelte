@@ -21,6 +21,7 @@
   export let timeOnly = false
   export let ignoreTimezones = false
   export let useKeyboardShortcuts = true
+  export let disableClear = false
   export let appendTo = undefined
   export let api = null
   export let align: PopoverAlignment = PopoverAlignment.Left
@@ -86,6 +87,7 @@
       {ignoreTimezones}
       {enableTime}
       {timeOnly}
+      {disableClear}
       startDayOfWeek={resolvedStartDayOfWeek}
       value={parsedValue}
       on:change

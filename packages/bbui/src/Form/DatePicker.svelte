@@ -16,6 +16,7 @@
   export let appendTo = undefined
   export let ignoreTimezones = false
   export let helpText = undefined
+  export let disableClear = false
 
   const dispatch = createEventDispatcher()
 
@@ -34,6 +35,7 @@
     {placeholder}
     {enableTime}
     {timeOnly}
+    {disableClear}
     {appendTo}
     {ignoreTimezones}
     on:change={onChange}

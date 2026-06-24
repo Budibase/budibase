@@ -4,6 +4,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let value
+  export let disableClear = false
 
   const dispatch = createEventDispatcher()
 
@@ -11,6 +12,10 @@
 
   const handleChange = e => {
     if (!e.target.value) {
+      if (disableClear) {
+        e.target.value = displayValue
+        return
+      }
       dispatch("change", undefined)
       return
     }
