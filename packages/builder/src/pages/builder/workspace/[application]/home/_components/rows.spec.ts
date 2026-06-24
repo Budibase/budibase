@@ -208,4 +208,44 @@ describe("sortHomeRows", () => {
 
     expect(result.map(row => row._id)).toEqual(["b", "a"])
   })
+
+  it("sorts by multiple project count descending", () => {
+    const rows = [
+      buildAgentRow({ id: "a", name: "OneProject" }),
+      {
+        ...buildAgentRow({ id: "b", name: "TwoProjects" }),
+        projectIds: ["project_1", "project_2"],
+        projectCount: 2,
+      },
+      {
+        ...buildAgentRow({ id: "c", name: "SingleAssigned" }),
+        projectIds: ["project_1"],
+        projectCount: 1,
+      },
+    ]
+
+    const result = sortHomeRows(rows, {
+      sortColumn: "projects",
+      sortOrder: "desc",
+    })
+
+    expect(result.map(row => row._id)).toEqual(["b", "c", "a"])
+  })
+
+  it("sorts by projectIds length when projectCount is unset", () => {
+    const rows = [
+      buildAgentRow({ id: "a", name: "Unassigned" }),
+      {
+        ...buildAgentRow({ id: "b", name: "Assigned" }),
+        projectIds: ["project_1", "project_2"],
+      },
+    ]
+
+    const result = sortHomeRows(rows, {
+      sortColumn: "projects",
+      sortOrder: "desc",
+    })
+
+    expect(result.map(row => row._id)).toEqual(["b", "a"])
+  })
 })

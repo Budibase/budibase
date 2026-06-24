@@ -14,8 +14,13 @@
 
   let selectedProjectIds: string[] = []
   let projectOptions: ProjectOption[] = []
+  let activeRowId = ""
 
-  $: selectedProjectIds = row?.projectIds || []
+  $: if ((row?._id || "") !== activeRowId) {
+    activeRowId = row?._id || ""
+    selectedProjectIds = row?.projectIds ? [...row.projectIds] : []
+  }
+
   $: projectOptions = projects.map(project => ({
     label: project.name,
     value: project._id,
@@ -24,7 +29,7 @@
 </script>
 
 <ModalContent
-  title={`Assign project${row ? ` to ${row.name}` : ""}`}
+  title={`Assign projects${row ? ` to ${row.name}` : ""}`}
   confirmText="Save"
   size="M"
   onConfirm={() =>

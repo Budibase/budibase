@@ -427,7 +427,7 @@
         })
       }
 
-      notifications.success("Project updated successfully")
+      notifications.success("Projects updated successfully")
       assignProjectModal?.hide()
     } catch (error) {
       console.error(error)
@@ -825,7 +825,7 @@
       ...row,
       projectName: project?.name,
       projectColor: project?.color,
-      projectCount: projects.length,
+      projectCount: rowProjectIds.length,
     }
   })
 
