@@ -50,6 +50,13 @@ jest.mock("../agents", () => ({
   formatIncompleteToolCallError: jest
     .fn()
     .mockReturnValue("Incomplete tool call"),
+  getAvailableTools: jest.fn().mockResolvedValue([]),
+  getToolDisplayNames: jest.fn().mockReturnValue({}),
+  getLiveOperations: (agent: {
+    operations?: Array<{ live?: boolean } & Record<string, unknown>>
+  }) => {
+    return (agent.operations || []).filter(operation => operation.live === true)
+  },
   prepareAgentChatRun: jest.fn(),
 }))
 
@@ -117,13 +124,25 @@ describe("agent test runner", () => {
   const mockAgentRun = ({
     response,
     toolCalls = [],
+    toolDisplayNames = {},
+    selectedOperation,
   }: {
     response: string
     toolCalls?: string[]
+    toolDisplayNames?: Record<string, string>
+    selectedOperation?: {
+      id: string
+      name: string
+      promptInstructions?: string
+      enabledTools?: string[]
+      knowledgeBases?: string[]
+    }
   }) => {
     prepareAgentChatRun.mockImplementation(async () => {
       const sessionLogIndexer = makeIndexer()
       return {
+        selectedOperation,
+        toolDisplayNames,
         sessionLogIndexer,
         stream: jest.fn().mockImplementation(async ({ onToolCalls }) => {
           sessionLogIndexer.addRequestId("agent-request")
@@ -176,8 +195,15 @@ describe("agent test runner", () => {
       _id: "agent-1",
       name: "Support Agent",
       aiconfig: "config-1",
-      enabledTools: [],
-      knowledgeBases: [],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+      ],
     })
     sdk.ai.agents.buildPromptAndTools.mockResolvedValue({
       systemPrompt: "You are a helpful assistant.",
@@ -321,6 +347,9 @@ describe("agent test runner", () => {
     mockAgentRun({
       response: "Found a result.",
       toolCalls: ["search_rows", "get_row"],
+      toolDisplayNames: {
+        search_rows: "Research Notes.search_rows",
+      },
     })
 
     const run = await runSuite({
@@ -336,6 +365,7 @@ describe("agent test runner", () => {
           reviewerId: "reviewer-1",
           type: "tool_used",
           status: "passed",
+          message: 'Tool "Research Notes.search_rows" was used.',
         },
       ],
     })
@@ -352,6 +382,9 @@ describe("agent test runner", () => {
     mockAgentRun({
       response: "Handled without a tool.",
       toolCalls: ["list_tables"],
+      toolDisplayNames: {
+        search_rows: "Research Notes.search_rows",
+      },
     })
 
     const run = await runSuite({
@@ -367,9 +400,199 @@ describe("agent test runner", () => {
           reviewerId: "reviewer-1",
           type: "tool_used",
           status: "failed",
-          message: 'Expected tool "search_rows" to be used.',
+          message: 'Expected tool "Research Notes.search_rows" to be used.',
         },
       ],
+    })
+  })
+
+  it("passes an operation used reviewer when the selected operation matches", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "operation_used",
+        value: "operation_2",
+      },
+    ])
+    sdk.ai.agents.getOrThrow.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support Agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+      ],
+    })
+    mockAgentRun({
+      response: "Handled by operation 2.",
+      selectedOperation: {
+        id: "operation_2",
+        name: "Operation 2",
+      },
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "passed",
+      selectedOperationId: "operation_2",
+      selectedOperationName: "Operation 2",
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "operation_used",
+          status: "passed",
+          message: 'Operation "Operation 2" was used.',
+        },
+      ],
+    })
+  })
+
+  it("fails an operation used reviewer when a different operation is selected", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "operation_used",
+        value: "operation_2",
+      },
+    ])
+    sdk.ai.agents.getOrThrow.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support Agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          enabledTools: [],
+          knowledgeBases: [],
+        },
+      ],
+    })
+    mockAgentRun({
+      response: "Handled by operation 1.",
+      selectedOperation: {
+        id: "operation_1",
+        name: "Operation 1",
+      },
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "failed",
+      selectedOperationId: "operation_1",
+      selectedOperationName: "Operation 1",
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "operation_used",
+          status: "failed",
+          message:
+            'Expected operation "Operation 2" to be used, but "Operation 1" was selected.',
+        },
+      ],
+    })
+  })
+
+  it("stores routed operation details on each case result instead of the run snapshot", async () => {
+    setSuite([])
+    sdk.ai.agents.getOrThrow.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support Agent",
+      aiconfig: "config-1",
+      goal: "Help users",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          promptInstructions: "First operation instructions",
+          enabledTools: ["list_tables"],
+          knowledgeBases: ["kb-1"],
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          promptInstructions: "Second operation instructions",
+          enabledTools: ["search_knowledge"],
+          knowledgeBases: ["kb-2"],
+        },
+      ],
+    })
+    mockAgentRun({
+      response: "Handled by operation 2.",
+      selectedOperation: {
+        id: "operation_2",
+        name: "Operation 2",
+        promptInstructions: "Second operation instructions",
+        enabledTools: ["search_knowledge"],
+        knowledgeBases: ["kb-2"],
+      },
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.snapshot).toEqual({
+      agentId: "agent-1",
+      agentName: "Support Agent",
+      aiconfig: "config-1",
+      aiConfig: {
+        aiConfigId: "config-1",
+        name: "Primary config",
+        provider: "openai",
+        model: "gpt-5",
+        liteLLMModelId: "openai/gpt-5",
+        reasoningEffort: "medium",
+      },
+      aiConfigs: [
+        {
+          aiConfigId: "config-1",
+          name: "Primary config",
+          provider: "openai",
+          model: "gpt-5",
+          liteLLMModelId: "openai/gpt-5",
+          reasoningEffort: "medium",
+        },
+      ],
+      goal: "Help users",
+    })
+    expect(run.results[0]).toMatchObject({
+      selectedOperationId: "operation_2",
+      selectedOperationName: "Operation 2",
+      promptInstructions: "Second operation instructions",
+      enabledTools: ["search_knowledge"],
+      knowledgeBases: ["kb-2"],
     })
   })
 
@@ -394,6 +617,9 @@ describe("agent test runner", () => {
     mockAgentRun({
       response: "Hello there",
       toolCalls: ["get_row"],
+      toolDisplayNames: {
+        search_rows: "Research Notes.search_rows",
+      },
     })
     mockJudgeRun({
       passed: true,
@@ -425,7 +651,7 @@ describe("agent test runner", () => {
           reviewerId: "reviewer-3",
           type: "tool_used",
           status: "failed",
-          message: 'Expected tool "search_rows" to be used.',
+          message: 'Expected tool "Research Notes.search_rows" to be used.',
         },
       ],
     })
@@ -454,8 +680,15 @@ describe("agent test runner", () => {
       _id: "agent-1",
       name: "Support Agent",
       aiconfig: "config-1",
-      enabledTools: [],
-      knowledgeBases: ["kb-1"],
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          enabledTools: [],
+          knowledgeBases: ["kb-1"],
+        },
+      ],
     })
     mockAgentRun({ response: "The policy is 30 days." })
 
@@ -469,7 +702,11 @@ describe("agent test runner", () => {
         agent: expect.objectContaining({
           _id: "agent-1",
           aiconfig: "config-1",
-          knowledgeBases: ["kb-1"],
+          operations: [
+            expect.objectContaining({
+              knowledgeBases: ["kb-1"],
+            }),
+          ],
         }),
         aiConfigId: "config-1",
         errorLabel: "agent test",

@@ -68,6 +68,7 @@
     keyValueArrayToRecord,
     getDefaultRestAuthConfig,
     isValidEndpointUrl,
+    isValidEndpointUrlMissingProtocol,
   } from "./query"
   import { applyBaseUrl } from "@budibase/shared-core"
   import restUtils from "@/helpers/data/utils"
@@ -89,14 +90,18 @@
   } from "../common/CodeEditor/urlParamHighlight"
   import { environment } from "@/stores/portal"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
-  import { onMount, createEventDispatcher } from "svelte"
+  import { onDestroy, onMount, createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
 
   export let queryId: string | undefined = undefined
   export let datasourceId: string | undefined = undefined
+  export let restTemplateId: RestTemplateId | undefined = undefined
   export let saveAndClose: boolean = false
+  export let redirectNewQueryOnSave: boolean = true
   export let settingsLocked: boolean = false
+  export let connectionPopoverPortalTarget: string | undefined = undefined
+  export let connectionPopoverZIndex: number | undefined = undefined
 
   $beforeUrlChange
   $: goto = $gotoStore
@@ -109,6 +114,7 @@
   }
 
   let activeDatasourceId: string | undefined = datasourceId
+  let lastDatasourceId: string | undefined = datasourceId
   let connectionSelectRef: ConnectionSelect
   let panelZIndex: number = 1001
 
@@ -133,16 +139,60 @@
   let mergedBindings: EnrichedBinding[] = []
   let bindingPreviewContext: Record<string, any> = {}
   let baseUrlOptions: { label: string; url: string }[] = []
+  let lastQuerySourceKey: string | undefined
+  let openConnectionMenuTimer: ReturnType<typeof setTimeout> | undefined
 
   // Custom query mode state
   let customUrl: string = ""
   let selectedChildTemplateId: string | undefined
+  let resolvedConnectorDatasourceId: string | undefined
 
   // ── DATASOURCE / MODE ────────────────────────────────────────────────────
+  $: draftRestTemplateId = $workspaceConnections.draft?.templateId
+  $: connectorRestTemplateId = draftRestTemplateId || restTemplateId
+  $: connectorMatchingConnections = connectorRestTemplateId
+    ? $workspaceConnections.list.filter(
+        connection =>
+          connection.source === "datasource" &&
+          connection.templateId === connectorRestTemplateId
+      )
+    : []
+  $: singleConnectorDatasourceId =
+    connectorMatchingConnections.length === 1
+      ? connectorMatchingConnections[0].sourceId
+      : undefined
+  $: resolvedConnectorDatasourceId =
+    connectorRestTemplateId && !queryId && !datasourceId
+      ? singleConnectorDatasourceId
+      : undefined
+  $: if (resolvedConnectorDatasourceId && openConnectionMenuTimer) {
+    clearTimeout(openConnectionMenuTimer)
+    openConnectionMenuTimer = undefined
+  }
+
+  $: queryDatasourceId = queryId
+    ? $queries.list.find(q => q._id === queryId)?.datasourceId
+    : undefined
+  $: if (datasourceId !== lastDatasourceId) {
+    activeDatasourceId = datasourceId
+    lastDatasourceId = datasourceId
+  }
+  $: if (!datasourceId && queryDatasourceId && !activeDatasourceId) {
+    activeDatasourceId = queryDatasourceId
+  }
+  $: storeQuery = queryId
+    ? resolveStoreQuery($queries.list, queryId, undefined)
+    : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
+  $: isNewQuery = !storeQuery?._id
+  $: canChangeConnection = !queryId || !!restTemplateId
   $: selectedDatasourceId =
+    (canChangeConnection ? activeDatasourceId : queryDatasourceId) ||
     datasourceId ||
-    activeDatasourceId ||
-    $workspaceConnections.draft?.query?.datasourceId
+    queryDatasourceId ||
+    $workspaceConnections.draft?.query?.datasourceId ||
+    resolvedConnectorDatasourceId ||
+    (!$workspaceConnections.draft ? activeDatasourceId : undefined) ||
+    undefined
   $: datasource = structuredClone(
     $datasources.list.find(
       d => d._id === (selectedDatasourceId || storeQuery?.datasourceId)
@@ -151,21 +201,15 @@
   $: isCustomMode = !hasRestTemplate(datasource)
 
   // ── QUERY INITIALISATION ─────────────────────────────────────────────────
-  $: if (!datasourceId && queryId && !activeDatasourceId) {
-    const dsId = $queries.list.find(q => q._id === queryId)?.datasourceId
-    if (dsId) activeDatasourceId = dsId
-  }
+  $: querySourceKey = storeQuery?._id
+    ? `query:${storeQuery._id}`
+    : $workspaceConnections.draft
+      ? `draft:${$workspaceConnections.draft.key}:${selectedDatasourceId || ""}`
+      : `new:${selectedDatasourceId || ""}`
 
-  $: storeQuery =
-    queryId &&
-    activeDatasourceId ===
-      $queries.list.find(q => q._id === queryId)?.datasourceId
-      ? resolveStoreQuery($queries.list, queryId, undefined)
-      : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
-  $: isNewQuery = !storeQuery?._id
-
-  $: if (!editableQuery || storeQuery?._id !== editableQuery._id) {
+  $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
+    lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
     selectedAuth = false
@@ -280,6 +324,7 @@
     buildQuery(
       {
         ...editableQuery,
+        datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },
       runtimeUrlQueries,
@@ -365,6 +410,10 @@
 
   // ── SAVE / RUN STATE ──────────────────────────────────────────────────────
   $: isValidCustomUrl = !isCustomMode || isValidEndpointUrl(requestUrl)
+  $: protocolMissingWarningMessage =
+    isCustomMode && isValidEndpointUrlMissingProtocol(requestUrl)
+      ? "http(s) protocol required in the URL"
+      : undefined
   $: existingQueryUnchanged = !isNewQuery && !queryDirty
   $: newQueryIncomplete =
     isNewQuery && (isCustomMode ? !requestUrl : !selectedEndpointOption)
@@ -564,7 +613,7 @@
   }
 
   // SAVE/PREVIEW
-  const saveQuery = async (redirectIfNew = true) => {
+  const saveQuery = async (redirectIfNew = redirectNewQueryOnSave) => {
     if (!builtQuery || !datasource) {
       return
     }
@@ -616,7 +665,7 @@
         return { ok: true }
       }
 
-      if (isNew && saveAndClose && _id) {
+      if (saveAndClose && _id) {
         dispatch("savedQuery", { queryId: _id })
         workspaceConnections.discardDraft()
         return { ok: true }
@@ -695,7 +744,8 @@
       const ds = $datasources.list.find(d => d._id === newDatasourceId) as
         | Datasource
         | undefined
-      const templateId = ds?.restTemplateId as string | undefined
+      const templateId =
+        ds?.restTemplateId || restTemplates.get(ds?.restTemplate)?.id
       workspaceConnections.updateDraft({
         templateId,
         query: {
@@ -786,6 +836,7 @@
   }
 
   const ensureQueryDefaults = (target: Query) => {
+    target.fields ||= {}
     if (!target.fields?.disabledHeaders) {
       target.fields.disabledHeaders = {}
     }
@@ -921,8 +972,24 @@
     if (!$environment.loaded) {
       environment.loadVariables()
     }
-    if ($workspaceConnections.draft && !datasourceId) {
-      setTimeout(() => connectionSelectRef.open(), 200)
+    if (connectorRestTemplateId && !datasourceId && !selectedDatasourceId) {
+      openConnectionMenuTimer = setTimeout(() => {
+        connectionSelectRef?.open()
+      }, 200)
+    } else if (
+      $workspaceConnections.draft &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
+      openConnectionMenuTimer = setTimeout(() => {
+        connectionSelectRef?.open()
+      }, 200)
+    }
+  })
+
+  onDestroy(() => {
+    if (openConnectionMenuTimer) {
+      clearTimeout(openConnectionMenuTimer)
     }
   })
 </script>
@@ -996,11 +1063,18 @@
         <ConnectionSelect
           bind:this={connectionSelectRef}
           authConfigId={editableQuery?.fields?.authConfigId}
-          restTemplateId={datasource?.restTemplateId}
+          restTemplateId={restTemplateId ||
+            datasource?.restTemplateId ||
+            $workspaceConnections.draft?.templateId}
           datasourceId={selectedDatasourceId || storeQuery?.datasourceId}
           editText="Edit connection + auth"
+          restrictToRestTemplate={!!(
+            restTemplateId || $workspaceConnections.draft?.templateId
+          )}
           {settingsLocked}
-          disabled={!isNewQuery}
+          popoverPortalTarget={connectionPopoverPortalTarget}
+          popoverZIndex={connectionPopoverZIndex}
+          disabled={!canChangeConnection}
           on:change={onConnectionChange}
         />
         {#if isCustomMode}
@@ -1010,6 +1084,7 @@
               verb={editableQuery?.queryVerb ?? "read"}
               url={customUrl}
               {baseUrlOptions}
+              activeWarningMessage={protocolMissingWarningMessage}
               on:verbChange={e => {
                 if (editableQuery) {
                   editableQuery.queryVerb = e.detail
@@ -1096,7 +1171,7 @@
           <Button
             primary
             disabled={isCustomMode
-              ? !customUrl || runningQuery
+              ? !customUrl || runningQuery || !isValidCustomUrl
               : !selectedEndpointOption || runningQuery}
             icon="paper-plane-right"
             on:click={previewQuery}
@@ -1521,5 +1596,12 @@
     display: flex;
     gap: var(--spacing-s);
     align-items: center;
+    position: relative;
+  }
+  .request-top {
+    z-index: 2;
+  }
+  .request-bottom {
+    z-index: 1;
   }
 </style>

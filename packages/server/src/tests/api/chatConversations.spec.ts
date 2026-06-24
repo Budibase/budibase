@@ -256,6 +256,10 @@ describe("chat conversations authorization", () => {
     config.end()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   const headersForUser = async (user: User) =>
     await config.withUser(user, async () => config.defaultHeaders({}, true))
 
@@ -398,6 +402,76 @@ describe("chat conversations authorization", () => {
       .set(headers)
 
     expect(res.status).toBe(404)
+  })
+
+  it("rejects download requests for unknown operations", async () => {
+    const headers = await headersForUser(userA)
+    const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
+
+    getAgentSpy.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    } as Agent)
+
+    const res = await config
+      .getRequest()!
+      .get(
+        `/api/chatapps/${chatApp._id}/agents/agent-1/operations/operation_3/files/file-1/url`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(404)
+    expect(res.body.message).toBe("Operation not found")
+  })
+
+  it("rejects download requests for draft operations", async () => {
+    const headers = await headersForUser(userA)
+    const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
+
+    getAgentSpy.mockResolvedValue({
+      _id: "agent-1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Operation 1",
+          live: true,
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          id: "operation_2",
+          name: "Operation 2",
+          live: false,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    } as Agent)
+
+    const res = await config
+      .getRequest()!
+      .get(
+        `/api/chatapps/${chatApp._id}/agents/agent-1/operations/operation_2/files/file-1/url`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(404)
+    expect(res.body.message).toBe("Operation not found")
   })
 })
 
@@ -847,8 +921,10 @@ describe("chat conversation transient behavior", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         tools: undefined,
-        toolChoice: "none",
       })
+    )
+    expect(jest.mocked(streamText).mock.calls[0]?.[0]).not.toHaveProperty(
+      "toolChoice"
     )
   })
 
@@ -1172,29 +1248,77 @@ describe("Agent chat tool call tracking", () => {
     })
   }
 
-  function makeWebhookStreamTextMock(toolResults: { toolCallId: string }[]) {
-    return (options: any) => ({
-      text: (async () => {
-        if (options.onStepFinish) {
-          await options.onStepFinish({
-            content: [],
-            toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
-            toolResults,
-          })
-        }
-        return "response"
-      })(),
-      response: Promise.resolve({
-        id: "gen-test",
-        headers: {
-          "x-litellm-response-cost": "0.0001",
-        },
-      }),
-      usage: Promise.resolve({
-        inputTokens: 0,
-        outputTokens: 0,
-      }),
-    })
+  const makeAssistantTextChunks = (text = "response") => [
+    { type: "start" },
+    { type: "text-start", id: "text-1" },
+    { type: "text-delta", id: "text-1", delta: text },
+    { type: "text-end", id: "text-1" },
+    { type: "finish", finishReason: "stop" },
+  ]
+
+  function makeWebhookStreamTextMock({
+    toolCalls = [],
+    toolResults = [],
+    text = "response",
+    chunks = makeAssistantTextChunks(text),
+  }: {
+    toolCalls?: { toolCallId: string; toolName?: string }[]
+    toolResults?: {
+      toolCallId: string
+      toolName?: string
+      output?: unknown
+      preliminary?: boolean
+    }[]
+    text?: string
+    chunks?: Record<string, unknown>[]
+  }) {
+    return async (options: any) => {
+      const stepToolCalls = toolCalls.length
+        ? toolCalls
+        : toolResults.map(result => ({
+            toolCallId: result.toolCallId,
+            toolName: result.toolName,
+          }))
+      if (options.onStepFinish) {
+        await options.onStepFinish({
+          content: [],
+          toolCalls: stepToolCalls,
+          toolResults,
+        })
+      }
+
+      return {
+        toUIMessageStream: jest
+          .fn()
+          .mockImplementation(
+            (streamOptions: { generateMessageId?: () => string } = {}) => {
+              const streamChunks = chunks.map(chunk =>
+                chunk.type === "start" &&
+                !("messageId" in chunk) &&
+                streamOptions.generateMessageId
+                  ? {
+                      ...chunk,
+                      messageId: streamOptions.generateMessageId(),
+                    }
+                  : chunk
+              )
+
+              return aiActual.simulateReadableStream({ chunks: streamChunks })
+            }
+          ),
+        text: Promise.resolve(text),
+        response: Promise.resolve({
+          id: "gen-test",
+          headers: {
+            "x-litellm-response-cost": "0.0001",
+          },
+        }),
+        usage: Promise.resolve({
+          inputTokens: 0,
+          outputTokens: 0,
+        }),
+      }
+    }
   }
 
   beforeAll(async () => {
@@ -1536,7 +1660,7 @@ describe("Agent chat tool call tracking", () => {
     it("allows configured channel deployments when internal agent chat is disabled", async () => {
       jest
         .mocked(streamText)
-        .mockImplementation(makeWebhookStreamTextMock([]) as any)
+        .mockImplementation(makeWebhookStreamTextMock({}) as any)
 
       await context.doInWorkspaceContext(
         config.getProdWorkspaceId(),
@@ -1576,15 +1700,15 @@ describe("Agent chat tool call tracking", () => {
     })
 
     it("counts each completed tool call as one action", async () => {
-      jest
-        .mocked(streamText)
-        .mockImplementation(
-          makeWebhookStreamTextMock([
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock({
+          toolResults: [
             { toolCallId: "c1" },
             { toolCallId: "c2" },
             { toolCallId: "c3" },
-          ]) as any
-        )
+          ],
+        }) as any
+      )
 
       await context.doInWorkspaceContext(
         config.getProdWorkspaceId(),
@@ -1609,10 +1733,216 @@ describe("Agent chat tool call tracking", () => {
       expect(addActionMock).toHaveBeenCalledTimes(3)
     })
 
+    it("returns RAG sources reported by the agent", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock({
+          toolResults: [
+            {
+              toolCallId: "call-1",
+              toolName: "search_knowledge",
+              output: {
+                sources: [
+                  {
+                    sourceId: "pricing-source",
+                    fileId: "file-1",
+                    filename: "Budibase Enterprise Pricing V8.pdf",
+                  },
+                  {
+                    sourceId: "faq-source",
+                    fileId: "file-2",
+                    filename: "FAQ.md",
+                  },
+                ],
+              },
+            },
+            {
+              toolCallId: "call-2",
+              toolName: "report_used_sources",
+              output: {
+                accepted: [
+                  {
+                    sourceId: "pricing-source",
+                    fileId: "file-1",
+                    filename: "Budibase Enterprise Pricing V8.pdf",
+                  },
+                ],
+              },
+            },
+          ],
+        }) as any
+      )
+
+      const result = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () =>
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "summarize pricing" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+      )
+
+      expect(result.ragSources).toEqual([
+        {
+          sourceId: "pricing-source",
+          fileId: "file-1",
+          filename: "Budibase Enterprise Pricing V8.pdf",
+        },
+      ])
+    })
+
+    it("streams assistant text deltas for webhook delivery", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock({
+          text: "Mock response",
+          chunks: [
+            { type: "start" },
+            { type: "text-start", id: "text-1" },
+            { type: "text-delta", id: "text-1", delta: "Mock " },
+            { type: "text-delta", id: "text-1", delta: "response" },
+            { type: "text-end", id: "text-1" },
+            { type: "finish", finishReason: "stop" },
+          ],
+        }) as any
+      )
+
+      let streamedText = ""
+      const result = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () =>
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+            onAssistantStream: async stream => {
+              for await (const chunk of stream) {
+                streamedText += chunk
+              }
+            },
+          })
+      )
+
+      expect(streamedText).toBe("Mock response")
+      expect(result.assistantText).toBe("Mock response")
+    })
+
+    it("generates an assistant message id for webhook responses", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock({}) as any)
+
+      const result = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () =>
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+      )
+
+      expect(result.messages[1].id).toEqual(expect.any(String))
+      expect(result.messages[1].id).not.toBe("")
+    })
+
+    it("keeps assistant tool context in the returned webhook conversation", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock({
+          toolCalls: [{ toolCallId: "c1", toolName: "search_knowledge" }],
+          toolResults: [{ toolCallId: "c1", toolName: "search_knowledge" }],
+          chunks: [
+            { type: "start" },
+            { type: "text-start", id: "text-1" },
+            { type: "text-delta", id: "text-1", delta: "response" },
+            { type: "text-end", id: "text-1" },
+            {
+              type: "tool-input-available",
+              toolCallId: "c1",
+              toolName: "search_knowledge",
+              input: { query: "hello" },
+            },
+            {
+              type: "tool-output-available",
+              toolCallId: "c1",
+              output: {
+                sources: [{ sourceId: "source-1", filename: "Source 1" }],
+              },
+            },
+            { type: "finish", finishReason: "stop" },
+          ],
+        }) as any
+      )
+
+      await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => {
+          const result = await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+
+          expect(result.messages[1]).toMatchObject({
+            role: "assistant",
+          })
+          expect(result.messages[1].parts).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "text",
+                text: "response",
+              }),
+              expect.objectContaining({
+                state: "output-available",
+                output: {
+                  sources: [{ sourceId: "source-1", filename: "Source 1" }],
+                },
+              }),
+            ])
+          )
+        }
+      )
+    })
+
     it("counts zero actions when the agent makes no tool calls", async () => {
       jest
         .mocked(streamText)
-        .mockImplementation(makeWebhookStreamTextMock([]) as any)
+        .mockImplementation(makeWebhookStreamTextMock({}) as any)
 
       await context.doInWorkspaceContext(
         config.getProdWorkspaceId(),
@@ -1642,6 +1972,11 @@ describe("Agent chat tool call tracking", () => {
       jest.mocked(streamText).mockImplementation(
         ((options: any) =>
           ({
+            toUIMessageStream: jest.fn().mockReturnValue(
+              aiActual.simulateReadableStream({
+                chunks: makeAssistantTextChunks(),
+              })
+            ),
             text: (async () => {
               if (options.onStepFinish) {
                 await options.onStepFinish({

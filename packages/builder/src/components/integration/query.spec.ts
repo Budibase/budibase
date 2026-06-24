@@ -2,6 +2,7 @@ import { it, expect, describe } from "vitest"
 import { applyBaseUrl } from "@budibase/shared-core"
 import {
   isValidEndpointUrl,
+  isValidEndpointUrlMissingProtocol,
   constructFullPath,
   convertPathVariables,
   validateQuery,
@@ -45,8 +46,8 @@ describe("isValidEndpointUrl", () => {
     expect(isValidEndpointUrl("")).toBe(false)
   })
 
-  it("rejects https:google.com (missing //)", () => {
-    expect(isValidEndpointUrl("https:google.com")).toBe(false)
+  it("rejects https:example.com (missing //)", () => {
+    expect(isValidEndpointUrl("https:example.com")).toBe(false)
   })
 
   it("rejects a non-http protocol", () => {
@@ -59,6 +60,38 @@ describe("isValidEndpointUrl", () => {
 
   it("rejects a URL with percent-encoded spaces in the hostname", () => {
     expect(isValidEndpointUrl("https://some%20url")).toBe(false)
+  })
+})
+
+describe("isValidEndpointUrlMissingProtocol", () => {
+  it("accepts a valid domain without a protocol", () => {
+    expect(isValidEndpointUrlMissingProtocol("example.com")).toBe(true)
+  })
+
+  it("accepts localhost without a protocol", () => {
+    expect(isValidEndpointUrlMissingProtocol("localhost")).toBe(true)
+  })
+
+  it("accepts localhost with a port without a protocol", () => {
+    expect(isValidEndpointUrlMissingProtocol("localhost:4001")).toBe(true)
+  })
+
+  it("accepts a valid domain and path without a protocol", () => {
+    expect(isValidEndpointUrlMissingProtocol("example.com/api/users")).toBe(
+      true
+    )
+  })
+
+  it("rejects a URL that already includes a protocol", () => {
+    expect(isValidEndpointUrlMissingProtocol("https://example.com")).toBe(false)
+  })
+
+  it("rejects a relative path", () => {
+    expect(isValidEndpointUrlMissingProtocol("api/v1/users")).toBe(false)
+  })
+
+  it("rejects a path with a leading slash", () => {
+    expect(isValidEndpointUrlMissingProtocol("/api/v1/users")).toBe(false)
   })
 })
 
@@ -89,6 +122,36 @@ describe("isValidEndpointUrl - HBS bindings", () => {
 
   it("rejects a malformed binding with no closing braces", () => {
     expect(isValidEndpointUrl("{{derp")).toBe(false)
+  })
+
+  it("accepts a binding containing internal whitespace", () => {
+    expect(
+      isValidEndpointUrl("https://api.example.com/{{ contact_id }}/users")
+    ).toBe(true)
+  })
+
+  it("accepts a URL that is entirely a binding with internal whitespace", () => {
+    expect(isValidEndpointUrl("{{ env.API_URL }}")).toBe(true)
+  })
+
+  it("rejects whitespace outside of a binding", () => {
+    expect(
+      isValidEndpointUrl("https://api.example.com/{{ contact_id }} /users")
+    ).toBe(false)
+  })
+
+  it("accepts multiple bindings that each contain internal whitespace", () => {
+    expect(
+      isValidEndpointUrl(
+        "https://api.example.com/{{ org_id }}/{{ contact_id }}"
+      )
+    ).toBe(true)
+  })
+
+  it("rejects whitespace between two bindings", () => {
+    expect(isValidEndpointUrl("https://api.example.com/{{ a }} {{ b }}")).toBe(
+      false
+    )
   })
 })
 

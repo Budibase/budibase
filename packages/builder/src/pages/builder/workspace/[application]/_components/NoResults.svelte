@@ -1,14 +1,12 @@
 <script lang="ts">
   import { Button, Icon, Layout } from "@budibase/bbui"
 
-  /* eslint-disable no-unused-vars */
   enum ResourceType {
     App = "app",
     Automation = "automation",
     Agent = "agent",
     API = "api",
   }
-  /* eslint-enable no-unused-vars */
 
   export let onCtaClick: () => void
   export let ctaText: string

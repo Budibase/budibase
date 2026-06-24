@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Body, Icon } from "@budibase/bbui"
   import type {
-    Agent,
+    AgentOperation,
     CaretPositionFn,
     EnrichedBinding,
     InsertAtPositionFn,
@@ -12,8 +12,10 @@
   import Panel from "@/components/design/Panel.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
+  import { contextMenuStore } from "@/stores/builder"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
+  import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
@@ -21,30 +23,34 @@
 
   let {
     open = false,
-    agent = $bindable(),
+    operation = $bindable(),
     promptBindings = [],
     bindingIcons = {},
     completions = [],
     toolsLoaded = false,
     availableTools = [],
     webSearchConfigured = false,
-    onClose = () => {},
-    onUpdated = () => {},
-    onAddApiConnection = () => {},
-    onConfigureWebSearch = () => {},
+    onClose,
+    onUpdated,
+    onAddApiConnection,
+    onConfigureWebSearch,
+    onRenameOperation,
+    onSetOperationLive,
   }: {
     open?: boolean
-    agent?: Agent
+    operation: AgentOperation
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
     webSearchConfigured?: boolean
-    onClose?: () => void
-    onUpdated?: () => void
-    onAddApiConnection?: () => void
-    onConfigureWebSearch?: () => void
+    onClose: () => void
+    onUpdated: () => Promise<boolean>
+    onAddApiConnection: () => void
+    onConfigureWebSearch: () => void
+    onRenameOperation: () => void
+    onSetOperationLive: (operationId: string, live: boolean) => Promise<boolean>
   } = $props()
 
   let insertAtPos: InsertAtPositionFn | undefined = $state(undefined)
@@ -78,7 +84,8 @@
       {} as Record<string, AgentTool[]>
     )
   )
-  let operationName = $derived(agent?.operationName?.trim())
+  let operationName = $derived(operation.name?.trim())
+  let operationLive = $derived(operation.live === true)
   let readableToRuntimeBinding = $derived.by(() =>
     Object.fromEntries(
       promptBindings
@@ -88,7 +95,7 @@
   )
   let includedToolRuntimeBindings = $derived(
     getIncludedToolRuntimeBindings(
-      agent?.promptInstructions,
+      operation.promptInstructions,
       readableToRuntimeBinding
     )
   )
@@ -99,10 +106,10 @@
   )
 
   const insertToolBinding = (readableBinding: string) => {
-    if (!agent) {
+    if (!operation) {
       return
     }
-    const currentValue = agent.promptInstructions || ""
+    const currentValue = operation.promptInstructions || ""
     const caretPos = getCaretPosition?.() ?? {
       start: currentValue.length,
       end: currentValue.length,
@@ -119,13 +126,13 @@
         cursor: { anchor: start + wrapped.length },
       })
     } else {
-      agent.promptInstructions =
+      operation.promptInstructions =
         currentValue.slice(0, start) + wrapped + currentValue.slice(end)
     }
   }
 
   const handleToolClick = (tool: AgentTool) => {
-    if (!agent || !tool.readableBinding) {
+    if (!operation || !tool.readableBinding) {
       return
     }
     insertToolBinding(tool.readableBinding)
@@ -147,15 +154,49 @@
     str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
   const removeToolBindingFromPrompt = (tool: AgentTool) => {
-    if (!agent || !tool.readableBinding) {
+    if (!operation || !tool.readableBinding) {
       return
     }
-    const current = agent.promptInstructions || ""
+    const current = operation.promptInstructions || ""
     const binding = escapeRegExp(tool.readableBinding)
     const regex = new RegExp(`\\{\\{\\s*${binding}\\s*\\}\\}`, "g")
     const next = current.replace(regex, "").replace(/\n{3,}/g, "\n\n")
-    agent.promptInstructions = next
+    operation.promptInstructions = next
     onUpdated()
+  }
+
+  const setOperationLive = async (nextLive: boolean) => {
+    if (operation.live === nextLive) {
+      return
+    }
+    const previousLive = operation.live
+    operation.live = nextLive
+    const saveSucceeded = await onSetOperationLive(operation.id, nextLive)
+    if (saveSucceeded === false) {
+      operation.live = previousLive
+    }
+  }
+
+  const openHeaderMenu = (event: MouseEvent) => {
+    event.stopPropagation()
+    contextMenuStore.open(
+      "agent-operation-panel",
+      [
+        {
+          icon: operationLive ? "stop" : "play",
+          name: operationLive ? "Stop" : "Set live",
+          visible: true,
+          callback: async () => await setOperationLive(!operationLive),
+        },
+        {
+          icon: "pencil",
+          name: "Rename",
+          visible: true,
+          callback: onRenameOperation,
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
   }
 </script>
 
@@ -183,117 +224,130 @@
       maxWidthRatio={0.8}
       position="right"
     >
-      <Panel
-        title={operationName}
-        showCloseButton
-        onClickCloseButton={onClose}
-        resizable
-      >
-        <div class="operation-panel">
-          <div class="operation-panel-content">
-            <div class="operation-panel-section">
-              <div class="instructions-header">
-                <Body size="S" color="var(--spectrum-global-color-gray-900)">
-                  Instructions
-                </Body>
-                <div class="instructions-actions">
-                  <GenerateInstructionsControl
-                    triggerLabel="Help write instructions"
-                    promptInstructions={agent?.promptInstructions || ""}
-                    {promptBindings}
-                    {bindingIcons}
-                    onApplyInstructions={instructions => {
-                      if (!agent) return
-                      agent.promptInstructions = instructions
-                      onUpdated()
-                    }}
+      <Panel resizable noHeaderBorder>
+        <div slot="panel-header-content" class="operation-panel-header">
+          <div class="operation-panel-title">
+            <Body
+              size="S"
+              weight="500"
+              color="var(--spectrum-global-color-gray-900)"
+            >
+              {operationName}
+            </Body>
+          </div>
+          <div class="operation-panel-header-actions">
+            <OperationLiveBadge
+              live={operationLive}
+              showMenuIcon
+              onclick={openHeaderMenu}
+            />
+            <Icon name="x" hoverable on:click={onClose} />
+          </div>
+        </div>
+
+        <div class="operation-panel-content">
+          <div class="operation-panel-section">
+            <div class="instructions-header">
+              <Body size="S" color="var(--spectrum-global-color-gray-900)">
+                Instructions
+              </Body>
+              <div class="instructions-actions">
+                <GenerateInstructionsControl
+                  triggerLabel="Help write instructions"
+                  promptInstructions={operation.promptInstructions || ""}
+                  {promptBindings}
+                  {bindingIcons}
+                  onApplyInstructions={instructions => {
+                    if (!operation) return
+                    operation.promptInstructions = instructions
+                    onUpdated()
+                  }}
+                />
+              </div>
+            </div>
+
+            <div class="instructions-editor">
+              <div class="editor-body">
+                {#if toolsLoaded}
+                  {#key resolvedIconCount}
+                    <CodeEditor
+                      value={operation.promptInstructions || ""}
+                      bindings={promptBindings}
+                      {bindingIcons}
+                      {completions}
+                      mode={EditorModes.Handlebars}
+                      bind:insertAtPos
+                      renderBindingsAsTags={true}
+                      renderMarkdownDecorations={true}
+                      placeholder=""
+                      on:change={event => {
+                        if (!operation) return
+                        operation.promptInstructions = event.detail || ""
+                      }}
+                      on:blur={onUpdated}
+                      bind:getCaretPosition
+                    />
+                  {/key}
+                {/if}
+              </div>
+              <div class="editor-footer">
+                <p class="footer-hint">
+                  Use <code>{`{{`}</code> to add tools to your instructions, or use
+                  the button to the right.
+                </p>
+                <div class="tools-popover-container">
+                  <ToolsDropdown
+                    {filteredTools}
+                    {toolSections}
+                    bind:toolSearch
+                    webSearchEnabled={webSearchConfigured}
+                    onToolClick={handleToolClick}
+                    {onAddApiConnection}
+                    {onConfigureWebSearch}
                   />
                 </div>
               </div>
-
-              <div class="instructions-editor">
-                <div class="editor-body">
-                  {#if toolsLoaded}
-                    {#key resolvedIconCount}
-                      <CodeEditor
-                        value={agent?.promptInstructions || ""}
-                        bindings={promptBindings}
-                        {bindingIcons}
-                        {completions}
-                        mode={EditorModes.Handlebars}
-                        bind:insertAtPos
-                        renderBindingsAsTags={true}
-                        renderMarkdownDecorations={true}
-                        placeholder=""
-                        on:change={event => {
-                          if (!agent) return
-                          agent.promptInstructions = event.detail || ""
-                        }}
-                        on:blur={onUpdated}
-                        bind:getCaretPosition
-                      />
-                    {/key}
-                  {/if}
-                </div>
-                <div class="editor-footer">
-                  <p class="footer-hint">
-                    Use <code>{`{{`}</code> to add tools to your instructions, or
-                    use the button to the right.
-                  </p>
-                  <div class="tools-popover-container">
-                    <ToolsDropdown
-                      {filteredTools}
-                      {toolSections}
-                      bind:toolSearch
-                      webSearchEnabled={webSearchConfigured}
-                      onToolClick={handleToolClick}
-                      {onAddApiConnection}
-                      {onConfigureWebSearch}
-                    />
-                  </div>
-                </div>
-              </div>
-              {#if includedToolsWithDetails.length > 0}
-                <div class="tools-list">
-                  {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
-                    <div class="tool-card">
-                      <div class="tool-main">
-                        <div class="tool-item-icon">
-                          <ToolIcon
-                            icon={tool.icon}
-                            size="S"
-                            fallbackIcon="Wrench"
-                          />
-                        </div>
-                        <div class="tool-label">
-                          <span>
-                            {tool.sourceLabel || "Tool"}:
-                          </span>
-                          <span>{formatToolLabel(tool)}</span>
-                        </div>
+            </div>
+            {#if includedToolsWithDetails.length > 0}
+              <div class="tools-list">
+                {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
+                  <div class="tool-card">
+                    <div class="tool-main">
+                      <div class="tool-item-icon">
+                        <ToolIcon
+                          icon={tool.icon}
+                          size="S"
+                          fallbackIcon="Wrench"
+                        />
                       </div>
-                      <div class="tool-actions">
-                        <button
-                          class="tool-close-button"
-                          type="button"
-                          onclick={() => removeToolBindingFromPrompt(tool)}
-                        >
-                          <Icon
-                            name="x"
-                            size="XS"
-                            color="var(--spectrum-global-color-gray-600)"
-                            hoverable
-                          />
-                        </button>
+                      <div class="tool-label">
+                        <span>
+                          {tool.sourceLabel || "Tool"}:
+                        </span>
+                        <span>{formatToolLabel(tool)}</span>
                       </div>
                     </div>
-                  {/each}
-                </div>
-              {/if}
-            </div>
-
-            <Knowledge></Knowledge>
+                    <div class="tool-actions">
+                      <button
+                        class="tool-close-button"
+                        type="button"
+                        onclick={() => removeToolBindingFromPrompt(tool)}
+                      >
+                        <Icon
+                          name="x"
+                          size="XS"
+                          color="var(--spectrum-global-color-gray-600)"
+                          hoverable
+                        />
+                      </button>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {/if}
           </div>
+
+          <Knowledge bind:operation {onUpdated} />
         </div>
       </Panel>
     </ResizablePanel>
@@ -318,27 +372,37 @@
     bottom: 0;
     border-top: var(--border-light);
     z-index: 99;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .operation-panel {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
   }
 
   .operation-panel-content {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
     padding: var(--spacing-xl);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
   }
+
+  .operation-panel-header {
+    display: flex;
+    gap: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
+  }
+
+  .operation-panel-title {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .operation-panel-title :global(p) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .operation-panel-header-actions {
+    display: flex;
+    gap: var(--spacing-s);
+  }
+
   .operation-panel-section {
     display: flex;
     flex-direction: column;
@@ -355,7 +419,7 @@
   .instructions-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-s);
   }
 
   .instructions-editor {
@@ -380,8 +444,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 8px 12px;
+    gap: var(--spacing-s);
+    padding: var(--spacing-s) var(--spacing-l);
     border-top: 1px solid var(--spectrum-global-color-gray-200);
     background: var(--background);
   }

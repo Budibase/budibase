@@ -1,3 +1,5 @@
+import { features } from "@budibase/backend-core"
+import { FeatureFlag } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 
@@ -19,15 +21,31 @@ describe("agent duplicate", () => {
     cleanupAIConfig = undefined
   })
 
+  const withMultipleOperationsEnabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.MULTIPLE_OPERATIONS]: true },
+      f
+    )
+  }
+
   it("duplicates an agent with a unique copy name", async () => {
-    const created = await config.api.agent.create({
-      name: "Support Agent",
-      aiconfig: "default",
-      description: "Support assistant",
-      promptInstructions: "Be helpful",
-      operationName: "Customer support",
-      live: true,
-    })
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Support Agent",
+        aiconfig: "default",
+        description: "Support assistant",
+        live: true,
+      },
+      {
+        id: "operation_1",
+        name: "Customer support",
+        live: false,
+        promptInstructions: "Be helpful",
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+      }
+    )
 
     const duplicate = await config.api.agent.duplicate(created._id!)
 
@@ -36,28 +54,157 @@ describe("agent duplicate", () => {
     expect(duplicate.name).not.toEqual(created.name)
     expect(duplicate.name).toContain("Support Agent")
     expect(duplicate.description).toEqual(created.description)
-    expect(duplicate.promptInstructions).toEqual(created.promptInstructions)
-    expect(duplicate.operationName).toEqual(created.operationName)
+    expect(duplicate.operations?.[0]?.promptInstructions).toEqual(
+      created.operations?.[0]?.promptInstructions
+    )
+    expect(duplicate.operations?.[0]?.name).toEqual(
+      created.operations?.[0]?.name
+    )
     expect(duplicate.live).toEqual(created.live)
   })
 
-  it("persists operationName on create and update", async () => {
-    const created = await config.api.agent.create({
-      name: "Operation Name Agent",
-      aiconfig: "default",
-      operationName: "Main triage flow",
-    })
-    expect(created.operationName).toEqual("Main triage flow")
+  it("persists operation name on create and update", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Operation Name Agent",
+        aiconfig: "default",
+      },
+      {
+        id: "operation_1",
+        name: "Main triage flow",
+        live: false,
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+      }
+    )
+    expect(created.operations?.[0]?.name).toEqual("Main triage flow")
 
-    const updated = await config.api.agent.update({
-      ...created,
-      operationName: "Escalation flow",
-    })
-    expect(updated.operationName).toEqual("Escalation flow")
+    const updated = await config.api.agent.updateOperation(
+      created._id!,
+      created.operations?.[0]?.id || "operation_1",
+      {
+        name: "Escalation flow",
+      }
+    )
+    expect(updated.operations?.[0]?.name).toEqual("Escalation flow")
 
     const { agents } = await config.api.agent.fetch()
     const fetched = agents.find(agent => agent._id === created._id)
-    expect(fetched?.operationName).toEqual("Escalation flow")
+    expect(fetched?.operations?.[0]?.name).toEqual("Escalation flow")
+  })
+
+  it("creates, updates, and deletes an operation via dedicated endpoints", async () => {
+    const created = await config.api.agent.create({
+      name: "Operation CRUD Agent",
+      aiconfig: "default",
+    })
+
+    const withOperation = await config.api.agent.createOperation(created._id!, {
+      id: "operation_2",
+      name: "Support flow",
+      live: false,
+      promptInstructions: "Help users",
+      enabledTools: [],
+      allowKnowledgeSourceDownload: true,
+    })
+    expect(withOperation.operations?.map(operation => operation.id)).toContain(
+      "operation_2"
+    )
+
+    const renamed = await config.api.agent.updateOperation(
+      created._id!,
+      "operation_2",
+      {
+        name: "Escalation flow",
+      }
+    )
+    expect(
+      renamed.operations?.find(operation => operation.id === "operation_2")
+        ?.name
+    ).toEqual("Escalation flow")
+
+    const removed = await config.api.agent.deleteOperation(
+      created._id!,
+      "operation_2"
+    )
+    expect(
+      removed.operations?.find(operation => operation.id === "operation_2")
+    ).toBeUndefined()
+  })
+
+  it("rejects creating an operation with a duplicate name for the same agent", async () => {
+    await withMultipleOperationsEnabled(async () => {
+      const created = await config.api.agent.createWithOperation(
+        {
+          name: "Duplicate Operation Agent",
+          aiconfig: "default",
+        },
+        {
+          id: "operation_1",
+          name: "Customer support",
+          live: false,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+
+      await config.api.agent.createOperation(
+        created._id!,
+        {
+          id: "operation_2",
+          name: "  customer SUPPORT  ",
+          live: false,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Operation with name 'customer SUPPORT' already exists.",
+          },
+        }
+      )
+    })
+  })
+
+  it("rejects renaming an operation to a duplicate name for the same agent", async () => {
+    await withMultipleOperationsEnabled(async () => {
+      const created = await config.api.agent.createWithOperation(
+        {
+          name: "Duplicate Rename Agent",
+          aiconfig: "default",
+        },
+        {
+          id: "operation_1",
+          name: "Customer support",
+          live: false,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+
+      await config.api.agent.createOperation(created._id!, {
+        id: "operation_2",
+        name: "Escalation flow",
+        live: false,
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+      })
+
+      await config.api.agent.updateOperation(
+        created._id!,
+        "operation_2",
+        {
+          name: " customer support ",
+        },
+        {
+          status: 400,
+          body: {
+            message: "Operation with name 'customer support' already exists.",
+          },
+        }
+      )
+    })
   })
 
   it("returns 404 for unknown agent", async () => {

@@ -160,11 +160,19 @@ export async function clearLogError(
     const metadata = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
+      delete metadata.automationStops
     } else if (
       metadata.automationErrors &&
       metadata.automationErrors[automationId]
     ) {
       delete metadata.automationErrors[automationId]
+    }
+    if (
+      automationId &&
+      metadata.automationStops &&
+      metadata.automationStops[automationId]
+    ) {
+      delete metadata.automationStops[automationId]
     }
     await db.put(metadata)
     await cache.workspace.invalidateWorkspaceMetadata(metadata.appId, metadata)
@@ -394,7 +402,7 @@ export async function test(
       return await triggers.externalTrigger(
         { ...automation, disabled: false },
         { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
-        { getResponses: true, onProgress: emitProgress }
+        { getResponses: true, onProgress: emitProgress, isTestRun: true }
       )
     })
     await events.automation.tested(automation)
