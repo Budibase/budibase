@@ -137,6 +137,7 @@ export type FilterStepInputs = {
   field: any
   condition: FilterCondition
   value: any
+  notify?: boolean
 }
 
 export type FilterStepOutputs = BaseAutomationOutputs & {
