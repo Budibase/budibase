@@ -1,4 +1,4 @@
-import { findHBSBlocks } from "@budibase/string-templates"
+import { findHBSBlocks, FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 import restUtils from "@/helpers/data/utils"
 import {
   runtimeToReadableMap,
@@ -475,12 +475,32 @@ export function keyValueArrayToRecord(
 }
 
 export function isValidEndpointUrl(url: string | undefined): boolean {
-  if (!url || /\s/.test(url)) return false
+  if (!url) return false
   if (!/^(https?:\/\/|\{\{)/.test(url)) return false
+  const withoutBindings = url.replace(new RegExp(FIND_ANY_HBS_REGEX), "")
+  if (/\s/.test(withoutBindings)) return false
   if (findHBSBlocks(url).length > 0) return true
   try {
     new URL(url)
     return true
+  } catch {
+    return false
+  }
+}
+
+export function isValidEndpointUrlMissingProtocol(
+  url: string | undefined
+): boolean {
+  if (!url) return false
+  if (/^(https?:\/\/|\{\{)/.test(url)) return false
+  if (url.startsWith("/") || /\s/.test(url)) return false
+  if (/^[a-z][a-z\d+.-]*:\/\//i.test(url)) return false
+  try {
+    const parsed = new URL(`https://${url}`)
+    return (
+      parsed.hostname === "localhost" ||
+      /^[^/?#]+\.[^/?#]+/.test(parsed.hostname)
+    )
   } catch {
     return false
   }

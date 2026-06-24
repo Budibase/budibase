@@ -698,6 +698,51 @@ describe("agent slack integration provisioning", () => {
       expect(conversations[0]?.messages).toHaveLength(2)
     })
 
+    it("formats Slack assistant replies using mrkdwn", async () => {
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [
+              {
+                type: "text",
+                text: "# Summary\nUse **bold** and *italic*.\n- First bullet\n[Leave link](https://example.com/docs)",
+              },
+            ],
+          },
+        ] as any,
+        assistantText:
+          "# Summary\nUse **bold** and *italic*.\n- First bullet\n[Leave link](https://example.com/docs)",
+        title: "Mock conversation",
+      })
+
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "*Summary*\nUse *bold* and _italic_.\n• First bullet\n[Leave link](https://example.com/docs)"
+      )
+    })
+
     it("appends downloadable RAG source links to Slack assistant replies", async () => {
       mockedGetFileUrlForAgent.mockResolvedValue(
         "/files/signed/prod-budi-app-assets/source.pdf"
@@ -818,6 +863,7 @@ describe("agent slack integration provisioning", () => {
             filename: "Source.pdf",
           },
         ],
+        allowKnowledgeSourceDownload: false,
         title: "Mock conversation",
       })
 

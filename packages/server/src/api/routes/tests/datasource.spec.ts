@@ -128,6 +128,98 @@ describe("/datasources", () => {
     })
   })
 
+  describe("secret redaction", () => {
+    it("should redact and preserve MongoDB connection strings", async () => {
+      const connectionString =
+        "mongodb://leakuser:SuperSecretPw123@prod-db.internal:27017/payments"
+      const mongoDatasource = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.MONGODB,
+        config: {
+          connectionString,
+          db: "payments",
+        },
+      })
+
+      expect(mongoDatasource.config!.connectionString).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const fetchedDatasource = await config.api.datasource.get(
+        mongoDatasource._id!
+      )
+      expect(fetchedDatasource.config!.connectionString).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const datasources = await config.api.datasource.fetch()
+      expect(datasources).toContainEqual(
+        expect.objectContaining({
+          _id: mongoDatasource._id,
+          config: expect.objectContaining({
+            connectionString: PASSWORD_REPLACEMENT,
+          }),
+        })
+      )
+
+      await config.api.datasource.update(fetchedDatasource)
+
+      const storedConnectionString = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const ds = await sdk.datasources.get(mongoDatasource._id!)
+          return ds.config!.connectionString
+        }
+      )
+      expect(storedConnectionString).toBe(connectionString)
+    })
+
+    it("should redact and preserve Firestore private keys", async () => {
+      const privateKey =
+        "-----BEGIN PRIVATE KEY-----\nMIISECRETKEYMATERIAL\n-----END PRIVATE KEY-----"
+      const firestoreDatasource = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.FIRESTORE,
+        config: {
+          email: "service-account@example.iam.gserviceaccount.com",
+          privateKey,
+          projectId: "project-id",
+          databaseId: "(default)",
+        },
+      })
+
+      expect(firestoreDatasource.config!.privateKey).toBe(PASSWORD_REPLACEMENT)
+
+      const fetchedDatasource = await config.api.datasource.get(
+        firestoreDatasource._id!
+      )
+      expect(fetchedDatasource.config!.privateKey).toBe(PASSWORD_REPLACEMENT)
+
+      const datasources = await config.api.datasource.fetch()
+      expect(datasources).toContainEqual(
+        expect.objectContaining({
+          _id: firestoreDatasource._id,
+          config: expect.objectContaining({
+            privateKey: PASSWORD_REPLACEMENT,
+          }),
+        })
+      )
+
+      await config.api.datasource.update(fetchedDatasource)
+
+      const storedPrivateKey = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const ds = await sdk.datasources.get(firestoreDatasource._id!)
+          return ds.config!.privateKey
+        }
+      )
+      expect(storedPrivateKey).toBe(privateKey)
+    })
+  })
+
   describe("dynamic variables", () => {
     it("should invalidate changed or removed variables", async () => {
       nock("http://www.example.com")
@@ -775,6 +867,14 @@ describe("/datasources", () => {
         config,
         method: "GET",
         url: `/api/datasources`,
+      })
+    })
+
+    it("should apply authorization to get endpoint", async () => {
+      await checkBuilderEndpoint({
+        config,
+        method: "GET",
+        url: `/api/datasources/${datasource._id}`,
       })
     })
 
