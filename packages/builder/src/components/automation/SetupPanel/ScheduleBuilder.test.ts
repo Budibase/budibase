@@ -5,15 +5,16 @@ import MockCronBuilder from "@/test/mocks/MockCronBuilder.svelte"
 import MockLayout from "@/test/mocks/MockLayout.svelte"
 import MockSelect from "@/test/mocks/MockSelect.svelte"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
+import MockTimeField from "@/test/mocks/MockTimeField.svelte"
 import ScheduleBuilderHarness from "@/test/mocks/ScheduleBuilderHarness.svelte"
 import { REBOOT_CRON } from "@budibase/shared-core"
 
 vi.mock("@budibase/bbui", () => ({
-  DatePicker: MockSlot,
   Label: MockSlot,
   Layout: MockLayout,
   Multiselect: MockSelect,
   Select: MockSelect,
+  TimeField: MockTimeField,
 }))
 
 vi.mock("./CronBuilder.svelte", () => ({
@@ -56,7 +57,7 @@ describe("ScheduleBuilder", () => {
     })
 
     expect(getByLabelText("Period")).toHaveValue("daily")
-    expect(getByTestId("date-picker")).toHaveAttribute("data-value", "09:00")
+    expect(getByTestId("time-field")).toHaveAttribute("data-value", "09:00")
   })
 
   it("hydrates a weekly cron expression into the friendly controls", () => {

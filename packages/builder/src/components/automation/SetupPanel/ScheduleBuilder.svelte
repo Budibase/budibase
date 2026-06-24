@@ -1,10 +1,10 @@
 <script lang="ts">
   import {
-    DatePicker,
     Label,
     Layout,
     Multiselect,
     Select,
+    TimeField,
   } from "@budibase/bbui"
   import CronBuilder from "./CronBuilder.svelte"
   import NextExecutionsTable from "./NextExecutionsTable.svelte"
@@ -396,10 +396,7 @@
         }}
       />
     {/if}
-    <div>
-      <Label>Time</Label>
-      <DatePicker bind:value={time} timeOnly />
-    </div>
+    <TimeField label="Time" bind:value={time} disableClearing />
     {#if error}
       <Label><div class="error">{error}</div></Label>
     {/if}
