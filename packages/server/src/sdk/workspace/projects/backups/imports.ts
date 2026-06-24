@@ -437,11 +437,7 @@ const sanitizeImportedDoc = (
     remapped.isDefault = false
   }
 
-  sanitizeImportedProjectAssignments(
-    remapped,
-    resourceType,
-    importedProjectId
-  )
+  sanitizeImportedProjectAssignments(remapped, resourceType, importedProjectId)
   return remapped
 }
 

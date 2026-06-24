@@ -603,9 +603,9 @@ describe("/projects", () => {
         },
       })
 
-      expect(updatedDatasource.entities![externalTable.name].projectIds).toEqual(
-        [project._id]
-      )
+      expect(
+        updatedDatasource.entities![externalTable.name].projectIds
+      ).toEqual([project._id])
     })
   })
 
