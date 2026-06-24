@@ -3,6 +3,10 @@
   export let timeOnly = false
 </script>
 
-<div data-testid="date-picker" data-disable-clear={disableClear} data-time-only={timeOnly}>
+<div
+  data-testid="date-picker"
+  data-disable-clear={disableClear}
+  data-time-only={timeOnly}
+>
   <slot />
 </div>
