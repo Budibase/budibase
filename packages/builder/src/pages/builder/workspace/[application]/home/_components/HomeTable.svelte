@@ -25,6 +25,7 @@
   export let selectedProjectName = ""
   export let sortColumn: HomeSortColumn
   export let sortOrder: HomeSortOrder
+  export let variant: "default" | "panel" = "default"
 
   const dispatch = createEventDispatcher<{
     openRow: HomeRow
@@ -74,6 +75,16 @@
     return "var(--spectrum-global-color-gray-600)"
   }
 
+  const getProjectCount = (row: HomeRow) =>
+    row.projectCount ?? row.projectIds?.length ?? 0
+
+  const getCreatedDisplay = (row: HomeRow) => {
+    if (!row.createdAt) {
+      return "-"
+    }
+    return Helpers.getDateDisplayValue(row.createdAt)
+  }
+
   export let highlightedRowId: string | null = null
 
   const openContextMenu = (event: MouseEvent, row: HomeRow) => {
@@ -81,10 +92,14 @@
     event.stopPropagation()
     dispatch("openContextMenu", { row, x: event.clientX, y: event.clientY })
   }
+
+  $: gridColumns = projectsEnabled
+    ? "1fr 140px 140px 140px 140px 60px"
+    : "1fr 140px 140px 140px 60px"
 </script>
 
-<div class="table-wrapper">
-  <div class="table" class:table--loading={loading}>
+<div class="table-wrapper" class:table-wrapper--panel={variant === "panel"}>
+  <div class="table" class:table--loading={loading} style="--grid-columns: {gridColumns}">
     {#if allRowsCount > 0}
       <div class="table-header" role="row">
         <button
@@ -108,7 +123,7 @@
 
         <button
           type="button"
-          class="header-cell header-cell--with-icon"
+          class="header-cell"
           on:click={() => headerClick("type")}
         >
           <span>Type</span>
@@ -125,9 +140,31 @@
           </span>
         </button>
 
+        {#if projectsEnabled}
+          <button
+            type="button"
+            class="header-cell"
+            on:click={() => headerClick("projects")}
+          >
+            <span>Projects</span>
+            <span
+              class="sort-indicator"
+              class:sort-indicator--active={isSorted("projects")}
+              class:sort-indicator--up={isSorted("projects") &&
+                sortOrder === "desc"}
+            >
+              <Icon
+                name="caret-down"
+                size="S"
+                color="var(--spectrum-global-color-gray-700)"
+              />
+            </span>
+          </button>
+        {/if}
+
         <button
           type="button"
-          class="header-cell header-cell--with-icon"
+          class="header-cell"
           on:click={() => headerClick("status")}
         >
           <span>Status</span>
@@ -147,15 +184,18 @@
 
         <button
           type="button"
-          class="header-cell header-cell--with-icon"
-          on:click={() => headerClick("updated")}
+          class="header-cell"
+          on:click={() => headerClick(projectsEnabled ? "created" : "updated")}
         >
-          <span>Updated</span>
+          <span>{projectsEnabled ? "Created" : "Updated"}</span>
           <span
             class="sort-indicator"
-            class:sort-indicator--active={isSorted("updated")}
-            class:sort-indicator--up={isSorted("updated") &&
-              sortOrder === "desc"}
+            class:sort-indicator--active={isSorted(
+              projectsEnabled ? "created" : "updated"
+            )}
+            class:sort-indicator--up={isSorted(
+              projectsEnabled ? "created" : "updated"
+            ) && sortOrder === "desc"}
           >
             <Icon
               name="caret-down"
@@ -180,30 +220,16 @@
           on:contextmenu={e => openContextMenu(e, row)}
         >
           <div class="cell name-cell">
-            <div class="icon-wrapper">
-              <Icon
-                name={row.icon}
-                size="S"
-                color={row.iconColor}
-                weight="fill"
-              />
-            </div>
+            <Icon
+              name={row.icon}
+              size="S"
+              color={row.iconColor}
+              weight="fill"
+            />
             <div class="name-content">
-              <div class="name-line">
-                <Body size="S" color="var(--spectrum-global-color-gray-900)"
-                  >{row.name}</Body
-                >
-                {#if projectsEnabled && row.projectName}
-                  <span
-                    class="project-chip"
-                    style={`--project-color: ${row.projectColor || "#8CA171"}`}
-                    title={row.projectName}
-                  >
-                    <span class="project-chip__dot"></span>
-                    <span class="project-chip__name">{row.projectName}</span>
-                  </span>
-                {/if}
-              </div>
+              <Body size="S" color="var(--spectrum-global-color-gray-800)"
+                >{row.name}</Body
+              >
             </div>
           </div>
 
@@ -213,6 +239,14 @@
             </Body>
           </div>
 
+          {#if projectsEnabled}
+            <div class="cell">
+              <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                {getProjectCount(row)}
+              </Body>
+            </div>
+          {/if}
+
           <div class="cell">
             <Body size="S" color={getStatusColor(getRowStatusLabel(row))}>
               {getRowStatusLabel(row)}
@@ -220,7 +254,11 @@
           </div>
 
           <div class="cell">
-            {#if row.updatedAt}
+            {#if projectsEnabled}
+              <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                {getCreatedDisplay(row)}
+              </Body>
+            {:else if row.updatedAt}
               <AbsTooltip text={Helpers.getDateDisplayValue(row.updatedAt)}>
                 <Body size="S" color="var(--spectrum-global-color-gray-700)">
                   {dayjs(row.updatedAt).fromNow()}
@@ -278,6 +316,10 @@
     scrollbar-width: none;
   }
 
+  .table-wrapper--panel {
+    border-radius: 0;
+  }
+
   .table-wrapper::-webkit-scrollbar {
     display: none;
   }
@@ -290,10 +332,15 @@
     min-width: 700px;
   }
 
+  .table-wrapper--panel .table {
+    border-radius: 0;
+    min-width: 0;
+  }
+
   .table-header,
   .row {
     display: grid;
-    grid-template-columns: 1fr 200px 200px 200px 50px;
+    grid-template-columns: var(--grid-columns);
     border-bottom: var(--border);
     align-items: center;
   }
@@ -303,54 +350,17 @@
     min-width: 0;
   }
 
-  .name-line {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .project-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    border-radius: 999px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    padding: 2px var(--spacing-s);
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--spectrum-global-color-gray-800);
-    background: var(--spectrum-global-color-gray-75);
-    max-width: 180px;
-  }
-
-  .project-chip__name {
+  .name-content :global(.spectrum-Body) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .project-chip__dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--project-color);
-    flex-shrink: 0;
-  }
-
-  @media (max-width: 1200px) {
-    .table-header,
-    .row {
-      grid-template-columns: 1fr 140px 140px 160px 45px;
-    }
-  }
-
   .table-header {
-    padding: 12px;
+    padding: 8px 12px;
     font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-700);
-    background: transparent;
+    background: var(--spectrum-global-color-gray-100);
   }
 
   .header-cell {
@@ -394,22 +404,22 @@
   .table-body {
     display: flex;
     flex-direction: column;
-    background: var(--background-alt);
+    background: var(--spectrum-global-color-gray-100);
   }
 
   .row {
-    padding: 9px 12px;
+    padding: 8px 12px;
     text-align: left;
     border: none;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    background: var(--background-alt);
+    background: var(--spectrum-global-color-gray-100);
     transition: background 130ms ease-out;
     cursor: pointer;
   }
 
   .row:hover,
   .row.active {
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .row:hover .actions > *,
@@ -442,21 +452,7 @@
   }
 
   .name-cell {
-    gap: var(--spacing-m);
-  }
-
-  .name-line :global(.spectrum-Body) {
-    min-width: 0;
-  }
-
-  .icon-wrapper {
-    width: 24px;
-    height: 24px;
-    border-radius: var(--border-radius-s);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--spectrum-global-color-gray-200);
+    gap: 12px;
   }
 
   .actions {
@@ -489,13 +485,6 @@
 
   .empty {
     padding: var(--spacing-l) 0;
-  }
-
-  @media (max-width: 900px) {
-    .table-header,
-    .row {
-      grid-template-columns: 1fr 120px 120px 140px 40px;
-    }
   }
 
   @media (hover: none), (pointer: coarse) {

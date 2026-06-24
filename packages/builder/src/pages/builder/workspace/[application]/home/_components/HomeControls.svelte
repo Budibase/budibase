@@ -5,6 +5,7 @@
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
 
   export let typeFilter: HomeType = "all"
+  export let variant: "default" | "panel" = "default"
 
   interface HomeFilterOption {
     label: string
@@ -16,23 +17,15 @@
     typeChange: HomeType
   }>()
 
-  const getOptions = () => {
-    const options: HomeFilterOption[] = []
-
-    options.push({ label: "Agents", value: "agent" })
-    options.push({ label: "Automations", value: "automation" })
-    options.push({ label: "Apps", value: "app" })
-
-    return options
-  }
-
-  $: tabOptions = [
-    { label: "All", value: "all" },
-    ...getOptions(),
-  ] satisfies HomeFilterOption[]
+  const tabOptions: HomeFilterOption[] = [
+    { label: "All tools", value: "all" },
+    { label: "Agents", value: "agent" },
+    { label: "Automations", value: "automation" },
+    { label: "Apps", value: "app" },
+  ]
 </script>
 
-<div class="filter">
+<div class="filter" class:filter--panel={variant === "panel"}>
   {#each tabOptions as option}
     <span
       class="filter-tab"
@@ -60,10 +53,15 @@
 <style>
   .filter {
     display: flex;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs);
+    gap: 4px;
+    padding: 4px;
     border-radius: var(--border-radius-s);
     background: var(--spectrum-global-color-gray-100);
+  }
+
+  .filter--panel {
+    background: transparent;
+    padding: 0 4px;
   }
 
   .filter-tab {
@@ -80,15 +78,19 @@
       border-color 130ms ease-out,
       background 130ms ease-out;
     border: 1px solid transparent;
-    padding: var(--spacing-xs) var(--spacing-s);
+    padding: 2px 8px;
     height: auto;
+  }
+
+  .filter--panel :global(.spectrum-ActionButton.is-selected) {
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .filter :global(.spectrum-ActionButton-label) {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: 4px;
     font-size: var(--font-size-s);
-    font-weight: 500;
+    font-weight: 400;
   }
 </style>
