@@ -79,6 +79,8 @@
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 2.5
   const ACTION_PANEL_DEFAULT_WIDTH = 480
+  const ACTION_PANEL_MIN_WIDTH = 360
+  const ACTION_PANEL_MAX_WIDTH_RATIO = 0.6
   const ACTION_PANEL_STORAGE_KEY = "automation-side-panel-width"
 
   const memoAutomation = memo(automation)
@@ -250,9 +252,7 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedNodeId
     visibleSelectionRequest = $automationStore.selectedNodeId
-    ensureSelectedNodeVisible($automationStore.selectedNodeId, {
-      rightInset: getActionPanelWidth(),
-    })
+    ensureSelectedNodeVisible($automationStore.selectedNodeId)
   }
 
   $: if (
@@ -263,15 +263,12 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
     visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
-    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId, {
-      rightInset: getActionPanelWidth(),
-    })
+    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
   }
 
   $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
     $automationStore.actionPanelBlock
   )
-
   $: if (
     actionPanelTargetNodeId &&
     actionPanelTargetNodeId !== lastVisibleActionTargetCheck &&
@@ -280,9 +277,7 @@
   ) {
     lastVisibleActionTargetCheck = actionPanelTargetNodeId
     visibleSelectionRequest = actionPanelTargetNodeId
-    ensureSelectedNodeVisible(actionPanelTargetNodeId, {
-      rightInset: getActionPanelWidth(),
-    })
+    ensureActionPanelTargetVisible(actionPanelTargetNodeId)
   }
 
   // Check if automation has unpublished changes
@@ -470,10 +465,17 @@
   }
 
   const getActionPanelWidth = () => {
-    const storedWidth = Number(localStorage?.getItem(ACTION_PANEL_STORAGE_KEY))
-    return Number.isFinite(storedWidth) && storedWidth > 0
-      ? storedWidth
-      : ACTION_PANEL_DEFAULT_WIDTH
+    const storedWidth = Number(localStorage.getItem(ACTION_PANEL_STORAGE_KEY))
+    const fallbackWidth = ACTION_PANEL_DEFAULT_WIDTH
+    const rawWidth =
+      Number.isFinite(storedWidth) && storedWidth > 0
+        ? storedWidth
+        : fallbackWidth
+    const maxWidth = Math.max(
+      ACTION_PANEL_MIN_WIDTH,
+      Math.floor(window.innerWidth * ACTION_PANEL_MAX_WIDTH_RATIO)
+    )
+    return Math.max(ACTION_PANEL_MIN_WIDTH, Math.min(rawWidth, maxWidth))
   }
 
   const ensureSelectedNodeVisible = async (
@@ -498,6 +500,71 @@
     const margin = 24
     const rightInset = options.rightInset ?? 0
     const visiblePaneWidth = Math.max(paneRect.width - rightInset, 0)
+    const nodeRight =
+      position.x * currentViewport.zoom +
+      currentViewport.x +
+      nodeWidth * currentViewport.zoom
+    const nodeLeft = position.x * currentViewport.zoom + currentViewport.x
+    const nodeBottom =
+      position.y * currentViewport.zoom +
+      currentViewport.y +
+      nodeHeight * currentViewport.zoom
+    const nodeTop = position.y * currentViewport.zoom + currentViewport.y
+    const xOverflow = nodeRight + margin - visiblePaneWidth
+    const xUnderflow = margin - nodeLeft
+    const yOverflow = nodeBottom + margin - paneRect.height
+    const yUnderflow = margin - nodeTop
+
+    if (
+      xOverflow <= 0 &&
+      xUnderflow <= 0 &&
+      yOverflow <= 0 &&
+      yUnderflow <= 0
+    ) {
+      return
+    }
+
+    let nextX = currentViewport.x
+    let nextY = currentViewport.y
+    if (xOverflow > 0) {
+      nextX -= xOverflow
+    } else if (xUnderflow > 0) {
+      nextX += xUnderflow
+    }
+    if (yOverflow > 0) {
+      nextY -= yOverflow
+    } else if (yUnderflow > 0) {
+      nextY += yUnderflow
+    }
+
+    setSyncedViewport(
+      {
+        x: nextX,
+        y: nextY,
+        zoom: currentViewport.zoom,
+      },
+      { duration: VIEWPORT_ANIMATION_DURATION }
+    )
+  }
+
+  const ensureActionPanelTargetVisible = async (nodeId: string) => {
+    await tick()
+    if (visibleSelectionRequest !== nodeId || !paneEl) {
+      return
+    }
+
+    const targetNode = get(nodes).find(node => node.id === nodeId)
+    const currentViewport = getViewport()
+    if (!targetNode || !currentViewport) {
+      return
+    }
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const { width: nodeWidth, height: nodeHeight } =
+      getNodeDimensions(targetNode)
+    const position = getAbsoluteNodePosition(targetNode)
+    const margin = 24
+    const visiblePaneWidth = Math.max(paneRect.width - getActionPanelWidth(), 0)
     const nodeRight =
       position.x * currentViewport.zoom +
       currentViewport.x +
@@ -854,7 +921,7 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m) var(--spacing-l);
+    padding: var(--spacing-m) var(--spacing-l) var(--spacing-m) var(--spacing-l);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
@@ -923,6 +990,7 @@
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
+    justify-content: flex-end;
     flex: 1 1 auto;
   }
 

@@ -8,8 +8,8 @@
     Icon,
   } from "@budibase/bbui"
   import { onDestroy, onMount } from "svelte"
-  import type { ManipulateType } from "dayjs"
   import dayjs from "dayjs"
+  import type { ManipulateType } from "dayjs"
   import {
     AutomationStatus,
     type AutomationLog,
@@ -24,24 +24,18 @@
 
   export let automation: UIAutomation
   export let onSelectLog: (log: AutomationLog) => void = () => {}
-  export let selectedLog: AutomationLog | null = null
+  export let selectedLog: AutomationLog | undefined = undefined
 
-  type StatusFilter =
-    | AutomationStatus.SUCCESS
-    | AutomationStatus.ERROR
-    | AutomationStatus.STOPPED
-    | AutomationStatus.STOPPED_ERROR
+  type TimeRange = `${number}-${ManipulateType}`
 
-  type TimeRange = "90-d" | "30-d" | "1-w" | "1-d" | "1-h" | "15-m" | "5-m"
-
-  interface SelectOption<T extends string> {
+  interface SelectOption<T extends string | number> {
     value: T
     label: string
   }
 
   interface QueuedFetch {
     automationId: string
-    status: StatusFilter | null
+    status: AutomationStatus | undefined
     page: string | null | undefined
     timeRange: TimeRange | null
     force: boolean
@@ -59,7 +53,7 @@
 
   let pageInfo = createPaginationStore()
   let runHistory: AutomationLog[] | null = null
-  let status: StatusFilter | null = null
+  let status: AutomationStatus | undefined
   let timeRange: TimeRange | null = null
   let loaded = false
   let totalLogs = 0
@@ -106,7 +100,7 @@
   $: showUpgradeButton =
     !$licensing.isEnterprisePlan && $auth?.user?.accountPortalAccess
 
-  const statusOptions: SelectOption<StatusFilter>[] = [
+  const statusOptions: SelectOption<AutomationStatus>[] = [
     { value: SUCCESS, label: "Success" },
     { value: ERROR, label: "Error" },
     { value: STOPPED, label: "Stopped" },
@@ -134,14 +128,14 @@
   }
 
   async function fetchLogs(
-    automationId: string,
-    status: StatusFilter | null,
+    automationId: string | undefined,
+    status: AutomationStatus | undefined,
     page: string | null | undefined,
     timeRange: TimeRange | null,
     force = false,
     fromRealtime = false
   ) {
-    if (!force && !loaded) {
+    if (!automationId || (!force && !loaded)) {
       return
     }
     if (loading) {
@@ -167,11 +161,11 @@
     try {
       const response = await automationStore.actions.getLogs({
         automationId,
-        status: status ?? undefined,
-        page: page ?? undefined,
+        status,
+        page: page || undefined,
         startDate,
       })
-      pageInfo.fetched(response.hasNextPage, response.nextPage ?? "")
+      pageInfo.fetched(response.hasNextPage, response.nextPage || "")
       totalLogs = response.totalLogs
       runHistory = response.data
     } catch (error) {
