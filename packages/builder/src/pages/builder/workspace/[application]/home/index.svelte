@@ -1053,6 +1053,14 @@
                       placeholder="Search"
                       bind:value={searchTerm}
                     />
+                    <button
+                      type="button"
+                      class="search-close"
+                      aria-label="Close search"
+                      on:click={toggleSearch}
+                    >
+                      <Icon name="x" size="S" />
+                    </button>
                   </div>
                 {:else}
                   <button
@@ -1355,6 +1363,22 @@
   }
 
   .search-toggle:hover {
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .search-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    padding: 2px;
+    cursor: pointer;
+    border-radius: var(--border-radius-s);
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .search-close:hover {
     background: var(--spectrum-global-color-gray-200);
   }
 
