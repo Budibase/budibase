@@ -8,6 +8,7 @@
     Icon,
   } from "@budibase/bbui"
   import { onDestroy, onMount } from "svelte"
+  import { get } from "svelte/store"
   import dayjs from "dayjs"
   import type { ManipulateType } from "dayjs"
   import {
@@ -54,6 +55,7 @@
   let totalLogs = 0
   let loading = false
   let queuedFetch: QueuedFetch | null = null
+  let refreshingPage = false
   let lastFilterKey: string | null = null
   let lastFetchKey: string | null = null
   let pollTimer: ReturnType<typeof setInterval> | undefined
@@ -111,7 +113,12 @@
 
   $: page = $pageInfo.page
   $: fetchKey = `${automation._id}:${filterKey}:${page || ""}`
-  $: if (loaded && automation._id && fetchKey !== lastFetchKey) {
+  $: if (
+    loaded &&
+    automation._id &&
+    !refreshingPage &&
+    fetchKey !== lastFetchKey
+  ) {
     lastFetchKey = fetchKey
     fetchLogs(automation._id, status, page, timeRange)
   }
@@ -120,6 +127,30 @@
     const nextFetch = queuedFetch
     queuedFetch = null
     return nextFetch
+  }
+
+  const getStartDate = (timeRange: TimeRange | null) => {
+    if (!timeRange) {
+      return undefined
+    }
+    const [length, units] = timeRange.split("-")
+    return dayjs()
+      .subtract(Number(length), units as ManipulateType)
+      .toISOString()
+  }
+
+  const loadLogs = async (
+    automationId: string,
+    status: AutomationStatus | undefined,
+    page: string | null | undefined,
+    timeRange: TimeRange | null
+  ) => {
+    return await automationStore.actions.getLogs({
+      automationId,
+      status,
+      page: page || undefined,
+      startDate: getStartDate(timeRange),
+    })
   }
 
   async function fetchLogs(
@@ -144,20 +175,8 @@
     }
     loading = true
     queuedFetch = null
-    let startDate: string | undefined
-    if (timeRange) {
-      const [length, units] = timeRange.split("-")
-      startDate = dayjs()
-        .subtract(Number(length), units as ManipulateType)
-        .toISOString()
-    }
     try {
-      const response = await automationStore.actions.getLogs({
-        automationId,
-        status,
-        page: page || undefined,
-        startDate,
-      })
+      const response = await loadLogs(automationId, status, page, timeRange)
       pageInfo.fetched(response.hasNextPage, response.nextPage || "")
       totalLogs = response.totalLogs
       runHistory = response.data
@@ -180,10 +199,51 @@
   }
 
   const refreshLogs = async () => {
-    if (!automation._id) {
+    if (!automation._id || loading || refreshingPage) {
       return
     }
-    await fetchLogs(automation._id, status, page, timeRange, true)
+
+    const targetPageNumber = get(pageInfo).pageNumber
+    refreshingPage = true
+    const refreshPageInfo = createPaginationStore()
+    let nextRunHistory = runHistory
+    let nextTotalLogs = totalLogs
+
+    try {
+      let pageToFetch: string | null | undefined = undefined
+      let fetchedPageNumber = 1
+      while (fetchedPageNumber <= targetPageNumber) {
+        const response = await loadLogs(
+          automation._id,
+          status,
+          pageToFetch,
+          timeRange
+        )
+        refreshPageInfo.fetched(response.hasNextPage, response.nextPage || "")
+        nextRunHistory = response.data
+        nextTotalLogs = response.totalLogs
+        const currentPageInfo = get(refreshPageInfo)
+        if (
+          fetchedPageNumber === targetPageNumber ||
+          !currentPageInfo.hasNextPage
+        ) {
+          break
+        }
+        refreshPageInfo.nextPage()
+        pageToFetch = get(refreshPageInfo).page
+        fetchedPageNumber++
+      }
+      const refreshedPageInfo = get(refreshPageInfo)
+      pageInfo.replace(refreshedPageInfo)
+      runHistory = nextRunHistory
+      totalLogs = nextTotalLogs
+      lastFetchKey = `${automation._id}:${filterKey}:${refreshedPageInfo.page || ""}`
+    } catch (error) {
+      notifications.error("Error fetching automation logs")
+      console.error(error)
+    } finally {
+      refreshingPage = false
+    }
   }
 
   onMount(async () => {
