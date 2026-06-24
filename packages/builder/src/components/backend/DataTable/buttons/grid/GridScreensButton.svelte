@@ -6,6 +6,8 @@
   import type { Screen, ScreenUsage } from "@budibase/types"
   const dispatch = createEventDispatcher<{ generate: void }>()
 
+  export let showGenerateAppScreenButton = true
+
   const { datasource } = getContext("grid")
 
   let popover: ScreensPopover
@@ -44,8 +46,10 @@
   showCount
 >
   <svelte:fragment slot="footer">
-    <Button secondary icon="browser" on:click={generateScreen}>
-      Generate app screen
-    </Button>
+    {#if showGenerateAppScreenButton}
+      <Button secondary icon="browser" on:click={generateScreen}>
+        Generate app screen
+      </Button>
+    {/if}
   </svelte:fragment>
 </ScreensPopover>

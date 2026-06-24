@@ -68,6 +68,7 @@
     keyValueArrayToRecord,
     getDefaultRestAuthConfig,
     isValidEndpointUrl,
+    isValidEndpointUrlMissingProtocol,
   } from "./query"
   import { applyBaseUrl } from "@budibase/shared-core"
   import restUtils from "@/helpers/data/utils"
@@ -409,6 +410,10 @@
 
   // ── SAVE / RUN STATE ──────────────────────────────────────────────────────
   $: isValidCustomUrl = !isCustomMode || isValidEndpointUrl(requestUrl)
+  $: protocolMissingWarningMessage =
+    isCustomMode && isValidEndpointUrlMissingProtocol(requestUrl)
+      ? "http(s) protocol required in the URL"
+      : undefined
   $: existingQueryUnchanged = !isNewQuery && !queryDirty
   $: newQueryIncomplete =
     isNewQuery && (isCustomMode ? !requestUrl : !selectedEndpointOption)
@@ -1079,6 +1084,7 @@
               verb={editableQuery?.queryVerb ?? "read"}
               url={customUrl}
               {baseUrlOptions}
+              activeWarningMessage={protocolMissingWarningMessage}
               on:verbChange={e => {
                 if (editableQuery) {
                   editableQuery.queryVerb = e.detail
@@ -1165,7 +1171,7 @@
           <Button
             primary
             disabled={isCustomMode
-              ? !customUrl || runningQuery
+              ? !customUrl || runningQuery || !isValidCustomUrl
               : !selectedEndpointOption || runningQuery}
             icon="paper-plane-right"
             on:click={previewQuery}
@@ -1590,5 +1596,12 @@
     display: flex;
     gap: var(--spacing-s);
     align-items: center;
+    position: relative;
+  }
+  .request-top {
+    z-index: 2;
+  }
+  .request-bottom {
+    z-index: 1;
   }
 </style>

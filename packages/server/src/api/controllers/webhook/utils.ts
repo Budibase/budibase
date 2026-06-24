@@ -1,5 +1,21 @@
-import { db as dbCore } from "@budibase/backend-core"
+import { configs, db as dbCore } from "@budibase/backend-core"
 import type { ChatConversation, Ctx } from "@budibase/types"
+
+export const isAbsoluteUrl = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://")
+
+export const toAbsoluteUrl = async (url: string) => {
+  if (isAbsoluteUrl(url)) {
+    return url
+  }
+
+  if (!url.startsWith("/")) {
+    return url
+  }
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  return `${platformUrl.replace(/\/$/, "")}${url}`
+}
 
 export const ensureProdWorkspaceWebhookRoute = ({
   ctx,

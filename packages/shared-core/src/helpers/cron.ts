@@ -14,6 +14,19 @@ const ERROR_SWAPS = {
   seconds: "'seconds'",
 }
 
+function formatExecutionDate(date: Date, timezone?: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: timezone,
+  }).format(date)
+}
+
 function improveErrors(errors: string[]): string[] {
   const finalErrors: string[] = []
 
@@ -33,12 +46,16 @@ function improveErrors(errors: string[]): string[] {
 
 export function getNextExecutionDates(
   cronExpression: string,
-  limit = 4
+  limit = 4,
+  timezone?: string
 ): string[] {
-  const parsed = cronParser.parseExpression(cronExpression)
+  const parsed = cronParser.parseExpression(
+    cronExpression,
+    timezone ? { tz: timezone } : undefined
+  )
   const nextRuns = []
   for (let i = 0; i < limit; i++) {
-    nextRuns.push(parsed.next().toString())
+    nextRuns.push(formatExecutionDate(parsed.next().toDate(), timezone))
   }
 
   return nextRuns
