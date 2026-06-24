@@ -1,4 +1,6 @@
-<script>
+<svelte:options runes={true} />
+
+<script lang="ts">
   import { Modal, keepOpen, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "@/constants/backend"
@@ -11,19 +13,40 @@
   import { createOnGoogleAuthStore } from "./stores/onGoogleAuth.js"
   import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
   import { configFromIntegration } from "@/stores/selectors"
+  import type { Datasource, UIIntegration } from "@budibase/types"
 
-  $goto
+  interface ModalHandle {
+    show(): void
+    hide(): void
+  }
+
+  interface DatasourceCreationState {
+    finished: boolean
+    stage: "googleAuth" | "editConfig" | "selectTables" | null
+    integration: UIIntegration | null
+    config: Record<string, any> | null
+    datasource: Datasource | null
+  }
+
+  interface CreateDatasourceSubmit {
+    config: Record<string, any>
+    projectIds?: string[]
+  }
 
   const store = createDatasourceCreationStore()
   const onGoogleAuth = createOnGoogleAuthStore()
-  let modal
+  let modal: ModalHandle | undefined = $state()
 
-  let modalVisible = false
+  let modalVisible = $state(false)
 
-  const handleStoreChanges = (store, modal, goto) => {
+  const handleStoreChanges = (
+    store: DatasourceCreationState,
+    modal: ModalHandle | undefined,
+    goto: (url: string) => void
+  ) => {
     store.stage === null ? modal?.hide() : modal?.show()
 
-    if (store.finished) {
+    if (store.finished && store.datasource) {
       const queryString =
         store.datasource.plus || store.datasource.source === "REST"
           ? ""
@@ -32,9 +55,11 @@
     }
   }
 
-  $: handleStoreChanges($store, modal, $goto)
+  $effect(() => {
+    handleStoreChanges($store, modal, $goto)
+  })
 
-  export function show(integration) {
+  export function show(integration: UIIntegration) {
     if (integration.name === IntegrationTypes.GOOGLE_SHEETS) {
       // This prompt redirects users to the Google OAuth flow, they'll be returned to this modal afterwards
       // with query params populated that trigger the `onGoogleAuth` store.
@@ -48,16 +73,25 @@
   }
 
   // Triggers opening the config editor whenever Google OAuth returns the user to the page
-  $: $onGoogleAuth((integration, config) => {
-    store.setIntegration(integration)
-    store.setConfig(config)
-    store.editConfigStage()
+  $effect(() => {
+    $onGoogleAuth((integration: UIIntegration, config: Record<string, any>) => {
+      store.setIntegration(integration)
+      store.setConfig(config)
+      store.editConfigStage()
+    })
   })
 
-  const createDatasource = async ({ config, projectIds }) => {
+  const createDatasource = async ({
+    config,
+    projectIds,
+  }: CreateDatasourceSubmit): Promise<void | typeof keepOpen> => {
     try {
+      const integration = get(store).integration
+      if (!integration) {
+        throw new Error("Integration is required")
+      }
       const datasource = await datasources.create({
-        integration: get(store).integration,
+        integration,
         config,
         projectIds,
       })
@@ -65,7 +99,8 @@
 
       notifications.success("Datasource created successfully")
     } catch (e) {
-      notifications.error(`Error creating datasource: ${e.message}`)
+      const message = e instanceof Error ? e.message : "Unknown error"
+      notifications.error(`Error creating datasource: ${message}`)
     }
 
     return keepOpen
@@ -87,17 +122,17 @@
   {#if $store.stage === "googleAuth"}
     <GoogleAuthPrompt
       on:close={() => {
-        modal.hide()
+        modal?.hide()
       }}
     />
-  {:else if $store.stage === "editConfig"}
+  {:else if $store.stage === "editConfig" && $store.integration && $store.config}
     <DatasourceConfigEditor
       integration={$store.integration}
       config={$store.config}
       showProjectField
       onSubmit={createDatasource}
     />
-  {:else if $store.stage === "selectTables"}
+  {:else if $store.stage === "selectTables" && $store.integration && $store.datasource}
     <TableImportSelection
       integration={$store.integration}
       datasource={$store.datasource}

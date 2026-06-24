@@ -1,18 +1,51 @@
-<script>
+<svelte:options runes={true} />
+
+<script lang="ts">
   import { Select, Icon, Layout, Label } from "@budibase/bbui"
   import { FIELDS } from "@/constants/backend"
   import { utils } from "@budibase/shared-core"
   import { canBeDisplayColumn } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { getValidationRows, parseFile } from "./utils"
+  import type {
+    FieldSchema,
+    Row,
+    TableSchema,
+    UIFieldSchema,
+  } from "@budibase/types"
 
-  export let rows = []
-  export let schema = {}
-  export let allValid = true
-  export let displayColumn = null
-  export let promptUpload = false
+  interface ParsedFile {
+    rows: Row[]
+    schema: TableSchema
+    fileName: string
+  }
 
-  const typeOptions = {
+  interface ImportFieldConfig {
+    type: FieldSchema["type"]
+    subtype?: string
+    constraints?: FieldSchema["constraints"]
+  }
+
+  interface Props {
+    rows?: Row[]
+    schema?: TableSchema
+    allValid?: boolean
+    displayColumn?: string | null
+    promptUpload?: boolean
+  }
+
+  let {
+    rows = $bindable([]),
+    schema = $bindable({}),
+    allValid = $bindable(true),
+    displayColumn = $bindable(null),
+    promptUpload = false,
+  }: Props = $props()
+
+  const typeOptions: Record<
+    string,
+    { label: string; value: string; config: ImportFieldConfig }
+  > = {
     [FIELDS.STRING.type]: {
       label: "Text",
       value: FIELDS.STRING.type,
@@ -89,29 +122,38 @@
     },
   }
 
-  let fileInput
-  let error = null
-  let fileName = null
-  let loading = false
-  let validation = {}
-  let validateHash = ""
-  let errors = {}
-  let selectedColumnTypes = {}
+  let fileInput: HTMLInputElement | undefined = $state()
+  let error: string | null = $state(null)
+  let fileName: string | null = $state(null)
+  let loading = $state(false)
+  let validation: Record<string, boolean> = $state({})
+  let validateHash = $state("")
+  let errors: Record<string, string> = $state({})
+  let selectedColumnTypes: Record<string, string> = $state({})
 
-  let rawRows = []
+  let rawRows: Row[] = $state([])
 
-  $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
-    return validation[column] && canBeDisplayColumn(schema[column])
+  const displayColumnOptions = $derived(
+    Object.keys(schema || {}).filter(column => {
+      return (
+        validation[column] &&
+        canBeDisplayColumn(schema[column] as UIFieldSchema)
+      )
+    })
+  )
+
+  $effect(() => {
+    if (
+      displayColumn &&
+      !canBeDisplayColumn(schema[displayColumn] as UIFieldSchema)
+    ) {
+      displayColumn = null
+    }
   })
 
-  $: if (displayColumn && !canBeDisplayColumn(schema[displayColumn])) {
-    displayColumn = null
-  }
-
-  $: {
+  $effect(() => {
     rows = rawRows.map(row => utils.trimOtherProps(row, Object.keys(schema)))
 
-    // binding in consumer is causing double renders here
     const validationRows = getValidationRows(rows)
     const newValidateHash =
       JSON.stringify(validationRows) + JSON.stringify(schema)
@@ -119,16 +161,19 @@
       validate(validationRows, schema)
     }
     validateHash = newValidateHash
-  }
-  $: openFileUpload(promptUpload, fileInput)
+  })
 
-  async function handleFile(e) {
+  $effect(() => {
+    openFileUpload(promptUpload, fileInput)
+  })
+
+  async function handleFile(e: Event) {
     loading = true
     error = null
     validation = {}
 
     try {
-      const response = await parseFile(e)
+      const response = (await parseFile(e)) as ParsedFile
       rawRows = response.rows
       schema = response.schema
       fileName = response.fileName
@@ -141,11 +186,11 @@
       )
     } catch (e) {
       loading = false
-      error = e
+      error = e instanceof Error ? e.message : String(e)
     }
   }
 
-  async function validate(rowsToValidate, schema) {
+  async function validate(rowsToValidate: Row[], schema: TableSchema) {
     loading = true
     try {
       if (rowsToValidate.length > 0) {
@@ -159,7 +204,7 @@
         error = null
       }
     } catch (e) {
-      error = e.message
+      error = e instanceof Error ? e.message : String(e)
       validation = {}
       allValid = false
       errors = {}
@@ -167,20 +212,32 @@
     loading = false
   }
 
-  const handleChange = (name, e) => {
-    const { config } = typeOptions[e.detail]
-    schema[name].type = config.type
-    schema[name].subtype = config.subtype
-    schema[name].constraints = config.constraints
+  const handleChange = (name: string, e: CustomEvent<string>) => {
+    const option = typeOptions[e.detail]
+    if (!option) {
+      return
+    }
+    const field = schema[name]
+    if (!field) {
+      return
+    }
+    schema[name] = {
+      ...field,
+      ...option.config,
+    } as FieldSchema
+    schema = schema
   }
 
-  const openFileUpload = (promptUpload, fileInput) => {
+  const openFileUpload = (
+    promptUpload: boolean,
+    fileInput: HTMLInputElement | undefined
+  ) => {
     if (promptUpload && fileInput) {
       fileInput.click()
     }
   }
 
-  const deleteColumn = name => {
+  const deleteColumn = (name: string) => {
     if (loading) {
       return
     }
@@ -191,7 +248,7 @@
 
 <Layout noPadding gap="S">
   <Layout gap="XS" noPadding>
-    <Label grey extraSmall>
+    <Label muted size="S">
       Create a Table from a CSV or JSON file (Optional)
     </Label>
     <div class="dropzone">
@@ -201,7 +258,7 @@
         id="file-upload"
         accept="text/csv,application/json"
         type="file"
-        on:change={handleFile}
+        onchange={handleFile}
       />
       <label for="file-upload" class:uploaded={rawRows.length > 0}>
         {#if error}
@@ -224,7 +281,7 @@
             bind:value={selectedColumnTypes[column.name]}
             on:change={e => handleChange(name, e)}
             options={Object.values(typeOptions)}
-            placeholder={null}
+            placeholder={false}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
           />
