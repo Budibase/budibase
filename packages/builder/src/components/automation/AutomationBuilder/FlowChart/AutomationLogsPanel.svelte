@@ -251,12 +251,7 @@
         </div>
       {/if}
       <div class="refresh-controls">
-        <Button
-          size="S"
-          quiet
-          icon="Refresh"
-          on:click={refreshLogs}
-        >
+        <Button size="S" quiet icon="Refresh" on:click={refreshLogs}>
           Refresh
         </Button>
       </div>
