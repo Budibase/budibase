@@ -61,13 +61,23 @@ describe("ScheduleBuilder", () => {
   })
 
   it("hydrates a weekly cron expression into the friendly controls", () => {
-    const { getByLabelText } = renderScheduleBuilder({
+    const { getByLabelText, getByTestId } = renderScheduleBuilder({
       cronExpression: "30 14 * * 1,3,5",
       timezone: "UTC",
     })
 
     expect(getByLabelText("Period")).toHaveValue("weekly")
     expect(getByLabelText("Days of the week")).toHaveValue(["1", "3", "5"])
+    expect(getByTestId("time-field")).toHaveAttribute("data-value", "14:30")
+  })
+
+  it("hydrates midnight cron expressions into the friendly controls", () => {
+    const { getByTestId } = renderScheduleBuilder({
+      cronExpression: "0 0 * * 1,2,3,4,5",
+      timezone: "UTC",
+    })
+
+    expect(getByTestId("time-field")).toHaveAttribute("data-value", "00:00")
   })
 
   it("hydrates a monthly cron expression into the friendly controls", () => {

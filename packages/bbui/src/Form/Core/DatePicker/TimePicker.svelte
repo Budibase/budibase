@@ -9,8 +9,7 @@
 
   const dispatch = createEventDispatcher<{ change: Dayjs | undefined }>()
 
-  $: displayValue =
-    value?.format("HH:mm") || (disableClearing ? "00:00" : undefined)
+  $: displayValue = value?.format("HH:mm")
 
   const handleChange = async (e: Event) => {
     const target = e.target as HTMLInputElement

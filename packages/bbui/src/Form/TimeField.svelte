@@ -48,8 +48,19 @@
       return undefined
     }
 
-    const parsedValue = dayjs(time, "HH:mm")
-    return parsedValue.isValid() ? parsedValue : undefined
+    const [hour, minute] = time.split(":").map(part => Number(part))
+    if (
+      !Number.isInteger(hour) ||
+      !Number.isInteger(minute) ||
+      hour < 0 ||
+      hour > 23 ||
+      minute < 0 ||
+      minute > 59
+    ) {
+      return undefined
+    }
+
+    return dayjs().hour(hour).minute(minute).second(0).millisecond(0)
   }
 
   const handleChange = (event: CustomEvent<Dayjs | undefined>) => {
