@@ -10,6 +10,7 @@
   import NextExecutionsTable from "./NextExecutionsTable.svelte"
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
   import { range } from "lodash"
+  import { untrack } from "svelte"
 
   interface Option<T extends string | number> {
     label: string
@@ -18,6 +19,14 @@
 
   type Frequency = "interval" | "daily" | "weekly" | "monthly" | "cron"
   type ScheduleError = string | string[] | undefined
+
+  interface ScheduleState {
+    frequency: Frequency
+    intervalMinutes: number
+    time: string
+    selectedDaysOfWeek: string[]
+    selectedDaysOfMonth: string[]
+  }
 
   interface ScheduleUpdate {
     cron: string
@@ -91,11 +100,147 @@
     { label: "12 hrs", value: 720 },
   ]
 
-  let frequency: Frequency = $state(cronExpression ? "cron" : "daily")
-  let intervalMinutes = $state(30)
-  let time: string | undefined = $state("09:00")
-  let selectedDaysOfWeek = $state(["1", "2", "3", "4", "5"])
-  let selectedDaysOfMonth = $state(["1"])
+  const DEFAULT_SCHEDULE_STATE: ScheduleState = {
+    frequency: "daily",
+    intervalMinutes: 30,
+    time: "09:00",
+    selectedDaysOfWeek: ["1", "2", "3", "4", "5"],
+    selectedDaysOfMonth: ["1"],
+  }
+
+  const getTimeValue = (minute: string, hour: string) => {
+    return `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`
+  }
+
+  const getCommaSeparatedParts = (value: string) => {
+    return value.split(",").filter(Boolean)
+  }
+
+  const includesOnlySupportedValues = (
+    values: string[],
+    options: Option<string>[]
+  ) => {
+    const supportedValues = new Set(options.map(option => option.value))
+    return values.every(value => supportedValues.has(value))
+  }
+
+  const isTimePart = (value: string, max: number) => {
+    const parsedValue = Number(value)
+    return (
+      Number.isInteger(parsedValue) &&
+      parsedValue >= 0 &&
+      parsedValue <= max &&
+      `${parsedValue}` === value
+    )
+  }
+
+  const isSupportedInterval = (interval: number) => {
+    return INTERVAL_OPTIONS.some(option => option.value === interval)
+  }
+
+  const getInitialScheduleState = (
+    expression: string | undefined
+  ): ScheduleState => {
+    if (!expression || expression === REBOOT_CRON) {
+      return DEFAULT_SCHEDULE_STATE
+    }
+
+    const [minute, hour, dayOfMonth, month, dayOfWeek, ...rest] =
+      expression.split(" ")
+    if (
+      rest.length ||
+      !minute ||
+      !hour ||
+      !dayOfMonth ||
+      !month ||
+      !dayOfWeek
+    ) {
+      return { ...DEFAULT_SCHEDULE_STATE, frequency: "cron" }
+    }
+
+    if (
+      hour === "*" &&
+      dayOfMonth === "*" &&
+      month === "*" &&
+      dayOfWeek === "*"
+    ) {
+      const interval = minute.startsWith("*/")
+        ? Number(minute.replace("*/", ""))
+        : undefined
+      if (interval && isSupportedInterval(interval)) {
+        return {
+          ...DEFAULT_SCHEDULE_STATE,
+          frequency: "interval",
+          intervalMinutes: interval,
+        }
+      }
+    }
+
+    if (
+      minute === "0" &&
+      hour.startsWith("*/") &&
+      dayOfMonth === "*" &&
+      month === "*" &&
+      dayOfWeek === "*"
+    ) {
+      const interval = Number(hour.replace("*/", "")) * MINUTES_PER_HOUR
+      if (isSupportedInterval(interval)) {
+        return {
+          ...DEFAULT_SCHEDULE_STATE,
+          frequency: "interval",
+          intervalMinutes: interval,
+        }
+      }
+    }
+
+    if (!isTimePart(minute, 59) || !isTimePart(hour, 23)) {
+      return { ...DEFAULT_SCHEDULE_STATE, frequency: "cron" }
+    }
+
+    if (dayOfMonth === "*" && month === "*" && dayOfWeek === "*") {
+      return {
+        ...DEFAULT_SCHEDULE_STATE,
+        frequency: "daily",
+        time: getTimeValue(minute, hour),
+      }
+    }
+
+    if (dayOfMonth === "*" && month === "*") {
+      const selectedDaysOfWeek = getCommaSeparatedParts(dayOfWeek)
+      if (!includesOnlySupportedValues(selectedDaysOfWeek, DAYS_OF_WEEK)) {
+        return { ...DEFAULT_SCHEDULE_STATE, frequency: "cron" }
+      }
+      return {
+        ...DEFAULT_SCHEDULE_STATE,
+        frequency: "weekly",
+        time: getTimeValue(minute, hour),
+        selectedDaysOfWeek,
+      }
+    }
+
+    if (month === "*" && dayOfWeek === "*") {
+      const selectedDaysOfMonth = getCommaSeparatedParts(dayOfMonth)
+      if (!includesOnlySupportedValues(selectedDaysOfMonth, DAYS_OF_MONTH)) {
+        return { ...DEFAULT_SCHEDULE_STATE, frequency: "cron" }
+      }
+      return {
+        ...DEFAULT_SCHEDULE_STATE,
+        frequency: "monthly",
+        time: getTimeValue(minute, hour),
+        selectedDaysOfMonth,
+      }
+    }
+
+    return { ...DEFAULT_SCHEDULE_STATE, frequency: "cron" }
+  }
+
+  const initialScheduleState = getInitialScheduleState(cronExpression)
+
+  let frequency: Frequency = $state(initialScheduleState.frequency)
+  let intervalMinutes = $state(initialScheduleState.intervalMinutes)
+  let time: string | undefined = $state(initialScheduleState.time)
+  let selectedDaysOfWeek = $state(initialScheduleState.selectedDaysOfWeek)
+  let selectedDaysOfMonth = $state(initialScheduleState.selectedDaysOfMonth)
   let error: ScheduleError = $state()
   let savedCronExpression = $state(cronExpression)
   let savedTimezone = $state(timezone)
@@ -198,7 +343,7 @@
     time
     selectedDaysOfWeek
     selectedDaysOfMonth
-    updateSchedule()
+    untrack(updateSchedule)
   })
 </script>
 
@@ -229,31 +374,27 @@
     <CronBuilder {cronExpression} {timezone} onchange={dispatchCron} />
   {:else}
     {#if frequency === "weekly"}
-      <div>
-        <Label>Days of the week</Label>
-        <Multiselect
-          value={selectedDaysOfWeek}
-          options={DAYS_OF_WEEK}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-          on:change={(event: CustomEvent<string[]>) => {
-            selectedDaysOfWeek = event.detail
-          }}
-        />
-      </div>
+      <Multiselect
+        label="Days of the week"
+        value={selectedDaysOfWeek}
+        options={DAYS_OF_WEEK}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        on:change={(event: CustomEvent<string[]>) => {
+          selectedDaysOfWeek = event.detail
+        }}
+      />
     {:else if frequency === "monthly"}
-      <div>
-        <Label>Days of the month</Label>
-        <Multiselect
-          value={selectedDaysOfMonth}
-          options={DAYS_OF_MONTH}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-          on:change={(event: CustomEvent<string[]>) => {
-            selectedDaysOfMonth = event.detail
-          }}
-        />
-      </div>
+      <Multiselect
+        label="Days of the month"
+        value={selectedDaysOfMonth}
+        options={DAYS_OF_MONTH}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        on:change={(event: CustomEvent<string[]>) => {
+          selectedDaysOfMonth = event.detail
+        }}
+      />
     {/if}
     <div>
       <Label>Time</Label>

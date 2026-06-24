@@ -50,9 +50,39 @@ describe("ScheduleBuilder", () => {
     expect(getChanges()).toEqual([])
   })
 
+  it("hydrates a daily cron expression into the friendly controls", () => {
+    const { getByLabelText, getByTestId } = renderScheduleBuilder({
+      cronExpression: "0 9 * * *",
+      timezone: "UTC",
+    })
+
+    expect(getByLabelText("Period")).toHaveValue("daily")
+    expect(getByTestId("date-picker")).toHaveAttribute("data-value", "09:00")
+  })
+
+  it("hydrates a weekly cron expression into the friendly controls", () => {
+    const { getByLabelText } = renderScheduleBuilder({
+      cronExpression: "30 14 * * 1,3,5",
+      timezone: "UTC",
+    })
+
+    expect(getByLabelText("Period")).toHaveValue("weekly")
+    expect(getByLabelText("Days of the week")).toHaveValue(["1", "3", "5"])
+  })
+
+  it("hydrates a monthly cron expression into the friendly controls", () => {
+    const { getByLabelText } = renderScheduleBuilder({
+      cronExpression: "15 8 1,15 * *",
+      timezone: "UTC",
+    })
+
+    expect(getByLabelText("Period")).toHaveValue("monthly")
+    expect(getByLabelText("Days of the month")).toHaveValue(["1", "15"])
+  })
+
   it("allows reboot cron from the cron builder", async () => {
     const { getChanges, getByText } = renderScheduleBuilder({
-      cronExpression: "0 12 * * *",
+      cronExpression: "0 12 * 1 *",
       timezone: "UTC",
     })
 
