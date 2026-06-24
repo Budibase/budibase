@@ -1,8 +1,15 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
 
-  export let value: string | undefined = ""
-  export let disabled = false
+  interface Props {
+    value?: string | undefined
+    disabled?: boolean
+  }
+
+  let { value = $bindable<string | undefined>(""), disabled = false }: Props =
+    $props()
 
   const dispatch = createEventDispatcher<{
     change: string | undefined
@@ -18,4 +25,4 @@
   <span>Color</span>
   <input aria-label="Color" bind:value {disabled} />
 </label>
-<button type="button" on:click={clear} {disabled}>Clear color</button>
+<button type="button" onclick={clear} {disabled}>Clear color</button>

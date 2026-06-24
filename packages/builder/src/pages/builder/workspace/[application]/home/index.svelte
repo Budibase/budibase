@@ -228,19 +228,6 @@
     typeFilter = normalised
   }
 
-  const openPrimaryCreate = () => {
-    switch (typeFilter) {
-      case "automation":
-        return createAutomation()
-      case "agent":
-        return createAgent()
-      case "app":
-      case "all":
-      default:
-        return createApp()
-    }
-  }
-
   const setSort = (column: HomeSortColumn) => {
     if (sortColumn === column) {
       sortOrder = sortOrder === "asc" ? "desc" : "asc"
@@ -1006,59 +993,64 @@
         {selectedProjectId}
         hasSelectedProject={!!selectedProject}
         canExport={$projectsStore.length > 0}
-        on:select={({ detail }) => (selectedProjectId = detail)}
-        on:createProject={createProject}
-        on:editProject={editProject}
-        on:deleteProject={() => confirmDeleteProjectDialog?.show()}
-        on:importProject={importProject}
-        on:exportProject={exportProject}
+        onSelect={projectId => (selectedProjectId = projectId)}
+        onCreateProject={createProject}
+        onEditProject={editProject}
+        onDeleteProject={() => confirmDeleteProjectDialog?.show()}
+        onImportProject={importProject}
+        onExportProject={exportProject}
       />
 
       <HomeResourcePanel>
-        <div slot="toolbar" class="panel-toolbar">
-          <HomeControls
-            {typeFilter}
-            variant="panel"
-            on:typeChange={({ detail }) => setTypeFilter(detail)}
-          />
-          <div class="panel-toolbar__right">
-            <div class="search-control" class:search-control--open={searchOpen}>
-              {#if searchOpen}
-                <div class="search-wrapper">
-                  <Icon name="magnifying-glass" size="S" />
-                  <input
-                    class="search-input"
-                    type="text"
-                    placeholder="Search"
-                    bind:value={searchTerm}
-                  />
-                </div>
-              {:else}
-                <button
-                  type="button"
-                  class="search-toggle"
-                  aria-label="Search"
-                  on:click={toggleSearch}
-                >
-                  <Icon
-                    name="magnifying-glass"
-                    size="S"
-                    color="var(--spectrum-global-color-gray-600)"
-                  />
-                </button>
-              {/if}
-            </div>
-            <HomeCreateMenu
-              variant="pill"
-              onCreateAgent={createAgent}
-              onCreateAutomation={createAutomation}
-              onCreateApp={createApp}
-              onCreateConnection={() => goToCreate("data/new")}
-              onCreateTable={openCreateTable}
-              onCreateApi={() => goToCreate("apis/new")}
+        {#snippet toolbar()}
+          <div class="panel-toolbar">
+            <HomeControls
+              {typeFilter}
+              variant="panel"
+              onTypeChange={setTypeFilter}
             />
+            <div class="panel-toolbar__right">
+              <div
+                class="search-control"
+                class:search-control--open={searchOpen}
+              >
+                {#if searchOpen}
+                  <div class="search-wrapper">
+                    <Icon name="magnifying-glass" size="S" />
+                    <input
+                      class="search-input"
+                      type="text"
+                      placeholder="Search"
+                      bind:value={searchTerm}
+                    />
+                  </div>
+                {:else}
+                  <button
+                    type="button"
+                    class="search-toggle"
+                    aria-label="Search"
+                    on:click={toggleSearch}
+                  >
+                    <Icon
+                      name="magnifying-glass"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-600)"
+                    />
+                  </button>
+                {/if}
+              </div>
+              <HomeCreateMenu
+                variant="pill"
+                onCreateAgent={createAgent}
+                onCreateAutomation={createAutomation}
+                onCreateApp={createApp}
+                onCreateConnection={() => goToCreate("data/new")}
+                onCreateTable={openCreateTable}
+                onCreateApi={() => goToCreate("apis/new")}
+              />
+            </div>
           </div>
-        </div>
+        {/snippet}
 
         <HomeTable
           rows={filteredRows}
@@ -1071,26 +1063,22 @@
           {sortOrder}
           {highlightedRowId}
           variant="panel"
-          on:create={() => openPrimaryCreate()}
-          on:openRow={({ detail }) => openRow(detail)}
-          on:openContextMenu={({ detail }) => openHomeContextMenu(detail)}
-          on:clearSearch={() => (searchTerm = "")}
-          on:resetFilters={() => {
+          onOpenRow={openRow}
+          onOpenContextMenu={openHomeContextMenu}
+          onClearSearch={() => (searchTerm = "")}
+          onResetFilters={() => {
             typeFilter = "all"
             selectedProjectId = ""
           }}
-          on:sortChange={({ detail }) => setSort(detail)}
-          on:createAgent={createAgent}
-          on:createAutomation={createAutomation}
-          on:createApp={createApp}
+          onSortChange={setSort}
+          onCreateAgent={createAgent}
+          onCreateAutomation={createAutomation}
+          onCreateApp={createApp}
         />
       </HomeResourcePanel>
     {:else}
       <div class="controls-row">
-        <HomeControls
-          {typeFilter}
-          on:typeChange={({ detail }) => setTypeFilter(detail)}
-        />
+        <HomeControls {typeFilter} onTypeChange={setTypeFilter} />
         <div class="controls-right">
           <div class="search-wrapper">
             <Icon name="magnifying-glass" size="S" />
@@ -1124,18 +1112,17 @@
         {sortColumn}
         {sortOrder}
         {highlightedRowId}
-        on:create={() => openPrimaryCreate()}
-        on:openRow={({ detail }) => openRow(detail)}
-        on:openContextMenu={({ detail }) => openHomeContextMenu(detail)}
-        on:clearSearch={() => (searchTerm = "")}
-        on:resetFilters={() => {
+        onOpenRow={openRow}
+        onOpenContextMenu={openHomeContextMenu}
+        onClearSearch={() => (searchTerm = "")}
+        onResetFilters={() => {
           typeFilter = "all"
           selectedProjectId = ""
         }}
-        on:sortChange={({ detail }) => setSort(detail)}
-        on:createAgent={createAgent}
-        on:createAutomation={createAutomation}
-        on:createApp={createApp}
+        onSortChange={setSort}
+        onCreateAgent={createAgent}
+        onCreateAutomation={createAutomation}
+        onCreateApp={createApp}
       />
     {/if}
   </div>

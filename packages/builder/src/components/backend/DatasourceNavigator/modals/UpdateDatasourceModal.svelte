@@ -1,24 +1,40 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import { get } from "svelte/store"
   import { datasources, integrations } from "@/stores/builder"
   import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
   import { integrationForDatasource } from "@/stores/selectors"
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
+  import type { Datasource, UIInternalDatasource } from "@budibase/types"
 
-  let error = ""
-  let modal
-  let name
+  type EditableDatasource = (Datasource | UIInternalDatasource) & {
+    entities?: Datasource["entities"] | UIInternalDatasource["entities"]
+  }
+
+  interface ModalHandle {
+    show(): void
+    hide(): void
+  }
+
+  interface Props {
+    datasource: EditableDatasource
+    onCancel?: (event: CustomEvent<void>) => void
+  }
+
+  let error = $state("")
+  let modal: ModalHandle | undefined = $state()
+  let name = $state("")
   let originalName = ""
-  let originalProjectIds = []
-  let projectIds = []
-  let hasChanges = false
+  let originalProjectIds: string[] = $state([])
+  let projectIds: string[] = $state([])
 
-  $: hasChanges =
+  const hasChanges = $derived(
     name !== originalName ||
-    JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
+      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
+  )
 
-  export let datasource
-  export let onCancel = undefined
+  let { datasource, onCancel }: Props = $props()
 
   export const show = () => {
     error = ""
@@ -26,14 +42,14 @@
     originalProjectIds = datasource?.projectIds || []
     name = originalName
     projectIds = originalProjectIds
-    modal.show()
+    modal?.show()
   }
   export const hide = () => {
-    modal.hide()
+    modal?.hide()
   }
 
-  function checkValid(evt) {
-    const datasourceName = evt.target.value
+  function checkValid(evt: Event) {
+    const datasourceName = (evt.target as HTMLInputElement).value
     if (
       $datasources?.list.some(
         ds => ds._id !== datasource?._id && ds.name === datasourceName
@@ -46,10 +62,13 @@
   }
 
   async function updateDatasource() {
-    const updatedDatasource = {
+    const updatedDatasource: Datasource = {
       ...datasource,
       name,
       projectIds: projectIds.length ? projectIds : undefined,
+      entities: Array.isArray(datasource.entities)
+        ? undefined
+        : datasource.entities,
     }
     await datasources.save({
       datasource: updatedDatasource,
@@ -61,7 +80,7 @@
   }
 </script>
 
-<Modal bind:this={modal} on:hide={onCancel}>
+<Modal bind:this={modal} on:hide={event => onCancel?.(event)}>
   <ModalContent
     title="Edit Datasource"
     size="L"

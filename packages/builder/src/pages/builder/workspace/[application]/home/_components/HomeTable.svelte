@@ -1,5 +1,6 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { AbsTooltip, Body, Helpers, Icon } from "@budibase/bbui"
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
@@ -16,41 +17,64 @@
 
   dayjs.extend(relativeTime)
 
-  export let rows: HomeRow[] = []
-  export let loading = false
-  export let allRowsCount = 0
-  export let typeFilter: HomeType = "all"
-  export let searchTerm = ""
-  export let projectsEnabled = false
-  export let selectedProjectName = ""
-  export let sortColumn: HomeSortColumn
-  export let sortOrder: HomeSortOrder
-  export let variant: "default" | "panel" = "default"
+  interface ContextMenuPayload {
+    row: HomeRow
+    x: number
+    y: number
+  }
 
-  const dispatch = createEventDispatcher<{
-    openRow: HomeRow
-    create: void
-    clearSearch: void
-    resetFilters: void
-    sortChange: HomeSortColumn
-    createAgent: void
-    createAutomation: void
-    createApp: void
-    openContextMenu: {
-      row: HomeRow
-      x: number
-      y: number
-    }
-  }>()
+  interface Props {
+    rows?: HomeRow[]
+    loading?: boolean
+    allRowsCount?: number
+    typeFilter?: HomeType
+    searchTerm?: string
+    projectsEnabled?: boolean
+    selectedProjectName?: string
+    sortColumn: HomeSortColumn
+    sortOrder: HomeSortOrder
+    variant?: "default" | "panel"
+    highlightedRowId?: string | null
+    onOpenRow?: (_row: HomeRow) => void
+    onClearSearch?: () => void
+    onResetFilters?: () => void
+    onSortChange?: (_column: HomeSortColumn) => void
+    onCreateAgent?: () => void
+    onCreateAutomation?: () => void
+    onCreateApp?: () => void
+    onOpenContextMenu?: (_payload: ContextMenuPayload) => void
+  }
+
+  let {
+    rows = [],
+    loading = false,
+    allRowsCount = 0,
+    typeFilter = "all",
+    searchTerm = "",
+    projectsEnabled = false,
+    selectedProjectName = "",
+    sortColumn,
+    sortOrder,
+    variant = "default",
+    highlightedRowId = null,
+    onOpenRow = () => {},
+    onClearSearch = () => {},
+    onResetFilters = () => {},
+    onSortChange = () => {},
+    onCreateAgent = () => {},
+    onCreateAutomation = () => {},
+    onCreateApp = () => {},
+    onOpenContextMenu = () => {},
+  }: Props = $props()
 
   const isSorted = (column: HomeSortColumn) => sortColumn === column
 
   const headerClick = (column: HomeSortColumn) => {
-    dispatch("sortChange", column)
+    onSortChange(column)
   }
 
   const handleRowClick = (row: HomeRow) => {
-    dispatch("openRow", row)
+    onOpenRow(row)
   }
 
   const getRowStatusLabel = (row: HomeRow) => {
@@ -85,17 +109,17 @@
     return Helpers.getDateDisplayValue(row.createdAt)
   }
 
-  export let highlightedRowId: string | null = null
-
   const openContextMenu = (event: MouseEvent, row: HomeRow) => {
     event.preventDefault()
     event.stopPropagation()
-    dispatch("openContextMenu", { row, x: event.clientX, y: event.clientY })
+    onOpenContextMenu({ row, x: event.clientX, y: event.clientY })
   }
 
-  $: gridColumns = projectsEnabled
-    ? "1fr 140px 140px 140px 140px 60px"
-    : "1fr 140px 140px 140px 60px"
+  const gridColumns = $derived(
+    projectsEnabled
+      ? "1fr 140px 140px 140px 140px 60px"
+      : "1fr 140px 140px 140px 60px"
+  )
 </script>
 
 <div class="table-wrapper" class:table-wrapper--panel={variant === "panel"}>
@@ -109,7 +133,7 @@
         <button
           type="button"
           class="header-cell"
-          on:click={() => headerClick("name")}
+          onclick={() => headerClick("name")}
         >
           <span>Name</span>
           <span
@@ -128,7 +152,7 @@
         <button
           type="button"
           class="header-cell"
-          on:click={() => headerClick("type")}
+          onclick={() => headerClick("type")}
         >
           <span>Type</span>
           <span
@@ -148,7 +172,7 @@
           <button
             type="button"
             class="header-cell"
-            on:click={() => headerClick("projects")}
+            onclick={() => headerClick("projects")}
           >
             <span>Projects</span>
             <span
@@ -169,7 +193,7 @@
         <button
           type="button"
           class="header-cell"
-          on:click={() => headerClick("status")}
+          onclick={() => headerClick("status")}
         >
           <span>Status</span>
           <span
@@ -189,7 +213,7 @@
         <button
           type="button"
           class="header-cell"
-          on:click={() => headerClick(projectsEnabled ? "created" : "updated")}
+          onclick={() => headerClick(projectsEnabled ? "created" : "updated")}
         >
           <span>{projectsEnabled ? "Created" : "Updated"}</span>
           <span
@@ -220,8 +244,8 @@
           class:favourite={row.favourite?._id}
           class:active={highlightedRowId === row._id}
           type="button"
-          on:click={() => handleRowClick(row)}
-          on:contextmenu={e => openContextMenu(e, row)}
+          onclick={() => handleRowClick(row)}
+          oncontextmenu={e => openContextMenu(e, row)}
         >
           <div class="cell name-cell">
             <Icon
@@ -300,12 +324,11 @@
             {allRowsCount}
             filteredRowsCount={rows.length}
             {selectedProjectName}
-            on:create={() => dispatch("create")}
-            on:clearSearch={() => dispatch("clearSearch")}
-            on:resetFilters={() => dispatch("resetFilters")}
-            on:createAgent={() => dispatch("createAgent")}
-            on:createAutomation={() => dispatch("createAutomation")}
-            on:createApp={() => dispatch("createApp")}
+            {onClearSearch}
+            {onResetFilters}
+            {onCreateAgent}
+            {onCreateAutomation}
+            {onCreateApp}
           />
         </div>
       {/if}

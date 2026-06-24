@@ -1,21 +1,27 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { ActionButton, Icon } from "@budibase/bbui"
   import type { HomeType } from "@budibase/types"
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
 
-  export let typeFilter: HomeType = "all"
-  export let variant: "default" | "panel" = "default"
+  interface Props {
+    typeFilter?: HomeType
+    variant?: "default" | "panel"
+    onTypeChange?: (_type: HomeType) => void
+  }
+
+  let {
+    typeFilter = "all",
+    variant = "default",
+    onTypeChange = () => {},
+  }: Props = $props()
 
   interface HomeFilterOption {
     label: string
     value: HomeType
     disabled?: boolean
   }
-
-  const dispatch = createEventDispatcher<{
-    typeChange: HomeType
-  }>()
 
   const tabOptions: HomeFilterOption[] = [
     { label: "All tools", value: "all" },
@@ -35,8 +41,7 @@
         quiet
         selected={typeFilter === option.value}
         disabled={option.disabled}
-        on:click={() =>
-          !option.disabled && dispatch("typeChange", option.value)}
+        on:click={() => !option.disabled && onTypeChange(option.value)}
       >
         <Icon
           name={getHomeTypeIcon(option.value)}

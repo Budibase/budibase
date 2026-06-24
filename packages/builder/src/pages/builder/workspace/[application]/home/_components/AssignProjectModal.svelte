@@ -1,12 +1,16 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import { Body, ModalContent, Multiselect } from "@budibase/bbui"
   import type { HomeRow, ProjectResponse } from "@budibase/types"
 
-  export let row: HomeRow | null = null
-  export let projects: ProjectResponse[] = []
-  export let onConfirm: (
-    _projectIds: string[] | undefined
-  ) => unknown = () => {}
+  interface Props {
+    row?: HomeRow | null
+    projects?: ProjectResponse[]
+    onConfirm?: (_projectIds: string[] | undefined) => unknown
+  }
+
+  let { row = null, projects = [], onConfirm = () => {} }: Props = $props()
 
   interface ProjectOption {
     label: string
@@ -14,20 +18,24 @@
     color?: string
   }
 
-  let selectedProjectIds: string[] = []
-  let projectOptions: ProjectOption[] = []
-  let activeRowId = ""
+  let selectedProjectIds: string[] = $state([])
+  let activeRowId = $state("")
 
-  $: if ((row?._id || "") !== activeRowId) {
+  $effect(() => {
+    if ((row?._id || "") === activeRowId) {
+      return
+    }
     activeRowId = row?._id || ""
     selectedProjectIds = row?.projectIds ? [...row.projectIds] : []
-  }
+  })
 
-  $: projectOptions = projects.map(project => ({
-    label: project.name,
-    value: project._id,
-    color: project.color,
-  }))
+  const projectOptions: ProjectOption[] = $derived(
+    projects.map(project => ({
+      label: project.name,
+      value: project._id,
+      color: project.color,
+    }))
+  )
 </script>
 
 <ModalContent

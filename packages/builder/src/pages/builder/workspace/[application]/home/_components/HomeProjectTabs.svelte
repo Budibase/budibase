@@ -1,21 +1,34 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
   import { ActionMenu, Icon, MenuItem, PopoverAlignment } from "@budibase/bbui"
   import type { ProjectResponse } from "@budibase/types"
 
-  export let projects: ProjectResponse[] = []
-  export let selectedProjectId = ""
-  export let hasSelectedProject = false
-  export let canExport = false
+  interface Props {
+    projects?: ProjectResponse[]
+    selectedProjectId?: string
+    hasSelectedProject?: boolean
+    canExport?: boolean
+    onSelect?: (_projectId: string) => void
+    onCreateProject?: () => void
+    onEditProject?: () => void
+    onDeleteProject?: () => void
+    onImportProject?: () => void
+    onExportProject?: () => void
+  }
 
-  const dispatch = createEventDispatcher<{
-    select: string
-    createProject: void
-    editProject: void
-    deleteProject: void
-    importProject: void
-    exportProject: void
-  }>()
+  let {
+    projects = [],
+    selectedProjectId = "",
+    hasSelectedProject = false,
+    canExport = false,
+    onSelect = () => {},
+    onCreateProject = () => {},
+    onEditProject = () => {},
+    onDeleteProject = () => {},
+    onImportProject = () => {},
+    onExportProject = () => {},
+  }: Props = $props()
 </script>
 
 <div class="project-tabs">
@@ -24,7 +37,7 @@
       type="button"
       class="chip"
       class:chip--selected={!selectedProjectId}
-      on:click={() => dispatch("select", "")}
+      onclick={() => onSelect("")}
     >
       All projects
     </button>
@@ -33,7 +46,7 @@
         type="button"
         class="chip"
         class:chip--selected={selectedProjectId === project._id}
-        on:click={() => dispatch("select", project._id)}
+        onclick={() => onSelect(project._id)}
       >
         {project.name}
       </button>
@@ -51,29 +64,29 @@
         />
       </div>
 
-      <MenuItem icon="stack" on:click={() => dispatch("createProject")}>
+      <MenuItem icon="stack" on:click={onCreateProject}>
         Create project
       </MenuItem>
       <MenuItem
         icon="pencil"
-        on:click={() => dispatch("editProject")}
+        on:click={onEditProject}
         disabled={!hasSelectedProject}
       >
         Edit selected project
       </MenuItem>
       <MenuItem
         icon="trash"
-        on:click={() => dispatch("deleteProject")}
+        on:click={onDeleteProject}
         disabled={!hasSelectedProject}
       >
         Delete selected project
       </MenuItem>
-      <MenuItem icon="upload-simple" on:click={() => dispatch("importProject")}>
+      <MenuItem icon="upload-simple" on:click={onImportProject}>
         Import project
       </MenuItem>
       <MenuItem
         icon="download-simple"
-        on:click={() => dispatch("exportProject")}
+        on:click={onExportProject}
         disabled={!canExport}
       >
         Export project

@@ -1,9 +1,22 @@
+<svelte:options runes={true} />
+
+<script lang="ts">
+  import type { Snippet } from "svelte"
+
+  interface Props {
+    toolbar?: Snippet
+    children?: Snippet
+  }
+
+  let { toolbar, children }: Props = $props()
+</script>
+
 <div class="resource-panel">
   <div class="resource-panel__toolbar">
-    <slot name="toolbar" />
+    {@render toolbar?.()}
   </div>
   <div class="resource-panel__content">
-    <slot />
+    {@render children?.()}
   </div>
 </div>
 

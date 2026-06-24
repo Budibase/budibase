@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {
     Body,
@@ -15,17 +17,23 @@
     color?: string
   }
 
-  export let onConfirm: (_payload: ConfirmPayload) => unknown = () => {}
-  export let project: ProjectResponse | undefined = undefined
-
-  let name = project?.name || ""
-  let description = project?.description || ""
-  let color: string | undefined = project?.color || "#8CA171"
-  let nameError: string | undefined = undefined
-
-  $: if (name.trim()) {
-    nameError = undefined
+  interface Props {
+    onConfirm?: (_payload: ConfirmPayload) => unknown
+    project?: ProjectResponse
   }
+
+  let { onConfirm = () => {}, project = undefined }: Props = $props()
+
+  let name = $state(project?.name || "")
+  let description = $state(project?.description || "")
+  let color: string | undefined = $state(project?.color || "#8CA171")
+  let nameError: string | undefined = $state(undefined)
+
+  $effect(() => {
+    if (name.trim()) {
+      nameError = undefined
+    }
+  })
 
   const confirm = () => {
     if (!name.trim()) {

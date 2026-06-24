@@ -1,6 +1,15 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import { goto as gotoStore, url } from "@roxi/routify"
-  import { DataEnvironmentMode, FieldType } from "@budibase/types"
+  import {
+    DataEnvironmentMode,
+    FieldType,
+    TableSourceType,
+    type Row,
+    type Table,
+    type TableSchema,
+  } from "@budibase/types"
   import { notifications, Input, ModalContent } from "@budibase/bbui"
   import { API } from "@/api"
   import { tables, datasources, dataEnvironmentStore } from "@/stores/builder"
@@ -10,56 +19,64 @@
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
-    DB_TYPE_INTERNAL,
   } from "@/constants/backend"
+  import { get } from "svelte/store"
 
-  $: goto = $gotoStore
-  $url
-
-  $: tableNames = $tables.list.map(table => table.name)
-  $: selectedSource = $datasources.list.find(
-    source => source._id === $datasources.selected
-  )
-
-  $: isSelectedInternal = selectedSource?.type === BUDIBASE_DATASOURCE_TYPE
-  $: targetDatasourceId = isSelectedInternal
-    ? selectedSource._id
-    : BUDIBASE_INTERNAL_DB_ID
-
-  export let promptUpload = false
-  export let name
-  export let beforeSave = async () => {}
-  export let afterSave = async table => {
-    notifications.success(`Table ${name} created successfully.`)
-
-    // Navigate to new table
-    const currentUrl = $url()
-    const path = currentUrl.endsWith("data")
-      ? `./table/${table._id}`
-      : `../../table/${table._id}`
-    goto(path)
+  interface Props {
+    promptUpload?: boolean
+    name?: string
+    beforeSave?: () => Promise<void>
+    afterSave?: (table: Table) => Promise<void>
   }
 
-  let error = ""
+  let {
+    promptUpload = false,
+    name = $bindable(""),
+    beforeSave = async () => {},
+    afterSave = async (table: Table) => {
+      notifications.success(`Table ${name} created successfully.`)
 
-  let schema = {}
-  let rows = []
-  let allValid = true
-  let displayColumn = null
-  let projectIds = []
+      const getCurrentUrl = get(url) as () => string
+      const currentUrl = getCurrentUrl()
+      const path = currentUrl.endsWith("data")
+        ? `./table/${table._id}`
+        : `../../table/${table._id}`
+      goto(path)
+    },
+  }: Props = $props()
 
-  const buildOptionConstraints = (schema, rows) => {
-    const updatedSchema = {}
-    const optionColumns = []
+  const goto = $derived($gotoStore)
+  const tableNames = $derived($tables.list.map(table => table.name))
+  const selectedSource = $derived(
+    $datasources.list.find(source => source._id === $datasources.selected)
+  )
+
+  const isSelectedInternal = $derived(
+    selectedSource?.type === BUDIBASE_DATASOURCE_TYPE
+  )
+  const targetDatasourceId = $derived(
+    isSelectedInternal
+      ? selectedSource?._id || BUDIBASE_INTERNAL_DB_ID
+      : BUDIBASE_INTERNAL_DB_ID
+  )
+
+  let error = $state("")
+
+  let schema: TableSchema = $state({})
+  let rows: Row[] = $state([])
+  let allValid = $state(true)
+  let displayColumn: string | null = $state(null)
+  let projectIds: string[] = $state([])
+
+  const buildOptionConstraints = (schema: TableSchema, rows: Row[]) => {
+    const updatedSchema: TableSchema = {}
+    const optionColumns: Array<{ name: string; isArray: boolean }> = []
 
     for (const [name, field] of Object.entries(schema || {})) {
-      const constraints = field?.constraints ? { ...field.constraints } : {}
-      updatedSchema[name] = { ...field, constraints }
+      updatedSchema[name] = { ...field }
 
-      if (
-        field?.type === FieldType.OPTIONS ||
-        field?.type === FieldType.ARRAY
-      ) {
+      if (field?.type === FieldType.OPTIONS) {
+        const constraints = { ...field.constraints }
         updatedSchema[name].constraints = {
           ...constraints,
           inclusion: Array.isArray(constraints.inclusion)
@@ -68,7 +85,19 @@
         }
         optionColumns.push({
           name,
-          isArray: field.type === FieldType.ARRAY,
+          isArray: false,
+        })
+      } else if (field?.type === FieldType.ARRAY) {
+        const constraints = { ...field.constraints }
+        updatedSchema[name].constraints = {
+          ...constraints,
+          inclusion: Array.isArray(constraints.inclusion)
+            ? [...constraints.inclusion]
+            : [],
+        }
+        optionColumns.push({
+          name,
+          isArray: true,
         })
       }
     }
@@ -77,19 +106,24 @@
       return updatedSchema
     }
 
-    const inclusionMap = optionColumns.reduce((acc, { name }) => {
-      acc[name] = new Set()
-      return acc
-    }, {})
+    const inclusionMap = optionColumns.reduce<Record<string, Set<string>>>(
+      (acc, { name }) => {
+        acc[name] = new Set()
+        return acc
+      },
+      {}
+    )
 
-    const addValue = (set, value) => {
+    const addValue = (set: Set<string>, value: Row[string]) => {
       if (value === null || value === undefined || value === "") {
         return
       }
-      set.add(value)
+      set.add(String(value))
     }
 
-    const parseJsonValue = raw => {
+    const parseJsonValue = (
+      raw: string
+    ): { ok: boolean; value?: Row[string] } => {
       try {
         return { ok: true, value: JSON.parse(raw) }
       } catch (_error) {
@@ -97,7 +131,7 @@
       }
     }
 
-    const parseArrayValue = value => {
+    const parseArrayValue = (value: Row[string]): Row[string][] => {
       if (Array.isArray(value)) {
         return value
       }
@@ -142,16 +176,17 @@
     }
 
     for (const { name } of optionColumns) {
-      updatedSchema[name].constraints.inclusion = Array.from(
-        inclusionMap[name]
-      ).sort()
+      const field = updatedSchema[name]
+      if (field.type === FieldType.OPTIONS || field.type === FieldType.ARRAY) {
+        field.constraints.inclusion = Array.from(inclusionMap[name]).sort()
+      }
     }
 
     return updatedSchema
   }
 
-  function checkValid(evt) {
-    const tableName = evt.target.value
+  function checkValid(evt: Event) {
+    const tableName = (evt.target as HTMLInputElement).value
     if (tableNames.includes(tableName)) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return
@@ -161,12 +196,12 @@
 
   async function saveTable() {
     const schemaForSave = buildOptionConstraints(schema, rows)
-    let newTable = {
+    let newTable: Table = {
       name,
       schema: { ...schemaForSave },
       type: "table",
       sourceId: targetDatasourceId,
-      sourceType: DB_TYPE_INTERNAL,
+      sourceType: TableSourceType.INTERNAL,
       projectIds: projectIds.length ? projectIds : undefined,
     }
 
@@ -175,26 +210,29 @@
       newTable.primaryDisplay = displayColumn
     }
 
-    let table
+    let table: Table
     try {
       await beforeSave()
       if (rows.length > IMPORT_ROWS_PER_CHUNK) {
         table = await tables.save(newTable)
         const chunks = chunkRows(rows, IMPORT_ROWS_PER_CHUNK)
         for (const chunk of chunks) {
-          await API.importTableData(table._id, chunk)
+          await API.importTableData(table._id!, chunk)
         }
       } else {
-        table = await tables.save({
+        const tableWithRows = {
           ...newTable,
           rows,
-        })
+        }
+        table = await tables.save(tableWithRows)
       }
       dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
       await datasources.fetch()
       await afterSave(table)
     } catch (e) {
-      notifications.error(e.message || e)
+      notifications.error(
+        e instanceof Error ? e.message : "Error creating table"
+      )
       // reload in case the table was created
       await tables.fetch()
     }
@@ -205,18 +243,12 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error ||
+  disabled={!!error ||
     !name ||
-    (rows.length && (!allValid || displayColumn == null))}
+    (rows.length > 0 && (!allValid || displayColumn == null))}
   size="M"
 >
-  <Input
-    thin
-    label="Table Name"
-    on:input={checkValid}
-    bind:value={name}
-    {error}
-  />
+  <Input label="Table Name" on:input={checkValid} bind:value={name} {error} />
   <ProjectSelect bind:value={projectIds} />
   <TableDataImport
     {promptUpload}

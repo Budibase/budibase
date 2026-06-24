@@ -1,24 +1,36 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import { Body, Input, ModalContent, Select, Toggle } from "@budibase/bbui"
   import type { ProjectResponse } from "@budibase/types"
-
-  export let projects: ProjectResponse[] = []
-  export let selectedProjectId = ""
 
   interface ConfirmPayload {
     id: string
     encryptPassword?: string
   }
 
-  export let onConfirm: (_payload: ConfirmPayload) => unknown = () => {}
+  interface Props {
+    projects?: ProjectResponse[]
+    selectedProjectId?: string
+    onConfirm?: (_payload: ConfirmPayload) => unknown
+  }
 
-  let projectId = ""
-  let encrypted = false
-  let encryptPassword = ""
-  let disabled = false
-  let initialised = false
+  let {
+    projects = [],
+    selectedProjectId = "",
+    onConfirm = () => {},
+  }: Props = $props()
 
-  $: if (!initialised && projects.length) {
+  let projectId = $state("")
+  let encrypted = $state(false)
+  let encryptPassword = $state("")
+  let disabled = $derived(!projectId || (encrypted && !encryptPassword.trim()))
+  let initialised = $state(false)
+
+  $effect(() => {
+    if (initialised || !projects.length) {
+      return
+    }
     const selectedProject = projects.find(
       project => project._id === selectedProjectId
     )
@@ -30,13 +42,13 @@
     }
 
     initialised = true
-  }
+  })
 
-  $: if (!encrypted && encryptPassword) {
-    encryptPassword = ""
-  }
-
-  $: disabled = !projectId || (encrypted && !encryptPassword.trim())
+  $effect(() => {
+    if (!encrypted && encryptPassword) {
+      encryptPassword = ""
+    }
+  })
 </script>
 
 <ModalContent

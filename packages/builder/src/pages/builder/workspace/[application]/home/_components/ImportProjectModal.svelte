@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {
     Body,
@@ -14,20 +16,26 @@
     encryptPassword?: string
   }
 
-  export let onConfirm: (_payload: ConfirmPayload) => unknown = () => {}
-
-  let encrypted = false
-  let manualEncrypted = false
-  let encryptPassword = ""
-  let file: File | undefined = undefined
-  let disabled = false
-
-  $: encrypted = manualEncrypted || !!file?.name?.endsWith(".enc.tar.gz")
-  $: disabled = !file || (encrypted && !encryptPassword.trim())
-
-  $: if (!encrypted && encryptPassword) {
-    encryptPassword = ""
+  interface Props {
+    onConfirm?: (_payload: ConfirmPayload) => unknown
   }
+
+  let { onConfirm = () => {} }: Props = $props()
+
+  let manualEncrypted = $state(false)
+  let encryptPassword = $state("")
+  let file = $state<File | undefined>(undefined)
+
+  const encrypted = $derived(
+    manualEncrypted || !!file?.name?.endsWith(".enc.tar.gz")
+  )
+  let disabled = $derived(!file || (encrypted && !encryptPassword.trim()))
+
+  $effect(() => {
+    if (!encrypted && encryptPassword) {
+      encryptPassword = ""
+    }
+  })
 
   const handleFileChange = (event: CustomEvent<Array<UIFile | File>>) => {
     const nextFile = event.detail?.[0]

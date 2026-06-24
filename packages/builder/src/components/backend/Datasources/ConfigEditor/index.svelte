@@ -14,7 +14,7 @@
     config: Record<string, any>
     name: string
     projectIds?: string[]
-  }) => Promise<void> | void = () => {}
+  }) => Promise<void | typeof keepOpen> | void | typeof keepOpen = () => {}
   export let showNameField: boolean = false
   export let nameFieldValue: string = ""
   export let showProjectField: boolean = false

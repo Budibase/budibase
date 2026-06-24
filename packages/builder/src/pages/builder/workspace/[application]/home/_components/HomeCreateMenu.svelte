@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {
     ActionMenu,
@@ -9,14 +11,27 @@
   } from "@budibase/bbui"
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
 
-  export let variant: "button" | "pill" = "button"
-  export let portalTarget: string | undefined = undefined
-  export let onCreateAgent: () => void = () => {}
-  export let onCreateAutomation: () => void = () => {}
-  export let onCreateApp: () => void = () => {}
-  export let onCreateConnection: () => void = () => {}
-  export let onCreateTable: () => void = () => {}
-  export let onCreateApi: () => void = () => {}
+  interface Props {
+    variant?: "button" | "pill"
+    portalTarget?: string
+    onCreateAgent?: () => void
+    onCreateAutomation?: () => void
+    onCreateApp?: () => void
+    onCreateConnection?: () => void
+    onCreateTable?: () => void
+    onCreateApi?: () => void
+  }
+
+  let {
+    variant = "button",
+    portalTarget = undefined,
+    onCreateAgent = () => {},
+    onCreateAutomation = () => {},
+    onCreateApp = () => {},
+    onCreateConnection = () => {},
+    onCreateTable = () => {},
+    onCreateApi = () => {},
+  }: Props = $props()
 </script>
 
 <ActionMenu align={PopoverAlignment.Right} {portalTarget} animate={false}>
