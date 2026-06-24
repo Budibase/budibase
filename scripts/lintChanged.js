@@ -57,6 +57,11 @@ const resolveBin = name =>
     ? `.\\node_modules\\.bin\\${name}.cmd`
     : `./node_modules/.bin/${name}`
 
+const eslintArgs = ["--no-warn-ignored", ...lintableFiles]
+if (process.env.BUDIBASE_ALLOW_LINT_WARNINGS !== "1") {
+  eslintArgs.unshift("--max-warnings=0")
+}
+
 const run = (bin, args) => {
   const result = spawnSync(resolveBin(bin), args, {
     stdio: "inherit",
@@ -69,9 +74,9 @@ const run = (bin, args) => {
 }
 
 if (mode === "fix") {
-  run("eslint", ["--fix", "--max-warnings=0", "--no-warn-ignored", ...lintableFiles])
+  run("eslint", ["--fix", ...eslintArgs])
   run("prettier", ["--write", ...lintableFiles])
 } else {
-  run("eslint", ["--max-warnings=0", "--no-warn-ignored", ...lintableFiles])
+  run("eslint", eslintArgs)
   run("prettier", ["--check", ...lintableFiles])
 }

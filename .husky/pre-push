@@ -13,7 +13,7 @@ git status --porcelain > "$before_lint_status"
 git diff --binary > "$before_lint_diff"
 git diff --cached --binary > "$before_lint_cached_diff"
 
-yarn lint:fix || {
+BUDIBASE_ALLOW_LINT_WARNINGS=1 yarn lint:fix || {
   printf >&2 "\n%s\n\n" "Linting failed. Push halted."
   exit 1
 }

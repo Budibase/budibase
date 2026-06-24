@@ -1,21 +1,34 @@
-<script>
+<script lang="ts">
+  import type { Dayjs } from "dayjs"
   import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value
+  export let value: Dayjs | undefined
+  export let disableClearing = false
+  export let disabled = false
+  export let readonly = false
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: Dayjs | undefined }>()
 
   $: displayValue = value?.format("HH:mm")
 
-  const handleChange = e => {
-    if (!e.target.value) {
+  const handleChange = async (e: Event) => {
+    if (disabled || readonly) {
+      return
+    }
+
+    const target = e.target as HTMLInputElement
+    if (!target.value) {
+      if (disableClearing) {
+        target.value = displayValue || "00:00"
+        return
+      }
       dispatch("change", undefined)
       return
     }
 
-    const [hour, minute] = e.target.value.split(":").map(x => parseInt(x))
+    const [hour, minute] = target.value.split(":").map(x => parseInt(x))
     dispatch(
       "change",
       (value || dayjs()).hour(hour).minute(minute).second(0).millisecond(0)
@@ -28,6 +41,8 @@
     hideArrows
     type={"time"}
     value={displayValue}
+    {disabled}
+    {readonly}
     on:input={handleChange}
     on:change={handleChange}
   />
