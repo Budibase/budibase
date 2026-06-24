@@ -103,7 +103,11 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   }
 
   updateProject = async (project: UpdateProjectRequest) => {
+    const workspaceId = this.workspaceId
     const response = await API.projects.update(project)
+    if (this.workspaceId !== workspaceId) {
+      return response.project
+    }
     this.invalidateFetch()
     this.update(state =>
       state.map(existing =>
@@ -114,7 +118,11 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   }
 
   deleteProject = async (id: string, rev: string) => {
+    const workspaceId = this.workspaceId
     await API.projects.delete(id, rev)
+    if (this.workspaceId !== workspaceId) {
+      return
+    }
     this.invalidateFetch()
     this.update(state => state.filter(project => project._id !== id))
   }

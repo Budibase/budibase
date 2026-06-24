@@ -175,6 +175,36 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([updated])
   })
 
+  it("does not update projects after the workspace changes", async () => {
+    const store = new ProjectsStore()
+    const pendingUpdate = defer<UpdateProjectResponse>()
+    const original = project("project_1")
+    const updated: ProjectResponse = {
+      ...original,
+      _rev: "2-rev",
+      name: "Updated project",
+    }
+    const secondWorkspaceProject = project("workspace_2_project")
+
+    fetchProjects
+      .mockResolvedValueOnce({ projects: [original] })
+      .mockResolvedValueOnce({ projects: [secondWorkspaceProject] })
+    updateProject.mockReturnValue(pendingUpdate.promise)
+
+    await store.fetch("app_workspace_1")
+    const updatePromise = store.updateProject({
+      _id: original._id,
+      _rev: original._rev,
+      name: updated.name,
+    })
+    await store.fetch("app_workspace_2")
+
+    pendingUpdate.resolve({ project: updated })
+
+    await expect(updatePromise).resolves.toEqual(updated)
+    expect(getProjects(store)).toEqual([secondWorkspaceProject])
+  })
+
   it("does not let an in-flight fetch re-add a deleted project", async () => {
     const store = new ProjectsStore()
     const fetch = defer<FetchProjectsResponse>()
@@ -192,5 +222,26 @@ describe("ProjectsStore", () => {
 
     await expect(fetchPromise).resolves.toEqual([deleted, retained])
     expect(getProjects(store)).toEqual([retained])
+  })
+
+  it("does not delete projects after the workspace changes", async () => {
+    const store = new ProjectsStore()
+    const pendingDelete = defer<void>()
+    const deleted = project("project_1")
+    const secondWorkspaceProject = project("workspace_2_project")
+
+    fetchProjects
+      .mockResolvedValueOnce({ projects: [deleted] })
+      .mockResolvedValueOnce({ projects: [secondWorkspaceProject] })
+    deleteProject.mockReturnValue(pendingDelete.promise)
+
+    await store.fetch("app_workspace_1")
+    const deletePromise = store.deleteProject(deleted._id, deleted._rev)
+    await store.fetch("app_workspace_2")
+
+    pendingDelete.resolve()
+
+    await deletePromise
+    expect(getProjects(store)).toEqual([secondWorkspaceProject])
   })
 })
