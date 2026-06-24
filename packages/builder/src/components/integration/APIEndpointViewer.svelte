@@ -132,6 +132,7 @@
   let defaultSpecServerUrl: string | undefined = undefined
   let response: PreviewQueryResponse
   let editableQuery: Query | undefined
+  let projectIds: string[] = []
   let datasource: Datasource | UIInternalDatasource | undefined
   let enabledHeaders: Record<string, boolean> = {}
   let globalDynamicRequestBindings: EnrichedBinding[] = []
@@ -210,6 +211,7 @@
 
   $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
+    projectIds = editableQuery?.projectIds || []
     lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
@@ -325,6 +327,7 @@
     buildQuery(
       {
         ...editableQuery,
+        projectIds: projectIds.length ? projectIds : undefined,
         datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },
@@ -1033,7 +1036,7 @@
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
             <div class="project">
-              <ProjectSelect bind:value={editableQuery.projectIds} />
+              <ProjectSelect bind:value={projectIds} />
             </div>
           {/if}
           {#if endpointDocs}
