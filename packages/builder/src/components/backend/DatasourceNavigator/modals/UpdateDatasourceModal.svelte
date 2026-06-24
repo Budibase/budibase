@@ -9,11 +9,13 @@
   let modal
   let name
   let originalName = ""
-  let originalProjectId = ""
-  let projectId = ""
+  let originalProjectIds = []
+  let projectIds = []
   let hasChanges = false
 
-  $: hasChanges = name !== originalName || projectId !== originalProjectId
+  $: hasChanges =
+    name !== originalName ||
+    JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
 
   export let datasource
   export let onCancel = undefined
@@ -21,9 +23,9 @@
   export const show = () => {
     error = ""
     originalName = datasource?.name || ""
-    originalProjectId = datasource?.projectId || ""
+    originalProjectIds = datasource?.projectIds || []
     name = originalName
-    projectId = originalProjectId
+    projectIds = originalProjectIds
     modal.show()
   }
   export const hide = () => {
@@ -47,7 +49,7 @@
     const updatedDatasource = {
       ...datasource,
       name,
-      projectId: projectId || undefined,
+      projectIds: projectIds.length ? projectIds : undefined,
     }
     await datasources.save({
       datasource: updatedDatasource,
@@ -73,6 +75,6 @@
       bind:value={name}
       {error}
     />
-    <ProjectSelect bind:value={projectId} />
+    <ProjectSelect bind:value={projectIds} />
   </ModalContent>
 </Modal>

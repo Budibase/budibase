@@ -46,7 +46,7 @@
   let rows = []
   let allValid = true
   let displayColumn = null
-  let projectId = ""
+  let projectIds = []
 
   const buildOptionConstraints = (schema, rows) => {
     const updatedSchema = {}
@@ -167,7 +167,7 @@
       type: "table",
       sourceId: targetDatasourceId,
       sourceType: DB_TYPE_INTERNAL,
-      projectId: projectId || undefined,
+      projectIds: projectIds.length ? projectIds : undefined,
     }
 
     // Only set primary display if defined
@@ -217,7 +217,7 @@
     bind:value={name}
     {error}
   />
-  <ProjectSelect bind:value={projectId} />
+  <ProjectSelect bind:value={projectIds} />
   <TableDataImport
     {promptUpload}
     bind:rows

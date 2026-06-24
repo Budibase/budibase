@@ -16,17 +16,18 @@
 
   let originalName
   let updatedName
-  let originalProjectId = ""
-  let projectId = ""
+  let originalProjectIds = []
+  let projectIds = []
   let hasChanges = false
 
   $: hasChanges =
-    updatedName !== originalName || projectId !== originalProjectId
+    updatedName !== originalName ||
+    JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
 
   async function save() {
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
-    updatedTable.projectId = projectId || undefined
+    updatedTable.projectIds = projectIds.length ? projectIds : undefined
     await tables.save(updatedTable)
     await datasources.fetch()
     notifications.success("Table updated successfully")
@@ -45,8 +46,8 @@
     error = ""
     originalName = table.name + ""
     updatedName = table.name + ""
-    originalProjectId = table.projectId || ""
-    projectId = originalProjectId
+    originalProjectIds = table.projectIds || []
+    projectIds = originalProjectIds
   }
 </script>
 
@@ -66,7 +67,7 @@
         on:input={checkValid}
         {error}
       />
-      <ProjectSelect bind:value={projectId} />
+      <ProjectSelect bind:value={projectIds} />
     </form>
   </ModalContent>
 </Modal>

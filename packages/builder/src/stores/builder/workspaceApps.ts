@@ -132,7 +132,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       url: workspaceApp.url,
       navigation: workspaceApp.navigation,
       disabled: workspaceApp.disabled,
-      projectId: workspaceApp.projectId,
+      projectIds: workspaceApp.projectIds,
     }
     if (workspaceApp.theme !== undefined) {
       safeWorkspaceApp.theme = workspaceApp.theme

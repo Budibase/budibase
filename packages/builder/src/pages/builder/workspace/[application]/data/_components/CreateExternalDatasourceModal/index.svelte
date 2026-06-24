@@ -54,12 +54,12 @@
     store.editConfigStage()
   })
 
-  const createDatasource = async ({ config, projectId }) => {
+  const createDatasource = async ({ config, projectIds }) => {
     try {
       const datasource = await datasources.create({
         integration: get(store).integration,
         config,
-        projectId,
+        projectIds,
       })
       store.setDatasource(datasource)
 
