@@ -7,6 +7,7 @@
     redirectToLoginWithReturnUrl,
     invalidationMessage,
     popNumSessionsInvalidated,
+    derivedMemo,
   } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
@@ -206,6 +207,15 @@
     if (dataLoaded && fontsLoaded) {
       document.getElementById("clientAppSkeletonLoader")?.remove()
     }
+  }
+
+  const builderActiveScreenId = derivedMemo(
+    [builderStore, screenStore],
+    ([$builderStore, $screenStore]) =>
+      $builderStore.inBuilder ? $screenStore.activeScreen?._id : undefined
+  )
+  $: if ($builderActiveScreenId) {
+    sidePanelStore.actions.close()
   }
 </script>
 
