@@ -1,7 +1,6 @@
 import { fireEvent, render, waitFor } from "@testing-library/svelte"
 import { describe, expect, it, vi } from "vitest"
 import { tick } from "svelte"
-import MockDatePicker from "@/test/mocks/MockDatePicker.svelte"
 import MockCronBuilder from "@/test/mocks/MockCronBuilder.svelte"
 import MockLayout from "@/test/mocks/MockLayout.svelte"
 import MockSelect from "@/test/mocks/MockSelect.svelte"
@@ -10,7 +9,7 @@ import ScheduleBuilderHarness from "@/test/mocks/ScheduleBuilderHarness.svelte"
 import { REBOOT_CRON } from "@budibase/shared-core"
 
 vi.mock("@budibase/bbui", () => ({
-  DatePicker: MockDatePicker,
+  DatePicker: MockSlot,
   Label: MockSlot,
   Layout: MockLayout,
   Multiselect: MockSelect,
@@ -91,17 +90,5 @@ describe("ScheduleBuilder", () => {
     await waitFor(() => {
       expect(getChanges()).toEqual([{ cron: REBOOT_CRON, timezone: "UTC" }])
     })
-  })
-
-  it("disables clearing the schedule time picker", () => {
-    const { getByTestId } = renderScheduleBuilder({
-      cronExpression: "",
-      timezone: "UTC",
-    })
-
-    expect(getByTestId("date-picker")).toHaveAttribute(
-      "data-disable-clear",
-      "true"
-    )
   })
 })
