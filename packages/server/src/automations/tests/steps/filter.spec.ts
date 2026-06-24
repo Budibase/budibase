@@ -142,4 +142,19 @@ describe("test the filter logic", () => {
       result: false,
     })
   })
+
+  it("should stop with the normal stopped status when notify is enabled", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .filter({
+        field: 1,
+        condition: FilterCondition.EQUAL,
+        value: 2,
+        notify: true,
+      })
+      .test({ fields: {} })
+
+    expect(result.status).toEqual(AutomationStatus.STOPPED)
+    expect(result.steps[0].outputs.status).toEqual(AutomationStatus.STOPPED)
+  })
 })
