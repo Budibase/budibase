@@ -39,11 +39,6 @@
     page: string | null | undefined
     timeRange: TimeRange | null
     force: boolean
-    fromRealtime: boolean
-  }
-
-  interface RefreshLogsOptions {
-    fromRealtime?: boolean
   }
 
   const ERROR = AutomationStatus.ERROR,
@@ -59,12 +54,12 @@
   let totalLogs = 0
   let loading = false
   let queuedFetch: QueuedFetch | null = null
-  let realtimePaused = false
-  let lastLogRefreshSequence = 0
   let lastFilterKey: string | null = null
   let lastFetchKey: string | null = null
+  let pollTimer: ReturnType<typeof setInterval> | undefined
 
   const AUTOMATION_LOG_PAGE_SIZE = 10
+  const AUTOMATION_LOG_POLL_INTERVAL_MS = 15000
 
   const allTimeOptions: SelectOption<TimeRange>[] = [
     { value: "90-d", label: "Past 90 days" },
@@ -132,8 +127,7 @@
     status: AutomationStatus | undefined,
     page: string | null | undefined,
     timeRange: TimeRange | null,
-    force = false,
-    fromRealtime = false
+    force = false
   ) {
     if (!automationId || (!force && !loaded)) {
       return
@@ -145,7 +139,6 @@
         page,
         timeRange,
         force,
-        fromRealtime,
       }
       return
     }
@@ -180,46 +173,17 @@
           nextFetch.status,
           nextFetch.page,
           nextFetch.timeRange,
-          nextFetch.force,
-          nextFetch.fromRealtime
+          nextFetch.force
         )
       }
     }
   }
 
-  const refreshLogs = async ({
-    fromRealtime = false,
-  }: RefreshLogsOptions = {}) => {
+  const refreshLogs = async () => {
     if (!automation._id) {
       return
     }
-    await fetchLogs(automation._id, status, page, timeRange, true, fromRealtime)
-  }
-
-  $: {
-    const logRefreshEvent = $automationStore.logRefreshEvent
-    if (
-      loaded &&
-      logRefreshEvent &&
-      logRefreshEvent.automationId === automation._id &&
-      logRefreshEvent.sequence !== lastLogRefreshSequence
-    ) {
-      lastLogRefreshSequence = logRefreshEvent.sequence
-      refreshLogs({ fromRealtime: true })
-    }
-  }
-
-  const toggleRealtimeUpdates = () => {
-    realtimePaused = !realtimePaused
-    if (automation._id) {
-      automationStore.actions.setLogRefreshPaused({
-        automationId: automation._id,
-        paused: realtimePaused,
-      })
-    }
-    if (!realtimePaused) {
-      refreshLogs()
-    }
+    await fetchLogs(automation._id, status, page, timeRange, true)
   }
 
   onMount(async () => {
@@ -227,22 +191,16 @@
       loaded = true
       return
     }
-    automationStore.actions.setLogRefreshPaused({
-      automationId: automation._id,
-      paused: realtimePaused,
-    })
     await fetchLogs(automation._id, status, undefined, timeRange, true)
+    lastFetchKey = `${automation._id}:${filterKey}:`
     loaded = true
+    pollTimer = setInterval(refreshLogs, AUTOMATION_LOG_POLL_INTERVAL_MS)
   })
 
   onDestroy(() => {
-    if (!automation._id) {
-      return
+    if (pollTimer) {
+      clearInterval(pollTimer)
     }
-    automationStore.actions.setLogRefreshPaused({
-      automationId: automation._id,
-      paused: false,
-    })
   })
 
   const getLogStatus = (log: AutomationLog) => {
@@ -292,20 +250,15 @@
           {/if}
         </div>
       {/if}
-      <div class="realtime-controls">
-        <Body size="S">
-          {"Live updates"}
-        </Body>
-        <div
-          class:live-dot={!realtimePaused}
-          class:paused-dot={realtimePaused}
-        ></div>
+      <div class="refresh-controls">
         <Button
           size="S"
           quiet
-          icon={realtimePaused ? "play" : "Pause"}
-          on:click={toggleRealtimeUpdates}
-        />
+          icon="Refresh"
+          on:click={refreshLogs}
+        >
+          Refresh
+        </Button>
       </div>
 
       {#if runHistory}
@@ -401,30 +354,12 @@
     gap: var(--spacing-m);
   }
 
-  .realtime-controls {
+  .refresh-controls {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-s);
     padding-right: var(--spacing-m);
-    color: var(--spectrum-global-color-gray-700);
     margin-bottom: 16px;
-  }
-
-  .live-dot,
-  .paused-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex: 0 0 auto;
-  }
-
-  .live-dot {
-    background: var(--spectrum-global-color-green-600);
-  }
-
-  .paused-dot {
-    background: var(--spectrum-global-color-gray-600);
   }
 
   .plan-message {

@@ -213,11 +213,6 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   }
   selectedLog?: AutomationLog
   selectedLogStepData?: any
-  logRefreshEvent?: {
-    automationId: string
-    sequence: number
-  }
-  pausedLogRefreshes?: Record<string, boolean>
   showLogsPanel?: boolean
   showLogDetailsPanel?: boolean
   viewMode: ViewMode

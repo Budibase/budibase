@@ -16,11 +16,6 @@ import http from "http"
 import Koa from "koa"
 import { Socket } from "socket.io"
 import { authorizedMiddleware as authorized } from "../middleware/authorized"
-import {
-  AutomationLogUpdate,
-  getAutomationLogUpdateRooms,
-  subscribeToAutomationLogUpdates,
-} from "../utilities/automationLogEvents"
 import { clearLock, updateLock } from "../utilities/redis"
 import { gridSocket } from "./index"
 import { BaseSocket, EmitOptions } from "./websocket"
@@ -28,11 +23,6 @@ import { BaseSocket, EmitOptions } from "./websocket"
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
     super(app, server, "/socket/builder", [authorized(permissions.BUILDER)])
-    subscribeToAutomationLogUpdates(update => {
-      this.emitAutomationLogUpdate(update)
-    }).catch(e => {
-      console.error("Error subscribing to automation log updates", e)
-    })
   }
 
   async onConnect(socket?: Socket) {
@@ -233,11 +223,4 @@ export default class BuilderSocket extends BaseSocket {
     })
   }
 
-  emitAutomationLogUpdate(update: AutomationLogUpdate) {
-    getAutomationLogUpdateRooms(update.appId).forEach(room => {
-      this.io.to(room).emit(BuilderSocketEvent.AutomationLogChange, {
-        automationId: update.automationId,
-      })
-    })
-  }
 }

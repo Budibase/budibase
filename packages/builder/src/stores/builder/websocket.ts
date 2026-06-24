@@ -148,12 +148,5 @@ export const createBuilderWebsocket = (appId: string) => {
     }
   )
 
-  socket.on(
-    BuilderSocketEvent.AutomationLogChange,
-    ({ automationId }: { automationId: string }) => {
-      automationStore.actions.handleLogRefresh({ automationId })
-    }
-  )
-
   return socket
 }
