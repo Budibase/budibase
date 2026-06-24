@@ -68,7 +68,11 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   }
 
   create = async (project: CreateProjectRequest) => {
+    const workspaceId = this.workspaceId
     const response = await API.projects.create(project)
+    if (this.workspaceId !== workspaceId) {
+      return response.project
+    }
     this.invalidateFetch()
     this.update(state => [...state, response.project])
     return response.project
