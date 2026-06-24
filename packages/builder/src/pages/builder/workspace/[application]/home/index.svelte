@@ -752,9 +752,9 @@
   }
 
   const loadProjects = async (workspaceId: string) => {
-    projectsRequestedForWorkspace = workspaceId
     try {
-      await projectsStore.fetch(workspaceId)
+      await projectsStore.ensureFetched(workspaceId)
+      projectsRequestedForWorkspace = workspaceId
     } catch (error) {
       if ($appStore.appId === workspaceId && projectsEnabled) {
         notifications.error(getErrorMessage(error) || "Unable to load projects")
