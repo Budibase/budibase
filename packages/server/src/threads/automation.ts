@@ -1132,7 +1132,9 @@ export const removeStalled = async (job: Job<AutomationData>) => {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   await context.doInWorkspaceContext(appId, async () => {
-    const orchestrator = new Orchestrator(job)
-    await orchestrator.stopCron("stalled")
+    logging.logWarn(
+      `Automation job stalled - ${appId}/${job.data.automation._id}`,
+      getAutomationLogContext(job)
+    )
   })
 }

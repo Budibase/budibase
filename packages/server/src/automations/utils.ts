@@ -42,6 +42,19 @@ function isWorkspaceDatabaseMissing(err: unknown) {
   )
 }
 
+async function workspaceExists(workspaceId: string) {
+  try {
+    const workspaceIds = await dbCore.getAllWorkspaces({
+      idsOnly: true,
+      efficient: true,
+    })
+    return workspaceIds.includes(workspaceId)
+  } catch (err) {
+    console.log("Failed to check workspace existence", { workspaceId, err })
+    return true
+  }
+}
+
 function isLegacyRepeatableJobId(jobId?: string) {
   return !!jobId?.startsWith("repeat:")
 }
@@ -159,7 +172,12 @@ export async function processEvent(job: AutomationJob) {
       } catch (err) {
         span.addTags({ error: true })
         console.warn(`automation was unable to run`, err, ...loggingArgs(job))
-        if (job.opts.repeat && job.id && isWorkspaceDatabaseMissing(err)) {
+        if (
+          job.opts.repeat &&
+          job.id &&
+          isWorkspaceDatabaseMissing(err) &&
+          !(await workspaceExists(workspaceId))
+        ) {
           await disableCronById(job.id)
         }
         return { err }

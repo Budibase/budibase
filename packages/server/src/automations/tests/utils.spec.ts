@@ -31,6 +31,10 @@ import { updateEntityMetadata } from "../../utilities"
 import type { MockedFunction } from "jest-mock"
 
 let mockRunnerRun = jest.fn()
+const mockGetAllWorkspaces = jest.fn<
+  Promise<string[]>,
+  [{ idsOnly: true; efficient?: boolean }]
+>()
 
 jest.mock("../../features", () => ({
   automationsEnabled: () => true,
@@ -76,6 +80,8 @@ jest.mock("@budibase/backend-core", () => {
     db: {
       ...actual.db,
       doWithDB: jest.fn(),
+      getAllWorkspaces: (opts: { idsOnly: true; efficient?: boolean }) =>
+        mockGetAllWorkspaces(opts),
     },
     context: {
       ...actual.context,
@@ -507,12 +513,13 @@ describe("automation utils process helpers", () => {
     expect(mockRunnerRun.mock.calls[1][0].data.event.bodyText).toEqual("two")
   })
 
-  it("disables repeated cron jobs when the workspace database is missing", async () => {
+  it("disables repeated cron jobs when the workspace database has been removed", async () => {
     const automation = buildCronAutomation("job_1")
     const job = buildJob(automation, { appId: "app_prod" }, { repeat: {} })
     mockRunnerRun.mockRejectedValue({
       reason: "Database does not exist.",
     })
+    mockGetAllWorkspaces.mockResolvedValue(["app_prod_other"])
     const mockRemoveRepeatableByKey = jest.fn()
     mockGetBullQueue.mockReturnValue({
       getRepeatableJobs: jest.fn().mockResolvedValue([
@@ -538,6 +545,33 @@ describe("automation utils process helpers", () => {
     mockRunnerRun.mockRejectedValue({
       reason: "Database does not exist.",
     })
+    mockGetAllWorkspaces.mockResolvedValue(["app_prod"])
+    const mockRemoveRepeatableByKey = jest.fn()
+    mockGetBullQueue.mockReturnValue({
+      getRepeatableJobs: jest.fn().mockResolvedValue([
+        { id: "job_1", key: "job_1:key" },
+        { id: "other", key: "other:key" },
+      ]),
+      removeRepeatableByKey: mockRemoveRepeatableByKey,
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
+    const consoleWarn = jest.spyOn(console, "warn").mockImplementation()
+    const consoleLog = jest.spyOn(console, "log").mockImplementation()
+
+    const result = await processEvent(job)
+
+    consoleWarn.mockRestore()
+    consoleLog.mockRestore()
+    expect(result.err).toEqual({ reason: "Database does not exist." })
+    expect(mockRemoveRepeatableByKey).not.toHaveBeenCalled()
+  })
+
+  it("does not disable a repeatable cron when checking workspace existence fails", async () => {
+    const automation = buildCronAutomation("job_1")
+    const job = buildJob(automation, { appId: "app_prod" }, { repeat: {} })
+    mockRunnerRun.mockRejectedValue({
+      reason: "Database does not exist.",
+    })
+    mockGetAllWorkspaces.mockRejectedValue(new Error("couch unavailable"))
     const mockRemoveRepeatableByKey = jest.fn()
     mockGetBullQueue.mockReturnValue({
       getRepeatableJobs: jest.fn().mockResolvedValue([
