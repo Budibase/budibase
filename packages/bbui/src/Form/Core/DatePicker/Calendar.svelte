@@ -5,9 +5,11 @@
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
   import Icon from "../../../Icon/Icon.svelte"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let value
   export let startDayOfWeek = "Monday"
+  export let calendarLabels = resolveTranslationGroup("calendar")
 
   const dispatch = createEventDispatcher()
   const DaysOfWeek = [
@@ -49,6 +51,10 @@
   $: calendarDate = dayjs(value || dayjs()).startOf("month")
   $: dayHeaders = getDayHeaders(startDayOfWeek)
   $: weekStarts = getWeekStarts(calendarDate, DayIndex[startDayOfWeek])
+  $: monthOptions = MonthsOfYear.map((month, idx) => ({
+    label: getTranslatedMonth(month),
+    value: idx,
+  }))
 
   const getWeekStarts = (monthStart, startDayIndex) => {
     if (!monthStart?.isValid()) {
@@ -72,6 +78,20 @@
       return DaysOfWeek
     }
     return [...DaysOfWeek.slice(index), ...DaysOfWeek.slice(0, index)]
+  }
+
+  const getTranslatedDay = day => {
+    return calendarLabels?.[day.toLowerCase()] ?? day
+  }
+
+  const getTranslatedMonth = month => {
+    return calendarLabels?.[month.toLowerCase()] ?? month
+  }
+
+  const getDateTitle = date => {
+    return `${getTranslatedDay(date.format("dddd"))}, ${getTranslatedMonth(
+      date.format("MMMM")
+    )} ${date.date()}, ${date.year()}`
   }
 
   const handleCalendarYearChange = e => {
@@ -108,8 +128,8 @@
       <div class="month-selector">
         <Select
           autoWidth
-          placeholder={null}
-          options={MonthsOfYear.map((m, idx) => ({ label: m, value: idx }))}
+          placeholder={calendarLabels?.datePickerPlaceholder}
+          options={monthOptions}
           value={calendarDate.month()}
           on:change={e => (calendarDate = calendarDate.month(e.detail))}
         />
@@ -150,8 +170,11 @@
         <tr>
           {#each dayHeaders as day}
             <th scope="col" class="spectrum-Calendar-tableCell">
-              <abbr class="spectrum-Calendar-dayOfWeek" title={day}>
-                {day[0]}
+              <abbr
+                class="spectrum-Calendar-dayOfWeek"
+                title={getTranslatedDay(day)}
+              >
+                {getTranslatedDay(day)[0]}
               </abbr>
             </th>
           {/each}
@@ -168,7 +191,7 @@
                 aria-disabled="true"
                 aria-selected="false"
                 aria-invalid="false"
-                title={date.format("dddd, MMMM D, YYYY")}
+                title={getDateTitle(date)}
                 on:click={() => handleDateChange(date)}
               >
                 <span

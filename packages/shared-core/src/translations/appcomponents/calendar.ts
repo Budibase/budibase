@@ -133,4 +133,19 @@ export const calendarTranslations = createTranslationDefinitions(category, [
     name: "No Events Found text",
     defaultValue: "No events found",
   },
+  {
+    key: "datePickerPlaceholder",
+    name: "Date Picker placeholder text",
+    defaultValue: "Choose an option",
+  },
+  {
+    key: "datePickerClear",
+    name: "Date picker clear button",
+    defaultValue: "Clear",
+  },
+  {
+    key: "datePickerNow",
+    name: "Date picker now button",
+    defaultValue: "Now",
+  },
 ])
