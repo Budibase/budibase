@@ -68,7 +68,7 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   }
 }
 
-async function maybeGenerateAndSaveRequestTitle({
+async function generateAndSaveRequestTitleIfMissing({
   request,
   agentId,
   sessionId,
@@ -145,7 +145,7 @@ async function createNewRequest({
     })
   )
 
-  return await maybeGenerateAndSaveRequestTitle({
+  return await generateAndSaveRequestTitleIfMissing({
     request: createdRequest,
     agentId,
     sessionId,
