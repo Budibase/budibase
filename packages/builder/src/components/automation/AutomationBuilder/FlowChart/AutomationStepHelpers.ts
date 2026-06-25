@@ -30,18 +30,15 @@ import {
   LoopV2NodeData,
 } from "@/types/automations"
 
-import { stepNode, anchorNode, edgeAddItem } from "./FlowCanvas/FlowFactories"
-import type { GraphBuildDeps } from "./FlowCanvas/FlowGraphBuilder"
-import {
-  renderBranches,
-  renderLoopV2Container,
-} from "./FlowCanvas/FlowGraphBuilder"
+import type { GraphBuildDeps } from "./FlowCanvas/FlowGraphTypes"
 import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
 import {
   applyBranchLaneClearance,
   applyLoopClearance,
   applyPostLoopBranchClearance,
 } from "./FlowCanvas/FlowLayout"
+
+export { buildAutomationGraph } from "./FlowCanvas/buildAutomationGraph"
 
 // -----------------
 // Type Guards
@@ -317,80 +314,6 @@ export const getBranchConditionDetails = (step: AutomationStepResult) => {
     allBranches: branches,
     totalBranches: branches.length,
   }
-}
-
-// ----------------------------
-// Graph building (top-level)
-// ----------------------------
-
-export const buildTopLevelGraph = (
-  blocks: AutomationBlock[],
-  deps: GraphBuildDeps
-) => {
-  let currentY = 0
-
-  blocks.forEach((block: AutomationBlock, idx: number) => {
-    const isTrigger = idx === 0
-    const isBranchStep = block.stepId === "BRANCH"
-    const isLoopV2 = block.stepId === "LOOP_V2"
-    const baseId = block.id
-    let blockHeight = deps.ySpacing
-
-    if (!isBranchStep) {
-      if (isLoopV2 && "schema" in block) {
-        const loopResult = renderLoopV2Container(block, 0, currentY, deps)
-        blockHeight = loopResult.containerHeight
-      } else {
-        deps.newNodes.push(
-          stepNode(baseId, block, undefined, {
-            x: 0,
-            y: currentY,
-          })
-        )
-      }
-    }
-
-    if (!isTrigger && !isBranchStep) {
-      const prevId = blocks[idx - 1].id
-      deps.newEdges.push(
-        edgeAddItem(prevId, baseId, {
-          block: blocks[idx - 1],
-        })
-      )
-    }
-
-    if (!isBranchStep && (blocks.length === 1 || idx === blocks.length - 1)) {
-      const terminalY = currentY + blockHeight
-      const terminalId = `anchor-${baseId}`
-      deps.newNodes.push(
-        anchorNode(terminalId, undefined, {
-          x: 0,
-          y: terminalY,
-        })
-      )
-      deps.newEdges.push(
-        edgeAddItem(baseId, terminalId, {
-          block,
-        })
-      )
-    }
-
-    if (isBranchStep) {
-      const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
-      const sourceBlock = !isTrigger ? blocks[idx - 1] : block
-      const branchBottomY = renderBranches(
-        block,
-        sourceForBranches,
-        sourceBlock,
-        0,
-        currentY + deps.ySpacing,
-        deps
-      )
-      blockHeight = branchBottomY - currentY
-    }
-
-    currentY += blockHeight
-  })
 }
 
 // ---------

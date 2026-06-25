@@ -4,7 +4,7 @@ import { ANCHOR, BRANCH, LOOP, STEP } from "./FlowGeometry"
 const BRANCH_LANE_CLEARANCE = 120
 const POST_LOOP_BRANCH_CLEARANCE = 120
 
-const getTopLevelGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
+const getRootGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
   const nodesById: Record<string, FlowNode> = {}
   graph.nodes.forEach(node => (nodesById[node.id] = node))
 
@@ -106,7 +106,7 @@ export const applyLoopClearance = (graph: {
   nodes: FlowNode[]
   edges: FlowEdge[]
 }) => {
-  const { nodesById, outgoing } = getTopLevelGraph(graph)
+  const { nodesById, outgoing } = getRootGraph(graph)
 
   const shiftSubtree = (startId: string, delta: number, axis: "x" | "y") => {
     if (delta <= 0) return
@@ -135,7 +135,7 @@ export const applyBranchLaneClearance = (graph: {
   nodes: FlowNode[]
   edges: FlowEdge[]
 }) => {
-  const { nodesById, outgoing } = getTopLevelGraph(graph)
+  const { nodesById, outgoing } = getRootGraph(graph)
   const branchGroups: Record<
     string,
     Array<{ branchIdx: number; nodeId: string }>
@@ -226,7 +226,7 @@ export const applyPostLoopBranchClearance = (graph: {
   nodes: FlowNode[]
   edges: FlowEdge[]
 }) => {
-  const { nodesById, outgoing } = getTopLevelGraph(graph)
+  const { nodesById, outgoing } = getRootGraph(graph)
   const branchTargetsByLoop: Record<
     string,
     Record<string, Array<{ branchIdx: number; nodeId: string }>>

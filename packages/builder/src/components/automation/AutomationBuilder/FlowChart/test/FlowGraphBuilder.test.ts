@@ -10,10 +10,9 @@ import {
   loopWithLinearChildrenStep,
   serverLogStep,
 } from "@/test/automationFixtures"
-import {
-  renderChain,
-  renderLoopV2Container,
-} from "../FlowCanvas/FlowGraphBuilder"
+import { renderChain } from "../FlowCanvas/FlowChainRenderer"
+import { renderLoopV2Container } from "../FlowCanvas/FlowLoopRenderer"
+import { buildAutomationGraph } from "../FlowCanvas/buildAutomationGraph"
 import {
   FLOW_ITEM_ACTION_BAR_WIDTH,
   LOOP_INSERT_ACTION_OFFSET,
@@ -61,6 +60,29 @@ const renderTestChain = (
   })
   return graph
 }
+
+describe("buildAutomationGraph", () => {
+  it("connects top-level automation blocks sequentially and adds a terminal anchor", () => {
+    const graph = createGraph()
+    const blocks = [automationTrigger, ...linearAutomationSteps()]
+
+    buildAutomationGraph(blocks, createDeps(graph))
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+
+    expect(getNode(graph, "trigger").position.y).toBe(0)
+    expect(getNode(graph, "step-1").position.y).toBe(340)
+    expect(getNode(graph, "step-2").position.y).toBe(680)
+    expect(getNode(graph, "step-3").position.y).toBe(1020)
+    expect(getNode(graph, "anchor-step-3").position.y).toBe(1360)
+
+    getEdge(graph, "trigger", "step-1")
+    getEdge(graph, "step-1", "step-2")
+    getEdge(graph, "step-2", "step-3")
+    getEdge(graph, "step-3", "anchor-step-3")
+  })
+})
 
 describe("renderLoopV2Container", () => {
   it("reserves exit space after the final child in mixed loop subflows", () => {

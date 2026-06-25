@@ -162,7 +162,7 @@ vi.mock("../AutomationStepHelpers", () => ({
   getBlocks: (automation: {
     definition: { trigger: unknown; steps: unknown[] }
   }) => [automation.definition.trigger, ...automation.definition.steps],
-  buildTopLevelGraph: (
+  buildAutomationGraph: (
     _blocks: unknown[],
     deps: {
       newNodes: Array<{

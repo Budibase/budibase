@@ -32,7 +32,7 @@
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     getBlocks as getBlocksHelper,
-    buildTopLevelGraph,
+    buildAutomationGraph,
     dagreLayoutAutomation,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
@@ -186,7 +186,7 @@
     }
 
     // Build graph via helpers
-    buildTopLevelGraph(blocks, deps)
+    buildAutomationGraph(blocks, deps)
 
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
