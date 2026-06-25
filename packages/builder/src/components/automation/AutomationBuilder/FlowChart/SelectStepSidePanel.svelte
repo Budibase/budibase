@@ -91,6 +91,7 @@
     insideLoopV2
       ? ![
           AutomationActionStepId.BRANCH,
+          AutomationActionStepId.MERGE,
           AutomationActionStepId.COLLECT,
           AutomationActionStepId.LOOP,
           AutomationActionStepId.LOOP_V2,
@@ -218,6 +219,7 @@
           AutomationActionStepId.FILTER,
           AutomationActionStepId.DELAY,
           AutomationActionStepId.BRANCH,
+          AutomationActionStepId.MERGE,
           AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
           AutomationActionStepId.COLLECT,
           AutomationActionStepId.LOOP_V2,

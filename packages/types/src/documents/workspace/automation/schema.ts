@@ -76,6 +76,8 @@ import {
   APIRequestStepInputs,
   APIRequestStepOutputs,
   BranchSearchFilters,
+  MergeStepInputs,
+  MergeStepOutputs,
   ExtractStateStepInputs,
   ExtractStateStepOutputs,
   LoopV2StepInputs,
@@ -206,6 +208,10 @@ export type ActionImplementations<T extends Hosting> = {
     AgentStepInputs,
     AgentStepOutputs
   >
+  [AutomationActionStepId.MERGE]: ActionImplementation<
+    MergeStepInputs,
+    MergeStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -287,25 +293,27 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                   ? LoopStepInputs
                                                   : T extends AutomationActionStepId.BRANCH
                                                     ? BranchStepInputs
-                                                    : T extends AutomationActionStepId.CLASSIFY_CONTENT
-                                                      ? ClassifyContentStepInputs
-                                                      : T extends AutomationActionStepId.PROMPT_LLM
-                                                        ? PromptLLMStepInputs
-                                                        : T extends AutomationActionStepId.TRANSLATE
-                                                          ? TranslateStepInputs
-                                                          : T extends AutomationActionStepId.SUMMARISE
-                                                            ? SummariseStepInputs
-                                                            : T extends AutomationActionStepId.GENERATE_TEXT
-                                                              ? GenerateTextStepInputs
-                                                              : T extends AutomationActionStepId.EXTRACT_FILE_DATA
-                                                                ? ExtractFileDataStepInputs
-                                                                : T extends AutomationActionStepId.EXTRACT_STATE
-                                                                  ? ExtractStateStepInputs
-                                                                  : T extends AutomationActionStepId.LOOP_V2
-                                                                    ? LoopV2StepInputs
-                                                                    : T extends AutomationActionStepId.AGENT
-                                                                      ? AgentStepInputs
-                                                                      : never
+                                                    : T extends AutomationActionStepId.MERGE
+                                                      ? MergeStepInputs
+                                                      : T extends AutomationActionStepId.CLASSIFY_CONTENT
+                                                        ? ClassifyContentStepInputs
+                                                        : T extends AutomationActionStepId.PROMPT_LLM
+                                                          ? PromptLLMStepInputs
+                                                          : T extends AutomationActionStepId.TRANSLATE
+                                                            ? TranslateStepInputs
+                                                            : T extends AutomationActionStepId.SUMMARISE
+                                                              ? SummariseStepInputs
+                                                              : T extends AutomationActionStepId.GENERATE_TEXT
+                                                                ? GenerateTextStepInputs
+                                                                : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                                  ? ExtractFileDataStepInputs
+                                                                  : T extends AutomationActionStepId.EXTRACT_STATE
+                                                                    ? ExtractStateStepInputs
+                                                                    : T extends AutomationActionStepId.LOOP_V2
+                                                                      ? LoopV2StepInputs
+                                                                      : T extends AutomationActionStepId.AGENT
+                                                                        ? AgentStepInputs
+                                                                        : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -354,25 +362,27 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                               ? OpenAIStepOutputs
                                               : T extends AutomationActionStepId.LOOP
                                                 ? BaseAutomationOutputs
-                                                : T extends AutomationActionStepId.CLASSIFY_CONTENT
-                                                  ? ClassifyContentStepOutputs
-                                                  : T extends AutomationActionStepId.PROMPT_LLM
-                                                    ? PromptLLMStepOutputs
-                                                    : T extends AutomationActionStepId.TRANSLATE
-                                                      ? TranslateStepOutputs
-                                                      : T extends AutomationActionStepId.SUMMARISE
-                                                        ? SummariseStepOutputs
-                                                        : T extends AutomationActionStepId.GENERATE_TEXT
-                                                          ? GenerateTextStepOutputs
-                                                          : T extends AutomationActionStepId.EXTRACT_FILE_DATA
-                                                            ? ExtractFileDataStepOutputs
-                                                            : T extends AutomationActionStepId.EXTRACT_STATE
-                                                              ? ExtractStateStepOutputs
-                                                              : T extends AutomationActionStepId.LOOP_V2
-                                                                ? LoopV2StepOutputs
-                                                                : T extends AutomationActionStepId.AGENT
-                                                                  ? AgentStepOutputs
-                                                                  : never
+                                                : T extends AutomationActionStepId.MERGE
+                                                  ? MergeStepOutputs
+                                                  : T extends AutomationActionStepId.CLASSIFY_CONTENT
+                                                    ? ClassifyContentStepOutputs
+                                                    : T extends AutomationActionStepId.PROMPT_LLM
+                                                      ? PromptLLMStepOutputs
+                                                      : T extends AutomationActionStepId.TRANSLATE
+                                                        ? TranslateStepOutputs
+                                                        : T extends AutomationActionStepId.SUMMARISE
+                                                          ? SummariseStepOutputs
+                                                          : T extends AutomationActionStepId.GENERATE_TEXT
+                                                            ? GenerateTextStepOutputs
+                                                            : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                              ? ExtractFileDataStepOutputs
+                                                              : T extends AutomationActionStepId.EXTRACT_STATE
+                                                                ? ExtractStateStepOutputs
+                                                                : T extends AutomationActionStepId.LOOP_V2
+                                                                  ? LoopV2StepOutputs
+                                                                  : T extends AutomationActionStepId.AGENT
+                                                                    ? AgentStepOutputs
+                                                                    : never
 
 export interface AutomationStepInputSettings {
   continueOnError?: boolean
@@ -446,6 +456,8 @@ export type OpenAIStep = AutomationStepSchema<AutomationActionStepId.OPENAI>
 
 export type LoopStep = AutomationStepSchema<AutomationActionStepId.LOOP>
 
+export type MergeStep = AutomationStepSchema<AutomationActionStepId.MERGE>
+
 export type ClassifyContentStep =
   AutomationStepSchema<AutomationActionStepId.CLASSIFY_CONTENT>
 
@@ -501,6 +513,7 @@ export type AutomationStep =
   | ExecuteBashStep
   | OpenAIStep
   | BranchStep
+  | MergeStep
   | ClassifyContentStep
   | PromptLLMStep
   | TranslateStep

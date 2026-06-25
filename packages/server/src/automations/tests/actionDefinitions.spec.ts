@@ -1,4 +1,4 @@
-import { PluginType } from "@budibase/types"
+import { AutomationActionStepId, PluginType } from "@budibase/types"
 import env, { setEnv } from "../../environment"
 import sdk from "../../sdk"
 import { getAction, getActionDefinitions } from "../actions"
@@ -97,6 +97,13 @@ describe("getActionDefinitions", () => {
 
     expect(action).toBeDefined()
     expect(mockPluginFetch).not.toHaveBeenCalled()
+  })
+
+  it("returns the merge action implementation", async () => {
+    const action = await getAction(AutomationActionStepId.MERGE)
+
+    expect(action).toBeDefined()
+    expect(await action!({ inputs: {} })).toEqual({ success: true })
   })
 
   it("throws when a self-hosted plugin action cannot be found", async () => {

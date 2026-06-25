@@ -43,6 +43,7 @@ const FLOW_LOGIC_STEPS = new Set<AutomationStepId>([
   AutomationActionStepId.FILTER,
   AutomationActionStepId.DELAY,
   AutomationActionStepId.BRANCH,
+  AutomationActionStepId.MERGE,
   AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
   AutomationActionStepId.COLLECT,
   AutomationActionStepId.LOOP,

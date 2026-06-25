@@ -12,6 +12,7 @@ import {
   type BlockDefinitions,
   type BranchStep,
   type LoopV2Step,
+  type MergeStep,
   type ServerLogStep,
 } from "@budibase/types"
 
@@ -123,6 +124,18 @@ export const loopStep = (
   schema: automationSchema,
 })
 
+export const mergeStep = (id = "merge"): MergeStep => ({
+  id,
+  stepId: AutomationActionStepId.MERGE,
+  type: AutomationStepType.LOGIC,
+  name: "Merge",
+  tagline: "",
+  icon: "",
+  description: "",
+  inputs: {},
+  schema: automationSchema,
+})
+
 export const automationWithSteps = (steps: AutomationStep[]): Automation => ({
   name: "Automation",
   appId: "app",
@@ -214,6 +227,7 @@ export const automationBlockDefinitions: BlockDefinitions = {
   ACTION: {
     [AutomationActionStepId.LOOP_V2]: loopStep(),
     [AutomationActionStepId.BRANCH]: branchStep(),
+    [AutomationActionStepId.MERGE]: mergeStep(),
   },
 }
 

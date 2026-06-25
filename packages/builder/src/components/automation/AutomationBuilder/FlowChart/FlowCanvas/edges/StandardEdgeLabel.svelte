@@ -8,6 +8,9 @@
   export let labelY: number
   export let showEdgeActions: boolean
   export let showEdgeDrop: boolean
+  export let showMergeAction: boolean
+  export let terminalBranchStepId: string | undefined
+  export let terminalBranchIdx: number | undefined
   export let collectBlockExists: boolean
   export let sourcePathForDrop: FlowBlockPath | undefined
   export let block: FlowBlockContext | undefined
@@ -36,7 +39,14 @@
             on:mousedown|stopPropagation
             on:click|stopPropagation
           >
-            <FlowItemActions {block} on:branch={handleBranch} />
+            <FlowItemActions
+              {block}
+              {sourcePathForDrop}
+              {showMergeAction}
+              {terminalBranchStepId}
+              {terminalBranchIdx}
+              on:branch={handleBranch}
+            />
           </div>
         {/if}
       {/if}

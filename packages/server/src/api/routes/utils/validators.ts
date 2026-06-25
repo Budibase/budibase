@@ -333,6 +333,10 @@ function generateStepSchema(allowStepTypes: string[]) {
     condition: filterObject({ unknown: false }).required().min(1),
     conditionUI: Joi.object(),
   })
+  const branchMergeConnectionSchema = Joi.object({
+    sourceBranchId: Joi.string().required(),
+    targetStepId: Joi.string().required(),
+  })
 
   return Joi.object({
     stepId: Joi.string().required(),
@@ -349,6 +353,7 @@ function generateStepSchema(allowStepTypes: string[]) {
         children: Joi.object()
           .pattern(Joi.string(), Joi.array().items(Joi.link("#step")))
           .required(),
+        mergeConnections: Joi.array().items(branchMergeConnectionSchema),
       }).required(),
       otherwise: Joi.object(),
     }),

@@ -19,6 +19,7 @@ import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as getRow from "./steps/getRow"
 import * as collect from "./steps/collect"
+import * as merge from "./steps/merge"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
 import * as bash from "./steps/bash"
@@ -65,6 +66,7 @@ const ACTION_IMPLS: ActionImplType = {
   DELAY: delay.run,
   FILTER: filter.run,
   COLLECT: collect.run,
+  MERGE: merge.run,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
   OPENAI: openai.run,
   CLASSIFY_CONTENT: classifyText.run,
@@ -105,6 +107,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   COLLECT: automations.steps.collect.definition,
   TRIGGER_AUTOMATION_RUN: automations.steps.triggerAutomationRun.definition,
   BRANCH: automations.steps.branch.definition,
+  MERGE: automations.steps.merge.definition,
   CLASSIFY_CONTENT: automations.steps.classifyText.definition,
   PROMPT_LLM: automations.steps.promptLLM.definition,
   TRANSLATE: automations.steps.translate.definition,

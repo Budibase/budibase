@@ -16,6 +16,9 @@
   export let preBranchLabelY: number
   export let showEdgeActions: boolean
   export let showEdgeDrop: boolean
+  export let showMergeAction: boolean
+  export let terminalBranchStepId: string | undefined
+  export let terminalBranchIdx: number | undefined
   export let showPreBranchActions: boolean
   export let showPreBranchDrop: boolean
   export let collectBlockExists: boolean
@@ -52,7 +55,14 @@
             on:mousedown|stopPropagation
             on:click|stopPropagation
           >
-            <FlowItemActions {block} on:branch={handleBranch} />
+            <FlowItemActions
+              {block}
+              {sourcePathForDrop}
+              {showMergeAction}
+              {terminalBranchStepId}
+              {terminalBranchIdx}
+              on:branch={handleBranch}
+            />
           </div>
         {/if}
       {/if}
@@ -79,7 +89,11 @@
         <div class="actions-stack">
           <FlowItemActions
             {block}
+            {sourcePathForDrop}
             hideBranch
+            showMergeAction={false}
+            terminalBranchStepId={undefined}
+            terminalBranchIdx={undefined}
             showAddBranch={isPrimaryBranchEdge}
             branchStepId={data.branchStepId}
             {viewMode}

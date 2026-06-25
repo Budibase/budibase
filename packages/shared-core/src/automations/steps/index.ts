@@ -1,5 +1,6 @@
 export * as bash from "./bash"
 export * as branch from "./branch"
+export * as merge from "./merge"
 export * as collect from "./collect"
 export * as createRow from "./createRow"
 export * as delay from "./delay"

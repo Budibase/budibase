@@ -2,6 +2,7 @@ import { configs, context, events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
+  AutomationActionStepId,
   AutomationResults,
   AutomationTriggerStepId,
   ConfigType,
@@ -214,6 +215,48 @@ describe("/automations", () => {
             'Invalid body - "definition.steps[0].inputs.branches[0].condition" must have at least 1 key',
         },
       })
+    })
+
+    it("should allow branch merge connections", async () => {
+      const automation = createAutomationBuilder(config)
+        .onAppAction()
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder
+                .serverLog({ text: "Active user" })
+                .merge(),
+            condition: {
+              equal: { "trigger.fields.status": "active" },
+            },
+          },
+          inactiveBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Inactive user" }),
+            condition: {
+              notEqual: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .build()
+
+      const branchStep = automation.definition.steps[0]
+      if (branchStep.stepId !== AutomationActionStepId.BRANCH) {
+        throw new Error("Expected branch step")
+      }
+
+      const sourceBranchId = branchStep.inputs.branches[1].id
+      const targetStepId = branchStep.inputs.children![
+        branchStep.inputs.branches[0].id
+      ].find(step => step.stepId === AutomationActionStepId.MERGE)!.id
+      branchStep.inputs.mergeConnections = [
+        {
+          sourceBranchId,
+          targetStepId,
+        },
+      ]
+
+      await config.api.automation.post(automation)
     })
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {

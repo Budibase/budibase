@@ -207,6 +207,12 @@
     !isBranchTarget &&
     !$view?.dragging &&
     !isSubflowEdge
+  $: terminalBranchStepId = data?.terminalBranchStepId
+  $: terminalBranchIdx = data?.terminalBranchIdx
+  $: showMergeAction =
+    showEdgeActions &&
+    typeof terminalBranchStepId === "string" &&
+    typeof terminalBranchIdx === "number"
 
   $: showEdgeDrop =
     viewMode === ViewMode.EDITOR &&
@@ -461,6 +467,9 @@
     {preBranchLabelY}
     {showEdgeActions}
     {showEdgeDrop}
+    {showMergeAction}
+    {terminalBranchStepId}
+    {terminalBranchIdx}
     {showPreBranchActions}
     {showPreBranchDrop}
     {collectBlockExists}
@@ -482,6 +491,9 @@
     {labelY}
     {showEdgeActions}
     {showEdgeDrop}
+    {showMergeAction}
+    {terminalBranchStepId}
+    {terminalBranchIdx}
     {collectBlockExists}
     {sourcePathForDrop}
     {block}

@@ -12,6 +12,7 @@ import {
   automationTrigger,
   branchStep,
   loopStep,
+  mergeStep,
   nestedLoopBranchAutomation,
   serverLogStep,
 } from "@/test/automationFixtures"
@@ -130,6 +131,68 @@ describe("automation store", () => {
       "branch",
       "branch-child",
     ])
+  })
+
+  it("connects a branch leaf to a merge step in another branch", async () => {
+    const merge = mergeStep("merge")
+    const branch = branchStep([], {
+      id: "branch",
+      branches: [
+        {
+          id: "first",
+          name: "First",
+          children: [serverLogStep("first-child")],
+        },
+        {
+          id: "second",
+          name: "Second",
+          children: [merge],
+        },
+      ],
+    })
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [branch],
+      },
+    }
+    let savedAutomation: Automation | undefined
+    const save = vi
+      .spyOn(automationStore.actions, "save")
+      .mockImplementation(async updatedAutomation => {
+        savedAutomation = updatedAutomation
+        return updatedAutomation
+      })
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    await automationStore.actions.connectBranchToMerge({
+      branchStepId: "branch",
+      sourceBranchId: "first",
+      targetStepId: "merge",
+    })
+
+    const savedBranch = savedAutomation?.definition.steps[0]
+    if (!savedBranch || !isBranchStep(savedBranch)) {
+      throw new Error("Expected saved branch step")
+    }
+
+    expect(savedBranch.inputs.mergeConnections).toEqual([
+      {
+        sourceBranchId: "first",
+        targetStepId: "merge",
+      },
+    ])
+
+    save.mockRestore()
   })
 
   it("allows moving the first branch step into another branch on the same branch block", () => {

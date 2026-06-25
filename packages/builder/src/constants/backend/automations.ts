@@ -17,6 +17,7 @@ export const ActionStepID = {
   GET_ROW: "GET_ROW",
   LOOP: "LOOP",
   COLLECT: "COLLECT",
+  MERGE: "MERGE",
   TRIGGER_AUTOMATION_RUN: "TRIGGER_AUTOMATION_RUN",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: "discord",

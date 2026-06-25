@@ -2,11 +2,15 @@
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { ViewMode } from "@/types/automations"
+  import { type FlowBlockPath, ViewMode } from "@/types/automations"
   import { type BlockRef } from "@budibase/types"
 
   export let block
+  export let sourcePathForDrop: FlowBlockPath | undefined = undefined
   export let hideBranch = false
+  export let showMergeAction = false
+  export let terminalBranchStepId: string | undefined = undefined
+  export let terminalBranchIdx: number | undefined = undefined
   export let showAddBranch = false
   export let branchStepId: string | undefined = undefined
   export let viewMode: ViewMode = ViewMode.EDITOR
@@ -25,6 +29,21 @@
   $: isActiveInsertionPoint =
     getActionTargetKey($automationStore.actionPanelBlock) ===
     getActionTargetKey(block)
+  $: mergeTarget =
+    viewMode === ViewMode.EDITOR && showMergeAction
+      ? (terminalBranchStepId && typeof terminalBranchIdx === "number"
+          ? automationStore.actions.getBranchMergeTarget({
+              branchStepId: terminalBranchStepId,
+              branchIdx: terminalBranchIdx,
+            })
+          : undefined) ||
+        automationStore.actions.getBranchMergeTargetForPath(
+          sourcePathForDrop
+        ) ||
+        (block?.id
+          ? automationStore.actions.getBranchMergeTargetForBlock(block.id)
+          : undefined)
+      : undefined
 
   const checkIsInsideBranchInLoop = (blockRef: BlockRef | undefined) => {
     if (!blockRef?.pathTo) return false
@@ -87,6 +106,22 @@
       tooltipType={TooltipType.Info}
       tooltipPosition={TooltipPosition.Right}
       tooltip={"Add branch"}
+      size="S"
+      color="var(--automation-flow-action-icon-color)"
+      hoverColor="var(--automation-flow-action-icon-hover-color)"
+    />
+  {/if}
+  {#if mergeTarget}
+    <Icon
+      hoverable
+      name="arrows-merge"
+      weight="fill"
+      on:click={async () => {
+        await automationStore.actions.connectBranchToMerge(mergeTarget)
+      }}
+      tooltipType={TooltipType.Info}
+      tooltipPosition={TooltipPosition.Right}
+      tooltip={"Merge branch"}
       size="S"
       color="var(--automation-flow-action-icon-color)"
       hoverColor="var(--automation-flow-action-icon-hover-color)"

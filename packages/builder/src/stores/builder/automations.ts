@@ -1993,6 +1993,159 @@ const automationActions = (store: AutomationStore) => ({
     }
   },
 
+  getBranchMergeTarget: ({
+    branchStepId,
+    branchIdx,
+  }: {
+    branchStepId: string
+    branchIdx: number
+  }) => {
+    const automation = get(selectedAutomation)?.data
+    const blockRefs = get(selectedAutomation)?.blockRefs || {}
+    if (!automation) {
+      return
+    }
+
+    const branchRef = blockRefs[branchStepId]
+    const branchStep = store.actions.getBlockByRef(automation, branchRef)
+    if (!branchStep || !isBranchStep(branchStep)) {
+      return
+    }
+
+    const sourceBranch = branchStep.inputs.branches[branchIdx]
+    if (!sourceBranch) {
+      return
+    }
+
+    const sourceBranchId = String(sourceBranch.id)
+    const existingConnection = branchStep.inputs.mergeConnections?.find(
+      connection => connection.sourceBranchId === sourceBranchId
+    )
+    if (existingConnection) {
+      return
+    }
+
+    for (const [
+      targetBranchIdx,
+      targetBranch,
+    ] of branchStep.inputs.branches.entries()) {
+      if (targetBranchIdx === branchIdx) {
+        continue
+      }
+
+      const mergeStep = branchStep.inputs.children?.[targetBranch.id]?.find(
+        step => step.stepId === AutomationActionStepId.MERGE
+      )
+      if (mergeStep) {
+        return {
+          branchStepId,
+          sourceBranchId,
+          targetStepId: mergeStep.id,
+        }
+      }
+    }
+  },
+
+  getBranchMergeTargetForPath: (pathTo?: FlowBlockPath) => {
+    const branchHop = pathTo
+      ?.slice()
+      .reverse()
+      .find(
+        hop =>
+          hop.branchStepId && Number.isInteger(hop.branchIdx) && !hop.loopStepId
+      )
+
+    if (!branchHop?.branchStepId || !Number.isInteger(branchHop.branchIdx)) {
+      return
+    }
+
+    const branchIdx = branchHop.branchIdx
+    if (branchIdx == null) {
+      return
+    }
+
+    return store.actions.getBranchMergeTarget({
+      branchStepId: branchHop.branchStepId,
+      branchIdx,
+    })
+  },
+
+  getBranchMergeTargetForBlock: (blockId: string) => {
+    const blockRef = get(selectedAutomation)?.blockRefs?.[blockId]
+    if (!blockRef?.terminating) {
+      return
+    }
+
+    return store.actions.getBranchMergeTargetForPath(blockRef.pathTo)
+  },
+
+  connectBranchToMerge: async ({
+    branchStepId,
+    sourceBranchId,
+    targetStepId,
+  }: {
+    branchStepId: string
+    sourceBranchId: string
+    targetStepId: string
+  }) => {
+    const automation = get(selectedAutomation)?.data
+    const blockRefs = get(selectedAutomation)?.blockRefs || {}
+    if (!automation) {
+      return
+    }
+
+    const branchRef = blockRefs[branchStepId]
+    const targetRef = blockRefs[targetStepId]
+    const branchStep = store.actions.getBlockByRef(automation, branchRef)
+    const targetStep = store.actions.getBlockByRef(automation, targetRef)
+
+    if (
+      !branchRef?.pathTo ||
+      !targetRef?.pathTo ||
+      !branchStep ||
+      !targetStep ||
+      !isBranchStep(branchStep) ||
+      targetStep.stepId !== AutomationActionStepId.MERGE
+    ) {
+      return
+    }
+
+    const targetBranchHop = targetRef.pathTo[branchRef.pathTo.length]
+    const targetBranch =
+      targetBranchHop &&
+      Number.isInteger(targetBranchHop.branchIdx) &&
+      branchStep.inputs.branches[targetBranchHop.branchIdx]?.id
+
+    if (!targetBranch || String(targetBranch) === sourceBranchId) {
+      return
+    }
+
+    const branchUpdate = cloneDeep(branchStep)
+    const existingConnections = branchUpdate.inputs.mergeConnections || []
+    branchUpdate.inputs.mergeConnections = [
+      ...existingConnections.filter(
+        connection => connection.sourceBranchId !== sourceBranchId
+      ),
+      {
+        sourceBranchId,
+        targetStepId,
+      },
+    ]
+
+    const updatedAutomation = store.actions.updateStep(
+      branchRef.pathTo,
+      automation,
+      branchUpdate
+    )
+
+    try {
+      await store.actions.save(updatedAutomation)
+    } catch (e) {
+      notifications.error("Error connecting branch to merge")
+      console.error("Automation connecting branch to merge ", e)
+    }
+  },
+
   /**
    * Take a block and move the provided branch to the left
    *

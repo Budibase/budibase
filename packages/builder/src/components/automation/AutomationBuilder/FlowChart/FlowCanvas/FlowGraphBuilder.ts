@@ -97,6 +97,12 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
+  const mergeConnectionByBranchId = new Map(
+    (step.inputs?.mergeConnections || []).map(connection => [
+      connection.sourceBranchId,
+      connection.targetStepId,
+    ])
+  )
 
   let clusterBottomY =
     coords.y +
@@ -186,22 +192,35 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         ? chainResult.bottomY
         : coords.y + deps.ySpacing
       if (!chainResult?.branched) {
-        const terminalId = `anchor-${chainResult ? chainResult.lastNodeId : branchNodeId}`
+        const terminalSourceId = chainResult
+          ? chainResult.lastNodeId
+          : branchNodeId
         const terminalBlock = chainResult
           ? chainResult.lastNodeBlock
           : branchBlockRef
         const terminalPath = resolveBlockPath(terminalBlock, deps)
-        pushAnchor(terminalId, bottomY, deps)
-        deps.newEdges.push(
-          edgeAddItem(
-            chainResult ? chainResult.lastNodeId : branchNodeId,
-            terminalId,
-            {
+        const mergeTargetId = mergeConnectionByBranchId.get(String(branch.id))
+        if (mergeTargetId) {
+          deps.newEdges.push(
+            edgeAddItem(terminalSourceId, mergeTargetId, {
               block: terminalBlock,
               ...(terminalPath ? { pathTo: terminalPath } : {}),
-            }
+              terminalBranchStepId: baseId,
+              terminalBranchIdx: bIdx,
+            })
           )
-        )
+        } else {
+          const terminalId = `anchor-${terminalSourceId}`
+          deps.newEdges.push(
+            edgeAddItem(terminalSourceId, terminalId, {
+              block: terminalBlock,
+              ...(terminalPath ? { pathTo: terminalPath } : {}),
+              terminalBranchStepId: baseId,
+              terminalBranchIdx: bIdx,
+            })
+          )
+          pushAnchor(terminalId, bottomY, deps)
+        }
       }
       clusterBottomY = Math.max(clusterBottomY, bottomY + deps.ySpacing)
     } else {

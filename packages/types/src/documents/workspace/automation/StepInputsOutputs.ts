@@ -163,6 +163,7 @@ export type LoopStepOutputs = {
 export type BranchStepInputs = {
   branches: Branch[]
   children?: Record<string, AutomationStep[]>
+  mergeConnections?: BranchMergeConnection[]
 }
 
 export type Branch = {
@@ -172,7 +173,16 @@ export type Branch = {
   conditionUI?: UISearchFilter
 }
 
+export type BranchMergeConnection = {
+  sourceBranchId: string
+  targetStepId: string
+}
+
 export type BranchSearchFilters = SearchFilters
+
+export type MergeStepInputs = Record<string, never>
+
+export type MergeStepOutputs = BaseAutomationOutputs
 
 export type MakeIntegrationInputs = {
   url: string

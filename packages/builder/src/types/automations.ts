@@ -358,6 +358,8 @@ export interface BaseEdgeData {
   block: FlowBlockContext
   pathTo?: FlowBlockPath
   isSubflowEdge?: boolean
+  terminalBranchStepId?: string
+  terminalBranchIdx?: number
   [key: string]: unknown
 }
 

@@ -89,11 +89,19 @@ export const edgeAddItem = (
   ctx: {
     block: FlowBlockContext
     pathTo?: FlowBlockPath
+    terminalBranchStepId?: string
+    terminalBranchIdx?: number
   }
 ): FlowEdge => {
   const data: BaseEdgeData = {
     block: ctx.block,
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
+    ...(ctx.terminalBranchStepId
+      ? { terminalBranchStepId: ctx.terminalBranchStepId }
+      : {}),
+    ...(typeof ctx.terminalBranchIdx === "number"
+      ? { terminalBranchIdx: ctx.terminalBranchIdx }
+      : {}),
   }
   return {
     id: `edge-${source}-${target}`,
