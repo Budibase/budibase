@@ -7,7 +7,7 @@ import { KoaAdapter } from "@bull-board/koa"
 import { UserSyncProcessor } from "../events/docUpdates/syncUsers"
 import * as automation from "../threads/automation"
 import { getAppMigrationQueue } from "../workspaceMigrations/queue"
-import { rag, tests as agentTests } from "../sdk/workspace/ai"
+import { agentRequests, rag, tests as agentTests } from "../sdk/workspace/ai"
 
 export const automationQueue = new queue.BudibaseQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,
@@ -46,6 +46,7 @@ export async function init() {
   queues.push(
     new BullAdapter(rag.knowledgeSourceSyncQueue.getQueue().getBullQueue())
   )
+  queues.push(new BullAdapter(agentRequests.getQueue().getBullQueue()))
   queues.push(new BullAdapter(agentTests.getQueue().getBullQueue()))
 
   const serverAdapter = new KoaAdapter()
