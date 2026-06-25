@@ -508,19 +508,28 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId,
       user: ctx.user,
     })
-    await sdk.ai.agentRequests.enqueueRequestTracking({
-      agentId,
-      sessionId,
-      latestUserPrompt: run.latestQuestion,
-      recentChatContext: getRecentChatContext(chat.messages),
-      operation: run.selectedOperation
-        ? {
-            name: run.selectedOperation.name,
-            prompt: run.selectedOperation.promptInstructions || "",
-          }
-        : undefined,
-      userId,
-    })
+    sdk.ai.agentRequests
+      .enqueueRequestTracking({
+        agentId,
+        sessionId,
+        latestUserPrompt: run.latestQuestion,
+        recentChatContext: getRecentChatContext(chat.messages),
+        operation: run.selectedOperation
+          ? {
+              name: run.selectedOperation.name,
+              prompt: run.selectedOperation.promptInstructions || "",
+            }
+          : undefined,
+        userId,
+      })
+      .catch(error => {
+        console.error("Failed to enqueue agent request tracking", {
+          agentId,
+          sessionId,
+          userId,
+          error,
+        })
+      })
 
     const pendingToolCalls = new Set<string>()
 
