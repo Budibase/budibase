@@ -6,6 +6,8 @@ import {
   GetAutomationActionDefinitionsResponse,
   GetAutomationStepDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
+  SearchAutomationLogsRequest,
+  SearchAutomationLogsResponse,
   TestAutomationRequest,
   TestAutomationResponse,
   TestEmailConnectionRequest,
@@ -153,6 +155,19 @@ export class AutomationAPI extends TestAPI {
     const { automations } = await this.fetch()
     await Promise.all(
       automations.map(automation => this.delete(automation, expectations))
+    )
+  }
+
+  logSearch = async (
+    body: SearchAutomationLogsRequest,
+    expectations?: Expectations
+  ): Promise<SearchAutomationLogsResponse> => {
+    return await this._post<SearchAutomationLogsResponse>(
+      `/api/automations/logs/search`,
+      {
+        body,
+        expectations,
+      }
     )
   }
 }
