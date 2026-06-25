@@ -10,9 +10,6 @@ import {
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
-type InvalidUpdateProjectRequest = Partial<UpdateProjectRequest> &
-  Pick<UpdateProjectRequest, "_id">
-
 export class ProjectAPI extends TestAPI {
   fetch = async (expectations?: Expectations) => {
     return await this._get<FetchProjectsResponse>("/api/projects", {
@@ -71,12 +68,11 @@ export class ProjectAPI extends TestAPI {
   }
 
   update = async (
-    project: UpdateProjectRequest | InvalidUpdateProjectRequest,
-    expectations?: Expectations,
-    pathId?: string
+    project: UpdateProjectRequest,
+    expectations?: Expectations
   ) => {
     return await this._put<UpdateProjectResponse>(
-      `/api/projects/${pathId || project._id}`,
+      `/api/projects/${project._id}`,
       {
         body: project,
         expectations,
