@@ -19,7 +19,7 @@ export interface InsertWorkspaceAppRequest {
   name: string
   url: string
   disabled?: boolean
-  projectIds?: string[] | null
+  projectIds?: string[]
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -39,7 +39,7 @@ export interface UpdateWorkspaceAppRequest {
   theme?: Theme
   customTheme?: AppCustomTheme
   disabled?: boolean
-  projectIds?: string[] | null
+  projectIds?: string[]
 }
 
 export interface UpdateWorkspaceAppResponse {
