@@ -130,7 +130,7 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
-  it("returns undefined when the agent has no live operations", async () => {
+  it("returns no_operation when the agent has no live operations", async () => {
     const result = await chooseOperationForQuestion({
       agent: {
         ...agent,
@@ -162,7 +162,7 @@ describe("chooseOperationForQuestion", () => {
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
 
-  it("returns undefined for blank questions when routing is enabled", async () => {
+  it("returns no_operation for blank questions when routing is enabled", async () => {
     mockIsEnabled.mockResolvedValue(true)
 
     const result = await chooseOperationForQuestion({
@@ -245,10 +245,11 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
-  it("returns undefined when the router selects an unknown operation id", async () => {
+  it("returns no_operation when the router selects an unknown operation id", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockResolvedValue({
       output: Promise.resolve({
+        action: "select_operation",
         operationId: "operation_missing",
         reason: "Hallucinated id",
       }),
@@ -265,7 +266,7 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
-  it("returns undefined when operation routing fails", async () => {
+  it("returns no_operation when operation routing fails", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockRejectedValue(new Error("Router unavailable"))
 
@@ -280,7 +281,7 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
-  it("returns undefined when operation routing output fails", async () => {
+  it("returns no_operation when operation routing output fails", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockResolvedValue({
       output: Promise.reject(new Error("Invalid routing output")),
