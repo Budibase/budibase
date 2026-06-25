@@ -1,5 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { Datasource, Project } from "@budibase/types"
+import { Datasource, DocumentType, prefixed, Project } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../.."
 import { hasProject, removeProjectId } from "./utils"
@@ -13,8 +13,15 @@ const normaliseProjectColor = (color?: string) => {
   if (color == null || color.trim() === "") {
     return undefined
   }
-  return color.trim()
+  const trimmed = color.trim()
+  if (trimmed.includes(";") || /\burl\s*\(/i.test(trimmed)) {
+    throw new HTTPError("Project color is invalid.", 400)
+  }
+  return trimmed
 }
+
+const isProjectId = (id?: string) =>
+  id?.startsWith(prefixed(DocumentType.PROJECT))
 
 export async function fetch(): Promise<Project[]> {
   const db = context.getWorkspaceDB()
@@ -29,8 +36,13 @@ export async function fetch(): Promise<Project[]> {
 }
 
 export async function get(id: string): Promise<Project | undefined> {
+  if (!isProjectId(id)) {
+    return undefined
+  }
+
   const db = context.getWorkspaceDB()
-  return await db.tryGet<Project>(id)
+  const project = await db.tryGet<Project>(id)
+  return isProjectId(project?._id) ? project : undefined
 }
 
 export async function create(project: ProjectCreate): Promise<Project> {
