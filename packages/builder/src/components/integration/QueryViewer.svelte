@@ -72,6 +72,9 @@
 
   let pagination: PaginationConfig | undefined = undefined
 
+  const getQueryProjectIds = (ids: string[]): Query["projectIds"] =>
+    ids.length ? ids : undefined
+
   const parseQuery = (query: Query) => {
     modified = false
     nameError = null
@@ -96,6 +99,7 @@
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
     projectIds = newQuery.projectIds || []
+    newQuery.projectIds = getQueryProjectIds(projectIds)
 
     // Initialize pagination for SQL Read queries
     if (newQuery.queryVerb === "read" && schemaType === "sql") {
@@ -126,7 +130,7 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   $: if (newQuery) {
-    newQuery.projectIds = projectIds
+    newQuery.projectIds = getQueryProjectIds(projectIds)
   }
 
   $: debouncedCheckIsModified(newQuery)
