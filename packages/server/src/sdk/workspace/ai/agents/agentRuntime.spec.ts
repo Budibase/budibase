@@ -78,7 +78,12 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 import { ToolLoopAgent } from "ai"
-import { chooseOperationForQuestion } from "./agentRuntime"
+import {
+  chooseOperationForQuestion,
+  prepareAgentRunContext,
+} from "./agentRuntime"
+import sdk from "../../.."
+import { buildPromptAndTools } from "./utils"
 
 describe("chooseOperationForQuestion", () => {
   const operation1 = {
@@ -118,6 +123,7 @@ describe("chooseOperationForQuestion", () => {
     mockIsEnabled.mockResolvedValue(false)
     mockRouterStream.mockResolvedValue({
       output: Promise.resolve({
+        action: "select_operation",
         operationId: "operation_2",
         reason: "HR question",
       }),
@@ -134,7 +140,9 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toBeUndefined()
+    expect(result).toEqual({
+      action: "no_operation",
+    })
     expect(mockIsEnabled).not.toHaveBeenCalled()
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
@@ -146,7 +154,10 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toEqual(operation1)
+    expect(result).toEqual({
+      action: "select_operation",
+      operation: operation1,
+    })
     expect(mockIsEnabled).toHaveBeenCalledWith(FeatureFlag.MULTIPLE_OPERATIONS)
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
@@ -160,7 +171,9 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toBeUndefined()
+    expect(result).toEqual({
+      action: "no_operation",
+    })
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
 
@@ -173,7 +186,10 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toEqual(operation2)
+    expect(result).toEqual({
+      action: "select_operation",
+      operation: operation2,
+    })
     expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -187,10 +203,32 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
-  it("returns undefined when the router selects no operation", async () => {
+  it("returns summarize_operations when the router decides to summarize capabilities", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockResolvedValue({
       output: Promise.resolve({
+        action: "summarize_operations",
+        operationId: null,
+        reason: "Capabilities overview",
+      }),
+    })
+
+    const result = await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "What can you help me with?",
+      llm,
+    })
+
+    expect(result).toEqual({
+      action: "summarize_operations",
+    })
+  })
+
+  it("returns no_operation when the router selects no operation", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "no_operation",
         operationId: null,
         reason: "Too broad",
       }),
@@ -202,7 +240,9 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toBeUndefined()
+    expect(result).toEqual({
+      action: "no_operation",
+    })
   })
 
   it("returns undefined when the router selects an unknown operation id", async () => {
@@ -220,7 +260,9 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toBeUndefined()
+    expect(result).toEqual({
+      action: "no_operation",
+    })
   })
 
   it("returns undefined when operation routing fails", async () => {
@@ -233,7 +275,9 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toBeUndefined()
+    expect(result).toEqual({
+      action: "no_operation",
+    })
   })
 
   it("returns undefined when operation routing output fails", async () => {
@@ -248,6 +292,88 @@ describe("chooseOperationForQuestion", () => {
       llm,
     })
 
-    expect(result).toBeUndefined()
+    expect(result).toEqual({
+      action: "no_operation",
+    })
+  })
+})
+
+describe("prepareAgentRunContext", () => {
+  const agent = {
+    _id: "agent_1",
+    name: "Support Agent",
+    aiconfig: "config-1",
+    operations: [
+      {
+        id: "operation_1",
+        name: "IT support",
+        live: true,
+        promptInstructions: "Handle IT issues",
+        enabledTools: [],
+        knowledgeBases: [],
+        allowKnowledgeSourceDownload: true,
+      },
+      {
+        id: "operation_2",
+        name: "HR support",
+        live: true,
+        promptInstructions: "Help with leave and policy questions",
+        enabledTools: [],
+        knowledgeBases: [],
+        allowKnowledgeSourceDownload: true,
+      },
+    ],
+  } satisfies Agent
+
+  const llm = {
+    chat: {} as any,
+    providerOptions: jest.fn().mockReturnValue(undefined),
+    uploadFile: jest.fn(),
+  } satisfies LLMResponse
+
+  beforeEach(() => {
+    jest.mocked(sdk.ai.llm.createLLM).mockResolvedValue(llm)
+    jest.mocked(buildPromptAndTools).mockResolvedValue({
+      systemPrompt: "system prompt",
+      tools: {},
+      toolDisplayNames: {},
+    })
+  })
+
+  it("passes a capabilities-summary prompt when the router chooses summarize_operations", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "summarize_operations",
+        operationId: null,
+        reason: "Capabilities overview",
+      }),
+    })
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "What can you help me with?",
+    })
+
+    expect(result.selectedOperation).toBeUndefined()
+    expect(result.routingAction).toBe("summarize_operations")
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      undefined,
+      expect.objectContaining({
+        fallbackPromptInstructions: expect.stringContaining(
+          "The router decided this is a capabilities-overview request."
+        ),
+      })
+    )
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      undefined,
+      expect.objectContaining({
+        fallbackPromptInstructions: expect.stringContaining("- IT support"),
+      })
+    )
   })
 })
