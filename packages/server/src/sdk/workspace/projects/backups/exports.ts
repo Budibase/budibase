@@ -12,6 +12,7 @@ import {
   ResourceType,
   Screen,
   UsedResource,
+  WorkspaceApp,
 } from "@budibase/types"
 import fsp from "fs/promises"
 import { dirname, join } from "path"
@@ -55,6 +56,19 @@ const sortResources = (resources: UsedResource[]) =>
     (a, b) => a.type.localeCompare(b.type) || a.id.localeCompare(b.id)
   )
 
+const toTimestamp = (timestamp?: string | number) => {
+  if (timestamp == null) {
+    return undefined
+  }
+  const date = new Date(timestamp)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
+}
+
+const getProjectCreatedAt = (project: Project) =>
+  toTimestamp(project.createdAt) ??
+  toTimestamp(project.updatedAt) ??
+  new Date().toISOString()
+
 export async function listAssignedAgentFiles(
   projectId: string,
   assignedAgents: Agent[],
@@ -81,16 +95,17 @@ export async function listAssignedAgentFiles(
   ).flat()
 }
 
-async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
-  const [datasources, tables, queries, automations, agents, workspaceApps] =
-    await Promise.all([
-      sdk.datasources.fetch(),
-      sdk.tables.getAllTables(),
-      sdk.queries.fetch(),
-      sdk.automations.fetch(),
-      sdk.ai.agents.fetch(),
-      sdk.workspaceApps.fetch(),
-    ])
+async function getDirectMembers(
+  projectId: string,
+  agents: Agent[],
+  workspaceApps: WorkspaceApp[]
+): Promise<UsedResource[]> {
+  const [datasources, tables, queries, automations] = await Promise.all([
+    sdk.datasources.fetch(),
+    sdk.tables.getAllTables(),
+    sdk.queries.fetch(),
+    sdk.automations.fetch(),
+  ])
 
   const asUsedResource = (
     doc: { _id?: string; name?: string },
@@ -135,10 +150,10 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
 }
 
 async function getUnsupportedContent(
-  projectId: string
+  projectId: string,
+  agents: Agent[],
+  workspaceApps: WorkspaceApp[]
 ): Promise<ProjectPackageUnsupportedContent[]> {
-  const agents = await sdk.ai.agents.fetch()
-  const workspaceApps = await sdk.workspaceApps.fetch()
   const assignedAgents = agents.filter(agent => hasProject(agent, projectId))
   const assignedWorkspaceApps = workspaceApps.filter(workspaceApp =>
     hasProject(workspaceApp, projectId)
@@ -218,7 +233,10 @@ async function sanitizeDocumentForExport(
 
 function sanitizeProjectForExport(project: Project) {
   const sanitized = structuredClone(project)
+  const createdAt = getProjectCreatedAt(project)
   delete sanitized._rev
+  sanitized.createdAt = createdAt
+  sanitized.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
   return sanitized
 }
 
@@ -228,6 +246,7 @@ function buildManifest(
   dependencies: UsedResource[],
   unsupportedContent: ProjectPackageUnsupportedContent[]
 ): ProjectPackageManifest {
+  const createdAt = getProjectCreatedAt(project)
   const resourcesByType = dependencies.reduce<
     Partial<Record<ResourceType, number>>
   >(
@@ -248,8 +267,8 @@ function buildManifest(
       name: project.name,
       description: project.description,
       color: project.color,
-      createdAt: String(project.createdAt),
-      updatedAt: project.updatedAt,
+      createdAt,
+      updatedAt: toTimestamp(project.updatedAt) ?? createdAt,
     },
     sourceWorkspace: {
       id: workspaceId,
@@ -314,8 +333,16 @@ export async function exportProject(
       ).values()
     )
   )
-  const directMembers = await getDirectMembers(projectId)
-  const unsupportedContent = await getUnsupportedContent(projectId)
+  const [agents, workspaceApps] = await Promise.all([
+    sdk.ai.agents.fetch(),
+    sdk.workspaceApps.fetch(),
+  ])
+  const directMembers = await getDirectMembers(projectId, agents, workspaceApps)
+  const unsupportedContent = await getUnsupportedContent(
+    projectId,
+    agents,
+    workspaceApps
+  )
 
   const typeByResourceId = new Map(
     projectDependencies.map(resource => [resource.id, resource.type])

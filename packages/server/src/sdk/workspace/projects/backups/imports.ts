@@ -19,7 +19,6 @@ import {
 import fs from "fs"
 import fsp from "fs/promises"
 import { basename, join, relative } from "path"
-import { Writable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import {
@@ -65,6 +64,7 @@ const MAX_PACKAGE_FILES = 2000
 const MAX_PACKAGE_DOCS = 1000
 const MAX_PATH_SEGMENTS = 4
 const MAX_ENCRYPT_PASSWORD_LENGTH = 1024
+type PipelineDestination = Parameters<typeof pipeline>[1]
 
 const PREASSIGNED_IMPORT_TYPES: ResourceType[] = [
   ResourceType.AGENT,
@@ -113,6 +113,19 @@ const readJsonFile = async <T>(filePath: string): Promise<T> => {
     )
   }
 }
+
+const toTimestamp = (timestamp?: string | number) => {
+  if (timestamp == null) {
+    return undefined
+  }
+  const date = new Date(timestamp)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
+}
+
+const getProjectCreatedAt = (project: Project) =>
+  toTimestamp(project.createdAt) ??
+  toTimestamp(project.updatedAt) ??
+  new Date().toISOString()
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -237,7 +250,7 @@ const validateProjectPackageBeforeExtraction = async (file: {
   })
 
   try {
-    await pipeline(stream, parser as unknown as Writable)
+    await pipeline(stream, parser as PipelineDestination)
   } catch (err) {
     throw validationError || err
   }
@@ -995,6 +1008,7 @@ export async function importProject(
       resourceId: idMap.get(requirement.resourceId) || requirement.resourceId,
     }))
 
+    const createdAt = getProjectCreatedAt(importedProject)
     return {
       project: {
         _id: importedProject._id!,
@@ -1002,8 +1016,8 @@ export async function importProject(
         name: importedProject.name,
         description: importedProject.description,
         color: importedProject.color,
-        createdAt: String(importedProject.createdAt),
-        updatedAt: importedProject.updatedAt,
+        createdAt,
+        updatedAt: toTimestamp(importedProject.updatedAt) ?? createdAt,
       },
       resources,
       unsupportedContent: extracted.manifest.unsupportedContent,
