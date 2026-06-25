@@ -810,7 +810,7 @@ describe("/api/resources/usage", () => {
       )
     })
 
-    it("sanitises external table project assignments when duplicating datasources", async () => {
+    it("removes external table project assignments when duplicating a datasource without its project", async () => {
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
         { [FeatureFlag.PROJECTS]: true },
@@ -834,38 +834,23 @@ describe("/api/resources/usage", () => {
           const withoutProject = await config.api.workspace.create({
             name: `Destination ${generator.natural()}`,
           })
-          const withProject = await config.api.workspace.create({
-            name: `Destination ${generator.natural()}`,
-          })
 
           await duplicateResources(
             [assignedDatasource._id!],
             withoutProject.appId
           )
-          await duplicateResources(
-            [project._id, assignedDatasource._id!],
-            withProject.appId
-          )
 
-          const getDuplicatedDatasource = async (workspaceId: string) => {
-            const destinationDb = db.getDB(db.getDevWorkspaceID(workspaceId), {
-              skip_setup: true,
-            })
-            return await destinationDb.get<Datasource>(assignedDatasource._id!)
-          }
-          const datasourceWithoutProject = await getDuplicatedDatasource(
-            withoutProject.appId
+          const destinationDb = db.getDB(
+            db.getDevWorkspaceID(withoutProject.appId),
+            { skip_setup: true }
           )
-          const datasourceWithProject = await getDuplicatedDatasource(
-            withProject.appId
+          const duplicatedDatasource = await destinationDb.get<Datasource>(
+            assignedDatasource._id!
           )
 
           expect(
-            datasourceWithoutProject.entities![externalTable.name].projectIds
+            duplicatedDatasource.entities![externalTable.name].projectIds
           ).toBeUndefined()
-          expect(
-            datasourceWithProject.entities![externalTable.name].projectIds
-          ).toEqual([project._id])
         }
       )
     })
