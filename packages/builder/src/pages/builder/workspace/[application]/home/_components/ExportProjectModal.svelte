@@ -55,7 +55,7 @@
   title="Export project"
   confirmText="Export"
   size="M"
-  bind:disabled
+  {disabled}
   onConfirm={() =>
     onConfirm({
       id: projectId,

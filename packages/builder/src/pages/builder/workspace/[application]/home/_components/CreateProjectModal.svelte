@@ -26,7 +26,7 @@
 
   let name = $state(project?.name || "")
   let description = $state(project?.description || "")
-  let color: string | undefined = $state(project?.color || "#8CA171")
+  let color = $state(project ? project.color || "" : "#8CA171")
   let nameError: string | undefined = $state(undefined)
 
   $effect(() => {
@@ -44,7 +44,7 @@
     return onConfirm({
       name: name.trim(),
       description: description.trim() || undefined,
-      color: color?.trim() || undefined,
+      color: color.trim() || undefined,
     })
   }
 </script>
@@ -65,7 +65,7 @@
 
   <div class="color-field">
     <Body size="S" weight="600">Color</Body>
-    <ColorPicker bind:value={color} on:change={e => (color = e.detail)} />
+    <ColorPicker bind:value={color} on:change={e => (color = e.detail || "")} />
   </div>
 </ModalContent>
 

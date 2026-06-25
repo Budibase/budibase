@@ -63,7 +63,7 @@
   title="Import project"
   confirmText="Import"
   size="M"
-  bind:disabled
+  {disabled}
   onConfirm={() =>
     file &&
     onConfirm({

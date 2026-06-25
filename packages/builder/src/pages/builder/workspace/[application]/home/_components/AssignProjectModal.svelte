@@ -7,7 +7,7 @@
   interface Props {
     row?: HomeRow | null
     projects?: ProjectResponse[]
-    onConfirm?: (_projectIds: string[] | undefined) => unknown
+    onConfirm?: (_projectIds: string[]) => unknown
   }
 
   let { row = null, projects = [], onConfirm = () => {} }: Props = $props()
@@ -42,8 +42,7 @@
   title={`Assign projects${row ? ` to ${row.name}` : ""}`}
   confirmText="Save"
   size="M"
-  onConfirm={() =>
-    onConfirm(selectedProjectIds.length ? selectedProjectIds : undefined)}
+  onConfirm={() => onConfirm(selectedProjectIds)}
 >
   {#if row}
     <Body size="S" color="var(--spectrum-global-color-gray-700)">

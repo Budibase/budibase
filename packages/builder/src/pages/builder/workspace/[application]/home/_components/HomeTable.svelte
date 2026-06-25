@@ -99,8 +99,7 @@
     return "var(--spectrum-global-color-gray-600)"
   }
 
-  const getProjectCount = (row: HomeRow) =>
-    row.projectCount ?? row.projectIds?.length ?? 0
+  const getProjectCount = (row: HomeRow) => row.projectIds?.length ?? 0
 
   const getCreatedDisplay = (row: HomeRow) => {
     if (!row.createdAt) {

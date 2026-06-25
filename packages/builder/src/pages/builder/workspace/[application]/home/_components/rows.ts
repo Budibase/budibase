@@ -90,8 +90,7 @@ const getUpdatedTimestamp = (row: HomeRow) => getTimestamp(row.updatedAt)
 
 const getCreatedTimestamp = (row: HomeRow) => getTimestamp(row.createdAt)
 
-const getProjectCount = (row: HomeRow) =>
-  row.projectCount ?? row.projectIds?.length ?? 0
+const getProjectCount = (row: HomeRow) => row.projectIds?.length ?? 0
 
 const getStatusSortValue = (row: HomeRow) => {
   if (row.type === "app" || row.type === "automation") {

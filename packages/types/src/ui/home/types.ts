@@ -21,9 +21,6 @@ interface HomeRowBase {
   name: string
   type: HomeRowType
   projectIds?: string[]
-  projectName?: string
-  projectColor?: string
-  projectCount?: number
   updatedAt?: string
   createdAt?: string
   favourite: WorkspaceFavourite

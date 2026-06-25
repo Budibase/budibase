@@ -36,15 +36,19 @@ export const buildHomeUrl = (
     params.set("project", state.selectedProjectId)
   }
 
+  const hasProjectOnlySort =
+    !state.projectsEnabled &&
+    (state.sortColumn === "projects" || state.sortColumn === "created")
+  const sortColumn = hasProjectOnlySort ? "updated" : state.sortColumn
+  const sortOrder = hasProjectOnlySort ? "desc" : state.sortOrder
   const defaultSortColumn = state.projectsEnabled ? "created" : "updated"
-  const isDefaultSort =
-    state.sortColumn === defaultSortColumn && state.sortOrder === "desc"
+  const isDefaultSort = sortColumn === defaultSortColumn && sortOrder === "desc"
   if (isDefaultSort) {
     params.delete("sort")
     params.delete("order")
   } else {
-    params.set("sort", state.sortColumn)
-    params.set("order", state.sortOrder)
+    params.set("sort", sortColumn)
+    params.set("order", sortOrder)
   }
 
   const query = params.toString()

@@ -197,7 +197,6 @@ describe("sortHomeRows", () => {
       {
         ...buildAgentRow({ id: "b", name: "Assigned" }),
         projectIds: ["project_1"],
-        projectCount: 1,
       },
     ]
 
@@ -215,12 +214,10 @@ describe("sortHomeRows", () => {
       {
         ...buildAgentRow({ id: "b", name: "TwoProjects" }),
         projectIds: ["project_1", "project_2"],
-        projectCount: 2,
       },
       {
         ...buildAgentRow({ id: "c", name: "SingleAssigned" }),
         projectIds: ["project_1"],
-        projectCount: 1,
       },
     ]
 
@@ -232,7 +229,7 @@ describe("sortHomeRows", () => {
     expect(result.map(row => row._id)).toEqual(["b", "c", "a"])
   })
 
-  it("sorts by projectIds length when projectCount is unset", () => {
+  it("sorts by projectIds length", () => {
     const rows = [
       buildAgentRow({ id: "a", name: "Unassigned" }),
       {

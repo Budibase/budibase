@@ -402,10 +402,13 @@
           projectIds,
         })
       } else if (selectedRow.type === "automation") {
-        await automationStore.actions.save({
-          ...selectedRow.resource,
-          projectIds,
-        })
+        await automationStore.actions.save(
+          {
+            ...selectedRow.resource,
+            projectIds,
+          },
+          { skipUnpublishedChanges: true }
+        )
       } else if (selectedRow.type === "agent") {
         await agentsStore.updateAgent({
           ...selectedRow.resource,
@@ -753,8 +756,8 @@
 
   const loadProjects = async (workspaceId: string) => {
     try {
-      await projectsStore.ensureFetched(workspaceId)
       projectsRequestedForWorkspace = workspaceId
+      await projectsStore.ensureFetched(workspaceId)
     } catch (error) {
       if ($appStore.appId === workspaceId && projectsEnabled) {
         notifications.error(getErrorMessage(error) || "Unable to load projects")
@@ -801,21 +804,7 @@
   const openUpgradePage = () => {
     licensing.goToUpgradePage()
   }
-  $: rowsWithProjects = baseRows.map(row => {
-    const rowProjectIds = row.projectIds || []
-    const projects = rowProjectIds
-      .map(projectId => projectLookup[projectId])
-      .filter((project): project is ProjectResponse => !!project)
-    const project = projects[0]
-    return {
-      ...row,
-      projectName: project?.name,
-      projectColor: project?.color,
-      projectCount: rowProjectIds.length,
-    }
-  })
-
-  $: allRows = sortHomeRows(rowsWithProjects, { sortColumn, sortOrder })
+  $: allRows = sortHomeRows(baseRows, { sortColumn, sortOrder })
 
   $: filteredRows = filterHomeRows({
     rows: allRows,
@@ -918,12 +907,16 @@
     if (project) {
       selectedProjectId = project
     }
-    if (sort) {
+    const sortAllowed =
+      sort && (projectsEnabled || (sort !== "projects" && sort !== "created"))
+    if (sortAllowed) {
       sortColumn = sort
     } else if (projectsEnabled) {
       sortColumn = "created"
+    } else {
+      sortColumn = "updated"
     }
-    if (order) {
+    if (order && sortAllowed) {
       sortOrder = order
     }
 

@@ -49,4 +49,15 @@ describe("buildHomeUrl", () => {
 
     expect(result).toBe("/builder/workspace/home")
   })
+
+  it("removes project-only sort state when projects are disabled", () => {
+    const result = buildHomeUrl("/builder/workspace/home", "?sort=projects", {
+      ...defaultState,
+      sortColumn: "projects",
+      sortOrder: "asc",
+      projectsEnabled: false,
+    })
+
+    expect(result).toBe("/builder/workspace/home")
+  })
 })

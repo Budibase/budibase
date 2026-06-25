@@ -69,4 +69,29 @@ describe("CreateProjectModal", () => {
       color: "#8CA171",
     })
   })
+
+  it("does not add a default colour when editing a colourless project", async () => {
+    const onConfirm = vi.fn()
+
+    render(CreateProjectModal, {
+      props: {
+        project: {
+          _id: "project_1",
+          _rev: "1-rev",
+          name: "Operations",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+        onConfirm,
+      },
+    })
+
+    await fireEvent.click(screen.getByText("Save"))
+
+    expect(onConfirm).toHaveBeenCalledWith({
+      name: "Operations",
+      description: undefined,
+      color: undefined,
+    })
+  })
 })
