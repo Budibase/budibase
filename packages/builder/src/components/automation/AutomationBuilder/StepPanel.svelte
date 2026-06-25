@@ -482,11 +482,11 @@
     display: flex;
     flex-direction: column;
     min-height: 200px;
-    max-height: 550px;
+    max-height: 650px;
     transition:
       height 300ms ease-out,
       max-height 300ms ease-out;
-    height: 400px;
+    height: 520px;
     box-sizing: border-box;
   }
   .config.panel .content {
