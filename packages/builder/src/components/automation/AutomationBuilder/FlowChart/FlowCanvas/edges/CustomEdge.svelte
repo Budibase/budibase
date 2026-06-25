@@ -149,6 +149,7 @@
   $: isLoopInsertAnchor = data?.insertIntoLoopV2 === true && isAnchorTarget
   $: isSubflowEdge = data.isSubflowEdge === true
   $: hideActions = data?.hideActions === true
+  $: continueThroughActions = data?.continueThroughActions === true
   $: isMergeJunctionTarget = isAnchorTarget && hideActions
   $: isBranchSource =
     data?.block && "branchNode" in data.block && data.block.branchNode === true
@@ -214,14 +215,21 @@
           targetX,
           targetY,
         })
-      : isAnchorTarget
-        ? getStraightPath({
-            sourceX,
-            sourceY,
-            targetX: labelX,
-            targetY: labelY,
-          })[0]
-        : loopTargetPath || loopSourcePath || primaryBranchPath || basePath[0]
+      : isAnchorTarget && continueThroughActions
+        ? [
+            `M ${sourceX},${sourceY}`,
+            `L ${labelX},${sourceY}`,
+            `L ${labelX},${targetY}`,
+            `L ${targetX},${targetY}`,
+          ].join(" ")
+        : isAnchorTarget
+          ? getStraightPath({
+              sourceX,
+              sourceY,
+              targetX: labelX,
+              targetY: labelY,
+            })[0]
+          : loopTargetPath || loopSourcePath || primaryBranchPath || basePath[0]
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined

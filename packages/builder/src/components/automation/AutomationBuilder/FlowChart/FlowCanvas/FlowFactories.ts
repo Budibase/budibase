@@ -94,6 +94,7 @@ export const edgeAddItem = (
     terminalBranchIdx?: number
     hideActions?: boolean
     mergeJunctionEdge?: boolean
+    continueThroughActions?: boolean
   }
 ): FlowEdge => {
   const data: BaseEdgeData = {
@@ -106,6 +107,7 @@ export const edgeAddItem = (
       ? { terminalBranchIdx: ctx.terminalBranchIdx }
       : {}),
     ...(ctx.hideActions ? { hideActions: true } : {}),
+    ...(ctx.continueThroughActions ? { continueThroughActions: true } : {}),
     ...(ctx.mergeJunctionEdge ||
     (source.startsWith("anchor-") && source.includes("-merge-"))
       ? { mergeJunctionEdge: true }

@@ -94,7 +94,7 @@ describe("AutomationStepHelpers", () => {
       hideActions: true,
     })
     expect(
-      getEdge(graph, "branch-branch-many-1-beta", joinAnchorId).data
+      getEdge(graph, "anchor-branch-branch-many-1-beta", joinAnchorId).data
     ).toMatchObject({ hideActions: true })
     expect(getEdge(graph, joinAnchorId, merge.id).data).not.toMatchObject({
       hideActions: true,
@@ -116,8 +116,23 @@ describe("AutomationStepHelpers", () => {
       )
     ).toBe(false)
     expect(
-      graph.nodes.some(node => node.id === "anchor-branch-branch-many-1-beta")
+      graph.edges.some(
+        edge =>
+          edge.source === "branch-branch-many-1-beta" &&
+          edge.target === joinAnchorId
+      )
     ).toBe(false)
+    expect(
+      getEdge(
+        graph,
+        "branch-branch-many-1-beta",
+        "anchor-branch-branch-many-1-beta"
+      ).data
+    ).toMatchObject({
+      terminalBranchStepId: "branch-many",
+      terminalBranchIdx: 1,
+      continueThroughActions: true,
+    })
     getNode(graph, "anchor-gamma-1")
 
     dagreLayoutAutomation(graph)

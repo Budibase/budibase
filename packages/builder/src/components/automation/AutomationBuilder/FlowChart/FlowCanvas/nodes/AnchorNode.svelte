@@ -17,14 +17,12 @@
     isConnectable={false}
     position={targetPosition}
   />
-  {#if isJunction}
-    <Handle
-      class="custom-handle"
-      type="source"
-      isConnectable={false}
-      position={targetPosition}
-    />
-  {/if}
+  <Handle
+    class="custom-handle"
+    type="source"
+    isConnectable={false}
+    position={targetPosition}
+  />
 </div>
 
 <style>

@@ -363,6 +363,7 @@ export interface BaseEdgeData {
   terminalBranchIdx?: number
   hideActions?: boolean
   mergeJunctionEdge?: boolean
+  continueThroughActions?: boolean
   [key: string]: unknown
 }
 

@@ -239,9 +239,25 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         const mergeTargetId =
           mergeConnectionByBranchId.get(String(branch.id)) ||
           branchMergeTarget?.id
+        let mergeSourceId = terminalSourceId
         if (mergeTargetId) {
+          if (!chainResult) {
+            const terminalId = `anchor-${terminalSourceId}`
+            deps.newEdges.push(
+              edgeAddItem(terminalSourceId, terminalId, {
+                block: terminalBlock,
+                ...(terminalPath ? { pathTo: terminalPath } : {}),
+                terminalBranchStepId: baseId,
+                terminalBranchIdx: bIdx,
+                continueThroughActions: true,
+              })
+            )
+            pushAnchor(terminalId, bottomY, deps)
+            mergeSourceId = terminalId
+          }
+
           const terminal = {
-            sourceId: terminalSourceId,
+            sourceId: mergeSourceId,
             block: terminalBlock,
             ...(terminalPath ? { pathTo: terminalPath } : {}),
             bottomY,
