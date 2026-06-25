@@ -36,7 +36,7 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
   import AgentSelector from "./AgentSelector.svelte"
-  import CronBuilder from "./CronBuilder.svelte"
+  import ScheduleBuilder from "./ScheduleBuilder.svelte"
   import Editor from "@/components/integration/QueryEditor.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
@@ -991,9 +991,10 @@
                 </DrawerContent>
               </Drawer>
             {:else if value.customType === "cron"}
-              <CronBuilder
-                on:change={e => onChange({ [key]: e.detail })}
+              <ScheduleBuilder
+                onchange={onChange}
                 cronExpression={inputData[key]}
+                timezone={inputData.timezone || "UTC"}
               />
             {:else if value.customType === "automationFields"}
               <AutomationSelector
