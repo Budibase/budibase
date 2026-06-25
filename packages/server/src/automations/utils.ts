@@ -278,6 +278,7 @@ export async function enableCronOrEmailTrigger(
   if (isCronTrigger(trigger)) {
     const inputs = trigger.inputs as CronTriggerInputs
     const cronExp = inputs.cron || ""
+    const timezone = inputs.timezone
     const validation = helpers.cron.validate(cronExp)
     if (!validation.valid) {
       throw new Error(
@@ -303,7 +304,7 @@ export async function enableCronOrEmailTrigger(
         automation,
         event: { appId },
       },
-      { repeat: { cron: cronExp }, jobId }
+      { repeat: { cron: cronExp, tz: timezone }, jobId }
     )
 
     trigger.cronJobId = jobId

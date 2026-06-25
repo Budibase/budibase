@@ -9,9 +9,17 @@
 
 <label>
   <span>{label}</span>
-  <select aria-label={label} bind:value {disabled}>
-    {#each options as option}
-      <option value={getOptionValue(option)}>{getOptionLabel(option)}</option>
-    {/each}
-  </select>
+  {#if Array.isArray(value)}
+    <select aria-label={label} bind:value {disabled} multiple>
+      {#each options as option}
+        <option value={getOptionValue(option)}>{getOptionLabel(option)}</option>
+      {/each}
+    </select>
+  {:else}
+    <select aria-label={label} bind:value {disabled}>
+      {#each options as option}
+        <option value={getOptionValue(option)}>{getOptionLabel(option)}</option>
+      {/each}
+    </select>
+  {/if}
 </label>
