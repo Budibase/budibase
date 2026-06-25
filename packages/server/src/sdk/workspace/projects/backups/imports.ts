@@ -187,7 +187,7 @@ const readDirectoryRecursively = async (
 const validateProjectPackageBeforeExtraction = async (file: {
   path: string
 }) => {
-  const archiveHeader = Buffer.alloc(2)
+  const archiveHeader = new Uint8Array(2)
   const archiveFile = await fsp.open(file.path, "r")
   try {
     await archiveFile.read(archiveHeader, 0, archiveHeader.length, 0)
