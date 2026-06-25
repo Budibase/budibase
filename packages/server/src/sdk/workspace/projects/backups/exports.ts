@@ -1,4 +1,4 @@
-import { context, encryption, logging } from "@budibase/backend-core"
+import { context, encryption } from "@budibase/backend-core"
 import {
   Agent,
   AnyDocument,
@@ -70,27 +70,12 @@ const getProjectCreatedAt = (project: Project) =>
   new Date().toISOString()
 
 export async function listAssignedAgentFiles(
-  projectId: string,
   assignedAgents: Agent[],
   listFilesForAgent = sdk.ai.rag.listFilesForAgent
 ): Promise<KnowledgeBaseFile[]> {
   return (
     await Promise.all(
-      assignedAgents.map(async agent => {
-        try {
-          return await listFilesForAgent(agent._id!)
-        } catch (err) {
-          logging.logWarn(
-            "Project export: failed to list RAG files for agent",
-            {
-              err,
-              projectId,
-              agentId: agent._id,
-            }
-          )
-          return []
-        }
-      })
+      assignedAgents.map(agent => listFilesForAgent(agent._id!))
     )
   ).flat()
 }
@@ -165,10 +150,10 @@ async function getUnsupportedContent(
     workspaceApps.find(workspaceApp => workspaceApp.isDefault) ||
     workspaceApps[0]
   const [assignedAgentFiles, orphanScreens] = await Promise.all([
-    listAssignedAgentFiles(projectId, assignedAgents),
+    listAssignedAgentFiles(assignedAgents),
     defaultWorkspaceApp && assignedWorkspaceAppIds.has(defaultWorkspaceApp._id)
       ? sdk.screens
-          .fetch(undefined, { repairMissingWorkspaceAppId: false })
+          .fetch()
           .then(screens => screens.filter(screen => !screen.workspaceAppId))
       : [],
   ])
@@ -280,7 +265,6 @@ function buildManifest(
       !!resourcesByType[ResourceType.DATASOURCE] ||
       !!resourcesByType[ResourceType.AGENT],
     unsupportedContent,
-    supportedImportModes: ["additiveImport"],
   }
 }
 

@@ -133,6 +133,7 @@
   let response: PreviewQueryResponse
   let editableQuery: Query | undefined
   let projectIds: string[] = []
+  let initialProjectIds: string[] = []
   let datasource: Datasource | UIInternalDatasource | undefined
   let enabledHeaders: Record<string, boolean> = {}
   let globalDynamicRequestBindings: EnrichedBinding[] = []
@@ -212,6 +213,7 @@
   $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
     projectIds = editableQuery?.projectIds || []
+    initialProjectIds = [...projectIds]
     lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
@@ -327,7 +329,7 @@
     buildQuery(
       {
         ...editableQuery,
-        projectIds: projectIds.length ? projectIds : undefined,
+        projectIds: getQueryProjectIds(),
         datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },
@@ -434,6 +436,13 @@
   const getDatasourceBaseUrl = (
     ds: Datasource | UIInternalDatasource | undefined
   ): string | undefined => (ds as Datasource)?.config?.url as string | undefined
+
+  const getQueryProjectIds = () => {
+    if (projectIds.length) {
+      return projectIds
+    }
+    return !isNewQuery && initialProjectIds.length ? [] : undefined
+  }
 
   const resolveStoreQuery = (
     list: Query[] | undefined,

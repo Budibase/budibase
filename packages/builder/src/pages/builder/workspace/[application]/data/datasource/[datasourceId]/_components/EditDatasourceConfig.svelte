@@ -61,6 +61,7 @@
     config={datasource.config || {}}
     showNameField
     showProjectField
+    preserveEmptyProjectIds
     nameFieldValue={datasource.name}
     projectIdsValue={datasource.projectIds || []}
     onSubmit={saveDatasource}

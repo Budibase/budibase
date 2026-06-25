@@ -32,18 +32,15 @@
   )
 
   $effect(() => {
-    if (!Array.isArray(value)) {
-      value = []
-    }
-  })
-
-  $effect(() => {
     if (!projectsEnabled || !workspaceId) {
       return
     }
+    const requestWorkspaceId = workspaceId
     fetchError = undefined
     projectsStore.ensureFetched(workspaceId).catch(() => {
-      fetchError = "Projects could not be loaded."
+      if (workspaceId === requestWorkspaceId) {
+        fetchError = "Projects could not be loaded."
+      }
     })
   })
 </script>
@@ -57,6 +54,5 @@
     getOptionLabel={option => option.label}
     getOptionValue={option => option.value}
     error={fetchError}
-    disabled={!!fetchError}
   />
 {/if}

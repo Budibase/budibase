@@ -103,22 +103,21 @@ export async function exportBundle(
 
 type ProjectImportFiles = {
   file?: KoaFile | KoaFile[]
-  projectExport?: KoaFile | KoaFile[]
 }
 
 export async function importBundle(
   ctx: Ctx<ImportProjectRequest, ImportProjectResponse>
 ) {
   const files = ctx.request.files as ProjectImportFiles | undefined
-  const projectExport = files?.projectExport ?? files?.file
+  const file = files?.file
 
-  if (!projectExport) {
+  if (!file) {
     ctx.throw(400, "Must supply Project export file to import")
   }
-  if (Array.isArray(projectExport)) {
+  if (Array.isArray(file)) {
     ctx.throw(400, "Must only supply one Project export")
   }
-  const filePath = projectExport.filepath
+  const filePath = file.filepath
   if (!filePath) {
     ctx.throw(400, "Must supply Project export file to import")
   }
