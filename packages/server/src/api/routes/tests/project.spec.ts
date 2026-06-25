@@ -7,6 +7,8 @@ import {
   basicDatasource,
   basicTable,
 } from "../../../tests/utilities/structures"
+import sdk from "../../../sdk"
+import * as projects from "../../../sdk/workspace/projects/crud"
 
 describe("/projects", () => {
   const config = new TestConfiguration()
@@ -326,6 +328,44 @@ describe("/projects", () => {
 
       await config.api.project.delete(project._id, "1-stale", {
         status: 409,
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
+    })
+  })
+
+  it("restores assignments when project cleanup fails after partial cleanup", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectIds: [project._id],
+        })
+      )
+      await config.api.table.save({
+        ...basicTable(),
+        projectIds: [project._id],
+      })
+
+      await config.doInContext(undefined, async () => {
+        const saveTable = jest
+          .spyOn(sdk.tables, "saveTable")
+          .mockRejectedValueOnce(new Error("cleanup failed"))
+
+        try {
+          await expect(
+            projects.remove(project._id, project._rev)
+          ).rejects.toThrow("cleanup failed")
+        } finally {
+          saveTable.mockRestore()
+        }
       })
 
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(

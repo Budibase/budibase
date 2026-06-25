@@ -1,5 +1,14 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { Datasource, DocumentType, prefixed, Project } from "@budibase/types"
+import {
+  DocumentType,
+  prefixed,
+  type Agent,
+  type Automation,
+  type Datasource,
+  type Project,
+  type Table,
+  type WorkspaceApp,
+} from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../.."
 import { hasProject, removeProjectId } from "./utils"
@@ -8,6 +17,7 @@ type ProjectCreate = Pick<Project, "name"> &
   Partial<Pick<Project, "description" | "color">>
 type ProjectUpdate = Pick<Project, "_id" | "_rev"> &
   Partial<Pick<Project, "name" | "description" | "color">>
+type Rollback = () => Promise<void>
 
 const normaliseProjectColor = (color?: string) => {
   if (color == null || color.trim() === "") {
@@ -94,7 +104,18 @@ export async function update(project: ProjectUpdate): Promise<Project> {
   return response.doc
 }
 
+const rollbackAssignments = async (rollbacks: Rollback[]) => {
+  const results = await Promise.allSettled(
+    rollbacks.reverse().map(rollback => rollback())
+  )
+  const failures = results.filter(result => result.status === "rejected")
+  if (failures.length) {
+    console.log("Failed to roll back project assignment cleanup", { failures })
+  }
+}
+
 async function clearAssignments(projectId: string) {
+  const rollbacks: Rollback[] = []
   const [workspaceApps, automations, agents, tables, queries, datasources] =
     await Promise.all([
       sdk.workspaceApps.fetch(),
@@ -105,62 +126,106 @@ async function clearAssignments(projectId: string) {
       sdk.datasources.getExternalDatasources(),
     ])
 
-  const db = context.getWorkspaceDB()
-  for (const workspaceApp of workspaceApps.filter(workspaceApp =>
-    hasProject(workspaceApp, projectId)
-  )) {
-    const workspaceAppWithoutProject = removeProjectId(workspaceApp, projectId)
-    await sdk.workspaceApps.update({
-      ...workspaceAppWithoutProject,
-      projectIds: workspaceAppWithoutProject.projectIds,
-    })
-  }
-
-  for (const automation of automations.filter(automation =>
-    hasProject(automation, projectId)
-  )) {
-    await sdk.automations.update(removeProjectId(automation, projectId))
-  }
-
-  for (const agent of agents.filter(agent => hasProject(agent, projectId))) {
-    const agentWithoutProject = removeProjectId(agent, projectId)
-    await sdk.ai.agents.update({
-      ...agentWithoutProject,
-      projectIds: agentWithoutProject.projectIds,
-    })
-  }
-
-  for (const table of tables.filter(
-    table => hasProject(table, projectId) && !isExternalTableID(table._id!)
-  )) {
-    await sdk.tables.saveTable(removeProjectId(table, projectId))
-  }
-
-  for (const query of queries.filter(query => hasProject(query, projectId))) {
-    await db.put(removeProjectId(query, projectId))
-  }
-
-  for (const datasource of datasources) {
-    const entityKeys = Object.entries(datasource.entities || {})
-      .filter(([_, entity]) => hasProject(entity, projectId))
-      .map(([key]) => key)
-    if (!hasProject(datasource, projectId) && !entityKeys.length) {
-      continue
+  try {
+    const db = context.getWorkspaceDB()
+    for (const workspaceApp of workspaceApps.filter(workspaceApp =>
+      hasProject(workspaceApp, projectId)
+    )) {
+      const workspaceAppWithoutProject = removeProjectId(
+        workspaceApp,
+        projectId
+      )
+      const updated = await sdk.workspaceApps.update({
+        ...workspaceAppWithoutProject,
+        projectIds: workspaceAppWithoutProject.projectIds,
+      })
+      rollbacks.push(async () => {
+        await sdk.workspaceApps.update({
+          ...(workspaceApp as WorkspaceApp),
+          _rev: updated._rev,
+        })
+      })
     }
 
-    const current = await db.get<Datasource>(datasource._id!)
-    const entities = { ...current.entities }
-    for (const key of entityKeys) {
-      const entity = entities[key]
-      if (entity) {
-        entities[key] = removeProjectId(entity, projectId)
+    for (const automation of automations.filter(automation =>
+      hasProject(automation, projectId)
+    )) {
+      const updated = await sdk.automations.update(
+        removeProjectId(automation, projectId)
+      )
+      rollbacks.push(async () => {
+        await sdk.automations.update({
+          ...(automation as Automation),
+          _rev: updated._rev,
+        })
+      })
+    }
+
+    for (const agent of agents.filter(agent => hasProject(agent, projectId))) {
+      const agentWithoutProject = removeProjectId(agent, projectId)
+      const updated = await sdk.ai.agents.update({
+        ...agentWithoutProject,
+        projectIds: agentWithoutProject.projectIds,
+      })
+      rollbacks.push(async () => {
+        await sdk.ai.agents.update({
+          ...(agent as Agent),
+          _rev: updated._rev,
+        })
+      })
+    }
+
+    for (const table of tables.filter(
+      table => hasProject(table, projectId) && !isExternalTableID(table._id!)
+    )) {
+      const updated = await sdk.tables.saveTable(
+        removeProjectId(table, projectId)
+      )
+      rollbacks.push(async () => {
+        await sdk.tables.saveTable({
+          ...(table as Table),
+          _rev: updated._rev,
+        })
+      })
+    }
+
+    for (const query of queries.filter(query => hasProject(query, projectId))) {
+      const updated = await db.put(removeProjectId(query, projectId))
+      rollbacks.push(async () => {
+        await db.put({ ...query, _rev: updated.rev })
+      })
+    }
+
+    for (const datasource of datasources) {
+      const entityKeys = Object.entries(datasource.entities || {})
+        .filter(([_, entity]) => hasProject(entity, projectId))
+        .map(([key]) => key)
+      if (!hasProject(datasource, projectId) && !entityKeys.length) {
+        continue
       }
+
+      const current = await db.get<Datasource>(datasource._id!)
+      const entities = { ...current.entities }
+      for (const key of entityKeys) {
+        const entity = entities[key]
+        if (entity) {
+          entities[key] = removeProjectId(entity, projectId)
+        }
+      }
+      const updated = await db.put({
+        ...removeProjectId(current, projectId),
+        entities,
+      })
+      rollbacks.push(async () => {
+        await db.put({ ...current, _rev: updated.rev })
+      })
     }
-    await db.put({
-      ...removeProjectId(current, projectId),
-      entities,
-    })
+  } catch (err) {
+    await rollbackAssignments(rollbacks)
+    throw err
   }
+
+  return rollbacks
 }
 
 export async function remove(id: string, rev: string) {
@@ -173,7 +238,11 @@ export async function remove(id: string, rev: string) {
     throw new HTTPError("Project revision does not match.", 409)
   }
 
-  const response = await db.remove(id, rev)
-  await clearAssignments(id)
-  return response
+  const rollbacks = await clearAssignments(id)
+  try {
+    return await db.remove(id, rev)
+  } catch (err) {
+    await rollbackAssignments(rollbacks)
+    throw err
+  }
 }
