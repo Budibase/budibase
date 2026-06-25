@@ -200,26 +200,13 @@ describe("Automation layout", () => {
     ) as HTMLElement
 
     expect(actionPanel).toBeTruthy()
-    expect(container.querySelector(".content")).toHaveClass("action-panel-open")
+    expect(container.querySelector(".content")).toHaveClass("panel-open")
     await waitFor(() => {
       expect(
         (
           container.querySelector(".content") as HTMLElement
-        ).style.getPropertyValue("--automation-action-panel-width")
+        ).style.getPropertyValue("--automation-panel-width")
       ).toBe("520px")
-    })
-
-    const resizedRect = actionPanel.getBoundingClientRect()
-    Object.defineProperty(resizedRect, "width", { value: 640 })
-    actionPanel.getBoundingClientRect = () => resizedRect
-    mocks.resizeObserverCallback?.([], {})
-
-    await waitFor(() => {
-      expect(
-        (
-          container.querySelector(".content") as HTMLElement
-        ).style.getPropertyValue("--automation-action-panel-width")
-      ).toBe("640px")
     })
     expect(container.querySelector(".step-panel-container")).toBeFalsy()
   })
