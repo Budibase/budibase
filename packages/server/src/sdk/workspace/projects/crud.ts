@@ -20,7 +20,8 @@ const normaliseProjectColor = (color?: string) => {
   return trimmed
 }
 
-const isProjectId = (id?: string) => id?.startsWith(prefixed(DocumentType.PROJECT))
+const isProjectId = (id?: string) =>
+  id?.startsWith(prefixed(DocumentType.PROJECT))
 
 export async function fetch(): Promise<Project[]> {
   const db = context.getWorkspaceDB()
