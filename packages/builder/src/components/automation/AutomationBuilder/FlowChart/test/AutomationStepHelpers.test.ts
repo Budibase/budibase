@@ -124,14 +124,11 @@ describe("AutomationStepHelpers", () => {
 
     const joinAnchor = getNode(graph, joinAnchorId)
     const mergeNode = getNode(graph, merge.id)
-    const triggerNode = getNode(graph, automationTrigger.id)
     const joinCenterY = joinAnchor.position.y + 0.5
-    const splitCenterY = triggerNode.position.y + 60
+    const mergeHandleY = mergeNode.position.y + 30
 
-    expect(Math.abs(joinCenterY - splitCenterY)).toBeLessThanOrEqual(1)
-    expect(mergeNode.position.x - joinAnchor.position.x).toBeGreaterThanOrEqual(
-      500
-    )
+    expect(Math.abs(joinCenterY - mergeHandleY)).toBeLessThanOrEqual(1)
+    expect(mergeNode.position.x - joinAnchor.position.x).toBe(80)
   })
 
   it("renders separate branch endings when merge connection targets are missing", () => {

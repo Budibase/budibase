@@ -3,7 +3,9 @@ import { ANCHOR, BRANCH, JUNCTION_ANCHOR, LOOP, STEP } from "./FlowGeometry"
 
 const BRANCH_LANE_CLEARANCE = 120
 const POST_LOOP_BRANCH_CLEARANCE = 120
-const MERGE_JUNCTION_CLEARANCE = 180
+const MERGE_JUNCTION_CLEARANCE = 80
+const MERGE_JUNCTION_INBOUND_TIGHTENING = 80
+const VISIBLE_STEP_HANDLE_CENTER_Y = 30
 
 const getTopLevelGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
   const nodesById: Record<string, FlowNode> = {}
@@ -105,22 +107,6 @@ const getSubtreeBounds = (
     bottom = Math.max(bottom, node.position.y + getNodeHeight(node))
   }
   return { top, bottom }
-}
-
-const getBranchStepIdFromPath = (value: unknown) => {
-  if (!Array.isArray(value)) {
-    return
-  }
-
-  const branchHop = value
-    .slice()
-    .reverse()
-    .find(
-      hop =>
-        hop && typeof hop === "object" && typeof hop.branchStepId === "string"
-    )
-
-  return branchHop?.branchStepId
 }
 
 // Shift only the subtree after a loop so that its lane clears the loop container
@@ -267,42 +253,20 @@ export const applyMergeJunctionClearance = (graph: {
       return
     }
 
-    const branchStepId = graph.edges
-      .filter(incomingEdge => incomingEdge.target === source.id)
-      .map(incomingEdge => {
-        const incomingData = incomingEdge.data as
-          | Record<string, unknown>
-          | undefined
-        return getBranchStepIdFromPath(incomingData?.pathTo)
-      })
-      .find(Boolean)
-    const branchSourceEdge = branchStepId
-      ? graph.edges.find(branchEdge => {
-          const branchData = branchEdge.data as
-            | Record<string, unknown>
-            | undefined
-          return (
-            branchData?.isBranchEdge === true &&
-            branchData.branchStepId === branchStepId
-          )
-        })
-      : undefined
-    const branchSource = branchSourceEdge
-      ? nodesById[branchSourceEdge.source]
-      : undefined
-    if (branchSource && !branchSource.parentId) {
-      source.position = {
-        x: source.position.x,
-        y:
-          branchSource.position.y +
-          getNodeHeight(branchSource) / 2 -
-          getNodeHeight(source) / 2,
-      }
+    const hasIncomingMergeBranches = graph.edges.some(
+      incomingEdge => incomingEdge.target === source.id
+    )
+    const targetCenterY = target.position.y + VISIBLE_STEP_HANDLE_CENTER_Y
+    source.position = {
+      x: hasIncomingMergeBranches
+        ? source.position.x - MERGE_JUNCTION_INBOUND_TIGHTENING
+        : source.position.x,
+      y: targetCenterY - getNodeHeight(source) / 2,
     }
 
-    const delta =
-      source.position.x + MERGE_JUNCTION_CLEARANCE - target.position.x
-    if (delta <= 0) {
+    const targetX = source.position.x + MERGE_JUNCTION_CLEARANCE
+    const delta = targetX - target.position.x
+    if (delta === 0) {
       return
     }
 

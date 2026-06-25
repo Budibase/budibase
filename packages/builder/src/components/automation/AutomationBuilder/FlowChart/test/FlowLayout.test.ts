@@ -877,9 +877,21 @@ describe("applyBranchLaneClearance", () => {
 })
 
 describe("applyMergeJunctionClearance", () => {
-  it("shifts the merge subtree right of the branch convergence point", () => {
+  it("positions the merge subtree close to the branch convergence point", () => {
     const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
       nodes: [
+        {
+          id: "upper-step",
+          type: "step-node",
+          data: {},
+          position: { x: 80, y: 0 },
+        },
+        {
+          id: "lower-step",
+          type: "step-node",
+          data: {},
+          position: { x: 80, y: 160 },
+        },
         {
           id: "merge-junction",
           type: "anchor-node",
@@ -901,6 +913,24 @@ describe("applyMergeJunctionClearance", () => {
       ],
       edges: [
         {
+          id: "edge-upper-junction",
+          source: "upper-step",
+          target: "merge-junction",
+          type: "add-item",
+          data: {
+            hideActions: true,
+          },
+        },
+        {
+          id: "edge-lower-junction",
+          source: "lower-step",
+          target: "merge-junction",
+          type: "add-item",
+          data: {
+            hideActions: true,
+          },
+        },
+        {
           id: "edge-junction-merge",
           source: "merge-junction",
           target: "merge",
@@ -920,8 +950,9 @@ describe("applyMergeJunctionClearance", () => {
 
     applyMergeJunctionClearance(graph)
 
-    expect(getNode(graph, "merge").position.x).toBe(580)
-    expect(getNode(graph, "after-merge").position.x).toBe(940)
+    expect(getNode(graph, "merge-junction").position.x).toBe(320)
+    expect(getNode(graph, "merge").position.x).toBe(400)
+    expect(getNode(graph, "after-merge").position.x).toBe(760)
   })
 })
 
