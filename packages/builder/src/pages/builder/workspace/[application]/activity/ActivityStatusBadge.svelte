@@ -14,8 +14,8 @@
 
   const badgeColorsByStatus = {
     completed: {
-      backgroundColor: "#4d6300",
-      textColor: "#f5ffbe",
+      backgroundColor: "var(--spectrum-semantic-positive-color-status)",
+      textColor: "var(--spectrum-global-color-static-gray-50)",
     },
   } as const
 
