@@ -40,20 +40,6 @@ jest.mock("@budibase/pro", () => {
 })
 
 describe("createLiteLLMOpenAI", () => {
-  const waitUntil = async (
-    predicate: () => boolean,
-    timeoutMs = 5000,
-    intervalMs = 50
-  ) => {
-    const start = Date.now()
-    while (!predicate()) {
-      if (Date.now() - start > timeoutMs) {
-        throw new Error("Timed out waiting for condition")
-      }
-      await new Promise(resolve => setTimeout(resolve, intervalMs))
-    }
-  }
-
   afterEach(() => {
     jest.restoreAllMocks()
     nock.cleanAll()
@@ -129,8 +115,8 @@ describe("createLiteLLMOpenAI", () => {
       }
     )
 
-    await waitUntil(() => quotaNock.isDone())
-    await waitUntil(() => setBudibaseAICreditsMock.mock.calls.length > 0)
+    // Await to allow the background setBudibaseAICredits to execute
+    await new Promise(r => setTimeout(r, 500))
 
     expect(quotaNock.isDone()).toBe(true)
     expect(setBudibaseAICreditsMock).toHaveBeenCalledTimes(1)
