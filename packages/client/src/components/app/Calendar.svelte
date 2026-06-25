@@ -14,7 +14,10 @@
     type FormatterInput,
   } from "@fullcalendar/core"
   import type { Row, UIFieldDataProviderContext } from "@budibase/types"
-  import { loadTranslationsByGroup } from "@budibase/frontend-core"
+  import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
 
   type CalendarView =
     | "dayGridMonth"
@@ -132,13 +135,16 @@
   export let calendarType: CalendarView = "dayGridMonth"
   export let showDayNames: boolean = true
 
-  const { styleable } = getContext("sdk")
+  const { styleable, appStore } = getContext("sdk")
   const component = getContext("component")
-  const calendarLabels = loadTranslationsByGroup("calendar")
   let calendarRef: FullCalendar | null = null
   let calendarContainer: HTMLDivElement | null = null
   let resizeObserver: ResizeObserver | null = null
   let timeGridDayTitleFormat: FormatterInput
+  $: translationOverrides = resolveWorkspaceTranslations(
+    $appStore.application?.translationOverrides
+  )
+  $: calendarLabels = resolveTranslationGroup("calendar", translationOverrides)
   $: isTimeGridDay = calendarType === "timeGridDay"
   $: calendarButtonType = buttonType === "primary" ? "primary" : "action"
   $: hasClickAction = typeof onClick === "function"
@@ -205,6 +211,16 @@
   const getTranslatedMonth = (date: Date, format: MonthFormat) => {
     const key = monthTranslationKeys[date.getUTCMonth()]
     return formatTranslatedLabel(calendarLabels[key], format)
+  }
+
+  const getTranslatedDefaultText = (
+    label: string,
+    defaultLabel: string,
+    translationKey: string
+  ) => {
+    return !label || label === defaultLabel
+      ? calendarLabels[translationKey]
+      : label
   }
 
   const replaceTranslatedMonths = (
@@ -354,11 +370,11 @@
     locale,
     allDayText: calendarLabels.allDay,
     buttonText: {
-      today: todayText,
-      dayGridMonth: monthText,
-      dayGridWeek: weekText,
-      timeGridDay: dayText,
-      listWeek: agendaText,
+      today: getTranslatedDefaultText(todayText, "Today", "todayButton"),
+      dayGridMonth: getTranslatedDefaultText(monthText, "Month", "monthButton"),
+      dayGridWeek: getTranslatedDefaultText(weekText, "Week", "weekButton"),
+      timeGridDay: getTranslatedDefaultText(dayText, "Day", "dayButton"),
+      listWeek: getTranslatedDefaultText(agendaText, "Agenda", "agendaButton"),
     },
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: calendarType || "dayGridMonth",
@@ -398,7 +414,11 @@
         titleFormat: dayGridWeekTitleFormat,
         listDayFormat,
         listDaySideFormat,
-        noEventsContent: emptyAgendaText,
+        noEventsContent: getTranslatedDefaultText(
+          emptyAgendaText,
+          "No events found",
+          "noEvents"
+        ),
       },
     },
     initialDate: openOnDate,

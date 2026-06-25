@@ -103,4 +103,34 @@ export const calendarTranslations = createTranslationDefinitions(category, [
     name: "December",
     defaultValue: "December",
   },
+  {
+    key: "monthButton",
+    name: "Month Button",
+    defaultValue: "Month",
+  },
+  {
+    key: "weekButton",
+    name: "Week Button",
+    defaultValue: "Week",
+  },
+  {
+    key: "dayButton",
+    name: "Day Button",
+    defaultValue: "Day",
+  },
+  {
+    key: "agendaButton",
+    name: "Adenda Button",
+    defaultValue: "Agenda",
+  },
+  {
+    key: "todayButton",
+    name: "Today Button",
+    defaultValue: "Today",
+  },
+  {
+    key: "noEvents",
+    name: "No Events Found text",
+    defaultValue: "No events found",
+  },
 ])
