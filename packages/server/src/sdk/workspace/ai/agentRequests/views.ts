@@ -1,9 +1,9 @@
-import { context, db } from "@budibase/backend-core"
+import { context, db, ViewName } from "@budibase/backend-core"
 import type { AgentRequest } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 
-const REQUESTS_BY_AGENT_VIEW = "agent_requests_by_agent"
-const REQUESTS_BY_UPDATED_AT_VIEW = "agent_requests_by_updated_at"
+const REQUESTS_BY_AGENT_VIEW = ViewName.AGENT_REQUESTS_BY_AGENT
+const REQUESTS_BY_UPDATED_AT_VIEW = ViewName.AGENT_REQUESTS_BY_UPDATED_AT
 
 const buildRequestsByAgentView = (): string => `function(doc) {
   if (doc._id && doc._id.startsWith("${DocumentType.AGENT_REQUEST}_") && doc.agentId) {
@@ -36,28 +36,16 @@ export const createRequestsByUpdatedAtView = async () => {
 export const queryRequestsByAgent = async (
   agentId: string
 ): Promise<AgentRequest[]> => {
-  const db = context.getProdWorkspaceDB()
-
-  try {
-    const response = await db.query<AgentRequest>(
-      `database/${REQUESTS_BY_AGENT_VIEW}`,
-      {
-        include_docs: true,
-        key: agentId,
-      }
-    )
-
-    return response.rows
-      .map(row => row.doc)
-      .filter((doc): doc is AgentRequest => !!doc)
-  } catch (err: any) {
-    if (err?.error === "not_found" && err?.reason === "missing_named_view") {
-      await createRequestsByAgentView()
-      return queryRequestsByAgent(agentId)
-    }
-
-    throw err
-  }
+  return (await db.queryView<AgentRequest>(
+    REQUESTS_BY_AGENT_VIEW,
+    {
+      include_docs: true,
+      key: agentId,
+    },
+    context.getProdWorkspaceDB(),
+    createRequestsByAgentView,
+    { arrayResponse: true }
+  )) as AgentRequest[]
 }
 
 export const queryRequestsByUpdatedAt = async ({
@@ -67,28 +55,16 @@ export const queryRequestsByUpdatedAt = async ({
   limit: number
   page: number
 }): Promise<AgentRequest[]> => {
-  const db = context.getProdWorkspaceDB()
-
-  try {
-    const response = await db.query<AgentRequest>(
-      `database/${REQUESTS_BY_UPDATED_AT_VIEW}`,
-      {
-        include_docs: true,
-        descending: true,
-        limit,
-        skip: (page - 1) * limit,
-      }
-    )
-
-    return response.rows
-      .map(row => row.doc)
-      .filter((doc): doc is AgentRequest => !!doc)
-  } catch (err: any) {
-    if (err?.error === "not_found" && err?.reason === "missing_named_view") {
-      await createRequestsByUpdatedAtView()
-      return queryRequestsByUpdatedAt({ limit, page })
-    }
-
-    throw err
-  }
+  return (await db.queryView<AgentRequest>(
+    REQUESTS_BY_UPDATED_AT_VIEW,
+    {
+      include_docs: true,
+      descending: true,
+      limit,
+      skip: (page - 1) * limit,
+    },
+    context.getProdWorkspaceDB(),
+    createRequestsByUpdatedAtView,
+    { arrayResponse: true }
+  )) as AgentRequest[]
 }
