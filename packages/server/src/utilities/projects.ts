@@ -3,8 +3,11 @@ import { DocumentType, FeatureFlag, prefixed } from "@budibase/types"
 import sdk from "../sdk"
 
 const normaliseProjectIds = (projectIds?: string[] | null) => {
-  if (projectIds == null) {
+  if (projectIds === undefined) {
     return undefined
+  }
+  if (projectIds === null) {
+    throw new HTTPError("Project ids must be an array.", 400)
   }
 
   if (!Array.isArray(projectIds)) {

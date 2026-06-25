@@ -284,7 +284,7 @@ describe("/workspaceApp", () => {
       expect(updated.customTheme?.fontFamily).toBe(AppFontFamily.SOURCE_SANS)
     })
 
-    it("clears project assignments when projectIds is empty", async () => {
+    it("preserves omitted projectIds and clears explicit empty projectIds", async () => {
       await features.testutils.withFeatureFlags(
         testConfig.getTenantId(),
         { [FeatureFlag.PROJECTS]: true },
@@ -300,13 +300,24 @@ describe("/workspaceApp", () => {
             })
           )
 
-          const { workspaceApp: updated } = await api.workspaceApp.update({
+          const { workspaceApp: preserved } = await api.workspaceApp.update({
             _id: workspaceApp._id,
             _rev: workspaceApp._rev,
-            name: workspaceApp.name,
+            name: "Updated project app",
             url: workspaceApp.url,
             navigation: workspaceApp.navigation,
             disabled: workspaceApp.disabled,
+          })
+
+          expect(preserved.projectIds).toEqual([project._id])
+
+          const { workspaceApp: updated } = await api.workspaceApp.update({
+            _id: preserved._id,
+            _rev: preserved._rev,
+            name: preserved.name,
+            url: preserved.url,
+            navigation: preserved.navigation,
+            disabled: preserved.disabled,
             projectIds: [],
           })
 

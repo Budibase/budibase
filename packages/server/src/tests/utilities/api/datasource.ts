@@ -12,17 +12,6 @@ import {
 import { Expectations, TestAPI } from "./base"
 import { sql } from "@budibase/backend-core"
 
-type MalformedDatasourceEntity = null | string | unknown[]
-type InvalidDatasourceEntitiesUpdate = Omit<
-  UpdateDatasourceRequest,
-  "entities"
-> & {
-  entities: Record<
-    string,
-    NonNullable<Datasource["entities"]>[string] | MalformedDatasourceEntity
-  >
-}
-
 export class DatasourceAPI extends TestAPI {
   create = async (
     config: Datasource,
@@ -43,17 +32,6 @@ export class DatasourceAPI extends TestAPI {
 
   update = async (
     datasource: UpdateDatasourceRequest,
-    expectations?: Expectations
-  ): Promise<Datasource> => {
-    const response = await this._put<UpdateDatasourceResponse>(
-      `/api/datasources/${datasource._id}`,
-      { body: datasource, expectations }
-    )
-    return response.datasource
-  }
-
-  updateWithInvalidEntities = async (
-    datasource: InvalidDatasourceEntitiesUpdate,
     expectations?: Expectations
   ): Promise<Datasource> => {
     const response = await this._put<UpdateDatasourceResponse>(
