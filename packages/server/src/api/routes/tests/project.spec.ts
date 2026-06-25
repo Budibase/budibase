@@ -1649,6 +1649,21 @@ describe("/projects", () => {
     })
   })
 
+  it("rejects malformed project import archives", async () => {
+    await withProjectsEnabled(async () => {
+      await config.api.project.import(
+        Buffer.from("not a project archive"),
+        undefined,
+        {
+          status: 400,
+          body: {
+            message: "Project package is invalid.",
+          },
+        }
+      )
+    })
+  })
+
   it("rejects packages that exceed the extracted size limit before extraction", async () => {
     await withProjectsEnabled(async () => {
       const packageBuffer = await createOversizedTarPackage()
