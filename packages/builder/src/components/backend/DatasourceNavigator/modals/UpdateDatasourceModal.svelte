@@ -65,7 +65,7 @@
     const updatedDatasource: Datasource = {
       ...datasource,
       name,
-      projectIds: projectIds.length ? projectIds : undefined,
+      projectIds,
       entities: Array.isArray(datasource.entities)
         ? undefined
         : datasource.entities,

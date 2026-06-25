@@ -2,7 +2,6 @@
   import { goto as gotoStore } from "@roxi/routify"
   import { datasources, integrations, queries } from "@/stores/builder"
   import {
-    Icon,
     Select,
     Input,
     Label,
@@ -10,7 +9,6 @@
     Heading,
     Body,
     Divider,
-    Button,
     ActionButton,
     Checkbox,
   } from "@budibase/bbui"
@@ -72,6 +70,9 @@
 
   let pagination: PaginationConfig | undefined = undefined
 
+  const getQueryProjectIds = (ids: string[]): Query["projectIds"] =>
+    ids.length ? ids : undefined
+
   const parseQuery = (query: Query) => {
     modified = false
     nameError = null
@@ -96,6 +97,7 @@
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
     projectIds = newQuery.projectIds || []
+    newQuery.projectIds = getQueryProjectIds(projectIds)
 
     // Initialize pagination for SQL Read queries
     if (newQuery.queryVerb === "read" && schemaType === "sql") {
@@ -126,7 +128,7 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   $: if (newQuery) {
-    newQuery.projectIds = projectIds.length ? projectIds : undefined
+    newQuery.projectIds = getQueryProjectIds(projectIds)
   }
 
   $: debouncedCheckIsModified(newQuery)
@@ -274,7 +276,8 @@
           Run query
         </ActionButton>
         <div class="tooltip" title="Run your query to enable saving">
-          <Button
+          <ActionButton
+            icon="floppy-disk"
             on:click={async () => {
               const response = await saveQuery()
 
@@ -292,11 +295,9 @@
               nameError ||
               !canSaveQuery
             )}
-            overBackground
           >
-            <Icon size="S" name="floppy-disk" />
             Save
-          </Button>
+          </ActionButton>
         </div>
       </div>
     </div>
@@ -540,19 +541,19 @@
     color: var(--ink);
   }
 
-  .controls :global(.is-disabled) {
+  .controls :global(.disabled) {
     pointer-events: none;
     background-color: transparent;
+    color: var(--grey-3);
+  }
+
+  .controls :global(.disabled i) {
     color: var(--grey-3);
   }
 
   .controls :global(span) {
     display: flex;
     align-items: center;
-  }
-
-  .controls :global(.icon) {
-    margin-right: 8px;
   }
 
   .configField {
