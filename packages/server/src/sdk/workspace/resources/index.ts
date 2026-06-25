@@ -210,6 +210,11 @@ export async function getResourcesInfo(): Promise<
     searchForUsages(query._id!, query)
   }
 
+  // Search in agents
+  for (const agent of agents) {
+    searchForUsages(agent._id!, agent)
+  }
+
   // Search in workspace app screens
   const screens = await sdk.screens.fetch()
   const workspaceAppScreens: Record<string, Screen[]> = {}
@@ -269,14 +274,30 @@ export async function getResourcesInfo(): Promise<
   }
 
   if (projects.length) {
+    type NamedDoc = { _id?: string; name?: string }
+
     const buildUsedResource = (
-      doc: { _id?: string; name?: string },
+      doc: NamedDoc,
       type: ResourceType
     ): UsedResource => ({
       id: doc._id!,
-      name: doc.name || "Unknown",
+      name: doc.name!,
       type,
     })
+
+    const collectDependencies = (
+      resourceId: string,
+      seen = new Set<string>()
+    ): UsedResource[] => {
+      if (seen.has(resourceId)) {
+        return []
+      }
+      seen.add(resourceId)
+
+      return (dependencies[resourceId]?.dependencies || []).flatMap(
+        dependency => [dependency, ...collectDependencies(dependency.id, seen)]
+      )
+    }
 
     for (const project of projects.filter(
       (doc): doc is Required<Pick<Project, "_id" | "name">> & Project =>
@@ -318,10 +339,7 @@ export async function getResourcesInfo(): Promise<
 
       addDependencies(project._id, directMembers)
       for (const member of directMembers) {
-        addDependencies(
-          project._id,
-          dependencies[member.id]?.dependencies || []
-        )
+        addDependencies(project._id, collectDependencies(member.id))
       }
     }
   }
