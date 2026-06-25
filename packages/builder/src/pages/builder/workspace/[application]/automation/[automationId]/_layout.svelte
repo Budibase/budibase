@@ -27,17 +27,19 @@
   $page
   $layout
 
-  let actionPanelContainer: HTMLDivElement | undefined
-  let observedActionPanel: HTMLDivElement | undefined
-  let actionPanelResizeObserver: ResizeObserver | undefined
-  let actionPanelWidth = 0
-
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
   $: selectedNodeId = $automationStore.selectedNodeId
   $: actionPanelOpen =
     !!$automationStore.actionPanelBlock && !$automationStore.selectedNodeId
-  $: syncActionPanelWidth(actionPanelOpen, actionPanelContainer)
+  $: stepPanelOpen =
+    !!$automationStore.selectedNodeId &&
+    !!(
+      blockRefs[$automationStore.selectedNodeId] ||
+      $automationStore.selectedBranchNode
+    )
+  $: panelOpen = actionPanelOpen || stepPanelOpen
+  $: panelWidth = panelOpen ? getSidePanelWidth() : 0
   $: if (automationId) {
     builderStore.selectResource(automationId)
   }
@@ -54,7 +56,6 @@
 
   onDestroy(() => {
     stopSyncing?.()
-    actionPanelResizeObserver?.disconnect()
   })
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -69,36 +70,6 @@
     return Number.isFinite(parsedWidth) && parsedWidth > 0
       ? parsedWidth
       : SIDE_PANEL_DEFAULT_WIDTH
-  }
-
-  const syncActionPanelWidth = (
-    isOpen: boolean,
-    panel: HTMLDivElement | undefined
-  ) => {
-    if (!isOpen || !panel) {
-      actionPanelResizeObserver?.disconnect()
-      actionPanelResizeObserver = undefined
-      observedActionPanel = undefined
-      actionPanelWidth = 0
-      return
-    }
-
-    if (panel === observedActionPanel) {
-      return
-    }
-
-    actionPanelResizeObserver?.disconnect()
-    observedActionPanel = panel
-    actionPanelWidth = getPanelWidth(panel)
-    actionPanelResizeObserver = new ResizeObserver(() => {
-      actionPanelWidth = getPanelWidth(panel)
-    })
-    actionPanelResizeObserver.observe(panel)
-  }
-
-  const getPanelWidth = (panel: HTMLDivElement) => {
-    const width = panel.getBoundingClientRect().width
-    return width > 0 ? width : getSidePanelWidth()
   }
 </script>
 
@@ -115,8 +86,8 @@
   <div class="root">
     <div
       class="content drawer-container"
-      class:action-panel-open={actionPanelOpen}
-      style:--automation-action-panel-width={`${actionPanelWidth}px`}
+      class:panel-open={panelOpen}
+      style:--automation-panel-width={`${panelWidth}px`}
     >
       <slot />
     </div>
@@ -138,7 +109,7 @@
     {/if}
 
     {#if actionPanelOpen}
-      <div class="action-panel-container" bind:this={actionPanelContainer}>
+      <div class="action-panel-container">
         <SelectStepSidePanel
           block={$automationStore.actionPanelBlock}
           onClose={() => automationStore.actions.closeActionPanel()}
@@ -218,13 +189,13 @@
     overflow: auto;
     min-width: 0;
   }
-  .content.action-panel-open :global(.automation-heading) {
-    padding-right: calc(
-      var(--spacing-l) + var(--automation-action-panel-width)
-    );
+  .content.panel-open :global(.automation-heading) {
+    padding-right: calc(var(--spacing-l) + var(--automation-panel-width));
   }
   .step-panel-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    right: 0;
     z-index: 99;
     height: 100%;
     display: flex;
