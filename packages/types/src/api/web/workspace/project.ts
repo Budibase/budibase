@@ -61,8 +61,6 @@ export interface ImportProjectResponse {
   requirements: ProjectImportRequirement[]
 }
 
-export type ProjectPackageImportMode = "dryRun" | "additiveImport"
-
 export interface ProjectPackageUnsupportedContent {
   type: string
   count: number
@@ -86,7 +84,6 @@ export interface ProjectPackageManifest {
   containsAttachments: boolean
   requiresSecrets: boolean
   unsupportedContent: ProjectPackageUnsupportedContent[]
-  supportedImportModes: ProjectPackageImportMode[]
 }
 
 export interface ProjectPackageDependencyIndex {

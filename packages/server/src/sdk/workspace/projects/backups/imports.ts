@@ -326,39 +326,30 @@ const remapObjectKeys = <T>(
   )
 }
 
-type IdMapping = [string, string]
-
-const remapValue = (
-  value: unknown,
-  idMap: Map<string, string>,
-  mappings: IdMapping[] = [...idMap.entries()].sort(
-    ([a], [b]) => b.length - a.length
-  )
-): unknown => {
+const remapValue = (value: unknown, idMap: Map<string, string>): unknown => {
   if (typeof value === "string") {
-    const exact = idMap.get(value)
-    if (exact) {
-      return exact
-    }
-    return mappings.reduce(
-      (remapped, [sourceId, destinationId]) =>
-        remapped.split(sourceId).join(destinationId),
-      value
-    )
+    return idMap.get(value) || value
   }
   if (Array.isArray(value)) {
-    return value.map(item => remapValue(item, idMap, mappings))
+    return value.map(item => remapValue(item, idMap))
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
         key,
-        remapValue(nestedValue, idMap, mappings),
+        remapValue(nestedValue, idMap),
       ])
     )
   }
   return value
 }
+
+const remapIdReferences = (value: string, idMap: Map<string, string>) =>
+  [...idMap.entries()].reduce(
+    (remapped, [sourceId, destinationId]) =>
+      remapped.split(`${sourceId}.`).join(`${destinationId}.`),
+    value
+  )
 
 const sanitizeImportedProjectAssignments = (
   doc: AnyDocument,
@@ -434,6 +425,15 @@ const sanitizeImportedDoc = (
       importedProjectId
     )
     return rowActions
+  }
+
+  if (resourceType === ResourceType.DATASOURCE) {
+    const datasource = remapped as Datasource
+    for (const entity of Object.values(datasource.entities || {})) {
+      if (typeof entity.primaryDisplay === "string") {
+        entity.primaryDisplay = remapIdReferences(entity.primaryDisplay, idMap)
+      }
+    }
   }
 
   if (resourceType === ResourceType.AUTOMATION) {
@@ -512,15 +512,6 @@ const validateManifest = (manifest: ProjectPackageManifest) => {
   if (manifest.formatVersion !== PROJECT_EXPORT_FORMAT_VERSION) {
     throw new HTTPError(
       `Unsupported Project package format version '${manifest.formatVersion}'.`,
-      400
-    )
-  }
-  if (
-    !Array.isArray(manifest.supportedImportModes) ||
-    !manifest.supportedImportModes.includes("additiveImport")
-  ) {
-    throw new HTTPError(
-      "Project package does not support additive import.",
       400
     )
   }
