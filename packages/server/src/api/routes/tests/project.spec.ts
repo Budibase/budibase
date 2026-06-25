@@ -64,6 +64,42 @@ describe("/projects", () => {
     })
   })
 
+  it.each([
+    "red; background-image: url(https://example.com/tracker)",
+    "url(https://example.com/tracker)",
+  ])("rejects unsafe project color '%s'", async color => {
+    await withProjectsEnabled(async () => {
+      await config.api.project.create(
+        {
+          name: "Unsafe color",
+          color,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Project color is invalid.",
+          },
+        }
+      )
+    })
+  })
+
+  it.each([
+    "#8CA171",
+    "rgb(140, 161, 113)",
+    "hsl(93deg 22% 54%)",
+    "var(--spectrum-global-color-green-500)",
+  ])("accepts safe project color '%s'", async color => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Safe color",
+        color,
+      })
+
+      expect(project.color).toBe(color)
+    })
+  })
+
   it("rejects stale revisions on update", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -84,6 +120,46 @@ describe("/projects", () => {
           status: 409,
         }
       )
+    })
+  })
+
+  it("does not update non-project documents through project routes", async () => {
+    await withProjectsEnabled(async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+
+      await config.api.project.update(
+        {
+          _id: datasource._id!,
+          _rev: datasource._rev!,
+          name: "Not a project",
+        },
+        {
+          status: 404,
+          body: {
+            message: `Project with id '${datasource._id}' not found.`,
+          },
+        }
+      )
+
+      const fetched = await config.api.datasource.get(datasource._id!)
+      expect(fetched.name).toBe(datasource.name)
+    })
+  })
+
+  it("does not delete non-project documents through project routes", async () => {
+    await withProjectsEnabled(async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+
+      await config.api.project.delete(datasource._id!, datasource._rev!, {
+        status: 404,
+      })
+
+      const fetched = await config.api.datasource.get(datasource._id!)
+      expect(fetched._id).toBe(datasource._id)
     })
   })
 
