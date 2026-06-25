@@ -1,4 +1,4 @@
-import { context, createView } from "@budibase/backend-core"
+import { context, db } from "@budibase/backend-core"
 import type { AgentRequest } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 
@@ -18,7 +18,7 @@ const buildRequestsByUpdatedAtView = (): string => `function(doc) {
 }`
 
 export const createRequestsByAgentView = async () => {
-  await createView(
+  await db.createView(
     context.getProdWorkspaceDB(),
     buildRequestsByAgentView(),
     REQUESTS_BY_AGENT_VIEW
@@ -26,7 +26,7 @@ export const createRequestsByAgentView = async () => {
 }
 
 export const createRequestsByUpdatedAtView = async () => {
-  await createView(
+  await db.createView(
     context.getProdWorkspaceDB(),
     buildRequestsByUpdatedAtView(),
     REQUESTS_BY_UPDATED_AT_VIEW
