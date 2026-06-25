@@ -24,6 +24,7 @@ export { default as Select } from "./Form/Select.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Stepper } from "./Form/Stepper.svelte"
 export { default as TextArea } from "./Form/TextArea.svelte"
+export { default as TimeField } from "./Form/TimeField.svelte"
 export { default as Toggle } from "./Form/Toggle.svelte"
 
 // Core form components to be used elsewhere (standard components)
