@@ -12,10 +12,10 @@ import { enableCronOrEmailTrigger, isRebootTrigger } from "./utils"
 
 function scheduledKey(
   jobId: string,
-  repeat: { cron?: string; every?: number }
+  repeat: { cron?: string; every?: number; tz?: string }
 ) {
   if (repeat.cron) {
-    return `${jobId}:cron:${repeat.cron}`
+    return `${jobId}:cron:${repeat.cron}:tz:${repeat.tz || ""}`
   }
   return `${jobId}:every:${repeat.every}`
 }
@@ -53,6 +53,7 @@ export async function rehydrateScheduledTriggers() {
       scheduledKey(job.id, {
         cron: job.cron,
         every: job.every,
+        tz: job.tz,
       })
     )
   }
@@ -76,15 +77,18 @@ export async function rehydrateScheduledTriggers() {
         if (isCronTrigger(trigger)) {
           const inputs = trigger.inputs as CronTriggerInputs
           const cron = inputs.cron || ""
+          const timezone = inputs.timezone
           const jobId = trigger.cronJobId?.toString()
-          const key = jobId ? scheduledKey(jobId, { cron }) : null
+          const key = jobId ? scheduledKey(jobId, { cron, tz: timezone }) : null
           if (!key || !scheduled.has(key)) {
             promises.push(
               enableCronOrEmailTrigger(prodId, automation).then(result => {
                 const scheduledJobId =
                   result.automation.definition.trigger.cronJobId?.toString()
                 if (scheduledJobId) {
-                  scheduled.add(scheduledKey(scheduledJobId, { cron }))
+                  scheduled.add(
+                    scheduledKey(scheduledJobId, { cron, tz: timezone })
+                  )
                 }
               })
             )

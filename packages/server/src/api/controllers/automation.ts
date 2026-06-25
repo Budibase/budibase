@@ -148,7 +148,10 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
 export async function logSearch(
   ctx: UserCtx<SearchAutomationLogsRequest, SearchAutomationLogsResponse>
 ) {
-  ctx.body = await automations.logs.logSearch(ctx.request.body)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.appId)
+  ctx.body = await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    return await automations.logs.logSearch(ctx.request.body)
+  })
 }
 
 export async function clearLogError(
@@ -160,11 +163,19 @@ export async function clearLogError(
     const metadata = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
+      delete metadata.automationStops
     } else if (
       metadata.automationErrors &&
       metadata.automationErrors[automationId]
     ) {
       delete metadata.automationErrors[automationId]
+    }
+    if (
+      automationId &&
+      metadata.automationStops &&
+      metadata.automationStops[automationId]
+    ) {
+      delete metadata.automationStops[automationId]
     }
     await db.put(metadata)
     await cache.workspace.invalidateWorkspaceMetadata(metadata.appId, metadata)

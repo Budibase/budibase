@@ -556,6 +556,14 @@
         automation => automation._id === automationId
       ),
     }))
+  $: automationStopEntries = Object.entries(targetApp?.automationStops || {})
+    .filter(([, logIds]) => logIds.length > 0)
+    .map(([automationId]) => ({
+      automationId,
+      automation: $automationStore.automations.find(
+        automation => automation._id === automationId
+      ),
+    }))
 
   $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
@@ -588,6 +596,11 @@
   ) => {
     const name = automationName || "Automation"
     return `${name} - Automation error${errorCount > 1 ? ` (${errorCount})` : ""}`
+  }
+
+  const automationStopMessage = (automationName: string | undefined) => {
+    const name = automationName || "Automation"
+    return `${name} - Automation stopped`
   }
 
   onMount(async () => {
@@ -653,6 +666,23 @@
               entry.automation?.name,
               entry.errorCount
             )}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
+          />
+        {/each}
+      </div>
+    {/if}
+
+    {#if automationStopEntries.length}
+      <div class="automation-errors">
+        {#each automationStopEntries as entry (entry.automationId)}
+          <Notification
+            wide
+            dismissable
+            type="warning"
+            icon="Alert"
+            action={() => goToAutomationError(entry.automationId)}
+            actionMessage="View"
+            message={automationStopMessage(entry.automation?.name)}
             on:dismiss={() => dismissAutomationError(entry.automationId)}
           />
         {/each}
