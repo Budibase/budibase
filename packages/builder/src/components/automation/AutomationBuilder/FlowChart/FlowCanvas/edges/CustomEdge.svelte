@@ -81,6 +81,37 @@
     return edgeData?.block
   }
 
+  const getMergeJunctionTargetPath = ({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+  }: {
+    sourceX: number
+    sourceY: number
+    targetX: number
+    targetY: number
+  }) => {
+    const radius = 12
+    const verticalDirection = targetY > sourceY ? 1 : -1
+    const cornerRadius = Math.min(
+      radius,
+      Math.abs(targetX - sourceX),
+      Math.abs(targetY - sourceY)
+    )
+
+    if (cornerRadius === 0) {
+      return `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+    }
+
+    return [
+      `M ${sourceX},${sourceY}`,
+      `L ${targetX - cornerRadius},${sourceY}`,
+      `Q ${targetX},${sourceY} ${targetX},${sourceY + cornerRadius * verticalDirection}`,
+      `L ${targetX},${targetY}`,
+    ].join(" ")
+  }
+
   /*
   Need a type guard here because there can be different properties
   coming in here depending on if it's a branch edge or not.
@@ -102,6 +133,7 @@
 
   $: isBranchTarget = target?.startsWith("branch-")
   $: isAnchorTarget = target?.startsWith("anchor-")
+  $: isMergeJunctionEdge = data?.mergeJunctionEdge === true
   $: targetBlockRef = target
     ? $selectedAutomation?.blockRefs?.[target]
     : undefined
@@ -116,6 +148,8 @@
       : false
   $: isLoopInsertAnchor = data?.insertIntoLoopV2 === true && isAnchorTarget
   $: isSubflowEdge = data.isSubflowEdge === true
+  $: hideActions = data?.hideActions === true
+  $: isMergeJunctionTarget = isAnchorTarget && hideActions
   $: isBranchSource =
     data?.block && "branchNode" in data.block && data.block.branchNode === true
 
@@ -133,6 +167,10 @@
   }
   $: if (isLoopInsertAnchor && isBranchSource) {
     labelX = sourceX + BRANCH_LOOP_INSERT_ACTION_OFFSET
+    labelY = sourceY
+  }
+  $: if (isMergeJunctionEdge && !isAnchorTarget) {
+    labelX = sourceX
     labelY = sourceY
   }
 
@@ -167,14 +205,23 @@
         })
       : undefined
 
-  $: edgePath = isAnchorTarget
-    ? getStraightPath({
-        sourceX,
-        sourceY,
-        targetX: labelX,
-        targetY: labelY,
-      })[0]
-    : loopTargetPath || loopSourcePath || primaryBranchPath || basePath[0]
+  $: edgePath = isMergeJunctionEdge
+    ? `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+    : isMergeJunctionTarget
+      ? getMergeJunctionTargetPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+        })
+      : isAnchorTarget
+        ? getStraightPath({
+            sourceX,
+            sourceY,
+            targetX: labelX,
+            targetY: labelY,
+          })[0]
+        : loopTargetPath || loopSourcePath || primaryBranchPath || basePath[0]
 
   $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
@@ -206,7 +253,8 @@
     viewMode === ViewMode.EDITOR &&
     !isBranchTarget &&
     !$view?.dragging &&
-    !isSubflowEdge
+    !isSubflowEdge &&
+    !hideActions
   $: terminalBranchStepId = data?.terminalBranchStepId
   $: terminalBranchIdx = data?.terminalBranchIdx
   $: showMergeAction =
@@ -218,7 +266,8 @@
     viewMode === ViewMode.EDITOR &&
     !isBranchTarget &&
     $view?.dragging &&
-    !isSubflowEdge
+    !isSubflowEdge &&
+    !hideActions
 
   $: showPreBranchActions =
     viewMode === ViewMode.EDITOR &&
@@ -498,6 +547,7 @@
     {sourcePathForDrop}
     {block}
     {handleBranch}
+    hideBranch={isMergeJunctionEdge}
     {dzWidth}
     {dzOffsetY}
   />

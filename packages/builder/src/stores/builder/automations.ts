@@ -511,6 +511,31 @@ const automationActions = (store: AutomationStore) => ({
       ...newAutomation.definition.steps,
     ]
 
+    const pruneMergeConnections = (
+      steps: AutomationStep[],
+      deletedIds: Set<string>
+    ) => {
+      steps.forEach(step => {
+        if (isBranchStep(step)) {
+          step.inputs.mergeConnections = step.inputs.mergeConnections?.filter(
+            connection => !deletedIds.has(connection.targetStepId)
+          )
+          Object.values(step.inputs.children || {}).forEach(children => {
+            pruneMergeConnections(children, deletedIds)
+          })
+          return
+        }
+
+        const children =
+          "children" in step.inputs && Array.isArray(step.inputs.children)
+            ? step.inputs.children
+            : undefined
+        if (children) {
+          pruneMergeConnections(children, deletedIds)
+        }
+      })
+    }
+
     let cache: any
     pathTo.forEach((path, pathIdx, array) => {
       const final = pathIdx === array.length - 1
@@ -554,6 +579,11 @@ const automationActions = (store: AutomationStore) => ({
             blocksDeleted.unshift(deletedBlock)
           }
         }
+
+        pruneMergeConnections(
+          newAutomation.definition.steps,
+          new Set(idsToDelete)
+        )
 
         return { deleted: blocksDeleted, newAutomation }
       }

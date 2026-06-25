@@ -13,6 +13,7 @@ import {
 } from "@/test/automationFixtures"
 import {
   buildTopLevelGraph,
+  dagreLayoutAutomation,
   getLogStepData,
   processLogSteps,
 } from "../AutomationStepHelpers"
@@ -46,7 +47,7 @@ describe("AutomationStepHelpers", () => {
     }
   }
 
-  it("connects selected branch leaves to an inline merge step", () => {
+  it("joins selected branch leaves before an inline merge step", () => {
     const graph = {
       nodes: [] as FlowNode[],
       edges: [] as FlowEdge[],
@@ -83,22 +84,101 @@ describe("AutomationStepHelpers", () => {
 
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
+    const joinAnchorId = "anchor-branch-many-merge-alpha-merge"
+
     getNode(graph, merge.id)
-    getEdge(graph, "alpha-1", merge.id)
+    expect(getNode(graph, joinAnchorId).data).toMatchObject({
+      variant: "junction",
+    })
+    expect(getEdge(graph, "alpha-1", joinAnchorId).data).toMatchObject({
+      hideActions: true,
+    })
     expect(
-      getEdge(graph, "branch-branch-many-1-beta", merge.id).data
-    ).toMatchObject({
-      terminalBranchStepId: "branch-many",
-      terminalBranchIdx: 1,
+      getEdge(graph, "branch-branch-many-1-beta", joinAnchorId).data
+    ).toMatchObject({ hideActions: true })
+    expect(getEdge(graph, joinAnchorId, merge.id).data).not.toMatchObject({
+      hideActions: true,
     })
     expect(getEdge(graph, "gamma-1", "anchor-gamma-1").data).toMatchObject({
       terminalBranchStepId: "branch-many",
       terminalBranchIdx: 2,
     })
     expect(
+      graph.edges.some(
+        edge => edge.source === "alpha-1" && edge.target === merge.id
+      )
+    ).toBe(false)
+    expect(
+      graph.edges.some(
+        edge =>
+          edge.source === "branch-branch-many-1-beta" &&
+          edge.target === merge.id
+      )
+    ).toBe(false)
+    expect(
       graph.nodes.some(node => node.id === "anchor-branch-branch-many-1-beta")
     ).toBe(false)
     getNode(graph, "anchor-gamma-1")
+
+    dagreLayoutAutomation(graph)
+
+    const joinAnchor = getNode(graph, joinAnchorId)
+    const mergeNode = getNode(graph, merge.id)
+    const triggerNode = getNode(graph, automationTrigger.id)
+    const joinCenterY = joinAnchor.position.y + 0.5
+    const splitCenterY = triggerNode.position.y + 60
+
+    expect(Math.abs(joinCenterY - splitCenterY)).toBeLessThanOrEqual(1)
+    expect(mergeNode.position.x - joinAnchor.position.x).toBeGreaterThanOrEqual(
+      500
+    )
+  })
+
+  it("renders separate branch endings when merge connection targets are missing", () => {
+    const graph = {
+      nodes: [] as FlowNode[],
+      edges: [] as FlowEdge[],
+    }
+    const branch = branchStep([], {
+      id: "branch-many",
+      branches: [
+        {
+          id: "alpha",
+          name: "Alpha",
+          children: [serverLogStep("alpha-1")],
+        },
+        {
+          id: "beta",
+          name: "Beta",
+          children: [],
+        },
+      ],
+    })
+    branch.inputs.mergeConnections = [
+      {
+        sourceBranchId: "beta",
+        targetStepId: "deleted-merge",
+      },
+    ]
+
+    buildTopLevelGraph([automationTrigger, branch], createGraphDeps(graph))
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+    expect(getEdge(graph, "alpha-1", "anchor-alpha-1").data).toMatchObject({
+      terminalBranchStepId: "branch-many",
+      terminalBranchIdx: 0,
+    })
+    expect(
+      getEdge(
+        graph,
+        "branch-branch-many-1-beta",
+        "anchor-branch-branch-many-1-beta"
+      ).data
+    ).toMatchObject({
+      terminalBranchStepId: "branch-many",
+      terminalBranchIdx: 1,
+    })
   })
 
   it("keeps branch children when reconstructing loop log steps", () => {

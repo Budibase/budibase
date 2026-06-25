@@ -1,23 +1,26 @@
 import { type Node as FlowNode, type Edge as FlowEdge } from "@xyflow/svelte"
-import { ANCHOR, BRANCH, LOOP, STEP } from "./FlowGeometry"
+import { ANCHOR, BRANCH, JUNCTION_ANCHOR, LOOP, STEP } from "./FlowGeometry"
 
 const BRANCH_LANE_CLEARANCE = 120
 const POST_LOOP_BRANCH_CLEARANCE = 120
+const MERGE_JUNCTION_CLEARANCE = 180
 
 const getTopLevelGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
   const nodesById: Record<string, FlowNode> = {}
   graph.nodes.forEach(node => (nodesById[node.id] = node))
 
   const outgoing: Record<string, string[]> = {}
+  const incoming: Record<string, string[]> = {}
   for (const edge of graph.edges) {
     const source = nodesById[edge.source]
     const target = nodesById[edge.target]
     if (!source || !target) continue
     if (source.parentId || target.parentId) continue
     ;(outgoing[edge.source] ||= []).push(edge.target)
+    ;(incoming[edge.target] ||= []).push(edge.source)
   }
 
-  return { nodesById, outgoing }
+  return { nodesById, outgoing, incoming }
 }
 
 const getNodeHeight = (node: FlowNode) => {
@@ -30,6 +33,9 @@ const getNodeHeight = (node: FlowNode) => {
     return BRANCH.height
   }
   if (node.type === "anchor-node") {
+    if (node.data?.variant === "junction") {
+      return JUNCTION_ANCHOR.height
+    }
     return ANCHOR.height
   }
   return STEP.height
@@ -101,6 +107,22 @@ const getSubtreeBounds = (
   return { top, bottom }
 }
 
+const getBranchStepIdFromPath = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return
+  }
+
+  const branchHop = value
+    .slice()
+    .reverse()
+    .find(
+      hop =>
+        hop && typeof hop === "object" && typeof hop.branchStepId === "string"
+    )
+
+  return branchHop?.branchStepId
+}
+
 // Shift only the subtree after a loop so that its lane clears the loop container
 export const applyLoopClearance = (graph: {
   nodes: FlowNode[]
@@ -135,7 +157,12 @@ export const applyBranchLaneClearance = (graph: {
   nodes: FlowNode[]
   edges: FlowEdge[]
 }) => {
-  const { nodesById, outgoing } = getTopLevelGraph(graph)
+  const { nodesById, outgoing, incoming } = getTopLevelGraph(graph)
+  const convergenceIds = new Set(
+    Object.entries(incoming)
+      .filter(([, sourceIds]) => sourceIds.length > 1)
+      .map(([targetId]) => targetId)
+  )
   const branchGroups: Record<
     string,
     Array<{ branchIdx: number; nodeId: string }>
@@ -167,7 +194,7 @@ export const applyBranchLaneClearance = (graph: {
     for (const branches of groups) {
       const siblingIds = new Set(branches.map(branch => branch.nodeId))
       const branchLanes = branches.map(branch => {
-        const blockedIds = new Set(siblingIds)
+        const blockedIds = new Set([...siblingIds, ...convergenceIds])
         blockedIds.delete(branch.nodeId)
         const subtreeIds = collectSubtree(
           branch.nodeId,
@@ -220,6 +247,72 @@ export const applyBranchLaneClearance = (graph: {
       break
     }
   }
+}
+
+export const applyMergeJunctionClearance = (graph: {
+  nodes: FlowNode[]
+  edges: FlowEdge[]
+}) => {
+  const { nodesById, outgoing } = getTopLevelGraph(graph)
+
+  graph.edges.forEach(edge => {
+    const data = edge.data as Record<string, unknown> | undefined
+    if (data?.mergeJunctionEdge !== true) {
+      return
+    }
+
+    const source = nodesById[edge.source]
+    const target = nodesById[edge.target]
+    if (!source || !target || source.parentId || target.parentId) {
+      return
+    }
+
+    const branchStepId = graph.edges
+      .filter(incomingEdge => incomingEdge.target === source.id)
+      .map(incomingEdge => {
+        const incomingData = incomingEdge.data as
+          | Record<string, unknown>
+          | undefined
+        return getBranchStepIdFromPath(incomingData?.pathTo)
+      })
+      .find(Boolean)
+    const branchSourceEdge = branchStepId
+      ? graph.edges.find(branchEdge => {
+          const branchData = branchEdge.data as
+            | Record<string, unknown>
+            | undefined
+          return (
+            branchData?.isBranchEdge === true &&
+            branchData.branchStepId === branchStepId
+          )
+        })
+      : undefined
+    const branchSource = branchSourceEdge
+      ? nodesById[branchSourceEdge.source]
+      : undefined
+    if (branchSource && !branchSource.parentId) {
+      source.position = {
+        x: source.position.x,
+        y:
+          branchSource.position.y +
+          getNodeHeight(branchSource) / 2 -
+          getNodeHeight(source) / 2,
+      }
+    }
+
+    const delta =
+      source.position.x + MERGE_JUNCTION_CLEARANCE - target.position.x
+    if (delta <= 0) {
+      return
+    }
+
+    shiftNodes(
+      collectSubtree(target.id, nodesById, outgoing),
+      nodesById,
+      delta,
+      "x"
+    )
+  })
 }
 
 export const applyPostLoopBranchClearance = (graph: {

@@ -1,6 +1,6 @@
 import { expect } from "vitest"
 import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
-import { ANCHOR, BRANCH, LOOP, STEP } from "./FlowGeometry"
+import { ANCHOR, BRANCH, JUNCTION_ANCHOR, LOOP, STEP } from "./FlowGeometry"
 
 export interface FlowGraph {
   nodes: FlowNode[]
@@ -34,6 +34,9 @@ export const getNodeHeight = (node: FlowNode) => {
     return BRANCH.height
   }
   if (node.type === "anchor-node") {
+    if (node.data?.variant === "junction") {
+      return JUNCTION_ANCHOR.height
+    }
     return ANCHOR.height
   }
   return STEP.height
@@ -46,6 +49,9 @@ export const getNodeWidth = (node: FlowNode) => {
       : STEP.width
   }
   if (node.type === "anchor-node") {
+    if (node.data?.variant === "junction") {
+      return JUNCTION_ANCHOR.width
+    }
     return ANCHOR.width
   }
   return STEP.width

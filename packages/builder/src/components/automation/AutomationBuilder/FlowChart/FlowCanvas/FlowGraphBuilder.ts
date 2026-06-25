@@ -90,6 +90,21 @@ interface PlaceBranchClusterArgs {
   }
 }
 
+interface BranchTerminal {
+  sourceId: string
+  block: FlowBlockContext
+  pathTo?: FlowBlockPath
+  bottomY: number
+  branchIdx: number
+}
+
+interface MergeTarget {
+  step: AutomationStep
+  branchIdx: number
+  postMergeSteps: AutomationStep[]
+  terminals: BranchTerminal[]
+}
+
 const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const { step, source, coords, deps, mode, parentId, visuals, loopContext } =
     args
@@ -97,12 +112,19 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
-  const mergeConnectionByBranchId = new Map(
-    (step.inputs?.mergeConnections || []).map(connection => [
-      connection.sourceBranchId,
-      connection.targetStepId,
-    ])
+  const childStepIds = new Set(
+    Object.values(childrenMap)
+      .flat()
+      .map(child => child.id)
   )
+  const mergeConnectionByBranchId = new Map(
+    (step.inputs?.mergeConnections || [])
+      .filter(connection => childStepIds.has(connection.targetStepId))
+      .map(connection => [connection.sourceBranchId, connection.targetStepId])
+  )
+  const mergeTargetIds = new Set(mergeConnectionByBranchId.values())
+  const mergeTargetsById = new Map<string, MergeTarget>()
+  const pendingMergeTerminalsByTargetId = new Map<string, BranchTerminal[]>()
 
   let clusterBottomY =
     coords.y +
@@ -158,9 +180,24 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
     )
 
     const parentPath = deps.blockRefs[baseId]?.pathTo || []
-    const childSteps: AutomationStep[] = filterLegacyLoops(
+    let childSteps: AutomationStep[] = filterLegacyLoops(
       childrenMap?.[branch.id] || []
     )
+    const mergeStepIdx = childSteps.findIndex(child =>
+      mergeTargetIds.has(child.id)
+    )
+    const branchMergeTarget =
+      mergeStepIdx >= 0 ? childSteps[mergeStepIdx] : undefined
+    if (branchMergeTarget) {
+      mergeTargetsById.set(branchMergeTarget.id, {
+        step: branchMergeTarget,
+        branchIdx: bIdx,
+        postMergeSteps: childSteps.slice(mergeStepIdx + 1),
+        terminals:
+          pendingMergeTerminalsByTargetId.get(branchMergeTarget.id) || [],
+      })
+      childSteps = childSteps.slice(0, mergeStepIdx)
+    }
     const branchPath: FlowBlockPath = [
       ...parentPath,
       {
@@ -199,16 +236,26 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           ? chainResult.lastNodeBlock
           : branchBlockRef
         const terminalPath = resolveBlockPath(terminalBlock, deps)
-        const mergeTargetId = mergeConnectionByBranchId.get(String(branch.id))
+        const mergeTargetId =
+          mergeConnectionByBranchId.get(String(branch.id)) ||
+          branchMergeTarget?.id
         if (mergeTargetId) {
-          deps.newEdges.push(
-            edgeAddItem(terminalSourceId, mergeTargetId, {
-              block: terminalBlock,
-              ...(terminalPath ? { pathTo: terminalPath } : {}),
-              terminalBranchStepId: baseId,
-              terminalBranchIdx: bIdx,
-            })
-          )
+          const terminal = {
+            sourceId: terminalSourceId,
+            block: terminalBlock,
+            ...(terminalPath ? { pathTo: terminalPath } : {}),
+            bottomY,
+            branchIdx: bIdx,
+          }
+          const mergeTarget = mergeTargetsById.get(mergeTargetId)
+          if (mergeTarget) {
+            mergeTarget.terminals.push(terminal)
+          } else {
+            const pendingTerminals =
+              pendingMergeTerminalsByTargetId.get(mergeTargetId) || []
+            pendingTerminals.push(terminal)
+            pendingMergeTerminalsByTargetId.set(mergeTargetId, pendingTerminals)
+          }
         } else {
           const terminalId = `anchor-${terminalSourceId}`
           deps.newEdges.push(
@@ -286,6 +333,62 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         )
       }
     }
+  })
+
+  mergeTargetsById.forEach((target, targetStepId) => {
+    if (target.terminals.length === 0) {
+      return
+    }
+
+    const targetTerminal =
+      target.terminals.find(
+        terminal => terminal.branchIdx === target.branchIdx
+      ) || target.terminals[0]
+    const joinAnchorId = `anchor-${baseId}-merge-${targetStepId}`
+    const joinY = coords.y
+
+    deps.newNodes.push(
+      anchorNode(joinAnchorId, undefined, { x: 0, y: joinY }, "junction")
+    )
+
+    target.terminals.forEach(terminal => {
+      deps.newEdges.push(
+        edgeAddItem(terminal.sourceId, joinAnchorId, {
+          block: terminal.block,
+          ...(terminal.pathTo ? { pathTo: terminal.pathTo } : {}),
+          hideActions: true,
+        })
+      )
+    })
+
+    const commonChainResult = renderChain(
+      [target.step, ...target.postMergeSteps],
+      joinAnchorId,
+      targetTerminal.block,
+      0,
+      joinY + deps.ySpacing,
+      deps
+    )
+
+    if (!commonChainResult.branched) {
+      const terminalPath = resolveBlockPath(
+        commonChainResult.lastNodeBlock,
+        deps
+      )
+      const terminalId = `anchor-${commonChainResult.lastNodeId}`
+      deps.newEdges.push(
+        edgeAddItem(commonChainResult.lastNodeId, terminalId, {
+          block: commonChainResult.lastNodeBlock,
+          ...(terminalPath ? { pathTo: terminalPath } : {}),
+        })
+      )
+      pushAnchor(terminalId, commonChainResult.bottomY, deps)
+    }
+
+    clusterBottomY = Math.max(
+      clusterBottomY,
+      commonChainResult.bottomY + deps.ySpacing
+    )
   })
 
   return { bottomY: clusterBottomY, branched: true }

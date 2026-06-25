@@ -66,9 +66,10 @@ export const branchNode = (
 export const anchorNode = (
   id: string,
   parentId?: string,
-  position: { x: number; y: number } = { x: 0, y: 0 }
+  position: { x: number; y: number } = { x: 0, y: 0 },
+  variant: AnchorNodeData["variant"] = "terminal"
 ): FlowNode => {
-  const data: AnchorNodeData = {}
+  const data: AnchorNodeData = { variant }
   const node: FlowNode = {
     id,
     type: "anchor-node",
@@ -91,6 +92,8 @@ export const edgeAddItem = (
     pathTo?: FlowBlockPath
     terminalBranchStepId?: string
     terminalBranchIdx?: number
+    hideActions?: boolean
+    mergeJunctionEdge?: boolean
   }
 ): FlowEdge => {
   const data: BaseEdgeData = {
@@ -101,6 +104,11 @@ export const edgeAddItem = (
       : {}),
     ...(typeof ctx.terminalBranchIdx === "number"
       ? { terminalBranchIdx: ctx.terminalBranchIdx }
+      : {}),
+    ...(ctx.hideActions ? { hideActions: true } : {}),
+    ...(ctx.mergeJunctionEdge ||
+    (source.startsWith("anchor-") && source.includes("-merge-"))
+      ? { mergeJunctionEdge: true }
       : {}),
   }
   return {

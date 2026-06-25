@@ -333,6 +333,7 @@ export interface LoopV2NodeData {
 }
 
 export interface AnchorNodeData {
+  variant?: "terminal" | "junction"
   [key: string]: unknown
 }
 
@@ -360,6 +361,8 @@ export interface BaseEdgeData {
   isSubflowEdge?: boolean
   terminalBranchStepId?: string
   terminalBranchIdx?: number
+  hideActions?: boolean
+  mergeJunctionEdge?: boolean
   [key: string]: unknown
 }
 

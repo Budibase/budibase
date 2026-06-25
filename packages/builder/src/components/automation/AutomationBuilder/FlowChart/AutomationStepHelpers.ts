@@ -36,10 +36,16 @@ import {
   renderBranches,
   renderLoopV2Container,
 } from "./FlowCanvas/FlowGraphBuilder"
-import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
+import {
+  ANCHOR,
+  BRANCH,
+  JUNCTION_ANCHOR,
+  STEP,
+} from "./FlowCanvas/FlowGeometry"
 import {
   applyBranchLaneClearance,
   applyLoopClearance,
+  applyMergeJunctionClearance,
   applyPostLoopBranchClearance,
 } from "./FlowCanvas/FlowLayout"
 
@@ -426,8 +432,14 @@ export const dagreLayoutAutomation = (
       if (node.type === "branch-node") {
         height = BRANCH.height
       } else if (node.type === "anchor-node") {
-        width = ANCHOR.width
-        height = ANCHOR.height
+        width =
+          node.data?.variant === "junction"
+            ? JUNCTION_ANCHOR.width
+            : ANCHOR.width
+        height =
+          node.data?.variant === "junction"
+            ? JUNCTION_ANCHOR.height
+            : ANCHOR.height
       } else if (isLoopSubflowNode(node)) {
         const w = node.data?.containerWidth
         if (w > 0) width = w
@@ -445,7 +457,14 @@ export const dagreLayoutAutomation = (
       const t = nodeById[e.target]
       return !(s?.parentId || t?.parentId)
     })
-    .forEach(edge => dagreGraph.setEdge(edge.source, edge.target))
+    .forEach(edge => {
+      const edgeData = edge.data as Record<string, unknown> | undefined
+      dagreGraph.setEdge(
+        edge.source,
+        edge.target,
+        edgeData?.mergeJunctionEdge === true ? { minlen: 2 } : {}
+      )
+    })
 
   dagre.layout(dagreGraph)
 
@@ -465,6 +484,7 @@ export const dagreLayoutAutomation = (
     })
 
   if (compactLoops) {
+    applyMergeJunctionClearance(graph)
     applyLoopClearance(graph)
     applyPostLoopBranchClearance(graph)
     applyBranchLaneClearance(graph)

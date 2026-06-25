@@ -195,6 +195,63 @@ describe("automation store", () => {
     save.mockRestore()
   })
 
+  it("removes merge connections that target a deleted merge step", () => {
+    const merge = mergeStep("merge")
+    const branch = branchStep([], {
+      id: "branch",
+      branches: [
+        {
+          id: "first",
+          name: "First",
+          children: [serverLogStep("first-child")],
+        },
+        {
+          id: "second",
+          name: "Second",
+          children: [merge],
+        },
+      ],
+    })
+    branch.inputs.mergeConnections = [
+      {
+        sourceBranchId: "first",
+        targetStepId: merge.id,
+      },
+    ]
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [branch],
+      },
+    }
+
+    const { newAutomation } = automationStore.actions.deleteBlock(
+      [
+        {
+          stepIdx: 1,
+          id: branch.id,
+        },
+        {
+          branchIdx: 1,
+          branchStepId: branch.id,
+          stepIdx: 0,
+          id: merge.id,
+        },
+      ],
+      automation
+    )
+    const updatedBranch = newAutomation.definition.steps[0]
+    if (!isBranchStep(updatedBranch)) {
+      throw new Error("Expected branch step")
+    }
+
+    expect(updatedBranch.inputs.mergeConnections).toEqual([])
+  })
+
   it("allows moving the first branch step into another branch on the same branch block", () => {
     const sourcePath = [
       {

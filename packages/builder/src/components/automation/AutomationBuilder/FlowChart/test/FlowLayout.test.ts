@@ -3,6 +3,7 @@ import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
 import {
   applyBranchLaneClearance,
   applyLoopClearance,
+  applyMergeJunctionClearance,
   applyPostLoopBranchClearance,
 } from "../FlowCanvas/FlowLayout"
 import {
@@ -423,6 +424,115 @@ describe("applyBranchLaneClearance", () => {
     expectNodeBelow(graph, "branch-2", "branch-1-child", 120)
   })
 
+  it("does not include shared merge junctions in branch lane clearance", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "source",
+          type: "step-node",
+          data: {},
+          position: { x: 0, y: 120 },
+        },
+        {
+          id: "branch-0",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 0 },
+        },
+        {
+          id: "branch-0-child",
+          type: "step-node",
+          data: {},
+          position: { x: 800, y: 0 },
+        },
+        {
+          id: "branch-1",
+          type: "branch-node",
+          data: {},
+          position: { x: 400, y: 240 },
+        },
+        {
+          id: "branch-1-child",
+          type: "step-node",
+          data: {},
+          position: { x: 800, y: 240 },
+        },
+        {
+          id: "merge-junction",
+          type: "anchor-node",
+          data: { variant: "junction" },
+          position: { x: 1100, y: 180 },
+        },
+        {
+          id: "merge",
+          type: "step-node",
+          data: {},
+          position: { x: 1300, y: 120 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-source-branch-0",
+          source: "source",
+          target: "branch-0",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "branch",
+            branchIdx: 0,
+          },
+        },
+        {
+          id: "edge-branch-0-child",
+          source: "branch-0",
+          target: "branch-0-child",
+          type: "add-item",
+        },
+        {
+          id: "edge-branch-0-junction",
+          source: "branch-0-child",
+          target: "merge-junction",
+          type: "add-item",
+        },
+        {
+          id: "edge-source-branch-1",
+          source: "source",
+          target: "branch-1",
+          type: "add-item",
+          data: {
+            isBranchEdge: true,
+            branchStepId: "branch",
+            branchIdx: 1,
+          },
+        },
+        {
+          id: "edge-branch-1-child",
+          source: "branch-1",
+          target: "branch-1-child",
+          type: "add-item",
+        },
+        {
+          id: "edge-branch-1-junction",
+          source: "branch-1-child",
+          target: "merge-junction",
+          type: "add-item",
+        },
+        {
+          id: "edge-junction-merge",
+          source: "merge-junction",
+          target: "merge",
+          type: "add-item",
+        },
+      ],
+    }
+
+    applyBranchLaneClearance(graph)
+
+    expect(getNode(graph, "branch-1").position.y).toBe(240)
+    expect(getNode(graph, "branch-1-child").position.y).toBe(240)
+    expect(getNode(graph, "merge").position.y).toBe(120)
+  })
+
   it("separates branch lanes when a lower branch contains a tall loop", () => {
     const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
       nodes: [
@@ -763,6 +873,55 @@ describe("applyBranchLaneClearance", () => {
     applyBranchLaneClearance(graph)
 
     expect(getNode(graph, "subflow-branch-1").position.y).toBe(20)
+  })
+})
+
+describe("applyMergeJunctionClearance", () => {
+  it("shifts the merge subtree right of the branch convergence point", () => {
+    const graph: { nodes: FlowNode[]; edges: FlowEdge[] } = {
+      nodes: [
+        {
+          id: "merge-junction",
+          type: "anchor-node",
+          data: { variant: "junction" },
+          position: { x: 400, y: 100 },
+        },
+        {
+          id: "merge",
+          type: "step-node",
+          data: {},
+          position: { x: 460, y: 40 },
+        },
+        {
+          id: "after-merge",
+          type: "step-node",
+          data: {},
+          position: { x: 820, y: 40 },
+        },
+      ],
+      edges: [
+        {
+          id: "edge-junction-merge",
+          source: "merge-junction",
+          target: "merge",
+          type: "add-item",
+          data: {
+            mergeJunctionEdge: true,
+          },
+        },
+        {
+          id: "edge-merge-after",
+          source: "merge",
+          target: "after-merge",
+          type: "add-item",
+        },
+      ],
+    }
+
+    applyMergeJunctionClearance(graph)
+
+    expect(getNode(graph, "merge").position.x).toBe(580)
+    expect(getNode(graph, "after-merge").position.x).toBe(940)
   })
 })
 

@@ -15,6 +15,7 @@
   export let sourcePathForDrop: FlowBlockPath | undefined
   export let block: FlowBlockContext | undefined
   export let handleBranch: () => void
+  export let hideBranch = false
   // Orientation-aware dropzone sizing/offset in LR
   export let dzWidth: number | undefined
   export let dzOffsetY: number = 0
@@ -45,6 +46,7 @@
               {showMergeAction}
               {terminalBranchStepId}
               {terminalBranchIdx}
+              {hideBranch}
               on:branch={handleBranch}
             />
           </div>

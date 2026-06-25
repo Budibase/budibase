@@ -20,6 +20,11 @@ export const ANCHOR = {
   height: 1,
 }
 
+export const JUNCTION_ANCHOR = {
+  width: 1,
+  height: 1,
+}
+
 export const LOOP = {
   minHeight: 260,
   clearance: LOOP_INSERT_ACTION_OFFSET * 2,
