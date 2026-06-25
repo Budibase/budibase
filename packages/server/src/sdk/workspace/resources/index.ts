@@ -116,6 +116,15 @@ export async function getResourcesInfo(): Promise<
     }))
   )
 
+  baseSearchTargets.push(
+    ...agents.map<BaseSearchTarget>(agent => ({
+      id: agent._id!,
+      idToSearch: agent._id!,
+      name: agent.name!,
+      type: ResourceType.AGENT,
+    }))
+  )
+
   const queries = await sdk.queries.fetch()
   baseSearchTargets.push(
     ...queries.map<BaseSearchTarget>(query => ({
