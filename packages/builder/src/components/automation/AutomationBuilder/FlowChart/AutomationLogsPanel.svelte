@@ -7,26 +7,45 @@
     Button,
     Icon,
   } from "@budibase/bbui"
-  import Panel from "@/components/design/Panel.svelte"
-  import { automationStore } from "@/stores/builder"
-  import { licensing, auth } from "@/stores/portal"
-  import { createPaginationStore } from "@/helpers/pagination"
-  import { onMount } from "svelte"
+  import { onDestroy, onMount } from "svelte"
+  import { get } from "svelte/store"
   import dayjs from "dayjs"
   import type { ManipulateType } from "dayjs"
-  import StatusRenderer from "@/settings/pages/automations/_components/StatusRenderer.svelte"
-  import { didRunStopWithoutBranchMatch } from "./FlowCanvas/FlowRunHelpers"
   import {
     AutomationStatus,
     type AutomationLog,
     type UIAutomation,
   } from "@budibase/types"
-
-  type TimeRange = `${number}-${ManipulateType}`
+  import Panel from "@/components/design/Panel.svelte"
+  import { automationStore } from "@/stores/builder"
+  import { licensing, auth } from "@/stores/portal"
+  import { createPaginationStore } from "@/helpers/pagination"
+  import StatusRenderer from "@/settings/pages/automations/_components/StatusRenderer.svelte"
+  import { didRunStopWithoutBranchMatch } from "./FlowCanvas/FlowRunHelpers"
 
   export let automation: UIAutomation
   export let onSelectLog: (log: AutomationLog) => void = () => {}
   export let selectedLog: AutomationLog | undefined = undefined
+
+  type TimeRange = `${number}-${ManipulateType}`
+
+  interface SelectOption<T extends string | number> {
+    value: T
+    label: string
+  }
+
+  interface QueuedFetch {
+    automationId: string
+    status: AutomationStatus | undefined
+    page: string | null | undefined
+    timeRange: TimeRange | null
+    force: boolean
+  }
+
+  const ERROR = AutomationStatus.ERROR,
+    SUCCESS = AutomationStatus.SUCCESS,
+    STOPPED = AutomationStatus.STOPPED,
+    STOPPED_ERROR = AutomationStatus.STOPPED_ERROR
 
   let pageInfo = createPaginationStore()
   let runHistory: AutomationLog[] | null = null
@@ -34,10 +53,17 @@
   let timeRange: TimeRange | null = null
   let loaded = false
   let totalLogs = 0
+  let loading = false
+  let queuedFetch: QueuedFetch | null = null
+  let refreshingPage = false
+  let lastFilterKey: string | null = null
+  let lastFetchKey: string | null = null
+  let pollTimer: ReturnType<typeof setInterval> | undefined
 
   const AUTOMATION_LOG_PAGE_SIZE = 10
+  const AUTOMATION_LOG_POLL_INTERVAL_MS = 15000
 
-  const allTimeOptions = [
+  const allTimeOptions: SelectOption<TimeRange>[] = [
     { value: "90-d", label: "Past 90 days" },
     { value: "30-d", label: "Past 30 days" },
     { value: "1-w", label: "Past week" },
@@ -71,17 +97,61 @@
   $: showUpgradeButton =
     !$licensing.isEnterprisePlan && $auth?.user?.accountPortalAccess
 
-  const statusOptions = [
-    { value: AutomationStatus.SUCCESS, label: "Success" },
-    { value: AutomationStatus.ERROR, label: "Error" },
-    { value: AutomationStatus.STOPPED, label: "Stopped" },
-    { value: AutomationStatus.STOPPED_ERROR, label: "Stopped - Error" },
+  const statusOptions: SelectOption<AutomationStatus>[] = [
+    { value: SUCCESS, label: "Success" },
+    { value: ERROR, label: "Error" },
+    { value: STOPPED, label: "Stopped" },
+    { value: STOPPED_ERROR, label: "Stopped - Error" },
   ]
 
-  // Reset the page every time that a filter gets updated
-  $: pageInfo.reset(), status, timeRange
+  $: filterKey = `${status || ""}:${timeRange || ""}`
+  $: if (filterKey !== lastFilterKey) {
+    lastFilterKey = filterKey
+    lastFetchKey = null
+    pageInfo.reset()
+  }
+
   $: page = $pageInfo.page
-  $: fetchLogs(automation._id, status, page, timeRange)
+  $: fetchKey = `${automation._id}:${filterKey}:${page || ""}`
+  $: if (
+    loaded &&
+    automation._id &&
+    !refreshingPage &&
+    fetchKey !== lastFetchKey
+  ) {
+    lastFetchKey = fetchKey
+    fetchLogs(automation._id, status, page, timeRange)
+  }
+
+  const consumeQueuedFetch = (): QueuedFetch | null => {
+    const nextFetch = queuedFetch
+    queuedFetch = null
+    return nextFetch
+  }
+
+  const getStartDate = (timeRange: TimeRange | null) => {
+    if (!timeRange) {
+      return undefined
+    }
+    const [length, units] = timeRange.split("-")
+    return dayjs()
+      .subtract(Number(length), units as ManipulateType)
+      .toISOString()
+  }
+
+  const loadLogs = async (
+    automationId: string,
+    status: AutomationStatus | undefined,
+    page: string | null | undefined,
+    timeRange: TimeRange | null
+  ) => {
+    return await automationStore.actions.getLogs({
+      automationId,
+      status,
+      page: page || undefined,
+      startDate: getStartDate(timeRange),
+    })
+  }
 
   async function fetchLogs(
     automationId: string | undefined,
@@ -93,38 +163,108 @@
     if (!automationId || (!force && !loaded)) {
       return
     }
-    let startDate: string | undefined
-    if (timeRange) {
-      const [length, units] = timeRange.split("-")
-      startDate = dayjs()
-        .subtract(Number(length), units as ManipulateType)
-        .toISOString()
-    }
-    try {
-      const response = await automationStore.actions.getLogs({
+    if (loading) {
+      queuedFetch = {
         automationId,
         status,
-        page: page || undefined,
-        startDate,
-      })
+        page,
+        timeRange,
+        force,
+      }
+      return
+    }
+    loading = true
+    queuedFetch = null
+    try {
+      const response = await loadLogs(automationId, status, page, timeRange)
       pageInfo.fetched(response.hasNextPage, response.nextPage || "")
       totalLogs = response.totalLogs
       runHistory = response.data
     } catch (error) {
       notifications.error("Error fetching automation logs")
       console.error(error)
+    } finally {
+      loading = false
+      const nextFetch = consumeQueuedFetch()
+      if (nextFetch) {
+        fetchLogs(
+          nextFetch.automationId,
+          nextFetch.status,
+          nextFetch.page,
+          nextFetch.timeRange,
+          nextFetch.force
+        )
+      }
+    }
+  }
+
+  const refreshLogs = async () => {
+    if (!automation._id || loading || refreshingPage) {
+      return
+    }
+
+    const targetPageNumber = get(pageInfo).pageNumber
+    refreshingPage = true
+    const refreshPageInfo = createPaginationStore()
+    let nextRunHistory = runHistory
+    let nextTotalLogs = totalLogs
+
+    try {
+      let pageToFetch: string | null | undefined = undefined
+      let fetchedPageNumber = 1
+      while (fetchedPageNumber <= targetPageNumber) {
+        const response = await loadLogs(
+          automation._id,
+          status,
+          pageToFetch,
+          timeRange
+        )
+        refreshPageInfo.fetched(response.hasNextPage, response.nextPage || "")
+        nextRunHistory = response.data
+        nextTotalLogs = response.totalLogs
+        const currentPageInfo = get(refreshPageInfo)
+        if (
+          fetchedPageNumber === targetPageNumber ||
+          !currentPageInfo.hasNextPage
+        ) {
+          break
+        }
+        refreshPageInfo.nextPage()
+        pageToFetch = get(refreshPageInfo).page
+        fetchedPageNumber++
+      }
+      const refreshedPageInfo = get(refreshPageInfo)
+      pageInfo.replace(refreshedPageInfo)
+      runHistory = nextRunHistory
+      totalLogs = nextTotalLogs
+      lastFetchKey = `${automation._id}:${filterKey}:${refreshedPageInfo.page || ""}`
+    } catch (error) {
+      notifications.error("Error fetching automation logs")
+      console.error(error)
+    } finally {
+      refreshingPage = false
     }
   }
 
   onMount(async () => {
+    if (!automation._id) {
+      loaded = true
+      return
+    }
     await fetchLogs(automation._id, status, undefined, timeRange, true)
+    lastFetchKey = `${automation._id}:${filterKey}:`
     loaded = true
+    pollTimer = setInterval(refreshLogs, AUTOMATION_LOG_POLL_INTERVAL_MS)
+  })
+
+  onDestroy(() => {
+    if (pollTimer) {
+      clearInterval(pollTimer)
+    }
   })
 
   const getLogStatus = (log: AutomationLog) => {
-    return didRunStopWithoutBranchMatch(log)
-      ? AutomationStatus.STOPPED
-      : log.status
+    return didRunStopWithoutBranchMatch(log) ? STOPPED : log.status
   }
 </script>
 
@@ -170,6 +310,11 @@
           {/if}
         </div>
       {/if}
+      <div class="refresh-controls">
+        <Button size="S" quiet icon="Refresh" on:click={refreshLogs}>
+          Refresh
+        </Button>
+      </div>
 
       {#if runHistory}
         <div class="logs-list">
@@ -262,6 +407,14 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .refresh-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: var(--spacing-m);
+    margin-bottom: 16px;
   }
 
   .plan-message {
