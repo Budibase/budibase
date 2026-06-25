@@ -4,7 +4,6 @@ import {
   FeatureFlag,
   KnowledgeBaseFileStatus,
   type Agent,
-  type Datasource,
   type KnowledgeBaseFile,
   type Project,
   type ProjectPackageDependencyIndex,
@@ -13,7 +12,7 @@ import { Header } from "@budibase/shared-core"
 import fsp from "fs/promises"
 import { tmpdir } from "os"
 import { join } from "path"
-import { Readable, Writable } from "stream"
+import { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import sdk from "../../../sdk"
@@ -33,6 +32,7 @@ import {
 describe("/projects", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
+  type PipelineDestination = Parameters<typeof pipeline>[1]
 
   afterAll(() => {
     config.end()
@@ -74,7 +74,7 @@ describe("/projects", () => {
         })
       },
     })
-    await pipeline(Readable.from(buffer), parser as unknown as Writable)
+    await pipeline(Readable.from(buffer), parser as PipelineDestination)
     return files
   }
 
@@ -191,7 +191,6 @@ describe("/projects", () => {
         description: "Operational workflows",
         color: "#8CA171",
       })
-
       expect(project._id).toBeDefined()
       expect(project.name).toBe("Operations")
 
@@ -320,7 +319,7 @@ describe("/projects", () => {
       const updateWithoutRev = {
         _id: project._id,
         name: "Updated operations",
-      } as unknown as Parameters<typeof config.api.project.update>[0]
+      }
 
       await config.api.project.update(updateWithoutRev, {
         status: 400,
@@ -514,14 +513,13 @@ describe("/projects", () => {
       const datasource = await config.api.datasource.create(
         basicDatasource().datasource
       )
-      const entities = {
-        TestTable: value,
-      } as unknown as NonNullable<Datasource["entities"]>
 
-      await config.api.datasource.update(
+      await config.api.datasource.updateWithInvalidEntities(
         {
           ...datasource,
-          entities,
+          entities: {
+            TestTable: value,
+          },
         },
         {
           status: 400,
@@ -1106,6 +1104,15 @@ describe("/projects", () => {
         description: "Operational workflows",
         color: "#8CA171",
       })
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const persistedProject = await context
+          .getWorkspaceDB()
+          .get<Project>(project._id)
+        await context.getWorkspaceDB().put({
+          ...persistedProject,
+          createdAt: "invalid",
+        })
+      })
 
       const datasource = await config.api.datasource.create({
         ...basicDatasource().datasource,
@@ -1206,6 +1213,10 @@ describe("/projects", () => {
       const exportedProject = JSON.parse(files.get("project.json")!.toString())
       expect(exportedProject._id).toBe(project._id)
       expect(exportedProject._rev).toBeUndefined()
+      expect(manifest.project.createdAt).not.toBe("invalid")
+      expect(manifest.project.createdAt).toBe(manifest.project.updatedAt)
+      expect(exportedProject.createdAt).toBe(manifest.project.createdAt)
+      expect(exportedProject.updatedAt).toBe(manifest.project.updatedAt)
 
       const exportedDatasource = JSON.parse(
         files.get(`docs/datasource/${datasource._id}.json`)!.toString()

@@ -55,6 +55,19 @@ const sortResources = (resources: UsedResource[]) =>
     (a, b) => a.type.localeCompare(b.type) || a.id.localeCompare(b.id)
   )
 
+const toTimestamp = (timestamp?: string | number) => {
+  if (timestamp == null) {
+    return undefined
+  }
+  const date = new Date(timestamp)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
+}
+
+const getProjectCreatedAt = (project: Project) =>
+  toTimestamp(project.createdAt) ??
+  toTimestamp(project.updatedAt) ??
+  new Date().toISOString()
+
 export async function listAssignedAgentFiles(
   projectId: string,
   assignedAgents: Agent[],
@@ -218,7 +231,10 @@ async function sanitizeDocumentForExport(
 
 function sanitizeProjectForExport(project: Project) {
   const sanitized = structuredClone(project)
+  const createdAt = getProjectCreatedAt(project)
   delete sanitized._rev
+  sanitized.createdAt = createdAt
+  sanitized.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
   return sanitized
 }
 
@@ -228,6 +244,7 @@ function buildManifest(
   dependencies: UsedResource[],
   unsupportedContent: ProjectPackageUnsupportedContent[]
 ): ProjectPackageManifest {
+  const createdAt = getProjectCreatedAt(project)
   const resourcesByType = dependencies.reduce<
     Partial<Record<ResourceType, number>>
   >(
@@ -248,8 +265,8 @@ function buildManifest(
       name: project.name,
       description: project.description,
       color: project.color,
-      createdAt: String(project.createdAt),
-      updatedAt: project.updatedAt,
+      createdAt,
+      updatedAt: toTimestamp(project.updatedAt) ?? createdAt,
     },
     sourceWorkspace: {
       id: workspaceId,
