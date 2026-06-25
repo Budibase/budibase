@@ -208,9 +208,6 @@ describe("/projects", () => {
     })
   })
 
-
-
-
   it.each([
     "red; background-image: url(https://example.com/tracker)",
     "url(https://example.com/tracker)",
@@ -247,8 +244,6 @@ describe("/projects", () => {
     })
   })
 
-
-
   it("rejects stale revisions on update", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -271,7 +266,6 @@ describe("/projects", () => {
       )
     })
   })
-
 
   it("rejects assigning an unknown project id", async () => {
     await withProjectsEnabled(async () => {
@@ -331,7 +325,6 @@ describe("/projects", () => {
     )
   })
 
-
   it.each([null, "invalid", []])(
     "rejects malformed datasource entities",
     async value => {
@@ -355,7 +348,6 @@ describe("/projects", () => {
       )
     }
   )
-
 
   it("preserves omitted external table project assignments", async () => {
     await withProjectsEnabled(async () => {
@@ -528,7 +520,6 @@ describe("/projects", () => {
     })
   })
 
-
   it("does not clear assignments when deleting with a stale rev", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -552,9 +543,6 @@ describe("/projects", () => {
       expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
     })
   })
-
-
-
 
   it("preserves assignments when updates omit project ids", async () => {
     await withProjectsEnabled(async () => {
