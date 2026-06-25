@@ -2,10 +2,12 @@
   import { Button, CollapsibleSearch, Divider } from "@budibase/bbui"
   import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
   import type { RestTemplate } from "@budibase/types"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
 
   export let templates: RestTemplate[] = []
   export let loading = false
   export let customDisabled = false
+  export let projectIds: string[] = []
 
   const dispatch = createEventDispatcher<{
     selectTemplate: RestTemplate
@@ -120,6 +122,7 @@
         value={searchValue}
         on:change={event => (searchValue = event.detail)}
       />
+      <ProjectSelect bind:value={projectIds} />
       <Button
         secondary
         icon="plus"

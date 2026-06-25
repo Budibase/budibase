@@ -25,6 +25,7 @@
 
   let selectedTemplate: TemplateSelectionContext | null = null
   let targetSpec: RestTemplateSpec | null = null
+  let projectIds: string[] = []
 
   $beforeUrlChange(() => {
     return true
@@ -45,6 +46,7 @@
         const ds = await datasources.create({
           integration,
           config: configFromIntegration(integration),
+          projectIds: projectIds.length ? projectIds : undefined,
         })
         await datasources.fetch()
         goto(`./query/new/${ds._id}`)
@@ -57,6 +59,7 @@
     loading = false
     selectedTemplate = null
     targetSpec = null
+    projectIds = []
   }
 
   const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
@@ -145,6 +148,7 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(selectedTemplate, targetSpec),
+        projectIds: projectIds.length ? projectIds : undefined,
         ...(template.restTemplateId
           ? {
               restTemplateId: template.restTemplateId,
@@ -168,6 +172,7 @@
       loading = false
       selectedTemplate = null
       targetSpec = null
+      projectIds = []
     }
   }
 
@@ -205,6 +210,7 @@
         templates={templatesValue}
         {loading}
         customDisabled={!restIntegration}
+        bind:projectIds
         on:custom={() => handleCustom(restIntegration)}
         on:selectTemplate={onSelectTemplate}
       />

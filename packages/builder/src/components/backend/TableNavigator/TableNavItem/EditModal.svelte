@@ -42,7 +42,7 @@
   async function save() {
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
-    updatedTable.projectIds = projectIds.length ? projectIds : undefined
+    updatedTable.projectIds = projectIds
     await tables.save(updatedTable)
     await datasources.fetch()
     notifications.success("Table updated successfully")
@@ -62,7 +62,7 @@
     originalName = table.name + ""
     updatedName = table.name + ""
     originalProjectIds = table.projectIds || []
-    projectIds = originalProjectIds
+    projectIds = [...originalProjectIds]
   }
 
   const confirmEditTableName = (event: SubmitEvent) => {

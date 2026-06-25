@@ -19,12 +19,20 @@
   export let nameFieldValue: string = ""
   export let showProjectField: boolean = false
   export let projectIdsValue: string[] = []
+  export let preserveEmptyProjectIds: boolean = false
 
   let projectIds: string[] = []
 
   $: configStore = createValidatedConfigStore(integration, config)
   $: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
   $: projectIds = projectIdsValue || []
+
+  const getSubmittedProjectIds = () => {
+    if (preserveEmptyProjectIds || projectIds.length) {
+      return projectIds
+    }
+    return undefined
+  }
 
   const handleConfirm = async () => {
     configStore.markAllFieldsActive()
@@ -36,7 +44,7 @@
       return onSubmit({
         config,
         name,
-        projectIds: projectIds.length ? projectIds : undefined,
+        projectIds: getSubmittedProjectIds(),
       })
     }
 
