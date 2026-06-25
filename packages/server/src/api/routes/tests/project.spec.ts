@@ -275,6 +275,46 @@ describe("/projects", () => {
     })
   })
 
+  it("does not update non-project documents through project routes", async () => {
+    await withProjectsEnabled(async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+
+      await config.api.project.update(
+        {
+          _id: datasource._id!,
+          _rev: datasource._rev!,
+          name: "Not a project",
+        },
+        {
+          status: 404,
+          body: {
+            message: `Project with id '${datasource._id}' not found.`,
+          },
+        }
+      )
+
+      const fetched = await config.api.datasource.get(datasource._id!)
+      expect(fetched.name).toBe(datasource.name)
+    })
+  })
+
+  it("does not delete non-project documents through project routes", async () => {
+    await withProjectsEnabled(async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+
+      await config.api.project.delete(datasource._id!, datasource._rev!, {
+        status: 404,
+      })
+
+      const fetched = await config.api.datasource.get(datasource._id!)
+      expect(fetched._id).toBe(datasource._id)
+    })
+  })
+
   it("rejects assigning an unknown project id", async () => {
     await withProjectsEnabled(async () => {
       const datasource = await config.api.datasource.create(
