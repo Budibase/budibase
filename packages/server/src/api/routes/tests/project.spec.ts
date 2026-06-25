@@ -1,6 +1,6 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { FeatureFlag, type Datasource, type Project } from "@budibase/types"
+import { FeatureFlag, type Project } from "@budibase/types"
 import { toProjectResponse } from "../../controllers/project"
 import sdk from "../../../sdk"
 import { buildExternalTableId } from "../../../integrations/utils"
@@ -178,7 +178,7 @@ describe("/projects", () => {
       const updateWithoutRev = {
         _id: project._id,
         name: "Updated operations",
-      } as unknown as Parameters<typeof config.api.project.update>[0]
+      }
 
       await config.api.project.update(updateWithoutRev, {
         status: 400,
@@ -372,14 +372,13 @@ describe("/projects", () => {
       const datasource = await config.api.datasource.create(
         basicDatasource().datasource
       )
-      const entities = {
-        TestTable: value,
-      } as unknown as NonNullable<Datasource["entities"]>
 
-      await config.api.datasource.update(
+      await config.api.datasource.updateWithInvalidEntities(
         {
           ...datasource,
-          entities,
+          entities: {
+            TestTable: value,
+          },
         },
         {
           status: 400,

@@ -8,7 +8,7 @@ export interface ProjectResponse {
   description?: string
   color?: string
   createdAt: string
-  updatedAt?: string
+  updatedAt: string
 }
 
 export interface FetchProjectsResponse {
