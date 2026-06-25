@@ -66,6 +66,7 @@
       }
       const clampedWidth = clampWidth(nextWidth)
       width = clampedWidth
+      lastNotifiedWidth = clampedWidth
       if (storageKey) {
         localStorage.setItem(storageKey, clampedWidth.toString())
       }
