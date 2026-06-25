@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import { Multiselect } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
@@ -10,28 +12,40 @@
     color?: string
   }
 
-  export let value: string[] = []
-  export let label = "Projects"
+  interface Props {
+    value?: string[]
+    label?: string
+  }
 
-  let options: ProjectOption[] = []
-  let fetchError: string | undefined
+  let { value = $bindable([]), label = "Projects" }: Props = $props()
 
-  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
-  $: workspaceId = $appStore.appId
-  $: value = Array.isArray(value) ? value : []
+  let fetchError: string | undefined = $state()
 
-  $: if (projectsEnabled && workspaceId) {
+  const projectsEnabled = $derived($featureFlags[FeatureFlag.PROJECTS])
+  const workspaceId = $derived($appStore.appId)
+  const options: ProjectOption[] = $derived(
+    $projectsStore.map(project => ({
+      label: project.name,
+      value: project._id,
+      color: project.color,
+    }))
+  )
+
+  $effect(() => {
+    if (!Array.isArray(value)) {
+      value = []
+    }
+  })
+
+  $effect(() => {
+    if (!projectsEnabled || !workspaceId) {
+      return
+    }
     fetchError = undefined
     projectsStore.ensureFetched(workspaceId).catch(() => {
       fetchError = "Projects could not be loaded."
     })
-  }
-
-  $: options = $projectsStore.map(project => ({
-    label: project.name,
-    value: project._id,
-    color: project.color,
-  }))
+  })
 </script>
 
 {#if projectsEnabled}

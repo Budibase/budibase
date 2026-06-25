@@ -126,7 +126,7 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   $: if (newQuery) {
-    newQuery.projectIds = projectIds.length ? projectIds : undefined
+    newQuery.projectIds = projectIds
   }
 
   $: debouncedCheckIsModified(newQuery)

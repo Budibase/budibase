@@ -53,6 +53,7 @@ const project = (id: string): ProjectResponse => ({
   _rev: "1-rev",
   name: id,
   createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
 })
 
 const getProjects = (store: ProjectsStore) => get(store.store)
