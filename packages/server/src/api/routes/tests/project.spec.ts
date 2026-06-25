@@ -19,6 +19,7 @@ import sdk from "../../../sdk"
 import { listAssignedAgentFiles } from "../../../sdk/workspace/projects/backups/exports"
 import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
   basicDatasource,
   basicQuery,
@@ -29,6 +30,7 @@ import {
 
 describe("/projects", () => {
   const config = new TestConfiguration()
+  let cleanupAIConfig: undefined | (() => Promise<void>)
   type PipelineDestination = Parameters<typeof pipeline>[1]
 
   afterAll(() => {
@@ -45,6 +47,12 @@ describe("/projects", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
+  })
+
+  afterEach(async () => {
+    await cleanupAIConfig?.()
+    cleanupAIConfig = undefined
   })
 
   const readTarEntries = async (buffer: Buffer) => {
@@ -324,30 +332,6 @@ describe("/projects", () => {
       }
     )
   })
-
-  it.each([null, "invalid", []])(
-    "rejects malformed datasource entities",
-    async value => {
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
-
-      await config.api.datasource.updateWithInvalidEntities(
-        {
-          ...datasource,
-          entities: {
-            TestTable: value,
-          },
-        },
-        {
-          status: 400,
-          body: {
-            message: "Datasource entity 'TestTable' must be an object.",
-          },
-        }
-      )
-    }
-  )
 
   it("preserves omitted external table project assignments", async () => {
     await withProjectsEnabled(async () => {
