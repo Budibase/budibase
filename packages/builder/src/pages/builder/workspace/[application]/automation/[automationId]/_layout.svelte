@@ -17,6 +17,7 @@
 
   const SIDE_PANEL_STORAGE_KEY = "automation-side-panel-width"
   const SIDE_PANEL_DEFAULT_WIDTH = 480
+  let sidePanelWidth = getSidePanelWidth()
 
   const { goto, params, url, redirect, isActive, page, layout } = routify
   $goto
@@ -39,7 +40,7 @@
       $automationStore.selectedBranchNode
     )
   $: panelOpen = actionPanelOpen || stepPanelOpen
-  $: panelWidth = panelOpen ? getSidePanelWidth() : 0
+  $: panelWidth = panelOpen ? sidePanelWidth : 0
   $: if (automationId) {
     builderStore.selectResource(automationId)
   }
@@ -58,18 +59,18 @@
     stopSyncing?.()
   })
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape" && $automationStore.actionPanelBlock) {
-      automationStore.actions.closeActionPanel()
-    }
-  }
-
-  const getSidePanelWidth = () => {
+  function getSidePanelWidth() {
     const saved = localStorage.getItem(SIDE_PANEL_STORAGE_KEY)
     const parsedWidth = saved ? parseInt(saved, 10) : SIDE_PANEL_DEFAULT_WIDTH
     return Number.isFinite(parsedWidth) && parsedWidth > 0
       ? parsedWidth
       : SIDE_PANEL_DEFAULT_WIDTH
+  }
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && $automationStore.actionPanelBlock) {
+      automationStore.actions.closeActionPanel()
+    }
   }
 </script>
 
@@ -95,11 +96,12 @@
     {#if selectedNodeId && (blockRefs[selectedNodeId] || $automationStore.selectedBranchNode)}
       <div class="step-panel-container">
         <ResizablePanel
-          storageKey="automation-side-panel-width"
-          defaultWidth={480}
+          storageKey={SIDE_PANEL_STORAGE_KEY}
+          defaultWidth={SIDE_PANEL_DEFAULT_WIDTH}
           minWidth={360}
           maxWidthRatio={0.6}
           position="right"
+          onResize={width => (sidePanelWidth = width)}
         >
           <div class="step-panel">
             <StepPanel />

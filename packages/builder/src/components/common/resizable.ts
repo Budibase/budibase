@@ -10,6 +10,7 @@ interface ResizeActionsConfig {
   initialValue?: number
   resetValue?: number
   setValue?: (value: number) => void
+  onValueChange?: (value: number) => void
   onResizeStart?: () => void
 }
 
@@ -21,6 +22,7 @@ const getResizeActions = ({
   initialValue,
   resetValue = initialValue,
   setValue = noop,
+  onValueChange = noop,
   onResizeStart = noop,
 }: ResizeActionsConfig) => {
   let element: HTMLElement | null = null
@@ -51,6 +53,7 @@ const getResizeActions = ({
       const change = (e[mouseCoordinate] - startPosition) * directionMultiplier
       const newValue = startProperty + change
       element.style[elementDimension] = `${newValue}px`
+      onValueChange(newValue)
     }
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -164,7 +167,8 @@ export const getHorizontalResizeActions = (
   setValue?: (value: number) => void,
   onResizeStart?: () => void,
   panelPosition: "left" | "right" = "left",
-  resetValue?: number
+  resetValue?: number,
+  onValueChange?: (value: number) => void
 ) => {
   return getResizeActions({
     elementDimension: "width",
@@ -174,6 +178,7 @@ export const getHorizontalResizeActions = (
     initialValue,
     resetValue,
     setValue,
+    onValueChange,
     onResizeStart,
   })
 }

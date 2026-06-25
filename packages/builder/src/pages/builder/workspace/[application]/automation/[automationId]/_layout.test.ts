@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/svelte"
+import { fireEvent, render, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
 
@@ -101,6 +101,8 @@ vi.mock("@/helpers/urlStateSync", () => ({
 vi.mock("@/stores/builder", () => ({
   builderStore: {
     subscribe: mocks.builderStore.subscribe,
+    setResizingPanel: (isResizingPanel: boolean) =>
+      mocks.builderStore.update(state => ({ ...state, isResizingPanel })),
     selectResource: mocks.selectResource,
   },
   automationStore: {
@@ -113,10 +115,6 @@ vi.mock("@/stores/builder", () => ({
   selectedAutomation: {
     subscribe: mocks.selectedAutomation.subscribe,
   },
-}))
-
-vi.mock("@/components/common/ResizablePanel.svelte", () => ({
-  default: MockSlot,
 }))
 
 vi.mock("@/components/automation/AutomationBuilder/StepPanel.svelte", () => ({
@@ -232,5 +230,57 @@ describe("Automation layout", () => {
 
     expect(container.querySelector(".step-panel-container")).toBeTruthy()
     expect(container.querySelector(".action-panel-container")).toBeFalsy()
+  })
+
+  it("updates the automation header offset when the selected-step panel is resized", async () => {
+    localStorage.setItem("automation-side-panel-width", "480")
+    mocks.automationStore.set({
+      actionPanelBlock: undefined,
+      automations: [{ _id: "automation-1" }],
+      selectedNodeId: "step-1",
+      selectedBranchNode: undefined,
+      showLogsPanel: false,
+      showLogDetailsPanel: false,
+      selectedLog: undefined,
+    })
+    mocks.selectedAutomation.set({
+      data: { _id: "automation-1", name: "Automation" },
+      blockRefs: {
+        "step-1": { pathTo: [{ stepIdx: 1, id: "step-1" }] },
+      },
+    })
+
+    const { container, getByRole } = render(AutomationLayout)
+
+    const panel = container.querySelector(".resizable-panel") as HTMLElement
+    Object.defineProperty(panel, "clientWidth", {
+      configurable: true,
+      value: 480,
+    })
+
+    await waitFor(() => {
+      expect(
+        (
+          container.querySelector(".content") as HTMLElement
+        ).style.getPropertyValue("--automation-panel-width")
+      ).toBe("480px")
+    })
+
+    await fireEvent.mouseDown(getByRole("separator"), {
+      clientX: 480,
+      pageX: 480,
+      detail: 1,
+    })
+    await fireEvent.mouseMove(window, { clientX: 360, pageX: 360 })
+
+    await waitFor(() => {
+      expect(
+        (
+          container.querySelector(".content") as HTMLElement
+        ).style.getPropertyValue("--automation-panel-width")
+      ).toBe("600px")
+    })
+
+    await fireEvent.mouseUp(window, { clientX: 360, pageX: 360 })
   })
 })
