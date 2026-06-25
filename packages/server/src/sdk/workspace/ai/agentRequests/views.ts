@@ -1,48 +1,36 @@
-import { context } from "@budibase/backend-core"
-import type { AgentRequest, DBView } from "@budibase/types"
+import { context, createView } from "@budibase/backend-core"
+import type { AgentRequest } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 
 const REQUESTS_BY_AGENT_VIEW = "agent_requests_by_agent"
 const REQUESTS_BY_UPDATED_AT_VIEW = "agent_requests_by_updated_at"
 
-const buildRequestsByAgentView = (): DBView => ({
-  map: `function(doc) {
-    if (doc._id && doc._id.startsWith("${DocumentType.AGENT_REQUEST}_") && doc.agentId) {
-      emit(doc.agentId, null)
-    }
-  }`,
-})
-
-const buildRequestsByUpdatedAtView = (): DBView => ({
-  map: `function(doc) {
-    if (doc._id && doc._id.startsWith("${DocumentType.AGENT_REQUEST}_") && (doc.updatedAt || doc.createdAt)) {
-      emit(doc.updatedAt || doc.createdAt, null)
-    }
-  }`,
-})
-
-const saveViews = async (views: Record<string, DBView>) => {
-  const db = context.getProdWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
-
-  designDoc.views = {
-    ...designDoc.views,
-    ...views,
+const buildRequestsByAgentView = (): string => `function(doc) {
+  if (doc._id && doc._id.startsWith("${DocumentType.AGENT_REQUEST}_") && doc.agentId) {
+    emit(doc.agentId, null)
   }
+}`
 
-  await db.put(designDoc)
-}
+const buildRequestsByUpdatedAtView = (): string => `function(doc) {
+  if (doc._id && doc._id.startsWith("${DocumentType.AGENT_REQUEST}_") && (doc.updatedAt || doc.createdAt)) {
+    emit(doc.updatedAt || doc.createdAt, null)
+  }
+}`
 
 export const createRequestsByAgentView = async () => {
-  await saveViews({
-    [REQUESTS_BY_AGENT_VIEW]: buildRequestsByAgentView(),
-  })
+  await createView(
+    context.getProdWorkspaceDB(),
+    buildRequestsByAgentView(),
+    REQUESTS_BY_AGENT_VIEW
+  )
 }
 
 export const createRequestsByUpdatedAtView = async () => {
-  await saveViews({
-    [REQUESTS_BY_UPDATED_AT_VIEW]: buildRequestsByUpdatedAtView(),
-  })
+  await createView(
+    context.getProdWorkspaceDB(),
+    buildRequestsByUpdatedAtView(),
+    REQUESTS_BY_UPDATED_AT_VIEW
+  )
 }
 
 export const queryRequestsByAgent = async (
