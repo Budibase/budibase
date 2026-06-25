@@ -14,6 +14,8 @@
 
   let width = minWidth
   let computedMaxWidth = defaultWidth
+  let lastNotifiedWidth: number | undefined = undefined
+  let hasMounted = false
 
   const clampWidth = (value: number) =>
     Math.max(minWidth, Math.min(value, computedMaxWidth))
@@ -33,32 +35,27 @@
 
     computedMaxWidth = Math.max(minWidth, candidateMax)
     width = clampWidth(width)
-    onResize(width)
   }
 
   const loadWidth = () => {
     if (!storageKey) {
       width = clampWidth(defaultWidth)
-      onResize(width)
       return
     }
 
     const saved = localStorage.getItem(storageKey)
     if (!saved) {
       width = clampWidth(defaultWidth)
-      onResize(width)
       return
     }
 
     const parsedWidth = parseInt(saved, 10)
     if (!Number.isFinite(parsedWidth)) {
       width = clampWidth(defaultWidth)
-      onResize(width)
       return
     }
 
     width = clampWidth(parsedWidth)
-    onResize(width)
   }
 
   const [resizable, resizableHandle] = getHorizontalResizeActions(
@@ -69,7 +66,6 @@
       }
       const clampedWidth = clampWidth(nextWidth)
       width = clampedWidth
-      onResize(width)
       if (storageKey) {
         localStorage.setItem(storageKey, clampedWidth.toString())
       }
@@ -80,9 +76,15 @@
     nextWidth => onResize(clampWidth(nextWidth))
   )
 
+  $: if (hasMounted && width !== lastNotifiedWidth) {
+    lastNotifiedWidth = width
+    onResize(width)
+  }
+
   onMount(() => {
     updateMaxWidth()
     loadWidth()
+    hasMounted = true
     window.addEventListener("resize", updateMaxWidth)
   })
 
