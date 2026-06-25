@@ -173,6 +173,7 @@ export async function remove(id: string, rev: string) {
     throw new HTTPError("Project revision does not match.", 409)
   }
 
+  const response = await db.remove(id, rev)
   await clearAssignments(id)
-  return await db.remove(id, rev)
+  return response
 }

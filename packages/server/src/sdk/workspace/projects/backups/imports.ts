@@ -187,23 +187,36 @@ const readDirectoryRecursively = async (
 const validateProjectPackageBeforeExtraction = async (file: {
   path: string
 }) => {
+  const archiveHeader = Buffer.alloc(2)
+  const archiveFile = await fsp.open(file.path, "r")
+  try {
+    await archiveFile.read(archiveHeader, 0, archiveHeader.length, 0)
+  } finally {
+    await archiveFile.close()
+  }
+  if (archiveHeader[0] !== 0x1f || archiveHeader[1] !== 0x8b) {
+    throw new HTTPError("Project package is invalid.", 400)
+  }
+
   const totals = { files: 0, bytes: 0 }
   const fileTypes = new Set(["File", "OldFile", "ContiguousFile"])
   const directoryTypes = new Set(["Directory", "GNUDumpDir"])
   const linkTypes = new Set(["Link", "SymbolicLink"])
   const stream = fs.createReadStream(file.path)
-  let validationError: HTTPError | undefined
+  let entries = 0
 
+  let validationError: HTTPError | undefined
   const fail = (error: HTTPError) => {
     validationError = error
     stream.destroy(error)
   }
 
-  const parser = new tar.Parser({
+  const parser = tar.list({
     onReadEntry: (entry: ProjectPackageTarEntry) => {
       if (validationError) {
         return
       }
+      entries += 1
       if (!isSafeArchivePath(entry.path)) {
         fail(new HTTPError("Project package contains unsafe paths.", 400))
         return
@@ -251,8 +264,11 @@ const validateProjectPackageBeforeExtraction = async (file: {
 
   try {
     await pipeline(stream, parser as PipelineDestination)
+    if (entries === 0) {
+      throw new HTTPError("Project package is invalid.", 400)
+    }
   } catch (err) {
-    throw validationError || err
+    throw validationError || new HTTPError("Project package is invalid.", 400)
   }
 }
 

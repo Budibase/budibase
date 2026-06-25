@@ -458,7 +458,6 @@ describe("/projects", () => {
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
       expect(fetchedDatasource.projectIds).toBeUndefined()
       expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
-      expect(fetchedDatasource.entities![externalTable.name]).toBeUndefined()
       expect(Object.keys(fetchedDatasource.entities!)).toEqual([entityKey])
     })
   })
@@ -1646,6 +1645,21 @@ describe("/projects", () => {
           message: "Workspace exports cannot be imported as Project packages.",
         },
       })
+    })
+  })
+
+  it("rejects malformed project import archives", async () => {
+    await withProjectsEnabled(async () => {
+      await config.api.project.import(
+        Buffer.from("not a project archive"),
+        undefined,
+        {
+          status: 400,
+          body: {
+            message: "Project package is invalid.",
+          },
+        }
+      )
     })
   })
 
