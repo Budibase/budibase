@@ -51,6 +51,7 @@ describe("CreateProjectModal", () => {
           description: "Original description",
           color: "#8CA171",
           createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
         },
         onConfirm,
       },
