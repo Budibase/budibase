@@ -87,6 +87,23 @@ describe("/automations", () => {
     jest.clearAllMocks()
   })
 
+  describe("logs", () => {
+    it("searches production automation logs from the builder context", async () => {
+      const { automation } = await config.api.automation.post(basicAutomation())
+      await config.createAutomationLog(automation, config.getProdWorkspaceId())
+
+      const logs = await config.api.automation.logSearch({
+        automationId: automation._id,
+      })
+
+      expect(logs.data).toEqual([
+        expect.objectContaining({
+          automationId: automation._id,
+        }),
+      ])
+    })
+  })
+
   describe("get definitions", () => {
     it("returns a list of definitions for actions", async () => {
       const res = await config.api.automation.getActions()
