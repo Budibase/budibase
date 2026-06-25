@@ -223,9 +223,7 @@ describe("/automations", () => {
         .branch({
           activeBranch: {
             steps: stepBuilder =>
-              stepBuilder
-                .serverLog({ text: "Active user" })
-                .merge(),
+              stepBuilder.serverLog({ text: "Active user" }).merge(),
             condition: {
               equal: { "trigger.fields.status": "active" },
             },

@@ -85,7 +85,9 @@ describe("AutomationStepHelpers", () => {
     expectAllEdgesResolvable(graph)
     getNode(graph, merge.id)
     getEdge(graph, "alpha-1", merge.id)
-    expect(getEdge(graph, "branch-branch-many-1-beta", merge.id).data).toMatchObject({
+    expect(
+      getEdge(graph, "branch-branch-many-1-beta", merge.id).data
+    ).toMatchObject({
       terminalBranchStepId: "branch-many",
       terminalBranchIdx: 1,
     })
