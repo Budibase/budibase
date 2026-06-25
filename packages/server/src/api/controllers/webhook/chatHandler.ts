@@ -370,6 +370,7 @@ export interface HandleChatMessageParams {
   formatAssistantReply?: (
     result: WebhookChatCompleteResult
   ) => Promise<string> | string
+  afterAssistantReply?: (result: WebhookChatCompleteResult) => Promise<void>
   beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
@@ -465,6 +466,7 @@ export const handleChatMessage = async ({
   reply,
   replyWithAssistantStream,
   formatAssistantReply,
+  afterAssistantReply,
   beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
@@ -757,5 +759,6 @@ export const handleChatMessage = async ({
     } else {
       await reply(finalReply)
     }
+    await afterAssistantReply?.(result)
   })
 }
