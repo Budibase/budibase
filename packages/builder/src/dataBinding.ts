@@ -73,10 +73,6 @@ interface DataBindingDisplay {
   rank?: unknown
 }
 
-interface CalculationFieldSchema extends DataBindingObject {
-  calculationType: string
-}
-
 export interface DataBindingFieldSchema extends DataBindingObject {
   type: string
   name?: string
@@ -87,6 +83,7 @@ export interface DataBindingFieldSchema extends DataBindingObject {
   schema?: DataBindingSchema
   visible?: boolean
   autocolumn?: boolean
+  calculationType?: string
 }
 
 export type DataBindingSchema = Record<string, DataBindingFieldSchema>
@@ -124,12 +121,6 @@ type SettingBinding = Omit<
 export interface SchemaForDatasourceResult {
   schema: DataBindingSchema
   table: Table
-}
-
-const isCalculationFieldSchema = (
-  field: DataBindingObject
-): field is CalculationFieldSchema => {
-  return typeof field.calculationType === "string"
 }
 
 type DataBindingTable = Omit<Partial<Table>, "schema" | "sourceType"> & {
@@ -314,13 +305,12 @@ const asSchema = (value: unknown): DataBindingSchema => {
       if (typeof field === "string") {
         acc[key] = { type: field }
       } else if (isDataBindingObject(field)) {
-        if (isCalculationFieldSchema(field)) {
+        const type = field.calculationType ? "number" : field.type
+        if (typeof type === "string") {
           acc[key] = {
             ...field,
-            type: "number",
+            type,
           } as DataBindingFieldSchema
-        } else if (typeof field.type === "string") {
-          acc[key] = field as DataBindingFieldSchema
         }
       }
       return acc
