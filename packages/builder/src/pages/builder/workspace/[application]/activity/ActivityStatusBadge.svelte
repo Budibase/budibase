@@ -24,19 +24,21 @@
   } as const
 </script>
 
-<Badge
-  size="S"
-  backgroundColor={badgeColorsByStatus[status].backgroundColor}
-  textColor={badgeColorsByStatus[status].textColor}
->
-  {statusLabelByStatus[status]}
-  <span class="status-icon">
-    <Icon size="XS" name={iconByStatus[status]} color="currentColor" />
-  </span>
-</Badge>
+<div class="activity-status-badge">
+  <Badge
+    size="S"
+    backgroundColor={badgeColorsByStatus[status].backgroundColor}
+    textColor={badgeColorsByStatus[status].textColor}
+  >
+    {statusLabelByStatus[status]}
+    <span class="status-icon">
+      <Icon size="XS" name={iconByStatus[status]} color="currentColor" />
+    </span>
+  </Badge>
+</div>
 
 <style>
-  :global(.spectrum-Label) {
+  .activity-status-badge :global(.spectrum-Label) {
     display: inline-flex;
     align-items: center;
   }
