@@ -156,7 +156,6 @@ describe("/projects", () => {
       containsAttachments: false,
       requiresSecrets: false,
       unsupportedContent: [],
-      supportedImportModes: ["additiveImport"],
       ...overrides.manifest,
     }
     const dependencyIndex = {
@@ -841,7 +840,6 @@ describe("/projects", () => {
             count: 1,
           },
         ],
-        supportedImportModes: ["additiveImport"],
       })
 
       const exportedProject = JSON.parse(files.get("project.json")!.toString())
@@ -888,7 +886,7 @@ describe("/projects", () => {
     })
   })
 
-  it("continues listing assigned agent files when one RAG lookup fails", async () => {
+  it("fails listing assigned agent files when a RAG lookup fails", async () => {
     const file: KnowledgeBaseFile = {
       _id: "kb_file_1",
       knowledgeBaseId: "kb_1",
@@ -907,16 +905,15 @@ describe("/projects", () => {
 
     await expect(
       listAssignedAgentFiles(
-        "project_1",
         [
           { _id: "ag_failed", name: "Failed agent" } as Agent,
           { _id: "ag_ok", name: "Working agent" } as Agent,
         ],
         listFilesForAgent
       )
-    ).resolves.toEqual([file])
+    ).rejects.toThrow("RAG unavailable")
 
-    expect(listFilesForAgent).toHaveBeenCalledTimes(2)
+    expect(listFilesForAgent).toHaveBeenCalled()
   })
 
   it("returns 404 when exporting an unknown project", async () => {
@@ -1163,6 +1160,7 @@ describe("/projects", () => {
       })
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
+        name: `Lookup ${datasource._id!} records`,
         projectIds: [project._id],
       })
       const table = await config.api.table.save({
@@ -1262,6 +1260,7 @@ describe("/projects", () => {
           expect(importedQuery.datasourceId).toBe(
             imported.resources.datasource?.[0]
           )
+          expect(importedQuery.name).toBe(`Lookup ${datasource._id!} records`)
           expect(importedQuery.projectIds).toEqual([imported.project._id])
 
           const importedTable = await config.api.table.get(
@@ -1415,32 +1414,6 @@ describe("/projects", () => {
       )
     })
   })
-
-  it.each([
-    ["missing", undefined],
-    ["non-array", "additiveImport"],
-    ["empty", []],
-  ])(
-    "rejects packages with %s supported import modes",
-    async (_label, value) => {
-      await withProjectsEnabled(async () => {
-        const packageBuffer = await createTarPackage(
-          createMinimalPackageEntries({
-            manifest: {
-              supportedImportModes: value,
-            },
-          })
-        )
-
-        await config.api.project.import(packageBuffer, undefined, {
-          status: 400,
-          body: {
-            message: "Project package does not support additive import.",
-          },
-        })
-      })
-    }
-  )
 
   it.each([
     ["manifest", "manifest.json", null, "Project package manifest is invalid."],
