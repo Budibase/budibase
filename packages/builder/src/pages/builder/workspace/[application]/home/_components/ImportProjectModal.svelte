@@ -40,9 +40,7 @@
 
   const handleFileChange = (event: CustomEvent<Array<UIFile | File>>) => {
     if (event.detail.length > 1) {
-      file = undefined
       fileError = "Choose one project export."
-      manualEncrypted = false
       return
     }
 
@@ -53,9 +51,7 @@
   }
 
   const handleTooManyFiles = () => {
-    file = undefined
     fileError = "Choose one project export."
-    manualEncrypted = false
   }
 </script>
 
