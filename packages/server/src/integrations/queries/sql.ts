@@ -69,9 +69,7 @@ export async function interpolateSQL(
     else if (listRegexMatch) {
       arrays.push(binding)
       // determine the length of the array
-      const value = (
-        await sdk.queries.enrichContext([binding], parameters)
-      )[0]
+      const value = (await sdk.queries.enrichContext([binding], parameters))[0]
         .split(",")
         .map((val: string) => val.trim())
       // build a string like ($1, $2, $3)
