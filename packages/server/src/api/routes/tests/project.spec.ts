@@ -307,7 +307,6 @@ describe("/projects", () => {
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
       expect(fetchedDatasource.projectIds).toBeUndefined()
       expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
-      expect(fetchedDatasource.entities![externalTable.name]).toBeUndefined()
       expect(Object.keys(fetchedDatasource.entities!)).toEqual([entityKey])
     })
   })
