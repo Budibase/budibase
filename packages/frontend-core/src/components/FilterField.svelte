@@ -14,6 +14,7 @@
   import { FieldType, ArrayOperator } from "@budibase/types"
   import * as Constants from "../constants"
   import { isJSBinding, findHBSBlocks } from "@budibase/string-templates"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
   import { createEventDispatcher } from "svelte"
 
   export let filter
@@ -28,6 +29,7 @@
   export let evaluationContext = {}
   export let bindingValueType = Constants.FilterValueType.BINDING
   export let useConditionValueControls = false
+  export let calendarLabels = resolveTranslationGroup("calendar")
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions, FilterValueType } = Constants
@@ -238,6 +240,7 @@
               disabled={filter.noValue}
               enableTime={!getSchema(filter)?.dateOnly}
               timeOnly={getSchema(filter)?.timeOnly}
+              {calendarLabels}
               value={readableValue}
               on:change={onChange}
             />
