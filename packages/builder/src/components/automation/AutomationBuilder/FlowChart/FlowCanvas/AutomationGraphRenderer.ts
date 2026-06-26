@@ -49,12 +49,7 @@ export class AutomationGraphRenderer {
       )
       blockHeight = loopResult.containerHeight
     } else {
-      this.deps.newNodes.push(
-        stepNode(block.id, block, undefined, {
-          x: this.originX,
-          y,
-        })
-      )
+      this.deps.newNodes.push(stepNode(block.id, block))
     }
 
     if (!item.isTrigger && item.previousBlock) {
@@ -93,12 +88,7 @@ export class AutomationGraphRenderer {
 
   private addTerminal(block: AutomationBlock, y: number) {
     const terminalId = `anchor-${block.id}`
-    this.deps.newNodes.push(
-      anchorNode(terminalId, undefined, {
-        x: this.originX,
-        y,
-      })
-    )
+    this.deps.newNodes.push(anchorNode(terminalId))
     this.deps.newEdges.push(
       edgeAddItem(block.id, terminalId, {
         block,

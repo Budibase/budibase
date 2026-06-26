@@ -43,7 +43,7 @@ export const renderLoopV2Container = (
     selectable: false,
     draggable: false,
     style: `width: ${containerWidth}px; height: ${containerHeight}px;`,
-    position: { x, y },
+    position: { x: 0, y: 0 },
   })
 
   const stepWidth = horizontalStepWidth
@@ -55,7 +55,8 @@ export const renderLoopV2Container = (
     const isBranch = child.stepId === AutomationActionStepId.BRANCH
     if (!isBranch) {
       const nodePos = { x: innerX, y: baseY }
-      deps.newNodes.push(stepNode(child.id, child, baseId, nodePos))
+      deps.newNodes.push(stepNode(child.id, child, baseId))
+      deps.subflowNodePositions[child.id] = nodePos
       if (lastLinearChild) {
         const prevRef = deps.blockRefs?.[lastLinearChild.id]
         deps.newEdges.push(
@@ -121,12 +122,11 @@ export const renderLoopV2Container = (
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
     const exitAnchorY = loopHandleY
     const exitAnchorX = containerWidth
-    deps.newNodes.push(
-      anchorNode(exitAnchorId, baseId, {
-        x: exitAnchorX,
-        y: exitAnchorY,
-      })
-    )
+    deps.newNodes.push(anchorNode(exitAnchorId, baseId))
+    deps.subflowNodePositions[exitAnchorId] = {
+      x: exitAnchorX,
+      y: exitAnchorY,
+    }
     deps.newEdges.push(
       edgeLoopAddItem(lastChild.id, exitAnchorId, {
         block: lastChild,

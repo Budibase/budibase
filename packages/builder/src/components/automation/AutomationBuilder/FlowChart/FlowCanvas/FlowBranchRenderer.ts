@@ -54,7 +54,10 @@ const pushAnchor = (
   deps: GraphBuildDeps,
   parentId?: string
 ) => {
-  deps.newNodes.push(anchorNode(id, parentId, { x: 0, y }))
+  deps.newNodes.push(anchorNode(id, parentId))
+  if (parentId) {
+    deps.subflowNodePositions[id] = { x: 0, y }
+  }
 }
 
 const renderBranchCluster = (args: BranchClusterArgs) => {
@@ -78,12 +81,7 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
     const branchNodeId = `branch-${baseId}-${bIdx}-${branch.id}`
 
     if (mode === BranchMode.TOPLEVEL) {
-      deps.newNodes.push(
-        branchNode(branchNodeId, step, branch, bIdx, undefined, undefined, {
-          x: 0,
-          y: coords.y,
-        })
-      )
+      deps.newNodes.push(branchNode(branchNodeId, step, branch, bIdx))
     } else {
       const branchX = coords.x ?? 40
       const branchY = stackStartY + bIdx * (BRANCH.height + visuals.gap)
@@ -94,10 +92,13 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
           branch,
           bIdx,
           parentId,
-          visuals.laneWidth,
-          { x: branchX, y: branchY }
+          visuals.laneWidth
         )
       )
+      deps.subflowNodePositions[branchNodeId] = {
+        x: branchX,
+        y: branchY,
+      }
     }
 
     deps.newEdges.push(
@@ -184,12 +185,11 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
       let prevBlock: FlowBlockContext = branchBlockRef
 
       branchChildren.forEach(child => {
-        deps.newNodes.push(
-          stepNode(child.id, child, parentId, {
-            x: childX,
-            y: childY,
-          })
-        )
+        deps.newNodes.push(stepNode(child.id, child, parentId))
+        deps.subflowNodePositions[child.id] = {
+          x: childX,
+          y: childY,
+        }
         const prevPath = resolveBlockPath(prevBlock, deps)
         deps.newEdges.push(
           edgeLoopAddItem(prevId, child.id, {
@@ -208,12 +208,11 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
       if (branchChildren.length === 0) {
         childX = branchX + STEP.width + 40
       }
-      deps.newNodes.push(
-        anchorNode(anchorId, parentId, {
-          x: childX,
-          y: childY,
-        })
-      )
+      deps.newNodes.push(anchorNode(anchorId, parentId))
+      deps.subflowNodePositions[anchorId] = {
+        x: childX,
+        y: childY,
+      }
       const anchorSourcePath = resolveBlockPath(prevBlock, deps)
       deps.newEdges.push(
         edgeLoopAddItem(prevId, anchorId, {

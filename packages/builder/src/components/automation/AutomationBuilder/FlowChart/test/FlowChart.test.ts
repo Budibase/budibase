@@ -174,6 +174,7 @@ vi.mock("../AutomationStepHelpers", () => ({
         height: number
       }>
       newEdges: unknown[]
+      subflowNodePositions: Record<string, { x: number; y: number }>
     }
   ) => {
     deps.newNodes.push(

@@ -84,12 +84,7 @@ class ChainRenderer {
   }
 
   private renderStep(step: AutomationBlock) {
-    this.deps.newNodes.push(
-      stepNode(step.id, step, undefined, {
-        x: this.baseX,
-        y: this.currentY,
-      })
-    )
+    this.deps.newNodes.push(stepNode(step.id, step))
     this.connectTo(step)
     this.lastNodeId = step.id
     this.lastNodeBlock = step

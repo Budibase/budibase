@@ -175,6 +175,7 @@
 
     const newNodes: FlowNode[] = []
     const newEdges: FlowEdge[] = []
+    const subflowNodePositions: GraphBuildDeps["subflowNodePositions"] = {}
 
     const deps: GraphBuildDeps = {
       xSpacing,
@@ -182,6 +183,7 @@
       blockRefs,
       newNodes,
       newEdges,
+      subflowNodePositions,
     }
 
     const laidOut = buildAutomationGraph(blocks, deps)

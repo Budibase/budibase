@@ -39,7 +39,19 @@ const createDeps = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => ({
   blockRefs: {},
   newNodes: graph.nodes,
   newEdges: graph.edges,
+  subflowNodePositions: {},
 })
+
+const applySubflowNodePositions = (
+  nodes: FlowNode[],
+  positions: Record<string, { x: number; y: number }>
+) => {
+  nodes.forEach(node => {
+    const position = positions[node.id]
+    if (!position) return
+    node.position = position
+  })
+}
 
 const renderTestChain = (
   chain: Parameters<typeof renderChain>[0],
@@ -51,13 +63,26 @@ const renderTestChain = (
     data: { block: automationTrigger },
     position: { x: 0, y: -340 },
   })
-  renderChain(chain, automationTrigger.id, automationTrigger, 0, 0, {
+  const deps = {
     xSpacing: 160,
     ySpacing: 340,
     blockRefs: {},
     newNodes: graph.nodes,
     newEdges: graph.edges,
-  })
+    subflowNodePositions: {},
+  }
+  renderChain(chain, automationTrigger.id, automationTrigger, 0, 0, deps)
+  applySubflowNodePositions(graph.nodes, deps.subflowNodePositions)
+  return graph
+}
+
+const renderTestLoop = (
+  loop: Parameters<typeof renderLoopV2Container>[0],
+  graph = createGraph()
+) => {
+  const deps = createDeps(graph)
+  renderLoopV2Container(loop, 0, 0, deps)
+  applySubflowNodePositions(graph.nodes, deps.subflowNodePositions)
   return graph
 }
 
@@ -102,7 +127,7 @@ describe("renderLoopV2Container", () => {
       edges: [],
     }
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     const loopNode = graph.nodes.find(node => node.id === loop.id)!
     const finalNode = graph.nodes.find(node => node.id === finalStep.id)!
@@ -121,7 +146,7 @@ describe("renderLoopV2Container", () => {
       edges: [],
     }
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     const firstNode = graph.nodes.find(node => node.id === firstStep.id)!
     const actionBarRight =
@@ -134,7 +159,7 @@ describe("renderLoopV2Container", () => {
     const loop = loopWithLinearChildrenStep()
     const graph = createGraph()
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
@@ -166,7 +191,7 @@ describe("renderLoopV2Container", () => {
     const loop = loopWithBranchChildStep()
     const graph = createGraph()
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
@@ -228,9 +253,6 @@ describe("renderChain", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    expect(getNode(graph, "step-1").position.y).toBe(0)
-    expect(getNode(graph, "step-2").position.y).toBe(340)
-    expect(getNode(graph, "step-3").position.y).toBe(680)
     expect(getEdge(graph, "trigger", "step-1").data).toMatchObject({
       block: automationTrigger,
     })

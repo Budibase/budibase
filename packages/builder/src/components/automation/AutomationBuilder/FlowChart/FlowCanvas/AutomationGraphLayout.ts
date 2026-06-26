@@ -17,6 +17,7 @@ import {
   getBranchBottomY,
   getLoopV2ContainerDimensions,
 } from "./FlowLayoutMeasurements"
+import type { FlowNodePosition } from "./FlowGraphTypes"
 import type {
   AutomationGraph,
   AutomationLayout,
@@ -30,6 +31,17 @@ const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
 type LoopSubflowNode = FlowNode<LoopV2NodeData, "loop-subflow-node">
 const isLoopSubflowNode = (node: FlowNode): node is LoopSubflowNode => {
   return node.type === "loop-subflow-node"
+}
+
+const applySubflowNodePositions = (
+  nodes: FlowNode[],
+  positions: Record<string, FlowNodePosition>
+) => {
+  nodes.forEach(node => {
+    const position = positions[node.id]
+    if (!position) return
+    node.position = position
+  })
 }
 
 export class AutomationGraphLayout {
@@ -149,4 +161,16 @@ export const dagreLayoutAutomation = (
     applyBranchLaneClearance(graph)
   }
   return graph
+}
+
+export interface AutomationFlowLayoutOptions extends DagreLayoutOptions {
+  subflowNodePositions: Record<string, FlowNodePosition>
+}
+
+export const layoutAutomationGraph = (
+  graph: { nodes: FlowNode[]; edges: FlowEdge[] },
+  opts: AutomationFlowLayoutOptions
+) => {
+  applySubflowNodePositions(graph.nodes, opts.subflowNodePositions)
+  return dagreLayoutAutomation(graph, opts)
 }
