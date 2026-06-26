@@ -35,32 +35,27 @@
 
     computedMaxWidth = Math.max(minWidth, candidateMax)
     width = clampWidth(width)
-    onResize(width)
   }
 
   const loadWidth = () => {
     if (!storageKey) {
       width = clampWidth(defaultWidth)
-      onResize(width)
       return
     }
 
     const saved = localStorage.getItem(storageKey)
     if (!saved) {
       width = clampWidth(defaultWidth)
-      onResize(width)
       return
     }
 
     const parsedWidth = parseInt(saved, 10)
     if (!Number.isFinite(parsedWidth)) {
       width = clampWidth(defaultWidth)
-      onResize(width)
       return
     }
 
     width = clampWidth(parsedWidth)
-    onResize(width)
   }
 
   const [resizable, resizableHandle] = getHorizontalResizeActions(
