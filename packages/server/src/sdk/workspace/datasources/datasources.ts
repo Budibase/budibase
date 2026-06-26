@@ -25,6 +25,7 @@ import {
   BudibaseInternalDB,
   DocumentType,
   generateDatasourceID,
+  getDatasourcePlusParams,
   getDatasourceParams,
   getTableParams,
 } from "../../../db/utils"
@@ -320,17 +321,25 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   return update
 }
 
-export async function getExternalDatasources(): Promise<Datasource[]> {
+async function fetchExternalDatasources(plus = false): Promise<Datasource[]> {
   const db = context.getWorkspaceDB()
 
   let dsResponse = await db.allDocs<Datasource>(
-    getDatasourceParams(undefined, {
+    (plus ? getDatasourcePlusParams : getDatasourceParams)(undefined, {
       include_docs: true,
     })
   )
 
   const externalDatasources = dsResponse.rows.map(r => r.doc!)
   return externalDatasources.map(datasource => addDatasourceFlags(datasource))
+}
+
+export async function getExternalDatasources(): Promise<Datasource[]> {
+  return fetchExternalDatasources()
+}
+
+export async function getExternalDatasourcePluses(): Promise<Datasource[]> {
+  return fetchExternalDatasources(true)
 }
 
 export async function save(
