@@ -16,8 +16,10 @@
     expandedStepId: string | null
     stepDetailCache: Record<string, AgentLogRequestDetail>
     expandedStepLoading: boolean
+    exportSessionLoading: boolean
     onClose: () => void
     onToggleStep: (entry: AgentLogEntry) => void | Promise<void>
+    onExportSession: (session: AgentLogSession) => void | Promise<void>
   }
 
   let {
@@ -26,8 +28,10 @@
     expandedStepId,
     stepDetailCache,
     expandedStepLoading,
+    exportSessionLoading,
     onClose,
     onToggleStep,
+    onExportSession,
   }: Props = $props()
 
   function formatEnvironment(environment: "development" | "production") {
@@ -79,7 +83,9 @@
           {expandedStepId}
           {stepDetailCache}
           {expandedStepLoading}
+          {exportSessionLoading}
           {onToggleStep}
+          {onExportSession}
         />
       </div>
     </div>
