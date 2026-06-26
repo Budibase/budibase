@@ -66,6 +66,34 @@ const MAX_PATH_SEGMENTS = 4
 const MAX_ENCRYPT_PASSWORD_LENGTH = 1024
 type PipelineDestination = Parameters<typeof pipeline>[1]
 
+const PROJECT_PACKAGE_FILE_ENTRY_TYPES = new Set([
+  "File",
+  "OldFile",
+  "ContiguousFile",
+])
+const PROJECT_PACKAGE_DIRECTORY_ENTRY_TYPES = new Set([
+  "Directory",
+  "GNUDumpDir",
+])
+const PROJECT_PACKAGE_LINK_ENTRY_TYPES = new Set(["Link", "SymbolicLink"])
+const PROJECT_PACKAGE_METADATA_ENTRY_TYPES = new Set([
+  "ExtendedHeader",
+  "GlobalExtendedHeader",
+  "NextFileHasLongLinkpath",
+  "NextFileHasLongPath",
+  "OldExtendedHeader",
+  "OldGnuLongPath",
+])
+
+export const isProjectPackageTarEntryTypeSupported = (type?: string) => {
+  return (
+    !type ||
+    PROJECT_PACKAGE_FILE_ENTRY_TYPES.has(type) ||
+    PROJECT_PACKAGE_DIRECTORY_ENTRY_TYPES.has(type) ||
+    PROJECT_PACKAGE_METADATA_ENTRY_TYPES.has(type)
+  )
+}
+
 const PREASSIGNED_IMPORT_TYPES: ResourceType[] = [
   ResourceType.AGENT,
   ResourceType.DATASOURCE,
@@ -199,9 +227,6 @@ const validateProjectPackageBeforeExtraction = async (file: {
   }
 
   const totals = { files: 0, bytes: 0 }
-  const fileTypes = new Set(["File", "OldFile", "ContiguousFile"])
-  const directoryTypes = new Set(["Directory", "GNUDumpDir"])
-  const linkTypes = new Set(["Link", "SymbolicLink"])
   const stream = fs.createReadStream(file.path)
   let entries = 0
 
@@ -232,21 +257,17 @@ const validateProjectPackageBeforeExtraction = async (file: {
         )
         return
       }
-      if (entry.type && linkTypes.has(entry.type)) {
+      if (entry.type && PROJECT_PACKAGE_LINK_ENTRY_TYPES.has(entry.type)) {
         fail(new HTTPError("Project package contains unsupported links.", 400))
         return
       }
-      if (
-        entry.type &&
-        !fileTypes.has(entry.type) &&
-        !directoryTypes.has(entry.type)
-      ) {
+      if (!isProjectPackageTarEntryTypeSupported(entry.type)) {
         fail(
           new HTTPError("Project package contains unsupported entries.", 400)
         )
         return
       }
-      if (!entry.type || fileTypes.has(entry.type)) {
+      if (!entry.type || PROJECT_PACKAGE_FILE_ENTRY_TYPES.has(entry.type)) {
         totals.files += 1
         totals.bytes += entry.size || 0
         if (totals.files > MAX_PACKAGE_FILES) {

@@ -116,15 +116,24 @@ const rollbackAssignments = async (rollbacks: Rollback[]) => {
 
 async function clearAssignments(projectId: string) {
   const rollbacks: Rollback[] = []
-  const [workspaceApps, automations, agents, tables, queries, datasources] =
-    await Promise.all([
-      sdk.workspaceApps.fetch(),
-      sdk.automations.fetch(),
-      sdk.ai.agents.fetch(),
-      sdk.tables.getAllTables(),
-      sdk.queries.fetch({ enrich: false }),
-      sdk.datasources.getExternalDatasources(),
-    ])
+  const [
+    workspaceApps,
+    automations,
+    agents,
+    tables,
+    queries,
+    datasources,
+    datasourcePluses,
+  ] = await Promise.all([
+    sdk.workspaceApps.fetch(),
+    sdk.automations.fetch(),
+    sdk.ai.agents.fetch(),
+    sdk.tables.getAllTables(),
+    sdk.queries.fetch({ enrich: false }),
+    sdk.datasources.getExternalDatasources(),
+    sdk.datasources.getExternalDatasourcePluses(),
+  ])
+  const allDatasources = [...datasources, ...datasourcePluses]
 
   try {
     const db = context.getWorkspaceDB()
@@ -196,7 +205,7 @@ async function clearAssignments(projectId: string) {
       })
     }
 
-    for (const datasource of datasources) {
+    for (const datasource of allDatasources) {
       const entityKeys = Object.entries(datasource.entities || {})
         .filter(([_, entity]) => hasProject(entity, projectId))
         .map(([key]) => key)
