@@ -86,7 +86,7 @@ export class AutomationGraphRenderer {
     )
   }
 
-  private addTerminal(block: AutomationBlock, y: number) {
+  private addTerminal(block: AutomationBlock, _y: number) {
     const terminalId = `anchor-${block.id}`
     this.deps.newNodes.push(anchorNode(terminalId))
     this.deps.newEdges.push(
