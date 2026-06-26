@@ -17,6 +17,7 @@ import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import sdk from "../../../sdk"
 import * as projects from "../../../sdk/workspace/projects/crud"
+import { isProjectPackageTarEntryTypeSupported } from "../../../sdk/workspace/projects/backups/imports"
 import { listAssignedAgentFiles } from "../../../sdk/workspace/projects/backups/exports"
 import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -1701,6 +1702,24 @@ describe("/projects", () => {
       )
     })
   })
+
+  it.each([
+    "ExtendedHeader",
+    "GlobalExtendedHeader",
+    "NextFileHasLongLinkpath",
+    "NextFileHasLongPath",
+    "OldExtendedHeader",
+    "OldGnuLongPath",
+  ])("allows tar metadata entry type %s during package validation", type => {
+    expect(isProjectPackageTarEntryTypeSupported(type)).toBe(true)
+  })
+
+  it.each(["SparseFile", "SymbolicLink"])(
+    "rejects unsupported tar entry type %s during package validation",
+    type => {
+      expect(isProjectPackageTarEntryTypeSupported(type)).toBe(false)
+    }
+  )
 
   it("rejects packages that exceed the extracted size limit before extraction", async () => {
     await withProjectsEnabled(async () => {
