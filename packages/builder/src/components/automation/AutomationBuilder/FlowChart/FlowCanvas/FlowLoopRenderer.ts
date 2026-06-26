@@ -33,6 +33,10 @@ export const renderLoopV2Container = (
     containerHeight,
     containerWidth,
     handleY: loopHandleY,
+    layout: {
+      width: containerWidth,
+      height: containerHeight,
+    },
   }
   deps.newNodes.push({
     id: baseId,

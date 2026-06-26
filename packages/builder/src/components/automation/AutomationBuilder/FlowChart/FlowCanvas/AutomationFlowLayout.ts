@@ -4,8 +4,7 @@ import {
   type Edge as FlowEdge,
   type Node as FlowNode,
 } from "@xyflow/svelte"
-import type { LoopV2NodeData } from "@/types/automations"
-import { ANCHOR, BRANCH, STEP } from "./FlowGeometry"
+import type { FlowNodeLayout } from "@/types/automations"
 import type { FlowNodePosition } from "./FlowGraphTypes"
 import {
   applyBranchLaneClearance,
@@ -13,10 +12,7 @@ import {
   applyPostLoopBranchClearance,
 } from "./FlowLayout"
 
-type LoopSubflowNode = FlowNode<LoopV2NodeData, "loop-subflow-node">
-const isLoopSubflowNode = (node: FlowNode): node is LoopSubflowNode => {
-  return node.type === "loop-subflow-node"
-}
+type LayoutFlowNode = FlowNode<{ layout: FlowNodeLayout }>
 
 const applySubflowNodePositions = (
   nodes: FlowNode[],
@@ -27,6 +23,10 @@ const applySubflowNodePositions = (
     if (!position) return
     node.position = position
   })
+}
+
+const getNodeDimensions = (node: FlowNode) => {
+  return (node as LayoutFlowNode).data.layout
 }
 
 export interface DagreLayoutOptions {
@@ -47,60 +47,40 @@ export const dagreLayoutAutomation = (
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({ rankdir: "LR", ranksep, nodesep })
 
-  const nodeById: Record<string, FlowNode> = {}
-  graph.nodes.forEach(n => (nodeById[n.id] = n))
+  const rootNodes = graph.nodes.filter(node => !node.parentId)
+  rootNodes.forEach(node => {
+    dagreGraph.setNode(node.id, getNodeDimensions(node))
+  })
 
-  graph.nodes
-    .filter(n => !n.parentId)
-    .forEach(node => {
-      let width = STEP.width
-      let height = STEP.height
-      if (node.type === "branch-node") {
-        height = BRANCH.height
-      } else if (node.type === "anchor-node") {
-        width = ANCHOR.width
-        height = ANCHOR.height
-      } else if (isLoopSubflowNode(node)) {
-        const w = node.data?.containerWidth
-        if (w > 0) width = w
-        const h = node?.data?.containerHeight
-        if (h > 0) {
-          height = h
-        }
-      }
-      dagreGraph.setNode(node.id, { width, height })
-    })
-
+  const nodeById = Object.fromEntries(graph.nodes.map(node => [node.id, node]))
   graph.edges
-    .filter(e => {
-      const s = nodeById[e.source]
-      const t = nodeById[e.target]
-      return !(s?.parentId || t?.parentId)
+    .filter(edge => {
+      const source = nodeById[edge.source]
+      const target = nodeById[edge.target]
+      return !!source && !!target && !source.parentId && !target.parentId
     })
     .forEach(edge => dagreGraph.setEdge(edge.source, edge.target))
 
   dagre.layout(dagreGraph)
 
-  graph.nodes
-    .filter(n => !n.parentId)
-    .forEach(node => {
-      const dims = dagreGraph.node(node.id)
-      if (!dims) return
-      const width = dims.width
-      const height = dims.height
-      node.targetPosition = Position.Left
-      node.sourcePosition = Position.Right
-      node.position = {
-        x: Math.round(dims.x - width / 2),
-        y: Math.round(dims.y - height / 2),
-      }
-    })
+  rootNodes.forEach(node => {
+    const dims = dagreGraph.node(node.id)
+    if (!dims) return
+
+    node.targetPosition = Position.Left
+    node.sourcePosition = Position.Right
+    node.position = {
+      x: Math.round(dims.x - dims.width / 2),
+      y: Math.round(dims.y - dims.height / 2),
+    }
+  })
 
   if (compactLoops) {
     applyLoopClearance(graph)
     applyPostLoopBranchClearance(graph)
     applyBranchLaneClearance(graph)
   }
+
   return graph
 }
 
