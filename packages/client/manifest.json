@@ -7975,13 +7975,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "TableSelectColumn",
+                "barIcon": "rows-plus-bottom",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "TableSelectRow",
+                "barIcon": "columns-plus-right",
                 "barTitle": "Row layout"
               }
             ],
@@ -10210,6 +10210,18 @@
               { "label": "Long", "value": "long" },
               { "label": "Narrow", "value": "narrow" }
             ]
+          },
+          {
+            "type": "select",
+            "label": "Weekday header format",
+            "key": "weekdayHeaderFormat",
+            "dependsOn": "showDayNames",
+            "options": [
+              { "label": "Narrow", "value": "narrow" },
+              { "label": "Short", "value": "short" },
+              { "label": "Long", "value": "long" }
+            ],
+            "defaultValue": "short"
           }
         ]
       },
@@ -10220,51 +10232,14 @@
         "defaultValue": true
       },
       {
-        "section": true,
-        "name": "Controls",
-        "dependsOn": "showButtons",
-        "settings": [
-          {
-            "type": "select",
-            "label": "Button type",
-            "key": "buttonType",
-            "options": [
-              { "label": "Action", "value": "action" },
-              { "label": "Primary", "value": "primary" }
-            ],
-            "defaultValue": "action"
-          },
-          {
-            "type": "text",
-            "label": "Month button Text",
-            "key": "monthText",
-            "defaultValue": "Month"
-          },
-          {
-            "type": "text",
-            "label": "Week button Text",
-            "key": "weekText",
-            "defaultValue": "Week"
-          },
-          {
-            "type": "text",
-            "label": "Day button Text",
-            "key": "dayText",
-            "defaultValue": "Day"
-          },
-          {
-            "type": "text",
-            "label": "Agenda button Text",
-            "key": "agendaText",
-            "defaultValue": "Agenda"
-          },
-          {
-            "type": "text",
-            "label": "Today button text",
-            "key": "todayText",
-            "defaultValue": "Today"
-          }
-        ]
+        "type": "select",
+        "label": "Button type",
+        "key": "buttonType",
+        "options": [
+          { "label": "Action", "value": "action" },
+          { "label": "Primary", "value": "primary" }
+        ],
+        "defaultValue": "action"
       }
     ]
   }
