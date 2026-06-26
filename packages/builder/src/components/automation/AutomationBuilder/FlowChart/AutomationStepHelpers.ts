@@ -1,11 +1,5 @@
 import { get } from "svelte/store"
 import { automationStore } from "@/stores/builder"
-import dagre from "@dagrejs/dagre"
-import {
-  Position,
-  type Node as FlowNode,
-  type Edge as FlowEdge,
-} from "@xyflow/svelte"
 
 import type {
   Automation,
@@ -27,26 +21,9 @@ import {
   ViewMode,
   type AutomationBlock,
   type AutomationLogStep,
-  LoopV2NodeData,
 } from "@/types/automations"
 
-import type { GraphBuildDeps } from "./FlowCanvas/FlowGraphTypes"
-import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
-import {
-  applyBranchLaneClearance,
-  applyLoopClearance,
-  applyPostLoopBranchClearance,
-} from "./FlowCanvas/FlowLayout"
-
 export { buildAutomationGraph } from "./FlowCanvas/buildAutomationGraph"
-
-// -----------------
-// Type Guards
-// -----------------
-type LoopSubflowNode = FlowNode<LoopV2NodeData, "loop-subflow-node">
-const isLoopSubflowNode = (node: FlowNode): node is LoopSubflowNode => {
-  return node.type === "loop-subflow-node"
-}
 
 // -----------------
 // Blocks / Logs API
@@ -316,83 +293,4 @@ export const getBranchConditionDetails = (step: AutomationStepResult) => {
   }
 }
 
-// ---------
-// Layout
-// ---------
-
-export interface DagreLayoutOptions {
-  ranksep?: number
-  nodesep?: number
-  compactLoops?: boolean
-}
-
-export const dagreLayoutAutomation = (
-  graph: { nodes: FlowNode[]; edges: FlowEdge[] },
-  opts?: DagreLayoutOptions
-) => {
-  const ranksep = opts?.ranksep ?? 260
-  const nodesep = opts?.nodesep ?? 220
-  const compactLoops = opts?.compactLoops !== false
-
-  const dagreGraph = new dagre.graphlib.Graph()
-  dagreGraph.setDefaultEdgeLabel(() => ({}))
-  dagreGraph.setGraph({ rankdir: "LR", ranksep, nodesep })
-
-  const nodeById: Record<string, FlowNode> = {}
-  graph.nodes.forEach(n => (nodeById[n.id] = n))
-
-  graph.nodes
-    .filter(n => !n.parentId)
-    .forEach(node => {
-      let width = STEP.width
-      let height = STEP.height
-      if (node.type === "branch-node") {
-        height = BRANCH.height
-      } else if (node.type === "anchor-node") {
-        width = ANCHOR.width
-        height = ANCHOR.height
-      } else if (isLoopSubflowNode(node)) {
-        const w = node.data?.containerWidth
-        if (w > 0) width = w
-        const h = node?.data?.containerHeight
-        if (h > 0) {
-          height = h
-        }
-      }
-      dagreGraph.setNode(node.id, { width, height })
-    })
-
-  graph.edges
-    .filter(e => {
-      const s = nodeById[e.source]
-      const t = nodeById[e.target]
-      return !(s?.parentId || t?.parentId)
-    })
-    .forEach(edge => dagreGraph.setEdge(edge.source, edge.target))
-
-  dagre.layout(dagreGraph)
-
-  graph.nodes
-    .filter(n => !n.parentId)
-    .forEach(node => {
-      const dims = dagreGraph.node(node.id)
-      if (!dims) return
-      const width = dims.width
-      const height = dims.height
-      node.targetPosition = Position.Left
-      node.sourcePosition = Position.Right
-      node.position = {
-        x: Math.round(dims.x - width / 2),
-        y: Math.round(dims.y - height / 2),
-      }
-    })
-
-  if (compactLoops) {
-    applyLoopClearance(graph)
-    applyPostLoopBranchClearance(graph)
-    applyBranchLaneClearance(graph)
-  }
-  return graph
-}
-
-export type { GraphBuildDeps }
+export type { GraphBuildDeps } from "./FlowCanvas/FlowGraphTypes"

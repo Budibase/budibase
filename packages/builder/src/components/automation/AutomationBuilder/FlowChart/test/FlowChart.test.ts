@@ -173,6 +173,7 @@ vi.mock("../AutomationStepHelpers", () => ({
         width: number
         height: number
       }>
+      newEdges: unknown[]
     }
   ) => {
     deps.newNodes.push(
@@ -193,8 +194,8 @@ vi.mock("../AutomationStepHelpers", () => ({
         height: 120,
       }
     )
+    return { nodes: deps.newNodes, edges: deps.newEdges }
   },
-  dagreLayoutAutomation: <T>(graph: T) => graph,
 }))
 
 import FlowChart from "../FlowChart.svelte"

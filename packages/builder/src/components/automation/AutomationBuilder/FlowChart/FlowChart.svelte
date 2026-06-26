@@ -33,7 +33,6 @@
   import {
     getBlocks as getBlocksHelper,
     buildAutomationGraph,
-    dagreLayoutAutomation,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
   import {
@@ -185,17 +184,7 @@
       newEdges,
     }
 
-    // Build graph via helpers
-    buildAutomationGraph(blocks, deps)
-
-    const laidOut = dagreLayoutAutomation(
-      { nodes: newNodes, edges: newEdges },
-      {
-        ranksep: xSpacing,
-        nodesep: NODE_SPACING,
-        compactLoops: true,
-      }
-    )
+    const laidOut = buildAutomationGraph(blocks, deps)
 
     const selectable = viewMode === ViewMode.EDITOR
 

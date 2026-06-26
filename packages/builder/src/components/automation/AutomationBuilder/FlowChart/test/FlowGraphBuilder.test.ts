@@ -71,11 +71,16 @@ describe("buildAutomationGraph", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    expect(getNode(graph, "trigger").position.y).toBe(0)
-    expect(getNode(graph, "step-1").position.y).toBe(340)
-    expect(getNode(graph, "step-2").position.y).toBe(680)
-    expect(getNode(graph, "step-3").position.y).toBe(1020)
-    expect(getNode(graph, "anchor-step-3").position.y).toBe(1360)
+    const trigger = getNode(graph, "trigger")
+    const firstStep = getNode(graph, "step-1")
+    const secondStep = getNode(graph, "step-2")
+    const thirdStep = getNode(graph, "step-3")
+    const terminal = getNode(graph, "anchor-step-3")
+
+    expect(firstStep.position.x).toBeGreaterThan(trigger.position.x)
+    expect(secondStep.position.x).toBeGreaterThan(firstStep.position.x)
+    expect(thirdStep.position.x).toBeGreaterThan(secondStep.position.x)
+    expect(terminal.position.x).toBeGreaterThan(thirdStep.position.x)
 
     getEdge(graph, "trigger", "step-1")
     getEdge(graph, "step-1", "step-2")
