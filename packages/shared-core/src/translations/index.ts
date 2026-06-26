@@ -46,6 +46,7 @@ const translationModules = [
 
 export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
   {
+    calendar: "Calendar",
     filter: "Filter",
     forgotPassword: "Forgot password",
     login: "Login",
@@ -56,7 +57,6 @@ export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
     recaptcha: "reCAPTCHA",
     userMenu: "User menu",
     validation: "Validation",
-    calendar: "Calendar",
   }
 
 // Central export of all translation definitions across modules.
