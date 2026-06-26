@@ -11,11 +11,3 @@ export interface AutomationGraphItem {
 export interface AutomationGraph {
   items: AutomationGraphItem[]
 }
-
-export interface AutomationLayoutItem extends AutomationGraphItem {
-  y: number
-}
-
-export interface AutomationLayout {
-  items: AutomationLayoutItem[]
-}

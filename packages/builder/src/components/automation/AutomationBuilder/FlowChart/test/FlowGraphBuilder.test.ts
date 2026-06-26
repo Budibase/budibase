@@ -71,7 +71,7 @@ const renderTestChain = (
     newEdges: graph.edges,
     subflowNodePositions: {},
   }
-  renderChain(chain, automationTrigger.id, automationTrigger, 0, 0, deps)
+  renderChain(chain, automationTrigger.id, automationTrigger, 0, deps)
   applySubflowNodePositions(graph.nodes, deps.subflowNodePositions)
   return graph
 }
@@ -81,7 +81,7 @@ const renderTestLoop = (
   graph = createGraph()
 ) => {
   const deps = createDeps(graph)
-  renderLoopV2Container(loop, 0, 0, deps)
+  renderLoopV2Container(loop, deps)
   applySubflowNodePositions(graph.nodes, deps.subflowNodePositions)
   return graph
 }

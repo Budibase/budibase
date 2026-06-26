@@ -15,8 +15,6 @@ import { renderSubflowBranches } from "./FlowBranchRenderer"
 
 export const renderLoopV2Container = (
   loopStep: LoopV2Step,
-  x: number,
-  y: number,
   deps: GraphBuildDeps
 ) => {
   const baseId = loopStep.id

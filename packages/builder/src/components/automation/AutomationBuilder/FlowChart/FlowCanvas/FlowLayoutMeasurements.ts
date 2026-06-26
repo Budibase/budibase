@@ -2,10 +2,8 @@ import {
   AutomationActionStepId,
   type AutomationStep,
   type Branch,
-  type BranchStep,
   type LoopV2Step,
 } from "@budibase/types"
-import type { AutomationBlock } from "@/types/automations"
 import {
   BRANCH,
   LOOP,
@@ -13,56 +11,8 @@ import {
   STEP,
   SUBFLOW,
 } from "./FlowGeometry"
-import type {
-  GraphLayoutDeps,
-  LoopV2ContainerDimensions,
-} from "./FlowGraphTypes"
-import { filterLegacyLoops, isLoopV2Step } from "./FlowGraphUtils"
-
-const getChainBottomY = (
-  chain: AutomationBlock[],
-  startY: number,
-  deps: GraphLayoutDeps
-) => {
-  let currentY = startY
-
-  for (const step of chain) {
-    if (step.stepId === AutomationActionStepId.BRANCH) {
-      return getBranchBottomY(step, currentY, deps)
-    }
-
-    if (isLoopV2Step(step)) {
-      currentY += getLoopV2ContainerDimensions(step).containerHeight
-    } else {
-      currentY += deps.ySpacing
-    }
-  }
-
-  return currentY
-}
-
-export const getBranchBottomY = (
-  branchStep: AutomationBlock,
-  startY: number,
-  deps: GraphLayoutDeps
-) => {
-  const step = branchStep as BranchStep
-  const branches: Branch[] = step.inputs?.branches || []
-  const childrenMap: Record<string, AutomationStep[]> =
-    step.inputs?.children || {}
-  let bottomY = startY + deps.ySpacing
-
-  branches.forEach(branch => {
-    const childSteps = filterLegacyLoops(childrenMap?.[branch.id] || [])
-    const branchBottomY =
-      childSteps.length > 0
-        ? getChainBottomY(childSteps, startY + deps.ySpacing, deps)
-        : startY + deps.ySpacing
-    bottomY = Math.max(bottomY, branchBottomY + deps.ySpacing)
-  })
-
-  return bottomY
-}
+import type { LoopV2ContainerDimensions } from "./FlowGraphTypes"
+import { filterLegacyLoops } from "./FlowGraphUtils"
 
 export const getLoopV2ContainerDimensions = (
   loopStep: LoopV2Step

@@ -1,10 +1,7 @@
 import type { AutomationBlock } from "@/types/automations"
 import { AutomationGraphBuilder } from "./AutomationGraphBuilder"
-import {
-  AutomationGraphLayout,
-  layoutAutomationGraph,
-} from "./AutomationGraphLayout"
 import { AutomationGraphRenderer } from "./AutomationGraphRenderer"
+import { layoutAutomationGraph } from "./AutomationFlowLayout"
 import { NODE_SPACING } from "./FlowGeometry"
 import type { GraphBuildDeps } from "./FlowGraphTypes"
 
@@ -13,8 +10,7 @@ export const buildAutomationGraph = (
   deps: GraphBuildDeps
 ) => {
   const graph = new AutomationGraphBuilder(blocks).build()
-  const layout = new AutomationGraphLayout(graph, deps).build()
-  new AutomationGraphRenderer(layout, deps).render()
+  new AutomationGraphRenderer(graph, deps).render()
   return layoutAutomationGraph(
     { nodes: deps.newNodes, edges: deps.newEdges },
     {

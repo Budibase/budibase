@@ -145,7 +145,6 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
               childSteps,
               branchNodeId,
               branchBlockRef,
-              0,
               coords.y + deps.ySpacing,
               deps
             )
@@ -239,7 +238,6 @@ export const renderBranches = (
   branchStep: AutomationBlock,
   sourceNodeId: string,
   sourceBlock: FlowBlockContext,
-  _centerX: number,
   startY: number,
   deps: GraphBuildDeps
 ): number => {

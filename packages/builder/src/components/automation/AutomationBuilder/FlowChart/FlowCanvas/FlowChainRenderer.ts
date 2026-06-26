@@ -16,7 +16,6 @@ class ChainRenderer {
     private readonly chain: AutomationBlock[],
     parentNodeId: string,
     parentBlock: FlowBlockContext,
-    private readonly baseX: number,
     startY: number,
     private readonly deps: GraphBuildDeps
   ) {
@@ -63,7 +62,6 @@ class ChainRenderer {
       step,
       this.lastNodeId,
       this.lastNodeBlock,
-      this.baseX,
       this.currentY,
       this.deps
     )
@@ -71,12 +69,7 @@ class ChainRenderer {
   }
 
   private renderLoop(step: LoopV2Step) {
-    const loopResult = renderLoopV2Container(
-      step,
-      this.baseX,
-      this.currentY,
-      this.deps
-    )
+    const loopResult = renderLoopV2Container(step, this.deps)
     this.connectTo(step)
     this.lastNodeId = step.id
     this.lastNodeBlock = step
@@ -114,7 +107,6 @@ export const renderChain = (
   chain: AutomationBlock[],
   parentNodeId: string,
   parentBlock: FlowBlockContext,
-  baseX: number,
   startY: number,
   deps: GraphBuildDeps
 ): ChainRenderResult => {
@@ -122,7 +114,6 @@ export const renderChain = (
     chain,
     parentNodeId,
     parentBlock,
-    baseX,
     startY,
     deps
   ).render()

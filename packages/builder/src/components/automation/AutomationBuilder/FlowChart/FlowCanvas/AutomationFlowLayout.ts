@@ -4,29 +4,14 @@ import {
   type Edge as FlowEdge,
   type Node as FlowNode,
 } from "@xyflow/svelte"
-import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
-import type { AutomationBlock, LoopV2NodeData } from "@/types/automations"
-import type { GraphLayoutDeps } from "./FlowGraphTypes"
+import type { LoopV2NodeData } from "@/types/automations"
 import { ANCHOR, BRANCH, STEP } from "./FlowGeometry"
+import type { FlowNodePosition } from "./FlowGraphTypes"
 import {
   applyBranchLaneClearance,
   applyLoopClearance,
   applyPostLoopBranchClearance,
 } from "./FlowLayout"
-import {
-  getBranchBottomY,
-  getLoopV2ContainerDimensions,
-} from "./FlowLayoutMeasurements"
-import type { FlowNodePosition } from "./FlowGraphTypes"
-import type {
-  AutomationGraph,
-  AutomationLayout,
-  AutomationLayoutItem,
-} from "./AutomationGraphTypes"
-
-const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
-  return step.stepId === AutomationActionStepId.LOOP_V2 && "schema" in step
-}
 
 type LoopSubflowNode = FlowNode<LoopV2NodeData, "loop-subflow-node">
 const isLoopSubflowNode = (node: FlowNode): node is LoopSubflowNode => {
@@ -42,50 +27,6 @@ const applySubflowNodePositions = (
     if (!position) return
     node.position = position
   })
-}
-
-export class AutomationGraphLayout {
-  private currentY = 0
-
-  constructor(
-    private readonly graph: AutomationGraph,
-    private readonly deps: GraphLayoutDeps
-  ) {}
-
-  build(): AutomationLayout {
-    const items: AutomationLayoutItem[] = []
-
-    this.graph.items.forEach(item => {
-      items.push({
-        ...item,
-        y: this.currentY,
-      })
-      this.currentY += this.getItemHeight(item.block)
-    })
-
-    return { items }
-  }
-
-  private getItemHeight(block: AutomationBlock) {
-    if (block.stepId === AutomationActionStepId.BRANCH) {
-      const branchBottomY = getBranchBottomY(block, this.nextBlockY, this.deps)
-      return branchBottomY - this.currentY
-    }
-
-    if (isLoopV2Step(block)) {
-      return getLoopV2ContainerDimensions(block).containerHeight
-    }
-
-    return this.stepHeight
-  }
-
-  private get nextBlockY() {
-    return this.currentY + this.stepHeight
-  }
-
-  private get stepHeight() {
-    return this.deps.ySpacing
-  }
 }
 
 export interface DagreLayoutOptions {
