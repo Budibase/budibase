@@ -96,13 +96,6 @@
     return label
   }
 
-  const isWeekdayFormat = (format: string): format is WeekdayFormat =>
-    ["long", "short", "narrow"].includes(format)
-  const isMonthFormat = (format: string | undefined): format is MonthFormat =>
-    format === "long" || format === "short"
-  const escapeRegExp = (value: string) =>
-    value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-
   interface CalendarEventPayload {
     row_id?: string
     title: string
@@ -227,7 +220,7 @@
     value: string,
     monthFormat: Intl.DateTimeFormatOptions["month"]
   ) => {
-    if (!isMonthFormat(monthFormat)) {
+    if (monthFormat !== "long" && monthFormat !== "short") {
       return value
     }
 
@@ -251,9 +244,7 @@
       ])
     )
     const monthPattern = new RegExp(
-      replacements
-        .map(({ localeLabel }) => escapeRegExp(localeLabel))
-        .join("|"),
+      replacements.map(({ localeLabel }) => localeLabel).join("|"),
       "g"
     )
 
@@ -316,7 +307,8 @@
       return formattedDate ? `${weekday} ${formattedDate}` : weekday
     }
 
-  $: monthTitleUsesTranslation = isMonthFormat(monthTitleFormat)
+  $: monthTitleUsesTranslation =
+    monthTitleFormat === "long" || monthTitleFormat === "short"
   $: dayGridMonthTitleFormat = monthTitleUsesTranslation
     ? buildTranslatedDateFormat({
         ...yearTitleFormatProps,
@@ -338,7 +330,7 @@
         ...monthTitleFormatProps,
       }
   $: {
-    if (weekdayTitleFormat && isWeekdayFormat(weekdayTitleFormat)) {
+    if (weekdayTitleFormat && weekdayTitleFormat !== "hidden") {
       timeGridDayTitleFormat = buildTranslatedWeekdayTitleFormat(
         weekdayTitleFormat,
         timeGridDayTitleDateFormat
