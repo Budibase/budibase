@@ -4,7 +4,10 @@ import { anchorNode, edgeAddItem, stepNode } from "./FlowFactories"
 import { renderBranches } from "./FlowBranchRenderer"
 import { renderLoopV2Container } from "./FlowLoopRenderer"
 import type { GraphBuildDeps } from "./FlowGraphTypes"
-import type { AutomationGraph, AutomationGraphItem } from "./AutomationGraphTypes"
+import type {
+  AutomationGraph,
+  AutomationGraphItem,
+} from "./AutomationGraphTypes"
 
 const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
   return step.stepId === AutomationActionStepId.LOOP_V2 && "schema" in step
