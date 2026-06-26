@@ -24,6 +24,7 @@ import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
   basicDatasource,
+  basicDatasourcePlus,
   basicQuery,
   basicScreen,
   basicTable,
@@ -447,6 +448,23 @@ describe("/projects", () => {
         },
       })
 
+      const datasourcePlus = await config.api.datasource.create({
+        ...basicDatasourcePlus().datasource,
+        projectIds: [project._id],
+      })
+      const plusEntityKey = "PlusTable"
+      const plusExternalTable = basicTable(datasourcePlus, {
+        _id: buildExternalTableId(datasourcePlus._id!, plusEntityKey),
+        name: "Updated plus table",
+        projectIds: [project._id],
+      })
+      await config.api.datasource.update({
+        ...datasourcePlus,
+        entities: {
+          [plusEntityKey]: plusExternalTable,
+        },
+      })
+
       await config.api.project.delete(project._id, project._rev)
 
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
@@ -461,6 +479,17 @@ describe("/projects", () => {
       expect(fetchedDatasource.projectIds).toBeUndefined()
       expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
       expect(Object.keys(fetchedDatasource.entities!)).toEqual([entityKey])
+
+      const fetchedDatasourcePlus = await config.api.datasource.get(
+        datasourcePlus._id!
+      )
+      expect(fetchedDatasourcePlus.projectIds).toBeUndefined()
+      expect(
+        fetchedDatasourcePlus.entities![plusEntityKey].projectIds
+      ).toBeUndefined()
+      expect(Object.keys(fetchedDatasourcePlus.entities!)).toEqual([
+        plusEntityKey,
+      ])
     })
   })
 
