@@ -119,7 +119,7 @@ export const getValidOperatorsForType = (
   } else if (type === FieldType.BARCODEQR) {
     ops = stringOps
   } else if (type === FieldType.LINK) {
-    ops = [Op.Empty, Op.NotEmpty]
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   }
 
   // Only allow equal/not equal for _id in SQL tables

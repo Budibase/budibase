@@ -241,13 +241,11 @@ class LinkController {
           }
 
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
-            // first check the doc we're linking to exists
-            try {
-              await this._db.get(linkId)
-            } catch (err) {
-              // skip links that don't exist
-              continue
-            }
+            // Allow creating links even when the target document doesn't exist yet.
+            // This supports workflows where a child record (e.g. Employee) must be
+            // linked to a parent UUID from state before the parent (e.g. Company)
+            // has been saved — enabling real-time filtering of child records by that
+            // UUID. See: https://github.com/Budibase/budibase/issues/18843
             operations.push(
               new LinkDocument(
                 table._id!,

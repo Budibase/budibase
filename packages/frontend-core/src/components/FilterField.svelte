@@ -189,7 +189,7 @@
               value={readableValue}
               on:change={onChange}
             />
-          {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI, FieldType.BARCODEQR].includes(filter.type)}
+          {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI, FieldType.BARCODEQR, FieldType.LINK].includes(filter.type)}
             <Input
               disabled={filter.noValue}
               value={readableValue}
