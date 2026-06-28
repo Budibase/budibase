@@ -1,6 +1,7 @@
 import { context } from "@budibase/backend-core"
 import {
   AutomationStepInputBase,
+  EscalationSource,
   EscalationStepInputs,
   EscalationStepOutputs,
 } from "@budibase/types"
@@ -42,6 +43,7 @@ export async function run({
   const automation = await sdk.automations.get(automationId)
 
   const { escalationId } = await escalationProcessor.create({
+    source: EscalationSource.AUTOMATION,
     automationId,
     stepId,
     appId,
@@ -55,6 +57,7 @@ export async function run({
     },
     delay: inputs.delay * 1000,
     ...(inputs.operationId && { escalationId: inputs.operationId }),
+    ...(inputs.agentId && { agentId: inputs.agentId }),
     ...(inputs.notifications && {
       recipients: parseJsonInput(inputs.notifications).recipients,
     }),

@@ -1,5 +1,6 @@
 import APIRequest from "./APIRequest.svelte"
 import EmailTrigger from "./EmailTrigger.svelte"
+import Escalation from "./Escalation.svelte"
 import { DrawerBindableInput } from "@/components/common/bindings"
 import { automationStore, selectedAutomation } from "@/stores/builder"
 import { Divider, Helpers, Select } from "@budibase/bbui"
@@ -343,6 +344,13 @@ export const getCustomStepLayout = (
     return [
       {
         comp: APIRequest,
+        wrapped: false,
+      },
+    ]
+  } else if (block.stepId === AutomationActionStepId.ESCALATION) {
+    return [
+      {
+        comp: Escalation,
         wrapped: false,
       },
     ]

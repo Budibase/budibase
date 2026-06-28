@@ -430,7 +430,7 @@
   {#if canShowField(field, inputData)}
     {@const { config, props, value, title } = schemaToUI(key, field, block)}
     <!-- 
-      Dean: Just testing better JSON support. The existing flow is weird and the UI stale.
+      TODO: Just testing better JSON support. The existing flow is weird and the UI stale.
       The final UI would we a custom render yes, but I didnt want to get into that here.
      -->
     {#if block?.stepId === AutomationActionStepId.ESCALATION && field.type === AutomationIOType.JSON}

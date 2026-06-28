@@ -6,7 +6,7 @@ import {
   AutomationStepType,
 } from "@budibase/types"
 
-// DEAN: user context at escalation time depends on the trigger type - row/app/action triggers
+// NOTE: User context at escalation time depends on the trigger type - row/app/action triggers
 // carry the authenticated user in ctx.trigger.user, but cron/webhook/email triggers have no user.
 // Notification target should be explicitly configured as a step input rather than inferred from
 // the triggering user, to ensure escalations work correctly regardless of trigger type.
@@ -26,12 +26,16 @@ export const definition: AutomationStepDefinition = {
   schema: {
     inputs: {
       properties: {
-        // Dean: this would be a custom UI in practice.
-        // There's a lot of nuance to these processes and things require some structure
         operationId: {
           type: AutomationIOType.STRING,
           title: "OperationId",
           description: "The Id of running operation",
+        },
+        agentId: {
+          type: AutomationIOType.STRING,
+          title: "Agent",
+          description:
+            "The agent whose Slack integration is used for notifications",
         },
         message: {
           type: AutomationIOType.STRING,
