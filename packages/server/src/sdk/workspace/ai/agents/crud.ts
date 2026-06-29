@@ -311,9 +311,10 @@ export const sanitiseAgentForExport = (agent: Agent): SanitisedAgent => {
   sanitised.slackIntegration = agentIntegrationSanitisers.slackIntegration(
     sanitised.slackIntegration
   )
-  sanitised.telegramIntegration = agentIntegrationSanitisers.telegramIntegration(
-    sanitised.telegramIntegration
-  )
+  sanitised.telegramIntegration =
+    agentIntegrationSanitisers.telegramIntegration(
+      sanitised.telegramIntegration
+    )
 
   return sanitised
 }
