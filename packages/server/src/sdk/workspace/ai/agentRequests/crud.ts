@@ -53,6 +53,9 @@ const buildThread = ({
   }
 }
 
+const isTerminalStatus = (status: AgentRequest["status"]) =>
+  status === "completed" || status === "failed"
+
 const sortRequests = (requests: AgentRequest[]) =>
   requests.sort(
     (a, b) =>
@@ -209,8 +212,8 @@ export async function initActiveRequest({
   }
 
   const candidates = await fetchRequestsByAgentAndUser(agentId, userId)
-  const existing = candidates.find(r =>
-    r.entries.some(e => e.sessionId === sessionId)
+  const existing = candidates.find(
+    r => !isTerminalStatus(r.status) && r.entries.some(e => e.sessionId === sessionId)
   )
   if (existing && existing._id) {
     return { requestId: existing._id }
@@ -321,6 +324,9 @@ export async function createOrUpdateRequestForPrompt({
       .getWorkspaceDB()
       .tryGet<AgentRequest>(existingRequestId)
     if (existing) {
+      if (isTerminalStatus(existing.status)) {
+        return { request: existing, created: false }
+      }
       const updated = await generateAndSaveRequestTitleIfMissing({
         request: existing,
         agentId,
@@ -333,9 +339,12 @@ export async function createOrUpdateRequestForPrompt({
   }
 
   const candidateRequests = await fetchRequestsByAgentAndUser(agentId, userId)
+  const activeCandidates = candidateRequests.filter(
+    r => !isTerminalStatus(r.status)
+  )
   const linkDecision = await analyzeAgentRequestLink({
     latestPrompt: prompt,
-    candidateRequests,
+    candidateRequests: activeCandidates,
     recentChatContext,
     agentId,
     sessionId,
@@ -360,7 +369,7 @@ export async function createOrUpdateRequestForPrompt({
     }
   }
 
-  const request = candidateRequests.find(
+  const request = activeCandidates.find(
     candidate => candidate._id === linkDecision.requestId
   )
   if (!request) {
