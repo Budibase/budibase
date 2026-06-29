@@ -1,4 +1,5 @@
-import { context, features } from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
+import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import { structures } from "@budibase/backend-core/tests"
 import {
   FeatureFlag,
@@ -658,11 +659,19 @@ describe("/projects", () => {
       await createAssignedInternalTable(project._id)
 
       await config.doInContext(undefined, async () => {
-        const db = context.getWorkspaceDB()
-        const bulkDocs = jest.spyOn(db, "bulkDocs").mockResolvedValueOnce([
-          { id: workspaceApp._id!, rev: "2-mock" },
-          { id: "table_mock", error: "conflict", reason: "cleanup failed" },
-        ])
+        const bulkDocs = jest
+          .spyOn(DatabaseImpl.prototype, "bulkDocs")
+          .mockImplementationOnce(async docs =>
+            docs.map((doc, index) =>
+              index === 0
+                ? { id: doc._id!, rev: "2-mock" }
+                : {
+                    id: doc._id!,
+                    error: "conflict",
+                    reason: "cleanup failed",
+                  }
+            )
+          )
 
         try {
           await expect(
