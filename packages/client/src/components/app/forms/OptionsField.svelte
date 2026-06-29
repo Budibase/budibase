@@ -20,7 +20,7 @@
   export let autocomplete = false
   export let direction = "vertical"
   export let onChange
-  export let sort = true
+  export let sortOrder = null
   export let span
   export let helpText = null
   export let wrapText = false
@@ -36,7 +36,8 @@
     dataProvider,
     labelColumn,
     valueColumn,
-    customOptions
+    customOptions,
+    sortOrder
   )
   const pickerLabels = loadTranslationsByGroup("picker")
 
@@ -76,7 +77,6 @@
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
         {autocomplete}
-        {sort}
         searchPlaceholder={pickerLabels.searchPlaceholder}
         {wrapText}
       />
@@ -93,7 +93,6 @@
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionTitle={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
-        {sort}
       />
     {/if}
   {/if}

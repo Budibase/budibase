@@ -34,6 +34,7 @@
   export let showSelectAll: boolean = false
   export let selectAllText: string = "Select all"
   export let wrapText: boolean = false
+  export let sortOrder: string | null = null
 
   let fieldState: FieldState | undefined
   let fieldApi: FieldApi | undefined
@@ -47,7 +48,8 @@
     dataProvider,
     labelColumn,
     valueColumn,
-    customOptions
+    customOptions,
+    sortOrder
   )
   const pickerLabels = loadTranslationsByGroup("picker")
 

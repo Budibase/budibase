@@ -4247,10 +4247,21 @@
         }
       },
       {
-        "type": "boolean",
-        "label": "Alphabetical",
-        "key": "sort",
-        "defaultValue": true
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "defaultValue": "ascending",
+        "placeholder": "None (backend order)",
+        "options": [
+          {
+            "label": "Ascending",
+            "value": "ascending"
+          },
+          {
+            "label": "Descending",
+            "value": "descending"
+          }
+        ]
       },
       {
         "type": "boolean",
@@ -4440,6 +4451,23 @@
           "setting": "optionsType",
           "value": "select"
         }
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "defaultValue": "ascending",
+        "placeholder": "None (backend order)",
+        "options": [
+          {
+            "label": "Ascending",
+            "value": "ascending"
+          },
+          {
+            "label": "Descending",
+            "value": "descending"
+          }
+        ]
       },
       {
         "type": "boolean",
