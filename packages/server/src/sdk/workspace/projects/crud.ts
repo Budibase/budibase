@@ -39,6 +39,12 @@ const normaliseProjectColor = (color?: string) => {
   }
 }
 
+const validateProjectName = (name?: string) => {
+  if (typeof name !== "string" || !name.trim()) {
+    throw new HTTPError("Project name is required.", 400)
+  }
+}
+
 const isProjectId = (id?: string) =>
   id?.startsWith(prefixed(DocumentType.PROJECT))
 
@@ -65,6 +71,8 @@ export async function get(id: string): Promise<Project | undefined> {
 }
 
 export async function create(project: CreateProjectInput): Promise<Project> {
+  validateProjectName(project.name)
+
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
 
@@ -88,6 +96,9 @@ export async function update(project: UpdateProjectInput): Promise<Project> {
   }
   if (!project._rev) {
     throw new HTTPError("Project revision is required.", 400)
+  }
+  if (Object.hasOwn(project, "name")) {
+    validateProjectName(project.name)
   }
 
   const db = context.getWorkspaceDB()
