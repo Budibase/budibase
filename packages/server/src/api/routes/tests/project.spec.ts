@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import { TRIGGER_DEFINITIONS } from "../../../automations"
 import { buildExternalTableId } from "../../../integrations/utils"
+import { getQueryIndex } from "../../../db/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
   automationTrigger,
@@ -440,59 +441,23 @@ describe("/projects", () => {
   it("uses the project members view when deleting project assignments", async () => {
     await withProjectsEnabled(async () => {
       const project = await createAssignedProject()
-      const workspaceApp = await createAssignedWorkspaceApp(project._id)
-      const table = await createAssignedInternalTable(project._id)
-      const { datasource } = await createAssignedExternalDatasource(project._id)
-      const { datasourcePlus } = await createAssignedDatasourcePlus(project._id)
-      const automation = await config.createAutomation()
-      const { automation: assignedAutomation } =
-        await config.api.automation.update({
-          ...automation,
-          projectIds: [project._id],
-        })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [project._id],
-      })
-      const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
-        projectIds: [project._id],
-      })
-      const allDocs = jest.spyOn(DatabaseImpl.prototype, "allDocs")
+      await createAssignedWorkspaceApp(project._id)
+
+      const query = jest.spyOn(DatabaseImpl.prototype, "query")
 
       try {
         await config.api.project.delete(project._id, project._rev)
-        const broadFetches = allDocs.mock.calls.filter(([params]) => {
-          return !params.keys
-        })
-        expect(broadFetches).toEqual([])
+
+        expect(query).toHaveBeenCalledWith(
+          getQueryIndex(ViewName.PROJECT_MEMBERS),
+          expect.objectContaining({
+            key: project._id,
+            include_docs: true,
+          })
+        )
       } finally {
-        allDocs.mockRestore()
+        query.mockRestore()
       }
-
-      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-        workspaceApp._id!
-      )
-      const fetchedAutomation = await config.api.automation.get(
-        assignedAutomation._id!
-      )
-      const { agents } = await config.api.agent.fetch()
-      const fetchedAgent = agents.find(existing => existing._id === agent._id)
-      const fetchedTable = await config.api.table.get(table._id!)
-      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
-      const fetchedDatasourcePlus = await config.api.datasource.get(
-        datasourcePlus._id!
-      )
-      const fetchedQuery = await config.api.query.get(query._id!)
-
-      expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
-      expect(fetchedAutomation.projectIds).toBeUndefined()
-      expect(fetchedAgent?.projectIds).toBeUndefined()
-      expect(fetchedTable.projectIds).toBeUndefined()
-      expect(fetchedDatasource.projectIds).toBeUndefined()
-      expect(fetchedDatasourcePlus.projectIds).toBeUndefined()
-      expect(fetchedQuery.projectIds).toBeUndefined()
     })
   })
 

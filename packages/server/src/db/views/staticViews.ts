@@ -1,6 +1,7 @@
 import { context } from "@budibase/backend-core"
 import {
   DBView,
+  DesignDocument,
   DocumentType,
   LinkDocument,
   Row,
@@ -8,14 +9,16 @@ import {
 } from "@budibase/types"
 import { SEPARATOR, ViewName } from "../utils"
 
-const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
-const WORKSPACE_APP_PREFIX = DocumentType.WORKSPACE_APP + SEPARATOR
-const AUTOMATION_PREFIX = DocumentType.AUTOMATION + SEPARATOR
-const AGENT_PREFIX = DocumentType.AGENT + SEPARATOR
-const TABLE_PREFIX = DocumentType.TABLE + SEPARATOR
-const QUERY_PREFIX = DocumentType.QUERY + SEPARATOR
-const DATASOURCE_PREFIX = DocumentType.DATASOURCE + SEPARATOR
-const DATASOURCE_PLUS_PREFIX = DocumentType.DATASOURCE_PLUS + SEPARATOR
+const withPrefix = (type: DocumentType) => type + SEPARATOR
+
+const SCREEN_PREFIX = withPrefix(DocumentType.SCREEN)
+const WORKSPACE_APP_PREFIX = withPrefix(DocumentType.WORKSPACE_APP)
+const AUTOMATION_PREFIX = withPrefix(DocumentType.AUTOMATION)
+const AGENT_PREFIX = withPrefix(DocumentType.AGENT)
+const TABLE_PREFIX = withPrefix(DocumentType.TABLE)
+const QUERY_PREFIX = withPrefix(DocumentType.QUERY)
+const DATASOURCE_PREFIX = withPrefix(DocumentType.DATASOURCE)
+const DATASOURCE_PLUS_PREFIX = withPrefix(DocumentType.DATASOURCE_PLUS)
 
 /**************************************************
  *                  INFORMATION                   *
@@ -36,7 +39,7 @@ const DATASOURCE_PLUS_PREFIX = DocumentType.DATASOURCE_PLUS + SEPARATOR
  */
 export async function createLinkView() {
   const db = context.getWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
   const view = {
     map: function (doc: LinkDocument) {
       // everything in this must remain constant as its going to Pouch, no external variables
@@ -72,7 +75,7 @@ export async function createLinkView() {
 
 export async function createRoutingView() {
   const db = context.getWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
   const view: DBView = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
@@ -95,7 +98,7 @@ export async function createRoutingView() {
 
 export async function createProjectMembersView() {
   const db = context.getWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
   const view: DBView = {
     map: `function(doc) {
       function emitProjectIds(projectIds) {
@@ -149,7 +152,7 @@ export async function createProjectMembersView() {
 
 async function searchIndex(indexName: string, fnString: string) {
   const db = context.getWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
   designDoc.indexes = {
     [indexName]: {
       index: fnString,

@@ -138,12 +138,7 @@ async function clearAssignments(projectId: string) {
   const db = context.getWorkspaceDB()
   const rollbacks: Rollback[] = []
   const assignedDocs = await fetchAssignedProjectDocs(projectId)
-  const assignedDocIds = assignedDocs
-    .map(doc => doc._id)
-    .filter((id): id is string => !!id)
-  const currentDocs = assignedDocIds.length
-    ? await db.getMultiple<AnyDocument>(assignedDocIds, { allowMissing: true })
-    : []
+  const currentDocs = assignedDocs
 
   const changedDocs: AnyDocument[] = []
   const originals: AnyDocument[] = []
