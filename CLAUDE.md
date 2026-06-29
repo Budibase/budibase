@@ -42,6 +42,8 @@
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
 - Avoid adding nested ternary statements.
+- Prefer a svelte5 approach over svelte4.
+- Don't use // @ts-nocheck when asked to fix type errors.
 - When writing tests involving a URL, use example.com as the domain.
 
 ## Test style - packages/server
