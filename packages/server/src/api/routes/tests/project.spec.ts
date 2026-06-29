@@ -696,7 +696,6 @@ describe("/projects", () => {
 
   describe("preserves assignments when updates omit project ids", () => {
     const createAssignedResources = async (projectId: string) => {
-      const { project } = { project: { _id: projectId } }
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Ops app",
