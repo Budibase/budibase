@@ -85,7 +85,7 @@ export const postLinkPromptPrivately = async ({
     console.error("Failed to send private link prompt", error)
     // postEphemeral doesn't work in DMs — fall back to a plain post
     try {
-      await target.post(card)
+      await target.post(message)
       return { delivered: true, usedDirectMessageFallback: true }
     } catch (fallbackError) {
       console.error("Failed to send link prompt fallback post", fallbackError)

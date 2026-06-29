@@ -1,8 +1,6 @@
 import zlib from "zlib"
 import type { Job } from "bull"
-import { context, utils } from "@budibase/backend-core"
-import { isDocumentConflictError } from "@budibase/backend-core/src/db/errors"
-import { getProdWorkspaceID } from "@budibase/backend-core/src/docIds/conversions"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { checkTestFlag } from "../../utilities/redis"
 import {
   DocumentType,
@@ -138,7 +136,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
           ...(response && { response }),
         })
       } catch (err) {
-        if (isDocumentConflictError(err) && attempt < maxRetries - 1) {
+        if (dbCore.isDocumentConflictError(err) && attempt < maxRetries - 1) {
           continue
         }
         throw err
@@ -189,14 +187,14 @@ export class BullEscalationProcessor implements IEscalationProcessor {
   }
 
   async list(appId: string): Promise<EscalationSummary[]> {
-    const prodAppId = getProdWorkspaceID(appId)
+    const prodAppId = dbCore.getProdWorkspaceID(appId)
     const bullQueue = getQueue().getBullQueue()
     const delayedJobs = await bullQueue.getDelayed()
 
     return delayedJobs
       .filter(
         (job: Job<EscalationJob>) =>
-          job.data?.appId && getProdWorkspaceID(job.data.appId) === prodAppId
+          job.data?.appId && dbCore.getProdWorkspaceID(job.data.appId) === prodAppId
       )
       .map((job: Job<EscalationJob>) => ({ ...job.data }))
   }

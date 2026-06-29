@@ -7,8 +7,10 @@ import { encodeJSBinding } from "@budibase/string-templates"
 // EscalationResponse to resolve, or false to leave the escalation open.
 
 // VM-injected escalation context. Declared (not emitted) for type-checking - the
-// isolate provides these as globals at execution time.
+// isolate provides these as globals at execution time. Listed so strategies can
+// reference them; totalRecipients isn't used yet but documents the contract.
 declare const responses: EscalationResponse[]
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const totalRecipients: number
 
 interface ResolutionStrategyFn {
