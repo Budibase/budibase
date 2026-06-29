@@ -77,7 +77,10 @@ export async function sendTelegramNotification({
   }
 
   const config = notifDoc.recipient.config as Record<string, string>
-  const botToken = await getTelegramBotToken(contextDoc.appId, contextDoc.agentId)
+  const botToken = await getTelegramBotToken(
+    contextDoc.appId,
+    contextDoc.agentId
+  )
   if (!botToken) {
     console.warn("sendTelegramNotification: no Telegram-enabled agent found", {
       escalationId: contextDoc._id,

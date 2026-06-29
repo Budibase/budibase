@@ -92,7 +92,10 @@ export async function sendDiscordNotification({
   }
 
   const config = notifDoc.recipient.config as Record<string, string>
-  const botToken = await getDiscordBotToken(contextDoc.appId, contextDoc.agentId)
+  const botToken = await getDiscordBotToken(
+    contextDoc.appId,
+    contextDoc.agentId
+  )
   if (!botToken) {
     console.warn("sendDiscordNotification: no Discord-enabled agent found", {
       escalationId: contextDoc._id,
@@ -111,7 +114,11 @@ export async function sendDiscordNotification({
   }
 
   if (config.channelId) {
-    await discordPost(`/channels/${config.channelId}/messages`, botToken, messageBody)
+    await discordPost(
+      `/channels/${config.channelId}/messages`,
+      botToken,
+      messageBody
+    )
     console.log("sendDiscordNotification: message sent to channel", {
       escalationId: notifDoc.escalationId,
       channelId: config.channelId,
@@ -128,10 +135,13 @@ export async function sendDiscordNotification({
       })
     )
     if (!link) {
-      console.warn("sendDiscordNotification: no Discord identity link for user", {
-        globalUserId: config.globalUserId,
-        escalationId: contextDoc._id,
-      })
+      console.warn(
+        "sendDiscordNotification: no Discord identity link for user",
+        {
+          globalUserId: config.globalUserId,
+          escalationId: contextDoc._id,
+        }
+      )
       return
     }
     externalUserId = link.externalUserId

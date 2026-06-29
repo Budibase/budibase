@@ -788,7 +788,8 @@
                   onApprove={() =>
                     card.escalationId && handleResolve(card.escalationId, true)}
                   onReject={() =>
-                    card.escalationId && handleResolve(card.escalationId, false)}
+                    card.escalationId &&
+                    handleResolve(card.escalationId, false)}
                 />
               {:else if isToolUIPart(part)}
                 {@const rawToolName = getToolName(part)}

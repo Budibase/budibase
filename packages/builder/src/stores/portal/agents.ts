@@ -301,7 +301,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
             live: operation.live,
             promptInstructions: operation.promptInstructions,
             enabledTools: operation.enabledTools,
-            allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+            allowKnowledgeSourceDownload:
+              operation.allowKnowledgeSourceDownload,
             escalation: operation.escalation,
           })
     }

@@ -113,8 +113,7 @@
       runtimeBinding: tool.name,
       icon,
       tagIconUrl,
-      fallbackIcon:
-        sourceType === ToolType.ESCALATION ? "User" : undefined,
+      fallbackIcon: sourceType === ToolType.ESCALATION ? "User" : undefined,
     }
   }
 

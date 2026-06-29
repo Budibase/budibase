@@ -181,9 +181,7 @@ const createTelegramInputHandler = ({
     } catch (error) {
       console.error("Telegram webhook processing failed", error)
       const msg =
-        error instanceof Error
-          ? error.message
-          : TELEGRAM_FALLBACK_ERROR_MESSAGE
+        error instanceof Error ? error.message : TELEGRAM_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
     }
   }
@@ -312,9 +310,7 @@ export async function telegramWebhook(
             const notifDoc =
               await db.tryGet<EscalationNotificationDoc>(notificationDocId)
             if (!notifDoc) {
-              throw new Error(
-                `Notification doc ${notificationDocId} not found`
-              )
+              throw new Error(`Notification doc ${notificationDocId} not found`)
             }
             return sdk.escalations.respond(
               notifDoc.escalationId,
@@ -335,8 +331,7 @@ export async function telegramWebhook(
             "Telegram escalation action: failed to record response",
             {
               notificationDocId,
-              error:
-                error instanceof Error ? error.message : String(error),
+              error: error instanceof Error ? error.message : String(error),
             }
           )
           if (event.thread) {

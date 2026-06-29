@@ -225,7 +225,10 @@ export async function discordWebhook(
         const parts = customId.split(":")
         const shortNotifId = parts[1]
         if (!shortNotifId) {
-          console.error("Discord escalation action: invalid custom_id", customId)
+          console.error(
+            "Discord escalation action: invalid custom_id",
+            customId
+          )
           return
         }
         const notificationDocId = `escalation_notification_${shortNotifId}`
@@ -243,7 +246,8 @@ export async function discordWebhook(
               return { status: "closed" as const }
             }
             const db = context.getWorkspaceDB()
-            const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+            const notifDoc =
+              await db.tryGet<EscalationNotificationDoc>(notificationDocId)
             if (!notifDoc) {
               throw new Error(`Notification doc ${notificationDocId} not found`)
             }
@@ -262,11 +266,14 @@ export async function discordWebhook(
             await event.thread.post(msg)
           }
         } catch (error) {
-          console.error("Discord escalation action: failed to record response", {
-            notificationDocId,
-            workspaceId,
-            message: error instanceof Error ? error.message : String(error),
-          })
+          console.error(
+            "Discord escalation action: failed to record response",
+            {
+              notificationDocId,
+              workspaceId,
+              message: error instanceof Error ? error.message : String(error),
+            }
+          )
           if (event.thread) {
             await event.thread.post("Failed to record response.")
           }

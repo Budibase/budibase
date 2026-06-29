@@ -28,7 +28,10 @@ export const getMSTeamsIntegration = async (
     agentId,
     a => !!(a.MSTeamsIntegration?.appId && a.MSTeamsIntegration?.appPassword)
   )
-  if (!agent?.MSTeamsIntegration?.appId || !agent.MSTeamsIntegration.appPassword) {
+  if (
+    !agent?.MSTeamsIntegration?.appId ||
+    !agent.MSTeamsIntegration.appPassword
+  ) {
     return undefined
   }
   return {

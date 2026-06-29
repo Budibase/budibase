@@ -135,10 +135,7 @@
       label="Directory (tenant) ID (Azure AD tenant ID)"
       bind:value={draft.tenantId}
     />
-    <Input
-      label="Default team ID (optional)"
-      bind:value={draft.teamId}
-    />
+    <Input label="Default team ID (optional)" bind:value={draft.teamId} />
     <Input
       label="Idle timeout (minutes)"
       type="number"

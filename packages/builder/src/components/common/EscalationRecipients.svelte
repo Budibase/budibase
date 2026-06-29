@@ -73,7 +73,10 @@
 
   // Reset all pending fields; optionally keep the chosen provider.
   const resetPending = (keepProvider = false) => {
-    pending = { ...DEFAULT_PENDING, provider: keepProvider ? pending.provider : "" }
+    pending = {
+      ...DEFAULT_PENDING,
+      provider: keepProvider ? pending.provider : "",
+    }
   }
 
   // Switch Teams input mode, clearing the other modes' fields.

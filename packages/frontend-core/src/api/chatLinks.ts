@@ -1,4 +1,7 @@
-import { type ChatIdentityLink, type ChatIdentityLinkProvider } from "@budibase/types"
+import {
+  type ChatIdentityLink,
+  type ChatIdentityLinkProvider,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface SlackChannel {

@@ -1,4 +1,8 @@
-import { EscalationResponse, ResolutionStrategy, Snippet } from "@budibase/types"
+import {
+  EscalationResponse,
+  ResolutionStrategy,
+  Snippet,
+} from "@budibase/types"
 import { encodeJSBinding } from "@budibase/string-templates"
 
 // Built-in escalation resolution strategies, authored as real (type-checked)

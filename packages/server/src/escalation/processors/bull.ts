@@ -29,8 +29,13 @@ export class BullEscalationProcessor implements IEscalationProcessor {
   async create(input: CreateEscalationInput): Promise<CreateEscalationResult> {
     const db = context.getWorkspaceDB()
 
-    if (input.source === EscalationSource.OPERATION && !input.recipients?.length) {
-      throw new Error("Cannot create an operation escalation with no recipients")
+    if (
+      input.source === EscalationSource.OPERATION &&
+      !input.recipients?.length
+    ) {
+      throw new Error(
+        "Cannot create an operation escalation with no recipients"
+      )
     }
 
     const escalationId = input.escalationId ?? buildEscalationId()
@@ -194,7 +199,8 @@ export class BullEscalationProcessor implements IEscalationProcessor {
     return delayedJobs
       .filter(
         (job: Job<EscalationJob>) =>
-          job.data?.appId && dbCore.getProdWorkspaceID(job.data.appId) === prodAppId
+          job.data?.appId &&
+          dbCore.getProdWorkspaceID(job.data.appId) === prodAppId
       )
       .map((job: Job<EscalationJob>) => ({ ...job.data }))
   }
