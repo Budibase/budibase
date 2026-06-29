@@ -1,4 +1,4 @@
-import { features } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import { structures } from "@budibase/backend-core/tests"
 import {
