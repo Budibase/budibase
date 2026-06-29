@@ -409,23 +409,32 @@
       return keepOpen
     }
 
+    const { resource } = selectedRow
+
     try {
       if (selectedRow.type === "app") {
         await workspaceAppStore.edit({
-          ...selectedRow.resource,
+          _id: resource._id!,
+          _rev: resource._rev!,
+          name: resource.name,
+          url: resource.url,
+          navigation: resource.navigation,
+          disabled: resource.disabled,
           projectIds,
         })
       } else if (selectedRow.type === "automation") {
+        const { publishStatus: _publishStatus, ...automation } = resource
         await automationStore.actions.save(
           {
-            ...selectedRow.resource,
+            ...automation,
             projectIds,
           },
           { skipUnpublishedChanges: true }
         )
       } else if (selectedRow.type === "agent") {
+        const { operations: _operations, ...agent } = resource
         await agentsStore.updateAgent({
-          ...selectedRow.resource,
+          ...agent,
           projectIds,
         })
       }
