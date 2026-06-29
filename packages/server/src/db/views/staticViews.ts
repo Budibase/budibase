@@ -9,6 +9,13 @@ import {
 import { SEPARATOR, ViewName } from "../utils"
 
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
+const WORKSPACE_APP_PREFIX = DocumentType.WORKSPACE_APP + SEPARATOR
+const AUTOMATION_PREFIX = DocumentType.AUTOMATION + SEPARATOR
+const AGENT_PREFIX = DocumentType.AGENT + SEPARATOR
+const TABLE_PREFIX = DocumentType.TABLE + SEPARATOR
+const QUERY_PREFIX = DocumentType.QUERY + SEPARATOR
+const DATASOURCE_PREFIX = DocumentType.DATASOURCE + SEPARATOR
+const DATASOURCE_PLUS_PREFIX = DocumentType.DATASOURCE_PLUS + SEPARATOR
 
 /**************************************************
  *                  INFORMATION                   *
@@ -82,6 +89,60 @@ export async function createRoutingView() {
   designDoc.views = {
     ...designDoc.views,
     [ViewName.ROUTING]: view,
+  }
+  await db.put(designDoc)
+}
+
+export async function createProjectMembersView() {
+  const db = context.getWorkspaceDB()
+  const designDoc = await db.get<any>("_design/database")
+  const view: DBView = {
+    map: `function(doc) {
+      function emitProjectIds(projectIds) {
+        if (!Array.isArray(projectIds)) {
+          return
+        }
+
+        for (var i = 0; i < projectIds.length; i++) {
+          emit(projectIds[i], null)
+        }
+      }
+
+      if (!doc || !doc._id) {
+        return
+      }
+
+      if (
+        doc._id.startsWith("${WORKSPACE_APP_PREFIX}") ||
+        doc._id.startsWith("${AUTOMATION_PREFIX}") ||
+        doc._id.startsWith("${AGENT_PREFIX}") ||
+        doc._id.startsWith("${TABLE_PREFIX}") ||
+        doc._id.startsWith("${QUERY_PREFIX}")
+      ) {
+        emitProjectIds(doc.projectIds)
+        return
+      }
+
+      if (
+        doc._id.startsWith("${DATASOURCE_PREFIX}") ||
+        doc._id.startsWith("${DATASOURCE_PLUS_PREFIX}")
+      ) {
+        emitProjectIds(doc.projectIds)
+
+        if (!doc.entities) {
+          return
+        }
+
+        for (var key in doc.entities) {
+          emitProjectIds(doc.entities[key].projectIds)
+        }
+      }
+    }`,
+  }
+
+  designDoc.views = {
+    ...designDoc.views,
+    [ViewName.PROJECT_MEMBERS]: view,
   }
   await db.put(designDoc)
 }

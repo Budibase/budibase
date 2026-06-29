@@ -30,7 +30,11 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
-import { hasProject } from "../utils"
+import {
+  fetchAssignedProjectDocs,
+  getProjectAssignedEntities,
+  hasProject,
+} from "../utils"
 
 async function tarFilesToTmp(tmpDir: string, files: string[]) {
   const fileName = `${uuid()}.tar.gz`
@@ -80,17 +84,8 @@ export async function listAssignedAgentFiles(
   ).flat()
 }
 
-async function getDirectMembers(
-  projectId: string,
-  agents: Agent[],
-  workspaceApps: WorkspaceApp[]
-): Promise<UsedResource[]> {
-  const [datasources, tables, queries, automations] = await Promise.all([
-    sdk.datasources.fetch(),
-    sdk.tables.getAllTables(),
-    sdk.queries.fetch(),
-    sdk.automations.fetch(),
-  ])
+async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
+  const assignedDocs = await fetchAssignedProjectDocs(projectId)
 
   const asUsedResource = (
     doc: { _id?: string; name?: string },
@@ -102,32 +97,59 @@ async function getDirectMembers(
   })
 
   return sortResources([
-    ...datasources
+    ...assignedDocs
       .filter(
         datasource =>
           datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
+          !!datasource._id &&
+          datasource._id.startsWith("datasource_") &&
+          typeof datasource.source === "string" &&
           (hasProject(datasource, projectId) ||
-            Object.values(datasource.entities || {}).some(entity =>
+            getProjectAssignedEntities(datasource).some(entity =>
               hasProject(entity, projectId)
             ))
       )
       .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
-    ...tables
+    ...assignedDocs
       .filter(
-        table => hasProject(table, projectId) && !isExternalTableID(table._id!)
+        table =>
+          !!table._id &&
+          table._id.startsWith("ta_") &&
+          hasProject(table, projectId) &&
+          !isExternalTableID(table._id)
       )
       .map(table => asUsedResource(table, ResourceType.TABLE)),
-    ...queries
-      .filter(query => hasProject(query, projectId))
+    ...assignedDocs
+      .filter(
+        query =>
+          !!query._id &&
+          query._id.startsWith("query_") &&
+          hasProject(query, projectId)
+      )
       .map(query => asUsedResource(query, ResourceType.QUERY)),
-    ...automations
-      .filter(automation => hasProject(automation, projectId))
+    ...assignedDocs
+      .filter(
+        automation =>
+          !!automation._id &&
+          automation._id.startsWith("au_") &&
+          hasProject(automation, projectId)
+      )
       .map(automation => asUsedResource(automation, ResourceType.AUTOMATION)),
-    ...agents
-      .filter(agent => hasProject(agent, projectId))
+    ...assignedDocs
+      .filter(
+        agent =>
+          !!agent._id &&
+          agent._id.startsWith("agent_") &&
+          hasProject(agent, projectId)
+      )
       .map(agent => asUsedResource(agent, ResourceType.AGENT)),
-    ...workspaceApps
-      .filter(workspaceApp => hasProject(workspaceApp, projectId))
+    ...assignedDocs
+      .filter(
+        workspaceApp =>
+          !!workspaceApp._id &&
+          workspaceApp._id.startsWith("workspace_app_") &&
+          hasProject(workspaceApp, projectId)
+      )
       .map(workspaceApp =>
         asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
       ),
@@ -321,7 +343,7 @@ export async function exportProject(
     sdk.ai.agents.fetch(),
     sdk.workspaceApps.fetch(),
   ])
-  const directMembers = await getDirectMembers(projectId, agents, workspaceApps)
+  const directMembers = await getDirectMembers(projectId)
   const unsupportedContent = await getUnsupportedContent(
     projectId,
     agents,
