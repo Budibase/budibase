@@ -21,7 +21,9 @@ const baseConfig: Config = {
     "^.+\\.js?$": "@swc/jest",
     "^.+\\.svelte?$": "<rootDir>/scripts/svelteTransformer.js",
   },
-  transformIgnorePatterns: ["/node_modules/(?!svelte/|esm-env/|devalue/).*"],
+  transformIgnorePatterns: [
+    "/node_modules/(?!svelte/|esm-env/|devalue/|chokidar/|readdirp/).*",
+  ],
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/shared-core/(.*)": "<rootDir>/../shared-core/$1",
@@ -30,6 +32,7 @@ const baseConfig: Config = {
     "@budibase/types": "<rootDir>/../types/src",
     "@budibase/string-templates/(.*)": ["<rootDir>/../string-templates/$1"],
     "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
+    "^chokidar$": "<rootDir>/__mocks__/chokidar.ts",
     "^chat$": "<rootDir>/__mocks__/chat.ts",
     "^@chat-adapter/discord$": "<rootDir>/__mocks__/chat-adapter-discord.ts",
     "^@chat-adapter/slack$": "<rootDir>/__mocks__/chat-adapter-slack.ts",
