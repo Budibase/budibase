@@ -25,7 +25,7 @@ import {
   AutomationTestProgressEvent,
   InProgressTestState,
 } from "@budibase/types"
-import { SvelteComponent } from "svelte"
+import type { Component, SvelteComponent } from "svelte"
 
 export enum DataMode {
   INPUT = "data_in",
@@ -183,7 +183,7 @@ export type AutomationBlockRefMap = Record<string, AutomationBlockRef>
  * forms
  */
 export interface SchemaConfigProps {
-  comp: typeof SvelteComponent<any>
+  comp: typeof SvelteComponent<any> | Component<any>
   onChange?: (e: CustomEvent) => void
   props?: (opts?: FieldProps) => Record<string, unknown>
   fullWidth?: boolean

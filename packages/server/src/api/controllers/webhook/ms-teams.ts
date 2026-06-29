@@ -8,10 +8,17 @@ import {
   type MSTeamsConversationScope,
   type WebhookChatCompleteResult,
 } from "@budibase/types"
-import { Chat, type Thread, type Message, type SentMessage } from "chat"
+import {
+  Actions,
+  Card,
+  Chat,
+  LinkButton,
+  type Thread,
+  type Message,
+  type SentMessage,
+} from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
-import { getLiveOperation } from "../../../sdk/workspace/ai/agents/utils"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -25,29 +32,28 @@ const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
 
 const formatTeamsLinkLabel = (value: string) =>
   value
-    .replace(/\[|]|\n|\r/g, " ")
+    .replace(/\[|]|<|>|@|\n|\r/g, " ")
     .replace(/\s+/g, " ")
     .trim()
 
-export const formatTeamsAssistantReply = async ({
+const getTeamsKnowledgeSourceLinks = async ({
   agentId,
   result,
-  allowKnowledgeSourceDownload,
   isPersonalConversation,
 }: {
   agentId: string
   result: WebhookChatCompleteResult
-  allowKnowledgeSourceDownload?: boolean
   isPersonalConversation?: boolean
 }) => {
-  const assistantText = result.assistantText || ""
-  if (allowKnowledgeSourceDownload === false || !isPersonalConversation) {
-    return assistantText
+  if (
+    result.allowKnowledgeSourceDownload === false ||
+    !isPersonalConversation
+  ) {
+    return []
   }
 
-  const sources = result.ragSources || []
-  const sourceLinks: string[] = []
-  for (const source of sources) {
+  const links: { label: string; url: string }[] = []
+  for (const source of result.ragSources || []) {
     if (!source.fileId) {
       continue
     }
@@ -58,19 +64,65 @@ export const formatTeamsAssistantReply = async ({
         source.fileId
       )
       const absoluteUrl = await toAbsoluteUrl(signedUrl)
-      const label =
-        formatTeamsLinkLabel(source.filename || "") || "Knowledge source"
-      sourceLinks.push(`- [${label}](${absoluteUrl})`)
+      links.push({
+        label:
+          formatTeamsLinkLabel(source.filename || "") || "Knowledge source",
+        url: absoluteUrl,
+      })
     } catch (error) {
       console.error("Failed to generate Teams RAG source link", error)
     }
   }
+  return links
+}
 
+export const formatTeamsAssistantReply = async ({
+  result,
+}: {
+  result: WebhookChatCompleteResult
+}) => {
+  return result.assistantText || ""
+}
+
+const postTeamsKnowledgeSourceLinks = async ({
+  thread,
+  agentId,
+  result,
+  isPersonalConversation,
+}: {
+  thread: Thread
+  agentId: string
+  result: WebhookChatCompleteResult
+  isPersonalConversation?: boolean
+}) => {
+  const sourceLinks = await getTeamsKnowledgeSourceLinks({
+    agentId,
+    result,
+    isPersonalConversation,
+  })
   if (!sourceLinks.length) {
-    return assistantText
+    return
   }
 
-  return `${assistantText}\n\nSources:\n${sourceLinks.join("\n")}`
+  try {
+    await thread.post(
+      Card({
+        title: "Sources",
+        children: [
+          Actions(
+            sourceLinks.map(source =>
+              LinkButton({
+                label: source.label,
+                url: source.url,
+              })
+            )
+          ),
+        ],
+      })
+    )
+  } catch (error) {
+    console.error("Failed to post Teams RAG source links", error)
+  }
 }
 
 export const stripTeamsMentions = (
@@ -193,7 +245,6 @@ const createTeamsMessageHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
-  allowKnowledgeSourceDownload,
 }: {
   workspaceId: string
   chatAppId: string
@@ -201,7 +252,6 @@ const createTeamsMessageHandler = ({
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
-  allowKnowledgeSourceDownload?: boolean
 }) => {
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as MSTeamsActivity | undefined
@@ -350,9 +400,13 @@ const createTeamsMessageHandler = ({
         },
         formatAssistantReply: async result =>
           await formatTeamsAssistantReply({
+            result,
+          }),
+        afterAssistantReply: async result =>
+          await postTeamsKnowledgeSourceLinks({
+            thread,
             agentId,
             result,
-            allowKnowledgeSourceDownload,
             isPersonalConversation,
           }),
         workspaceId,
@@ -398,7 +452,6 @@ export async function MSTeamsWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
-        allowKnowledgeSourceDownload,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
@@ -406,8 +459,6 @@ export async function MSTeamsWebhook(
             sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
           idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.MSTeamsIntegration?.requireUserLink,
-          allowKnowledgeSourceDownload:
-            getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true,
           channelEnabled:
             !!agent.MSTeamsIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -436,7 +487,6 @@ export async function MSTeamsWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
-        allowKnowledgeSourceDownload,
       })
       chat.onDirectMessage(async (thread, message) => {
         await handler(thread, message)

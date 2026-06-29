@@ -1,71 +1,80 @@
-<script>
-  import {
-    Select,
-    InlineAlert,
-    Input,
-    Label,
-    Layout,
-    notifications,
-  } from "@budibase/bbui"
-  import { onMount, createEventDispatcher } from "svelte"
+<script lang="ts">
+  import { Select, Input, Label, Layout, notifications } from "@budibase/bbui"
+  import { onMount } from "svelte"
   import { flags } from "@/stores/builder"
   import { aiStore } from "@/stores/portal"
   import { API } from "@/api"
   import MagicWand from "../../../../assets/MagicWand.svelte"
+  import NextExecutionsTable from "./NextExecutionsTable.svelte"
 
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
-  const dispatch = createEventDispatcher()
-
-  export let cronExpression
-
-  let error
-  let nextExecutions
-
-  // AI prompt
-  let aiCronPrompt = ""
-  let loadingAICronExpression = false
-
-  $: aiEnabled = $aiStore.aiEnabled
-  $: {
-    if (cronExpression) {
-      try {
-        nextExecutions = helpers.cron
-          .getNextExecutionDates(cronExpression)
-          .join("\n")
-      } catch (err) {
-        nextExecutions = null
-      }
-    }
+  interface CronOption {
+    label: string
+    value: string
   }
 
-  const onChange = e => {
-    if (e.detail !== REBOOT_CRON) {
-      error = helpers.cron.validate(e.detail).err
+  type CronError = string | undefined
+
+  interface Props {
+    cronExpression?: string
+    timezone?: string
+    onchange?: (cronExpression: string) => void
+  }
+
+  let {
+    cronExpression = $bindable(),
+    timezone = "UTC",
+    onchange,
+  }: Props = $props()
+
+  let error: CronError = $state()
+  let aiCronPrompt = $state("")
+  let loadingAICronExpression = $state(false)
+  let touched = $state(false)
+
+  let aiEnabled = $derived($aiStore.aiEnabled)
+  let nextExecutions = $derived.by(() => {
+    if (!cronExpression || cronExpression === REBOOT_CRON) {
+      return null
     }
-    if (e.detail === cronExpression || error) {
+    try {
+      return helpers.cron.getNextExecutionDates(cronExpression, 4, timezone)
+    } catch (err) {
+      return null
+    }
+  })
+
+  const onChange = (value: string | undefined) => {
+    if (!value) {
+      return
+    }
+    if (value !== REBOOT_CRON) {
+      const validation = helpers.cron.validate(value)
+      error = "err" in validation ? validation.err.join(". ") : undefined
+    } else {
+      error = undefined
+    }
+    if (value === cronExpression || error) {
       return
     }
 
-    cronExpression = e.detail
-    dispatch("change", e.detail)
+    cronExpression = value
+    onchange?.(value)
   }
 
-  const updatePreset = e => {
+  const updatePreset = (event: CustomEvent<string | undefined>) => {
     aiCronPrompt = ""
-    onChange(e)
+    onChange(event.detail)
   }
 
-  const updateCronExpression = e => {
+  const updateCronExpression = (event: CustomEvent<string | undefined>) => {
     aiCronPrompt = ""
-    cronExpression = null
-    nextExecutions = null
-    onChange(e)
+    cronExpression = undefined
+    onChange(event.detail)
   }
 
-  let touched = false
-
-  const CRON_EXPRESSIONS = [
+  const CRON_EXPRESSIONS: CronOption[] = [
     {
       label: "Every Minute",
       value: "* * * * *",
@@ -98,23 +107,21 @@
     try {
       const response = await API.generateCronExpression(aiCronPrompt)
       cronExpression = response.message
-      dispatch("change", response.message)
+      onchange?.(response.message)
     } catch (err) {
-      notifications.error(err.message)
+      notifications.error(
+        err instanceof Error ? err.message : "Error generating cron expression"
+      )
     } finally {
       loadingAICronExpression = false
     }
   }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <Layout noPadding gap="S">
   <Select
     on:change={updatePreset}
     value={cronExpression || "Custom"}
-    secondary
-    extraThin
     label="Use a Preset (Optional)"
     options={CRON_EXPRESSIONS}
   />
@@ -123,17 +130,17 @@
       <Input
         bind:value={aiCronPrompt}
         label="Generate Cron Expression with AI"
-        size="S"
         placeholder="Run every hour between 1pm to 4pm everyday of the week"
       />
       {#if aiCronPrompt}
-        <div
+        <button
+          type="button"
           class="icon"
           class:pulsing-text={loadingAICronExpression}
-          on:click={generateAICronExpression}
+          onclick={generateAICronExpression}
         >
           <MagicWand height="17" width="17" />
-        </div>
+        </button>
       {/if}
     </div>
   {/if}
@@ -149,11 +156,7 @@
     <Label><div class="error">Please specify a CRON expression</div></Label>
   {/if}
   {#if nextExecutions}
-    <InlineAlert
-      type="info"
-      header="Next Executions"
-      message={nextExecutions}
-    />
+    <NextExecutionsTable executions={nextExecutions} />
   {/if}
 </Layout>
 
@@ -172,6 +175,9 @@
     flex-direction: row;
     box-sizing: border-box;
     border-left: 1px solid var(--spectrum-alias-border-color);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
     border-top-right-radius: var(--spectrum-alias-border-radius-regular);
     border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
     width: 31px;
@@ -182,6 +188,7 @@
       box-shadow var(--spectrum-global-animation-duration-100, 130ms),
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);
+    padding: 0;
   }
 
   .icon:hover {

@@ -7235,7 +7235,7 @@
     "@types/node" "*"
     form-data "^3.0.0"
 
-"@types/node@*", "@types/node@22.18.0", "@types/node@>=10.0.0", "@types/node@>=13.13.4", "@types/node@>=13.7.0", "@types/node@>=18", "@types/node@>=18.0.0", "@types/node@>=8.0.0 <15", "@types/node@^12.20.52", "@types/node@^18.11.18", "@types/node@^22.0.0":
+"@types/node@*", "@types/node@22.18.0", "@types/node@>=10.0.0", "@types/node@>=13.13.4", "@types/node@>=13.7.0", "@types/node@>=18", "@types/node@>=18.0.0", "@types/node@>=8.0.0 <15", "@types/node@^12.20.52", "@types/node@^18.11.18", "@types/node@^25.5.0":
   version "22.18.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-22.18.0.tgz#9e4709be4f104e3568f7dd1c71e2949bf147a47b"
   integrity sha512-m5ObIqwsUp6BZzyiy4RdZpzWGub9bqLJMvZDD0QMXhxjqMHMENlj+SqF5QxoUwaQNFe+8kz8XM8ZQhqkQPTgMQ==
@@ -15592,10 +15592,10 @@ js-yaml@4.1.1:
   dependencies:
     argparse "^2.0.1"
 
-js-yaml@5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-5.0.0.tgz#f8500ec24e26830f8f0f66f9df9cb909e22e82cc"
-  integrity sha512-GSvaPUbk1U+FMZ7rJzF+F8e5YVtu7KnD40et/5rBXXRBv2jCO9L3qCewvIDDdudC0QycTFlf6EAA+h3kxBsuUw==
+js-yaml@5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-5.1.0.tgz#c084ac880197833810a69e9c7e51eae12ff35448"
+  integrity sha512-s8VA5jkR8f22S3NAXmhKPFqGUduqZGlsufabVOgN14iTdw/RXcym7bKkbwjxLK9Yw2lEvvmJjFp119+KPeo8Kg==
   dependencies:
     argparse "^2.0.1"
 
@@ -21292,16 +21292,21 @@ saxes@^6.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
-scim-patch@^0.8.1:
-  version "0.8.3"
-  resolved "https://registry.yarnpkg.com/scim-patch/-/scim-patch-0.8.3.tgz#a4a686d69b3869bf8c6d118e27636e1cbc4fda1b"
-  integrity sha512-3d0wD4THAt03Zgi08kCQwc+lvPJ2v4wwk41b0xViVa4gLYSgRUCmGkJNBsaE+yoKg0fufTOJCcSrufZaqYn/og==
+scim-patch@^0.9.1:
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/scim-patch/-/scim-patch-0.9.1.tgz#b2a7b270f505a5bc45062dc759e3599a71284fec"
+  integrity sha512-Uzf8Lz8xFlmx3IQazphvLezeRYVd12TSZAr7pm2OMEMLMFE1z3VWdfHmguygPbS/0TuhWvVMySb8fzg8/QwG2A==
   dependencies:
-    "@types/node" "^22.0.0"
+    "@types/node" "^25.5.0"
     fast-deep-equal "3.1.3"
-    scim2-parse-filter "0.2.10"
+    scim2-parse-filter "0.3.0"
 
-scim2-parse-filter@0.2.10, scim2-parse-filter@^0.2.8:
+scim2-parse-filter@0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/scim2-parse-filter/-/scim2-parse-filter-0.3.0.tgz#4d4234586e96710efdd4f78651e9d16353f1972e"
+  integrity sha512-GMMvQlgnvps689B0tz5trN81NCRCyUVNrOR8dkLa1qAgRa8KylEElHsIl3jUZy9+VFFH0yPLwjFt1rSy8JnqcA==
+
+scim2-parse-filter@^0.2.8:
   version "0.2.10"
   resolved "https://registry.yarnpkg.com/scim2-parse-filter/-/scim2-parse-filter-0.2.10.tgz#856e5be35f06162a9ae1995bf769e8d9bcdd87ea"
   integrity sha512-k5TgGSuQEbR4jXRgw/GPAYVL9fMp1pWA2abLF5z3q9IGWSuZTqbrZBOSUezvc+rtViXr+czSZjg3eAN4QSTvxQ==
