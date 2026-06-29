@@ -27,6 +27,7 @@
     notifications,
     Banner,
     Divider,
+    Label,
   } from "@budibase/bbui"
   import {
     BodyType,
@@ -1045,9 +1046,10 @@
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
             <div class="project">
+              <Label>Projects</Label>
               <ProjectSelect
                 bind:value={projectIds}
-                labelPosition="left"
+                label=""
                 autoWidth
               />
             </div>
@@ -1600,6 +1602,7 @@
   .project {
     display: flex;
     align-items: center;
+    gap: var(--spacing-m);
   }
   .pagination {
     display: grid;
