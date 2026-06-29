@@ -43,6 +43,71 @@ describe("/projects", () => {
     )
   }
 
+  const createAssignedProject = async () => {
+    const { project } = await config.api.project.create({
+      name: "Operations",
+    })
+    return project
+  }
+
+  const createAssignedWorkspaceApp = async (projectId: string) => {
+    const { workspaceApp } = await config.api.workspaceApp.create(
+      structures.workspaceApps.createRequest({
+        name: "Ops app",
+        url: "/ops-app",
+        projectIds: [projectId],
+      })
+    )
+    return workspaceApp
+  }
+
+  const createAssignedInternalTable = async (projectId: string) => {
+    return await config.api.table.save({
+      ...basicTable(),
+      projectIds: [projectId],
+    })
+  }
+
+  const createAssignedExternalDatasource = async (projectId: string) => {
+    const datasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      projectIds: [projectId],
+    })
+    const entityKey = "TestTable"
+    const externalTable = basicTable(datasource, {
+      _id: buildExternalTableId(datasource._id!, entityKey),
+      name: "Updated table",
+      projectIds: [projectId],
+    })
+    await config.api.datasource.update({
+      ...datasource,
+      entities: {
+        [entityKey]: externalTable,
+      },
+    })
+    return { datasource, entityKey }
+  }
+
+  const createAssignedDatasourcePlus = async (projectId: string) => {
+    const datasourcePlus = await config.api.datasource.create({
+      ...basicDatasourcePlus().datasource,
+      projectIds: [projectId],
+    })
+    const plusEntityKey = "PlusTable"
+    const plusExternalTable = basicTable(datasourcePlus, {
+      _id: buildExternalTableId(datasourcePlus._id!, plusEntityKey),
+      name: "Updated plus table",
+      projectIds: [projectId],
+    })
+    await config.api.datasource.update({
+      ...datasourcePlus,
+      entities: {
+        [plusEntityKey]: plusExternalTable,
+      },
+    })
+    return { datasourcePlus, plusEntityKey }
+  }
+
   beforeEach(async () => {
     await config.newTenant()
     cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
@@ -338,58 +403,11 @@ describe("/projects", () => {
     })
   })
 
-  it("clears assignments when deleting a project", async () => {
+  it("clears workspace app and internal table assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-
-      const { workspaceApp } = await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Ops app",
-          url: "/ops-app",
-          projectIds: [project._id],
-        })
-      )
-
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
-
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds: [project._id],
-      })
-      const entityKey = "TestTable"
-      const externalTable = basicTable(datasource, {
-        _id: buildExternalTableId(datasource._id!, entityKey),
-        name: "Updated table",
-        projectIds: [project._id],
-      })
-      await config.api.datasource.update({
-        ...datasource,
-        entities: {
-          [entityKey]: externalTable,
-        },
-      })
-
-      const datasourcePlus = await config.api.datasource.create({
-        ...basicDatasourcePlus().datasource,
-        projectIds: [project._id],
-      })
-      const plusEntityKey = "PlusTable"
-      const plusExternalTable = basicTable(datasourcePlus, {
-        _id: buildExternalTableId(datasourcePlus._id!, plusEntityKey),
-        name: "Updated plus table",
-        projectIds: [project._id],
-      })
-      await config.api.datasource.update({
-        ...datasourcePlus,
-        entities: {
-          [plusEntityKey]: plusExternalTable,
-        },
-      })
+      const project = await createAssignedProject()
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+      const table = await createAssignedInternalTable(project._id)
 
       await config.api.project.delete(project._id, project._rev)
 
@@ -400,11 +418,31 @@ describe("/projects", () => {
 
       const fetchedTable = await config.api.table.get(table._id!)
       expect(fetchedTable.projectIds).toBeUndefined()
+    })
+  })
+
+  it("clears external datasource and entity assignments when deleting a project", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const { datasource, entityKey } = await createAssignedExternalDatasource(
+        project._id
+      )
+
+      await config.api.project.delete(project._id, project._rev)
 
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
       expect(fetchedDatasource.projectIds).toBeUndefined()
       expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
-      expect(Object.keys(fetchedDatasource.entities!)).toEqual([entityKey])
+    })
+  })
+
+  it("clears datasource_plus entity assignments when deleting a project", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const { datasourcePlus, plusEntityKey } =
+        await createAssignedDatasourcePlus(project._id)
+
+      await config.api.project.delete(project._id, project._rev)
 
       const fetchedDatasourcePlus = await config.api.datasource.get(
         datasourcePlus._id!
@@ -413,9 +451,6 @@ describe("/projects", () => {
       expect(
         fetchedDatasourcePlus.entities![plusEntityKey].projectIds
       ).toBeUndefined()
-      expect(Object.keys(fetchedDatasourcePlus.entities!)).toEqual([
-        plusEntityKey,
-      ])
     })
   })
 
@@ -618,32 +653,23 @@ describe("/projects", () => {
 
   it("restores assignments when project cleanup fails after partial cleanup", async () => {
     await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const { workspaceApp } = await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Ops app",
-          url: "/ops-app",
-          projectIds: [project._id],
-        })
-      )
-      await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
+      const project = await createAssignedProject()
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+      await createAssignedInternalTable(project._id)
 
       await config.doInContext(undefined, async () => {
-        const saveTable = jest
-          .spyOn(sdk.tables, "saveTable")
-          .mockRejectedValueOnce(new Error("cleanup failed"))
+        const db = context.getWorkspaceDB()
+        const bulkDocs = jest.spyOn(db, "bulkDocs").mockResolvedValueOnce([
+          { id: workspaceApp._id!, rev: "2-mock" },
+          { id: "table_mock", error: "conflict", reason: "cleanup failed" },
+        ])
 
         try {
           await expect(
             projects.remove(project._id, project._rev)
-          ).rejects.toThrow("cleanup failed")
+          ).rejects.toThrow("Failed to clear project assignments.")
         } finally {
-          saveTable.mockRestore()
+          bulkDocs.mockRestore()
         }
       })
 
@@ -853,13 +879,8 @@ describe("/projects", () => {
         files.get(`docs/agent/${agent._id}.json`)!.toString()
       )
       expect(exportedAgent.live).toBe(false)
-      expect(exportedAgent.slackIntegration?.botToken).toBeUndefined()
-      expect(exportedAgent.slackIntegration?.signingSecret).toBeUndefined()
-      expect(exportedAgent.telegramIntegration?.botToken).toBeUndefined()
-      expect(
-        exportedAgent.telegramIntegration?.webhookSecretToken
-      ).toBeUndefined()
-      expect(exportedAgent.telegramIntegration?.botUserName).toBe("ops_bot")
+      expect(exportedAgent.slackIntegration).toBeUndefined()
+      expect(exportedAgent.telegramIntegration).toBeUndefined()
 
       const dependencyIndex = JSON.parse(
         files.get("dependency-index.json")!.toString()

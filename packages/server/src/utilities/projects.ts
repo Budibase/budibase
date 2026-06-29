@@ -2,7 +2,7 @@ import { features, HTTPError } from "@budibase/backend-core"
 import { DocumentType, FeatureFlag, prefixed } from "@budibase/types"
 import sdk from "../sdk"
 
-const normaliseProjectIds = (projectIds?: string[] | null) => {
+const validateProjectIds = (projectIds?: string[] | null) => {
   if (projectIds === undefined) {
     return undefined
   }
@@ -14,39 +14,46 @@ const normaliseProjectIds = (projectIds?: string[] | null) => {
     throw new HTTPError("Project ids must be an array.", 400)
   }
 
-  const ids = projectIds.map(projectId => {
+  return projectIds.map(projectId => {
     if (typeof projectId !== "string" || !projectId.trim()) {
       throw new HTTPError("Project ids must be non-empty strings.", 400)
     }
-    return projectId.trim()
+    const trimmed = projectId.trim()
+    if (!trimmed.startsWith(prefixed(DocumentType.PROJECT))) {
+      throw new HTTPError(`Project '${trimmed}' not found.`, 404)
+    }
+    return trimmed
   })
+}
 
-  const deduped = Array.from(new Set(ids))
+const dedupeProjectIds = (projectIds: string[]) => {
+  const deduped = Array.from(new Set(projectIds))
   return deduped.length ? deduped : undefined
 }
 
 export const resolveProjectIds = async (projectIds?: string[] | null) => {
-  const ids = normaliseProjectIds(projectIds)
-  if (!ids?.length) {
+  const validated = validateProjectIds(projectIds)
+  if (!validated?.length) {
     return undefined
   }
 
-  for (const projectId of ids) {
-    if (!projectId.startsWith(prefixed(DocumentType.PROJECT))) {
-      throw new HTTPError(`Project '${projectId}' not found.`, 404)
-    }
+  const ids = dedupeProjectIds(validated)
+  if (!ids?.length) {
+    return undefined
   }
 
   if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
     throw new HTTPError("Projects feature is not enabled.", 404)
   }
 
-  for (const projectId of ids) {
-    const project = await sdk.projects.get(projectId)
-    if (!project) {
-      throw new HTTPError(`Project '${projectId}' not found.`, 404)
-    }
-  }
+  await Promise.all(
+    ids.map(async projectId => {
+      const project = await sdk.projects.get(projectId)
+      if (!project) {
+        throw new HTTPError(`Project '${projectId}' not found.`, 404)
+      }
+    })
+  )
 
   return ids
 }

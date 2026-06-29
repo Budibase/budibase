@@ -154,6 +154,7 @@ export async function update(
       ? workspaceApp.customTheme
       : persisted.customTheme,
     disabled: workspaceApp.disabled,
+    // projectIds is optional on update: omitted means keep persisted assignments.
     projectIds: hasOwn(workspaceApp, "projectIds")
       ? workspaceApp.projectIds
       : persisted.projectIds,

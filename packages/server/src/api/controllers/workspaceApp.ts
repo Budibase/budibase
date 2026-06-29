@@ -113,7 +113,7 @@ export async function edit(
     ctx.throw(404)
   }
 
-  const projectIds = await resolveUpdatedProjectIds(
+  const updatedProjectIds = await resolveUpdatedProjectIds(
     body.projectIds,
     existingWorkspaceApp.projectIds
   )
@@ -125,7 +125,8 @@ export async function edit(
     url: body.url,
     navigation: body.navigation,
     disabled: body.disabled,
-    projectIds,
+    projectIds: updatedProjectIds,
+    // Only overwrite optional theme fields when the client explicitly sent them.
     ...(hasOwn(body, "theme") ? { theme: body.theme } : {}),
     ...(hasOwn(body, "customTheme") ? { customTheme: body.customTheme } : {}),
   })
