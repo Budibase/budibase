@@ -54,6 +54,7 @@
     type HomeSortColumn,
     type HomeSortOrder,
     type HomeType,
+    type ProjectFormPayload,
     type ProjectResponse,
     PublishResourceState,
     type Agent,
@@ -448,9 +449,7 @@
     }
   }
 
-  const handleCreateProject = async (
-    project: Pick<ProjectResponse, "name" | "description" | "color">
-  ) => {
+  const handleCreateProject = async (project: ProjectFormPayload) => {
     try {
       const createdProject = await projectsStore.create(project)
       selectedProjectId = createdProject._id
@@ -463,9 +462,7 @@
     }
   }
 
-  const handleUpdateProject = async (
-    project: Pick<ProjectResponse, "name" | "description" | "color">
-  ) => {
+  const handleUpdateProject = async (project: ProjectFormPayload) => {
     if (!selectedProject) {
       return keepOpen
     }

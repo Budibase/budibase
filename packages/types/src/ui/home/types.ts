@@ -47,3 +47,9 @@ export interface AgentRow extends HomeRowBase {
 }
 
 export type HomeRow = AppRow | AutomationRow | AgentRow
+
+export interface ProjectFormPayload {
+  name: string
+  description?: string
+  color?: string
+}
