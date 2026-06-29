@@ -9,6 +9,7 @@ export type TranslationCategory =
   | "login"
   | "forgotPassword"
   | "validation"
+  | "calendar"
 
 export interface TranslationDefinitionInput {
   key: string

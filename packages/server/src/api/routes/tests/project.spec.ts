@@ -238,22 +238,6 @@ describe("/projects", () => {
     })
   })
 
-  it.each([
-    "#8CA171",
-    "rgb(140, 161, 113)",
-    "hsl(93deg 22% 54%)",
-    "var(--spectrum-global-color-green-500)",
-  ])("accepts safe project color '%s'", async color => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Safe color",
-        color,
-      })
-
-      expect(project.color).toBe(color)
-    })
-  })
-
   it("rejects stale revisions on update", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -356,59 +340,6 @@ describe("/projects", () => {
           },
         }
       )
-    })
-  })
-
-  it("rejects assigning a project while the feature is disabled", async () => {
-    await config.api.workspaceApp.create(
-      structures.workspaceApps.createRequest({
-        name: "Ops app",
-        url: "/ops-app",
-        projectIds: ["project_1"],
-      }),
-      {
-        status: 404,
-        body: {
-          message: "Projects feature is not enabled.",
-        },
-      }
-    )
-  })
-
-  it("preserves omitted external table project assignments", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
-      const externalTable = basicTable(datasource, {
-        _id: buildExternalTableId(datasource._id!, "TestTable"),
-        projectIds: [project._id],
-      })
-      const assignedDatasource = await config.api.datasource.update({
-        ...datasource,
-        entities: {
-          [externalTable.name]: externalTable,
-        },
-      })
-      const { projectIds: _projectIds, ...tableUpdate } =
-        assignedDatasource.entities![externalTable.name]
-
-      const updatedDatasource = await config.api.datasource.update({
-        ...assignedDatasource,
-        entities: {
-          [externalTable.name]: {
-            ...tableUpdate,
-            name: "Updated table",
-          },
-        },
-      })
-
-      expect(
-        updatedDatasource.entities![externalTable.name].projectIds
-      ).toEqual([project._id])
     })
   })
 

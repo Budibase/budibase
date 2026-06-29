@@ -145,6 +145,7 @@ export async function getAvailableToolsMetadata(
 export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
+  fallbackPromptInstructions?: string
 }
 
 export async function buildPromptAndTools(
@@ -156,7 +157,11 @@ export async function buildPromptAndTools(
   tools: ToolSet
   toolDisplayNames: Record<string, string>
 }> {
-  const { baseSystemPrompt, includeGoal = true } = options
+  const {
+    baseSystemPrompt,
+    includeGoal = true,
+    fallbackPromptInstructions,
+  } = options
   const agentId = agent._id
   if (!agentId) {
     throw new Error("Agent _id is required")
@@ -194,7 +199,7 @@ export async function buildPromptAndTools(
       ? [`Current operation: ${operation.name}`, operation.promptInstructions]
           .filter(Boolean)
           .join("\n\n")
-      : undefined,
+      : fallbackPromptInstructions,
     includeGoal,
   })
 
