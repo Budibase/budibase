@@ -1,4 +1,3 @@
-import path from "path"
 import env from "./environment"
 import chokidar from "chokidar"
 import fs from "fs"
@@ -7,10 +6,11 @@ import { processUploaded } from "./sdk/plugins"
 import { PluginSource } from "@budibase/types"
 
 export function watch() {
-  const watchPath = path.join(env.PLUGINS_DIR, "./**/*.tar.gz")
+  // chokidar v4+ removed glob support, so we watch the plugins directory
+  // recursively and filter for plugin archives in the handler below.
   chokidar
-    .watch(watchPath, {
-      ignored: "**/node_modules",
+    .watch(env.PLUGINS_DIR, {
+      ignored: (filePath: string) => filePath.includes("node_modules"),
       awaitWriteFinish: {
         pollInterval: 100,
         stabilityThreshold: 250,
@@ -18,20 +18,20 @@ export function watch() {
       usePolling: true,
       interval: 250,
     })
-    .on("all", async (event: string, path: string) => {
+    .on("all", async (event: string, filePath: string) => {
       // Sanity checks
-      if (!path?.endsWith(".tar.gz") || !fs.existsSync(path)) {
+      if (!filePath?.endsWith(".tar.gz") || !fs.existsSync(filePath)) {
         return
       }
       await tenancy.doInTenant(constants.DEFAULT_TENANT_ID, async () => {
         try {
-          const split = path.split("/")
+          const split = filePath.split("/")
           const name = split[split.length - 1]
-          console.log("Importing plugin:", path)
+          console.log("Importing plugin:", filePath)
           await processUploaded(
             {
               originalFilename: name,
-              filepath: path,
+              filepath: filePath,
               mimetype: "application/gzip",
             },
             PluginSource.FILE

@@ -356,12 +356,10 @@ describe("REST Integration", () => {
           expect(options?.method).toEqual("POST")
           expect(options?.body).toBeInstanceOf(UndiciFormData)
 
-          const headers = options?.headers as Record<string, any>
-          const contentTypeHeader =
-            headers["Content-Type"] || headers["content-type"]
+          const headers = new undici.Headers(options?.headers)
           // The original Content-Type inserted in the test data below should be stripped so that
           // undici can automatically insert the correct multipart/form-data header with boundary
-          expect(contentTypeHeader).toBeUndefined()
+          expect(headers.get("content-type")).toBeNull()
         },
         { success: true }
       )
@@ -379,12 +377,9 @@ describe("REST Integration", () => {
 
       // Assert that the non-Content-Type header was kept
       const lastFetchOptions = fetchMock.mock.calls[0][1]
-      expect((lastFetchOptions!.headers! as any)["X-Custom-Header"]).toEqual(
-        "KeepMe"
-      )
-      expect(
-        (lastFetchOptions!.headers! as any)["Content-Type"]
-      ).toBeUndefined()
+      const headers = new undici.Headers(lastFetchOptions!.headers)
+      expect(headers.get("X-Custom-Header")).toEqual("KeepMe")
+      expect(headers.get("Content-Type")).toBeNull()
 
       expect(data).toEqual({ success: true })
     })

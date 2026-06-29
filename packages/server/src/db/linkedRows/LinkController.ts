@@ -98,7 +98,11 @@ class LinkController {
       if (schema.type !== FieldType.LINK) {
         continue
       }
-      if (schema.fieldName && !schema.fieldName.match(ValidColumnNameRegex)) {
+      if (
+        schema.fieldName &&
+        !schema.autocolumn &&
+        !schema.fieldName.match(ValidColumnNameRegex)
+      ) {
         throw new Error("Column names can't contain special characters")
       }
       const unique = schema.tableId! + schema?.fieldName
