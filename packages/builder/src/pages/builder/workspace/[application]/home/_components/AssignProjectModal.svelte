@@ -18,9 +18,11 @@
     color?: string
   }
 
-  let selectedProjectIds: string[] = $derived(
-    row?.projectIds ? [...row.projectIds] : []
-  )
+  let selectedProjectIds: string[] = $state([])
+
+  $effect(() => {
+    selectedProjectIds = row?.projectIds ? [...row.projectIds] : []
+  })
 
   const projectOptions: ProjectOption[] = $derived(
     projects.map(project => ({
