@@ -1,5 +1,12 @@
 import { context, features } from "@budibase/backend-core"
-import { FeatureFlag, type Document, type Project } from "@budibase/types"
+import {
+  AnyDocument,
+  FeatureFlag,
+  type Document,
+  type Project,
+} from "@budibase/types"
+import { getQueryIndex, ViewName } from "../../../db/utils"
+import { createProjectMembersView } from "../../../db/views/staticViews"
 
 export interface ProjectAssignable extends Document {
   projectIds?: string[]
@@ -39,6 +46,19 @@ export const addProjectId = <T extends ProjectAssignable>(
 ): T =>
   withProjectIds(doc, Array.from(new Set([...getProjectIds(doc), projectId])))
 
+export const getProjectAssignedEntities = (
+  doc: AnyDocument
+): ProjectAssignable[] => {
+  if (!doc.entities || typeof doc.entities !== "object") {
+    return []
+  }
+
+  return Object.values(doc.entities).filter(
+    (entity): entity is ProjectAssignable =>
+      !!entity && typeof entity === "object"
+  )
+}
+
 export const getValidProjectIdsForDuplication = async (
   projectIds?: string[]
 ) => {
@@ -55,4 +75,58 @@ export const getValidProjectIdsForDuplication = async (
   const validProjectIds = new Set(projects.map(project => project._id))
   const ids = projectIds.filter(projectId => validProjectIds.has(projectId))
   return ids.length ? ids : undefined
+}
+
+const isMissingViewError = (err: unknown) => {
+  if (err instanceof Error && err.name === "not_found") {
+    return true
+  }
+  if (!err || typeof err !== "object") {
+    return false
+  }
+
+  return (
+    "error" in err &&
+    "reason" in err &&
+    err.error === "not_found" &&
+    err.reason === "missing_named_view"
+  )
+}
+
+const getDocId = (doc: AnyDocument): string | undefined => doc._id
+
+export const fetchAssignedProjectDocs = async (
+  projectId: string
+): Promise<AnyDocument[]> => {
+  const db = context.getWorkspaceDB()
+
+  try {
+    const response = await db.query<AnyDocument>(
+      getQueryIndex(ViewName.PROJECT_MEMBERS),
+      {
+        key: projectId,
+        include_docs: true,
+      }
+    )
+    const docsById = new Map<string, AnyDocument>()
+
+    for (const row of response.rows) {
+      if (!row.doc) {
+        continue
+      }
+
+      const id = getDocId(row.doc)
+      if (id && !docsById.has(id)) {
+        docsById.set(id, row.doc)
+      }
+    }
+
+    return Array.from(docsById.values())
+  } catch (err) {
+    if (isMissingViewError(err)) {
+      await createProjectMembersView()
+      return await fetchAssignedProjectDocs(projectId)
+    }
+    throw err
+  }
 }
