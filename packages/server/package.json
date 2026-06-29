@@ -131,7 +131,7 @@
     "tar": "7.5.16",
     "tmp": "0.2.7",
     "to-json-schema": "0.2.5",
-    "undici": "^7.28.0",
+    "undici": "^8.5.0",
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
