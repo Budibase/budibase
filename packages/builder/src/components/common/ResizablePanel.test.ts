@@ -39,12 +39,14 @@ describe("ResizablePanel", () => {
 
   it("resizes with drag and persists clamped width", async () => {
     const onResizeStart = vi.fn()
+    const onResize = vi.fn()
     const { container, getByRole } = render(ResizablePanel, {
       storageKey: "panel-width",
       defaultWidth: 400,
       minWidth: 250,
       maxWidthRatio: 0.6,
       onResizeStart,
+      onResize,
     })
 
     const panel = container.querySelector(".resizable-panel") as HTMLElement
@@ -57,6 +59,7 @@ describe("ResizablePanel", () => {
 
     await fireEvent.mouseMove(window, { clientX: 100 })
     expect(panel).toHaveStyle("width: 100px")
+    expect(onResize).toHaveBeenLastCalledWith(250)
     expect(localStorage.getItem("panel-width")).toBeNull()
 
     await fireEvent.mouseUp(window, { clientX: 100 })
