@@ -120,6 +120,7 @@ const rollbackAssignments = async (rollbacks: Rollback[]) => {
 }
 
 async function clearAssignments(projectId: string) {
+  const db = context.getWorkspaceDB()
   const rollbacks: Rollback[] = []
   const [
     workspaceApps,
@@ -149,38 +150,44 @@ async function clearAssignments(projectId: string) {
   const changedDocs: AnyDocument[] = []
   const originals: AnyDocument[] = []
 
-  for (const workspaceApp of workspaceApps.filter(workspaceApp =>
-    hasProject(workspaceApp, projectId)
-  )) {
-    originals.push(workspaceApp)
-    changedDocs.push(removeProjectId(workspaceApp, projectId))
+  const getProjectRemovalUpdates = async <T extends AnyDocument>(docs: T[]) => {
+    const ids = docs
+      .filter(
+        (doc): doc is T & { _id: string } =>
+          !!doc._id && hasProject(doc, projectId)
+      )
+      .map(doc => doc._id)
+
+    if (!ids.length) {
+      return []
+    }
+
+    const currentDocs = await db.getMultiple<AnyDocument>(ids)
+    return currentDocs
+      .filter(doc => hasProject(doc, projectId))
+      .map(current => ({
+        original: current,
+        updated: removeProjectId(current, projectId),
+      }))
   }
 
-  for (const automation of automations.filter(automation =>
-    hasProject(automation, projectId)
-  )) {
-    originals.push(automation)
-    changedDocs.push(removeProjectId(automation, projectId))
+  const assignmentUpdates = (
+    await Promise.all([
+      getProjectRemovalUpdates(workspaceApps),
+      getProjectRemovalUpdates(automations),
+      getProjectRemovalUpdates(agents),
+      getProjectRemovalUpdates(
+        tables.filter(table => !isExternalTableID(table._id!))
+      ),
+      getProjectRemovalUpdates(queries),
+    ])
+  ).flat()
+
+  for (const { original, updated } of assignmentUpdates) {
+    originals.push(original)
+    changedDocs.push(updated)
   }
 
-  for (const agent of agents.filter(agent => hasProject(agent, projectId))) {
-    originals.push(agent)
-    changedDocs.push(removeProjectId(agent, projectId))
-  }
-
-  for (const table of tables.filter(
-    table => hasProject(table, projectId) && !isExternalTableID(table._id!)
-  )) {
-    originals.push(table)
-    changedDocs.push(removeProjectId(table, projectId))
-  }
-
-  for (const query of queries.filter(query => hasProject(query, projectId))) {
-    originals.push(query)
-    changedDocs.push(removeProjectId(query, projectId))
-  }
-
-  const db = context.getWorkspaceDB()
   const datasourceCandidates = allDatasources.filter(datasource => {
     const entityKeys = Object.entries(datasource.entities || {}).filter(
       ([_, entity]) => hasProject(entity, projectId)
