@@ -138,7 +138,13 @@ async function clearAssignments(projectId: string) {
     sdk.datasources.getExternalDatasources(),
     sdk.datasources.getExternalDatasources({ plus: true }),
   ])
-  const allDatasources = [...datasources, ...datasourcePluses]
+  const allDatasources = Array.from(
+    new Map(
+      [...datasources, ...datasourcePluses]
+        .filter((datasource): datasource is Datasource => !!datasource._id)
+        .map(datasource => [datasource._id!, datasource])
+    ).values()
+  )
 
   const changedDocs: AnyDocument[] = []
   const originals: AnyDocument[] = []
