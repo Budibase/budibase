@@ -499,7 +499,6 @@ export async function MSTeamsWebhook(
         let parsed: {
           escalationId: string
           notificationDocId: string
-          appId: string
         }
         try {
           parsed = JSON.parse(event.value ?? "")
@@ -510,7 +509,9 @@ export async function MSTeamsWebhook(
           )
           return
         }
-        const { escalationId, notificationDocId, appId } = parsed
+        // The appId carried in the button value is untrusted - resolve the
+        // context from the verified webhook route's workspaceId instead.
+        const { escalationId, notificationDocId } = parsed
 
         const teamsResponse = {
           actionId: event.actionId,
@@ -520,7 +521,7 @@ export async function MSTeamsWebhook(
         }
 
         try {
-          const result = await context.doInContext(appId, async () => {
+          const result = await context.doInContext(workspaceId, async () => {
             if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
               return { status: "closed" as const }
             }
@@ -542,7 +543,7 @@ export async function MSTeamsWebhook(
           console.error("Teams escalation action: failed to record response", {
             escalationId,
             notificationDocId,
-            appId,
+            workspaceId,
             message: error instanceof Error ? error.message : String(error),
           })
           if (event.thread) {
