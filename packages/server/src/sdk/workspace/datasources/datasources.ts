@@ -334,12 +334,10 @@ async function fetchExternalDatasources(plus = false): Promise<Datasource[]> {
   return externalDatasources.map(datasource => addDatasourceFlags(datasource))
 }
 
-export async function getExternalDatasources(): Promise<Datasource[]> {
-  return fetchExternalDatasources()
-}
-
-export async function getExternalDatasourcePluses(): Promise<Datasource[]> {
-  return fetchExternalDatasources(true)
+export async function getExternalDatasources(
+  { plus }: { plus?: boolean } = {}
+): Promise<Datasource[]> {
+  return fetchExternalDatasources(plus)
 }
 
 export async function save(
