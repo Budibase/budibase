@@ -24,9 +24,6 @@ export interface AutomationDataEvent {
   user?: UserBindings
   timestamp?: number
   fields?: Record<string, any>
-  // Set when re-enqueuing an automation after escalation resolution.
-  // Skips the automation quota increment - the original run was already charged.
-  isResume?: boolean
   // Carries suspended state for resumed automations - restored into context
   // before executeSteps runs so prior bindings remain available.
   resumeContext?: AutomationResumeContext
@@ -35,6 +32,8 @@ export interface AutomationDataEvent {
 export interface AutomationData {
   event: AutomationDataEvent
   automation: Automation
+  // Set server-side on resume to skip the quota increment
+  isResume?: boolean
 }
 
 export interface AutomationRowEvent {

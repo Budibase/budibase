@@ -516,9 +516,9 @@ async function processResume(job: Job<EscalationJob>) {
     await automationQueue.add(
       {
         automation: resumeAutomation,
+        isResume: true,
         event: {
           appId,
-          isResume: true,
           resumeContext: { stepResults: resolvedStepResults, state },
         },
       },
