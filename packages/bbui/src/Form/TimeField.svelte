@@ -21,6 +21,7 @@
 </script>
 
 <script lang="ts">
+  import "@spectrum-css/textfield/dist/index-vars.css"
   import dayjs from "dayjs"
   import type { Dayjs } from "dayjs"
   import TimePicker from "./Core/DatePicker/TimePicker.svelte"
@@ -73,6 +74,7 @@
   }
 
   const parsedValue = $derived(parseValue(value))
+  let isFocused = $state(false)
 
   $effect(() => {
     if (disableClearing && !value) {
@@ -84,10 +86,18 @@
 
 <Field {id} {helpText} {label} {labelPosition} {error} {required}>
   <div
-    class="time-field"
+    class="time-field spectrum-Textfield"
     class:is-disabled={disabled}
     class:is-readonly={readonly}
+    class:is-invalid={!!error}
+    class:is-focused={isFocused}
     aria-disabled={disabled}
+    onfocusin={() => {
+      isFocused = true
+    }}
+    onfocusout={() => {
+      isFocused = false
+    }}
   >
     <TimePicker
       value={parsedValue}
@@ -105,12 +115,76 @@
 <style>
   .time-field {
     display: inline-flex;
-    width: auto;
+    align-items: center;
+    min-width: 104px;
+    width: fit-content;
+    --spectrum-textfield-padding-bottom: var(--spectrum-textfield-padding-top);
   }
 
   .time-field.is-disabled,
   .time-field.is-readonly {
     opacity: 0.5;
     pointer-events: none;
+  }
+
+  .time-field :global(.time-picker) {
+    width: 100%;
+  }
+
+  .time-field :global(input[type="time"]) {
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border: var(--spectrum-textfield-border-size) solid
+      var(
+        --spectrum-textfield-m-border-color,
+        var(--spectrum-alias-border-color)
+      );
+    border-radius: var(--spectrum-textfield-border-radius);
+    box-sizing: border-box !important;
+    color: var(
+      --spectrum-textfield-m-text-color,
+      var(--spectrum-alias-text-color)
+    );
+    font-family: var(--font-sans);
+    font-size: var(--spectrum-textfield-text-size);
+    font-weight: var(--spectrum-regular-font-weight);
+    height: var(--spectrum-textfield-height);
+    line-height: var(--spectrum-textfield-text-line-height);
+    margin: 0;
+    min-width: 72px;
+    outline: none;
+    padding: var(--spectrum-textfield-padding-top)
+      calc(var(--spectrum-textfield-padding-x) + var(--spacing-xs))
+      var(--spectrum-textfield-padding-bottom) !important;
+    text-indent: var(--spacing-xs);
+    width: 100%;
+  }
+
+  .time-field :global(input[type="time"]:hover),
+  .time-field :global(input[type="time"]:focus) {
+    background-color: var(
+      --spectrum-textfield-m-background-color-hover,
+      var(--spectrum-global-color-gray-50)
+    );
+    border-color: var(
+      --spectrum-textfield-m-border-color-hover,
+      var(--spectrum-alias-border-color-hover)
+    );
+  }
+
+  .time-field :global(input[type="time"]:focus) {
+    border-color: var(
+      --spectrum-textfield-m-border-color-down,
+      var(--spectrum-alias-border-color-mouse-focus)
+    );
+  }
+
+  .time-field.is-invalid :global(input[type="time"]) {
+    border-color: var(
+      --spectrum-textfield-m-border-color-error,
+      var(--spectrum-semantic-negative-color-default)
+    );
   }
 </style>
