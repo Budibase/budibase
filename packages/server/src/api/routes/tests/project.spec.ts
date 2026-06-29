@@ -858,11 +858,18 @@ describe("/projects", () => {
         slackIntegration: {
           botToken: "secret-token",
           signingSecret: "secret-signing-key",
+          chatAppId: "slack-app-id",
+          messagingEndpointUrl: "https://source.example/slack",
+          idleTimeoutMinutes: 20,
+          requireUserLink: true,
         },
         telegramIntegration: {
           botToken: "secret-telegram-token",
           webhookSecretToken: "secret-telegram-webhook",
           botUserName: "ops_bot",
+          chatAppId: "telegram-app-id",
+          messagingEndpointUrl: "https://source.example/telegram",
+          idleTimeoutMinutes: 25,
         },
         projectIds: [project._id],
       })
@@ -933,8 +940,14 @@ describe("/projects", () => {
         files.get(`docs/agent/${agent._id}.json`)!.toString()
       )
       expect(exportedAgent.live).toBe(false)
-      expect(exportedAgent.slackIntegration).toBeUndefined()
-      expect(exportedAgent.telegramIntegration).toBeUndefined()
+      expect(exportedAgent.slackIntegration).toEqual({
+        idleTimeoutMinutes: 20,
+        requireUserLink: true,
+      })
+      expect(exportedAgent.telegramIntegration).toEqual({
+        botUserName: "ops_bot",
+        idleTimeoutMinutes: 25,
+      })
 
       const dependencyIndex = JSON.parse(
         files.get("dependency-index.json")!.toString()
