@@ -961,167 +961,219 @@ describe("/projects", () => {
     expect(duplicatedAgent.projectIds).toBeUndefined()
   })
 
-  it("exports a project tarball with selective docs and manifest", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-        description: "Operational workflows",
-        color: "#8CA171",
+  const createProjectExportFixture = async () => {
+    const { project } = await config.api.project.create({
+      name: "Operations",
+      description: "Operational workflows",
+      color: "#8CA171",
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const persistedProject = await context
+        .getWorkspaceDB()
+        .get<Project>(project._id)
+      await context.getWorkspaceDB().put({
+        ...persistedProject,
+        createdAt: "invalid",
       })
-      await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const persistedProject = await context
-          .getWorkspaceDB()
-          .get<Project>(project._id)
-        await context.getWorkspaceDB().put({
-          ...persistedProject,
-          createdAt: "invalid",
-        })
-      })
+    })
 
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        config: {
-          password: "super-secret",
-        },
-        projectIds: [project._id],
-      })
-      const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
-        projectIds: [project._id],
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
-      const { workspaceApp } = await config.api.workspaceApp.create({
-        name: "Operations app",
-        url: "/operations-app",
-        projectIds: [project._id],
-      })
-      const screen = await config.api.screen.save({
-        ...createQueryScreen(datasource._id!, query),
-        workspaceAppId: workspaceApp._id,
-      })
+    const datasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      config: {
+        password: "super-secret",
+      },
+      projectIds: [project._id],
+    })
+    const query = await config.api.query.save({
+      ...basicQuery(datasource._id!),
+      projectIds: [project._id],
+    })
+    const table = await config.api.table.save({
+      ...basicTable(),
+      projectIds: [project._id],
+    })
+    const { workspaceApp } = await config.api.workspaceApp.create({
+      name: "Operations app",
+      url: "/operations-app",
+      projectIds: [project._id],
+    })
+    const screen = await config.api.screen.save({
+      ...createQueryScreen(datasource._id!, query),
+      workspaceAppId: workspaceApp._id,
+    })
 
-      const automation = await config.createAutomation()
-      await config.api.automation.update({
-        ...automation,
-        projectIds: [project._id],
-      })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        live: true,
-        slackIntegration: {
-          botToken: "secret-token",
-          signingSecret: "secret-signing-key",
-          chatAppId: "slack-app-id",
-          messagingEndpointUrl: "https://source.example/slack",
-          idleTimeoutMinutes: 20,
-          requireUserLink: true,
-        },
-        telegramIntegration: {
-          botToken: "secret-telegram-token",
-          webhookSecretToken: "secret-telegram-webhook",
-          botUserName: "ops_bot",
-          chatAppId: "telegram-app-id",
-          messagingEndpointUrl: "https://source.example/telegram",
-          idleTimeoutMinutes: 25,
-        },
-        projectIds: [project._id],
-      })
-
-      const body = await config.api.project.export(project._id)
-      const files = await readTarEntries(body)
-
-      expect(Array.from(files.keys())).toEqual(
-        expect.arrayContaining([
-          "manifest.json",
-          "project.json",
-          "dependency-index.json",
-          `docs/datasource/${datasource._id}.json`,
-          `docs/query/${query._id}.json`,
-          `docs/table/${table._id}.json`,
-          `docs/automation/${automation._id}.json`,
-          `docs/agent/${agent._id}.json`,
-          `docs/workspace_app/${workspaceApp._id}.json`,
-          `docs/screen/${screen._id}.json`,
-        ])
-      )
-
-      const manifest = JSON.parse(files.get("manifest.json")!.toString())
-      expect(manifest).toMatchObject({
-        artifactType: "project",
-        formatVersion: 1,
-        containsRows: false,
-        containsAttachments: false,
-        requiresSecrets: true,
-        project: {
-          _id: project._id,
-          name: project.name,
-          description: project.description,
-          color: project.color,
-        },
-        resourcesByType: {
-          project: 1,
-          datasource: 1,
-          query: 1,
-          table: 1,
-          automation: 1,
-          agent: 1,
-          workspace_app: 1,
-          screen: 1,
-        },
-        unsupportedContent: [
-          {
-            type: "agent_linked_content",
-            count: 1,
-          },
-        ],
-      })
-
-      const exportedProject = JSON.parse(files.get("project.json")!.toString())
-      expect(exportedProject._id).toBe(project._id)
-      expect(exportedProject._rev).toBeUndefined()
-      expect(manifest.project.createdAt).not.toBe("invalid")
-      expect(manifest.project.createdAt).toBe(manifest.project.updatedAt)
-      expect(exportedProject.createdAt).toBe(manifest.project.createdAt)
-      expect(exportedProject.updatedAt).toBe(manifest.project.updatedAt)
-
-      const exportedDatasource = JSON.parse(
-        files.get(`docs/datasource/${datasource._id}.json`)!.toString()
-      )
-      expect(exportedDatasource.config.password).not.toBe("super-secret")
-
-      const exportedAgent = JSON.parse(
-        files.get(`docs/agent/${agent._id}.json`)!.toString()
-      )
-      expect(exportedAgent.live).toBe(false)
-      expect(exportedAgent.slackIntegration).toEqual({
+    const automation = await config.createAutomation()
+    await config.api.automation.update({
+      ...automation,
+      projectIds: [project._id],
+    })
+    const agent = await config.api.agent.create({
+      name: "Ops agent",
+      aiconfig: "default",
+      live: true,
+      slackIntegration: {
+        botToken: "secret-token",
+        signingSecret: "secret-signing-key",
+        chatAppId: "slack-app-id",
+        messagingEndpointUrl: "https://source.example/slack",
         idleTimeoutMinutes: 20,
         requireUserLink: true,
-      })
-      expect(exportedAgent.telegramIntegration).toEqual({
+      },
+      telegramIntegration: {
+        botToken: "secret-telegram-token",
+        webhookSecretToken: "secret-telegram-webhook",
         botUserName: "ops_bot",
+        chatAppId: "telegram-app-id",
+        messagingEndpointUrl: "https://source.example/telegram",
         idleTimeoutMinutes: 25,
-      })
+      },
+      projectIds: [project._id],
+    })
 
-      const dependencyIndex = JSON.parse(
-        files.get("dependency-index.json")!.toString()
-      ) as ProjectPackageDependencyIndex
-      expect(dependencyIndex.rootProjectId).toBe(project._id)
-      expect(
-        dependencyIndex.directMembers.map(resource => resource.id)
-      ).toEqual(
-        expect.arrayContaining([
-          datasource._id,
-          query._id,
-          table._id,
-          automation._id,
-          agent._id,
-          workspaceApp._id,
-        ])
-      )
+    const body = await config.api.project.export(project._id)
+    const files = await readTarEntries(body)
+
+    return {
+      project,
+      datasource,
+      query,
+      table,
+      automation,
+      agent,
+      workspaceApp,
+      screen,
+      files,
+    }
+  }
+
+  describe("exports project tarballs", () => {
+    it("includes expected docs and manifest metadata", async () => {
+      await withProjectsEnabled(async () => {
+        const {
+          project,
+          datasource,
+          query,
+          table,
+          automation,
+          agent,
+          workspaceApp,
+          screen,
+          files,
+        } = await createProjectExportFixture()
+
+        expect(Array.from(files.keys())).toEqual(
+          expect.arrayContaining([
+            "manifest.json",
+            "project.json",
+            "dependency-index.json",
+            `docs/datasource/${datasource._id}.json`,
+            `docs/query/${query._id}.json`,
+            `docs/table/${table._id}.json`,
+            `docs/automation/${automation._id}.json`,
+            `docs/agent/${agent._id}.json`,
+            `docs/workspace_app/${workspaceApp._id}.json`,
+            `docs/screen/${screen._id}.json`,
+          ])
+        )
+
+        const manifest = JSON.parse(files.get("manifest.json")!.toString())
+        expect(manifest).toMatchObject({
+          artifactType: "project",
+          formatVersion: 1,
+          containsRows: false,
+          containsAttachments: false,
+          requiresSecrets: true,
+          project: {
+            _id: project._id,
+            name: project.name,
+            description: project.description,
+            color: project.color,
+          },
+          resourcesByType: {
+            project: 1,
+            datasource: 1,
+            query: 1,
+            table: 1,
+            automation: 1,
+            agent: 1,
+            workspace_app: 1,
+            screen: 1,
+          },
+          unsupportedContent: [
+            {
+              type: "agent_linked_content",
+              count: 1,
+            },
+          ],
+        })
+
+        const exportedProject = JSON.parse(
+          files.get("project.json")!.toString()
+        )
+        expect(exportedProject._id).toBe(project._id)
+        expect(exportedProject._rev).toBeUndefined()
+        expect(manifest.project.createdAt).not.toBe("invalid")
+        expect(manifest.project.createdAt).toBe(manifest.project.updatedAt)
+        expect(exportedProject.createdAt).toBe(manifest.project.createdAt)
+        expect(exportedProject.updatedAt).toBe(manifest.project.updatedAt)
+      })
+    })
+
+    it("sanitises exported secrets and agent integrations", async () => {
+      await withProjectsEnabled(async () => {
+        const { datasource, agent, files } = await createProjectExportFixture()
+
+        const exportedDatasource = JSON.parse(
+          files.get(`docs/datasource/${datasource._id}.json`)!.toString()
+        )
+        expect(exportedDatasource.config.password).not.toBe("super-secret")
+
+        const exportedAgent = JSON.parse(
+          files.get(`docs/agent/${agent._id}.json`)!.toString()
+        )
+        expect(exportedAgent.live).toBe(false)
+        expect(exportedAgent.publishedAt).toBeUndefined()
+        expect(exportedAgent.slackIntegration).toEqual({
+          idleTimeoutMinutes: 20,
+          requireUserLink: true,
+        })
+        expect(exportedAgent.telegramIntegration).toEqual({
+          botUserName: "ops_bot",
+          idleTimeoutMinutes: 25,
+        })
+      })
+    })
+
+    it("includes a dependency index for exported project members", async () => {
+      await withProjectsEnabled(async () => {
+        const {
+          project,
+          datasource,
+          query,
+          table,
+          automation,
+          agent,
+          workspaceApp,
+          files,
+        } = await createProjectExportFixture()
+
+        const dependencyIndex = JSON.parse(
+          files.get("dependency-index.json")!.toString()
+        ) as ProjectPackageDependencyIndex
+        expect(dependencyIndex.rootProjectId).toBe(project._id)
+        expect(
+          dependencyIndex.directMembers.map(resource => resource.id)
+        ).toEqual(
+          expect.arrayContaining([
+            datasource._id,
+            query._id,
+            table._id,
+            automation._id,
+            agent._id,
+            workspaceApp._id,
+          ])
+        )
+      })
     })
   })
 
