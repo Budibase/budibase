@@ -1045,7 +1045,11 @@
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
             <div class="project">
-              <ProjectSelect bind:value={projectIds} />
+              <ProjectSelect
+                bind:value={projectIds}
+                labelPosition="left"
+                autoWidth
+              />
             </div>
           {/if}
           {#if endpointDocs}
@@ -1592,6 +1596,10 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+  }
+  .project {
+    display: flex;
+    align-items: center;
   }
   .pagination {
     display: grid;
