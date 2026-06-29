@@ -8,8 +8,12 @@ import {
   type Project,
 } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
-import sdk from "../.."
-import { hasProject, removeProjectId } from "./utils"
+import {
+  fetchAssignedProjectDocs,
+  getProjectAssignedEntities,
+  hasProject,
+  removeProjectId,
+} from "./utils"
 
 interface CreateProjectInput {
   name: string
@@ -122,77 +126,49 @@ const rollbackAssignments = async (rollbacks: Rollback[]) => {
 async function clearAssignments(projectId: string) {
   const db = context.getWorkspaceDB()
   const rollbacks: Rollback[] = []
-  const [
-    workspaceApps,
-    automations,
-    agents,
-    tables,
-    queries,
-    datasources,
-    datasourcePluses,
-  ] = await Promise.all([
-    sdk.workspaceApps.fetch(),
-    sdk.automations.fetch(),
-    sdk.ai.agents.fetch(),
-    sdk.tables.getAllTables(),
-    sdk.queries.fetch({ enrich: false }),
-    sdk.datasources.getExternalDatasources(),
-    sdk.datasources.getExternalDatasources({ plus: true }),
-  ])
-  const allDatasources = Array.from(
-    new Map(
-      [...datasources, ...datasourcePluses]
-        .filter((datasource): datasource is Datasource => !!datasource._id)
-        .map(datasource => [datasource._id!, datasource])
-    ).values()
-  )
+  const assignedDocs = await fetchAssignedProjectDocs(projectId)
+  const assignedDocIds = assignedDocs
+    .map(doc => doc._id)
+    .filter((id): id is string => !!id)
+  const currentDocs = assignedDocIds.length
+    ? await db.getMultiple<AnyDocument>(assignedDocIds, { allowMissing: true })
+    : []
 
   const changedDocs: AnyDocument[] = []
   const originals: AnyDocument[] = []
 
-  const getProjectRemovalUpdates = async <T extends AnyDocument>(docs: T[]) => {
-    const ids = docs
-      .filter(
-        (doc): doc is T & { _id: string } =>
-          !!doc._id && hasProject(doc, projectId)
-      )
-      .map(doc => doc._id)
-
-    if (!ids.length) {
-      return []
-    }
-
-    const currentDocs = await db.getMultiple<AnyDocument>(ids)
-    return currentDocs
-      .filter(doc => hasProject(doc, projectId))
-      .map(current => ({
-        original: current,
-        updated: removeProjectId(current, projectId),
-      }))
-  }
-
-  const assignmentUpdates = (
-    await Promise.all([
-      getProjectRemovalUpdates(workspaceApps),
-      getProjectRemovalUpdates(automations),
-      getProjectRemovalUpdates(agents),
-      getProjectRemovalUpdates(
-        tables.filter(table => !isExternalTableID(table._id!))
-      ),
-      getProjectRemovalUpdates(queries),
-    ])
-  ).flat()
+  const assignmentUpdates = currentDocs
+    .filter(
+      doc =>
+        doc._id &&
+        !isExternalTableID(doc._id) &&
+        !doc._id.startsWith(prefixed(DocumentType.DATASOURCE)) &&
+        hasProject(doc, projectId)
+    )
+    .map(current => ({
+      original: current,
+      updated: removeProjectId(current, projectId),
+    }))
 
   for (const { original, updated } of assignmentUpdates) {
     originals.push(original)
     changedDocs.push(updated)
   }
 
-  const datasourceCandidates = allDatasources.filter(datasource => {
-    const entityKeys = Object.entries(datasource.entities || {}).filter(
-      ([_, entity]) => hasProject(entity, projectId)
+  const datasourceCandidates = currentDocs.filter(datasource => {
+    if (
+      !datasource._id?.startsWith(prefixed(DocumentType.DATASOURCE)) ||
+      typeof datasource.source !== "string"
+    ) {
+      return false
+    }
+
+    return (
+      hasProject(datasource, projectId) ||
+      getProjectAssignedEntities(datasource).some(entity =>
+        hasProject(entity, projectId)
+      )
     )
-    return hasProject(datasource, projectId) || entityKeys.length
   })
 
   const datasourceUpdates = await Promise.all(

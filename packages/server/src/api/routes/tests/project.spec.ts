@@ -1,8 +1,9 @@
-import { context, features } from "@budibase/backend-core"
+import { context, features, ViewName } from "@budibase/backend-core"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import { structures } from "@budibase/backend-core/tests"
 import {
   AutomationTriggerStepId,
+  DesignDocument,
   FeatureFlag,
   isEmailTrigger,
   type Automation,
@@ -16,6 +17,7 @@ import {
   automationTrigger,
   basicDatasource,
   basicDatasourcePlus,
+  basicQuery,
   basicTable,
   newAutomation,
 } from "../../../tests/utilities/structures"
@@ -315,6 +317,173 @@ describe("/projects", () => {
       expect(
         fetchedDatasourcePlus.entities![plusEntityKey].projectIds
       ).toBeUndefined()
+    })
+  })
+
+  it("removes only the deleted project from multi-project assignments", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const { project: retainedProject } = await config.api.project.create({
+        name: "Support",
+      })
+      const projectIds = [project._id, retainedProject._id]
+
+      const { workspaceApp } = await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Ops app",
+          url: "/ops-app",
+          projectIds,
+        })
+      )
+      const automation = await config.createAutomation()
+      const { automation: updatedAutomation } =
+        await config.api.automation.update({
+          ...automation,
+          projectIds,
+        })
+      const agent = await config.api.agent.create({
+        name: "Ops agent",
+        aiconfig: "default",
+        projectIds,
+      })
+      const table = await config.api.table.save({
+        ...basicTable(),
+        projectIds,
+      })
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        projectIds,
+      })
+      const entityKey = "TestTable"
+      const externalTable = basicTable(datasource, {
+        _id: buildExternalTableId(datasource._id!, entityKey),
+        name: "Updated table",
+        projectIds,
+      })
+      await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [entityKey]: externalTable,
+        },
+      })
+      const query = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        projectIds,
+      })
+
+      await config.api.project.delete(project._id, project._rev)
+
+      const expectedProjectIds = [retainedProject._id]
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      const fetchedAutomation = await config.api.automation.get(
+        updatedAutomation._id!
+      )
+      const { agents } = await config.api.agent.fetch()
+      const fetchedAgent = agents.find(existing => existing._id === agent._id)
+      const fetchedTable = await config.api.table.get(table._id!)
+      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+      const fetchedQuery = await config.api.query.get(query._id!)
+
+      expect(fetchedWorkspaceApp.projectIds).toEqual(expectedProjectIds)
+      expect(fetchedAutomation.projectIds).toEqual(expectedProjectIds)
+      expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
+      expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
+      expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
+      expect(fetchedDatasource.entities![entityKey].projectIds).toEqual(
+        expectedProjectIds
+      )
+      expect(fetchedQuery.projectIds).toEqual(expectedProjectIds)
+    })
+  })
+
+  it("uses the project members view when deleting project assignments", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+      const table = await createAssignedInternalTable(project._id)
+      const { datasource } = await createAssignedExternalDatasource(project._id)
+      const { datasourcePlus } = await createAssignedDatasourcePlus(project._id)
+      const automation = await config.createAutomation()
+      const { automation: assignedAutomation } =
+        await config.api.automation.update({
+          ...automation,
+          projectIds: [project._id],
+        })
+      const agent = await config.api.agent.create({
+        name: "Ops agent",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+      const query = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        projectIds: [project._id],
+      })
+      const allDocs = jest.spyOn(DatabaseImpl.prototype, "allDocs")
+
+      try {
+        await config.api.project.delete(project._id, project._rev)
+        const broadFetches = allDocs.mock.calls.filter(([params]) => {
+          return !params.keys
+        })
+        expect(broadFetches).toEqual([])
+      } finally {
+        allDocs.mockRestore()
+      }
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      const fetchedAutomation = await config.api.automation.get(
+        assignedAutomation._id!
+      )
+      const { agents } = await config.api.agent.fetch()
+      const fetchedAgent = agents.find(existing => existing._id === agent._id)
+      const fetchedTable = await config.api.table.get(table._id!)
+      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+      const fetchedDatasourcePlus = await config.api.datasource.get(
+        datasourcePlus._id!
+      )
+      const fetchedQuery = await config.api.query.get(query._id!)
+
+      expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
+      expect(fetchedAutomation.projectIds).toBeUndefined()
+      expect(fetchedAgent?.projectIds).toBeUndefined()
+      expect(fetchedTable.projectIds).toBeUndefined()
+      expect(fetchedDatasource.projectIds).toBeUndefined()
+      expect(fetchedDatasourcePlus.projectIds).toBeUndefined()
+      expect(fetchedQuery.projectIds).toBeUndefined()
+    })
+  })
+
+  it("recreates the project members view when deleting project assignments", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const designDoc = await db.get<DesignDocument>("_design/database")
+        delete designDoc.views?.[ViewName.PROJECT_MEMBERS]
+        await db.put(designDoc)
+      })
+
+      await config.api.project.delete(project._id, project._rev)
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const designDoc = await context
+          .getWorkspaceDB()
+          .get<DesignDocument>("_design/database")
+        expect(designDoc.views?.[ViewName.PROJECT_MEMBERS]).toBeDefined()
+      })
     })
   })
 

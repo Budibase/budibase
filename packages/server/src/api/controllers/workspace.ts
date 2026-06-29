@@ -82,6 +82,7 @@ import {
 import {
   createAllSearchIndex,
   createLinkView,
+  createProjectMembersView,
   createRoutingView,
 } from "../../db/views/staticViews"
 import env from "../../environment"
@@ -216,6 +217,7 @@ async function createInstance(appId: string, template: AppTemplate) {
   // add view for linked rows
   await createLinkView()
   await createRoutingView()
+  await createProjectMembersView()
   await createAllSearchIndex()
 
   if (template?.useTemplate || template.file) {
