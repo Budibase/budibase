@@ -407,27 +407,29 @@ export async function exportProject(
     )
     await fsp.mkdir(join(tmpPath, PROJECT_DOCS_DIRECTORY), { recursive: true })
 
-    for (const doc of exportedDocs) {
-      const type = typeByResourceId.get(doc._id!)
-      if (!type) {
-        continue
-      }
+    await Promise.all(
+      exportedDocs.map(async doc => {
+        const type = typeByResourceId.get(doc._id!)
+        if (!type) {
+          return
+        }
 
-      const sanitized = await sanitizeDocumentForExport(
-        doc,
-        type,
-        screenWorkspaceAppIdByScreenId
-      )
-      await writeJsonFile(
-        join(
-          tmpPath,
-          PROJECT_DOCS_DIRECTORY,
-          getExportDirectoryName(type),
-          `${doc._id}.json`
-        ),
-        sanitized
-      )
-    }
+        const sanitized = await sanitizeDocumentForExport(
+          doc,
+          type,
+          screenWorkspaceAppIdByScreenId
+        )
+        await writeJsonFile(
+          join(
+            tmpPath,
+            PROJECT_DOCS_DIRECTORY,
+            getExportDirectoryName(type),
+            `${doc._id}.json`
+          ),
+          sanitized
+        )
+      })
+    )
 
     if (opts?.encryptPassword) {
       await encryptDirectory(tmpPath, opts.encryptPassword)
