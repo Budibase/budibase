@@ -480,6 +480,7 @@ const sanitizeImportedDoc = (
 
   if (resourceType === ResourceType.AGENT) {
     remapped.live = false
+    delete remapped.publishedAt
   }
 
   if (resourceType === ResourceType.WORKSPACE_APP) {
