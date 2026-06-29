@@ -1,6 +1,6 @@
 import { Document } from "../../"
 
-export type AgentRequestStatus = "completed"
+export type AgentRequestStatus = "active" | "completed" | "failed"
 
 export interface AgentRequestEntry {
   sessionId: string
@@ -9,6 +9,8 @@ export interface AgentRequestEntry {
   createdAt: string
   updatedAt: string
   status: AgentRequestStatus
+  error?: string
+  completedAt?: string
 }
 
 export interface AgentRequest extends Document {
@@ -17,4 +19,6 @@ export interface AgentRequest extends Document {
   userId: string
   entries: AgentRequestEntry[]
   status: AgentRequestStatus
+  error?: string
+  completedAt?: string
 }

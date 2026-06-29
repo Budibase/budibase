@@ -2,6 +2,7 @@ import {
   context,
   events,
   docIds,
+  features,
   getErrorMessage,
   HTTPError,
 } from "@budibase/backend-core"
@@ -15,6 +16,7 @@ import {
   ChatConversationRequest,
   CreateChatConversationRequest,
   DocumentType,
+  FeatureFlag,
   FetchAgentHistoryResponse,
   FetchAgentFileUrlResponse,
   ContextUser,
@@ -44,6 +46,7 @@ import {
   prepareChatConversationForSave,
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
+import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -497,6 +500,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   await sdk.ai.agents.assertAgentHasValidConfig(agent)
 
+  let trackingHandle: { requestId: string } | undefined
+
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
     const sessionId = chat.transient ? chat.sessionId || chatId : chatId
@@ -508,6 +513,34 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId,
       user: ctx.user,
     })
+
+    if (
+      run.selectedOperation &&
+      context.isProdWorkspace() &&
+      (await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
+    ) {
+      trackingHandle = await sdk.ai.agentRequests
+        .initActiveRequest({
+          agentId,
+          sessionId,
+          latestPrompt: run.latestQuestion,
+          operation: {
+            name: run.selectedOperation.name,
+            prompt: run.selectedOperation.promptInstructions || "",
+          },
+          userId,
+          source: determineTrigger(sessionId),
+        })
+        .catch(error => {
+          console.error("Failed to init active agent request", {
+            agentId,
+            sessionId,
+            error,
+          })
+          return undefined
+        })
+    }
+
     sdk.ai.agentRequests
       .enqueueRequestTracking({
         agentId,
@@ -521,6 +554,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
             }
           : undefined,
         userId,
+        existingRequestId: trackingHandle?.requestId,
       })
       .catch(error => {
         console.error("Failed to enqueue agent request tracking", {
@@ -532,6 +566,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       })
 
     const pendingToolCalls = new Set<string>()
+    const streamResult = { toolCallsIncomplete: false }
 
     const result = await run.stream({
       pendingToolCalls,
@@ -569,7 +604,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           const usedKnowledgeSources = run.getUsedKnowledgeSourcesMetadata()
           // Check if model ended in a tool-call state or steps were incomplete
           const finishReason = (part as { finishReason?: string }).finishReason
-          const toolCallsIncomplete =
+          streamResult.toolCallsIncomplete =
             pendingToolCalls.size > 0 || finishReason === "tool-calls"
 
           const finishPart = part as {
@@ -590,7 +625,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
             createdAt: streamStartTime,
             completedAt: Date.now(),
             ...(usage ? { usage } : {}),
-            ...(toolCallsIncomplete && {
+            ...(streamResult.toolCallsIncomplete && {
               error: formatIncompleteToolCallError([]),
             }),
           }
@@ -616,11 +651,47 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           reason: ActionFailureReason.ERROR,
           errorMessage: getErrorMessage(error),
         })
+        if (trackingHandle) {
+          sdk.ai.agentRequests
+            .updateRequestStatus({
+              requestId: trackingHandle.requestId,
+              status: "failed",
+              error: getErrorMessage(error),
+            })
+            .catch(updateError => {
+              console.error("Failed to update agent request status on error", {
+                agentId,
+                sessionId,
+                error: updateError,
+              })
+            })
+        }
         return getErrorMessage(error)
       },
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
         events.action.aiAgentExecuted({ agentId })
+
+        if (trackingHandle) {
+          const finalStatus = streamResult.toolCallsIncomplete
+            ? "failed"
+            : "completed"
+          await sdk.ai.agentRequests
+            .updateRequestStatus({
+              requestId: trackingHandle.requestId,
+              status: finalStatus,
+              ...(streamResult.toolCallsIncomplete
+                ? { error: "Tool calls incomplete" }
+                : {}),
+            })
+            .catch(updateError => {
+              console.error("Failed to update agent request status on finish", {
+                agentId,
+                sessionId,
+                error: updateError,
+              })
+            })
+        }
 
         if (chat.transient || !chatAppId) {
           return
@@ -648,6 +719,20 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     return
   } catch (error: any) {
     const message = error?.message || "Agent action failed"
+    if (trackingHandle) {
+      sdk.ai.agentRequests
+        .updateRequestStatus({
+          requestId: trackingHandle.requestId,
+          status: "failed",
+          error: message,
+        })
+        .catch(updateError => {
+          console.error("Failed to update agent request status on catch", {
+            agentId,
+            error: updateError,
+          })
+        })
+    }
     ctx.res.write(
       `data: ${JSON.stringify({ type: "error", errorText: message })}\n\n`
     )

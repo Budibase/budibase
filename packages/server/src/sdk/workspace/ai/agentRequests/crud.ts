@@ -28,7 +28,7 @@ const buildEntry = ({
     operationNames: operation?.name ? [operation.name] : [],
     createdAt: timestamp,
     updatedAt: timestamp,
-    status: "completed",
+    status: "active",
   }
 }
 
@@ -186,6 +186,99 @@ export async function fetchRequestsByAgentAndUser(
     .slice(0, THREAD_CANDIDATE_LIMIT)
 }
 
+export async function initActiveRequest({
+  agentId,
+  userId,
+  sessionId,
+  latestPrompt,
+  operation,
+  source,
+}: {
+  agentId: string
+  userId: string
+  sessionId: string
+  latestPrompt: string
+  operation?: {
+    name: string
+    prompt: string
+  }
+  source: string
+}): Promise<{ requestId: string } | undefined> {
+  if (!operation?.name) {
+    return undefined
+  }
+
+  const candidates = await fetchRequestsByAgentAndUser(agentId, userId)
+  const existing = candidates.find(r =>
+    r.entries.some(e => e.sessionId === sessionId)
+  )
+  if (existing && existing._id) {
+    return { requestId: existing._id }
+  }
+
+  const entry = buildEntry({ sessionId, operation, source })
+  const thread = buildThread({ agentId, userId, entry })
+
+  let title: string | undefined
+  try {
+    title = await generateAgentRequestTitle({
+      latestPrompt,
+      agentId,
+      sessionId,
+      operation,
+    })
+  } catch (error) {
+    console.error("Failed to generate agent request title", {
+      agentId,
+      sessionId,
+      error,
+    })
+  }
+
+  const created = await saveRequest({ ...thread, title })
+  return { requestId: created._id! }
+}
+
+export async function updateRequestStatus({
+  requestId,
+  status,
+  error,
+}: {
+  requestId: string
+  status: "active" | "completed" | "failed"
+  error?: string
+}): Promise<void> {
+  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  if (!request) {
+    return
+  }
+
+  const timestamp = nowIso()
+  const isTerminal = status === "completed" || status === "failed"
+
+  const updatedEntries = request.entries.map((entry, idx) => {
+    if (idx !== request.entries.length - 1) {
+      return entry
+    }
+    return {
+      ...entry,
+      status,
+      updatedAt: timestamp,
+      ...(isTerminal ? { completedAt: timestamp } : {}),
+      ...(error === undefined ? {} : { error }),
+    }
+  })
+
+  await saveRequest({
+    ...request,
+    entries: updatedEntries,
+    status,
+    updatedAt: timestamp,
+    ...(isTerminal ? { completedAt: timestamp } : {}),
+    ...(error !== undefined ? { error } : {}),
+  })
+}
+
 export async function createOrUpdateRequestForPrompt({
   agentId,
   sessionId,
@@ -194,6 +287,7 @@ export async function createOrUpdateRequestForPrompt({
   operation,
   source,
   userId,
+  existingRequestId,
 }: {
   agentId: string
   sessionId: string
@@ -208,6 +302,7 @@ export async function createOrUpdateRequestForPrompt({
   }
   source: string
   userId: string
+  existingRequestId?: string
 }): Promise<{ request: AgentRequest; created: boolean } | undefined> {
   const prompt = latestUserPrompt.trim()
   const resolvedOperation = operation
@@ -219,6 +314,22 @@ export async function createOrUpdateRequestForPrompt({
   const resolvedSource = source?.trim()
   if (!prompt || !resolvedSource) {
     return undefined
+  }
+
+  if (existingRequestId) {
+    const existing = await context
+      .getWorkspaceDB()
+      .tryGet<AgentRequest>(existingRequestId)
+    if (existing) {
+      const updated = await generateAndSaveRequestTitleIfMissing({
+        request: existing,
+        agentId,
+        sessionId,
+        latestPrompt: prompt,
+        operation: resolvedOperation,
+      })
+      return { request: updated, created: false }
+    }
   }
 
   const candidateRequests = await fetchRequestsByAgentAndUser(agentId, userId)
@@ -289,7 +400,7 @@ export async function createOrUpdateRequestForPrompt({
       source: resolvedSource,
       operationNames: [...operationNames],
       updatedAt: timestamp,
-      status: "completed",
+      status: "active",
     }
   } else {
     nextEntries.push(
@@ -306,7 +417,7 @@ export async function createOrUpdateRequestForPrompt({
       ...request,
       entries: nextEntries,
       updatedAt: timestamp,
-      status: "completed",
+      status: "active",
     }),
     created: false,
   }

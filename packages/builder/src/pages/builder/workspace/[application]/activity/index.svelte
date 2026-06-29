@@ -63,7 +63,9 @@
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
   const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
+    active: { label: "Active" },
     completed: { label: "Completed" },
+    failed: { label: "Failed" },
   }
 
   const getRequestTitle = (request: AgentRequest) => {
@@ -91,10 +93,19 @@
     const requests = filteredRequests
     return [
       { label: "All actions", value: requests.length },
-      { label: "Completed", value: requests.length },
-      { label: "Processing", value: 0 },
+      {
+        label: "Completed",
+        value: requests.filter(r => r.status === "completed").length,
+      },
+      {
+        label: "Processing",
+        value: requests.filter(r => r.status === "active").length,
+      },
       { label: "Needs input", value: 0 },
-      { label: "Failed", value: 0 },
+      {
+        label: "Failed",
+        value: requests.filter(r => r.status === "failed").length,
+      },
     ]
   })
 
