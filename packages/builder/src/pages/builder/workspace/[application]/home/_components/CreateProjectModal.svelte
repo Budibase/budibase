@@ -72,10 +72,7 @@
 
   <div class="color-field">
     <Body size="S" weight="600">Color</Body>
-    <ColorPicker
-      bind:value={color}
-      on:change={e => (color = e.detail || "")}
-    />
+    <ColorPicker bind:value={color} on:change={e => (color = e.detail || "")} />
     {#if colorError}
       <Body size="S" color="var(--spectrum-semantic-negative-color-default)">
         {colorError}
