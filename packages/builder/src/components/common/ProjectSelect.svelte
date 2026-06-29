@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { Multiselect } from "@budibase/bbui"
+  import { Multiselect, type LabelPosition } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
   import { featureFlags, projectsStore } from "@/stores/portal"
   import { appStore } from "@/stores/builder"
@@ -15,9 +15,16 @@
   interface Props {
     value?: string[]
     label?: string
+    labelPosition?: LabelPosition
+    autoWidth?: boolean
   }
 
-  let { value = $bindable([]), label = "Projects" }: Props = $props()
+  let {
+    value = $bindable([]),
+    label = "Projects",
+    labelPosition = "above",
+    autoWidth = false,
+  }: Props = $props()
 
   let fetchError: string | undefined = $state()
 
@@ -48,9 +55,11 @@
 {#if projectsEnabled}
   <Multiselect
     {label}
+    {labelPosition}
     placeholder="No projects"
     bind:value
     {options}
+    {autoWidth}
     getOptionLabel={option => option.label}
     getOptionValue={option => option.value}
     error={fetchError}
