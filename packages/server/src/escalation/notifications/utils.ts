@@ -7,7 +7,7 @@ const DEFAULT_HEADING = "Escalation requires your review"
 // Finds the agent providing a channel integration in the workspace - the one
 // matching agentId, else the first with the integration. Each sender derives
 // its token from the returned agent (Slack validates; others read directly).
-export const findIntegrationAgent = (
+export const findIntegrationAgent = async (
   appId: string,
   agentId: string | undefined,
   has: (_agent: Agent) => boolean
