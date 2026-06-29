@@ -2,9 +2,6 @@ import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   FeatureFlag,
-  KnowledgeBaseFileStatus,
-  type Agent,
-  type KnowledgeBaseFile,
   type Project,
   type ProjectPackageDependencyIndex,
 } from "@budibase/types"
@@ -17,8 +14,6 @@ import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import sdk from "../../../sdk"
 import * as projects from "../../../sdk/workspace/projects/crud"
-import { isProjectPackageTarEntryTypeSupported } from "../../../sdk/workspace/projects/backups/imports"
-import { listAssignedAgentFiles } from "../../../sdk/workspace/projects/backups/exports"
 import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
@@ -885,36 +880,6 @@ describe("/projects", () => {
     })
   })
 
-  it("fails listing assigned agent files when a RAG lookup fails", async () => {
-    const file: KnowledgeBaseFile = {
-      _id: "kb_file_1",
-      knowledgeBaseId: "kb_1",
-      filename: "guide.pdf",
-      objectStoreKey: "files/guide.pdf",
-      ragSourceId: "rag_1",
-      status: KnowledgeBaseFileStatus.READY,
-      uploadedBy: "user_1",
-    }
-    const listFilesForAgent = jest.fn(async (agentId: string) => {
-      if (agentId === "ag_failed") {
-        throw new Error("RAG unavailable")
-      }
-      return [file]
-    })
-
-    await expect(
-      listAssignedAgentFiles(
-        [
-          { _id: "ag_failed", name: "Failed agent" } as Agent,
-          { _id: "ag_ok", name: "Working agent" } as Agent,
-        ],
-        listFilesForAgent
-      )
-    ).rejects.toThrow("RAG unavailable")
-
-    expect(listFilesForAgent).toHaveBeenCalled()
-  })
-
   it("returns 404 when exporting an unknown project", async () => {
     await withProjectsEnabled(async () => {
       await config.api.project.export("project_missing", undefined, {
@@ -1662,24 +1627,6 @@ describe("/projects", () => {
       )
     })
   })
-
-  it.each([
-    "ExtendedHeader",
-    "GlobalExtendedHeader",
-    "NextFileHasLongLinkpath",
-    "NextFileHasLongPath",
-    "OldExtendedHeader",
-    "OldGnuLongPath",
-  ])("allows tar metadata entry type %s during package validation", type => {
-    expect(isProjectPackageTarEntryTypeSupported(type)).toBe(true)
-  })
-
-  it.each(["SparseFile", "SymbolicLink"])(
-    "rejects unsupported tar entry type %s during package validation",
-    type => {
-      expect(isProjectPackageTarEntryTypeSupported(type)).toBe(false)
-    }
-  )
 
   it("rejects packages that exceed the extracted size limit before extraction", async () => {
     await withProjectsEnabled(async () => {

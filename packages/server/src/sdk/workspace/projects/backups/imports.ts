@@ -85,7 +85,7 @@ const PROJECT_PACKAGE_METADATA_ENTRY_TYPES = new Set([
   "OldGnuLongPath",
 ])
 
-export const isProjectPackageTarEntryTypeSupported = (type?: string) => {
+const isProjectPackageTarEntryTypeSupported = (type?: string) => {
   return (
     !type ||
     PROJECT_PACKAGE_FILE_ENTRY_TYPES.has(type) ||
