@@ -18,9 +18,6 @@ import {
   resolveUpdatedProjectIds,
 } from "../../utilities/projects"
 
-const hasOwn = (obj: object, key: string) =>
-  Object.prototype.hasOwnProperty.call(obj, key)
-
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
 ): WorkspaceAppResponse {
@@ -127,8 +124,10 @@ export async function edit(
     disabled: body.disabled,
     projectIds: updatedProjectIds,
     // Only overwrite optional theme fields when the client explicitly sent them.
-    ...(hasOwn(body, "theme") ? { theme: body.theme } : {}),
-    ...(hasOwn(body, "customTheme") ? { customTheme: body.customTheme } : {}),
+    ...(Object.hasOwn(body, "theme") ? { theme: body.theme } : {}),
+    ...(Object.hasOwn(body, "customTheme")
+      ? { customTheme: body.customTheme }
+      : {}),
   })
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),

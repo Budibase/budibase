@@ -1428,26 +1428,39 @@ describe("/api/resources/usage", () => {
           },
         ],
         discordIntegration: {
+          applicationId: "discord-app-id",
           publicKey: "discord-public-key",
           botToken: "discord-bot-token",
+          guildId: "discord-guild-id",
           chatAppId: "app_source",
+          idleTimeoutMinutes: 15,
+          requireUserLink: true,
           interactionsEndpointUrl: "https://source.example/discord",
         },
         MSTeamsIntegration: {
+          appId: "teams-app-id",
           appPassword: "teams-app-password",
+          tenantId: "teams-tenant-id",
           chatAppId: "app_source",
+          idleTimeoutMinutes: 20,
+          requireUserLink: true,
           messagingEndpointUrl: "https://source.example/teams",
         },
         slackIntegration: {
           botToken: "slack-bot-token",
           signingSecret: "slack-signing-secret",
           chatAppId: "app_source",
+          idleTimeoutMinutes: 25,
+          requireUserLink: false,
           messagingEndpointUrl: "https://source.example/slack",
         },
         telegramIntegration: {
           botToken: "telegram-bot-token",
           webhookSecretToken: "telegram-webhook-secret",
+          botUserName: "telegram_bot",
           chatAppId: "app_source",
+          idleTimeoutMinutes: 30,
+          requireUserLink: true,
           messagingEndpointUrl: "https://source.example/telegram",
         },
       }
@@ -1473,10 +1486,27 @@ describe("/api/resources/usage", () => {
         })
       )
       expect(duplicatedAgent.publishedAt).toBeUndefined()
-      expect(duplicatedAgent.discordIntegration).toBeUndefined()
-      expect(duplicatedAgent.MSTeamsIntegration).toBeUndefined()
-      expect(duplicatedAgent.slackIntegration).toBeUndefined()
-      expect(duplicatedAgent.telegramIntegration).toBeUndefined()
+      expect(duplicatedAgent.discordIntegration).toEqual({
+        applicationId: "discord-app-id",
+        guildId: "discord-guild-id",
+        idleTimeoutMinutes: 15,
+        requireUserLink: true,
+      })
+      expect(duplicatedAgent.MSTeamsIntegration).toEqual({
+        appId: "teams-app-id",
+        tenantId: "teams-tenant-id",
+        idleTimeoutMinutes: 20,
+        requireUserLink: true,
+      })
+      expect(duplicatedAgent.slackIntegration).toEqual({
+        idleTimeoutMinutes: 25,
+        requireUserLink: false,
+      })
+      expect(duplicatedAgent.telegramIntegration).toEqual({
+        botUserName: "telegram_bot",
+        idleTimeoutMinutes: 30,
+        requireUserLink: true,
+      })
     })
 
     it("does not throw when copying the same resources twice", async () => {
