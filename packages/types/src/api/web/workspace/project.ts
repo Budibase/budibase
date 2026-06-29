@@ -61,7 +61,6 @@ export interface ImportProjectResponse {
   requirements: ProjectImportRequirement[]
 }
 
-
 export interface ProjectManifestSummary {
   _id: string
   name: string
