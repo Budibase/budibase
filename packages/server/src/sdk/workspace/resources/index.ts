@@ -210,7 +210,6 @@ export async function getResourcesInfo(): Promise<
     searchForUsages(query._id!, query)
   }
 
-  // Search in agents
   for (const agent of agents) {
     searchForUsages(agent._id!, agent)
   }
@@ -285,7 +284,7 @@ export async function getResourcesInfo(): Promise<
       type,
     })
 
-    const collectDependencies = (
+    const collectTransitiveDependencies = (
       resourceId: string,
       seen = new Set<string>()
     ): UsedResource[] => {
@@ -294,11 +293,18 @@ export async function getResourcesInfo(): Promise<
       }
       seen.add(resourceId)
 
+      // dependencies[resourceId] lists resources referenced in that resource's JSON
+      // (e.g. a query referencing a table). Those references can themselves reference
+      // other resources, so we walk the graph recursively. seen breaks cycles.
       return (dependencies[resourceId]?.dependencies || []).flatMap(
-        dependency => [dependency, ...collectDependencies(dependency.id, seen)]
+        dependency => [
+          dependency,
+          ...collectTransitiveDependencies(dependency.id, seen),
+        ]
       )
     }
 
+    // Projects include direct members plus each member's transitive dependencies.
     for (const project of projects.filter(
       (doc): doc is Required<Pick<Project, "_id" | "name">> & Project =>
         !!doc._id && !!doc.name
@@ -338,8 +344,9 @@ export async function getResourcesInfo(): Promise<
       ]
 
       addDependencies(project._id, directMembers)
+      // e.g. a project-assigned query may depend on a table, which depends on a datasource.
       for (const member of directMembers) {
-        addDependencies(project._id, collectDependencies(member.id))
+        addDependencies(project._id, collectTransitiveDependencies(member.id))
       }
     }
   }

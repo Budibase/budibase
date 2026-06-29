@@ -1018,20 +1018,12 @@ describe("/api/resources/usage", () => {
               [externalTable.name]: externalTable,
             },
           })
-          const internalTable = await createInternalTable({
-            name: "Internal project table",
-            projectIds: [project._id],
-          })
           const destination = await config.api.workspace.create({
             name: `Destination ${generator.natural()}`,
           })
 
           const resourcesToCopy = await collectDependantResourceIds(project._id)
-          expect(resourcesToCopy).toEqual([
-            project._id,
-            assignedDatasource._id,
-            internalTable._id,
-          ])
+          expect(resourcesToCopy).toEqual([project._id, assignedDatasource._id])
 
           await duplicateResources(resourcesToCopy, destination.appId)
 
@@ -1044,12 +1036,28 @@ describe("/api/resources/usage", () => {
           )
 
           await expect(destinationDb.get(project._id)).resolves.toBeDefined()
-          await expect(
-            destinationDb.get(internalTable._id!)
-          ).resolves.toBeDefined()
           expect(
             duplicatedDatasource.entities![externalTable.name].projectIds
           ).toEqual([project._id])
+        }
+      )
+    })
+
+    it("includes internal tables in project dependency graph", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.PROJECTS]: true },
+        async () => {
+          const { project } = await config.api.project.create({
+            name: "Operations",
+          })
+          const internalTable = await createInternalTable({
+            name: "Internal project table",
+            projectIds: [project._id],
+          })
+
+          const resourcesToCopy = await collectDependantResourceIds(project._id)
+          expect(resourcesToCopy).toEqual([project._id, internalTable._id])
         }
       )
     })
@@ -1462,13 +1470,13 @@ describe("/api/resources/usage", () => {
               knowledgeSources: [],
             }),
           ],
-          discordIntegration: {},
-          MSTeamsIntegration: {},
-          slackIntegration: {},
-          telegramIntegration: {},
         })
       )
       expect(duplicatedAgent.publishedAt).toBeUndefined()
+      expect(duplicatedAgent.discordIntegration).toBeUndefined()
+      expect(duplicatedAgent.MSTeamsIntegration).toBeUndefined()
+      expect(duplicatedAgent.slackIntegration).toBeUndefined()
+      expect(duplicatedAgent.telegramIntegration).toBeUndefined()
     })
 
     it("does not throw when copying the same resources twice", async () => {
