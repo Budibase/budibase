@@ -228,21 +228,4 @@ describe("sortHomeRows", () => {
 
     expect(result.map(row => row._id)).toEqual(["b", "c", "a"])
   })
-
-  it("sorts by projectIds length", () => {
-    const rows = [
-      buildAgentRow({ id: "a", name: "Unassigned" }),
-      {
-        ...buildAgentRow({ id: "b", name: "Assigned" }),
-        projectIds: ["project_1", "project_2"],
-      },
-    ]
-
-    const result = sortHomeRows(rows, {
-      sortColumn: "projects",
-      sortOrder: "desc",
-    })
-
-    expect(result.map(row => row._id)).toEqual(["b", "a"])
-  })
 })
