@@ -9,16 +9,15 @@ import {
 } from "@budibase/types"
 import { SEPARATOR, ViewName } from "../utils"
 
-const withPrefix = (type: DocumentType) => type + SEPARATOR
+const getPrefix = (type: DocumentType) => type + SEPARATOR
 
-const SCREEN_PREFIX = withPrefix(DocumentType.SCREEN)
-const WORKSPACE_APP_PREFIX = withPrefix(DocumentType.WORKSPACE_APP)
-const AUTOMATION_PREFIX = withPrefix(DocumentType.AUTOMATION)
-const AGENT_PREFIX = withPrefix(DocumentType.AGENT)
-const TABLE_PREFIX = withPrefix(DocumentType.TABLE)
-const QUERY_PREFIX = withPrefix(DocumentType.QUERY)
-const DATASOURCE_PREFIX = withPrefix(DocumentType.DATASOURCE)
-const DATASOURCE_PLUS_PREFIX = withPrefix(DocumentType.DATASOURCE_PLUS)
+const WORKSPACE_APP_PREFIX = getPrefix(DocumentType.WORKSPACE_APP)
+const AUTOMATION_PREFIX = getPrefix(DocumentType.AUTOMATION)
+const AGENT_PREFIX = getPrefix(DocumentType.AGENT)
+const TABLE_PREFIX = getPrefix(DocumentType.TABLE)
+const QUERY_PREFIX = getPrefix(DocumentType.QUERY)
+const DATASOURCE_PREFIX = getPrefix(DocumentType.DATASOURCE)
+const DATASOURCE_PLUS_PREFIX = getPrefix(DocumentType.DATASOURCE_PLUS)
 
 /**************************************************
  *                  INFORMATION                   *
@@ -79,7 +78,7 @@ export async function createRoutingView() {
   const view: DBView = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
-      if (doc._id.startsWith("${SCREEN_PREFIX}")) {
+      if (doc._id.startsWith("${getPrefix(DocumentType.SCREEN)}")) {
         emit([doc.workspaceAppId, doc._id], {
           id: doc._id,
           routing: doc.routing,
