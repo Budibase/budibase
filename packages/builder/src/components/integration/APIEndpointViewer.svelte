@@ -1052,11 +1052,7 @@
             </div>
             <div class="project">
               <Label>Projects</Label>
-              <ProjectSelect
-                bind:value={projectIds}
-                label=""
-                autoWidth
-              />
+              <ProjectSelect bind:value={projectIds} label="" autoWidth />
             </div>
           {/if}
           {#if endpointDocs}

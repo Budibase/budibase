@@ -31,9 +31,7 @@
     if (typeof window === "undefined") {
       return []
     }
-    const projectId = new URLSearchParams(window.location.search).get(
-      "project"
-    )
+    const projectId = new URLSearchParams(window.location.search).get("project")
     return projectId ? [projectId] : []
   })()
 
@@ -52,10 +50,7 @@
   }
 </script>
 
-<CreateInternalTableModal
-  bind:this={internalTableModal}
-  {initialProjectIds}
-/>
+<CreateInternalTableModal bind:this={internalTableModal} {initialProjectIds} />
 
 <CreateExternalDatasourceModal
   bind:this={externalDatasourceModal}

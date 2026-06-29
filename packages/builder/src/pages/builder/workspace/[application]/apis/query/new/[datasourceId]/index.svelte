@@ -11,9 +11,7 @@
     if (typeof window === "undefined") {
       return ""
     }
-    const projectId = new URLSearchParams(window.location.search).get(
-      "project"
-    )
+    const projectId = new URLSearchParams(window.location.search).get("project")
     return projectId ? `?project=${encodeURIComponent(projectId)}` : ""
   })()
   $: {

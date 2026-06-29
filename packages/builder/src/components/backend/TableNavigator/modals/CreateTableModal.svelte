@@ -68,11 +68,7 @@
   let rows: Row[] = $state([])
   let allValid = $state(true)
   let displayColumn: string | null = $state(null)
-  let projectIds: string[] = $state([])
-
-  $effect(() => {
-    projectIds = [...initialProjectIds]
-  })
+  let projectIds: string[] = $derived([...initialProjectIds])
 
   const buildOptionConstraints = (schema: TableSchema, rows: Row[]) => {
     const updatedSchema: TableSchema = {}
