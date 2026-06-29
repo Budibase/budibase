@@ -61,6 +61,16 @@ export interface ImportProjectResponse {
   requirements: ProjectImportRequirement[]
 }
 
+
+export interface ProjectManifestSummary {
+  _id: string
+  name: string
+  description?: string
+  color?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface ProjectPackageUnsupportedContent {
   type: string
   count: number
@@ -72,10 +82,7 @@ export interface ProjectPackageManifest {
   artifactType: "project"
   budibaseVersion: string
   exportedAt: string
-  project: Pick<
-    ProjectResponse,
-    "_id" | "name" | "description" | "color" | "createdAt" | "updatedAt"
-  >
+  project: ProjectManifestSummary
   sourceWorkspace: {
     id: string
   }
