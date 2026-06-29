@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, features, HTTPError } from "@budibase/backend-core"
 import { ChatCommands, SupportedChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -8,6 +8,7 @@ import {
   type DiscordConversationScope,
   type DiscordInteraction,
   type EscalationNotificationDoc,
+  FeatureFlag,
 } from "@budibase/types"
 import { Chat, type ActionEvent } from "chat"
 import { createDiscordAdapter } from "@chat-adapter/discord"
@@ -238,6 +239,9 @@ export async function discordWebhook(
 
         try {
           const result = await context.doInContext(workspaceId, async () => {
+            if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
+              return { status: "closed" as const }
+            }
             const db = context.getWorkspaceDB()
             const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
             if (!notifDoc) {

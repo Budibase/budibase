@@ -1,7 +1,8 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
+  FeatureFlag,
   type ChatConversationChannel,
   type Ctx,
   type MSTeamsActivity,
@@ -212,7 +213,7 @@ const isTeamsBotAddedToConversation = (activity: MSTeamsActivity) => {
     return false
   }
   return (activity.membersAdded || []).some(
-    member => member.id?.trim() === recipientId
+    (member: { id?: string }) => member.id?.trim() === recipientId
   )
 }
 
@@ -231,7 +232,7 @@ export const isTeamsMentionActivity = (activity?: MSTeamsActivity) => {
   }
 
   return (activity?.entities || []).some(
-    entity =>
+    (entity: { type?: string; mentioned?: { id?: string } }) =>
       entity.type?.toLowerCase() === "mention" &&
       entity.mentioned?.id?.trim() === recipientId
   )
@@ -432,7 +433,7 @@ const createTeamsMessageHandler = ({
     } catch (error) {
       console.error("Teams webhook processing failed", error)
       const msg =
-        error instanceof HTTPError
+        error instanceof Error
           ? error.message
           : TEAMS_FALLBACK_ERROR_MESSAGE
       await editOrPostTextReply(msg)
@@ -522,6 +523,9 @@ export async function MSTeamsWebhook(
 
         try {
           const result = await context.doInContext(appId, async () => {
+            if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
+              return { status: "closed" as const }
+            }
             return sdk.escalations.respond(
               escalationId,
               notificationDocId,

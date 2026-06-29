@@ -450,6 +450,11 @@ export const prepareAgentChatRun = async ({
     tools.report_used_sources = reportUsedSourcesTool
   }
 
+  // Escalation gate: when off, strip the escalate tool entirely
+  if (tools.escalate && !(await features.isEnabled(FeatureFlag.ESCALATION))) {
+    delete tools.escalate
+  }
+
   if (tools.escalate) {
     const recipients = selectedOperation?.escalation?.recipients
     if (escalationResolved) {

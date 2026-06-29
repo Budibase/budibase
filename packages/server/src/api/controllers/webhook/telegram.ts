@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { TelegramMessage } from "@chat-adapter/telegram"
 import { createTelegramAdapter } from "@chat-adapter/telegram"
@@ -9,6 +9,7 @@ import {
   type Ctx,
   DocumentType,
   type EscalationNotificationDoc,
+  FeatureFlag,
   SEPARATOR,
   type TelegramConversationScope,
 } from "@budibase/types"
@@ -180,7 +181,7 @@ const createTelegramInputHandler = ({
     } catch (error) {
       console.error("Telegram webhook processing failed", error)
       const msg =
-        error instanceof HTTPError
+        error instanceof Error
           ? error.message
           : TELEGRAM_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
@@ -304,6 +305,9 @@ export async function telegramWebhook(
 
         try {
           const result = await context.doInContext(workspaceId, async () => {
+            if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
+              return { status: "closed" as const }
+            }
             const db = context.getWorkspaceDB()
             const notifDoc =
               await db.tryGet<EscalationNotificationDoc>(notificationDocId)

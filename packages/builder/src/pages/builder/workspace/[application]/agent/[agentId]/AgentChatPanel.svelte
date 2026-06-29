@@ -1,12 +1,14 @@
 <script lang="ts">
-  import type {
-    AgentMessageMetadata,
-    DraftChatConversation,
-    WithoutDocMetadata,
+  import {
+    FeatureFlag,
+    type AgentMessageMetadata,
+    type DraftChatConversation,
+    type WithoutDocMetadata,
   } from "@budibase/types"
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { escalationsStore } from "@/stores/portal/escalations"
+  import { featureFlags } from "@/stores/portal"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
 
@@ -108,7 +110,7 @@
         isAgentPreviewChat={true}
         onEscalationPending={handleEscalationPending}
         escalationState={$escalationsStore.escalations}
-        showInlineApproval={true}
+        showInlineApproval={$featureFlags[FeatureFlag.ESCALATION]}
         onResolve={resolveEscalation}
       />
     {/key}

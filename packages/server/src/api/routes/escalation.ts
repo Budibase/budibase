@@ -1,8 +1,14 @@
+import { auth } from "@budibase/backend-core"
 import * as controller from "../controllers/escalation"
-import { builderAdminRoutes } from "./endpointGroups"
+import { endpointGroupList } from "./endpointGroups"
+import { escalationEnabled } from "../../middleware/escalationEnabled"
 
-// These aren't currently used but can be used to view or manage the escalations
-builderAdminRoutes
+// Gated behind the ESCALATION feature flag (same pattern AI_RAG/AI_TESTS use).
+const escalationRoutes = endpointGroupList
+  .group(auth.builderOrAdmin)
+  .addGroupMiddleware(escalationEnabled)
+
+escalationRoutes
   .get("/api/escalations", controller.fetch)
   .get("/api/escalations/context", controller.fetchContextDocs)
   .get("/api/escalations/context/:id", controller.findContextDoc)
