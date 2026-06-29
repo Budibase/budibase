@@ -16,7 +16,11 @@
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext, createEventDispatcher } from "svelte"
   import FilterField from "./FilterField.svelte"
-  import { utils } from "@budibase/shared-core"
+  import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+    utils,
+  } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
   const {
@@ -46,7 +50,13 @@
   export let toReadable
   export let toRuntime
   export let evaluationContext = {}
+  const sdk = getContext("sdk") || {}
+  const { appStore } = sdk
 
+  $: translationOverrides = resolveWorkspaceTranslations(
+    appStore ? $appStore.application?.translationOverrides : undefined
+  )
+  $: calendarLabels = resolveTranslationGroup("calendar", translationOverrides)
   $: editableFilters = migrateFilters(filters)
   $: {
     if (
@@ -423,6 +433,7 @@
                           ...filter,
                         }}
                         {schemaFields}
+                        {calendarLabels}
                         {bindings}
                         {panel}
                         {toReadable}
