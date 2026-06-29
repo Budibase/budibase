@@ -208,8 +208,21 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   }
 }
 
-export const sanitiseAgentForExport = (agent: Agent): Agent => {
-  const sanitised = structuredClone(withAgentDefaults(agent))
+type AgentIntegrationKeys = {
+  [K in keyof Required<Agent>]: K extends `${string}Integration` ? K : never
+}[keyof Required<Agent>]
+
+const agentIntegrationKeys: Record<AgentIntegrationKeys, true> = {
+  discordIntegration: true,
+  MSTeamsIntegration: true,
+  slackIntegration: true,
+  telegramIntegration: true,
+}
+
+export type SanitisedAgent = Omit<Agent, AgentIntegrationKeys | "publishedAt">
+
+export const sanitiseAgentForExport = (agent: Agent): SanitisedAgent => {
+  const sanitised = structuredClone(withAgentDefaults(agent)) as Agent
   sanitised.live = false
   delete sanitised.publishedAt
   sanitised.operations = sanitised.operations?.map(operation => ({
@@ -218,31 +231,10 @@ export const sanitiseAgentForExport = (agent: Agent): Agent => {
     knowledgeSources: [],
   }))
 
-  if (sanitised.discordIntegration) {
-    delete sanitised.discordIntegration.publicKey
-    delete sanitised.discordIntegration.botToken
-    delete sanitised.discordIntegration.chatAppId
-    delete sanitised.discordIntegration.interactionsEndpointUrl
-  }
-
-  if (sanitised.slackIntegration) {
-    delete sanitised.slackIntegration.botToken
-    delete sanitised.slackIntegration.signingSecret
-    delete sanitised.slackIntegration.chatAppId
-    delete sanitised.slackIntegration.messagingEndpointUrl
-  }
-
-  if (sanitised.MSTeamsIntegration) {
-    delete sanitised.MSTeamsIntegration.appPassword
-    delete sanitised.MSTeamsIntegration.chatAppId
-    delete sanitised.MSTeamsIntegration.messagingEndpointUrl
-  }
-
-  if (sanitised.telegramIntegration) {
-    delete sanitised.telegramIntegration.botToken
-    delete sanitised.telegramIntegration.webhookSecretToken
-    delete sanitised.telegramIntegration.chatAppId
-    delete sanitised.telegramIntegration.messagingEndpointUrl
+  for (const key of Object.keys(
+    agentIntegrationKeys
+  ) as AgentIntegrationKeys[]) {
+    delete sanitised[key]
   }
 
   return sanitised

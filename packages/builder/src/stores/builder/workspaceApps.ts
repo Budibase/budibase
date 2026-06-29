@@ -125,6 +125,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   }
 
   async edit(workspaceApp: WorkspaceApp) {
+    // Theme fields use presence checks because the API treats omitted fields as unchanged.
     const safeWorkspaceApp: UpdateWorkspaceAppRequest = {
       _id: workspaceApp._id!,
       _rev: workspaceApp._rev!,
@@ -133,12 +134,12 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       navigation: workspaceApp.navigation,
       disabled: workspaceApp.disabled,
       projectIds: workspaceApp.projectIds,
-    }
-    if (workspaceApp.theme !== undefined) {
-      safeWorkspaceApp.theme = workspaceApp.theme
-    }
-    if (workspaceApp.customTheme !== undefined) {
-      safeWorkspaceApp.customTheme = workspaceApp.customTheme
+      ...(Object.hasOwn(workspaceApp, "theme")
+        ? { theme: workspaceApp.theme }
+        : {}),
+      ...(Object.hasOwn(workspaceApp, "customTheme")
+        ? { customTheme: workspaceApp.customTheme }
+        : {}),
     }
 
     const updatedWorkspaceApp = await API.workspaceApp.update(safeWorkspaceApp)
