@@ -290,6 +290,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         promptInstructions: operation.promptInstructions,
         enabledTools: operation.enabledTools,
         allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+        escalation: operation.escalation,
       }
 
       latestAgent = currentIds.has(operation.id)
@@ -300,8 +301,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
             live: operation.live,
             promptInstructions: operation.promptInstructions,
             enabledTools: operation.enabledTools,
-            allowKnowledgeSourceDownload:
-              operation.allowKnowledgeSourceDownload,
+            allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+            escalation: operation.escalation,
           })
     }
 

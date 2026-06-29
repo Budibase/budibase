@@ -1,4 +1,4 @@
-import { features } from "@budibase/backend-core"
+import { cache, features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
@@ -40,6 +40,7 @@ import {
   createEscalateTool,
   createResolvedEscalateTool,
 } from "../../../../ai/tools/budibase/escalate"
+import { createListSessionEscalationsTool } from "../../../../ai/tools/budibase/listSessionEscalations"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
@@ -58,6 +59,8 @@ interface PrepareAgentChatRunParams {
   sessionId: string
   user: ContextUser
   startedAt?: string
+  // Pin the run to a specific operation instead of routing on the question.
+  operationId?: string
   // On resume swap escalate for a resolved stub so the model can't trigger a fresh escalation
   escalationResolved?: boolean
   // Appended to the system prompt - a trusted channel for run-time directives
@@ -127,6 +130,29 @@ ${operations
   )
   .join("\n")}`
 
+// Remembers the operation a conversation is currently in, so a follow-up turn
+// the router can't classify ("yes", "ok") keeps the same operation/tools.
+const sessionOperationKey = (sessionId: string) =>
+  `agent_session_operation_${sessionId}`
+
+const getSessionOperationId = async (
+  sessionId: string
+): Promise<string | undefined> => {
+  const stored = await cache.get(sessionOperationKey(sessionId))
+  return typeof stored === "string" ? stored : undefined
+}
+
+const setSessionOperationId = async (
+  sessionId: string,
+  operationId: string
+) => {
+  await cache.store(
+    sessionOperationKey(sessionId),
+    operationId,
+    cache.TTL.ONE_HOUR
+  )
+}
+
 export const chooseOperationForQuestion = async ({
   agent,
   latestQuestion,
@@ -172,6 +198,7 @@ export const chooseOperationForQuestion = async ({
     })
 
     const route = (await result.output) as OperationRoute
+
     if (!route?.operationId) {
       return undefined
     }
@@ -194,6 +221,8 @@ export interface PrepareAgentRunContextParams {
   aiConfigId?: string
   span?: tracer.Span
   buildPromptOptions?: BuildPromptAndToolsOptions
+  // When set, pin the run to this operation instead of routing on the question.
+  operationId?: string
 }
 
 export interface AgentRunContext {
@@ -212,6 +241,7 @@ export const prepareAgentRunContext = async ({
   aiConfigId,
   span,
   buildPromptOptions,
+  operationId,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -219,11 +249,31 @@ export const prepareAgentRunContext = async ({
     span,
     agentId
   )
-  const selectedOperation = await chooseOperationForQuestion({
-    agent,
-    latestQuestion,
-    llm,
-  })
+  let selectedOperation = operationId
+    ? getLiveOperations(agent).find(operation => operation.id === operationId)
+    : await chooseOperationForQuestion({
+        agent,
+        latestQuestion,
+        llm,
+      })
+
+  // STICKY: Operation selection is sticky per conversation. The router can return null for
+  // conversational follow-ups ("yes", "that's correct", "ok"), which would
+  // otherwise strip the operation - and all its tools - mid-flow, breaking
+  // multi-turn flows like gather -> confirm -> escalate. When routing doesn't
+  // pick one, fall back to the last operation used in this session.
+  if (!selectedOperation && !operationId) {
+    const lastOperationId = await getSessionOperationId(sessionId)
+    if (lastOperationId) {
+      selectedOperation = getLiveOperations(agent).find(
+        operation => operation.id === lastOperationId
+      )
+    }
+  }
+  if (selectedOperation) {
+    await setSessionOperationId(sessionId, selectedOperation.id)
+  }
+
   const promptAndTools = await buildPromptAndTools(
     agent,
     selectedOperation,
@@ -248,6 +298,7 @@ export const prepareAgentChatRun = async ({
   sessionId,
   user,
   startedAt,
+  operationId,
   escalationResolved,
   additionalInstructions,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
@@ -268,6 +319,7 @@ export const prepareAgentChatRun = async ({
       sessionId,
       latestQuestion,
       aiConfigId,
+      operationId,
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user),
         includeGoal: false,
@@ -332,8 +384,13 @@ export const prepareAgentChatRun = async ({
         getMessages: () => modelMessages,
       })
     }
-    // Otherwise the operation references escalate but has no reviewers - leave
-    // the placeholder tool in place so the model is told it's unavailable.
+
+    // Give the model read-only visibility of this session's escalations so it
+    // can tell whether a request has already been raised/approved before
+    // escalating again.
+    tools.list_session_escalations = createListSessionEscalationsTool({
+      sessionId,
+    })
   }
 
   const systemPrompt = [baseSystemPrompt, additionalInstructions]

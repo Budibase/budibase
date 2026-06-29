@@ -7,10 +7,14 @@ import {
   type ChatConversation,
   type ChatConversationChannel,
   type Ctx,
+  DocumentType,
+  type EscalationNotificationDoc,
+  SEPARATOR,
   type TelegramConversationScope,
 } from "@budibase/types"
-import { Chat, type Message, type Thread } from "chat"
+import { Chat, type ActionEvent, type Message, type Thread } from "chat"
 import sdk from "../../../sdk"
+import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
 import { getTelegramState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -274,6 +278,68 @@ export async function telegramWebhook(
         idleTimeoutMinutes,
       })
       const handler = createTelegramMessageHandler(handleTelegramInput)
+
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
+
+        const shortNotifId = event.value
+        if (!shortNotifId) {
+          console.error(
+            "Telegram escalation action: missing value",
+            event.actionId
+          )
+          return
+        }
+
+        const notificationDocId = `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}${shortNotifId}`
+
+        const telegramResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+        }
+
+        try {
+          const result = await context.doInContext(workspaceId, async () => {
+            const db = context.getWorkspaceDB()
+            const notifDoc =
+              await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+            if (!notifDoc) {
+              throw new Error(
+                `Notification doc ${notificationDocId} not found`
+              )
+            }
+            return sdk.escalations.respond(
+              notifDoc.escalationId,
+              notificationDocId,
+              telegramResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error(
+            "Telegram escalation action: failed to record response",
+            {
+              notificationDocId,
+              error:
+                error instanceof Error ? error.message : String(error),
+            }
+          )
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
 
       chat.onNewMention(handler)
       chat.onSubscribedMessage(handler)

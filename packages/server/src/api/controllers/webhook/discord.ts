@@ -7,10 +7,12 @@ import {
   type Ctx,
   type DiscordConversationScope,
   type DiscordInteraction,
+  type EscalationNotificationDoc,
 } from "@budibase/types"
-import { Chat } from "chat"
+import { Chat, type ActionEvent } from "chat"
 import { createDiscordAdapter } from "@chat-adapter/discord"
 import sdk from "../../../sdk"
+import { escalationProcessor } from "../../../escalation/processor"
 import { pickLatestConversation } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { getDiscordState } from "./chatState"
@@ -112,7 +114,7 @@ export async function discordWebhook(
       })
 
       chat.onSlashCommand(
-        SupportedChatCommands.map(command => `/${command}`),
+        SupportedChatCommands.map((command: string) => `/${command}`),
         async event => {
           const interaction = event.raw as DiscordInteraction
           const normalizedCommand = event.command
@@ -195,7 +197,7 @@ export async function discordWebhook(
           } catch (error) {
             console.error("Discord webhook processing failed", error)
             const msg =
-              error instanceof HTTPError
+              error instanceof Error
                 ? error.message
                 : "Sorry, something went wrong while processing your request."
             try {
@@ -206,6 +208,66 @@ export async function discordWebhook(
           }
         }
       )
+
+      chat.onAction(async (event: ActionEvent) => {
+        const customId = event.actionId
+        const isApprove = customId.startsWith("esc_a:")
+        const isReject = customId.startsWith("esc_r:")
+        if (!isApprove && !isReject) {
+          return
+        }
+
+        // custom_id format: esc_a:<shortNotifId>:<appId>
+        // shortNotifId is the notifDocId without the escalation_notification_
+        // prefix. The trailing appId is ignored - the workspace comes from the
+        // trusted handler context, never the user-controlled interaction payload.
+        const parts = customId.split(":")
+        const shortNotifId = parts[1]
+        if (!shortNotifId) {
+          console.error("Discord escalation action: invalid custom_id", customId)
+          return
+        }
+        const notificationDocId = `escalation_notification_${shortNotifId}`
+
+        const discordResponse = {
+          actionId: isApprove ? "escalation_approve" : "escalation_reject",
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+        }
+
+        try {
+          const result = await context.doInContext(workspaceId, async () => {
+            const db = context.getWorkspaceDB()
+            const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+            if (!notifDoc) {
+              throw new Error(`Notification doc ${notificationDocId} not found`)
+            }
+            return sdk.escalations.respond(
+              notifDoc.escalationId,
+              notificationDocId,
+              discordResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Discord escalation action: failed to record response", {
+            notificationDocId,
+            workspaceId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
 
       return request => chat.webhooks.discord(request)
     },

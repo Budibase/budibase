@@ -599,6 +599,7 @@
 {#key currentAgent?._id}
   <OperationsSection
     bind:agent={draft}
+    agentId={currentAgent?._id}
     {promptBindings}
     bindingIcons={readableToIcon}
     completions={promptCompletions}

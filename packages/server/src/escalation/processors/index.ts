@@ -1,30 +1,51 @@
 import {
   EscalationRecipient,
   EscalationResponse,
+  EscalationSource,
   SuspendedAutomationContext,
+  SuspendedOperationContext,
 } from "@budibase/types"
 
-export interface CreateEscalationInput {
-  automationId: string
-  stepId: string
+interface CreateEscalationBase {
   appId: string
   tenantId: string
   message: string
-  context: SuspendedAutomationContext
   delay: number
   // Allow an explicit ID to be provided (e.g. for idempotent test runs)
   escalationId?: string
   recipients?: EscalationRecipient[]
   resolutionStrategy?: string
+  // Human-facing heading + detail rendered in the notification.
+  title?: string
+  summary?: string
 }
+
+export interface CreateAutomationEscalationInput extends CreateEscalationBase {
+  source: EscalationSource.AUTOMATION
+  automationId: string
+  stepId: string
+  agentId?: string
+  context: SuspendedAutomationContext
+}
+
+export interface CreateOperationEscalationInput extends CreateEscalationBase {
+  source: EscalationSource.OPERATION
+  agentId: string
+  operationId: string
+  context: SuspendedOperationContext
+}
+
+export type CreateEscalationInput =
+  | CreateAutomationEscalationInput
+  | CreateOperationEscalationInput
 
 export interface CreateEscalationResult {
   escalationId: string
   expiresAt: string
 }
 
-// Dean: useful to have calculated values in the queue
-// to minimise db reads. Like expires at
+// Useful to have calculated values like expiresAt in the queue
+// to minimise db reads and possibly for use in the UI
 export interface EscalationSummary {
   escalationId: string
   appId: string
@@ -40,10 +61,4 @@ export interface IEscalationProcessor {
   resolve(escalationId: string, response?: EscalationResponse): Promise<void>
   cancel(escalationId: string): Promise<void>
   list(appId: string): Promise<EscalationSummary[]>
-  // Re-enqueues any pending escalations whose Bull jobs are missing - used to
-  // recover after a Redis flush or queue loss.
-  resync(): Promise<{ resynced: number }>
 }
-
-// DEAN: I'm thinking all this ecalation queue/process should be outside the escalation
-// automation step. It should be entirely reusable??

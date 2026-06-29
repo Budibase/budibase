@@ -25,10 +25,25 @@ export async function findContextDoc(ctx: UserCtx) {
   ctx.body = doc
 }
 
+export async function result(ctx: UserCtx) {
+  const { id } = ctx.params
+  const result = await sdk.escalations.getResult(id)
+  if (!result) {
+    ctx.throw(404, `Escalation not found: ${id}`)
+  }
+  ctx.body = result
+}
+
 export async function resolve(ctx: UserCtx) {
   const { id } = ctx.params
+  const doc = await sdk.escalations.getContextDoc(id)
+  const status = doc && doc.resolution !== "pending" ? "closed" : "recorded"
   await escalationProcessor.resolve(id, ctx.request.body?.response)
-  ctx.body = { message: "Escalation resolved" }
+  ctx.body = {
+    status,
+    message:
+      status === "closed" ? "Escalation already closed." : "Response recorded.",
+  }
 }
 
 export async function cancel(ctx: UserCtx) {
@@ -51,10 +66,5 @@ export async function respond(ctx: UserCtx) {
     response,
     (escalationId, res) => escalationProcessor.resolve(escalationId, res)
   )
-  ctx.body = result
-}
-
-export async function resync(ctx: UserCtx) {
-  const result = await escalationProcessor.resync()
   ctx.body = result
 }

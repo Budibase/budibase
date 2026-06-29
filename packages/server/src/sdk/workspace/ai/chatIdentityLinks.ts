@@ -144,6 +144,7 @@ export const createChatIdentityLinkSession = async ({
   teamId,
   guildId,
   providerTenantId,
+  serviceUrl,
 }: CreateChatIdentityLinkSessionInput) => {
   const now = new Date()
   const expiresAt = new Date(
@@ -160,6 +161,7 @@ export const createChatIdentityLinkSession = async ({
     teamId,
     guildId,
     providerTenantId,
+    serviceUrl,
     createdAt: now.toISOString(),
     expiresAt,
   }
@@ -227,6 +229,7 @@ export const upsertChatIdentityLink = async ({
   teamId,
   guildId,
   providerTenantId,
+  serviceUrl,
   globalUserId,
   linkedBy,
 }: UpsertChatIdentityLinkInput): Promise<ChatIdentityLink> => {
@@ -256,6 +259,7 @@ export const upsertChatIdentityLink = async ({
     teamId: teamId || existing?.teamId,
     guildId: guildId || existing?.guildId,
     providerTenantId: providerTenantId || existing?.providerTenantId,
+    serviceUrl: serviceUrl || existing?.serviceUrl,
     createdAt: existing?.createdAt || now,
     updatedAt: now,
   }

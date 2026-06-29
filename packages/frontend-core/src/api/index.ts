@@ -50,6 +50,7 @@ import { buildAgentEndpoints } from "./agents"
 import { buildAgentTestEndpoints } from "./agentTests"
 import { buildAgentLogEndpoints } from "./agentLogs"
 import { buildChatAppEndpoints } from "./chatApps"
+import { buildEscalationEndpoints } from "./escalations"
 import { buildChatLinksEndpoints } from "./chatLinks"
 import { buildFeatureFlagEndpoints } from "./features"
 import { buildNavigationEndpoints } from "./navigation"
@@ -322,6 +323,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildAgentTestEndpoints(API),
     ...buildAgentLogEndpoints(API),
     ...buildChatAppEndpoints(API),
+    ...buildEscalationEndpoints(API),
     ...buildChatLinksEndpoints(API),
     ...buildFeatureFlagEndpoints(API),
     deployment: buildDeploymentEndpoints(API),

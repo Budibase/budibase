@@ -1,9 +1,12 @@
 <script lang="ts">
   import type {
+    AgentMessageMetadata,
     DraftChatConversation,
     WithoutDocMetadata,
   } from "@budibase/types"
+  import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
+  import { escalationsStore } from "@/stores/portal/escalations"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
 
@@ -25,7 +28,43 @@
   let lastKey = $state("")
   let refreshKey = $state(0)
 
+  // Preview is transient, so escalation polling lives here, not in Chatbox.
+  let chatbox = $state<
+    | { appendAssistantMessage: (_m: UIMessage<AgentMessageMetadata>) => void }
+    | undefined
+  >()
+  const delivered = new Set<string>()
+
+  const handleEscalationPending = ({
+    escalationId,
+  }: {
+    escalationId: string
+  }) => {
+    escalationsStore.track(escalationId)
+  }
+
+  // Inject resolved escalations into the chat (reactive: fires on mount + each
+  // poll update). Entries are kept so the card keeps its resolved state.
+  $effect(() => {
+    if (!chatbox) {
+      return
+    }
+    for (const entry of Object.values($escalationsStore.escalations)) {
+      if (entry.resumeResult && !delivered.has(entry.escalationId)) {
+        delivered.add(entry.escalationId)
+        chatbox.appendAssistantMessage(
+          entry.resumeResult as UIMessage<AgentMessageMetadata>
+        )
+      }
+    }
+  })
+
+  const resolveEscalation = (escalationId: string, accepted: boolean) =>
+    escalationsStore.resolve(escalationId, { accepted })
+
   const resetChat = (nextAgentId?: string) => {
+    escalationsStore.reset()
+    delivered.clear()
     chat = {
       ...INITIAL_CHAT,
       agentId: nextAgentId || "",
@@ -62,10 +101,15 @@
   <div class="chat-preview-body">
     {#key refreshKey}
       <Chatbox
+        bind:this={chatbox}
         bind:chat
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
+        onEscalationPending={handleEscalationPending}
+        escalationState={$escalationsStore.escalations}
+        showInlineApproval={true}
+        onResolve={resolveEscalation}
       />
     {/key}
   </div>

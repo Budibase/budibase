@@ -363,6 +363,7 @@
               Who gets notified when this operation escalates for approval.
             </Body>
             <EscalationRecipients
+              single
               recipients={operation.escalation?.recipients ?? []}
               {agentId}
               onChange={updateRecipients}

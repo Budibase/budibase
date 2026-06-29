@@ -8,6 +8,12 @@ import type {
 } from "@budibase/types"
 import { getGlobalIDFromUserMetadataID } from "../../../db/utils"
 import sdk from "../../../sdk"
+import {
+  getMSTeamsIntegration,
+  getOAuthToken,
+  listTeamsChannels,
+  MS_SCOPE_GRAPH,
+} from "../../../escalation/notifications/ms-teams"
 
 const CHAT_LINK_RETURN_URL_COOKIE = "budibase:returnurl"
 const BUILDER_LOGIN_PATH = "/builder/auth/login"
@@ -173,6 +179,7 @@ export async function confirmChatLinkSession(
     teamId: consumedSession.teamId,
     guildId: consumedSession.guildId,
     providerTenantId: consumedSession.providerTenantId,
+    serviceUrl: consumedSession.serviceUrl,
     globalUserId: currentGlobalUserId,
     linkedBy: currentGlobalUserId,
   })
@@ -230,4 +237,31 @@ export async function listSlackChannels(ctx: UserCtx) {
         ? `Group DM: ${c.purpose?.value?.replace("Group messaging with: ", "") ?? c.name}`
         : c.name,
     }))
+}
+
+export async function listMSTeamsChannels(ctx: UserCtx) {
+  const appId = ctx.appId
+  if (!appId) {
+    ctx.throw(400, "appId is required")
+  }
+
+  const agentId = ctx.query.agentId as string | undefined
+  if (!agentId) {
+    ctx.throw(400, "agentId is required")
+  }
+
+  const integration = await getMSTeamsIntegration(appId, agentId)
+  if (!integration) {
+    ctx.body = []
+    return
+  }
+
+  const graphToken = await getOAuthToken(
+    integration.msClientId,
+    integration.appPassword,
+    integration.msTenantId,
+    MS_SCOPE_GRAPH
+  )
+
+  ctx.body = await listTeamsChannels(graphToken)
 }
