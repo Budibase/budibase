@@ -212,14 +212,85 @@ type AgentIntegrationKeys = {
   [K in keyof Required<Agent>]: K extends `${string}Integration` ? K : never
 }[keyof Required<Agent>]
 
-const agentIntegrationKeys: Record<AgentIntegrationKeys, true> = {
-  discordIntegration: true,
-  MSTeamsIntegration: true,
-  slackIntegration: true,
-  telegramIntegration: true,
+type AgentIntegrationSanitisers = {
+  [K in AgentIntegrationKeys]: (integration: Agent[K]) => Agent[K]
 }
 
-export type SanitisedAgent = Omit<Agent, AgentIntegrationKeys | "publishedAt">
+const sanitiseDiscordIntegration = (
+  discordIntegration: Agent["discordIntegration"]
+): Agent["discordIntegration"] => {
+  if (!discordIntegration) {
+    return discordIntegration
+  }
+
+  const {
+    publicKey: _publicKey,
+    botToken: _botToken,
+    chatAppId: _chatAppId,
+    interactionsEndpointUrl: _interactionsEndpointUrl,
+    ...sanitised
+  } = discordIntegration
+  return sanitised
+}
+
+const sanitiseMSTeamsIntegration = (
+  msTeamsIntegration: Agent["MSTeamsIntegration"]
+): Agent["MSTeamsIntegration"] => {
+  if (!msTeamsIntegration) {
+    return msTeamsIntegration
+  }
+
+  const {
+    appPassword: _appPassword,
+    chatAppId: _chatAppId,
+    messagingEndpointUrl: _messagingEndpointUrl,
+    ...sanitised
+  } = msTeamsIntegration
+  return sanitised
+}
+
+const sanitiseSlackIntegration = (
+  slackIntegration: Agent["slackIntegration"]
+): Agent["slackIntegration"] => {
+  if (!slackIntegration) {
+    return slackIntegration
+  }
+
+  const {
+    botToken: _botToken,
+    signingSecret: _signingSecret,
+    chatAppId: _chatAppId,
+    messagingEndpointUrl: _messagingEndpointUrl,
+    ...sanitised
+  } = slackIntegration
+  return sanitised
+}
+
+const sanitiseTelegramIntegration = (
+  telegramIntegration: Agent["telegramIntegration"]
+): Agent["telegramIntegration"] => {
+  if (!telegramIntegration) {
+    return telegramIntegration
+  }
+
+  const {
+    botToken: _botToken,
+    webhookSecretToken: _webhookSecretToken,
+    chatAppId: _chatAppId,
+    messagingEndpointUrl: _messagingEndpointUrl,
+    ...sanitised
+  } = telegramIntegration
+  return sanitised
+}
+
+const agentIntegrationSanitisers: AgentIntegrationSanitisers = {
+  discordIntegration: sanitiseDiscordIntegration,
+  MSTeamsIntegration: sanitiseMSTeamsIntegration,
+  slackIntegration: sanitiseSlackIntegration,
+  telegramIntegration: sanitiseTelegramIntegration,
+}
+
+export type SanitisedAgent = Omit<Agent, "publishedAt">
 
 export const sanitiseAgentForExport = (agent: Agent): SanitisedAgent => {
   const sanitised = structuredClone(withAgentDefaults(agent)) as Agent
@@ -231,11 +302,18 @@ export const sanitiseAgentForExport = (agent: Agent): SanitisedAgent => {
     knowledgeSources: [],
   }))
 
-  for (const key of Object.keys(
-    agentIntegrationKeys
-  ) as AgentIntegrationKeys[]) {
-    delete sanitised[key]
-  }
+  sanitised.discordIntegration = agentIntegrationSanitisers.discordIntegration(
+    sanitised.discordIntegration
+  )
+  sanitised.MSTeamsIntegration = agentIntegrationSanitisers.MSTeamsIntegration(
+    sanitised.MSTeamsIntegration
+  )
+  sanitised.slackIntegration = agentIntegrationSanitisers.slackIntegration(
+    sanitised.slackIntegration
+  )
+  sanitised.telegramIntegration = agentIntegrationSanitisers.telegramIntegration(
+    sanitised.telegramIntegration
+  )
 
   return sanitised
 }
