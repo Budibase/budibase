@@ -1,6 +1,5 @@
 import { cache, features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
-import { helpers } from "@budibase/shared-core"
 import {
   ActionType,
   Agent,
@@ -13,7 +12,6 @@ import {
 import {
   Output,
   extractReasoningMiddleware,
-  jsonSchema,
   stepCountIs,
   ToolLoopAgent,
   type LanguageModelUsage,
@@ -22,6 +20,7 @@ import {
   type ToolSet,
   wrapLanguageModel,
 } from "ai"
+import { z } from "zod"
 import sdk from "../../.."
 import { createSessionLogIndexer } from "../agentLogs"
 import {
@@ -91,30 +90,38 @@ export interface AgentChatStreamOptions {
   pendingToolCalls?: Set<string>
 }
 
-interface OperationRoute {
-  operationId?: string
-  reason?: string
-}
+const operationRoutingActionSchema = z.enum([
+  "select_operation",
+  "summarize_operations",
+  "no_operation",
+])
 
-const OPERATION_ROUTER_SCHEMA =
-  helpers.structuredOutput.normalizeSchemaForStructuredOutput({
-    type: "object",
-    properties: {
-      operationId: {
-        anyOf: [{ type: "string" }, { type: "null" }],
-      },
-      reason: { type: "string" },
-    },
-    required: ["operationId", "reason"],
-  })
+const operationRouterOutputSchema = z.object({
+  action: operationRoutingActionSchema,
+  operationId: z.string().nullable(),
+  reason: z.string(),
+})
+
+type OperationRoutingAction = z.infer<typeof operationRoutingActionSchema>
+type OperationRouterOutput = z.infer<typeof operationRouterOutputSchema>
+type OperationRoute =
+  | {
+      action: "select_operation"
+      operation: AgentOperation
+    }
+  | {
+      action: Exclude<OperationRoutingAction, "select_operation">
+      operation?: undefined
+    }
 
 const buildOperationRoutingInstructions = (
   operations: AgentOperation[]
-) => `You route a user request to one Budibase agent operation.
+) => `You decide whether the assistant should use one Budibase agent operation, summarize the available operations, or proceed without an operation.
 
-Choose exactly one live operation only when it is clearly the best match for the latest user request.
-If the request does not fit any operation, return operationId as null.
-Be conservative. If the request is ambiguous, too broad, or unrelated, return null.
+Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId.
+Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId as null.
+Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId as null.
+Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one unless it is clearly a capabilities-overview request.
 Use the operation name, instructions, tools, and knowledge setup as signals.
 Return only the structured output.
 
@@ -161,19 +168,26 @@ export const chooseOperationForQuestion = async ({
   agent: Agent
   latestQuestion: string
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
-}): Promise<AgentOperation | undefined> => {
+}): Promise<OperationRoute> => {
   const liveOperations = getLiveOperations(agent)
   if (liveOperations.length === 0) {
-    return undefined
+    return {
+      action: "no_operation",
+    }
   }
   const multipleOperationsEnabled = await features.isEnabled(
     FeatureFlag.MULTIPLE_OPERATIONS
   )
   if (!multipleOperationsEnabled) {
-    return liveOperations[0]
+    return {
+      action: "select_operation",
+      operation: liveOperations[0],
+    }
   }
   if (!latestQuestion.trim()) {
-    return undefined
+    return {
+      action: "no_operation",
+    }
   }
 
   const router = new ToolLoopAgent({
@@ -186,7 +200,7 @@ export const chooseOperationForQuestion = async ({
     instructions: buildOperationRoutingInstructions(liveOperations),
     stopWhen: stepCountIs(1),
     providerOptions: llm.providerOptions?.(false),
-    output: Output.object({ schema: jsonSchema(OPERATION_ROUTER_SCHEMA) }),
+    output: Output.object({ schema: operationRouterOutputSchema }),
     headers: {
       "x-litellm-tags": "bb-operation-routing",
     },
@@ -197,20 +211,86 @@ export const chooseOperationForQuestion = async ({
       prompt: latestQuestion,
     })
 
-    const route = (await result.output) as OperationRoute
-
-    if (!route?.operationId) {
-      return undefined
+    const route = (await result.output) as OperationRouterOutput
+    if (route?.action === "summarize_operations") {
+      return {
+        action: "summarize_operations",
+      }
     }
 
-    return liveOperations.find(operation => operation.id === route.operationId)
+    if (route?.action !== "select_operation" || !route.operationId) {
+      return {
+        action: "no_operation",
+      }
+    }
+
+    const operation = liveOperations.find(
+      operation => operation.id === route.operationId
+    )
+    if (!operation) {
+      return {
+        action: "no_operation",
+      }
+    }
+
+    return {
+      action: "select_operation",
+      operation,
+    }
   } catch (error) {
     console.error("Operation routing failed", {
       agentId: agent._id,
       error,
     })
-    return undefined
+    return {
+      action: "no_operation",
+    }
   }
+}
+
+// Selects the operation for a run: pin to operationId when given (resume path),
+// else route on the question, else fall back to the conversation's last
+// operation (sticky - keeps the operation + its tools across "yes"/"ok"
+// follow-ups). Records the choice so the next turn can stick to it.
+const selectOperationForRun = async ({
+  agent,
+  sessionId,
+  latestQuestion,
+  operationId,
+  llm,
+}: {
+  agent: Agent
+  sessionId: string
+  latestQuestion: string
+  operationId?: string
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+}): Promise<OperationRoute> => {
+  let route: OperationRoute
+  if (operationId) {
+    const operation = getLiveOperations(agent).find(o => o.id === operationId)
+    route = operation
+      ? { action: "select_operation", operation }
+      : { action: "no_operation" }
+  } else {
+    route = await chooseOperationForQuestion({ agent, latestQuestion, llm })
+  }
+
+  // Sticky
+  if (route.action === "no_operation" && !operationId) {
+    const lastOperationId = await getSessionOperationId(sessionId)
+    const lastOperation = lastOperationId
+      ? getLiveOperations(agent).find(o => o.id === lastOperationId)
+      : undefined
+    if (lastOperation) {
+      route = { action: "select_operation", operation: lastOperation }
+    }
+  }
+
+  if (route.action === "select_operation") {
+    await setSessionOperationId(sessionId, route.operation.id)
+  }
+
+  return route
 }
 
 export interface PrepareAgentRunContextParams {
@@ -228,10 +308,30 @@ export interface PrepareAgentRunContextParams {
 export interface AgentRunContext {
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
   selectedOperation?: AgentOperation
+  routingAction: OperationRoute["action"]
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
 }
+
+const buildOperationsSummaryPrompt = (operations: AgentOperation[]) =>
+  [
+    "The router decided this is a capabilities-overview request.",
+    "Summarize the live operations below instead of picking one.",
+    "Keep the answer user-facing and concise.",
+    "",
+    "Live operations:",
+    ...operations.map(operation =>
+      [
+        `- ${operation.name}`,
+        operation.promptInstructions?.trim()
+          ? `  Focus: ${operation.promptInstructions.trim()}`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    ),
+  ].join("\n")
 
 export const prepareAgentRunContext = async ({
   agent,
@@ -249,40 +349,29 @@ export const prepareAgentRunContext = async ({
     span,
     agentId
   )
-  let selectedOperation = operationId
-    ? getLiveOperations(agent).find(operation => operation.id === operationId)
-    : await chooseOperationForQuestion({
-        agent,
-        latestQuestion,
-        llm,
-      })
-
-  // STICKY: Operation selection is sticky per conversation. The router can return null for
-  // conversational follow-ups ("yes", "that's correct", "ok"), which would
-  // otherwise strip the operation - and all its tools - mid-flow, breaking
-  // multi-turn flows like gather -> confirm -> escalate. When routing doesn't
-  // pick one, fall back to the last operation used in this session.
-  if (!selectedOperation && !operationId) {
-    const lastOperationId = await getSessionOperationId(sessionId)
-    if (lastOperationId) {
-      selectedOperation = getLiveOperations(agent).find(
-        operation => operation.id === lastOperationId
-      )
-    }
-  }
-  if (selectedOperation) {
-    await setSessionOperationId(sessionId, selectedOperation.id)
-  }
-
+  const routingDecision = await selectOperationForRun({
+    agent,
+    sessionId,
+    latestQuestion,
+    operationId,
+    llm,
+  })
   const promptAndTools = await buildPromptAndTools(
     agent,
-    selectedOperation,
-    buildPromptOptions
+    routingDecision.operation,
+    {
+      ...buildPromptOptions,
+      fallbackPromptInstructions:
+        routingDecision.action === "summarize_operations"
+          ? buildOperationsSummaryPrompt(getLiveOperations(agent))
+          : buildPromptOptions?.fallbackPromptInstructions,
+    }
   )
 
   return {
     llm,
-    selectedOperation,
+    selectedOperation: routingDecision.operation,
+    routingAction: routingDecision.action,
     ...promptAndTools,
   }
 }

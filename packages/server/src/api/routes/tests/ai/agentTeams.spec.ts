@@ -601,7 +601,7 @@ describe("agent teams integration provisioning", () => {
           {
             sourceId: "source-1",
             fileId: "file-1",
-            filename: "Source [One]\nDraft.pdf",
+            filename: "Source [One]\n@Draft.pdf",
           },
         ],
         title: "Mock conversation",
@@ -624,13 +624,13 @@ describe("agent teams integration provisioning", () => {
         },
       })
 
-      expect(response.body.messages).toContain(
-        [
-          "Answer with sources",
-          "",
-          "Sources:",
-          "- [Source One Draft.pdf](http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf)",
-        ].join("\n")
+      expect(response.body.messages).toContain("Answer with sources")
+      const cardMessage = response.body.messages.find((message: string) =>
+        message.includes("Source One Draft.pdf")
+      )
+      expect(cardMessage).toContain('"title":"Sources"')
+      expect(cardMessage).toContain(
+        "http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf"
       )
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(agent._id, "file-1")
@@ -696,6 +696,7 @@ describe("agent teams integration provisioning", () => {
           },
         ] as any,
         assistantText: "Answer without links",
+        allowKnowledgeSourceDownload: false,
         ragSources: [
           {
             sourceId: "source-1",

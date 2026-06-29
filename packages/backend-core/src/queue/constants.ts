@@ -11,5 +11,6 @@ export enum JobQueue {
   KNOWLEDGE_SOURCE_SYNC = "knowledgeSourceSyncQueue",
   AGENT_LOG_INDEXING = "agentLogIndexingQueue",
   ESCALATION = "escalationQueue",
+  AGENT_REQUEST_TRACKING = "agentRequestTrackingQueue",
   AGENT_TEST_RUN = "agentTestRunQueue",
 }
