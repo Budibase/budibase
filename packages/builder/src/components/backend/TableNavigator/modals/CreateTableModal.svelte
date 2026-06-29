@@ -27,12 +27,14 @@
     name?: string
     beforeSave?: () => Promise<void>
     afterSave?: (table: Table) => Promise<void>
+    initialProjectIds?: string[]
   }
 
   let {
     promptUpload = false,
     name = $bindable(""),
     beforeSave = async () => {},
+    initialProjectIds = [],
     afterSave = async (table: Table) => {
       notifications.success(`Table ${name} created successfully.`)
 
@@ -67,6 +69,10 @@
   let allValid = $state(true)
   let displayColumn: string | null = $state(null)
   let projectIds: string[] = $state([])
+
+  $effect(() => {
+    projectIds = [...initialProjectIds]
+  })
 
   const buildOptionConstraints = (schema: TableSchema, rows: Row[]) => {
     const updatedSchema: TableSchema = {}

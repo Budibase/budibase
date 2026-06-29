@@ -7,6 +7,15 @@
 
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
+  $: projectSearch = (() => {
+    if (typeof window === "undefined") {
+      return ""
+    }
+    const projectId = new URLSearchParams(window.location.search).get(
+      "project"
+    )
+    return projectId ? `?project=${encodeURIComponent(projectId)}` : ""
+  })()
   $: {
     if ($datasources.list.length && !datasource) {
       $redirect(`/builder/workspace/${$params.application}/apis`)
@@ -16,7 +25,9 @@
       )
     } else if (datasource && isRestDatasource) {
       queries.setNewQueryDatasourceId($params.datasourceId)
-      $redirect(`/builder/workspace/${$params.application}/apis/query/new`)
+      $redirect(
+        `/builder/workspace/${$params.application}/apis/query/new${projectSearch}`
+      )
     }
   }
 </script>

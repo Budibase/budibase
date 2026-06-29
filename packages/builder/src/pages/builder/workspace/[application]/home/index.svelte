@@ -94,6 +94,7 @@
 
   let createTableModal: ModalAPI
   let tableName = ""
+  let createTableModalKey = 0
 
   let selectedAgent: Agent | undefined
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
@@ -128,6 +129,7 @@
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
   $: if (searchTerm.trim()) {
     searchOpen = true
@@ -273,8 +275,19 @@
     importProjectModal?.show()
   }
 
+  const withSelectedProject = (route: string) => {
+    const target = url(route)
+    if (!selectedProjectId) {
+      return target
+    }
+    const separator = target.includes("?") ? "&" : "?"
+    return `${target}${separator}project=${encodeURIComponent(
+      selectedProjectId
+    )}`
+  }
+
   const goToCreate = (target: "data/new" | "apis/new") => {
-    goto(url(`../${target}`))
+    goto(withSelectedProject(`../${target}`))
   }
 
   const handleTableSave = async (table: Table) => {
@@ -284,6 +297,7 @@
 
   const openCreateTable = () => {
     tableName = ""
+    createTableModalKey += 1
     createTableModal?.show()
   }
 
@@ -429,7 +443,8 @@
     project: Pick<ProjectResponse, "name" | "description" | "color">
   ) => {
     try {
-      await projectsStore.create(project)
+      const createdProject = await projectsStore.create(project)
+      selectedProjectId = createdProject._id
       notifications.success("Project created successfully")
       createProjectModal?.hide()
     } catch (error) {
@@ -1211,21 +1226,28 @@
 <WorkspaceAppModal
   bind:this={workspaceAppModal}
   workspaceApp={selectedWorkspaceApp}
+  {initialProjectIds}
   on:hide={() => (selectedWorkspaceApp = undefined)}
 />
 
 <Modal bind:this={createAutomationModal}>
-  <CreateAutomationModal {webhookModal} />
+  <CreateAutomationModal {webhookModal} {initialProjectIds} />
 </Modal>
 <Modal bind:this={webhookModal}>
   <CreateWebhookModal />
 </Modal>
 
 <Modal bind:this={createTableModal} closeOnOutsideClick={false}>
-  <CreateTableModal bind:name={tableName} afterSave={handleTableSave} />
+  {#key createTableModalKey}
+    <CreateTableModal
+      bind:name={tableName}
+      {initialProjectIds}
+      afterSave={handleTableSave}
+    />
+  {/key}
 </Modal>
 
-<AgentModal bind:this={agentModal} />
+<AgentModal bind:this={agentModal} {initialProjectIds} />
 
 <Modal bind:this={duplicateAutomationModal}>
   {#if selectedAutomation}

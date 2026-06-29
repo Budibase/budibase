@@ -27,6 +27,15 @@
 
   let sampleDataLoading = false
   $: disabled = sampleDataLoading
+  $: initialProjectIds = (() => {
+    if (typeof window === "undefined") {
+      return []
+    }
+    const projectId = new URLSearchParams(window.location.search).get(
+      "project"
+    )
+    return projectId ? [projectId] : []
+  })()
 
   const createSampleData = async () => {
     sampleDataLoading = true
@@ -43,9 +52,15 @@
   }
 </script>
 
-<CreateInternalTableModal bind:this={internalTableModal} />
+<CreateInternalTableModal
+  bind:this={internalTableModal}
+  {initialProjectIds}
+/>
 
-<CreateExternalDatasourceModal bind:this={externalDatasourceModal} />
+<CreateExternalDatasourceModal
+  bind:this={externalDatasourceModal}
+  {initialProjectIds}
+/>
 
 <CreationPage
   showClose={hasData($datasources, $tables)}

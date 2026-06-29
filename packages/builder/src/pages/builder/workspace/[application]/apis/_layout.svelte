@@ -29,6 +29,16 @@
     workspaceConnections.startDraft()
   }
 
+  const getProjectSearch = () => {
+    if (typeof window === "undefined") {
+      return ""
+    }
+    const projectId = new URLSearchParams(window.location.search).get(
+      "project"
+    )
+    return projectId ? `?project=${encodeURIComponent(projectId)}` : ""
+  }
+
   const loadPanelWidth = () => {
     const saved = localStorage.getItem("api-panel-width")
     if (saved) {
@@ -87,7 +97,7 @@
 
   // When a connection is created while on the empty state, redirect to new query
   $: if (hasRestDatasources && $isActive("./new")) {
-    $redirect(`./query/new/${firstRestDatasource._id}`)
+    $redirect(`./query/new/${firstRestDatasource._id}${getProjectSearch()}`)
   }
 </script>
 

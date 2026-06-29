@@ -132,6 +132,7 @@
   let selectedColumnTypes: Record<string, string> = $state({})
 
   let rawRows: Row[] = $state([])
+  let rowsHash = $state("")
 
   const displayColumnOptions = $derived(
     Object.keys(schema || {}).filter(column => {
@@ -152,13 +153,28 @@
   })
 
   $effect(() => {
-    rows = rawRows.map(row => utils.trimOtherProps(row, Object.keys(schema)))
+    const nextRows = rawRows.map(row =>
+      utils.trimOtherProps(row, Object.keys(schema))
+    )
+    const nextRowsHash = JSON.stringify(nextRows)
+    if (nextRowsHash !== rowsHash) {
+      rows = nextRows
+      rowsHash = nextRowsHash
+    }
 
-    const validationRows = getValidationRows(rows)
+    const validationRows = getValidationRows(nextRows)
     const newValidateHash =
       JSON.stringify(validationRows) + JSON.stringify(schema)
     if (newValidateHash !== validateHash) {
-      validate(validationRows, schema)
+      if (validationRows.length) {
+        validate(validationRows, schema)
+      } else {
+        validation = {}
+        allValid = true
+        errors = {}
+        error = null
+        loading = false
+      }
     }
     validateHash = newValidateHash
   })
