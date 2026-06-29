@@ -2,7 +2,12 @@ import { context, features } from "@budibase/backend-core"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import { structures } from "@budibase/backend-core/tests"
 import {
+  AutomationTriggerStepId,
   FeatureFlag,
+  isEmailTrigger,
+  type Automation,
+  type EmailTrigger,
+  type EmailTriggerInputs,
   type Project,
   type ProjectPackageDependencyIndex,
 } from "@budibase/types"
@@ -13,18 +18,21 @@ import { join } from "path"
 import { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
+import { TRIGGER_DEFINITIONS } from "../../../automations"
 import sdk from "../../../sdk"
 import * as projects from "../../../sdk/workspace/projects/crud"
 import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
+  automationTrigger,
   basicDatasource,
   basicDatasourcePlus,
   basicQuery,
   basicScreen,
   basicTable,
   createQueryScreen,
+  newAutomation,
 } from "../../../tests/utilities/structures"
 
 describe("/projects", () => {
@@ -532,6 +540,43 @@ describe("/projects", () => {
         expectedProjectIds
       )
       expect(fetchedQuery.projectIds).toEqual(expectedProjectIds)
+    })
+  })
+
+  it("preserves stored automation email passwords when deleting a project", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const password = "imap-secret"
+      const trigger: EmailTrigger = {
+        ...automationTrigger(TRIGGER_DEFINITIONS.EMAIL),
+        stepId: AutomationTriggerStepId.EMAIL,
+        inputs: {
+          host: "imap.example.com",
+          port: 993,
+          secure: true,
+          username: "ops@example.com",
+          password,
+          mailbox: "INBOX",
+        } satisfies EmailTriggerInputs,
+      }
+      const { automation } = await config.api.automation.post({
+        ...newAutomation({ trigger, steps: [] }),
+        projectIds: [project._id],
+      })
+
+      await config.api.project.delete(project._id, project._rev)
+
+      const stored = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () =>
+          await context.getWorkspaceDB().get<Automation>(automation._id!)
+      )
+
+      expect(stored.projectIds).toBeUndefined()
+      if (!isEmailTrigger(stored.definition.trigger)) {
+        throw new Error("Expected stored automation to have an email trigger")
+      }
+      expect(stored.definition.trigger.inputs.password).toBe(password)
     })
   })
 
