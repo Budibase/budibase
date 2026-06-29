@@ -779,10 +779,7 @@ describe("/api/resources/usage", () => {
           })
 
           const resourcesToCopy = await collectDependantResourceIds(project._id)
-          expect(resourcesToCopy).toEqual([
-            project._id,
-            assignedDatasource._id,
-          ])
+          expect(resourcesToCopy).toEqual([project._id, assignedDatasource._id])
 
           await duplicateResources(resourcesToCopy, destination.appId)
 

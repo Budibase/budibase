@@ -339,12 +339,10 @@ describe("/projects", () => {
 
       await config.doInContext(undefined, async () => {
         const db = context.getWorkspaceDB()
-        const bulkDocs = jest
-          .spyOn(db, "bulkDocs")
-          .mockResolvedValueOnce([
-            { id: workspaceApp._id!, rev: "2-mock" },
-            { id: "table_mock", error: "conflict", reason: "cleanup failed" },
-          ])
+        const bulkDocs = jest.spyOn(db, "bulkDocs").mockResolvedValueOnce([
+          { id: workspaceApp._id!, rev: "2-mock" },
+          { id: "table_mock", error: "conflict", reason: "cleanup failed" },
+        ])
 
         try {
           await expect(
