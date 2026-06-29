@@ -138,12 +138,11 @@ async function clearAssignments(projectId: string) {
   const db = context.getWorkspaceDB()
   const rollbacks: Rollback[] = []
   const assignedDocs = await fetchAssignedProjectDocs(projectId)
-  const currentDocs = assignedDocs
 
   const changedDocs: AnyDocument[] = []
   const originals: AnyDocument[] = []
 
-  const assignmentUpdates = currentDocs
+  const assignmentUpdates = assignedDocs
     .filter(
       doc =>
         doc._id &&
@@ -161,7 +160,7 @@ async function clearAssignments(projectId: string) {
     changedDocs.push(updated)
   }
 
-  const datasourceCandidates = currentDocs.filter(datasource => {
+  const datasourceCandidates = assignedDocs.filter(datasource => {
     if (
       !datasource._id?.startsWith(prefixed(DocumentType.DATASOURCE)) ||
       typeof datasource.source !== "string"

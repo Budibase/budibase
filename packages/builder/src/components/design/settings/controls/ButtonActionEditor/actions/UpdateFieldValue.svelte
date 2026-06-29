@@ -17,12 +17,16 @@
   }
 
   interface Props {
-    parameters: Parameters
+    parameters?: Parameters
     bindings?: unknown[]
     nested?: boolean
   }
 
-  let { parameters, bindings = [], nested }: Props = $props()
+  let {
+    parameters = $bindable<Parameters>({}),
+    bindings = [],
+    nested,
+  }: Props = $props()
 
   const typeOptions = [
     {
@@ -46,9 +50,10 @@
     if (component) {
       return component
     }
-    // Check for block component IDs, and use the block itself instead
-    if (id?.includes("-")) {
-      return findComponent(asset, id.split("-")[0])
+    // Action provider IDs can include a suffix, e.g. "<componentId>-form".
+    const componentId = id?.replace(/-(form|provider)$/, "")
+    if (componentId && componentId !== id) {
+      return findComponent(asset, componentId)
     }
     return null
   }
@@ -63,38 +68,70 @@
     getActionProviders(
       $selectedScreen,
       $componentStore.selectedComponentId,
-      "ValidateForm",
+      "UpdateFieldValue",
       { includeSelf: nested || false }
     )
   )
 
   onMount(() => {
     if (!parameters.type) {
-      parameters.type = "set"
+      parameters = {
+        ...parameters,
+        type: "set",
+      }
     }
   })
 
+  const handleFormChange = (e: CustomEvent<string | undefined>) => {
+    if (!e.detail) {
+      return
+    }
+
+    parameters = {
+      ...parameters,
+      componentId: e.detail,
+      fields: [],
+      fieldValues: {},
+    }
+  }
+
+  const handleTypeChange = (
+    e: CustomEvent<UpdateFieldValueType | undefined>
+  ) => {
+    if (!e.detail) {
+      return
+    }
+
+    parameters = {
+      ...parameters,
+      type: e.detail,
+    }
+  }
+
   const handleFieldChange = (e: CustomEvent<string[]>) => {
-    // Convert from single field to multi-select format
-    parameters.fields = e.detail || []
-    // Initialize fieldValues for new fields
-    if (!parameters.fieldValues) {
-      parameters.fieldValues = {}
+    parameters = {
+      ...parameters,
+      fields: e.detail || [],
+      fieldValues: parameters.fieldValues || {},
     }
   }
 
   const handleFieldValueChange = (fieldName: string, value: string) => {
-    if (!parameters.fieldValues) {
-      parameters.fieldValues = {}
+    parameters = {
+      ...parameters,
+      fieldValues: {
+        ...(parameters.fieldValues || {}),
+        [fieldName]: value,
+      },
     }
-    parameters.fieldValues[fieldName] = value
   }
 </script>
 
 <div class="root">
   <Label size="S">Form</Label>
   <Select
-    bind:value={parameters.componentId}
+    value={parameters.componentId}
+    on:change={handleFormChange}
     options={actionProviders}
     getOptionLabel={x => x.readableBinding}
     getOptionValue={x => x.runtimeBinding}
@@ -102,7 +139,8 @@
   <Label size="S">Type</Label>
   <Select
     placeholder={false}
-    bind:value={parameters.type}
+    value={parameters.type}
+    on:change={handleTypeChange}
     options={typeOptions}
   />
   <Label size="S">Fields</Label>

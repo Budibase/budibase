@@ -407,7 +407,7 @@ export async function exportProject(
     )
     await fsp.mkdir(join(tmpPath, PROJECT_DOCS_DIRECTORY), { recursive: true })
 
-    await Promise.all(
+    const writeResults = await Promise.allSettled(
       exportedDocs.map(async doc => {
         const type = typeByResourceId.get(doc._id!)
         if (!type) {
@@ -430,6 +430,12 @@ export async function exportProject(
         )
       })
     )
+    const writeFailure = writeResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    )
+    if (writeFailure) {
+      throw writeFailure.reason
+    }
 
     if (opts?.encryptPassword) {
       await encryptDirectory(tmpPath, opts.encryptPassword)
