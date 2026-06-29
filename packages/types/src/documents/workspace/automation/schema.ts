@@ -208,7 +208,10 @@ export type ActionImplementations<T extends Hosting> = {
     AgentStepInputs,
     AgentStepOutputs
   >
-  [AutomationActionStepId.ESCALATION]: ActionImplementation<
+  // Optional: the automation escalation step impl is currently removed from the
+  // product (backend escalation support + types remain). Re-registering it makes
+  // this required again.
+  [AutomationActionStepId.ESCALATION]?: ActionImplementation<
     EscalationStepInputs,
     EscalationStepOutputs
   >

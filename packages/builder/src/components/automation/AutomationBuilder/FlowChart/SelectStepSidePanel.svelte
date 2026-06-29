@@ -221,7 +221,6 @@
           AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
           AutomationActionStepId.COLLECT,
           AutomationActionStepId.LOOP_V2,
-          AutomationActionStepId.ESCALATION,
         ].includes(k as AutomationActionStepId)
       ),
     },
