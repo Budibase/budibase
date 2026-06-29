@@ -26,6 +26,6 @@
     "zod": "^4.2.1"
   },
   "dependencies": {
-    "scim-patch": "^0.8.1"
+    "scim-patch": "^0.9.1"
   }
 }

@@ -8,6 +8,7 @@ import { portalTranslations } from "./portal"
 import { loginTranslations } from "./login"
 import { forgotPasswordTranslations } from "./forgotPassword"
 import { validationTranslations } from "./validation"
+import { calendarTranslations } from "./appcomponents/calendar"
 import type {
   TranslationCategory,
   TranslationDefinition,
@@ -26,6 +27,7 @@ export {
   loginTranslations,
   forgotPasswordTranslations,
   validationTranslations,
+  calendarTranslations,
 }
 
 const translationModules = [
@@ -39,19 +41,21 @@ const translationModules = [
   loginTranslations,
   forgotPasswordTranslations,
   validationTranslations,
+  calendarTranslations,
 ]
 
 export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
   {
-    userMenu: "User menu",
-    profileModal: "Profile modal",
+    calendar: "Calendar",
+    filter: "Filter",
+    forgotPassword: "Forgot password",
+    login: "Login",
     passwordModal: "Password modal",
     picker: "Picker",
-    filter: "Filter",
-    recaptcha: "reCAPTCHA",
     portal: "Portal",
-    login: "Login",
-    forgotPassword: "Forgot password",
+    profileModal: "Profile modal",
+    recaptcha: "reCAPTCHA",
+    userMenu: "User menu",
     validation: "Validation",
   }
 

@@ -137,6 +137,7 @@ export type FilterStepInputs = {
   field: any
   condition: FilterCondition
   value: any
+  notify?: boolean
 }
 
 export type FilterStepOutputs = BaseAutomationOutputs & {
@@ -443,6 +444,7 @@ export type AppActionTriggerOutputs = {
 
 export type CronTriggerInputs = {
   cron: string
+  timezone?: string
 }
 
 export enum EmailTriggerAuthType {

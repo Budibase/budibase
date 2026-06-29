@@ -44,7 +44,7 @@
     "bull": "4.10.1",
     "correlation-id": "4.0.0",
     "csvtojson": "2.0.13",
-    "dd-trace": "5.63.0",
+    "dd-trace": "5.109.0",
     "dotenv": "16.0.1",
     "google-auth-library": "^10.5.0",
     "google-spreadsheet": "npm:@budibase/google-spreadsheet@4.1.5",
@@ -55,7 +55,7 @@
     "koa": "3.1.2",
     "koa-passport": "^6.0.0",
     "koa-pino-logger": "4.0.0",
-    "@koa/router": "15.3.0",
+    "@koa/router": "15.6.0",
     "lodash": "4.18.1",
     "node-fetch": "2.6.7",
     "object-sizeof": "2.6.1",
@@ -72,7 +72,7 @@
     "sanitize-s3-objectkey": "0.0.1",
     "semver": "^7.5.4",
     "tar-fs": "2.1.4",
-    "undici": "^6.24.0",
+    "undici": "^8.5.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
