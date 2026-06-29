@@ -9,16 +9,11 @@
     ModalContent,
     TextArea,
   } from "@budibase/bbui"
-  import type { ProjectResponse } from "@budibase/types"
-
-  interface ConfirmPayload {
-    name: string
-    description?: string
-    color?: string
-  }
+  import { helpers } from "@budibase/shared-core"
+  import type { ProjectFormPayload, ProjectResponse } from "@budibase/types"
 
   interface Props {
-    onConfirm?: (_payload: ConfirmPayload) => unknown
+    onConfirm?: (_payload: ProjectFormPayload) => unknown
     project?: ProjectResponse
   }
 
@@ -28,10 +23,14 @@
   let description = $state(project?.description || "")
   let color = $state(project ? project.color || "" : "#8CA171")
   let nameError: string | undefined = $state(undefined)
+  let colorError: string | undefined = $state(undefined)
 
   $effect(() => {
     if (name.trim()) {
       nameError = undefined
+    }
+    if (color.trim()) {
+      colorError = undefined
     }
   })
 
@@ -41,10 +40,18 @@
       return keepOpen
     }
 
+    let normalizedColor: string | undefined
+    try {
+      normalizedColor = helpers.normaliseSafeCssColor(color)
+    } catch {
+      colorError = "Color is invalid"
+      return keepOpen
+    }
+
     return onConfirm({
       name: name.trim(),
       description: description.trim() || undefined,
-      color: color.trim() || undefined,
+      color: normalizedColor,
     })
   }
 </script>
@@ -65,7 +72,15 @@
 
   <div class="color-field">
     <Body size="S" weight="600">Color</Body>
-    <ColorPicker bind:value={color} on:change={e => (color = e.detail || "")} />
+    <ColorPicker
+      bind:value={color}
+      on:change={e => (color = e.detail || "")}
+    />
+    {#if colorError}
+      <Body size="S" color="var(--spectrum-semantic-negative-color-default)">
+        {colorError}
+      </Body>
+    {/if}
   </div>
 </ModalContent>
 
