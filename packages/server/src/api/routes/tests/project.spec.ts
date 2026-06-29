@@ -164,6 +164,43 @@ describe("/projects", () => {
     })
   })
 
+  it("rejects unusable project names on create", async () => {
+    await withProjectsEnabled(async () => {
+      await config.api.project.create(
+        {
+          name: "   ",
+        },
+        {
+          status: 400,
+          body: {
+            message: "Project name is required.",
+          },
+        }
+      )
+    })
+  })
+
+  it("rejects unusable project names on update", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+
+      await config.api.project.update(
+        {
+          ...project,
+          name: "   ",
+        },
+        {
+          status: 400,
+          body: {
+            message: "Project name is required.",
+          },
+        }
+      )
+    })
+  })
+
   it("rejects stale revisions on update", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
