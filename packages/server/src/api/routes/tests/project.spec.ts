@@ -1911,16 +1911,16 @@ describe("/projects", () => {
 
   it("rejects malformed project import archives", async () => {
     await withProjectsEnabled(async () => {
-      await config.api.project.import(
-        Buffer.from("not a project archive"),
-        undefined,
-        {
+      await config.api.project.import({
+        file: Buffer.from("not a project archive"),
+        body: undefined,
+        expectations: {
           status: 400,
           body: {
             message: "Project package is invalid.",
           },
-        }
-      )
+        },
+      })
     })
   })
 
