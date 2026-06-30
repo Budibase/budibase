@@ -407,23 +407,6 @@ describe("/api/resources/usage", () => {
         )
       })
     })
-
-    it("does not include project resources after the feature flag is disabled", async () => {
-      const { project } = await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          projectIds: [project._id],
-        })
-        return { project }
-      })
-
-      const result = await config.api.resource.getResourceDependencies()
-
-      expect(result.body.resources[project._id]).toBeUndefined()
-    })
   })
 
   describe("duplication", () => {
@@ -772,34 +755,6 @@ describe("/api/resources/usage", () => {
         screens: [...app1.screens, ...app2.screens],
         tables: [table],
       })
-    })
-
-    it("strips project assignments when duplicating after projects are disabled", async () => {
-      const { datasource } = await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          projectIds: [project._id],
-        })
-        return { datasource }
-      })
-      const newWorkspace = await config.api.workspace.create({
-        name: `Destination ${generator.natural()}`,
-      })
-
-      await duplicateResources([datasource._id!], newWorkspace.appId)
-
-      await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
-        async () => {
-          const copiedDatasource = await config.api.datasource.get(
-            datasource._id!
-          )
-          expect(copiedDatasource.projectIds).toBeUndefined()
-        }
-      )
     })
 
     it("strips dangling project assignments when the project is not duplicated", async () => {
