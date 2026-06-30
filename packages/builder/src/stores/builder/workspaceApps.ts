@@ -133,7 +133,9 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       url: workspaceApp.url,
       navigation: workspaceApp.navigation,
       disabled: workspaceApp.disabled,
-      projectIds: workspaceApp.projectIds,
+      ...(Object.hasOwn(workspaceApp, "projectIds")
+        ? { projectIds: workspaceApp.projectIds }
+        : {}),
       ...(Object.hasOwn(workspaceApp, "theme")
         ? { theme: workspaceApp.theme }
         : {}),

@@ -1,4 +1,5 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
 import {
   Agent,
   AnyDocument,
@@ -11,9 +12,11 @@ import {
   ProjectPackageManifest,
   ResourceType,
   RowActionPermissions,
+  Table,
   TableRowActions,
   SEPARATOR,
   VirtualDocumentType,
+  WorkspaceApp,
   prefixed,
 } from "@budibase/types"
 import fs from "fs"
@@ -33,6 +36,7 @@ import {
 import { isExternalTableID } from "../../../../integrations/utils"
 import { decryptFiles, untarFile } from "../../backups/imports"
 import sdk from "../../.."
+import { getAppUrl } from "../../workspaces/utils"
 import {
   PROJECT_DEPENDENCY_INDEX_FILE,
   PROJECT_DOCS_DIRECTORY,
@@ -388,6 +392,95 @@ const remapIdReferences = (value: string, idMap: Map<string, string>) =>
     value
   )
 
+const getDatasourceEntities = (
+  datasource: Datasource
+): Record<string, Table> => {
+  const entities = datasource.entities
+  if (!entities) {
+    return {}
+  }
+  if (!isRecord(entities)) {
+    throw new HTTPError(
+      "Project package contains invalid datasource entities.",
+      400
+    )
+  }
+  for (const entity of Object.values(entities)) {
+    if (!isRecord(entity)) {
+      throw new HTTPError(
+        "Project package contains invalid datasource entities.",
+        400
+      )
+    }
+  }
+  return entities
+}
+
+const normaliseWorkspaceAppUrl = (url?: string) => {
+  const trimmed = url?.trim()
+  if (!trimmed) {
+    return undefined
+  }
+  return getAppUrl({ url: trimmed })
+}
+
+const normaliseUrlForComparison = (url: string) =>
+  url.replace(/\/$/, "").toLowerCase()
+
+const createWorkspaceAppImportDeconflicter = async () => {
+  const existingApps = await sdk.workspaceApps.fetch()
+  const usedNames = existingApps.map(app => app.name)
+  const normalisedNames = new Set(
+    usedNames.map(name => helpers.normalizeForComparison(name))
+  )
+  const normalisedUrls = new Set(
+    existingApps
+      .map(app => normaliseWorkspaceAppUrl(app.url))
+      .filter((url): url is string => !!url)
+      .map(normaliseUrlForComparison)
+  )
+
+  const reserveName = (name: string) => {
+    usedNames.push(name)
+    normalisedNames.add(helpers.normalizeForComparison(name))
+    return name
+  }
+
+  const reserveUrl = (url: string) => {
+    normalisedUrls.add(normaliseUrlForComparison(url))
+    return url
+  }
+
+  const getUniqueName = (name?: string) => {
+    const preferred = name?.trim() || "Imported app"
+    if (!normalisedNames.has(helpers.normalizeForComparison(preferred))) {
+      return reserveName(preferred)
+    }
+    return reserveName(helpers.duplicateName(preferred, usedNames))
+  }
+
+  const getUniqueUrl = (url: string | undefined, name: string) => {
+    const preferred = normaliseWorkspaceAppUrl(url) || getAppUrl({ name })
+    if (!normalisedUrls.has(normaliseUrlForComparison(preferred))) {
+      return reserveUrl(preferred)
+    }
+
+    const baseUrl = getAppUrl({ name }).replace(/\/$/, "")
+    let candidate = baseUrl
+    let index = 1
+    while (normalisedUrls.has(normaliseUrlForComparison(candidate))) {
+      candidate = `${baseUrl}-${index}`
+      index += 1
+    }
+    return reserveUrl(candidate)
+  }
+
+  return (workspaceApp: WorkspaceApp) => {
+    workspaceApp.name = getUniqueName(workspaceApp.name)
+    workspaceApp.url = getUniqueUrl(workspaceApp.url, workspaceApp.name)
+  }
+}
+
 const sanitizeImportedProjectAssignments = (
   doc: AnyDocument,
   resourceType: ResourceType,
@@ -404,12 +497,13 @@ const sanitizeImportedProjectAssignments = (
   }
 
   const datasource = doc as Datasource
-  if (!datasource.entities) {
+  const entities = getDatasourceEntities(datasource)
+  if (!Object.keys(entities).length) {
     return
   }
 
   datasource.entities = Object.fromEntries(
-    Object.entries(datasource.entities).map(([key, entity]) => {
+    Object.entries(entities).map(([key, entity]) => {
       const sanitizedEntity = { ...entity }
       if (getProjectIds(sanitizedEntity).includes(importedProjectId)) {
         sanitizedEntity.projectIds = [importedProjectId]
@@ -421,13 +515,14 @@ const sanitizeImportedProjectAssignments = (
   )
 }
 
-const sanitizeImportedDoc = (
+const sanitizeImportedDoc = async (
   doc: AnyDocument,
   resourceType: ResourceType,
   idMap: Map<string, string>,
   workspaceId: string,
-  importedProjectId: string
-): AnyDocument => {
+  importedProjectId: string,
+  deconflictWorkspaceApp: (_workspaceApp: WorkspaceApp) => void
+): Promise<AnyDocument> => {
   const remapped = remapValue(structuredClone(doc), idMap) as AnyDocument
   delete remapped._rev
 
@@ -466,7 +561,7 @@ const sanitizeImportedDoc = (
 
   if (resourceType === ResourceType.DATASOURCE) {
     const datasource = remapped as Datasource
-    for (const entity of Object.values(datasource.entities || {})) {
+    for (const entity of Object.values(getDatasourceEntities(datasource))) {
       if (typeof entity.primaryDisplay === "string") {
         entity.primaryDisplay = remapIdReferences(entity.primaryDisplay, idMap)
       }
@@ -479,16 +574,23 @@ const sanitizeImportedDoc = (
   }
 
   if (resourceType === ResourceType.AGENT) {
-    remapped.live = false
-    delete remapped.publishedAt
+    Object.assign(
+      remapped,
+      sdk.ai.agents.sanitiseAgentForExport(remapped as Agent)
+    )
+    delete (remapped as Agent).publishedAt
   }
 
   if (resourceType === ResourceType.WORKSPACE_APP) {
+    deconflictWorkspaceApp(remapped as WorkspaceApp)
     remapped.disabled = true
     remapped.isDefault = false
   }
 
   sanitizeImportedProjectAssignments(remapped, resourceType, importedProjectId)
+  if (resourceType === ResourceType.DATASOURCE) {
+    return await sdk.datasources.removeSecretSingle(remapped as Datasource)
+  }
   return remapped
 }
 
@@ -753,7 +855,7 @@ const assignImportedIds = (docs: ImportedDoc[], idMap: Map<string, string>) => {
         const sourceDatasourceId = importedDoc.doc._id!
         const destinationDatasourceId = idMap.get(sourceDatasourceId)!
         const datasource = importedDoc.doc as Datasource
-        for (const entity of Object.values(datasource.entities || {})) {
+        for (const entity of Object.values(getDatasourceEntities(datasource))) {
           if (!entity._id || !isExternalTableID(entity._id)) {
             continue
           }
@@ -1004,25 +1106,29 @@ export async function importProject(
     ])
 
     assignImportedIds(extracted.docs, idMap)
+    const deconflictWorkspaceApp = await createWorkspaceAppImportDeconflicter()
 
     const resources: Partial<Record<ResourceType, string[]>> = {
       [ResourceType.PROJECT]: [importedProject._id!],
     }
 
     for (const resourceType of IMPORT_ORDER) {
-      const docsToInsert = extracted.docs
-        .filter(doc => doc.resourceType === resourceType)
-        .map(({ doc }) => {
-          const newId = idMap.get(doc._id!)
-          const remappedDoc = sanitizeImportedDoc(
-            { ...doc, _id: newId },
-            resourceType,
-            idMap,
-            workspaceId,
-            importedProjectId
-          )
-          return remappedDoc
-        })
+      const docsToInsert = await Promise.all(
+        extracted.docs
+          .filter(doc => doc.resourceType === resourceType)
+          .map(async ({ doc }) => {
+            const newId = idMap.get(doc._id!)
+            const remappedDoc = await sanitizeImportedDoc(
+              { ...doc, _id: newId },
+              resourceType,
+              idMap,
+              workspaceId,
+              importedProjectId,
+              deconflictWorkspaceApp
+            )
+            return remappedDoc
+          })
+      )
 
       if (!docsToInsert.length) {
         continue
