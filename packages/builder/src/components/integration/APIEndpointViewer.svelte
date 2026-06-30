@@ -696,6 +696,8 @@
       }
 
       editableQuery = structuredClone(updatedQuery)
+      projectIds = updatedQuery.projectIds || []
+      originalProjectIds = [...projectIds]
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
