@@ -5,8 +5,47 @@ import {
   type AutomationStepResult,
   type AutomationTriggerResult,
 } from "@budibase/types"
+import {
+  ViewMode,
+  type EdgeData,
+  type FlowBlockContext,
+} from "@/types/automations"
 
 export type RunHighlight = "success" | "error" | "stopped"
+type AutomationRunResult = AutomationStepResult | AutomationTriggerResult
+type BranchRunResult = AutomationRunResult & {
+  outputs: {
+    branchId?: string
+    success?: boolean
+  }
+}
+
+export interface BranchRunState {
+  executed: boolean
+  success: boolean
+  error: boolean
+  stopped: boolean
+}
+
+interface BranchRunStateArgs {
+  branchResult?: AutomationRunResult | null
+  branchId?: string
+  runHighlight: RunHighlight | undefined
+}
+
+interface EdgeRunHighlightArgs {
+  edgeData: EdgeData | undefined
+  target: string
+  runResults: unknown
+  viewMode: ViewMode
+  getProgressResult: (blockId: string) => AutomationRunResult | undefined
+  getBranchId: (branchStepId: string, branchIdx: number) => string | undefined
+}
+
+type ProgressEdgeHighlightArgs = Omit<
+  EdgeRunHighlightArgs,
+  "runResults" | "viewMode"
+>
 
 /**
  * Step IDs that support the continueOnError functionality
@@ -41,9 +80,7 @@ export function getRunResults(value: unknown): AutomationResults | undefined {
 /**
  * Check if a step has outputs (i.e., it ran)
  */
-export function didStepRun(
-  result: AutomationStepResult | AutomationTriggerResult
-): boolean {
+export function didStepRun(result: AutomationRunResult): boolean {
   return !!result.outputs
 }
 
@@ -52,7 +89,7 @@ export function didStepRun(
  */
 export function getLastExecutedResult(
   results: AutomationResults
-): AutomationStepResult | AutomationTriggerResult {
+): AutomationRunResult {
   const executedSteps = results.steps.filter(didStepRun)
   return executedSteps.at(-1) || results.trigger
 }
@@ -60,9 +97,7 @@ export function getLastExecutedResult(
 /**
  * Check if a step can continue on error based on its configuration
  */
-export function canContinueOnError(
-  result: AutomationStepResult | AutomationTriggerResult
-): boolean {
+export function canContinueOnError(result: AutomationRunResult): boolean {
   if (!("inputs" in result) || !result.inputs) {
     return false
   }
@@ -79,7 +114,7 @@ export function canContinueOnError(
  * Check if a result represents a terminal state (failure that stops execution)
  */
 export function isTerminalFailure(
-  result: AutomationStepResult | AutomationTriggerResult | undefined
+  result: AutomationRunResult | undefined | null
 ): boolean {
   if (!result?.outputs) {
     return false
@@ -98,7 +133,7 @@ export function isTerminalFailure(
 }
 
 export function didBranchStopWithoutMatch(
-  result: AutomationStepResult | AutomationTriggerResult | undefined
+  result: AutomationRunResult | undefined | null
 ): boolean {
   const outputs = result?.outputs
   return (
@@ -149,6 +184,237 @@ export function hasSuccessOutput(
     typeof value.outputs === "object" &&
     "success" in value.outputs
   )
+}
+
+export function hasBranchResult(
+  value: AutomationRunResult | undefined | null
+): value is BranchRunResult {
+  return !!value?.outputs && "branchId" in value.outputs
+}
+
+export function didBranchResultExecuteBranch(
+  branchResult: AutomationRunResult | undefined | null,
+  branchId: string | undefined
+): boolean {
+  return (
+    !!branchId &&
+    hasBranchResult(branchResult) &&
+    branchResult.outputs.branchId === branchId
+  )
+}
+
+export function getBranchRunState({
+  branchResult,
+  branchId,
+  runHighlight,
+}: BranchRunStateArgs): BranchRunState {
+  const branchExecuted = didBranchResultExecuteBranch(branchResult, branchId)
+  const hasBranchResultValue = hasBranchResult(branchResult)
+  const branchStepFailed = isTerminalFailure(branchResult)
+  const branchStepFailure =
+    branchStepFailed && (branchExecuted || !hasBranchResultValue)
+  const branchStoppedWithoutMatch = didBranchStopWithoutMatch(branchResult)
+  const error =
+    !branchStoppedWithoutMatch &&
+    runHighlight !== "stopped" &&
+    (branchStepFailure || (branchExecuted && runHighlight === "error"))
+  const success = !error && branchExecuted && runHighlight === "success"
+  const stopped =
+    branchStoppedWithoutMatch ||
+    (!error && branchExecuted && runHighlight === "stopped")
+
+  return {
+    executed: branchExecuted,
+    success,
+    error,
+    stopped,
+  }
+}
+
+export function getFlowEdgeRunHighlight({
+  edgeData,
+  target,
+  runResults,
+  viewMode,
+  getProgressResult,
+  getBranchId,
+}: EdgeRunHighlightArgs): RunHighlight | undefined {
+  if (viewMode !== ViewMode.LOGS) {
+    const progressHighlight = getProgressEdgeHighlight({
+      edgeData,
+      target,
+      getProgressResult,
+      getBranchId,
+    })
+    if (progressHighlight) {
+      return progressHighlight
+    }
+  }
+
+  if (!edgeData || !isRunResults(runResults)) {
+    return undefined
+  }
+  const runHighlight = getRunHighlight(runResults)
+
+  if (isBranchEdgeData(edgeData)) {
+    if (didBranchStepStopWithoutMatch(runResults, edgeData.branchStepId)) {
+      return "stopped"
+    }
+    if (
+      runHighlight !== "stopped" &&
+      didBranchStepFail(runResults, edgeData.branchStepId)
+    ) {
+      return runHighlight
+    }
+    return didBranchRun(
+      runResults,
+      edgeData.branchStepId,
+      edgeData.branchIdx,
+      getBranchId
+    )
+      ? runHighlight
+      : undefined
+  }
+
+  if (isBranchContext(edgeData.block)) {
+    if (
+      didBranchStepStopWithoutMatch(runResults, edgeData.block.branchStepId)
+    ) {
+      return undefined
+    }
+    if (
+      runHighlight !== "stopped" &&
+      didBranchStepFail(runResults, edgeData.block.branchStepId)
+    ) {
+      return runHighlight
+    }
+    return didBranchRun(
+      runResults,
+      edgeData.block.branchStepId,
+      edgeData.block.branchIdx,
+      getBranchId
+    )
+      ? runHighlight
+      : undefined
+  }
+
+  if (didBranchStepStopWithoutMatch(runResults, target)) {
+    return "stopped"
+  }
+
+  if (!didTargetRun(runResults, target)) {
+    return undefined
+  }
+  return didRunStopWithoutBranchMatch(runResults) ? "stopped" : runHighlight
+}
+
+function getProgressEdgeHighlight({
+  edgeData,
+  target,
+  getProgressResult,
+  getBranchId,
+}: ProgressEdgeHighlightArgs): RunHighlight | undefined {
+  if (!edgeData) {
+    return undefined
+  }
+
+  if (isBranchEdgeData(edgeData)) {
+    return didProgressBranchRun({
+      branchStepId: edgeData.branchStepId,
+      branchIdx: edgeData.branchIdx,
+      getProgressResult,
+      getBranchId,
+    })
+  }
+
+  const progress = getProgressResult(target)
+  if (!progress || !didStepRun(progress)) {
+    return undefined
+  }
+  if (isTerminalFailure(progress)) {
+    return progress.outputs.status === AutomationStatus.STOPPED
+      ? "stopped"
+      : "error"
+  }
+  return "success"
+}
+
+function didTargetRun(results: AutomationResults, target: string): boolean {
+  if (target === results.trigger.id) {
+    return didStepRun(results.trigger)
+  }
+  const targetResult = results.steps.find(step => step.id === target)
+  return targetResult ? didStepRun(targetResult) : false
+}
+
+function didBranchRun(
+  results: AutomationResults,
+  branchStepId: string,
+  branchIdx: number,
+  getBranchId: (branchStepId: string, branchIdx: number) => string | undefined
+): boolean {
+  const branchId = getBranchId(branchStepId, branchIdx)
+  if (!branchId) {
+    return false
+  }
+  const result = results.steps.find(step => step.id === branchStepId)
+  if (isTerminalFailure(result)) {
+    return false
+  }
+  return didBranchResultExecuteBranch(result, branchId)
+}
+
+function didBranchStepFail(
+  results: AutomationResults,
+  branchStepId: string
+): boolean {
+  return isTerminalFailure(results.steps.find(step => step.id === branchStepId))
+}
+
+function didBranchStepStopWithoutMatch(
+  results: AutomationResults,
+  branchStepId: string
+): boolean {
+  return didBranchStopWithoutMatch(
+    results.steps.find(step => step.id === branchStepId)
+  )
+}
+
+function didProgressBranchRun({
+  branchStepId,
+  branchIdx,
+  getProgressResult,
+  getBranchId,
+}: Pick<EdgeRunHighlightArgs, "getProgressResult" | "getBranchId"> & {
+  branchStepId: string
+  branchIdx: number
+}): RunHighlight | undefined {
+  const result = getProgressResult(branchStepId)
+  if (!result || !didStepRun(result)) {
+    return undefined
+  }
+  const branchId = getBranchId(branchStepId, branchIdx)
+  if (!didBranchResultExecuteBranch(result, branchId)) {
+    return undefined
+  }
+  if (isTerminalFailure(result)) {
+    return result.outputs.status === AutomationStatus.STOPPED
+      ? "stopped"
+      : "error"
+  }
+  return "success"
+}
+
+function isBranchEdgeData(
+  edgeData: EdgeData
+): edgeData is Extract<EdgeData, { isBranchEdge: true }> {
+  return "isBranchEdge" in edgeData && edgeData.isBranchEdge === true
+}
+
+function isBranchContext(
+  value: FlowBlockContext
+): value is Extract<FlowBlockContext, { branchNode: true }> {
+  return "branchNode" in value && value.branchNode === true
 }
 
 /**
