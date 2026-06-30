@@ -18,11 +18,7 @@ interface BranchEdgeData {
   [key: string]: unknown
 }
 
-const stepNode = (
-  id: string,
-  type = "step-node",
-  layout = STEP
-): FlowNode => ({
+const stepNode = (id: string, type = "step-node", layout = STEP): FlowNode => ({
   id,
   type,
   data: {

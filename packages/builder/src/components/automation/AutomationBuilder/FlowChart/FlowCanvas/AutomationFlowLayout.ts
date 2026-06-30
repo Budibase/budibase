@@ -72,7 +72,11 @@ const unionBounds = (bounds: Bounds[]): Bounds => {
   )
 }
 
-const boundsFromSize = (left: number, top: number, size: Dimensions): Bounds => {
+const boundsFromSize = (
+  left: number,
+  top: number,
+  size: Dimensions
+): Bounds => {
   return {
     left,
     top,
@@ -193,9 +197,7 @@ class AutomationLayoutEngine {
     const totalLaneHeight = this.getStackedHeight(lanes)
     const branchGap = this.ranksep
     const width =
-      nodeSize.width +
-      branchGap +
-      Math.max(...lanes.map(lane => lane.width), 0)
+      nodeSize.width + branchGap + Math.max(...lanes.map(lane => lane.width), 0)
 
     if (node.type === "loop-subflow-node") {
       return {
@@ -276,10 +278,7 @@ class AutomationLayoutEngine {
       nodeBounds.top + getNodeDimensions(node).height / 2 - totalLaneHeight / 2
     const stackTop =
       node.type === "loop-subflow-node"
-        ? Math.max(
-            centeredTop,
-            nodeBounds.bottom + POST_LOOP_BRANCH_CLEARANCE
-          )
+        ? Math.max(centeredTop, nodeBounds.bottom + POST_LOOP_BRANCH_CLEARANCE)
         : centeredTop
     const childX = nodeBounds.right + this.ranksep
 
