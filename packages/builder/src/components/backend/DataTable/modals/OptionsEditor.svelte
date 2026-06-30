@@ -1,103 +1,51 @@
-<script>
+<script lang="ts">
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { Icon, Input, Popover } from "@budibase/bbui"
-  import { tick, onMount, onDestroy } from "svelte"
+  import { tick } from "svelte"
   import { Constants } from "@budibase/frontend-core"
   import { getSequentialName } from "@/helpers/duplicate"
   import { derived, writable } from "svelte/store"
   import { appStore } from "@/stores/builder"
+  import type { FieldConstraints } from "@budibase/types"
 
-  export let constraints
-  export let optionColors = {}
+  export let constraints: FieldConstraints & { inclusion: string[] }
+  export let optionColors: Record<string, string> = {}
   export let valid = true
 
   const flipDurationMs = 130
   const { OptionColours } = Constants
-  const getDefaultColor = idx => OptionColours[idx % OptionColours.length]
+  const getDefaultColor = (idx: number) => OptionColours[idx % OptionColours.length]
 
   const MAX_SAVED_COLORS = 8
 
-  import { get } from "svelte/store"
+  $: savedColors = $appStore.savedOptionColors || []
 
-  let savedColorsKey = null
-  let savedColors = []
-
-  const loadSavedColors = key => {
-    if (!key) {
-      savedColors = []
-      return
-    }
-    const stored = localStorage.getItem(key)
-    if (stored) {
-      try {
-        savedColors = JSON.parse(stored)
-      } catch (e) {
-        savedColors = []
-      }
-    } else {
-      savedColors = []
-    }
-  }
-
-  onMount(() => {
-    // Use the current appId at mount time to form a stable key.
-    const appId = get(appStore)?.appId
-    savedColorsKey = appId ? `budibase-saved-option-colors-${appId}` : null
-    loadSavedColors(savedColorsKey)
-
-    // If nothing was found for the per-app key, check for legacy global key and migrate
-    if ((savedColors == null || savedColors.length === 0) && !savedColorsKey) {
-      const legacy = localStorage.getItem("budibase-saved-option-colors")
-      if (legacy) {
-        try {
-          const parsed = JSON.parse(legacy)
-          if (Array.isArray(parsed) && parsed.length) {
-            // If we have an appId, store under the per-app key; otherwise keep legacy
-            if (savedColorsKey) {
-              localStorage.setItem(savedColorsKey, JSON.stringify(parsed))
-              savedColors = parsed
-            } else {
-              savedColors = parsed
-            }
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
-    }
-
-    // Subscribe to appStore to reload saved colors if app changes (e.g., after a rebase or navigation)
-    const unsub = appStore.subscribe(state => {
-      const nextKey = state?.appId
-        ? `budibase-saved-option-colors-${state.appId}`
-        : null
-      if (nextKey !== savedColorsKey) {
-        savedColorsKey = nextKey
-        loadSavedColors(savedColorsKey)
-      }
-    })
-
-    onDestroy(unsub)
-  })
-
-  const saveCustomColor = color => {
+  const saveCustomColor = async (color: string) => {
     if (!color || savedColors.includes(color) || OptionColours.includes(color))
       return
+    let next: string[]
     if (savedColors.length >= MAX_SAVED_COLORS) {
-      // Remove oldest and add new
-      savedColors = [...savedColors.slice(1), color]
+      next = [...savedColors.slice(1), color]
     } else {
-      savedColors = [...savedColors, color]
+      next = [...savedColors, color]
     }
-    localStorage.setItem(savedColorsKey, JSON.stringify(savedColors))
+    await appStore.saveOptionColorPalette(next)
   }
 
-  const removeSavedColor = color => {
-    savedColors = savedColors.filter(c => c !== color)
-    localStorage.setItem(savedColorsKey, JSON.stringify(savedColors))
+  const removeSavedColor = async (color: string) => {
+    await appStore.saveOptionColorPalette(savedColors.filter((c: string) => c !== color))
   }
-  const options = writable(
+
+  interface Option {
+    id: number
+    name: string
+    color: string
+    invalid?: boolean
+    valid?: boolean
+  }
+
+  const options = writable<Option[]>(
     constraints.inclusion.map((value, idx) => ({
       id: Math.random(),
       name: value,
@@ -106,27 +54,27 @@
     }))
   )
   const enrichedOptions = derived(options, $options => {
-    let enriched = []
+    let enriched: Option[] = []
     $options.forEach(option => {
       enriched.push({
         ...option,
-        valid: option.name && !enriched.some(opt => opt.name === option.name),
+        valid: !!option.name && !enriched.some(opt => opt.name === option.name),
       })
     })
     return enriched
   })
 
-  let openOption = null
-  let anchor = null
+  let openOption: number | null = null
+  let anchor: HTMLElement | undefined = undefined
 
   $: options.subscribe(updateConstraints)
   $: valid = $enrichedOptions.every(option => option.valid)
 
-  const updateConstraints = options => {
-    constraints.inclusion = options.map(option => option.name)
-    optionColors = options.reduce(
+  const updateConstraints = (opts: Option[]) => {
+    constraints.inclusion = opts.map(option => option.name)
+    optionColors = opts.reduce(
       (colors, option) => ({ ...colors, [option.name]: option.color }),
-      {}
+      {} as Record<string, string>
     )
   }
 
@@ -134,7 +82,7 @@
     const newId = Math.random()
     const newName = getSequentialName($options, "Option ", {
       numberFirstItem: true,
-      getName: option => option.name,
+      getName: (option: Option) => option.name,
     })
     options.update(state => {
       return [
@@ -147,48 +95,47 @@
       ]
     })
 
-    // Focus new option
     await tick()
     document.getElementById(`option-${newId}`)?.focus()
   }
 
-  const removeInput = id => {
+  const removeInput = (id: number) => {
     options.update(state => state.filter(option => option.id !== id))
   }
 
-  const openColorPicker = id => {
-    anchor = document.getElementById(`color-${id}`)
+  const openColorPicker = (id: number) => {
+    anchor = document.getElementById(`color-${id}`) ?? undefined
     openOption = id
   }
 
-  const handleColorChange = (id, color) => {
+  const handleColorChange = (id: number, color: string) => {
     options.update(state => {
-      state.find(option => option.id === id).color = color
+      state.find(option => option.id === id)!.color = color
       return state.slice()
     })
     openOption = null
   }
 
-  const handleCustomColorInput = (id, value) => {
+  const handleCustomColorInput = (id: number, value: string) => {
     if (!value) return
     options.update(state => {
-      state.find(option => option.id === id).color = value
+      state.find(option => option.id === id)!.color = value
       return state.slice()
     })
   }
 
-  const handleSaveCustomColor = (id, color) => {
+  const handleSaveCustomColor = async (_id: number, color: string) => {
     if (!isCustomColor(color)) return
-    saveCustomColor(color)
+    await saveCustomColor(color)
   }
 
-  const isCustomColor = color => {
+  const isCustomColor = (color: string) => {
     return color && !OptionColours.includes(color)
   }
 
-  const handleNameChange = (id, name) => {
+  const handleNameChange = (id: number, name: string) => {
     options.update(state => {
-      state.find(option => option.id === id).name = name
+      state.find(option => option.id === id)!.name = name
       return state.slice()
     })
   }
@@ -229,6 +176,7 @@
               offset={0}
               animate={false}
               resizable={false}
+              on:close={() => (openOption = null)}
             >
               <div class="color-popover" data-ignore-click-outside="true">
                 <div class="colors">
@@ -275,7 +223,7 @@
                         ? option.color
                         : "#000000"}
                       on:input={e =>
-                        handleCustomColorInput(option.id, e.target.value)}
+                        handleCustomColorInput(option.id, (e.target as HTMLInputElement).value)}
                     />
                     <Input
                       updateOnChange={false}
@@ -316,7 +264,7 @@
           value={option.name}
           placeholder="Option name"
           id="option-{option.id}"
-          on:input={e => handleNameChange(option.id, e.target.value)}
+          on:input={e => handleNameChange(option.id, (e.target as HTMLInputElement).value)}
         />
         <Icon
           name="x"

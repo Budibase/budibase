@@ -54,6 +54,7 @@ export interface AppMetaState {
   icon?: WorkspaceIcon
   pwa?: PWAManifest
   scripts: AppScript[]
+  savedOptionColors: string[]
   embedAllowedOrigins: string[]
   embedSSO?: EmbedSSOConfig
 }
@@ -102,6 +103,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
     screenshots: [],
   },
   scripts: [],
+  savedOptionColors: [],
   embedAllowedOrigins: [],
 }
 
@@ -136,6 +138,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       hasAppPackage: true,
       pwa: workspace.pwa,
       scripts: workspace.scripts || [],
+      savedOptionColors: workspace.savedOptionColors || [],
       embedAllowedOrigins: workspace.embedAllowedOrigins || [],
       embedSSO: workspace.embedSSO,
     }))
@@ -183,6 +186,10 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   async updateApp(updates: UpdateWorkspaceRequest) {
     const app = await API.saveAppMetadata(get(this.store).appId, updates)
     this.syncApp(app)
+  }
+
+  async saveOptionColorPalette(colors: string[]) {
+    await this.updateApp({ savedOptionColors: colors })
   }
 
   // Returned from socket
