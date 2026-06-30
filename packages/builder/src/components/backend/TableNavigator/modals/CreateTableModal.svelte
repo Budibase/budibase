@@ -21,6 +21,7 @@
     BUDIBASE_DATASOURCE_TYPE,
   } from "@/constants/backend"
   import { get } from "svelte/store"
+  import { SvelteSet } from "svelte/reactivity"
 
   interface Props {
     promptUpload?: boolean
@@ -68,7 +69,7 @@
   let rows: Row[] = $state([])
   let allValid = $state(true)
   let displayColumn: string | null = $state(null)
-  let projectIds: string[] = $derived([...initialProjectIds])
+  let projectIds = $derived([...initialProjectIds])
 
   const buildOptionConstraints = (schema: TableSchema, rows: Row[]) => {
     const updatedSchema: TableSchema = {}
@@ -108,15 +109,15 @@
       return updatedSchema
     }
 
-    const inclusionMap = optionColumns.reduce<Record<string, Set<string>>>(
+    const inclusionMap = optionColumns.reduce<Record<string, SvelteSet<string>>>(
       (acc, { name }) => {
-        acc[name] = new Set()
+        acc[name] = new SvelteSet()
         return acc
       },
       {}
     )
 
-    const addValue = (set: Set<string>, value: Row[string]) => {
+    const addValue = (set: SvelteSet<string>, value: Row[string]) => {
       if (value === null || value === undefined || value === "") {
         return
       }
