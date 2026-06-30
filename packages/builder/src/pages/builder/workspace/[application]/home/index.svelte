@@ -410,10 +410,9 @@
       return keepOpen
     }
 
-    const { resource } = selectedRow
-
     try {
       if (selectedRow.type === "app") {
+        const { resource } = selectedRow
         await workspaceAppStore.edit({
           _id: resource._id!,
           _rev: resource._rev!,
@@ -421,9 +420,11 @@
           url: resource.url,
           navigation: resource.navigation,
           disabled: resource.disabled,
+          isDefault: resource.isDefault,
           projectIds,
         })
       } else if (selectedRow.type === "automation") {
+        const { resource } = selectedRow
         const { publishStatus: _publishStatus, ...automation } = resource
         await automationStore.actions.save(
           {
@@ -433,6 +434,7 @@
           { skipUnpublishedChanges: true }
         )
       } else if (selectedRow.type === "agent") {
+        const { resource } = selectedRow
         const { operations: _operations, ...agent } = resource
         await agentsStore.updateAgent({
           ...agent,
