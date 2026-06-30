@@ -1,7 +1,4 @@
-import {
-  AutomationActionStepId,
-  type AutomationStep,
-} from "@budibase/types"
+import { AutomationActionStepId, type AutomationStep } from "@budibase/types"
 import type { FlowBlockContext, FlowBlockPath } from "@/types/automations"
 import type { GraphLayoutDeps } from "./FlowGraphTypes"
 

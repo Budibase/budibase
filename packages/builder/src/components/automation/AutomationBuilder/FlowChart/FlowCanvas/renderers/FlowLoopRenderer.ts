@@ -107,8 +107,7 @@ const getLoopV2ContainerDimensions = (
   const contentHeight =
     containerHeight - SUBFLOW.paddingTop - SUBFLOW.paddingBottom
   const baseY =
-    SUBFLOW.paddingTop +
-    Math.floor((contentHeight - SUBFLOW.childHeight) / 2)
+    SUBFLOW.paddingTop + Math.floor((contentHeight - SUBFLOW.childHeight) / 2)
 
   return {
     containerWidth,
@@ -203,8 +202,7 @@ export const renderLoopV2Container = (
 
     lastLinearChild = undefined
     const { maxLaneChildren } = getBranchChildMetrics(child)
-    innerX +=
-      getBranchLaneWidth(maxLaneChildren) + internalSpacing + LR_GAP
+    innerX += getBranchLaneWidth(maxLaneChildren) + internalSpacing + LR_GAP
   })
 
   if (
