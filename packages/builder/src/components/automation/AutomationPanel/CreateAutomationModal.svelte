@@ -16,6 +16,7 @@
   $: goto = $gotoStore
 
   export let webhookModal
+  export let initialProjectIds = []
 
   let name
   let selectedTrigger
@@ -36,7 +37,11 @@
         triggerVal.stepId,
         triggerVal
       )
-      const automation = await automationStore.actions.create(name, trigger)
+      const automation = await automationStore.actions.create(
+        name,
+        trigger,
+        initialProjectIds.length ? initialProjectIds : undefined
+      )
       if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show()
       }

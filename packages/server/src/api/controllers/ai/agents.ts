@@ -21,6 +21,10 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
 const parseOptionalChatAppId = (value: unknown) => {
@@ -216,11 +220,13 @@ export async function createAgent(
   const body = ctx.request.body
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
+  const projectIds = await resolveProjectIds(body.projectIds)
 
   const createRequest: Parameters<typeof sdk.ai.agents.create>[number] = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
+    projectIds,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
@@ -244,6 +250,10 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
   const existing = await sdk.ai.agents.getOrThrow(body._id)
+  const projectIds = await resolveUpdatedProjectIds(
+    body.projectIds,
+    existing.projectIds
+  )
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -251,6 +261,7 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
+    projectIds,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
