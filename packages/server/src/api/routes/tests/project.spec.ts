@@ -1174,6 +1174,41 @@ describe("/projects", () => {
         )
       })
     })
+
+    it("reports unsupported content for transitive agents", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const agent = await config.api.agent.create({
+          name: "Referenced agent",
+          aiconfig: "default",
+          live: true,
+        })
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          name: `Uses ${agent._id}`,
+          projectIds: [project._id],
+        })
+
+        const body = await config.api.project.export(project._id)
+        const files = await readTarEntries(body)
+        const manifest = JSON.parse(files.get("manifest.json")!.toString())
+
+        expect(files.has(`docs/agent/${agent._id}.json`)).toBe(true)
+        expect(manifest.unsupportedContent).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: "agent_linked_content",
+              count: 1,
+            }),
+          ])
+        )
+      })
+    })
   })
 
   it("returns 404 when exporting an unknown project", async () => {
@@ -1566,6 +1601,16 @@ describe("/projects", () => {
               imported.resources.screen?.[0],
             ])
           )
+
+          const secondImport = await config.api.project.import(body)
+          const importedAppsAfterSecondImport =
+            await config.api.workspaceApp.fetch()
+          const secondImportedApp =
+            importedAppsAfterSecondImport.workspaceApps.find(
+              app => app._id === secondImport.resources.workspace_app?.[0]
+            )
+          expect(secondImportedApp?.name).toBe("Operations app 1")
+          expect(secondImportedApp?.url).toBe("/operations%20app%201")
         }
       )
 
@@ -1921,6 +1966,229 @@ describe("/projects", () => {
           },
         },
       })
+    })
+  })
+
+  it("rejects project packages with malformed datasource entities", async () => {
+    await withProjectsEnabled(async () => {
+      const datasourceId = "datasource_malformed"
+      const dependency = {
+        id: datasourceId,
+        name: "Malformed datasource",
+        type: "datasource",
+      }
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              datasource: 1,
+            },
+          },
+          dependencyIndex: {
+            directMembers: [dependency],
+            resources: {
+              project_source: {
+                dependencies: [dependency],
+              },
+              [datasourceId]: {
+                dependencies: [],
+              },
+            },
+          },
+          docs: {
+            [`docs/datasource/${datasourceId}.json`]: {
+              ...basicDatasource().datasource,
+              _id: datasourceId,
+              name: "Malformed datasource",
+              projectIds: ["project_source"],
+              entities: {
+                Broken: "not an entity",
+              },
+            },
+          },
+        })
+      )
+
+      await config.api.project.import({
+        file: packageBuffer,
+        expectations: {
+          status: 400,
+          body: {
+            message: "Project package contains invalid datasource entities.",
+          },
+        },
+      })
+    })
+  })
+
+  it("sanitises crafted import packages before saving resources", async () => {
+    await withProjectsEnabled(async () => {
+      const datasourceId = "datasource_secret"
+      const agentId = "agent_secret"
+      const datasourceDependency = {
+        id: datasourceId,
+        name: "Secret datasource",
+        type: "datasource",
+      }
+      const agentDependency = {
+        id: agentId,
+        name: "Secret agent",
+        type: "agent",
+      }
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              datasource: 1,
+              agent: 1,
+            },
+            requiresSecrets: true,
+          },
+          dependencyIndex: {
+            directMembers: [datasourceDependency, agentDependency],
+            resources: {
+              project_source: {
+                dependencies: [datasourceDependency, agentDependency],
+              },
+              [datasourceId]: {
+                dependencies: [],
+              },
+              [agentId]: {
+                dependencies: [],
+              },
+            },
+          },
+          docs: {
+            [`docs/datasource/${datasourceId}.json`]: {
+              ...basicDatasource().datasource,
+              _id: datasourceId,
+              name: "Secret datasource",
+              projectIds: ["project_source"],
+              config: {
+                password: "crafted-secret",
+              },
+            },
+            [`docs/agent/${agentId}.json`]: {
+              _id: agentId,
+              name: "Secret agent",
+              aiconfig: "default",
+              live: true,
+              publishedAt: new Date().toISOString(),
+              projectIds: ["project_source"],
+              slackIntegration: {
+                botToken: "crafted-token",
+                signingSecret: "crafted-signing-secret",
+                idleTimeoutMinutes: 20,
+              },
+            },
+          },
+        })
+      )
+
+      const imported = await config.api.project.import(packageBuffer)
+      const importedDatasource = await config.api.datasource.get(
+        imported.resources.datasource?.[0]!
+      )
+      const { agents } = await config.api.agent.fetch()
+      const importedAgent = agents.find(
+        agent => agent._id === imported.resources.agent?.[0]
+      )
+
+      expect(importedDatasource.config?.password).not.toBe("crafted-secret")
+      expect(importedAgent?.live).toBe(false)
+      expect(importedAgent?.publishedAt).toBeUndefined()
+      expect(importedAgent?.slackIntegration).toEqual({
+        idleTimeoutMinutes: 20,
+      })
+    })
+  })
+
+  it("rolls back imported resources when project import partially fails", async () => {
+    await withProjectsEnabled(async () => {
+      const firstDatasourceId = "datasource_first"
+      const secondDatasourceId = "datasource_second"
+      const dependencies = [
+        {
+          id: firstDatasourceId,
+          name: "First datasource",
+          type: "datasource",
+        },
+        {
+          id: secondDatasourceId,
+          name: "Second datasource",
+          type: "datasource",
+        },
+      ]
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: {
+              project: 1,
+              datasource: 2,
+            },
+          },
+          dependencyIndex: {
+            directMembers: dependencies,
+            resources: {
+              project_source: {
+                dependencies,
+              },
+              [firstDatasourceId]: {
+                dependencies: [],
+              },
+              [secondDatasourceId]: {
+                dependencies: [],
+              },
+            },
+          },
+          docs: {
+            [`docs/datasource/${firstDatasourceId}.json`]: {
+              ...basicDatasource().datasource,
+              _id: firstDatasourceId,
+              name: "First datasource",
+              projectIds: ["project_source"],
+            },
+            [`docs/datasource/${secondDatasourceId}.json`]: {
+              ...basicDatasource().datasource,
+              _id: secondDatasourceId,
+              name: "Second datasource",
+              projectIds: ["project_source"],
+            },
+          },
+        })
+      )
+
+      const bulkDocs = jest
+        .spyOn(DatabaseImpl.prototype, "bulkDocs")
+        .mockImplementationOnce(async docs =>
+          docs.map((doc, index) =>
+            index === 0
+              ? { id: doc._id!, rev: "1-imported" }
+              : {
+                  id: doc._id!,
+                  error: "conflict",
+                  reason: "import failed",
+                }
+          )
+        )
+
+      try {
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message: expect.stringContaining(
+              "Project import failed while saving"
+            ),
+          },
+        })
+      } finally {
+        bulkDocs.mockRestore()
+      }
+
+      const { projects } = await config.api.project.fetch()
+      expect(projects).toHaveLength(0)
     })
   })
 
