@@ -1,11 +1,20 @@
 import {
   CreateProjectRequest,
   CreateProjectResponse,
+  ExportProjectRequest,
   FetchProjectsResponse,
+  ImportProjectRequest,
+  ImportProjectResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
+
+interface ImportProjectParams {
+  file: Buffer | string
+  body?: ImportProjectRequest
+  expectations?: Expectations
+}
 
 export class ProjectAPI extends TestAPI {
   fetch = async (expectations?: Expectations) => {
@@ -24,6 +33,52 @@ export class ProjectAPI extends TestAPI {
         status: 201,
         ...expectations,
       },
+    })
+  }
+
+  export = async (
+    id: string,
+    body?: ExportProjectRequest,
+    expectations?: Expectations
+  ) => {
+    const expectsError = (expectations?.status || 200) >= 400
+    const exp = {
+      ...expectations,
+      headers: {
+        ...expectations?.headers,
+        ...(expectsError ? {} : { "Content-Type": "application/gzip" }),
+      },
+    }
+
+    return await this._post<Buffer>(`/api/projects/${id}/export`, {
+      body,
+      expectations: exp,
+    })
+  }
+
+  import = async (
+    fileOrParams: Buffer | string | ImportProjectParams,
+    body?: ImportProjectRequest,
+    expectations?: Expectations
+  ) => {
+    const params =
+      typeof fileOrParams === "object" && !Buffer.isBuffer(fileOrParams)
+        ? fileOrParams
+        : {
+            file: fileOrParams,
+            body,
+            expectations,
+          }
+
+    return await this._post<ImportProjectResponse>(`/api/projects/import`, {
+      fields: params.body,
+      files: {
+        file: {
+          file: params.file,
+          name: "project-export.tar.gz",
+        },
+      },
+      expectations: params.expectations,
     })
   }
 

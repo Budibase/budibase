@@ -1,4 +1,10 @@
-import { db, events, features, objectStore } from "@budibase/backend-core"
+import {
+  context,
+  db,
+  events,
+  features,
+  objectStore,
+} from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
@@ -36,6 +42,13 @@ import { ObjectStoreBuckets } from "../../../constants"
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
+  const withProjectsEnabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PROJECTS]: true },
+      f
+    )
+  }
 
   beforeAll(async () => {
     await config.init()
@@ -261,6 +274,137 @@ describe("/api/resources/usage", () => {
             type: ResourceType.QUERY,
           },
         ],
+      })
+    })
+
+    it("should include direct project members and transitive dependencies", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const query = await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          projectIds: [project._id],
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          projectIds: [project._id],
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Operations app",
+          url: "/operations-app",
+          projectIds: [project._id],
+        })
+        const screen = await config.api.screen.save({
+          ...createQueryScreen(datasource._id!, query),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        const automation = await config.createAutomation()
+        await config.api.automation.update({
+          ...automation,
+          projectIds: [project._id],
+        })
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
+
+        const result = await config.api.resource.getResourceDependencies()
+
+        expect(result.body.resources[project._id!]).toEqual({
+          dependencies: [
+            {
+              id: datasource._id,
+              name: datasource.name,
+              type: ResourceType.DATASOURCE,
+            },
+            {
+              id: table._id,
+              name: table.name,
+              type: ResourceType.TABLE,
+            },
+            {
+              id: query._id,
+              name: query.name,
+              type: ResourceType.QUERY,
+            },
+            {
+              id: automation._id,
+              name: automation.name,
+              type: ResourceType.AUTOMATION,
+            },
+            {
+              id: agent._id,
+              name: agent.name,
+              type: ResourceType.AGENT,
+            },
+            {
+              id: workspaceApp._id,
+              name: workspaceApp.name,
+              type: ResourceType.WORKSPACE_APP,
+            },
+            {
+              id: screen._id,
+              name: screen.name,
+              type: ResourceType.SCREEN,
+            },
+          ],
+        })
+      })
+    })
+
+    it("should include repaired app screens for project apps", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const defaultWorkspaceApp = await config.api.workspaceApp.find(
+          config.getDefaultWorkspaceAppId()
+        )
+        const { workspaceApp } = await config.api.workspaceApp.update({
+          _id: defaultWorkspaceApp._id,
+          _rev: defaultWorkspaceApp._rev,
+          name: defaultWorkspaceApp.name,
+          url: defaultWorkspaceApp.url,
+          disabled: defaultWorkspaceApp.disabled,
+          navigation: defaultWorkspaceApp.navigation,
+          projectIds: [project._id],
+        })
+        const screen = await config.api.screen.save({
+          ...basicScreen("/operations"),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const workspaceDb = context.getWorkspaceDB()
+          await workspaceDb.put({
+            ...screen,
+            workspaceAppId: undefined,
+          })
+        })
+
+        const result = await config.api.resource.getResourceDependencies()
+
+        expect(result.body.resources[project._id!].dependencies).toEqual(
+          expect.arrayContaining([
+            {
+              id: workspaceApp._id,
+              name: workspaceApp.name,
+              type: ResourceType.WORKSPACE_APP,
+            },
+            {
+              id: screen._id,
+              name: screen.name,
+              type: ResourceType.SCREEN,
+            },
+          ])
+        )
       })
     })
   })
@@ -610,6 +754,61 @@ describe("/api/resources/usage", () => {
         apps: [app1.app, app2.app],
         screens: [...app1.screens, ...app2.screens],
         tables: [table],
+      })
+    })
+
+    it("strips dangling project assignments when the project is not duplicated", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        await duplicateResources([datasource._id!], newWorkspace.appId)
+
+        await config.withHeaders(
+          { [Header.APP_ID]: newWorkspace.appId },
+          async () => {
+            const copiedDatasource = await config.api.datasource.get(
+              datasource._id!
+            )
+            expect(copiedDatasource.projectIds).toBeUndefined()
+          }
+        )
+      })
+    })
+
+    it("preserves project assignments when the destination already has the project", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        await duplicateResources([project._id!], newWorkspace.appId)
+        await duplicateResources([datasource._id!], newWorkspace.appId)
+
+        await config.withHeaders(
+          { [Header.APP_ID]: newWorkspace.appId },
+          async () => {
+            const copiedDatasource = await config.api.datasource.get(
+              datasource._id!
+            )
+            expect(copiedDatasource.projectIds).toEqual([project._id])
+          }
+        )
       })
     })
 

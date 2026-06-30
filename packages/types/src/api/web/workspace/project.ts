@@ -61,7 +61,14 @@ export interface ImportProjectResponse {
   requirements: ProjectImportRequirement[]
 }
 
-export type ProjectPackageImportMode = "dryRun" | "additiveImport"
+export interface ProjectManifestSummary {
+  _id: string
+  name: string
+  description?: string
+  color?: string
+  createdAt: string
+  updatedAt: string
+}
 
 export interface ProjectPackageUnsupportedContent {
   type: string
@@ -74,10 +81,7 @@ export interface ProjectPackageManifest {
   artifactType: "project"
   budibaseVersion: string
   exportedAt: string
-  project: Pick<
-    ProjectResponse,
-    "_id" | "name" | "description" | "color" | "createdAt" | "updatedAt"
-  >
+  project: ProjectManifestSummary
   sourceWorkspace: {
     id: string
   }
@@ -86,7 +90,6 @@ export interface ProjectPackageManifest {
   containsAttachments: boolean
   requiresSecrets: boolean
   unsupportedContent: ProjectPackageUnsupportedContent[]
-  supportedImportModes: ProjectPackageImportMode[]
 }
 
 export interface ProjectPackageDependencyIndex {
