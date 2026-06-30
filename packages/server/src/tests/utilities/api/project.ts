@@ -10,6 +10,12 @@ import {
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
+interface ImportProjectParams {
+  file: Buffer | string
+  body?: ImportProjectRequest
+  expectations?: Expectations
+}
+
 export class ProjectAPI extends TestAPI {
   fetch = async (expectations?: Expectations) => {
     return await this._get<FetchProjectsResponse>("/api/projects", {
@@ -51,19 +57,28 @@ export class ProjectAPI extends TestAPI {
   }
 
   import = async (
-    file: Buffer | string,
+    fileOrParams: Buffer | string | ImportProjectParams,
     body?: ImportProjectRequest,
     expectations?: Expectations
   ) => {
+    const params =
+      typeof fileOrParams === "object" && !Buffer.isBuffer(fileOrParams)
+        ? fileOrParams
+        : {
+            file: fileOrParams,
+            body,
+            expectations,
+          }
+
     return await this._post<ImportProjectResponse>(`/api/projects/import`, {
-      fields: body,
+      fields: params.body,
       files: {
         file: {
-          file,
+          file: params.file,
           name: "project-export.tar.gz",
         },
       },
-      expectations,
+      expectations: params.expectations,
     })
   }
 

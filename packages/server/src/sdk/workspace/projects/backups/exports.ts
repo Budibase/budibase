@@ -73,6 +73,13 @@ const getProjectCreatedAt = (project: Project) =>
   toTimestamp(project.updatedAt) ??
   new Date().toISOString()
 
+const isDirectProjectResource = (
+  doc: AnyDocument,
+  prefix: string,
+  projectId: string
+): doc is AnyDocument & { _id: string } =>
+  !!doc._id && doc._id.startsWith(prefix) && hasProject(doc, projectId)
+
 export async function listAssignedAgentFiles(
   assignedAgents: Agent[],
   listFilesForAgent = sdk.ai.rag.listFilesForAgent
@@ -113,42 +120,24 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
     ...assignedDocs
       .filter(
         table =>
-          !!table._id &&
-          table._id.startsWith("ta_") &&
-          hasProject(table, projectId) &&
+          isDirectProjectResource(table, "ta_", projectId) &&
           !isExternalTableID(table._id)
       )
       .map(table => asUsedResource(table, ResourceType.TABLE)),
     ...assignedDocs
-      .filter(
-        query =>
-          !!query._id &&
-          query._id.startsWith("query_") &&
-          hasProject(query, projectId)
-      )
+      .filter(query => isDirectProjectResource(query, "query_", projectId))
       .map(query => asUsedResource(query, ResourceType.QUERY)),
     ...assignedDocs
-      .filter(
-        automation =>
-          !!automation._id &&
-          automation._id.startsWith("au_") &&
-          hasProject(automation, projectId)
+      .filter(automation =>
+        isDirectProjectResource(automation, "au_", projectId)
       )
       .map(automation => asUsedResource(automation, ResourceType.AUTOMATION)),
     ...assignedDocs
-      .filter(
-        agent =>
-          !!agent._id &&
-          agent._id.startsWith("agent_") &&
-          hasProject(agent, projectId)
-      )
+      .filter(agent => isDirectProjectResource(agent, "agent_", projectId))
       .map(agent => asUsedResource(agent, ResourceType.AGENT)),
     ...assignedDocs
-      .filter(
-        workspaceApp =>
-          !!workspaceApp._id &&
-          workspaceApp._id.startsWith("workspace_app_") &&
-          hasProject(workspaceApp, projectId)
+      .filter(workspaceApp =>
+        isDirectProjectResource(workspaceApp, "workspace_app_", projectId)
       )
       .map(workspaceApp =>
         asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
@@ -247,6 +236,18 @@ function sanitizeProjectForExport(project: Project) {
   return sanitized
 }
 
+function countManifestResourcesByType(dependencies: UsedResource[]) {
+  const resourcesByType: Partial<Record<ResourceType, number>> = {
+    // The project document is exported separately from its dependency docs.
+    [ResourceType.PROJECT]: 1,
+  }
+  for (const dependency of dependencies) {
+    resourcesByType[dependency.type] =
+      (resourcesByType[dependency.type] || 0) + 1
+  }
+  return resourcesByType
+}
+
 function buildManifest(
   project: Project,
   workspaceId: string,
@@ -254,15 +255,7 @@ function buildManifest(
   unsupportedContent: ProjectPackageUnsupportedContent[]
 ): ProjectPackageManifest {
   const createdAt = getProjectCreatedAt(project)
-  const resourcesByType = dependencies.reduce<
-    Partial<Record<ResourceType, number>>
-  >(
-    (acc, dependency) => {
-      acc[dependency.type] = (acc[dependency.type] || 0) + 1
-      return acc
-    },
-    { [ResourceType.PROJECT]: 1 }
-  )
+  const resourcesByType = countManifestResourcesByType(dependencies)
 
   return {
     formatVersion: PROJECT_EXPORT_FORMAT_VERSION,
