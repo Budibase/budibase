@@ -2286,7 +2286,11 @@ const automationActions = (store: AutomationStore) => ({
     }
   },
 
-  create: async (name: string, trigger: AutomationTrigger) => {
+  create: async (
+    name: string,
+    trigger: AutomationTrigger,
+    projectIds?: string[]
+  ) => {
     const automation: Automation = {
       name,
       type: "automation",
@@ -2296,6 +2300,7 @@ const automationActions = (store: AutomationStore) => ({
         trigger,
       },
       disabled: true,
+      projectIds,
     }
     const response = await store.actions.save(automation)
     return response

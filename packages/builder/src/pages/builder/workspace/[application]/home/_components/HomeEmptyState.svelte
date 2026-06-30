@@ -1,26 +1,44 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
-  import { Body, Icon } from "@budibase/bbui"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import type { HomeType } from "@budibase/types"
   import { getRowIcon, getRowIconColor } from "./rows"
 
-  export let allRowsCount = 0
-  export let filteredRowsCount = 0
-  export let typeFilter: HomeType = "all"
-  export let searchTerm = ""
+  interface Props {
+    allRowsCount?: number
+    filteredRowsCount?: number
+    typeFilter?: HomeType
+    searchTerm?: string
+    selectedProjectName?: string
+    onClearSearch?: () => void
+    onResetFilters?: () => void
+    onCreateAgent?: () => void
+    onCreateAutomation?: () => void
+    onCreateApp?: () => void
+  }
 
-  const dispatch = createEventDispatcher<{
-    clearSearch: void
-    resetFilters: void
-    createAgent: void
-    createAutomation: void
-    createApp: void
-  }>()
+  let {
+    allRowsCount = 0,
+    filteredRowsCount = 0,
+    typeFilter = "all",
+    searchTerm = "",
+    selectedProjectName = "",
+    onClearSearch = () => {},
+    onResetFilters = () => {},
+    onCreateAgent = () => {},
+    onCreateAutomation = () => {},
+    onCreateApp = () => {},
+  }: Props = $props()
 
-  $: hasAnyRows = allRowsCount > 0
-  $: hasSearch = !!searchTerm.trim()
-  $: hasFilter = typeFilter !== "all"
-  $: isNoResults = hasAnyRows && filteredRowsCount === 0
+  const hasAnyRows = $derived(allRowsCount > 0)
+  const hasSearch = $derived(!!searchTerm.trim())
+  const hasProjectFilter = $derived(!!selectedProjectName)
+  const hasFilter = $derived(typeFilter !== "all" || hasProjectFilter)
+  const isNoResults = $derived(hasAnyRows && filteredRowsCount === 0)
+  const noResultsText = $derived(
+    hasProjectFilter ? `No results in ${selectedProjectName}.` : "No results."
+  )
 
   const agentColor = getRowIconColor("agent")
   const automationColor = getRowIconColor("automation")
@@ -35,26 +53,18 @@
   <div class="empty">
     {#if isNoResults}
       <Body size="M" color="var(--spectrum-global-color-gray-700)">
-        No results.
+        {noResultsText}
       </Body>
       <div class="actions">
         {#if hasSearch}
-          <button
-            type="button"
-            class="action"
-            on:click={() => dispatch("clearSearch")}
-          >
+          <Button secondary quiet size="S" on:click={onClearSearch}>
             Clear search
-          </button>
+          </Button>
         {/if}
         {#if hasFilter}
-          <button
-            type="button"
-            class="action"
-            on:click={() => dispatch("resetFilters")}
-          >
+          <Button secondary quiet size="S" on:click={onResetFilters}>
             Reset filter
-          </button>
+          </Button>
         {/if}
       </div>
     {:else}
@@ -126,11 +136,7 @@
           </Body>
         </div>
 
-        <button
-          type="button"
-          class="spotlight-btn"
-          on:click={() => dispatch("createAgent")}
-        >
+        <button type="button" class="spotlight-btn" onclick={onCreateAgent}>
           <div class="spotlight-btn-icon">
             <Icon name={agentIcon} size="S" color="white" weight="fill" />
           </div>
@@ -144,11 +150,7 @@
         </div>
 
         <div class="secondary-pills">
-          <button
-            type="button"
-            class="pill"
-            on:click={() => dispatch("createAutomation")}
-          >
+          <button type="button" class="pill" onclick={onCreateAutomation}>
             <Icon
               name={automationIcon}
               size="S"
@@ -157,11 +159,7 @@
             />
             <span>Automation</span>
           </button>
-          <button
-            type="button"
-            class="pill"
-            on:click={() => dispatch("createApp")}
-          >
+          <button type="button" class="pill" onclick={onCreateApp}>
             <Icon name={appIcon} size="S" color={appColor} weight="fill" />
             <span>App</span>
           </button>
@@ -173,7 +171,7 @@
 
 <style>
   .empty {
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) var(--spacing-l);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
@@ -185,23 +183,7 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
-  }
-
-  .action {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background: transparent;
-    border-radius: 6px;
-    padding: 6px 10px;
-    cursor: pointer;
-    color: var(--spectrum-global-color-gray-800);
-    transition:
-      background 130ms ease-out,
-      border-color 130ms ease-out;
-  }
-
-  .action:hover {
-    background: var(--spectrum-global-color-gray-100);
-    border-color: var(--spectrum-global-color-gray-400);
+    flex-wrap: wrap;
   }
 
   .welcome {

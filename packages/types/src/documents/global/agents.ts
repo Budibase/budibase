@@ -103,6 +103,7 @@ export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
+  projectIds?: string[]
   operations?: AgentOperation[]
   goal?: string
   live?: boolean
