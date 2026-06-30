@@ -186,6 +186,10 @@ export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
 }
 
+export const generateProjectID = () => {
+  return `${DocumentType.PROJECT}${SEPARATOR}${newid()}`
+}
+
 export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }

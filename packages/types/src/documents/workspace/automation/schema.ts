@@ -83,6 +83,8 @@ import {
   EmailTriggerInputs,
   AgentStepInputs,
   AgentStepOutputs,
+  EscalationStepInputs,
+  EscalationStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -206,6 +208,13 @@ export type ActionImplementations<T extends Hosting> = {
     AgentStepInputs,
     AgentStepOutputs
   >
+  // Optional: the automation escalation step impl is currently removed from the
+  // product (backend escalation support + types remain). Re-registering it makes
+  // this required again.
+  [AutomationActionStepId.ESCALATION]?: ActionImplementation<
+    EscalationStepInputs,
+    EscalationStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -305,7 +314,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                                     ? LoopV2StepInputs
                                                                     : T extends AutomationActionStepId.AGENT
                                                                       ? AgentStepInputs
-                                                                      : never
+                                                                      : T extends AutomationActionStepId.ESCALATION
+                                                                        ? EscalationStepInputs
+                                                                        : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -372,7 +383,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                                 ? LoopV2StepOutputs
                                                                 : T extends AutomationActionStepId.AGENT
                                                                   ? AgentStepOutputs
-                                                                  : never
+                                                                  : T extends AutomationActionStepId.ESCALATION
+                                                                    ? EscalationStepOutputs
+                                                                    : never
 
 export interface AutomationStepInputSettings {
   continueOnError?: boolean
@@ -471,6 +484,9 @@ export type LoopV2Step = AutomationStepSchema<AutomationActionStepId.LOOP_V2>
 
 export type AgentStep = AutomationStepSchema<AutomationActionStepId.AGENT>
 
+export type EscalationStep =
+  AutomationStepSchema<AutomationActionStepId.ESCALATION>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
   conditionUI?: {
     groups: BranchSearchFilters[]
@@ -510,6 +526,7 @@ export type AutomationStep =
   | ExtractStateStep
   | LoopV2Step
   | AgentStep
+  | EscalationStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger

@@ -18,6 +18,7 @@ export enum AutomationIOType {
   DATETIME = "datetime",
   ATTACHMENT = "attachment",
   LONGFORM = "longform",
+  JS = "javascript",
 }
 
 export enum AutomationCustomIOType {
@@ -92,6 +93,7 @@ export enum AutomationActionStepId {
   EXTRACT_STATE = "EXTRACT_STATE",
   LOOP_V2 = "LOOP_V2",
   AGENT = "AGENT",
+  ESCALATION = "ESCALATION",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -151,6 +153,7 @@ export interface Automation extends Document {
   uiTree?: any
   appId: string
   live?: boolean
+  projectIds?: string[]
   name: string
   internal?: boolean
   type?: string
@@ -199,6 +202,7 @@ export enum AutomationStatus {
   STOPPED_ERROR = "stopped_error",
   NO_CONDITION_MET = "No branch condition met",
   TIMED_OUT = "timed_out",
+  SUSPENDED = "suspended",
 }
 
 export enum AutomationStoppedReason {
@@ -269,6 +273,8 @@ export interface AutomationStepInputBase {
   emitter: ContextEmitter
   appId: string
   apiKey?: string
+  automationId?: string
+  stepId?: string
   isTestRun?: boolean
 }
 
