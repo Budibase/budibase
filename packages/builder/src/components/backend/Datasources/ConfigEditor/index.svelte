@@ -19,7 +19,7 @@
   export let nameFieldValue: string = ""
   export let showProjectField: boolean = false
   export let projectIdsValue: string[] = []
-  export let preserveEmptyProjectIds: boolean = false
+  export let originalProjectIdsValue: string[] | undefined = undefined
 
   let projectIds: string[] = []
 
@@ -28,8 +28,14 @@
   $: projectIds = projectIdsValue || []
 
   const getSubmittedProjectIds = () => {
-    if (preserveEmptyProjectIds || projectIds.length) {
+    if (projectIds.length) {
       return projectIds
+    }
+    if (
+      originalProjectIdsValue &&
+      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIdsValue)
+    ) {
+      return []
     }
     return undefined
   }
@@ -88,7 +94,7 @@
     <ProjectSelect bind:value={projectIds} />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}
+  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder } (key)}
     <ConfigInput
       {type}
       {value}

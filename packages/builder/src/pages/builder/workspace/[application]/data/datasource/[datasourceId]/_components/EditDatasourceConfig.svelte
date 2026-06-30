@@ -36,9 +36,20 @@
     projectIds,
   }: DatasourceConfigSubmit) {
     try {
+      const { projectIds: _projectIds, ...datasourceWithoutProjectIds } =
+        datasource
+      const updatedDatasource: Datasource = {
+        ...datasourceWithoutProjectIds,
+        config,
+        name,
+      }
+      if (projectIds !== undefined) {
+        updatedDatasource.projectIds = projectIds
+      }
+
       await datasources.save({
         integration,
-        datasource: { ...datasource, config, name, projectIds },
+        datasource: updatedDatasource,
       })
 
       notifications.success(
@@ -61,7 +72,7 @@
     config={datasource.config || {}}
     showNameField
     showProjectField
-    preserveEmptyProjectIds
+    originalProjectIdsValue={datasource.projectIds || []}
     nameFieldValue={datasource.name}
     projectIdsValue={datasource.projectIds || []}
     onSubmit={saveDatasource}
