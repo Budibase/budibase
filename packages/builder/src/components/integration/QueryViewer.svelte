@@ -72,14 +72,17 @@
 
   let pagination: PaginationConfig | undefined = undefined
 
-  const getInitialProjectIds = (ids: string[]): Query["projectIds"] =>
+  const getLoadedQueryProjectIds = (ids: string[]): Query["projectIds"] =>
     ids.length ? ids : undefined
 
-  const getUpdatedProjectIds = (ids: string[]): Query["projectIds"] => {
+  const getProjectIdsForSave = (
+    ids: string[],
+    hadProjectIdsOnLoad: boolean
+  ): Query["projectIds"] => {
     if (ids.length) {
       return ids
     }
-    return initialProjectIds.length ? [] : undefined
+    return hadProjectIdsOnLoad ? [] : undefined
   }
 
   const getSchemaQueryHash = (query?: Query) => {
@@ -120,7 +123,7 @@
     newQuery.fields[schemaType] ??= ""
     projectIds = newQuery.projectIds || []
     initialProjectIds = [...projectIds]
-    newQuery.projectIds = getInitialProjectIds(projectIds)
+    newQuery.projectIds = getLoadedQueryProjectIds(projectIds)
 
     // Initialize pagination for SQL Read queries
     if (newQuery.queryVerb === "read" && schemaType === "sql") {
@@ -152,7 +155,10 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   $: if (newQuery) {
-    newQuery.projectIds = getUpdatedProjectIds(projectIds)
+    newQuery.projectIds = getProjectIdsForSave(
+      projectIds,
+      initialProjectIds.length > 0
+    )
   }
 
   $: debouncedCheckIsModified(newQuery)

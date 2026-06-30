@@ -12,6 +12,12 @@
     entities?: Datasource["entities"] | UIInternalDatasource["entities"]
   }
 
+  const getPersistableEntities = (
+    datasource: EditableDatasource
+  ): Datasource["entities"] => {
+    return Array.isArray(datasource.entities) ? undefined : datasource.entities
+  }
+
   interface ModalHandle {
     show(): void
     hide(): void
@@ -67,9 +73,7 @@
     const updatedDatasource: Datasource = {
       ...datasourceWithoutProjectIds,
       name,
-      entities: Array.isArray(datasource.entities)
-        ? undefined
-        : datasource.entities,
+      entities: getPersistableEntities(datasource),
     }
     if (JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)) {
       updatedDatasource.projectIds = projectIds
