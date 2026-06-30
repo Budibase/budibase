@@ -17,6 +17,7 @@ import { AddressInfo } from "net"
 import * as api from "../api"
 import * as automations from "../automations"
 import * as bullboard from "../automations/bullboard"
+import * as escalation from "../escalation/queue"
 import env from "../environment"
 import { default as eventEmitter, init as eventInit } from "../events"
 import { automationsEnabled, printFeatures } from "../features"
@@ -28,7 +29,7 @@ import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
-import { rag, tests as agentTests } from "../sdk/workspace/ai"
+import { agentRequests, rag, tests as agentTests } from "../sdk/workspace/ai"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
@@ -173,7 +174,9 @@ export async function startup(
     )
   )
   queuePromises.push(rag.ragQueue.init())
+  queuePromises.push(escalation.init())
   queuePromises.push(rag.knowledgeSourceSyncQueue.init())
+  queuePromises.push(agentRequests.init())
   queuePromises.push(agentTests.init())
   queuePromises.push(
     rag.knowledgeSourceSyncQueue.rehydrateScheduledJobs().catch(err => {

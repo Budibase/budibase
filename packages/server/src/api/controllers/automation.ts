@@ -53,6 +53,10 @@ import env from "../../environment"
 import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -66,13 +70,15 @@ export async function create(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
-  automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
     await update(ctx)
     return
   }
+
+  automation.projectIds = await resolveProjectIds(automation.projectIds)
+  automation.appId = ctx.appId
 
   let createdAutomation: Automation
 
@@ -115,6 +121,12 @@ export async function update(
     return
   }
 
+  const existingAutomation = await sdk.automations.get(automation._id)
+  automation.projectIds = await resolveUpdatedProjectIds(
+    automation.projectIds,
+    existingAutomation.projectIds
+  )
+
   const updatedAutomation = await sdk.automations.update(automation)
 
   ctx.body = {
@@ -148,7 +160,10 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
 export async function logSearch(
   ctx: UserCtx<SearchAutomationLogsRequest, SearchAutomationLogsResponse>
 ) {
-  ctx.body = await automations.logs.logSearch(ctx.request.body)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.appId)
+  ctx.body = await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    return await automations.logs.logSearch(ctx.request.body)
+  })
 }
 
 export async function clearLogError(

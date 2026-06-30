@@ -1,4 +1,9 @@
-import { context, db as dbCore, events } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   BuildSchemaFromSourceRequest,
   BuildSchemaFromSourceResponse,
@@ -35,6 +40,10 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -204,6 +213,31 @@ async function invalidateVariables(
   await invalidateCachedVariable(toInvalidate)
 }
 
+const isDatasourceEntity = (entity: unknown): entity is Table =>
+  typeof entity === "object" && entity !== null && !Array.isArray(entity)
+
+const resolveDatasourceEntityProjectIds = async (
+  datasource: Datasource,
+  existingDatasource?: Datasource
+) => {
+  if (!datasource.entities) {
+    return
+  }
+
+  for (const [name, entity] of Object.entries<unknown>(datasource.entities)) {
+    if (!isDatasourceEntity(entity)) {
+      throw new HTTPError(`Datasource entity '${name}' must be an object.`, 400)
+    }
+
+    entity.projectIds = existingDatasource
+      ? await resolveUpdatedProjectIds(
+          entity.projectIds,
+          existingDatasource.entities?.[name]?.projectIds
+        )
+      : await resolveProjectIds(entity.projectIds)
+  }
+}
+
 export async function update(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
@@ -227,6 +261,11 @@ export async function update(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
+  datasource.projectIds = await resolveUpdatedProjectIds(
+    ctx.request.body.projectIds,
+    baseDatasource.projectIds
+  )
+  await resolveDatasourceEntityProjectIds(datasource, baseDatasource)
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -277,6 +316,8 @@ export async function save(
     fetchSchema,
     tablesFilter,
   } = ctx.request.body
+  datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
+  await resolveDatasourceEntityProjectIds(datasourceData)
   const { datasource, errors } = await sdk.datasources.save(datasourceData, {
     fetchSchema,
     tablesFilter,

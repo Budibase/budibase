@@ -13,6 +13,7 @@ import { default as links } from "./workspace/links"
 import * as navigation from "./workspace/navigation"
 import * as oauth2 from "./workspace/oauth2"
 import * as permissions from "./workspace/permissions"
+import * as projects from "./workspace/projects"
 import { default as queries } from "./workspace/queries"
 import * as resources from "./workspace/resources"
 import * as rowActions from "./workspace/rowActions"
@@ -20,6 +21,7 @@ import { default as rows } from "./workspace/rows"
 import * as screens from "./workspace/screens"
 import { default as tables } from "./workspace/tables"
 import * as views from "./workspace/views"
+import * as escalations from "./workspace/escalations"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
 
@@ -36,6 +38,7 @@ const sdk = {
   screens,
   views,
   permissions,
+  projects,
   links,
   rowActions,
   common,
@@ -48,6 +51,7 @@ const sdk = {
   embedSSO,
   dev,
   workspace,
+  escalations,
 }
 
 // default export for TS

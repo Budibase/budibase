@@ -2,7 +2,6 @@
   import { goto as gotoStore } from "@roxi/routify"
   import { datasources, integrations, queries } from "@/stores/builder"
   import {
-    Icon,
     Select,
     Input,
     Label,
@@ -10,7 +9,6 @@
     Heading,
     Body,
     Divider,
-    Button,
     ActionButton,
     Checkbox,
   } from "@budibase/bbui"
@@ -27,6 +25,7 @@
   import { Utils } from "@budibase/frontend-core"
   import ConnectedQueryUsage from "./ConnectedQueryUsage.svelte"
   import { getErrorMessage } from "@/helpers/errors"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import type {
     Datasource,
     Integration,
@@ -56,6 +55,10 @@
   let scrolling = false
   let showSidePanel = false
   let nameError: string | null = null
+  let projectIds: string[] = []
+  let initialProjectIds: string[] = []
+  let canSaveQuery = false
+  let schemaQueryHash = ""
 
   let newQuery: Query
 
@@ -69,8 +72,38 @@
 
   let pagination: PaginationConfig | undefined = undefined
 
+  const getLoadedQueryProjectIds = (ids: string[]): Query["projectIds"] =>
+    ids.length ? ids : undefined
+
+  const getProjectIdsForSave = (
+    ids: string[],
+    hadProjectIdsOnLoad: boolean
+  ): Query["projectIds"] => {
+    if (ids.length) {
+      return ids
+    }
+    return hadProjectIdsOnLoad ? [] : undefined
+  }
+
+  const getSchemaQueryHash = (query?: Query) => {
+    if (!query) {
+      return ""
+    }
+    return JSON.stringify({
+      datasourceId: query.datasourceId,
+      fields: query.fields,
+      parameters: query.parameters,
+      queryVerb: query.queryVerb,
+      transformer: query.transformer,
+    })
+  }
+
   const parseQuery = (query: Query) => {
     modified = false
+    nameError = null
+    showSidePanel = false
+    rows = []
+    nestedSchemaFields = {}
 
     datasource = $datasources.list.find(
       (ds: DatasourceOption) => ds._id === query.datasourceId
@@ -88,6 +121,9 @@
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
+    projectIds = newQuery.projectIds || []
+    initialProjectIds = [...projectIds]
+    newQuery.projectIds = getLoadedQueryProjectIds(projectIds)
 
     // Initialize pagination for SQL Read queries
     if (newQuery.queryVerb === "read" && schemaType === "sql") {
@@ -104,6 +140,7 @@
     }
 
     queryHash = JSON.stringify(newQuery)
+    schemaQueryHash = getSchemaQueryHash(newQuery)
   }
 
   $: parseQuery(query)
@@ -117,7 +154,20 @@
 
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
+  $: if (newQuery) {
+    newQuery.projectIds = getProjectIdsForSave(
+      projectIds,
+      initialProjectIds.length > 0
+    )
+  }
+
   $: debouncedCheckIsModified(newQuery)
+
+  $: schemaIsCurrent = schemaQueryHash === getSchemaQueryHash(newQuery)
+
+  $: canSaveQuery =
+    rows.length > 0 ||
+    (!!newQuery?._id && Object.keys(schema || {}).length > 0 && schemaIsCurrent)
 
   async function runQuery({ suppressErrors = true }: RunQueryOptions = {}) {
     try {
@@ -135,6 +185,7 @@
 
       schema = response.schema
       rows = response.rows
+      schemaQueryHash = getSchemaQueryHash(newQuery)
 
       notifications.success("Query executed successfully")
     } catch (error) {
@@ -259,7 +310,8 @@
           Run query
         </ActionButton>
         <div class="tooltip" title="Run your query to enable saving">
-          <Button
+          <ActionButton
+            icon="floppy-disk"
             on:click={async () => {
               const response = await saveQuery()
 
@@ -275,13 +327,11 @@
               loading ||
               !newQuery.name ||
               nameError ||
-              rows.length === 0
+              !canSaveQuery
             )}
-            overBackground
           >
-            <Icon size="S" name="floppy-disk" />
             Save
-          </Button>
+          </ActionButton>
         </div>
       </div>
     </div>
@@ -306,6 +356,7 @@
             }}
             error={nameError || undefined}
           />
+          <ProjectSelect bind:value={projectIds} />
           {#if integration.query}
             <Label>Function</Label>
             <Select
@@ -524,19 +575,19 @@
     color: var(--ink);
   }
 
-  .controls :global(.is-disabled) {
+  .controls :global(.disabled) {
     pointer-events: none;
     background-color: transparent;
+    color: var(--grey-3);
+  }
+
+  .controls :global(.disabled i) {
     color: var(--grey-3);
   }
 
   .controls :global(span) {
     display: flex;
     align-items: center;
-  }
-
-  .controls :global(.icon) {
-    margin-right: 8px;
   }
 
   .configField {

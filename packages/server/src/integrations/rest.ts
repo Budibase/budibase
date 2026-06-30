@@ -505,39 +505,10 @@ export class RestIntegration implements IntegrationBase {
             }
           }
         )
-        const ensureHeaderObject = (): Record<
-          string,
-          string | readonly string[]
-        > => {
-          if (!input.headers) {
-            const headerObject: Record<string, string> = {}
-            return headerObject
-          }
-          if (Array.isArray(input.headers)) {
-            const headerObject = input.headers.reduce<Record<string, string>>(
-              (acc, [name, value]) => {
-                acc[name] = value
-                return acc
-              },
-              {}
-            )
-            return headerObject
-          }
-          if (input.headers instanceof Headers) {
-            return Object.fromEntries(input.headers)
-          }
-          return input.headers
-        }
-
-        const headers = ensureHeaderObject()
+        const headers = new Headers(input.headers)
 
         // Delete Content-Type to allow fetch to auto-generate the correct header/boundary.
-        const existingContentTypeKey = Object.keys(headers).find(
-          key => key.toLowerCase() === "content-type"
-        )
-        if (existingContentTypeKey) {
-          delete headers[existingContentTypeKey]
-        }
+        headers.delete("content-type")
 
         input.headers = headers
         input.body = form

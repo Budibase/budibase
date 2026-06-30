@@ -17,7 +17,10 @@
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
-  export const show = () => modal.show()
+  export const show = () => {
+    resetModalState()
+    modal.show()
+  }
   export const hide = () => modal.hide()
 
   let modal: Modal
@@ -25,6 +28,7 @@
 
   let selectedTemplate: TemplateSelectionContext | null = null
   let targetSpec: RestTemplateSpec | null = null
+  let projectIds: string[] = []
 
   $beforeUrlChange(() => {
     return true
@@ -37,6 +41,13 @@
     integration => integration.name === IntegrationTypes.REST
   )
 
+  const resetModalState = () => {
+    loading = false
+    selectedTemplate = null
+    targetSpec = null
+    projectIds = []
+  }
+
   const handleCustom = async (integration?: UIIntegration) => {
     if (!integration || loading) return
     try {
@@ -45,6 +56,7 @@
         const ds = await datasources.create({
           integration,
           config: configFromIntegration(integration),
+          projectIds: projectIds.length ? projectIds : undefined,
         })
         await datasources.fetch()
         goto(`./query/new/${ds._id}`)
@@ -54,9 +66,7 @@
     }
 
     modal.hide()
-    loading = false
-    selectedTemplate = null
-    targetSpec = null
+    resetModalState()
   }
 
   const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
@@ -145,6 +155,7 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(selectedTemplate, targetSpec),
+        projectIds: projectIds.length ? projectIds : undefined,
         ...(template.restTemplateId
           ? {
               restTemplateId: template.restTemplateId,
@@ -165,9 +176,7 @@
         `Error importing template - ${error?.message || "Unknown error"}`
       )
     } finally {
-      loading = false
-      selectedTemplate = null
-      targetSpec = null
+      resetModalState()
     }
   }
 
@@ -194,7 +203,7 @@
 </script>
 
 <div class="settings-wrap">
-  <Modal bind:this={modal} autoFocus={false}>
+  <Modal bind:this={modal} autoFocus={false} on:hide={resetModalState}>
     <div
       class="spectrum-Dialog--large"
       role="dialog"
@@ -205,6 +214,7 @@
         templates={templatesValue}
         {loading}
         customDisabled={!restIntegration}
+        bind:projectIds
         on:custom={() => handleCustom(restIntegration)}
         on:selectTemplate={onSelectTemplate}
       />
