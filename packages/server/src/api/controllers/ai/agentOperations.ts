@@ -38,6 +38,7 @@ export async function createAgentOperation(
     promptInstructions: body.promptInstructions,
     enabledTools: body.enabledTools,
     allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload ?? true,
+    escalation: body.escalation,
   })
 
   ctx.body = toAgentResponse(agent)
