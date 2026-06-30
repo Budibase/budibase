@@ -1,7 +1,10 @@
 import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
 import type { AutomationBlock } from "@/types/automations"
 import { anchorNode, edgeAddItem, stepNode } from "./FlowFactories"
-import { renderBranches } from "./renderers/FlowBranchRenderer"
+import {
+  renderBranches,
+  type BranchTerminalSource,
+} from "./renderers/FlowBranchRenderer"
 import { renderLoopV2Container } from "./renderers/FlowLoopRenderer"
 import type {
   AutomationGraph,
@@ -15,6 +18,7 @@ const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
 
 export class AutomationGraphBuilder {
   private graph?: AutomationGraph
+  private readonly branchTerminals: Record<string, BranchTerminalSource[]> = {}
 
   constructor(
     private readonly blocks: AutomationBlock[],
@@ -74,19 +78,32 @@ export class AutomationGraphBuilder {
     const sourceBlock = item.isTrigger
       ? item.block
       : item.previousBlock || item.block
-    renderBranches(
+    const result = renderBranches(
       item.block,
       sourceBlock.id,
       sourceBlock,
       this.deps.ySpacing,
       this.deps
     )
+    this.branchTerminals[item.block.id] = result.terminals
   }
 
   private connectSequentially(
     previousBlock: AutomationBlock,
     block: AutomationBlock
   ) {
+    if (previousBlock.stepId === AutomationActionStepId.BRANCH) {
+      for (const terminal of this.branchTerminals[previousBlock.id] || []) {
+        this.deps.newEdges.push(
+          edgeAddItem(terminal.nodeId, block.id, {
+            block: terminal.block,
+            ...(terminal.pathTo ? { pathTo: terminal.pathTo } : {}),
+          })
+        )
+      }
+      return
+    }
+
     this.deps.newEdges.push(
       edgeAddItem(previousBlock.id, block.id, {
         block: previousBlock,

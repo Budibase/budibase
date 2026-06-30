@@ -49,6 +49,12 @@ interface BranchClusterArgs {
   }
 }
 
+export interface BranchTerminalSource {
+  nodeId: string
+  block: FlowBlockContext
+  pathTo?: FlowBlockPath
+}
+
 const edgeBranchAddItem = (
   source: string,
   target: string,
@@ -106,6 +112,7 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
+  const terminals: BranchTerminalSource[] = []
 
   let clusterBottomY =
     coords.y +
@@ -198,6 +205,11 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
           : branchBlockRef
         const terminalPath = resolveBlockPath(terminalBlock, deps)
         pushAnchor(terminalId, bottomY, deps)
+        terminals.push({
+          nodeId: terminalId,
+          block: terminalBlock,
+          ...(terminalPath ? { pathTo: terminalPath } : {}),
+        })
         deps.newEdges.push(
           edgeAddItem(
             chainResult ? chainResult.lastNodeId : branchNodeId,
@@ -208,6 +220,8 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
             }
           )
         )
+      } else {
+        terminals.push(...chainResult.terminals)
       }
       clusterBottomY = Math.max(clusterBottomY, bottomY + deps.ySpacing)
     } else {
@@ -270,7 +284,7 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
     }
   })
 
-  return { bottomY: clusterBottomY, branched: true }
+  return { bottomY: clusterBottomY, branched: true, terminals }
 }
 
 export const renderBranches = (
@@ -279,7 +293,7 @@ export const renderBranches = (
   sourceBlock: FlowBlockContext,
   startY: number,
   deps: GraphBuildDeps
-): number => {
+): ReturnType<typeof renderBranchCluster> => {
   const result = renderBranchCluster({
     step: branchStep as BranchStep,
     source: {
@@ -296,7 +310,7 @@ export const renderBranches = (
       laneYSpacing: deps.ySpacing,
     },
   })
-  return result.bottomY
+  return result
 }
 
 export const renderSubflowBranches = (args: {

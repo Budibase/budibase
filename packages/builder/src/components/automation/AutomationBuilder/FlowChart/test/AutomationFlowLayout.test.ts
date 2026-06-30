@@ -54,6 +54,22 @@ const layoutGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
 }
 
 describe("layoutAutomationGraph", () => {
+  it("falls back to default horizontal spacing for non-positive rank separation", () => {
+    const graph = layoutAutomationGraph(
+      {
+        nodes: [stepNode("first"), stepNode("second")],
+        edges: [edge("first", "second")],
+      },
+      {
+        ranksep: 0,
+        nodesep,
+        subflowNodePositions: {},
+      }
+    )
+
+    expectNodeRightOf(graph, "second", "first", 100)
+  })
+
   it("leaves loop clearance before the next sequential root node", () => {
     const graph = layoutGraph({
       nodes: [

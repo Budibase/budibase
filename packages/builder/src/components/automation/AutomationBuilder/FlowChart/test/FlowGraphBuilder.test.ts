@@ -112,6 +112,22 @@ describe("buildAutomationGraph", () => {
     getEdge(graph, "step-2", "step-3")
     getEdge(graph, "step-3", "anchor-step-3")
   })
+
+  it("connects a block after a top-level branch from branch terminal anchors", () => {
+    const graph = createGraph()
+    const afterBranch = serverLogStep("after-branch")
+    const blocks = [automationTrigger, branchWithManyLanesStep(), afterBranch]
+
+    buildAutomationGraph(blocks, createDeps(graph))
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+
+    getEdge(graph, "anchor-alpha-2", afterBranch.id)
+    getEdge(graph, "anchor-branch-branch-many-1-beta", afterBranch.id)
+    getEdge(graph, "anchor-gamma-1", afterBranch.id)
+    getEdge(graph, "anchor-delta-loop", afterBranch.id)
+  })
 })
 
 describe("renderLoopV2Container", () => {
@@ -243,6 +259,46 @@ describe("renderLoopV2Container", () => {
       }
     )
     expectSubflowNodesInsideParent(graph)
+  })
+
+  it("renders branch-first loop children from a real loop source anchor", () => {
+    const firstBranch = branchStep([], {
+      id: "first-loop-branch",
+      branches: [
+        {
+          id: "matched",
+          name: "Matched",
+          children: [serverLogStep("first-loop-branch-child")],
+        },
+        {
+          id: "fallback",
+          name: "Fallback",
+          children: [],
+        },
+      ],
+    })
+    const loop = loopStep([firstBranch], "branch-first-loop")
+    const graph = createGraph()
+
+    renderTestLoop(loop, graph)
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+
+    const sourceAnchor = getNode(
+      graph,
+      "anchor-branch-first-loop-loop-first-loop-branch-source"
+    )
+    expect(sourceAnchor.parentId).toBe(loop.id)
+    expectBranchEdge(
+      getEdge(graph, sourceAnchor.id, "branch-first-loop-branch-0-matched"),
+      {
+        branchStepId: firstBranch.id,
+        branchIdx: 0,
+        branchesCount: 2,
+        isSubflowEdge: true,
+      }
+    )
   })
 })
 

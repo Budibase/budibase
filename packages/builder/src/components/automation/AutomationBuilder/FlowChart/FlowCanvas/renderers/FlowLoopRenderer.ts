@@ -65,6 +65,22 @@ const getBranchLaneWidth = (maxLaneChildren: number) => {
   )
 }
 
+const createBranchSourceAnchor = (
+  loopStepId: string,
+  branchStep: AutomationStep,
+  x: number,
+  y: number,
+  deps: GraphBuildDeps
+) => {
+  const sourceId = `anchor-${loopStepId}-loop-${branchStep.id}-source`
+  deps.newNodes.push(anchorNode(sourceId, loopStepId))
+  deps.subflowNodePositions[sourceId] = {
+    x: Math.max(0, x - LOOP_INSERT_ACTION_OFFSET),
+    y,
+  }
+  return sourceId
+}
+
 const getLoopV2ContainerDimensions = (
   children: AutomationStep[]
 ): LoopV2ContainerDimensions => {
@@ -184,7 +200,13 @@ export const renderLoopV2Container = (
           pathTo: deps.blockRefs?.[lastLinearChild.id]?.pathTo,
         }
       : {
-          id: child.id,
+          id: createBranchSourceAnchor(
+            loopStep.id,
+            child,
+            innerX,
+            baseY + childHeight / 2,
+            deps
+          ),
           block: child,
           pathTo: resolveBlockPath(child, deps),
         }

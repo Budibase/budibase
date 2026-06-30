@@ -3,7 +3,10 @@ import type { AutomationBlock, FlowBlockContext } from "@/types/automations"
 import { edgeAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
 import { resolveBlockPath } from "./FlowRenderUtils"
-import { renderBranches } from "./FlowBranchRenderer"
+import {
+  renderBranches,
+  type BranchTerminalSource,
+} from "./FlowBranchRenderer"
 import { renderLoopV2Container } from "./FlowLoopRenderer"
 
 interface ChainRenderResult {
@@ -11,6 +14,7 @@ interface ChainRenderResult {
   lastNodeBlock: FlowBlockContext
   bottomY: number
   branched: boolean
+  terminals: BranchTerminalSource[]
 }
 
 interface ChainRenderContext {
@@ -18,6 +22,7 @@ interface ChainRenderContext {
   lastNodeBlock: FlowBlockContext
   currentY: number
   branched: boolean
+  terminals: BranchTerminalSource[]
   deps: GraphBuildDeps
 }
 
@@ -39,14 +44,16 @@ const renderBranchSplit = (
   step: AutomationBlock,
   context: ChainRenderContext
 ) => {
-  context.currentY = renderBranches(
+  const result = renderBranches(
     step,
     context.lastNodeId,
     context.lastNodeBlock,
     context.currentY,
     context.deps
   )
+  context.currentY = result.bottomY
   context.branched = true
+  context.terminals = result.terminals
 }
 
 const renderLoop = (step: LoopV2Step, context: ChainRenderContext) => {
@@ -86,6 +93,7 @@ const getRenderResult = (context: ChainRenderContext): ChainRenderResult => {
     lastNodeBlock: context.lastNodeBlock,
     bottomY: context.currentY,
     branched: context.branched,
+    terminals: context.terminals,
   }
 }
 
@@ -101,6 +109,7 @@ export const renderChain = (
     lastNodeBlock: parentBlock,
     currentY: startY,
     branched: false,
+    terminals: [],
     deps,
   }
 

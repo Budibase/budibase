@@ -4,7 +4,7 @@ import {
   type Node as FlowNode,
 } from "@xyflow/svelte"
 import type { FlowNodeLayout } from "@/types/automations"
-import { LOOP, STEP } from "./FlowGeometry"
+import { LOOP, NODE_SPACING, STEP } from "./FlowGeometry"
 import type { FlowNodePosition } from "./FlowGraphTypes"
 
 type LayoutFlowNode = FlowNode<{
@@ -83,6 +83,10 @@ const boundsFromSize = (
     right: left + size.width,
     bottom: top + size.height,
   }
+}
+
+const positiveOrDefault = (value: number | undefined, fallback: number) => {
+  return typeof value === "number" && value > 0 ? value : fallback
 }
 
 class AutomationLayoutEngine {
@@ -328,7 +332,7 @@ class AutomationLayoutEngine {
   }
 
   private get ranksep() {
-    return this.opts.ranksep ?? 260
+    return positiveOrDefault(this.opts.ranksep, NODE_SPACING)
   }
 
   private get nodesep() {
