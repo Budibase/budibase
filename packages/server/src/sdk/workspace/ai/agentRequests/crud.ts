@@ -213,7 +213,9 @@ export async function initActiveRequest({
 
   const candidates = await fetchRequestsByAgentAndUser(agentId, userId)
   const existing = candidates.find(
-    r => !isTerminalStatus(r.status) && r.entries.some(e => e.sessionId === sessionId)
+    r =>
+      !isTerminalStatus(r.status) &&
+      r.entries.some(e => e.sessionId === sessionId)
   )
   if (existing && existing._id) {
     return { requestId: existing._id }

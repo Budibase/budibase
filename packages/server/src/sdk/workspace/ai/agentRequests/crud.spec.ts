@@ -16,8 +16,7 @@ describe("agentRequests crud", () => {
   const config = new TestConfiguration()
 
   const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
-  const generateAgentRequestTitleMock =
-    generateAgentRequestTitle as jest.Mock
+  const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
 
   beforeEach(async () => {
     analyzeAgentRequestLinkMock.mockReset()
