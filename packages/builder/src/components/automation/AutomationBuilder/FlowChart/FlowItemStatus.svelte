@@ -189,6 +189,14 @@
       }
     }
 
+    if (outputStatus === AutomationStatus.SUSPENDED) {
+      return {
+        message: "Suspended",
+        icon: "PauseCircle",
+        type: FlowStatusType.WARN,
+      }
+    }
+
     if (branch && isBranchStep(block)) {
       const branchStatus = getBranchFlowStatus(outputs, block.inputs?.branches)
       if (branchStatus !== undefined) {
