@@ -13,100 +13,75 @@ interface ChainRenderResult {
   branched: boolean
 }
 
-class ChainRenderer {
-  private lastNodeId: string
-  private lastNodeBlock: FlowBlockContext
-  private currentY: number
-  private branched = false
+interface ChainRenderContext {
+  lastNodeId: string
+  lastNodeBlock: FlowBlockContext
+  currentY: number
+  branched: boolean
+  deps: GraphBuildDeps
+}
 
-  constructor(
-    private readonly chain: AutomationBlock[],
-    parentNodeId: string,
-    parentBlock: FlowBlockContext,
-    startY: number,
-    private readonly deps: GraphBuildDeps
-  ) {
-    this.lastNodeId = parentNodeId
-    this.lastNodeBlock = parentBlock
-    this.currentY = startY
+const connectTo = (step: AutomationBlock, context: ChainRenderContext) => {
+  const sourcePath = resolveBlockPath(context.lastNodeBlock, context.deps)
+  context.deps.newEdges.push(
+    edgeAddItem(context.lastNodeId, step.id, {
+      block: context.lastNodeBlock,
+      ...(sourcePath ? { pathTo: sourcePath } : {}),
+    })
+  )
+}
+
+const renderBranchSplit = (
+  step: AutomationBlock,
+  context: ChainRenderContext
+) => {
+  context.currentY = renderBranches(
+    step,
+    context.lastNodeId,
+    context.lastNodeBlock,
+    context.currentY,
+    context.deps
+  )
+  context.branched = true
+}
+
+const renderLoop = (step: LoopV2Step, context: ChainRenderContext) => {
+  const loopResult = renderLoopV2Container(step, context.deps)
+  connectTo(step, context)
+  context.lastNodeId = step.id
+  context.lastNodeBlock = step
+  context.currentY += loopResult.containerHeight + context.deps.ySpacing
+}
+
+const renderStep = (step: AutomationBlock, context: ChainRenderContext) => {
+  context.deps.newNodes.push(stepNode(step.id, step))
+  connectTo(step, context)
+  context.lastNodeId = step.id
+  context.lastNodeBlock = step
+  context.currentY += context.deps.ySpacing
+}
+
+const renderBlock = (step: AutomationBlock, context: ChainRenderContext) => {
+  if (step.stepId === AutomationActionStepId.BRANCH) {
+    renderBranchSplit(step, context)
+    return false
   }
 
-  render(): ChainRenderResult {
-    for (const step of this.chain) {
-      const shouldContinue = this.renderBlock(step)
-      if (!shouldContinue) {
-        break
-      }
-    }
-
-    return {
-      lastNodeId: this.lastNodeId,
-      lastNodeBlock: this.lastNodeBlock,
-      bottomY: this.currentY,
-      branched: this.branched,
-    }
-  }
-
-  private renderBlock(step: AutomationBlock) {
-    const isBranch = step.stepId === AutomationActionStepId.BRANCH
-
-    if (isBranch) {
-      this.renderBranchSplit(step)
-      return false
-    }
-
-    if (isLoopV2Step(step)) {
-      this.renderLoop(step)
-      return true
-    }
-
-    this.renderStep(step)
+  if (isLoopV2Step(step)) {
+    renderLoop(step, context)
     return true
   }
 
-  private renderBranchSplit(step: AutomationBlock) {
-    this.currentY = renderBranches(
-      step,
-      this.lastNodeId,
-      this.lastNodeBlock,
-      this.currentY,
-      this.deps
-    )
-    this.branched = true
-  }
+  renderStep(step, context)
+  return true
+}
 
-  private renderLoop(step: LoopV2Step) {
-    const loopResult = renderLoopV2Container(step, this.deps)
-    this.connectTo(step)
-    this.lastNodeId = step.id
-    this.lastNodeBlock = step
-    this.advance(loopResult.containerHeight + this.stepGap)
-  }
-
-  private renderStep(step: AutomationBlock) {
-    this.deps.newNodes.push(stepNode(step.id, step))
-    this.connectTo(step)
-    this.lastNodeId = step.id
-    this.lastNodeBlock = step
-    this.advance(this.stepGap)
-  }
-
-  private connectTo(step: AutomationBlock) {
-    const sourcePath = resolveBlockPath(this.lastNodeBlock, this.deps)
-    this.deps.newEdges.push(
-      edgeAddItem(this.lastNodeId, step.id, {
-        block: this.lastNodeBlock,
-        ...(sourcePath ? { pathTo: sourcePath } : {}),
-      })
-    )
-  }
-
-  private advance(height: number) {
-    this.currentY += height
-  }
-
-  private get stepGap() {
-    return this.deps.ySpacing
+const getRenderResult = (context: ChainRenderContext): ChainRenderResult => {
+  return {
+    lastNodeId: context.lastNodeId,
+    lastNodeBlock: context.lastNodeBlock,
+    bottomY: context.currentY,
+    branched: context.branched,
   }
 }
 
@@ -117,11 +92,20 @@ export const renderChain = (
   startY: number,
   deps: GraphBuildDeps
 ): ChainRenderResult => {
-  return new ChainRenderer(
-    chain,
-    parentNodeId,
-    parentBlock,
-    startY,
-    deps
-  ).render()
+  const context: ChainRenderContext = {
+    lastNodeId: parentNodeId,
+    lastNodeBlock: parentBlock,
+    currentY: startY,
+    branched: false,
+    deps,
+  }
+
+  for (const step of chain) {
+    const shouldContinue = renderBlock(step, context)
+    if (!shouldContinue) {
+      break
+    }
+  }
+
+  return getRenderResult(context)
 }
