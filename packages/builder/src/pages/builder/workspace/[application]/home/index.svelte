@@ -966,9 +966,7 @@
           weight="500"
           color="var(--spectrum-global-color-gray-900)"
         >
-          {projectsEnabled
-            ? "Welcome to Budibase"
-            : $appStore.name || "Workspace"}
+          {$appStore.name || "Workspace"}
         </Body>
       </div>
 

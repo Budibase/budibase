@@ -142,12 +142,12 @@
 
   .chip--selected {
     background: var(--color-brand-950);
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-global-color-static-gray-50);
     padding: 4px 6px;
   }
 
   .chip--selected:hover {
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-global-color-static-gray-50);
   }
 
   .project-tabs__menu {
