@@ -35,6 +35,12 @@
     projectIds?: string[]
   }
 
+  interface Props {
+    initialProjectIds?: string[]
+  }
+
+  let { initialProjectIds = [] }: Props = $props()
+
   const store = createDatasourceCreationStore()
   const onGoogleAuth = createOnGoogleAuthStore()
   let modal: ModalHandle | undefined = $state()
@@ -132,6 +138,7 @@
       integration={$store.integration}
       config={$store.config}
       showProjectField
+      projectIdsValue={initialProjectIds}
       onSubmit={createDatasource}
     />
   {:else if $store.stage === "selectTables" && $store.integration && $store.datasource}
