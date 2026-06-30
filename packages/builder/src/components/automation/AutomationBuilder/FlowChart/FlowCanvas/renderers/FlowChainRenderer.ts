@@ -2,7 +2,7 @@ import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
 import type { AutomationBlock, FlowBlockContext } from "@/types/automations"
 import { edgeAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
-import { resolveBlockPath } from "../FlowGraphUtils"
+import { resolveBlockPath } from "./FlowRenderUtils"
 import { renderBranches } from "./FlowBranchRenderer"
 import { renderLoopV2Container } from "./FlowLoopRenderer"
 

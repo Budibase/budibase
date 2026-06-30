@@ -21,7 +21,7 @@ import {
   stepNode,
 } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
-import { filterLegacyLoops, resolveBlockPath } from "../FlowGraphUtils"
+import { filterLegacyLoops, resolveBlockPath } from "./FlowRenderUtils"
 import { renderChain } from "./FlowChainRenderer"
 
 enum BranchMode {

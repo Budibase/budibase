@@ -15,7 +15,7 @@ import {
 } from "../FlowGeometry"
 import { anchorNode, edgeLoopAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
-import { filterLegacyLoops, resolveBlockPath } from "../FlowGraphUtils"
+import { filterLegacyLoops, resolveBlockPath } from "./FlowRenderUtils"
 import { renderSubflowBranches } from "./FlowBranchRenderer"
 
 interface LoopV2ContainerDimensions {
