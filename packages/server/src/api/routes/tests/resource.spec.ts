@@ -408,7 +408,7 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("should not include project resources when the feature flag is disabled", async () => {
+    it("does not include project resources after the feature flag is disabled", async () => {
       const { project } = await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -774,7 +774,7 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("strips project assignments when duplicating with projects disabled", async () => {
+    it("strips project assignments when duplicating after projects are disabled", async () => {
       const { datasource } = await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",

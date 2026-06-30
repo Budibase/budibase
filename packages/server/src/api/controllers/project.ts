@@ -90,6 +90,7 @@ export async function exportBundle(
 
   const encryptPassword = ctx.request.body?.encryptPassword || undefined
 
+  // Project exports are streamed and can exceed the default request timeout.
   ctx.req.setTimeout(0)
 
   const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
