@@ -3,10 +3,7 @@ import type { AutomationBlock, FlowBlockContext } from "@/types/automations"
 import { edgeAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
 import { resolveBlockPath } from "./FlowRenderUtils"
-import {
-  renderBranches,
-  type BranchTerminalSource,
-} from "./FlowBranchRenderer"
+import { renderBranches, type BranchTerminalSource } from "./FlowBranchRenderer"
 import { renderLoopV2Container } from "./FlowLoopRenderer"
 
 interface ChainRenderResult {
