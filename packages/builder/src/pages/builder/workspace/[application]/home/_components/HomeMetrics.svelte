@@ -17,14 +17,9 @@
   interface Props {
     metrics?: GetWorkspaceHomeMetricsResponse | null
     showBudibaseAIMetric?: boolean
-    variant?: "default" | "projects"
   }
 
-  let {
-    metrics = null,
-    showBudibaseAIMetric = true,
-    variant = "default",
-  }: Props = $props()
+  let { metrics = null, showBudibaseAIMetric = true }: Props = $props()
 
   let githubStars: number | null = $state(null)
   let actionsBreakdownModal = $state<Modal>()
@@ -52,9 +47,6 @@
   }
 
   onMount(async () => {
-    if (variant === "projects") {
-      return
-    }
     try {
       const response = await API.workspaceHome.getGitHubStars()
       githubStars = response.stars
@@ -64,154 +56,19 @@
   })
 </script>
 
-<div
-  class="metrics"
-  class:three={!showBudibaseAIMetric && variant !== "projects"}
-  class:projects={variant === "projects"}
->
-  {#if variant === "projects"}
-    <div class="metric-card">
-      <Body size="XL" weight="600">
-        {metrics ? formatMetric(metrics.operationsThisMonth) : "-"}
-      </Body>
-      {#if actionsBreakdown}
-        <button
-          type="button"
-          class="metric-label-link metric-label-button"
-          onclick={() => actionsBreakdownModal?.show()}
-        >
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Actions this month
-          </Body>
-          <Icon
-            name="arrow-up-right"
-            size="XS"
-            color="var(--spectrum-global-color-gray-600)"
-            weight="regular"
-          />
-        </button>
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Actions this month
-        </Body>
-      {/if}
-    </div>
-
-    <div class="metric-card">
-      <Body size="XL" weight="600">
-        {metrics ? formatMetric(metrics.totalUsers) : "-"}
-      </Body>
-      {#if canViewOrganisationUsers}
-        <button
-          type="button"
-          class="metric-label-link metric-label-button"
-          onclick={() => bb.settings("/people/users")}
-        >
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Users
-          </Body>
-          <Icon
-            name="arrow-up-right"
-            size="XS"
-            color="var(--spectrum-global-color-gray-600)"
-            weight="regular"
-          />
-        </button>
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Users
-        </Body>
-      {/if}
-    </div>
-
-    {#if showBudibaseAIMetric}
-      <div class="metric-card">
-        <Body size="XL" weight="600">
-          {metrics ? formatMetric(metrics.budibaseAICreditsThisMonth) : "-"}
-        </Body>
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Budibase AI tokens this month
-        </Body>
-      </div>
-    {/if}
-  {:else}
-    <div class="metric-card">
-      <Body size="XL" weight="600">
-        {metrics ? formatMetric(metrics.totalUsers) : "-"}
-      </Body>
-      {#if canViewOrganisationUsers}
-        <button
-          type="button"
-          class="metric-label-link metric-label-button"
-          onclick={() => bb.settings("/people/users")}
-        >
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Total users
-          </Body>
-          <Icon
-            name="arrow-up-right"
-            size="XS"
-            color="var(--spectrum-global-color-gray-600)"
-            weight="regular"
-          />
-        </button>
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Total users
-        </Body>
-      {/if}
-    </div>
-
-    <div class="metric-card">
-      <Body size="XL" weight="600">
-        {metrics ? formatMetric(metrics.operationsThisMonth) : "-"}
-      </Body>
-      {#if actionsBreakdown}
-        <button
-          type="button"
-          class="metric-label-link metric-label-button"
-          onclick={() => actionsBreakdownModal?.show()}
-        >
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Actions this month
-          </Body>
-          <Icon
-            name="arrow-up-right"
-            size="XS"
-            color="var(--spectrum-global-color-gray-600)"
-            weight="regular"
-          />
-        </button>
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Actions this month
-        </Body>
-      {/if}
-    </div>
-
-    {#if showBudibaseAIMetric}
-      <div class="metric-card">
-        <Body size="XL" weight="600">
-          {metrics ? formatMetric(metrics.budibaseAICreditsThisMonth) : "-"}
-        </Body>
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Budibase AI credits this month
-        </Body>
-      </div>
-    {/if}
-
-    <div class="metric-card">
-      <Body size="XL" weight="600">
-        {githubStars != null ? formatStars(githubStars) : "25000+"}
-      </Body>
-      <a
-        href={GITHUB_REPO_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="metric-label-link"
+<div class="metrics" class:three={!showBudibaseAIMetric}>
+  <div class="metric-card">
+    <Body size="XL" weight="600">
+      {metrics ? formatMetric(metrics.totalUsers) : "-"}
+    </Body>
+    {#if canViewOrganisationUsers}
+      <button
+        type="button"
+        class="metric-label-link metric-label-button"
+        onclick={() => bb.settings("/people/users")}
       >
         <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          GitHub stars
+          Total users
         </Body>
         <Icon
           name="arrow-up-right"
@@ -219,9 +76,73 @@
           color="var(--spectrum-global-color-gray-600)"
           weight="regular"
         />
-      </a>
+      </button>
+    {:else}
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        Total users
+      </Body>
+    {/if}
+  </div>
+
+  <div class="metric-card">
+    <Body size="XL" weight="600">
+      {metrics ? formatMetric(metrics.operationsThisMonth) : "-"}
+    </Body>
+    {#if actionsBreakdown}
+      <button
+        type="button"
+        class="metric-label-link metric-label-button"
+        onclick={() => actionsBreakdownModal?.show()}
+      >
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          Actions this month
+        </Body>
+        <Icon
+          name="arrow-up-right"
+          size="XS"
+          color="var(--spectrum-global-color-gray-600)"
+          weight="regular"
+        />
+      </button>
+    {:else}
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        Actions this month
+      </Body>
+    {/if}
+  </div>
+
+  {#if showBudibaseAIMetric}
+    <div class="metric-card">
+      <Body size="XL" weight="600">
+        {metrics ? formatMetric(metrics.budibaseAICreditsThisMonth) : "-"}
+      </Body>
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        Budibase AI credits this month
+      </Body>
     </div>
   {/if}
+
+  <div class="metric-card">
+    <Body size="XL" weight="600">
+      {githubStars != null ? formatStars(githubStars) : "25000+"}
+    </Body>
+    <a
+      href={GITHUB_REPO_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="metric-label-link"
+    >
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        GitHub stars
+      </Body>
+      <Icon
+        name="arrow-up-right"
+        size="XS"
+        color="var(--spectrum-global-color-gray-600)"
+        weight="regular"
+      />
+    </a>
+  </div>
 </div>
 
 {#if actionsBreakdown}
@@ -242,12 +163,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .metrics.projects {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 0;
-  }
-
   .metric-card {
     background: var(--spectrum-global-color-gray-100);
     border-radius: 4px;
@@ -255,17 +170,6 @@
     display: flex;
     flex-direction: column;
     gap: calc(var(--spacing-s) - var(--spacing-xs));
-  }
-
-  .metrics.projects .metric-card {
-    border-radius: 12px;
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .metrics.projects .metric-card :global(.spectrum-Body[size="XL"]) {
-    font-size: 26px;
-    line-height: normal;
   }
 
   .metric-label-link {
@@ -299,8 +203,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .metrics.three,
-    .metrics.projects {
+    .metrics.three {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }

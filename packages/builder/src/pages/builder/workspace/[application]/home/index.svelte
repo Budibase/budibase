@@ -1021,11 +1021,7 @@
       </div>
     {/if}
 
-    <HomeMetrics
-      {metrics}
-      {showBudibaseAIMetric}
-      variant={projectsEnabled ? "projects" : "default"}
-    />
+    <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     {#if projectsEnabled}
       <HomeProjectTabs
