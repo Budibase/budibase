@@ -32,7 +32,6 @@ const getNodeDimensions = (node: FlowNode) => {
 export interface DagreLayoutOptions {
   ranksep?: number
   nodesep?: number
-  compactLoops?: boolean
 }
 
 export const dagreLayoutAutomation = (
@@ -41,7 +40,6 @@ export const dagreLayoutAutomation = (
 ) => {
   const ranksep = opts?.ranksep ?? 260
   const nodesep = opts?.nodesep ?? 220
-  const compactLoops = opts?.compactLoops !== false
 
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
@@ -75,11 +73,9 @@ export const dagreLayoutAutomation = (
     }
   })
 
-  if (compactLoops) {
-    applyLoopClearance(graph)
-    applyPostLoopBranchClearance(graph)
-    applyBranchLaneClearance(graph)
-  }
+  applyLoopClearance(graph)
+  applyPostLoopBranchClearance(graph)
+  applyBranchLaneClearance(graph)
 
   return graph
 }

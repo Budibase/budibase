@@ -14,7 +14,6 @@ export const buildAutomationGraph = (
     {
       ranksep: deps.xSpacing,
       nodesep: NODE_SPACING,
-      compactLoops: true,
       subflowNodePositions: deps.subflowNodePositions,
     }
   )
