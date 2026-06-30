@@ -148,9 +148,12 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
 async function getUnsupportedContent(
   projectId: string,
   agents: Agent[],
-  workspaceApps: WorkspaceApp[]
+  workspaceApps: WorkspaceApp[],
+  exportedAgentIds: Set<string>
 ): Promise<ProjectPackageUnsupportedContent[]> {
-  const assignedAgents = agents.filter(agent => hasProject(agent, projectId))
+  const exportedAgents = agents.filter(
+    agent => !!agent._id && exportedAgentIds.has(agent._id)
+  )
   const assignedWorkspaceApps = workspaceApps.filter(workspaceApp =>
     hasProject(workspaceApp, projectId)
   )
@@ -161,7 +164,7 @@ async function getUnsupportedContent(
     workspaceApps.find(workspaceApp => workspaceApp.isDefault) ||
     workspaceApps[0]
   const [assignedAgentFiles, orphanScreens] = await Promise.all([
-    listAssignedAgentFiles(assignedAgents),
+    listAssignedAgentFiles(exportedAgents),
     defaultWorkspaceApp && assignedWorkspaceAppIds.has(defaultWorkspaceApp._id)
       ? sdk.screens
           .fetch()
@@ -180,10 +183,10 @@ async function getUnsupportedContent(
     })
   }
 
-  if (assignedAgents.length) {
+  if (exportedAgents.length) {
     unsupported.push({
       type: "agent_linked_content",
-      count: assignedAgents.length,
+      count: exportedAgents.length,
       reason:
         "Agent chats, deployments, and other linked AI content are excluded from Project exports.",
     })
@@ -337,10 +340,16 @@ export async function exportProject(
     sdk.workspaceApps.fetch(),
   ])
   const directMembers = await getDirectMembers(projectId)
+  const exportedAgentIds = new Set(
+    projectDependencies
+      .filter(resource => resource.type === ResourceType.AGENT)
+      .map(resource => resource.id)
+  )
   const unsupportedContent = await getUnsupportedContent(
     projectId,
     agents,
-    workspaceApps
+    workspaceApps,
+    exportedAgentIds
   )
 
   const typeByResourceId = new Map(
