@@ -10,6 +10,7 @@ export interface ChatIdentityLinkSession {
   teamId?: string
   guildId?: string
   providerTenantId?: string
+  serviceUrl?: string
   confirmationToken?: string
   createdAt: string
   expiresAt: string
@@ -27,6 +28,7 @@ export interface UpsertChatIdentityLinkInput {
   teamId?: string
   guildId?: string
   providerTenantId?: string
+  serviceUrl?: string
   globalUserId: string
   linkedBy?: string
 }
@@ -39,6 +41,7 @@ export interface CreateChatIdentityLinkSessionInput {
   teamId?: string
   guildId?: string
   providerTenantId?: string
+  serviceUrl?: string
 }
 
 export interface ChatIdentityLinkLookupInput {

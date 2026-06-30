@@ -69,6 +69,7 @@
     "@google-cloud/firestore": "7.8.0",
     "@koa/cors": "5.0.0",
     "@koa/router": "15.6.0",
+    "@slack/web-api": "^7.15.0",
     "@socket.io/redis-adapter": "^8.2.1",
     "@types/xml2js": "^0.4.14",
     "ai": "^6.0.116",
