@@ -13,6 +13,7 @@
   import { onMount } from "svelte"
 
   $: goto = $gotoStore
+  export let initialProjectIds: string[] = []
 
   export const show = () => {
     name = ""
@@ -48,6 +49,7 @@
       const newAgent = await agentsStore.createAgent({
         name: trimmedName,
         live: false,
+        projectIds: initialProjectIds.length ? initialProjectIds : undefined,
       })
       modal.hide()
       goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)

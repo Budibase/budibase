@@ -104,6 +104,7 @@
   export let settingsLocked: boolean = false
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
+  export let initialProjectIds: string[] = []
 
   $beforeUrlChange
   $: goto = $gotoStore
@@ -134,7 +135,7 @@
   let response: PreviewQueryResponse
   let editableQuery: Query | undefined
   let projectIds: string[] = []
-  let initialProjectIds: string[] = []
+  let originalProjectIds: string[] = []
   let datasource: Datasource | UIInternalDatasource | undefined
   let enabledHeaders: Record<string, boolean> = {}
   let globalDynamicRequestBindings: EnrichedBinding[] = []
@@ -213,8 +214,12 @@
 
   $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
-    projectIds = editableQuery?.projectIds || []
-    initialProjectIds = [...projectIds]
+    projectIds =
+      editableQuery?.projectIds ||
+      (!editableQuery?._id && initialProjectIds.length
+        ? [...initialProjectIds]
+        : [])
+    originalProjectIds = [...projectIds]
     lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
@@ -442,7 +447,7 @@
     if (projectIds.length) {
       return projectIds
     }
-    return !isNewQuery && initialProjectIds.length ? [] : undefined
+    return !isNewQuery && originalProjectIds.length ? [] : undefined
   }
 
   const resolveStoreQuery = (
@@ -691,6 +696,8 @@
       }
 
       editableQuery = structuredClone(updatedQuery)
+      projectIds = updatedQuery.projectIds || []
+      originalProjectIds = [...projectIds]
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
