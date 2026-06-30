@@ -109,7 +109,7 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([project("second_project")])
   })
 
-  it("returns the import response when the post-import refresh fails", async () => {
+  it("returns the import response and allows retry when refresh fails", async () => {
     const store = new ProjectsStore()
     const response: ImportProjectResponse = {
       project: project("project_1"),
@@ -120,15 +120,19 @@ describe("ProjectsStore", () => {
       requirements: [],
     }
     const file = new File(["project"], "project.tar.gz")
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {})
 
     importBundle.mockResolvedValue(response)
     fetchProjects.mockRejectedValue(new Error("refresh failed"))
 
     await expect(store.importProject(file)).resolves.toEqual(response)
     expect(fetchProjects).toHaveBeenCalledTimes(1)
+    expect(consoleWarn).toHaveBeenCalledWith(
+      "Failed to refresh projects after import",
+      expect.any(Error)
+    )
 
-    warn.mockRestore()
+    consoleWarn.mockRestore()
   })
 
   it("does not let an in-flight fetch overwrite a created project", async () => {
@@ -225,7 +229,7 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([retained])
   })
 
-  it("does not delete projects after the workspace changes", async () => {
+  it("does not apply a late delete after the workspace changes", async () => {
     const store = new ProjectsStore()
     const pendingDelete = defer<void>()
     const deleted = project("project_1")

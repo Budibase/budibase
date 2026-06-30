@@ -578,6 +578,7 @@ const sanitizeImportedDoc = async (
       remapped,
       sdk.ai.agents.sanitiseAgentForExport(remapped as Agent)
     )
+    delete (remapped as Agent).publishedAt
   }
 
   if (resourceType === ResourceType.WORKSPACE_APP) {

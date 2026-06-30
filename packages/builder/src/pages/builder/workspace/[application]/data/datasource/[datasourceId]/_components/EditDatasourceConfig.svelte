@@ -12,8 +12,10 @@
     show(): void
   }
 
+  type DatasourceConfig = NonNullable<Datasource["config"]>
+
   interface DatasourceConfigSubmit {
-    config: Record<string, any>
+    config: DatasourceConfig
     name: string
     projectIds?: string[]
   }

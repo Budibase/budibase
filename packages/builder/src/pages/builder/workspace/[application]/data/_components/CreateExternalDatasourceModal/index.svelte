@@ -20,16 +20,18 @@
     hide(): void
   }
 
+  type DatasourceConfig = NonNullable<Datasource["config"]>
+
   interface DatasourceCreationState {
     finished: boolean
     stage: "googleAuth" | "editConfig" | "selectTables" | null
     integration: UIIntegration | null
-    config: Record<string, any> | null
+    config: DatasourceConfig | null
     datasource: Datasource | null
   }
 
   interface CreateDatasourceSubmit {
-    config: Record<string, any>
+    config: DatasourceConfig
     projectIds?: string[]
   }
 
@@ -80,7 +82,7 @@
 
   // Triggers opening the config editor whenever Google OAuth returns the user to the page
   $effect(() => {
-    $onGoogleAuth((integration: UIIntegration, config: Record<string, any>) => {
+    $onGoogleAuth((integration: UIIntegration, config: DatasourceConfig) => {
       store.setIntegration(integration)
       store.setConfig(config)
       store.editConfigStage()
