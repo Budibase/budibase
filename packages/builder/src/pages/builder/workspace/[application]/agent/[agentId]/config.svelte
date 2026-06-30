@@ -31,6 +31,7 @@
   import {
     REST_TAG_ICON_URL,
     WEB_SEARCH_TAG_ICON_URL,
+    ESCALATION_TAG_ICON_URL,
   } from "../logos/tagIconUrls"
   import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
@@ -56,6 +57,7 @@
     knowledgeBases: operation.knowledgeBases,
     allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
     knowledgeSources: operation.knowledgeSources,
+    escalation: operation.escalation,
   })
 
   // Agent state
@@ -111,6 +113,7 @@
       runtimeBinding: tool.name,
       icon,
       tagIconUrl,
+      fallbackIcon: sourceType === ToolType.ESCALATION ? "User" : undefined,
     }
   }
 
@@ -298,6 +301,10 @@
       }
     }
 
+    if (sourceType === ToolType.ESCALATION) {
+      return { tagIconUrl: ESCALATION_TAG_ICON_URL }
+    }
+
     if (sourceType === ToolType.REST_QUERY) {
       const ds = $datasources.list.find(d => d.name === sourceLabel)
       const templateIconUrl = getRestTemplateIdentifier(ds)
@@ -352,6 +359,9 @@
     if (sourceType === ToolType.DATASOURCE_QUERY) {
       return sourceLabel ? sanitizeString(sourceLabel, true) : "datasource"
     }
+    if (sourceType === ToolType.ESCALATION) {
+      return "escalation"
+    }
     return "tool"
   }
 
@@ -376,6 +386,9 @@
     }
     if (sourceType === ToolType.DATASOURCE_QUERY) {
       return sourceLabel || "Datasource tools"
+    }
+    if (sourceType === ToolType.ESCALATION) {
+      return "Escalation"
     }
     return "Tools"
   }
@@ -585,6 +598,7 @@
 {#key currentAgent?._id}
   <OperationsSection
     bind:agent={draft}
+    agentId={currentAgent?._id}
     {promptBindings}
     bindingIcons={readableToIcon}
     completions={promptCompletions}

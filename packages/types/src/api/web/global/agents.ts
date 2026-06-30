@@ -207,6 +207,7 @@ export type AgentOperationConfigRequest = Pick<
   | "promptInstructions"
   | "enabledTools"
   | "allowKnowledgeSourceDownload"
+  | "escalation"
 >
 
 export type CreateAgentOperationRequest = AgentOperationConfigRequest &

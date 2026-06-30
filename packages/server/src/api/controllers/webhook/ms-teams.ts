@@ -1,7 +1,8 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
+  FeatureFlag,
   type ChatConversationChannel,
   type Ctx,
   type MSTeamsActivity,
@@ -9,16 +10,18 @@ import {
   type WebhookChatCompleteResult,
 } from "@budibase/types"
 import {
+  Chat,
   Actions,
   Card,
-  Chat,
   LinkButton,
+  type ActionEvent,
   type Thread,
   type Message,
   type SentMessage,
 } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
+import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -210,7 +213,7 @@ const isTeamsBotAddedToConversation = (activity: MSTeamsActivity) => {
     return false
   }
   return (activity.membersAdded || []).some(
-    member => member.id?.trim() === recipientId
+    (member: { id?: string }) => member.id?.trim() === recipientId
   )
 }
 
@@ -229,7 +232,7 @@ export const isTeamsMentionActivity = (activity?: MSTeamsActivity) => {
   }
 
   return (activity?.entities || []).some(
-    entity =>
+    (entity: { type?: string; mentioned?: { id?: string } }) =>
       entity.type?.toLowerCase() === "mention" &&
       entity.mentioned?.id?.trim() === recipientId
   )
@@ -277,6 +280,7 @@ const createTeamsMessageHandler = ({
     const tenantId =
       raw?.channelData?.tenant?.id?.trim() || raw?.from?.tenantId?.trim()
     const conversationType = raw?.conversation?.conversationType?.trim()
+    const serviceUrl = raw?.serviceUrl?.trim()
 
     if (!conversationId) {
       await thread.post("Missing Teams conversation information.")
@@ -301,6 +305,7 @@ const createTeamsMessageHandler = ({
       tenantId,
       externalUserId,
       externalUserName: displayName,
+      serviceUrl,
     }
 
     const scope: MSTeamsConversationScope = {
@@ -428,9 +433,7 @@ const createTeamsMessageHandler = ({
     } catch (error) {
       console.error("Teams webhook processing failed", error)
       const msg =
-        error instanceof HTTPError
-          ? error.message
-          : TEAMS_FALLBACK_ERROR_MESSAGE
+        error instanceof Error ? error.message : TEAMS_FALLBACK_ERROR_MESSAGE
       await editOrPostTextReply(msg)
     }
   }
@@ -488,6 +491,67 @@ export async function MSTeamsWebhook(
         idleTimeoutMinutes,
         requireUserLink,
       })
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
+
+        let parsed: {
+          escalationId: string
+          notificationDocId: string
+        }
+        try {
+          parsed = JSON.parse(event.value ?? "")
+        } catch {
+          console.error(
+            "Teams escalation action: invalid button value",
+            event.value
+          )
+          return
+        }
+        // The appId carried in the button value is untrusted - resolve the
+        // context from the verified webhook route's workspaceId instead.
+        const { escalationId, notificationDocId } = parsed
+
+        const teamsResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+        }
+
+        try {
+          const result = await context.doInContext(workspaceId, async () => {
+            if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
+              return { status: "closed" as const }
+            }
+            return sdk.escalations.respond(
+              escalationId,
+              notificationDocId,
+              teamsResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Teams escalation action: failed to record response", {
+            escalationId,
+            notificationDocId,
+            workspaceId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
+
       chat.onDirectMessage(async (thread, message) => {
         await handler(thread, message)
       })

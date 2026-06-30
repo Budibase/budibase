@@ -17,6 +17,7 @@ import { AddressInfo } from "net"
 import * as api from "../api"
 import * as automations from "../automations"
 import * as bullboard from "../automations/bullboard"
+import * as escalation from "../escalation/queue"
 import env from "../environment"
 import { default as eventEmitter, init as eventInit } from "../events"
 import { automationsEnabled, printFeatures } from "../features"
@@ -173,6 +174,7 @@ export async function startup(
     )
   )
   queuePromises.push(rag.ragQueue.init())
+  queuePromises.push(escalation.init())
   queuePromises.push(rag.knowledgeSourceSyncQueue.init())
   queuePromises.push(agentRequests.init())
   queuePromises.push(agentTests.init())
