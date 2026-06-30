@@ -1,22 +1,35 @@
-<script>
+<script lang="ts">
   import { Select, Icon, Popover, ActionButton } from "@budibase/bbui"
+
+  type GapValue = string | { column: string; row: string }
+
+  interface Props {
+    value?: GapValue
+    options?: { label: string; value: string }[]
+    units?: string[]
+    onChange?: (value: GapValue) => void
+  }
 
   let {
     value = "M",
     options = [],
     units = ["rem", "px", "em", "%"],
     onChange,
-  } = $props()
+  }: Props = $props()
 
-  let columnAnchor = $state()
-  let rowAnchor = $state()
+  let columnAnchor = $state<HTMLElement | undefined>(undefined)
+  let rowAnchor = $state<HTMLElement | undefined>(undefined)
   let showColumnUnitMenu = $state(false)
   let showRowUnitMenu = $state(false)
 
   let isCustom = $derived(typeof value === "object")
   let mode = $derived(isCustom ? "custom" : value)
-  let columnGap = $derived(isCustom ? value?.column || "0.5rem" : "")
-  let rowGap = $derived(isCustom ? value?.row || "0.5rem" : "")
+  let columnGap = $derived(
+    isCustom && typeof value === "object" ? value.column || "0.5rem" : ""
+  )
+  let rowGap = $derived(
+    isCustom && typeof value === "object" ? value.row || "0.5rem" : ""
+  )
 
   let columnParsed = $derived(parseValue(columnGap))
   let columnNumeric = $derived(columnParsed.number)
@@ -26,11 +39,11 @@
   let rowNumeric = $derived(rowParsed.number)
   let rowUnit = $derived(rowParsed.unit)
 
-  function parseValue(val) {
+  function parseValue(val: string): { number: string; unit: string } {
     if (!val || val === "") {
       return { number: "", unit: "rem" }
     }
-    const match = String(val).match(/^([\d.]+)(.*)$/)
+    const match = val.match(/^([\d.]+)(.*)$/)
     if (match) {
       return {
         number: match[1],
@@ -40,17 +53,17 @@
     return { number: val, unit: "rem" }
   }
 
-  function handleModeChange(e) {
+  function handleModeChange(e: CustomEvent<GapValue>) {
     const newMode = e.detail
-    if (newMode === "custom") {
+    if (newMode === "custom" || typeof newMode === "object") {
       onChange?.({ column: "0.5rem", row: "0.5rem" })
     } else {
       onChange?.(newMode)
     }
   }
 
-  function handleColumnNumberInput(e) {
-    const num = e.target.value
+  function handleColumnNumberInput(e: Event) {
+    const num = (e.target as HTMLInputElement).value
     if (num !== "") {
       onChange?.({
         column: `${num}${columnUnit}`,
@@ -59,8 +72,8 @@
     }
   }
 
-  function handleRowNumberInput(e) {
-    const num = e.target.value
+  function handleRowNumberInput(e: Event) {
+    const num = (e.target as HTMLInputElement).value
     if (num !== "") {
       onChange?.({
         column: columnGap || "0",
@@ -69,7 +82,7 @@
     }
   }
 
-  function selectColumnUnit(unit) {
+  function selectColumnUnit(unit: string) {
     if (columnNumeric) {
       onChange?.({
         column: `${columnNumeric}${unit}`,
@@ -79,7 +92,7 @@
     showColumnUnitMenu = false
   }
 
-  function selectRowUnit(unit) {
+  function selectRowUnit(unit: string) {
     if (rowNumeric) {
       onChange?.({
         column: columnGap || "0",
@@ -90,16 +103,17 @@
   }
 </script>
 
-<div class="gap-control">
-  <Select
-    value={mode}
-    options={options}
-    on:change={handleModeChange}
-    placeholder={false}
-  />
-</div>
+<div class="gap-wrapper">
+  <div class="gap-control">
+    <Select
+      value={mode}
+      options={options}
+      on:change={handleModeChange}
+      placeholder={false}
+    />
+  </div>
 
-{#if isCustom}
+  {#if isCustom}
   <div class="custom-gaps">
     <!-- Column Gap Input -->
     <div class="gap-row">
@@ -194,10 +208,15 @@
         </Popover>
       </div>
     </div>
-  </div>
-{/if}
+    </div>
+  {/if}
+</div>
 
 <style>
+  .gap-wrapper {
+    display: contents;
+  }
+
   .gap-control {
     display: flex;
     flex-direction: column;
