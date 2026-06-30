@@ -276,19 +276,8 @@
     importProjectModal?.show()
   }
 
-  const withSelectedProject = (route: string) => {
-    const target = url(route)
-    if (!selectedProjectId) {
-      return target
-    }
-    const separator = target.includes("?") ? "&" : "?"
-    return `${target}${separator}project=${encodeURIComponent(
-      selectedProjectId
-    )}`
-  }
-
   const goToCreate = (target: "data/new" | "apis/new") => {
-    goto(withSelectedProject(`../${target}`))
+    goto(url(`../${target}`))
   }
 
   const handleTableSave = async (table: Table) => {
@@ -782,6 +771,7 @@
       projectsRequestedForWorkspace = workspaceId
       await projectsStore.ensureFetched(workspaceId)
     } catch (error) {
+      projectsRequestedForWorkspace = ""
       if ($appStore.appId === workspaceId && projectsEnabled) {
         notifications.error(getErrorMessage(error) || "Unable to load projects")
       }

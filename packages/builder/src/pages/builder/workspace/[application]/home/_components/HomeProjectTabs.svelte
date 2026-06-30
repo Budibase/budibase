@@ -55,14 +55,19 @@
 
   <div class="project-tabs__menu">
     <ActionMenu align={PopoverAlignment.Left} animate={false}>
-      <div slot="control" class="stack-plus-control">
+      <button
+        slot="control"
+        type="button"
+        class="stack-plus-control"
+        aria-label="Project actions"
+      >
         <Icon
           name="stack-plus"
           size="S"
           hoverable
           color="var(--spectrum-global-color-gray-600)"
         />
-      </div>
+      </button>
 
       <MenuItem icon="stack" on:click={onCreateProject}>
         Create project
@@ -161,6 +166,8 @@
     align-items: center;
     justify-content: center;
     padding: 4px;
+    border: none;
+    background: none;
     cursor: pointer;
   }
 </style>

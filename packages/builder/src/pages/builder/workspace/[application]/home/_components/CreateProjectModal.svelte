@@ -29,9 +29,8 @@
     if (name.trim()) {
       nameError = undefined
     }
-    if (color.trim()) {
-      colorError = undefined
-    }
+    color
+    colorError = undefined
   })
 
   const confirm = () => {

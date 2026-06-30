@@ -1,4 +1,4 @@
-import type { PublishResourceState } from "../../api"
+import type { CreateProjectRequest, PublishResourceState } from "../../api"
 import type { Agent, WorkspaceFavourite } from "../../documents"
 import type { UIAutomation } from "../stores/automations"
 import type { UIWorkspaceApp } from "../workspaceApps"
@@ -48,8 +48,4 @@ export interface AgentRow extends HomeRowBase {
 
 export type HomeRow = AppRow | AutomationRow | AgentRow
 
-export interface ProjectFormPayload {
-  name: string
-  description?: string
-  color?: string
-}
+export type ProjectFormPayload = CreateProjectRequest

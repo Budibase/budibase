@@ -4,6 +4,7 @@
   import {
     ActionMenu,
     Button,
+    Icon,
     MenuItem,
     MenuSeparator,
     PopoverAlignment,
@@ -42,7 +43,7 @@
   >
     {#if variant === "pill"}
       <button type="button" class="create-pill-btn">
-        <span class="create-pill-icon">+</span>
+        <Icon name="plus" size="S" />
         Create
       </button>
     {:else}
@@ -104,11 +105,6 @@
 
   .create-pill-btn:hover {
     opacity: 0.9;
-  }
-
-  .create-pill-icon {
-    font-size: 16px;
-    line-height: 1;
   }
 
   .create-menu-control.create-pill {
