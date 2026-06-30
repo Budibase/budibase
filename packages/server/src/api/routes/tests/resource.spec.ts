@@ -1,10 +1,13 @@
-import { db, events, objectStore } from "@budibase/backend-core"
+import { db, events, features, objectStore } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
+  Agent,
+  AgentKnowledgeSourceType,
   AnyDocument,
   Automation,
   Datasource,
+  FeatureFlag,
   FieldType,
   Query,
   RelationshipType,
@@ -20,7 +23,9 @@ import path from "path"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { generateRowActionsID } from "../../../db/utils"
+import { buildExternalTableId } from "../../../integrations/utils"
 import {
+  basicDatasource,
   basicQuery,
   basicScreen,
   basicTable,
@@ -748,6 +753,116 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("duplicates project external tables through their datasource", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.PROJECTS]: true },
+        async () => {
+          const { project } = await config.api.project.create({
+            name: "Operations",
+          })
+          const datasource = await config.api.datasource.create(
+            basicDatasource().datasource
+          )
+          const externalTable = basicTable(datasource, {
+            _id: buildExternalTableId(datasource._id!, "TestTable"),
+            projectIds: [project._id],
+          })
+          const assignedDatasource = await config.api.datasource.update({
+            ...datasource,
+            entities: {
+              [externalTable.name]: externalTable,
+            },
+          })
+          const destination = await config.api.workspace.create({
+            name: `Destination ${generator.natural()}`,
+          })
+
+          const resourcesToCopy = await collectDependantResourceIds(project._id)
+          expect(resourcesToCopy).toEqual([project._id, assignedDatasource._id])
+
+          await duplicateResources(resourcesToCopy, destination.appId)
+
+          const destinationDb = db.getDB(
+            db.getDevWorkspaceID(destination.appId),
+            { skip_setup: true }
+          )
+          const duplicatedDatasource = await destinationDb.get<Datasource>(
+            assignedDatasource._id!
+          )
+
+          await expect(destinationDb.get(project._id)).resolves.toBeDefined()
+          expect(
+            duplicatedDatasource.entities![externalTable.name].projectIds
+          ).toEqual([project._id])
+        }
+      )
+    })
+
+    it("includes internal tables in project dependency graph", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.PROJECTS]: true },
+        async () => {
+          const { project } = await config.api.project.create({
+            name: "Operations",
+          })
+          const internalTable = await createInternalTable({
+            name: "Internal project table",
+            projectIds: [project._id],
+          })
+
+          const resourcesToCopy = await collectDependantResourceIds(project._id)
+          expect(resourcesToCopy).toEqual([project._id, internalTable._id])
+        }
+      )
+    })
+
+    it("removes external table project assignments when duplicating a datasource without its project", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.PROJECTS]: true },
+        async () => {
+          const { project } = await config.api.project.create({
+            name: "Operations",
+          })
+          const datasource = await config.api.datasource.create(
+            basicDatasource().datasource
+          )
+          const externalTable = basicTable(datasource, {
+            _id: buildExternalTableId(datasource._id!, "TestTable"),
+            projectIds: [project._id],
+          })
+          const assignedDatasource = await config.api.datasource.update({
+            ...datasource,
+            entities: {
+              [externalTable.name]: externalTable,
+            },
+          })
+          const withoutProject = await config.api.workspace.create({
+            name: `Destination ${generator.natural()}`,
+          })
+
+          await duplicateResources(
+            [assignedDatasource._id!],
+            withoutProject.appId
+          )
+
+          const destinationDb = db.getDB(
+            db.getDevWorkspaceID(withoutProject.appId),
+            { skip_setup: true }
+          )
+          const duplicatedDatasource = await destinationDb.get<Datasource>(
+            assignedDatasource._id!
+          )
+
+          expect(
+            duplicatedDatasource.entities![externalTable.name].projectIds
+          ).toBeUndefined()
+        }
+      )
+    })
+
     it("duplicates individual tables", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
@@ -1033,6 +1148,120 @@ describe("/api/resources/usage", () => {
       await validateWorkspace(newWorkspace.appId, {
         apps: [{ ...app, disabled: true }],
         screens,
+      })
+    })
+
+    it("sanitises duplicated agents in the destination workspace", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+      const agent: Agent = {
+        _id: `agent_${generator.guid()}`,
+        name: "Duplicated agent",
+        aiconfig: "default",
+        live: true,
+        publishedAt: "2026-06-09T10:00:00.000Z",
+        operations: [
+          {
+            id: "operation_source",
+            name: "Source operation",
+            live: true,
+            allowKnowledgeSourceDownload: true,
+            knowledgeBases: ["kb_source"],
+            knowledgeSources: [
+              {
+                id: "source",
+                type: AgentKnowledgeSourceType.SHAREPOINT,
+                config: {
+                  datasourceId: "datasource_source",
+                  authConfigId: "auth_source",
+                  site: {
+                    id: "site_source",
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        discordIntegration: {
+          applicationId: "discord-app-id",
+          publicKey: "discord-public-key",
+          botToken: "discord-bot-token",
+          guildId: "discord-guild-id",
+          chatAppId: "app_source",
+          idleTimeoutMinutes: 15,
+          requireUserLink: true,
+          interactionsEndpointUrl: "https://source.example/discord",
+        },
+        MSTeamsIntegration: {
+          appId: "teams-app-id",
+          appPassword: "teams-app-password",
+          tenantId: "teams-tenant-id",
+          chatAppId: "app_source",
+          idleTimeoutMinutes: 20,
+          requireUserLink: true,
+          messagingEndpointUrl: "https://source.example/teams",
+        },
+        slackIntegration: {
+          botToken: "slack-bot-token",
+          signingSecret: "slack-signing-secret",
+          chatAppId: "app_source",
+          idleTimeoutMinutes: 25,
+          requireUserLink: false,
+          messagingEndpointUrl: "https://source.example/slack",
+        },
+        telegramIntegration: {
+          botToken: "telegram-bot-token",
+          webhookSecretToken: "telegram-webhook-secret",
+          botUserName: "telegram_bot",
+          chatAppId: "app_source",
+          idleTimeoutMinutes: 30,
+          requireUserLink: true,
+          messagingEndpointUrl: "https://source.example/telegram",
+        },
+      }
+      const sourceDb = db.getDB(config.getDevWorkspaceId())
+      await sourceDb.put(agent)
+
+      await duplicateResources([agent._id!], newWorkspace.appId)
+
+      const destinationDb = db.getDB(db.getDevWorkspaceID(newWorkspace.appId), {
+        skip_setup: true,
+      })
+      const duplicatedAgent = await destinationDb.get<Agent>(agent._id!)
+      expect(duplicatedAgent).toEqual(
+        expect.objectContaining({
+          live: false,
+          operations: [
+            expect.objectContaining({
+              id: "operation_source",
+              knowledgeBases: [],
+              knowledgeSources: [],
+            }),
+          ],
+        })
+      )
+      expect(duplicatedAgent.publishedAt).toBeUndefined()
+      expect(duplicatedAgent.discordIntegration).toEqual({
+        applicationId: "discord-app-id",
+        guildId: "discord-guild-id",
+        idleTimeoutMinutes: 15,
+        requireUserLink: true,
+      })
+      expect(duplicatedAgent.MSTeamsIntegration).toEqual({
+        appId: "teams-app-id",
+        tenantId: "teams-tenant-id",
+        idleTimeoutMinutes: 20,
+        requireUserLink: true,
+      })
+      expect(duplicatedAgent.slackIntegration).toEqual({
+        idleTimeoutMinutes: 25,
+        requireUserLink: false,
+      })
+      expect(duplicatedAgent.telegramIntegration).toEqual({
+        botUserName: "telegram_bot",
+        idleTimeoutMinutes: 30,
+        requireUserLink: true,
       })
     })
 
