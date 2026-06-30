@@ -330,7 +330,7 @@ function generateStepSchema(allowStepTypes: string[]) {
   const branchSchema = Joi.object({
     id: Joi.string().required(),
     name: Joi.string().required(),
-    condition: filterObject({ unknown: false }).required().min(1),
+    condition: filterObject({ unknown: false }).required(),
     conditionUI: Joi.object(),
   })
 

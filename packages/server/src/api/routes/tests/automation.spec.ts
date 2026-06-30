@@ -212,7 +212,7 @@ describe("/automations", () => {
       })
     })
 
-    it("Should check validation on a branch step with empty conditions", async () => {
+    it("allows a branch step with empty conditions", async () => {
       const automation = createAutomationBuilder(config)
         .onAppAction()
         .branch({
@@ -224,13 +224,9 @@ describe("/automations", () => {
         })
         .build()
 
-      await config.api.automation.post(automation, {
-        status: 400,
-        body: {
-          message:
-            'Invalid body - "definition.steps[0].inputs.branches[0].condition" must have at least 1 key',
-        },
-      })
+      const { message } = await config.api.automation.post(automation)
+
+      expect(message).toEqual("Automation created successfully")
     })
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {
@@ -240,14 +236,15 @@ describe("/automations", () => {
           activeBranch: {
             steps: stepBuilder =>
               stepBuilder.serverLog({ text: "Active user" }),
-            condition: {
-              //@ts-ignore
-              INCORRECT: { "trigger.fields.status": "active" },
-            },
+            condition: {},
           },
         })
         .serverLog({ text: "Inactive user" })
         .build()
+      const [step] = automation.definition.steps
+      step.inputs.branches[0].condition = {
+        INCORRECT: { "trigger.fields.status": "active" },
+      }
 
       await config.api.automation.post(automation, {
         status: 400,
