@@ -17,6 +17,7 @@ import {
   Table,
   WebhookTriggerInputs,
   isDidNotTriggerResponse,
+  isBranchStep,
   isEmailTrigger,
 } from "@budibase/types"
 import {
@@ -229,6 +230,28 @@ describe("/automations", () => {
       expect(message).toEqual("Automation created successfully")
     })
 
+    it("allows a branch step with empty condition UI", async () => {
+      const automation = createAutomationBuilder(config)
+        .onAppAction()
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {},
+          },
+        })
+        .build()
+      const [step] = automation.definition.steps
+      if (!isBranchStep(step)) {
+        throw new Error("Expected branch step")
+      }
+      step.inputs.branches[0].conditionUI = null
+
+      const { message } = await config.api.automation.post(automation)
+
+      expect(message).toEqual("Automation created successfully")
+    })
+
     it("Should check validation on an branch that has a condition that is not valid", async () => {
       const automation = createAutomationBuilder(config)
         .onAppAction()
@@ -242,17 +265,42 @@ describe("/automations", () => {
         .serverLog({ text: "Inactive user" })
         .build()
       const [step] = automation.definition.steps
-      step.inputs.branches[0].condition = {
-        INCORRECT: { "trigger.fields.status": "active" },
+      if (!isBranchStep(step)) {
+        throw new Error("Expected branch step")
+      }
+      const invalidAutomation = {
+        ...automation,
+        definition: {
+          ...automation.definition,
+          steps: [
+            {
+              ...step,
+              inputs: {
+                ...step.inputs,
+                branches: [
+                  {
+                    ...step.inputs.branches[0],
+                    condition: {
+                      INCORRECT: { "trigger.fields.status": "active" },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
       }
 
-      await config.api.automation.post(automation, {
-        status: 400,
-        body: {
-          message:
-            'Invalid body - "definition.steps[0].inputs.branches[0].condition.INCORRECT" is not allowed',
-        },
-      })
+      const response = await config.request!
+        .post("/api/automations")
+        .send(invalidAutomation)
+        .set(config.defaultHeaders())
+        .expect(400)
+        .expect("Content-Type", /json/)
+
+      expect(response.body.message).toEqual(
+        'Invalid body - "definition.steps[0].inputs.branches[0].condition.INCORRECT" is not allowed'
+      )
     })
 
     it("should apply authorization to endpoint", async () => {

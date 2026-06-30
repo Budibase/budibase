@@ -331,7 +331,7 @@ function generateStepSchema(allowStepTypes: string[]) {
     id: Joi.string().required(),
     name: Joi.string().required(),
     condition: filterObject({ unknown: false }).required(),
-    conditionUI: Joi.object(),
+    conditionUI: Joi.object().allow(null),
   })
 
   return Joi.object({
