@@ -10,8 +10,8 @@ import { sdk as usersSdk } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 
 export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
-  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
-  if (!isBuilderOrAdmin && chatApp.live !== true) {
+  const isCreator = usersSdk.users.isCreator(ctx.user)
+  if (!isCreator && chatApp.live !== true) {
     throw new HTTPError("Chat app is not live", 403)
   }
 }
@@ -26,7 +26,7 @@ export const canAccessChatAppAgentForUser = async (
   chatAgent: ChatAppAgent,
   accessController?: InstanceType<typeof roles.AccessController>
 ) => {
-  if (usersSdk.users.isAdminOrBuilder(ctx.user)) {
+  if (usersSdk.users.isCreator(ctx.user)) {
     return true
   }
   if (!chatAgent.roleId) {
