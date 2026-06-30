@@ -7,10 +7,33 @@ import {
   users,
 } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
-import { ContextUser, User, UserCtx, UserGroup } from "@budibase/types"
+import {
+  type ContextUser,
+  type User,
+  type UserCtx,
+  type UserGroup,
+  type UserSSO,
+} from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import env from "../environment"
+
+interface SensitiveGlobalUser extends User, Partial<UserSSO> {
+  thirdPartyProfile?: object
+}
+
+function stripSensitiveUserFields<
+  T extends ContextUser | SensitiveGlobalUser,
+>(user: T): T {
+  delete user.oauth2
+  delete user.provider
+  delete user.providerType
+  delete user.profile
+  delete user.thirdPartyProfile
+  delete user.ssoId
+  delete user.forceResetPassword
+  return user
+}
 
 export async function processUser(
   user: ContextUser,
@@ -21,6 +44,7 @@ export async function processUser(
   }
   user = cloneDeep(user)
   delete user.password
+  stripSensitiveUserFields(user)
   const workspaceId = opts.appId || context.getWorkspaceId()
   if (!workspaceId) {
     throw new Error("Unable to process user without app ID")
@@ -100,12 +124,14 @@ export async function getGlobalUser(userId: string): Promise<ContextUser> {
 
 export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   const db = tenancy.getGlobalDB()
-  let globalUsers: User[]
+  let globalUsers: SensitiveGlobalUser[]
   if (userIds) {
-    globalUsers = await db.getMultiple<User>(userIds, { allowMissing: true })
+    globalUsers = await db.getMultiple<SensitiveGlobalUser>(userIds, {
+      allowMissing: true,
+    })
   } else {
     globalUsers = (
-      await db.allDocs<User>(
+      await db.allDocs<SensitiveGlobalUser>(
         dbCore.getGlobalUserParams(null, {
           include_docs: true,
         })
@@ -116,8 +142,7 @@ export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
     .filter(user => user != null)
     .map(user => {
       delete user.password
-      delete user.forceResetPassword
-      return user
+      return stripSensitiveUserFields(user)
     })
 }
 

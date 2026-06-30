@@ -4,6 +4,7 @@ import { sdk as proSdk } from "@budibase/pro"
 import tk from "timekeeper"
 
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { getGlobalUser } from "../../../utilities/global"
 import { fetchMetadata, rawUserMetadata, syncGlobalUsers } from "../utils"
 
 describe("syncGlobalUsers", () => {
@@ -190,6 +191,83 @@ describe("syncGlobalUsers", () => {
         expect.objectContaining({
           _id: db.generateUserMetadataID(user._id!),
           fullName: "SurnameOnly",
+        })
+      )
+    })
+  })
+
+  it("strips SSO tokens from fetched user metadata", async () => {
+    const user = await config.createUser(
+      structures.users.ssoUser({
+        user: {
+          admin: { global: false },
+          builder: { global: false },
+          roles: {
+            [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+          },
+        },
+      })
+    )
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      await syncGlobalUsers()
+
+      const metadata = await fetchMetadata()
+      const found = metadata.find(
+        doc => doc._id === db.generateUserMetadataID(user._id!)
+      )
+
+      expect(found).toEqual(
+        expect.objectContaining({
+          _id: db.generateUserMetadataID(user._id!),
+          email: user.email,
+        })
+      )
+      expect(found).toEqual(
+        expect.not.objectContaining({
+          oauth2: expect.anything(),
+          provider: expect.anything(),
+          providerType: expect.anything(),
+          profile: expect.anything(),
+          thirdPartyProfile: expect.anything(),
+          ssoId: expect.anything(),
+          forceResetPassword: expect.anything(),
+        })
+      )
+    })
+  })
+
+  it("strips SSO tokens from single global user metadata", async () => {
+    const user = await config.createUser(
+      structures.users.ssoUser({
+        user: {
+          admin: { global: false },
+          builder: { global: false },
+          roles: {
+            [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+          },
+        },
+      })
+    )
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      const found = await getGlobalUser(db.generateUserMetadataID(user._id!))
+
+      expect(found).toEqual(
+        expect.objectContaining({
+          _id: user._id,
+          email: user.email,
+        })
+      )
+      expect(found).toEqual(
+        expect.not.objectContaining({
+          oauth2: expect.anything(),
+          provider: expect.anything(),
+          providerType: expect.anything(),
+          profile: expect.anything(),
+          thirdPartyProfile: expect.anything(),
+          ssoId: expect.anything(),
+          forceResetPassword: expect.anything(),
         })
       )
     })
