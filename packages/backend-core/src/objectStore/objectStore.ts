@@ -93,7 +93,11 @@ const STRING_CONTENT_TYPES = [
 // does normal sanitization and then swaps dev apps to apps
 export function sanitizeKey(input: string): string {
   const key = sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
-  if (key.split("/").some((segment: string) => segment === "." || segment === "..")) {
+  if (
+    key
+      .split("/")
+      .some((segment: string) => segment === "." || segment === "..")
+  ) {
     throw new Error("Invalid object store key: path traversal is not allowed.")
   }
   return key
