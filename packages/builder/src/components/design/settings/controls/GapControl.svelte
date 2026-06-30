@@ -103,17 +103,16 @@
   }
 </script>
 
-<div class="gap-wrapper">
-  <div class="gap-control">
-    <Select
-      value={mode}
-      options={options}
-      on:change={handleModeChange}
-      placeholder={false}
-    />
-  </div>
+<div class="gap-control">
+  <Select
+    value={mode}
+    options={options}
+    on:change={handleModeChange}
+    placeholder={false}
+  />
+</div>
 
-  {#if isCustom}
+{#if isCustom}
   <div class="custom-gaps">
     <!-- Column Gap Input -->
     <div class="gap-row">
@@ -208,15 +207,10 @@
         </Popover>
       </div>
     </div>
-    </div>
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style>
-  .gap-wrapper {
-    display: contents;
-  }
-
   .gap-control {
     display: flex;
     flex-direction: column;
