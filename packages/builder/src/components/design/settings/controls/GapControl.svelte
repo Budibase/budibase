@@ -1,32 +1,30 @@
 <script>
   import { Select, Icon, Popover, ActionButton } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
 
-  export let value = "M"
-  export let options = []
-  export let units = ["rem", "px", "em", "%"]
+  let {
+    value = "M",
+    options = [],
+    units = ["rem", "px", "em", "%"],
+    onChange,
+  } = $props()
 
-  const dispatch = createEventDispatcher()
+  let columnAnchor = $state()
+  let rowAnchor = $state()
+  let showColumnUnitMenu = $state(false)
+  let showRowUnitMenu = $state(false)
 
-  $: presetOptions = options
-  $: isCustom = typeof value === "object"
-  $: mode = isCustom ? "custom" : value
-  $: columnGap = isCustom ? value?.column || "0.5rem" : ""
-  $: rowGap = isCustom ? value?.row || "0.5rem" : ""
+  let isCustom = $derived(typeof value === "object")
+  let mode = $derived(isCustom ? "custom" : value)
+  let columnGap = $derived(isCustom ? value?.column || "0.5rem" : "")
+  let rowGap = $derived(isCustom ? value?.row || "0.5rem" : "")
 
-  // Parse column gap
-  $: columnParsed = parseValue(columnGap)
-  $: columnNumeric = columnParsed.number
-  $: columnUnit = columnParsed.unit
+  let columnParsed = $derived(parseValue(columnGap))
+  let columnNumeric = $derived(columnParsed.number)
+  let columnUnit = $derived(columnParsed.unit)
 
-  // Parse row gap
-  $: rowParsed = parseValue(rowGap)
-  $: rowNumeric = rowParsed.number
-  $: rowUnit = rowParsed.unit
-
-  let columnAnchor, rowAnchor
-  let showColumnUnitMenu = false
-  let showRowUnitMenu = false
+  let rowParsed = $derived(parseValue(rowGap))
+  let rowNumeric = $derived(rowParsed.number)
+  let rowUnit = $derived(rowParsed.unit)
 
   function parseValue(val) {
     if (!val || val === "") {
@@ -45,18 +43,17 @@
   function handleModeChange(e) {
     const newMode = e.detail
     if (newMode === "custom") {
-      dispatch("change", { column: "0.5rem", row: "0.5rem" })
+      onChange?.({ column: "0.5rem", row: "0.5rem" })
     } else {
-      dispatch("change", newMode)
+      onChange?.(newMode)
     }
   }
 
   function handleColumnNumberInput(e) {
     const num = e.target.value
     if (num !== "") {
-      const newValue = `${num}${columnUnit}`
-      dispatch("change", {
-        column: newValue,
+      onChange?.({
+        column: `${num}${columnUnit}`,
         row: rowGap || "0",
       })
     }
@@ -65,19 +62,17 @@
   function handleRowNumberInput(e) {
     const num = e.target.value
     if (num !== "") {
-      const newValue = `${num}${rowUnit}`
-      dispatch("change", {
+      onChange?.({
         column: columnGap || "0",
-        row: newValue,
+        row: `${num}${rowUnit}`,
       })
     }
   }
 
   function selectColumnUnit(unit) {
     if (columnNumeric) {
-      const newValue = `${columnNumeric}${unit}`
-      dispatch("change", {
-        column: newValue,
+      onChange?.({
+        column: `${columnNumeric}${unit}`,
         row: rowGap || "0",
       })
     }
@@ -86,10 +81,9 @@
 
   function selectRowUnit(unit) {
     if (rowNumeric) {
-      const newValue = `${rowNumeric}${unit}`
-      dispatch("change", {
+      onChange?.({
         column: columnGap || "0",
-        row: newValue,
+        row: `${rowNumeric}${unit}`,
       })
     }
     showRowUnitMenu = false
@@ -99,7 +93,7 @@
 <div class="gap-control">
   <Select
     value={mode}
-    options={presetOptions}
+    options={options}
     on:change={handleModeChange}
     placeholder={false}
   />
@@ -121,7 +115,7 @@
           placeholder="0.5"
           step="0.1"
           min="0"
-          on:input={handleColumnNumberInput}
+          oninput={handleColumnNumberInput}
         />
         <div bind:this={columnAnchor}>
           <ActionButton
@@ -139,12 +133,14 @@
         >
           <div class="unit-menu">
             {#each units as unit}
-              <!-- svelte-ignore a11y-no-static-element-interactions -->
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
               <div
                 class="unit-option"
                 class:selected={unit === columnUnit}
-                on:click={() => selectColumnUnit(unit)}
+                role="option"
+                aria-selected={unit === columnUnit}
+                onclick={() => selectColumnUnit(unit)}
+                onkeydown={e => e.key === "Enter" && selectColumnUnit(unit)}
+                tabindex="0"
               >
                 {unit.toUpperCase()}
               </div>
@@ -168,7 +164,7 @@
           placeholder="0.5"
           step="0.1"
           min="0"
-          on:input={handleRowNumberInput}
+          oninput={handleRowNumberInput}
         />
         <div bind:this={rowAnchor}>
           <ActionButton
@@ -182,12 +178,14 @@
         <Popover bind:open={showRowUnitMenu} anchor={rowAnchor} align="right">
           <div class="unit-menu">
             {#each units as unit}
-              <!-- svelte-ignore a11y-no-static-element-interactions -->
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
               <div
                 class="unit-option"
                 class:selected={unit === rowUnit}
-                on:click={() => selectRowUnit(unit)}
+                role="option"
+                aria-selected={unit === rowUnit}
+                onclick={() => selectRowUnit(unit)}
+                onkeydown={e => e.key === "Enter" && selectRowUnit(unit)}
+                tabindex="0"
               >
                 {unit.toUpperCase()}
               </div>
