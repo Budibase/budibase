@@ -20,6 +20,7 @@ import { default as rows } from "./workspace/rows"
 import * as screens from "./workspace/screens"
 import { default as tables } from "./workspace/tables"
 import * as views from "./workspace/views"
+import * as escalations from "./workspace/escalations"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
 
@@ -48,6 +49,7 @@ const sdk = {
   embedSSO,
   dev,
   workspace,
+  escalations,
 }
 
 // default export for TS

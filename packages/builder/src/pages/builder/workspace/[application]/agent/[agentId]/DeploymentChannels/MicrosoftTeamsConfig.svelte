@@ -29,6 +29,7 @@
     appId: "",
     appPassword: "",
     tenantId: "",
+    teamId: "",
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
     requireUserLink: true,
   })
@@ -68,6 +69,7 @@
       appId: integration?.appId || "",
       appPassword: integration?.appPassword || "",
       tenantId: integration?.tenantId || "",
+      teamId: integration?.teamId || "",
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
       requireUserLink: integration?.requireUserLink !== false,
@@ -89,6 +91,7 @@
           appId: toOptionalValue(draft.appId),
           appPassword: toOptionalValue(draft.appPassword),
           tenantId: toOptionalValue(draft.tenantId),
+          teamId: toOptionalValue(draft.teamId),
           chatAppId: agent.MSTeamsIntegration?.chatAppId,
           messagingEndpointUrl: agent.MSTeamsIntegration?.messagingEndpointUrl,
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
@@ -132,6 +135,7 @@
       label="Directory (tenant) ID (Azure AD tenant ID)"
       bind:value={draft.tenantId}
     />
+    <Input label="Default team ID (optional)" bind:value={draft.teamId} />
     <Input
       label="Idle timeout (minutes)"
       type="number"

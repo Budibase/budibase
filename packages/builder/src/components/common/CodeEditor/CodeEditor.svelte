@@ -570,11 +570,11 @@
   /* Editor */
   .code-editor {
     font-size: 12px;
-    height: auto;
+    height: 100%;
     cursor: text;
   }
   .code-editor :global(.cm-editor) {
-    height: auto;
+    height: 100%;
     background: var(--spectrum-global-color-gray-50) !important;
     outline: none;
     border: none;
@@ -584,7 +584,7 @@
     padding: 10px 0;
   }
   .code-editor > div {
-    height: auto;
+    height: 100%;
   }
 
   /* HBS tags */

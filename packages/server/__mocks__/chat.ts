@@ -196,6 +196,7 @@ export class Chat {
   directMessageHandlers: AnyFn[] = []
   newMessageHandlers: AnyFn[] = []
   subscribedHandlers: AnyFn[] = []
+  actionHandlers: AnyFn[] = []
   installationHandlers = new Map<string, AnyFn>()
   adapters: Record<string, unknown>
 
@@ -580,6 +581,13 @@ export class Chat {
 
   onNewMessage(_pattern: unknown, handler: AnyFn) {
     this.newMessageHandlers.push(handler)
+  }
+
+  onAction(handlerOrIds: AnyFn | string | string[], handler?: AnyFn) {
+    const fn = typeof handlerOrIds === "function" ? handlerOrIds : handler
+    if (fn) {
+      this.actionHandlers.push(fn)
+    }
   }
 
   onInstallationUpdate(action: string, handler: AnyFn) {
