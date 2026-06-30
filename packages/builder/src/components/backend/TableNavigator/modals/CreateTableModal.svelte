@@ -109,13 +109,12 @@
       return updatedSchema
     }
 
-    const inclusionMap = optionColumns.reduce<Record<string, SvelteSet<string>>>(
-      (acc, { name }) => {
-        acc[name] = new SvelteSet()
-        return acc
-      },
-      {}
-    )
+    const inclusionMap = optionColumns.reduce<
+      Record<string, SvelteSet<string>>
+    >((acc, { name }) => {
+      acc[name] = new SvelteSet()
+      return acc
+    }, {})
 
     const addValue = (set: SvelteSet<string>, value: Row[string]) => {
       if (value === null || value === undefined || value === "") {
