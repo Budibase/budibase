@@ -17,7 +17,10 @@
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
-  export const show = () => modal.show()
+  export const show = () => {
+    resetModalState()
+    modal.show()
+  }
   export const hide = () => modal.hide()
 
   let modal: Modal
@@ -38,6 +41,13 @@
     integration => integration.name === IntegrationTypes.REST
   )
 
+  const resetModalState = () => {
+    loading = false
+    selectedTemplate = null
+    targetSpec = null
+    projectIds = []
+  }
+
   const handleCustom = async (integration?: UIIntegration) => {
     if (!integration || loading) return
     try {
@@ -56,10 +66,7 @@
     }
 
     modal.hide()
-    loading = false
-    selectedTemplate = null
-    targetSpec = null
-    projectIds = []
+    resetModalState()
   }
 
   const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
@@ -169,10 +176,7 @@
         `Error importing template - ${error?.message || "Unknown error"}`
       )
     } finally {
-      loading = false
-      selectedTemplate = null
-      targetSpec = null
-      projectIds = []
+      resetModalState()
     }
   }
 
@@ -199,7 +203,7 @@
 </script>
 
 <div class="settings-wrap">
-  <Modal bind:this={modal} autoFocus={false}>
+  <Modal bind:this={modal} autoFocus={false} on:hide={resetModalState}>
     <div
       class="spectrum-Dialog--large"
       role="dialog"

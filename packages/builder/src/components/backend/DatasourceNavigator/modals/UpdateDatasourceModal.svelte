@@ -41,7 +41,7 @@
     originalName = datasource?.name || ""
     originalProjectIds = datasource?.projectIds || []
     name = originalName
-    projectIds = originalProjectIds
+    projectIds = [...originalProjectIds]
     modal?.show()
   }
   export const hide = () => {
@@ -62,13 +62,17 @@
   }
 
   async function updateDatasource() {
+    const { projectIds: _projectIds, ...datasourceWithoutProjectIds } =
+      datasource
     const updatedDatasource: Datasource = {
-      ...datasource,
+      ...datasourceWithoutProjectIds,
       name,
-      projectIds,
       entities: Array.isArray(datasource.entities)
         ? undefined
         : datasource.entities,
+    }
+    if (JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)) {
+      updatedDatasource.projectIds = projectIds
     }
     await datasources.save({
       datasource: updatedDatasource,

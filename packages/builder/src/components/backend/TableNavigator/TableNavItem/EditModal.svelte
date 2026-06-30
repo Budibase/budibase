@@ -43,7 +43,7 @@
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
     if (JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)) {
-      updatedTable.projectIds = projectIds.length ? projectIds : undefined
+      updatedTable.projectIds = projectIds
     }
     await tables.save(updatedTable)
     await datasources.fetch()
