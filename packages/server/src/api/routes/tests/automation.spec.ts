@@ -291,8 +291,8 @@ describe("/automations", () => {
         },
       }
 
-      const response = await config.request!
-        .post("/api/automations")
+      const response = await config
+        .request!.post("/api/automations")
         .send(invalidAutomation)
         .set(config.defaultHeaders())
         .expect(400)
