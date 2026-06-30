@@ -40,6 +40,7 @@ import {
 } from "@budibase/types"
 import { testConnection } from "../../automations/email"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
+import { sanitizeAutomationTestResult } from "../../automations/sanitizeTestResult"
 import * as triggers from "../../automations/triggers"
 import {
   AutomationTestProgressEvent,
@@ -395,10 +396,11 @@ export async function test(
   const emitProgress = (event: ProgressEventInput) => {
     const payload: AutomationTestProgressEvent = {
       ...event,
+      result: sanitizeAutomationTestResult(event.result),
       automationId: automation._id!,
       appId,
     }
-    recordTestProgress(appId, automation._id!, payload)
+    recordTestProgress(appId, automation._id!, payload, ctx.user._id)
     builderSocket?.emitToRoom(
       ctx,
       ctx.appId,
@@ -421,15 +423,16 @@ export async function test(
       )
     })
     await events.automation.tested(automation)
+    const sanitizedResult = sanitizeAutomationTestResult(result)
     emitProgress({
       status: "complete",
       occurredAt: Date.now(),
-      result,
+      result: sanitizedResult,
     })
-    return result
+    return sanitizedResult
   }
 
-  clearTestProgress(appId, automation._id!)
+  clearTestProgress(appId, automation._id!, ctx.user._id)
 
   if (asyncFlag) {
     ctx.status = 202
@@ -449,6 +452,6 @@ export async function test(
 
 export async function testStatus(ctx: UserCtx<void, unknown>) {
   const automationId = ctx.params.id
-  const status = getTestProgress(ctx.appId, automationId)
+  const status = getTestProgress(ctx.appId, automationId, ctx.user._id)
   ctx.body = status || {}
 }
