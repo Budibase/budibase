@@ -21,18 +21,21 @@
     BUDIBASE_DATASOURCE_TYPE,
   } from "@/constants/backend"
   import { get } from "svelte/store"
+  import { SvelteSet } from "svelte/reactivity"
 
   interface Props {
     promptUpload?: boolean
     name?: string
     beforeSave?: () => Promise<void>
     afterSave?: (table: Table) => Promise<void>
+    initialProjectIds?: string[]
   }
 
   let {
     promptUpload = false,
     name = $bindable(""),
     beforeSave = async () => {},
+    initialProjectIds = [],
     afterSave = async (table: Table) => {
       notifications.success(`Table ${name} created successfully.`)
 
@@ -66,7 +69,7 @@
   let rows: Row[] = $state([])
   let allValid = $state(true)
   let displayColumn: string | null = $state(null)
-  let projectIds: string[] = $state([])
+  let projectIds = $derived([...initialProjectIds])
 
   const buildOptionConstraints = (schema: TableSchema, rows: Row[]) => {
     const updatedSchema: TableSchema = {}
@@ -106,15 +109,14 @@
       return updatedSchema
     }
 
-    const inclusionMap = optionColumns.reduce<Record<string, Set<string>>>(
-      (acc, { name }) => {
-        acc[name] = new Set()
-        return acc
-      },
-      {}
-    )
+    const inclusionMap = optionColumns.reduce<
+      Record<string, SvelteSet<string>>
+    >((acc, { name }) => {
+      acc[name] = new SvelteSet()
+      return acc
+    }, {})
 
-    const addValue = (set: Set<string>, value: Row[string]) => {
+    const addValue = (set: SvelteSet<string>, value: Row[string]) => {
       if (value === null || value === undefined || value === "") {
         return
       }
