@@ -7,15 +7,16 @@ import {
 import type {
   AutomationBlock,
   BranchFlowContext,
+  BranchEdgeData,
   FlowBlockContext,
   FlowBlockPath,
 } from "@/types/automations"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
 import { BRANCH, STEP, SUBFLOW } from "../FlowGeometry"
 import {
   anchorNode,
   branchNode,
   edgeAddItem,
-  edgeBranchAddItem,
   edgeLoopAddItem,
   stepNode,
 } from "../FlowFactories"
@@ -45,6 +46,44 @@ interface BranchClusterArgs {
   loopContext?: {
     loopStepId: string
     loopChildInsertIndex: number
+  }
+}
+
+const edgeBranchAddItem = (
+  source: string,
+  target: string,
+  ctx: {
+    block: FlowBlockContext
+    branchStepId: string
+    branchIdx: number
+    branchesCount: number
+    isPrimaryEdge: boolean
+    pathTo?: FlowBlockPath
+    isSubflowEdge?: boolean
+    loopStepId?: string
+    loopChildInsertIndex?: number
+  }
+): FlowEdge => {
+  const data: BranchEdgeData = {
+    isBranchEdge: true,
+    isPrimaryEdge: ctx.isPrimaryEdge,
+    branchStepId: ctx.branchStepId,
+    branchIdx: ctx.branchIdx,
+    branchesCount: ctx.branchesCount,
+    block: ctx.block,
+    ...(ctx.isSubflowEdge ? { isSubflowEdge: true } : {}),
+    ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
+    ...(ctx.loopStepId ? { loopStepId: ctx.loopStepId } : {}),
+    ...(typeof ctx.loopChildInsertIndex === "number"
+      ? { loopChildInsertIndex: ctx.loopChildInsertIndex }
+      : {}),
+  }
+  return {
+    id: `edge-${source}-${target}`,
+    type: "add-item",
+    source,
+    target,
+    data,
   }
 }
 

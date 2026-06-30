@@ -6,12 +6,117 @@ import {
   type LoopV2Step,
 } from "@budibase/types"
 import type { LoopV2NodeData } from "@/types/automations"
-import { LOOP_INSERT_ACTION_OFFSET, STEP, SUBFLOW } from "../FlowGeometry"
+import {
+  BRANCH,
+  LOOP,
+  LOOP_INSERT_ACTION_OFFSET,
+  STEP,
+  SUBFLOW,
+} from "../FlowGeometry"
 import { anchorNode, edgeLoopAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
 import { filterLegacyLoops, resolveBlockPath } from "../FlowGraphUtils"
-import { getLoopV2ContainerDimensions } from "../FlowLayoutMeasurements"
 import { renderSubflowBranches } from "./FlowBranchRenderer"
+
+interface LoopV2ContainerDimensions {
+  containerWidth: number
+  containerHeight: number
+  baseY: number
+  loopHandleY: number
+}
+
+interface BranchChildMetrics {
+  fanoutWidth: number
+  maxLaneChildren: number
+  rowHeight: number
+}
+
+const LR_GAP = 60
+const INITIAL_INNER_X = LOOP_INSERT_ACTION_OFFSET * 2
+
+const getBranchChildMetrics = (step: AutomationStep): BranchChildMetrics => {
+  const branches: Branch[] = (step as BranchStep).inputs?.branches || []
+  const childrenMap: Record<string, AutomationStep[]> =
+    (step as BranchStep).inputs?.children || {}
+  const maxLaneChildren = branches.reduce((acc, branch) => {
+    const childCount = filterLegacyLoops(childrenMap?.[branch.id] || []).length
+    return Math.max(acc, childCount)
+  }, 0)
+  const fanoutWidth =
+    SUBFLOW.laneWidth +
+    Math.max(0, branches.length - 1) * (SUBFLOW.laneWidth + SUBFLOW.laneGap)
+  const rowHeight =
+    branches.length * BRANCH.height +
+    Math.max(0, branches.length - 1) * SUBFLOW.laneGap +
+    SUBFLOW.internalSpacing * 2
+
+  return {
+    fanoutWidth,
+    maxLaneChildren,
+    rowHeight,
+  }
+}
+
+const getBranchLaneWidth = (maxLaneChildren: number) => {
+  return (
+    SUBFLOW.laneWidth +
+    maxLaneChildren * (SUBFLOW.stepWidth + SUBFLOW.internalSpacing) +
+    SUBFLOW.internalSpacing
+  )
+}
+
+const getLoopV2ContainerDimensions = (
+  children: AutomationStep[]
+): LoopV2ContainerDimensions => {
+  const dimensions = children.reduce(
+    (acc, step) => {
+      if (step.stepId !== AutomationActionStepId.BRANCH) {
+        acc.linearWidth += STEP.width + SUBFLOW.internalSpacing + LR_GAP
+        return acc
+      }
+
+      const metrics = getBranchChildMetrics(step)
+      acc.hasBranchChild = true
+      acc.linearWidth +=
+        getBranchLaneWidth(metrics.maxLaneChildren) +
+        SUBFLOW.internalSpacing +
+        LR_GAP
+      acc.maxFanoutWidth = Math.max(acc.maxFanoutWidth, metrics.fanoutWidth)
+      acc.maxRowHeight = Math.max(acc.maxRowHeight, metrics.rowHeight)
+      return acc
+    },
+    {
+      hasBranchChild: false,
+      linearWidth: 0,
+      maxFanoutWidth: STEP.width,
+      maxRowHeight: SUBFLOW.childHeight,
+    }
+  )
+  const linearWidth =
+    dimensions.linearWidth > 0 ? dimensions.linearWidth - LR_GAP : 0
+  const containerWidth = Math.max(
+    dimensions.hasBranchChild ? 400 : 280,
+    INITIAL_INNER_X + linearWidth + LOOP_INSERT_ACTION_OFFSET * 2,
+    dimensions.maxFanoutWidth + 80,
+    dimensions.hasBranchChild ? SUBFLOW.laneWidth + 80 : 0
+  )
+  const containerHeight = Math.max(
+    SUBFLOW.paddingTop + dimensions.maxRowHeight + SUBFLOW.paddingBottom,
+    LOOP.minHeight
+  )
+  const contentHeight =
+    containerHeight - SUBFLOW.paddingTop - SUBFLOW.paddingBottom
+  const baseY =
+    SUBFLOW.paddingTop +
+    Math.floor((contentHeight - SUBFLOW.childHeight) / 2)
+
+  return {
+    containerWidth,
+    containerHeight,
+    baseY,
+    loopHandleY: baseY + SUBFLOW.childHeight / 2,
+  }
+}
 
 export const renderLoopV2Container = (
   loopStep: LoopV2Step,
@@ -22,11 +127,10 @@ export const renderLoopV2Container = (
     loopStep.inputs?.children || []
   )
   const { containerWidth, containerHeight, baseY, loopHandleY } =
-    getLoopV2ContainerDimensions(loopStep)
+    getLoopV2ContainerDimensions(children)
   const internalSpacing = SUBFLOW.internalSpacing
   const childHeight = SUBFLOW.childHeight
   const horizontalStepWidth = STEP.width
-  const initialInnerX = LOOP_INSERT_ACTION_OFFSET * 2
 
   const loopNodeData: LoopV2NodeData = {
     block: loopStep,
@@ -49,8 +153,7 @@ export const renderLoopV2Container = (
   })
 
   const stepWidth = horizontalStepWidth
-  let innerX = initialInnerX
-  const lrGap = 60
+  let innerX = INITIAL_INNER_X
   let lastLinearChild: AutomationStep | undefined = undefined
 
   children.forEach((child, cIdx) => {
@@ -71,7 +174,7 @@ export const renderLoopV2Container = (
         )
       }
       lastLinearChild = child
-      innerX += stepWidth + internalSpacing + lrGap
+      innerX += stepWidth + internalSpacing + LR_GAP
       return
     }
 
@@ -99,20 +202,9 @@ export const renderLoopV2Container = (
     })
 
     lastLinearChild = undefined
-    const brs: Branch[] = (child as BranchStep)?.inputs?.branches || []
-    const childrenMap: Record<string, AutomationStep[]> =
-      (child as BranchStep)?.inputs?.children || {}
-
-    const maxChildrenInBranch = brs.reduce((acc, br) => {
-      const len = filterLegacyLoops(childrenMap?.[br.id] || []).length
-      return Math.max(acc, len)
-    }, 0)
-    const maxChildrenWidth =
-      maxChildrenInBranch * (SUBFLOW.stepWidth + internalSpacing)
-    const branchLaneWidth =
-      SUBFLOW.laneWidth + maxChildrenWidth + internalSpacing
-
-    innerX += branchLaneWidth + internalSpacing + lrGap
+    const { maxLaneChildren } = getBranchChildMetrics(child)
+    innerX +=
+      getBranchLaneWidth(maxLaneChildren) + internalSpacing + LR_GAP
   })
 
   if (

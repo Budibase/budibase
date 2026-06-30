@@ -2,7 +2,7 @@ import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
 import type { AutomationBlock, FlowBlockContext } from "@/types/automations"
 import { edgeAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
-import { isLoopV2Step, resolveBlockPath } from "../FlowGraphUtils"
+import { resolveBlockPath } from "../FlowGraphUtils"
 import { renderBranches } from "./FlowBranchRenderer"
 import { renderLoopV2Container } from "./FlowLoopRenderer"
 
@@ -19,6 +19,10 @@ interface ChainRenderContext {
   currentY: number
   branched: boolean
   deps: GraphBuildDeps
+}
+
+const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
+  return step.stepId === AutomationActionStepId.LOOP_V2 && "schema" in step
 }
 
 const connectTo = (step: AutomationBlock, context: ChainRenderContext) => {
