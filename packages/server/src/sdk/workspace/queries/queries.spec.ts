@@ -79,6 +79,24 @@ describe("queries SDK", () => {
       })
     })
 
+    it("keeps quoted JSON bindings as string values", async () => {
+      const payload = 'x", "name": {"$ne": "x"}, "$comment": "bud-033'
+      const result = await enrichContext(
+        {
+          json: '{"name": "{{ name }}"}',
+        },
+        {
+          name: payload,
+        }
+      )
+
+      expect(result).toEqual({
+        json: {
+          name: payload,
+        },
+      })
+    })
+
     it("falls back to requestBody when json is blank", async () => {
       const result = await enrichContext({
         json: "",
