@@ -10,7 +10,7 @@ import type {
   FlowBlockContext,
   FlowBlockPath,
 } from "@/types/automations"
-import { BRANCH, STEP, SUBFLOW } from "./FlowGeometry"
+import { BRANCH, STEP, SUBFLOW } from "../FlowGeometry"
 import {
   anchorNode,
   branchNode,
@@ -18,9 +18,9 @@ import {
   edgeBranchAddItem,
   edgeLoopAddItem,
   stepNode,
-} from "./FlowFactories"
-import type { GraphBuildDeps } from "./FlowGraphTypes"
-import { filterLegacyLoops, resolveBlockPath } from "./FlowGraphUtils"
+} from "../FlowFactories"
+import type { GraphBuildDeps } from "../FlowGraphTypes"
+import { filterLegacyLoops, resolveBlockPath } from "../FlowGraphUtils"
 import { renderChain } from "./FlowChainRenderer"
 
 enum BranchMode {

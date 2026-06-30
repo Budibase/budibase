@@ -6,11 +6,11 @@ import {
   type LoopV2Step,
 } from "@budibase/types"
 import type { LoopV2NodeData } from "@/types/automations"
-import { LOOP_INSERT_ACTION_OFFSET, STEP, SUBFLOW } from "./FlowGeometry"
-import { anchorNode, edgeLoopAddItem, stepNode } from "./FlowFactories"
-import type { GraphBuildDeps } from "./FlowGraphTypes"
-import { filterLegacyLoops, resolveBlockPath } from "./FlowGraphUtils"
-import { getLoopV2ContainerDimensions } from "./FlowLayoutMeasurements"
+import { LOOP_INSERT_ACTION_OFFSET, STEP, SUBFLOW } from "../FlowGeometry"
+import { anchorNode, edgeLoopAddItem, stepNode } from "../FlowFactories"
+import type { GraphBuildDeps } from "../FlowGraphTypes"
+import { filterLegacyLoops, resolveBlockPath } from "../FlowGraphUtils"
+import { getLoopV2ContainerDimensions } from "../FlowLayoutMeasurements"
 import { renderSubflowBranches } from "./FlowBranchRenderer"
 
 export const renderLoopV2Container = (

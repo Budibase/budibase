@@ -11,8 +11,14 @@ import {
   STEP,
   SUBFLOW,
 } from "./FlowGeometry"
-import type { LoopV2ContainerDimensions } from "./FlowGraphTypes"
 import { filterLegacyLoops } from "./FlowGraphUtils"
+
+interface LoopV2ContainerDimensions {
+  containerWidth: number
+  containerHeight: number
+  baseY: number
+  loopHandleY: number
+}
 
 export const getLoopV2ContainerDimensions = (
   loopStep: LoopV2Step

@@ -1,10 +1,17 @@
 import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
 import type { AutomationBlock, FlowBlockContext } from "@/types/automations"
-import { edgeAddItem, stepNode } from "./FlowFactories"
-import type { ChainRenderResult, GraphBuildDeps } from "./FlowGraphTypes"
-import { isLoopV2Step, resolveBlockPath } from "./FlowGraphUtils"
+import { edgeAddItem, stepNode } from "../FlowFactories"
+import type { GraphBuildDeps } from "../FlowGraphTypes"
+import { isLoopV2Step, resolveBlockPath } from "../FlowGraphUtils"
 import { renderBranches } from "./FlowBranchRenderer"
 import { renderLoopV2Container } from "./FlowLoopRenderer"
+
+interface ChainRenderResult {
+  lastNodeId: string
+  lastNodeBlock: FlowBlockContext
+  bottomY: number
+  branched: boolean
+}
 
 class ChainRenderer {
   private lastNodeId: string

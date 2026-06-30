@@ -1,8 +1,8 @@
 import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
 import type { AutomationBlock } from "@/types/automations"
 import { anchorNode, edgeAddItem, stepNode } from "./FlowFactories"
-import { renderBranches } from "./FlowBranchRenderer"
-import { renderLoopV2Container } from "./FlowLoopRenderer"
+import { renderBranches } from "./renderers/FlowBranchRenderer"
+import { renderLoopV2Container } from "./renderers/FlowLoopRenderer"
 import type {
   AutomationGraph,
   AutomationGraphItem,

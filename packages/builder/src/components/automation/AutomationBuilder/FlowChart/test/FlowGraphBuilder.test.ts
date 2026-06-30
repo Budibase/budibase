@@ -10,8 +10,8 @@ import {
   loopWithLinearChildrenStep,
   serverLogStep,
 } from "@/test/automationFixtures"
-import { renderChain } from "../FlowCanvas/FlowChainRenderer"
-import { renderLoopV2Container } from "../FlowCanvas/FlowLoopRenderer"
+import { renderChain } from "../FlowCanvas/renderers/FlowChainRenderer"
+import { renderLoopV2Container } from "../FlowCanvas/renderers/FlowLoopRenderer"
 import { buildAutomationGraph } from "../FlowCanvas/buildAutomationGraph"
 import {
   FLOW_ITEM_ACTION_BAR_WIDTH,
