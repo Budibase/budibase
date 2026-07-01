@@ -237,7 +237,6 @@ import { screenStore } from "@/stores/builder"
 import { workspaceConnections } from "@/stores/builder/workspaceConnection"
 import { confirm } from "@/helpers"
 import { bb } from "@/stores/bb"
-import { featureFlags } from "@/stores/portal"
 
 const REST_DS_ID = "datasource_c190e3055ae643b4b3bb66ee15ad12c9"
 const REST_DS_ID_2 = "datasource_aaaabbbbccccdddd1111222233334444"
