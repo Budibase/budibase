@@ -15,7 +15,8 @@
 
   const flipDurationMs = 130
   const { OptionColours } = Constants
-  const getDefaultColor = (idx: number) => OptionColours[idx % OptionColours.length]
+  const getDefaultColor = (idx: number) =>
+    OptionColours[idx % OptionColours.length]
 
   const MAX_SAVED_COLORS = 8
 
@@ -34,7 +35,9 @@
   }
 
   const removeSavedColor = async (color: string) => {
-    await appStore.saveOptionColorPalette(savedColors.filter((c: string) => c !== color))
+    await appStore.saveOptionColorPalette(
+      savedColors.filter((c: string) => c !== color)
+    )
   }
 
   interface Option {
@@ -228,7 +231,10 @@
                         ? option.color
                         : "#000000"}
                       on:input={e =>
-                        handleCustomColorInput(option.id, (e.target as HTMLInputElement).value)}
+                        handleCustomColorInput(
+                          option.id,
+                          (e.target as HTMLInputElement).value
+                        )}
                     />
                     <Input
                       updateOnChange={false}
@@ -269,7 +275,8 @@
           value={option.name}
           placeholder="Option name"
           id="option-{option.id}"
-          on:input={e => handleNameChange(option.id, (e.target as HTMLInputElement).value)}
+          on:input={e =>
+            handleNameChange(option.id, (e.target as HTMLInputElement).value)}
         />
         <Icon
           name="x"

@@ -6,7 +6,10 @@
   import { hexToHsla } from "../../../utils"
 
   export let value: string | string[] | undefined
-  export let schema: { constraints?: { inclusion?: string[] }; optionColors?: Record<string, string> }
+  export let schema: {
+    constraints?: { inclusion?: string[] }
+    optionColors?: Record<string, string>
+  }
   export let onChange: (val: string | string[] | null) => void
   export let focused = false
   export let multi = false
@@ -23,7 +26,9 @@
   $: options = schema?.constraints?.inclusion || []
   $: optionColors = schema?.optionColors || {}
   $: editable = focused && !readonly
-  $: values = Array.isArray(value) ? value : [value].filter((x): x is string => x != null)
+  $: values = Array.isArray(value)
+    ? value
+    : [value].filter((x): x is string => x != null)
   $: {
     if (!focused && isOpen) {
       close()
@@ -71,7 +76,10 @@
     }
     e.preventDefault()
     if (e.key === "ArrowDown") {
-      focusedOptionIdx = Math.min((focusedOptionIdx ?? 0) + 1, options.length - 1)
+      focusedOptionIdx = Math.min(
+        (focusedOptionIdx ?? 0) + 1,
+        options.length - 1
+      )
     } else if (e.key === "ArrowUp") {
       focusedOptionIdx = Math.max((focusedOptionIdx ?? 0) - 1, 0)
     } else if (e.key === "Enter") {
