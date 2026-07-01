@@ -112,8 +112,16 @@ function getToolLabel(name: string, displayName?: string): string {
 }
 
 export function getStepFlow(
-  detail: AgentLogRequestDetail | undefined
+  detail: AgentLogRequestDetail | undefined,
+  loadingStep: boolean
 ): StepFlow {
+  if (loadingStep) {
+    return {
+      from: "Loading details",
+      to: "...",
+    }
+  }
+
   if (!detail) {
     return {
       from: "Model input",

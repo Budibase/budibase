@@ -5,7 +5,7 @@ import {
 } from "../../../../tests/utilities/mocks/ai/openai"
 import { getPool, resetHttpMocking } from "../../../../tests/jestEnv"
 import { withEnv } from "../../../../environment"
-import { createBBAIClient } from "./bbai"
+import { createBBAIClient, getBBAIKey } from "./bbai"
 
 jest.mock("@budibase/types", () => {
   const actual = jest.requireActual("@budibase/types")
@@ -155,6 +155,16 @@ describe("createBBAIClient", () => {
     expect(incrementCreditsMock).toHaveBeenCalledWith(7)
   })
 
+  it("fails fast with a clear error when the Budibase AI key is missing", async () => {
+    await withEnv({ BBAI_LITELLM_KEY: undefined }, async () => {
+      await expect(createBBAIClient("budibase/v1")).rejects.toThrow(
+        /Budibase AI is not configured/
+      )
+    })
+
+    expect(incrementCreditsMock).not.toHaveBeenCalled()
+  })
+
   it("surfaces authorization failures for non-budibase models", async () => {
     const pool = getPool("https://api.openai.com")
 
@@ -188,5 +198,27 @@ describe("createBBAIClient", () => {
         ).rejects.toThrow("Not allowed to access model")
       }
     )
+  })
+})
+
+describe("getBBAIKey", () => {
+  it("returns the configured Budibase AI key", async () => {
+    await withEnv({ BBAI_LITELLM_KEY: "sk-test-key" }, async () => {
+      expect(getBBAIKey()).toEqual("sk-test-key")
+    })
+  })
+
+  it("throws an explicit error when the key is not configured", async () => {
+    await withEnv({ BBAI_LITELLM_KEY: undefined }, async () => {
+      expect(() => getBBAIKey()).toThrow(
+        /Budibase AI is not configured.*BBAI_LITELLM_KEY/
+      )
+    })
+  })
+
+  it("throws when the key is an empty string", async () => {
+    await withEnv({ BBAI_LITELLM_KEY: "" }, async () => {
+      expect(() => getBBAIKey()).toThrow(/Budibase AI is not configured/)
+    })
   })
 })
