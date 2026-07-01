@@ -287,13 +287,14 @@ async function resumeOperation({
         : "This request was rejected."
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
-    await markEscalationRequestResolved({
-      status: "failed",
-      error:
-        outcome === "expired"
-          ? "Escalation expired without a response"
-          : "Escalation rejected",
-    })
+    // A rejection is a human decision, not a failure - the escalation did its
+    // job. Expiring without any response, though, means the request never
+    // actually got resolved.
+    await markEscalationRequestResolved(
+      outcome === "expired"
+        ? { status: "failed", error: "Escalation expired without a response" }
+        : { status: "completed" }
+    )
     return
   }
 

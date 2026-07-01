@@ -30,6 +30,7 @@ import {
 import {
   updatePendingToolCalls,
   updateUnrecoveredToolFailures,
+  partitionEscalateAwareToolResults,
   buildPromptAndTools,
   getLiveOperations,
   type BuildPromptAndToolsOptions,
@@ -87,6 +88,10 @@ export interface AgentChatRun {
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
+  // Fires with the names of tools that actually completed successfully in a
+  // step - not merely attempted. A tool that errors, or escalate returning a
+  // non-pending_approval status (e.g. no reviewers configured), is reported
+  // through unrecoveredToolFailures instead, never here.
   onToolCalls?: (toolNames: string[]) => void
   pendingToolCalls?: Set<string>
   unrecoveredToolFailures?: Set<string>
@@ -542,13 +547,11 @@ export const prepareAgentChatRun = async ({
             }
             contextUsage.output = usage
             sessionLogIndexer.addRequestId(response?.id)
-            if (onToolCalls) {
-              const toolNames = toolCalls
-                .map(toolCall => toolCall.toolName)
-                .filter(Boolean)
-              if (toolNames.length) {
-                onToolCalls(toolNames)
-              }
+            const { successResults, successNames, semanticFailureNames } =
+              partitionEscalateAwareToolResults(toolResults)
+
+            if (onToolCalls && successNames.length) {
+              onToolCalls(successNames)
             }
             if (pendingToolCalls) {
               updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
@@ -560,8 +563,8 @@ export const prepareAgentChatRun = async ({
                 .map(part => part.toolName)
               updateUnrecoveredToolFailures(
                 unrecoveredToolFailures,
-                toolResults,
-                erroredToolNames
+                successResults,
+                [...erroredToolNames, ...semanticFailureNames]
               )
             }
 

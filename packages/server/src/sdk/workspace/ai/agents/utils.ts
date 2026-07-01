@@ -13,6 +13,11 @@ import {
   createEscalatePlaceholderTool,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
+import {
+  ESCALATE_TOOL_NAME,
+  ESCALATE_STATUS_PENDING_APPROVAL,
+  ESCALATE_STATUS_UNAVAILABLE,
+} from "../../../../ai/tools/budibase/escalate"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
@@ -326,6 +331,46 @@ export function updateUnrecoveredToolFailures(
   for (const toolName of erroredToolNames) {
     unrecoveredToolFailures.add(toolName)
   }
+}
+
+// escalate can return a technically-successful tool-result that isn't a real
+// escalation (e.g. the "no reviewers configured" placeholder responds with
+// status "unavailable" instead of throwing). Split tool results so callers
+// can treat that case as a failure rather than a genuine success, while every
+// other tool keeps its normal success/failure handling untouched.
+export function partitionEscalateAwareToolResults(
+  toolResults: TypedToolResult<ToolSet>[]
+): {
+  successResults: TypedToolResult<ToolSet>[]
+  successNames: string[]
+  semanticFailureNames: string[]
+} {
+  const successResults: TypedToolResult<ToolSet>[] = []
+  const successNames: string[] = []
+  const semanticFailureNames: string[] = []
+
+  for (const toolResult of toolResults) {
+    if (toolResult.toolName !== ESCALATE_TOOL_NAME) {
+      successResults.push(toolResult)
+      successNames.push(toolResult.toolName)
+      continue
+    }
+
+    const status = (toolResult.output as { status?: string } | undefined)
+      ?.status
+
+    if (status === ESCALATE_STATUS_UNAVAILABLE) {
+      semanticFailureNames.push(toolResult.toolName)
+      continue
+    }
+
+    successResults.push(toolResult)
+    if (status === ESCALATE_STATUS_PENDING_APPROVAL) {
+      successNames.push(toolResult.toolName)
+    }
+  }
+
+  return { successResults, successNames, semanticFailureNames }
 }
 
 export function formatIncompleteToolCallError(

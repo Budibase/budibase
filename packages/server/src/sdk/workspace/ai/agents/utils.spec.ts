@@ -14,6 +14,7 @@ import {
   getLiveOperations,
   getToolDisplayNames,
   IncompleteToolCall,
+  partitionEscalateAwareToolResults,
   updatePendingToolCalls,
   updateUnrecoveredToolFailures,
 } from "./utils"
@@ -468,6 +469,60 @@ describe("incomplete tool call detection", () => {
 
       expect(unrecovered.has("send_email")).toBe(true)
       expect(unrecovered.has("escalate")).toBe(true)
+    })
+  })
+
+  describe("partitionEscalateAwareToolResults", () => {
+    const escalateResult = (status: string): TypedToolResult<ToolSet> => ({
+      type: "tool-result",
+      toolCallId: "call-1",
+      toolName: "escalate",
+      input: {},
+      output: { status },
+    })
+
+    it("treats a real escalation (pending_approval) as a success", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        partitionEscalateAwareToolResults([escalateResult("pending_approval")])
+
+      expect(successResults).toHaveLength(1)
+      expect(successNames).toEqual(["escalate"])
+      expect(semanticFailureNames).toEqual([])
+    })
+
+    it("treats an unavailable escalation as a semantic failure, not a success", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        partitionEscalateAwareToolResults([escalateResult("unavailable")])
+
+      expect(successResults).toEqual([])
+      expect(successNames).toEqual([])
+      expect(semanticFailureNames).toEqual(["escalate"])
+    })
+
+    it("treats an already_approved resume result as harmless, not needs_input", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        partitionEscalateAwareToolResults([escalateResult("already_approved")])
+
+      expect(successResults).toHaveLength(1)
+      expect(successNames).toEqual([])
+      expect(semanticFailureNames).toEqual([])
+    })
+
+    it("leaves non-escalate tool results untouched", () => {
+      const toolResult: TypedToolResult<ToolSet> = {
+        type: "tool-result",
+        toolCallId: "call-2",
+        toolName: "send_email",
+        input: {},
+        output: {},
+      }
+
+      const { successResults, successNames, semanticFailureNames } =
+        partitionEscalateAwareToolResults([toolResult])
+
+      expect(successResults).toEqual([toolResult])
+      expect(successNames).toEqual(["send_email"])
+      expect(semanticFailureNames).toEqual([])
     })
   })
 
