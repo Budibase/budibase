@@ -170,7 +170,7 @@ export type Branch = {
   id: any
   name: string
   condition: BranchSearchFilters
-  conditionUI?: UISearchFilter
+  conditionUI?: UISearchFilter | null
 }
 
 export type BranchSearchFilters = SearchFilters
