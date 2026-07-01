@@ -1,5 +1,10 @@
-import { context, docIds, roles } from "@budibase/backend-core"
-import { ActionType, AgentChannelProvider, DocumentType } from "@budibase/types"
+import { context, docIds, features, roles } from "@budibase/backend-core"
+import {
+  ActionType,
+  AgentChannelProvider,
+  DocumentType,
+  FeatureFlag,
+} from "@budibase/types"
 import type {
   Agent,
   ChatApp,
@@ -1731,6 +1736,66 @@ describe("Agent chat tool call tracking", () => {
       )
 
       expect(addActionMock).toHaveBeenCalledTimes(3)
+    })
+
+    it("creates and finalizes an agent request for webhook channels (e.g. Slack)", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock({}) as any)
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue({
+        _id: "agent-1",
+        name: "Test Agent",
+        aiconfig: "config-1",
+        operations: [
+          {
+            id: "op-1",
+            name: "Support",
+            live: true,
+            promptInstructions: "Help the user.",
+            enabledTools: [],
+          },
+        ],
+      } as any)
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              await webhookChat({
+                chat: {
+                  chatAppId: chatApp._id!,
+                  agentId: "agent-1",
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C123",
+                    externalUserId: "slack-user-1",
+                  },
+                  messages: [
+                    {
+                      id: "msg-1",
+                      role: "user",
+                      parts: [{ type: "text", text: "hello" }],
+                    },
+                  ],
+                },
+                user: { _id: "user-1" } as any,
+              })
+
+              const requests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+              expect(requests).toHaveLength(1)
+              expect(requests[0].status).toEqual("completed")
+            }
+          )
+        }
+      )
     })
 
     it("returns RAG sources reported by the agent", async () => {
