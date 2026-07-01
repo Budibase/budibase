@@ -124,6 +124,16 @@ tests:
             name: APP_FEATURES
             value: "api"
 
+  - it: should propagate BBAI_LITELLM_KEY when configured
+    set:
+      services.litellm.bbaiKey: "sk-bbai-test"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: BBAI_LITELLM_KEY
+            value: "sk-bbai-test"
+
   - it: should set terminationGracePeriodSeconds to 70 by default
     asserts:
       - equal:
