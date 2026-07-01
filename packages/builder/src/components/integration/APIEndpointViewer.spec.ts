@@ -412,7 +412,6 @@ beforeEach(async () => {
   } as any)
   queries.store.update(s => ({ ...s, list: [], selectedQueryId: null }))
   workspaceConnections.discardDraft()
-  featureFlags.set({})
   bb.reset()
   await setupDatasources()
 })
