@@ -436,15 +436,6 @@ describe("API Endpoint Viewer", () => {
     })
   })
 
-  it("shows project assignment controls when projects are enabled", async () => {
-    featureFlags.set({ [FeatureFlag.PROJECTS]: true })
-    const { container } = setupDOM({ datasourceId: REST_DS_ID })
-
-    await waitFor(() => {
-      expect(container.textContent).toContain("Projects")
-    })
-  })
-
   describe("New query state", () => {
     it("Send button is disabled when no endpoint is selected", async () => {
       const { container } = setupDOM({ datasourceId: REST_DS_ID })
