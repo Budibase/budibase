@@ -1,8 +1,12 @@
 import path from "path"
+import { join } from "path"
 import { db, objectStore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
+import { basicTable } from "../../../tests/utilities/structures"
+import fsp from "fs/promises"
+import os from "os"
 
 const PASSWORD = "testtest"
 
@@ -318,5 +322,50 @@ describe("/applications/:appId/import", () => {
       name: snippetName,
       code: existingSnippetCode,
     })
+  })
+
+  it("should include row data when importing into an existing workspace", async () => {
+    const appId = config.getDevWorkspaceId()
+
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {
+      name: "Alice",
+      description: "first row",
+    })
+    await config.api.row.save(table._id!, {
+      name: "Bob",
+      description: "second row",
+    })
+
+    const tmpDir = await fsp.mkdtemp(join(os.tmpdir(), "bb-import-test-"))
+    const dbTxtPath = join(tmpDir, "db.txt")
+    try {
+      await sdk.backups.exportDB(appId!, { exportPath: dbTxtPath })
+
+      const existingRows = await config.api.row.fetch(table._id!)
+      for (const row of existingRows) {
+        await config.api.row.delete(table._id!, {
+          _id: row._id!,
+        })
+      }
+      expect(await config.api.row.fetch(table._id!)).toHaveLength(0)
+
+      await request
+        .post(`/api/applications/${appId}/import`)
+        .attach("appExport", dbTxtPath)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      // rows should be restored
+      const rowsAfterImport = await config.api.row.fetch(table._id!)
+      expect(rowsAfterImport).toHaveLength(2)
+      expect(rowsAfterImport.map((r: any) => r.name).sort()).toEqual([
+        "Alice",
+        "Bob",
+      ])
+    } finally {
+      await fsp.rm(tmpDir, { recursive: true, force: true })
+    }
   })
 })
