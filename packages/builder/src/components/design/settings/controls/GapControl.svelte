@@ -106,7 +106,7 @@
 <div class="gap-control">
   <Select
     value={mode}
-    options={options}
+    {options}
     on:change={handleModeChange}
     placeholder={false}
   />
