@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import {
     Icon,
@@ -7,22 +7,37 @@
     StatusLight,
     Tags,
     Tag,
+    TooltipType,
   } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
-  import { Features } from "@/constants/backend/automations"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import {
+    AutomationActionStepId,
+    AutomationFeature,
+    AutomationStepType,
+    isTrigger as isTriggerBlock,
+  } from "@budibase/types"
+  import type {
+    Automation,
+    AutomationStep,
+    AutomationStepResult,
+    AutomationTrigger,
+    AutomationTriggerResult,
+  } from "@budibase/types"
 
-  export let block
-  export let open
+  type TestResult = AutomationStepResult | AutomationTriggerResult
+
+  export let block: AutomationStep | AutomationTrigger
+  export let open: boolean
   export let showTestStatus = false
-  export let testResult
-  export let isTrigger
-  export let addLooping
-  export let deleteStep
+  export let testResult: TestResult | undefined = undefined
+  export let isTrigger: boolean
+  export let addLooping: () => void
+  export let deleteStep: () => void
   export let enableNaming = true
-  export let itemName
-  export let automation
+  export let itemName: string | undefined = undefined
+  export let automation: Automation | undefined = undefined
 
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
@@ -34,9 +49,16 @@
   $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
-  $: blockDefinition = $automationStore.blockDefinitions.ACTION[block.stepId]
-  $: restTemplate = block?.inputs?.restTemplateId
-    ? restTemplates.get(block.inputs.restTemplateId)
+  $: actionStepId = isTriggerBlock(block) ? undefined : block.stepId
+  $: blockDefinition = actionStepId
+    ? $automationStore.blockDefinitions.ACTION[actionStepId]
+    : undefined
+  $: restTemplateId =
+    actionStepId === AutomationActionStepId.API_REQUEST
+      ? getRestTemplateId(block.inputs)
+      : undefined
+  $: restTemplate = restTemplateId
+    ? restTemplates.get(restTemplateId)
     : undefined
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: inputWidth = `${Math.min(
@@ -48,12 +70,14 @@
   )}ch`
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
-  $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
+  $: isHeaderTrigger = isTrigger || block.type === AutomationStepType.TRIGGER
   $: isBranch = block.stepId === "BRANCH"
 
   $: {
     if (!testResult) {
-      testResult = $automationStore.testResults?.steps?.filter(step =>
+      const results = $automationStore.testResults
+      const testSteps = results && "steps" in results ? results.steps : []
+      testResult = testSteps?.filter((step: TestResult) =>
         block.id ? step.id === block.id : step.stepId === block.stepId
       )?.[0]
     }
@@ -62,27 +86,42 @@
   $: blockRef = blockRefs[block.id]
   $: isLooped = blockRef?.looped
 
-  async function onSelect(block) {
+  async function onSelect(block: AutomationStep | AutomationTrigger) {
     automationStore.update(state => {
-      state.selectedBlock = block
-      return state
+      return {
+        ...state,
+        selectedBlock: block,
+      }
     })
   }
 
-  function updateStatus(results) {
+  function updateStatus(results?: TestResult) {
     if (!results) {
       return {}
     }
     const lcStatus = results.outputs?.status?.toLowerCase()
     if (lcStatus === "stopped" || lcStatus === "stopped_error") {
       return { yellow: true, message: "Stopped" }
+    } else if (lcStatus === "suspended") {
+      return { yellow: true, message: "Suspended" }
     } else if (results.outputs?.success || isTrigger) {
       return { positive: true, message: "Success" }
     } else {
       return { negative: true, message: "Error" }
     }
   }
-  const getAutomationNameError = name => {
+
+  const getRestTemplateId = (inputs: object | void | undefined) => {
+    if (
+      inputs &&
+      "restTemplateId" in inputs &&
+      typeof inputs.restTemplateId === "string"
+    ) {
+      return inputs.restTemplateId
+    }
+  }
+
+  const getAutomationNameError = (name: string) => {
     const duplicateError =
       "This name already exists, please enter a unique name"
     if (editing) {
@@ -92,7 +131,7 @@
         }
       }
 
-      for (const step of allSteps) {
+      for (const step of allSteps as AutomationStep[]) {
         if (step.id !== block.id && name === step.name) {
           return duplicateError
         }
@@ -135,19 +174,16 @@
   <div class="splitHeader">
     <div class="center-items">
       {#if restTemplate?.icon}
-        <img
-          alt={restTemplate.name}
-          width="22px"
-          height="22px"
-          src={restTemplate.icon}
-        />
-      {:else if externalActions[block.stepId]}
-        <img
-          alt={externalActions[block.stepId].name}
-          width="22px"
-          height="22px"
-          src={externalActions[block.stepId].icon}
-        />
+        <div class="external-icon">
+          <img alt={restTemplate.name} src={restTemplate.icon} />
+        </div>
+      {:else if actionStepId && externalActions[actionStepId]}
+        <div class="external-icon">
+          <img
+            alt={externalActions[actionStepId].name}
+            src={externalActions[actionStepId].icon}
+          />
+        </div>
       {:else}
         <Icon
           name={block.icon}
@@ -162,7 +198,7 @@
           <Body size="XS">
             <div style="display: flex; gap: 0.5rem; align-items: center;">
               <b>{isBranch ? "Branch" : "Step"}</b>
-              {#if blockDefinition.deprecated}
+              {#if blockDefinition?.deprecated}
                 <Tags>
                   <Tag invalid>Deprecated</Tag>
                 </Tags>
@@ -181,7 +217,7 @@
             value={automationName}
             style:width={inputWidth}
             on:input={e => {
-              automationName = e.target.value.trim()
+              automationName = e.currentTarget.value.trim()
             }}
             on:click={e => {
               e.stopPropagation()
@@ -214,7 +250,6 @@
             </StatusLight>
           </div>
           <Icon
-            e.stopPropagation()
             on:click={e => {
               e.stopPropagation()
               dispatch("toggle")
@@ -233,13 +268,13 @@
       >
         <slot name="custom-actions" />
         {#if !showTestStatus}
-          {#if !isHeaderTrigger && !isLooped && !isBranch && (block?.features?.[Features.LOOPING] || !block.features)}
-            <AbsTooltip type="info" text="Add looping">
+          {#if actionStepId && !isLooped && !isBranch && (block.features?.[AutomationFeature.LOOPING] || !block.features)}
+            <AbsTooltip type={TooltipType.Info} text="Add looping">
               <Icon on:click={addLooping} hoverable name="arrow-clockwise" />
             </AbsTooltip>
           {/if}
           {#if !isHeaderTrigger}
-            <AbsTooltip type="negative" text="Delete step">
+            <AbsTooltip type={TooltipType.Negative} text="Delete step">
               <Icon on:click={deleteStep} hoverable name="trash" />
             </AbsTooltip>
           {/if}
@@ -260,7 +295,7 @@
       </div>
       {#if automationNameError && editing}
         <div class="error-container">
-          <AbsTooltip type="negative" text={automationNameError}>
+          <AbsTooltip type={TooltipType.Negative} text={automationNameError}>
             <div class="error-icon">
               <Icon size="S" name="warning" />
             </div>
@@ -292,6 +327,25 @@
     display: flex;
     align-items: center;
   }
+  .external-icon {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+    background: var(--spectrum-global-color-gray-100);
+  }
+
+  .external-icon img {
+    width: 28px;
+    height: 28px;
+  }
+
   .splitHeader {
     display: flex;
     justify-content: space-between;

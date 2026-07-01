@@ -168,6 +168,10 @@ spec:
         - name: LITELLM_MASTER_KEY
           value: {{ .Values.services.litellm.masterKey | quote }}
         {{- end }}
+        {{- if .Values.services.litellm.bbaiKey }}
+        - name: BBAI_LITELLM_KEY
+          value: {{ .Values.services.litellm.bbaiKey | quote }}
+        {{- end }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
         - name: ACCOUNT_PORTAL_URL

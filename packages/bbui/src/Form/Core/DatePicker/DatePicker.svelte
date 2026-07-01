@@ -10,6 +10,7 @@
   import { PopoverAlignment } from "../../../constants"
   import type dayjs from "dayjs"
   import { getLocaleStartDayOfWeek, type Weekday } from "./utils"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let id = null
   export let disabled = false
@@ -26,6 +27,7 @@
   export let align: PopoverAlignment = PopoverAlignment.Left
   const browserStartDayOfWeek = getLocaleStartDayOfWeek()
   export let startDayOfWeek: Weekday | undefined = undefined
+  export let calendarLabels = resolveTranslationGroup("calendar")
 
   let isOpen = false
   let anchor: HTMLElement
@@ -87,6 +89,7 @@
       {enableTime}
       {timeOnly}
       startDayOfWeek={resolvedStartDayOfWeek}
+      {calendarLabels}
       value={parsedValue}
       on:change
     />

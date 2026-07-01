@@ -40,6 +40,7 @@ import {
 } from "@budibase/types"
 import { testConnection } from "../../automations/email"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
+import { sanitizeAutomationTestResult } from "../../automations/sanitizeTestResult"
 import * as triggers from "../../automations/triggers"
 import {
   AutomationTestProgressEvent,
@@ -53,6 +54,10 @@ import env from "../../environment"
 import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -66,13 +71,15 @@ export async function create(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
-  automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
     await update(ctx)
     return
   }
+
+  automation.projectIds = await resolveProjectIds(automation.projectIds)
+  automation.appId = ctx.appId
 
   let createdAutomation: Automation
 
@@ -114,6 +121,12 @@ export async function update(
     await create(ctx)
     return
   }
+
+  const existingAutomation = await sdk.automations.get(automation._id)
+  automation.projectIds = await resolveUpdatedProjectIds(
+    automation.projectIds,
+    existingAutomation.projectIds
+  )
 
   const updatedAutomation = await sdk.automations.update(automation)
 
@@ -383,10 +396,11 @@ export async function test(
   const emitProgress = (event: ProgressEventInput) => {
     const payload: AutomationTestProgressEvent = {
       ...event,
+      result: sanitizeAutomationTestResult(event.result),
       automationId: automation._id!,
       appId,
     }
-    recordTestProgress(appId, automation._id!, payload)
+    recordTestProgress(appId, automation._id!, payload, ctx.user._id)
     builderSocket?.emitToRoom(
       ctx,
       ctx.appId,
@@ -409,15 +423,16 @@ export async function test(
       )
     })
     await events.automation.tested(automation)
+    const sanitizedResult = sanitizeAutomationTestResult(result)
     emitProgress({
       status: "complete",
       occurredAt: Date.now(),
-      result,
+      result: sanitizedResult,
     })
-    return result
+    return sanitizedResult
   }
 
-  clearTestProgress(appId, automation._id!)
+  clearTestProgress(appId, automation._id!, ctx.user._id)
 
   if (asyncFlag) {
     ctx.status = 202
@@ -432,11 +447,11 @@ export async function test(
     return
   }
 
-  ctx.body = await runTest()
+  ctx.body = (await runTest()) as TestAutomationResponse
 }
 
 export async function testStatus(ctx: UserCtx<void, unknown>) {
   const automationId = ctx.params.id
-  const status = getTestProgress(ctx.appId, automationId)
+  const status = getTestProgress(ctx.appId, automationId, ctx.user._id)
   ctx.body = status || {}
 }

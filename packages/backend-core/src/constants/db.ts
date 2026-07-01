@@ -30,6 +30,7 @@ export enum ViewName {
   AGENT_REQUESTS_BY_UPDATED_AT = "agent_requests_by_updated_at",
   LINK = "by_link",
   ROUTING = "screen_routes_2",
+  PROJECT_MEMBERS = "project_members",
   AUTOMATION_LOGS = "automation_logs",
   ACCOUNT_BY_EMAIL = "account_by_email",
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase_2",
