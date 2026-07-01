@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import { Body, Icon, Modal } from "@budibase/bbui"
   import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
@@ -12,22 +14,26 @@
 
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
-  export let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  export let showBudibaseAIMetric = true
+  interface Props {
+    metrics?: GetWorkspaceHomeMetricsResponse | null
+    showBudibaseAIMetric?: boolean
+  }
 
-  let githubStars: number | null = null
-  let actionsBreakdownModal: Modal
+  let { metrics = null, showBudibaseAIMetric = true }: Props = $props()
 
-  $: canViewOrganisationUsers = $flattenedRoutes.some(
-    (route: Route) => route.path === "/people/users"
+  let githubStars: number | null = $state(null)
+  let actionsBreakdownModal = $state<Modal>()
+
+  const canViewOrganisationUsers = $derived(
+    $flattenedRoutes.some((route: Route) => route.path === "/people/users")
   )
 
-  $: actionsBreakdown = $licensing.actionsBreakdown
-  $: actionsUsage = {
+  const actionsBreakdown = $derived($licensing.actionsBreakdown)
+  const actionsUsage = $derived({
     name: "Actions",
     used: metrics?.operationsThisMonth ?? 0,
     total: $licensing.actionsLimit ?? 0,
-  }
+  })
 
   const formatMetric = (value: number) => {
     return new Intl.NumberFormat("en").format(value)
@@ -59,7 +65,7 @@
       <button
         type="button"
         class="metric-label-link metric-label-button"
-        on:click={() => bb.settings("/people/users")}
+        onclick={() => bb.settings("/people/users")}
       >
         <Body size="S" color="var(--spectrum-global-color-gray-600)">
           Total users
@@ -86,7 +92,7 @@
       <button
         type="button"
         class="metric-label-link metric-label-button"
-        on:click={() => actionsBreakdownModal.show()}
+        onclick={() => actionsBreakdownModal?.show()}
       >
         <Body size="S" color="var(--spectrum-global-color-gray-600)">
           Actions this month

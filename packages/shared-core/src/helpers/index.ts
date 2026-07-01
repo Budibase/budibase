@@ -2,6 +2,7 @@ export * from "./helpers"
 export * from "./integrations"
 export * from "./async"
 export * from "./retry"
+export * from "./colors"
 import { getNextExecutionDates, validate } from "./cron"
 export const cron = { getNextExecutionDates, validate }
 export * as schema from "./schema"

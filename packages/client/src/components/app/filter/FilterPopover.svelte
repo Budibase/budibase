@@ -18,6 +18,10 @@
   } from "@budibase/frontend-core/src/constants"
   import { loadTranslationsByGroup } from "@budibase/frontend-core"
   import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
+  import {
     type FieldSchema,
     type FilterConfig,
     type TableSchema,
@@ -55,6 +59,7 @@
 
   const dispatch = createEventDispatcher()
   const rowCache: Writable<Record<string, any>> = getContext("rows")
+  const { appStore } = getContext("sdk")
   const filterLabels = loadTranslationsByGroup("filter")
 
   let popover: PopoverAPI | undefined
@@ -65,6 +70,11 @@
   let enableTime: boolean
   let timeOnly: boolean
   let ignoreTimezones: boolean
+
+  $: translationOverrides = resolveWorkspaceTranslations(
+    $appStore.application?.translationOverrides
+  )
+  $: calendarLabels = resolveTranslationGroup("calendar", translationOverrides)
 
   // Change on update
   $: editableFilter = getDefaultFilter(filter, schema, config)
@@ -279,6 +289,7 @@
             {enableTime}
             {timeOnly}
             {ignoreTimezones}
+            {calendarLabels}
             value={parseDateRange(editableFilter.value)}
             on:change={e => {
               const [from, to] = e.detail
@@ -313,6 +324,7 @@
             {enableTime}
             {timeOnly}
             {ignoreTimezones}
+            {calendarLabels}
             disabled={editableFilter.noValue}
             value={editableFilter.value}
             on:change={e => {

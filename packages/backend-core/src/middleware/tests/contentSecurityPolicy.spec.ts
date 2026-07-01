@@ -5,6 +5,7 @@ import { workspace } from "../../cache"
 import { contentSecurityPolicy } from "../contentSecurityPolicy"
 
 jest.mock("crypto", () => ({
+  ...jest.requireActual("crypto"),
   randomBytes: jest.fn(),
   randomUUID: jest.fn(),
 }))

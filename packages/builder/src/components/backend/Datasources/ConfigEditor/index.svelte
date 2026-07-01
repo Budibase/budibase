@@ -6,18 +6,39 @@
   import { get } from "svelte/store"
   import type { UIIntegration } from "@budibase/types"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
 
   export let integration: UIIntegration
   export let config: Record<string, any>
   export let onSubmit: (_value: {
     config: Record<string, any>
     name: string
-  }) => Promise<void> | void = () => {}
+    projectIds?: string[]
+  }) => Promise<void | typeof keepOpen> | void | typeof keepOpen = () => {}
   export let showNameField: boolean = false
   export let nameFieldValue: string = ""
+  export let showProjectField: boolean = false
+  export let projectIdsValue: string[] = []
+  export let originalProjectIdsValue: string[] | undefined = undefined
+
+  let projectIds: string[] = []
 
   $: configStore = createValidatedConfigStore(integration, config)
   $: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
+  $: projectIds = projectIdsValue || []
+
+  const getSubmittedProjectIds = () => {
+    if (projectIds.length) {
+      return projectIds
+    }
+    if (
+      originalProjectIdsValue &&
+      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIdsValue)
+    ) {
+      return []
+    }
+    return undefined
+  }
 
   const handleConfirm = async () => {
     configStore.markAllFieldsActive()
@@ -29,6 +50,7 @@
       return onSubmit({
         config,
         name,
+        projectIds: getSubmittedProjectIds(),
       })
     }
 
@@ -68,7 +90,11 @@
     />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}
+  {#if showProjectField}
+    <ProjectSelect bind:value={projectIds} />
+  {/if}
+
+  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder } (key)}
     <ConfigInput
       {type}
       {value}
