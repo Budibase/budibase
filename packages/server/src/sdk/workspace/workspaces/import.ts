@@ -15,7 +15,10 @@ import {
 import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
-import { USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX } from "../../../db/utils"
+import {
+  USER_METDATA_PREFIX,
+  LINK_USER_METADATA_PREFIX,
+} from "../../../db/utils"
 
 export type FileAttributes = {
   type: string
