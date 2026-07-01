@@ -26,7 +26,7 @@ import {
   expectUniqueGraphIds,
   getEdge,
   getNode,
-} from "../FlowCanvas/FlowTestAssertions"
+} from "./FlowTestAssertions"
 
 const createGraph = () => ({
   nodes: [] as FlowNode[],

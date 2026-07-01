@@ -1,6 +1,6 @@
 import { expect } from "vitest"
 import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
-import { ANCHOR, BRANCH, LOOP, STEP } from "./FlowGeometry"
+import { ANCHOR, BRANCH, LOOP, STEP } from "../FlowCanvas/FlowGeometry"
 
 export interface FlowGraph {
   nodes: FlowNode[]

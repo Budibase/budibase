@@ -6,7 +6,7 @@ import {
   expectNodeBelow,
   expectNodeRightOf,
   getNode,
-} from "../FlowCanvas/FlowTestAssertions"
+} from "./FlowTestAssertions"
 
 const ranksep = 160
 const nodesep = 120
