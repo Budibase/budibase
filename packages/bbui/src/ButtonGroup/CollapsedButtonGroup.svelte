@@ -6,6 +6,7 @@
 
   export let buttons
   export let text = "Action"
+  export let type
   export let size = "M"
   export let align = "left"
   export let offset
@@ -19,6 +20,13 @@
     popover.hide()
     await button.onClick?.()
   }
+
+  $: effectiveType = type ?? (quiet ? "secondary" : "primary")
+  $: cta = effectiveType === "cta"
+  $: primary = effectiveType === "primary"
+  $: secondary = effectiveType === "secondary"
+  $: warning = effectiveType === "warning"
+  $: overBackground = effectiveType === "overBackground"
 </script>
 
 <Button
@@ -26,9 +34,12 @@
   {size}
   icon="caret-down"
   {quiet}
-  primary={quiet}
-  cta={!quiet}
-  newStyles={!quiet}
+  {cta}
+  {primary}
+  {secondary}
+  {warning}
+  {overBackground}
+  newStyles={true}
   on:click={() => popover?.show()}
   on:click
   reverse

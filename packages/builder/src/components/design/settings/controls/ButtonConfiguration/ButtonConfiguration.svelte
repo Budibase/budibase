@@ -75,7 +75,8 @@
       {
         _instanceName: Helpers.uuid(),
         text: cfg.text,
-        type: cfg.type || "primary",
+        type: cfg.type || "inherit",
+        size: cfg.size || "inherit",
       }
     )
   }

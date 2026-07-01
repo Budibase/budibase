@@ -3,6 +3,7 @@
   import { Icon } from "@budibase/bbui"
   import { runtimeToReadableBinding } from "@/dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
+  import { title } from "process"
 
   export let item
   export let componentBindings
@@ -22,21 +23,54 @@
   // We will need to update this in future if the normal button component
   // gets broken into multiple settings sections, as we assume a flat array.
   const updatedNestedFlags = settings => {
-    if (!nested || !settings?.length) {
+    if (!settings?.length) {
       return settings
     }
-    let newSettings = settings.map(setting => ({
-      ...setting,
-      nested: true,
-    }))
-    // We need to prevent bindings for the button names because of how grid
-    // blocks work. This is an edge case but unavoidable.
-    let name = newSettings.find(x => x.key === "text")
-    if (name) {
-      name.disableBindings = true
+    let newSettings = nested
+      ? settings.map(setting => ({ ...setting, nested: true }))
+      : [...settings]
+    if (nested) {
+      // We need to prevent bindings for the button names because of how grid
+      // blocks work. This is an edge case but unavoidable.
+      let name = newSettings.find(x => x.key === "text")
+      if (name) {
+        name.disableBindings = true
+      }
+      if (parentComponent?._component?.endsWith("/gridblock")) {
+        newSettings = newSettings.filter(setting => setting.key !== "size")
+      }
     }
-    if (parentComponent?._component?.endsWith("/gridblock")) {
-      newSettings = newSettings.filter(setting => setting.key !== "size")
+    // For buttons inside a button group, inject an "Inherit" option for variant
+    // and size so individual buttons can fall back to the group-level settings.
+    if (parentComponent?._component?.endsWith("/buttongroup")) {
+      const typeSetting = newSettings.find(x => x.key === "type")
+      if (typeSetting?.options) {
+        typeSetting.options = [
+          { label: "Inherit", value: "inherit" },
+          ...typeSetting.options,
+        ]
+      }
+      const sizeSetting = newSettings.find(x => x.key === "size")
+      if (sizeSetting?.options) {
+        sizeSetting.options = [
+          { label: "Inherit", value: "inherit" },
+          ...sizeSetting.options,
+        ]
+      }
+      // Insert info display after the size setting
+      const sizeIndex = newSettings.findIndex(x => x.key === "size")
+      if (sizeIndex !== -1) {
+        newSettings.splice(sizeIndex + 1, 0, {
+          type: "infoDisplay",
+          key: "inheritInfo",
+          label: "",
+          labelHidden: true,
+          wide: true,
+          title: "Button type and size inheritance",
+          icon: "info",
+          body: "These override the Variant and Size of the individual button when specified. Set to &quot;Inherit&quot; to use the size specified in the button group's settings.",
+        })
+      }
     }
     return newSettings
   }
