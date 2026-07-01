@@ -83,6 +83,10 @@
 
   const initData = (tableId, metaFields, row) => {
     if (!tableId) {
+      table = undefined
+      schemaFields = undefined
+      editableFields = {}
+      editableRow = {}
       return
     }
 
