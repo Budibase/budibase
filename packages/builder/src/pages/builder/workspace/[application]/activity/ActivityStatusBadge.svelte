@@ -10,8 +10,23 @@
 
   const iconByStatus: Record<AgentRequestStatus, string> = {
     active: "spinner",
+    needs_input: "warning",
     completed: "check-circle",
     failed: "x-circle",
+  }
+
+  const iconWeightByStatus: Record<AgentRequestStatus, "regular" | "fill"> = {
+    active: "regular",
+    needs_input: "fill",
+    completed: "fill",
+    failed: "fill",
+  }
+
+  const iconColorByStatus: Record<AgentRequestStatus, string> = {
+    active: "var(--spectrum-global-color-blue-500)",
+    needs_input: "var(--spectrum-global-color-yellow-500)",
+    completed: "var(--spectrum-global-color-green-500)",
+    failed: "var(--spectrum-global-color-red-500)",
   }
 
   const badgeColorsByStatus: Record<
@@ -19,21 +34,30 @@
     { backgroundColor: string; textColor: string }
   > = {
     active: {
-      backgroundColor: "var(--spectrum-semantic-informative-color-status)",
+      backgroundColor:
+        "color-mix(in srgb, var(--spectrum-global-color-blue-500) 18%, transparent)",
+      textColor: "var(--spectrum-global-color-static-gray-50)",
+    },
+    needs_input: {
+      backgroundColor:
+        "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     completed: {
-      backgroundColor: "var(--spectrum-semantic-positive-color-status)",
+      backgroundColor:
+        "color-mix(in srgb, var(--spectrum-global-color-green-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     failed: {
-      backgroundColor: "var(--spectrum-semantic-negative-color-status)",
+      backgroundColor:
+        "color-mix(in srgb, var(--spectrum-global-color-red-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
     },
   }
 
   const statusLabelByStatus: Record<AgentRequestStatus, string> = {
-    active: "Active",
+    active: "Processing",
+    needs_input: "Needs input",
     completed: "Completed",
     failed: "Failed",
   }
@@ -47,7 +71,12 @@
   >
     {statusLabelByStatus[status]}
     <span class="status-icon" class:spinning={status === "active"}>
-      <Icon size="XS" name={iconByStatus[status]} color="currentColor" />
+      <Icon
+        size="XS"
+        name={iconByStatus[status]}
+        weight={iconWeightByStatus[status]}
+        color={iconColorByStatus[status]}
+      />
     </span>
   </Badge>
 </div>
