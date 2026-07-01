@@ -26,6 +26,7 @@
   export let bindings
   export let isTestModal
   export let context
+  export let disabled = false
 
   $: fieldData = value[field]
 
@@ -101,10 +102,12 @@
       })}
     value={fieldData}
     options={schema.constraints.inclusion}
+    {disabled}
   />
 {:else if schema.type === "datetime"}
   <DatePicker
     value={fieldData}
+    {disabled}
     on:change={e =>
       onChange({
         row: {
@@ -125,11 +128,13 @@
       { label: "True", value: "true" },
       { label: "False", value: "false" },
     ]}
+    {disabled}
   />
 {:else if schemaHasOptions(schema) && schema.type === "array"}
   <Multiselect
     value={fieldData}
     options={schema.constraints.inclusion}
+    {disabled}
     on:change={e =>
       onChange({
         row: {
@@ -140,6 +145,7 @@
 {:else if schema.type === "longform"}
   <TextArea
     value={readableValue}
+    {disabled}
     on:change={e =>
       onChange({
         row: {
@@ -153,6 +159,7 @@
       <CodeEditor
         value={readableValue}
         {bindings}
+        readonly={disabled}
         on:blur={e => {
           onChange({
             row: {
@@ -167,6 +174,7 @@
   <LinkedRowSelector
     linkedData={fieldData}
     {schema}
+    {disabled}
     on:change={e =>
       onChange({
         row: {
@@ -180,6 +188,7 @@
     linkedData={fieldData}
     {schema}
     linkedTableId={"ta_users"}
+    {disabled}
     on:change={e =>
       onChange({
         row: {
@@ -195,6 +204,7 @@
         value={meta?.fields?.[field]?.useAttachmentBinding}
         text={"Use bindings"}
         size={"XS"}
+        disabled={disabled}
         on:change={e => {
           onChange({
             row: {
@@ -234,6 +244,7 @@
           actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
             schema.type === FieldType.SIGNATURE_SINGLE) &&
             fieldData}
+          readOnly={disabled}
           {context}
         />
       </div>
@@ -254,6 +265,7 @@
           allowJS={true}
           updateOnChange={false}
           title={schema.name}
+          {disabled}
         />
       </div>
     {/if}
@@ -275,6 +287,7 @@
     updateOnChange={false}
     title={schema.name}
     autocomplete="off"
+    {disabled}
   />
 {/if}
 

@@ -15,6 +15,7 @@
   export let fullWidth: boolean = false
   export let noPadding: boolean = false
   export let tooltip: string = ""
+  export let tooltipDirection: "top" | "bottom" | "left" | "right" = "bottom"
   export let accentColor: string | null = null
   export let loading: boolean = false
 
@@ -82,8 +83,11 @@
     <span class="spectrum-ActionButton-label"><slot /></span>
   {/if}
   {#if tooltip && showTooltip}
-    <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-      <Tooltip textWrapping direction="bottom" text={tooltip} />
+    <div
+      class="tooltip tooltip-{tooltipDirection}"
+      in:fade={{ duration: 130, delay: 250 }}
+    >
+      <Tooltip textWrapping direction={tooltipDirection} text={tooltip} />
     </div>
   {/if}
 </button>
@@ -182,14 +186,30 @@
   .tooltip {
     position: absolute;
     pointer-events: none;
-    inset-inline-end: 0;
-    top: calc(100% + 4px);
     width: max-content;
     max-width: 150px;
     min-width: 0;
     text-align: center;
     z-index: 1;
     box-sizing: border-box;
+  }
+  .tooltip-bottom {
+    inset-inline-end: 0;
+    top: calc(100% + 4px);
+  }
+  .tooltip-top {
+    bottom: calc(100% + 4px);
+    inset-inline-end: 0;
+  }
+  .tooltip-left {
+    inset-inline-end: calc(100% + 4px);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .tooltip-right {
+    inset-inline-start: calc(100% + 4px);
+    top: 50%;
+    transform: translateY(-50%);
   }
   .accent.is-selected,
   .accent:active {

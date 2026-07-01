@@ -10,6 +10,7 @@
   export let useLabel = true
   export let linkedTableId
   export let label
+  export let disabled = false
   const dispatch = createEventDispatcher()
 
   let rows = []
@@ -66,6 +67,7 @@
       dispatch("change", linkedIds)
     }}
     label={useLabel ? label : null}
+    {disabled}
     sort
   />
 {:else}
@@ -75,6 +77,7 @@
     options={rows}
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
+    {disabled}
     sort
     on:change
   />

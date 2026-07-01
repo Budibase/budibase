@@ -97,4 +97,35 @@ describe("RowSelector", () => {
     })
     expect(screen.queryByText("Jobs")).not.toBeInTheDocument()
   })
+
+  it("shows all fields in the modal and toggles field visibility", async () => {
+    render(RowSelectorHarness, {
+      props: {
+        row: {
+          tableId: "ta_employees",
+          Email: "test@example.com",
+        },
+        meta: {
+          fields: {
+            Email: {},
+          },
+        },
+      },
+    })
+
+    expect(
+      screen.getByRole("button", { name: "Hide Email" })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Show Jobs" })
+    ).toBeInTheDocument()
+
+    await fireEvent.click(screen.getByRole("button", { name: "Hide Email" }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Show Email" })
+      ).toBeInTheDocument()
+    })
+  })
 })

@@ -7,6 +7,7 @@
     TooltipPosition,
     TooltipType,
     ActionGroup,
+    Button,
     Modal,
     ModalContent,
   } from "@budibase/bbui"
@@ -41,16 +42,20 @@
   type RowMeta = {
     fields?: EditableFields
   }
+  type FieldUpdates = Record<string, EditableField | null>
   type Binding = Record<string, unknown> & {
     icon?: string
   }
   type ChangeUpdate = {
     row?: EditableRow
-    meta?: RowMeta
+    meta?: {
+      fields?: FieldUpdates
+    }
   }
   type SchemaEntry = [string, FieldSchema]
   type PopoverHandle = {
     show: () => void
+    hide?: () => void
   }
 
   const dispatch = createEventDispatcher<{
@@ -85,10 +90,8 @@
   ]
 
   let customPopover: PopoverHandle | undefined
-  let modalPopover: PopoverHandle | undefined
   let fieldsModal: PopoverHandle | undefined
   let popoverAnchor: HTMLDivElement | null | undefined
-  let modalPopoverAnchor: HTMLDivElement | null | undefined
   let editableRow: EditableRow = {}
   let editableFields: EditableFields = {}
 
@@ -279,6 +282,34 @@
 
   const emitChange = (update: ChangeUpdate) => {
     dispatch("change", update)
+  }
+
+  const isFieldVisible = (field: string) => {
+    return Object.hasOwn(editableFields, field)
+  }
+
+  const toggleFieldVisibility = (field: string) => {
+    if (isFieldVisible(field)) {
+      handleChange({
+        meta: {
+          fields: {
+            [field]: null,
+          },
+        },
+        row: {
+          [field]: null,
+        },
+      })
+      return
+    } else {
+      handleChange({
+        meta: {
+          fields: {
+            [field]: {},
+          },
+        },
+      })
+    }
   }
 
   const handleChange = (update: ChangeUpdate) => {
@@ -479,108 +510,67 @@
 
 <Modal bind:this={fieldsModal}>
   <ModalContent
-    title="Edit fields"
     size="XL"
     showCancelButton={false}
     showConfirmButton={false}
+    showCloseIcon={false}
   >
-    <div class="modal-fields">
-      <div class="modal-actions" bind:this={modalPopoverAnchor}>
-        <ActionGroup>
-          <ActionButton
-            on:click={() => {
-              modalPopover?.show()
-            }}
-            disabled={!schemaFields}
-          >
-            Edit fields
-          </ActionButton>
-          {#if schemaFields?.length}
-            <ActionButton
-              on:click={() => {
-                emitChange({
-                  meta: { fields: {} },
-                  row: {},
-                })
-              }}
-            >
-              Clear
-            </ActionButton>
-          {/if}
-        </ActionGroup>
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <span>Edit fields</span>
+        <Button cta on:click={() => fieldsModal?.hide?.()}>Done</Button>
       </div>
-
+    </svelte:fragment>
+    <div class="modal-fields">
       {#each schemaFields || [] as [field, schema]}
-        {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
+        {#if !isAutoincrement(schema)}
+          {@const visible = isFieldVisible(field)}
           <PropField label={field} fullWidth={true} {componentWidth}>
-            <div class="prop-control-wrap">
-              <RowSelectorTypes
-                isTestModal={true}
-                {field}
-                {schema}
-                bindings={parsedBindings}
-                value={editableRow}
-                meta={{
-                  fields: editableFields,
-                }}
-                onChange={handleChange}
-                {context}
-              />
+            <div class="modal-field-control" class:hidden={!visible}>
+              <div class="modal-field-input">
+                <RowSelectorTypes
+                  isTestModal={true}
+                  {field}
+                  {schema}
+                  bindings={parsedBindings}
+                  value={editableRow}
+                  meta={{
+                    fields: editableFields,
+                  }}
+                  onChange={handleChange}
+                  {context}
+                  disabled={!visible}
+                />
+              </div>
+              <div class="modal-field-visibility">
+                <ActionButton
+                  selected={visible}
+                  tooltip={visible ? "Hide field" : "Show field"}
+                  tooltipDirection="left"
+                  on:click={() => toggleFieldVisibility(field)}
+                >
+                  <Icon name={visible ? "eye" : "eye-slash"} size="S" />
+                  <span class="sr-only">
+                    {visible ? `Hide ${field}` : `Show ${field}`}
+                  </span>
+                </ActionButton>
+              </div>
             </div>
           </PropField>
         {/if}
       {/each}
     </div>
-
-    <Popover
-      align="left"
-      bind:this={modalPopover}
-      anchor={editableFields ? modalPopoverAnchor || undefined : undefined}
-      widthMode="fixed-to-anchor"
-      maxHeight={500}
-      resizable={false}
-    >
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <ul class="spectrum-Menu" role="listbox">
-        {#each schemaFields || [] as [field, schema]}
-          {#if !isAutoincrement(schema)}
-            <li
-              class="table_field spectrum-Menu-item"
-              class:is-selected={Object.hasOwn(editableFields, field)}
-              on:click={() => {
-                if (Object.hasOwn(editableFields, field)) {
-                  delete editableFields[field]
-                  handleChange({
-                    meta: { fields: editableFields },
-                    row: { [field]: null },
-                  })
-                } else {
-                  editableFields[field] = {}
-                  handleChange({ meta: { fields: editableFields } })
-                }
-              }}
-            >
-              <Icon
-                name={typeToField?.[schema.type]?.icon}
-                color={"var(--spectrum-global-color-gray-600)"}
-                tooltip={capitalise(schema.type)}
-                tooltipType={TooltipType.Info}
-                tooltipPosition={TooltipPosition.Left}
-              />
-              <div class="field_name spectrum-Menu-itemLabel">{field}</div>
-              <div class="check">
-                <Icon name="check" />
-              </div>
-            </li>
-          {/if}
-        {/each}
-      </ul>
-    </Popover>
   </ModalContent>
 </Modal>
 
 <style>
+  .modal-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
   .modal-fields {
     display: flex;
     flex-direction: column;
@@ -590,9 +580,57 @@
     padding-right: var(--spacing-s);
   }
 
-  .modal-actions {
+  .modal-field-control {
     display: flex;
-    justify-content: flex-end;
+    align-items: flex-end;
+    gap: var(--spacing-l);
+    width: 100%;
+  }
+
+  .modal-field-control.hidden .modal-field-input {
+    opacity: 0.6;
+  }
+
+  .modal-field-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .modal-field-input :global(.control),
+  .modal-field-input :global(.spectrum-Form-item),
+  .modal-field-input :global(.spectrum-Form-itemField),
+  .modal-field-input :global(.spectrum-InputGroup) {
+    width: 100%;
+  }
+
+  .modal-field-visibility {
+    display: flex;
+    flex: 0 0 48px;
+    justify-content: center;
+  }
+
+  .modal-field-visibility :global(.spectrum-ActionButton) {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-field-visibility :global(.spectrum-ActionButton-label) {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .sr-only {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
   }
 
   .table_field {
