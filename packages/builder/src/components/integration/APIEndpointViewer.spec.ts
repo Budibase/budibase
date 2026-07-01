@@ -210,6 +210,21 @@ vi.mock("@/stores/builder", async () => {
   }
 })
 
+vi.mock("@/stores/portal", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/stores/portal")>()
+  const { writable } = await import("svelte/store")
+  const projectsStore = {
+    ...writable([]),
+    ensureFetched: vi.fn().mockResolvedValue(undefined),
+  }
+
+  return {
+    ...actual,
+    featureFlags: writable({}),
+    projectsStore,
+  }
+})
+
 import {
   datasources,
   hasRestTemplate,
@@ -222,6 +237,8 @@ import { screenStore } from "@/stores/builder"
 import { workspaceConnections } from "@/stores/builder/workspaceConnection"
 import { confirm } from "@/helpers"
 import { bb } from "@/stores/bb"
+import { featureFlags } from "@/stores/portal"
+import { FeatureFlag } from "@budibase/types"
 
 const REST_DS_ID = "datasource_c190e3055ae643b4b3bb66ee15ad12c9"
 const REST_DS_ID_2 = "datasource_aaaabbbbccccdddd1111222233334444"
@@ -396,6 +413,7 @@ beforeEach(async () => {
   } as any)
   queries.store.update(s => ({ ...s, list: [], selectedQueryId: null }))
   workspaceConnections.discardDraft()
+  featureFlags.set({})
   bb.reset()
   await setupDatasources()
 })
@@ -406,6 +424,24 @@ describe("API Endpoint Viewer", () => {
     await waitFor(() => {
       expect(container.querySelector(".request-heading")).not.toBeNull()
       expect(notifications.error).not.toBeCalled()
+    })
+  })
+
+  it("hides project assignment controls when projects are disabled", async () => {
+    const { container } = setupDOM({ datasourceId: REST_DS_ID })
+
+    await waitFor(() => {
+      expect(container.querySelector(".request-heading")).not.toBeNull()
+      expect(container.textContent).not.toContain("Projects")
+    })
+  })
+
+  it("shows project assignment controls when projects are enabled", async () => {
+    featureFlags.set({ [FeatureFlag.PROJECTS]: true })
+    const { container } = setupDOM({ datasourceId: REST_DS_ID })
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("Projects")
     })
   })
 
