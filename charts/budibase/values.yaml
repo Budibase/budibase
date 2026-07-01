@@ -735,6 +735,9 @@ services:
     saltKey: ""
     # -- The master key to use for litellm.
     masterKey: ""
+    # -- The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set
+    # it is rendered onto both the app service and the automation worker.
+    bbaiKey: ""
     # -- Optional username for LiteLLM Admin UI login.
     # If not set, LiteLLM uses its built-in defaults.
     uiUsername: ""
