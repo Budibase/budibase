@@ -15,6 +15,7 @@ import {
   getToolDisplayNames,
   IncompleteToolCall,
   updatePendingToolCalls,
+  updateUnrecoveredToolFailures,
 } from "./utils"
 
 type MessagePart = NonNullable<UIMessage["parts"]>[number]
@@ -431,6 +432,42 @@ describe("incomplete tool call detection", () => {
       updatePendingToolCalls(pending, toolCalls, toolResults)
       expect(pending.has("call-1")).toBe(false)
       expect(pending.has("call-2")).toBe(true)
+    })
+  })
+
+  describe("updateUnrecoveredToolFailures", () => {
+    it("flags a tool that ends in tool-error", () => {
+      const unrecovered = new Set<string>()
+
+      updateUnrecoveredToolFailures(unrecovered, [], ["send_email"])
+
+      expect(unrecovered.has("send_email")).toBe(true)
+    })
+
+    it("clears the flag once the same tool later succeeds", () => {
+      const unrecovered = new Set<string>(["send_email"])
+      const toolResults: TypedToolResult<ToolSet>[] = [
+        {
+          type: "tool-result",
+          toolCallId: "call-2",
+          toolName: "send_email",
+          input: {},
+          output: {},
+        },
+      ]
+
+      updateUnrecoveredToolFailures(unrecovered, toolResults, [])
+
+      expect(unrecovered.has("send_email")).toBe(false)
+    })
+
+    it("leaves other tools' failure state untouched", () => {
+      const unrecovered = new Set<string>(["send_email"])
+
+      updateUnrecoveredToolFailures(unrecovered, [], ["escalate"])
+
+      expect(unrecovered.has("send_email")).toBe(true)
+      expect(unrecovered.has("escalate")).toBe(true)
     })
   })
 

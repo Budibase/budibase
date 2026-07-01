@@ -221,6 +221,54 @@ describe("agentRequests crud", () => {
       })
     })
 
+    it("does not overwrite a request that is already failed", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({
+          requestId,
+          status: "failed",
+          error: "Tool calls incomplete",
+        })
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("failed")
+        expect(request.error).toEqual("Tool calls incomplete")
+      })
+    })
+
+    it("does not overwrite a request that is already completed", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "completed" })
+        await updateRequestStatus({
+          requestId,
+          status: "failed",
+          error: "Tool calls incomplete",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("completed")
+        expect(request.error).toBeUndefined()
+      })
+    })
+
     it("does nothing if the requestId does not exist", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await expect(

@@ -29,6 +29,7 @@ import {
 } from "../chatConversations"
 import {
   updatePendingToolCalls,
+  updateUnrecoveredToolFailures,
   buildPromptAndTools,
   getLiveOperations,
   type BuildPromptAndToolsOptions,
@@ -88,6 +89,7 @@ export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
   onToolCalls?: (toolNames: string[]) => void
   pendingToolCalls?: Set<string>
+  unrecoveredToolFailures?: Set<string>
 }
 
 const operationRoutingActionSchema = z.enum([
@@ -519,7 +521,12 @@ export const prepareAgentChatRun = async ({
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,
-    stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
+    stream: async ({
+      onFinish,
+      onToolCalls,
+      pendingToolCalls,
+      unrecoveredToolFailures,
+    } = {}) =>
       await withLiteLLMSessionId(sessionId, () =>
         agentRunner.stream({
           messages: modelMessages,
@@ -545,6 +552,17 @@ export const prepareAgentChatRun = async ({
             }
             if (pendingToolCalls) {
               updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            }
+
+            if (unrecoveredToolFailures) {
+              const erroredToolNames = content
+                .filter(part => part.type === "tool-error")
+                .map(part => part.toolName)
+              updateUnrecoveredToolFailures(
+                unrecoveredToolFailures,
+                toolResults,
+                erroredToolNames
+              )
             }
 
             for (const toolResult of toolResults) {
@@ -580,13 +598,10 @@ export const prepareAgentChatRun = async ({
               await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
 
-            if (!pendingToolCalls) {
-              return
-            }
-
             for (const part of content) {
               if (part.type === "tool-error") {
-                pendingToolCalls.delete(part.toolCallId)
+                pendingToolCalls?.delete(part.toolCallId)
+                unrecoveredToolFailures?.add(part.toolName)
               }
             }
           },

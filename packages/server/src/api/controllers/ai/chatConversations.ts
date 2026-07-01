@@ -567,10 +567,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       })
 
     const pendingToolCalls = new Set<string>()
+    const unrecoveredToolFailures = new Set<string>()
     const streamResult = { toolCallsIncomplete: false }
 
     const result = await run.stream({
       pendingToolCalls,
+      unrecoveredToolFailures,
       onToolCalls: toolNames => {
         if (trackingHandle && toolNames.includes(ESCALATE_TOOL_NAME)) {
           sdk.ai.agentRequests
@@ -693,16 +695,22 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         events.action.aiAgentExecuted({ agentId })
 
         if (trackingHandle) {
-          const finalStatus = streamResult.toolCallsIncomplete
-            ? "failed"
-            : "completed"
+          const hasUnrecoveredToolFailure = unrecoveredToolFailures.size > 0
+          const finalStatus =
+            streamResult.toolCallsIncomplete || hasUnrecoveredToolFailure
+              ? "failed"
+              : "completed"
           await sdk.ai.agentRequests
             .updateRequestStatus({
               requestId: trackingHandle.requestId,
               status: finalStatus,
               ...(streamResult.toolCallsIncomplete
                 ? { error: "Tool calls incomplete" }
-                : {}),
+                : hasUnrecoveredToolFailure
+                  ? {
+                      error: `Tool call(s) failed: ${[...unrecoveredToolFailures].join(", ")}`,
+                    }
+                  : {}),
             })
             .catch(updateError => {
               console.error("Failed to update agent request status on finish", {

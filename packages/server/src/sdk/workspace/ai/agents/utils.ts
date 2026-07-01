@@ -314,6 +314,20 @@ export function updatePendingToolCalls(
   }
 }
 
+export function updateUnrecoveredToolFailures(
+  unrecoveredToolFailures: Set<string>,
+  toolResults: TypedToolResult<ToolSet>[],
+  erroredToolNames: string[]
+): void {
+  for (const toolResult of toolResults) {
+    unrecoveredToolFailures.delete(toolResult.toolName)
+  }
+
+  for (const toolName of erroredToolNames) {
+    unrecoveredToolFailures.add(toolName)
+  }
+}
+
 export function formatIncompleteToolCallError(
   incompleteTools: IncompleteToolCall[]
 ): string {

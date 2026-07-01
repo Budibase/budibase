@@ -258,6 +258,10 @@ export async function updateRequestStatus({
     return
   }
 
+  if (isTerminalStatus(request.status)) {
+    return
+  }
+
   const timestamp = nowIso()
   const isTerminal = status === "completed" || status === "failed"
 
