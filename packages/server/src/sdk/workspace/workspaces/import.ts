@@ -15,7 +15,7 @@ import {
 import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
-import { USER_METDATA_PREFIX } from "../../../db/utils"
+import { USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX } from "../../../db/utils"
 
 export type FileAttributes = {
   type: string
@@ -88,8 +88,12 @@ async function removeImportableDocuments(db: Database) {
   for (let response of await Promise.all(docPromises)) {
     documentRefs = documentRefs.concat(
       response.rows
-        // never delete/replace user-metadata rows (internal Users table)
-        .filter(row => !row.id.startsWith(USER_METDATA_PREFIX))
+        // never delete/replace user-metadata rows or their relationship links
+        .filter(
+          row =>
+            !row.id.startsWith(USER_METDATA_PREFIX) &&
+            !row.id.startsWith(LINK_USER_METADATA_PREFIX)
+        )
         .map(row => ({
           _id: row.id,
           _rev: (row.value as RowValue).rev,
@@ -131,8 +135,12 @@ async function getImportableDocuments(db: Database) {
   for (let response of await Promise.all(docPromises)) {
     documents = documents.concat(
       response.rows
-        // never import user-metadata rows (internal Users table)
-        .filter(row => !row.id.startsWith(USER_METDATA_PREFIX))
+        // never import user-metadata rows or their relationship links
+        .filter(
+          row =>
+            !row.id.startsWith(USER_METDATA_PREFIX) &&
+            !row.id.startsWith(LINK_USER_METADATA_PREFIX)
+        )
         .map(row => row.doc!)
     )
   }
