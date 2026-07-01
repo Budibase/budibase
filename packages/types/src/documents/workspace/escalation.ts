@@ -18,6 +18,21 @@ export enum EscalationSource {
   OPERATION = "operation",
 }
 
+// The registered name of the escalate tool exposed to agent operations.
+export const ESCALATE_TOOL_NAME = "escalate"
+
+// The escalate tool's own result status, returned to the model.
+export enum EscalateToolResultStatus {
+  // A real escalation was raised and is awaiting a human response.
+  PENDING_APPROVAL = "pending_approval",
+  // No escalation could be raised (e.g. no reviewers configured). The
+  // model's request was not actually handed to a human.
+  UNAVAILABLE = "unavailable",
+  // Resume-only: the escalation was already approved, so calling escalate
+  // again is a no-op rather than a fresh escalation or a failure.
+  ALREADY_APPROVED = "already_approved",
+}
+
 // Built-in resolution strategies.
 export enum ResolutionStrategy {
   FIRST_RESPONSE = "first_response",

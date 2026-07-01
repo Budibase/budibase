@@ -5,6 +5,8 @@ import {
   ToolMetadata,
   SourceName,
   WebSearchProvider,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import {
@@ -13,11 +15,6 @@ import {
   createEscalatePlaceholderTool,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
-import {
-  ESCALATE_TOOL_NAME,
-  ESCALATE_STATUS_PENDING_APPROVAL,
-  ESCALATE_STATUS_UNAVAILABLE,
-} from "../../../../ai/tools/budibase/escalate"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
@@ -359,13 +356,13 @@ export function partitionEscalateAwareToolResults(
     const status = (toolResult.output as { status?: string } | undefined)
       ?.status
 
-    if (status === ESCALATE_STATUS_UNAVAILABLE) {
+    if (status === EscalateToolResultStatus.UNAVAILABLE) {
       semanticFailureNames.push(toolResult.toolName)
       continue
     }
 
     successResults.push(toolResult)
-    if (status === ESCALATE_STATUS_PENDING_APPROVAL) {
+    if (status === EscalateToolResultStatus.PENDING_APPROVAL) {
       successNames.push(toolResult.toolName)
     }
   }

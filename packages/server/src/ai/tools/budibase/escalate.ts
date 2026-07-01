@@ -2,6 +2,8 @@ import { context } from "@budibase/backend-core"
 import {
   type ChatConversationChannel,
   type EscalationRecipient,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   EscalationSource,
   ResolutionStrategy,
   ToolType,
@@ -12,17 +14,6 @@ import { z } from "zod"
 import { escalationProcessor } from "../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../escalation/resolutionStrategies"
 import type { AiToolDefinition } from ".."
-
-export const ESCALATE_TOOL_NAME = "escalate"
-
-// A real escalation was raised and is awaiting a human response.
-export const ESCALATE_STATUS_PENDING_APPROVAL = "pending_approval"
-// No escalation could be raised (e.g. no reviewers configured) - the model's
-// request was not actually handed to a human.
-export const ESCALATE_STATUS_UNAVAILABLE = "unavailable"
-// Resume-only: the escalation was already approved, so calling escalate again
-// is a no-op rather than a fresh escalation or a failure.
-export const ESCALATE_STATUS_ALREADY_APPROVED = "already_approved"
 
 interface CreateEscalateToolParams {
   agentId: string
@@ -101,7 +92,7 @@ export const createEscalateTool = ({
       })
 
       return {
-        status: ESCALATE_STATUS_PENDING_APPROVAL,
+        status: EscalateToolResultStatus.PENDING_APPROVAL,
         escalationId,
         note: `Escalated for approval: ${reason}. The request is paused until a human responds.`,
       }
@@ -130,7 +121,7 @@ export const createEscalatePlaceholderTool = (): AiToolDefinition => ({
       reason: z.string(),
     }),
     execute: async () => ({
-      status: ESCALATE_STATUS_UNAVAILABLE,
+      status: EscalateToolResultStatus.UNAVAILABLE,
       note:
         "Escalation is referenced but no reviewers are configured for this " +
         "operation. Tell the user approval cannot be requested right now.",
@@ -150,7 +141,7 @@ export const createResolvedEscalateTool = () =>
       reason: z.string(),
     }),
     execute: async () => ({
-      status: ESCALATE_STATUS_ALREADY_APPROVED,
+      status: EscalateToolResultStatus.ALREADY_APPROVED,
       note:
         "This request has already been reviewed and APPROVED by a human " +
         "reviewer. Do not escalate again - proceed to fulfil it.",

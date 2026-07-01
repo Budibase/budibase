@@ -12,13 +12,15 @@
     DraftChatConversation,
     AgentMessageMetadata,
     EscalationContextDoc,
+    ESCALATE_TOOL_NAME,
+    EscalateToolResultStatus,
     EscalationRespondResult,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
-  import { formatToolName } from "../../utils/aiTools"
+  import { formatToolName } from "../../utils"
   import ReasoningStatus from "./ReasoningStatus.svelte"
   import ContextUsage from "./ContextUsage.svelte"
   import EscalationCard from "./EscalationCard.svelte"
@@ -385,7 +387,7 @@
       for (const part of message.parts ?? []) {
         if (
           !isToolUIPart(part) ||
-          getToolName(part) !== "escalate" ||
+          getToolName(part) !== ESCALATE_TOOL_NAME ||
           part.state !== "output-available"
         ) {
           continue
@@ -393,7 +395,10 @@
         const output = part.output as
           | { status?: string; escalationId?: string }
           | undefined
-        if (output?.status === "pending_approval" && output.escalationId) {
+        if (
+          output?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+          output.escalationId
+        ) {
           ids.push(output.escalationId)
         }
       }
@@ -773,7 +778,7 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && getToolName(part) === "escalate"}
+              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME}
                 {@const card = escalationCardProps(part)}
                 <EscalationCard
                   title={card.title}

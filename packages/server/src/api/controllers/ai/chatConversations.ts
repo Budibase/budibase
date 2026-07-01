@@ -16,6 +16,7 @@ import {
   ChatConversationRequest,
   CreateChatConversationRequest,
   DocumentType,
+  ESCALATE_TOOL_NAME,
   FeatureFlag,
   FetchAgentHistoryResponse,
   FetchAgentFileUrlResponse,
@@ -48,7 +49,6 @@ import {
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
 import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
-import { ESCALATE_TOOL_NAME } from "../../../ai/tools/budibase"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
