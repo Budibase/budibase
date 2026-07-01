@@ -35,15 +35,19 @@ export function stopCleanup() {
   clearInterval(cleanupInterval)
 }
 
-const getKey = (appId: string | undefined, automationId: string) =>
-  `${appId || "unknown"}:${automationId}`
+const getKey = (
+  appId: string | undefined,
+  automationId: string,
+  userId?: string
+) => `${appId || "unknown"}:${automationId}:${userId || "unknown"}`
 
 export function recordTestProgress(
   appId: string | undefined,
   automationId: string,
-  event: AutomationTestProgressEvent
+  event: AutomationTestProgressEvent,
+  userId?: string
 ) {
-  const key = getKey(appId, automationId)
+  const key = getKey(appId, automationId, userId)
   const state =
     progressState.get(key) ||
     ({
@@ -75,16 +79,18 @@ export function recordTestProgress(
 
 export function getTestProgress(
   appId: string | undefined,
-  automationId: string
+  automationId: string,
+  userId?: string
 ) {
-  const key = getKey(appId, automationId)
+  const key = getKey(appId, automationId, userId)
   return progressState.get(key)
 }
 
 export function clearTestProgress(
   appId: string | undefined,
-  automationId: string
+  automationId: string,
+  userId?: string
 ) {
-  const key = getKey(appId, automationId)
+  const key = getKey(appId, automationId, userId)
   progressState.delete(key)
 }
