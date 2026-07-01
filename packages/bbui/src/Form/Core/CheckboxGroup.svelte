@@ -4,8 +4,8 @@
 </script>
 
 <script lang="ts" generics="O, V">
+  import "@spectrum-css/checkbox/dist/index-vars.css"
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
-  import "@spectrum-css/radio/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
   import Icon from "../../Icon/Icon.svelte"
 
@@ -19,8 +19,25 @@
   export let getOptionValue = (option: O) => option as unknown as V
   export let showSelectAll = false
   export let selectAllText = "Select all"
+  export let checkboxOutlineColor: string | undefined = undefined
+  export let checkboxCheckColor: string | undefined = undefined
 
   const dispatch = createEventDispatcher<{ change: V[] }>()
+
+  const outlineColorProperties = [
+    "--spectrum-checkbox-m-box-border-color",
+    "--spectrum-checkbox-m-box-border-color-hover",
+    "--spectrum-checkbox-m-box-border-color-down",
+    "--spectrum-checkbox-m-box-border-color-key-focus",
+    "--spectrum-checkbox-m-box-border-color-selected",
+    "--spectrum-checkbox-m-box-border-color-selected-hover",
+    "--spectrum-checkbox-m-box-border-color-selected-down",
+    "--spectrum-checkbox-m-box-border-color-selected-key-focus",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected-hover",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected-down",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected-key-focus",
+  ]
 
   const onChange = (optionValue: V) => {
     if (!value.includes(optionValue)) {
@@ -55,12 +72,29 @@
       ? `repeat(${columns}, minmax(0, 1fr))`
       : undefined
   $: useGridLayout = Boolean(horizontalColumns)
+  $: colorStyles = [
+    ...(checkboxOutlineColor
+      ? outlineColorProperties.map(
+          property => `${property}: ${checkboxOutlineColor}`
+        )
+      : []),
+  ]
+    .filter(Boolean)
+    .join("; ")
+  $: groupStyles = [
+    horizontalColumns
+      ? `grid-template-columns: ${horizontalColumns}`
+      : undefined,
+    colorStyles,
+  ]
+    .filter(Boolean)
+    .join("; ")
 </script>
 
 <div
   class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}
   class:horizontal={useGridLayout}
-  style:grid-template-columns={horizontalColumns}
+  style={groupStyles}
 >
   {#if showSelectAll && options?.length > 0}
     <div
@@ -83,7 +117,8 @@
             <Icon
               name={indeterminate ? "minus" : "check"}
               weight="bold"
-              color="var(--spectrum-global-color-gray-50)"
+              color={checkboxCheckColor ||
+                "var(--spectrum-global-color-gray-50)"}
             />
           </span>
         </span>
@@ -115,7 +150,8 @@
               <Icon
                 name="check"
                 weight="bold"
-                color="var(--spectrum-global-color-gray-50)"
+                color={checkboxCheckColor ||
+                  "var(--spectrum-global-color-gray-50)"}
               />
             </span>
           </span>

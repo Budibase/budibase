@@ -4360,6 +4360,16 @@
             "barTitle": "3 columns"
           }
         ]
+      },
+      {
+        "type": "color",
+        "label": "Outline colour",
+        "key": "radioOutlineColor"
+      },
+      {
+        "type": "color",
+        "label": "Fill colour",
+        "key": "radioFillColor"
       }
     ],
     "context": {
@@ -4525,6 +4535,24 @@
         "dependsOn": {
           "setting": "direction",
           "value": "horizontal"
+        }
+      },
+      {
+        "type": "color",
+        "label": "Outline colour",
+        "key": "checkboxOutlineColor",
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "checkbox"
+        }
+      },
+      {
+        "type": "color",
+        "label": "Check colour",
+        "key": "checkboxCheckColor",
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "checkbox"
         }
       },
       {
@@ -4767,6 +4795,16 @@
             "barTitle": "3 columns"
           }
         ]
+      },
+      {
+        "type": "color",
+        "label": "Outline colour",
+        "key": "checkboxOutlineColor"
+      },
+      {
+        "type": "color",
+        "label": "Check colour",
+        "key": "checkboxCheckColor"
       }
     ],
     "context": {

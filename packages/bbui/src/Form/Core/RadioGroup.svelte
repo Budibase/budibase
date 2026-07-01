@@ -14,9 +14,28 @@
   export let getOptionSubtitle = option => option?.subtitle ?? undefined
   export let getOptionDisabled = option => option?.disabled ?? false
   export let sort = false
+  export let radioOutlineColor = undefined
+  export let radioFillColor = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = e => dispatch("change", e.target.value)
+
+  const outlineColorProperties = [
+    "--spectrum-radio-m-circle-border-color",
+    "--spectrum-radio-m-circle-border-color-hover",
+    "--spectrum-radio-m-circle-border-color-down",
+    "--spectrum-radio-m-circle-border-color-key-focus",
+  ]
+
+  const fillColorProperties = [
+    "--spectrum-radio-m-circle-border-color-selected",
+    "--spectrum-radio-m-circle-border-color-selected-hover",
+    "--spectrum-radio-m-circle-border-color-selected-down",
+    "--spectrum-radio-m-emphasized-circle-border-color-selected",
+    "--spectrum-radio-m-emphasized-circle-border-color-selected-hover",
+    "--spectrum-radio-m-emphasized-circle-border-color-selected-down",
+    "--spectrum-radio-m-emphasized-circle-border-color-selected-key-focus",
+  ]
 
   const getSortedOptions = (options, getLabel, sort) => {
     if (!options?.length || !Array.isArray(options)) {
@@ -33,9 +52,24 @@
   }
 
   $: parsedOptions = getSortedOptions(options, getOptionLabel, sort)
+  $: colorStyles = [
+    ...(radioOutlineColor
+      ? outlineColorProperties.map(
+          property => `${property}: ${radioOutlineColor}`
+        )
+      : []),
+    ...(radioFillColor
+      ? fillColorProperties.map(property => `${property}: ${radioFillColor}`)
+      : []),
+  ]
+    .filter(Boolean)
+    .join("; ")
 </script>
 
-<div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
+<div
+  class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}
+  style={colorStyles}
+>
   {#if parsedOptions && Array.isArray(parsedOptions)}
     {#each parsedOptions as option}
       {@const isOptionDisabled = disabled || getOptionDisabled(option)}

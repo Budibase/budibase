@@ -24,6 +24,8 @@
   export let span
   export let helpText = null
   export let wrapText = false
+  export let radioOutlineColor
+  export let radioFillColor
 
   let fieldState
   let fieldApi
@@ -94,6 +96,8 @@
         getOptionTitle={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
         {sort}
+        {radioOutlineColor}
+        {radioFillColor}
       />
     {/if}
   {/if}

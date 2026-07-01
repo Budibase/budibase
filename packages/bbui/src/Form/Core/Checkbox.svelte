@@ -13,13 +13,39 @@
   export let quiet = false
   export let size: "S" | "M" | "L" | "XL" = "M"
   export let indeterminate = false
+  export let checkboxOutlineColor: string | undefined = undefined
+  export let checkboxCheckColor: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange: ChangeEventHandler<HTMLInputElement> = event => {
     dispatch("change", event.currentTarget.checked)
   }
 
+  const outlineColorProperties = [
+    "--spectrum-checkbox-m-box-border-color",
+    "--spectrum-checkbox-m-box-border-color-hover",
+    "--spectrum-checkbox-m-box-border-color-down",
+    "--spectrum-checkbox-m-box-border-color-key-focus",
+    "--spectrum-checkbox-m-box-border-color-selected",
+    "--spectrum-checkbox-m-box-border-color-selected-hover",
+    "--spectrum-checkbox-m-box-border-color-selected-down",
+    "--spectrum-checkbox-m-box-border-color-selected-key-focus",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected-hover",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected-down",
+    "--spectrum-checkbox-m-emphasized-box-border-color-selected-key-focus",
+  ]
+
   $: sizeClass = `spectrum-Checkbox--size${size}`
+  $: colorStyles = [
+    ...(checkboxOutlineColor
+      ? outlineColorProperties.map(
+          property => `${property}: ${checkboxOutlineColor}`
+        )
+      : []),
+  ]
+    .filter(Boolean)
+    .join("; ")
 </script>
 
 <label
@@ -28,6 +54,7 @@
   class:is-indeterminate={indeterminate}
   class:is-disabled={disabled}
   class:readonly
+  style={colorStyles}
 >
   <input
     checked={value}
@@ -44,7 +71,7 @@
         <Icon
           name="minus"
           weight="bold"
-          color="var(--spectrum-global-color-gray-50)"
+          color={checkboxCheckColor || "var(--spectrum-global-color-gray-50)"}
         />
       </span>
     {:else if value}
@@ -52,7 +79,7 @@
         <Icon
           name="check"
           weight="bold"
-          color="var(--spectrum-global-color-gray-50)"
+          color={checkboxCheckColor || "var(--spectrum-global-color-gray-50)"}
         />
       </span>
     {/if}

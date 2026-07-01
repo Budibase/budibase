@@ -13,6 +13,8 @@
   export let onChange
   export let span
   export let helpText = null
+  export let checkboxOutlineColor
+  export let checkboxCheckColor
 
   let fieldState
   let fieldApi
@@ -60,6 +62,8 @@
       id={fieldState.fieldId}
       {size}
       {text}
+      {checkboxOutlineColor}
+      {checkboxCheckColor}
       on:change={handleChange}
     />
   {/if}

@@ -18,6 +18,8 @@
   export let getOptionDisabled = option =>
     extractProperty(option, "disabled", false)
   export let helpText = undefined
+  export let radioOutlineColor = undefined
+  export let radioFillColor = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -44,6 +46,8 @@
     {getOptionTitle}
     {getOptionSubtitle}
     {getOptionDisabled}
+    {radioOutlineColor}
+    {radioFillColor}
     on:change={onChange}
   />
 </Field>
