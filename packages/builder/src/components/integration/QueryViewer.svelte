@@ -25,7 +25,6 @@
   import { Utils } from "@budibase/frontend-core"
   import ConnectedQueryUsage from "./ConnectedQueryUsage.svelte"
   import { getErrorMessage } from "@/helpers/errors"
-  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import type {
     Datasource,
     Integration,
@@ -55,8 +54,6 @@
   let scrolling = false
   let showSidePanel = false
   let nameError: string | null = null
-  let projectIds: string[] = []
-  let initialProjectIds: string[] = []
   let canSaveQuery = false
   let schemaQueryHash = ""
 
@@ -71,19 +68,6 @@
   let rows: PreviewQueryResponse["rows"] = []
 
   let pagination: PaginationConfig | undefined = undefined
-
-  const getLoadedQueryProjectIds = (ids: string[]): Query["projectIds"] =>
-    ids.length ? ids : undefined
-
-  const getProjectIdsForSave = (
-    ids: string[],
-    hadProjectIdsOnLoad: boolean
-  ): Query["projectIds"] => {
-    if (ids.length) {
-      return ids
-    }
-    return hadProjectIdsOnLoad ? [] : undefined
-  }
 
   const getSchemaQueryHash = (query?: Query) => {
     if (!query) {
@@ -121,9 +105,6 @@
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
-    projectIds = newQuery.projectIds || []
-    initialProjectIds = [...projectIds]
-    newQuery.projectIds = getLoadedQueryProjectIds(projectIds)
 
     // Initialize pagination for SQL Read queries
     if (newQuery.queryVerb === "read" && schemaType === "sql") {
@@ -153,13 +134,6 @@
   }
 
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
-
-  $: if (newQuery) {
-    newQuery.projectIds = getProjectIdsForSave(
-      projectIds,
-      initialProjectIds.length > 0
-    )
-  }
 
   $: debouncedCheckIsModified(newQuery)
 
@@ -338,7 +312,7 @@
 
     <div class="body" on:scroll={handleScroll}>
       <div class="bodyInner">
-        <div class="configField">
+        <div class="configField" data-testid="query-config-fields">
           <Label>Name</Label>
           <Input
             value={newQuery.name}
@@ -356,7 +330,6 @@
             }}
             error={nameError || undefined}
           />
-          <ProjectSelect bind:value={projectIds} />
           {#if integration.query}
             <Label>Function</Label>
             <Select
