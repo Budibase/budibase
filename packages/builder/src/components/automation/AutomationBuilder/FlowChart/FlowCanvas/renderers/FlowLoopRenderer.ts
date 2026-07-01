@@ -13,8 +13,8 @@ import {
   STEP,
   SUBFLOW,
 } from "../FlowGeometry"
-import { anchorNode, edgeLoopAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
+import { FlowGraphWriter } from "../FlowGraphWriter"
 import { filterLegacyLoops, resolveBlockPath } from "./FlowRenderUtils"
 import { renderSubflowBranches } from "./FlowBranchRenderer"
 
@@ -72,12 +72,12 @@ const createBranchSourceAnchor = (
   y: number,
   deps: GraphBuildDeps
 ) => {
+  const writer = new FlowGraphWriter(deps)
   const sourceId = `anchor-${loopStepId}-loop-${branchStep.id}-source`
-  deps.newNodes.push(anchorNode(sourceId, loopStepId))
-  deps.subflowNodePositions[sourceId] = {
+  writer.addAnchor(sourceId, loopStepId, {
     x: Math.max(0, x - LOOP_INSERT_ACTION_OFFSET),
     y,
-  }
+  })
   return sourceId
 }
 
@@ -137,6 +137,7 @@ export const renderLoopV2Container = (
   loopStep: LoopV2Step,
   deps: GraphBuildDeps
 ) => {
+  const writer = new FlowGraphWriter(deps)
   const baseId = loopStep.id
   const children: AutomationStep[] = filterLegacyLoops(
     loopStep.inputs?.children || []
@@ -157,7 +158,7 @@ export const renderLoopV2Container = (
       height: containerHeight,
     },
   }
-  deps.newNodes.push({
+  writer.addNode({
     id: baseId,
     type: "loop-subflow-node",
     data: loopNodeData,
@@ -175,18 +176,15 @@ export const renderLoopV2Container = (
     const isBranch = child.stepId === AutomationActionStepId.BRANCH
     if (!isBranch) {
       const nodePos = { x: innerX, y: baseY }
-      deps.newNodes.push(stepNode(child.id, child, baseId))
-      deps.subflowNodePositions[child.id] = nodePos
+      writer.addStep(child.id, child, baseId, nodePos)
       if (lastLinearChild) {
         const prevRef = deps.blockRefs?.[lastLinearChild.id]
-        deps.newEdges.push(
-          edgeLoopAddItem(lastLinearChild.id, child.id, {
-            block: lastLinearChild,
-            loopStepId: loopStep.id,
-            loopChildInsertIndex: cIdx,
-            pathTo: prevRef?.pathTo,
-          })
-        )
+        writer.connectLoop(lastLinearChild.id, child.id, {
+          block: lastLinearChild,
+          loopStepId: loopStep.id,
+          loopChildInsertIndex: cIdx,
+          pathTo: prevRef?.pathTo,
+        })
       }
       lastLinearChild = child
       innerX += stepWidth + internalSpacing + LR_GAP
@@ -236,19 +234,16 @@ export const renderLoopV2Container = (
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
     const exitAnchorY = loopHandleY
     const exitAnchorX = containerWidth
-    deps.newNodes.push(anchorNode(exitAnchorId, baseId))
-    deps.subflowNodePositions[exitAnchorId] = {
+    writer.addAnchor(exitAnchorId, baseId, {
       x: exitAnchorX,
       y: exitAnchorY,
-    }
-    deps.newEdges.push(
-      edgeLoopAddItem(lastChild.id, exitAnchorId, {
-        block: lastChild,
-        loopStepId: loopStep.id,
-        loopChildInsertIndex: children.length,
-        pathTo: lastRef?.pathTo,
-      })
-    )
+    })
+    writer.connectLoop(lastChild.id, exitAnchorId, {
+      block: lastChild,
+      loopStepId: loopStep.id,
+      loopChildInsertIndex: children.length,
+      pathTo: lastRef?.pathTo,
+    })
   }
 
   return { containerWidth, containerHeight }

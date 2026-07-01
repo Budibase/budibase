@@ -7,20 +7,12 @@ import {
 import type {
   AutomationBlock,
   BranchFlowContext,
-  BranchEdgeData,
   FlowBlockContext,
   FlowBlockPath,
 } from "@/types/automations"
-import type { Edge as FlowEdge } from "@xyflow/svelte"
 import { BRANCH, STEP, SUBFLOW } from "../FlowGeometry"
-import {
-  anchorNode,
-  branchNode,
-  edgeAddItem,
-  edgeLoopAddItem,
-  stepNode,
-} from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
+import { FlowGraphWriter } from "../FlowGraphWriter"
 import { filterLegacyLoops, resolveBlockPath } from "./FlowRenderUtils"
 import { renderChain } from "./FlowChainRenderer"
 
@@ -55,59 +47,19 @@ export interface BranchTerminalSource {
   pathTo?: FlowBlockPath
 }
 
-const edgeBranchAddItem = (
-  source: string,
-  target: string,
-  ctx: {
-    block: FlowBlockContext
-    branchStepId: string
-    branchIdx: number
-    branchesCount: number
-    isPrimaryEdge: boolean
-    pathTo?: FlowBlockPath
-    isSubflowEdge?: boolean
-    loopStepId?: string
-    loopChildInsertIndex?: number
-  }
-): FlowEdge => {
-  const data: BranchEdgeData = {
-    isBranchEdge: true,
-    isPrimaryEdge: ctx.isPrimaryEdge,
-    branchStepId: ctx.branchStepId,
-    branchIdx: ctx.branchIdx,
-    branchesCount: ctx.branchesCount,
-    block: ctx.block,
-    ...(ctx.isSubflowEdge ? { isSubflowEdge: true } : {}),
-    ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
-    ...(ctx.loopStepId ? { loopStepId: ctx.loopStepId } : {}),
-    ...(typeof ctx.loopChildInsertIndex === "number"
-      ? { loopChildInsertIndex: ctx.loopChildInsertIndex }
-      : {}),
-  }
-  return {
-    id: `edge-${source}-${target}`,
-    type: "add-item",
-    source,
-    target,
-    data,
-  }
-}
-
 const pushAnchor = (
   id: string,
   y: number,
-  deps: GraphBuildDeps,
+  writer: FlowGraphWriter,
   parentId?: string
 ) => {
-  deps.newNodes.push(anchorNode(id, parentId))
-  if (parentId) {
-    deps.subflowNodePositions[id] = { x: 0, y }
-  }
+  writer.addAnchor(id, parentId, parentId ? { x: 0, y } : undefined)
 }
 
 const renderBranchCluster = (args: BranchClusterArgs) => {
   const { step, source, coords, deps, mode, parentId, visuals, loopContext } =
     args
+  const writer = new FlowGraphWriter(deps)
   const baseId = step.id
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
@@ -127,43 +79,39 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
     const branchNodeId = `branch-${baseId}-${bIdx}-${branch.id}`
 
     if (mode === BranchMode.TOPLEVEL) {
-      deps.newNodes.push(branchNode(branchNodeId, step, branch, bIdx))
+      writer.addBranch(branchNodeId, step, branch, bIdx)
     } else {
       const branchX = coords.x ?? 40
       const branchY = stackStartY + bIdx * (BRANCH.height + visuals.gap)
-      deps.newNodes.push(
-        branchNode(
-          branchNodeId,
-          step,
-          branch,
-          bIdx,
-          parentId,
-          visuals.laneWidth
-        )
+      writer.addBranch(
+        branchNodeId,
+        step,
+        branch,
+        bIdx,
+        parentId,
+        visuals.laneWidth,
+        {
+          x: branchX,
+          y: branchY,
+        }
       )
-      deps.subflowNodePositions[branchNodeId] = {
-        x: branchX,
-        y: branchY,
-      }
     }
 
-    deps.newEdges.push(
-      edgeBranchAddItem(source.id, branchNodeId, {
-        block: source.block,
-        isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
-        branchStepId: baseId,
-        branchIdx: bIdx,
-        branchesCount: branches.length,
-        pathTo: source.pathTo,
-        isSubflowEdge: mode === BranchMode.SUBFLOW,
-        ...(loopContext
-          ? {
-              loopStepId: loopContext.loopStepId,
-              loopChildInsertIndex: loopContext.loopChildInsertIndex,
-            }
-          : {}),
-      })
-    )
+    writer.connectBranch(source.id, branchNodeId, {
+      block: source.block,
+      isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
+      branchStepId: baseId,
+      branchIdx: bIdx,
+      branchesCount: branches.length,
+      pathTo: source.pathTo,
+      isSubflowEdge: mode === BranchMode.SUBFLOW,
+      ...(loopContext
+        ? {
+            loopStepId: loopContext.loopStepId,
+            loopChildInsertIndex: loopContext.loopChildInsertIndex,
+          }
+        : {}),
+    })
 
     const parentPath = deps.blockRefs[baseId]?.pathTo || []
     const childSteps: AutomationStep[] = filterLegacyLoops(
@@ -204,21 +152,19 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
           ? chainResult.lastNodeBlock
           : branchBlockRef
         const terminalPath = resolveBlockPath(terminalBlock, deps)
-        pushAnchor(terminalId, bottomY, deps)
+        pushAnchor(terminalId, bottomY, writer)
         terminals.push({
           nodeId: terminalId,
           block: terminalBlock,
           ...(terminalPath ? { pathTo: terminalPath } : {}),
         })
-        deps.newEdges.push(
-          edgeAddItem(
-            chainResult ? chainResult.lastNodeId : branchNodeId,
-            terminalId,
-            {
-              block: terminalBlock,
-              ...(terminalPath ? { pathTo: terminalPath } : {}),
-            }
-          )
+        writer.connect(
+          chainResult ? chainResult.lastNodeId : branchNodeId,
+          terminalId,
+          {
+            block: terminalBlock,
+            ...(terminalPath ? { pathTo: terminalPath } : {}),
+          }
         )
       } else {
         terminals.push(...chainResult.terminals)
@@ -237,20 +183,17 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
       let prevBlock: FlowBlockContext = branchBlockRef
 
       branchChildren.forEach(child => {
-        deps.newNodes.push(stepNode(child.id, child, parentId))
-        deps.subflowNodePositions[child.id] = {
+        writer.addStep(child.id, child, parentId, {
           x: childX,
           y: childY,
-        }
+        })
         const prevPath = resolveBlockPath(prevBlock, deps)
-        deps.newEdges.push(
-          edgeLoopAddItem(prevId, child.id, {
-            block: prevBlock,
-            loopStepId: loopContext!.loopStepId,
-            loopChildInsertIndex: loopContext!.loopChildInsertIndex,
-            ...(prevPath ? { pathTo: prevPath as BlockPath[] } : {}),
-          })
-        )
+        writer.connectLoop(prevId, child.id, {
+          block: prevBlock,
+          loopStepId: loopContext!.loopStepId,
+          loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+          ...(prevPath ? { pathTo: prevPath as BlockPath[] } : {}),
+        })
         prevId = child.id
         prevBlock = child
         childX += SUBFLOW.stepWidth + SUBFLOW.internalSpacing
@@ -260,22 +203,19 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
       if (branchChildren.length === 0) {
         childX = branchX + STEP.width + 40
       }
-      deps.newNodes.push(anchorNode(anchorId, parentId))
-      deps.subflowNodePositions[anchorId] = {
+      writer.addAnchor(anchorId, parentId, {
         x: childX,
         y: childY,
-      }
+      })
       const anchorSourcePath = resolveBlockPath(prevBlock, deps)
-      deps.newEdges.push(
-        edgeLoopAddItem(prevId, anchorId, {
-          block: prevBlock,
-          loopStepId: loopContext!.loopStepId,
-          loopChildInsertIndex: loopContext!.loopChildInsertIndex,
-          ...(anchorSourcePath
-            ? { pathTo: anchorSourcePath as BlockPath[] }
-            : {}),
-        })
-      )
+      writer.connectLoop(prevId, anchorId, {
+        block: prevBlock,
+        loopStepId: loopContext!.loopStepId,
+        loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+        ...(anchorSourcePath
+          ? { pathTo: anchorSourcePath as BlockPath[] }
+          : {}),
+      })
 
       clusterBottomY = Math.max(
         clusterBottomY,

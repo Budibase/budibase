@@ -1,12 +1,12 @@
 import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
 import type { AutomationBlock } from "@/types/automations"
-import { anchorNode, edgeAddItem, stepNode } from "./FlowFactories"
 import {
   renderBranches,
   type BranchTerminalSource,
 } from "./renderers/FlowBranchRenderer"
 import { renderLoopV2Container } from "./renderers/FlowLoopRenderer"
 import type { GraphBuildDeps } from "./FlowGraphTypes"
+import { FlowGraphWriter } from "./FlowGraphWriter"
 
 interface AutomationGraphItem {
   block: AutomationBlock
@@ -27,11 +27,14 @@ const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
 export class AutomationGraphBuilder {
   private graph?: AutomationGraph
   private readonly branchTerminals: Record<string, BranchTerminalSource[]> = {}
+  private readonly writer: FlowGraphWriter
 
   constructor(
     private readonly blocks: AutomationBlock[],
     private readonly deps: GraphBuildDeps
-  ) {}
+  ) {
+    this.writer = new FlowGraphWriter(deps)
+  }
 
   build() {
     this.graph = {
@@ -70,7 +73,7 @@ export class AutomationGraphBuilder {
     if (isLoopV2Step(block)) {
       renderLoopV2Container(block, this.deps)
     } else {
-      this.deps.newNodes.push(stepNode(block.id, block))
+      this.writer.addStep(block.id, block)
     }
 
     if (!item.isTrigger && item.previousBlock) {
@@ -102,30 +105,24 @@ export class AutomationGraphBuilder {
   ) {
     if (previousBlock.stepId === AutomationActionStepId.BRANCH) {
       for (const terminal of this.branchTerminals[previousBlock.id] || []) {
-        this.deps.newEdges.push(
-          edgeAddItem(terminal.nodeId, block.id, {
-            block: terminal.block,
-            ...(terminal.pathTo ? { pathTo: terminal.pathTo } : {}),
-          })
-        )
+        this.writer.connect(terminal.nodeId, block.id, {
+          block: terminal.block,
+          ...(terminal.pathTo ? { pathTo: terminal.pathTo } : {}),
+        })
       }
       return
     }
 
-    this.deps.newEdges.push(
-      edgeAddItem(previousBlock.id, block.id, {
-        block: previousBlock,
-      })
-    )
+    this.writer.connect(previousBlock.id, block.id, {
+      block: previousBlock,
+    })
   }
 
   private addTerminal(block: AutomationBlock) {
     const terminalId = `anchor-${block.id}`
-    this.deps.newNodes.push(anchorNode(terminalId))
-    this.deps.newEdges.push(
-      edgeAddItem(block.id, terminalId, {
-        block,
-      })
-    )
+    this.writer.addAnchor(terminalId)
+    this.writer.connect(block.id, terminalId, {
+      block,
+    })
   }
 }

@@ -1,7 +1,7 @@
 import { AutomationActionStepId, type LoopV2Step } from "@budibase/types"
 import type { AutomationBlock, FlowBlockContext } from "@/types/automations"
-import { edgeAddItem, stepNode } from "../FlowFactories"
 import type { GraphBuildDeps } from "../FlowGraphTypes"
+import { FlowGraphWriter } from "../FlowGraphWriter"
 import { resolveBlockPath } from "./FlowRenderUtils"
 import { renderBranches, type BranchTerminalSource } from "./FlowBranchRenderer"
 import { renderLoopV2Container } from "./FlowLoopRenderer"
@@ -21,6 +21,7 @@ interface ChainRenderContext {
   branched: boolean
   terminals: BranchTerminalSource[]
   deps: GraphBuildDeps
+  writer: FlowGraphWriter
 }
 
 const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
@@ -29,12 +30,10 @@ const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
 
 const connectTo = (step: AutomationBlock, context: ChainRenderContext) => {
   const sourcePath = resolveBlockPath(context.lastNodeBlock, context.deps)
-  context.deps.newEdges.push(
-    edgeAddItem(context.lastNodeId, step.id, {
-      block: context.lastNodeBlock,
-      ...(sourcePath ? { pathTo: sourcePath } : {}),
-    })
-  )
+  context.writer.connect(context.lastNodeId, step.id, {
+    block: context.lastNodeBlock,
+    ...(sourcePath ? { pathTo: sourcePath } : {}),
+  })
 }
 
 const renderBranchSplit = (
@@ -62,7 +61,7 @@ const renderLoop = (step: LoopV2Step, context: ChainRenderContext) => {
 }
 
 const renderStep = (step: AutomationBlock, context: ChainRenderContext) => {
-  context.deps.newNodes.push(stepNode(step.id, step))
+  context.writer.addStep(step.id, step)
   connectTo(step, context)
   context.lastNodeId = step.id
   context.lastNodeBlock = step
@@ -108,6 +107,7 @@ export const renderChain = (
     branched: false,
     terminals: [],
     deps,
+    writer: new FlowGraphWriter(deps),
   }
 
   for (const step of chain) {
