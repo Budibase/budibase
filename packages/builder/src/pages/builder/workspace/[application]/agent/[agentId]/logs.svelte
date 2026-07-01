@@ -9,7 +9,7 @@
     AgentLogRequestDetail,
     AgentLogSession,
   } from "@budibase/types"
-  import LogsSessionDetailPanel from "./LogComponents/LogsSessionDetailPanel.svelte"
+  import LogsSessionDetail from "./LogComponents/LogsSessionDetail.svelte"
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
   import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
   import { notifications } from "@budibase/bbui"
@@ -19,10 +19,9 @@
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
   let selectedSession = $state<AgentLogSession | null>(null)
-  let detailPanelOpen = $state(false)
   let expandedStepId = $state<string | null>(null)
-  let stepDetailCache = $state<Record<string, AgentLogRequestDetail>>({})
-  let loadingStepIds = $state<Record<string, boolean>>({})
+  let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
+  let expandedStepLoading = $state(false)
   let hasMore = $state(false)
   let nextBookmark = $state<string | undefined>(undefined)
 
@@ -48,13 +47,9 @@
 
   function resetDetailState() {
     expandedStepId = null
-    stepDetailCache = {}
-    loadingStepIds = {}
+    expandedStepDetail = null
+    expandedStepLoading = false
   }
-
-  let expandedStepLoading = $derived(
-    expandedStepId != null && !!loadingStepIds[expandedStepId]
-  )
 
   let visibleSessions = $derived.by(() => sessions)
 
@@ -87,7 +82,6 @@
       hasMore = false
       nextBookmark = undefined
       selectedSession = null
-      detailPanelOpen = false
       resetDetailState()
       return
     }
@@ -133,7 +127,6 @@
 
       if (!append && !selectedStillExists) {
         selectedSession = null
-        detailPanelOpen = false
         resetDetailState()
       }
     } catch (error) {
@@ -143,7 +136,6 @@
         hasMore = false
         nextBookmark = undefined
         selectedSession = null
-        detailPanelOpen = false
         resetDetailState()
       }
     } finally {
@@ -153,40 +145,27 @@
 
   async function loadStepDetail(entry: AgentLogEntry): Promise<void> {
     const agentId = $selectedAgent?._id
-    const requestedSessionId = selectedSession?.sessionId
-    const requestedEnvironment = selectedSession?.environment
+    if (!agentId) return
 
-    if (!agentId || !requestedSessionId || !requestedEnvironment) {
+    if (
+      expandedStepLoading ||
+      expandedStepDetail?.requestId === entry.requestId
+    ) {
       return
     }
 
-    if (stepDetailCache[entry.requestId] || loadingStepIds[entry.requestId]) {
-      return
-    }
-
-    loadingStepIds = {
-      ...loadingStepIds,
-      [entry.requestId]: true,
-    }
+    expandedStepLoading = true
+    expandedStepDetail = null
 
     try {
       const detail = await API.fetchAgentLogDetail(agentId, entry.requestId)
-      const selectionUnchanged =
-        selectedSession?.sessionId === requestedSessionId &&
-        selectedSession?.environment === requestedEnvironment
-
-      if (selectionUnchanged) {
-        stepDetailCache = {
-          ...stepDetailCache,
-          [detail.requestId || entry.requestId]: detail,
-        }
+      if (expandedStepId === entry.requestId) {
+        expandedStepDetail = detail
       }
     } catch (error) {
       console.error("Failed to fetch step detail", error)
     } finally {
-      const { [entry.requestId]: _loadingStepId, ...remainingLoadingStepIds } =
-        loadingStepIds
-      loadingStepIds = remainingLoadingStepIds
+      expandedStepLoading = false
     }
   }
 
@@ -219,7 +198,6 @@
       if (!isCurrentSelection()) return
       notifications.error("Failed to fetch full session detail")
       selectedSession = null
-      detailPanelOpen = false
       resetDetailState()
     }
   }
@@ -236,14 +214,8 @@
         item.sessionId === row.sessionId && item.environment === row.environment
     )
     if (session) {
-      detailPanelOpen = true
       selectSession(session)
     }
-  }
-
-  function closeDetailPanel() {
-    detailPanelOpen = false
-    resetDetailState()
   }
 
   async function loadMoreSessions() {
@@ -257,6 +229,8 @@
   async function toggleStep(entry: AgentLogEntry) {
     if (expandedStepId === entry.requestId) {
       expandedStepId = null
+      expandedStepDetail = null
+      expandedStepLoading = false
       return
     }
 
@@ -281,26 +255,30 @@
 </script>
 
 <div class="logs-container">
-  <LogsSessionList
-    {loading}
-    {sessionTableData}
-    {hasMore}
-    bind:statusFilter
-    bind:dateRange
-    bind:triggerFilter
-    {onSessionRowClick}
-    onLoadMore={loadMoreSessions}
-  />
+  <div class="logs-split">
+    <div class="logs-table-panel">
+      <LogsSessionList
+        {loading}
+        {sessionTableData}
+        {hasMore}
+        bind:statusFilter
+        bind:dateRange
+        bind:triggerFilter
+        {onSessionRowClick}
+        onLoadMore={loadMoreSessions}
+      />
+    </div>
 
-  <LogsSessionDetailPanel
-    open={detailPanelOpen}
-    selectedSession={visibleSelectedSession}
-    {expandedStepId}
-    {stepDetailCache}
-    {expandedStepLoading}
-    onClose={closeDetailPanel}
-    onToggleStep={toggleStep}
-  />
+    <div class="detail-panel">
+      <LogsSessionDetail
+        selectedSession={visibleSelectedSession}
+        {expandedStepId}
+        {expandedStepDetail}
+        {expandedStepLoading}
+        onToggleStep={toggleStep}
+      />
+    </div>
+  </div>
 </div>
 
 <style>
@@ -310,5 +288,64 @@
     flex: 1 1 auto;
     height: 100%;
     min-height: 0;
+  }
+
+  .logs-split {
+    display: flex;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--background);
+  }
+
+  .logs-table-panel {
+    flex: 0 0 52%;
+    min-width: 420px;
+    max-width: 60%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    border-right: 1px solid var(--spectrum-global-color-gray-200);
+    background: var(--background);
+  }
+
+  .detail-panel {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--background-alt);
+    scrollbar-width: thin;
+  }
+
+  .detail-panel::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .detail-panel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .detail-panel::-webkit-scrollbar-thumb {
+    background: var(--spectrum-global-color-gray-300);
+    border-radius: 3px;
+  }
+
+  @media (max-width: 1400px) {
+    .logs-split {
+      flex-direction: column;
+    }
+
+    .logs-table-panel {
+      flex: none;
+      min-width: 0;
+      max-width: none;
+      border-right: none;
+      border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+      max-height: 360px;
+    }
   }
 </style>
