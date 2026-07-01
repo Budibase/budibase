@@ -95,17 +95,17 @@ describe("/users", () => {
       await config.api.user.update(metadata)
 
       const found = await config.api.user.find(user._id!)
-      expect(found).toEqual(
-        expect.not.objectContaining({
-          oauth2: expect.anything(),
-          provider: expect.anything(),
-          providerType: expect.anything(),
-          profile: expect.anything(),
-          thirdPartyProfile: expect.anything(),
-          ssoId: expect.anything(),
-          forceResetPassword: expect.anything(),
-        })
-      )
+      for (const field of [
+        "oauth2",
+        "provider",
+        "providerType",
+        "profile",
+        "thirdPartyProfile",
+        "ssoId",
+        "forceResetPassword",
+      ]) {
+        expect(found).not.toHaveProperty(field)
+      }
     })
 
     it("should require the _rev field for multiple updates", async () => {
