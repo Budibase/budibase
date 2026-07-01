@@ -1,13 +1,20 @@
 <script lang="ts">
   import RowSelector from "./RowSelector.svelte"
 
-  export let row: Record<string, any>
-  export let meta: { fields?: Record<string, any> }
-  export let bindings: any[] = []
+  type EditableFields = Record<string, Record<string, unknown>>
 
-  const onChange = (event: CustomEvent) => {
-    row = event.detail.row
-    meta = event.detail.meta
+  export let row: Record<string, unknown>
+  export let meta: { fields?: EditableFields }
+  export let bindings: Record<string, unknown>[] = []
+
+  const onChange = (event: {
+    detail: {
+      row?: Record<string, unknown>
+      meta?: { fields?: EditableFields }
+    }
+  }) => {
+    row = event.detail.row || {}
+    meta = event.detail.meta || {}
   }
 </script>
 

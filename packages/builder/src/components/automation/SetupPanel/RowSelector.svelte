@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { tables } from "@/stores/builder"
   import {
     ActionButton,
@@ -11,7 +11,13 @@
     ModalContent,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { AutoReason, FieldType } from "@budibase/types"
+  import {
+    AutoReason,
+    FieldType,
+    type FieldSchema,
+    type Table,
+    type UIField,
+  } from "@budibase/types"
 
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import {
@@ -24,42 +30,67 @@
   import PropField from "./PropField.svelte"
   import { cloneDeep, isPlainObject, mergeWith } from "lodash"
 
-  const dispatch = createEventDispatcher()
+  type EditableRow = Record<string, unknown> & {
+    tableId?: string
+    title?: string
+  }
+  type EditableField = Record<string, unknown> & {
+    clearRelationships?: boolean
+  }
+  type EditableFields = Record<string, EditableField>
+  type RowMeta = {
+    fields?: EditableFields
+  }
+  type Binding = Record<string, unknown> & {
+    icon?: string
+  }
+  type ChangeUpdate = {
+    row?: EditableRow
+    meta?: RowMeta
+  }
+  type SchemaEntry = [string, FieldSchema]
+  type PopoverHandle = {
+    show: () => void
+  }
 
-  export let row
-  export let meta
-  export let bindings
-  export let isTestModal
-  export let context = {}
-  export let componentWidth
+  const dispatch = createEventDispatcher<{
+    change: ChangeUpdate
+  }>()
+
+  export let row: EditableRow
+  export let meta: RowMeta
+  export let bindings: Binding[] = []
+  export let isTestModal: boolean
+  export let context: Record<string, unknown> = {}
+  export let componentWidth: number | undefined = undefined
   export let fullWidth = false
 
-  const typeToField = Object.values(FIELDS).reduce((acc, field) => {
-    acc[field.type] = field
-    return acc
-  }, {})
+  const typeToField: Partial<Record<FieldType, UIField>> = {}
+  for (const field of Object.values(FIELDS)) {
+    typeToField[field.type] = field
+  }
 
   const memoStore = memo({
     row,
     meta,
   })
 
-  let table
+  let table: Table | undefined
   // Row Schema Fields
-  let schemaFields
-  let attachmentTypes = [
+  let schemaFields: SchemaEntry[] | undefined
+  let attachmentTypes: FieldType[] = [
     FieldType.ATTACHMENTS,
     FieldType.ATTACHMENT_SINGLE,
     FieldType.SIGNATURE_SINGLE,
   ]
 
-  let customPopover
-  let modalPopover
-  let fieldsModal
-  let popoverAnchor
-  let modalPopoverAnchor
-  let editableRow = {}
-  let editableFields = {}
+  let customPopover: PopoverHandle | undefined
+  let modalPopover: PopoverHandle | undefined
+  let fieldsModal: PopoverHandle | undefined
+  let popoverAnchor: HTMLDivElement | null | undefined
+  let modalPopoverAnchor: HTMLDivElement | null | undefined
+  let editableRow: EditableRow = {}
+  let editableFields: EditableFields = {}
 
   // Avoid unnecessary updates
   $: memoStore.set({
@@ -67,7 +98,7 @@
     meta,
   })
 
-  $: parsedBindings = bindings.map(binding => {
+  $: parsedBindings = bindings.map((binding: Binding) => {
     let clone = Object.assign({}, binding)
     clone.icon = clone.icon ?? "ShareAndroid"
     return clone
@@ -77,11 +108,15 @@
 
   $: initData(tableId, $memoStore?.meta?.fields, $memoStore?.row)
 
-  const isAutoincrement = field => {
+  const isAutoincrement = (field: FieldSchema) => {
     return field.autocolumn && field.autoReason !== AutoReason.FOREIGN_KEY
   }
 
-  const initData = (tableId, metaFields, row) => {
+  const initData = (
+    tableId: string | undefined,
+    metaFields: EditableFields | undefined,
+    row: EditableRow | undefined
+  ) => {
     if (!tableId) {
       table = undefined
       schemaFields = undefined
@@ -96,7 +131,7 @@
     // Refresh all the row data
     editableRow = cloneDeep(row || {})
 
-    table = $tables.list.find(table => table._id === tableId)
+    table = $tables.list.find((table: Table) => table._id === tableId)
 
     schemaFields = Object.entries(table?.schema ?? {})
       .filter(entry => {
@@ -122,8 +157,7 @@
     for (const entry of schemaFields) {
       const [key, fieldSchema] = entry
 
-      const emptyField =
-        editableRow[key] == null || editableRow[key]?.length === 0
+      const emptyField = isEmptyFieldValue(editableRow[key])
 
       // Put non-empty elements into the update and add their key to the fields list.
       if (!emptyField && !Object.hasOwn(editableFields, key)) {
@@ -175,8 +209,18 @@
     }
   }
 
+  const isEmptyFieldValue = (value: unknown) => {
+    if (value == null) {
+      return true
+    }
+    if (typeof value === "string" || Array.isArray(value)) {
+      return value.length === 0
+    }
+    return false
+  }
+
   // Row coerce
-  const coerce = (value, type) => {
+  const coerce = (value: unknown, type: FieldType) => {
     const re = new RegExp(/{{([^{].*?)}}/g)
     if (typeof value === "string" && re.test(value)) {
       return value
@@ -197,7 +241,9 @@
       if (Array.isArray(value)) {
         return value
       }
-      return value.split(",").map(x => x.trim())
+      return String(value)
+        .split(",")
+        .map((x: string) => x.trim())
     }
 
     if (type === "link") {
@@ -206,17 +252,24 @@
       } else if (Array.isArray(value)) {
         return value
       }
-      return value.split(",").map(x => x.trim())
+      return String(value)
+        .split(",")
+        .map((x: string) => x.trim())
     }
 
-    if (type === "json") {
+    if (
+      type === "json" &&
+      typeof value === "object" &&
+      value != null &&
+      "value" in value
+    ) {
       return value.value
     }
 
     return value
   }
 
-  const isFullWidth = type => {
+  const isFullWidth = (type: FieldType) => {
     return (
       attachmentTypes.includes(type) ||
       type === FieldType.JSON ||
@@ -224,16 +277,28 @@
     )
   }
 
-  const onChange = update => {
-    const customizer = (objValue, srcValue) => {
+  const emitChange = (update: ChangeUpdate) => {
+    dispatch("change", update)
+  }
+
+  const handleChange = (update: ChangeUpdate) => {
+    const customizer = (objValue: unknown, srcValue: unknown) => {
       if (isPlainObject(objValue) && isPlainObject(srcValue)) {
-        const result = mergeWith({}, objValue, srcValue, customizer)
-        let outcome = Object.keys(result).reduce((acc, key) => {
-          if (result[key] !== null) {
-            acc[key] = result[key]
-          }
-          return acc
-        }, {})
+        const result: Record<string, unknown> = mergeWith(
+          {},
+          objValue,
+          srcValue,
+          customizer
+        )
+        let outcome: Record<string, unknown> = Object.keys(result).reduce(
+          (acc: Record<string, unknown>, key: string) => {
+            if (result[key] !== null) {
+              acc[key] = result[key]
+            }
+            return acc
+          },
+          {}
+        )
         return outcome
       }
       return srcValue
@@ -250,15 +315,18 @@
       update,
       customizer
     )
-    dispatch("change", result)
+    emitChange(result)
   }
 
   /**
    * Converts arrays into strings. The CodeEditor expects a string or encoded JS
    * @param{object} fieldValue
    */
-  const drawerValue = fieldValue => {
-    return Array.isArray(fieldValue) ? fieldValue.join(",") : fieldValue
+  const drawerValue = (fieldValue: unknown) => {
+    if (fieldValue == null) {
+      return undefined
+    }
+    return Array.isArray(fieldValue) ? fieldValue.join(",") : String(fieldValue)
   }
 
   // The element controls their own binding drawer
@@ -272,7 +340,7 @@
         <ActionGroup>
           <ActionButton
             on:click={() => {
-              customPopover.show()
+              customPopover?.show()
             }}
             disabled={!schemaFields}
           >
@@ -281,7 +349,7 @@
           {#if schemaFields.length}
             <ActionButton
               on:click={() => {
-                dispatch("change", {
+                emitChange({
                   meta: { fields: {} },
                   row: {},
                 })
@@ -291,7 +359,7 @@
             </ActionButton>
             <ActionButton
               on:click={() => {
-                fieldsModal.show()
+                fieldsModal?.show()
               }}
             >
               <Icon name="arrows-out-simple" size="S" />
@@ -321,7 +389,7 @@
             meta={{
               fields: editableFields,
             }}
-            {onChange}
+            onChange={handleChange}
             {context}
           />
         </div>
@@ -333,7 +401,7 @@
           {schema}
           value={drawerValue(editableRow[field])}
           on:change={e =>
-            onChange({
+            handleChange({
               row: {
                 [field]: e.detail,
               },
@@ -353,7 +421,7 @@
               meta={{
                 fields: editableFields,
               }}
-              {onChange}
+              onChange={handleChange}
               {context}
             />
           </div>
@@ -366,7 +434,7 @@
 <Popover
   align="left"
   bind:this={customPopover}
-  anchor={editableFields ? popoverAnchor : null}
+  anchor={editableFields ? popoverAnchor || undefined : undefined}
   widthMode="fixed-to-anchor"
   maxHeight={300}
   resizable={false}
@@ -382,13 +450,13 @@
           on:click={() => {
             if (Object.hasOwn(editableFields, field)) {
               delete editableFields[field]
-              onChange({
+              handleChange({
                 meta: { fields: editableFields },
                 row: { [field]: null },
               })
             } else {
               editableFields[field] = {}
-              onChange({ meta: { fields: editableFields } })
+              handleChange({ meta: { fields: editableFields } })
             }
           }}
         >
@@ -421,7 +489,7 @@
         <ActionGroup>
           <ActionButton
             on:click={() => {
-              modalPopover.show()
+              modalPopover?.show()
             }}
             disabled={!schemaFields}
           >
@@ -430,7 +498,7 @@
           {#if schemaFields?.length}
             <ActionButton
               on:click={() => {
-                dispatch("change", {
+                emitChange({
                   meta: { fields: {} },
                   row: {},
                 })
@@ -455,7 +523,7 @@
                 meta={{
                   fields: editableFields,
                 }}
-                {onChange}
+                onChange={handleChange}
                 {context}
               />
             </div>
@@ -467,7 +535,7 @@
     <Popover
       align="left"
       bind:this={modalPopover}
-      anchor={editableFields ? modalPopoverAnchor : null}
+      anchor={editableFields ? modalPopoverAnchor || undefined : undefined}
       widthMode="fixed-to-anchor"
       maxHeight={500}
       resizable={false}
@@ -483,13 +551,13 @@
               on:click={() => {
                 if (Object.hasOwn(editableFields, field)) {
                   delete editableFields[field]
-                  onChange({
+                  handleChange({
                     meta: { fields: editableFields },
                     row: { [field]: null },
                   })
                 } else {
                   editableFields[field] = {}
-                  onChange({ meta: { fields: editableFields } })
+                  handleChange({ meta: { fields: editableFields } })
                 }
               }}
             >
