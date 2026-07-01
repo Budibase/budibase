@@ -31,6 +31,7 @@
   } from "@budibase/bbui"
   import {
     BodyType,
+    FeatureFlag,
     type Query,
     type Datasource,
     type ImportEndpoint,
@@ -90,7 +91,7 @@
     urlParamHighlightPlugin,
     urlParamHighlightTheme,
   } from "../common/CodeEditor/urlParamHighlight"
-  import { environment } from "@/stores/portal"
+  import { environment, featureFlags } from "@/stores/portal"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { onDestroy, onMount, createEventDispatcher } from "svelte"
 
@@ -109,6 +110,7 @@
 
   $beforeUrlChange
   $: goto = $gotoStore
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -1066,10 +1068,12 @@
             <div class="access">
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
-            <div class="project">
-              <Label>Projects</Label>
-              <ProjectSelect bind:value={projectIds} label="" autoWidth />
-            </div>
+            {#if projectsEnabled}
+              <div class="project">
+                <Label>Projects</Label>
+                <ProjectSelect bind:value={projectIds} label="" autoWidth />
+              </div>
+            {/if}
           {/if}
           {#if endpointDocs}
             <ActionButton
