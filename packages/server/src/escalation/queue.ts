@@ -287,7 +287,7 @@ async function resumeOperation({
         : "This request was rejected."
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
-    // A rejection is a human decision, not a failure - the escalation did its
+    // A rejection is a human decision, not a failure. The escalation did its
     // job. Expiring without any response, though, means the request never
     // actually got resolved.
     await markEscalationRequestResolved(

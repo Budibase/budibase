@@ -12,10 +12,9 @@
     DraftChatConversation,
     AgentMessageMetadata,
     EscalationContextDoc,
-    ESCALATE_TOOL_NAME,
-    EscalateToolResultStatus,
     EscalationRespondResult,
   } from "@budibase/types"
+  import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"

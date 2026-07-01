@@ -474,7 +474,7 @@ export async function createOrUpdateRequestForPrompt({
       entries: nextEntries,
       updatedAt: timestamp,
       // Linking a follow-up prompt into this thread isn't a response to the
-      // escalation - leave needs_input as-is rather than reviving it.
+      // escalation. Leave needs_input as-is rather than reviving it.
       status: request.status === "needs_input" ? "needs_input" : "active",
     }),
     created: false,
