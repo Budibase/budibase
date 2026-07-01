@@ -2,7 +2,6 @@ import { cache } from "@budibase/backend-core"
 import { Ctx } from "@budibase/types"
 import { Next } from "koa"
 import env from "../environment"
-import * as userSdk from "../sdk/users"
 
 const normalizeEmail = (e: string) => (e || "").toLowerCase()
 const lockKey = (email: string) => `auth:login:lock:${normalizeEmail(email)}`
@@ -22,8 +21,7 @@ export default async (ctx: Ctx, next: Next) => {
     return await next()
   }
 
-  const dbUser = await userSdk.db.getUserByEmail(email)
-  if (dbUser && (await isLocked(email))) {
+  if (await isLocked(email)) {
     console.log(
       `[auth] login blocked due to lock email=${normalizeEmail(email)}`
     )
