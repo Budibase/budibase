@@ -200,6 +200,7 @@ describe("syncGlobalUsers", () => {
     const user = await config.createUser(
       structures.users.ssoUser({
         user: {
+          _id: "us_sso_tokens_fetch",
           admin: { global: false },
           builder: { global: false },
           roles: {
@@ -241,6 +242,7 @@ describe("syncGlobalUsers", () => {
     const user = await config.createUser(
       structures.users.ssoUser({
         user: {
+          _id: "us_sso_tokens_single",
           admin: { global: false },
           builder: { global: false },
           roles: {
