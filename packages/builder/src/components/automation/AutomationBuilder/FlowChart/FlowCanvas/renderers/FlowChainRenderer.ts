@@ -14,9 +14,10 @@ interface ChainRenderResult {
   terminals: BranchTerminalSource[]
 }
 
+type ChainRenderSource = BranchTerminalSource
+
 interface ChainRenderContext {
-  lastNodeId: string
-  lastNodeBlock: FlowBlockContext
+  currentSources: ChainRenderSource[]
   currentY: number
   branched: boolean
   terminals: BranchTerminalSource[]
@@ -28,11 +29,21 @@ const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
   return step.stepId === AutomationActionStepId.LOOP_V2 && "schema" in step
 }
 
-const connectTo = (step: AutomationBlock, context: ChainRenderContext) => {
-  const sourcePath = resolveBlockPath(context.lastNodeBlock, context.deps)
-  context.writer.connect(context.lastNodeId, step.id, {
-    block: context.lastNodeBlock,
-    ...(sourcePath ? { pathTo: sourcePath } : {}),
+const getLastSource = (context: ChainRenderContext) => {
+  return context.currentSources[context.currentSources.length - 1]
+}
+
+const connectToCurrentSources = (
+  step: AutomationBlock,
+  context: ChainRenderContext
+) => {
+  context.currentSources.forEach(source => {
+    const sourcePath =
+      source.pathTo || resolveBlockPath(source.block, context.deps)
+    context.writer.connect(source.nodeId, step.id, {
+      block: source.block,
+      ...(sourcePath ? { pathTo: sourcePath } : {}),
+    })
   })
 }
 
@@ -40,31 +51,35 @@ const renderBranchSplit = (
   step: AutomationBlock,
   context: ChainRenderContext
 ) => {
+  const source = getLastSource(context) || {
+    nodeId: step.id,
+    block: step,
+    pathTo: resolveBlockPath(step, context.deps),
+  }
   const result = renderBranches(
     step,
-    context.lastNodeId,
-    context.lastNodeBlock,
+    source.nodeId,
+    source.block,
     context.currentY,
     context.deps
   )
   context.currentY = result.bottomY
   context.branched = true
   context.terminals = result.terminals
+  context.currentSources = result.terminals
 }
 
 const renderLoop = (step: LoopV2Step, context: ChainRenderContext) => {
   const loopResult = renderLoopV2Container(step, context.deps)
-  connectTo(step, context)
-  context.lastNodeId = step.id
-  context.lastNodeBlock = step
+  connectToCurrentSources(step, context)
+  context.currentSources = [{ nodeId: step.id, block: step }]
   context.currentY += loopResult.containerHeight + context.deps.ySpacing
 }
 
 const renderStep = (step: AutomationBlock, context: ChainRenderContext) => {
   context.writer.addStep(step.id, step)
-  connectTo(step, context)
-  context.lastNodeId = step.id
-  context.lastNodeBlock = step
+  connectToCurrentSources(step, context)
+  context.currentSources = [{ nodeId: step.id, block: step }]
   context.currentY += context.deps.ySpacing
 }
 
@@ -84,9 +99,14 @@ const renderBlock = (step: AutomationBlock, context: ChainRenderContext) => {
 }
 
 const getRenderResult = (context: ChainRenderContext): ChainRenderResult => {
+  const lastSource = getLastSource(context)
+  if (!lastSource) {
+    throw new Error("Cannot render an empty flow chain")
+  }
+
   return {
-    lastNodeId: context.lastNodeId,
-    lastNodeBlock: context.lastNodeBlock,
+    lastNodeId: lastSource.nodeId,
+    lastNodeBlock: lastSource.block,
     bottomY: context.currentY,
     branched: context.branched,
     terminals: context.terminals,
@@ -101,8 +121,7 @@ export const renderChain = (
   deps: GraphBuildDeps
 ): ChainRenderResult => {
   const context: ChainRenderContext = {
-    lastNodeId: parentNodeId,
-    lastNodeBlock: parentBlock,
+    currentSources: [{ nodeId: parentNodeId, block: parentBlock }],
     currentY: startY,
     branched: false,
     terminals: [],
@@ -118,4 +137,34 @@ export const renderChain = (
   }
 
   return getRenderResult(context)
+}
+
+export const renderRootChain = (
+  chain: AutomationBlock[],
+  deps: GraphBuildDeps
+) => {
+  const context: ChainRenderContext = {
+    currentSources: [],
+    currentY: deps.ySpacing,
+    branched: false,
+    terminals: [],
+    deps,
+    writer: new FlowGraphWriter(deps),
+  }
+
+  let lastWasBranch = false
+  for (const step of chain) {
+    lastWasBranch = step.stepId === AutomationActionStepId.BRANCH
+    renderBlock(step, context)
+  }
+
+  const lastSource = getLastSource(context)
+  if (lastSource && !lastWasBranch) {
+    const terminalId = `anchor-${lastSource.nodeId}`
+    context.writer.addAnchor(terminalId)
+    context.writer.connect(lastSource.nodeId, terminalId, {
+      block: lastSource.block,
+      ...(lastSource.pathTo ? { pathTo: lastSource.pathTo } : {}),
+    })
+  }
 }
