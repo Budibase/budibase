@@ -1,13 +1,29 @@
 import { AutomationTestProgressEvent } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 
-function stripOAuth2FromOutputs(
-  outputs?: Record<string, any> | null
-): Record<string, any> | undefined | null {
-  if (outputs?.user?.oauth2) {
+type AutomationOutputs = Record<string, unknown>
+
+interface OAuth2UserOutput {
+  user: {
+    oauth2?: unknown
+  }
+}
+
+function hasOAuth2UserOutput(
+  outputs?: AutomationOutputs | null
+): outputs is AutomationOutputs & OAuth2UserOutput {
+  return (
+    !!outputs &&
+    typeof outputs.user === "object" &&
+    outputs.user !== null &&
+    "oauth2" in outputs.user
+  )
+}
+
+function stripOAuth2FromOutputs(outputs?: AutomationOutputs | null) {
+  if (hasOAuth2UserOutput(outputs)) {
     delete outputs.user.oauth2
   }
-  return outputs
 }
 
 export function sanitizeAutomationTestResult(
