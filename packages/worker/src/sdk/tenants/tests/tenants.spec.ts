@@ -57,17 +57,17 @@ const mockDb = {
 const mockedTenancy = jest.mocked(tenancy)
 const mockedConfigs = jest.mocked(configs)
 
+const DEACTIVATION_SCHEDULED = "2026-07-15T12:00:00.000Z"
+
 describe("tenants", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Setup mock database
     mockedTenancy.getTenantDB.mockReturnValue(mockDb as any)
-    // Setup mock config ID generation
     mockedConfigs.generateConfigID.mockReturnValue("config_settings")
   })
 
   describe("lockTenant", () => {
-    it("should lock tenant with provided reason", async () => {
+    it("should lock tenant with provided reason and deactivation date", async () => {
       const tenantId = structures.tenant.id()
       const lockReason = LockReason.FREE_TIER
 
@@ -79,7 +79,7 @@ describe("tenants", () => {
 
       mockDb.tryGet.mockResolvedValue(settingsConfig)
 
-      await lockTenant(tenantId, lockReason)
+      await lockTenant(tenantId, lockReason, DEACTIVATION_SCHEDULED)
 
       expect(mockDb.tryGet).toHaveBeenCalledWith(
         configs.generateConfigID(ConfigType.SETTINGS)
@@ -89,28 +89,34 @@ describe("tenants", () => {
         config: {
           ...settingsConfig.config,
           lockedBy: lockReason,
+          deactivationScheduledAt: DEACTIVATION_SCHEDULED,
         },
       })
     })
 
     it("should create settings config when not found", async () => {
-      const lockReason = LockReason.FREE_TIER
+      const lockReason = LockReason.MIGRATION
 
       mockDb.tryGet.mockResolvedValue(null)
 
-      await lockTenant(structures.tenant.id(), lockReason)
+      await lockTenant(
+        structures.tenant.id(),
+        lockReason,
+        "2026-06-24T12:00:00.000Z"
+      )
 
       expect(mockDb.put).toHaveBeenCalledWith({
         _id: "config_settings",
         type: ConfigType.SETTINGS,
         config: {
           lockedBy: lockReason,
+          deactivationScheduledAt: "2026-06-24T12:00:00.000Z",
         },
       })
     })
 
     it("should initialise config property when missing", async () => {
-      const lockReason = LockReason.FREE_TIER
+      const lockReason = LockReason.PAID_TO_FREE
 
       const settingsConfig = {
         _id: "config_settings",
@@ -119,19 +125,24 @@ describe("tenants", () => {
 
       mockDb.tryGet.mockResolvedValue(settingsConfig)
 
-      await lockTenant(structures.tenant.id(), lockReason)
+      await lockTenant(
+        structures.tenant.id(),
+        lockReason,
+        "2026-06-24T12:00:00.000Z"
+      )
 
       expect(mockDb.put).toHaveBeenCalledWith({
         ...settingsConfig,
         config: {
           lockedBy: lockReason,
+          deactivationScheduledAt: "2026-06-24T12:00:00.000Z",
         },
       })
     })
   })
 
   describe("unlockTenant", () => {
-    it("should unlock tenant by removing lock reason", async () => {
+    it("should unlock tenant by removing lock reason and deactivation date", async () => {
       const tenantId = structures.tenant.id()
 
       const settingsConfig: SettingsConfig = {
@@ -139,6 +150,7 @@ describe("tenants", () => {
         type: ConfigType.SETTINGS,
         config: {
           lockedBy: LockReason.FREE_TIER,
+          deactivationScheduledAt: DEACTIVATION_SCHEDULED,
         },
       }
 
@@ -152,8 +164,8 @@ describe("tenants", () => {
       expect(mockDb.put).toHaveBeenCalledWith({
         ...settingsConfig,
         config: {
-          ...settingsConfig.config,
           lockedBy: undefined,
+          deactivationScheduledAt: undefined,
         },
       })
     })

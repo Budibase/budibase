@@ -4,6 +4,8 @@ import { structures } from "../../../tests"
 import {
   downloadTarball,
   downloadTarballDirect,
+  getSafeRetrieveDirectoryPath,
+  sanitizeKey,
   streamUpload,
   streamUploadMany,
   upload,
@@ -23,6 +25,46 @@ jest.mock("../../utils/outboundFetch", () => ({
 describe("objectStore", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe("sanitizeKey", () => {
+    it("rejects traversal path segments", () => {
+      expect(() => sanitizeKey("app_123/files/../../etc/passwd")).toThrow(
+        "Invalid object store key"
+      )
+      expect(() => sanitizeKey("app_123/files/./config.json")).toThrow(
+        "Invalid object store key"
+      )
+    })
+
+    it("allows dots in ordinary path segments", () => {
+      expect(sanitizeKey("app_123/files/config.backup.json")).toBe(
+        "app_123/files/config.backup.json"
+      )
+    })
+  })
+
+  describe("getSafeRetrieveDirectoryPath", () => {
+    it("resolves safe object keys under the export directory", () => {
+      expect(
+        getSafeRetrieveDirectoryPath(
+          "/tmp/budibase-export",
+          "app_123/files/config.json"
+        )
+      ).toEqual({
+        dir: "/tmp/budibase-export/app_123/files",
+        path: "/tmp/budibase-export/app_123/files/config.json",
+      })
+    })
+
+    it("rejects object keys that resolve outside the export directory", () => {
+      expect(
+        getSafeRetrieveDirectoryPath(
+          "/tmp/budibase-export",
+          "app_123/files/../../../../etc/passwd"
+        )
+      ).toBeUndefined()
+    })
   })
 
   describe("upload", () => {

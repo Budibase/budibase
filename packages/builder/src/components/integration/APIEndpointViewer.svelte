@@ -27,9 +27,11 @@
     notifications,
     Banner,
     Divider,
+    Label,
   } from "@budibase/bbui"
   import {
     BodyType,
+    FeatureFlag,
     type Query,
     type Datasource,
     type ImportEndpoint,
@@ -68,6 +70,7 @@
     keyValueArrayToRecord,
     getDefaultRestAuthConfig,
     isValidEndpointUrl,
+    isValidEndpointUrlMissingProtocol,
   } from "./query"
   import { applyBaseUrl } from "@budibase/shared-core"
   import restUtils from "@/helpers/data/utils"
@@ -81,13 +84,14 @@
   import ExpandablePanel from "@/components/common/ExpandablePanel.svelte"
   import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { confirm } from "@/helpers"
   import {
     urlParamHighlightPlugin,
     urlParamHighlightTheme,
   } from "../common/CodeEditor/urlParamHighlight"
-  import { environment } from "@/stores/portal"
+  import { environment, featureFlags } from "@/stores/portal"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { onDestroy, onMount, createEventDispatcher } from "svelte"
 
@@ -101,9 +105,12 @@
   export let settingsLocked: boolean = false
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
+  export let openAddConnectionOnMount: boolean = false
+  export let initialProjectIds: string[] = []
 
   $beforeUrlChange
   $: goto = $gotoStore
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -130,6 +137,8 @@
   let defaultSpecServerUrl: string | undefined = undefined
   let response: PreviewQueryResponse
   let editableQuery: Query | undefined
+  let projectIds: string[] = []
+  let originalProjectIds: string[] = []
   let datasource: Datasource | UIInternalDatasource | undefined
   let enabledHeaders: Record<string, boolean> = {}
   let globalDynamicRequestBindings: EnrichedBinding[] = []
@@ -208,6 +217,12 @@
 
   $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
+    projectIds =
+      editableQuery?.projectIds ||
+      (!editableQuery?._id && initialProjectIds.length
+        ? [...initialProjectIds]
+        : [])
+    originalProjectIds = [...projectIds]
     lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
@@ -323,6 +338,7 @@
     buildQuery(
       {
         ...editableQuery,
+        projectIds: getQueryProjectIds(),
         datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },
@@ -409,6 +425,10 @@
 
   // ── SAVE / RUN STATE ──────────────────────────────────────────────────────
   $: isValidCustomUrl = !isCustomMode || isValidEndpointUrl(requestUrl)
+  $: protocolMissingWarningMessage =
+    isCustomMode && isValidEndpointUrlMissingProtocol(requestUrl)
+      ? "http(s) protocol required in the URL"
+      : undefined
   $: existingQueryUnchanged = !isNewQuery && !queryDirty
   $: newQueryIncomplete =
     isNewQuery && (isCustomMode ? !requestUrl : !selectedEndpointOption)
@@ -425,6 +445,13 @@
   const getDatasourceBaseUrl = (
     ds: Datasource | UIInternalDatasource | undefined
   ): string | undefined => (ds as Datasource)?.config?.url as string | undefined
+
+  const getQueryProjectIds = () => {
+    if (projectIds.length) {
+      return projectIds
+    }
+    return !isNewQuery && originalProjectIds.length ? [] : undefined
+  }
 
   const resolveStoreQuery = (
     list: Query[] | undefined,
@@ -672,6 +699,8 @@
       }
 
       editableQuery = structuredClone(updatedQuery)
+      projectIds = updatedQuery.projectIds || []
+      originalProjectIds = [...projectIds]
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
@@ -967,7 +996,20 @@
     if (!$environment.loaded) {
       environment.loadVariables()
     }
-    if (connectorRestTemplateId && !datasourceId && !selectedDatasourceId) {
+    if (
+      openAddConnectionOnMount &&
+      connectorRestTemplateId &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
+      openConnectionMenuTimer = setTimeout(() => {
+        connectionSelectRef?.addConnection(connectorRestTemplateId)
+      }, 200)
+    } else if (
+      connectorRestTemplateId &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
       openConnectionMenuTimer = setTimeout(() => {
         connectionSelectRef?.open()
       }, 200)
@@ -1026,6 +1068,12 @@
             <div class="access">
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
+            {#if projectsEnabled}
+              <div class="project">
+                <Label>Projects</Label>
+                <ProjectSelect bind:value={projectIds} label="" autoWidth />
+              </div>
+            {/if}
           {/if}
           {#if endpointDocs}
             <ActionButton
@@ -1079,6 +1127,7 @@
               verb={editableQuery?.queryVerb ?? "read"}
               url={customUrl}
               {baseUrlOptions}
+              activeWarningMessage={protocolMissingWarningMessage}
               on:verbChange={e => {
                 if (editableQuery) {
                   editableQuery.queryVerb = e.detail
@@ -1165,7 +1214,7 @@
           <Button
             primary
             disabled={isCustomMode
-              ? !customUrl || runningQuery
+              ? !customUrl || runningQuery || !isValidCustomUrl
               : !selectedEndpointOption || runningQuery}
             icon="paper-plane-right"
             on:click={previewQuery}
@@ -1571,6 +1620,11 @@
     align-items: center;
     gap: var(--spacing-m);
   }
+  .project {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
   .pagination {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1590,5 +1644,12 @@
     display: flex;
     gap: var(--spacing-s);
     align-items: center;
+    position: relative;
+  }
+  .request-top {
+    z-index: 2;
+  }
+  .request-bottom {
+    z-index: 1;
   }
 </style>

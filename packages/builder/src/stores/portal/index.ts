@@ -20,6 +20,7 @@ export { themeStore } from "./theme"
 export { temporalStore } from "./temporal"
 export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
+export { projectsStore } from "./projects"
 export { agentsStore, selectedAgent } from "./agents"
 export type {
   OperationKnowledgePendingUpload,

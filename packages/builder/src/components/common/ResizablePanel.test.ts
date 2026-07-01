@@ -39,12 +39,14 @@ describe("ResizablePanel", () => {
 
   it("resizes with drag and persists clamped width", async () => {
     const onResizeStart = vi.fn()
+    const onResize = vi.fn()
     const { container, getByRole } = render(ResizablePanel, {
       storageKey: "panel-width",
       defaultWidth: 400,
       minWidth: 250,
       maxWidthRatio: 0.6,
       onResizeStart,
+      onResize,
     })
 
     const panel = container.querySelector(".resizable-panel") as HTMLElement
@@ -57,6 +59,7 @@ describe("ResizablePanel", () => {
 
     await fireEvent.mouseMove(window, { clientX: 100 })
     expect(panel).toHaveStyle("width: 100px")
+    expect(onResize).toHaveBeenLastCalledWith(250)
     expect(localStorage.getItem("panel-width")).toBeNull()
 
     await fireEvent.mouseUp(window, { clientX: 100 })
@@ -66,6 +69,30 @@ describe("ResizablePanel", () => {
     })
     expect(panel).not.toHaveClass("resizing-panel")
     expect(localStorage.getItem("panel-width")).toBe("250")
+  })
+
+  it("keeps double-click reset at the default width when the initial animation starts from min width", async () => {
+    localStorage.setItem("panel-width", "360")
+
+    const { container, getByRole } = render(ResizablePanel, {
+      storageKey: "panel-width",
+      defaultWidth: 480,
+      minWidth: 300,
+      maxWidthRatio: 0.6,
+    })
+
+    const panel = container.querySelector(".resizable-panel") as HTMLElement
+    const resizeHandle = getByRole("separator")
+
+    await waitFor(() => {
+      expect(panel).toHaveStyle("width: 360px")
+    })
+
+    await fireEvent.dblClick(resizeHandle)
+
+    await waitFor(() => {
+      expect(panel).toHaveStyle("width: 480px")
+    })
   })
 
   it("recomputes max width on window resize and clamps current width", async () => {

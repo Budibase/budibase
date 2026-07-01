@@ -1,4 +1,5 @@
 import { v4 } from "uuid"
+import type { SentMessage } from "chat"
 import {
   configs,
   context,
@@ -35,6 +36,7 @@ const DEFAULT_IDLE_TIMEOUT_MS = 45 * 60 * 1000
 const DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const CONVERSATION_SCOPE_CACHE_KEY_PREFIX = "chatConversationScope"
 const REDIS_CACHE_INIT_RETRY_MS = 30 * 1000
+export const NO_ASSISTANT_RESPONSE_MESSAGE = "No response generated."
 
 const conversationCache = new Map<string, string>()
 let conversationCacheClient: RedisClient | undefined
@@ -362,10 +364,13 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 
 export interface HandleChatMessageParams {
   reply: (text: string) => Promise<void>
-  replyWithAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
+  replyWithAssistantStream?: (
+    stream: WebhookAssistantStream
+  ) => Promise<SentMessage | void>
   formatAssistantReply?: (
     result: WebhookChatCompleteResult
   ) => Promise<string> | string
+  afterAssistantReply?: (result: WebhookChatCompleteResult) => Promise<void>
   beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
@@ -461,6 +466,7 @@ export const handleChatMessage = async ({
   reply,
   replyWithAssistantStream,
   formatAssistantReply,
+  afterAssistantReply,
   beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
@@ -521,6 +527,7 @@ export const handleChatMessage = async ({
           teamId: channel.teamId,
           guildId: channel.guildId,
           providerTenantId: channel.tenantId,
+          serviceUrl: channel.serviceUrl,
         })
 
       const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
@@ -699,13 +706,19 @@ export const handleChatMessage = async ({
     }
 
     let result: Awaited<ReturnType<typeof webhookChat>>
+    let streamedAssistantMessage: SentMessage | undefined
     try {
       await beforeAssistantWebhook?.()
       result = await webhookChat({
         chat: draftChat,
         user: chatUser,
         ...(replyWithAssistantStream
-          ? { onAssistantStream: replyWithAssistantStream }
+          ? {
+              onAssistantStream: async stream => {
+                streamedAssistantMessage =
+                  (await replyWithAssistantStream(stream)) || undefined
+              },
+            }
           : {}),
       })
     } catch (error) {
@@ -734,11 +747,19 @@ export const handleChatMessage = async ({
       idleTimeoutMs,
     })
 
-    if (!replyWithAssistantStream) {
-      const assistantReply = formatAssistantReply
-        ? await formatAssistantReply(result)
-        : result.assistantText
-      await reply(assistantReply || "No response generated.")
+    const assistantReply = formatAssistantReply
+      ? await formatAssistantReply(result)
+      : result.assistantText
+    const finalReply = assistantReply || NO_ASSISTANT_RESPONSE_MESSAGE
+    if (streamedAssistantMessage) {
+      if (
+        finalReply !== (result.assistantText || NO_ASSISTANT_RESPONSE_MESSAGE)
+      ) {
+        await streamedAssistantMessage.edit(finalReply)
+      }
+    } else {
+      await reply(finalReply)
     }
+    await afterAssistantReply?.(result)
   })
 }

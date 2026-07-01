@@ -10,6 +10,7 @@ import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
+  createEscalatePlaceholderTool,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
@@ -31,15 +32,17 @@ const HELPER_TOOL_NAMES = new Set([
   "get_automation",
   "list_knowledge_files",
   "search_knowledge",
+  "list_session_escalations",
 ])
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
 
-export const getLiveOperation = (agent: Agent): AgentOperation | undefined => {
-  const operation = agent.operations?.[0]
-  return operation?.live === true ? operation : undefined
-}
+export const getLiveOperations = (agent: Agent): AgentOperation[] =>
+  (agent.operations || []).filter(operation => operation.live === true)
+
+export const getLiveOperation = (agent: Agent): AgentOperation | undefined =>
+  getLiveOperations(agent)[0]
 
 export function getToolDisplayNames(
   tools: AiToolDefinition[]
@@ -122,6 +125,7 @@ export async function getAvailableTools(
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
+    createEscalatePlaceholderTool(),
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
@@ -144,22 +148,27 @@ export async function getAvailableToolsMetadata(
 export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
+  fallbackPromptInstructions?: string
 }
 
 export async function buildPromptAndTools(
   agent: Agent,
+  operation?: AgentOperation,
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
 }> {
-  const { baseSystemPrompt, includeGoal = true } = options
+  const {
+    baseSystemPrompt,
+    includeGoal = true,
+    fallbackPromptInstructions,
+  } = options
   const agentId = agent._id
   if (!agentId) {
     throw new Error("Agent _id is required")
   }
-  const operation = getLiveOperation(agent)
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
@@ -172,28 +181,38 @@ export async function buildPromptAndTools(
   )
 
   if (
+    operation &&
     hasKnowledgeBases &&
     !enabledTools.some(tool => tool.name === "list_knowledge_files")
   ) {
-    enabledTools.push(createKnowledgeFilesTool(agentId))
+    enabledTools.push(createKnowledgeFilesTool(agentId, operation.id))
   }
   if (
+    operation &&
     hasKnowledgeBases &&
     !enabledTools.some(tool => tool.name === "search_knowledge")
   ) {
-    enabledTools.push(createKnowledgeSearchTool(agentId))
+    enabledTools.push(createKnowledgeSearchTool(agentId, operation.id))
   }
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
-    promptInstructions: operation?.promptInstructions,
+    promptInstructions: operation
+      ? [`Current operation: ${operation.name}`, operation.promptInstructions]
+          .filter(Boolean)
+          .join("\n\n")
+      : fallbackPromptInstructions,
     includeGoal,
   })
 
-  const resolvedSystemPrompt = hasKnowledgeBases
-    ? `${systemPrompt}\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
-    : systemPrompt
+  let resolvedSystemPrompt = systemPrompt
+  if (hasKnowledgeBases) {
+    resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
+  }
+  if (enabledToolNames.has("escalate")) {
+    resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
+  }
 
   return {
     systemPrompt: resolvedSystemPrompt,

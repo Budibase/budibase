@@ -1,5 +1,6 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
+import { EscalationRecipient } from "../workspace/escalation"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",
@@ -8,6 +9,7 @@ export enum ToolType {
   REST_QUERY = "REST_QUERY",
   DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
+  ESCALATION = "ESCALATION",
 }
 
 export interface ToolMetadata {
@@ -37,6 +39,7 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   appId?: string
   appPassword?: string
   tenantId?: string
+  teamId?: string
   messagingEndpointUrl?: string
 }
 
@@ -78,6 +81,12 @@ export interface AgentSharePointKnowledgeSource {
 
 export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
+export interface AgentEscalationConfig {
+  recipients?: EscalationRecipient[]
+  // How long the escalation is kept before being marked as expired.
+  delay?: number
+}
+
 export interface AgentOperation {
   id: string
   name: string
@@ -87,12 +96,14 @@ export interface AgentOperation {
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
+  escalation?: AgentEscalationConfig
 }
 
 export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
+  projectIds?: string[]
   operations?: AgentOperation[]
   goal?: string
   live?: boolean
@@ -132,6 +143,9 @@ export interface AgentMessageUsage {
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>
+  selectedOperationId?: string
+  selectedOperationName?: string
+  allowKnowledgeSourceDownload?: boolean
   createdAt?: number
   completedAt?: number
   error?: string

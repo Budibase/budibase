@@ -1,11 +1,14 @@
 <script lang="ts">
   import { Body, Icon } from "@budibase/bbui"
-  import type {
-    AgentOperation,
-    CaretPositionFn,
-    EnrichedBinding,
-    InsertAtPositionFn,
+  import {
+    FeatureFlag,
+    ToolType,
+    type AgentOperation,
+    type CaretPositionFn,
+    type EnrichedBinding,
+    type InsertAtPositionFn,
   } from "@budibase/types"
+  import { featureFlags } from "@/stores/portal"
   import type { BindingCompletion } from "@/types"
   import { fly } from "svelte/transition"
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
@@ -19,11 +22,13 @@
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
+  import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
 
   let {
     open = false,
     operation = $bindable(),
+    agentId,
     promptBindings = [],
     bindingIcons = {},
     completions = [],
@@ -34,10 +39,12 @@
     onUpdated,
     onAddApiConnection,
     onConfigureWebSearch,
+    onRenameOperation,
     onSetOperationLive,
   }: {
     open?: boolean
     operation: AgentOperation
+    agentId?: string
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -48,6 +55,7 @@
     onUpdated: () => Promise<boolean>
     onAddApiConnection: () => void
     onConfigureWebSearch: () => void
+    onRenameOperation: () => void
     onSetOperationLive: (operationId: string, live: boolean) => Promise<boolean>
   } = $props()
 
@@ -60,6 +68,13 @@
   let toolSearch = $state("")
   let filteredTools = $derived.by(() =>
     availableTools.filter(tool => {
+      // Hide the escalate tool when the escalation feature flag is off.
+      if (
+        tool.sourceType === ToolType.ESCALATION &&
+        !$featureFlags[FeatureFlag.ESCALATION]
+      ) {
+        return false
+      }
       const query = toolSearch.trim().toLowerCase()
       if (!query) {
         return true
@@ -137,6 +152,11 @@
     onUpdated()
   }
 
+  const updateRecipients = (recipients: any[]) => {
+    operation.escalation = { ...(operation.escalation ?? {}), recipients }
+    onUpdated()
+  }
+
   const formatToolLabel = (tool: AgentTool) =>
     (tool.readableName || tool.name)
       .split(".")
@@ -185,6 +205,12 @@
           name: operationLive ? "Stop" : "Set live",
           visible: true,
           callback: async () => await setOperationLive(!operationLive),
+        },
+        {
+          icon: "pencil",
+          name: "Rename",
+          visible: true,
+          callback: onRenameOperation,
         },
       ],
       { x: event.clientX, y: event.clientY }
@@ -338,6 +364,23 @@
               </div>
             {/if}
           </div>
+
+          {#if $featureFlags[FeatureFlag.ESCALATION]}
+            <div class="operation-panel-section">
+              <Body size="S" color="var(--spectrum-global-color-gray-900)">
+                Escalation recipients
+              </Body>
+              <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+                Who gets notified when this operation escalates for approval.
+              </Body>
+              <EscalationRecipients
+                single
+                recipients={operation.escalation?.recipients ?? []}
+                {agentId}
+                onChange={updateRecipients}
+              />
+            </div>
+          {/if}
 
           <Knowledge bind:operation {onUpdated} />
         </div>

@@ -1,24 +1,132 @@
-import { context, HTTPError } from "@budibase/backend-core"
-import { ChatCommands, SupportedChatCommand } from "@budibase/shared-core"
+import { context, features } from "@budibase/backend-core"
+import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
+  FeatureFlag,
   type ChatConversationChannel,
   type Ctx,
   type MSTeamsActivity,
   type MSTeamsConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
-import { Chat, type Thread, type Message, type SentMessage } from "chat"
+import {
+  Chat,
+  Actions,
+  Card,
+  LinkButton,
+  type ActionEvent,
+  type Thread,
+  type Message,
+  type SentMessage,
+} from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
-import { handleChatMessage } from "./chatHandler"
+import { escalationProcessor } from "../../../escalation/processor"
+import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
+import { toAbsoluteUrl } from "./utils"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 const TEAMS_PROCESSING_MESSAGE = "Thinking..."
 const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
+
+const formatTeamsLinkLabel = (value: string) =>
+  value
+    .replace(/\[|]|<|>|@|\n|\r/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+const getTeamsKnowledgeSourceLinks = async ({
+  agentId,
+  result,
+  isPersonalConversation,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  isPersonalConversation?: boolean
+}) => {
+  if (
+    result.allowKnowledgeSourceDownload === false ||
+    !isPersonalConversation
+  ) {
+    return []
+  }
+
+  const links: { label: string; url: string }[] = []
+  for (const source of result.ragSources || []) {
+    if (!source.fileId) {
+      continue
+    }
+
+    try {
+      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
+        agentId,
+        source.fileId
+      )
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      links.push({
+        label:
+          formatTeamsLinkLabel(source.filename || "") || "Knowledge source",
+        url: absoluteUrl,
+      })
+    } catch (error) {
+      console.error("Failed to generate Teams RAG source link", error)
+    }
+  }
+  return links
+}
+
+export const formatTeamsAssistantReply = async ({
+  result,
+}: {
+  result: WebhookChatCompleteResult
+}) => {
+  return result.assistantText || ""
+}
+
+const postTeamsKnowledgeSourceLinks = async ({
+  thread,
+  agentId,
+  result,
+  isPersonalConversation,
+}: {
+  thread: Thread
+  agentId: string
+  result: WebhookChatCompleteResult
+  isPersonalConversation?: boolean
+}) => {
+  const sourceLinks = await getTeamsKnowledgeSourceLinks({
+    agentId,
+    result,
+    isPersonalConversation,
+  })
+  if (!sourceLinks.length) {
+    return
+  }
+
+  try {
+    await thread.post(
+      Card({
+        title: "Sources",
+        children: [
+          Actions(
+            sourceLinks.map(source =>
+              LinkButton({
+                label: source.label,
+                url: source.url,
+              })
+            )
+          ),
+        ],
+      })
+    )
+  } catch (error) {
+    console.error("Failed to post Teams RAG source links", error)
+  }
+}
 
 export const stripTeamsMentions = (
   text: string,
@@ -85,7 +193,7 @@ export const splitTeamsMessage = (
   content: string,
   maxLength = 3500
 ): string[] => {
-  const normalized = content || "No response generated."
+  const normalized = content || NO_ASSISTANT_RESPONSE_MESSAGE
   if (normalized.length <= maxLength) {
     return [normalized]
   }
@@ -105,7 +213,7 @@ const isTeamsBotAddedToConversation = (activity: MSTeamsActivity) => {
     return false
   }
   return (activity.membersAdded || []).some(
-    member => member.id?.trim() === recipientId
+    (member: { id?: string }) => member.id?.trim() === recipientId
   )
 }
 
@@ -124,7 +232,7 @@ export const isTeamsMentionActivity = (activity?: MSTeamsActivity) => {
   }
 
   return (activity?.entities || []).some(
-    entity =>
+    (entity: { type?: string; mentioned?: { id?: string } }) =>
       entity.type?.toLowerCase() === "mention" &&
       entity.mentioned?.id?.trim() === recipientId
   )
@@ -172,6 +280,7 @@ const createTeamsMessageHandler = ({
     const tenantId =
       raw?.channelData?.tenant?.id?.trim() || raw?.from?.tenantId?.trim()
     const conversationType = raw?.conversation?.conversationType?.trim()
+    const serviceUrl = raw?.serviceUrl?.trim()
 
     if (!conversationId) {
       await thread.post("Missing Teams conversation information.")
@@ -196,6 +305,7 @@ const createTeamsMessageHandler = ({
       tenantId,
       externalUserId,
       externalUserName: displayName,
+      serviceUrl,
     }
 
     const scope: MSTeamsConversationScope = {
@@ -213,6 +323,7 @@ const createTeamsMessageHandler = ({
 
     const shouldPostChannelWorkingIndicator =
       shouldShowProgress && !isTeamsPersonalConversation(conversationType)
+    const isPersonalConversation = isTeamsPersonalConversation(conversationType)
 
     let progressMessage: SentMessage | undefined
     let hasUsedProgressMessage = false
@@ -235,7 +346,7 @@ const createTeamsMessageHandler = ({
 
     const editOrPostTextReply = async (text: string) => {
       const chunks = splitTeamsMessage(text)
-      const firstChunk = chunks[0] || "No response generated."
+      const firstChunk = chunks[0] || NO_ASSISTANT_RESPONSE_MESSAGE
       const remainingChunks = chunks.slice(1)
       if (!(await editProgressMessage(firstChunk))) {
         await thread.post(firstChunk)
@@ -264,7 +375,7 @@ const createTeamsMessageHandler = ({
         replyWithAssistantStream: shouldPostChannelWorkingIndicator
           ? undefined
           : async stream => {
-              await thread.post(stream)
+              return await thread.post(stream)
             },
         beforeAssistantWebhook: shouldPostChannelWorkingIndicator
           ? async () => {
@@ -292,6 +403,17 @@ const createTeamsMessageHandler = ({
           }
           await editOrPostTextReply("I sent you a private Budibase link.")
         },
+        formatAssistantReply: async result =>
+          await formatTeamsAssistantReply({
+            result,
+          }),
+        afterAssistantReply: async result =>
+          await postTeamsKnowledgeSourceLinks({
+            thread,
+            agentId,
+            result,
+            isPersonalConversation,
+          }),
         workspaceId,
         chatAppId,
         agentId,
@@ -311,9 +433,7 @@ const createTeamsMessageHandler = ({
     } catch (error) {
       console.error("Teams webhook processing failed", error)
       const msg =
-        error instanceof HTTPError
-          ? error.message
-          : TEAMS_FALLBACK_ERROR_MESSAGE
+        error instanceof Error ? error.message : TEAMS_FALLBACK_ERROR_MESSAGE
       await editOrPostTextReply(msg)
     }
   }
@@ -371,6 +491,67 @@ export async function MSTeamsWebhook(
         idleTimeoutMinutes,
         requireUserLink,
       })
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
+
+        let parsed: {
+          escalationId: string
+          notificationDocId: string
+        }
+        try {
+          parsed = JSON.parse(event.value ?? "")
+        } catch {
+          console.error(
+            "Teams escalation action: invalid button value",
+            event.value
+          )
+          return
+        }
+        // The appId carried in the button value is untrusted - resolve the
+        // context from the verified webhook route's workspaceId instead.
+        const { escalationId, notificationDocId } = parsed
+
+        const teamsResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+        }
+
+        try {
+          const result = await context.doInContext(workspaceId, async () => {
+            if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
+              return { status: "closed" as const }
+            }
+            return sdk.escalations.respond(
+              escalationId,
+              notificationDocId,
+              teamsResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Teams escalation action: failed to record response", {
+            escalationId,
+            notificationDocId,
+            workspaceId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
+
       chat.onDirectMessage(async (thread, message) => {
         await handler(thread, message)
       })

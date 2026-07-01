@@ -15,6 +15,10 @@
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
   import type { AutomationLog } from "@budibase/types"
 
+  const SIDE_PANEL_STORAGE_KEY = "automation-side-panel-width"
+  const SIDE_PANEL_DEFAULT_WIDTH = 480
+  let sidePanelWidth = getSidePanelWidth()
+
   const { goto, params, url, redirect, isActive, page, layout } = routify
   $goto
   $params
@@ -27,6 +31,16 @@
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
   $: selectedNodeId = $automationStore.selectedNodeId
+  $: actionPanelOpen =
+    !!$automationStore.actionPanelBlock && !$automationStore.selectedNodeId
+  $: stepPanelOpen =
+    !!$automationStore.selectedNodeId &&
+    !!(
+      blockRefs[$automationStore.selectedNodeId] ||
+      $automationStore.selectedBranchNode
+    )
+  $: panelOpen = actionPanelOpen || stepPanelOpen
+  $: panelWidth = panelOpen ? sidePanelWidth : 0
   $: if (automationId) {
     builderStore.selectResource(automationId)
   }
@@ -44,6 +58,14 @@
   onDestroy(() => {
     stopSyncing?.()
   })
+
+  function getSidePanelWidth() {
+    const saved = localStorage.getItem(SIDE_PANEL_STORAGE_KEY)
+    const parsedWidth = saved ? parseInt(saved, 10) : SIDE_PANEL_DEFAULT_WIDTH
+    return Number.isFinite(parsedWidth) && parsedWidth > 0
+      ? parsedWidth
+      : SIDE_PANEL_DEFAULT_WIDTH
+  }
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape" && $automationStore.actionPanelBlock) {
@@ -63,18 +85,23 @@
     icon="path"
   />
   <div class="root">
-    <div class="content drawer-container">
+    <div
+      class="content drawer-container"
+      class:panel-open={panelOpen}
+      style:--automation-panel-width={`${panelWidth}px`}
+    >
       <slot />
     </div>
 
     {#if selectedNodeId && (blockRefs[selectedNodeId] || $automationStore.selectedBranchNode)}
       <div class="step-panel-container">
         <ResizablePanel
-          storageKey="automation-side-panel-width"
-          defaultWidth={480}
+          storageKey={SIDE_PANEL_STORAGE_KEY}
+          defaultWidth={SIDE_PANEL_DEFAULT_WIDTH}
           minWidth={360}
           maxWidthRatio={0.6}
           position="right"
+          onResize={width => (sidePanelWidth = width)}
         >
           <div class="step-panel">
             <StepPanel />
@@ -83,11 +110,13 @@
       </div>
     {/if}
 
-    {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
-      <SelectStepSidePanel
-        block={$automationStore.actionPanelBlock}
-        onClose={() => automationStore.actions.closeActionPanel()}
-      />
+    {#if actionPanelOpen}
+      <div class="action-panel-container">
+        <SelectStepSidePanel
+          block={$automationStore.actionPanelBlock}
+          onClose={() => automationStore.actions.closeActionPanel()}
+        />
+      </div>
     {/if}
 
     {#if $automationStore.showLogsPanel && $selectedAutomation?.data}
@@ -162,14 +191,29 @@
     overflow: auto;
     min-width: 0;
   }
+  .content.panel-open :global(.automation-heading) {
+    padding-right: calc(var(--spacing-l) + var(--automation-panel-width));
+  }
   .step-panel-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    right: 0;
     z-index: 99;
     height: 100%;
     display: flex;
     flex-direction: row;
     align-items: stretch;
     overflow: hidden;
+  }
+  .action-panel-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 99;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
   }
   .step-panel {
     display: flex;

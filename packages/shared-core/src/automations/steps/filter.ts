@@ -25,6 +25,7 @@ export const definition: AutomationStepDefinition = {
   stepId: AutomationActionStepId.FILTER,
   inputs: {
     condition: FilterCondition.EQUAL,
+    notify: false,
   },
   schema: {
     inputs: {
@@ -42,6 +43,10 @@ export const definition: AutomationStepDefinition = {
         value: {
           type: AutomationIOType.STRING,
           title: "Comparison Value",
+        },
+        notify: {
+          type: AutomationIOType.BOOLEAN,
+          title: "Notify on stop",
         },
       },
       required: ["field", "condition", "value"],

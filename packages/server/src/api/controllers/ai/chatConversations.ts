@@ -23,15 +23,16 @@ import {
 } from "@budibase/types"
 import {
   consumeStream,
+  readUIMessageStream,
   type LanguageModelUsage,
-  type StreamTextResult,
-  type ToolSet,
+  type UIMessage,
+  type UIMessageChunk,
 } from "ai"
 import sdk from "../../../sdk"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
-  getLiveOperation,
+  getLiveOperations,
   prepareAgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
@@ -52,8 +53,40 @@ const getGlobalUserId = (ctx: UserCtx) => {
   return userId as string
 }
 
-const allowsKnowledgeSourceDownload = (agent: Agent) =>
-  getLiveOperation(agent)?.allowKnowledgeSourceDownload ?? true
+const getRecentChatContext = (
+  messages: ChatConversation["messages"],
+  limit = 6
+) => {
+  return messages
+    .flatMap(message => {
+      if (message.role !== "user" && message.role !== "assistant") {
+        return []
+      }
+
+      const content = (message.parts || [])
+        .filter(
+          (
+            part
+          ): part is Extract<
+            (typeof message.parts)[number],
+            { type: "text" }
+          > => part.type === "text"
+        )
+        .map(part => part.text)
+        .join("\n")
+        .trim()
+
+      if (!content) {
+        return []
+      }
+
+      return [{ role: message.role, content }]
+    })
+    .slice(-limit)
+}
+
+const findLiveOperation = (agent: Agent, operationId: string) =>
+  getLiveOperations(agent).find(operation => operation.id === operationId)
 
 const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
@@ -270,10 +303,35 @@ const resolveChatStreamRequest = async (
   }
 }
 
-export type WebhookAssistantStream = StreamTextResult<
-  ToolSet,
-  never
->["fullStream"]
+export type WebhookAssistantStream = AsyncIterable<string>
+
+const getAssistantMessageText = (assistantMessage?: UIMessage) =>
+  assistantMessage?.parts
+    ?.flatMap(part => (part.type === "text" ? [part.text] : []))
+    .join("") || ""
+
+const createAssistantTextStream = async function* (
+  stream: ReadableStream<UIMessageChunk>
+): AsyncGenerator<string, void, void> {
+  let previousText = ""
+  for await (const assistantMessage of readUIMessageStream({ stream })) {
+    const currentText = getAssistantMessageText(assistantMessage)
+    if (!currentText || currentText === previousText) {
+      continue
+    }
+
+    if (currentText.startsWith(previousText)) {
+      const delta = currentText.slice(previousText.length)
+      if (delta) {
+        yield delta
+      }
+    } else {
+      yield currentText
+    }
+
+    previousText = currentText
+  }
+}
 
 export async function webhookChat({
   chat,
@@ -320,15 +378,37 @@ export async function webhookChat({
 
   const result = await run.stream()
 
-  const streamTask = onAssistantStream
-    ? onAssistantStream(result.fullStream)
-    : Promise.resolve()
+  const uiMessageStream = result.toUIMessageStream({
+    generateMessageId: v4,
+    sendReasoning: true,
+  })
+  let assistantStreamForCapture: ReadableStream<UIMessageChunk> =
+    uiMessageStream
+  let streamTask: Promise<void> = Promise.resolve()
+  if (onAssistantStream) {
+    const [deliveryStream, captureStream] = uiMessageStream.tee()
+    assistantStreamForCapture = captureStream
+    streamTask = onAssistantStream(createAssistantTextStream(deliveryStream))
+  }
 
-  const [textResult, responseResult, streamOutcome] = await Promise.allSettled([
-    result.text,
-    result.response,
-    streamTask,
-  ])
+  const assistantMessageTask = (async () => {
+    let assistantMessage: ChatConversation["messages"][number] | undefined
+    for await (const message of readUIMessageStream<
+      ChatConversation["messages"][number]
+    >({
+      stream: assistantStreamForCapture,
+    })) {
+      assistantMessage = message
+    }
+    return assistantMessage
+  })()
+
+  const [assistantMessageResult, responseResult, streamOutcome] =
+    await Promise.allSettled([
+      assistantMessageTask,
+      result.response,
+      streamTask,
+    ])
 
   if (streamOutcome.status === "rejected") {
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
@@ -346,19 +426,19 @@ export async function webhookChat({
   run.sessionLogIndexer.addRequestId(requestId)
   await run.sessionLogIndexer.index()
 
-  if (textResult.status === "rejected") {
+  if (assistantMessageResult.status === "rejected") {
     console.error("Agent streaming error", {
       agentId,
       chatAppId,
       sessionId,
-      error: textResult.reason,
+      error: assistantMessageResult.reason,
     })
     events.action.aiAgentFailed({
       agentId,
       reason: ActionFailureReason.ERROR,
-      errorMessage: getErrorMessage(textResult.reason),
+      errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
-    throw textResult.reason
+    throw assistantMessageResult.reason
   }
   if (responseResult.status === "rejected") {
     console.error("Agent response metadata error", {
@@ -376,19 +456,28 @@ export async function webhookChat({
   }
 
   events.action.aiAgentExecuted({ agentId })
+  const ragSources = run.getUsedKnowledgeSourcesMetadata()
 
-  const assistantText = textResult.value
+  const finalAssistantMessage =
+    assistantMessageResult.value ||
+    ({
+      id: v4(),
+      role: "assistant",
+      parts: [{ type: "text", text: "" }],
+    } satisfies ChatConversation["messages"][number])
+  const assistantText = getAssistantMessageText(finalAssistantMessage)
   const assistantMessage: ChatConversation["messages"][number] = {
-    id: v4(),
-    role: "assistant",
-    parts: [{ type: "text", text: assistantText || "" }],
+    ...finalAssistantMessage,
   }
 
   return {
     messages: [...chat.messages, assistantMessage],
     assistantText: assistantText || "",
     ragSources: run.getUsedKnowledgeSourcesMetadata(),
+    allowKnowledgeSourceDownload:
+      run.selectedOperation?.allowKnowledgeSourceDownload,
     title,
+    ...(ragSources?.length ? { ragSources } : {}),
   }
 }
 
@@ -419,6 +508,28 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId,
       user: ctx.user,
     })
+    sdk.ai.agentRequests
+      .enqueueRequestTracking({
+        agentId,
+        sessionId,
+        latestUserPrompt: run.latestQuestion,
+        recentChatContext: getRecentChatContext(chat.messages),
+        operation: run.selectedOperation
+          ? {
+              name: run.selectedOperation.name,
+              prompt: run.selectedOperation.promptInstructions || "",
+            }
+          : undefined,
+        userId,
+      })
+      .catch(error => {
+        console.error("Failed to enqueue agent request tracking", {
+          agentId,
+          sessionId,
+          userId,
+          error,
+        })
+      })
 
     const pendingToolCalls = new Set<string>()
 
@@ -435,6 +546,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const sharedMetadata = {
       ...(Object.keys(run.toolDisplayNames).length > 0
         ? { toolDisplayNames: run.toolDisplayNames }
+        : {}),
+      ...(run.selectedOperation
+        ? {
+            selectedOperationId: run.selectedOperation.id,
+            selectedOperationName: run.selectedOperation.name,
+            allowKnowledgeSourceDownload:
+              run.selectedOperation.allowKnowledgeSourceDownload,
+          }
         : {}),
     }
     result.pipeUIMessageStreamToResponse(ctx.res, {
@@ -540,10 +659,15 @@ export async function fetchChatAppAgentFileUrl(
   ctx: UserCtx<
     void,
     FetchAgentFileUrlResponse,
-    { chatAppId: string; agentId: string; fileId: string }
+    {
+      chatAppId: string
+      agentId: string
+      operationId: string
+      fileId: string
+    }
   >
 ) {
-  const { chatAppId, agentId, fileId } = ctx.params
+  const { chatAppId, agentId, operationId, fileId } = ctx.params
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
@@ -560,14 +684,24 @@ export async function fetchChatAppAgentFileUrl(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (!allowsKnowledgeSourceDownload(agent)) {
+  const operation = findLiveOperation(agent, operationId)
+
+  if (!operation) {
+    throw new HTTPError("Operation not found", 404)
+  }
+
+  if (!operation.allowKnowledgeSourceDownload) {
     throw new HTTPError(
       "Knowledge source downloads are disabled for this agent",
       403
     )
   }
 
-  const url = await sdk.ai.rag.getFileUrlForAgent(agentId, fileId)
+  const url = await sdk.ai.rag.getFileUrlForOperation(
+    agentId,
+    operation.id,
+    fileId
+  )
   ctx.body = { url }
   ctx.status = 200
 }

@@ -10,7 +10,6 @@
   } from "@budibase/types"
   import {
     AutomationSelector,
-    CronBuilder,
     DateSelector,
     ExecuteScript,
     ExecuteScriptV2,
@@ -20,6 +19,7 @@
     PropField,
     QueryParamSelector,
     SchemaSetup,
+    ScheduleBuilder,
     TableSelector,
   } from "."
   import { getFieldLabel, getInputValue } from "./layouts"
@@ -174,11 +174,18 @@
       fullWidth: true,
     },
     [SchemaFieldTypes.CRON]: {
-      comp: CronBuilder,
+      comp: ScheduleBuilder,
+      wrapped: false,
       props: (opts: FieldProps = {} as FieldProps) => {
         const { value } = opts
         return {
           cronExpression: value,
+          timezone: getInputValue(inputData, "timezone") || "UTC",
+          onchange: (update: FormUpdate) => {
+            if (block) {
+              automationStore.actions.requestUpdate(update, block)
+            }
+          },
         }
       },
     },
@@ -458,3 +465,6 @@
     {/if}
   {/if}
 {/each}
+
+<style>
+</style>

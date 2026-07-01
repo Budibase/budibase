@@ -39,6 +39,7 @@ router
   )
   .get(
     "/api/global/groups",
+    auth.builderOrAdmin,
     proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     controller.fetch
   )

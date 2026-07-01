@@ -16,6 +16,9 @@ const userRoutes = endpointGroupList.group({
 })
 
 builderAdminRoutes
+  .get("/api/chat-links", ai.listChatIdentityLinks)
+  .get("/api/slack-channels", ai.listSlackChannels)
+  .get("/api/teams-channels", ai.listMSTeamsChannels)
   .put("/api/chatapps/:chatAppId", ai.updateChatApp)
   .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
 
@@ -33,7 +36,7 @@ userRoutes
   .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
   .get("/api/chatapps/:chatAppId/agents", ai.fetchChatAppAgents)
   .get(
-    "/api/chatapps/:chatAppId/agents/:agentId/files/:fileId/url",
+    "/api/chatapps/:chatAppId/agents/:agentId/operations/:operationId/files/:fileId/url",
     ai.fetchChatAppAgentFileUrl
   )
   .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)

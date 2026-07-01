@@ -57,6 +57,7 @@ export interface ChatConversationChannel {
   threadId?: string
   externalUserId?: string
   externalUserName?: string
+  serviceUrl?: string
 }
 
 export interface ChatConversationRequest extends Document {
@@ -74,6 +75,7 @@ export interface WebhookChatCompleteResult {
   messages: ChatConversation["messages"]
   assistantText: string
   ragSources?: AgentMessageMetadata["ragSources"]
+  allowKnowledgeSourceDownload?: boolean
   title?: string
 }
 
@@ -101,4 +103,5 @@ export interface ChatIdentityLink extends Document {
   teamId?: string
   guildId?: string
   providerTenantId?: string
+  serviceUrl?: string
 }

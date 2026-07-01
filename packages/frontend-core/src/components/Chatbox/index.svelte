@@ -11,6 +11,8 @@
     ChatConversation,
     DraftChatConversation,
     AgentMessageMetadata,
+    EscalationContextDoc,
+    EscalationRespondResult,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
@@ -19,6 +21,7 @@
   import { formatToolName } from "../../utils/aiTools"
   import ReasoningStatus from "./ReasoningStatus.svelte"
   import ContextUsage from "./ContextUsage.svelte"
+  import EscalationCard from "./EscalationCard.svelte"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -38,11 +41,23 @@
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
+    // Fired when an escalation parks; the consumer polls the outcome and
+    // injects it via appendAssistantMessage.
+    onEscalationPending?: (_detail: { escalationId: string }) => void
+    // Live resolution per escalationId (from the poll) - drives the card state.
+    escalationState?: Record<
+      string,
+      { resolution: EscalationContextDoc["resolution"] }
+    >
+    // Dev-only: show the inline Approve/Reject buttons on the escalation card.
+    showInlineApproval?: boolean
+    onResolve?: (
+      _escalationId: string,
+      _accepted: boolean
+    ) => Promise<EscalationRespondResult | undefined>
     isAgentPreviewChat?: boolean
-    operationId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
-    allowKnowledgeSourceDownload?: boolean
   }
 
   let {
@@ -52,12 +67,46 @@
     conversationStarters = [],
     initialPrompt = "",
     onchatsaved,
+    onEscalationPending,
+    escalationState,
+    showInlineApproval = false,
+    onResolve,
     isAgentPreviewChat = false,
-    operationId,
     readOnly = false,
     readOnlyReason,
-    allowKnowledgeSourceDownload = true,
   }: Props = $props()
+
+  // Per-escalation in-flight flag + the message relayed from resolve, so the
+  // card shows the real outcome on click rather than a static label.
+  let resolvingEscalations = $state<Record<string, boolean>>({})
+  let resolveMessages = $state<Record<string, string>>({})
+  const handleResolve = async (escalationId: string, accepted: boolean) => {
+    resolvingEscalations = { ...resolvingEscalations, [escalationId]: true }
+    try {
+      const result = await onResolve?.(escalationId, accepted)
+      if (result?.message) {
+        resolveMessages = { ...resolveMessages, [escalationId]: result.message }
+      }
+    } finally {
+      resolvingEscalations = { ...resolvingEscalations, [escalationId]: false }
+    }
+  }
+
+  // The escalate part's input/output are loosely typed by the AI SDK, so the
+  // casts live here rather than cluttering the template.
+  const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
+    const output = part.output as { escalationId?: string } | undefined
+    const input = part.input as { title?: string; summary?: string } | undefined
+    const escalationId = output?.escalationId
+    return {
+      escalationId,
+      title: input?.title,
+      summary: input?.summary,
+      resolution:
+        (escalationId && escalationState?.[escalationId]?.resolution) ||
+        "pending",
+    }
+  }
 
   let API = $state(
     createAPIClient({
@@ -85,9 +134,14 @@
   }
 
   const openRagSource = async (
+    message: UIMessage<AgentMessageMetadata>,
     source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
   ) => {
-    if (!allowKnowledgeSourceDownload) {
+    const selectedOperationId = message.metadata?.selectedOperationId
+    const messageAllowsDownload =
+      message.metadata?.allowKnowledgeSourceDownload === true
+
+    if (!messageAllowsDownload) {
       notifications.error("Source downloads are disabled for this agent")
       return
     }
@@ -97,19 +151,23 @@
 
     try {
       const resolvedUrl =
-        !isAgentPreviewChat && chat?.chatAppId && chat?.agentId
+        !isAgentPreviewChat &&
+        chat?.chatAppId &&
+        chat?.agentId &&
+        selectedOperationId
           ? (
               await API.fetchChatAppAgentFileUrl(
                 chat.chatAppId,
                 chat.agentId,
-                source.fileId
+                source.fileId,
+                selectedOperationId
               )
             ).url
-          : isAgentPreviewChat && chat?.agentId && operationId
+          : isAgentPreviewChat && chat?.agentId && selectedOperationId
             ? (
                 await API.fetchOperationFileUrl(
                   chat.agentId,
-                  operationId,
+                  selectedOperationId,
                   source.fileId
                 )
               ).url
@@ -136,6 +194,10 @@
       .filter(isReasoningUIPart)
       .map(p => p.text)
       .join("")
+
+  const canDownloadSource = (message: UIMessage<AgentMessageMetadata>) =>
+    message.metadata?.allowKnowledgeSourceDownload === true &&
+    !!message.metadata?.selectedOperationId
 
   const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     reasoningTextByMessageId[message.id] || getReasoningText(message)
@@ -312,6 +374,48 @@
 
   let messages = $derived(chatInstance.messages)
   let lastMessage = $derived(messages[messages.length - 1])
+
+  // Notify the consumer of every unseen parked escalation. The escalate part's
+  // output stays frozen at pending_approval, so notifying only the first would
+  // shadow later escalations.
+  const notifiedEscalations = new Set<string>()
+  let pendingEscalationIds = $derived.by(() => {
+    const ids: string[] = []
+    for (const message of messages) {
+      for (const part of message.parts ?? []) {
+        if (
+          !isToolUIPart(part) ||
+          getToolName(part) !== "escalate" ||
+          part.state !== "output-available"
+        ) {
+          continue
+        }
+        const output = part.output as
+          | { status?: string; escalationId?: string }
+          | undefined
+        if (output?.status === "pending_approval" && output.escalationId) {
+          ids.push(output.escalationId)
+        }
+      }
+    }
+    return ids
+  })
+  $effect(() => {
+    for (const escalationId of pendingEscalationIds) {
+      if (!notifiedEscalations.has(escalationId)) {
+        notifiedEscalations.add(escalationId)
+        onEscalationPending?.({ escalationId })
+      }
+    }
+  })
+
+  // Injects the polled resume outcome as a plain assistant turn - the agent's
+  // own reply self-frames the approval.
+  export function appendAssistantMessage(
+    message: UIMessage<AgentMessageMetadata>
+  ) {
+    chatInstance.messages = [...chatInstance.messages, message]
+  }
 
   let lastAssistantUsage = $derived(
     messages.findLast(m => m.role === "assistant" && m.metadata?.usage)
@@ -669,6 +773,24 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
+              {:else if isToolUIPart(part) && getToolName(part) === "escalate"}
+                {@const card = escalationCardProps(part)}
+                <EscalationCard
+                  title={card.title}
+                  summary={card.summary}
+                  resolution={card.resolution}
+                  statusMessage={card.escalationId
+                    ? resolveMessages[card.escalationId]
+                    : undefined}
+                  showApproval={showInlineApproval}
+                  resolving={!!card.escalationId &&
+                    !!resolvingEscalations[card.escalationId]}
+                  onApprove={() =>
+                    card.escalationId && handleResolve(card.escalationId, true)}
+                  onReject={() =>
+                    card.escalationId &&
+                    handleResolve(card.escalationId, false)}
+                />
               {:else if isToolUIPart(part)}
                 {@const rawToolName = getToolName(part)}
                 {@const displayToolName = formatToolName(
@@ -781,11 +903,11 @@
                 <ul>
                   {#each getVisibleRagSources(message) as source (source.fileId)}
                     <li class="source-item">
-                      {#if allowKnowledgeSourceDownload}
+                      {#if canDownloadSource(message)}
                         <button
                           type="button"
                           class="source-link"
-                          onclick={() => openRagSource(source)}
+                          onclick={() => openRagSource(message, source)}
                         >
                           {source.filename}
                         </button>
