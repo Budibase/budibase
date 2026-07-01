@@ -15,6 +15,7 @@ import {
   InternalTables,
 } from "../../db/utils"
 import { getGlobalUsers } from "../../utilities/global"
+import { stripSensitiveUserFields } from "../../utilities/sensitiveUserFields"
 import { getUserFullName } from "../../utilities/users"
 
 export function combineMetadataAndUser(
@@ -22,9 +23,10 @@ export function combineMetadataAndUser(
   metadata: UserMetadata | UserMetadata[]
 ): ContextUserMetadata | null {
   const metadataId = generateUserMetadataID(user._id!)
-  const found = Array.isArray(metadata)
+  const foundMetadata = Array.isArray(metadata)
     ? metadata.find(doc => doc._id === metadataId)
     : metadata
+  const found = foundMetadata && stripSensitiveUserFields({ ...foundMetadata })
   // skip users with no access
   if (
     user.roleId == null ||
@@ -83,10 +85,11 @@ export async function fetchMetadata(): Promise<ContextUserMetadata[]> {
   for (let user of global) {
     // find the metadata that matches up to the global ID
     const info = metadata.find(meta => meta._id!.includes(user._id!))
+    const strippedInfo = info && stripSensitiveUserFields({ ...info })
     // remove these props, not for the correct DB
     const mergedUser = {
       ...user,
-      ...info,
+      ...strippedInfo,
       tableId: InternalTables.USER_METADATA,
       // make sure the ID is always a local ID, not a global one
       _id: generateUserMetadataID(user._id!),

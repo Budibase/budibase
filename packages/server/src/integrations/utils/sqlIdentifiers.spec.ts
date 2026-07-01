@@ -1,5 +1,6 @@
 import {
   quoteMySqlIdentifier,
+  quoteOracleIdentifier,
   quotePostgresIdentifier,
   quoteSqlServerIdentifier,
 } from "./sqlIdentifiers"
@@ -9,6 +10,12 @@ describe("sql identifiers", () => {
     expect(quotePostgresIdentifier(`safe"; SELECT pg_sleep(1); --`)).toBe(
       `"safe""; SELECT pg_sleep(1); --"`
     )
+  })
+
+  it("quotes oracle identifiers", () => {
+    expect(
+      quoteOracleIdentifier(`safe"; SELECT username FROM dba_users; --`)
+    ).toBe(`"safe""; SELECT username FROM dba_users; --"`)
   })
 
   it("quotes mysql identifiers", () => {

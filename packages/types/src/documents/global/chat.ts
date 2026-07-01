@@ -57,6 +57,7 @@ export interface ChatConversationChannel {
   threadId?: string
   externalUserId?: string
   externalUserName?: string
+  serviceUrl?: string
 }
 
 export interface ChatConversationRequest extends Document {
@@ -102,4 +103,5 @@ export interface ChatIdentityLink extends Document {
   teamId?: string
   guildId?: string
   providerTenantId?: string
+  serviceUrl?: string
 }

@@ -527,6 +527,7 @@ export const handleChatMessage = async ({
           teamId: channel.teamId,
           guildId: channel.guildId,
           providerTenantId: channel.tenantId,
+          serviceUrl: channel.serviceUrl,
         })
 
       const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
