@@ -204,6 +204,78 @@ describe("getFlowEdgeRunHighlight", () => {
     ).toBeUndefined()
   })
 
+  it("highlights failed branch edges only for the branch that ran", () => {
+    const runResults = createResults(AutomationStatus.ERROR, [
+      createBranchResult({
+        success: false,
+        branchId: "branch-a",
+      }),
+    ])
+
+    expect(
+      getFlowEdgeRunHighlight({
+        edgeData: branchEdgeData,
+        target: "branch-target",
+        runResults,
+        viewMode: ViewMode.LOGS,
+        getProgressResult: getEmptyProgressResult,
+        getBranchId,
+      })
+    ).toBe("error")
+
+    expect(
+      getFlowEdgeRunHighlight({
+        edgeData: {
+          ...branchEdgeData,
+          branchIdx: 1,
+        },
+        target: "branch-target",
+        runResults,
+        viewMode: ViewMode.LOGS,
+        getProgressResult: getEmptyProgressResult,
+        getBranchId,
+      })
+    ).toBeUndefined()
+  })
+
+  it("highlights failed branch context child edges only for the branch that ran", () => {
+    const runResults = createResults(AutomationStatus.ERROR, [
+      createBranchResult({
+        success: false,
+        branchId: "branch-a",
+      }),
+    ])
+
+    expect(
+      getFlowEdgeRunHighlight({
+        edgeData: {
+          block: branchBlock,
+        },
+        target: "child-step",
+        runResults,
+        viewMode: ViewMode.LOGS,
+        getProgressResult: getEmptyProgressResult,
+        getBranchId,
+      })
+    ).toBe("error")
+
+    expect(
+      getFlowEdgeRunHighlight({
+        edgeData: {
+          block: {
+            ...branchBlock,
+            branchIdx: 1,
+          },
+        },
+        target: "child-step",
+        runResults,
+        viewMode: ViewMode.LOGS,
+        getProgressResult: getEmptyProgressResult,
+        getBranchId,
+      })
+    ).toBeUndefined()
+  })
+
   it("highlights branch edges as stopped when no branch matched", () => {
     const runResults = createResults(AutomationStatus.STOPPED, [
       createBranchResult({

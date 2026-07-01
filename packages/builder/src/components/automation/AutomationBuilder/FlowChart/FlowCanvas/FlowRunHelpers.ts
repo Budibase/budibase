@@ -262,7 +262,12 @@ export function getFlowEdgeRunHighlight({
     }
     if (
       runHighlight !== "stopped" &&
-      didBranchStepFail(runResults, edgeData.branchStepId)
+      didBranchStepFailBranch(
+        runResults,
+        edgeData.branchStepId,
+        edgeData.branchIdx,
+        getBranchId
+      )
     ) {
       return runHighlight
     }
@@ -284,7 +289,12 @@ export function getFlowEdgeRunHighlight({
     }
     if (
       runHighlight !== "stopped" &&
-      didBranchStepFail(runResults, edgeData.block.branchStepId)
+      didBranchStepFailBranch(
+        runResults,
+        edgeData.block.branchStepId,
+        edgeData.block.branchIdx,
+        getBranchId
+      )
     ) {
       return runHighlight
     }
@@ -364,11 +374,24 @@ function didBranchRun(
   return didBranchResultExecuteBranch(result, branchId)
 }
 
-function didBranchStepFail(
+function didBranchStepFailBranch(
   results: AutomationResults,
-  branchStepId: string
+  branchStepId: string,
+  branchIdx: number,
+  getBranchId: (branchStepId: string, branchIdx: number) => string | undefined
 ): boolean {
-  return isTerminalFailure(results.steps.find(step => step.id === branchStepId))
+  const result = results.steps.find(step => step.id === branchStepId)
+  if (!isTerminalFailure(result)) {
+    return false
+  }
+  if (!hasBranchResult(result)) {
+    return true
+  }
+
+  return didBranchResultExecuteBranch(
+    result,
+    getBranchId(branchStepId, branchIdx)
+  )
 }
 
 function didBranchStepStopWithoutMatch(
