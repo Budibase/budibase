@@ -12,28 +12,11 @@ import {
   type User,
   type UserCtx,
   type UserGroup,
-  type UserSSO,
 } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import env from "../environment"
-
-interface SensitiveGlobalUser extends User, Partial<UserSSO> {
-  thirdPartyProfile?: object
-}
-
-function stripSensitiveUserFields<T extends ContextUser | SensitiveGlobalUser>(
-  user: T
-): T {
-  delete user.oauth2
-  delete user.provider
-  delete user.providerType
-  delete user.profile
-  delete user.thirdPartyProfile
-  delete user.ssoId
-  delete user.forceResetPassword
-  return user
-}
+import { stripSensitiveUserFields } from "./sensitiveUserFields"
 
 export async function processUser(
   user: ContextUser,
@@ -43,7 +26,6 @@ export async function processUser(
     return user
   }
   user = cloneDeep(user)
-  delete user.password
   stripSensitiveUserFields(user)
   const workspaceId = opts.appId || context.getWorkspaceId()
   if (!workspaceId) {
@@ -124,14 +106,14 @@ export async function getGlobalUser(userId: string): Promise<ContextUser> {
 
 export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   const db = tenancy.getGlobalDB()
-  let globalUsers: SensitiveGlobalUser[]
+  let globalUsers: User[]
   if (userIds) {
-    globalUsers = await db.getMultiple<SensitiveGlobalUser>(userIds, {
+    globalUsers = await db.getMultiple<User>(userIds, {
       allowMissing: true,
     })
   } else {
     globalUsers = (
-      await db.allDocs<SensitiveGlobalUser>(
+      await db.allDocs<User>(
         dbCore.getGlobalUserParams(null, {
           include_docs: true,
         })
@@ -140,10 +122,7 @@ export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   }
   return globalUsers
     .filter(user => user != null)
-    .map(user => {
-      delete user.password
-      return stripSensitiveUserFields(user)
-    })
+    .map(user => stripSensitiveUserFields(user))
 }
 
 export async function getGlobalUsers(
@@ -162,10 +141,11 @@ export async function getGlobalUsersFromMetadata(users: ContextUser[]) {
     const globalUser = globalUsers.find(
       globalUser => globalUser && user._id?.includes(globalUser._id!)
     )
+    const metadata = stripSensitiveUserFields(cloneDeep(user))
     return {
       ...globalUser,
       // doing user second overwrites the id and rev (always metadata)
-      ...user,
+      ...metadata,
     }
   })
 }

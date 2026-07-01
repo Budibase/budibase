@@ -339,6 +339,96 @@ describe("syncGlobalUsers", () => {
     })
   })
 
+  it("strips SSO tokens from persisted metadata in fetchMetadata", async () => {
+    const user = await config.createUser({
+      firstName: "Persisted",
+      lastName: "Token",
+      admin: { global: false },
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    })
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      const workspaceDb = context.getWorkspaceDB()
+      const userMetadataId = db.generateUserMetadataID(user._id!)
+      await workspaceDb.put({
+        _id: userMetadataId,
+        tableId: "ta_users",
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        oauth2: { accessToken: "access", refreshToken: "refresh" },
+        provider: "google",
+        providerType: "google",
+        profile: { displayName: "Persisted Token" },
+        thirdPartyProfile: { id: "external" },
+        ssoId: "sso-user",
+        forceResetPassword: false,
+      })
+
+      const metadata = await fetchMetadata()
+      const found = metadata.find(doc => doc._id === userMetadataId)
+
+      expect(found).toEqual(
+        expect.not.objectContaining({
+          oauth2: expect.anything(),
+          provider: expect.anything(),
+          providerType: expect.anything(),
+          profile: expect.anything(),
+          thirdPartyProfile: expect.anything(),
+          ssoId: expect.anything(),
+          forceResetPassword: expect.anything(),
+        })
+      )
+    })
+  })
+
+  it("removes stale SSO tokens from persisted metadata during sync", async () => {
+    const user = await config.createUser({
+      admin: { global: false },
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    })
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      const workspaceDb = context.getWorkspaceDB()
+      const userMetadataId = db.generateUserMetadataID(user._id!)
+      await workspaceDb.put({
+        _id: userMetadataId,
+        tableId: "ta_users",
+        email: user.email,
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        oauth2: { accessToken: "access", refreshToken: "refresh" },
+        provider: "google",
+        providerType: "google",
+        profile: { displayName: "Persisted Token" },
+        thirdPartyProfile: { id: "external" },
+        ssoId: "sso-user",
+        forceResetPassword: false,
+      })
+
+      await syncGlobalUsers()
+
+      const stored = await workspaceDb.get(userMetadataId)
+      expect(stored).toEqual(
+        expect.not.objectContaining({
+          oauth2: expect.anything(),
+          provider: expect.anything(),
+          providerType: expect.anything(),
+          profile: expect.anything(),
+          thirdPartyProfile: expect.anything(),
+          ssoId: expect.anything(),
+          forceResetPassword: expect.anything(),
+        })
+      )
+    })
+  })
+
   it("workspace users are not synced if not specified", async () => {
     const user = await config.createUser({
       admin: { global: false },
