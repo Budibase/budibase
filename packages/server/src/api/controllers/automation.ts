@@ -447,7 +447,7 @@ export async function test(
     return
   }
 
-  ctx.body = await runTest()
+  ctx.body = (await runTest()) as TestAutomationResponse
 }
 
 export async function testStatus(ctx: UserCtx<void, unknown>) {

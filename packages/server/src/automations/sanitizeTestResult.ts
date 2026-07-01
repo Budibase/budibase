@@ -24,7 +24,7 @@ export function sanitizeAutomationTestResult(
     for (const step of sanitized.steps || []) {
       stripOAuth2FromOutputs(step.outputs)
     }
-  } else {
+  } else if ("outputs" in sanitized) {
     stripOAuth2FromOutputs(sanitized.outputs)
   }
   return sanitized
