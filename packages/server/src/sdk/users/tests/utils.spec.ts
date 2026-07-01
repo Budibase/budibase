@@ -372,17 +372,17 @@ describe("syncGlobalUsers", () => {
       const metadata = await fetchMetadata()
       const found = metadata.find(doc => doc._id === userMetadataId)
 
-      expect(found).toEqual(
-        expect.not.objectContaining({
-          oauth2: expect.anything(),
-          provider: expect.anything(),
-          providerType: expect.anything(),
-          profile: expect.anything(),
-          thirdPartyProfile: expect.anything(),
-          ssoId: expect.anything(),
-          forceResetPassword: expect.anything(),
-        })
-      )
+      for (const field of [
+        "oauth2",
+        "provider",
+        "providerType",
+        "profile",
+        "thirdPartyProfile",
+        "ssoId",
+        "forceResetPassword",
+      ]) {
+        expect(found).not.toHaveProperty(field)
+      }
     })
   })
 
