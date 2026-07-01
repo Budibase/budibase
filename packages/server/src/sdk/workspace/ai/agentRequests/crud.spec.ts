@@ -161,6 +161,66 @@ describe("agentRequests crud", () => {
       })
     })
 
+    it("marks a request as needs_input without completedAt", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Approve this purchase",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("needs_input")
+        expect(request.completedAt).toBeUndefined()
+        expect(request.entries[0].status).toEqual("needs_input")
+        expect(request.entries[0].completedAt).toBeUndefined()
+      })
+    })
+
+    it("treats needs_input as non-terminal so initActiveRequest reuses the same requestId", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const first = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Approve this purchase",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({
+          requestId: first.requestId,
+          status: "needs_input",
+        })
+
+        const second = await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Approve this purchase",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        })
+
+        expect(second?.requestId).toEqual(first.requestId)
+        expect(await fetchRequestsByAgent("agent_1")).toHaveLength(1)
+      })
+    })
+
     it("does nothing if the requestId does not exist", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await expect(

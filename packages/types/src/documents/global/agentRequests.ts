@@ -1,6 +1,10 @@
 import { Document } from "../../"
 
-export type AgentRequestStatus = "active" | "completed" | "failed"
+export type AgentRequestStatus =
+  | "active"
+  | "needs_input"
+  | "completed"
+  | "failed"
 
 export interface AgentRequestEntry {
   sessionId: string

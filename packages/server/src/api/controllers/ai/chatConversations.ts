@@ -47,6 +47,7 @@ import {
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
 import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
+import { ESCALATE_TOOL_NAME } from "../../../ai/tools/budibase"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -570,6 +571,25 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
     const result = await run.stream({
       pendingToolCalls,
+      onToolCalls: toolNames => {
+        if (trackingHandle && toolNames.includes(ESCALATE_TOOL_NAME)) {
+          sdk.ai.agentRequests
+            .updateRequestStatus({
+              requestId: trackingHandle.requestId,
+              status: "needs_input",
+            })
+            .catch(error => {
+              console.error(
+                "Failed to update agent request status to needs_input",
+                {
+                  agentId,
+                  sessionId,
+                  error,
+                }
+              )
+            })
+        }
+      },
     })
 
     const title = run.latestQuestion

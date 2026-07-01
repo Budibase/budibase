@@ -250,7 +250,7 @@ export async function updateRequestStatus({
   error,
 }: {
   requestId: string
-  status: "active" | "completed" | "failed"
+  status: "active" | "needs_input" | "completed" | "failed"
   error?: string
 }): Promise<void> {
   const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
