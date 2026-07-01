@@ -22,9 +22,9 @@ interface SensitiveGlobalUser extends User, Partial<UserSSO> {
   thirdPartyProfile?: object
 }
 
-function stripSensitiveUserFields<
-  T extends ContextUser | SensitiveGlobalUser,
->(user: T): T {
+function stripSensitiveUserFields<T extends ContextUser | SensitiveGlobalUser>(
+  user: T
+): T {
   delete user.oauth2
   delete user.provider
   delete user.providerType
