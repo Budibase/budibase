@@ -204,7 +204,7 @@
         value={meta?.fields?.[field]?.useAttachmentBinding}
         text={"Use bindings"}
         size={"XS"}
-        disabled={disabled}
+        {disabled}
         on:change={e => {
           onChange({
             row: {
