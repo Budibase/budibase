@@ -24,6 +24,7 @@
   $: goto = $gotoStore
 
   export let workspaceApp: UIWorkspaceApp | null = null
+  export let initialProjectIds: string[] = []
 
   let modal: Modal
   export const show = () => modal.show()
@@ -122,6 +123,7 @@
         const workspaceApp = await workspaceAppStore.add({
           ...workspaceAppData,
           disabled: true,
+          projectIds: initialProjectIds.length ? initialProjectIds : undefined,
         })
 
         const newScreen = await screenStore.save({

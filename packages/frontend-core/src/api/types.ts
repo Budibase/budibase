@@ -20,6 +20,7 @@ import { MigrationEndpoints } from "./migrations"
 import { OAuth2Endpoints } from "./oauth2"
 import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
+import { ProjectEndpoints } from "./projects"
 import { PluginEndpoins } from "./plugins"
 import { QueryEndpoints } from "./queries"
 import { RelationshipEndpoints } from "./relationships"
@@ -39,6 +40,8 @@ import { AgentTestEndpoints } from "./agentTests"
 import { AgentLogEndpoints } from "./agentLogs"
 import { AgentRequestEndpoints } from "./agentRequests"
 import { ChatAppEndpoints } from "./chatApps"
+import { ChatLinksEndpoints } from "./chatLinks"
+import { EscalationEndpoints } from "./escalations"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
@@ -125,6 +128,8 @@ export type APIClient = BaseAPIClient &
   AgentLogEndpoints &
   AgentRequestEndpoints &
   ChatAppEndpoints &
+  ChatLinksEndpoints &
+  EscalationEndpoints &
   AnalyticsEndpoints &
   AppEndpoints &
   AttachmentEndpoints &
@@ -162,6 +167,7 @@ export type APIClient = BaseAPIClient &
     viewV2: ViewV2Endpoints
     oauth2: OAuth2Endpoints
     navigation: NavigationEndpoints
+    projects: ProjectEndpoints
     workspaceApp: WorkspaceAppEndpoints
     workspace: WorkspaceFavouriteEndpoints
     workspaceHome: WorkspaceHomeEndpoints

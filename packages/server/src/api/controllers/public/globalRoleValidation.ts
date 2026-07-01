@@ -4,6 +4,22 @@ import type { UserCtx } from "@budibase/types"
 interface GlobalRoleUpdate {
   builder?: boolean
   admin?: boolean
+  appBuilder?: {
+    appId?: string
+  }
+  role?: {
+    appId?: string
+  }
+}
+
+const validateAppRoleUpdate = (ctx: UserCtx, appId?: string) => {
+  if (!appId) {
+    return
+  }
+
+  if (!users.isAdmin(ctx.user) && !users.isBuilder(ctx.user, appId)) {
+    ctx.throw(403, "Only app builders or admins can update app permissions.")
+  }
 }
 
 export const validateGlobalRoleUpdate = (
@@ -20,4 +36,7 @@ export const validateGlobalRoleUpdate = (
       "Only global builders or admins can update global builder permissions."
     )
   }
+
+  validateAppRoleUpdate(ctx, roleUpdate.appBuilder?.appId)
+  validateAppRoleUpdate(ctx, roleUpdate.role?.appId)
 }
