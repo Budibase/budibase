@@ -6,11 +6,19 @@ import {
   type BranchTerminalSource,
 } from "./renderers/FlowBranchRenderer"
 import { renderLoopV2Container } from "./renderers/FlowLoopRenderer"
-import type {
-  AutomationGraph,
-  AutomationGraphItem,
-} from "./AutomationGraphTypes"
 import type { GraphBuildDeps } from "./FlowGraphTypes"
+
+interface AutomationGraphItem {
+  block: AutomationBlock
+  previousBlock?: AutomationBlock
+  index: number
+  isTrigger: boolean
+  isLast: boolean
+}
+
+interface AutomationGraph {
+  items: AutomationGraphItem[]
+}
 
 const isLoopV2Step = (step: AutomationBlock): step is LoopV2Step => {
   return step.stepId === AutomationActionStepId.LOOP_V2 && "schema" in step
