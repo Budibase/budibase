@@ -104,6 +104,10 @@
   }
 
   const openColorPicker = (id: number) => {
+    if (openOption === id) {
+      openOption = null
+      return
+    }
     anchor = document.getElementById(`color-${id}`) ?? undefined
     openOption = id
   }
@@ -166,6 +170,7 @@
         <div
           id="color-{option.id}"
           class="color-picker"
+          data-ignore-click-outside="true"
           on:click={() => openColorPicker(option.id)}
         >
           <div class="circle" style="--color:{option.color}">
