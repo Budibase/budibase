@@ -2,6 +2,7 @@ import { context, roles } from "@budibase/backend-core"
 import { ContextUserMetadata, UserCtx, UserMetadata } from "@budibase/types"
 import { InternalTables } from "../db/utils"
 import { getGlobalUser } from "./global"
+import { stripSensitiveUserFields } from "./sensitiveUserFields"
 
 export function getUserFullName(user: {
   firstName?: string
@@ -33,6 +34,7 @@ export async function getFullUser(
     const db = context.getWorkspaceDB()
     metadata = await db.get<UserMetadata>(userId)
     delete metadata.csrfToken
+    stripSensitiveUserFields(metadata)
   } catch (err) {
     // it is fine if there is no user metadata yet
   }
