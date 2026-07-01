@@ -176,6 +176,33 @@ export async function fetchRequestsByAgent(
   return sortRequests(await queryRequestsByAgent(agentId))
 }
 
+export async function findRequestBySession(
+  agentId: string,
+  sessionId: string
+): Promise<AgentRequest | undefined> {
+  const requests = await fetchRequestsByAgent(agentId)
+  return requests.find(r => r.entries.some(e => e.sessionId === sessionId))
+}
+
+export function resolveFinalRequestStatus({
+  toolCallsIncomplete,
+  unrecoveredToolFailures,
+}: {
+  toolCallsIncomplete: boolean
+  unrecoveredToolFailures: Set<string>
+}): { status: "completed" | "failed"; error?: string } {
+  if (toolCallsIncomplete) {
+    return { status: "failed", error: "Tool calls incomplete" }
+  }
+  if (unrecoveredToolFailures.size > 0) {
+    return {
+      status: "failed",
+      error: `Tool call(s) failed: ${[...unrecoveredToolFailures].join(", ")}`,
+    }
+  }
+  return { status: "completed" }
+}
+
 export async function fetchRequestsByAgentAndUser(
   agentId: string,
   userId: string
@@ -248,10 +275,16 @@ export async function updateRequestStatus({
   requestId,
   status,
   error,
+  allowFromNeedsInput = false,
 }: {
   requestId: string
   status: "active" | "needs_input" | "completed" | "failed"
   error?: string
+  // needs_input is only meant to move once a human has actually responded to
+  // the escalation (approved/rejected/expired) - set this when that's the
+  // case. Anything else touching a needs_input request (a later turn in the
+  // same conversation, an unrelated error) must leave it as-is.
+  allowFromNeedsInput?: boolean
 }): Promise<void> {
   const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
   if (!request) {
@@ -259,6 +292,14 @@ export async function updateRequestStatus({
   }
 
   if (isTerminalStatus(request.status)) {
+    return
+  }
+
+  if (
+    request.status === "needs_input" &&
+    status !== "needs_input" &&
+    !allowFromNeedsInput
+  ) {
     return
   }
 
@@ -432,7 +473,9 @@ export async function createOrUpdateRequestForPrompt({
       ...request,
       entries: nextEntries,
       updatedAt: timestamp,
-      status: "active",
+      // Linking a follow-up prompt into this thread isn't a response to the
+      // escalation - leave needs_input as-is rather than reviving it.
+      status: request.status === "needs_input" ? "needs_input" : "active",
     }),
     created: false,
   }

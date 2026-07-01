@@ -2,7 +2,9 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import {
   createOrUpdateRequestForPrompt,
   fetchRequestsByAgent,
+  findRequestBySession,
   initActiveRequest,
+  resolveFinalRequestStatus,
   updateRequestStatus,
 } from "./crud"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
@@ -279,6 +281,116 @@ describe("agentRequests crud", () => {
         ).resolves.toBeUndefined()
       })
     })
+
+    it("does not move a needs_input request away without allowFromNeedsInput", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Order 1500 pens",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({ requestId, status: "completed" })
+        await updateRequestStatus({
+          requestId,
+          status: "failed",
+          error: "boom",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("needs_input")
+      })
+    })
+
+    it("moves a needs_input request when allowFromNeedsInput is set (escalation resolved)", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Order 1500 pens",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({
+          requestId,
+          status: "completed",
+          allowFromNeedsInput: true,
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("completed")
+      })
+    })
+  })
+
+  describe("findRequestBySession", () => {
+    it("finds the request that has an entry with the given sessionId", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        const found = await findRequestBySession("agent_1", "session_1")
+        expect(found?._id).toEqual(requestId)
+      })
+    })
+
+    it("returns undefined when no request matches the session", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const found = await findRequestBySession("agent_1", "unknown-session")
+        expect(found).toBeUndefined()
+      })
+    })
+  })
+
+  describe("resolveFinalRequestStatus", () => {
+    it("fails with an incomplete tool calls error when tool calls are incomplete", () => {
+      expect(
+        resolveFinalRequestStatus({
+          toolCallsIncomplete: true,
+          unrecoveredToolFailures: new Set(),
+        })
+      ).toEqual({ status: "failed", error: "Tool calls incomplete" })
+    })
+
+    it("fails listing unrecovered tool failures", () => {
+      expect(
+        resolveFinalRequestStatus({
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(["escalate"]),
+        })
+      ).toEqual({
+        status: "failed",
+        error: "Tool call(s) failed: escalate",
+      })
+    })
+
+    it("completes when nothing failed", () => {
+      expect(
+        resolveFinalRequestStatus({
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+        })
+      ).toEqual({ status: "completed" })
+    })
   })
 
   describe("createOrUpdateRequestForPrompt", () => {
@@ -390,6 +502,52 @@ describe("agentRequests crud", () => {
           status: "active",
         })
         expect(second?.created).toEqual(false)
+      })
+    })
+
+    it("keeps needs_input when linking a follow-up prompt into a thread awaiting escalation", async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const first = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: "Order 1500 pens",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        await updateRequestStatus({
+          requestId: first!.request._id!,
+          status: "needs_input",
+        })
+
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first!.request._id,
+          entryAction: "append_latest_entry",
+        })
+
+        const second = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_2",
+          latestUserPrompt: "any update on this?",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        expect(second?.request._id).toEqual(first?.request._id)
+        expect(second?.request.status).toEqual("needs_input")
       })
     })
 

@@ -232,20 +232,15 @@ const finalizeAgentRequestTracking = async ({
   if (!trackingHandle) {
     return
   }
-  const hasUnrecoveredToolFailure = unrecoveredToolFailures.size > 0
-  const finalStatus =
-    toolCallsIncomplete || hasUnrecoveredToolFailure ? "failed" : "completed"
+  const { status, error } = sdk.ai.agentRequests.resolveFinalRequestStatus({
+    toolCallsIncomplete,
+    unrecoveredToolFailures,
+  })
   await sdk.ai.agentRequests
     .updateRequestStatus({
       requestId: trackingHandle.requestId,
-      status: finalStatus,
-      ...(toolCallsIncomplete
-        ? { error: "Tool calls incomplete" }
-        : hasUnrecoveredToolFailure
-          ? {
-              error: `Tool call(s) failed: ${[...unrecoveredToolFailures].join(", ")}`,
-            }
-          : {}),
+      status,
+      ...(error !== undefined ? { error } : {}),
     })
     .catch(updateError => {
       console.error("Failed to update agent request status on finish", {
