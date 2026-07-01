@@ -244,8 +244,15 @@ describe("getSessionSummary", () => {
 })
 
 describe("getStepFlow", () => {
+  it("returns loading state", () => {
+    expect(getStepFlow(undefined, true)).toEqual({
+      from: "Loading details",
+      to: "...",
+    })
+  })
+
   it("returns default flow when detail is undefined", () => {
-    expect(getStepFlow(undefined)).toEqual({
+    expect(getStepFlow(undefined, false)).toEqual({
       from: "Model input",
       to: "Model output",
     })
@@ -256,7 +263,7 @@ describe("getStepFlow", () => {
       toolResults: [{ name: "search", content: "" }],
       toolCalls: [{ name: "update_row", arguments: "{}" }],
     })
-    const flow = getStepFlow(detail)
+    const flow = getStepFlow(detail, false)
     expect(flow.from).toBe("search")
     expect(flow.to).toBe("update_row")
   })
@@ -269,14 +276,14 @@ describe("getStepFlow", () => {
       toolCalls: [],
       response: "done",
     })
-    const flow = getStepFlow(detail)
+    const flow = getStepFlow(detail, false)
     expect(flow.from).toBe("Search Tool")
     expect(flow.to).toBe("Assistant response")
   })
 
   it("falls back to Prompt + context when no tool results", () => {
     const detail = makeDetail({ toolResults: [], toolCalls: [] })
-    expect(getStepFlow(detail).from).toBe("Prompt + context")
+    expect(getStepFlow(detail, false).from).toBe("Prompt + context")
   })
 
   it("shows Error when detail has an error and no tool calls", () => {
@@ -284,7 +291,7 @@ describe("getStepFlow", () => {
       toolCalls: [],
       error: { message: "fail" },
     })
-    expect(getStepFlow(detail).to).toBe("Error")
+    expect(getStepFlow(detail, false).to).toBe("Error")
   })
 
   it("shows No response when no tool calls, no error, no response", () => {
@@ -292,7 +299,7 @@ describe("getStepFlow", () => {
       toolCalls: [],
       response: "",
     })
-    expect(getStepFlow(detail).to).toBe("No response")
+    expect(getStepFlow(detail, false).to).toBe("No response")
   })
 
   it("groups duplicate tool names with count", () => {
@@ -304,7 +311,7 @@ describe("getStepFlow", () => {
         { name: "update_row", arguments: "{}" },
       ],
     })
-    expect(getStepFlow(detail).to).toBe("search (x2), update_row")
+    expect(getStepFlow(detail, false).to).toBe("search (x2), update_row")
   })
 })
 

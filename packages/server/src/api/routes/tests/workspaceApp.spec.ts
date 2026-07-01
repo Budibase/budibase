@@ -1,9 +1,14 @@
 import { structures } from "@budibase/backend-core/tests"
-import { AppFontFamily, Theme, type Workspace } from "@budibase/types"
+import {
+  AppFontFamily,
+  FeatureFlag,
+  Theme,
+  type Workspace,
+} from "@budibase/types"
 import nock from "nock"
 import * as setup from "./utilities"
 import sdk from "../../../sdk"
-import { context, events } from "@budibase/backend-core"
+import { context, events, features } from "@budibase/backend-core"
 
 describe("/workspaceApp", () => {
   const testConfig = setup.getConfig()
@@ -277,6 +282,51 @@ describe("/workspaceApp", () => {
 
       expect(updated.theme).toBe(Theme.MIDNIGHT)
       expect(updated.customTheme?.fontFamily).toBe(AppFontFamily.SOURCE_SANS)
+    })
+
+    it("preserves omitted projectIds and clears explicit empty projectIds", async () => {
+      await features.testutils.withFeatureFlags(
+        testConfig.getTenantId(),
+        { [FeatureFlag.PROJECTS]: true },
+        async () => {
+          const { project } = await api.project.create({
+            name: "Operations",
+          })
+          const { workspaceApp } = await api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "Project app",
+              url: "/project-app",
+              projectIds: [project._id],
+            })
+          )
+
+          const { workspaceApp: preserved } = await api.workspaceApp.update({
+            _id: workspaceApp._id,
+            _rev: workspaceApp._rev,
+            name: "Updated project app",
+            url: workspaceApp.url,
+            navigation: workspaceApp.navigation,
+            disabled: workspaceApp.disabled,
+          })
+
+          expect(preserved.projectIds).toEqual([project._id])
+
+          const { workspaceApp: updated } = await api.workspaceApp.update({
+            _id: preserved._id,
+            _rev: preserved._rev,
+            name: preserved.name,
+            url: preserved.url,
+            navigation: preserved.navigation,
+            disabled: preserved.disabled,
+            projectIds: [],
+          })
+
+          expect(updated.projectIds).toBeUndefined()
+
+          const fetched = await api.workspaceApp.find(workspaceApp._id)
+          expect(fetched.projectIds).toBeUndefined()
+        }
+      )
     })
 
     it("rejects invalid theme settings", async () => {

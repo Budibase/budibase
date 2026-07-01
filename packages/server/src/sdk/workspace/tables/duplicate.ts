@@ -3,6 +3,7 @@ import { create } from "./create"
 import { getAllInternalTables } from "./getters"
 import { events } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
+import { getValidProjectIdsForDuplication } from "../projects/utils"
 
 /**
  * Duplicates an internal table without its data
@@ -20,6 +21,7 @@ export async function duplicate(table: Table, userId?: string): Promise<Table> {
   const tableToCreate: WithoutDocMetadata<Table> = {
     name: duplicatedName,
     type: table.type,
+    projectIds: await getValidProjectIdsForDuplication(table.projectIds),
     sourceType: table.sourceType,
     sourceId: table.sourceId,
     schema: { ...table.schema },

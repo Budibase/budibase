@@ -19,6 +19,21 @@ import { Readable } from "stream"
 import { blob } from "stream/consumers"
 import { unwrapLiteLLMFileId } from "./litellm"
 
+// The OpenAI client resolves its API key lazily, so an undefined key would
+// otherwise surface later as a misleading "OpenAI API key is missing" error.
+// Validate up front so a missing key fails with an explicit message.
+export function getBBAIKey(): string {
+  const apiKey = environment.BBAI_LITELLM_KEY
+  if (!apiKey) {
+    throw new HTTPError(
+      "Budibase AI is not configured in this environment (BBAI_LITELLM_KEY is missing). " +
+        "Ensure the key is available to every service that runs agents, including the automation worker.",
+      500
+    )
+  }
+  return apiKey
+}
+
 interface OpenAIUsage {
   prompt_tokens?: number
   completion_tokens?: number
@@ -161,7 +176,7 @@ export async function createBBAIClient(
   }
 
   const client = createOpenAI({
-    apiKey: environment.BBAI_LITELLM_KEY,
+    apiKey: getBBAIKey(),
     baseURL: baseUrl,
     fetch: createBBAIFetch(sessionId, reasoningEffort, agentId),
   })
@@ -228,7 +243,7 @@ export async function createBBAIClient(
         const response = await fetch(`${liteLLMBaseUrl}/v1/files`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${environment.BBAI_LITELLM_KEY}`,
+            Authorization: `Bearer ${getBBAIKey()}`,
           },
           body: formdata,
         })

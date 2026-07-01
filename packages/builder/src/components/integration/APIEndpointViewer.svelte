@@ -27,6 +27,7 @@
     notifications,
     Banner,
     Divider,
+    Label,
   } from "@budibase/bbui"
   import {
     BodyType,
@@ -82,6 +83,7 @@
   import ExpandablePanel from "@/components/common/ExpandablePanel.svelte"
   import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { confirm } from "@/helpers"
   import {
@@ -103,6 +105,7 @@
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
   export let openAddConnectionOnMount: boolean = false
+  export let initialProjectIds: string[] = []
 
   $beforeUrlChange
   $: goto = $gotoStore
@@ -132,6 +135,8 @@
   let defaultSpecServerUrl: string | undefined = undefined
   let response: PreviewQueryResponse
   let editableQuery: Query | undefined
+  let projectIds: string[] = []
+  let originalProjectIds: string[] = []
   let datasource: Datasource | UIInternalDatasource | undefined
   let enabledHeaders: Record<string, boolean> = {}
   let globalDynamicRequestBindings: EnrichedBinding[] = []
@@ -210,6 +215,12 @@
 
   $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
+    projectIds =
+      editableQuery?.projectIds ||
+      (!editableQuery?._id && initialProjectIds.length
+        ? [...initialProjectIds]
+        : [])
+    originalProjectIds = [...projectIds]
     lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
@@ -325,6 +336,7 @@
     buildQuery(
       {
         ...editableQuery,
+        projectIds: getQueryProjectIds(),
         datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },
@@ -431,6 +443,13 @@
   const getDatasourceBaseUrl = (
     ds: Datasource | UIInternalDatasource | undefined
   ): string | undefined => (ds as Datasource)?.config?.url as string | undefined
+
+  const getQueryProjectIds = () => {
+    if (projectIds.length) {
+      return projectIds
+    }
+    return !isNewQuery && originalProjectIds.length ? [] : undefined
+  }
 
   const resolveStoreQuery = (
     list: Query[] | undefined,
@@ -678,6 +697,8 @@
       }
 
       editableQuery = structuredClone(updatedQuery)
+      projectIds = updatedQuery.projectIds || []
+      originalProjectIds = [...projectIds]
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
@@ -1044,6 +1065,10 @@
           {#if editableQuery}
             <div class="access">
               <AccessLevelSelect query={editableQuery} label="Access" />
+            </div>
+            <div class="project">
+              <Label>Projects</Label>
+              <ProjectSelect bind:value={projectIds} label="" autoWidth />
             </div>
           {/if}
           {#if endpointDocs}
@@ -1587,6 +1612,11 @@
     gap: var(--spacing-s);
   }
   .access {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+  .project {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);

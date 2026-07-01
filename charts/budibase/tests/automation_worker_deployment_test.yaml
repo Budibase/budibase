@@ -90,6 +90,26 @@ tests:
             name: APP_FEATURES
             value: "automations"
 
+  - it: should propagate BBAI_LITELLM_KEY when configured so agents can run
+    set:
+      services.automationWorkers.enabled: true
+      services.litellm.bbaiKey: "sk-bbai-test"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: BBAI_LITELLM_KEY
+            value: "sk-bbai-test"
+
+  - it: should not render BBAI_LITELLM_KEY when unset
+    set:
+      services.automationWorkers.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: BBAI_LITELLM_KEY
+
   - it: should set correct container port
     set:
       services.automationWorkers.enabled: true

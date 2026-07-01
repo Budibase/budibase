@@ -20,10 +20,7 @@
     statusFilter?: string
     dateRange?: [Dayjs | null, Dayjs | null]
     triggerFilter?: string
-    onSessionRowClick: (_row: {
-      sessionId?: string
-      environment?: AgentLogEnvironment
-    }) => void
+    onSessionRowClick: (_row: { sessionId?: string }) => void
     onLoadMore: () => void | Promise<void>
   }
 
@@ -131,19 +128,18 @@
   .filters-bar {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--spacing-s) var(--spacing-m);
+    gap: var(--spacing-m);
     padding: var(--spacing-l) var(--spacing-l) var(--spacing-s);
     align-items: flex-end;
   }
 
   .filter-group {
-    flex: 1 1 140px;
+    flex: 0 0 120px;
     min-width: 0;
   }
 
   .date-range-group {
-    flex: 2 1 300px;
+    flex: 0 1 420px;
     max-width: 420px;
     display: flex;
     flex-direction: row;
@@ -153,15 +149,6 @@
   .date-range-group :global(.spectrum-Form-item) {
     flex: 1 1 auto;
     width: 0;
-  }
-
-  .date-range-group :global(.date-range-picker > *) {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .date-range-group :global(.date-range-picker .spectrum-InputGroup) {
-    width: 100%;
   }
 
   .filter-label {
@@ -228,23 +215,5 @@
     padding: var(--spacing-s) 0;
     border-top: 1px solid var(--spectrum-global-color-gray-200);
     flex-shrink: 0;
-  }
-
-  @media (max-width: 1400px) {
-    .filters-bar {
-      padding-top: var(--spacing-m);
-    }
-
-    .date-range-group {
-      max-width: 360px;
-    }
-  }
-
-  @media (max-width: 900px) {
-    .filter-group,
-    .date-range-group {
-      flex-basis: 100%;
-      max-width: none;
-    }
   }
 </style>
