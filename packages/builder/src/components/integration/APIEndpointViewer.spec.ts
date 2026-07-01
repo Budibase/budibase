@@ -210,6 +210,21 @@ vi.mock("@/stores/builder", async () => {
   }
 })
 
+vi.mock("@/stores/portal", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/stores/portal")>()
+  const { writable } = await import("svelte/store")
+  const projectsStore = {
+    ...writable([]),
+    ensureFetched: vi.fn().mockResolvedValue(undefined),
+  }
+
+  return {
+    ...actual,
+    featureFlags: writable({}),
+    projectsStore,
+  }
+})
+
 import {
   datasources,
   hasRestTemplate,
@@ -406,6 +421,15 @@ describe("API Endpoint Viewer", () => {
     await waitFor(() => {
       expect(container.querySelector(".request-heading")).not.toBeNull()
       expect(notifications.error).not.toBeCalled()
+    })
+  })
+
+  it("hides project assignment controls when projects are disabled", async () => {
+    const { container } = setupDOM({ datasourceId: REST_DS_ID })
+
+    await waitFor(() => {
+      expect(container.querySelector(".request-heading")).not.toBeNull()
+      expect(container.textContent).not.toContain("Projects")
     })
   })
 
