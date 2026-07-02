@@ -1,30 +1,35 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
   import { onMount } from "svelte"
   import GridPopover from "../overlays/GridPopover.svelte"
   import { OptionColours } from "../../../constants"
+  import { hexToHsla } from "../../../utils"
 
-  export let value
-  export let schema
-  export let onChange
+  export let value: string | string[] | undefined
+  export let schema: {
+    constraints?: { inclusion?: string[] }
+    optionColors?: Record<string, string>
+  }
+  export let onChange: (val: string | string[] | null) => void
   export let focused = false
   export let multi = false
   export let readonly = false
-  export let api
+  export let api: Record<string, unknown>
   export let contentLines = 1
 
   const InvalidColor = "hsla(0, 0%, 70%, 0.3)"
 
   let isOpen = false
-  let focusedOptionIdx = null
-  let anchor
+  let focusedOptionIdx: number | null = null
+  let anchor: HTMLElement
 
   $: options = schema?.constraints?.inclusion || []
   $: optionColors = schema?.optionColors || {}
   $: editable = focused && !readonly
-  $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
+  $: values = Array.isArray(value)
+    ? value
+    : [value].filter((x): x is string => x != null)
   $: {
-    // Close when deselected
     if (!focused && isOpen) {
       close()
     }
@@ -39,15 +44,19 @@
     isOpen = false
   }
 
-  const getOptionColor = value => {
-    let idx = value ? options.indexOf(value) : null
+  const getOptionColor = (val: string) => {
+    let idx = val ? options.indexOf(val) : null
     if (idx == null || idx === -1) {
       return InvalidColor
     }
     return OptionColours[idx % OptionColours.length]
   }
 
-  const toggleOption = option => {
+  const resolveColor = (color: string) => {
+    return color?.startsWith("#") ? hexToHsla(color) : color
+  }
+
+  const toggleOption = (option: string) => {
     if (!multi) {
       onChange(option === value ? null : option)
       close()
@@ -61,17 +70,20 @@
     }
   }
 
-  const onKeyDown = e => {
+  const onKeyDown = (e: KeyboardEvent) => {
     if (!isOpen) {
       return false
     }
     e.preventDefault()
     if (e.key === "ArrowDown") {
-      focusedOptionIdx = Math.min(focusedOptionIdx + 1, options.length - 1)
+      focusedOptionIdx = Math.min(
+        (focusedOptionIdx ?? 0) + 1,
+        options.length - 1
+      )
     } else if (e.key === "ArrowUp") {
-      focusedOptionIdx = Math.max(focusedOptionIdx - 1, 0)
+      focusedOptionIdx = Math.max((focusedOptionIdx ?? 0) - 1, 0)
     } else if (e.key === "Enter") {
-      toggleOption(options[focusedOptionIdx])
+      toggleOption(options[focusedOptionIdx ?? 0])
     }
     return true
   }
@@ -103,8 +115,9 @@
   >
     {#each values as val}
       {@const color = optionColors[val] || getOptionColor(val)}
+      {@const resolvedColor = resolveColor(color)}
       {#if color}
-        <div class="badge text" style="--color: {color}">
+        <div class="badge text" style="--color: {resolvedColor}">
           <span>
             {val}
           </span>
@@ -128,6 +141,7 @@
     <div class="options">
       {#each options as option, idx}
         {@const color = optionColors[option] || getOptionColor(option)}
+        {@const resolvedColor = resolveColor(color)}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
@@ -136,7 +150,7 @@
           class:focused={focusedOptionIdx === idx}
           on:mouseenter={() => (focusedOptionIdx = idx)}
         >
-          <div class="badge text" style="--color: {color}">
+          <div class="badge text" style="--color: {resolvedColor}">
             <span>
               {option}
             </span>

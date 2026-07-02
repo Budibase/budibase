@@ -38,6 +38,7 @@ export interface Workspace extends Document {
   scripts?: AppScript[]
   // list of origins (e.g. https://example.com) allowed to embed this
   // workspace's apps in an iframe. Empty/unset means any origin is allowed.
+  savedOptionColors?: string[]
   embedAllowedOrigins?: string[]
   // configuration for authenticating embedded users via a signed token passed
   // by the host site (e.g. Nextcloud). The token's identity is mapped to an
