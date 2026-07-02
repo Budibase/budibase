@@ -70,7 +70,7 @@
     textColor={badgeColorsByStatus[status].textColor}
   >
     {statusLabelByStatus[status]}
-    <span class="status-icon" class:spinning={status === "active"}>
+    <span class="status-icon">
       <Icon
         size="XS"
         name={iconByStatus[status]}
@@ -99,18 +99,5 @@
     justify-content: center;
     width: 13px;
     height: 13px;
-  }
-
-  .status-icon.spinning {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
   }
 </style>
