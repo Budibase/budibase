@@ -5,9 +5,11 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@budibase/bbui", async () => {
   const { default: Select } = await import("./tests/MockSelect.svelte")
   const { default: DatePicker } = await import("./tests/MockDatePicker.svelte")
+  const { default: Input } = await import("./tests/MockInput.svelte")
 
   return {
     DatePicker,
+    Input,
     Select,
   }
 })
@@ -83,7 +85,7 @@ describe("ConditionValueControl", () => {
 
   it.each([
     [FieldType.STRING, "Condition value", "INPUT", "text"],
-    [FieldType.NUMBER, "Condition value", "INPUT", "number"],
+    [FieldType.NUMBER, "Value", "INPUT", "number"],
     [FieldType.DATETIME, "Date value", "INPUT", undefined],
     [FieldType.BOOLEAN, "Select", "SELECT", undefined],
   ])(
@@ -114,7 +116,9 @@ describe("ConditionValueControl", () => {
     "dispatches direct %s value updates",
     async (valueType, value, inputType) => {
       const { onBlur, onChange } = renderControl({ valueType })
-      const input = screen.getByLabelText("Condition value")
+      const input = screen.getByLabelText(
+        valueType === FieldType.NUMBER ? "Value" : "Condition value"
+      )
 
       expect(input).toHaveAttribute("type", inputType)
 
@@ -193,13 +197,19 @@ describe("ConditionValueControl", () => {
   })
 
   it.each([
+    [FieldType.NUMBER, "Value"],
     [FieldType.DATETIME, "Date value"],
     [FieldType.BOOLEAN, "Select"],
   ])(
     "shows a free-form binding value for %s and restores the typed control when cleared",
     async (valueType, directControlLabel) => {
       const { onChange, rerender } = renderControl({
-        value: valueType === FieldType.BOOLEAN ? "true" : "2026-05-01",
+        value:
+          valueType === FieldType.BOOLEAN
+            ? "true"
+            : valueType === FieldType.NUMBER
+              ? "42"
+              : "2026-05-01",
         valueType,
       })
 

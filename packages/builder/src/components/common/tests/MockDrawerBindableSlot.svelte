@@ -13,8 +13,12 @@
   const isValidDate = (value: any) =>
     !value || !Number.isNaN(new Date(value).valueOf())
 
+  const isValidNumber = (value: any) =>
+    value == null || value === "" || !Number.isNaN(Number(value))
+
   $: showFreeForm =
     (type === "boolean" && !isValidBoolean(value)) ||
+    (type === "number" && !isValidNumber(value)) ||
     ((type === "date" || type === "datetime") && !isValidDate(value))
 
   const onInput = (event: Event) => {

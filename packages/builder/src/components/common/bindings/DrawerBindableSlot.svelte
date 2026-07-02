@@ -105,6 +105,10 @@
     )
   }
 
+  const isValidNumber = value => {
+    return value == null || value === "" || !Number.isNaN(Number(value))
+  }
+
   const validationMap = {
     date: isValidDate,
     datetime: isValidDate,
@@ -114,6 +118,7 @@
     array: hasValidOptions,
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),
+    number: isValidNumber,
     options: value => !isJSBinding(value) && !findHBSBlocks(value)?.length,
     boolean: isValidBoolean,
     attachment: false,
@@ -135,6 +140,9 @@
     }
     if (type === "date" || type === "datetime") {
       return "date-slot-icon"
+    }
+    if (!isValid(value)) {
+      return "slot-icon"
     }
     if (
       ![
@@ -253,6 +261,7 @@
   }
 
   .icon {
+    right: 1px;
     bottom: 1px;
     position: absolute;
     justify-content: center;
