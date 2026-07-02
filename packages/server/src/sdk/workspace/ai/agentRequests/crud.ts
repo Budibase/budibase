@@ -28,7 +28,7 @@ const buildEntry = ({
     operationNames: operation?.name ? [operation.name] : [],
     createdAt: timestamp,
     updatedAt: timestamp,
-    status: "completed",
+    status: "active",
   }
 }
 
@@ -52,6 +52,9 @@ const buildThread = ({
     status: entry.status,
   }
 }
+
+const isTerminalStatus = (status: AgentRequest["status"]) =>
+  status === "completed" || status === "failed"
 
 const sortRequests = (requests: AgentRequest[]) =>
   requests.sort(
@@ -173,6 +176,33 @@ export async function fetchRequestsByAgent(
   return sortRequests(await queryRequestsByAgent(agentId))
 }
 
+export async function findRequestBySession(
+  agentId: string,
+  sessionId: string
+): Promise<AgentRequest | undefined> {
+  const requests = await fetchRequestsByAgent(agentId)
+  return requests.find(r => r.entries.some(e => e.sessionId === sessionId))
+}
+
+export function resolveFinalRequestStatus({
+  toolCallsIncomplete,
+  unrecoveredToolFailures,
+}: {
+  toolCallsIncomplete: boolean
+  unrecoveredToolFailures: Set<string>
+}): { status: "completed" | "failed"; error?: string } {
+  if (toolCallsIncomplete) {
+    return { status: "failed", error: "Tool calls incomplete" }
+  }
+  if (unrecoveredToolFailures.size > 0) {
+    return {
+      status: "failed",
+      error: `Tool call(s) failed: ${[...unrecoveredToolFailures].join(", ")}`,
+    }
+  }
+  return { status: "completed" }
+}
+
 export async function fetchRequestsByAgentAndUser(
   agentId: string,
   userId: string
@@ -186,6 +216,119 @@ export async function fetchRequestsByAgentAndUser(
     .slice(0, THREAD_CANDIDATE_LIMIT)
 }
 
+export async function initActiveRequest({
+  agentId,
+  userId,
+  sessionId,
+  latestPrompt,
+  operation,
+  source,
+}: {
+  agentId: string
+  userId: string
+  sessionId: string
+  latestPrompt: string
+  operation?: {
+    name: string
+    prompt: string
+  }
+  source: string
+}): Promise<{ requestId: string } | undefined> {
+  if (!operation?.name) {
+    return undefined
+  }
+
+  const candidates = await fetchRequestsByAgentAndUser(agentId, userId)
+  const existing = candidates.find(
+    r =>
+      !isTerminalStatus(r.status) &&
+      r.entries.some(e => e.sessionId === sessionId)
+  )
+  if (existing && existing._id) {
+    return { requestId: existing._id }
+  }
+
+  const entry = buildEntry({ sessionId, operation, source })
+  const thread = buildThread({ agentId, userId, entry })
+
+  let title: string | undefined
+  try {
+    title = await generateAgentRequestTitle({
+      latestPrompt,
+      agentId,
+      sessionId,
+      operation,
+    })
+  } catch (error) {
+    console.error("Failed to generate agent request title", {
+      agentId,
+      sessionId,
+      error,
+    })
+  }
+
+  const created = await saveRequest({ ...thread, title })
+  return { requestId: created._id! }
+}
+
+export async function updateRequestStatus({
+  requestId,
+  status,
+  error,
+  allowFromNeedsInput = false,
+}: {
+  requestId: string
+  status: "active" | "needs_input" | "completed" | "failed"
+  error?: string
+  // needs_input is only meant to move once a human has actually responded to
+  // the escalation (approved/rejected/expired) - set this when that's the
+  // case. Anything else touching a needs_input request (a later turn in the
+  // same conversation, an unrelated error) must leave it as-is.
+  allowFromNeedsInput?: boolean
+}): Promise<void> {
+  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  if (!request) {
+    return
+  }
+
+  if (isTerminalStatus(request.status)) {
+    return
+  }
+
+  if (
+    request.status === "needs_input" &&
+    status !== "needs_input" &&
+    !allowFromNeedsInput
+  ) {
+    return
+  }
+
+  const timestamp = nowIso()
+  const isTerminal = status === "completed" || status === "failed"
+
+  const updatedEntries = request.entries.map((entry, idx) => {
+    if (idx !== request.entries.length - 1) {
+      return entry
+    }
+    return {
+      ...entry,
+      status,
+      updatedAt: timestamp,
+      ...(isTerminal ? { completedAt: timestamp } : {}),
+      ...(error === undefined ? {} : { error }),
+    }
+  })
+
+  await saveRequest({
+    ...request,
+    entries: updatedEntries,
+    status,
+    updatedAt: timestamp,
+    ...(isTerminal ? { completedAt: timestamp } : {}),
+    ...(error !== undefined ? { error } : {}),
+  })
+}
+
 export async function createOrUpdateRequestForPrompt({
   agentId,
   sessionId,
@@ -194,6 +337,7 @@ export async function createOrUpdateRequestForPrompt({
   operation,
   source,
   userId,
+  existingRequestId,
 }: {
   agentId: string
   sessionId: string
@@ -208,6 +352,7 @@ export async function createOrUpdateRequestForPrompt({
   }
   source: string
   userId: string
+  existingRequestId?: string
 }): Promise<{ request: AgentRequest; created: boolean } | undefined> {
   const prompt = latestUserPrompt.trim()
   const resolvedOperation = operation
@@ -221,10 +366,32 @@ export async function createOrUpdateRequestForPrompt({
     return undefined
   }
 
+  if (existingRequestId) {
+    const existing = await context
+      .getWorkspaceDB()
+      .tryGet<AgentRequest>(existingRequestId)
+    if (existing) {
+      if (isTerminalStatus(existing.status)) {
+        return { request: existing, created: false }
+      }
+      const updated = await generateAndSaveRequestTitleIfMissing({
+        request: existing,
+        agentId,
+        sessionId,
+        latestPrompt: prompt,
+        operation: resolvedOperation,
+      })
+      return { request: updated, created: false }
+    }
+  }
+
   const candidateRequests = await fetchRequestsByAgentAndUser(agentId, userId)
+  const activeCandidates = candidateRequests.filter(
+    r => !isTerminalStatus(r.status)
+  )
   const linkDecision = await analyzeAgentRequestLink({
     latestPrompt: prompt,
-    candidateRequests,
+    candidateRequests: activeCandidates,
     recentChatContext,
     agentId,
     sessionId,
@@ -249,7 +416,7 @@ export async function createOrUpdateRequestForPrompt({
     }
   }
 
-  const request = candidateRequests.find(
+  const request = activeCandidates.find(
     candidate => candidate._id === linkDecision.requestId
   )
   if (!request) {
@@ -289,7 +456,7 @@ export async function createOrUpdateRequestForPrompt({
       source: resolvedSource,
       operationNames: [...operationNames],
       updatedAt: timestamp,
-      status: "completed",
+      status: "active",
     }
   } else {
     nextEntries.push(
@@ -306,7 +473,9 @@ export async function createOrUpdateRequestForPrompt({
       ...request,
       entries: nextEntries,
       updatedAt: timestamp,
-      status: "completed",
+      // Linking a follow-up prompt into this thread isn't a response to the
+      // escalation. Leave needs_input as-is rather than reviving it.
+      status: request.status === "needs_input" ? "needs_input" : "active",
     }),
     created: false,
   }

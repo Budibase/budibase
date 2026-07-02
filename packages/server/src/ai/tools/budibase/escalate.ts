@@ -2,6 +2,8 @@ import { context } from "@budibase/backend-core"
 import {
   type ChatConversationChannel,
   type EscalationRecipient,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   EscalationSource,
   ResolutionStrategy,
   ToolType,
@@ -12,8 +14,6 @@ import { z } from "zod"
 import { escalationProcessor } from "../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../escalation/resolutionStrategies"
 import type { AiToolDefinition } from ".."
-
-export const ESCALATE_TOOL_NAME = "escalate"
 
 interface CreateEscalateToolParams {
   agentId: string
@@ -92,7 +92,7 @@ export const createEscalateTool = ({
       })
 
       return {
-        status: "pending_approval",
+        status: EscalateToolResultStatus.PENDING_APPROVAL,
         escalationId,
         note: `Escalated for approval: ${reason}. The request is paused until a human responds.`,
       }
@@ -121,7 +121,7 @@ export const createEscalatePlaceholderTool = (): AiToolDefinition => ({
       reason: z.string(),
     }),
     execute: async () => ({
-      status: "unavailable",
+      status: EscalateToolResultStatus.UNAVAILABLE,
       note:
         "Escalation is referenced but no reviewers are configured for this " +
         "operation. Tell the user approval cannot be requested right now.",
@@ -141,7 +141,7 @@ export const createResolvedEscalateTool = () =>
       reason: z.string(),
     }),
     execute: async () => ({
-      status: "already_approved",
+      status: EscalateToolResultStatus.ALREADY_APPROVED,
       note:
         "This request has already been reviewed and APPROVED by a human " +
         "reviewer. Do not escalate again - proceed to fulfil it.",

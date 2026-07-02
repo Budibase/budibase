@@ -29,6 +29,8 @@ import {
 } from "../chatConversations"
 import {
   updatePendingToolCalls,
+  updateUnrecoveredToolFailures,
+  partitionEscalateAwareToolResults,
   buildPromptAndTools,
   getLiveOperations,
   type BuildPromptAndToolsOptions,
@@ -86,8 +88,13 @@ export interface AgentChatRun {
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
+  // Fires with the names of tools that actually completed successfully in a
+  // step, not merely attempted. A tool that errors, or escalate returning a
+  // non-pending_approval status (e.g. no reviewers configured), is reported
+  // through unrecoveredToolFailures instead, never here.
   onToolCalls?: (toolNames: string[]) => void
   pendingToolCalls?: Set<string>
+  unrecoveredToolFailures?: Set<string>
 }
 
 const operationRoutingActionSchema = z.enum([
@@ -519,7 +526,12 @@ export const prepareAgentChatRun = async ({
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,
-    stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
+    stream: async ({
+      onFinish,
+      onToolCalls,
+      pendingToolCalls,
+      unrecoveredToolFailures,
+    } = {}) =>
       await withLiteLLMSessionId(sessionId, () =>
         agentRunner.stream({
           messages: modelMessages,
@@ -535,16 +547,25 @@ export const prepareAgentChatRun = async ({
             }
             contextUsage.output = usage
             sessionLogIndexer.addRequestId(response?.id)
-            if (onToolCalls) {
-              const toolNames = toolCalls
-                .map(toolCall => toolCall.toolName)
-                .filter(Boolean)
-              if (toolNames.length) {
-                onToolCalls(toolNames)
-              }
+            const { successResults, successNames, semanticFailureNames } =
+              partitionEscalateAwareToolResults(toolResults)
+
+            if (onToolCalls && successNames.length) {
+              onToolCalls(successNames)
             }
             if (pendingToolCalls) {
               updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            }
+
+            if (unrecoveredToolFailures) {
+              const erroredToolNames = content
+                .filter(part => part.type === "tool-error")
+                .map(part => part.toolName)
+              updateUnrecoveredToolFailures(
+                unrecoveredToolFailures,
+                successResults,
+                [...erroredToolNames, ...semanticFailureNames]
+              )
             }
 
             for (const toolResult of toolResults) {
@@ -580,13 +601,10 @@ export const prepareAgentChatRun = async ({
               await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
 
-            if (!pendingToolCalls) {
-              return
-            }
-
             for (const part of content) {
               if (part.type === "tool-error") {
-                pendingToolCalls.delete(part.toolCallId)
+                pendingToolCalls?.delete(part.toolCallId)
+                unrecoveredToolFailures?.add(part.toolName)
               }
             }
           },

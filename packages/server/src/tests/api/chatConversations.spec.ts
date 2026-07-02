@@ -1,5 +1,10 @@
-import { context, docIds, roles } from "@budibase/backend-core"
-import { ActionType, AgentChannelProvider, DocumentType } from "@budibase/types"
+import { context, docIds, features, roles } from "@budibase/backend-core"
+import {
+  ActionType,
+  AgentChannelProvider,
+  DocumentType,
+  FeatureFlag,
+} from "@budibase/types"
 import type {
   Agent,
   ChatApp,
@@ -1731,6 +1736,251 @@ describe("Agent chat tool call tracking", () => {
       )
 
       expect(addActionMock).toHaveBeenCalledTimes(3)
+    })
+
+    it("creates and finalizes an agent request for webhook channels (e.g. Slack)", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock({}) as any)
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue({
+        _id: "agent-1",
+        name: "Test Agent",
+        aiconfig: "config-1",
+        operations: [
+          {
+            id: "op-1",
+            name: "Support",
+            live: true,
+            promptInstructions: "Help the user.",
+            enabledTools: [],
+          },
+        ],
+      } as any)
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              await webhookChat({
+                chat: {
+                  chatAppId: chatApp._id!,
+                  agentId: "agent-1",
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C123",
+                    externalUserId: "slack-user-1",
+                  },
+                  messages: [
+                    {
+                      id: "msg-1",
+                      role: "user",
+                      parts: [{ type: "text", text: "hello" }],
+                    },
+                  ],
+                },
+                user: { _id: "user-1" } as any,
+              })
+
+              const requests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+              const request = requests.find(r => r.userId === "user-1")
+              expect(request?.status).toEqual("completed")
+            }
+          )
+        }
+      )
+    })
+
+    it("marks the request as failed, not needs_input, when the escalate tool call itself fails", async () => {
+      jest.mocked(streamText).mockImplementation((async (options: any) => {
+        if (options.onStepFinish) {
+          await options.onStepFinish({
+            content: [
+              {
+                type: "tool-error",
+                toolCallId: "call-1",
+                toolName: "escalate",
+                input: {},
+                error: new Error("failed to create escalation"),
+              },
+            ],
+            toolCalls: [{ toolCallId: "call-1", toolName: "escalate" }],
+            toolResults: [],
+          })
+        }
+
+        return {
+          toUIMessageStream: jest.fn().mockImplementation(() =>
+            aiActual.simulateReadableStream({
+              chunks: makeAssistantTextChunks("Trying to escalate..."),
+            })
+          ),
+          text: Promise.resolve("Trying to escalate..."),
+          response: Promise.resolve({
+            id: "gen-test",
+            headers: { "x-litellm-response-cost": "0.0001" },
+          }),
+          usage: Promise.resolve({ inputTokens: 0, outputTokens: 0 }),
+          finishReason: Promise.resolve("stop"),
+        }
+      }) as any)
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue({
+        _id: "agent-1",
+        name: "Test Agent",
+        aiconfig: "config-1",
+        operations: [
+          {
+            id: "op-1",
+            name: "Support",
+            live: true,
+            promptInstructions: "Help the user.",
+            enabledTools: ["escalate"],
+          },
+        ],
+      } as any)
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              await webhookChat({
+                chat: {
+                  chatAppId: chatApp._id!,
+                  agentId: "agent-1",
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C999",
+                    externalUserId: "slack-user-2",
+                  },
+                  messages: [
+                    {
+                      id: "msg-1",
+                      role: "user",
+                      parts: [{ type: "text", text: "please escalate this" }],
+                    },
+                  ],
+                },
+                user: { _id: "user-2" } as any,
+              })
+
+              const requests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+              const request = requests.find(r => r.userId === "user-2")
+              expect(request?.status).toEqual("failed")
+              expect(request?.error).toEqual("Tool call(s) failed: escalate")
+            }
+          )
+        }
+      )
+    })
+
+    it("marks the request as failed, not needs_input, when escalate cannot actually raise an escalation (e.g. no reviewers configured)", async () => {
+      jest.mocked(streamText).mockImplementation((async (options: any) => {
+        if (options.onStepFinish) {
+          await options.onStepFinish({
+            content: [],
+            toolCalls: [{ toolCallId: "call-1", toolName: "escalate" }],
+            toolResults: [
+              {
+                type: "tool-result",
+                toolCallId: "call-1",
+                toolName: "escalate",
+                input: {},
+                output: {
+                  status: "unavailable",
+                  note: "Escalation is referenced but no reviewers are configured for this operation.",
+                },
+              },
+            ],
+          })
+        }
+
+        return {
+          toUIMessageStream: jest.fn().mockImplementation(() =>
+            aiActual.simulateReadableStream({
+              chunks: makeAssistantTextChunks(
+                "I can't escalate this right now."
+              ),
+            })
+          ),
+          text: Promise.resolve("I can't escalate this right now."),
+          response: Promise.resolve({
+            id: "gen-test",
+            headers: { "x-litellm-response-cost": "0.0001" },
+          }),
+          usage: Promise.resolve({ inputTokens: 0, outputTokens: 0 }),
+          finishReason: Promise.resolve("stop"),
+        }
+      }) as any)
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue({
+        _id: "agent-1",
+        name: "Test Agent",
+        aiconfig: "config-1",
+        operations: [
+          {
+            id: "op-1",
+            name: "Support",
+            live: true,
+            promptInstructions: "Help the user.",
+            enabledTools: ["escalate"],
+          },
+        ],
+      } as any)
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              await webhookChat({
+                chat: {
+                  chatAppId: chatApp._id!,
+                  agentId: "agent-1",
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C888",
+                    externalUserId: "slack-user-3",
+                  },
+                  messages: [
+                    {
+                      id: "msg-1",
+                      role: "user",
+                      parts: [{ type: "text", text: "please escalate this" }],
+                    },
+                  ],
+                },
+                user: { _id: "user-3" } as any,
+              })
+
+              const requests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+              const request = requests.find(r => r.userId === "user-3")
+              expect(request?.status).toEqual("failed")
+              expect(request?.error).toEqual("Tool call(s) failed: escalate")
+            }
+          )
+        }
+      )
     })
 
     it("returns RAG sources reported by the agent", async () => {

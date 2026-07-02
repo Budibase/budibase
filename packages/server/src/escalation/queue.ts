@@ -254,6 +254,32 @@ async function resumeOperation({
     operationId: ctx.operationId,
   })
 
+  const escalationRequest = await sdk.ai.agentRequests.findRequestBySession(
+    ctx.agentId,
+    ctx.sessionId
+  )
+
+  const markEscalationRequestResolved = async (params: {
+    status: "completed" | "failed"
+    error?: string
+  }) => {
+    if (!escalationRequest?._id) {
+      return
+    }
+    await sdk.ai.agentRequests
+      .updateRequestStatus({
+        requestId: escalationRequest._id,
+        allowFromNeedsInput: true,
+        ...params,
+      })
+      .catch(error => {
+        console.error(
+          "Failed to update agent request status on escalation resume",
+          { escalationId, agentId: ctx.agentId, error }
+        )
+      })
+  }
+
   if (outcome !== "approved") {
     const text =
       outcome === "expired"
@@ -261,6 +287,14 @@ async function resumeOperation({
         : "This request was rejected."
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
+    // A rejection is a human decision, not a failure. The escalation did its
+    // job. Expiring without any response, though, means the request never
+    // actually got resolved.
+    await markEscalationRequestResolved(
+      outcome === "expired"
+        ? { status: "failed", error: "Escalation expired without a response" }
+        : { status: "completed" }
+    )
     return
   }
 
@@ -349,39 +383,79 @@ async function resumeOperation({
     escalationResolved: true,
     additionalInstructions: approvalInstructions,
   })
-  const result = await run.stream()
 
-  // Drain the stream (this runs the approved action) and capture the full
-  // assistant turn. Attach toolDisplayNames, as the live chat path does, so tool
-  // parts render friendly names not raw ids.
-  const sharedMetadata =
-    Object.keys(run.toolDisplayNames).length > 0
-      ? { toolDisplayNames: run.toolDisplayNames }
-      : {}
-  let assistantMessage: UIMessage | undefined
-  for await (const uiMessage of readUIMessageStream({
-    stream: result.toUIMessageStream({
-      sendReasoning: true,
-      messageMetadata: ({ part }) =>
-        part.type === "start" ? sharedMetadata : undefined,
-    }),
-  })) {
-    assistantMessage = uiMessage
+  const pendingToolCalls = new Set<string>()
+  const unrecoveredToolFailures = new Set<string>()
+
+  try {
+    const result = await run.stream({
+      pendingToolCalls,
+      unrecoveredToolFailures,
+    })
+
+    // Drain the stream (this runs the approved action) and capture the full
+    // assistant turn. Attach toolDisplayNames, as the live chat path does, so tool
+    // parts render friendly names not raw ids.
+    const sharedMetadata =
+      Object.keys(run.toolDisplayNames).length > 0
+        ? { toolDisplayNames: run.toolDisplayNames }
+        : {}
+    let assistantMessage: UIMessage | undefined
+    for await (const uiMessage of readUIMessageStream({
+      stream: result.toUIMessageStream({
+        sendReasoning: true,
+        messageMetadata: ({ part }) =>
+          part.type === "start" ? sharedMetadata : undefined,
+      }),
+    })) {
+      assistantMessage = uiMessage
+    }
+
+    // The resumed stream yields a message with an empty id; give it a real one so
+    // it doesn't collide with other resumed messages in the chat's keyed list.
+    if (assistantMessage && !assistantMessage.id) {
+      assistantMessage.id = v4()
+    }
+
+    // Flush the resumed turn into the session-log index (requestIds collected
+    // during the drain) so agent-logs reflect the post-approval turn.
+    await run.sessionLogIndexer.index()
+
+    const text = assistantMessage ? messageText(assistantMessage) : ""
+    await persistResumeResult(
+      escalationId,
+      assistantMessage ?? textMessage(text)
+    )
+    await deliverOperationResult(ctx, text)
+
+    const finishReason = await Promise.resolve(result.finishReason).catch(
+      error => {
+        console.warn(
+          "Escalation resume (operation): finishReason unavailable",
+          {
+            escalationId,
+            agentId: ctx.agentId,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        )
+        return undefined
+      }
+    )
+    const toolCallsIncomplete =
+      pendingToolCalls.size > 0 || finishReason === "tool-calls"
+    await markEscalationRequestResolved(
+      sdk.ai.agentRequests.resolveFinalRequestStatus({
+        toolCallsIncomplete,
+        unrecoveredToolFailures,
+      })
+    )
+  } catch (error) {
+    await markEscalationRequestResolved({
+      status: "failed",
+      error: error instanceof Error ? error.message : String(error),
+    })
+    throw error
   }
-
-  // The resumed stream yields a message with an empty id; give it a real one so
-  // it doesn't collide with other resumed messages in the chat's keyed list.
-  if (assistantMessage && !assistantMessage.id) {
-    assistantMessage.id = v4()
-  }
-
-  // Flush the resumed turn into the session-log index (requestIds collected
-  // during the drain) so agent-logs reflect the post-approval turn.
-  await run.sessionLogIndexer.index()
-
-  const text = assistantMessage ? messageText(assistantMessage) : ""
-  await persistResumeResult(escalationId, assistantMessage ?? textMessage(text))
-  await deliverOperationResult(ctx, text)
 }
 
 async function processResume(job: Job<EscalationJob>) {

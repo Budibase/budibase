@@ -5,6 +5,8 @@ import {
   ToolMetadata,
   SourceName,
   WebSearchProvider,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import {
@@ -312,6 +314,60 @@ export function updatePendingToolCalls(
       pendingToolCalls.delete(toolResult.toolCallId)
     }
   }
+}
+
+export function updateUnrecoveredToolFailures(
+  unrecoveredToolFailures: Set<string>,
+  toolResults: TypedToolResult<ToolSet>[],
+  erroredToolNames: string[]
+): void {
+  for (const toolResult of toolResults) {
+    unrecoveredToolFailures.delete(toolResult.toolName)
+  }
+
+  for (const toolName of erroredToolNames) {
+    unrecoveredToolFailures.add(toolName)
+  }
+}
+
+// escalate can return a technically-successful tool-result that isn't a real
+// escalation (e.g. the "no reviewers configured" placeholder responds with
+// status "unavailable" instead of throwing). Split tool results so callers
+// can treat that case as a failure rather than a genuine success, while every
+// other tool keeps its normal success/failure handling untouched.
+export function partitionEscalateAwareToolResults(
+  toolResults: TypedToolResult<ToolSet>[]
+): {
+  successResults: TypedToolResult<ToolSet>[]
+  successNames: string[]
+  semanticFailureNames: string[]
+} {
+  const successResults: TypedToolResult<ToolSet>[] = []
+  const successNames: string[] = []
+  const semanticFailureNames: string[] = []
+
+  for (const toolResult of toolResults) {
+    if (toolResult.toolName !== ESCALATE_TOOL_NAME) {
+      successResults.push(toolResult)
+      successNames.push(toolResult.toolName)
+      continue
+    }
+
+    const status = (toolResult.output as { status?: string } | undefined)
+      ?.status
+
+    if (status === EscalateToolResultStatus.UNAVAILABLE) {
+      semanticFailureNames.push(toolResult.toolName)
+      continue
+    }
+
+    successResults.push(toolResult)
+    if (status === EscalateToolResultStatus.PENDING_APPROVAL) {
+      successNames.push(toolResult.toolName)
+    }
+  }
+
+  return { successResults, successNames, semanticFailureNames }
 }
 
 export function formatIncompleteToolCallError(
