@@ -77,7 +77,9 @@ describe("url helpers", () => {
     })
 
     it("redirects end users away from builder-only return paths", () => {
-      expect(resolvePostLoginReturnPath({}, "/builder")).toEqual("/builder/apps")
+      expect(resolvePostLoginReturnPath({}, "/builder")).toEqual(
+        "/builder/apps"
+      )
       expect(resolvePostLoginReturnPath({}, "/builder/apps")).toEqual(
         "/builder/apps"
       )
@@ -90,7 +92,9 @@ describe("url helpers", () => {
     })
 
     it("stores app portal path for unauthenticated /builder visits", () => {
-      expect(resolveUnauthenticatedReturnPath("/builder")).toEqual("/builder/apps")
+      expect(resolveUnauthenticatedReturnPath("/builder")).toEqual(
+        "/builder/apps"
+      )
       expect(resolveUnauthenticatedReturnPath("/builder/apps")).toEqual(
         "/builder/apps"
       )

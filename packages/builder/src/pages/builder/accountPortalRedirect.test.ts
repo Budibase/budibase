@@ -16,7 +16,9 @@ describe("account portal redirect layout", () => {
   it("does not synchronously redirect to account portal from auth layout", () => {
     const source = readBuilderPage("auth/_layout.svelte")
 
-    expect(source).not.toContain("window.location.href = $admin.accountPortalUrl")
+    expect(source).not.toContain(
+      "window.location.href = $admin.accountPortalUrl"
+    )
     expect(source).toContain("$auth.loaded")
     expect(source).toContain("getDefaultPostLoginPath")
   })

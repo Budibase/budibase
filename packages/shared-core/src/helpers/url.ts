@@ -150,7 +150,9 @@ export const isBuilderOnlyReturnPath = (path: string) => {
   if (normalized === BUILDER_URLS.ROOT) {
     return true
   }
-  return BUILDER_ONLY_PATH_PREFIXES.some(prefix => normalized.startsWith(prefix))
+  return BUILDER_ONLY_PATH_PREFIXES.some(prefix =>
+    normalized.startsWith(prefix)
+  )
 }
 
 export const resolvePostLoginReturnPath = (
