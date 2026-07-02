@@ -36,6 +36,8 @@ class GroupStore extends BudiStore<UserGroup[]> {
       } catch (error) {
         console.error("Error fetching user groups", error)
       }
+    } else {
+      this.set([])
     }
   }
 
