@@ -194,9 +194,7 @@ export async function updateWithExport(
     const existingTablesRes = await workspaceDb.allDocs(
       dbCore.getDocParams(DocumentType.TABLE)
     )
-    const existingTableIds = new Set(
-      existingTablesRes.rows.map(row => row.id)
-    )
+    const existingTableIds = new Set(existingTablesRes.rows.map(row => row.id))
 
     const getTableIdFromRowId = (rowId: string) => {
       // rowId format: ro_<tableId>_<uuid> where tableId is like ta_123
