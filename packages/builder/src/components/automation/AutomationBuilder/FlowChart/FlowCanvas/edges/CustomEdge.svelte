@@ -71,6 +71,12 @@
         insertIntoLoopV2: true,
         loopStepId: edgeData.loopStepId,
         ...(loopChildInsertIndex !== undefined ? { loopChildInsertIndex } : {}),
+        ...(edgeData.branchStepId
+          ? { branchStepId: edgeData.branchStepId }
+          : {}),
+        ...(typeof edgeData.branchIdx === "number"
+          ? { branchIdx: edgeData.branchIdx }
+          : {}),
       } as any
     }
     return edgeData?.block

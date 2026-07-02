@@ -44,10 +44,24 @@
 
     const target = value as Record<string, unknown>
     if (target.insertIntoLoopV2) {
+      const branchKey =
+        typeof target.branchStepId === "string" ||
+        typeof target.branchIdx === "number"
+          ? `branch:${target.branchStepId || ""}:${target.branchIdx ?? ""}`
+          : "root"
+      const sourceKey =
+        typeof target.id === "string"
+          ? `step:${target.id}`
+          : target.branchNode
+            ? branchKey
+            : "unknown"
+
       return [
         "loop",
         target.loopStepId || target.id,
         target.loopChildInsertIndex,
+        branchKey,
+        sourceKey,
       ].join(":")
     }
 

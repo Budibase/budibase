@@ -385,6 +385,8 @@ export interface LoopEdgeData extends BaseEdgeData {
   insertIntoLoopV2?: boolean
   loopStepId: string
   loopChildInsertIndex: number
+  branchStepId?: string
+  branchIdx?: number
 }
 
 export type EdgeData = BaseEdgeData | BranchEdgeData | LoopEdgeData
