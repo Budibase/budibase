@@ -39,7 +39,7 @@
   export let itemName: string | undefined = undefined
   export let automation: Automation | undefined = undefined
 
-  let validRegex = /^[A-Za-z0-9_\s]+$/
+  let validRegex = /^[A-Za-z0-9_.\-\s]+$/
   let typing = false
   let editing = false
   const dispatch = createEventDispatcher()
@@ -141,7 +141,7 @@
     if (name !== block.name && name?.length > 0) {
       let invalidRoleName = !validRegex.test(name)
       if (invalidRoleName) {
-        return "Please enter a name consisting of only alphanumeric symbols and underscores"
+        return "Please enter a name consisting of only alphanumeric characters, spaces, underscores, hyphens and periods"
       }
     }
 

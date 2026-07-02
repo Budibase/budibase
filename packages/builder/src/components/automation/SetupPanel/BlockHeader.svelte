@@ -27,7 +27,7 @@
 
   let externalAction: ExternalAction | undefined
   let editing: boolean
-  let validRegex: RegExp = /^[A-Za-z0-9_\s]+$/
+  let validRegex: RegExp = /^[A-Za-z0-9_.\-\s]+$/
 
   $: stepNames = automation?.definition.stepNames || {}
   $: blockHeading = getHeading(itemName, block) || ""
@@ -85,7 +85,7 @@
     if (name !== block.name && name?.length > 0) {
       let invalidRoleName = !validRegex.test(name)
       if (invalidRoleName) {
-        return "Please enter a name consisting of only alphanumeric symbols and underscores"
+        return "Please enter a name consisting of only alphanumeric characters, spaces, underscores, hyphens and periods"
       }
     }
   }
