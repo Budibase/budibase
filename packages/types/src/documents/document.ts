@@ -65,9 +65,9 @@ export enum DocumentType {
 }
 
 // these are the core documents that make up the data, design
-// and automation sections of an app. ROW and LINK are included
-// so that row data and relationship links are preserved when
-// importing a workspace export into an existing workspace.
+// and automation sections of an app. ROW is included
+// so that row data is preserved when importing a workspace export
+// into an existing workspace (only for newly created tables).
 // User-metadata rows (internal Users table) are filtered out
 // separately in the import logic to avoid overwriting them.
 export const DocumentTypesToImport: DocumentType[] = [
@@ -76,7 +76,6 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.DATASOURCE_PLUS,
   DocumentType.TABLE,
   DocumentType.ROW,
-  DocumentType.LINK,
   DocumentType.AUTOMATION,
   DocumentType.WEBHOOK,
   DocumentType.SCREEN,

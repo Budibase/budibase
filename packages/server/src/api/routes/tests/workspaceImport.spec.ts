@@ -324,7 +324,51 @@ describe("/applications/:appId/import", () => {
     })
   })
 
-  it("should include row data when importing into an existing workspace", async () => {
+  it("should include row data when importing into an existing workspace for newly created tables", async () => {
+    const appId = config.getDevWorkspaceId()
+
+    // create a table with two rows
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {
+      name: "Alice",
+      description: "first row",
+    })
+    await config.api.row.save(table._id!, {
+      name: "Bob",
+      description: "second row",
+    })
+
+    const tmpDir = await fsp.mkdtemp(join(os.tmpdir(), "bb-import-test-"))
+    const dbTxtPath = join(tmpDir, "db.txt")
+    try {
+      await sdk.backups.exportDB(appId!, { exportPath: dbTxtPath })
+
+      // delete the table so it does not exist before importing
+      await config.api.table.destroy(table._id!, table._rev!)
+
+      await request
+        .post(`/api/applications/${appId}/import`)
+        .attach("appExport", dbTxtPath)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      const tables = await config.api.table.fetch()
+      const newTable = tables.find((t: any) => t.name === "TestTable")
+      expect(newTable).toBeDefined()
+
+      const rowsAfterImport = await config.api.row.fetch(newTable?._id!)
+      expect(rowsAfterImport).toHaveLength(2)
+      expect(rowsAfterImport.map((r: any) => r.name).sort()).toEqual([
+        "Alice",
+        "Bob",
+      ])
+    } finally {
+      await fsp.rm(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it("should not overwrite row data for tables that already exist in the workspace", async () => {
     const appId = config.getDevWorkspaceId()
 
     const table = await config.api.table.save(basicTable())
@@ -342,13 +386,16 @@ describe("/applications/:appId/import", () => {
     try {
       await sdk.backups.exportDB(appId!, { exportPath: dbTxtPath })
 
-      const existingRows = await config.api.row.fetch(table._id!)
-      for (const row of existingRows) {
-        await config.api.row.delete(table._id!, {
-          _id: row._id!,
-        })
+      await config.api.row.save(table._id!, {
+        name: "Charlie",
+        description: "third row",
+      })
+      const tableWithAge = await config.api.table.get(table._id!)
+      tableWithAge.schema.age = {
+        type: "number" as any,
+        name: "age",
       }
-      expect(await config.api.row.fetch(table._id!)).toHaveLength(0)
+      await config.api.table.save(tableWithAge)
 
       await request
         .post(`/api/applications/${appId}/import`)
@@ -357,13 +404,17 @@ describe("/applications/:appId/import", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      // rows should be restored
+      // rows in the workspace should remain intact (i.e. Charlie should still exist, and not be overwritten)
       const rowsAfterImport = await config.api.row.fetch(table._id!)
-      expect(rowsAfterImport).toHaveLength(2)
+      expect(rowsAfterImport).toHaveLength(3)
       expect(rowsAfterImport.map((r: any) => r.name).sort()).toEqual([
         "Alice",
         "Bob",
+        "Charlie",
       ])
+
+      const tableAfterImport = await config.api.table.get(table._id!)
+      expect(tableAfterImport.schema.age).toBeUndefined()
     } finally {
       await fsp.rm(tmpDir, { recursive: true, force: true })
     }
