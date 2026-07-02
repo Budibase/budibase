@@ -18,7 +18,7 @@ export async function duplicateResourceToWorkspace(
   ctx: UserCtx<DuplicateResourceToWorkspaceRequest, void>
 ) {
   const { toWorkspace, resources, copyRows } = ctx.request.body
-  if (!users.isAdmin(ctx.user) && !users.isBuilder(ctx.user, toWorkspace)) {
+  if (!users.isAdminOrBuilder(ctx.user, toWorkspace)) {
     ctx.throw(403, "Only app builders or admins can duplicate resources.")
   }
 
