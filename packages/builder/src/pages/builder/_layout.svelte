@@ -272,7 +272,9 @@
           licensing.init(),
           appsStore.load(),
           organisation.init(),
-          groups.init(),
+          ...(sdk.users.hasBuilderPermissions($auth.user)
+            ? [groups.init()]
+            : []),
         ])
 
         await auth.getInitInfo()
