@@ -19,7 +19,7 @@
     admin,
     translations,
   } from "@/stores/portal"
-  import { resolveTranslationGroup } from "@budibase/shared-core"
+  import { resolveTranslationGroup, helpers } from "@budibase/shared-core"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
   import { handleError } from "./_components/utils"
@@ -70,13 +70,17 @@
         const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
         if (returnUrl) {
           CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
-          if (returnUrl.startsWith("/builder")) {
-            goto(returnUrl)
+          const destination = helpers.resolvePostLoginReturnPath(
+            $auth.user,
+            returnUrl
+          )
+          if (destination.startsWith("/builder")) {
+            goto(destination)
           } else {
-            window.location.assign(returnUrl)
+            window.location.assign(destination)
           }
         } else {
-          goto("/builder")
+          goto(helpers.getDefaultPostLoginPath($auth.user))
         }
       }
     } catch (err) {

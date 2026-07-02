@@ -1,26 +1,18 @@
 <script>
   import { auth, admin } from "@/stores/portal"
-  import { redirect } from "@roxi/routify"
   import { CookieUtils } from "@budibase/frontend-core"
+  import { helpers } from "@budibase/shared-core"
 
-  $redirect
+  let redirectedAway = false
 
-  // If already authenticated, redirect away from the auth section.
-  // Check this onMount rather than a reactive statement to avoid trumping
-  // the login return URL functionality.
-  if ($auth.user && !$auth.user.forceResetPassword) {
-    $redirect("../")
-  }
-
-  // Redirect to account portal for authentication in cloud environments
-  if (
-    !$auth.user &&
-    $admin.cloud &&
-    !$admin.disableAccountPortal &&
-    $admin.accountPortalUrl &&
-    !$admin?.checklist?.sso?.checked
+  $: if (
+    !redirectedAway &&
+    $auth.loaded &&
+    $auth.user &&
+    !$auth.user.forceResetPassword
   ) {
-    window.location.href = $admin.accountPortalUrl
+    redirectedAway = true
+    window.location.href = helpers.getDefaultPostLoginPath($auth.user)
   }
 
   if ($admin?.cloud && $admin?.checklist?.branding) {

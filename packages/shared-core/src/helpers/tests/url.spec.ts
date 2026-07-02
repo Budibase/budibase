@@ -5,6 +5,10 @@ import {
   accountPortalBillingUrl,
   accountPortalUpgradeUrl,
   builderWorkspacesUrl,
+  getDefaultPostLoginPath,
+  isBuilderOnlyReturnPath,
+  resolvePostLoginReturnPath,
+  resolveUnauthenticatedReturnPath,
   applyBaseUrl,
 } from "../url"
 
@@ -54,6 +58,42 @@ describe("url helpers", () => {
     it("normalizes base when joining", () => {
       const url = builderWorkspacesUrl(`${BASE}/`)
       expect(url).toEqual(`${BASE}/builder/apps`)
+    })
+
+    it("returns app portal path for end users", () => {
+      expect(getDefaultPostLoginPath({})).toEqual("/builder/apps")
+    })
+
+    it("returns builder root for users with builder permissions", () => {
+      expect(getDefaultPostLoginPath({ builder: { global: true } })).toEqual(
+        "/builder"
+      )
+    })
+
+    it("identifies builder-only return paths", () => {
+      expect(isBuilderOnlyReturnPath("/builder")).toBe(true)
+      expect(isBuilderOnlyReturnPath("/builder/workspace/app/home")).toBe(true)
+      expect(isBuilderOnlyReturnPath("/builder/apps")).toBe(false)
+    })
+
+    it("redirects end users away from builder-only return paths", () => {
+      expect(resolvePostLoginReturnPath({}, "/builder")).toEqual("/builder/apps")
+      expect(resolvePostLoginReturnPath({}, "/builder/apps")).toEqual(
+        "/builder/apps"
+      )
+      expect(
+        resolvePostLoginReturnPath(
+          { builder: { global: true } },
+          "/builder/workspace/app/home"
+        )
+      ).toEqual("/builder/workspace/app/home")
+    })
+
+    it("stores app portal path for unauthenticated /builder visits", () => {
+      expect(resolveUnauthenticatedReturnPath("/builder")).toEqual("/builder/apps")
+      expect(resolveUnauthenticatedReturnPath("/builder/apps")).toEqual(
+        "/builder/apps"
+      )
     })
   })
 

@@ -1,4 +1,6 @@
+import type { UserBuilderInfo } from "@budibase/types"
 import { ACCOUNT_PORTAL_PATHS, BUILDER_URLS } from "../constants"
+import { hasBuilderPermissions } from "../sdk/documents/users"
 
 const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
 
@@ -134,6 +136,41 @@ export const builderSettingsPeopleUsersUrl = (builderBaseUrl?: string | null) =>
 export const builderAppsUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.APPS)
 
+export const getDefaultPostLoginPath = (user?: UserBuilderInfo) =>
+  hasBuilderPermissions(user) ? BUILDER_URLS.ROOT : BUILDER_URLS.APPS
+
+const BUILDER_ONLY_PATH_PREFIXES = [
+  `${BUILDER_URLS.ROOT}/workspace`,
+  `${BUILDER_URLS.ROOT}/onboarding`,
+  `${BUILDER_URLS.ROOT}/get-started`,
+]
+
+export const isBuilderOnlyReturnPath = (path: string) => {
+  const normalized = trimTrailingSlash(path) || BUILDER_URLS.ROOT
+  if (normalized === BUILDER_URLS.ROOT) {
+    return true
+  }
+  return BUILDER_ONLY_PATH_PREFIXES.some(prefix => normalized.startsWith(prefix))
+}
+
+export const resolvePostLoginReturnPath = (
+  user: UserBuilderInfo | undefined,
+  returnUrl: string
+) => {
+  if (!hasBuilderPermissions(user) && isBuilderOnlyReturnPath(returnUrl)) {
+    return BUILDER_URLS.APPS
+  }
+  return returnUrl
+}
+
+export const resolveUnauthenticatedReturnPath = (pathname: string) => {
+  const normalized = trimTrailingSlash(pathname) || BUILDER_URLS.ROOT
+  if (normalized === BUILDER_URLS.ROOT) {
+    return BUILDER_URLS.APPS
+  }
+  return pathname
+}
+
 export const appChatUrl = (appUrl: string) =>
   `/app-chat${normalizeAppUrl(appUrl)}`
 
@@ -152,6 +189,10 @@ export const urlHelpers = {
   builderSettingsAuthUrl,
   builderSettingsPeopleUsersUrl,
   builderAppsUrl,
+  getDefaultPostLoginPath,
+  isBuilderOnlyReturnPath,
+  resolvePostLoginReturnPath,
+  resolveUnauthenticatedReturnPath,
   appChatUrl,
   appAgentUrl,
   agentChatUrl,

@@ -10,7 +10,7 @@
     groups,
     enrichedApps,
   } from "@/stores/portal"
-  import { sdk } from "@budibase/shared-core"
+  import { sdk, helpers } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
   import { onMount } from "svelte"
   import {
@@ -133,12 +133,28 @@
           window.location.assign(action.url)
         }
         break
+
+      case "accountPortalRedirect":
+        window.location.href = action.url
+        break
     }
   }
 
   const navigationAction = derivedMemo(
     [admin, auth, enrichedApps, isActive, appsStore, loaded],
     ([$admin, $auth, $enrichedApps, $isActive, $appsStore, $loaded]) => {
+      if ($admin.loaded && $auth.loaded && !$auth.user) {
+        if (
+          useAccountPortal &&
+          $admin.accountPortalUrl &&
+          !$admin?.checklist?.sso?.checked &&
+          !$isActive("./invite") &&
+          !$isActive("./admin")
+        ) {
+          return { type: "accountPortalRedirect", url: $admin.accountPortalUrl }
+        }
+      }
+
       // Only run remaining logic when fully loaded
       if (!$loaded || !$admin.loaded || !$auth.loaded) {
         return null
@@ -151,7 +167,12 @@
         !$auth.postLogout &&
         !isOnPreLoginPage()
       ) {
-        return { type: "setReturnUrl", url: window.location.pathname }
+        return {
+          type: "setReturnUrl",
+          url: helpers.resolveUnauthenticatedReturnPath(
+            window.location.pathname
+          ),
+        }
       }
 
       // if tenant is not set go to it
@@ -178,9 +199,11 @@
       if ($auth.user) {
         const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
 
-        // Return to saved URL first - skip onboarding check if user has a return URL
         if (returnUrl) {
-          return { type: "returnUrl", url: returnUrl }
+          return {
+            type: "returnUrl",
+            url: helpers.resolvePostLoginReturnPath($auth.user, returnUrl),
+          }
         }
 
         // Review if builder users have workspaces. If not, redirect them to onboarding
