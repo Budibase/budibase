@@ -32,8 +32,7 @@
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     getBlocks as getBlocksHelper,
-    buildTopLevelGraph,
-    dagreLayoutAutomation,
+    buildAutomationGraph,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
   import {
@@ -176,6 +175,7 @@
 
     const newNodes: FlowNode[] = []
     const newEdges: FlowEdge[] = []
+    const subflowNodePositions: GraphBuildDeps["subflowNodePositions"] = {}
 
     const deps: GraphBuildDeps = {
       xSpacing,
@@ -183,19 +183,10 @@
       blockRefs,
       newNodes,
       newEdges,
+      subflowNodePositions,
     }
 
-    // Build graph via helpers
-    buildTopLevelGraph(blocks, deps)
-
-    const laidOut = dagreLayoutAutomation(
-      { nodes: newNodes, edges: newEdges },
-      {
-        ranksep: xSpacing,
-        nodesep: NODE_SPACING,
-        compactLoops: true,
-      }
-    )
+    const laidOut = buildAutomationGraph(blocks, deps)
 
     const selectable = viewMode === ViewMode.EDITOR
 

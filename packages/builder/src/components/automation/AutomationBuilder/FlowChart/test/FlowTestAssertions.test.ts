@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
-import { expectSubflowNodesInsideParent } from "../FlowCanvas/FlowTestAssertions"
+import { expectSubflowNodesInsideParent } from "./FlowTestAssertions"
 
 const createGraph = (childPosition: { x: number; y: number }) => ({
   nodes: [

@@ -162,7 +162,7 @@ vi.mock("../AutomationStepHelpers", () => ({
   getBlocks: (automation: {
     definition: { trigger: unknown; steps: unknown[] }
   }) => [automation.definition.trigger, ...automation.definition.steps],
-  buildTopLevelGraph: (
+  buildAutomationGraph: (
     _blocks: unknown[],
     deps: {
       newNodes: Array<{
@@ -173,6 +173,8 @@ vi.mock("../AutomationStepHelpers", () => ({
         width: number
         height: number
       }>
+      newEdges: unknown[]
+      subflowNodePositions: Record<string, { x: number; y: number }>
     }
   ) => {
     deps.newNodes.push(
@@ -193,8 +195,8 @@ vi.mock("../AutomationStepHelpers", () => ({
         height: 120,
       }
     )
+    return { nodes: deps.newNodes, edges: deps.newEdges }
   },
-  dagreLayoutAutomation: <T>(graph: T) => graph,
 }))
 
 import FlowChart from "../FlowChart.svelte"

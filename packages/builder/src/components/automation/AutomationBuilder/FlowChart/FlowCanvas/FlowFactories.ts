@@ -10,6 +10,7 @@ import type {
 } from "@/types/automations"
 import type { Node as FlowNode, Edge as FlowEdge } from "@xyflow/svelte"
 import type { BlockPath, Branch, BranchStep } from "@budibase/types"
+import { ANCHOR, BRANCH, STEP } from "./FlowGeometry"
 
 export const stepNode = (
   id: string,
@@ -17,7 +18,13 @@ export const stepNode = (
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
-  const data: StepNodeData = { block }
+  const data: StepNodeData = {
+    block,
+    layout: {
+      width: STEP.width,
+      height: STEP.height,
+    },
+  }
   const node: FlowNode = {
     id,
     type: "step-node",
@@ -45,6 +52,10 @@ export const branchNode = (
     block: step,
     branch,
     branchIdx,
+    layout: {
+      width: laneWidth || STEP.width,
+      height: BRANCH.height,
+    },
     ...(parentId ? { isSubflow: true } : {}),
     ...(laneWidth ? { laneWidth } : {}),
   }
@@ -68,7 +79,12 @@ export const anchorNode = (
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
-  const data: AnchorNodeData = {}
+  const data: AnchorNodeData = {
+    layout: {
+      width: ANCHOR.width,
+      height: ANCHOR.height,
+    },
+  }
   const node: FlowNode = {
     id,
     type: "anchor-node",

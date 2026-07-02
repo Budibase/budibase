@@ -10,10 +10,9 @@ import {
   loopWithLinearChildrenStep,
   serverLogStep,
 } from "@/test/automationFixtures"
-import {
-  renderChain,
-  renderLoopV2Container,
-} from "../FlowCanvas/FlowGraphBuilder"
+import { renderChain } from "../FlowCanvas/renderers/FlowChainRenderer"
+import { renderLoopV2Container } from "../FlowCanvas/renderers/FlowLoopRenderer"
+import { buildAutomationGraph } from "../FlowCanvas/buildAutomationGraph"
 import {
   FLOW_ITEM_ACTION_BAR_WIDTH,
   LOOP_INSERT_ACTION_OFFSET,
@@ -27,7 +26,7 @@ import {
   expectUniqueGraphIds,
   getEdge,
   getNode,
-} from "../FlowCanvas/FlowTestAssertions"
+} from "./FlowTestAssertions"
 
 const createGraph = () => ({
   nodes: [] as FlowNode[],
@@ -40,7 +39,19 @@ const createDeps = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => ({
   blockRefs: {},
   newNodes: graph.nodes,
   newEdges: graph.edges,
+  subflowNodePositions: {},
 })
+
+const applySubflowNodePositions = (
+  nodes: FlowNode[],
+  positions: Record<string, { x: number; y: number }>
+) => {
+  nodes.forEach(node => {
+    const position = positions[node.id]
+    if (!position) return
+    node.position = position
+  })
+}
 
 const renderTestChain = (
   chain: Parameters<typeof renderChain>[0],
@@ -52,15 +63,72 @@ const renderTestChain = (
     data: { block: automationTrigger },
     position: { x: 0, y: -340 },
   })
-  renderChain(chain, automationTrigger.id, automationTrigger, 0, 0, {
+  const deps = {
     xSpacing: 160,
     ySpacing: 340,
     blockRefs: {},
     newNodes: graph.nodes,
     newEdges: graph.edges,
-  })
+    subflowNodePositions: {},
+  }
+  renderChain(chain, automationTrigger.id, automationTrigger, 0, deps)
+  applySubflowNodePositions(graph.nodes, deps.subflowNodePositions)
   return graph
 }
+
+const renderTestLoop = (
+  loop: Parameters<typeof renderLoopV2Container>[0],
+  graph = createGraph()
+) => {
+  const deps = createDeps(graph)
+  renderLoopV2Container(loop, deps)
+  applySubflowNodePositions(graph.nodes, deps.subflowNodePositions)
+  return graph
+}
+
+describe("buildAutomationGraph", () => {
+  it("connects top-level automation blocks sequentially and adds a terminal anchor", () => {
+    const graph = createGraph()
+    const blocks = [automationTrigger, ...linearAutomationSteps()]
+
+    buildAutomationGraph(blocks, createDeps(graph))
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+
+    const trigger = getNode(graph, "trigger")
+    const firstStep = getNode(graph, "step-1")
+    const secondStep = getNode(graph, "step-2")
+    const thirdStep = getNode(graph, "step-3")
+    const terminal = getNode(graph, "anchor-step-3")
+
+    expect(firstStep.position.x).toBeGreaterThan(trigger.position.x)
+    expect(secondStep.position.x).toBeGreaterThan(firstStep.position.x)
+    expect(thirdStep.position.x).toBeGreaterThan(secondStep.position.x)
+    expect(terminal.position.x).toBeGreaterThan(thirdStep.position.x)
+
+    getEdge(graph, "trigger", "step-1")
+    getEdge(graph, "step-1", "step-2")
+    getEdge(graph, "step-2", "step-3")
+    getEdge(graph, "step-3", "anchor-step-3")
+  })
+
+  it("connects a block after a top-level branch from branch terminal anchors", () => {
+    const graph = createGraph()
+    const afterBranch = serverLogStep("after-branch")
+    const blocks = [automationTrigger, branchWithManyLanesStep(), afterBranch]
+
+    buildAutomationGraph(blocks, createDeps(graph))
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+
+    getEdge(graph, "anchor-alpha-2", afterBranch.id)
+    getEdge(graph, "anchor-branch-branch-many-1-beta", afterBranch.id)
+    getEdge(graph, "anchor-gamma-1", afterBranch.id)
+    getEdge(graph, "anchor-delta-loop", afterBranch.id)
+  })
+})
 
 describe("renderLoopV2Container", () => {
   it("reserves exit space after the final child in mixed loop subflows", () => {
@@ -75,7 +143,7 @@ describe("renderLoopV2Container", () => {
       edges: [],
     }
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     const loopNode = graph.nodes.find(node => node.id === loop.id)!
     const finalNode = graph.nodes.find(node => node.id === finalStep.id)!
@@ -94,7 +162,7 @@ describe("renderLoopV2Container", () => {
       edges: [],
     }
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     const firstNode = graph.nodes.find(node => node.id === firstStep.id)!
     const actionBarRight =
@@ -107,7 +175,7 @@ describe("renderLoopV2Container", () => {
     const loop = loopWithLinearChildrenStep()
     const graph = createGraph()
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
@@ -139,7 +207,7 @@ describe("renderLoopV2Container", () => {
     const loop = loopWithBranchChildStep()
     const graph = createGraph()
 
-    renderLoopV2Container(loop, 0, 0, createDeps(graph))
+    renderTestLoop(loop, graph)
 
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
@@ -192,6 +260,46 @@ describe("renderLoopV2Container", () => {
     )
     expectSubflowNodesInsideParent(graph)
   })
+
+  it("renders branch-first loop children from a real loop source anchor", () => {
+    const firstBranch = branchStep([], {
+      id: "first-loop-branch",
+      branches: [
+        {
+          id: "matched",
+          name: "Matched",
+          children: [serverLogStep("first-loop-branch-child")],
+        },
+        {
+          id: "fallback",
+          name: "Fallback",
+          children: [],
+        },
+      ],
+    })
+    const loop = loopStep([firstBranch], "branch-first-loop")
+    const graph = createGraph()
+
+    renderTestLoop(loop, graph)
+
+    expectUniqueGraphIds(graph)
+    expectAllEdgesResolvable(graph)
+
+    const sourceAnchor = getNode(
+      graph,
+      "anchor-branch-first-loop-loop-first-loop-branch-source"
+    )
+    expect(sourceAnchor.parentId).toBe(loop.id)
+    expectBranchEdge(
+      getEdge(graph, sourceAnchor.id, "branch-first-loop-branch-0-matched"),
+      {
+        branchStepId: firstBranch.id,
+        branchIdx: 0,
+        branchesCount: 2,
+        isSubflowEdge: true,
+      }
+    )
+  })
 })
 
 describe("renderChain", () => {
@@ -201,9 +309,6 @@ describe("renderChain", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    expect(getNode(graph, "step-1").position.y).toBe(0)
-    expect(getNode(graph, "step-2").position.y).toBe(340)
-    expect(getNode(graph, "step-3").position.y).toBe(680)
     expect(getEdge(graph, "trigger", "step-1").data).toMatchObject({
       block: automationTrigger,
     })
