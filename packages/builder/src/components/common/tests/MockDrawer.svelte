@@ -1,8 +1,9 @@
 <script lang="ts">
-  export let title: string | undefined = undefined
+  export const show = () => {}
+  export const hide = () => {}
 </script>
 
-<div aria-label={title || "Drawer"}>
+<div>
   <slot name="buttons" />
   <slot name="body" />
 </div>

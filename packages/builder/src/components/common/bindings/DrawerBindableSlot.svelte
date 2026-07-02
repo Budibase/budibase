@@ -106,7 +106,15 @@
   }
 
   const isValidNumber = value => {
-    return value == null || value === "" || !Number.isNaN(Number(value))
+    if (value == null || value === "") {
+      return true
+    }
+
+    if (typeof value === "string" && value.trim() === "") {
+      return false
+    }
+
+    return Number.isFinite(Number(value))
   }
 
   const validationMap = {

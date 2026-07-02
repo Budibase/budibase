@@ -85,6 +85,7 @@
 {:else if effectiveValueType === FieldType.NUMBER}
   <DrawerBindableSlot
     title="Value"
+    placeholder="Value"
     type="number"
     value={currentValue}
     on:change={e => updateValue(e.detail)}
@@ -107,6 +108,7 @@
 {:else if effectiveValueType === FieldType.DATETIME}
   <DrawerBindableSlot
     title="Value"
+    placeholder="Value"
     type="date"
     value={currentValue}
     on:change={e => updateValue(e.detail)}
@@ -126,6 +128,7 @@
 {:else if effectiveValueType === FieldType.BOOLEAN}
   <DrawerBindableSlot
     title="Value"
+    placeholder="Value"
     type="boolean"
     value={currentValue}
     on:change={e => updateValue(e.detail)}

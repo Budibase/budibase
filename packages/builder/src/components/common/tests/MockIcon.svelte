@@ -1,5 +1,6 @@
 <script lang="ts">
-  export let name: string
+  export let name = ""
+  export let disabled = false
 </script>
 
-<span>{name}</span>
+<span aria-label={name} aria-disabled={disabled} />
