@@ -64,9 +64,7 @@ export default class BuilderSocket extends BaseSocket {
           const tenantId = context.getTenantIDFromWorkspaceID(appId)
           if (tenantId) {
             await context.doInTenant(tenantId, async () => {
-              await events.user.dataCollaboration(
-                Object.keys(userIdMap).length
-              )
+              await events.user.dataCollaboration(Object.keys(userIdMap).length)
             })
           }
 
