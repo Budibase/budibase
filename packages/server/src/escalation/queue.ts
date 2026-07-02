@@ -428,8 +428,21 @@ async function resumeOperation({
     )
     await deliverOperationResult(ctx, text)
 
+    const finishReason = await Promise.resolve(result.finishReason).catch(
+      error => {
+        console.warn(
+          "Escalation resume (operation): finishReason unavailable",
+          {
+            escalationId,
+            agentId: ctx.agentId,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        )
+        return undefined
+      }
+    )
     const toolCallsIncomplete =
-      pendingToolCalls.size > 0 || (await result.finishReason) === "tool-calls"
+      pendingToolCalls.size > 0 || finishReason === "tool-calls"
     await markEscalationRequestResolved(
       sdk.ai.agentRequests.resolveFinalRequestStatus({
         toolCallsIncomplete,
