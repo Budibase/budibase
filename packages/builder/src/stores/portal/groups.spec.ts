@@ -1,4 +1,5 @@
 import { API } from "@/api"
+import { GetGlobalSelfResponse } from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { auth, licensing } from "@/stores/portal"
 import { groups } from "./groups"
@@ -11,13 +12,16 @@ vi.mock("@/api", () => {
   }
 })
 
-vi.mock("@budibase/shared-core", () => {
+vi.mock("@budibase/shared-core", async importOriginal => {
+  const original = await importOriginal<typeof import("@budibase/shared-core")>()
   return {
+    ...original,
     sdk: {
+      ...original.sdk,
       users: {
+        ...original.sdk.users,
         hasBuilderPermissions: vi.fn(
-          (user?: { builder?: { global?: boolean } }) =>
-            !!user?.builder?.global
+          (user?: { builder?: { global?: boolean } }) => !!user?.builder?.global
         ),
         hasAdminPermissions: vi.fn(
           (user?: { admin?: { global?: boolean } }) => !!user?.admin?.global
@@ -45,11 +49,7 @@ const setGroupsEnabled = (groupsEnabled: boolean) => {
   }))
 }
 
-const setUser = (user?: {
-  admin: { global: boolean }
-  builder: { global: boolean }
-  roles: Record<string, string>
-}) => {
+const setUser = (user?: GetGlobalSelfResponse) => {
   auth.update(state => ({
     ...state,
     user,
@@ -69,7 +69,7 @@ describe("portal groups store", () => {
       builder: { global: false },
       admin: { global: false },
       roles: {},
-    })
+    } as GetGlobalSelfResponse)
     setGroupsEnabled(true)
     getGroups.mockRejectedValue(
       new Error("Non-builder users cannot fetch groups")
