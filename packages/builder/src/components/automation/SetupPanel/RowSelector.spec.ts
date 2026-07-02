@@ -42,6 +42,7 @@ vi.mock("@budibase/bbui", async () => {
   return {
     ActionButton: MockActionButton,
     ActionGroup: MockSlot,
+    Button: MockActionButton,
     Helpers: { uuid: vi.fn(() => "test-session") },
     Icon: MockSlot,
     Label: MockSlot,
