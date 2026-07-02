@@ -5,6 +5,7 @@
     type APIRequestStepInputs,
     type AutomationStep,
     type EnrichedBinding,
+    type RestTemplateId,
   } from "@budibase/types"
   import PropField from "../PropField.svelte"
   import { type AutomationContext } from "@/stores/builder/automations"
@@ -39,6 +40,7 @@
     datasourceMatchesRestTemplate,
     workspaceConnections,
   } from "@/stores/builder/workspaceConnection"
+  import { restTemplates } from "@/stores/builder/restTemplates"
   import { tick } from "svelte"
 
   export let bindings: EnrichedBinding[] | undefined = undefined
@@ -63,6 +65,10 @@
     | undefined
   $: fieldKey = "query"
   $: restTemplateId = inputData?.restTemplateId
+  $: restTemplate = restTemplateId
+    ? restTemplates.get(restTemplateId)
+    : undefined
+  $: connectionTemplateId = restTemplate?.id || restTemplateId
   $: {
     value = getInputValue(inputData, fieldKey)
   }
@@ -79,6 +85,13 @@
 
   // The configured query
   $: query = $queries.list.find(query => query._id === value?.queryId)
+
+  $: hasTemplateConnection =
+    !!connectionTemplateId &&
+    !!restSources?.some(ds =>
+      datasourceMatchesRestTemplate(ds, connectionTemplateId)
+    )
+  $: showConnectToTemplate = !!restTemplateId && !hasTemplateConnection
 
   // QUERY DETAILS
 
@@ -145,14 +158,19 @@
     modal.show()
   }
 
+  const getConnectionTemplateId = (templateId: RestTemplateId) => {
+    return restTemplates.get(templateId)?.id || templateId
+  }
+
   const handleAddTemplateApi = async (blockId: string) => {
     const templateId =
       automationStore.actions.consumeApiRequestTemplate(blockId)
     if (!templateId) {
       return
     }
+    const connectionTemplateId = getConnectionTemplateId(templateId)
     const hasExistingQuery = restSources?.some(ds => {
-      if (!datasourceMatchesRestTemplate(ds, templateId)) {
+      if (!datasourceMatchesRestTemplate(ds, connectionTemplateId)) {
         return false
       }
       return $queries.list.some(query => query.datasourceId === ds._id)
@@ -207,6 +225,7 @@
               bind:this={apiViewer}
               saveAndClose={true}
               settingsLocked={true}
+              openAddConnectionOnMount={true}
               connectionPopoverPortalTarget=".spectrum"
               on:savedQuery={handleSavedQuery}
             />
@@ -244,20 +263,28 @@
       </Layout>
     </div>
   {:else}
-    <QuerySelect
-      value={value?.queryId}
-      {restTemplateId}
-      fullWidthDropdown
-      onchange={q => defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
-      onaddApi={handleAddApi}
-    />
+    {#if !showConnectToTemplate}
+      <QuerySelect
+        value={value?.queryId}
+        restTemplateId={connectionTemplateId}
+        fullWidthDropdown
+        onchange={q => defaultChange({ [fieldKey]: { queryId: q._id } }, block)}
+        onaddApi={handleAddApi}
+      />
+    {/if}
     <div class="explorer-btn">
       <Button
         on:click={() => {
-          modal.show()
+          if (showConnectToTemplate) {
+            handleAddApi()
+          } else {
+            modal.show()
+          }
         }}
       >
-        Open API explorer
+        {showConnectToTemplate
+          ? `Connect to ${restTemplate?.name || "connector"}`
+          : "Open API explorer"}
       </Button>
     </div>
     {#if value?.queryId}

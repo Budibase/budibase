@@ -38,6 +38,7 @@ export interface ContextUser extends Omit<User & Partial<UserSSO>, "roles"> {
   featureFlags?: FeatureFlag[]
   accountPortalAccess?: boolean
   account?: Account
+  thirdPartyProfile?: object
 }
 
 /**
