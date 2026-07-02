@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Label } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
@@ -133,7 +133,11 @@
       <Label size="M">{label}</Label>
     </div>
   {/if}
-  <div id={`${key}-prop-control`} class="control">
+  <div
+    id={`${key}-prop-control`}
+    class="control"
+    class:control-contents={type === "gapControl"}
+  >
     <svelte:component
       this={control}
       {componentInstance}
@@ -213,6 +217,10 @@
   }
   .control {
     position: relative;
+  }
+
+  .control-contents {
+    display: contents;
   }
   .text {
     font-size: var(--spectrum-global-dimension-font-size-75);

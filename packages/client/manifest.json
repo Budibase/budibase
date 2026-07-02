@@ -338,7 +338,7 @@
         }
       },
       {
-        "type": "select",
+        "type": "gapControl",
         "label": "Gap",
         "key": "gap",
         "showInBar": true,
@@ -359,6 +359,10 @@
           {
             "label": "Large",
             "value": "L"
+          },
+          {
+            "label": "Custom",
+            "value": "custom"
           }
         ],
         "defaultValue": "M",
