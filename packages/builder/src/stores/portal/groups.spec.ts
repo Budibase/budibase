@@ -13,7 +13,8 @@ vi.mock("@/api", () => {
 })
 
 vi.mock("@budibase/shared-core", async importOriginal => {
-  const original = await importOriginal<typeof import("@budibase/shared-core")>()
+  const original =
+    await importOriginal<typeof import("@budibase/shared-core")>()
   return {
     ...original,
     sdk: {
