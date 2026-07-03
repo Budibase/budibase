@@ -7,7 +7,7 @@
   } from "@/dataBinding"
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding } from "@budibase/string-templates"
+  import { findHBSBlocks, isJSBinding } from "@budibase/string-templates"
   import { builderStore } from "@/stores/builder"
 
   export let panel = ClientBindingPanel
@@ -40,6 +40,8 @@
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
   $: isJS = isJSBinding(value)
+  $: hasBinding = !!findHBSBlocks(value)?.length
+  $: resolvedInputType = hasBinding ? "text" : inputType
 
   const saveBinding = () => {
     onChange(tempValue)
@@ -82,7 +84,7 @@
     placeholder={placeholder || undefined}
     {updateOnChange}
     {autocomplete}
-    type={multiline ? undefined : inputType}
+    type={multiline ? undefined : resolvedInputType}
   >
     {#if !disabled && !disableBindings}
       <div

@@ -79,6 +79,43 @@ describe("queries SDK", () => {
       })
     })
 
+    it("keeps quoted JSON parameters from changing MongoDB query structure", async () => {
+      const result = await enrichContext(
+        {
+          json: '{"username": "{{ username }}"}',
+        },
+        {
+          username: '", "$ne": ""',
+        }
+      )
+
+      expect(result).toEqual({
+        json: {
+          username: '", "$ne": ""',
+        },
+      })
+    })
+
+    it("keeps quoted JSON parameters inside MongoDB filter fields", async () => {
+      const result = await enrichContext(
+        {
+          json: '{"filter": {"username": "{{ username }}"}, "options": {}}',
+        },
+        {
+          username: '", "$ne": ""',
+        }
+      )
+
+      expect(result).toEqual({
+        json: {
+          filter: {
+            username: '", "$ne": ""',
+          },
+          options: {},
+        },
+      })
+    })
+
     it("falls back to requestBody when json is blank", async () => {
       const result = await enrichContext({
         json: "",

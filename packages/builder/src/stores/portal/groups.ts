@@ -1,5 +1,6 @@
 import { API } from "@/api"
-import { licensing } from "@/stores/portal"
+import { auth, licensing } from "@/stores/portal"
+import { sdk } from "@budibase/shared-core"
 import { UserGroup } from "@budibase/types"
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
@@ -22,11 +23,21 @@ class GroupStore extends BudiStore<UserGroup[]> {
   }
 
   async init() {
-    // Only init if there is a groups license, just to be sure but the feature will be blocked
-    // on the backend anyway
-    if (get(licensing).groupsEnabled) {
-      const groups = await API.getGroups()
-      this.set(groups)
+    // Only init if there is a groups license and the user is a builder or
+    // admin - the endpoint 403s for end users
+    const user = get(auth).user
+    const canReadGroups =
+      sdk.users.hasBuilderPermissions(user) ||
+      sdk.users.hasAdminPermissions(user)
+    if (get(licensing).groupsEnabled && canReadGroups) {
+      try {
+        const groups = await API.getGroups()
+        this.set(groups)
+      } catch (error) {
+        console.error("Error fetching user groups", error)
+      }
+    } else {
+      this.set([])
     }
   }
 

@@ -15,6 +15,18 @@ import APIRequest from "./APIRequest.svelte"
 import { automationStore } from "@/stores/builder"
 import { workspaceConnections } from "@/stores/builder/workspaceConnection"
 
+interface WorkspaceConnectionTestState {
+  draft: {
+    key: number
+    templateId?: RestTemplateId
+    datasource: Partial<Datasource>
+    query: Partial<Query>
+    dirty: boolean
+  } | null
+  list: []
+  selectedConnectionId: string | null
+}
+
 if (!Element.prototype.animate) {
   Element.prototype.animate = () =>
     Object.assign(Object.create(null), {
@@ -46,7 +58,7 @@ const testState = vi.hoisted(() => {
     inputData: {} as Record<string, any>,
     datasourceStore: createStore({ list: [] as Datasource[] }),
     queryStore: createStore({ list: [] as Query[] }),
-    workspaceConnectionStore: createStore({
+    workspaceConnectionStore: createStore<WorkspaceConnectionTestState>({
       draft: null,
       list: [],
       selectedConnectionId: null,
@@ -88,7 +100,33 @@ vi.mock("@/stores/builder/workspaceConnection", () => ({
 
 vi.mock("@/stores/builder/restTemplates", () => ({
   restTemplates: {
-    flatTemplates: [],
+    flatTemplates: [
+      {
+        id: "github",
+        name: "GitHub",
+      },
+    ],
+    get: vi.fn((templateId?: string) => {
+      if (templateId === "github") {
+        return {
+          id: "github",
+          name: "GitHub",
+        }
+      }
+      if (templateId === "hubspot" || templateId === "hubspot-contacts") {
+        return {
+          id: "hubspot",
+          name: "HubSpot",
+        }
+      }
+      if (templateId === "bamboohr") {
+        return {
+          id: "bamboohr",
+          name: "BambooHR",
+        }
+      }
+      return undefined
+    }),
   },
   featuredTemplates: [],
 }))
@@ -119,6 +157,16 @@ const githubDatasource: Datasource = {
   name: "GitHub",
   source: SourceName.REST,
   restTemplateId: "github",
+  config: {},
+}
+
+const hubspotDatasource: Datasource = {
+  _id: "hubspot_ds",
+  _rev: "1",
+  type: "datasource",
+  name: "HubSpot",
+  source: SourceName.REST,
+  restTemplateId: "hubspot",
   config: {},
 }
 
@@ -167,6 +215,21 @@ describe("APIRequest", () => {
       list: [],
       selectedConnectionId: null,
     })
+    vi.mocked(workspaceConnections.startDraft).mockImplementation(
+      (templateId?: RestTemplateId) => {
+        testState.workspaceConnectionStore.set({
+          draft: {
+            key: Date.now(),
+            templateId,
+            datasource: {},
+            query: {},
+            dirty: false,
+          },
+          list: [],
+          selectedConnectionId: null,
+        })
+      }
+    )
     testState.datasourceStore.set({
       list: [bamboohrDatasource, githubDatasource],
     })
@@ -221,6 +284,83 @@ describe("APIRequest", () => {
       expect(screen.getByText("GitHub repos")).not.toBeNull()
       expect(screen.queryByText("BambooHR employees")).toBeNull()
       expect(screen.queryByText("Add new API")).toBeNull()
+    })
+  })
+
+  it("shows a connector CTA when the connector template has no connection", async () => {
+    testState.inputData = { restTemplateId: "github" }
+    testState.datasourceStore.set({
+      list: [bamboohrDatasource],
+    })
+
+    render(APIRequest, {
+      props: {
+        block: makeBlock("step_1"),
+        context: undefined,
+      },
+    })
+
+    expect(screen.queryByText("Select a request")).toBeNull()
+    expect(screen.queryByText("No REST requests available.")).toBeNull()
+
+    await fireEvent.click(screen.getByText("Connect to GitHub"))
+
+    expect(workspaceConnections.startDraft).toHaveBeenCalledWith("github")
+    expect(
+      screen.getByTestId("api-endpoint-viewer-open-add-connection").textContent
+    ).toBe("true")
+  })
+
+  it("keeps the explorer available when the connector template has a connection but no requests", async () => {
+    testState.inputData = { restTemplateId: "github" }
+
+    render(APIRequest, {
+      props: {
+        block: makeBlock("step_1"),
+        context: undefined,
+      },
+    })
+
+    expect(screen.getByText("Select a request")).toBeInTheDocument()
+    expect(screen.getByText("Open API explorer")).toBeInTheDocument()
+    expect(screen.queryByText("Connect to GitHub")).toBeNull()
+  })
+
+  it("uses the parent connector template when checking child template connections", async () => {
+    testState.inputData = { restTemplateId: "hubspot-contacts" }
+    testState.datasourceStore.set({
+      list: [bamboohrDatasource, hubspotDatasource],
+    })
+    testState.queryStore.set({
+      list: [
+        makeQuery({
+          _id: "bamboohr_query",
+          name: "BambooHR employees",
+          datasourceId: "bamboohr_ds",
+        }),
+        makeQuery({
+          _id: "hubspot_query",
+          name: "HubSpot contacts",
+          datasourceId: "hubspot_ds",
+        }),
+      ],
+    })
+
+    render(APIRequest, {
+      props: {
+        block: makeBlock("step_1"),
+        context: undefined,
+      },
+    })
+
+    expect(screen.getByText("Select a request")).toBeInTheDocument()
+    expect(screen.queryByText("Connect to HubSpot")).toBeNull()
+
+    await fireEvent.click(screen.getByText("Select a request"))
+
+    await waitFor(() => {
+      expect(screen.getByText("HubSpot contacts")).toBeInTheDocument()
+      expect(screen.queryByText("BambooHR employees")).toBeNull()
     })
   })
 
@@ -346,6 +486,42 @@ describe("APIRequest", () => {
           _id: "github_query",
           name: "GitHub repos",
           datasourceId: "github_ds",
+        }),
+      ],
+    })
+
+    render(APIRequest, {
+      props: {
+        block: makeBlock("step_1"),
+        context: undefined,
+      },
+    })
+
+    await waitFor(() => {
+      expect(
+        automationStore.actions.consumeApiRequestTemplate
+      ).toHaveBeenCalledWith("step_1")
+    })
+    expect(workspaceConnections.startDraft).not.toHaveBeenCalled()
+  })
+
+  it("does not open a connector draft for a child template with an existing parent request", async () => {
+    vi.mocked(
+      automationStore.actions.consumeApiRequestTemplate
+    ).mockImplementation((blockId: string) =>
+      blockId === "step_1"
+        ? ("hubspot-contacts" satisfies RestTemplateId)
+        : undefined
+    )
+    testState.datasourceStore.set({
+      list: [hubspotDatasource],
+    })
+    testState.queryStore.set({
+      list: [
+        makeQuery({
+          _id: "hubspot_query",
+          name: "HubSpot contacts",
+          datasourceId: "hubspot_ds",
         }),
       ],
     })
