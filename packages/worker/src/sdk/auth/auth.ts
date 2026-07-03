@@ -38,6 +38,7 @@ export async function loginUser(user: User) {
   return {
     token,
     invalidatedSessionCount: sessionResult.invalidatedSessionCount,
+    maxSessionsPerUser: sessionResult.maxSessionsPerUser,
   }
 }
 

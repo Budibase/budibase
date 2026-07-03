@@ -273,9 +273,9 @@
 
     loaded.set(true)
 
-    const invalidated = popNumSessionsInvalidated()
+    const { invalidated, maxSessions } = popNumSessionsInvalidated()
     if (invalidated > 0) {
-      notifications.info(invalidationMessage(invalidated), {
+      notifications.info(invalidationMessage(invalidated, maxSessions), {
         duration: 5000,
       })
     }

@@ -14,6 +14,7 @@ import { BaseAPIClient } from "./types"
 
 export interface ExtendedLoginResponse extends LoginResponse {
   invalidatedSessionCount?: number
+  maxSessionsPerUser?: number
 }
 
 export interface AuthEndpoints {
@@ -55,11 +56,15 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
         const invalidatedSessionCount = response.headers.get(
           "X-Session-Invalidated-Count"
         )
+        const maxSessionsPerUser = response.headers.get("X-Session-Max-Count")
         return {
           ...data,
           invalidatedSessionCount: invalidatedSessionCount
             ? parseInt(invalidatedSessionCount)
             : 0,
+          maxSessionsPerUser: maxSessionsPerUser
+            ? parseInt(maxSessionsPerUser)
+            : undefined,
         } as ExtendedLoginResponse
       },
     })

@@ -64,7 +64,10 @@
         goto("./reset")
       } else {
         notifications.success("Logged in successfully")
-        pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
+        pushNumSessionsInvalidated(
+          loginResult.invalidatedSessionCount || 0,
+          loginResult.maxSessionsPerUser
+        )
 
         // Check for return URL cookie and redirect there if it exists
         const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)

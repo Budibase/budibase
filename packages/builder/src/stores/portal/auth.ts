@@ -139,6 +139,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
 
     return {
       invalidatedSessionCount: loginResult.invalidatedSessionCount || 0,
+      maxSessionsPerUser: loginResult.maxSessionsPerUser,
     }
   }
 

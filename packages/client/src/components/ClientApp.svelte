@@ -158,10 +158,10 @@
     await authStore.actions.fetchUser()
     dataLoaded = true
 
-    const invalidated = popNumSessionsInvalidated()
+    const { invalidated, maxSessions } = popNumSessionsInvalidated()
     if (invalidated > 0) {
       notificationStore.actions.info(
-        invalidationMessage(invalidated),
+        invalidationMessage(invalidated, maxSessions),
         true,
         5000
       )

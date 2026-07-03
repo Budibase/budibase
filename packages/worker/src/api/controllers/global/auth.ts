@@ -106,6 +106,7 @@ async function passportCallback(
       loginResult.invalidatedSessionCount.toString()
     )
   }
+  ctx.set("X-Session-Max-Count", loginResult.maxSessionsPerUser.toString())
 }
 
 export const login = async (

@@ -1,5 +1,6 @@
 import * as sessions from "../sessions"
 import { generator, DBTestConfiguration } from "../../../tests"
+import { getMaxSessionsPerUser } from "@budibase/shared-core"
 
 async function createSession(userId: string, tenantId: string, email: string) {
   return await sessions.createASession(userId, {
@@ -23,7 +24,7 @@ describe("sessions", () => {
   })
 
   describe("concurrent sessions", () => {
-    it("should allow up to 3 concurrent sessions per user", async () => {
+    it(`should allow up to ${getMaxSessionsPerUser()} concurrent sessions per user`, async () => {
       await config.doInTenant(async () => {
         const userId = generator.guid()
         const email = generator.email({ domain: "example.com" })
@@ -43,7 +44,7 @@ describe("sessions", () => {
       })
     })
 
-    it("should invalidate oldest session when 4th session is created", async () => {
+    it("should invalidate oldest session when limit is exceeded", async () => {
       await config.doInTenant(async () => {
         const userId = generator.guid()
         const email = generator.email({ domain: "example.com" })
@@ -72,5 +73,43 @@ describe("sessions", () => {
         expect(four.invalidatedSessionCount).toBe(1)
       })
     })
+
+    it("should respect BB_MAX_SESSIONS_PER_USER env var override", async () => {
+      const original = process.env.BB_MAX_SESSIONS_PER_USER
+      process.env.BB_MAX_SESSIONS_PER_USER = "2"
+
+      try {
+        await config.doInTenant(async () => {
+          const userId = generator.guid()
+          const email = generator.email({ domain: "example.com" })
+          const tenantId = config.getTenantId()
+
+          const one = await createSession(userId, tenantId, email)
+          const two = await createSession(userId, tenantId, email)
+
+          let userSessions = await sessions.getSessionsForUser(userId)
+          expect(userSessions).toHaveLength(2)
+
+          const three = await createSession(userId, tenantId, email)
+
+          userSessions = await sessions.getSessionsForUser(userId)
+          expect(userSessions).toHaveLength(2)
+
+          const sessionIds = userSessions.map(s => s.sessionId)
+          expect(sessionIds).not.toContain(one.session.sessionId)
+          expect(sessionIds).toContain(two.session.sessionId)
+          expect(sessionIds).toContain(three.session.sessionId)
+
+          expect(three.invalidatedSessionCount).toBe(1)
+        })
+      } finally {
+        if (original === undefined) {
+          delete process.env.BB_MAX_SESSIONS_PER_USER
+        } else {
+          process.env.BB_MAX_SESSIONS_PER_USER = original
+        }
+      }
+    })
   })
 })
+

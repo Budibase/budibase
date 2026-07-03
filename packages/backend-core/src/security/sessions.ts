@@ -9,7 +9,7 @@ import {
   SessionKey,
   CreateSession,
 } from "@budibase/types"
-import { MAX_SESSIONS_PER_USER } from "@budibase/shared-core"
+import { getMaxSessionsPerUser } from "@budibase/shared-core"
 
 // a week expiry is the default
 const EXPIRY_SECONDS = getSessionExpirySeconds()
@@ -78,13 +78,14 @@ export async function createASession(
   const existingSessions = await getSessionsForUser(userId)
   let invalidatedSessionCount = 0
 
-  if (existingSessions.length >= MAX_SESSIONS_PER_USER) {
+  const maxSessions = getMaxSessionsPerUser()
+  if (existingSessions.length >= maxSessions) {
     const sortedSessions = existingSessions.sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     )
 
-    const sessionsToRemove = existingSessions.length - MAX_SESSIONS_PER_USER + 1
+    const sessionsToRemove = existingSessions.length - maxSessions + 1
     const sessionIdsToInvalidate = sortedSessions
       .slice(0, sessionsToRemove)
       .map(session => session.sessionId)
@@ -114,6 +115,7 @@ export async function createASession(
   return {
     session,
     invalidatedSessionCount,
+    maxSessionsPerUser: maxSessions,
   }
 }
 

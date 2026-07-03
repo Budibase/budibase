@@ -30,6 +30,7 @@ services:
       BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
       PLUGINS_DIR: ${PLUGINS_DIR}
       OFFLINE_MODE: ${OFFLINE_MODE:-}
+      BB_MAX_SESSIONS_PER_USER: ${BB_MAX_SESSIONS_PER_USER:-}
     depends_on:
       - worker-service
       - redis-service
@@ -61,6 +62,7 @@ services:
       LITELLM_URL: http://litellm-service:4000
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       OFFLINE_MODE: ${OFFLINE_MODE:-}
+      BB_MAX_SESSIONS_PER_USER: ${BB_MAX_SESSIONS_PER_USER:-}
     depends_on:
       - redis-service
       - minio-service
