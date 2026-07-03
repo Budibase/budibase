@@ -13,6 +13,44 @@ interface ChatMockModule {
   ) => void
 }
 
+interface SlackManifest {
+  display_information: {
+    name: string
+    description: string
+  }
+  features: {
+    bot_user: {
+      display_name: string
+      always_online: boolean
+    }
+    slash_commands: Array<{
+      command: string
+      url: string
+      description: string
+      usage_hint: string
+      should_escape: boolean
+    }>
+  }
+  oauth_config: {
+    scopes: {
+      bot: string[]
+    }
+  }
+  settings: {
+    event_subscriptions: {
+      request_url: string
+      bot_events: string[]
+    }
+    interactivity: {
+      is_enabled: boolean
+      request_url: string
+    }
+    org_deploy_enabled: boolean
+    socket_mode_enabled: boolean
+    token_rotation_enabled: boolean
+  }
+}
+
 jest.mock("@chat-adapter/slack", () => ({
   createSlackAdapter: jest.fn(() => ({})),
 }))
@@ -224,6 +262,74 @@ describe("agent slack integration provisioning", () => {
     })
 
     await config.api.agent.provisionSlackChannel(agent._id!, undefined, {
+      status: 400,
+    })
+  })
+
+  it("downloads a Slack app manifest for an agent", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack Manifest Agent",
+      description: "Answers questions in Slack.",
+      slackIntegration: {
+        botToken: "xoxb-token-manifest",
+        signingSecret: "slack-signing-secret-manifest",
+      },
+    })
+
+    const manifestText = await config.api.agent.downloadSlackManifest(
+      agent._id!,
+      {
+        headers: {
+          "Content-Disposition":
+            /budibase-slack-slack-manifest-agent-manifest\.json/,
+        },
+      }
+    )
+    const manifest = JSON.parse(manifestText) as SlackManifest
+    const endpointUrl = manifest.settings.event_subscriptions.request_url
+
+    expect(manifest.display_information).toEqual({
+      name: "Slack Manifest Agent",
+      description: "Answers questions in Slack.",
+    })
+    expect(endpointUrl).toContain("/api/webhooks/slack/")
+    expect(endpointUrl).toContain(`/${config.getProdWorkspaceId()}/`)
+    expect(endpointUrl).toContain(`/${agent._id}`)
+    expect(manifest.settings.interactivity.request_url).toEqual(endpointUrl)
+    expect(manifest.features.slash_commands).toContainEqual({
+      command: `/${ChatCommands.LINK}`,
+      url: endpointUrl,
+      description: "Link your Slack user to your Budibase account.",
+      usage_hint: `/${ChatCommands.LINK}`,
+      should_escape: false,
+    })
+    expect(manifest.settings.event_subscriptions.bot_events).toEqual([
+      "app_mention",
+      "message.im",
+    ])
+    expect(manifest.oauth_config.scopes.bot).toEqual([
+      "app_mentions:read",
+      "channels:history",
+      "chat:write",
+      "commands",
+      "im:history",
+      "im:read",
+      "im:write",
+    ])
+    expect(manifestText).not.toContain("xoxb-token-manifest")
+    expect(manifestText).not.toContain("slack-signing-secret-manifest")
+
+    const { agents } = await config.api.agent.fetch()
+    const updated = agents.find(candidate => candidate._id === agent._id)
+    expect(updated?.slackIntegration?.messagingEndpointUrl).toEqual(endpointUrl)
+  })
+
+  it("returns a validation error when downloading a Slack manifest without settings", async () => {
+    const agent = await config.api.agent.create({
+      name: "No Slack Manifest Settings",
+    })
+
+    await config.api.agent.downloadSlackManifest(agent._id!, {
       status: 400,
     })
   })

@@ -76,6 +76,7 @@ builderAdminRoutes
     provisionAgentSlackChannelValidator(),
     ai.provisionAgentSlackChannel
   )
+  .get("/api/agent/:agentId/slack/manifest", ai.downloadAgentSlackManifest)
   .post(
     "/api/agent/:agentId/telegram/toggle",
     toggleAgentTelegramDeploymentValidator(),

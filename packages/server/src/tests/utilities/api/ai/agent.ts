@@ -170,6 +170,19 @@ export class AgentAPI extends TestAPI {
     )
   }
 
+  downloadSlackManifest = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<string> => {
+    const response = this._checkResponse(
+      await this._requestRaw("get", `/api/agent/${agentId}/slack/manifest`, {
+        expectations,
+      }),
+      expectations
+    )
+    return response.text
+  }
+
   provisionTelegramChannel = async (
     agentId: string,
     body?: ProvisionAgentTelegramChannelRequest,

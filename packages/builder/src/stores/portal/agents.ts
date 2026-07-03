@@ -374,6 +374,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.provisionAgentSlackChannel(agentId, body)
     )
 
+  downloadSlackManifest = async (agentId: string): Promise<string> =>
+    await this.runAndRefreshAgents(() =>
+      API.downloadAgentSlackManifest(agentId)
+    )
+
   provisionTelegramChannel = async (
     agentId: string,
     body?: ProvisionAgentTelegramChannelRequest

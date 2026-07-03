@@ -70,6 +70,7 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ) => Promise<ProvisionAgentSlackChannelResponse>
+  downloadAgentSlackManifest: (agentId: string) => Promise<string>
   provisionAgentTelegramChannel: (
     agentId: string,
     body?: ProvisionAgentTelegramChannelRequest
@@ -235,6 +236,13 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     >({
       url: `/api/agent/${agentId}/slack/provision`,
       body,
+    })
+  },
+
+  downloadAgentSlackManifest: async (agentId: string) => {
+    return await API.get<string>({
+      url: `/api/agent/${agentId}/slack/manifest`,
+      parseResponse: async response => await response.text(),
     })
   },
 

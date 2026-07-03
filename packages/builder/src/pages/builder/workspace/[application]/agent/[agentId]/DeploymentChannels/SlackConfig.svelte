@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     Body,
+    Button,
     Checkbox,
     CopyInput,
     Input,
@@ -32,6 +33,7 @@
   })
 
   let provisioning = $state(false)
+  let downloadingManifest = $state(false)
   let provisionResult = $state<ProvisionAgentSlackChannelResponse | undefined>()
 
   const messagingEndpointUrl = $derived(
@@ -66,9 +68,29 @@
     draftAgentId = currentAgent._id
   })
 
-  const provisionSlackChannel = async () => {
+  const getManifestFilename = () => {
+    const safeName = (agent?.name || "agent")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+    return `budibase-slack-${safeName || "agent"}-manifest.json`
+  }
+
+  const downloadTextFile = (contents: string, filename: string) => {
+    const url = URL.createObjectURL(
+      new Blob([contents], { type: "application/json" })
+    )
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const provisionSlackChannel = async (showNotification = true) => {
     if (!agent?._id || provisioning) {
-      return
+      return false
     }
 
     provisioning = true
@@ -88,12 +110,38 @@
       if (agent.live) {
         await deploymentStore.publishApp()
       }
-      notifications.success("Slack channel settings saved")
+      if (showNotification) {
+        notifications.success("Slack channel settings saved")
+      }
+      return true
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save Slack channel settings")
+      return false
     } finally {
       provisioning = false
+    }
+  }
+
+  const downloadSlackManifest = async () => {
+    if (!agent?._id || downloadingManifest || !hasRequiredCredentials) {
+      return
+    }
+
+    downloadingManifest = true
+    try {
+      const saved = await provisionSlackChannel(false)
+      if (!saved) {
+        return
+      }
+      const manifest = await agentsStore.downloadSlackManifest(agent._id)
+      downloadTextFile(manifest, getManifestFilename())
+      notifications.success("Slack manifest downloaded")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to download Slack manifest")
+    } finally {
+      downloadingManifest = false
     }
   }
 </script>
@@ -144,5 +192,23 @@
       value={messagingEndpointUrl}
       disabled
     />
+    <div class="manifest-action">
+      <Button
+        secondary
+        on:click={downloadSlackManifest}
+        disabled={provisioning ||
+          downloadingManifest ||
+          !hasRequiredCredentials}
+      >
+        {downloadingManifest ? "Downloading..." : "Download manifest"}
+      </Button>
+    </div>
   {/snippet}
 </ChannelConfigLayout>
+
+<style>
+  .manifest-action {
+    display: flex;
+    justify-content: flex-start;
+  }
+</style>

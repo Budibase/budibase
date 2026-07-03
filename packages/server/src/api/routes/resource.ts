@@ -1,5 +1,6 @@
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
+import { destinationWorkspaceBuilderOrAdmin } from "../../middleware/destinationWorkspaceBuilderOrAdmin"
 import * as controller from "../controllers/resource"
 import { builderRoutes } from "./endpointGroups"
 
@@ -15,5 +16,6 @@ builderRoutes.get("/api/resources", controller.getResourceDependencies)
 builderRoutes.post(
   "/api/resources/duplicate",
   duplicateRequestValidator,
+  destinationWorkspaceBuilderOrAdmin,
   controller.duplicateResourceToWorkspace
 )

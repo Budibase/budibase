@@ -21,6 +21,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
   resolveProjectIds,
   resolveUpdatedProjectIds,
@@ -43,6 +44,10 @@ interface ConfiguredDeployment<TValidatedIntegration> {
 
 type DiscordDeployment = ConfiguredDeployment<
   ReturnType<typeof sdk.ai.deployments.discord.validateDiscordIntegration>
+>
+
+type SlackDeployment = ConfiguredDeployment<
+  ReturnType<typeof sdk.ai.deployments.slack.validateSlackIntegration>
 >
 
 const configureDeploymentChannel = async <
@@ -200,6 +205,39 @@ const configureDiscordDeployment = async ({
       }),
   })
 
+const configureSlackDeployment = async ({
+  agent,
+  agentId,
+  requestedChatAppId,
+}: {
+  agent: Agent
+  agentId: string
+  requestedChatAppId?: string
+}): Promise<SlackDeployment> =>
+  await configureDeploymentChannel({
+    agent,
+    agentId,
+    requestedChatAppId,
+    validateIntegration: sdk.ai.deployments.slack.validateSlackIntegration,
+    resolveChatAppForAgent: sdk.ai.deployments.slack.resolveChatAppForAgent,
+    buildEndpointUrl: sdk.ai.deployments.slack.buildSlackWebhookUrl,
+    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      await persistSlackDeployment({
+        agent,
+        chatAppId,
+        messagingEndpointUrl,
+      }),
+  })
+
+const toSafeFilenameSegment = (value: string) => {
+  const safe = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  return safe || "agent"
+}
+
 export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
   const rawAiconfigId = ctx.query.aiconfigId
 
@@ -354,19 +392,10 @@ export async function provisionAgentSlackChannel(
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-  const { chatAppId, endpointUrl } = await configureDeploymentChannel({
+  const { chatAppId, endpointUrl } = await configureSlackDeployment({
     agent,
     agentId,
     requestedChatAppId,
-    validateIntegration: sdk.ai.deployments.slack.validateSlackIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.slack.resolveChatAppForAgent,
-    buildEndpointUrl: sdk.ai.deployments.slack.buildSlackWebhookUrl,
-    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-      await persistSlackDeployment({
-        agent,
-        chatAppId,
-        messagingEndpointUrl,
-      }),
   })
 
   ctx.body = {
@@ -374,6 +403,31 @@ export async function provisionAgentSlackChannel(
     chatAppId,
     messagingEndpointUrl: endpointUrl,
   }
+  ctx.status = 200
+}
+
+export async function downloadAgentSlackManifest(
+  ctx: UserCtx<void, ReturnType<typeof apiFileReturn>, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const requestedChatAppId = parseOptionalChatAppId(
+    agent.slackIntegration?.chatAppId?.trim() || undefined
+  )
+  const { endpointUrl } = await configureSlackDeployment({
+    agent,
+    agentId,
+    requestedChatAppId,
+  })
+  const manifest = sdk.ai.deployments.slack.buildSlackManifest({
+    agent,
+    messagingEndpointUrl: endpointUrl,
+  })
+  const filename = `budibase-slack-${toSafeFilenameSegment(agent.name)}-manifest.json`
+
+  ctx.attachment(filename)
+  ctx.type = "application/json"
+  ctx.body = apiFileReturn(`${JSON.stringify(manifest, null, 2)}\n`)
   ctx.status = 200
 }
 
