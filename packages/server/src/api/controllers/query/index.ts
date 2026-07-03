@@ -47,7 +47,6 @@ import {
 } from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
-import { mergePreviewSchema } from "./schema"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -402,9 +401,20 @@ export async function preview(
   const { rows, keys, info, extra } = queryResponse
   const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
-  // keep any previously set column type while the data still fits it, so a
-  // re-run doesn't overwrite the user's choice (e.g. a date kept as DATETIME)
-  const schema = mergePreviewSchema(previewSchema, existingSchema, rows?.[0])
+  // keep any previously set column type so a re-run doesn't overwrite the user's
+  // choice (e.g. a date kept as DATETIME); columns no longer returned keep their
+  // previous schema too
+  const schema = { ...previewSchema }
+  if (existingSchema) {
+    for (const key of Object.keys(existingSchema)) {
+      const existing = existingSchema[key]
+      const existingType =
+        typeof existing === "string" ? existing : existing?.type
+      if (!schema[key] || existingType) {
+        schema[key] = existing
+      }
+    }
+  }
   // remove configuration before sending event
   delete datasource.config
   await events.query.previewed(datasource, ctx.request.body)
