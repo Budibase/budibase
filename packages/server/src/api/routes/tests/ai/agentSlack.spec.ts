@@ -302,6 +302,7 @@ describe("agent slack integration provisioning", () => {
       messages_tab_enabled: true,
       messages_tab_read_only_enabled: false,
     })
+    expect(manifest.features.bot_user.always_online).toBe(true)
     expect(endpointUrl).toContain("/api/webhooks/slack/")
     expect(endpointUrl).toContain(`/${config.getProdWorkspaceId()}/`)
     expect(endpointUrl).toContain(`/${agent._id}`)

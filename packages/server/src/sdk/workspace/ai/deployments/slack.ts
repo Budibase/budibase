@@ -96,7 +96,7 @@ export const buildSlackManifest = ({
       },
       bot_user: {
         display_name: normaliseBotDisplayName(agent.name),
-        always_online: false,
+        always_online: true,
       },
       slash_commands: [
         {
