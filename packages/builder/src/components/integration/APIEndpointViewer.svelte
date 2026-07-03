@@ -31,6 +31,7 @@
   } from "@budibase/bbui"
   import {
     BodyType,
+    FeatureFlag,
     type Query,
     type Datasource,
     type ImportEndpoint,
@@ -90,7 +91,7 @@
     urlParamHighlightPlugin,
     urlParamHighlightTheme,
   } from "../common/CodeEditor/urlParamHighlight"
-  import { environment } from "@/stores/portal"
+  import { environment, featureFlags } from "@/stores/portal"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { onDestroy, onMount, createEventDispatcher } from "svelte"
 
@@ -104,10 +105,12 @@
   export let settingsLocked: boolean = false
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
+  export let openAddConnectionOnMount: boolean = false
   export let initialProjectIds: string[] = []
 
   $beforeUrlChange
   $: goto = $gotoStore
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -993,7 +996,20 @@
     if (!$environment.loaded) {
       environment.loadVariables()
     }
-    if (connectorRestTemplateId && !datasourceId && !selectedDatasourceId) {
+    if (
+      openAddConnectionOnMount &&
+      connectorRestTemplateId &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
+      openConnectionMenuTimer = setTimeout(() => {
+        connectionSelectRef?.addConnection(connectorRestTemplateId)
+      }, 200)
+    } else if (
+      connectorRestTemplateId &&
+      !datasourceId &&
+      !selectedDatasourceId
+    ) {
       openConnectionMenuTimer = setTimeout(() => {
         connectionSelectRef?.open()
       }, 200)
@@ -1052,10 +1068,12 @@
             <div class="access">
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
-            <div class="project">
-              <Label>Projects</Label>
-              <ProjectSelect bind:value={projectIds} label="" autoWidth />
-            </div>
+            {#if projectsEnabled}
+              <div class="project">
+                <Label>Projects</Label>
+                <ProjectSelect bind:value={projectIds} label="" autoWidth />
+              </div>
+            {/if}
           {/if}
           {#if endpointDocs}
             <ActionButton
