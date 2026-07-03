@@ -1,5 +1,5 @@
 <script>
-  import { DatePicker, Select } from "@budibase/bbui"
+  import { DatePicker, Input, Select } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
@@ -71,7 +71,7 @@
   />
 {/if}
 
-{#if bindingValueTypes.includes(effectiveValueType) || effectiveValueType === FieldType.NUMBER}
+{#if bindingValueTypes.includes(effectiveValueType)}
   <DrawerBindableInput
     {disabled}
     {bindings}
@@ -79,13 +79,36 @@
     {panel}
     placeholder="Value"
     value={currentValue}
-    inputType={effectiveValueType === FieldType.NUMBER ? "number" : undefined}
     on:change={e => updateValue(e.detail)}
     on:blur={e => commitValue(e.detail)}
   />
+{:else if effectiveValueType === FieldType.NUMBER}
+  <DrawerBindableSlot
+    title="Value"
+    placeholder="Value"
+    type="number"
+    value={currentValue}
+    on:change={e => updateValue(e.detail)}
+    on:blur={e => commitValue(e.detail)}
+    {bindings}
+    {context}
+    {panel}
+    updateOnChange={false}
+    {disabled}
+  >
+    <Input
+      placeholder="Value"
+      type="number"
+      {disabled}
+      value={currentValue}
+      on:change={e => updateValue(e.detail)}
+      on:blur={e => commitValue(e.detail)}
+    />
+  </DrawerBindableSlot>
 {:else if effectiveValueType === FieldType.DATETIME}
   <DrawerBindableSlot
     title="Value"
+    placeholder="Value"
     type="date"
     value={currentValue}
     on:change={e => updateValue(e.detail)}
@@ -105,6 +128,7 @@
 {:else if effectiveValueType === FieldType.BOOLEAN}
   <DrawerBindableSlot
     title="Value"
+    placeholder="Value"
     type="boolean"
     value={currentValue}
     on:change={e => updateValue(e.detail)}
