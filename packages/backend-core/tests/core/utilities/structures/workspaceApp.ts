@@ -20,6 +20,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   > = {
     name: generator.guid(),
     url: `/${generator.guid().replace(/-/g, "")}`,
+    projectIds: undefined,
 
     _id: undefined,
     _rev: undefined,
@@ -38,12 +39,12 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
 export function createRequest(
   props?: Partial<InsertWorkspaceAppRequest>
 ): InsertWorkspaceAppRequest {
-  const workspace = workspaceApp(props)
-
   const result: RequiredKeys<InsertWorkspaceAppRequest> = {
-    name: workspace.name,
-    url: workspace.url,
-    disabled: workspace.disabled,
+    name: generator.guid(),
+    url: `/${generator.guid().replace(/-/g, "")}`,
+    disabled: false,
+    projectIds: undefined,
+    ...props,
   }
   return result
 }

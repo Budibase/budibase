@@ -18,7 +18,7 @@ import tracer from "dd-trace"
 import fs, { PathLike, ReadStream } from "fs"
 import fsp from "fs/promises"
 import https from "https"
-import { join } from "path"
+import { dirname, join, resolve, sep } from "path"
 import stream, { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import { ReadableStream } from "stream/web"
@@ -92,7 +92,15 @@ const STRING_CONTENT_TYPES = [
 
 // does normal sanitization and then swaps dev apps to apps
 export function sanitizeKey(input: string): string {
-  return sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
+  const key = sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
+  if (
+    key
+      .split("/")
+      .some((segment: string) => segment === "." || segment === "..")
+  ) {
+    throw new Error("Invalid object store key: path traversal is not allowed.")
+  }
+  return key
 }
 
 // simply handles the dev app to app conversion
@@ -589,16 +597,20 @@ export async function retrieveDirectory(
         await tracer.trace("retrieveDirectory.object", async span => {
           const filename = object.Key!
           span.addTags({ filename })
+
+          const writeTarget = getSafeRetrieveDirectoryPath(writePath, filename)
+          if (!writeTarget) {
+            span.addTags({ skippedUnsafePath: true })
+            return
+          }
+
           const { stream } = await getReadStream(bucketName, filename)
-          const possiblePath = filename.split("/")
-          const dirs = possiblePath.slice(0, possiblePath.length - 1)
-          const possibleDir = join(writePath, ...dirs)
-          if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
-            await fsp.mkdir(possibleDir, { recursive: true })
+          if (!fs.existsSync(writeTarget.dir)) {
+            await fsp.mkdir(writeTarget.dir, { recursive: true })
           }
           await pipeline(
             stream,
-            fs.createWriteStream(join(writePath, ...possiblePath), {
+            fs.createWriteStream(writeTarget.path, {
               mode: 0o644,
             })
           )
@@ -610,6 +622,21 @@ export async function retrieveDirectory(
     span.addTags({ numObjects })
     return writePath
   })
+}
+
+export function getSafeRetrieveDirectoryPath(writePath: string, key: string) {
+  const root = resolve(writePath)
+  const target = resolve(root, ...key.split("/"))
+  const isWithinRoot = target === root || target.startsWith(`${root}${sep}`)
+
+  if (!isWithinRoot) {
+    return undefined
+  }
+
+  return {
+    dir: dirname(target),
+    path: target,
+  }
 }
 
 /**

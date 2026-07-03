@@ -287,6 +287,17 @@
     border-radius: 8px;
   }
 
+  .external-icon {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+    background: var(--spectrum-global-color-gray-100);
+  }
+
   .external-icon img {
     width: 24px;
     height: 24px;
@@ -303,6 +314,13 @@
     justify-content: center;
     padding: 2px;
     border-radius: 8px;
+  }
+
+  .external-icon.compact {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    transform: translateY(-2px);
   }
 
   .icon-container.compact :global(i) {

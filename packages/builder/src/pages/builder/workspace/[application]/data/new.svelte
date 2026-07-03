@@ -26,9 +26,7 @@
   let externalDatasourceModal: CreateExternalDatasourceModal
 
   let sampleDataLoading = false
-  let externalDatasourceLoading = false
-
-  $: disabled = sampleDataLoading || externalDatasourceLoading
+  $: disabled = sampleDataLoading
 
   const createSampleData = async () => {
     sampleDataLoading = true
@@ -47,10 +45,7 @@
 
 <CreateInternalTableModal bind:this={internalTableModal} />
 
-<CreateExternalDatasourceModal
-  bind:loading={externalDatasourceLoading}
-  bind:this={externalDatasourceModal}
-/>
+<CreateExternalDatasourceModal bind:this={externalDatasourceModal} />
 
 <CreationPage
   showClose={hasData($datasources, $tables)}
