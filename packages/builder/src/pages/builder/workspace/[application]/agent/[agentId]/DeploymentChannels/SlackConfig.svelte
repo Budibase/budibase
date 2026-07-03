@@ -33,7 +33,7 @@
   })
 
   let provisioning = $state(false)
-  let downloadingManifest = $state(false)
+  let copyingManifest = $state(false)
   let provisionResult = $state<ProvisionAgentSlackChannelResponse | undefined>()
 
   const messagingEndpointUrl = $derived(
@@ -67,26 +67,6 @@
     provisionResult = undefined
     draftAgentId = currentAgent._id
   })
-
-  const getManifestFilename = () => {
-    const safeName = (agent?.name || "agent")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9._-]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-    return `budibase-slack-${safeName || "agent"}-manifest.json`
-  }
-
-  const downloadTextFile = (contents: string, filename: string) => {
-    const url = URL.createObjectURL(
-      new Blob([contents], { type: "application/json" })
-    )
-    const link = document.createElement("a")
-    link.href = url
-    link.download = filename
-    link.click()
-    URL.revokeObjectURL(url)
-  }
 
   const provisionSlackChannel = async (showNotification = true) => {
     if (!agent?._id || provisioning) {
@@ -123,25 +103,25 @@
     }
   }
 
-  const downloadSlackManifest = async () => {
-    if (!agent?._id || downloadingManifest || !hasRequiredCredentials) {
+  const copySlackManifest = async () => {
+    if (!agent?._id || copyingManifest || !hasRequiredCredentials) {
       return
     }
 
-    downloadingManifest = true
+    copyingManifest = true
     try {
       const saved = await provisionSlackChannel(false)
       if (!saved) {
         return
       }
       const manifest = await agentsStore.downloadSlackManifest(agent._id)
-      downloadTextFile(manifest, getManifestFilename())
-      notifications.success("Slack manifest downloaded")
+      await navigator.clipboard.writeText(manifest)
+      notifications.success("Slack manifest copied to clipboard")
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to download Slack manifest")
+      notifications.error("Failed to copy Slack manifest")
     } finally {
-      downloadingManifest = false
+      copyingManifest = false
     }
   }
 </script>
@@ -195,12 +175,10 @@
     <div class="manifest-action">
       <Button
         secondary
-        on:click={downloadSlackManifest}
-        disabled={provisioning ||
-          downloadingManifest ||
-          !hasRequiredCredentials}
+        on:click={copySlackManifest}
+        disabled={provisioning || copyingManifest || !hasRequiredCredentials}
       >
-        {downloadingManifest ? "Downloading..." : "Download manifest"}
+        {copyingManifest ? "Copying..." : "Copy manifest"}
       </Button>
     </div>
   {/snippet}

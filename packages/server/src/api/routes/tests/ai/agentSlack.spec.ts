@@ -19,6 +19,11 @@ interface SlackManifest {
     description: string
   }
   features: {
+    app_home: {
+      home_tab_enabled: boolean
+      messages_tab_enabled: boolean
+      messages_tab_read_only_enabled: boolean
+    }
     bot_user: {
       display_name: string
       always_online: boolean
@@ -291,6 +296,11 @@ describe("agent slack integration provisioning", () => {
     expect(manifest.display_information).toEqual({
       name: "Slack Manifest Agent",
       description: "Answers questions in Slack.",
+    })
+    expect(manifest.features.app_home).toEqual({
+      home_tab_enabled: false,
+      messages_tab_enabled: true,
+      messages_tab_read_only_enabled: false,
     })
     expect(endpointUrl).toContain("/api/webhooks/slack/")
     expect(endpointUrl).toContain(`/${config.getProdWorkspaceId()}/`)
