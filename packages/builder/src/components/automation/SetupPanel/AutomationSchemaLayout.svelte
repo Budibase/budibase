@@ -445,7 +445,11 @@
           />
         {/key}
       {:else}
-        <PropField label={title} fullWidth labelTooltip={config.tooltip || ""}>
+        <PropField
+          label={title}
+          fullWidth
+          labelTooltip={config.tooltip || field.description || ""}
+        >
           {#key shouldRerender(field, block, key)}
             <svelte:component
               this={config.comp}
