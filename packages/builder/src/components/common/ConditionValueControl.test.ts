@@ -5,20 +5,32 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@budibase/bbui", async () => {
   const { default: Select } = await import("./tests/MockSelect.svelte")
   const { default: DatePicker } = await import("./tests/MockDatePicker.svelte")
+  const { default: Input } = await import("./tests/MockInput.svelte")
+  const { default: Drawer } = await import("./tests/MockDrawer.svelte")
+  const { default: Button } = await import("./tests/MockButton.svelte")
+  const { default: Icon } = await import("./tests/MockIcon.svelte")
 
   return {
+    Button,
     DatePicker,
+    Drawer,
+    Helpers: {
+      uuid: () => "test-session-id",
+    },
+    Icon,
+    Input,
     Select,
   }
 })
 
-vi.mock("@/components/common/bindings/ClientBindingPanel.svelte", async () => {
-  const { default: MockDrawerBindableSlot } = await import(
-    "./tests/MockDrawerBindableSlot.svelte"
-  )
+vi.mock("@/dataBinding", () => ({
+  readableToRuntimeBinding: (_bindings: any[], value: any) => value,
+  runtimeToReadableBinding: (_bindings: any[], value: any) => value,
+}))
 
+vi.mock("@/components/common/bindings/ClientBindingPanel.svelte", async () => {
   return {
-    default: MockDrawerBindableSlot,
+    default: (await import("./tests/MockClientBindingPanel.svelte")).default,
   }
 })
 
@@ -29,16 +41,6 @@ vi.mock("@/components/common/bindings/DrawerBindableInput.svelte", async () => {
 
   return {
     default: MockDrawerBindableInput,
-  }
-})
-
-vi.mock("@/components/common/bindings/DrawerBindableSlot.svelte", async () => {
-  const { default: MockDrawerBindableSlot } = await import(
-    "./tests/MockDrawerBindableSlot.svelte"
-  )
-
-  return {
-    default: MockDrawerBindableSlot,
   }
 })
 
@@ -83,7 +85,7 @@ describe("ConditionValueControl", () => {
 
   it.each([
     [FieldType.STRING, "Condition value", "INPUT", "text"],
-    [FieldType.NUMBER, "Condition value", "INPUT", "number"],
+    [FieldType.NUMBER, "Value", "INPUT", "number"],
     [FieldType.DATETIME, "Date value", "INPUT", undefined],
     [FieldType.BOOLEAN, "Select", "SELECT", undefined],
   ])(
@@ -114,7 +116,9 @@ describe("ConditionValueControl", () => {
     "dispatches direct %s value updates",
     async (valueType, value, inputType) => {
       const { onBlur, onChange } = renderControl({ valueType })
-      const input = screen.getByLabelText("Condition value")
+      const input = screen.getByLabelText(
+        valueType === FieldType.NUMBER ? "Value" : "Condition value"
+      )
 
       expect(input).toHaveAttribute("type", inputType)
 
@@ -193,13 +197,19 @@ describe("ConditionValueControl", () => {
   })
 
   it.each([
+    [FieldType.NUMBER, "Value"],
     [FieldType.DATETIME, "Date value"],
     [FieldType.BOOLEAN, "Select"],
   ])(
     "shows a free-form binding value for %s and restores the typed control when cleared",
     async (valueType, directControlLabel) => {
       const { onChange, rerender } = renderControl({
-        value: valueType === FieldType.BOOLEAN ? "true" : "2026-05-01",
+        value:
+          valueType === FieldType.BOOLEAN
+            ? "true"
+            : valueType === FieldType.NUMBER
+              ? "42"
+              : "2026-05-01",
         valueType,
       })
 
@@ -213,17 +223,19 @@ describe("ConditionValueControl", () => {
         bindings: [],
       })
 
-      const bindingInput = screen.getByLabelText("Binding value")
+      const bindingInput = screen.getByLabelText("Value")
       expect(bindingInput).toHaveValue("{{ trigger.fields.value }}")
       if (valueType === FieldType.BOOLEAN) {
         expect(screen.getAllByLabelText("Select")).toHaveLength(1)
+      } else if (valueType === FieldType.NUMBER) {
+        expect(bindingInput).toHaveAttribute("type", "text")
       } else {
         expect(
           screen.queryByLabelText(directControlLabel)
         ).not.toBeInTheDocument()
       }
 
-      await fireEvent.click(screen.getByLabelText("Clear binding value"))
+      await fireEvent.click(screen.getByLabelText("x"))
       expect(onChange).toHaveBeenLastCalledWith({
         value: "",
       })
@@ -234,11 +246,22 @@ describe("ConditionValueControl", () => {
         bindings: [],
       })
 
-      expect(screen.queryByLabelText("Binding value")).not.toBeInTheDocument()
+      expect(
+        screen.queryByDisplayValue("{{ trigger.fields.value }}")
+      ).not.toBeInTheDocument()
       const restoredControls = screen.getAllByLabelText(directControlLabel)
       expect(restoredControls[restoredControls.length - 1]).toBeInTheDocument()
     }
   )
+
+  it("shows a free-form value input for whitespace-only number values", async () => {
+    renderControl({
+      value: " ",
+      valueType: FieldType.NUMBER,
+    })
+
+    expect(screen.getByLabelText("Value")).toHaveValue(" ")
+  })
 
   it("supports switching from bindings back to direct values", async () => {
     const { onChange } = renderControl({
