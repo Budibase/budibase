@@ -25,10 +25,10 @@ describe("buildHomeUrl", () => {
     )
   })
 
-  it("omits default created sort when projects are enabled", () => {
+  it("omits default updated sort when projects are enabled", () => {
     const result = buildHomeUrl("/builder/workspace/home", "", {
       ...defaultState,
-      sortColumn: "created",
+      sortColumn: "updated",
       sortOrder: "desc",
       projectsEnabled: true,
     })

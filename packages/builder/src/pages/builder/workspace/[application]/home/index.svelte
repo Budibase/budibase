@@ -924,8 +924,6 @@
       sort && (projectsEnabled || (sort !== "projects" && sort !== "created"))
     if (sortAllowed) {
       sortColumn = sort
-    } else if (projectsEnabled) {
-      sortColumn = "created"
     } else {
       sortColumn = "updated"
     }
