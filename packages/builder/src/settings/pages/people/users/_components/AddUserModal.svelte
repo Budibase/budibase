@@ -299,7 +299,7 @@
     validateWorkspaceEmails(nextEmails)
   }
 
-  const updateHighlightedUser = (direction: number) => {
+  const updateHighlightedUser = (direction: 1 | -1) => {
     if (!suggestedUsers.length) {
       return
     }
