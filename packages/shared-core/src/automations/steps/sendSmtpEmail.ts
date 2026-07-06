@@ -29,7 +29,7 @@ export const definition: AutomationStepDefinition = {
         from: {
           type: AutomationIOType.STRING,
           title: "Send From",
-          description:
+          tooltip:
             "To include a display name, use the format: Display Name <email@example.com>",
         },
         replyTo: {
