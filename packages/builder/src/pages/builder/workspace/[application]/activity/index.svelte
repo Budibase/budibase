@@ -67,8 +67,11 @@
   let allRequests = $state<AgentRequest[]>([])
   let summary = $state<AgentRequestsSummary | null>(null)
   let userNames = $state<Record<string, string>>({})
-  let hasNextPage = $state(false)
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
+
+  let hasNextPage = $derived.by(() => {
+    return !!summary && summary.total > currentPage * PAGE_SIZE
+  })
 
   // Ticks on an interval purely to force updatedLabel to re-derive
   let now = $state(Date.now())
@@ -175,7 +178,7 @@
   async function loadRequests(page = currentPage) {
     if (!($agentsStore.agents || []).length) {
       allRequests = []
-      hasNextPage = false
+      summary = null
       return
     }
 
@@ -187,7 +190,6 @@
       })
       allRequests = response.requests
       summary = response.summary
-      hasNextPage = response.requests.length === PAGE_SIZE
       try {
         await hydrateUserNames(response.requests)
       } catch (error) {
@@ -197,7 +199,7 @@
       console.error("Failed to fetch agent requests", error)
       notifications.error("Failed to load agent actions")
       allRequests = []
-      hasNextPage = false
+      summary = null
     } finally {
       loading = false
     }
@@ -280,7 +282,7 @@
     const currentAgentIds = ($agentsStore.agents || []).map(agent => agent._id)
     if (!currentAgentIds.length) {
       allRequests = []
-      hasNextPage = false
+      summary = null
       return
     }
 
