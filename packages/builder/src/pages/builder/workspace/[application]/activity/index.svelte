@@ -5,7 +5,10 @@
   import { builderStore } from "@/stores/builder"
   import { Body, Pagination, Table, notifications } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
-  import type { AgentRequestStatus } from "@budibase/types"
+  import type {
+    AgentRequestsSummary,
+    AgentRequestStatus,
+  } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import dayjs from "dayjs"
@@ -30,7 +33,7 @@
     value: number
   }
 
-  const PAGE_SIZE = 40
+  const PAGE_SIZE = 20
   const tableSchema = {
     title: {
       type: "string",
@@ -62,6 +65,7 @@
   let currentPage = $state(1)
   let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
+  let summary = $state<AgentRequestsSummary | null>(null)
   let userNames = $state<Record<string, string>>({})
   let hasNextPage = $state(false)
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
@@ -98,25 +102,19 @@
   let filteredRequests = $derived(allRequests)
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
-    const requests = filteredRequests
+    const counts = summary || {
+      total: 0,
+      active: 0,
+      needs_input: 0,
+      completed: 0,
+      failed: 0,
+    }
     return [
-      { label: "All requests", value: requests.length },
-      {
-        label: "Completed",
-        value: requests.filter(r => r.status === "completed").length,
-      },
-      {
-        label: "Processing",
-        value: requests.filter(r => r.status === "active").length,
-      },
-      {
-        label: "Needs input",
-        value: requests.filter(r => r.status === "needs_input").length,
-      },
-      {
-        label: "Failed",
-        value: requests.filter(r => r.status === "failed").length,
-      },
+      { label: "All requests", value: counts.total },
+      { label: "Completed", value: counts.completed },
+      { label: "Processing", value: counts.active },
+      { label: "Needs input", value: counts.needs_input },
+      { label: "Failed", value: counts.failed },
     ]
   })
 
@@ -188,6 +186,7 @@
         page,
       })
       allRequests = response.requests
+      summary = response.summary
       hasNextPage = response.requests.length === PAGE_SIZE
       try {
         await hydrateUserNames(response.requests)
@@ -297,12 +296,27 @@
     }
 
     const handleAgentRequestChange = async (request: AgentRequest) => {
-      const exists = allRequests.some(r => r._id === request._id)
-      if (exists) {
+      const previous = allRequests.find(r => r._id === request._id)
+      if (previous) {
         allRequests = allRequests.map(r =>
           r._id === request._id ? request : r
         )
+        if (summary && previous.status !== request.status) {
+          summary = {
+            ...summary,
+            [previous.status]: summary[previous.status] - 1,
+            [request.status]: summary[request.status] + 1,
+          }
+        }
         return
+      }
+
+      if (summary) {
+        summary = {
+          ...summary,
+          total: summary.total + 1,
+          [request.status]: summary[request.status] + 1,
+        }
       }
 
       // Only insert live on page 1. A request created while viewing a
