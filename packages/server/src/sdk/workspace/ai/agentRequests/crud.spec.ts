@@ -15,9 +15,6 @@ jest.mock("./helpers", () => ({
   generateAgentRequestTitle: jest.fn(),
 }))
 
-// Other test setup (creating/publishing workspaces) exercises unrelated
-// builderSocket.emit* calls - stub every method as a jest.fn() on demand so
-// only emitAgentRequestChange needs asserting on below.
 jest.mock("../../../../websockets", () => ({
   initialise: jest.fn(),
   builderSocket: new Proxy(
@@ -36,8 +33,8 @@ describe("agentRequests crud", () => {
 
   const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
   const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
-  const emitAgentRequestChangeMock = builderSocket!
-    .emitAgentRequestChange as jest.Mock
+  const emitAgentRequestChangeMock =
+    builderSocket?.emitAgentRequestChange as jest.Mock
 
   beforeEach(async () => {
     analyzeAgentRequestLinkMock.mockReset()

@@ -290,9 +290,6 @@
     loadRequests(1)
   })
 
-  // allRequests is local page state (not a shared store), so we listen for
-  // live status changes directly on the builder socket rather than through
-  // the centralised handlers in stores/builder/websocket.ts.
   $effect(() => {
     const socket = builderStore.websocket
     if (!socket) {
@@ -308,7 +305,7 @@
         return
       }
 
-      // Only insert live on page 1 - a request created while viewing a
+      // Only insert live on page 1. A request created while viewing a
       // later page belongs on page 1, not under the user on this one.
       if (currentPage !== 1) {
         return

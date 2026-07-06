@@ -250,12 +250,6 @@ export default class BuilderSocket extends BaseSocket {
     })
   }
 
-  // AgentRequest mutations don't all originate from an HTTP controller (see
-  // saveRequest() in sdk/workspace/ai/agentRequests/crud.ts), so unlike the
-  // other emit* methods above this can't rely on a Koa ctx being available.
-  // The full request is sent (not just a status diff) so a brand new
-  // request can be rendered without a refetch, not just an existing one
-  // updated in place.
   emitAgentRequestChange(workspaceId: string, request: AgentRequest) {
     this.io.in(workspaceId).emit(BuilderSocketEvent.AgentRequestChange, request)
   }

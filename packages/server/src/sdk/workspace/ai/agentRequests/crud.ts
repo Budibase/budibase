@@ -73,9 +73,6 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
 
   const workspaceId = context.getWorkspaceId()
   if (workspaceId) {
-    // Agent activity (chat, escalations) runs in the prod workspace context,
-    // but BuilderSocket rooms are always joined using the dev workspace id
-    // (the Activity tab lives in the builder, which only ever edits dev).
     builderSocket?.emitAgentRequestChange(context.getDevWorkspaceId(), saved)
   }
 
