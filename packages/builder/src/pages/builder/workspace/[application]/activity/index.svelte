@@ -56,6 +56,8 @@
     { column: "actions", component: ActivityActionsRenderer },
   ]
 
+  const RELATIVE_TIME_REFRESH_MS = 30000
+
   let loading = $state(false)
   let currentPage = $state(1)
   let selectedRequestId = $state<string | null>(null)
@@ -63,6 +65,9 @@
   let userNames = $state<Record<string, string>>({})
   let hasNextPage = $state(false)
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
+
+  // Ticks on an interval purely to force updatedLabel to re-derive
+  let now = $state(Date.now())
 
   const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
     active: { label: "Processing" },
@@ -127,7 +132,7 @@
         statusLabel: requestStatusMeta[request.status].label,
         status: request.status,
         updatedLabel:
-          updatedTime > 0 ? dayjs(updatedAt).fromNow() : "Unknown time",
+          updatedTime > 0 ? dayjs(updatedAt).from(now) : "Unknown time",
         actions: "",
       }
     })
@@ -259,6 +264,13 @@
       $goto("../home")
       return
     }
+  })
+
+  $effect(() => {
+    const interval = setInterval(() => {
+      now = Date.now()
+    }, RELATIVE_TIME_REFRESH_MS)
+    return () => clearInterval(interval)
   })
 
   $effect(() => {
