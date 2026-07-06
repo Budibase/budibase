@@ -3,7 +3,7 @@
   import Select from "../../Select.svelte"
   import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onDestroy } from "svelte"
   import Icon from "../../../Icon/Icon.svelte"
   import { resolveTranslationGroup } from "@budibase/shared-core"
 
@@ -116,6 +116,51 @@
   }
 
   const cleanYear = cleanInput({ max: 9999, pad: 0, fallback: now.year() })
+
+  // Scroll (desktop) or horizontal swipe (touch) over the calendar to move
+  // between months.
+  const SWIPE_THRESHOLD = 40
+  let wheelLock = false
+  let wheelTimer
+  let touchStartX = 0
+  let touchStartY = 0
+
+  const changeMonth = forward => {
+    calendarDate = forward
+      ? calendarDate.add(1, "month")
+      : calendarDate.subtract(1, "month")
+  }
+
+  // A short lock keeps a single trackpad gesture from skipping many months
+  const handleWheel = e => {
+    if (wheelLock) {
+      return
+    }
+    const delta = e.deltaY || e.deltaX
+    if (!delta) {
+      return
+    }
+    wheelLock = true
+    wheelTimer = setTimeout(() => (wheelLock = false), 120)
+    changeMonth(delta > 0)
+  }
+
+  const handleTouchStart = e => {
+    touchStartX = e.changedTouches[0].clientX
+    touchStartY = e.changedTouches[0].clientY
+  }
+
+  // Only a clear horizontal swipe changes month - vertical stays a normal
+  // scroll and small movements remain taps so date selection keeps working
+  const handleTouchEnd = e => {
+    const dx = e.changedTouches[0].clientX - touchStartX
+    const dy = e.changedTouches[0].clientY - touchStartY
+    if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+      changeMonth(dx < 0)
+    }
+  }
+
+  onDestroy(() => clearTimeout(wheelTimer))
 </script>
 
 <div class="spectrum-Calendar">
@@ -160,10 +205,14 @@
       <Icon name="caret-right" weight="bold" size="S" />
     </button>
   </div>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="spectrum-Calendar-body"
     aria-readonly="true"
     aria-disabled="false"
+    on:wheel|preventDefault={handleWheel}
+    on:touchstart={handleTouchStart}
+    on:touchend={handleTouchEnd}
   >
     <table role="presentation" class="spectrum-Calendar-table">
       <thead role="presentation">
