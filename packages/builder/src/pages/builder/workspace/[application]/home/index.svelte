@@ -189,7 +189,7 @@
       return null
     }
     if (value === "created") {
-      return "created"
+      return "updated"
     }
     if (
       value === "name" ||

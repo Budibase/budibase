@@ -36,11 +36,11 @@ export const buildHomeUrl = (
     params.set("project", state.selectedProjectId)
   }
 
-  const hasProjectOnlySort =
-    !state.projectsEnabled &&
-    (state.sortColumn === "projects" || state.sortColumn === "created")
-  const sortColumn = hasProjectOnlySort ? "updated" : state.sortColumn
-  const sortOrder = hasProjectOnlySort ? "desc" : state.sortOrder
+  const unsupportedSort =
+    state.sortColumn === "created" ||
+    (!state.projectsEnabled && state.sortColumn === "projects")
+  const sortColumn = unsupportedSort ? "updated" : state.sortColumn
+  const sortOrder = unsupportedSort ? "desc" : state.sortOrder
   const defaultSortColumn = "updated"
   const isDefaultSort = sortColumn === defaultSortColumn && sortOrder === "desc"
   if (isDefaultSort) {

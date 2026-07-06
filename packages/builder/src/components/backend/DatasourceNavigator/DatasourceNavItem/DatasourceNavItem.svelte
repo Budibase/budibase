@@ -85,7 +85,16 @@
   }
 
   const refreshDataStores = async () => {
-    await Promise.all([datasources.fetch(), tables.fetch(), queries.fetch()])
+    const refreshes = await Promise.allSettled([
+      datasources.fetch(),
+      tables.fetch(),
+      queries.fetch(),
+    ])
+    if (refreshes.some(result => result.status === "rejected")) {
+      notifications.warning(
+        "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+      )
+    }
   }
 
   const openAssignProjectModal = async () => {
@@ -110,7 +119,6 @@
         ),
         skipConnectionCheck: true,
       })
-      await refreshDataStores()
       notifications.success("Projects updated successfully")
       assignProjectModal?.hide()
     } catch (error) {
@@ -118,6 +126,8 @@
       notifications.error("Unable to update project")
       return keepOpen
     }
+
+    await refreshDataStores()
   }
 
   const addQueryItem: MenuItem = {

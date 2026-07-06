@@ -63,17 +63,24 @@
         ...table,
         projectIds,
       })
-      await Promise.all([
-        datasources.fetch(),
-        tablesStore.fetch(),
-        queries.fetch(),
-      ])
-      notifications.success("Projects updated successfully")
-      assignProjectModal?.hide()
     } catch (error) {
       console.error(error)
       notifications.error("Unable to update project")
       return keepOpen
+    }
+
+    notifications.success("Projects updated successfully")
+    assignProjectModal?.hide()
+
+    const refreshes = await Promise.allSettled([
+      datasources.fetch(),
+      tablesStore.fetch(),
+      queries.fetch(),
+    ])
+    if (refreshes.some(result => result.status === "rejected")) {
+      notifications.warning(
+        "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+      )
     }
   }
 
