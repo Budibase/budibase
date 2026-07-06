@@ -72,6 +72,29 @@ describe("agentRequests crud", () => {
       })
     })
 
+    it("emits AgentRequestChange with the full request on creation", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        emitAgentRequestChangeMock.mockClear()
+
+        const result = await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(emitAgentRequestChangeMock).toHaveBeenCalledWith(
+          config.getDevWorkspaceId(),
+          request
+        )
+        expect(request._id).toEqual(result?.requestId)
+        expect(request.title).toEqual("Generated title")
+      })
+    })
+
     it("returns the existing requestId if the sessionId already has a request", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const first = await initActiveRequest({
@@ -176,11 +199,7 @@ describe("agentRequests crud", () => {
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(emitAgentRequestChangeMock).toHaveBeenCalledWith(
           config.getDevWorkspaceId(),
-          {
-            requestId,
-            status: "completed",
-            updatedAt: request.updatedAt,
-          }
+          request
         )
       })
     })

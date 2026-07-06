@@ -287,18 +287,26 @@
       return
     }
 
-    const handleAgentRequestChange = ({
-      requestId,
-      status,
-      updatedAt,
-    }: {
-      requestId: string
-      status: AgentRequestStatus
-      updatedAt: string
-    }) => {
-      allRequests = allRequests.map(request =>
-        request._id === requestId ? { ...request, status, updatedAt } : request
-      )
+    const handleAgentRequestChange = async (request: AgentRequest) => {
+      const exists = allRequests.some(r => r._id === request._id)
+      if (exists) {
+        allRequests = allRequests.map(r =>
+          r._id === request._id ? request : r
+        )
+        return
+      }
+
+      // Only insert live on page 1 - a request created while viewing a
+      // later page belongs on page 1, not under the user on this one.
+      if (currentPage !== 1) {
+        return
+      }
+      allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
+      try {
+        await hydrateUserNames([request])
+      } catch (error) {
+        console.error("Failed to hydrate agent request user name", error)
+      }
     }
 
     socket.on(BuilderSocketEvent.AgentRequestChange, handleAgentRequestChange)
