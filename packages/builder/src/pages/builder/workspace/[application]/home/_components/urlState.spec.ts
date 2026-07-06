@@ -60,4 +60,13 @@ describe("buildHomeUrl", () => {
 
     expect(result).toBe("/builder/workspace/home")
   })
+
+  it("writes the data type filter", () => {
+    const result = buildHomeUrl("/builder/workspace/home", "", {
+      ...defaultState,
+      typeFilter: "data",
+    })
+
+    expect(result).toBe("/builder/workspace/home?type=data")
+  })
 })

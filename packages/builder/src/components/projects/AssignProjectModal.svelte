@@ -2,15 +2,21 @@
 
 <script lang="ts">
   import { Body, ModalContent, Multiselect } from "@budibase/bbui"
-  import type { HomeRow, ProjectResponse } from "@budibase/types"
+  import type { ProjectResponse } from "@budibase/types"
+
+  interface AssignableProjectResource {
+    name: string
+    typeLabel: string
+    projectIds?: string[]
+  }
 
   interface Props {
-    row?: HomeRow | null
+    resource?: AssignableProjectResource | null
     projects?: ProjectResponse[]
     onConfirm?: (_projectIds: string[]) => unknown
   }
 
-  let { row = null, projects = [], onConfirm = () => {} }: Props = $props()
+  let { resource = null, projects = [], onConfirm = () => {} }: Props = $props()
 
   interface ProjectOption {
     label: string
@@ -19,7 +25,7 @@
   }
 
   let selectedProjectIds: string[] = $derived(
-    row?.projectIds ? [...row.projectIds] : []
+    resource?.projectIds ? [...resource.projectIds] : []
   )
 
   const projectOptions: ProjectOption[] = $derived(
@@ -32,14 +38,14 @@
 </script>
 
 <ModalContent
-  title={`Assign projects${row ? ` to ${row.name}` : ""}`}
+  title={`Assign projects${resource ? ` to ${resource.name}` : ""}`}
   confirmText="Save"
   size="M"
   onConfirm={() => onConfirm(selectedProjectIds)}
 >
-  {#if row}
+  {#if resource}
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Choose which projects this {row.type} belongs to.
+      Choose which projects this {resource.typeLabel.toLowerCase()} belongs to.
     </Body>
   {/if}
 

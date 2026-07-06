@@ -6,7 +6,7 @@
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import AssignProjectModal from "./_components/AssignProjectModal.svelte"
+  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
   import CreateProjectModal from "./_components/CreateProjectModal.svelte"
   import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
@@ -20,6 +20,10 @@
     appStore,
     automationStore,
     contextMenuStore,
+    datasources,
+    integrations,
+    queries,
+    tables,
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
@@ -58,16 +62,20 @@
     type ProjectResponse,
     PublishResourceState,
     type Agent,
+    type Datasource,
     type Table,
     type WorkspaceFavourite,
     type WorkspaceResource,
   } from "@budibase/types"
+  import { integrationForDatasource } from "@/stores/selectors"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { get } from "svelte/store"
   import {
     buildHomeRows,
     filterHomeRows,
+    getTypeLabel,
     sortHomeRows,
   } from "./_components/rows"
   import { buildHomeUrl, type HomeUrlState } from "./_components/urlState"
@@ -131,6 +139,13 @@
   $: currentUserId = $auth.user?._id || ""
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
+  $: selectedProjectResource = selectedRow
+    ? {
+        name: selectedRow.name,
+        typeLabel: getTypeLabel(selectedRow.type),
+        projectIds: selectedRow.projectIds,
+      }
+    : null
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
   $: if (searchTerm.trim()) {
     searchOpen = true
@@ -157,10 +172,13 @@
     if (!value) {
       return null
     }
-    if (value === "all" || value === "app" || value === "automation") {
-      return value
-    }
-    if (value === "agent") {
+    if (
+      value === "all" ||
+      value === "app" ||
+      value === "automation" ||
+      value === "agent" ||
+      value === "data"
+    ) {
       return value
     }
     return null
@@ -429,10 +447,42 @@
           ...agent,
           projectIds,
         })
+      } else if (selectedRow.type === "datasource") {
+        const { resource } = selectedRow
+        await datasources.save({
+          datasource: {
+            ...resource,
+            projectIds,
+          },
+          integration: integrationForDatasource(get(integrations), resource),
+          skipConnectionCheck: true,
+        })
+      } else if (selectedRow.type === "table") {
+        const { resource } = selectedRow
+        await tables.save({
+          ...resource,
+          projectIds,
+        })
       }
 
       notifications.success("Projects updated successfully")
       assignProjectModal?.hide()
+
+      // Propagation on the server may have additively assigned projectIds to
+      // dependencies of the resource we just saved, so refresh everything
+      // shown on the home page to reflect that.
+      const refreshes = await Promise.allSettled([
+        appStore.refresh(),
+        agentsStore.fetchAgents(),
+        datasources.fetch(),
+        tables.fetch(),
+        queries.fetch(),
+      ])
+      if (refreshes.some(result => result.status === "rejected")) {
+        notifications.warning(
+          "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+        )
+      }
     } catch (error) {
       console.error(error)
       notifications.error("Unable to update project")
@@ -489,6 +539,9 @@
       const refreshes = await Promise.allSettled([
         appStore.refresh(),
         agentsStore.fetchAgents(),
+        datasources.fetch(),
+        tables.fetch(),
+        queries.fetch(),
       ])
       if (refreshes.some(result => result.status === "rejected")) {
         notifications.warning(
@@ -553,6 +606,9 @@
       const refreshes = await Promise.allSettled([
         appStore.refresh(),
         agentsStore.fetchAgents(),
+        datasources.fetch(),
+        tables.fetch(),
+        queries.fetch(),
         loadMetrics(),
       ])
       if (refreshes.some(result => result.status === "rejected")) {
@@ -705,6 +761,23 @@
       ]
     }
 
+    if (row.type === "datasource" || row.type === "table") {
+      return [
+        {
+          icon: "arrow-square-out",
+          name: "Open",
+          visible: true,
+          callback: () => openRow(row),
+        },
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
+        },
+      ]
+    }
+
     return []
   }
 
@@ -755,6 +828,14 @@
       goto(url(`../agent/${row.id}/config`))
       return
     }
+    if (row.type === "datasource") {
+      goto(url(`../data/datasource/${row.id}`))
+      return
+    }
+    if (row.type === "table") {
+      goto(url(`../data/table/${row.id}`))
+      return
+    }
   }
 
   const loadMetrics = async () => {
@@ -782,6 +863,8 @@
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
     agents: $agentsStore.agents,
+    datasources: $datasources.list as Datasource[],
+    tables: $tables.list,
     getFavourite,
   })
 
@@ -1015,8 +1098,6 @@
       <HomeProjectTabs
         projects={$projectsStore}
         {selectedProjectId}
-        hasSelectedProject={!!selectedProject}
-        canExport={$projectsStore.length > 0}
         onSelect={projectId => (selectedProjectId = projectId)}
         onCreateProject={createProject}
         onEditProject={editProject}
@@ -1169,7 +1250,7 @@
 
   <Modal bind:this={assignProjectModal}>
     <AssignProjectModal
-      row={selectedRow}
+      resource={selectedProjectResource}
       projects={$projectsStore}
       onConfirm={assignProject}
     />

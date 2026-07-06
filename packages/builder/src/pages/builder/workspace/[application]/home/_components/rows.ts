@@ -1,21 +1,27 @@
 import {
   WorkspaceResource,
   type Agent,
+  type Datasource,
   type HomeRow,
   type HomeRowType,
   type HomeSortColumn,
   type HomeSortOrder,
   type HomeType,
+  type Table,
   type UIAutomation,
   type UIWorkspaceApp,
   type WorkspaceFavourite,
 } from "@budibase/types"
+import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
+import { TableNames } from "@/constants"
 import { getAgentStatusLabel, getPublishResourceStatusLabel } from "./status"
 
 interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]
   automations: UIAutomation[]
   agents: Agent[]
+  datasources: Datasource[]
+  tables: Table[]
   getFavourite: (
     resourceType: WorkspaceResource,
     resourceId: string
@@ -30,6 +36,10 @@ export const getRowIcon = (type: HomeRowType) => {
       return "browsers"
     case "agent":
       return "sparkle"
+    case "datasource":
+      return "database"
+    case "table":
+      return "table"
     default:
       return "cube"
   }
@@ -43,6 +53,9 @@ export const getRowIconColor = (type: HomeRowType) => {
       return "var(--color-orange-400)"
     case "agent":
       return "var(--color-brand-400)"
+    case "datasource":
+    case "table":
+      return "var(--color-green-600)"
     default:
       return "var(--spectrum-global-color-gray-700)"
   }
@@ -52,12 +65,18 @@ export const getHomeTypeIcon = (type: HomeType) => {
   if (type === "all") {
     return "squares-four"
   }
+  if (type === "data") {
+    return "database"
+  }
   return getRowIcon(type)
 }
 
 export const getHomeTypeIconColor = (type: HomeType) => {
   if (type === "all") {
     return "var(--spectrum-global-color-gray-700)"
+  }
+  if (type === "data") {
+    return "var(--color-green-600)"
   }
   return getRowIconColor(type)
 }
@@ -70,6 +89,10 @@ export const getTypeLabel = (type: HomeRowType) => {
       return "Automation"
     case "agent":
       return "Agent"
+    case "datasource":
+      return "Datasource"
+    case "table":
+      return "Table"
   }
 }
 
@@ -96,7 +119,10 @@ const getStatusSortValue = (row: HomeRow) => {
   if (row.type === "app" || row.type === "automation") {
     return getPublishResourceStatusLabel(row.resource.publishStatus)
   }
-  return getAgentStatusLabel(row.resource)
+  if (row.type === "agent") {
+    return getAgentStatusLabel(row.resource)
+  }
+  return "-"
 }
 
 const getSortValue = (row: HomeRow, column: HomeSortColumn) => {
@@ -168,7 +194,13 @@ export const filterHomeRows = ({
   const normalisedSearchTerm = searchTerm.trim().toLowerCase()
 
   return rows.filter(row => {
-    if (typeFilter !== "all" && row.type !== typeFilter) {
+    const matchesType =
+      typeFilter === "all" ||
+      (typeFilter === "data"
+        ? row.type === "datasource" || row.type === "table"
+        : row.type === typeFilter)
+
+    if (!matchesType) {
       return false
     }
 
@@ -184,6 +216,8 @@ export const buildHomeRows = ({
   apps,
   automations,
   agents,
+  datasources,
+  tables,
   getFavourite,
 }: BuildHomeRowsParams): HomeRow[] => {
   const appRows: HomeRow[] = apps.map(app => {
@@ -242,5 +276,55 @@ export const buildHomeRows = ({
     }
   })
 
-  return [...appRows, ...automationRows, ...agentRows]
+  const externalDatasources = datasources.filter(
+    datasource => datasource._id !== BUDIBASE_INTERNAL_DB_ID
+  )
+  const assignableInternalTables = tables.filter(
+    table =>
+      table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+      table._id !== TableNames.USERS
+  )
+  const datasourceRows: HomeRow[] = externalDatasources.map(datasource => {
+    const id = datasource._id as string
+    return {
+      _id: id,
+      id,
+      name: datasource.name || "Datasource",
+      type: "datasource",
+      projectIds: datasource.projectIds,
+      updatedAt: datasource.updatedAt,
+      createdAt: datasource.createdAt
+        ? String(datasource.createdAt)
+        : undefined,
+      resource: datasource,
+      favourite: getFavourite(WorkspaceResource.DATASOURCE, id),
+      icon: getRowIcon("datasource"),
+      iconColor: getRowIconColor("datasource"),
+    }
+  })
+
+  const tableRows: HomeRow[] = assignableInternalTables.map(table => {
+    const id = table._id as string
+    return {
+      _id: id,
+      id,
+      name: table.name || "Table",
+      type: "table",
+      projectIds: table.projectIds,
+      updatedAt: table.updatedAt,
+      createdAt: table.createdAt ? String(table.createdAt) : undefined,
+      resource: table,
+      favourite: getFavourite(WorkspaceResource.TABLE, id),
+      icon: getRowIcon("table"),
+      iconColor: getRowIconColor("table"),
+    }
+  })
+
+  return [
+    ...appRows,
+    ...automationRows,
+    ...agentRows,
+    ...datasourceRows,
+    ...tableRows,
+  ]
 }
