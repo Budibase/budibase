@@ -2,6 +2,7 @@
   import { ActionButton, notifications } from "@budibase/bbui"
   import { selectedScreen, componentStore } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"
+  import { hasFormContext } from "@/helpers/formFields"
   import { makeDatasourceFormComponents } from "@/templates/commonComponents"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
@@ -13,7 +14,7 @@
     const form = findClosestMatchingComponent(
       $selectedScreen?.props,
       componentInstance._id,
-      component => component._component.endsWith("/form")
+      hasFormContext
     )
     const dataSource = form?.dataSource
     const fields = makeDatasourceFormComponents(dataSource)

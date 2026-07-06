@@ -15,7 +15,7 @@ import {
   makeComponentUnique,
   findComponentType,
 } from "@/helpers/components"
-import { getComponentFieldOptions } from "@/helpers/formFields"
+import { getComponentFieldOptions, hasFormContext } from "@/helpers/formFields"
 import { selectedScreen } from "./screens"
 import {
   screenStore,
@@ -489,7 +489,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
       const parentForm = findClosestMatchingComponent(
         screen.props,
         get(selectedComponent)?._id,
-        (component: Component) => component._component.endsWith("/form")
+        (component: Component) => hasFormContext(component)
       )
       const formSteps = findAllMatchingComponents(
         parentForm,

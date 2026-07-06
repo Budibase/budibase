@@ -26,6 +26,7 @@
   import { SvelteSet } from "svelte/reactivity"
   import { selectedScreen, selectedComponent } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"
+  import { hasFormContext } from "@/helpers/formFields"
   import {
     getSchemaForDatasource,
     getDatasourceForProvider,
@@ -138,9 +139,8 @@
     const formParent = findClosestMatchingComponent(
       asset.props,
       component._id,
-      (component: Component) =>
-        component._component.endsWith("/form") ||
-        component._component.endsWith("/formblock") ||
+      component =>
+        hasFormContext(component) ||
         component._component.endsWith("/tableblock")
     )
     const dataSource = resolveDatasource(asset, component, formParent)

@@ -1,5 +1,6 @@
 import { makePropSafe } from "@budibase/string-templates"
 import { UIBinding } from "@budibase/types"
+import { hasFormContext } from "@/helpers/formFields"
 
 export function extractRelationships(bindings: UIBinding[]) {
   return (
@@ -7,7 +8,7 @@ export function extractRelationships(bindings: UIBinding[]) {
       // Get only link bindings
       .filter(x => x.fieldSchema?.type === "link")
       // Filter out bindings provided by forms
-      .filter(x => !x.component?.endsWith("/form"))
+      .filter(x => !hasFormContext(x.component ?? ""))
       .map(binding => {
         const { providerId, readableBinding, fieldSchema } = binding || {}
         const { name, tableId } = fieldSchema || {}

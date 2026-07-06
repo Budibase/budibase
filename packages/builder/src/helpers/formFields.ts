@@ -5,8 +5,10 @@ import {
 } from "@/helpers/components"
 import type { Component, Screen } from "@budibase/types"
 
-const hasFormContext = (component: Component) => {
-  const contexts = getComponentContexts(component._component)
+export const hasFormContext = (component: Component | string) => {
+  const componentType =
+    typeof component === "string" ? component : component._component
+  const contexts = getComponentContexts(componentType)
   return contexts.some(context => context.type === "form")
 }
 

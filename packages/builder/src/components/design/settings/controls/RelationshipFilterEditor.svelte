@@ -3,6 +3,7 @@
     findClosestMatchingComponent,
     findComponent,
   } from "@/helpers/components"
+  import { hasFormContext } from "@/helpers/formFields"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
@@ -19,7 +20,7 @@
   $: form = findClosestMatchingComponent(
     $selectedScreen.props,
     componentInstance._id,
-    component => component._component.endsWith("/form")
+    hasFormContext
   )
 
   const resolveDatasource = (selectedScreen, componentInstance, form) => {
