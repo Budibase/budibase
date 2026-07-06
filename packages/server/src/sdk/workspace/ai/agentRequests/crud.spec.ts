@@ -1,4 +1,5 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { builderSocket } from "../../../../websockets"
 import {
   createOrUpdateRequestForPrompt,
   fetchRequestsByAgent,
@@ -14,16 +15,35 @@ jest.mock("./helpers", () => ({
   generateAgentRequestTitle: jest.fn(),
 }))
 
+// Other test setup (creating/publishing workspaces) exercises unrelated
+// builderSocket.emit* calls - stub every method as a jest.fn() on demand so
+// only emitAgentRequestChange needs asserting on below.
+jest.mock("../../../../websockets", () => ({
+  initialise: jest.fn(),
+  builderSocket: new Proxy(
+    {},
+    {
+      get: (target: Record<string, jest.Mock>, prop: string) => {
+        target[prop] ??= jest.fn()
+        return target[prop]
+      },
+    }
+  ),
+}))
+
 describe("agentRequests crud", () => {
   const config = new TestConfiguration()
 
   const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
   const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
+  const emitAgentRequestChangeMock = builderSocket!
+    .emitAgentRequestChange as jest.Mock
 
   beforeEach(async () => {
     analyzeAgentRequestLinkMock.mockReset()
     generateAgentRequestTitleMock.mockReset()
     generateAgentRequestTitleMock.mockResolvedValue("Generated title")
+    emitAgentRequestChangeMock.mockReset()
     await config.newTenant()
   })
 
@@ -134,6 +154,34 @@ describe("agentRequests crud", () => {
         expect(request.entries[0].status).toEqual("completed")
         expect(request.entries[0].completedAt).toEqual(expect.any(String))
         expect(request.title).toEqual("Generated title")
+      })
+    })
+
+    it("emits AgentRequestChange over the builder socket to the request's dev workspace room", async () => {
+      // Agent activity runs in the prod workspace context, but the builder's
+      // Activity tab (and its socket room) only ever exists in dev.
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+        emitAgentRequestChangeMock.mockClear()
+
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(emitAgentRequestChangeMock).toHaveBeenCalledWith(
+          config.getDevWorkspaceId(),
+          {
+            requestId,
+            status: "completed",
+            updatedAt: request.updatedAt,
+          }
+        )
       })
     })
 

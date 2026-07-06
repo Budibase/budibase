@@ -1,6 +1,7 @@
 import { auth, context, events, permissions } from "@budibase/backend-core"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
+  AgentRequestStatus,
   Automation,
   ContextUser,
   Ctx,
@@ -64,9 +65,7 @@ export default class BuilderSocket extends BaseSocket {
           const tenantId = context.getTenantIDFromWorkspaceID(appId)
           if (tenantId) {
             await context.doInTenant(tenantId, async () => {
-              await events.user.dataCollaboration(
-                Object.keys(userIdMap).length
-              )
+              await events.user.dataCollaboration(Object.keys(userIdMap).length)
             })
           }
 
@@ -249,5 +248,19 @@ export default class BuilderSocket extends BaseSocket {
       id,
       automation: null,
     })
+  }
+
+  // AgentRequest mutations don't all originate from an HTTP controller (see
+  // saveRequest() in sdk/workspace/ai/agentRequests/crud.ts), so unlike the
+  // other emit* methods above this can't rely on a Koa ctx being available.
+  emitAgentRequestChange(
+    workspaceId: string,
+    payload: {
+      requestId: string
+      status: AgentRequestStatus
+      updatedAt: string
+    }
+  ) {
+    this.io.in(workspaceId).emit(BuilderSocketEvent.AgentRequestChange, payload)
   }
 }

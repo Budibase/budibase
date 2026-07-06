@@ -2,7 +2,9 @@
   import { API } from "@/api"
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
+  import { builderStore } from "@/stores/builder"
   import { Body, Pagination, Table, notifications } from "@budibase/bbui"
+  import { BuilderSocketEvent } from "@budibase/shared-core"
   import type { AgentRequestStatus } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
@@ -274,6 +276,38 @@
     currentPage = 1
     selectedRequestId = null
     loadRequests(1)
+  })
+
+  // allRequests is local page state (not a shared store), so we listen for
+  // live status changes directly on the builder socket rather than through
+  // the centralised handlers in stores/builder/websocket.ts.
+  $effect(() => {
+    const socket = builderStore.websocket
+    if (!socket) {
+      return
+    }
+
+    const handleAgentRequestChange = ({
+      requestId,
+      status,
+      updatedAt,
+    }: {
+      requestId: string
+      status: AgentRequestStatus
+      updatedAt: string
+    }) => {
+      allRequests = allRequests.map(request =>
+        request._id === requestId ? { ...request, status, updatedAt } : request
+      )
+    }
+
+    socket.on(BuilderSocketEvent.AgentRequestChange, handleAgentRequestChange)
+    return () => {
+      socket.off(
+        BuilderSocketEvent.AgentRequestChange,
+        handleAgentRequestChange
+      )
+    }
   })
 </script>
 

@@ -1,5 +1,6 @@
 import { context, docIds, Duration } from "@budibase/backend-core"
 import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
+import { builderSocket } from "../../../../websockets"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
 import { queryRequestsByAgent, queryRequestsByUpdatedAt } from "./views"
 
@@ -65,10 +66,24 @@ const sortRequests = (requests: AgentRequest[]) =>
 
 async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   const response = await context.getWorkspaceDB().put(request)
-  return {
+  const saved = {
     ...request,
     _rev: response.rev,
   }
+
+  const workspaceId = context.getWorkspaceId()
+  if (workspaceId) {
+    // Agent activity (chat, escalations) runs in the prod workspace context,
+    // but BuilderSocket rooms are always joined using the dev workspace id
+    // (the Activity tab lives in the builder, which only ever edits dev).
+    builderSocket?.emitAgentRequestChange(context.getDevWorkspaceId(), {
+      requestId: saved._id!,
+      status: saved.status,
+      updatedAt: saved.updatedAt!,
+    })
+  }
+
+  return saved
 }
 
 async function generateAndSaveRequestTitleIfMissing({
