@@ -75,7 +75,7 @@ export interface AgentEndpoints {
   downloadAgentSlackManifest: (agentId: string) => Promise<string>
   createAgentSlackApp: (
     agentId: string,
-    body: CreateAgentSlackAppRequest
+    body?: CreateAgentSlackAppRequest
   ) => Promise<CreateAgentSlackAppResponse>
   provisionAgentTelegramChannel: (
     agentId: string,
@@ -254,7 +254,7 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
 
   createAgentSlackApp: async (agentId: string, body) => {
     return await API.post<
-      CreateAgentSlackAppRequest,
+      CreateAgentSlackAppRequest | undefined,
       CreateAgentSlackAppResponse
     >({
       url: `/api/agent/${agentId}/slack/app/create`,

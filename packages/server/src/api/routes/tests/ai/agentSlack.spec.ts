@@ -101,6 +101,7 @@ import {
   DocumentType,
   type Agent,
   type ChatConversation,
+  type SlackAppConfig,
 } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
@@ -361,12 +362,26 @@ describe("agent slack integration provisioning", () => {
       name: "Slack Created App",
       description: "Created through Slack API.",
     })
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/tooling.tokens.rotate")) {
+        expect(
+          (init?.headers as Record<string, string>)["Content-Type"]
+        ).toEqual("application/x-www-form-urlencoded")
+        expect((init?.body as URLSearchParams).get("refresh_token")).toEqual(
+          "xoxe-refresh-token"
+        )
+        return slackJsonResponse({
+          ok: true,
+          token: "xoxe-rotated-config-token",
+          refresh_token: "xoxe-rotated-refresh-token",
+          exp: Math.floor(Date.now() / 1000) + 43200,
+        })
+      }
 
-    jest.spyOn(global, "fetch").mockImplementation(async (_url, init) => {
       const body = JSON.parse(String(init?.body))
       const manifest = JSON.parse(body.manifest)
       expect((init?.headers as Record<string, string>).Authorization).toEqual(
-        "Bearer xoxe-config-token"
+        "Bearer xoxe-rotated-config-token"
       )
       expect(body.token).toBeUndefined()
       expect(manifest.oauth_config.redirect_urls[0]).toContain(
@@ -388,9 +403,14 @@ describe("agent slack integration provisioning", () => {
       })
     })
 
-    const result = await config.api.agent.createSlackApp(agent._id!, {
-      configToken: "xoxe-config-token",
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
     })
+
+    const result = await config.api.agent.createSlackApp(agent._id!)
 
     expect(result.success).toBe(true)
     expect(result.appId).toEqual("A_SLACK_APP")
@@ -416,12 +436,75 @@ describe("agent slack integration provisioning", () => {
     expect(persisted.slackIntegration?.botToken).toBeUndefined()
   })
 
+  it("requires a tenant Slack app configuration token when creating a Slack app", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack Missing Config App",
+    })
+
+    await config.api.agent.createSlackApp(agent._id!, undefined, {
+      status: 400,
+    })
+  })
+
+  it("rotates Slack app configuration tokens before using an expiring token", async () => {
+    let rotations = 0
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      expect(String(url)).toContain("/tooling.tokens.rotate")
+      expect((init?.headers as Record<string, string>)["Content-Type"]).toEqual(
+        "application/x-www-form-urlencoded"
+      )
+      rotations += 1
+      expect((init?.body as URLSearchParams).get("refresh_token")).toEqual(
+        rotations === 1 ? "xoxe-refresh-token" : "xoxe-rotated-refresh-token-1"
+      )
+      return slackJsonResponse({
+        ok: true,
+        token: `xoxe-rotated-config-token-${rotations}`,
+        refresh_token: `xoxe-rotated-refresh-token-${rotations}`,
+        exp: Math.floor(Date.now() / 1000) + (rotations === 1 ? 60 : 43200),
+      })
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
+
+      const token = await sdk.ai.slackAppConfig.fetchConfigToken()
+
+      expect(token).toEqual("xoxe-rotated-config-token-2")
+      const persisted = (await sdk.ai.slackAppConfig.fetch()) as SlackAppConfig
+      expect(
+        secretMatch("xoxe-rotated-config-token-2", persisted.configToken)
+      ).toBeTrue()
+      expect(
+        secretMatch("xoxe-rotated-refresh-token-2", persisted.refreshToken!)
+      ).toBeTrue()
+      expect(rotations).toEqual(2)
+    })
+  })
+
   it("completes Slack OAuth and stores the bot token", async () => {
     const agent = await config.api.agent.create({
       name: "Slack OAuth App",
     })
-
     jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/tooling.tokens.rotate")) {
+        expect(
+          (init?.headers as Record<string, string>)["Content-Type"]
+        ).toEqual("application/x-www-form-urlencoded")
+        expect((init?.body as URLSearchParams).get("refresh_token")).toEqual(
+          "xoxe-refresh-token"
+        )
+        return slackJsonResponse({
+          ok: true,
+          token: "xoxe-rotated-oauth-config-token",
+          refresh_token: "xoxe-rotated-oauth-refresh-token",
+          exp: Math.floor(Date.now() / 1000) + 43200,
+        })
+      }
+
       if (String(url).endsWith("/apps.manifest.create")) {
         return slackJsonResponse({
           ok: true,
@@ -451,9 +534,13 @@ describe("agent slack integration provisioning", () => {
         },
       })
     })
-    const created = await config.api.agent.createSlackApp(agent._id!, {
-      configToken: "xoxe-config-token",
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
     })
+    const created = await config.api.agent.createSlackApp(agent._id!)
     const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
     expect(state).toBeTruthy()
 

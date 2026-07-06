@@ -152,11 +152,7 @@ export function provisionAgentSlackChannelValidator() {
 }
 
 export function createAgentSlackAppValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      configToken: NON_EMPTY_STRING.required(),
-    }).required()
-  )
+  return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
 export function provisionAgentTelegramChannelValidator() {

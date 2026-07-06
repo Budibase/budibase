@@ -170,12 +170,30 @@ interface SlackOAuthAccessResponse extends SlackApiResponse {
   }
 }
 
+interface SlackConfigTokenRotateResponse extends SlackApiResponse {
+  token?: string
+  refresh_token?: string
+  exp?: number
+}
+
 const assertSlackOk = <T extends SlackApiResponse>(
   payload: T,
   action: string
 ) => {
   if (payload.ok) {
     return payload
+  }
+  if (payload.error === "token_expired") {
+    throw new HTTPError(
+      "Slack app configuration token has expired. Save a new config token and refresh token.",
+      400
+    )
+  }
+  if (payload.error === "invalid_refresh_token") {
+    throw new HTTPError(
+      "Slack app configuration refresh token is invalid. Save a new config token and refresh token.",
+      400
+    )
   }
   const details = payload.errors?.map(error => error.message).filter(Boolean)
   const message = details?.length
@@ -236,4 +254,44 @@ export const exchangeSlackOAuthCode = async ({
     throw new HTTPError("Failed to exchange Slack OAuth code", response.status)
   }
   return assertSlackOk(payload, "Failed to exchange Slack OAuth code")
+}
+
+export const rotateSlackConfigToken = async ({
+  refreshToken,
+}: {
+  refreshToken: string
+}) => {
+  const response = await fetch(`${SLACK_API_BASE}/tooling.tokens.rotate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      refresh_token: refreshToken,
+    }),
+  })
+  const payload = (await response.json()) as SlackConfigTokenRotateResponse
+  if (!response.ok) {
+    throw new HTTPError(
+      "Failed to rotate Slack app configuration token",
+      response.status
+    )
+  }
+
+  const rotated = assertSlackOk(
+    payload,
+    "Failed to rotate Slack app configuration token"
+  )
+  if (!rotated.token || !rotated.refresh_token || !rotated.exp) {
+    throw new HTTPError(
+      "Slack app configuration token rotation response was incomplete",
+      400
+    )
+  }
+
+  return {
+    configToken: rotated.token,
+    refreshToken: rotated.refresh_token,
+    expiresAt: new Date(rotated.exp * 1000).toISOString(),
+  }
 }

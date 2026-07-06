@@ -147,6 +147,13 @@ export const orgRoutes = (
       component: Pages.get("environment"),
     },
     {
+      section: "Slack",
+      access: () => isAdmin,
+      path: "slack-app-config",
+      icon: "slack-logo",
+      component: Pages.get("slack_app_config"),
+    },
+    {
       section: "Email",
       path: "email",
       icon: "envelope",

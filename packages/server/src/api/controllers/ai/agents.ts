@@ -523,7 +523,7 @@ export async function createAgentSlackApp(
     oauthRedirectUrl,
   })
   const created = await sdk.ai.deployments.slack.createSlackAppFromManifest({
-    configToken: ctx.request.body.configToken.trim(),
+    configToken: await sdk.ai.slackAppConfig.fetchConfigToken(),
     manifest,
   })
 

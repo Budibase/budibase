@@ -3,7 +3,7 @@ import { AIConfigType, WebSearchProvider } from "@budibase/types"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
-const REQUIRED_STRING = Joi.string().required()
+const REQUIRED_STRING = Joi.string().trim().min(1).required()
 
 const CONFIG_TYPE = Joi.string()
   .valid(...Object.values(AIConfigType))
@@ -60,5 +60,14 @@ export function updateAIConfigValidator() {
       isDefault: IS_DEFAULT,
       liteLLMModelId: OPTIONAL_STRING,
     }).unknown(true)
+  )
+}
+
+export function saveSlackAppConfigValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      configToken: REQUIRED_STRING,
+      refreshToken: REQUIRED_STRING,
+    }).required()
   )
 }

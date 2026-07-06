@@ -25,6 +25,8 @@ import {
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesResponse,
+  SaveSlackAppConfigRequest,
+  SlackAppConfigResponse,
   ToolMetadata,
   UpdateAgentSharePointSiteRequest,
   UpdateAgentSharePointSiteResponse,
@@ -383,9 +385,19 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   createSlackApp = async (
     agentId: string,
-    body: CreateAgentSlackAppRequest
+    body?: CreateAgentSlackAppRequest
   ): Promise<CreateAgentSlackAppResponse> =>
     await this.runAndRefreshAgents(() => API.createAgentSlackApp(agentId, body))
+
+  fetchSlackAppConfig = async (): Promise<SlackAppConfigResponse> =>
+    await API.fetchSlackAppConfig()
+
+  saveSlackAppConfig = async (
+    body: SaveSlackAppConfigRequest
+  ): Promise<SlackAppConfigResponse> => await API.saveSlackAppConfig(body)
+
+  deleteSlackAppConfig = async (): Promise<SlackAppConfigResponse> =>
+    await API.deleteSlackAppConfig()
 
   provisionTelegramChannel = async (
     agentId: string,

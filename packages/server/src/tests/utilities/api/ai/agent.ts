@@ -187,7 +187,7 @@ export class AgentAPI extends TestAPI {
 
   createSlackApp = async (
     agentId: string,
-    body: CreateAgentSlackAppRequest,
+    body?: CreateAgentSlackAppRequest,
     expectations?: Expectations
   ): Promise<CreateAgentSlackAppResponse> => {
     return await this._post<CreateAgentSlackAppResponse>(
