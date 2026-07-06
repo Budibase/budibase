@@ -1,19 +1,41 @@
 <script lang="ts">
   import { isActive, goto, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
-  import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
+  import {
+    appStore,
+    contextMenuStore,
+    datasources,
+    integrations,
+    queries,
+    tables,
+    userSelectedResourceMap,
+  } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { integrationForDatasource } from "@/stores/selectors"
   import { canCreateDatasourceQuery } from "@/components/backend/DatasourceNavigator/datasourceUtils"
   import NavItem from "@/components/common/NavItem.svelte"
   import type { MenuItem } from "@/types"
-  import type { Datasource, UIInternalDatasource } from "@budibase/types"
+  import {
+    FeatureFlag,
+    type Datasource,
+    type UIInternalDatasource,
+  } from "@budibase/types"
 
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import { Icon } from "@budibase/bbui"
+  import {
+    Icon,
+    Modal,
+    keepOpen,
+    notifications,
+    type ModalAPI,
+  } from "@budibase/bbui"
   import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
+  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import { featureFlags, projectsStore } from "@/stores/portal"
+  import { get } from "svelte/store"
 
   $goto
   $params
@@ -25,6 +47,14 @@
     open?: boolean
     selected?: boolean
   }
+
+  const isAssignableDatasource = (
+    value: DatasourceNavItemDatasource
+  ): value is Datasource =>
+    !!value._id &&
+    value._id !== BUDIBASE_INTERNAL_DB_ID &&
+    value._id !== "__draft__" &&
+    !Array.isArray(value.entities)
 
   interface ModalRef {
     show: () => void
@@ -41,6 +71,54 @@
 
   let editModal!: ModalRef
   let deleteConfirmationModal!: ModalRef
+  let assignProjectModal!: ModalAPI
+
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: assignableDatasource = isAssignableDatasource(datasource)
+    ? datasource
+    : undefined
+  $: canAssignProject = projectsEnabled && !!assignableDatasource
+  $: projectAssignmentResource = {
+    name: assignableDatasource?.name || "Datasource",
+    typeLabel: "datasource",
+    projectIds: assignableDatasource?.projectIds,
+  }
+
+  const refreshDataStores = async () => {
+    await Promise.all([datasources.fetch(), tables.fetch(), queries.fetch()])
+  }
+
+  const openAssignProjectModal = async () => {
+    await projectsStore.ensureFetched($appStore.appId)
+    assignProjectModal?.show()
+  }
+
+  const assignProject = async (projectIds: string[]) => {
+    if (!assignableDatasource) {
+      return keepOpen
+    }
+
+    try {
+      await datasources.save({
+        datasource: {
+          ...assignableDatasource,
+          projectIds,
+        },
+        integration: integrationForDatasource(
+          get(integrations),
+          assignableDatasource
+        ),
+        skipConnectionCheck: true,
+      })
+      await refreshDataStores()
+      notifications.success("Projects updated successfully")
+      assignProjectModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to update project")
+      return keepOpen
+    }
+  }
 
   const addQueryItem: MenuItem = {
     icon: "plus",
@@ -60,6 +138,14 @@
   const getContextMenuItems = (): MenuItem[] => {
     return [
       ...(canCreateDatasourceQuery(datasource) ? [addQueryItem] : []),
+      {
+        icon: "stack",
+        name: "Assign project",
+        keyBind: null,
+        visible: canAssignProject,
+        disabled: false,
+        callback: openAssignProjectModal,
+      },
       {
         icon: "pencil",
         name: datasource.source === "REST" ? "Edit connection" : "Edit",
@@ -129,6 +215,13 @@
   source={datasource}
   bind:this={deleteConfirmationModal}
 />
+<Modal bind:this={assignProjectModal}>
+  <AssignProjectModal
+    resource={projectAssignmentResource}
+    projects={$projectsStore}
+    onConfirm={assignProject}
+  />
+</Modal>
 
 <style>
   .datasource-icon {

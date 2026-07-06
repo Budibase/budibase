@@ -1,5 +1,8 @@
 <script>
   import {
+    appStore,
+    datasources,
+    queries,
     tables as tablesStore,
     userSelectedResourceMap,
     contextMenuStore,
@@ -10,11 +13,12 @@
   import { isActive } from "@roxi/routify"
   import EditModal from "./EditModal.svelte"
   import DeleteConfirmationModal from "../../modals/DeleteDataConfirmationModal.svelte"
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Modal, keepOpen, notifications } from "@budibase/bbui"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
-  import { notifications } from "@budibase/bbui"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
-  import { WorkspaceResource } from "@budibase/types"
+  import { FeatureFlag, WorkspaceResource } from "@budibase/types"
+  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import { featureFlags, projectsStore } from "@/stores/portal"
 
   $isActive
 
@@ -25,8 +29,19 @@
 
   let editModal
   let deleteConfirmationModal
+  let assignProjectModal
 
   $: favourite = table?._id ? $favourites[table?._id] : undefined
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: canAssignProject =
+    projectsEnabled &&
+    table?._id !== TableNames.USERS &&
+    table?.sourceType !== DB_TYPE_EXTERNAL
+  $: projectAssignmentResource = {
+    name: table?.name || "Table",
+    typeLabel: "table",
+    projectIds: table?.projectIds,
+  }
 
   const duplicateTable = async () => {
     try {
@@ -37,8 +52,41 @@
     }
   }
 
+  const openAssignProjectModal = async () => {
+    await projectsStore.ensureFetched($appStore.appId)
+    assignProjectModal?.show()
+  }
+
+  const assignProject = async projectIds => {
+    try {
+      await tablesStore.save({
+        ...table,
+        projectIds,
+      })
+      await Promise.all([
+        datasources.fetch(),
+        tablesStore.fetch(),
+        queries.fetch(),
+      ])
+      notifications.success("Projects updated successfully")
+      assignProjectModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to update project")
+      return keepOpen
+    }
+  }
+
   const getContextMenuItems = () => {
     return [
+      {
+        icon: "stack",
+        name: "Assign project",
+        keyBind: null,
+        visible: canAssignProject,
+        disabled: false,
+        callback: openAssignProjectModal,
+      },
       {
         icon: "pencil",
         name: "Edit",
@@ -101,6 +149,13 @@
 </NavItem>
 <EditModal {table} bind:this={editModal} />
 <DeleteConfirmationModal source={table} bind:this={deleteConfirmationModal} />
+<Modal bind:this={assignProjectModal}>
+  <AssignProjectModal
+    resource={projectAssignmentResource}
+    projects={$projectsStore}
+    onConfirm={assignProject}
+  />
+</Modal>
 
 <style>
   .buttons {
