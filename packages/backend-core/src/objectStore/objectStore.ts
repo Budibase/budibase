@@ -597,13 +597,14 @@ export async function retrieveDirectory(
         await tracer.trace("retrieveDirectory.object", async span => {
           const filename = object.Key!
           span.addTags({ filename })
-          const { stream } = await getReadStream(bucketName, filename)
+
           const writeTarget = getSafeRetrieveDirectoryPath(writePath, filename)
           if (!writeTarget) {
             span.addTags({ skippedUnsafePath: true })
             return
           }
 
+          const { stream } = await getReadStream(bucketName, filename)
           if (!fs.existsSync(writeTarget.dir)) {
             await fsp.mkdir(writeTarget.dir, { recursive: true })
           }
