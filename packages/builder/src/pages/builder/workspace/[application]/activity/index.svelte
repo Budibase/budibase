@@ -167,12 +167,13 @@
   let paginationLabel = $derived.by(() => {
     const start = (currentPage - 1) * PAGE_SIZE + 1
     const end = start + paginatedRows.length - 1
+    const total = summary?.total || 0
 
     if (!paginatedRows.length) {
       return "Showing 0 items"
     }
 
-    return `Showing ${start} to ${end} items`
+    return `Showing ${start}–${end} of ${total} items`
   })
 
   async function loadRequests(page = currentPage) {
