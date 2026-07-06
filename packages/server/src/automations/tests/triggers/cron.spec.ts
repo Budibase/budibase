@@ -50,6 +50,27 @@ describe("cron trigger", () => {
     expect(repeat.cron).toEqual("* * * * *")
   })
 
+  it("should queue a Bull cron job with a timezone", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onCron({ cron: "0 9 * * *", timezone: "Europe/London" })
+      .serverLog({
+        text: "Hello, world!",
+      })
+      .save()
+
+    const messages = await captureAutomationMessages(automation, () =>
+      config.api.workspace.publish()
+    )
+    expect(messages).toHaveLength(1)
+
+    const repeat = messages[0].opts?.repeat
+    if (!repeat || !("cron" in repeat)) {
+      throw new Error("Expected cron repeat")
+    }
+    expect(repeat.cron).toEqual("0 9 * * *")
+    expect(repeat.tz).toEqual("Europe/London")
+  })
+
   it("should fail if the cron expression is invalid", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onCron({ cron: "* * * * * *" })

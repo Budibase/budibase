@@ -31,7 +31,7 @@ import ActionDefinitions from "@/components/design/settings/controls/ButtonActio
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
 import { FIELDS, DB_TYPE_INTERNAL } from "@/constants/backend"
-import { FieldType, TableSourceType } from "@budibase/types"
+import { CalculationType, FieldType, TableSourceType } from "@budibase/types"
 import type {
   Component,
   ComponentContext,
@@ -83,6 +83,7 @@ export interface DataBindingFieldSchema extends DataBindingObject {
   schema?: DataBindingSchema
   visible?: boolean
   autocolumn?: boolean
+  calculationType?: CalculationType
 }
 
 export type DataBindingSchema = Record<string, DataBindingFieldSchema>
@@ -303,8 +304,14 @@ const asSchema = (value: unknown): DataBindingSchema => {
     (acc, [key, field]) => {
       if (typeof field === "string") {
         acc[key] = { type: field }
-      } else if (isDataBindingObject(field) && typeof field.type === "string") {
-        acc[key] = field as DataBindingFieldSchema
+      } else if (isDataBindingObject(field)) {
+        const type = field.calculationType ? "number" : field.type
+        if (typeof type === "string") {
+          acc[key] = {
+            ...field,
+            type,
+          } as DataBindingFieldSchema
+        }
       }
       return acc
     },

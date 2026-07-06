@@ -8,6 +8,7 @@
   export let redirectNewQueryOnSave: boolean = true
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
+  export let openAddConnectionOnMount: boolean = false
 
   export const confirmIfDirty = async () => true
 
@@ -33,6 +34,9 @@
   >
   <span data-testid="api-endpoint-viewer-popover-z-index"
     >{connectionPopoverZIndex || ""}</span
+  >
+  <span data-testid="api-endpoint-viewer-open-add-connection"
+    >{openAddConnectionOnMount.toString()}</span
   >
   <button on:click={save}>Save request</button>
 </div>

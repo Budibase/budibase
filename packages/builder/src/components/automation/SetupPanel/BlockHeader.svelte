@@ -14,6 +14,10 @@
   import { getAutomationStepIconColor } from "@/components/automation/AutomationBuilder/FlowChart/AutomationStepCategories"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { createEventDispatcher } from "svelte"
+  import {
+    AUTOMATION_STEP_NAME_ERROR,
+    isValidAutomationStepName,
+  } from "../stepNameValidation"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
   export let automation: Automation | undefined = undefined
@@ -27,7 +31,6 @@
 
   let externalAction: ExternalAction | undefined
   let editing: boolean
-  let validRegex: RegExp = /^[A-Za-z0-9_\s]+$/
 
   $: stepNames = automation?.definition.stepNames || {}
   $: blockHeading = getHeading(itemName, block) || ""
@@ -83,9 +86,9 @@
     }
 
     if (name !== block.name && name?.length > 0) {
-      let invalidRoleName = !validRegex.test(name)
+      let invalidRoleName = !isValidAutomationStepName(name)
       if (invalidRoleName) {
-        return "Please enter a name consisting of only alphanumeric symbols and underscores"
+        return AUTOMATION_STEP_NAME_ERROR
       }
     }
   }
@@ -287,6 +290,17 @@
     border-radius: 8px;
   }
 
+  .external-icon {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+    background: var(--spectrum-global-color-gray-100);
+  }
+
   .external-icon img {
     width: 24px;
     height: 24px;
@@ -303,6 +317,13 @@
     justify-content: center;
     padding: 2px;
     border-radius: 8px;
+  }
+
+  .external-icon.compact {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    transform: translateY(-2px);
   }
 
   .icon-container.compact :global(i) {

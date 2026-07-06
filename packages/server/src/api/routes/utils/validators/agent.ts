@@ -54,12 +54,21 @@ const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
   .optional()
   .allow(null)
 
+const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
+  type: Joi.string().required(),
+  config: Joi.object().optional(),
+})
+
 const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   name: OPTIONAL_STRING,
   live: Joi.boolean().optional(),
   promptInstructions: OPTIONAL_STRING,
   enabledTools: Joi.array().items(Joi.string()).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
+  escalation: Joi.object({
+    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
+    delay: Joi.number().optional(),
+  }).optional(),
 })
 
 export function createAgentValidator() {
@@ -68,6 +77,7 @@ export function createAgentValidator() {
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
       aiconfig: OPTIONAL_AICONFIG,
+      projectIds: Joi.array().items(Joi.string()).optional(),
       promptInstructions: OPTIONAL_STRING,
       operationName: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
@@ -90,6 +100,7 @@ export function updateAgentValidator() {
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
       aiconfig: OPTIONAL_AICONFIG,
+      projectIds: Joi.array().items(Joi.string()).optional(),
       promptInstructions: OPTIONAL_STRING,
       operationName: OPTIONAL_STRING,
       live: Joi.boolean().optional(),

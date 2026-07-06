@@ -47,6 +47,7 @@ export enum DocumentType {
   AGENT_FILE = "agentfile",
   AGENT_LOG_SESSION = "agentlogsession",
   AGENT_LOG_REQUEST = "agentlogrequest",
+  AGENT_REQUEST = "agentrequest",
   AGENT_TEST_SUITE = "agenttestsuite",
   AGENT_TEST_RUN = "agenttestrun",
   AGENT_KNOWLEDGE_SOURCE_SYNC_STATE = "agentknowledgesync",
@@ -57,17 +58,24 @@ export enum DocumentType {
   KNOWLEDGE_BASE = "knowledgebase",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
+  PROJECT = "project",
   AUTO_COLUMN_STATE = "autocolumn_state",
+  ESCALATION_CONTEXT = "escalation_context",
+  ESCALATION_NOTIFICATION = "escalation_notification",
 }
 
 // these are the core documents that make up the data, design
-// and automation sections of an app. This excludes any internal
-// rows as we shouldn't import data.
+// and automation sections of an app. ROW is included
+// so that row data is preserved when importing a workspace export
+// into an existing workspace (only for newly created tables).
+// User-metadata rows (internal Users table) are filtered out
+// separately in the import logic to avoid overwriting them.
 export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.ROLE,
   DocumentType.DATASOURCE,
   DocumentType.DATASOURCE_PLUS,
   DocumentType.TABLE,
+  DocumentType.ROW,
   DocumentType.AUTOMATION,
   DocumentType.WEBHOOK,
   DocumentType.SCREEN,

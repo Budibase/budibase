@@ -29,6 +29,7 @@ import {
   toBindingsArray,
 } from "@/dataBinding"
 import { JSONUtils } from "@budibase/frontend-core"
+import { CalculationType } from "@budibase/types"
 import type { Component, ComponentDefinition } from "@budibase/types"
 
 interface MockStore<T> {
@@ -1128,6 +1129,43 @@ describe("Builder dataBinding", () => {
       expect(schema.visible).toMatchObject({ name: "visible" })
       expect(schema.hidden).toBeUndefined()
       expect(schema._id).toMatchObject({ name: "_id" })
+    })
+
+    it("includes calculation fields for viewV2 datasources", () => {
+      getTablesStore().set({
+        list: [
+          {
+            _id: tableId,
+            sourceType: "external",
+            views: {
+              view: {
+                id: "view_1",
+                name: "Active customers",
+                schema: {
+                  sum: {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "Price",
+                  },
+                },
+              },
+            },
+          },
+        ],
+      })
+
+      const { schema } = getSchemaForDatasource(null, {
+        type: "viewV2",
+        id: "view_1",
+        tableId,
+      })
+
+      expect(schema.sum).toMatchObject({
+        name: "sum",
+        calculationType: CalculationType.SUM,
+        field: "Price",
+        type: "number",
+      })
     })
 
     it("builds schemas for field datasources", () => {

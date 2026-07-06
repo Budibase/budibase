@@ -23,6 +23,7 @@ import { buildFlagEndpoints } from "./flags"
 import { buildLayoutEndpoints } from "./layouts"
 import { buildOtherEndpoints } from "./other"
 import { buildPermissionsEndpoints } from "./permissions"
+import { buildProjectEndpoints } from "./projects"
 import { buildQueryEndpoints } from "./queries"
 import { buildRelationshipEndpoints } from "./relationships"
 import { buildRoleEndpoints } from "./roles"
@@ -49,7 +50,10 @@ import { buildOAuth2Endpoints } from "./oauth2"
 import { buildAgentEndpoints } from "./agents"
 import { buildAgentTestEndpoints } from "./agentTests"
 import { buildAgentLogEndpoints } from "./agentLogs"
+import { buildAgentRequestEndpoints } from "./agentRequests"
 import { buildChatAppEndpoints } from "./chatApps"
+import { buildEscalationEndpoints } from "./escalations"
+import { buildChatLinksEndpoints } from "./chatLinks"
 import { buildFeatureFlagEndpoints } from "./features"
 import { buildNavigationEndpoints } from "./navigation"
 import { buildWorkspaceAppEndpoints } from "./workspaceApps"
@@ -320,13 +324,17 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildAgentEndpoints(API),
     ...buildAgentTestEndpoints(API),
     ...buildAgentLogEndpoints(API),
+    ...buildAgentRequestEndpoints(API),
     ...buildChatAppEndpoints(API),
+    ...buildEscalationEndpoints(API),
+    ...buildChatLinksEndpoints(API),
     ...buildFeatureFlagEndpoints(API),
     deployment: buildDeploymentEndpoints(API),
     viewV2: buildViewV2Endpoints(API),
     rowActions: buildRowActionEndpoints(API),
     oauth2: buildOAuth2Endpoints(API),
     navigation: buildNavigationEndpoints(API),
+    projects: buildProjectEndpoints(API),
     workspaceApp: buildWorkspaceAppEndpoints(API),
     workspace: buildWorkspaceFavouriteEndpoints(API),
     workspaceHome: buildWorkspaceHomeEndpoints(API),

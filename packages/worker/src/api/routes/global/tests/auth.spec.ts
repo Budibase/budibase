@@ -204,6 +204,41 @@ describe("/api/global/auth", () => {
             }
           )
         })
+
+        it("locks unknown emails after the same failed attempt threshold", async () => {
+          const tenantId = config.tenantId!
+          const email = "missing@example.com"
+          const password = "incorrect123"
+          const { withEnv } = require("../../../../environment")
+
+          await withEnv(
+            {
+              LOGIN_MAX_FAILED_ATTEMPTS: 5,
+              LOGIN_LOCKOUT_SECONDS: 900,
+            },
+            async () => {
+              for (let i = 0; i < 4; i++) {
+                await config.api.auth.login(tenantId, email, password, {
+                  status: 403,
+                })
+              }
+
+              const response = await config.api.auth.login(
+                tenantId,
+                email,
+                password,
+                { status: 403 }
+              )
+
+              expect(response.headers["x-account-locked"]).toBe("1")
+              expect(response.headers["retry-after"]).toBe("900")
+              expect(response.body).toEqual({
+                message: "Account temporarily locked. Try again later.",
+                status: 403,
+              })
+            }
+          )
+        })
       })
 
       describe("IP lockout", () => {

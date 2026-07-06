@@ -15,6 +15,7 @@ import {
   SupportedFileType,
 } from "./automation"
 import { AutomationStep } from "./schema"
+import type { EscalationRecipient, EscalationResponse } from "../escalation"
 
 export enum FilterCondition {
   EQUAL = "EQUAL",
@@ -137,6 +138,7 @@ export type FilterStepInputs = {
   field: any
   condition: FilterCondition
   value: any
+  notify?: boolean
 }
 
 export type FilterStepOutputs = BaseAutomationOutputs & {
@@ -168,7 +170,7 @@ export type Branch = {
   id: any
   name: string
   condition: BranchSearchFilters
-  conditionUI?: UISearchFilter
+  conditionUI?: UISearchFilter | null
 }
 
 export type BranchSearchFilters = SearchFilters
@@ -443,6 +445,7 @@ export type AppActionTriggerOutputs = {
 
 export type CronTriggerInputs = {
   cron: string
+  timezone?: string
 }
 
 export enum EmailTriggerAuthType {
@@ -526,4 +529,21 @@ export type RowActionTriggerOutputs = {
   id: string
   revision?: string
   table: Table
+}
+
+export type EscalationStepInputs = {
+  message: string
+  delay: number
+  operationId?: string
+  agentId?: string
+  notifications?: { recipients?: EscalationRecipient[] }
+  resolutionStrategy?: string
+}
+
+export type EscalationStepOutputs = {
+  success: boolean
+  escalationId?: string
+  resolution?: "pending" | "resolved" | "expired" | "cancelled"
+  resolvedAt?: string
+  response?: EscalationResponse
 }

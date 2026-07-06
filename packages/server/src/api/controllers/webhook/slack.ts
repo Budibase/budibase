@@ -10,8 +10,15 @@ import {
   type SlackConversationScope,
   type WebhookChatCompleteResult,
 } from "@budibase/types"
-import { Chat, type Message, type SlashCommandEvent, type Thread } from "chat"
+import {
+  Chat,
+  type ActionEvent,
+  type Message,
+  type SlashCommandEvent,
+  type Thread,
+} from "chat"
 import sdk from "../../../sdk"
+import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -374,7 +381,8 @@ export async function slackWebhook(
         `/${ChatCommands.LINK}`,
         async (event: SlashCommandEvent) => {
           const raw = event.raw as Record<string, string | undefined>
-          if (!raw.channel_id || !event.user.userId) {
+          const channelId = raw.channel_id
+          if (!channelId || !event.user.userId) {
             await event.channel.post("Missing Slack command metadata.")
             return
           }
@@ -384,7 +392,7 @@ export async function slackWebhook(
             author: event.user,
             command: ChatCommands.LINK,
             content: event.text,
-            channelId: raw.channel_id,
+            channelId,
             externalUserId: event.user.userId,
             isDirectMessage: isSlackDirectMessage({
               type: "message",
@@ -394,6 +402,64 @@ export async function slackWebhook(
           })
         }
       )
+      // TODO: Make these a strict set
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
+
+        let parsed: {
+          escalationId: string
+          notificationDocId: string
+          appId: string
+        }
+        try {
+          parsed = JSON.parse(event.value ?? "")
+        } catch {
+          console.error("Escalation action: invalid button value", event.value)
+          return
+        }
+        const { escalationId, notificationDocId, appId } = parsed
+
+        const slackResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+          channel: (event.raw as any)?.channel,
+        }
+
+        try {
+          const result = await context.doInContext(appId, async () => {
+            // We can respond with closed or
+            return sdk.escalations.respond(
+              escalationId,
+              notificationDocId,
+              slackResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+
+          // TODO: Can these responses be more dynamic/informative
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Escalation action: failed to record response", {
+            escalationId,
+            notificationDocId,
+            appId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
 
       chat.onNewMention(handler)
       chat.onSubscribedMessage(handler)

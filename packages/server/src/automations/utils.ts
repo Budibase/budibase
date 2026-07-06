@@ -152,7 +152,10 @@ export async function processEvent(job: AutomationJob) {
           console.log("automation running", ...loggingArgs(job))
 
           const runFn = () => Runner.run(job)
-          const result = await quotas.addAutomation(runFn, { automationId })
+          // Skip quota increment for resumed escalations - the original run was already charged
+          const result = job.data.isResume
+            ? await runFn()
+            : await quotas.addAutomation(runFn, { automationId })
           console.log("automation completed", ...loggingArgs(job))
           return result
         })
@@ -275,6 +278,7 @@ export async function enableCronOrEmailTrigger(
   if (isCronTrigger(trigger)) {
     const inputs = trigger.inputs as CronTriggerInputs
     const cronExp = inputs.cron || ""
+    const timezone = inputs.timezone
     const validation = helpers.cron.validate(cronExp)
     if (!validation.valid) {
       throw new Error(
@@ -300,7 +304,7 @@ export async function enableCronOrEmailTrigger(
         automation,
         event: { appId },
       },
-      { repeat: { cron: cronExp }, jobId }
+      { repeat: { cron: cronExp, tz: timezone }, jobId }
     )
 
     trigger.cronJobId = jobId

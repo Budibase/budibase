@@ -124,6 +124,11 @@ export const getRelationshipSchemaAdditions = async (
           constraints: linkSchema[linkKey].constraints,
         }
       })
+      // Expose the related row's _id so relationships can be filtered on the
+      // same value a relationship picker emits, matching the filter field list.
+      relationshipAdditions[`${fieldKey}._id`] = {
+        type: "string",
+      }
     }
   }
   return relationshipAdditions

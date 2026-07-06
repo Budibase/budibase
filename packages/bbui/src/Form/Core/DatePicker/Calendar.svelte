@@ -3,11 +3,13 @@
   import Select from "../../Select.svelte"
   import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onDestroy } from "svelte"
   import Icon from "../../../Icon/Icon.svelte"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let value
   export let startDayOfWeek = "Monday"
+  export let calendarLabels = resolveTranslationGroup("calendar")
 
   const dispatch = createEventDispatcher()
   const DaysOfWeek = [
@@ -49,6 +51,10 @@
   $: calendarDate = dayjs(value || dayjs()).startOf("month")
   $: dayHeaders = getDayHeaders(startDayOfWeek)
   $: weekStarts = getWeekStarts(calendarDate, DayIndex[startDayOfWeek])
+  $: monthOptions = MonthsOfYear.map((month, idx) => ({
+    label: getTranslatedMonth(month),
+    value: idx,
+  }))
 
   const getWeekStarts = (monthStart, startDayIndex) => {
     if (!monthStart?.isValid()) {
@@ -74,6 +80,20 @@
     return [...DaysOfWeek.slice(index), ...DaysOfWeek.slice(0, index)]
   }
 
+  const getTranslatedDay = day => {
+    return calendarLabels?.[day.toLowerCase()] ?? day
+  }
+
+  const getTranslatedMonth = month => {
+    return calendarLabels?.[month.toLowerCase()] ?? month
+  }
+
+  const getDateTitle = date => {
+    return `${getTranslatedDay(date.format("dddd"))}, ${getTranslatedMonth(
+      date.format("MMMM")
+    )} ${date.date()}, ${date.year()}`
+  }
+
   const handleCalendarYearChange = e => {
     calendarDate = calendarDate.year(parseInt(e.target.value))
   }
@@ -96,6 +116,51 @@
   }
 
   const cleanYear = cleanInput({ max: 9999, pad: 0, fallback: now.year() })
+
+  // Scroll (desktop) or horizontal swipe (touch) over the calendar to move
+  // between months.
+  const SWIPE_THRESHOLD = 40
+  let wheelLock = false
+  let wheelTimer
+  let touchStartX = 0
+  let touchStartY = 0
+
+  const changeMonth = forward => {
+    calendarDate = forward
+      ? calendarDate.add(1, "month")
+      : calendarDate.subtract(1, "month")
+  }
+
+  // A short lock keeps a single trackpad gesture from skipping many months
+  const handleWheel = e => {
+    if (wheelLock) {
+      return
+    }
+    const delta = e.deltaY || e.deltaX
+    if (!delta) {
+      return
+    }
+    wheelLock = true
+    wheelTimer = setTimeout(() => (wheelLock = false), 120)
+    changeMonth(delta > 0)
+  }
+
+  const handleTouchStart = e => {
+    touchStartX = e.changedTouches[0].clientX
+    touchStartY = e.changedTouches[0].clientY
+  }
+
+  // Only a clear horizontal swipe changes month - vertical stays a normal
+  // scroll and small movements remain taps so date selection keeps working
+  const handleTouchEnd = e => {
+    const dx = e.changedTouches[0].clientX - touchStartX
+    const dy = e.changedTouches[0].clientY - touchStartY
+    if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+      changeMonth(dx < 0)
+    }
+  }
+
+  onDestroy(() => clearTimeout(wheelTimer))
 </script>
 
 <div class="spectrum-Calendar">
@@ -108,8 +173,8 @@
       <div class="month-selector">
         <Select
           autoWidth
-          placeholder={null}
-          options={MonthsOfYear.map((m, idx) => ({ label: m, value: idx }))}
+          placeholder={calendarLabels?.datePickerPlaceholder}
+          options={monthOptions}
           value={calendarDate.month()}
           on:change={e => (calendarDate = calendarDate.month(e.detail))}
         />
@@ -140,18 +205,25 @@
       <Icon name="caret-right" weight="bold" size="S" />
     </button>
   </div>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="spectrum-Calendar-body"
     aria-readonly="true"
     aria-disabled="false"
+    on:wheel|preventDefault={handleWheel}
+    on:touchstart={handleTouchStart}
+    on:touchend={handleTouchEnd}
   >
     <table role="presentation" class="spectrum-Calendar-table">
       <thead role="presentation">
         <tr>
           {#each dayHeaders as day}
             <th scope="col" class="spectrum-Calendar-tableCell">
-              <abbr class="spectrum-Calendar-dayOfWeek" title={day}>
-                {day[0]}
+              <abbr
+                class="spectrum-Calendar-dayOfWeek"
+                title={getTranslatedDay(day)}
+              >
+                {getTranslatedDay(day)[0]}
               </abbr>
             </th>
           {/each}
@@ -168,7 +240,7 @@
                 aria-disabled="true"
                 aria-selected="false"
                 aria-invalid="false"
-                title={date.format("dddd, MMMM D, YYYY")}
+                title={getDateTitle(date)}
                 on:click={() => handleDateChange(date)}
               >
                 <span

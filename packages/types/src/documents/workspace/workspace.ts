@@ -2,6 +2,7 @@ import { Document, Plugin, Snippet, Theme, User } from ".."
 import { SocketSession } from "../../sdk"
 
 export type WorkspaceMetadataErrors = { [key: string]: string[] }
+export type WorkspaceMetadataAutomationStops = { [key: string]: string[] }
 export type TranslationOverrides = Record<string, string>
 
 export interface Workspace extends Document {
@@ -23,6 +24,7 @@ export interface Workspace extends Document {
   /** @deprecated use workspace app navigation instead */
   navigation?: AppNavigation
   automationErrors?: WorkspaceMetadataErrors
+  automationStops?: WorkspaceMetadataAutomationStops
   backupErrors?: WorkspaceMetadataErrors
   icon?: WorkspaceIcon
   features?: WorkspaceFeatures
