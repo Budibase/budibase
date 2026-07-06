@@ -165,7 +165,7 @@
     ? `${$builderStore.screen?._id}-navigation`
     : "navigation"
 
-  function enrichNavItem(navItem) {
+  const enrichNavItem = navItem => {
     const internalLink = isInternal(navItem.url)
     return {
       ...navItem,
@@ -174,7 +174,7 @@
     }
   }
 
-  function getRouteWithoutQueryParams(route) {
+  const getRouteWithoutQueryParams = route => {
     if (!route) {
       return route
     }
@@ -185,7 +185,7 @@
     }
   }
 
-  function canAccessSubLink(subLink, accessibleRoutes) {
+  const canAccessSubLink = (subLink, accessibleRoutes) => {
     if ($builderStore.inBuilder) {
       return true
     }
@@ -203,7 +203,7 @@
     return accessibleRoutes.has(getRouteWithoutQueryParams(url))
   }
 
-  function enrichNavItems(navItems, userRoleHierarchy, routeEntries = []) {
+  const enrichNavItems = (navItems, userRoleHierarchy, routeEntries = []) => {
     if (!navItems?.length) {
       return []
     }
