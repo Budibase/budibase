@@ -313,6 +313,15 @@
         return
       }
 
+      // A brand-new request always lands on page 1, pushing every other
+      // page's rows down by one. On page 1 we can patch locally; on any
+      // other page the shift can only be reproduced by re-fetching that
+      // page's offset from the server.
+      if (currentPage !== 1) {
+        await loadRequests(currentPage)
+        return
+      }
+
       if (summary) {
         summary = {
           ...summary,
@@ -321,11 +330,6 @@
         }
       }
 
-      // Only insert live on page 1. A request created while viewing a
-      // later page belongs on page 1, not under the user on this one.
-      if (currentPage !== 1) {
-        return
-      }
       allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
       try {
         await hydrateUserNames([request])
