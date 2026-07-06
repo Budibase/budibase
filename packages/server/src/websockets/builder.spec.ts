@@ -90,6 +90,24 @@ describe("BuilderSocket - SelectApp authorization", () => {
     expect(fakeSocket.disconnect).toHaveBeenCalledWith(true)
   })
 
+  it("does not invoke the SelectApp callback when the user is not authorized for the requested workspace", async () => {
+    const socketInstance = Object.create(BuilderSocket.prototype) as any
+    socketInstance.app = new Koa()
+    socketInstance.joinRoom = jest.fn()
+    socketInstance.getRoomSessions = jest.fn().mockResolvedValue([])
+
+    const { fakeSocket, handlers } = createFakeSocket()
+    await socketInstance.onConnect(fakeSocket)
+
+    const callback = jest.fn()
+    await handlers[BuilderSocketEvent.SelectApp](
+      { appId: workspaceBDevId },
+      callback
+    )
+
+    expect(callback).not.toHaveBeenCalled()
+  })
+
   it("lets a builder join their own workspace's room via SelectApp", async () => {
     const socketInstance = Object.create(BuilderSocket.prototype) as any
     socketInstance.app = new Koa()
