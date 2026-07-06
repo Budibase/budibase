@@ -11,6 +11,17 @@ const MAX_APP_NAME_LENGTH = 35
 const MAX_BOT_DISPLAY_NAME_LENGTH = 80
 const MAX_DESCRIPTION_LENGTH = 140
 const DEFAULT_DESCRIPTION = "Ask this Budibase agent questions in Slack."
+const SLACK_API_BASE = "https://slack.com/api"
+
+export const SLACK_BOT_SCOPES = [
+  "app_mentions:read",
+  "channels:history",
+  "chat:write",
+  "commands",
+  "im:history",
+  "im:read",
+  "im:write",
+]
 
 const truncate = (value: string, maxLength: number) =>
   value.length > maxLength ? value.slice(0, maxLength) : value
@@ -76,9 +87,11 @@ export const buildSlackWebhookUrl = async (
 export const buildSlackManifest = ({
   agent,
   messagingEndpointUrl,
+  oauthRedirectUrl,
 }: {
   agent: Agent
   messagingEndpointUrl: string
+  oauthRedirectUrl?: string
 }) => {
   const name = normaliseAppName(agent.name)
   const description = normaliseDescription(agent.description || agent.goal)
@@ -109,16 +122,9 @@ export const buildSlackManifest = ({
       ],
     },
     oauth_config: {
+      ...(oauthRedirectUrl ? { redirect_urls: [oauthRedirectUrl] } : {}),
       scopes: {
-        bot: [
-          "app_mentions:read",
-          "channels:history",
-          "chat:write",
-          "commands",
-          "im:history",
-          "im:read",
-          "im:write",
-        ],
+        bot: SLACK_BOT_SCOPES,
       },
     },
     settings: {
@@ -135,4 +141,99 @@ export const buildSlackManifest = ({
       token_rotation_enabled: false,
     },
   }
+}
+
+interface SlackApiResponse {
+  ok?: boolean
+  error?: string
+  errors?: { message?: string; pointer?: string }[]
+}
+
+interface SlackManifestCreateResponse extends SlackApiResponse {
+  app_id?: string
+  credentials?: {
+    client_id?: string
+    client_secret?: string
+    signing_secret?: string
+    verification_token?: string
+  }
+  oauth_authorize_url?: string
+}
+
+interface SlackOAuthAccessResponse extends SlackApiResponse {
+  access_token?: string
+  bot_user_id?: string
+  app_id?: string
+  team?: {
+    id?: string
+    name?: string
+  }
+}
+
+const assertSlackOk = <T extends SlackApiResponse>(
+  payload: T,
+  action: string
+) => {
+  if (payload.ok) {
+    return payload
+  }
+  const details = payload.errors?.map(error => error.message).filter(Boolean)
+  const message = details?.length
+    ? `${action}: ${details.join(", ")}`
+    : `${action}: ${payload.error || "unknown_error"}`
+  throw new HTTPError(message, 400)
+}
+
+export const createSlackAppFromManifest = async ({
+  configToken,
+  manifest,
+}: {
+  configToken: string
+  manifest: ReturnType<typeof buildSlackManifest>
+}) => {
+  const response = await fetch(`${SLACK_API_BASE}/apps.manifest.create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${configToken}`,
+    },
+    body: JSON.stringify({
+      manifest: JSON.stringify(manifest),
+    }),
+  })
+  const payload = (await response.json()) as SlackManifestCreateResponse
+  if (!response.ok) {
+    throw new HTTPError("Failed to create Slack app", response.status)
+  }
+  return assertSlackOk(payload, "Failed to create Slack app")
+}
+
+export const exchangeSlackOAuthCode = async ({
+  code,
+  clientId,
+  clientSecret,
+  redirectUri,
+}: {
+  code: string
+  clientId: string
+  clientSecret: string
+  redirectUri: string
+}) => {
+  const response = await fetch(`${SLACK_API_BASE}/oauth.v2.access`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+    }),
+  })
+  const payload = (await response.json()) as SlackOAuthAccessResponse
+  if (!response.ok) {
+    throw new HTTPError("Failed to exchange Slack OAuth code", response.status)
+  }
+  return assertSlackOk(payload, "Failed to exchange Slack OAuth code")
 }

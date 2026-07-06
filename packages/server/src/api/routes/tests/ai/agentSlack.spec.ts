@@ -114,6 +114,14 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
 
+const slackJsonResponse = (body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
 const resetWebhookChatMock = () => {
   mockedWebhookChat.mockReset()
   mockedWebhookChat.mockImplementation(async ({ chat }) => ({
@@ -181,6 +189,9 @@ describe("agent slack integration provisioning", () => {
   })
 
   afterEach(async () => {
+    if (jest.isMockFunction(global.fetch)) {
+      jest.mocked(global.fetch).mockRestore()
+    }
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
   })
@@ -343,6 +354,123 @@ describe("agent slack integration provisioning", () => {
     await config.api.agent.downloadSlackManifest(agent._id!, {
       status: 400,
     })
+  })
+
+  it("creates a Slack app from the generated manifest", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack Created App",
+      description: "Created through Slack API.",
+    })
+
+    jest.spyOn(global, "fetch").mockImplementation(async (_url, init) => {
+      const body = JSON.parse(String(init?.body))
+      const manifest = JSON.parse(body.manifest)
+      expect((init?.headers as Record<string, string>).Authorization).toEqual(
+        "Bearer xoxe-config-token"
+      )
+      expect(body.token).toBeUndefined()
+      expect(manifest.oauth_config.redirect_urls[0]).toContain(
+        "/api/agent/slack/oauth/callback"
+      )
+      expect(manifest.settings.event_subscriptions.request_url).toContain(
+        "/api/webhooks/slack/"
+      )
+      return slackJsonResponse({
+        ok: true,
+        app_id: "A_SLACK_APP",
+        credentials: {
+          client_id: "slack-client-id",
+          client_secret: "slack-client-secret",
+          signing_secret: "slack-signing-secret-created",
+        },
+        oauth_authorize_url:
+          "https://slack.com/oauth/v2/authorize?client_id=slack-client-id&scope=commands,chat:write",
+      })
+    })
+
+    const result = await config.api.agent.createSlackApp(agent._id!, {
+      configToken: "xoxe-config-token",
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.appId).toEqual("A_SLACK_APP")
+    expect(result.oauthAuthorizeUrl).toContain("state=")
+    expect(result.oauthAuthorizeUrl).toContain("redirect_uri=")
+    expect(result.messagingEndpointUrl).toContain("/api/webhooks/slack/")
+
+    const persisted = await getPersistedAgent(agent._id)
+    expect(persisted.slackIntegration?.appId).toEqual("A_SLACK_APP")
+    expect(persisted.slackIntegration?.clientId).toEqual("slack-client-id")
+    expect(
+      secretMatch(
+        "slack-client-secret",
+        persisted.slackIntegration!.clientSecret!
+      )
+    ).toBeTrue()
+    expect(
+      secretMatch(
+        "slack-signing-secret-created",
+        persisted.slackIntegration!.signingSecret!
+      )
+    ).toBeTrue()
+    expect(persisted.slackIntegration?.botToken).toBeUndefined()
+  })
+
+  it("completes Slack OAuth and stores the bot token", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack OAuth App",
+    })
+
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/apps.manifest.create")) {
+        return slackJsonResponse({
+          ok: true,
+          app_id: "A_SLACK_OAUTH_APP",
+          credentials: {
+            client_id: "slack-oauth-client-id",
+            client_secret: "slack-oauth-client-secret",
+            signing_secret: "slack-oauth-signing-secret",
+          },
+          oauth_authorize_url:
+            "https://slack.com/oauth/v2/authorize?client_id=slack-oauth-client-id&scope=commands,chat:write",
+        })
+      }
+
+      expect(String(url)).toContain("/oauth.v2.access")
+      const body = init?.body as URLSearchParams
+      expect(body.get("code")).toEqual("slack-oauth-code")
+      expect(body.get("client_id")).toEqual("slack-oauth-client-id")
+      return slackJsonResponse({
+        ok: true,
+        access_token: "xoxb-oauth-bot-token",
+        bot_user_id: "U_BOT",
+        app_id: "A_SLACK_OAUTH_APP",
+        team: {
+          id: "T_SLACK",
+          name: "Slack Team",
+        },
+      })
+    })
+    const created = await config.api.agent.createSlackApp(agent._id!, {
+      configToken: "xoxe-config-token",
+    })
+    const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
+    expect(state).toBeTruthy()
+
+    await config
+      .getRequest()!
+      .get(
+        `/api/agent/slack/oauth/callback?code=slack-oauth-code&state=${state}`
+      )
+      .expect(302)
+
+    const persisted = await getPersistedAgent(agent._id)
+    expect(
+      secretMatch("xoxb-oauth-bot-token", persisted.slackIntegration!.botToken!)
+    ).toBeTrue()
+    expect(persisted.slackIntegration?.botUserId).toEqual("U_BOT")
+    expect(persisted.slackIntegration?.teamId).toEqual("T_SLACK")
+    expect(persisted.slackIntegration?.teamName).toEqual("Slack Team")
   })
 
   describe("slack webhook incoming messages", () => {

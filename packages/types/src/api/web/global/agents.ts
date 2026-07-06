@@ -160,6 +160,17 @@ export interface ProvisionAgentSlackChannelResponse
   messagingEndpointUrl: string
 }
 
+export interface CreateAgentSlackAppRequest {
+  configToken: string
+}
+
+export interface CreateAgentSlackAppResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  appId: string
+  oauthAuthorizeUrl: string
+  messagingEndpointUrl: string
+}
+
 export type ProvisionAgentTelegramChannelRequest =
   ConfigureAgentDeploymentChannelRequest
 

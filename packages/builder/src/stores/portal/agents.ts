@@ -7,6 +7,8 @@ import {
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
   DisconnectAgentSharePointSiteResponse,
   FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
@@ -378,6 +380,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await this.runAndRefreshAgents(() =>
       API.downloadAgentSlackManifest(agentId)
     )
+
+  createSlackApp = async (
+    agentId: string,
+    body: CreateAgentSlackAppRequest
+  ): Promise<CreateAgentSlackAppResponse> =>
+    await this.runAndRefreshAgents(() => API.createAgentSlackApp(agentId, body))
 
   provisionTelegramChannel = async (
     agentId: string,

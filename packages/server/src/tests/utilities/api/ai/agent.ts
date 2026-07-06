@@ -6,6 +6,8 @@ import {
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
   FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -181,6 +183,20 @@ export class AgentAPI extends TestAPI {
       expectations
     )
     return response.text
+  }
+
+  createSlackApp = async (
+    agentId: string,
+    body: CreateAgentSlackAppRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentSlackAppResponse> => {
+    return await this._post<CreateAgentSlackAppResponse>(
+      `/api/agent/${agentId}/slack/app/create`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
   provisionTelegramChannel = async (

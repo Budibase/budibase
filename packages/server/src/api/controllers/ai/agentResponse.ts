@@ -27,6 +27,7 @@ export const obfuscateAgentSecrets = (agent: Agent): Agent => ({
   }),
   ...(agent.slackIntegration && {
     slackIntegration: maskSecretFields(agent.slackIntegration, [
+      "clientSecret",
       "botToken",
       "signingSecret",
     ]),

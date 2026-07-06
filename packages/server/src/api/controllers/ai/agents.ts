@@ -1,6 +1,15 @@
-import { db, HTTPError } from "@budibase/backend-core"
+import {
+  cache,
+  configs,
+  context,
+  db,
+  HTTPError,
+  utils,
+} from "@budibase/backend-core"
 import {
   Agent,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentsResponse,
@@ -27,6 +36,38 @@ import {
   resolveUpdatedProjectIds,
 } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
+
+const SLACK_OAUTH_STATE_TTL_SECONDS = 600
+const SLACK_OAUTH_CALLBACK_PATH = "/api/agent/slack/oauth/callback"
+
+interface SlackOAuthState {
+  agentId: string
+  workspaceId: string
+  chatAppId: string
+}
+
+const getSlackOAuthStateCacheKey = (state: string) =>
+  `agent:slack:oauth:state:${state}`
+
+const getSlackOAuthRedirectUrl = async () => {
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  return `${platformUrl.replace(/\/$/, "")}${SLACK_OAUTH_CALLBACK_PATH}`
+}
+
+const buildSlackInstallUrl = ({
+  oauthAuthorizeUrl,
+  redirectUri,
+  state,
+}: {
+  oauthAuthorizeUrl: string
+  redirectUri: string
+  state: string
+}) => {
+  const url = new URL(oauthAuthorizeUrl)
+  url.searchParams.set("redirect_uri", redirectUri)
+  url.searchParams.set("state", state)
+  return url.toString()
+}
 
 const parseOptionalChatAppId = (value: unknown) => {
   if (typeof value !== "string") {
@@ -229,6 +270,31 @@ const configureSlackDeployment = async ({
       }),
   })
 
+const configureSlackAppCreationDeployment = async ({
+  agent,
+  agentId,
+}: {
+  agent: Agent
+  agentId: string
+}) => {
+  const chatApp = await sdk.ai.deployments.slack.resolveChatAppForAgent(
+    agentId,
+    agent.slackIntegration?.chatAppId
+  )
+  const chatAppId = chatApp._id
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const messagingEndpointUrl =
+    await sdk.ai.deployments.slack.buildSlackWebhookUrl(chatAppId, agentId)
+
+  return {
+    chatAppId,
+    messagingEndpointUrl,
+  }
+}
+
 const toSafeFilenameSegment = (value: string) => {
   const safe = value
     .trim()
@@ -429,6 +495,153 @@ export async function downloadAgentSlackManifest(
   ctx.type = "application/json"
   ctx.body = apiFileReturn(`${JSON.stringify(manifest, null, 2)}\n`)
   ctx.status = 200
+}
+
+export async function createAgentSlackApp(
+  ctx: UserCtx<
+    CreateAgentSlackAppRequest,
+    CreateAgentSlackAppResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    throw new HTTPError("workspaceId is required", 400)
+  }
+
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const { chatAppId, messagingEndpointUrl } =
+    await configureSlackAppCreationDeployment({
+      agent,
+      agentId,
+    })
+  const oauthRedirectUrl = await getSlackOAuthRedirectUrl()
+  const manifest = sdk.ai.deployments.slack.buildSlackManifest({
+    agent,
+    messagingEndpointUrl,
+    oauthRedirectUrl,
+  })
+  const created = await sdk.ai.deployments.slack.createSlackAppFromManifest({
+    configToken: ctx.request.body.configToken.trim(),
+    manifest,
+  })
+
+  const clientId = created.credentials?.client_id?.trim()
+  const clientSecret = created.credentials?.client_secret?.trim()
+  const signingSecret = created.credentials?.signing_secret?.trim()
+  const appId = created.app_id?.trim()
+  const oauthAuthorizeUrl = created.oauth_authorize_url?.trim()
+  if (
+    !clientId ||
+    !clientSecret ||
+    !signingSecret ||
+    !appId ||
+    !oauthAuthorizeUrl
+  ) {
+    throw new HTTPError("Slack app creation response was incomplete", 400)
+  }
+
+  const state = utils.newid()
+  await cache.store(
+    getSlackOAuthStateCacheKey(state),
+    {
+      agentId,
+      workspaceId,
+      chatAppId,
+    } satisfies SlackOAuthState,
+    SLACK_OAUTH_STATE_TTL_SECONDS,
+    { useTenancy: false }
+  )
+
+  await sdk.ai.agents.update({
+    ...agent,
+    slackIntegration: {
+      ...agent.slackIntegration,
+      appId,
+      clientId,
+      clientSecret,
+      signingSecret,
+      chatAppId,
+      messagingEndpointUrl,
+    },
+  })
+
+  ctx.body = {
+    success: true,
+    chatAppId,
+    appId,
+    messagingEndpointUrl,
+    oauthAuthorizeUrl: buildSlackInstallUrl({
+      oauthAuthorizeUrl,
+      redirectUri: oauthRedirectUrl,
+      state,
+    }),
+  }
+  ctx.status = 200
+}
+
+export async function completeSlackOAuth(ctx: UserCtx<void, void>) {
+  const state = String(ctx.query.state || "").trim()
+  if (!state) {
+    throw new Error("Slack OAuth callback is missing state")
+  }
+
+  const cacheKey = getSlackOAuthStateCacheKey(state)
+  const statePayload = (await cache.get(cacheKey, {
+    useTenancy: false,
+  })) as SlackOAuthState | undefined
+  await cache.destroy(cacheKey, { useTenancy: false })
+  if (!statePayload?.agentId || !statePayload.workspaceId) {
+    throw new Error("Slack OAuth state is invalid or expired")
+  }
+
+  const oauthError = String(ctx.query.error || "").trim()
+  if (oauthError) {
+    throw new Error("Slack OAuth authorization failed")
+  }
+
+  const code = String(ctx.query.code || "").trim()
+  if (!code) {
+    throw new Error("Slack OAuth callback is missing the authorization code")
+  }
+
+  await context.doInWorkspaceContext(statePayload.workspaceId, async () => {
+    const agent = await sdk.ai.agents.getOrThrow(statePayload.agentId)
+    const clientId = agent.slackIntegration?.clientId?.trim()
+    const clientSecret = agent.slackIntegration?.clientSecret?.trim()
+    if (!clientId || !clientSecret) {
+      throw new Error("Slack OAuth client credentials are not configured")
+    }
+
+    const redirectUri = await getSlackOAuthRedirectUrl()
+    const token = await sdk.ai.deployments.slack.exchangeSlackOAuthCode({
+      code,
+      clientId,
+      clientSecret,
+      redirectUri,
+    })
+    const botToken = token.access_token?.trim()
+    if (!botToken) {
+      throw new Error("Slack OAuth response did not include a bot token")
+    }
+
+    await sdk.ai.agents.update({
+      ...agent,
+      slackIntegration: {
+        ...agent.slackIntegration,
+        appId: token.app_id?.trim() || agent.slackIntegration?.appId,
+        botToken,
+        botUserId: token.bot_user_id?.trim() || undefined,
+        teamId: token.team?.id?.trim() || undefined,
+        teamName: token.team?.name?.trim() || undefined,
+      },
+    })
+  })
+
+  ctx.redirect(
+    `/builder/workspace/${statePayload.workspaceId}/agent/${statePayload.agentId}/deployment?slack_connected=1`
+  )
 }
 
 export async function provisionAgentTelegramChannel(

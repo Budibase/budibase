@@ -28,11 +28,13 @@
   let draft = $state({
     botToken: "",
     signingSecret: "",
+    configToken: "",
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
     requireUserLink: true,
   })
 
   let provisioning = $state(false)
+  let creatingSlackApp = $state(false)
   let copyingManifest = $state(false)
   let provisionResult = $state<ProvisionAgentSlackChannelResponse | undefined>()
 
@@ -60,6 +62,7 @@
     draft = {
       botToken: integration?.botToken || "",
       signingSecret: integration?.signingSecret || "",
+      configToken: "",
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
       requireUserLink: integration?.requireUserLink !== false,
@@ -103,6 +106,10 @@
     }
   }
 
+  const saveSlackChannel = async () => {
+    await provisionSlackChannel()
+  }
+
   const copySlackManifest = async () => {
     if (!agent?._id || copyingManifest || !hasRequiredCredentials) {
       return
@@ -124,6 +131,33 @@
       copyingManifest = false
     }
   }
+
+  const createSlackApp = async () => {
+    if (!agent?._id || creatingSlackApp || !draft.configToken.trim()) {
+      return
+    }
+
+    creatingSlackApp = true
+    try {
+      await agentsStore.updateAgent({
+        ...agent,
+        slackIntegration: {
+          ...agent.slackIntegration,
+          idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
+          requireUserLink: draft.requireUserLink,
+        },
+      })
+      const result = await agentsStore.createSlackApp(agent._id, {
+        configToken: draft.configToken.trim(),
+      })
+      window.location.href = result.oauthAuthorizeUrl
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to create Slack app")
+    } finally {
+      creatingSlackApp = false
+    }
+  }
 </script>
 
 <ChannelConfigLayout
@@ -136,7 +170,7 @@
       ? "Save changes"
       : "Save channel"}
   actionDisabled={provisioning || !hasRequiredCredentials}
-  onAction={provisionSlackChannel}
+  onAction={saveSlackChannel}
 >
   {#snippet fields()}
     <Input label="Bot token" type="password" bind:value={draft.botToken} />
@@ -172,6 +206,25 @@
       value={messagingEndpointUrl}
       disabled
     />
+    <div class="guided-setup">
+      <Body size="S">
+        To create the Slack app automatically, generate a Slack app
+        configuration token from Slack app settings and paste it here. Budibase
+        uses it once and does not store it.
+      </Body>
+      <Input
+        label="Slack app configuration token"
+        type="password"
+        bind:value={draft.configToken}
+      />
+      <Button
+        secondary
+        on:click={createSlackApp}
+        disabled={creatingSlackApp || !draft.configToken.trim()}
+      >
+        {creatingSlackApp ? "Creating app..." : "Create Slack app"}
+      </Button>
+    </div>
     <div class="manifest-action">
       <Button
         secondary
@@ -188,5 +241,15 @@
   .manifest-action {
     display: flex;
     justify-content: flex-start;
+  }
+
+  .guided-setup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .guided-setup :global(button) {
+    align-self: flex-start;
   }
 </style>
