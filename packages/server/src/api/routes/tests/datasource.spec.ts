@@ -1257,6 +1257,129 @@ if (descriptions.length) {
               table.schema.enum.constraints!.inclusion!.toSorted()
             ).toEqual(enumOptions)
           })
+
+        it("re-points primaryDisplay when its column is dropped from the source database", async () => {
+          await client.schema.createTable("display_test", table => {
+            table.increments("id").primary()
+            table.string("name")
+            table.string("description")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          let ds = await config.api.datasource.get(datasource._id!)
+          let table = Object.values(ds.entities!).find(
+            t => t.name === "display_test"
+          )!
+          await config.api.table.save({ ...table, primaryDisplay: "name" })
+
+          await client.schema.alterTable("display_test", table => {
+            table.dropColumn("name")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          ds = await config.api.datasource.get(datasource._id!)
+          table = Object.values(ds.entities!).find(
+            t => t.name === "display_test"
+          )!
+          expect(table.primaryDisplay).toBeDefined()
+          expect(table.primaryDisplay).not.toEqual("name")
+          expect(table.schema[table.primaryDisplay!]).toBeDefined()
+        })
+
+        it("still searches views referencing a column dropped from the source database", async () => {
+          await client.schema.createTable("stale_view_test", table => {
+            table.increments("id").primary()
+            table.string("name")
+            table.string("doomed")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          const ds = await config.api.datasource.get(datasource._id!)
+          const table = Object.values(ds.entities!).find(
+            t => t.name === "stale_view_test"
+          )!
+          const view = await config.api.viewV2.create({
+            name: generator.guid(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: { visible: true },
+              doomed: { visible: true },
+            },
+          })
+          await config.api.row.save(table._id!, { name: "a", doomed: "gone" })
+
+          await client.schema.alterTable("stale_view_test", table => {
+            table.dropColumn("doomed")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          // The view schema still contains the dropped column - the search
+          // must skip it rather than reference it in the generated SQL
+          const response = await config.api.viewV2.search(view.id)
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows[0].name).toEqual("a")
+          expect(response.rows[0].doomed).toBeUndefined()
+        })
+
+        it("re-points view display columns when the display column is dropped from the source database", async () => {
+          await client.schema.createTable("view_display_test", table => {
+            table.increments("id").primary()
+            table.string("name")
+            table.string("description")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          let ds = await config.api.datasource.get(datasource._id!)
+          let table = Object.values(ds.entities!).find(
+            t => t.name === "view_display_test"
+          )!
+          await config.api.table.save({ ...table, primaryDisplay: "name" })
+          const view = await config.api.viewV2.create({
+            name: generator.guid(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: { visible: true },
+              description: { visible: true },
+            },
+          })
+
+          await client.schema.alterTable("view_display_test", table => {
+            table.dropColumn("name")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          // The view follows the table's healed display column, and the
+          // dropped column is removed from its schema so it can be updated
+          const updated = await config.api.viewV2.get(view.id)
+          expect(updated.primaryDisplay).toBeDefined()
+          expect(updated.primaryDisplay).not.toEqual("name")
+          expect(Object.keys(updated.schema!)).not.toContain("name")
+
+          await config.api.viewV2.update(
+            {
+              ...updated,
+              schema: {
+                id: { visible: true },
+                description: { visible: false },
+              },
+            },
+            { status: 200 }
+          )
+        })
       })
 
       describe("verify", () => {

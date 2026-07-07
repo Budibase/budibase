@@ -1060,6 +1060,60 @@ if (descriptions.length) {
             })
           })
 
+          it("can still read and update a view whose display column no longer exists", async () => {
+            const displayTable = await config.api.table.save(
+              saveTableRequest({
+                primaryDisplay: "name",
+                schema: {
+                  name: {
+                    name: "name",
+                    type: FieldType.STRING,
+                  },
+                  category: {
+                    name: "category",
+                    type: FieldType.STRING,
+                  },
+                },
+              })
+            )
+            const staleView = await config.api.viewV2.create({
+              tableId: displayTable._id!,
+              name: generator.guid(),
+              primaryDisplay: "category",
+              schema: {
+                id: { visible: true },
+                name: { visible: true },
+                category: { visible: true },
+              },
+            })
+
+            // deleting the column the view uses as its display column leaves
+            // the view's primaryDisplay referencing a missing column
+            const saved = await config.api.table.get(displayTable._id!)
+            const { category, ...schema } = saved.schema
+            await config.api.table.save({ ...saved, schema }, { status: 200 })
+
+            // reads fall back to the table's display column
+            const fetched = await config.api.viewV2.get(staleView.id)
+            expect(fetched.primaryDisplay).toEqual("name")
+
+            // saving any view change must fall back to the table's display
+            // column rather than rejecting the update
+            await config.api.viewV2.update(
+              {
+                ...staleView,
+                schema: {
+                  id: { visible: true },
+                  name: { visible: true },
+                },
+              },
+              { status: 200 }
+            )
+
+            const updated = await config.api.viewV2.get(staleView.id)
+            expect(updated.primaryDisplay).toEqual("name")
+          })
+
           it("can update an existing view data", async () => {
             const tableId = table._id!
             await config.api.viewV2.update({
