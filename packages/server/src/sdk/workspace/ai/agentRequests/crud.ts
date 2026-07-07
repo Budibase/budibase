@@ -162,14 +162,23 @@ async function refineUserMessageActionSummary({
     return request
   }
 
-  return await saveRequest({
-    ...latest,
-    actions: (latest.actions ?? []).map(action =>
-      action.id === actionId && action.type === "user_message"
-        ? { ...action, summary }
-        : action
-    ),
-  })
+  try {
+    return await saveRequest({
+      ...latest,
+      actions: (latest.actions ?? []).map(action =>
+        action.id === actionId && action.type === "user_message"
+          ? { ...action, summary }
+          : action
+      ),
+    })
+  } catch (err) {
+    // Best-effort upgrade - a concurrent writer (e.g. updateRequestStatus)
+    // winning the race is an expected outcome, not a failure of this flow.
+    if (dbCore.isDocumentConflictError(err)) {
+      return latest
+    }
+    throw err
+  }
 }
 
 const isTerminalStatus = (status: AgentRequest["status"]) =>
