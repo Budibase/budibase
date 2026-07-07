@@ -106,7 +106,7 @@
     }))
 
   const INVALID_FIELD_TOOLTIP =
-    "This field may have been deleted or renamed and will be ignored. Delete or update as required"
+    "This field may have been deleted or renamed. No rows will be returned until it is updated or removed"
 
   const isInvalidField = (filter, options) => {
     return (
