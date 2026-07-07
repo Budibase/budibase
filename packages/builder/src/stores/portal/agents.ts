@@ -370,6 +370,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.provisionAgentMSTeamsChannel(agentId, body)
     )
 
+  downloadMSTeamsPackage = async (agentId: string): Promise<Blob> =>
+    await this.runAndRefreshAgents(() =>
+      API.downloadAgentMSTeamsPackage(agentId)
+    )
+
   provisionSlackChannel = async (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest

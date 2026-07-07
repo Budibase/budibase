@@ -68,6 +68,7 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ) => Promise<ProvisionAgentMSTeamsChannelResponse>
+  downloadAgentMSTeamsPackage: (agentId: string) => Promise<Blob>
   provisionAgentSlackChannel: (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
@@ -232,6 +233,13 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     >({
       url: `/api/agent/${agentId}/ms-teams/provision`,
       body,
+    })
+  },
+
+  downloadAgentMSTeamsPackage: async (agentId: string) => {
+    return await API.get<Blob>({
+      url: `/api/agent/${agentId}/ms-teams/package`,
+      parseResponse: async response => await response.blob(),
     })
   },
 

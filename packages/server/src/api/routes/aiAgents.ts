@@ -62,6 +62,7 @@ builderAdminRoutes
     provisionAgentMSTeamsChannelValidator(),
     ai.provisionAgentMSTeamsChannel
   )
+  .get("/api/agent/:agentId/ms-teams/package", ai.downloadAgentMSTeamsPackage)
   .post(
     "/api/agent/:agentId/ms-teams/toggle",
     toggleAgentMSTeamsDeploymentValidator(),

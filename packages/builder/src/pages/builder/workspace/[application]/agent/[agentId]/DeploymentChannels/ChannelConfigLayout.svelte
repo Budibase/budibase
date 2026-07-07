@@ -9,6 +9,9 @@
     actionLabel,
     actionDisabled = false,
     onAction,
+    secondaryActionLabel,
+    secondaryActionDisabled = false,
+    onSecondaryAction,
     fields,
     response,
   }: {
@@ -18,6 +21,9 @@
     actionLabel: string
     actionDisabled?: boolean
     onAction: () => void | Promise<void>
+    secondaryActionLabel?: string
+    secondaryActionDisabled?: boolean
+    onSecondaryAction?: () => void | Promise<void>
     fields: Snippet
     response: Snippet
   } = $props()
@@ -39,6 +45,15 @@
   </div>
 
   <div class="actions">
+    {#if secondaryActionLabel && onSecondaryAction}
+      <Button
+        secondary
+        on:click={() => onSecondaryAction()}
+        disabled={secondaryActionDisabled}
+      >
+        {secondaryActionLabel}
+      </Button>
+    {/if}
     <Button cta on:click={() => onAction()} disabled={actionDisabled}>
       {actionLabel}
     </Button>
@@ -77,6 +92,7 @@
   .actions {
     display: flex;
     justify-content: flex-end;
+    gap: var(--spacing-s);
   }
 
   @media (max-width: 900px) {

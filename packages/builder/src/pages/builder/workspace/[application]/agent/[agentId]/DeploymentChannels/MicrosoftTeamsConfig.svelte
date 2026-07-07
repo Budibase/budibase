@@ -35,6 +35,7 @@
   })
 
   let provisioning = $state(false)
+  let downloadingPackage = $state(false)
   let provisionResult = $state<
     ProvisionAgentMSTeamsChannelResponse | undefined
   >()
@@ -78,9 +79,9 @@
     draftAgentId = currentAgent._id
   })
 
-  const provisionMSTeamsChannel = async () => {
+  const provisionMSTeamsChannel = async (showNotification = true) => {
     if (!agent?._id || provisioning) {
-      return
+      return false
     }
 
     provisioning = true
@@ -102,12 +103,43 @@
       if (agent.live) {
         await deploymentStore.publishApp()
       }
-      notifications.success("Microsoft Teams channel settings saved")
+      if (showNotification) {
+        notifications.success("Microsoft Teams channel settings saved")
+      }
+      return true
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save Microsoft Teams channel settings")
+      return false
     } finally {
       provisioning = false
+    }
+  }
+
+  const downloadMSTeamsPackage = async () => {
+    if (!agent?._id || downloadingPackage || !hasRequiredCredentials) {
+      return
+    }
+
+    downloadingPackage = true
+    try {
+      const saved = await provisionMSTeamsChannel(false)
+      if (!saved) {
+        return
+      }
+      const blob = await agentsStore.downloadMSTeamsPackage(agent._id)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "budibase-teams-app-package.zip"
+      link.click()
+      URL.revokeObjectURL(url)
+      notifications.success("Microsoft Teams app package downloaded")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to download Microsoft Teams app package")
+    } finally {
+      downloadingPackage = false
     }
   }
 </script>
@@ -123,6 +155,13 @@
       : "Save channel"}
   actionDisabled={provisioning || !hasRequiredCredentials}
   onAction={provisionMSTeamsChannel}
+  secondaryActionLabel={downloadingPackage
+    ? "Downloading..."
+    : "Download app package"}
+  secondaryActionDisabled={provisioning ||
+    downloadingPackage ||
+    !hasRequiredCredentials}
+  onSecondaryAction={downloadMSTeamsPackage}
 >
   {#snippet fields()}
     <Input label="App ID (client ID)" bind:value={draft.appId} />

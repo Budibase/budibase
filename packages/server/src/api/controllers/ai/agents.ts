@@ -1,3 +1,6 @@
+import archiver from "archiver"
+import stream from "stream"
+
 import {
   cache,
   configs,
@@ -39,6 +42,15 @@ import { toAgentResponse } from "./agentResponse"
 
 const SLACK_OAUTH_STATE_TTL_SECONDS = 600
 const SLACK_OAUTH_CALLBACK_PATH = "/api/agent/slack/oauth/callback"
+
+const TEAMS_COLOR_ICON = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAACF0lEQVR4nO3ToQEAIAzAMG7kEv4344yJRsTX9Lw7A1VnOwA2GYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaQYgzQCkGYA0A5BmANIMQJoBSDMAaR+ikxc1i9nMKQAAAABJRU5ErkJggg==",
+  "base64"
+)
+const TEAMS_OUTLINE_ICON = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKUlEQVR4nO3OIQEAAAACIP+f1hkWWEB6FgEBAQEBAQEBAQEBAQEBgXdgl/rw4unIZ5cAAAAASUVORK5CYII=",
+  "base64"
+)
 
 interface SlackOAuthState {
   agentId: string
@@ -270,6 +282,30 @@ const configureSlackDeployment = async ({
       }),
   })
 
+const configureMSTeamsDeployment = async ({
+  agent,
+  agentId,
+  requestedChatAppId,
+}: {
+  agent: Agent
+  agentId: string
+  requestedChatAppId?: string
+}) =>
+  await configureDeploymentChannel({
+    agent,
+    agentId,
+    requestedChatAppId,
+    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
+    resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
+    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
+    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      await persistMSTeamsDeployment({
+        agent,
+        chatAppId,
+        messagingEndpointUrl,
+      }),
+  })
+
 const configureSlackAppCreationDeployment = async ({
   agent,
   agentId,
@@ -303,6 +339,9 @@ const toSafeFilenameSegment = (value: string) => {
     .replace(/^-+|-+$/g, "")
   return safe || "agent"
 }
+
+const toSafeTeamsPackageName = (agent: Agent) =>
+  `budibase-teams-${toSafeFilenameSegment(agent.name)}-package.zip`
 
 export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
   const rawAiconfigId = ctx.query.aiconfigId
@@ -425,19 +464,10 @@ export async function provisionAgentMSTeamsChannel(
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-  const { chatAppId, endpointUrl } = await configureDeploymentChannel({
+  const { chatAppId, endpointUrl } = await configureMSTeamsDeployment({
     agent,
     agentId,
     requestedChatAppId,
-    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
-    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
-    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-      await persistMSTeamsDeployment({
-        agent,
-        chatAppId,
-        messagingEndpointUrl,
-      }),
   })
 
   ctx.body = {
@@ -445,6 +475,40 @@ export async function provisionAgentMSTeamsChannel(
     chatAppId,
     messagingEndpointUrl: endpointUrl,
   }
+  ctx.status = 200
+}
+
+export async function downloadAgentMSTeamsPackage(
+  ctx: UserCtx<void, stream.PassThrough, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const requestedChatAppId = parseOptionalChatAppId(
+    agent.MSTeamsIntegration?.chatAppId?.trim() || undefined
+  )
+  const { endpointUrl } = await configureMSTeamsDeployment({
+    agent,
+    agentId,
+    requestedChatAppId,
+  })
+  const manifest = sdk.ai.deployments.MSTeams.buildMSTeamsManifest({
+    agent,
+    messagingEndpointUrl: endpointUrl,
+  })
+
+  const passThrough = new stream.PassThrough()
+  const archive = archiver.create("zip")
+  archive.pipe(passThrough)
+  archive.append(`${JSON.stringify(manifest, null, 2)}\n`, {
+    name: "manifest.json",
+  })
+  archive.append(TEAMS_COLOR_ICON, { name: "color.png" })
+  archive.append(TEAMS_OUTLINE_ICON, { name: "outline.png" })
+
+  ctx.attachment(toSafeTeamsPackageName(agent))
+  ctx.type = "zip"
+  ctx.body = passThrough
+  await archive.finalize()
   ctx.status = 200
 }
 
