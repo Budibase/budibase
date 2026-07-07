@@ -10,11 +10,17 @@ import {
   resolveFinalRequestStatus,
   updateRequestStatus,
 } from "./crud"
-import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
+import {
+  analyzeAgentRequestLink,
+  generateAgentRequestTitle,
+  generateInteractionSummary,
+} from "./helpers"
+import { truncateTitle } from "../chatConversations"
 
 jest.mock("./helpers", () => ({
   analyzeAgentRequestLink: jest.fn(),
   generateAgentRequestTitle: jest.fn(),
+  generateInteractionSummary: jest.fn(),
 }))
 
 jest.mock("../../../../websockets", () => ({
@@ -35,6 +41,7 @@ describe("agentRequests crud", () => {
 
   const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
   const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
+  const generateInteractionSummaryMock = generateInteractionSummary as jest.Mock
   const emitAgentRequestChangeMock =
     builderSocket?.emitAgentRequestChange as jest.Mock
 
@@ -42,6 +49,8 @@ describe("agentRequests crud", () => {
     analyzeAgentRequestLinkMock.mockReset()
     generateAgentRequestTitleMock.mockReset()
     generateAgentRequestTitleMock.mockResolvedValue("Generated title")
+    generateInteractionSummaryMock.mockReset()
+    generateInteractionSummaryMock.mockResolvedValue("User asked something")
     emitAgentRequestChangeMock.mockReset()
     await config.newTenant()
   })
@@ -940,6 +949,160 @@ describe("agentRequests crud", () => {
         })
 
         expect(created).toBeUndefined()
+      })
+    })
+  })
+
+  describe("user_message actions", () => {
+    it("records the generated summary as the first action when creating a thread", async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValue({ decision: "new_thread" })
+      generateInteractionSummaryMock.mockResolvedValue(
+        "User asked about VPN access"
+      )
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const created = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: "I can't connect to the VPN from home",
+          operation: { name: "Support", prompt: "Help with IT issues." },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        expect(created?.request.actions).toEqual([
+          {
+            id: expect.any(String),
+            timestamp: expect.any(String),
+            sessionId: "session_1",
+            type: "user_message",
+            summary: "User asked about VPN access",
+          },
+        ])
+        expect(generateInteractionSummaryMock).toHaveBeenCalledWith({
+          latestPrompt: "I can't connect to the VPN from home",
+          agentId: "agent_1",
+          sessionId: "session_1",
+        })
+      })
+    })
+
+    it("falls back to a truncated prompt when summary generation fails", async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValue({ decision: "new_thread" })
+      generateInteractionSummaryMock.mockRejectedValue(new Error("LLM error"))
+      const longPrompt =
+        "I have been trying for the last hour to connect to the office VPN from my home network and it keeps timing out"
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const created = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: longPrompt,
+          operation: { name: "Support", prompt: "Help with IT issues." },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        expect(created?.request.actions?.[0]).toEqual(
+          expect.objectContaining({
+            type: "user_message",
+            summary: truncateTitle(longPrompt, 60),
+          })
+        )
+      })
+    })
+
+    it("appends a new user_message action for a follow-up turn via existingRequestId", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        generateInteractionSummaryMock.mockResolvedValue(
+          "User booked a meeting"
+        )
+
+        const result = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+          userId: "user_1",
+          existingRequestId: requestId,
+        })
+
+        expect(result?.request.actions).toEqual([
+          {
+            id: expect.any(String),
+            timestamp: expect.any(String),
+            sessionId: "session_1",
+            type: "user_message",
+            summary: "User booked a meeting",
+          },
+        ])
+      })
+    })
+
+    it("appends one action per follow-up turn linked into the same thread", async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+      generateInteractionSummaryMock.mockResolvedValueOnce(
+        "User asked about company policy"
+      )
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const first = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: "Show me the holidays company policy",
+          operation: {
+            name: "Support",
+            prompt: "Help users with company policy questions.",
+          },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first!.request._id,
+          entryAction: "append_latest_entry",
+        })
+        generateInteractionSummaryMock.mockResolvedValueOnce(
+          "User asked for a summary"
+        )
+
+        const second = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_2",
+          latestUserPrompt: "summarise it in 50 words",
+          operation: {
+            name: "Support",
+            prompt: "Summarise company policies clearly.",
+          },
+          source: "Slack",
+          userId: "user_1",
+        })
+
+        expect(second?.request.actions).toEqual([
+          expect.objectContaining({
+            type: "user_message",
+            summary: "User asked about company policy",
+            sessionId: "session_1",
+          }),
+          expect.objectContaining({
+            type: "user_message",
+            summary: "User asked for a summary",
+            sessionId: "session_2",
+          }),
+        ])
       })
     })
   })

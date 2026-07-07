@@ -1,12 +1,19 @@
-import { context, docIds, Duration } from "@budibase/backend-core"
+import { context, docIds, Duration, utils } from "@budibase/backend-core"
 import type {
   AgentRequest,
+  AgentRequestAction,
   AgentRequestEntry,
   AgentRequestsSummary,
   AgentRequestStatus,
+  UserMessageAction,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
-import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
+import {
+  analyzeAgentRequestLink,
+  generateAgentRequestTitle,
+  generateInteractionSummary,
+} from "./helpers"
+import { truncateTitle } from "../chatConversations"
 import {
   queryRequestsByAgent,
   queryRequestStatuses,
@@ -16,6 +23,7 @@ import {
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
+const INTERACTION_SUMMARY_FALLBACK_LENGTH = 60
 
 const nowIso = () => new Date().toISOString()
 
@@ -47,10 +55,12 @@ const buildThread = ({
   agentId,
   userId,
   entry,
+  actions = [],
 }: {
   agentId: string
   userId: string
   entry: AgentRequestEntry
+  actions?: AgentRequestAction[]
 }): AgentRequest => {
   return {
     _id: docIds.generateAgentRequestID(),
@@ -58,9 +68,49 @@ const buildThread = ({
     agentId,
     userId,
     entries: [entry],
+    actions,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     status: entry.status,
+  }
+}
+
+// Every user turn in the context of a request is tracked as a user_message
+// action, summarised into a short UI-facing title. The summary generation
+// falls back to a truncated prompt rather than skipping the action entirely,
+// so the timeline always has something to show for that turn even if the LLM
+// call fails.
+async function buildUserMessageActionForTurn({
+  agentId,
+  sessionId,
+  latestPrompt,
+}: {
+  agentId: string
+  sessionId: string
+  latestPrompt: string
+}): Promise<UserMessageAction> {
+  let summary: string
+  try {
+    summary = await generateInteractionSummary({
+      latestPrompt,
+      agentId,
+      sessionId,
+    })
+  } catch (error) {
+    console.error("Failed to generate agent request interaction summary", {
+      agentId,
+      sessionId,
+      error,
+    })
+    summary = truncateTitle(latestPrompt, INTERACTION_SUMMARY_FALLBACK_LENGTH)
+  }
+
+  return {
+    id: utils.newid(),
+    timestamp: nowIso(),
+    sessionId,
+    type: "user_message",
+    summary,
   }
 }
 
@@ -154,6 +204,12 @@ async function createNewRequest({
     return undefined
   }
 
+  const userMessageAction = await buildUserMessageActionForTurn({
+    agentId,
+    sessionId,
+    latestPrompt,
+  })
+
   const createdRequest = await saveRequest(
     buildThread({
       agentId,
@@ -163,6 +219,7 @@ async function createNewRequest({
         operation,
         source,
       }),
+      actions: [userMessageAction],
     })
   )
 
@@ -409,12 +466,21 @@ export async function createOrUpdateRequestForPrompt({
       if (isTerminalStatus(existing.status)) {
         return { request: existing, created: false }
       }
-      const updated = await generateAndSaveRequestTitleIfMissing({
+      const withTitle = await generateAndSaveRequestTitleIfMissing({
         request: existing,
         agentId,
         sessionId,
         latestPrompt: prompt,
         operation: resolvedOperation,
+      })
+      const userMessageAction = await buildUserMessageActionForTurn({
+        agentId,
+        sessionId,
+        latestPrompt: prompt,
+      })
+      const updated = await saveRequest({
+        ...withTitle,
+        actions: [...(withTitle.actions ?? []), userMessageAction],
       })
       return { request: updated, created: false }
     }
@@ -503,10 +569,17 @@ export async function createOrUpdateRequestForPrompt({
     )
   }
 
+  const userMessageAction = await buildUserMessageActionForTurn({
+    agentId,
+    sessionId,
+    latestPrompt: prompt,
+  })
+
   return {
     request: await saveRequest({
       ...request,
       entries: nextEntries,
+      actions: [...(request.actions ?? []), userMessageAction],
       updatedAt: timestamp,
       // Linking a follow-up prompt into this thread isn't a response to the
       // escalation. Leave needs_input as-is rather than reviving it.
