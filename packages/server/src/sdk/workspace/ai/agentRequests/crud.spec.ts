@@ -410,6 +410,181 @@ describe("agentRequests crud", () => {
     })
   })
 
+  describe("status_changed actions", () => {
+    it("records a status_changed action when transitioning to completed", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({
+            type: "status_changed",
+            from: "active",
+            to: "completed",
+            id: expect.any(String),
+            timestamp: expect.any(String),
+          }),
+        ])
+      })
+    })
+
+    it("records the error on the status_changed action when failing", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({
+          requestId,
+          status: "failed",
+          error: "Tool calls incomplete",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({
+            type: "status_changed",
+            from: "active",
+            to: "failed",
+            error: "Tool calls incomplete",
+          }),
+        ])
+      })
+    })
+
+    it("records one status_changed action per real transition", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Order 1500 pens",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({
+          requestId,
+          status: "completed",
+          allowFromNeedsInput: true,
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({ from: "active", to: "needs_input" }),
+          expect.objectContaining({ from: "needs_input", to: "completed" }),
+        ])
+      })
+    })
+
+    it("does not record a duplicate action on a defensive re-entry to the same status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Approve this purchase",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({ requestId, status: "needs_input" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toHaveLength(1)
+      })
+    })
+
+    it("does not record an action when a transition is blocked by a terminal status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({
+          requestId,
+          status: "failed",
+          error: "Tool calls incomplete",
+        })
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({ from: "active", to: "failed" }),
+        ])
+      })
+    })
+
+    it("does not record an action when the needs_input guard blocks the transition", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Order 1500 pens",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({ from: "active", to: "needs_input" }),
+        ])
+      })
+    })
+  })
+
   describe("fetchRequestsSummary", () => {
     it("counts requests by status across the whole workspace", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
