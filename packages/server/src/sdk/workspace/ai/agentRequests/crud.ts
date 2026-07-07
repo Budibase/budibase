@@ -19,7 +19,6 @@ import {
   generateAgentRequestTitle,
   generateInteractionSummary,
 } from "./helpers"
-import { truncateTitle } from "../chatConversations"
 import {
   queryRequestsByAgent,
   queryRequestStatuses,
@@ -29,7 +28,6 @@ import {
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
-const INTERACTION_SUMMARY_FALLBACK_LENGTH = 60
 
 const nowIso = () => new Date().toISOString()
 
@@ -81,16 +79,14 @@ const buildThread = ({
   }
 }
 
-// Fallback summary (truncated prompt) used when LLM summarisation fails or hasn't run yet.
 const buildFallbackUserMessageAction = (
-  sessionId: string,
-  latestPrompt: string
+  sessionId: string
 ): UserMessageAction => ({
   id: utils.newid(),
   timestamp: nowIso(),
   sessionId,
   type: "user_message",
-  summary: truncateTitle(latestPrompt, INTERACTION_SUMMARY_FALLBACK_LENGTH),
+  summary: "User sent a message",
 })
 
 async function buildUserMessageActionForTurn({
@@ -121,7 +117,7 @@ async function buildUserMessageActionForTurn({
       sessionId,
       error,
     })
-    return buildFallbackUserMessageAction(sessionId, latestPrompt)
+    return buildFallbackUserMessageAction(sessionId)
   }
 }
 
@@ -271,7 +267,7 @@ async function createNewRequest({
     return undefined
   }
 
-  const fallbackAction = buildFallbackUserMessageAction(sessionId, latestPrompt)
+  const fallbackAction = buildFallbackUserMessageAction(sessionId)
 
   const createdRequest = await saveRequest(
     buildThread({

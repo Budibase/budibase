@@ -15,7 +15,6 @@ import {
   generateAgentRequestTitle,
   generateInteractionSummary,
 } from "./helpers"
-import { truncateTitle } from "../chatConversations"
 
 jest.mock("./helpers", () => ({
   analyzeAgentRequestLink: jest.fn(),
@@ -987,17 +986,17 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("falls back to a truncated prompt when summary generation fails", async () => {
+    it("falls back to a generic placeholder when summary generation fails, never the raw prompt", async () => {
       analyzeAgentRequestLinkMock.mockResolvedValue({ decision: "new_thread" })
       generateInteractionSummaryMock.mockRejectedValue(new Error("LLM error"))
-      const longPrompt =
-        "I have been trying for the last hour to connect to the office VPN from my home network and it keeps timing out"
+      const sensitivePrompt =
+        "My SSN is 123-45-6789, please update my HR record with it"
 
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const created = await createOrUpdateRequestForPrompt({
           agentId: "agent_1",
           sessionId: "session_1",
-          latestUserPrompt: longPrompt,
+          latestUserPrompt: sensitivePrompt,
           operation: { name: "Support", prompt: "Help with IT issues." },
           source: "Chat",
           userId: "user_1",
@@ -1006,7 +1005,12 @@ describe("agentRequests crud", () => {
         expect(created?.request.actions?.[0]).toEqual(
           expect.objectContaining({
             type: "user_message",
-            summary: truncateTitle(longPrompt, 60),
+            summary: "User sent a message",
+          })
+        )
+        expect(created?.request.actions?.[0]).not.toEqual(
+          expect.objectContaining({
+            summary: expect.stringContaining("123-45-6789"),
           })
         )
       })
