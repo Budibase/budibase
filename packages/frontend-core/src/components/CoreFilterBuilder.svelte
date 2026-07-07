@@ -1,5 +1,6 @@
 <script>
   import {
+    AbsTooltip,
     Body,
     Button,
     Icon,
@@ -44,6 +45,7 @@
   export let drawerTitle = null
   export let bindingValueType = Constants.FilterValueType.BINDING
   export let useConditionValueControls = false
+  export let flagInvalidFields = false
 
   export let bindings
   export let panel
@@ -102,6 +104,41 @@
       label: field.displayName || field.name,
       value: field.name,
     }))
+
+  const INVALID_FIELD_TOOLTIP =
+    "This field may have been deleted or renamed and will be ignored. Delete or update as required"
+
+  const isInvalidField = (filter, options) => {
+    return (
+      flagInvalidFields &&
+      !!filter.field &&
+      !options.some(option => option.value === filter.field)
+    )
+  }
+
+  // A saved filter can reference a column that no longer exists. When enabled,
+  // keep the referenced field visible as a flagged option rather than an
+  // unset column select, so it can be seen and resolved.
+  const getFieldOptions = (filter, options) => {
+    if (isInvalidField(filter, options)) {
+      return [
+        {
+          label: filter.field,
+          value: filter.field,
+          icon: {
+            component: Icon,
+            props: {
+              name: "warning",
+              size: "M",
+              color: "var(--spectrum-global-color-yellow-600)",
+            },
+          },
+        },
+        ...options,
+      ]
+    }
+    return options
+  }
 
   const onFieldChange = filter => {
     const previousType = filter.type
@@ -376,17 +413,23 @@
                         {sanitizeValue}
                       />
                     {:else}
-                      <Select
-                        value={filter.field}
-                        options={fieldOptions}
-                        on:change={e => {
-                          const updated = { ...filter, field: e.detail }
-                          onFieldChange(updated)
-                          onFilterFieldUpdate(updated, groupIdx, filterIdx)
-                        }}
-                        placeholder="Column"
-                        popoverAutoWidth
-                      />
+                      <AbsTooltip
+                        text={isInvalidField(filter, fieldOptions)
+                          ? INVALID_FIELD_TOOLTIP
+                          : ""}
+                      >
+                        <Select
+                          value={filter.field}
+                          options={getFieldOptions(filter, fieldOptions)}
+                          on:change={e => {
+                            const updated = { ...filter, field: e.detail }
+                            onFieldChange(updated)
+                            onFilterFieldUpdate(updated, groupIdx, filterIdx)
+                          }}
+                          placeholder="Column"
+                          popoverAutoWidth
+                        />
+                      </AbsTooltip>
                     {/if}
                     <Select
                       value={filter.operator || OperatorOptions.Equals.value}
