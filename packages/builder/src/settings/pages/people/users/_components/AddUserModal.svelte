@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     keepOpen,
     Label,
@@ -25,8 +25,42 @@
   import { OnboardingType } from "@/constants"
   import { helpers } from "@budibase/shared-core"
   import { onDestroy } from "svelte"
+  import type { UserInfo } from "@/types"
+  import type { UserData as AddUsersData } from "../workspaceInviteUtils"
+  import type { StrippedUser, UserGroup } from "@budibase/types"
 
-  export let showOnboardingTypeModal
+  interface UserInput {
+    email: string | null
+    role: string | null
+    password: string
+    forceResetPassword: true
+    error: string | undefined
+  }
+
+  interface EndUserRoleOption {
+    label: string
+    value: string
+    color?: string
+  }
+
+  interface OnboardingOption {
+    label: string
+    subtitle?: string
+    value: string
+    disabled: boolean
+  }
+
+  type EmailPickerKeydownEvent = CustomEvent<KeyboardEvent>
+
+  type SuggestedUser = StrippedUser & {
+    firstName?: string
+    lastName?: string
+  }
+
+  export let showOnboardingTypeModal: (
+    addUsersData: AddUsersData,
+    onboardingType?: string
+  ) => unknown
   export let workspaceOnly = false
   export let useWorkspaceInviteModal = workspaceOnly
   export let assignToWorkspace = workspaceOnly
@@ -34,19 +68,27 @@
   export let showGroupSelect = !useWorkspaceInviteModal
   export let showInviteIcon = true
 
+  const createUserInput = (inputPassword: string): UserInput => ({
+    email: "",
+    role: Constants.BudibaseRoles.AppUser,
+    password: inputPassword,
+    forceResetPassword: true,
+    error: undefined,
+  })
+
   const password = generatePassword(12)
-  let userGroups = []
-  let emailsInput = []
-  let parsedEmails = []
+  let userGroups: string[] = []
+  let emailsInput: string[] = []
+  let parsedEmails: string[] = []
   let pendingEmailInput = ""
-  let emailError = null
-  let suggestedUsers = []
+  let emailError: string | undefined
+  let suggestedUsers: SuggestedUser[] = []
   let isSearchingUsers = false
-  let userSearchTimeout
+  let userSearchTimeout: ReturnType<typeof setTimeout> | undefined
   let userSearchId = 0
   let highlightedUserIndex = -1
   const maxItems = 15
-  let selectedRole = Constants.BudibaseRoles.Creator
+  let selectedRole = Constants.BudibaseRoles.AppUser
   const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
   const excludedRoleIds = [
     ...builtInEndUserRoles,
@@ -54,20 +96,23 @@
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]
-  let roleColorLookup = {}
-  $: roleColorLookup = ($roles || []).reduce((acc, role) => {
+  let roleColorLookup: Record<string, string | undefined> = {}
+  $: roleColorLookup = ($roles || []).reduce<
+    Record<string, string | undefined>
+  >((acc, role) => {
     acc[role._id] = role.uiMetadata?.color
     return acc
   }, {})
   $: customEndUserRoleOptions = ($roles || [])
     .filter(role => !excludedRoleIds.includes(role._id))
-    .map(role => ({
+    .map<EndUserRoleOption>(role => ({
       label: role.uiMetadata?.displayName || role.name || "Custom role",
       value: role._id,
       color:
         role.uiMetadata?.color ||
         "var(--spectrum-global-color-static-magenta-400)",
     }))
+  let endUserRoleOptions: EndUserRoleOption[] = []
   $: endUserRoleOptions = [
     {
       label: "Basic user",
@@ -82,17 +127,10 @@
     ...customEndUserRoleOptions,
   ]
   let endUserRole = Constants.Roles.BASIC
-  let onboardingType = OnboardingType.EMAIL
+  let onboardingType: string | null = OnboardingType.EMAIL
 
-  $: userData = [
-    {
-      email: "",
-      role: "appUser",
-      password,
-      forceResetPassword: true,
-    },
-  ]
-  $: hasError = userData.find(x => x.error != null)
+  let userData: UserInput[] = [createUserInput(password)]
+  $: hasError = userData.some(x => x.error != null)
   $: {
     if (!useWorkspaceInviteModal) {
       parsedEmails = []
@@ -105,14 +143,15 @@
     }
   }
   $: userCount =
-    $licensing.userCount +
+    ($licensing.userCount || 0) +
     (useWorkspaceInviteModal ? parsedEmails.length : userData.length)
   $: reached = licensing.usersLimitReached(userCount)
   $: exceeded = licensing.usersLimitExceeded(userCount)
   $: smtpConfigured =
     $admin.loaded && ($admin.cloud || !!$admin.checklist?.smtp?.checked)
   $: emailInviteDisabled = $admin.loaded ? !smtpConfigured : false
-  $: passwordInviteDisabled = $organisation.isSSOEnforced
+  $: passwordInviteDisabled = !!$organisation.isSSOEnforced
+  let onboardingOptions: OnboardingOption[] = []
   $: onboardingOptions = [
     {
       label: "Send email invites",
@@ -136,25 +175,17 @@
     onboardingType = OnboardingType.EMAIL
   }
 
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+  let internalGroups: UserGroup[] = []
+  $: internalGroups = ($groups || []).filter(g => !g?.scimInfo?.isSync)
 
-  function removeInput(idx) {
-    userData = userData.filter((e, i) => i !== idx)
+  function removeInput(idx: number) {
+    userData = userData.filter((_input, i) => i !== idx)
   }
   function addNewInput() {
-    userData = [
-      ...userData,
-      {
-        email: "",
-        role: "appUser",
-        password: generatePassword(12),
-        forceResetPassword: true,
-        error: null,
-      },
-    ]
+    userData = [...userData, createUserInput(generatePassword(12))]
   }
 
-  function validateInput(input, index) {
+  function validateInput(input: UserInput, index: number) {
     if (input.email) {
       input.email = input.email.trim()
     }
@@ -162,7 +193,7 @@
     if (email) {
       const res = emailValidator(email)
       if (res === true) {
-        userData[index].error = null
+        userData[index].error = undefined
       } else {
         userData[index].error = res
       }
@@ -172,9 +203,9 @@
     return userData[index].error == null
   }
 
-  function validateWorkspaceEmails(emails = emailsInput) {
+  function validateWorkspaceEmails(emails: string[] = emailsInput) {
     if (!emails.length) {
-      emailError = null
+      emailError = undefined
       return false
     }
 
@@ -193,7 +224,7 @@
       return false
     }
 
-    emailError = null
+    emailError = undefined
     return true
   }
 
@@ -201,7 +232,7 @@
     validateWorkspaceEmails()
   }
 
-  const searchExistingUsers = async search => {
+  const searchExistingUsers = async (search: string) => {
     const nextSearchId = ++userSearchId
     const trimmedSearch = search.trim()
     if (!trimmedSearch) {
@@ -218,7 +249,9 @@
       if (nextSearchId !== userSearchId) {
         return
       }
-      suggestedUsers = (response.data || []).filter(user => user.email)
+      suggestedUsers = (response.data || []).filter(
+        (user): user is SuggestedUser => !!user.email
+      )
       highlightedUserIndex = suggestedUsers.findIndex(
         user => !isSuggestedUserSelected(user)
       )
@@ -254,7 +287,7 @@
     )
   }
 
-  const selectSuggestedUser = user => {
+  const selectSuggestedUser = (user: SuggestedUser) => {
     if (!user?.email || isSuggestedUserSelected(user)) {
       return
     }
@@ -266,7 +299,7 @@
     validateWorkspaceEmails(nextEmails)
   }
 
-  const updateHighlightedUser = direction => {
+  const updateHighlightedUser = (direction: 1 | -1) => {
     if (!suggestedUsers.length) {
       return
     }
@@ -283,12 +316,12 @@
     highlightedUserIndex = -1
   }
 
-  const isSuggestedUserSelected = user => {
+  const isSuggestedUserSelected = (user: SuggestedUser) => {
     const userEmail = user?.email?.trim().toLowerCase()
     return emailsInput.some(email => email.trim().toLowerCase() === userEmail)
   }
 
-  const handleEmailPickerKeydown = event => {
+  const handleEmailPickerKeydown = (event: EmailPickerKeydownEvent) => {
     if (!suggestedUsers.length) {
       return
     }
@@ -312,7 +345,7 @@
     clearTimeout(userSearchTimeout)
   })
 
-  function buildWorkspaceUsers() {
+  function buildWorkspaceUsers(): UserInfo[] {
     return emailsInput.map(email => ({
       email,
       role: selectedRole,
@@ -325,7 +358,16 @@
     }))
   }
 
-  function generatePassword(length) {
+  function buildUserInputs(): UserInfo[] {
+    return userData.map(input => ({
+      email: input.email || "",
+      role: input.role || Constants.BudibaseRoles.AppUser,
+      password: input.password,
+      forceResetPassword: input.forceResetPassword,
+    }))
+  }
+
+  function generatePassword(length: number) {
     const array = new Uint8Array(length)
     window.crypto.getRandomValues(array)
     return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
@@ -358,7 +400,7 @@
       return keepOpen
     }
     showOnboardingTypeModal({
-      users: userData,
+      users: buildUserInputs(),
       groups: userGroups,
       assignToWorkspace,
     })
@@ -474,7 +516,7 @@
             label="Add to groups (optional)"
             options={internalGroups}
             getOptionLabel={option => option.name}
-            getOptionValue={option => option._id}
+            getOptionValue={option => option._id || ""}
           />
         {/if}
 
@@ -494,7 +536,8 @@
           <div class="user-notification">
             <Icon name="info" />
             <span>
-              {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
+              {capitalise($licensing.license?.plan.type || "")} plan is limited to
+              {$licensing.userLimit}
               users. Upgrade your plan to add more users</span
             >
           </div>
@@ -535,7 +578,8 @@
         <div class="user-notification">
           <Icon name="info" />
           <span>
-            {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
+            {capitalise($licensing.license?.plan.type || "")} plan is limited to
+            {$licensing.userLimit}
             users. Upgrade your plan to add more users</span
           >
         </div>
@@ -556,7 +600,7 @@
       label="Groups"
       options={internalGroups}
       getOptionLabel={option => option.name}
-      getOptionValue={option => option._id}
+      getOptionValue={option => option._id || ""}
     />
   {/if}
 </ModalContent>
