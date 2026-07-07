@@ -81,11 +81,18 @@ const buildThread = ({
   }
 }
 
-// Every user turn in the context of a request is tracked as a user_message
-// action, summarised into a short UI-facing title. The summary generation
-// falls back to a truncated prompt rather than skipping the action entirely,
-// so the timeline always has something to show for that turn even if the LLM
-// call fails.
+// Fallback summary (truncated prompt) used when LLM summarisation fails or hasn't run yet.
+const buildFallbackUserMessageAction = (
+  sessionId: string,
+  latestPrompt: string
+): UserMessageAction => ({
+  id: utils.newid(),
+  timestamp: nowIso(),
+  sessionId,
+  type: "user_message",
+  summary: truncateTitle(latestPrompt, INTERACTION_SUMMARY_FALLBACK_LENGTH),
+})
+
 async function buildUserMessageActionForTurn({
   agentId,
   sessionId,
@@ -95,6 +102,43 @@ async function buildUserMessageActionForTurn({
   sessionId: string
   latestPrompt: string
 }): Promise<UserMessageAction> {
+  try {
+    const summary = await generateInteractionSummary({
+      latestPrompt,
+      agentId,
+      sessionId,
+    })
+    return {
+      id: utils.newid(),
+      timestamp: nowIso(),
+      sessionId,
+      type: "user_message",
+      summary,
+    }
+  } catch (error) {
+    console.error("Failed to generate agent request interaction summary", {
+      agentId,
+      sessionId,
+      error,
+    })
+    return buildFallbackUserMessageAction(sessionId, latestPrompt)
+  }
+}
+
+// Upgrades the fallback summary in place once the LLM responds, without blocking the first save.
+async function refineUserMessageActionSummary({
+  request,
+  actionId,
+  agentId,
+  sessionId,
+  latestPrompt,
+}: {
+  request: AgentRequest
+  actionId: string
+  agentId: string
+  sessionId: string
+  latestPrompt: string
+}): Promise<AgentRequest> {
   let summary: string
   try {
     summary = await generateInteractionSummary({
@@ -108,16 +152,24 @@ async function buildUserMessageActionForTurn({
       sessionId,
       error,
     })
-    summary = truncateTitle(latestPrompt, INTERACTION_SUMMARY_FALLBACK_LENGTH)
+    return request
   }
 
-  return {
-    id: utils.newid(),
-    timestamp: nowIso(),
-    sessionId,
-    type: "user_message",
-    summary,
+  const latest = await context
+    .getWorkspaceDB()
+    .tryGet<AgentRequest>(request._id!)
+  if (!latest) {
+    return request
   }
+
+  return await saveRequest({
+    ...latest,
+    actions: (latest.actions ?? []).map(action =>
+      action.id === actionId && action.type === "user_message"
+        ? { ...action, summary }
+        : action
+    ),
+  })
 }
 
 const isTerminalStatus = (status: AgentRequest["status"]) =>
@@ -210,11 +262,7 @@ async function createNewRequest({
     return undefined
   }
 
-  const userMessageAction = await buildUserMessageActionForTurn({
-    agentId,
-    sessionId,
-    latestPrompt,
-  })
+  const fallbackAction = buildFallbackUserMessageAction(sessionId, latestPrompt)
 
   const createdRequest = await saveRequest(
     buildThread({
@@ -225,12 +273,20 @@ async function createNewRequest({
         operation,
         source,
       }),
-      actions: [userMessageAction],
+      actions: [fallbackAction],
     })
   )
 
-  return await generateAndSaveRequestTitleIfMissing({
+  const withSummary = await refineUserMessageActionSummary({
     request: createdRequest,
+    actionId: fallbackAction.id,
+    agentId,
+    sessionId,
+    latestPrompt,
+  })
+
+  return await generateAndSaveRequestTitleIfMissing({
+    request: withSummary,
     agentId,
     sessionId,
     latestPrompt,
@@ -386,11 +442,7 @@ export async function updateRequestStatus({
 }): Promise<void> {
   const db = context.getWorkspaceDB()
 
-  // The user_message tracking job (createOrUpdateRequestForPrompt) writes to
-  // the same document concurrently. On a write conflict, re-read the latest
-  // revision and reapply the status transition instead of losing it - a
-  // caller-side .catch() around this function would otherwise swallow the
-  // conflict and leave the request stuck at its previous status.
+  // Retries on conflict since createOrUpdateRequestForPrompt writes to the same document concurrently.
   for (let attempt = 0; attempt < 3; attempt++) {
     const request = await db.tryGet<AgentRequest>(requestId)
     if (!request) {
@@ -502,11 +554,7 @@ export async function createOrUpdateRequestForPrompt({
         latestPrompt: prompt,
       })
 
-      // Generating the title/summary can take a while, and the live turn
-      // driving this same request can finish (and change its status) while
-      // we wait. Re-read right before writing instead of saving on top of
-      // the snapshot read at the start of this function, so we don't
-      // silently overwrite a status change with stale data.
+      // Re-read before writing - the status may have changed while we awaited the LLM calls above.
       const latest = await context
         .getWorkspaceDB()
         .tryGet<AgentRequest>(existingRequestId)
@@ -612,8 +660,7 @@ export async function createOrUpdateRequestForPrompt({
     latestPrompt: prompt,
   })
 
-  // LLM calls above can take a while, so re-read immediately before writing
-  // instead of saving on top of the snapshot fetched earlier in this function.
+  // Re-read before writing - the status may have changed while we awaited the LLM calls above.
   const latestRequest = await context
     .getWorkspaceDB()
     .tryGet<AgentRequest>(request._id!)
