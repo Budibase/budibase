@@ -147,7 +147,11 @@ const providerDisplayName = (provider: ChatIdentityLinkProvider) => {
   if (provider === AgentChannelProvider.TELEGRAM) {
     return "Telegram"
   }
-  return "Slack"
+  if (provider === AgentChannelProvider.SLACK) {
+    return "Slack"
+  }
+
+  throw provider satisfies never
 }
 
 const renderLinkConfirmationPage = (
