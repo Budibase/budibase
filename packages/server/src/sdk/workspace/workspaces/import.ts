@@ -15,6 +15,10 @@ import {
 import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
+import {
+  USER_METDATA_PREFIX,
+  LINK_USER_METADATA_PREFIX,
+} from "../../../db/utils"
 
 export type FileAttributes = {
   type: string
@@ -86,10 +90,17 @@ async function removeImportableDocuments(db: Database) {
   let documentRefs: { _id: string; _rev: string }[] = []
   for (let response of await Promise.all(docPromises)) {
     documentRefs = documentRefs.concat(
-      response.rows.map(row => ({
-        _id: row.id,
-        _rev: (row.value as RowValue).rev,
-      }))
+      response.rows
+        // never delete/replace user-metadata rows or their relationship links
+        .filter(
+          row =>
+            !row.id.startsWith(USER_METDATA_PREFIX) &&
+            !row.id.startsWith(LINK_USER_METADATA_PREFIX)
+        )
+        .map(row => ({
+          _id: row.id,
+          _rev: (row.value as RowValue).rev,
+        }))
     )
   }
 
@@ -125,7 +136,16 @@ async function getImportableDocuments(db: Database) {
   // map the responses to the document itself
   let documents: Document[] = []
   for (let response of await Promise.all(docPromises)) {
-    documents = documents.concat(response.rows.map(row => row.doc!))
+    documents = documents.concat(
+      response.rows
+        // never import user-metadata rows or their relationship links
+        .filter(
+          row =>
+            !row.id.startsWith(USER_METDATA_PREFIX) &&
+            !row.id.startsWith(LINK_USER_METADATA_PREFIX)
+        )
+        .map(row => row.doc!)
+    )
   }
 
   const designDocs = await db.getMultiple(DESIGN_DOCUMENTS_TO_IMPORT, {
@@ -169,9 +189,40 @@ export async function updateWithExport(
     const toUpdate = await getImportableDocuments(tempDb)
     // clear out the old documents
     const toDelete = await removeImportableDocuments(workspaceDb)
+
+    // get existing tables to ensure we only import rows for newly created tables
+    const existingTablesRes = await workspaceDb.allDocs(
+      dbCore.getDocParams(DocumentType.TABLE)
+    )
+    const existingTableIds = new Set(existingTablesRes.rows.map(row => row.id))
+
+    const getTableIdFromRowId = (rowId: string) => {
+      // rowId format: ro_<tableId>_<uuid> where tableId is like ta_123
+      const parts = rowId.split("_")
+      if (parts.length >= 3) {
+        return `${parts[1]}_${parts[2]}`
+      }
+      return null
+    }
+
+    const isRowOfExistingTable = (docId?: string) => {
+      if (!docId || !docId.startsWith("ro_")) {
+        return false
+      }
+      const tableId = getTableIdFromRowId(docId)
+      return tableId ? existingTableIds.has(tableId) : false
+    }
+
+    const filteredUpdate = toUpdate.filter(
+      doc => !isRowOfExistingTable(doc._id)
+    )
+    const filteredDelete = toDelete.filter(
+      doc => !isRowOfExistingTable(doc._id)
+    )
+
     // now bulk update documents - add new ones, delete old ones and update common ones
     const updateDocsResult = await workspaceDb.bulkDocs(
-      mergeUpdateAndDeleteDocuments(toUpdate, toDelete, newMetadata)
+      mergeUpdateAndDeleteDocuments(filteredUpdate, filteredDelete, newMetadata)
     )
     if (updateDocsResult.some(r => r.error)) {
       throw new HTTPError("Error importing documents", 500)
