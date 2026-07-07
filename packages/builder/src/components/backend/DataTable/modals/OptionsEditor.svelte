@@ -3,7 +3,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { Icon, Input, Popover } from "@budibase/bbui"
   import { tick } from "svelte"
-  import { Constants } from "@budibase/frontend-core"
+  import { Constants, hexToHsla } from "@budibase/frontend-core"
   import { getSequentialName } from "@/helpers/duplicate"
   import { derived, writable } from "svelte/store"
   import { appStore } from "@/stores/builder"
@@ -17,6 +17,10 @@
   const { OptionColours } = Constants
   const getDefaultColor = (idx: number) =>
     OptionColours[idx % OptionColours.length]
+
+  const resolveDisplayedColor = (color: string) => {
+    return color?.startsWith("#") ? hexToHsla(color) : color
+  }
 
   const MAX_SAVED_COLORS = 8
 
@@ -176,7 +180,10 @@
           data-ignore-click-outside="true"
           on:click={() => openColorPicker(option.id)}
         >
-          <div class="circle" style="--color:{option.color}">
+          <div
+            class="circle"
+            style="--color:{resolveDisplayedColor(option.color)}"
+          >
             <Popover
               open={openOption === option.id}
               {anchor}
@@ -191,7 +198,7 @@
                   {#each OptionColours as colorOption}
                     <div
                       on:click={() => handleColorChange(option.id, colorOption)}
-                      style="--color:{colorOption};"
+                      style="--color:{resolveDisplayedColor(colorOption)};"
                       class="circle"
                       class:selected={colorOption === option.color}
                     ></div>
@@ -205,7 +212,7 @@
                         <div class="saved-circle-wrapper">
                           <div
                             on:click={() => handleColorChange(option.id, saved)}
-                            style="--color:{saved};"
+                            style="--color:{resolveDisplayedColor(saved)};"
                             class="circle"
                             class:selected={saved === option.color}
                           ></div>
@@ -224,18 +231,24 @@
                 <div class="custom-color">
                   <div class="custom-color-label">Custom</div>
                   <div class="custom-color-input">
-                    <input
-                      type="color"
-                      class="native-color-input"
-                      value={isCustomColor(option.color)
-                        ? option.color
-                        : "#000000"}
-                      on:input={e =>
-                        handleCustomColorInput(
-                          option.id,
-                          (e.target as HTMLInputElement).value
-                        )}
-                    />
+                    <div class="native-color-input">
+                      <div
+                        class="native-color-preview"
+                        style="--color:{resolveDisplayedColor(option.color)}"
+                      ></div>
+                      <input
+                        type="color"
+                        class="native-color-input-control"
+                        value={isCustomColor(option.color)
+                          ? option.color
+                          : "#000000"}
+                        on:input={e =>
+                          handleCustomColorInput(
+                            option.id,
+                            (e.target as HTMLInputElement).value
+                          )}
+                      />
+                    </div>
                     <Input
                       updateOnChange={false}
                       quiet
@@ -380,14 +393,32 @@
     gap: var(--spacing-s);
   }
   .native-color-input {
+    position: relative;
     width: 28px;
     height: 28px;
+    flex-shrink: 0;
+  }
+  .native-color-preview {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-color: var(--color);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    box-sizing: border-box;
+  }
+  .native-color-input-control {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     border: none;
     border-radius: 50%;
     padding: 0;
     cursor: pointer;
     background: none;
-    flex-shrink: 0;
+    opacity: 0;
+    appearance: none;
+    -webkit-appearance: none;
   }
   .save-color-btn {
     display: grid;
@@ -434,14 +465,6 @@
   }
   .saved-circle-wrapper:hover .remove-saved {
     display: block;
-  }
-  .native-color-input::-webkit-color-swatch-wrapper {
-    padding: 0;
-    border-radius: 50%;
-  }
-  .native-color-input::-webkit-color-swatch {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 50%;
   }
   .option-name {
     border: none;
