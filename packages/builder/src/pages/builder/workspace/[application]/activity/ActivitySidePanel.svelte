@@ -103,6 +103,7 @@
       {
         id: "request-created",
         label: "Request created",
+        timestamp: dayjs(request.createdAt).format("MMM D, YYYY h:mm A"),
       },
     ]
   })
@@ -184,7 +185,12 @@
               {#if timelineEvents.length > 0}
                 {#each timelineEvents as event}
                   <div class="timeline-row">
-                    {event.label}
+                    <span class="timeline-text"
+                      ><span class="timeline-timestamp"
+                        >{event.timestamp} - </span
+                      >
+                      {event.label}</span
+                    >
                   </div>
                 {/each}
               {:else}
@@ -303,18 +309,31 @@
   .timeline-table {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
 
   .timeline-row {
-    min-height: 32px;
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: 1px solid var(--spectrum-alias-border-color);
-    background: var(--background);
     display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 11px;
+    align-self: stretch;
+    padding: 8px 16px;
+    gap: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-100);
+  }
+
+  .timeline-text {
+    color: var(--spectrum-alias-text-color);
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .timeline-timestamp {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 13px;
+    line-height: 1.35;
   }
 
   .timeline-row.empty {
