@@ -129,7 +129,6 @@
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
 
-  let searchOpen = false
   let highlightedRowId: string | null = null
 
   let hasMounted = false
@@ -147,9 +146,6 @@
       }
     : null
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
-  $: if (searchTerm.trim()) {
-    searchOpen = true
-  }
 
   let getFavourite: (
     _resourceType: WorkspaceResource,
@@ -890,13 +886,6 @@
     selectedProjectId = ""
   }
 
-  const toggleSearch = () => {
-    searchOpen = !searchOpen
-    if (!searchOpen) {
-      searchTerm = ""
-    }
-  }
-
   const openUpgradePage = () => {
     licensing.goToUpgradePage()
   }
@@ -1115,42 +1104,14 @@
               onTypeChange={setTypeFilter}
             />
             <div class="panel-toolbar__right">
-              <div
-                class="search-control"
-                class:search-control--open={searchOpen}
-              >
-                {#if searchOpen}
-                  <div class="search-wrapper">
-                    <Icon name="magnifying-glass" size="S" />
-                    <input
-                      class="search-input"
-                      type="text"
-                      placeholder="Search"
-                      bind:value={searchTerm}
-                    />
-                    <button
-                      type="button"
-                      class="search-close"
-                      aria-label="Close search"
-                      on:click={toggleSearch}
-                    >
-                      <Icon name="x" size="S" />
-                    </button>
-                  </div>
-                {:else}
-                  <button
-                    type="button"
-                    class="search-toggle"
-                    aria-label="Search"
-                    on:click={toggleSearch}
-                  >
-                    <Icon
-                      name="magnifying-glass"
-                      size="S"
-                      color="var(--spectrum-global-color-gray-600)"
-                    />
-                  </button>
-                {/if}
+              <div class="search-wrapper">
+                <Icon name="magnifying-glass" size="S" />
+                <input
+                  class="search-input"
+                  type="text"
+                  placeholder="Search"
+                  bind:value={searchTerm}
+                />
               </div>
               <HomeCreateMenu
                 variant="pill"
@@ -1428,42 +1389,6 @@
     flex-shrink: 0;
   }
 
-  .search-control {
-    display: flex;
-    align-items: center;
-  }
-
-  .search-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    padding: 4px;
-    cursor: pointer;
-    border-radius: var(--border-radius-s);
-  }
-
-  .search-toggle:hover {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
-  .search-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    padding: 2px;
-    cursor: pointer;
-    border-radius: var(--border-radius-s);
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .search-close:hover {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
   .panel-toolbar .search-wrapper {
     display: flex;
     align-items: center;
@@ -1489,13 +1414,6 @@
 
   .panel-toolbar .search-input::placeholder {
     color: var(--spectrum-global-color-gray-600);
-  }
-
-  @media (min-width: 1080px) {
-    .search-control--open .search-wrapper,
-    .search-control .search-wrapper {
-      display: flex;
-    }
   }
 
   .automation-errors {
