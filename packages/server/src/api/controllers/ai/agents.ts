@@ -11,6 +11,8 @@ import {
 } from "@budibase/backend-core"
 import {
   Agent,
+  CreateAgentMSTeamsAppRequest,
+  CreateAgentMSTeamsAppResponse,
   CreateAgentSlackAppRequest,
   CreateAgentSlackAppResponse,
   CreateAgentRequest,
@@ -331,6 +333,31 @@ const configureSlackAppCreationDeployment = async ({
   }
 }
 
+const configureMSTeamsAppCreationDeployment = async ({
+  agent,
+  agentId,
+}: {
+  agent: Agent
+  agentId: string
+}) => {
+  const chatApp = await sdk.ai.deployments.MSTeams.resolveChatAppForAgent(
+    agentId,
+    agent.MSTeamsIntegration?.chatAppId
+  )
+  const chatAppId = chatApp._id
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const messagingEndpointUrl =
+    await sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl(chatAppId, agentId)
+
+  return {
+    chatAppId,
+    messagingEndpointUrl,
+  }
+}
+
 const toSafeFilenameSegment = (value: string) => {
   const safe = value
     .trim()
@@ -509,6 +536,54 @@ export async function downloadAgentMSTeamsPackage(
   ctx.type = "zip"
   ctx.body = passThrough
   await archive.finalize()
+  ctx.status = 200
+}
+
+export async function createAgentMSTeamsApp(
+  ctx: UserCtx<
+    CreateAgentMSTeamsAppRequest,
+    CreateAgentMSTeamsAppResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const body = ctx.request.body || {}
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const config = await sdk.ai.msTeamsAppConfig.fetchConfig()
+  const { chatAppId, messagingEndpointUrl } =
+    await configureMSTeamsAppCreationDeployment({
+      agent,
+      agentId,
+    })
+  const created = await sdk.ai.deployments.MSTeams.createMSTeamsAppResources({
+    agent,
+    config,
+    messagingEndpointUrl,
+  })
+
+  await sdk.ai.agents.update({
+    ...agent,
+    MSTeamsIntegration: {
+      ...agent.MSTeamsIntegration,
+      appId: created.appId,
+      appPassword: created.appPassword,
+      tenantId: created.tenantId,
+      teamId: parseOptionalChatAppId(body.teamId),
+      idleTimeoutMinutes: body.idleTimeoutMinutes,
+      requireUserLink: body.requireUserLink,
+      chatAppId,
+      messagingEndpointUrl,
+    },
+  })
+
+  ctx.body = {
+    success: true,
+    chatAppId,
+    appId: created.appId,
+    tenantId: created.tenantId,
+    messagingEndpointUrl,
+    packageAvailable: true,
+  }
   ctx.status = 200
 }
 

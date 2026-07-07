@@ -29,6 +29,8 @@ import {
   UpdateAgentRequest,
   UpdateAgentResponse,
   CreateAgentOperationRequest,
+  CreateAgentMSTeamsAppRequest,
+  CreateAgentMSTeamsAppResponse,
   UpdateAgentOperationRequest,
   AgentOperationMutationResponse,
   CreateAgentSlackAppRequest,
@@ -68,6 +70,10 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ) => Promise<ProvisionAgentMSTeamsChannelResponse>
+  createAgentMSTeamsApp: (
+    agentId: string,
+    body?: CreateAgentMSTeamsAppRequest
+  ) => Promise<CreateAgentMSTeamsAppResponse>
   downloadAgentMSTeamsPackage: (agentId: string) => Promise<Blob>
   provisionAgentSlackChannel: (
     agentId: string,
@@ -240,6 +246,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     return await API.get<Blob>({
       url: `/api/agent/${agentId}/ms-teams/package`,
       parseResponse: async response => await response.blob(),
+    })
+  },
+
+  createAgentMSTeamsApp: async (agentId: string, body) => {
+    return await API.post<
+      CreateAgentMSTeamsAppRequest | undefined,
+      CreateAgentMSTeamsAppResponse
+    >({
+      url: `/api/agent/${agentId}/ms-teams/app/create`,
+      body,
     })
   },
 

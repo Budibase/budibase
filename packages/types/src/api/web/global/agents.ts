@@ -169,6 +169,20 @@ export interface CreateAgentSlackAppResponse
   messagingEndpointUrl: string
 }
 
+export interface CreateAgentMSTeamsAppRequest {
+  teamId?: string
+  idleTimeoutMinutes?: number
+  requireUserLink?: boolean
+}
+
+export interface CreateAgentMSTeamsAppResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  appId: string
+  tenantId: string
+  messagingEndpointUrl: string
+  packageAvailable: boolean
+}
+
 export interface SlackAppConfigResponse {
   configured: boolean
   updatedAt?: string
@@ -179,6 +193,20 @@ export interface SlackAppConfigResponse {
 export interface SaveSlackAppConfigRequest {
   configToken: string
   refreshToken: string
+}
+
+export interface MSTeamsAppConfigResponse {
+  configured: boolean
+  updatedAt?: string
+}
+
+export interface SaveMSTeamsAppConfigRequest {
+  azureTenantId: string
+  clientId: string
+  clientSecret: string
+  subscriptionId: string
+  resourceGroupName: string
+  location: string
 }
 
 export type ProvisionAgentTelegramChannelRequest =

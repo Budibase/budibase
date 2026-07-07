@@ -155,6 +155,18 @@ export function createAgentSlackAppValidator() {
   return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
+export function createAgentMSTeamsAppValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      teamId: OPTIONAL_STRING,
+      idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+      requireUserLink: Joi.boolean().optional(),
+    })
+      .optional()
+      .allow(null)
+  )
+}
+
 export function provisionAgentTelegramChannelValidator() {
   return chatAppIdBodyValidator()
 }

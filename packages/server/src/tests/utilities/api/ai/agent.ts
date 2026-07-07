@@ -6,6 +6,8 @@ import {
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  CreateAgentMSTeamsAppRequest,
+  CreateAgentMSTeamsAppResponse,
   CreateAgentSlackAppRequest,
   CreateAgentSlackAppResponse,
   FetchAgentKnowledgeIndexResponse,
@@ -174,6 +176,20 @@ export class AgentAPI extends TestAPI {
       expectations
     )
     return response.body as Buffer
+  }
+
+  createMSTeamsApp = async (
+    agentId: string,
+    body?: CreateAgentMSTeamsAppRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentMSTeamsAppResponse> => {
+    return await this._post<CreateAgentMSTeamsAppResponse>(
+      `/api/agent/${agentId}/ms-teams/app/create`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
   provisionSlackChannel = async (

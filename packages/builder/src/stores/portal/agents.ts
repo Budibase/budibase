@@ -6,6 +6,8 @@ import {
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
+  CreateAgentMSTeamsAppRequest,
+  CreateAgentMSTeamsAppResponse,
   CreateAgentRequest,
   CreateAgentSlackAppRequest,
   CreateAgentSlackAppResponse,
@@ -27,6 +29,8 @@ import {
   SyncAgentKnowledgeSourcesResponse,
   SaveSlackAppConfigRequest,
   SlackAppConfigResponse,
+  SaveMSTeamsAppConfigRequest,
+  MSTeamsAppConfigResponse,
   ToolMetadata,
   UpdateAgentSharePointSiteRequest,
   UpdateAgentSharePointSiteResponse,
@@ -375,6 +379,14 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.downloadAgentMSTeamsPackage(agentId)
     )
 
+  createMSTeamsApp = async (
+    agentId: string,
+    body?: CreateAgentMSTeamsAppRequest
+  ): Promise<CreateAgentMSTeamsAppResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.createAgentMSTeamsApp(agentId, body)
+    )
+
   provisionSlackChannel = async (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
@@ -403,6 +415,16 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   deleteSlackAppConfig = async (): Promise<SlackAppConfigResponse> =>
     await API.deleteSlackAppConfig()
+
+  fetchMSTeamsAppConfig = async (): Promise<MSTeamsAppConfigResponse> =>
+    await API.fetchMSTeamsAppConfig()
+
+  saveMSTeamsAppConfig = async (
+    body: SaveMSTeamsAppConfigRequest
+  ): Promise<MSTeamsAppConfigResponse> => await API.saveMSTeamsAppConfig(body)
+
+  deleteMSTeamsAppConfig = async (): Promise<MSTeamsAppConfigResponse> =>
+    await API.deleteMSTeamsAppConfig()
 
   provisionTelegramChannel = async (
     agentId: string,

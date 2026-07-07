@@ -154,6 +154,13 @@ export const orgRoutes = (
       component: Pages.get("slack_app_config"),
     },
     {
+      section: "Microsoft Teams",
+      access: () => isAdmin,
+      path: "ms-teams-app-config",
+      icon: "microsoft-teams-logo",
+      component: Pages.get("ms_teams_app_config"),
+    },
+    {
       section: "Email",
       path: "email",
       icon: "envelope",

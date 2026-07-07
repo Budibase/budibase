@@ -68,7 +68,7 @@ import os from "os"
 import path from "path"
 
 import extract from "extract-zip"
-import { context, docIds, roles } from "@budibase/backend-core"
+import { context, docIds, encryption, roles } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -86,6 +86,33 @@ const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
   jest.requireActual("chat") as ChatMockModule
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
+const SECRET_ENCODING_PREFIX = "bbai_enc::"
+
+const jsonResponse = (body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+const jsonErrorResponse = (body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    status: 400,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+const secretMatch = (plain: string, encoded: string) => {
+  if (!encoded.startsWith(SECRET_ENCODING_PREFIX)) {
+    throw new Error("Encoded Teams secret not properly configured.")
+  }
+  return encryption.compare(
+    plain,
+    encoded.substring(SECRET_ENCODING_PREFIX.length)
+  )
+}
 
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
@@ -117,6 +144,9 @@ describe("agent teams integration provisioning", () => {
   })
 
   afterEach(async () => {
+    if (jest.isMockFunction(global.fetch)) {
+      jest.mocked(global.fetch).mockRestore()
+    }
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
   })
@@ -214,9 +244,31 @@ describe("agent teams integration provisioning", () => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       const db = context.getWorkspaceDB()
       const stored = await db.get<Agent>(created._id!)
-      expect(stored.MSTeamsIntegration?.appPassword).toEqual(
-        "teams-app-password"
-      )
+      expect(
+        secretMatch(
+          "teams-app-password",
+          stored.MSTeamsIntegration!.appPassword!
+        )
+      ).toBeTrue()
+    })
+
+    await config.api.agent.update({
+      ...updated,
+      MSTeamsIntegration: {
+        ...updated.MSTeamsIntegration,
+        appPassword: undefined,
+      },
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const stored = await db.get<Agent>(created._id!)
+      expect(
+        secretMatch(
+          "teams-app-password",
+          stored.MSTeamsIntegration!.appPassword!
+        )
+      ).toBeTrue()
     })
   })
 
@@ -226,6 +278,166 @@ describe("agent teams integration provisioning", () => {
     })
 
     await config.api.agent.provisionMSTeamsChannel(agent._id!, undefined, {
+      status: 400,
+    })
+  })
+
+  it("creates a Teams app using tenant Microsoft provisioning settings", async () => {
+    const agent = await config.api.agent.create({
+      name: "Teams Created App",
+      description: "Created through Microsoft APIs.",
+    })
+    const calls: string[] = []
+    let servicePrincipalAttempts = 0
+    let addPasswordAttempts = 0
+    let botVerificationRequests = 0
+    let channelVerificationRequests = 0
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      const method = init?.method || "GET"
+      calls.push(`${method} ${String(url)}`)
+
+      if (String(url).includes("/oauth2/v2.0/token")) {
+        const body = init?.body as URLSearchParams
+        expect(body.get("client_id")).toEqual("provisioning-client-id")
+        expect(body.get("client_secret")).toEqual("provisioning-secret")
+        return jsonResponse({ access_token: `token-${calls.length}` })
+      }
+
+      if (String(url).endsWith("/applications")) {
+        const body = JSON.parse(String(init?.body))
+        expect(body.displayName).toEqual("Teams Created App")
+        return jsonResponse({ id: "graph-object-id", appId: "teams-app-id" })
+      }
+
+      if (String(url).endsWith("/servicePrincipals")) {
+        servicePrincipalAttempts += 1
+        if (servicePrincipalAttempts === 1) {
+          return jsonErrorResponse({
+            error: {
+              code: "Request_BadRequest",
+              message:
+                "The appId 'teams-app-id' of the service principal does not reference a valid application object.",
+              details: [{ code: "NoBackingApplicationObject" }],
+            },
+          })
+        }
+        const body = JSON.parse(String(init?.body))
+        expect(body.appId).toEqual("teams-app-id")
+        return jsonResponse({ id: "service-principal-id" })
+      }
+
+      if (String(url).endsWith("/applications/graph-object-id/addPassword")) {
+        addPasswordAttempts += 1
+        if (addPasswordAttempts === 1) {
+          return jsonErrorResponse({
+            error: {
+              code: "Request_ResourceNotFound",
+              message:
+                "Resource 'graph-object-id' does not exist or one of its queried reference-property objects are not present.",
+            },
+          })
+        }
+        return jsonResponse({ secretText: "generated-teams-secret" })
+      }
+
+      if (
+        String(url).includes("/botServices/") &&
+        String(url).includes("/channels/MsTeamsChannel")
+      ) {
+        expect(String(url)).toContain("/botServices/budibase-teams-app-id/")
+        if (method === "GET") {
+          channelVerificationRequests += 1
+          return jsonResponse({
+            properties: {
+              channelName: "MsTeamsChannel",
+              properties: {
+                isEnabled: true,
+              },
+            },
+          })
+        }
+
+        const body = JSON.parse(String(init?.body))
+        expect(body.kind).toEqual("azurebot")
+        expect(body.sku.name).toEqual("F0")
+        expect(body.properties.channelName).toEqual("MsTeamsChannel")
+        expect(body.properties.properties.acceptedTerms).toBe(true)
+        expect(body.properties.properties.isEnabled).toBe(true)
+        return jsonResponse({})
+      }
+
+      if (String(url).includes("/botServices/")) {
+        expect(String(url)).toContain("/botServices/budibase-teams-app-id")
+        if (method === "GET") {
+          botVerificationRequests += 1
+          return jsonResponse({
+            properties: {
+              msaAppId: "teams-app-id",
+            },
+          })
+        }
+
+        const body = JSON.parse(String(init?.body))
+        expect(body.properties.endpoint).toContain("/api/webhooks/ms-teams/")
+        expect(body.properties.msaAppId).toEqual("teams-app-id")
+        expect(body.properties.msaAppTenantId).toEqual("azure-tenant-id")
+        expect(body.properties.tenantId).toEqual("azure-tenant-id")
+        return jsonResponse({})
+      }
+
+      throw new Error(`Unexpected fetch ${String(url)}`)
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.msTeamsAppConfig.save({
+        azureTenantId: "azure-tenant-id",
+        clientId: "provisioning-client-id",
+        clientSecret: "provisioning-secret",
+        subscriptionId: "subscription-id",
+        resourceGroupName: "resource-group",
+        location: "global",
+      })
+    })
+
+    const result = await config.api.agent.createMSTeamsApp(agent._id!, {
+      teamId: "default-team-id",
+      idleTimeoutMinutes: 30,
+      requireUserLink: false,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.appId).toEqual("teams-app-id")
+    expect(result.tenantId).toEqual("azure-tenant-id")
+    expect(result.packageAvailable).toBe(true)
+    expect(result.messagingEndpointUrl).toContain("/api/webhooks/ms-teams/")
+    expect(servicePrincipalAttempts).toEqual(2)
+    expect(addPasswordAttempts).toEqual(2)
+    expect(botVerificationRequests).toEqual(1)
+    expect(channelVerificationRequests).toEqual(1)
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const stored = await db.get<Agent>(agent._id!)
+      expect(stored.MSTeamsIntegration?.appId).toEqual("teams-app-id")
+      expect(stored.MSTeamsIntegration?.tenantId).toEqual("azure-tenant-id")
+      expect(stored.MSTeamsIntegration?.teamId).toEqual("default-team-id")
+      expect(stored.MSTeamsIntegration?.idleTimeoutMinutes).toEqual(30)
+      expect(stored.MSTeamsIntegration?.requireUserLink).toBe(false)
+      expect(
+        secretMatch(
+          "generated-teams-secret",
+          stored.MSTeamsIntegration!.appPassword!
+        )
+      ).toBeTrue()
+    })
+  })
+
+  it("requires tenant Microsoft provisioning settings when creating a Teams app", async () => {
+    const agent = await config.api.agent.create({
+      name: "Teams Missing Provisioning Config",
+    })
+
+    await config.api.agent.createMSTeamsApp(agent._id!, undefined, {
       status: 400,
     })
   })

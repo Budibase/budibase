@@ -4,6 +4,7 @@ import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import { generateAgentInstructionsValidator } from "./utils/validators/agent"
 import {
   createAIConfigValidator,
+  saveMSTeamsAppConfigValidator,
   saveSlackAppConfigValidator,
   updateAIConfigValidator,
 } from "./utils/validators/aiConfig"
@@ -28,6 +29,13 @@ builderAdminRoutes
     ai.saveSlackAppConfig
   )
   .delete("/api/ai/slack/app-config", ai.deleteSlackAppConfig)
+  .get("/api/ai/ms-teams/app-config", ai.fetchMSTeamsAppConfig)
+  .put(
+    "/api/ai/ms-teams/app-config",
+    saveMSTeamsAppConfigValidator(),
+    ai.saveMSTeamsAppConfig
+  )
+  .delete("/api/ai/ms-teams/app-config", ai.deleteMSTeamsAppConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 

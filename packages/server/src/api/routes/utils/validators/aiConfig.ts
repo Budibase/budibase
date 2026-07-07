@@ -71,3 +71,16 @@ export function saveSlackAppConfigValidator() {
     }).required()
   )
 }
+
+export function saveMSTeamsAppConfigValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      azureTenantId: REQUIRED_STRING,
+      clientId: REQUIRED_STRING,
+      clientSecret: REQUIRED_STRING,
+      subscriptionId: REQUIRED_STRING,
+      resourceGroupName: REQUIRED_STRING,
+      location: REQUIRED_STRING,
+    }).required()
+  )
+}

@@ -8,6 +8,7 @@ import {
 } from "./endpointGroups"
 import {
   connectAgentSharePointSiteValidator,
+  createAgentMSTeamsAppValidator,
   createAgentSlackAppValidator,
   createAgentOperationValidator,
   createAgentValidator,
@@ -63,6 +64,11 @@ builderAdminRoutes
     ai.provisionAgentMSTeamsChannel
   )
   .get("/api/agent/:agentId/ms-teams/package", ai.downloadAgentMSTeamsPackage)
+  .post(
+    "/api/agent/:agentId/ms-teams/app/create",
+    createAgentMSTeamsAppValidator(),
+    ai.createAgentMSTeamsApp
+  )
   .post(
     "/api/agent/:agentId/ms-teams/toggle",
     toggleAgentMSTeamsDeploymentValidator(),
