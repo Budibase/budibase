@@ -1364,8 +1364,13 @@ if (descriptions.length) {
 
           // The view follows the table's healed display column, and the
           // dropped column is removed from its schema so it can be updated
+          ds = await config.api.datasource.get(datasource._id!)
+          table = Object.values(ds.entities!).find(
+            t => t.name === "view_display_test"
+          )!
           const updated = await config.api.viewV2.get(view.id)
-          expect(updated.primaryDisplay).toBeDefined()
+          expect(table.primaryDisplay).toBeDefined()
+          expect(updated.primaryDisplay).toEqual(table.primaryDisplay)
           expect(updated.primaryDisplay).not.toEqual("name")
           expect(Object.keys(updated.schema!)).not.toContain("name")
 

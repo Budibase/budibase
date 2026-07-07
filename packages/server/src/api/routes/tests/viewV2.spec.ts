@@ -1090,7 +1090,7 @@ if (descriptions.length) {
             // deleting the column the view uses as its display column leaves
             // the view's primaryDisplay referencing a missing column
             const saved = await config.api.table.get(displayTable._id!)
-            const { category, ...schema } = saved.schema
+            const { category: _deleted, ...schema } = saved.schema
             await config.api.table.save({ ...saved, schema }, { status: 200 })
 
             // reads fall back to the table's display column

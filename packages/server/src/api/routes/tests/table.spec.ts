@@ -415,7 +415,7 @@ if (descriptions.length) {
             })
           )
 
-          const { name, description, ...rest } = table.schema
+          const { name: _deleted, description, ...rest } = table.schema
           const updated = await config.api.table.save({
             ...table,
             schema: { description, ...rest },
@@ -442,7 +442,7 @@ if (descriptions.length) {
               })
             )
 
-            const { name, ...schema } = table.schema
+            const { name: _deleted, ...schema } = table.schema
             const updated = await config.api.table.save({ ...table, schema })
 
             expect(updated.primaryDisplay).toBeUndefined()
