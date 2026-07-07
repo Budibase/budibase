@@ -1,4 +1,10 @@
-import { context, docIds, Duration, utils } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  Duration,
+  utils,
+} from "@budibase/backend-core"
 import type {
   AgentRequest,
   AgentRequestAction,
@@ -378,47 +384,64 @@ export async function updateRequestStatus({
   // same conversation, an unrelated error) must leave it as-is.
   allowFromNeedsInput?: boolean
 }): Promise<void> {
-  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
-  if (!request) {
-    return
-  }
+  const db = context.getWorkspaceDB()
 
-  if (isTerminalStatus(request.status)) {
-    return
-  }
-
-  if (
-    request.status === "needs_input" &&
-    status !== "needs_input" &&
-    !allowFromNeedsInput
-  ) {
-    return
-  }
-
-  const timestamp = nowIso()
-  const isTerminal = status === "completed" || status === "failed"
-
-  const updatedEntries = request.entries.map((entry, idx) => {
-    if (idx !== request.entries.length - 1) {
-      return entry
+  // The user_message tracking job (createOrUpdateRequestForPrompt) writes to
+  // the same document concurrently. On a write conflict, re-read the latest
+  // revision and reapply the status transition instead of losing it - a
+  // caller-side .catch() around this function would otherwise swallow the
+  // conflict and leave the request stuck at its previous status.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const request = await db.tryGet<AgentRequest>(requestId)
+    if (!request) {
+      return
     }
-    return {
-      ...entry,
-      status,
-      updatedAt: timestamp,
-      ...(isTerminal ? { completedAt: timestamp } : {}),
-      ...(error === undefined ? {} : { error }),
-    }
-  })
 
-  await saveRequest({
-    ...request,
-    entries: updatedEntries,
-    status,
-    updatedAt: timestamp,
-    ...(isTerminal ? { completedAt: timestamp } : {}),
-    ...(error !== undefined ? { error } : {}),
-  })
+    if (isTerminalStatus(request.status)) {
+      return
+    }
+
+    if (
+      request.status === "needs_input" &&
+      status !== "needs_input" &&
+      !allowFromNeedsInput
+    ) {
+      return
+    }
+
+    const timestamp = nowIso()
+    const isTerminal = status === "completed" || status === "failed"
+
+    const updatedEntries = request.entries.map((entry, idx) => {
+      if (idx !== request.entries.length - 1) {
+        return entry
+      }
+      return {
+        ...entry,
+        status,
+        updatedAt: timestamp,
+        ...(isTerminal ? { completedAt: timestamp } : {}),
+        ...(error === undefined ? {} : { error }),
+      }
+    })
+
+    try {
+      await saveRequest({
+        ...request,
+        entries: updatedEntries,
+        status,
+        updatedAt: timestamp,
+        ...(isTerminal ? { completedAt: timestamp } : {}),
+        ...(error !== undefined ? { error } : {}),
+      })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err) && attempt < 2) {
+        continue
+      }
+      throw err
+    }
+  }
 }
 
 export async function createOrUpdateRequestForPrompt({
@@ -478,9 +501,23 @@ export async function createOrUpdateRequestForPrompt({
         sessionId,
         latestPrompt: prompt,
       })
+
+      // Generating the title/summary can take a while, and the live turn
+      // driving this same request can finish (and change its status) while
+      // we wait. Re-read right before writing instead of saving on top of
+      // the snapshot read at the start of this function, so we don't
+      // silently overwrite a status change with stale data.
+      const latest = await context
+        .getWorkspaceDB()
+        .tryGet<AgentRequest>(existingRequestId)
+      if (!latest || isTerminalStatus(latest.status)) {
+        return { request: latest ?? withTitle, created: false }
+      }
+
       const updated = await saveRequest({
-        ...withTitle,
-        actions: [...(withTitle.actions ?? []), userMessageAction],
+        ...latest,
+        title: latest.title ?? withTitle.title,
+        actions: [...(latest.actions ?? []), userMessageAction],
       })
       return { request: updated, created: false }
     }
@@ -575,15 +612,24 @@ export async function createOrUpdateRequestForPrompt({
     latestPrompt: prompt,
   })
 
+  // LLM calls above can take a while, so re-read immediately before writing
+  // instead of saving on top of the snapshot fetched earlier in this function.
+  const latestRequest = await context
+    .getWorkspaceDB()
+    .tryGet<AgentRequest>(request._id!)
+  if (!latestRequest || isTerminalStatus(latestRequest.status)) {
+    return { request: latestRequest ?? request, created: false }
+  }
+
   return {
     request: await saveRequest({
-      ...request,
+      ...latestRequest,
       entries: nextEntries,
-      actions: [...(request.actions ?? []), userMessageAction],
+      actions: [...(latestRequest.actions ?? []), userMessageAction],
       updatedAt: timestamp,
       // Linking a follow-up prompt into this thread isn't a response to the
       // escalation. Leave needs_input as-is rather than reviving it.
-      status: request.status === "needs_input" ? "needs_input" : "active",
+      status: latestRequest.status === "needs_input" ? "needs_input" : "active",
     }),
     created: false,
   }
