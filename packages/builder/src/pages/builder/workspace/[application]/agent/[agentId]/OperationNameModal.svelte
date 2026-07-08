@@ -89,6 +89,10 @@
     onConfirm={submit}
   >
     <form
+      autocomplete="off"
+      data-1p-ignore
+      data-lpignore="true"
+      data-bwignore="true"
       onsubmit={event => {
         event.preventDefault()
         submitError = undefined
@@ -100,6 +104,10 @@
       }}
     >
       <Input
+        autocomplete="off"
+        data-1p-ignore
+        data-lpignore="true"
+        data-bwignore="true"
         label="Name"
         bind:value={name}
         error={nameError}

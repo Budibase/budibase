@@ -79,6 +79,10 @@
   >
     <div class="agent-form">
       <form
+        autocomplete="off"
+        data-1p-ignore
+        data-lpignore="true"
+        data-bwignore="true"
         on:submit|preventDefault={() => {
           if (loading || !trimmedName) {
             return
@@ -87,6 +91,10 @@
         }}
       >
         <Input
+          autocomplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          data-bwignore="true"
           label="Name"
           bind:value={name}
           error={nameError}
