@@ -1,7 +1,7 @@
 import type { ModelMessage, UIMessage } from "ai"
 import { Document } from "../document"
 import { Automation, AutomationStepResult } from "./automation"
-import { ChatConversationChannel } from "../global/chat"
+import { ChatConversationChannel } from "../global"
 
 // This does need a degree of flexibility
 // {accepted: boolean} is a given for now, but response text
@@ -68,6 +68,7 @@ export interface EscalationContextDoc extends Document {
   appId: string
   tenantId: string
   agentId?: string
+  requestId?: string
   // zlib-deflated + base64 JSON of the SuspendedContext
   contextCompressed?: string
   delay: number

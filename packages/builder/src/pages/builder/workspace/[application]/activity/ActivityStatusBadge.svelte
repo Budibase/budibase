@@ -8,74 +8,69 @@
     status: AgentRequestStatus
   } = $props()
 
-  const iconByStatus: Record<AgentRequestStatus, string> = {
-    active: "spinner",
-    needs_input: "warning",
-    completed: "check-circle",
-    failed: "x-circle",
-  }
-
-  const iconWeightByStatus: Record<AgentRequestStatus, "regular" | "fill"> = {
-    active: "regular",
-    needs_input: "fill",
-    completed: "fill",
-    failed: "fill",
-  }
-
-  const iconColorByStatus: Record<AgentRequestStatus, string> = {
-    active: "var(--spectrum-global-color-blue-500)",
-    needs_input: "var(--spectrum-global-color-yellow-500)",
-    completed: "var(--spectrum-global-color-green-500)",
-    failed: "var(--spectrum-global-color-red-500)",
-  }
-
-  const badgeColorsByStatus: Record<
+  const statusConfig: Record<
     AgentRequestStatus,
-    { backgroundColor: string; textColor: string }
+    {
+      icon: string
+      iconWeight: "regular" | "fill"
+      color: string
+      backgroundColor: string
+      textColor: string
+      label: string
+    }
   > = {
     active: {
+      icon: "spinner",
+      iconWeight: "regular",
+      color: "var(--spectrum-global-color-blue-500)",
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-blue-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
+      label: "Processing",
     },
     needs_input: {
+      icon: "warning",
+      iconWeight: "fill",
+      color: "var(--spectrum-global-color-yellow-500)",
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
+      label: "Needs input",
     },
     completed: {
+      icon: "check-circle",
+      iconWeight: "fill",
+      color: "var(--spectrum-global-color-green-500)",
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-green-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
+      label: "Completed",
     },
     failed: {
+      icon: "x-circle",
+      iconWeight: "fill",
+      color: "var(--spectrum-global-color-red-500)",
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-red-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
+      label: "Failed",
     },
-  }
-
-  const statusLabelByStatus: Record<AgentRequestStatus, string> = {
-    active: "Processing",
-    needs_input: "Needs input",
-    completed: "Completed",
-    failed: "Failed",
   }
 </script>
 
 <div class="activity-status-badge">
   <Badge
     size="S"
-    backgroundColor={badgeColorsByStatus[status].backgroundColor}
-    textColor={badgeColorsByStatus[status].textColor}
+    backgroundColor={statusConfig[status].backgroundColor}
+    textColor={statusConfig[status].textColor}
   >
-    {statusLabelByStatus[status]}
+    {statusConfig[status].label}
     <span class="status-icon">
       <Icon
         size="XS"
-        name={iconByStatus[status]}
-        weight={iconWeightByStatus[status]}
-        color={iconColorByStatus[status]}
+        name={statusConfig[status].icon}
+        weight={statusConfig[status].iconWeight}
+        color={statusConfig[status].color}
       />
     </span>
   </Badge>

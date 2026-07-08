@@ -89,6 +89,8 @@ const extractLinkUrl = (messages: string[]) => {
   return urls[0]
 }
 
+const getLinkPath = (linkUrl: string) => new URL(linkUrl).pathname
+
 describe("agent teams integration provisioning", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
@@ -357,8 +359,19 @@ describe("agent teams integration provisioning", () => {
         },
       })
 
-      expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+      const linkUrl = extractLinkUrl(response.body.messages)
+      expect(linkUrl).toBeTruthy()
       expect(mockedWebhookChat).not.toHaveBeenCalled()
+
+      const handoff = await config
+        .getRequest()!
+        .get(getLinkPath(linkUrl!))
+        .set(config.defaultHeaders({}, true))
+        .expect(200)
+      expect(handoff.text).toContain(
+        "Link your Budibase account to <strong>Teams User</strong> on <strong>Teams</strong>."
+      )
+      expect(handoff.text).not.toContain("msteams")
     })
 
     it("blocks unlinked users and guides them to link first", async () => {

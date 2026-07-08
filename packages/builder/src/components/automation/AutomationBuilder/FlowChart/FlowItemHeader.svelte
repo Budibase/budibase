@@ -25,6 +25,10 @@
     AutomationTrigger,
     AutomationTriggerResult,
   } from "@budibase/types"
+  import {
+    AUTOMATION_STEP_NAME_ERROR,
+    isValidAutomationStepName,
+  } from "../../stepNameValidation"
 
   type TestResult = AutomationStepResult | AutomationTriggerResult
 
@@ -39,7 +43,6 @@
   export let itemName: string | undefined = undefined
   export let automation: Automation | undefined = undefined
 
-  let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
   let editing = false
   const dispatch = createEventDispatcher()
@@ -139,9 +142,9 @@
     }
 
     if (name !== block.name && name?.length > 0) {
-      let invalidRoleName = !validRegex.test(name)
+      let invalidRoleName = !isValidAutomationStepName(name)
       if (invalidRoleName) {
-        return "Please enter a name consisting of only alphanumeric symbols and underscores"
+        return AUTOMATION_STEP_NAME_ERROR
       }
     }
 
