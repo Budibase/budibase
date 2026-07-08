@@ -379,6 +379,12 @@ export async function createOrUpdateRequestForPrompt({
       })
       return { request: updated, created: false }
     }
+
+    console.error("existingRequestId did not resolve to a request", {
+      agentId,
+      sessionId,
+      existingRequestId,
+    })
   }
 
   const candidateRequests = await fetchRequestsByAgentAndUser(agentId, userId)
