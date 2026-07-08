@@ -434,6 +434,17 @@
         <Label size="L">Activated</Label>
         <Toggle text="" bind:value={oidcConfig.activated} />
       </div>
+      <div class="form-row">
+        <div class="lock">
+          <Label
+            size="L"
+            tooltip="When off, a login is only linked to an existing account if the identity provider confirms the email is verified. Only enable this if you fully trust the provider to assert email addresses - otherwise it can allow account takeover."
+          >
+            Allow unverified email linking
+          </Label>
+        </div>
+        <Toggle text="" bind:value={oidcConfig.allowUnverifiedEmailLinking} />
+      </div>
     </Layout>
 
     <Layout gap="XS" noPadding>
