@@ -295,6 +295,47 @@ const configureSlackAppCreationDeployment = async ({
   }
 }
 
+const publishSlackIntegrationForLiveAgent = async (agent: Agent) => {
+  if (!agent.live || !agent._id || !agent.slackIntegration) {
+    return
+  }
+
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    throw new HTTPError("workspaceId is required", 400)
+  }
+
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
+  const isPublished = await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
+  if (!isPublished) {
+    return
+  }
+
+  await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    const prodAgent = await context.getWorkspaceDB().tryGet<Agent>(agent._id!)
+    if (!prodAgent) {
+      return
+    }
+
+    await sdk.ai.agents.update({
+      ...prodAgent,
+      slackIntegration: {
+        ...prodAgent.slackIntegration,
+        appId: agent.slackIntegration?.appId,
+        clientId: agent.slackIntegration?.clientId,
+        clientSecret: agent.slackIntegration?.clientSecret,
+        signingSecret: agent.slackIntegration?.signingSecret,
+        chatAppId: agent.slackIntegration?.chatAppId,
+        messagingEndpointUrl: agent.slackIntegration?.messagingEndpointUrl,
+        botToken: agent.slackIntegration?.botToken,
+        botUserId: agent.slackIntegration?.botUserId,
+        teamId: agent.slackIntegration?.teamId,
+        teamName: agent.slackIntegration?.teamName,
+      },
+    })
+  })
+}
+
 const toSafeFilenameSegment = (value: string) => {
   const safe = value
     .trim()
@@ -626,7 +667,7 @@ export async function completeSlackOAuth(ctx: UserCtx<void, void>) {
       throw new Error("Slack OAuth response did not include a bot token")
     }
 
-    await sdk.ai.agents.update({
+    const updatedAgent = await sdk.ai.agents.update({
       ...agent,
       slackIntegration: {
         ...agent.slackIntegration,
@@ -637,6 +678,7 @@ export async function completeSlackOAuth(ctx: UserCtx<void, void>) {
         teamName: token.team?.name?.trim() || undefined,
       },
     })
+    await publishSlackIntegrationForLiveAgent(updatedAgent)
   })
 
   ctx.redirect(

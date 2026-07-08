@@ -560,6 +560,104 @@ describe("agent slack integration provisioning", () => {
     expect(persisted.slackIntegration?.teamName).toEqual("Slack Team")
   })
 
+  it("publishes Slack OAuth credentials for live agents", async () => {
+    const agent = await config.api.agent.createWithOperation(
+      {
+        name: "Live Slack OAuth App",
+        aiconfig: "test-config",
+      },
+      {
+        id: "operation_1",
+        name: "Live Slack OAuth operation",
+        live: true,
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+      }
+    )
+    const liveAgent = await config.api.agent.update({
+      ...agent,
+      live: true,
+    })
+    await config.publish()
+
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/tooling.tokens.rotate")) {
+        return slackJsonResponse({
+          ok: true,
+          token: "xoxe-rotated-live-oauth-config-token",
+          refresh_token: "xoxe-rotated-live-oauth-refresh-token",
+          exp: Math.floor(Date.now() / 1000) + 43200,
+        })
+      }
+
+      if (String(url).endsWith("/apps.manifest.create")) {
+        return slackJsonResponse({
+          ok: true,
+          app_id: "A_LIVE_SLACK_OAUTH_APP",
+          credentials: {
+            client_id: "live-slack-oauth-client-id",
+            client_secret: "live-slack-oauth-client-secret",
+            signing_secret: "live-slack-oauth-signing-secret",
+          },
+          oauth_authorize_url:
+            "https://slack.com/oauth/v2/authorize?client_id=live-slack-oauth-client-id&scope=commands,chat:write",
+        })
+      }
+
+      expect(String(url)).toContain("/oauth.v2.access")
+      const body = init?.body as URLSearchParams
+      expect(body.get("code")).toEqual("live-slack-oauth-code")
+      expect(body.get("client_id")).toEqual("live-slack-oauth-client-id")
+      return slackJsonResponse({
+        ok: true,
+        access_token: "xoxb-live-oauth-bot-token",
+        bot_user_id: "U_LIVE_BOT",
+        app_id: "A_LIVE_SLACK_OAUTH_APP",
+        team: {
+          id: "T_LIVE_SLACK",
+          name: "Live Slack Team",
+        },
+      })
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
+    })
+
+    const created = await config.api.agent.createSlackApp(liveAgent._id!)
+    const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
+    expect(state).toBeTruthy()
+
+    await config
+      .getRequest()!
+      .get(
+        `/api/agent/slack/oauth/callback?code=live-slack-oauth-code&state=${state}`
+      )
+      .expect(302)
+
+    const prodPersisted = await db.doWithDB(
+      config.getProdWorkspaceId(),
+      workspaceDb => workspaceDb.get<Agent>(liveAgent._id!)
+    )
+    expect(
+      secretMatch(
+        "xoxb-live-oauth-bot-token",
+        prodPersisted.slackIntegration!.botToken!
+      )
+    ).toBeTrue()
+    expect(
+      secretMatch(
+        "live-slack-oauth-signing-secret",
+        prodPersisted.slackIntegration!.signingSecret!
+      )
+    ).toBeTrue()
+    expect(prodPersisted.slackIntegration?.botUserId).toEqual("U_LIVE_BOT")
+    expect(prodPersisted.slackIntegration?.teamId).toEqual("T_LIVE_SLACK")
+    expect(prodPersisted.slackIntegration?.teamName).toEqual("Live Slack Team")
+  })
+
   describe("slack webhook incoming messages", () => {
     const postSlackMessage = async ({
       path,
