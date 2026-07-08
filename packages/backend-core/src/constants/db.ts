@@ -27,7 +27,7 @@ export enum ViewName {
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   AGENT_REQUESTS_BY_AGENT = "agent_requests_by_agent",
-  AGENT_REQUESTS_BY_UPDATED_AT = "agent_requests_by_updated_at",
+  AGENT_REQUESTS_BY_UPDATED_AT = "agent_requests_by_updated_at_2",
   LINK = "by_link",
   ROUTING = "screen_routes_2",
   PROJECT_MEMBERS = "project_members",
@@ -42,6 +42,11 @@ export const DeprecatedViews: Record<string, string[]> = {
   [ViewName.USER_BY_EMAIL]: [
     // removed due to inaccuracy in view doc filter logic
     "by_email",
+  ],
+  [ViewName.AGENT_REQUESTS_BY_UPDATED_AT]: [
+    // map function changed to emit doc.status as the value, needed a fresh
+    // view so already-created design docs pick up the new definition
+    "agent_requests_by_updated_at",
   ],
 }
 

@@ -5,7 +5,10 @@
   import { builderStore } from "@/stores/builder"
   import { Body, Pagination, Table, notifications } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
-  import type { AgentRequestStatus } from "@budibase/types"
+  import type {
+    AgentRequestsSummary,
+    AgentRequestStatus,
+  } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import dayjs from "dayjs"
@@ -30,7 +33,7 @@
     value: number
   }
 
-  const PAGE_SIZE = 40
+  const PAGE_SIZE = 20
   const tableSchema = {
     title: {
       type: "string",
@@ -62,9 +65,13 @@
   let currentPage = $state(1)
   let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
+  let summary = $state<AgentRequestsSummary | null>(null)
   let userNames = $state<Record<string, string>>({})
-  let hasNextPage = $state(false)
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
+
+  let hasNextPage = $derived.by(() => {
+    return !!summary && summary.total > currentPage * PAGE_SIZE
+  })
 
   // Ticks on an interval purely to force updatedLabel to re-derive
   let now = $state(Date.now())
@@ -98,25 +105,19 @@
   let filteredRequests = $derived(allRequests)
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
-    const requests = filteredRequests
+    const counts = summary || {
+      total: 0,
+      active: 0,
+      needs_input: 0,
+      completed: 0,
+      failed: 0,
+    }
     return [
-      { label: "All requests", value: requests.length },
-      {
-        label: "Completed",
-        value: requests.filter(r => r.status === "completed").length,
-      },
-      {
-        label: "Processing",
-        value: requests.filter(r => r.status === "active").length,
-      },
-      {
-        label: "Needs input",
-        value: requests.filter(r => r.status === "needs_input").length,
-      },
-      {
-        label: "Failed",
-        value: requests.filter(r => r.status === "failed").length,
-      },
+      { label: "All requests", value: counts.total },
+      { label: "Completed", value: counts.completed },
+      { label: "Processing", value: counts.active },
+      { label: "Needs input", value: counts.needs_input },
+      { label: "Failed", value: counts.failed },
     ]
   })
 
@@ -166,18 +167,19 @@
   let paginationLabel = $derived.by(() => {
     const start = (currentPage - 1) * PAGE_SIZE + 1
     const end = start + paginatedRows.length - 1
+    const total = summary?.total || 0
 
     if (!paginatedRows.length) {
       return "Showing 0 items"
     }
 
-    return `Showing ${start} to ${end} items`
+    return `Showing ${start}–${end} of ${total} items`
   })
 
   async function loadRequests(page = currentPage) {
     if (!($agentsStore.agents || []).length) {
       allRequests = []
-      hasNextPage = false
+      summary = null
       return
     }
 
@@ -188,7 +190,7 @@
         page,
       })
       allRequests = response.requests
-      hasNextPage = response.requests.length === PAGE_SIZE
+      summary = response.summary
       try {
         await hydrateUserNames(response.requests)
       } catch (error) {
@@ -198,7 +200,7 @@
       console.error("Failed to fetch agent requests", error)
       notifications.error("Failed to load agent actions")
       allRequests = []
-      hasNextPage = false
+      summary = null
     } finally {
       loading = false
     }
@@ -281,7 +283,7 @@
     const currentAgentIds = ($agentsStore.agents || []).map(agent => agent._id)
     if (!currentAgentIds.length) {
       allRequests = []
-      hasNextPage = false
+      summary = null
       return
     }
 
@@ -297,11 +299,18 @@
     }
 
     const handleAgentRequestChange = async (request: AgentRequest) => {
-      const exists = allRequests.some(r => r._id === request._id)
-      if (exists) {
+      const previous = allRequests.find(r => r._id === request._id)
+      if (previous) {
         allRequests = allRequests.map(r =>
           r._id === request._id ? request : r
         )
+        if (summary && previous.status !== request.status) {
+          summary = {
+            ...summary,
+            [previous.status]: summary[previous.status] - 1,
+            [request.status]: summary[request.status] + 1,
+          }
+        }
         try {
           await hydrateUserNames([request])
         } catch (error) {
@@ -310,14 +319,27 @@
         return
       }
 
-      // Only insert live on page 1. A request created while viewing a
-      // later page belongs on page 1, not under the user on this one.
+      // A brand-new request always lands on page 1, pushing every other
+      // page's rows down by one. On page 1 we can patch locally; on any
+      // other page the shift can only be reproduced by re-fetching that
+      // page's offset from the server.
       if (currentPage !== 1) {
+        await loadRequests(currentPage)
         return
       }
+
       if (allRequests.length >= PAGE_SIZE) {
         hasNextPage = true
       }
+
+      if (summary) {
+        summary = {
+          ...summary,
+          total: summary.total + 1,
+          [request.status]: summary[request.status] + 1,
+        }
+      }
+
       allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
       try {
         await hydrateUserNames([request])

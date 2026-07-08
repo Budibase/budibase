@@ -3,6 +3,7 @@ import { builderSocket } from "../../../../websockets"
 import {
   createOrUpdateRequestForPrompt,
   fetchRequestsByAgent,
+  fetchRequestsSummary,
   initActiveRequest,
   resolveFinalRequestStatus,
   updateRequestStatus,
@@ -395,6 +396,71 @@ describe("agentRequests crud", () => {
 
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("completed")
+      })
+    })
+  })
+
+  describe("fetchRequestsSummary", () => {
+    it("counts requests by status across the whole workspace", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+
+        await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_active",
+          latestPrompt: "Book me a meeting",
+          operation,
+          source: "Chat",
+        })
+
+        const completed = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_completed",
+          latestPrompt: "Book me a meeting",
+          operation,
+          source: "Chat",
+        }))!
+        await updateRequestStatus({
+          requestId: completed.requestId,
+          status: "completed",
+        })
+
+        const failed = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_failed",
+          latestPrompt: "Book me a meeting",
+          operation,
+          source: "Chat",
+        }))!
+        await updateRequestStatus({
+          requestId: failed.requestId,
+          status: "failed",
+          error: "Tool calls incomplete",
+        })
+
+        const needsInput = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_needs_input",
+          latestPrompt: "Approve this purchase",
+          operation,
+          source: "Chat",
+        }))!
+        await updateRequestStatus({
+          requestId: needsInput.requestId,
+          status: "needs_input",
+        })
+
+        expect(await fetchRequestsSummary()).toEqual({
+          total: 4,
+          active: 1,
+          completed: 1,
+          failed: 1,
+          needs_input: 1,
+        })
       })
     })
   })

@@ -3,10 +3,15 @@ import type {
   AgentRequest,
   AgentRequestEntry,
   AgentRequestStatus,
+  AgentRequestsSummary,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
-import { queryRequestsByAgent, queryRequestsByUpdatedAt } from "./views"
+import {
+  queryRequestsByAgent,
+  queryRequestStatuses,
+  queryRequestsByUpdatedAt,
+} from "./views"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -180,6 +185,17 @@ export async function fetchRequests({
     limit,
     page,
   })
+}
+
+export async function fetchRequestsSummary(): Promise<AgentRequestsSummary> {
+  const statuses = await queryRequestStatuses()
+  return {
+    total: statuses.length,
+    active: statuses.filter(status => status === "active").length,
+    needs_input: statuses.filter(status => status === "needs_input").length,
+    completed: statuses.filter(status => status === "completed").length,
+    failed: statuses.filter(status => status === "failed").length,
+  }
 }
 
 export async function fetchRequestsByAgent(

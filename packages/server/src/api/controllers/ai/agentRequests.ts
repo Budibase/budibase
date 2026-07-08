@@ -46,11 +46,15 @@ export async function fetchAgentRequests(
   const { limit, page } = ctx.query as Record<string, string>
   const resolvedLimit = sanitizeLimitQuery(limit)
   const resolvedPage = sanitizePageQuery(page)
-  const requests = await sdk.ai.agentRequests.fetchRequests({
-    limit: resolvedLimit,
-    page: resolvedPage,
-  })
+  const [requests, summary] = await Promise.all([
+    sdk.ai.agentRequests.fetchRequests({
+      limit: resolvedLimit,
+      page: resolvedPage,
+    }),
+    sdk.ai.agentRequests.fetchRequestsSummary(),
+  ])
   ctx.body = {
     requests,
+    summary,
   }
 }
