@@ -106,7 +106,6 @@
 >
   <input
     bind:this={field}
-    {...$$restProps}
     {disabled}
     {readonly}
     {id}

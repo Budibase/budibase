@@ -46,7 +46,6 @@
 
 <Field {helpText} {label} {labelPosition} {error} {required} {description}>
   <TextField
-    {...$$restProps}
     {updateOnChange}
     {disabled}
     {readonly}

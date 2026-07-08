@@ -61,12 +61,29 @@
     }
   }
 
+  let isOpen = false
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (isOpen && event.key === "Enter") {
+      if (loading || !trimmedName) {
+        return
+      }
+      modalContent.confirm()
+    }
+  }
+
   onMount(() => {
     aiConfigsStore.fetch()
   })
 </script>
 
-<Modal bind:this={modal}>
+<svelte:window on:keydown={handleKeydown} />
+
+<Modal
+  bind:this={modal}
+  on:show={() => (isOpen = true)}
+  on:hide={() => (isOpen = false)}
+>
   <ModalContent
     bind:this={modalContent}
     title={"New agent"}
@@ -78,30 +95,13 @@
     onConfirm={createAgent}
   >
     <div class="agent-form">
-      <form
-        autocomplete="off"
-        data-1p-ignore
-        data-lpignore="true"
-        data-bwignore="true"
-        on:submit|preventDefault={() => {
-          if (loading || !trimmedName) {
-            return
-          }
-          modalContent.confirm()
-        }}
-      >
-        <Input
-          autocomplete="off"
-          data-1p-ignore
-          data-lpignore="true"
-          data-bwignore="true"
-          label="Name"
-          bind:value={name}
-          error={nameError}
-          on:input={() => (touched = true)}
-          placeholder="Support agent"
-        />
-      </form>
+      <Input
+        label="Name"
+        bind:value={name}
+        error={nameError}
+        on:input={() => (touched = true)}
+        placeholder="Support agent"
+      />
     </div>
   </ModalContent>
 </Modal>

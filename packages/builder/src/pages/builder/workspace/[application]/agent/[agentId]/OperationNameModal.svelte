@@ -78,9 +78,27 @@
       submitting = false
     }
   }
+  let isOpen = $state(false)
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (isOpen && event.key === "Enter") {
+      submitError = undefined
+      if (cannotSubmit()) {
+        touched = true
+        return
+      }
+      modalContent.confirm()
+    }
+  }
 </script>
 
-<Modal bind:this={modal}>
+<svelte:window on:keydown={handleKeydown} />
+
+<Modal
+  bind:this={modal}
+  on:show={() => (isOpen = true)}
+  on:hide={() => (isOpen = false)}
+>
   <ModalContent
     bind:this={modalContent}
     {title}
@@ -88,32 +106,12 @@
     disabled={cannotSubmit()}
     onConfirm={submit}
   >
-    <form
-      autocomplete="off"
-      data-1p-ignore
-      data-lpignore="true"
-      data-bwignore="true"
-      onsubmit={event => {
-        event.preventDefault()
-        submitError = undefined
-        if (cannotSubmit()) {
-          touched = true
-          return
-        }
-        modalContent.confirm()
-      }}
-    >
-      <Input
-        autocomplete="off"
-        data-1p-ignore
-        data-lpignore="true"
-        data-bwignore="true"
-        label="Name"
-        bind:value={name}
-        error={nameError}
-        on:input={() => (touched = true)}
-        {placeholder}
-      />
-    </form>
+    <Input
+      label="Name"
+      bind:value={name}
+      error={nameError}
+      on:input={() => (touched = true)}
+      {placeholder}
+    />
   </ModalContent>
 </Modal>
