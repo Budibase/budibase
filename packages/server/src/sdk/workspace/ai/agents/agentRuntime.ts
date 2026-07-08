@@ -97,7 +97,10 @@ export interface AgentChatStreamOptions {
   // non-pending_approval status (e.g. no reviewers configured), is reported
   // through unrecoveredToolFailures instead, never here.
   onToolCalls?: (toolNames: string[]) => void
+  // In-flight (pending) tool calls.
   pendingToolCalls?: Set<string>
+  // Tool calls whose last known outcome was a failure (couldn't be
+  // recovered).
   unrecoveredToolFailures?: Set<string>
 }
 
