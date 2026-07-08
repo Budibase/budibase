@@ -274,7 +274,7 @@ describe("FlowChart", () => {
     })
   })
 
-  it("does not add a side panel overlay offset when a selected step is already visible", async () => {
+  it("moves the canvas left when selecting a step would leave it behind the side panel", async () => {
     const automation = {
       ...automationWithSteps([serverLogStep("step-1")]),
       _id: "automation-1",
@@ -302,8 +302,12 @@ describe("FlowChart", () => {
       selectedNodeId: "step-1",
     }))
 
-    await tick()
-    expect(mocks.setViewport).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -304, y: 240, zoom: 1 },
+        { duration: 180 }
+      )
+    })
   })
 
   it("moves the canvas left when opening the add-step panel would hide the target on the right", async () => {
