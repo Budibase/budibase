@@ -150,10 +150,10 @@ const renameOwnReferences = (table: Table, old: string, updated: string) => {
     )
   }
   for (const view of Object.values(table.views || {})) {
-    if (!helpers.views.isV2(view) || !view.schema) {
+    if (!helpers.views.isV2(view)) {
       continue
     }
-    if (view.schema[old]) {
+    if (view.schema && view.schema[old]) {
       view.schema[updated] ??= view.schema[old]
       delete view.schema[old]
     }
@@ -164,7 +164,8 @@ const renameOwnReferences = (table: Table, old: string, updated: string) => {
       view.sort.field = updated
     }
     // saved filters may reference the column directly (`old`) or filter through
-    // it on a sub-column (`old.subField`)
+    // it on a sub-column (`old.subField`) - these live on the view regardless of
+    // whether it declares a `schema`
     renameViewFilterFields(view, key => {
       if (key === old) {
         return updated
@@ -199,17 +200,22 @@ const renameRelationshipColumnRefs = (
 
   let changed = false
   for (const view of Object.values(table.views || {})) {
-    if (!helpers.views.isV2(view) || !view.schema) {
+    if (!helpers.views.isV2(view)) {
       continue
     }
-    for (const relField of relFields) {
-      const viewField = view.schema[relField]
-      const columns =
-        viewField && "columns" in viewField ? viewField.columns : undefined
-      if (columns && columns[old]) {
-        columns[updated] = columns[old]
-        delete columns[old]
-        changed = true
+    // the `columns` map lives on the relationship field's view schema entry, so
+    // it only needs rewriting when the view declares a schema; saved filters do
+    // not, so they are handled for every V2 view below
+    if (view.schema) {
+      for (const relField of relFields) {
+        const viewField = view.schema[relField]
+        const columns =
+          viewField && "columns" in viewField ? viewField.columns : undefined
+        if (columns && columns[old]) {
+          columns[updated] = columns[old]
+          delete columns[old]
+          changed = true
+        }
       }
     }
     const filtersChanged = renameViewFilterFields(view, key => {

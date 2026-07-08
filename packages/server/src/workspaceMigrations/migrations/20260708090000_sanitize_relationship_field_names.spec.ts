@@ -170,8 +170,9 @@ describe("sanitize relationship field names migration", () => {
       }
 
       // an invoices table whose only reference to the illegal column is a saved
-      // filter (no `columns` map entry) - proves the cross-table pass is reached
-      // for filter-only references, not just `columns` maps
+      // filter (no `columns` map entry, and the view declares no `schema` at
+      // all) - proves the cross-table pass rewrites filters for schema-less V2
+      // views, not just `columns` maps on views that declare a schema
       const invoicesDoc = await db.get<Table>(invoicesId)
       invoicesDoc.schema.person = {
         type: FieldType.LINK,
@@ -186,9 +187,6 @@ describe("sanitize relationship field names migration", () => {
           id: "view_invoices_grid",
           name: "Invoices Grid",
           tableId: invoicesId,
-          schema: {
-            name: { visible: true },
-          },
           query: {
             [ArrayOperator.CONTAINS]: {
               [`person.${ILLEGAL_FIELD_NAME}`]: ["Order-1"],
