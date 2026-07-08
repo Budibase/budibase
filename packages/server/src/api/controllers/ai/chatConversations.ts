@@ -105,13 +105,16 @@ const startAgentRequestTracking = async ({
   userId: string
   chatMessages: ChatConversation["messages"]
 }): Promise<AgentRequestTrackingHandle> => {
+  if (
+    !context.isProdWorkspace() ||
+    !(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
+  ) {
+    return undefined
+  }
+
   let trackingHandle: AgentRequestTrackingHandle
 
-  if (
-    run.selectedOperation &&
-    context.isProdWorkspace() &&
-    (await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
-  ) {
+  if (run.selectedOperation) {
     trackingHandle = await sdk.ai.agentRequests
       .initActiveRequest({
         agentId,
