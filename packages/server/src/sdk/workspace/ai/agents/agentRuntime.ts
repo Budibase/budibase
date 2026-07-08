@@ -30,7 +30,7 @@ import {
 import {
   updatePendingToolCalls,
   updateUnrecoveredToolFailures,
-  partitionEscalateAwareToolResults,
+  groupToolResultsByOutcome,
   buildPromptAndTools,
   getLiveOperations,
   type BuildPromptAndToolsOptions,
@@ -554,7 +554,7 @@ export const prepareAgentChatRun = async ({
             contextUsage.output = usage
             sessionLogIndexer.addRequestId(response?.id)
             const { successResults, successNames, semanticFailureNames } =
-              partitionEscalateAwareToolResults(toolResults)
+              groupToolResultsByOutcome(toolResults)
 
             if (onToolCalls && successNames.length) {
               onToolCalls(successNames)
