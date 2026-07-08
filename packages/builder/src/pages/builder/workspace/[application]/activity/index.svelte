@@ -302,6 +302,11 @@
         allRequests = allRequests.map(r =>
           r._id === request._id ? request : r
         )
+        try {
+          await hydrateUserNames([request])
+        } catch (error) {
+          console.error("Failed to hydrate agent request user name", error)
+        }
         return
       }
 
