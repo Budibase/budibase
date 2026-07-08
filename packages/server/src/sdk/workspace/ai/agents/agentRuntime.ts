@@ -92,10 +92,7 @@ export interface AgentChatRun {
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
-  // Fires with the names of tools that actually completed successfully in a
-  // step, not merely attempted. A tool that errors, or escalate returning a
-  // non-pending_approval status (e.g. no reviewers configured), is reported
-  // through unrecoveredToolFailures instead, never here.
+  // Tool calls that actually competed successfully
   onToolCalls?: (toolNames: string[]) => void
   // In-flight (pending) tool calls.
   pendingToolCalls?: Set<string>
