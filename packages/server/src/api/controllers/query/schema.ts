@@ -6,10 +6,37 @@ type SchemaEntry = string | QuerySchema
 const getType = (entry: SchemaEntry | undefined): FieldType | undefined =>
   (typeof entry === "string" ? entry : entry?.type) as FieldType | undefined
 
+// Whether a string value genuinely fits the given type. Only NUMBER and
+// DATETIME can lean on coerce() (the same casting Budibase uses when converting
+// values to these types) - it throws for those on bad input but silently
+// returns the input for every other type, so BOOLEAN and JSON are validated
+// explicitly and anything else re-detects.
+const stringFitsType = (value: string, type: FieldType): boolean => {
+  switch (type) {
+    case FieldType.NUMBER:
+    case FieldType.DATETIME:
+      try {
+        coerce(value, type)
+        return true
+      } catch {
+        return false
+      }
+    case FieldType.BOOLEAN:
+      return value === "true" || value === "false"
+    case FieldType.JSON:
+      try {
+        return typeof JSON.parse(value) === "object"
+      } catch {
+        return false
+      }
+    default:
+      return false
+  }
+}
+
 // A previously set type only wins over detection when detection fell back to
 // STRING (its "can't tell" result - SQL drivers return dates and numbers as
-// strings) and the value still coerces to that type, using the same coerce()
-// the query runner applies at execution time. Concrete detections (number,
+// strings) and the value still fits that type. Concrete detections (number,
 // boolean, json, array, datetime) always win, so a genuine data change still
 // updates the schema. One deliberate asymmetry: an explicit Text override
 // sticks for any scalar value.
@@ -25,21 +52,14 @@ const keepExisting = (
   if (value == null || value === "") {
     return true
   }
-  if (typeof value === "object" && !(value instanceof Date)) {
-    return false
-  }
-  if (existingType === FieldType.STRING) {
+  const valueIsObject = typeof value === "object" && !(value instanceof Date)
+  if (existingType === FieldType.STRING && !valueIsObject) {
     return true
   }
-  if (getType(detected) !== FieldType.STRING) {
+  if (getType(detected) !== FieldType.STRING || typeof value !== "string") {
     return false
   }
-  try {
-    coerce(value as string | Date | string[], existingType)
-    return true
-  } catch {
-    return false
-  }
+  return stringFitsType(value, existingType)
 }
 
 // Merge the freshly detected preview schema with the previously set one, so a

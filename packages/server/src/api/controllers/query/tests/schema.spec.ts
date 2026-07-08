@@ -40,6 +40,17 @@ describe("mergePreviewSchema", () => {
     })
   })
 
+  it("keeps an explicit Text override when the value is a Date object", () => {
+    const merged = mergePreviewSchema(
+      { created: { type: FieldType.DATETIME, name: "created" } },
+      { created: { type: FieldType.STRING, name: "created" } },
+      { created: new Date("2024-01-01T10:00:00Z") }
+    )
+    expect(merged).toEqual({
+      created: { type: FieldType.STRING, name: "created" },
+    })
+  })
+
   it("re-detects when a NUMBER column starts returning non-numeric strings", () => {
     const merged = mergePreviewSchema(
       { data: { type: FieldType.STRING, name: "data" } },
@@ -76,6 +87,50 @@ describe("mergePreviewSchema", () => {
     )
     expect(merged).toEqual({
       field: { type: FieldType.JSON, name: "field" },
+    })
+  })
+
+  it("keeps a previously set BOOLEAN when the value is a boolean string", () => {
+    const merged = mergePreviewSchema(
+      { active: { type: FieldType.STRING, name: "active" } },
+      { active: { type: FieldType.BOOLEAN, name: "active" } },
+      { active: "true" }
+    )
+    expect(merged).toEqual({
+      active: { type: FieldType.BOOLEAN, name: "active" },
+    })
+  })
+
+  it("re-detects when a BOOLEAN column starts returning non-boolean strings", () => {
+    const merged = mergePreviewSchema(
+      { active: { type: FieldType.STRING, name: "active" } },
+      { active: { type: FieldType.BOOLEAN, name: "active" } },
+      { active: "banana" }
+    )
+    expect(merged).toEqual({
+      active: { type: FieldType.STRING, name: "active" },
+    })
+  })
+
+  it("keeps a previously set JSON type when the value is a JSON string", () => {
+    const merged = mergePreviewSchema(
+      { config: { type: FieldType.STRING, name: "config" } },
+      { config: { type: FieldType.JSON, name: "config" } },
+      { config: '{"nested": "value"}' }
+    )
+    expect(merged).toEqual({
+      config: { type: FieldType.JSON, name: "config" },
+    })
+  })
+
+  it("re-detects when a JSON column starts returning plain strings", () => {
+    const merged = mergePreviewSchema(
+      { config: { type: FieldType.STRING, name: "config" } },
+      { config: { type: FieldType.JSON, name: "config" } },
+      { config: "plain text" }
+    )
+    expect(merged).toEqual({
+      config: { type: FieldType.STRING, name: "config" },
     })
   })
 
