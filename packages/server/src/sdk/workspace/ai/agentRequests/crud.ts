@@ -2,6 +2,7 @@ import { context, docIds, Duration } from "@budibase/backend-core"
 import type {
   AgentRequest,
   AgentRequestEntry,
+  AgentRequestStatus,
   AgentRequestsSummary,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
@@ -62,7 +63,7 @@ const buildThread = ({
   }
 }
 
-const isTerminalStatus = (status: AgentRequest["status"]) =>
+const isTerminalStatus = (status: AgentRequestStatus) =>
   status === "completed" || status === "failed"
 
 const sortRequests = (requests: AgentRequest[]) =>
@@ -203,14 +204,6 @@ export async function fetchRequestsByAgent(
   return sortRequests(await queryRequestsByAgent(agentId))
 }
 
-export async function findRequestBySession(
-  agentId: string,
-  sessionId: string
-): Promise<AgentRequest | undefined> {
-  const requests = await fetchRequestsByAgent(agentId)
-  return requests.find(r => r.entries.some(e => e.sessionId === sessionId))
-}
-
 export function resolveFinalRequestStatus({
   toolCallsIncomplete,
   unrecoveredToolFailures,
@@ -302,16 +295,16 @@ export async function updateRequestStatus({
   requestId,
   status,
   error,
-  allowFromNeedsInput = false,
+  isHumanResponse = false,
 }: {
   requestId: string
-  status: "active" | "needs_input" | "completed" | "failed"
+  status: AgentRequestStatus
   error?: string
   // needs_input is only meant to move once a human has actually responded to
   // the escalation (approved/rejected/expired) - set this when that's the
   // case. Anything else touching a needs_input request (a later turn in the
   // same conversation, an unrelated error) must leave it as-is.
-  allowFromNeedsInput?: boolean
+  isHumanResponse?: boolean
 }): Promise<void> {
   const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
   if (!request) {
@@ -325,13 +318,13 @@ export async function updateRequestStatus({
   if (
     request.status === "needs_input" &&
     status !== "needs_input" &&
-    !allowFromNeedsInput
+    !isHumanResponse
   ) {
     return
   }
 
   const timestamp = nowIso()
-  const isTerminal = status === "completed" || status === "failed"
+  const isTerminal = isTerminalStatus(status)
 
   const updatedEntries = request.entries.map((entry, idx) => {
     if (idx !== request.entries.length - 1) {
@@ -410,6 +403,12 @@ export async function createOrUpdateRequestForPrompt({
       })
       return { request: updated, created: false }
     }
+
+    console.error("existingRequestId did not resolve to a request", {
+      agentId,
+      sessionId,
+      existingRequestId,
+    })
   }
 
   const candidateRequests = await fetchRequestsByAgentAndUser(agentId, userId)

@@ -335,7 +335,7 @@ export function updateUnrecoveredToolFailures(
 // status "unavailable" instead of throwing). Split tool results so callers
 // can treat that case as a failure rather than a genuine success, while every
 // other tool keeps its normal success/failure handling untouched.
-export function partitionEscalateAwareToolResults(
+export function groupToolResultsByOutcome(
   toolResults: TypedToolResult<ToolSet>[]
 ): {
   successResults: TypedToolResult<ToolSet>[]
