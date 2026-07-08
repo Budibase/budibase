@@ -4,6 +4,7 @@ import type {
   AgentRequestEntry,
   AgentRequestStatus,
 } from "@budibase/types"
+import { builderSocket } from "../../../../websockets"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
 import { queryRequestsByAgent, queryRequestsByUpdatedAt } from "./views"
 
@@ -69,10 +70,17 @@ const sortRequests = (requests: AgentRequest[]) =>
 
 async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   const response = await context.getWorkspaceDB().put(request)
-  return {
+  const saved = {
     ...request,
     _rev: response.rev,
   }
+
+  const workspaceId = context.getWorkspaceId()
+  if (workspaceId) {
+    builderSocket?.emitAgentRequestChange(context.getDevWorkspaceId(), saved)
+  }
+
+  return saved
 }
 
 async function generateAndSaveRequestTitleIfMissing({

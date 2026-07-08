@@ -2,7 +2,9 @@
   import { API } from "@/api"
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
+  import { builderStore } from "@/stores/builder"
   import { Body, Pagination, Table, notifications } from "@budibase/bbui"
+  import { BuilderSocketEvent } from "@budibase/shared-core"
   import type { AgentRequestStatus } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
@@ -54,6 +56,8 @@
     { column: "actions", component: ActivityActionsRenderer },
   ]
 
+  const RELATIVE_TIME_REFRESH_MS = 30000
+
   let loading = $state(false)
   let currentPage = $state(1)
   let selectedRequestId = $state<string | null>(null)
@@ -61,6 +65,9 @@
   let userNames = $state<Record<string, string>>({})
   let hasNextPage = $state(false)
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
+
+  // Ticks on an interval purely to force updatedLabel to re-derive
+  let now = $state(Date.now())
 
   const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
     active: { label: "Processing" },
@@ -125,7 +132,7 @@
         statusLabel: requestStatusMeta[request.status].label,
         status: request.status,
         updatedLabel:
-          updatedTime > 0 ? dayjs(updatedAt).fromNow() : "Unknown time",
+          updatedTime > 0 ? dayjs(updatedAt).from(now) : "Unknown time",
         actions: "",
       }
     })
@@ -260,6 +267,13 @@
   })
 
   $effect(() => {
+    const interval = setInterval(() => {
+      now = Date.now()
+    }, RELATIVE_TIME_REFRESH_MS)
+    return () => clearInterval(interval)
+  })
+
+  $effect(() => {
     if (!activityEnabled) {
       return
     }
@@ -274,6 +288,51 @@
     currentPage = 1
     selectedRequestId = null
     loadRequests(1)
+  })
+
+  $effect(() => {
+    const socket = builderStore.websocket
+    if (!socket) {
+      return
+    }
+
+    const handleAgentRequestChange = async (request: AgentRequest) => {
+      const exists = allRequests.some(r => r._id === request._id)
+      if (exists) {
+        allRequests = allRequests.map(r =>
+          r._id === request._id ? request : r
+        )
+        try {
+          await hydrateUserNames([request])
+        } catch (error) {
+          console.error("Failed to hydrate agent request user name", error)
+        }
+        return
+      }
+
+      // Only insert live on page 1. A request created while viewing a
+      // later page belongs on page 1, not under the user on this one.
+      if (currentPage !== 1) {
+        return
+      }
+      if (allRequests.length >= PAGE_SIZE) {
+        hasNextPage = true
+      }
+      allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
+      try {
+        await hydrateUserNames([request])
+      } catch (error) {
+        console.error("Failed to hydrate agent request user name", error)
+      }
+    }
+
+    socket.on(BuilderSocketEvent.AgentRequestChange, handleAgentRequestChange)
+    return () => {
+      socket.off(
+        BuilderSocketEvent.AgentRequestChange,
+        handleAgentRequestChange
+      )
+    }
   })
 </script>
 
