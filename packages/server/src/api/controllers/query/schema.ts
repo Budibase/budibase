@@ -67,11 +67,15 @@ const keepExisting = (
 // DATETIME) while genuine data changes still re-detect. Columns that
 // disappeared from the results keep their previous schema; brand-new columns
 // use the detected type.
-export function mergePreviewSchema(
-  previewSchema: Record<string, SchemaEntry>,
-  existingSchema: Record<string, SchemaEntry> | undefined,
-  firstRow: Record<string, any> | undefined
-): Record<string, SchemaEntry> {
+export function mergePreviewSchema({
+  previewSchema,
+  existingSchema,
+  firstRow,
+}: {
+  previewSchema: Record<string, SchemaEntry>
+  existingSchema: Record<string, SchemaEntry> | undefined
+  firstRow: Record<string, unknown> | undefined
+}): Record<string, SchemaEntry> {
   if (!existingSchema) {
     return previewSchema
   }

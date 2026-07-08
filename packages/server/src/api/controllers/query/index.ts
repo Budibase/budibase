@@ -402,7 +402,11 @@ export async function preview(
   const { rows, keys, info, extra } = queryResponse
   const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
-  const schema = mergePreviewSchema(previewSchema, existingSchema, rows?.[0])
+  const schema = mergePreviewSchema({
+    previewSchema,
+    existingSchema,
+    firstRow: rows?.[0],
+  })
   // remove configuration before sending event
   delete datasource.config
   await events.query.previewed(datasource, ctx.request.body)
