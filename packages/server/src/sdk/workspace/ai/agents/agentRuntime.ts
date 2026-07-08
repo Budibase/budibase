@@ -67,6 +67,10 @@ interface PrepareAgentChatRunParams {
   // Appended to the system prompt - a trusted channel for run-time directives
   // Puting it in the user input made it suspicious.
   additionalInstructions?: string
+  // Resolves the AgentRequest id tracking this run, for the escalate tool to
+  // stamp onto the escalation it raises. Read lazily since the caller only
+  // knows it after this run's operation is resolved.
+  getRequestId?: () => string | undefined
 }
 
 export interface AgentChatRun {
@@ -397,6 +401,7 @@ export const prepareAgentChatRun = async ({
   operationId,
   escalationResolved,
   additionalInstructions,
+  getRequestId,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -483,6 +488,7 @@ export const prepareAgentChatRun = async ({
         channel: chat?.channel,
         userId: user?._id,
         getMessages: () => modelMessages,
+        getRequestId: () => getRequestId?.(),
       })
     }
 

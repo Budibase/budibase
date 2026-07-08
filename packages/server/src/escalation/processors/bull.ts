@@ -61,6 +61,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
             agentId: input.agentId,
             operationId: input.operationId,
             sessionId: input.context.sessionId,
+            ...(input.requestId && { requestId: input.requestId }),
           }
 
     const existing = await db.tryGet<EscalationContextDoc>(docId)

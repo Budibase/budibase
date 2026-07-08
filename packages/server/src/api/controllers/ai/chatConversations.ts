@@ -533,6 +533,7 @@ export async function webhookChat({
   const providerPrefix = chat.channel?.provider || "chat"
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${providerPrefix}:${chatId}`
+  let trackingHandle: AgentRequestTrackingHandle
   const run = await prepareAgentChatRun({
     agent,
     agentId,
@@ -540,13 +541,14 @@ export async function webhookChat({
     errorLabel: "webhook chat",
     sessionId,
     user,
+    getRequestId: () => trackingHandle?.requestId,
   })
   const title = run.latestQuestion
     ? truncateTitle(run.latestQuestion)
     : chat.title
 
   const userId = user.globalId || user.userId || user._id || ""
-  const trackingHandle = await startAgentRequestTracking({
+  trackingHandle = await startAgentRequestTracking({
     agentId,
     sessionId,
     run,
@@ -734,6 +736,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       errorLabel: "chat stream",
       sessionId,
       user: ctx.user,
+      getRequestId: () => trackingHandle?.requestId,
     })
 
     trackingHandle = await startAgentRequestTracking({

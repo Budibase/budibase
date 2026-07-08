@@ -5,11 +5,7 @@ import type {
   AgentRequestStatus,
 } from "@budibase/types"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
-import {
-  queryRequestsByAgent,
-  queryRequestsBySession,
-  queryRequestsByUpdatedAt,
-} from "./views"
+import { queryRequestsByAgent, queryRequestsByUpdatedAt } from "./views"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -182,14 +178,6 @@ export async function fetchRequestsByAgent(
   agentId: string
 ): Promise<AgentRequest[]> {
   return sortRequests(await queryRequestsByAgent(agentId))
-}
-
-export async function findRequestBySession(
-  agentId: string,
-  sessionId: string
-): Promise<AgentRequest | undefined> {
-  const requests = await queryRequestsBySession(agentId, sessionId)
-  return sortRequests(requests)[0]
 }
 
 export function resolveFinalRequestStatus({

@@ -2,7 +2,6 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import {
   createOrUpdateRequestForPrompt,
   fetchRequestsByAgent,
-  findRequestBySession,
   initActiveRequest,
   resolveFinalRequestStatus,
   updateRequestStatus,
@@ -332,31 +331,6 @@ describe("agentRequests crud", () => {
 
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("completed")
-      })
-    })
-  })
-
-  describe("findRequestBySession", () => {
-    it("finds the request that has an entry with the given sessionId", async () => {
-      await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
-          source: "Chat",
-        }))!
-
-        const found = await findRequestBySession("agent_1", "session_1")
-        expect(found?._id).toEqual(requestId)
-      })
-    })
-
-    it("returns undefined when no request matches the session", async () => {
-      await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const found = await findRequestBySession("agent_1", "unknown-session")
-        expect(found).toBeUndefined()
       })
     })
   })

@@ -28,7 +28,6 @@ export enum ViewName {
   BY_API_KEY = "by_api_key",
   AGENT_REQUESTS_BY_AGENT = "agent_requests_by_agent",
   AGENT_REQUESTS_BY_UPDATED_AT = "agent_requests_by_updated_at",
-  AGENT_REQUESTS_BY_SESSION = "agent_requests_by_session",
   LINK = "by_link",
   ROUTING = "screen_routes_2",
   PROJECT_MEMBERS = "project_members",
