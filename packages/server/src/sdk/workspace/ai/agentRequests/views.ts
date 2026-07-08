@@ -71,7 +71,7 @@ export const queryRequestsByUpdatedAt = async ({
 }
 
 export const queryRequestStatuses = async (): Promise<AgentRequestStatus[]> => {
-  return (await db.queryView<AgentRequest>(
+  return (await db.queryView(
     REQUESTS_BY_UPDATED_AT_VIEW,
     {
       include_docs: false,
@@ -79,5 +79,5 @@ export const queryRequestStatuses = async (): Promise<AgentRequestStatus[]> => {
     context.getProdWorkspaceDB(),
     createRequestsByUpdatedAtView,
     { arrayResponse: true }
-  )) as unknown as AgentRequestStatus[]
+  )) as AgentRequestStatus[]
 }
