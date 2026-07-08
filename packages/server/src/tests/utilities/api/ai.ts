@@ -204,20 +204,19 @@ export class AIAPI extends TestAPI {
   fetchSlackAppConfig = async (
     expectations?: Expectations
   ): Promise<SlackAppConfigResponse> => {
-    return await this._get<SlackAppConfigResponse>(
-      `/api/ai/slack/app-config`,
-      { expectations }
-    )
+    return await this._get<SlackAppConfigResponse>(`/api/ai/slack/app-config`, {
+      expectations,
+    })
   }
 
   saveSlackAppConfig = async (
     body: SaveSlackAppConfigRequest,
     expectations?: Expectations
   ): Promise<SlackAppConfigResponse> => {
-    return await this._put<SlackAppConfigResponse>(
-      `/api/ai/slack/app-config`,
-      { body, expectations }
-    )
+    return await this._put<SlackAppConfigResponse>(`/api/ai/slack/app-config`, {
+      body,
+      expectations,
+    })
   }
 
   deleteSlackAppConfig = async (

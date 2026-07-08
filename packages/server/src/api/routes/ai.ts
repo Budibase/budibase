@@ -29,11 +29,7 @@ builderAdminRoutes
     saveSlackAppConfigValidator(),
     ai.saveSlackAppConfig
   )
-  .delete(
-    "/api/ai/slack/app-config",
-    auth.adminOnly,
-    ai.deleteSlackAppConfig
-  )
+  .delete("/api/ai/slack/app-config", auth.adminOnly, ai.deleteSlackAppConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 
