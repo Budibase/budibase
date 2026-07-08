@@ -1,6 +1,21 @@
 import { context } from "@budibase/backend-core"
-import { ValidColumnNameRegex, helpers } from "@budibase/shared-core"
-import { Document, FieldType, LinkDocument, Table } from "@budibase/types"
+import {
+  ValidColumnNameRegex,
+  dataFilters,
+  helpers,
+} from "@budibase/shared-core"
+import {
+  Document,
+  FieldType,
+  isLogicalSearchOperator,
+  LegacyFilter,
+  LinkDocument,
+  SearchFilterGroup,
+  SearchFilters,
+  Table,
+  UISearchFilter,
+  ViewV2,
+} from "@budibase/types"
 import sdk from "../../sdk"
 import { generateLinkID } from "../../db/utils"
 
@@ -11,9 +26,10 @@ import { generateLinkID } from "../../db/utils"
 // relationship `fieldName` on internal tables and rewrites every reference the
 // schema tracks: the LINK column, the mirrored column in the related table, the
 // link documents, and views on any table (own columns + relationship `columns`
-// maps). It does NOT rewrite automation/screen/formula binding strings - the
-// platform does not migrate those on a normal rename either, and illegal
-// characters cannot appear in those bindings.
+// maps + saved filter references in `query`/`queryUI`). It does NOT rewrite
+// automation/screen/formula binding strings - the platform does not migrate
+// those on a normal rename either, and illegal characters cannot appear in
+// those bindings.
 
 interface ColumnRename {
   tableId: string
@@ -25,7 +41,10 @@ const isIllegalName = (name?: string): name is string =>
   !!name && !name.match(new RegExp(ValidColumnNameRegex))
 
 const sanitize = (name: string, taken: Set<string>): string => {
-  let base = name.replace(/[^_a-zA-Z0-9\s]/g, "_").replace(/\s+/g, " ").trim()
+  let base = name
+    .replace(/[^_a-zA-Z0-9\s]/g, "_")
+    .replace(/\s+/g, " ")
+    .trim()
   if (!base) {
     base = "column"
   }
@@ -35,6 +54,69 @@ const sanitize = (name: string, taken: Set<string>): string => {
     candidate = `${base}_${counter++}`
   }
   return candidate
+}
+
+// rewrite field references inside a V2 view's saved filters (`query` in both its
+// SearchFilters and legacy-array forms, and the `queryUI` group tree). `match`
+// receives each field key with any numeric uniqueness prefix (e.g. `1:`) removed
+// and returns the replacement key, or undefined to leave the reference untouched.
+const renameViewFilterFields = (
+  view: ViewV2,
+  match: (bareKey: string) => string | undefined
+) => {
+  const rename = (fieldKey: string): string => {
+    const { prefix, key } = dataFilters.getKeyNumbering(fieldKey)
+    const renamed = match(key)
+    return renamed === undefined ? fieldKey : `${prefix || ""}${renamed}`
+  }
+
+  const renameConditionKeys = (filters: SearchFilters) => {
+    for (const filterKey of Object.keys(filters) as (keyof SearchFilters)[]) {
+      if (isLogicalSearchOperator(filterKey)) {
+        for (const condition of filters[filterKey]!.conditions) {
+          renameConditionKeys(condition)
+        }
+        continue
+      }
+      const operand = filters[filterKey]!
+      if (typeof operand !== "object") {
+        continue
+      }
+      for (const key of Object.keys(operand)) {
+        const renamed = rename(key)
+        if (renamed !== key) {
+          operand[renamed] = operand[key]
+          delete operand[key]
+        }
+      }
+    }
+  }
+
+  const renameLegacyFilters = (filters: LegacyFilter[]) => {
+    for (const filter of filters) {
+      if ("field" in filter && typeof filter.field === "string") {
+        filter.field = rename(filter.field)
+      }
+    }
+  }
+
+  if (Array.isArray(view.query)) {
+    renameLegacyFilters(view.query)
+  } else if (view.query) {
+    renameConditionKeys(view.query)
+  }
+
+  const renameGroups = (
+    groups: (SearchFilterGroup | UISearchFilter)[] | undefined
+  ) => {
+    for (const group of groups || []) {
+      renameGroups(group.groups)
+      if ("filters" in group && group.filters) {
+        renameLegacyFilters(group.filters)
+      }
+    }
+  }
+  renameGroups(view.queryUI?.groups)
 }
 
 // rewrite references to a renamed column *within its own table*
@@ -73,6 +155,17 @@ const renameOwnReferences = (table: Table, old: string, updated: string) => {
     if (view.sort?.field === old) {
       view.sort.field = updated
     }
+    // saved filters may reference the column directly (`old`) or filter through
+    // it on a sub-column (`old.subField`)
+    renameViewFilterFields(view, key => {
+      if (key === old) {
+        return updated
+      }
+      if (key.startsWith(`${old}.`)) {
+        return `${updated}${key.slice(old.length)}`
+      }
+      return undefined
+    })
   }
 }
 
@@ -166,8 +259,7 @@ const migration = async () => {
         }
         return Object.entries(view.schema).some(([fieldName, viewField]) => {
           const tableField = table.schema[fieldName]
-          const columns =
-            "columns" in viewField ? viewField.columns : undefined
+          const columns = "columns" in viewField ? viewField.columns : undefined
           return (
             tableField?.type === FieldType.LINK &&
             tableField.tableId === rename.tableId &&

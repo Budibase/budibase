@@ -1,10 +1,16 @@
 import { context } from "@budibase/backend-core"
 import {
+  ArrayOperator,
+  BasicOperator,
   FieldType,
   LinkDocument,
   RelationshipType,
+  RelationshipFieldMetadata,
   Row,
+  SearchFilter,
+  SearchFilters,
   Table,
+  UILogicalOperator,
   ViewV2,
 } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
@@ -65,7 +71,10 @@ describe("sanitize relationship field names migration", () => {
         relationshipType: RelationshipType.MANY_TO_MANY,
       }
 
-      // a view on people that references the illegal column directly
+      // a view on people that references the illegal column directly - in its
+      // schema, primaryDisplay, sort and saved filters (both the compiled
+      // `query` and the `queryUI` group tree, referencing the column directly
+      // and through a sub-column)
       peopleDoc.views = {
         "People Grid": {
           version: 2,
@@ -77,6 +86,38 @@ describe("sanitize relationship field names migration", () => {
           schema: {
             name: { visible: true },
             [ILLEGAL_FIELD_NAME]: { visible: true },
+          },
+          query: {
+            [BasicOperator.EMPTY]: { [ILLEGAL_FIELD_NAME]: null },
+            $and: {
+              conditions: [
+                {
+                  [ArrayOperator.CONTAINS]: {
+                    [`${ILLEGAL_FIELD_NAME}.name`]: ["Order-1"],
+                  },
+                },
+              ],
+            },
+          },
+          queryUI: {
+            logicalOperator: UILogicalOperator.ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ANY,
+                filters: [
+                  {
+                    operator: BasicOperator.EMPTY,
+                    field: ILLEGAL_FIELD_NAME,
+                    value: null,
+                  },
+                  {
+                    operator: ArrayOperator.CONTAINS,
+                    field: `1:${ILLEGAL_FIELD_NAME}.name`,
+                    value: ["Order-1"],
+                  },
+                ],
+              },
+            ],
           },
         },
       }
@@ -155,13 +196,18 @@ describe("sanitize relationship field names migration", () => {
         return {
           orders,
           people,
-          linkFieldNames: docs.flatMap(d => [d.doc1.fieldName, d.doc2.fieldName]),
-          linkIds: docs.map(d => d._id),
+          linkFieldNames: docs.flatMap(d => [
+            d.doc1.fieldName,
+            d.doc2.fieldName,
+          ]),
+          linkIds: docs.map(d => d._id!),
         }
       })
 
     // owning table: LINK column fieldName sanitised
-    expect(orders.schema.customer.fieldName).toEqual(SANITISED_FIELD_NAME)
+    const ordersCustomerColumn = orders.schema
+      .customer as RelationshipFieldMetadata
+    expect(ordersCustomerColumn.fieldName).toEqual(SANITISED_FIELD_NAME)
     // related table: mirrored column key + name renamed, illegal key gone
     expect(people.schema[ILLEGAL_FIELD_NAME]).toBeUndefined()
     expect(people.schema[SANITISED_FIELD_NAME].name).toEqual(
@@ -178,6 +224,23 @@ describe("sanitize relationship field names migration", () => {
     expect(peopleView.schema![SANITISED_FIELD_NAME]).toBeDefined()
     expect(peopleView.primaryDisplay).toEqual(SANITISED_FIELD_NAME)
     expect(peopleView.sort!.field).toEqual(SANITISED_FIELD_NAME)
+
+    // related table's own view: saved filter references updated in `query`
+    const query = peopleView.query as SearchFilters
+    expect(query[BasicOperator.EMPTY]![ILLEGAL_FIELD_NAME]).toBeUndefined()
+    expect(query[BasicOperator.EMPTY]![SANITISED_FIELD_NAME]).toBeDefined()
+    const nested = query.$and!.conditions[0]
+    expect(
+      nested[ArrayOperator.CONTAINS]![`${ILLEGAL_FIELD_NAME}.name`]
+    ).toBeUndefined()
+    expect(
+      nested[ArrayOperator.CONTAINS]![`${SANITISED_FIELD_NAME}.name`]
+    ).toBeDefined()
+
+    // ...and in `queryUI`, preserving the numeric prefix on the sub-column ref
+    const uiFilters = peopleView.queryUI!.groups![0].filters as SearchFilter[]
+    expect(uiFilters[0].field).toEqual(SANITISED_FIELD_NAME)
+    expect(uiFilters[1].field).toEqual(`1:${SANITISED_FIELD_NAME}.name`)
 
     // owning table's view: relationship `columns` map reference updated
     const ordersView = orders.views!["Orders Grid"] as ViewV2
