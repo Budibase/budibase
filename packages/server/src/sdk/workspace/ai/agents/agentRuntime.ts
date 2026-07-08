@@ -92,7 +92,7 @@ export interface AgentChatRun {
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
-  // Tool calls that actually competed successfully
+  // Tool calls that actually completed successfully
   onToolCalls?: (toolNames: string[]) => void
   // In-flight (pending) tool calls.
   pendingToolCalls?: Set<string>
