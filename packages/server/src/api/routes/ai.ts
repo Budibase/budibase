@@ -1,3 +1,4 @@
+import { auth } from "@budibase/backend-core"
 import { middleware } from "@budibase/pro"
 import * as ai from "../controllers/ai"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
@@ -21,13 +22,18 @@ builderAdminRoutes
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
   .put("/api/configs", updateAIConfigValidator(), ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
-  .get("/api/ai/slack/app-config", ai.fetchSlackAppConfig)
+  .get("/api/ai/slack/app-config", auth.adminOnly, ai.fetchSlackAppConfig)
   .put(
     "/api/ai/slack/app-config",
+    auth.adminOnly,
     saveSlackAppConfigValidator(),
     ai.saveSlackAppConfig
   )
-  .delete("/api/ai/slack/app-config", ai.deleteSlackAppConfig)
+  .delete(
+    "/api/ai/slack/app-config",
+    auth.adminOnly,
+    ai.deleteSlackAppConfig
+  )
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 
