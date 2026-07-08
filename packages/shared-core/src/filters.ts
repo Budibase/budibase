@@ -28,12 +28,15 @@ import {
   StringFieldSubType,
 } from "@budibase/types"
 import dayjs from "dayjs"
+import utc from "dayjs/plugin/utc"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { processSearchFilters } from "./utils"
 import { deepGet, schema } from "./helpers"
 import isPlainObject from "lodash/isPlainObject"
 import isEmpty from "lodash/isEmpty"
 import { decodeNonAscii } from "./helpers/schema"
+
+dayjs.extend(utc)
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 const LOGICAL_OPERATORS = Object.values(LogicalOperator)
@@ -388,9 +391,19 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
     }
   } else if (operator === "rangeHigh" && value != null && value !== "") {
     query.range ??= {}
+    // A date-only "less than or equal to" bound comes through as midnight, which
+    // would drop the rest of that day. Push it to the end of the day so the whole
+    // date is included.
+    let high = value
+    if (type === FieldType.DATETIME) {
+      const date = dayjs.utc(value)
+      if (date.isValid() && date.isSame(date.startOf("day"))) {
+        high = date.endOf("day").toISOString()
+      }
+    }
     query.range[field] = {
       ...query.range[field],
-      high: value,
+      high,
     }
   } else if (operator === "rangeLow" && value != null && value !== "") {
     query.range ??= {}
