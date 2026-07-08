@@ -13,6 +13,10 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
+jest.mock("../automations/logging", () => ({
+  storeLog: jest.fn(),
+}))
+
 import { context, events } from "@budibase/backend-core"
 import {
   ActionFailureReason,
@@ -33,6 +37,7 @@ import { basicAutomation } from "../tests/utilities/structures"
 import { executeInThread } from "./automation"
 import sdk from "../sdk"
 import { automations } from "@budibase/shared-core"
+import { storeLog } from "../automations/logging"
 
 const isAutomationStepResult = (
   result: AutomationTestProgressEvent["result"]
@@ -40,6 +45,7 @@ const isAutomationStepResult = (
 
 describe("automation thread", () => {
   const config = new TestConfiguration()
+  const mockStoreLog = jest.mocked(storeLog)
 
   beforeAll(async () => {
     await config.init()
@@ -162,6 +168,24 @@ describe("automation thread", () => {
       step => step.stepId === AutomationActionStepId.SERVER_LOG
     )
     expect(logStepResult).toBeUndefined()
+  })
+
+  it("does not store automation logs for test runs", async () => {
+    mockStoreLog.mockClear()
+    const appId = config.getDevWorkspaceId()
+    const job = {
+      data: {
+        isTestRun: true,
+        automation: basicAutomation({ appId }),
+        event: {
+          appId,
+        },
+      },
+    } as Job<AutomationData>
+
+    await executeInThread(job, { isTestRun: true })
+
+    expect(mockStoreLog).not.toHaveBeenCalled()
   })
 
   it("stops after a failed step by default", async () => {

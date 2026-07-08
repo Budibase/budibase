@@ -394,6 +394,9 @@ class Orchestrator {
   }
 
   private async logResult(result: AutomationResults) {
+    if (this.isTestRun) {
+      return
+    }
     await storeLog(this.automation, result)
   }
 
