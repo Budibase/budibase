@@ -2,7 +2,6 @@ import { context, docIds, Duration } from "@budibase/backend-core"
 import type {
   AgentRequest,
   AgentRequestEntry,
-  AgentRequestStatus,
   AgentRequestsSummary,
   AgentRequestStatus,
 } from "@budibase/types"
