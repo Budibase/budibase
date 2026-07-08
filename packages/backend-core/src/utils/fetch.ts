@@ -1,4 +1,5 @@
 import { Agent, ProxyAgent, Dispatcher } from "undici"
+import type { LookupFunction } from "net"
 
 /**
  * Check if a URL matches any pattern in the NO_PROXY list.
@@ -105,11 +106,20 @@ function shouldBypassProxy(url?: string): boolean {
 
 /**
  * Creates a direct Agent (no proxy).
+ *
+ * When a `lookup` is provided the connection is pinned to the address that
+ * function returns. Callers use this to pin to a pre-validated IP so that a
+ * second DNS resolution at connection time cannot rebind the request to a
+ * blocked (e.g. loopback/private) address.
  */
-function createDirectAgent(rejectUnauthorized: boolean): Agent {
+function createDirectAgent(
+  rejectUnauthorized: boolean,
+  lookup?: LookupFunction
+): Agent {
   return new Agent({
     connect: {
       rejectUnauthorized,
+      ...(lookup ? { lookup } : {}),
     },
   })
 }
@@ -161,11 +171,12 @@ function createProxyAgent(rejectUnauthorized: boolean): ProxyAgent {
 function createDispatcher(options?: {
   rejectUnauthorized?: boolean
   url?: string
+  lookup?: LookupFunction
 }): Dispatcher {
   const rejectUnauthorized = options?.rejectUnauthorized ?? true
 
   if (shouldBypassProxy(options?.url)) {
-    return createDirectAgent(rejectUnauthorized)
+    return createDirectAgent(rejectUnauthorized, options?.lookup)
   }
 
   return createProxyAgent(rejectUnauthorized)
@@ -183,6 +194,7 @@ function createDispatcher(options?: {
 export function getDispatcher(options: {
   rejectUnauthorized?: boolean
   url: string
+  lookup?: LookupFunction
 }): Dispatcher {
   return createDispatcher(options)
 }
