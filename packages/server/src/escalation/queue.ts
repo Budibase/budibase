@@ -264,7 +264,7 @@ async function resumeOperation({
     await sdk.ai.agentRequests
       .updateRequestStatus({
         requestId: doc.requestId,
-        allowFromNeedsInput: true,
+        isHumanResponse: true,
         ...params,
       })
       .catch(error => {

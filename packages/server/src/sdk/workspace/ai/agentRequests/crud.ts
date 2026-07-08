@@ -271,7 +271,7 @@ export async function updateRequestStatus({
   requestId,
   status,
   error,
-  allowFromNeedsInput = false,
+  isHumanResponse = false,
 }: {
   requestId: string
   status: AgentRequestStatus
@@ -280,7 +280,7 @@ export async function updateRequestStatus({
   // the escalation (approved/rejected/expired) - set this when that's the
   // case. Anything else touching a needs_input request (a later turn in the
   // same conversation, an unrelated error) must leave it as-is.
-  allowFromNeedsInput?: boolean
+  isHumanResponse?: boolean
 }): Promise<void> {
   const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
   if (!request) {
@@ -294,7 +294,7 @@ export async function updateRequestStatus({
   if (
     request.status === "needs_input" &&
     status !== "needs_input" &&
-    !allowFromNeedsInput
+    !isHumanResponse
   ) {
     return
   }
