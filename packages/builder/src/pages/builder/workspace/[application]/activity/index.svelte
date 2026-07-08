@@ -310,6 +310,9 @@
       if (currentPage !== 1) {
         return
       }
+      if (allRequests.length >= PAGE_SIZE) {
+        hasNextPage = true
+      }
       allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
       try {
         await hydrateUserNames([request])
