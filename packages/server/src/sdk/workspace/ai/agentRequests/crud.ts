@@ -300,7 +300,7 @@ export async function updateRequestStatus({
   }
 
   const timestamp = nowIso()
-  const isTerminal = status === "completed" || status === "failed"
+  const isTerminal = isTerminalStatus(status)
 
   const updatedEntries = request.entries.map((entry, idx) => {
     if (idx !== request.entries.length - 1) {
