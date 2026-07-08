@@ -22,7 +22,7 @@
     failed: "fill",
   }
 
-  const iconColorByStatus: Record<AgentRequestStatus, string> = {
+  const colorByStatus: Record<AgentRequestStatus, string> = {
     active: "var(--spectrum-global-color-blue-500)",
     needs_input: "var(--spectrum-global-color-yellow-500)",
     completed: "var(--spectrum-global-color-green-500)",
@@ -34,23 +34,19 @@
     { backgroundColor: string; textColor: string }
   > = {
     active: {
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-blue-500) 18%, transparent)",
+      backgroundColor: `color-mix(in srgb, ${colorByStatus.active} 18%, transparent)`,
       textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     needs_input: {
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
+      backgroundColor: `color-mix(in srgb, ${colorByStatus.needs_input} 18%, transparent)`,
       textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     completed: {
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-green-500) 18%, transparent)",
+      backgroundColor: `color-mix(in srgb, ${colorByStatus.completed} 18%, transparent)`,
       textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     failed: {
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-red-500) 18%, transparent)",
+      backgroundColor: `color-mix(in srgb, ${colorByStatus.failed} 18%, transparent)`,
       textColor: "var(--spectrum-global-color-static-gray-50)",
     },
   }
@@ -75,7 +71,7 @@
         size="XS"
         name={iconByStatus[status]}
         weight={iconWeightByStatus[status]}
-        color={iconColorByStatus[status]}
+        color={colorByStatus[status]}
       />
     </span>
   </Badge>
