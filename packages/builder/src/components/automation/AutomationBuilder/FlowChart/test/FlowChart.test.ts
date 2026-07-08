@@ -178,7 +178,7 @@ vi.mock("../AutomationStepHelpers", () => ({
       newNodes: Array<{
         id: string
         type: string
-        data: { block: unknown }
+        data: Record<string, unknown>
         position: { x: number; y: number }
         width: number
         height: number
