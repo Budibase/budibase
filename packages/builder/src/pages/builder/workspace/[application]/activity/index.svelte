@@ -355,6 +355,11 @@
             [request.status]: summary[request.status] + 1,
           }
         }
+        try {
+          await hydrateUserNames([request])
+        } catch (error) {
+          console.error("Failed to hydrate agent request user name", error)
+        }
         return
       }
 
@@ -365,6 +370,10 @@
       if (currentPage !== 1) {
         await loadRequests(currentPage)
         return
+      }
+
+      if (allRequests.length >= PAGE_SIZE) {
+        hasNextPage = true
       }
 
       if (summary) {

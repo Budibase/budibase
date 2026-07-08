@@ -433,6 +433,9 @@ describe("agent slack integration provisioning", () => {
         .expect(200)
       expect(authHandoff.type).toEqual("text/html")
       expect(authHandoff.text).toContain("Confirm chat account link")
+      expect(authHandoff.text).toContain("<style>")
+      expect(authHandoff.text).toContain("/builder/bblogo.png")
+      expect(authHandoff.text).toContain("Link account")
       const confirmationToken = extractConfirmationToken(authHandoff.text)
       expect(confirmationToken).toBeTruthy()
 
@@ -460,6 +463,11 @@ describe("agent slack integration provisioning", () => {
         .expect(200)
       expect(confirmHandoff.type).toEqual("text/html")
       expect(confirmHandoff.text).toContain("Authentication succeeded.")
+      expect(confirmHandoff.text).toContain("<style>")
+      expect(confirmHandoff.text).toContain("/builder/bblogo.png")
+      expect(confirmHandoff.text).toContain(
+        "You can return to your chat to continue."
+      )
 
       await config.doInTenant(async () => {
         const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({

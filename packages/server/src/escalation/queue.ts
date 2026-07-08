@@ -254,22 +254,17 @@ async function resumeOperation({
     operationId: ctx.operationId,
   })
 
-  const escalationRequest = await sdk.ai.agentRequests.findRequestBySession(
-    ctx.agentId,
-    ctx.sessionId
-  )
-
   const markEscalationRequestResolved = async (params: {
     status: "completed" | "failed"
     error?: string
   }) => {
-    if (!escalationRequest?._id) {
+    if (!doc.requestId) {
       return
     }
     await sdk.ai.agentRequests
       .updateRequestStatus({
-        requestId: escalationRequest._id,
-        allowFromNeedsInput: true,
+        requestId: doc.requestId,
+        isHumanResponse: true,
         ...params,
       })
       .catch(error => {

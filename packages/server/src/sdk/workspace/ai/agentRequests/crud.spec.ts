@@ -5,7 +5,6 @@ import {
   fetchRequests,
   fetchRequestsByAgent,
   fetchRequestsSummary,
-  findRequestBySession,
   initActiveRequest,
   resolveFinalRequestStatus,
   updateRequestStatus,
@@ -348,7 +347,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("does not move a needs_input request away without allowFromNeedsInput", async () => {
+    it("does not move a needs_input request away without isHumanResponse", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await initActiveRequest({
           agentId: "agent_1",
@@ -375,7 +374,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("moves a needs_input request when allowFromNeedsInput is set (escalation resolved)", async () => {
+    it("moves a needs_input request when isHumanResponse is set (escalation resolved)", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await initActiveRequest({
           agentId: "agent_1",
@@ -393,7 +392,7 @@ describe("agentRequests crud", () => {
         await updateRequestStatus({
           requestId,
           status: "completed",
-          allowFromNeedsInput: true,
+          isHumanResponse: true,
         })
 
         const [request] = await fetchRequestsByAgent("agent_1")
