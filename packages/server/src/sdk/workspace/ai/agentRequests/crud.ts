@@ -274,7 +274,7 @@ export async function updateRequestStatus({
   allowFromNeedsInput = false,
 }: {
   requestId: string
-  status: "active" | "needs_input" | "completed" | "failed"
+  status: AgentRequestStatus
   error?: string
   // needs_input is only meant to move once a human has actually responded to
   // the escalation (approved/rejected/expired) - set this when that's the
