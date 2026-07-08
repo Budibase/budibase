@@ -1,5 +1,9 @@
 import { context, docIds, Duration } from "@budibase/backend-core"
-import type { AgentRequest, AgentRequestEntry } from "@budibase/types"
+import type {
+  AgentRequest,
+  AgentRequestEntry,
+  AgentRequestStatus,
+} from "@budibase/types"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
 import { queryRequestsByAgent, queryRequestsByUpdatedAt } from "./views"
 
@@ -53,7 +57,7 @@ const buildThread = ({
   }
 }
 
-const isTerminalStatus = (status: AgentRequest["status"]) =>
+const isTerminalStatus = (status: AgentRequestStatus) =>
   status === "completed" || status === "failed"
 
 const sortRequests = (requests: AgentRequest[]) =>
