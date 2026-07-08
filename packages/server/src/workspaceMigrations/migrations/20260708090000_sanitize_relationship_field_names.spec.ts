@@ -26,6 +26,7 @@ describe("sanitize relationship field names migration", () => {
 
   let peopleId: string
   let ordersId: string
+  let invoicesId: string
   let peopleRowId: string
   let ordersRowId: string
 
@@ -42,6 +43,11 @@ describe("sanitize relationship field names migration", () => {
       name: "orders",
     })
     ordersId = orders._id!
+    const invoices = await config.api.table.save({
+      ...basicTable(),
+      name: "invoices",
+    })
+    invoicesId = invoices._id!
 
     const peopleRow = await config.api.row.save(peopleId, { name: "Alice" })
     peopleRowId = peopleRow._id!
@@ -122,7 +128,8 @@ describe("sanitize relationship field names migration", () => {
         },
       }
       // a view on orders that exposes the illegal column through the
-      // relationship field's nested `columns` map
+      // relationship field's nested `columns` map, and also filters through the
+      // relationship on it (`customer.<illegal>`) in both `query` and `queryUI`
       ordersDoc.views = {
         "Orders Grid": {
           version: 2,
@@ -138,6 +145,69 @@ describe("sanitize relationship field names migration", () => {
                 name: { visible: true },
               },
             },
+          },
+          query: {
+            [ArrayOperator.CONTAINS]: {
+              [`customer.${ILLEGAL_FIELD_NAME}`]: ["Order-1"],
+            },
+          },
+          queryUI: {
+            logicalOperator: UILogicalOperator.ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ANY,
+                filters: [
+                  {
+                    operator: ArrayOperator.CONTAINS,
+                    field: `1:customer.${ILLEGAL_FIELD_NAME}`,
+                    value: ["Order-1"],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      }
+
+      // an invoices table whose only reference to the illegal column is a saved
+      // filter (no `columns` map entry) - proves the cross-table pass is reached
+      // for filter-only references, not just `columns` maps
+      const invoicesDoc = await db.get<Table>(invoicesId)
+      invoicesDoc.schema.person = {
+        type: FieldType.LINK,
+        name: "person",
+        fieldName: "invoices",
+        tableId: peopleId,
+        relationshipType: RelationshipType.MANY_TO_MANY,
+      }
+      invoicesDoc.views = {
+        "Invoices Grid": {
+          version: 2,
+          id: "view_invoices_grid",
+          name: "Invoices Grid",
+          tableId: invoicesId,
+          schema: {
+            name: { visible: true },
+          },
+          query: {
+            [ArrayOperator.CONTAINS]: {
+              [`person.${ILLEGAL_FIELD_NAME}`]: ["Order-1"],
+            },
+          },
+          queryUI: {
+            logicalOperator: UILogicalOperator.ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ANY,
+                filters: [
+                  {
+                    operator: ArrayOperator.CONTAINS,
+                    field: `person.${ILLEGAL_FIELD_NAME}`,
+                    value: ["Order-1"],
+                  },
+                ],
+              },
+            ],
           },
         },
       }
@@ -165,7 +235,7 @@ describe("sanitize relationship field names migration", () => {
         },
       }
 
-      await db.bulkDocs([ordersDoc, peopleDoc, linkDoc])
+      await db.bulkDocs([ordersDoc, peopleDoc, invoicesDoc, linkDoc])
     })
   })
 
@@ -182,11 +252,12 @@ describe("sanitize relationship field names migration", () => {
   it("sanitises the fieldName across both tables and link docs, restoring saves", async () => {
     await config.doInContext(config.getDevWorkspaceId(), () => migration())
 
-    const { orders, people, linkFieldNames, linkIds } =
+    const { orders, people, invoices, linkFieldNames, linkIds } =
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const db = context.getWorkspaceDB()
         const orders = await db.get<Table>(ordersId)
         const people = await db.get<Table>(peopleId)
+        const invoices = await db.get<Table>(invoicesId)
         const links = await db.allDocs<LinkDocument>({
           startkey: "li",
           endkey: `li￰`,
@@ -196,6 +267,7 @@ describe("sanitize relationship field names migration", () => {
         return {
           orders,
           people,
+          invoices,
           linkFieldNames: docs.flatMap(d => [
             d.doc1.fieldName,
             d.doc2.fieldName,
@@ -249,6 +321,32 @@ describe("sanitize relationship field names migration", () => {
       "columns" in customerField ? customerField.columns : undefined
     expect(relColumns?.[ILLEGAL_FIELD_NAME]).toBeUndefined()
     expect(relColumns?.[SANITISED_FIELD_NAME]).toBeDefined()
+
+    // owning table's view: filter through the relationship (`customer.<col>`)
+    // rewritten in both `query` and `queryUI`
+    const ordersQuery = ordersView.query as SearchFilters
+    expect(
+      ordersQuery[ArrayOperator.CONTAINS]![`customer.${ILLEGAL_FIELD_NAME}`]
+    ).toBeUndefined()
+    expect(
+      ordersQuery[ArrayOperator.CONTAINS]![`customer.${SANITISED_FIELD_NAME}`]
+    ).toBeDefined()
+    const ordersUiFilters = ordersView.queryUI!.groups![0]
+      .filters as SearchFilter[]
+    expect(ordersUiFilters[0].field).toEqual(
+      `1:customer.${SANITISED_FIELD_NAME}`
+    )
+
+    // filter-only table: reached by the cross-table pass despite having no
+    // `columns` map entry, and its `person.<col>` filter rewritten
+    const invoicesView = invoices.views!["Invoices Grid"] as ViewV2
+    const invoicesQuery = invoicesView.query as SearchFilters
+    expect(
+      invoicesQuery[ArrayOperator.CONTAINS]![`person.${ILLEGAL_FIELD_NAME}`]
+    ).toBeUndefined()
+    expect(
+      invoicesQuery[ArrayOperator.CONTAINS]![`person.${SANITISED_FIELD_NAME}`]
+    ).toBeDefined()
 
     // the table can be saved again (validateTable no longer throws)
     const savable = await config.api.table.get(ordersId)

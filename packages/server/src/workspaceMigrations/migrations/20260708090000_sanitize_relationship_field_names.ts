@@ -60,14 +60,20 @@ const sanitize = (name: string, taken: Set<string>): string => {
 // SearchFilters and legacy-array forms, and the `queryUI` group tree). `match`
 // receives each field key with any numeric uniqueness prefix (e.g. `1:`) removed
 // and returns the replacement key, or undefined to leave the reference untouched.
+// Returns whether any reference was rewritten.
 const renameViewFilterFields = (
   view: ViewV2,
   match: (bareKey: string) => string | undefined
-) => {
+): boolean => {
+  let changed = false
   const rename = (fieldKey: string): string => {
     const { prefix, key } = dataFilters.getKeyNumbering(fieldKey)
     const renamed = match(key)
-    return renamed === undefined ? fieldKey : `${prefix || ""}${renamed}`
+    if (renamed === undefined || renamed === key) {
+      return fieldKey
+    }
+    changed = true
+    return `${prefix || ""}${renamed}`
   }
 
   const renameConditionKeys = (filters: SearchFilters) => {
@@ -117,6 +123,8 @@ const renameViewFilterFields = (
     }
   }
   renameGroups(view.queryUI?.groups)
+
+  return changed
 }
 
 // rewrite references to a renamed column *within its own table*
@@ -170,32 +178,59 @@ const renameOwnReferences = (table: Table, old: string, updated: string) => {
 }
 
 // rewrite references to `relatedTableId`.`old` inside views of `table` that
-// expose the related column through a relationship field's `columns` map
+// expose the related column through a relationship field - both in the field's
+// `columns` map and in saved filters keyed as `relationshipField.old` (or
+// `relationshipField.old.subField`). Returns whether anything was rewritten.
 const renameRelationshipColumnRefs = (
   table: Table,
   relatedTableId: string,
   old: string,
   updated: string
-) => {
+): boolean => {
+  const relFields = Object.entries(table.schema)
+    .filter(
+      ([, field]) =>
+        field.type === FieldType.LINK && field.tableId === relatedTableId
+    )
+    .map(([fieldName]) => fieldName)
+  if (relFields.length === 0) {
+    return false
+  }
+
+  let changed = false
   for (const view of Object.values(table.views || {})) {
     if (!helpers.views.isV2(view) || !view.schema) {
       continue
     }
-    for (const [fieldName, viewField] of Object.entries(view.schema)) {
-      const tableField = table.schema[fieldName]
-      if (
-        tableField?.type !== FieldType.LINK ||
-        tableField.tableId !== relatedTableId
-      ) {
-        continue
-      }
-      const columns = "columns" in viewField ? viewField.columns : undefined
+    for (const relField of relFields) {
+      const viewField = view.schema[relField]
+      const columns =
+        viewField && "columns" in viewField ? viewField.columns : undefined
       if (columns && columns[old]) {
         columns[updated] = columns[old]
         delete columns[old]
+        changed = true
       }
     }
+    const filtersChanged = renameViewFilterFields(view, key => {
+      for (const relField of relFields) {
+        const prefix = `${relField}.`
+        if (!key.startsWith(prefix)) {
+          continue
+        }
+        const rest = key.slice(prefix.length)
+        if (rest === old) {
+          return `${prefix}${updated}`
+        }
+        if (rest.startsWith(`${old}.`)) {
+          return `${prefix}${updated}${rest.slice(old.length)}`
+        }
+      }
+      return undefined
+    })
+    changed = changed || filtersChanged
   }
+  return changed
 }
 
 const migration = async () => {
@@ -250,33 +285,30 @@ const migration = async () => {
     return
   }
 
-  // 2. rewrite relationship `columns` references in views across all tables
+  // 2. rewrite relationship references (view `columns` maps + saved filter keys)
+  //    to the renamed column in views across all tables
   for (const rename of renames) {
     for (const table of tables) {
-      const references = Object.values(table.views || {}).some(view => {
-        if (!helpers.views.isV2(view) || !view.schema) {
-          return false
-        }
-        return Object.entries(view.schema).some(([fieldName, viewField]) => {
-          const tableField = table.schema[fieldName]
-          const columns = "columns" in viewField ? viewField.columns : undefined
-          return (
-            tableField?.type === FieldType.LINK &&
-            tableField.tableId === rename.tableId &&
-            !!columns?.[rename.old]
-          )
-        })
-      })
-      if (!references) {
+      const relatesToRenamed = Object.values(table.schema).some(
+        field =>
+          field.type === FieldType.LINK && field.tableId === rename.tableId
+      )
+      if (!relatesToRenamed) {
         continue
       }
+      const wasQueued = rawTableCache.has(table._id!)
       const rawTable = await getRawTable(table._id!)
-      renameRelationshipColumnRefs(
+      const changed = renameRelationshipColumnRefs(
         rawTable,
         rename.tableId,
         rename.old,
         rename.updated
       )
+      // only keep the table queued for writing if it (or an earlier step)
+      // actually changed it
+      if (!changed && !wasQueued) {
+        rawTableCache.delete(table._id!)
+      }
     }
   }
 
