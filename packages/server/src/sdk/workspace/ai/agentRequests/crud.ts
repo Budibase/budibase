@@ -11,6 +11,7 @@ import type {
   AgentRequestEntry,
   AgentRequestsSummary,
   AgentRequestStatus,
+  StatusChangedAction,
   UserMessageAction,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
@@ -458,8 +459,23 @@ export async function updateRequestStatus({
       return
     }
 
+    // Defensive re-entry (e.g. two escalate tool calls in the same turn)
+    // nothing actually changed, so there's nothing to record or save.
+    if (request.status === status) {
+      return
+    }
+
     const timestamp = nowIso()
     const isTerminal = isTerminalStatus(status)
+
+    const statusChangedAction: StatusChangedAction = {
+      id: utils.newid(),
+      timestamp,
+      type: "status_changed",
+      from: request.status,
+      to: status,
+      ...(error === undefined ? {} : { error }),
+    }
 
     const updatedEntries = request.entries.map((entry, idx) => {
       if (idx !== request.entries.length - 1) {
@@ -478,6 +494,7 @@ export async function updateRequestStatus({
       await saveRequest({
         ...request,
         entries: updatedEntries,
+        actions: [...(request.actions ?? []), statusChangedAction],
         status,
         updatedAt: timestamp,
         ...(isTerminal ? { completedAt: timestamp } : {}),
