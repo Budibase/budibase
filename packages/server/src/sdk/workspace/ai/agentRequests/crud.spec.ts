@@ -489,7 +489,7 @@ describe("agentRequests crud", () => {
         await updateRequestStatus({
           requestId,
           status: "completed",
-          allowFromNeedsInput: true,
+          isHumanResponse: true,
         })
 
         const [request] = await fetchRequestsByAgent("agent_1")
