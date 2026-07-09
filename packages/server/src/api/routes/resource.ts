@@ -2,7 +2,7 @@ import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 import { destinationWorkspaceBuilderOrAdmin } from "../../middleware/destinationWorkspaceBuilderOrAdmin"
 import * as controller from "../controllers/resource"
-import { builderRoutes } from "./endpointGroups"
+import { builderAdminRoutes, builderRoutes } from "./endpointGroups"
 
 const duplicateRequestValidator = auth.joiValidator.body(
   Joi.object({
@@ -13,7 +13,7 @@ const duplicateRequestValidator = auth.joiValidator.body(
 )
 
 builderRoutes.get("/api/resources", controller.getResourceDependencies)
-builderRoutes.post(
+builderAdminRoutes.post(
   "/api/resources/duplicate",
   duplicateRequestValidator,
   destinationWorkspaceBuilderOrAdmin,
