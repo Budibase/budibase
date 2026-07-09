@@ -67,6 +67,7 @@
     datasource={{ type: "table", tableId }}
     on:change={e => (localFilters = e.detail)}
     {bindings}
+    flagInvalidFields
   />
   <div>
     <Button

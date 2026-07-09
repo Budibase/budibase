@@ -115,7 +115,14 @@
   async function deleteView(view: ViewV2 | View) {
     try {
       if (helpers.views.isV2(view)) {
-        await viewsV2.delete(view as ViewV2)
+        const viewV2 = view as ViewV2
+        const isSelected = params.viewId === viewV2.id
+        await viewsV2.delete(viewV2)
+        if (isSelected) {
+          goto(
+            `/builder/workspace/${$appStore.appId}/data/table/${viewV2.tableId}`
+          )
+        }
       } else {
         await views.delete(view as View)
       }
