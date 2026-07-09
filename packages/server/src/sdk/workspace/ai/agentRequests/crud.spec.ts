@@ -5,7 +5,6 @@ import {
   fetchRequests,
   fetchRequestsByAgent,
   fetchRequestsSummary,
-  findRequestBySession,
   initActiveRequest,
   resolveFinalRequestStatus,
   updateRequestStatus,
@@ -356,7 +355,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("does not move a needs_input request away without allowFromNeedsInput", async () => {
+    it("does not move a needs_input request away without isHumanResponse", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await initActiveRequest({
           agentId: "agent_1",
@@ -383,7 +382,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("moves a needs_input request when allowFromNeedsInput is set (escalation resolved)", async () => {
+    it("moves a needs_input request when isHumanResponse is set (escalation resolved)", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await initActiveRequest({
           agentId: "agent_1",
@@ -401,7 +400,7 @@ describe("agentRequests crud", () => {
         await updateRequestStatus({
           requestId,
           status: "completed",
-          allowFromNeedsInput: true,
+          isHumanResponse: true,
         })
 
         const [request] = await fetchRequestsByAgent("agent_1")
@@ -764,31 +763,6 @@ describe("agentRequests crud", () => {
         expect(
           firstPage.map(r => r._id).concat(secondPage.map(r => r._id))
         ).toHaveLength(3)
-      })
-    })
-  })
-
-  describe("findRequestBySession", () => {
-    it("finds the request that has an entry with the given sessionId", async () => {
-      await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
-          source: "Chat",
-        }))!
-
-        const found = await findRequestBySession("agent_1", "session_1")
-        expect(found?._id).toEqual(requestId)
-      })
-    })
-
-    it("returns undefined when no request matches the session", async () => {
-      await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const found = await findRequestBySession("agent_1", "unknown-session")
-        expect(found).toBeUndefined()
       })
     })
   })

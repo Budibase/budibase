@@ -233,8 +233,7 @@ export async function generateInteractionSummary({
     messages: [
       {
         role: "system",
-        content:
-          'Summarize the user\'s intent in this single message for a UI timeline entry. Write it in third person starting with "User", e.g. "User asked about VPN access". Return plain text only. Use 4 to 6 words, no quotes, no punctuation unless necessary.',
+        content: `Summarize the user's intent in this single message for a UI timeline entry. Write it in third person starting with "User", e.g. "User asked about VPN access". Return plain text only. Use 4 to 6 words, no quotes, no punctuation unless necessary.`,
       },
       {
         role: "user",

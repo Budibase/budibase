@@ -69,7 +69,7 @@ describe("BuilderSocket - SelectApp authorization", () => {
     // Instantiated without going through `new BuilderSocket(app, server)`
     // that constructor stands up a real socket.io server + Redis adapter,
     // which isn't supported in this test environment. We only need the
-    // onConnect handler under test, so we bind it to a bare instance.
+    // `onConnect` handler under test, so we bind it to a bare instance.
     const socketInstance = Object.create(BuilderSocket.prototype) as any
     socketInstance.app = new Koa()
     socketInstance.joinRoom = jest.fn()
@@ -88,6 +88,24 @@ describe("BuilderSocket - SelectApp authorization", () => {
     // be able to join Workspace B's room just by sending its id.
     expect(socketInstance.joinRoom).not.toHaveBeenCalled()
     expect(fakeSocket.disconnect).toHaveBeenCalledWith(true)
+  })
+
+  it("does not invoke the SelectApp callback when the user is not authorized for the requested workspace", async () => {
+    const socketInstance = Object.create(BuilderSocket.prototype) as any
+    socketInstance.app = new Koa()
+    socketInstance.joinRoom = jest.fn()
+    socketInstance.getRoomSessions = jest.fn().mockResolvedValue([])
+
+    const { fakeSocket, handlers } = createFakeSocket()
+    await socketInstance.onConnect(fakeSocket)
+
+    const callback = jest.fn()
+    await handlers[BuilderSocketEvent.SelectApp](
+      { appId: workspaceBDevId },
+      callback
+    )
+
+    expect(callback).not.toHaveBeenCalled()
   })
 
   it("lets a builder join their own workspace's room via SelectApp", async () => {
