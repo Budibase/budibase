@@ -411,7 +411,6 @@ export async function slackWebhook(
         let parsed: {
           escalationId: string
           notificationDocId: string
-          appId: string
         }
         try {
           parsed = JSON.parse(event.value ?? "")
@@ -419,7 +418,9 @@ export async function slackWebhook(
           console.error("Escalation action: invalid button value", event.value)
           return
         }
-        const { escalationId, notificationDocId, appId } = parsed
+        // The appId carried in the button value is untrusted - resolve the
+        // context from the verified webhook route's workspaceId instead.
+        const { escalationId, notificationDocId } = parsed
 
         const slackResponse = {
           actionId: event.actionId,
@@ -430,7 +431,7 @@ export async function slackWebhook(
         }
 
         try {
-          const result = await context.doInContext(appId, async () => {
+          const result = await context.doInContext(workspaceId, async () => {
             // We can respond with closed or
             return sdk.escalations.respond(
               escalationId,
@@ -452,7 +453,7 @@ export async function slackWebhook(
           console.error("Escalation action: failed to record response", {
             escalationId,
             notificationDocId,
-            appId,
+            workspaceId,
             message: error instanceof Error ? error.message : String(error),
           })
           if (event.thread) {
