@@ -147,7 +147,7 @@
     try {
       showSidePanel = true
       loading = true
-      const response = await queries.preview(newQuery)
+      const response = await queries.preview({ ...newQuery, schema })
       if (response.rows.length === 0) {
         notifications.info(
           "Query results empty. Please execute a query with results to create your schema."
