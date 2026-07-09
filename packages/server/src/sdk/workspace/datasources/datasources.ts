@@ -37,6 +37,7 @@ import {
 import { setupCreationAuth as googleSetupCreationAuth } from "../../../integrations/googlesheets"
 import sdk from "../../index"
 import { getEnvironmentVariables } from "../../utils"
+import { ensureValidPrimaryDisplay } from "../tables/utils"
 
 const ENV_VAR_PREFIX = "env."
 
@@ -394,6 +395,8 @@ const preSaveAction: Partial<Record<SourceName, any>> = {
  */
 export function setDefaultDisplayColumns(datasource: Datasource) {
   for (const entity of Object.values(datasource.entities || {})) {
+    // the display column can have been dropped from the source database
+    ensureValidPrimaryDisplay(entity)
     if (entity.primaryDisplay) {
       continue
     }
