@@ -155,6 +155,7 @@
                 <input
                   class="screen-search-input"
                   placeholder="Search components"
+                  aria-label="Search components"
                   bind:value={searchTerm}
                   bind:this={searchInput}
                   on:click|stopPropagation
