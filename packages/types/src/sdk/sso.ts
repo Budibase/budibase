@@ -10,6 +10,7 @@ import { SaveUserOpts } from "./user"
 export interface JwtClaims {
   preferred_username?: string
   email?: string
+  email_verified?: boolean
 }
 
 export interface SSOAuthDetails {
@@ -18,6 +19,7 @@ export interface SSOAuthDetails {
   providerType: SSOProviderType
   userId: string
   email?: string
+  emailVerified?: boolean
   profile?: SSOProfile
 }
 
