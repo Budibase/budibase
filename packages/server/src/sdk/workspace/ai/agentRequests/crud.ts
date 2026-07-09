@@ -2,8 +2,8 @@ import { context, docIds, Duration } from "@budibase/backend-core"
 import type {
   AgentRequest,
   AgentRequestEntry,
-  AgentRequestStatus,
   AgentRequestsSummary,
+  AgentRequestStatus,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
 import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
@@ -11,6 +11,7 @@ import {
   queryRequestsByAgent,
   queryRequestStatuses,
   queryRequestsByUpdatedAt,
+  queryRequestsByStatusAndUpdatedAt,
 } from "./views"
 
 const THREAD_CANDIDATE_LIMIT = 10
@@ -177,10 +178,16 @@ async function createNewRequest({
 export async function fetchRequests({
   limit,
   page,
+  status,
 }: {
   limit: number
   page: number
+  status?: AgentRequestStatus
 }): Promise<AgentRequest[]> {
+  if (status) {
+    return await queryRequestsByStatusAndUpdatedAt({ status, limit, page })
+  }
+
   return await queryRequestsByUpdatedAt({
     limit,
     page,

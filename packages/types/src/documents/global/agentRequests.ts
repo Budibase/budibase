@@ -1,10 +1,13 @@
 import { Document } from "../../"
 
-export type AgentRequestStatus =
-  | "active"
-  | "needs_input"
-  | "completed"
-  | "failed"
+export const AGENT_REQUEST_STATUSES = [
+  "active",
+  "needs_input",
+  "completed",
+  "failed",
+] as const
+
+export type AgentRequestStatus = (typeof AGENT_REQUEST_STATUSES)[number]
 
 export interface AgentRequestEntry {
   sessionId: string

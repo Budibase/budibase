@@ -2,6 +2,7 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import {
   createOrUpdateRequestForPrompt,
+  fetchRequests,
   fetchRequestsByAgent,
   fetchRequestsSummary,
   initActiveRequest,
@@ -461,6 +462,124 @@ describe("agentRequests crud", () => {
           failed: 1,
           needs_input: 1,
         })
+      })
+    })
+  })
+
+  describe("fetchRequests", () => {
+    it("returns every request ordered by most recently updated when no status is given", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+
+        const first = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation,
+          source: "Chat",
+        }))!
+        const second = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_2",
+          latestPrompt: "Book me a meeting",
+          operation,
+          source: "Chat",
+        }))!
+        await updateRequestStatus({
+          requestId: second.requestId,
+          status: "completed",
+        })
+
+        const requests = await fetchRequests({ limit: 10, page: 1 })
+        expect(requests.map(r => r._id)).toEqual([
+          second.requestId,
+          first.requestId,
+        ])
+      })
+    })
+
+    it("only returns requests matching the given status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+
+        const active = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_active",
+          latestPrompt: "Book me a meeting",
+          operation,
+          source: "Chat",
+        }))!
+
+        const completed = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_completed",
+          latestPrompt: "Book me a meeting",
+          operation,
+          source: "Chat",
+        }))!
+        await updateRequestStatus({
+          requestId: completed.requestId,
+          status: "completed",
+        })
+
+        const failedRequests = await fetchRequests({
+          limit: 10,
+          page: 1,
+          status: "failed",
+        })
+        expect(failedRequests).toHaveLength(0)
+
+        const completedRequests = await fetchRequests({
+          limit: 10,
+          page: 1,
+          status: "completed",
+        })
+        expect(completedRequests.map(r => r._id)).toEqual([completed.requestId])
+
+        const activeRequests = await fetchRequests({
+          limit: 10,
+          page: 1,
+          status: "active",
+        })
+        expect(activeRequests.map(r => r._id)).toEqual([active.requestId])
+      })
+    })
+
+    it("paginates within a single status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+
+        for (const sessionId of ["session_1", "session_2", "session_3"]) {
+          await initActiveRequest({
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId,
+            latestPrompt: "Book me a meeting",
+            operation,
+            source: "Chat",
+          })
+        }
+
+        const firstPage = await fetchRequests({
+          limit: 2,
+          page: 1,
+          status: "active",
+        })
+        const secondPage = await fetchRequests({
+          limit: 2,
+          page: 2,
+          status: "active",
+        })
+
+        expect(firstPage).toHaveLength(2)
+        expect(secondPage).toHaveLength(1)
+        expect(
+          firstPage.map(r => r._id).concat(secondPage.map(r => r._id))
+        ).toHaveLength(3)
       })
     })
   })

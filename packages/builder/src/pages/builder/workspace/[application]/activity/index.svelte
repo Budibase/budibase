@@ -3,7 +3,13 @@
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
   import { builderStore } from "@/stores/builder"
-  import { Body, Pagination, Table, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Pagination,
+    Select,
+    Table,
+    notifications,
+  } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
   import type {
     AgentRequestsSummary,
@@ -61,16 +67,26 @@
 
   const RELATIVE_TIME_REFRESH_MS = 30000
 
+  type StatusFilter = AgentRequestStatus | "all"
+
   let loading = $state(false)
   let currentPage = $state(1)
+  let statusFilter = $state<StatusFilter>("all")
   let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
   let summary = $state<AgentRequestsSummary | null>(null)
   let userNames = $state<Record<string, string>>({})
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
+  let filteredTotal = $derived.by(() => {
+    if (!summary) {
+      return 0
+    }
+    return statusFilter === "all" ? summary.total : summary[statusFilter]
+  })
+
   let hasNextPage = $derived.by(() => {
-    return !!summary && summary.total > currentPage * PAGE_SIZE
+    return filteredTotal > currentPage * PAGE_SIZE
   })
 
   // Ticks on an interval purely to force updatedLabel to re-derive
@@ -82,6 +98,14 @@
     completed: { label: "Completed" },
     failed: { label: "Failed" },
   }
+
+  const statusFilterOptions: { label: string; value: StatusFilter }[] = [
+    { label: "All statuses", value: "all" },
+    ...(Object.keys(requestStatusMeta) as AgentRequestStatus[]).map(status => ({
+      label: requestStatusMeta[status].label,
+      value: status,
+    })),
+  ]
 
   const getRequestTitle = (request: AgentRequest) => {
     return request.title || "Untitled request"
@@ -167,44 +191,61 @@
   let paginationLabel = $derived.by(() => {
     const start = (currentPage - 1) * PAGE_SIZE + 1
     const end = start + paginatedRows.length - 1
-    const total = summary?.total || 0
 
     if (!paginatedRows.length) {
       return "Showing 0 items"
     }
 
-    return `Showing ${start}–${end} of ${total} items`
+    return `Showing ${start}–${end} of ${filteredTotal} items`
   })
 
-  async function loadRequests(page = currentPage) {
-    if (!($agentsStore.agents || []).length) {
-      allRequests = []
-      summary = null
-      return
-    }
+  const loadRequests = (() => {
+    let requestSequence = 0
 
-    loading = true
-    try {
-      const response = await API.fetchAgentRequests({
-        limit: PAGE_SIZE,
-        page,
-      })
-      allRequests = response.requests
-      summary = response.summary
-      try {
-        await hydrateUserNames(response.requests)
-      } catch (error) {
-        console.error("Failed to hydrate agent request user names", error)
+    return async function loadRequests(page = currentPage) {
+      const sequence = ++requestSequence
+
+      if (!($agentsStore.agents || []).length) {
+        allRequests = []
+        summary = null
+        loading = false
+        return
       }
-    } catch (error) {
-      console.error("Failed to fetch agent requests", error)
-      notifications.error("Failed to load agent actions")
-      allRequests = []
-      summary = null
-    } finally {
-      loading = false
+
+      loading = true
+      try {
+        const response = await API.fetchAgentRequests({
+          limit: PAGE_SIZE,
+          page,
+          status: statusFilter === "all" ? undefined : statusFilter,
+        })
+        if (sequence !== requestSequence) {
+          // A newer request was issued while this one was in flight - discard
+          // this stale response so it can't overwrite fresher state.
+          return
+        }
+        allRequests = response.requests
+        summary = response.summary
+        try {
+          await hydrateUserNames(response.requests)
+        } catch (error) {
+          console.error("Failed to hydrate agent request user names", error)
+        }
+      } catch (error) {
+        if (sequence !== requestSequence) {
+          return
+        }
+        console.error("Failed to fetch agent requests", error)
+        notifications.error("Failed to load agent actions")
+        allRequests = []
+        summary = null
+      } finally {
+        if (sequence === requestSequence) {
+          loading = false
+        }
+      }
     }
-  }
+  })()
 
   async function hydrateUserNames(requests: AgentRequest[]) {
     const missingUserIds = [...new Set(requests.map(request => request.userId))]
@@ -240,6 +281,17 @@
       ...userNames,
       ...Object.fromEntries(entries),
     }
+  }
+
+  function changeStatusFilter(nextFilter: StatusFilter) {
+    if (nextFilter === statusFilter) {
+      return
+    }
+
+    statusFilter = nextFilter
+    currentPage = 1
+    selectedRequestId = null
+    loadRequests(1)
   }
 
   function changePage(nextPage: number) {
@@ -299,6 +351,15 @@
     }
 
     const handleAgentRequestChange = async (request: AgentRequest) => {
+      // With a status filter active, a change can move a request in or out
+      // of the filtered set (e.g. it stops being "Failed"), which a local
+      // patch can't express correctly - only a re-fetch can. loadRequests
+      // also refreshes summary from the server, so no manual patch is needed.
+      if (statusFilter !== "all") {
+        await loadRequests(currentPage)
+        return
+      }
+
       const previous = allRequests.find(r => r._id === request._id)
       if (previous) {
         allRequests = allRequests.map(r =>
@@ -378,6 +439,18 @@
         </section>
       {/each}
     </div>
+
+    <div class="filters-row">
+      <Select
+        size="M"
+        autoWidth
+        placeholder={false}
+        options={statusFilterOptions}
+        value={statusFilter}
+        on:change={({ detail }) => changeStatusFilter(detail)}
+      />
+    </div>
+
     <section class="requests-table-panel">
       <Table
         quiet
@@ -454,6 +527,15 @@
     display: flex;
     flex-direction: column;
     gap: calc(var(--spacing-s) - var(--spacing-xs));
+  }
+
+  .filters-row {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .filters-row :global(.spectrum-Picker) {
+    min-width: 180px;
   }
 
   .requests-table-panel {
