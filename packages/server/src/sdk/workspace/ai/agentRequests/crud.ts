@@ -13,12 +13,14 @@ import type {
   AgentRequestStatus,
   StatusChangedAction,
   UserMessageAction,
+  ToolCallAction,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
 import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
   generateInteractionSummary,
+  generateToolCallSummary,
 } from "./helpers"
 import {
   queryRequestsByAgent,
@@ -201,6 +203,100 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   }
 
   return saved
+}
+
+// Plain Omit<T, K> isn't distributive over a union - it collapses to the
+// properties common to every member, dropping variant-specific fields like
+// ToolCallAction.toolName. Distributing over each member first preserves them.
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never
+
+// Appends a single action to a request that isn't already loaded in memory
+// (unlike updateRequestStatus/createOrUpdateRequestForPrompt, callers here -
+// e.g. agentRuntime's onStepFinish - only have a requestId). get + put isn't
+// atomic, so retry on conflict since several tool calls can resolve in quick
+// succession.
+async function appendAction(
+  requestId: string,
+  action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">
+): Promise<void> {
+  const db = context.getWorkspaceDB()
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const request = await db.tryGet<AgentRequest>(requestId)
+    if (!request) {
+      return
+    }
+
+    const fullAction = {
+      ...action,
+      id: utils.newid(),
+      timestamp: nowIso(),
+    } as AgentRequestAction
+
+    try {
+      await saveRequest({
+        ...request,
+        actions: [...(request.actions ?? []), fullAction],
+      })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err) && attempt < 2) {
+        continue
+      }
+      throw err
+    }
+  }
+}
+
+export async function recordToolCall({
+  requestId,
+  agentId,
+  sessionId,
+  toolName,
+  status,
+  readableName,
+  input,
+  output,
+}: {
+  requestId: string
+  agentId: string
+  sessionId: string
+  toolName: string
+  status: ToolCallAction["status"]
+  readableName?: string
+  input?: unknown
+  output?: unknown
+}): Promise<void> {
+  let summary: string | undefined
+  try {
+    summary = await generateToolCallSummary({
+      toolName,
+      readableName,
+      status,
+      input,
+      output,
+      agentId,
+      sessionId,
+    })
+  } catch (error) {
+    console.error("Failed to generate agent request tool call summary", {
+      agentId,
+      sessionId,
+      toolName,
+      error,
+    })
+  }
+
+  await appendAction(requestId, {
+    type: "tool_call",
+    toolName,
+    status,
+    sessionId,
+    ...(readableName === undefined ? {} : { readableName }),
+    ...(summary === undefined ? {} : { summary }),
+  })
 }
 
 async function generateAndSaveRequestTitleIfMissing({

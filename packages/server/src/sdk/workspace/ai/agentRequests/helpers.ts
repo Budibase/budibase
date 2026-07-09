@@ -208,6 +208,62 @@ export async function generateAgentRequestTitle({
   return title
 }
 
+export async function generateToolCallSummary({
+  toolName,
+  readableName,
+  status,
+  input,
+  output,
+  agentId,
+  sessionId,
+}: {
+  toolName: string
+  readableName?: string
+  status: "success" | "error"
+  input?: unknown
+  output?: unknown
+  agentId: string
+  sessionId: string
+}): Promise<string> {
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const llm = await sdk.ai.llm.createLLM(
+    agent.aiconfig,
+    sessionId,
+    undefined,
+    agentId
+  )
+  const result = await generateText({
+    model: llm.chat,
+    providerOptions: llm.providerOptions?.(false),
+    headers: {
+      "x-litellm-tags": "bb-agent-request-tool-call-summary",
+    },
+    messages: [
+      {
+        role: "system",
+        content:
+          'Summarize a single tool call for a UI timeline entry, in plain user-friendly language, not technical jargon - describe what the action did and its outcome, e.g. "Searched tickets for email server errors" or "Failed to update the customer\'s address". Return plain text only. Use at most 6 to 7 words, no quotes, no punctuation unless necessary.',
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          tool: readableName || toolName,
+          status,
+          input,
+          output,
+        }),
+      },
+    ],
+  })
+
+  const summary = normalizeTitle(result.text || "")
+  if (!summary) {
+    throw new Error("Invalid tool call summary response")
+  }
+
+  return summary
+}
+
 export async function generateInteractionSummary({
   latestPrompt,
   agentId,

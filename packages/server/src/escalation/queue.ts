@@ -386,6 +386,28 @@ async function resumeOperation({
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
+      onToolCallCompleted: ({ toolName, status, input, output }) => {
+        if (!doc.requestId) {
+          return
+        }
+        return sdk.ai.agentRequests
+          .recordToolCall({
+            requestId: doc.requestId,
+            agentId: ctx.agentId,
+            sessionId: ctx.sessionId,
+            toolName,
+            status,
+            readableName: run.toolDisplayNames[toolName],
+            input,
+            output,
+          })
+          .catch(error => {
+            console.error(
+              "Failed to record agent request tool call on escalation resume",
+              { escalationId, agentId: ctx.agentId, toolName, error }
+            )
+          })
+      },
     })
 
     // Drain the stream (this runs the approved action) and capture the full

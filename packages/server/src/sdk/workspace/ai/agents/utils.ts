@@ -341,10 +341,12 @@ export function groupToolResultsByOutcome(
   successResults: TypedToolResult<ToolSet>[]
   successNames: string[]
   semanticFailureNames: string[]
+  semanticFailureResults: TypedToolResult<ToolSet>[]
 } {
   const successResults: TypedToolResult<ToolSet>[] = []
   const successNames: string[] = []
   const semanticFailureNames: string[] = []
+  const semanticFailureResults: TypedToolResult<ToolSet>[] = []
 
   for (const toolResult of toolResults) {
     if (toolResult.toolName !== ESCALATE_TOOL_NAME) {
@@ -358,6 +360,7 @@ export function groupToolResultsByOutcome(
 
     if (status === EscalateToolResultStatus.UNAVAILABLE) {
       semanticFailureNames.push(toolResult.toolName)
+      semanticFailureResults.push(toolResult)
       continue
     }
 
@@ -367,7 +370,12 @@ export function groupToolResultsByOutcome(
     }
   }
 
-  return { successResults, successNames, semanticFailureNames }
+  return {
+    successResults,
+    successNames,
+    semanticFailureNames,
+    semanticFailureResults,
+  }
 }
 
 export function formatIncompleteToolCallError(

@@ -34,7 +34,7 @@
       case "status_changed":
         return `Status changed to ${statusChangedLabelByStatus[action.to]}`
       case "tool_call":
-        return action.readableName || action.toolName
+        return action.summary || action.readableName || action.toolName
       case "escalation_raised":
         return action.recipients.length
           ? `Escalated to ${action.recipients.map(r => r.label).join(", ")}`

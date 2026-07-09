@@ -6,6 +6,7 @@ import {
   fetchRequestsByAgent,
   fetchRequestsSummary,
   initActiveRequest,
+  recordToolCall,
   resolveFinalRequestStatus,
   updateRequestStatus,
 } from "./crud"
@@ -13,12 +14,14 @@ import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
   generateInteractionSummary,
+  generateToolCallSummary,
 } from "./helpers"
 
 jest.mock("./helpers", () => ({
   analyzeAgentRequestLink: jest.fn(),
   generateAgentRequestTitle: jest.fn(),
   generateInteractionSummary: jest.fn(),
+  generateToolCallSummary: jest.fn(),
 }))
 
 jest.mock("../../../../websockets", () => ({
@@ -40,6 +43,7 @@ describe("agentRequests crud", () => {
   const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
   const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
   const generateInteractionSummaryMock = generateInteractionSummary as jest.Mock
+  const generateToolCallSummaryMock = generateToolCallSummary as jest.Mock
   const emitAgentRequestChangeMock =
     builderSocket?.emitAgentRequestChange as jest.Mock
 
@@ -49,6 +53,8 @@ describe("agentRequests crud", () => {
     generateAgentRequestTitleMock.mockResolvedValue("Generated title")
     generateInteractionSummaryMock.mockReset()
     generateInteractionSummaryMock.mockResolvedValue("User asked something")
+    generateToolCallSummaryMock.mockReset()
+    generateToolCallSummaryMock.mockResolvedValue("Did something useful")
     emitAgentRequestChangeMock.mockReset()
     await config.newTenant()
   })
@@ -580,6 +586,187 @@ describe("agentRequests crud", () => {
         expect(statusActions).toEqual([
           expect.objectContaining({ from: "active", to: "needs_input" }),
         ])
+      })
+    })
+  })
+
+  describe("tool_call actions", () => {
+    it("records a tool_call action on success", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "success",
+          readableName: "Book meeting",
+          input: { date: "2026-07-10" },
+          output: { meetingId: "m1" },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            type: "tool_call",
+            toolName: "book_meeting",
+            readableName: "Book meeting",
+            summary: "Did something useful",
+            status: "success",
+            sessionId: "session_1",
+            id: expect.any(String),
+            timestamp: expect.any(String),
+          }),
+        ])
+        expect(generateToolCallSummaryMock).toHaveBeenCalledWith({
+          toolName: "book_meeting",
+          readableName: "Book meeting",
+          status: "success",
+          input: { date: "2026-07-10" },
+          output: { meetingId: "m1" },
+          agentId: "agent_1",
+          sessionId: "session_1",
+        })
+      })
+    })
+
+    it("records a tool_call action on error", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "error",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            type: "tool_call",
+            toolName: "book_meeting",
+            status: "error",
+            summary: "Did something useful",
+          }),
+        ])
+        expect(toolCallActions[0]).not.toHaveProperty("readableName")
+      })
+    })
+
+    it("falls back to no summary when summary generation fails, without dropping the action", async () => {
+      generateToolCallSummaryMock.mockRejectedValue(new Error("LLM error"))
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "success",
+          readableName: "Book meeting",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            toolName: "book_meeting",
+            readableName: "Book meeting",
+            status: "success",
+          }),
+        ])
+        expect(toolCallActions[0]).not.toHaveProperty("summary")
+      })
+    })
+
+    it("records one action per tool call, appended to the existing actions", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "list_calendars",
+          status: "success",
+        })
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "error",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            toolName: "list_calendars",
+            status: "success",
+          }),
+          expect.objectContaining({
+            toolName: "book_meeting",
+            status: "error",
+          }),
+        ])
+      })
+    })
+
+    it("does nothing if the requestId does not exist", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await expect(
+          recordToolCall({
+            requestId: "agentrequest_missing",
+            agentId: "agent_1",
+            sessionId: "session_1",
+            toolName: "book_meeting",
+            status: "success",
+          })
+        ).resolves.toBeUndefined()
       })
     })
   })

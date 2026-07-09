@@ -190,6 +190,53 @@ const buildEscalateToolCallHandler =
     }
   }
 
+const buildToolCallTrackingHandler =
+  ({
+    trackingHandle,
+    agentId,
+    sessionId,
+    toolDisplayNames,
+  }: {
+    trackingHandle: AgentRequestTrackingHandle
+    agentId: string
+    sessionId: string
+    toolDisplayNames: Record<string, string>
+  }) =>
+  ({
+    toolName,
+    status,
+    input,
+    output,
+  }: {
+    toolName: string
+    status: "success" | "error"
+    input?: unknown
+    output?: unknown
+  }) => {
+    if (!trackingHandle) {
+      return
+    }
+    return sdk.ai.agentRequests
+      .recordToolCall({
+        requestId: trackingHandle.requestId,
+        agentId,
+        sessionId,
+        toolName,
+        status,
+        readableName: toolDisplayNames[toolName],
+        input,
+        output,
+      })
+      .catch(error => {
+        console.error("Failed to record agent request tool call", {
+          agentId,
+          sessionId,
+          toolName,
+          error,
+        })
+      })
+  }
+
 const markAgentRequestFailed = async ({
   trackingHandle,
   agentId,
@@ -567,6 +614,12 @@ export async function webhookChat({
       agentId,
       sessionId,
     }),
+    onToolCallCompleted: buildToolCallTrackingHandler({
+      trackingHandle,
+      agentId,
+      sessionId,
+      toolDisplayNames: run.toolDisplayNames,
+    }),
   })
 
   const uiMessageStream = result.toUIMessageStream({
@@ -758,6 +811,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         trackingHandle,
         agentId,
         sessionId,
+      }),
+      onToolCallCompleted: buildToolCallTrackingHandler({
+        trackingHandle,
+        agentId,
+        sessionId,
+        toolDisplayNames: run.toolDisplayNames,
       }),
     })
 
