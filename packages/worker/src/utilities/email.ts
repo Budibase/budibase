@@ -42,7 +42,7 @@ function createSMTPTransport(config?: SMTPInnerConfig) {
       auth: config?.auth,
     }
     options.tls = {
-      rejectUnauthorized: env.SMTP_IGNORE_SELF_SIGNED !== "true",
+      rejectUnauthorized: env.SMTP_REJECT_UNAUTHORIZED !== "true",
     }
     if (config?.connectionTimeout) {
       options.connectionTimeout = config.connectionTimeout
