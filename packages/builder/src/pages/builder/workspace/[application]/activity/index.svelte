@@ -208,6 +208,7 @@
       if (!($agentsStore.agents || []).length) {
         allRequests = []
         summary = null
+        loading = false
         return
       }
 
