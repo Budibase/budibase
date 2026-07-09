@@ -79,7 +79,8 @@ describe("outboundFetch", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://example.com/spec.json",
-      expect.objectContaining({ redirect: "manual" })
+      expect.objectContaining({ redirect: "manual" }),
+      expect.any(String)
     )
     expect(result).toBe(response)
   })
@@ -302,7 +303,8 @@ describe("outboundFetch", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       "https://example.com/other/path",
-      expect.objectContaining({ redirect: "manual" })
+      expect.objectContaining({ redirect: "manual" }),
+      expect.any(String)
     )
   })
 
