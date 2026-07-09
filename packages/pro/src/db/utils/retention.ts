@@ -7,8 +7,7 @@ const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
 
 export async function getOldestRetentionDate(quotaName: ConstantQuotaName) {
   const license = await licensing.cache.getCachedLicense()
-  const retentionDays =
-    license.quotas?.[QuotaType.CONSTANT]?.[quotaName]?.value
+  const retentionDays = license.quotas?.[QuotaType.CONSTANT]?.[quotaName]?.value
   if (
     retentionDays === licenses.UNLIMITED ||
     retentionDays == null ||

@@ -615,9 +615,9 @@ describe("backups", () => {
           objectStore.ObjectStoreBuckets.BACKUPS,
           "expired.tar.gz"
         )
-        await expect(backups.getWorkspaceBackup(backupId)).rejects.toMatchObject(
-          { status: 404 }
-        )
+        await expect(
+          backups.getWorkspaceBackup(backupId)
+        ).rejects.toMatchObject({ status: 404 })
       })
     })
 
@@ -665,9 +665,9 @@ describe("backups", () => {
 
         expect(result).toEqual({ deleted: 1, failed: 0 })
         expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
-        await expect(backups.getWorkspaceBackup(backupId)).rejects.toMatchObject(
-          { status: 404 }
-        )
+        await expect(
+          backups.getWorkspaceBackup(backupId)
+        ).rejects.toMatchObject({ status: 404 })
       })
     })
 
@@ -738,9 +738,9 @@ describe("backups", () => {
           objectStore.ObjectStoreBuckets.BACKUPS,
           "queued.tar.gz"
         )
-        await expect(backups.getWorkspaceBackup(backupId)).rejects.toMatchObject(
-          { status: 404 }
-        )
+        await expect(
+          backups.getWorkspaceBackup(backupId)
+        ).rejects.toMatchObject({ status: 404 })
       })
     })
   })
