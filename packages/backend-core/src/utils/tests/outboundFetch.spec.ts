@@ -486,37 +486,68 @@ describe("outboundFetch", () => {
   // ─── Pinned lookup ────────────────────────────────────────────────────────
 
   describe("createPinnedLookup", () => {
-    it("resolves any hostname to the pinned IPv4 address", done => {
+    it("resolves any hostname to the pinned IPv4 address", async () => {
       const lookup = createPinnedLookup("203.0.113.10")
-      lookup("attacker-controlled.example.com", {}, (err, address, family) => {
-        expect(err).toBeNull()
-        expect(address).toBe("203.0.113.10")
-        expect(family).toBe(4)
-        done()
+
+      await new Promise<void>((resolve, reject) => {
+        lookup(
+          "attacker-controlled.example.com",
+          {},
+          (err, address, family) => {
+            try {
+              expect(err).toBeNull()
+              expect(address).toBe("203.0.113.10")
+              expect(family).toBe(4)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+        )
       })
     })
 
-    it("resolves to the pinned IPv6 address with family 6", done => {
+    it("resolves to the pinned IPv6 address with family 6", async () => {
       const lookup = createPinnedLookup("2001:db8::1")
-      lookup("attacker-controlled.example.com", {}, (err, address, family) => {
-        expect(err).toBeNull()
-        expect(address).toBe("2001:db8::1")
-        expect(family).toBe(6)
-        done()
+
+      await new Promise<void>((resolve, reject) => {
+        lookup(
+          "attacker-controlled.example.com",
+          {},
+          (err, address, family) => {
+            try {
+              expect(err).toBeNull()
+              expect(address).toBe("2001:db8::1")
+              expect(family).toBe(6)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+        )
       })
     })
 
-    it("returns the pinned address as an array when all=true", done => {
+    it("returns the pinned address as an array when all=true", async () => {
       const lookup = createPinnedLookup("203.0.113.10")
-      lookup(
-        "attacker-controlled.example.com",
-        { all: true },
-        (err, addresses) => {
-          expect(err).toBeNull()
-          expect(addresses).toEqual([{ address: "203.0.113.10", family: 4 }])
-          done()
-        }
-      )
+
+      await new Promise<void>((resolve, reject) => {
+        lookup(
+          "attacker-controlled.example.com",
+          { all: true },
+          (err, addresses) => {
+            try {
+              expect(err).toBeNull()
+              expect(addresses).toEqual([
+                { address: "203.0.113.10", family: 4 },
+              ])
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+        )
+      })
     })
   })
 })
