@@ -591,16 +591,19 @@ describe("agentRequests crud", () => {
   })
 
   describe("tool_call actions", () => {
+    const createBookingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
     it("records a tool_call action on success", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
-          source: "Chat",
-        }))!
+        const { requestId } = (await createBookingRequest())!
 
         await recordToolCall({
           requestId,
@@ -643,14 +646,7 @@ describe("agentRequests crud", () => {
 
     it("records a tool_call action on error", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
-          source: "Chat",
-        }))!
+        const { requestId } = (await createBookingRequest())!
 
         await recordToolCall({
           requestId,
@@ -680,14 +676,7 @@ describe("agentRequests crud", () => {
       generateToolCallSummaryMock.mockRejectedValue(new Error("LLM error"))
 
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
-          source: "Chat",
-        }))!
+        const { requestId } = (await createBookingRequest())!
 
         await recordToolCall({
           requestId,
@@ -715,14 +704,7 @@ describe("agentRequests crud", () => {
 
     it("records one action per tool call, appended to the existing actions", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
-          source: "Chat",
-        }))!
+        const { requestId } = (await createBookingRequest())!
 
         await recordToolCall({
           requestId,
