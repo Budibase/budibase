@@ -92,7 +92,9 @@
   ]
   $: enforcedSSO = $organisation.isSSOEnforced
 
-  $: oidcConfig = providers?.oidc?.config?.configs?.[0]
+  $: oidcConfig = providers?.oidc?.config?.configs?.[0] ?? {
+    allowUnverifiedEmailLinking: false,
+  }
 
   $: OIDCConfigFields = {
     Oidc: [
@@ -291,11 +293,22 @@
     if (!oidcDoc?._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
-        config: { configs: [{ activated: false, scopes: defaultScopes }] },
+        config: {
+          configs: [
+            {
+              activated: false,
+              scopes: defaultScopes,
+              allowUnverifiedEmailLinking: false,
+            },
+          ],
+        },
       }
     } else {
       if (!oidcDoc.config.configs[0].scopes) {
         oidcDoc.config.configs[0].scopes = [...defaultScopes]
+      }
+      if (oidcDoc.config.configs[0].allowUnverifiedEmailLinking === undefined) {
+        oidcDoc.config.configs[0].allowUnverifiedEmailLinking = false
       }
       providers.oidc = oidcDoc
     }
