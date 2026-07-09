@@ -460,12 +460,19 @@ async function resumeOperation({
     )
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
-    await markEscalationRequestResolved(
-      sdk.ai.agentRequests.resolveFinalRequestStatus({
+    if (doc.requestId) {
+      const outcome = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+        requestId: doc.requestId,
+        agentId: ctx.agentId,
+        sessionId: ctx.sessionId,
         toolCallsIncomplete,
         unrecoveredToolFailures,
+        finalResponse: text,
       })
-    )
+      if (outcome) {
+        await markEscalationRequestResolved(outcome)
+      }
+    }
   } catch (error) {
     await markEscalationRequestResolved({
       status: "failed",

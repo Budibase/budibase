@@ -20,6 +20,7 @@ import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
   generateInteractionSummary,
+  generateRequestOutcome,
   generateToolCallSummary,
 } from "./helpers"
 import {
@@ -449,6 +450,60 @@ export function resolveFinalRequestStatus({
     }
   }
   return { status: "completed" }
+}
+
+// Judges the request's actual outcome via LLM instead of just counting tool
+// failures (see resolveFinalRequestStatus above, kept as the fallback when
+// the judgment call itself fails). Returns undefined when there's nothing to
+// decide yet - e.g. the request just moved to needs_input mid-turn (an
+// escalation), or already reached a terminal status through another path -
+// callers should skip updateRequestStatus entirely in that case rather than
+// spend an LLM call on a result that would be discarded anyway.
+export async function resolveFinalRequestOutcome({
+  requestId,
+  agentId,
+  sessionId,
+  toolCallsIncomplete,
+  unrecoveredToolFailures,
+  finalResponse,
+}: {
+  requestId: string
+  agentId: string
+  sessionId: string
+  toolCallsIncomplete: boolean
+  unrecoveredToolFailures: Set<string>
+  finalResponse: string
+}): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
+  const db = context.getWorkspaceDB()
+  const request = await db.tryGet<AgentRequest>(requestId)
+  if (
+    !request ||
+    isTerminalStatus(request.status) ||
+    request.status === "needs_input"
+  ) {
+    return undefined
+  }
+
+  try {
+    const { status, reason } = await generateRequestOutcome({
+      title: request.title,
+      actions: request.actions ?? [],
+      finalResponse,
+      toolCallsIncomplete,
+      agentId,
+      sessionId,
+    })
+    return { status, ...(status === "failed" ? { error: reason } : {}) }
+  } catch (error) {
+    console.error(
+      "Failed to generate agent request outcome, falling back to mechanical criteria",
+      { requestId, agentId, sessionId, error }
+    )
+    return resolveFinalRequestStatus({
+      toolCallsIncomplete,
+      unrecoveredToolFailures,
+    })
+  }
 }
 
 export async function fetchRequestsByAgentAndUser(

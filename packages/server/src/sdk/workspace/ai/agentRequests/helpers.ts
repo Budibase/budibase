@@ -1,5 +1,5 @@
 import { generateText } from "ai"
-import type { AgentRequest } from "@budibase/types"
+import type { AgentRequest, AgentRequestAction } from "@budibase/types"
 import sdk from "../../.."
 
 interface AgentRequestLinkDecision {
@@ -304,4 +304,113 @@ export async function generateInteractionSummary({
   }
 
   return summary
+}
+
+export interface RequestOutcomeDecision {
+  status: "completed" | "failed"
+  reason: string
+}
+
+const summarizeActionForOutcome = (action: AgentRequestAction) => {
+  switch (action.type) {
+    case "user_message":
+      return { type: action.type, summary: action.summary }
+    case "tool_call":
+      return {
+        type: action.type,
+        tool: action.readableName || action.toolName,
+        status: action.status,
+        summary: action.summary,
+      }
+    case "status_changed":
+      return {
+        type: action.type,
+        from: action.from,
+        to: action.to,
+        error: action.error,
+      }
+    case "escalation_raised":
+      return { type: action.type, recipients: action.recipients }
+  }
+}
+
+const extractOutcomeJson = (
+  value: string
+): RequestOutcomeDecision | undefined => {
+  const trimmed = value.trim()
+  const jsonMatch = trimmed.match(/\{[\s\S]*\}/)
+  const candidate = jsonMatch?.[0] || trimmed
+
+  try {
+    const parsed = JSON.parse(candidate) as Partial<RequestOutcomeDecision>
+    if (parsed.status !== "completed" && parsed.status !== "failed") {
+      return undefined
+    }
+    const reason = typeof parsed.reason === "string" ? parsed.reason.trim() : ""
+    if (!reason) {
+      return undefined
+    }
+    return { status: parsed.status, reason }
+  } catch {
+    return undefined
+  }
+}
+
+// Judges whether the request's underlying goal was met, not whether every
+// tool call technically succeeded - a failed tool call that gets worked
+// around is still a success, and an all-success tool sequence that never
+// delivers what the user asked for is still a failure. Only two possible
+// outcomes: this always resolves a terminal decision, never a third state.
+export async function generateRequestOutcome({
+  title,
+  actions,
+  finalResponse,
+  toolCallsIncomplete,
+  agentId,
+  sessionId,
+}: {
+  title?: string
+  actions: AgentRequestAction[]
+  finalResponse: string
+  toolCallsIncomplete: boolean
+  agentId: string
+  sessionId: string
+}): Promise<RequestOutcomeDecision> {
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const llm = await sdk.ai.llm.createLLM(
+    agent.aiconfig,
+    sessionId,
+    undefined,
+    agentId
+  )
+  const result = await generateText({
+    model: llm.chat,
+    providerOptions: llm.providerOptions?.(false),
+    headers: {
+      "x-litellm-tags": "bb-agent-request-outcome",
+    },
+    messages: [
+      {
+        role: "system",
+        content:
+          'Decide whether a tracked user request was actually fulfilled, based on its full timeline (the user\'s asks and every tool call the agent made, in order, with each outcome) and the agent\'s final reply. Judge only the underlying goal, not the mechanics: a tool call that failed but was worked around some other way is still a success if the goal was met, and a sequence of technically-successful tool calls that never delivered what the user actually asked for is still a failure. toolCallsIncomplete means the model ran out of steps or left a tool call unresolved - judge based on what was actually accomplished and said, not on that fact alone. Reply with JSON only, one of: {"status":"completed","reason":"<short reason>"} or {"status":"failed","reason":"<short reason>"}. status must be exactly one of those two values - there is no partial or in-between outcome.',
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          title,
+          toolCallsIncomplete,
+          timeline: actions.map(summarizeActionForOutcome),
+          finalResponse,
+        }),
+      },
+    ],
+  })
+
+  const decision = extractOutcomeJson(result.text || "")
+  if (!decision) {
+    throw new Error("Invalid agent request outcome response")
+  }
+
+  return decision
 }
