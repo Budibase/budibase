@@ -615,7 +615,9 @@ describe("/api/resources/usage", () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
       })
-      const table = await createInternalTable({ name: "Admin duplicated table" })
+      const table = await createInternalTable({
+        name: "Admin duplicated table",
+      })
       const admin = await config.createUser({
         admin: { global: true },
         builder: { global: false },
