@@ -924,7 +924,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         const finalAssistantMessage = [...messages]
           .reverse()
           .find(message => message.role === "assistant")
-        await finalizeAgentRequestTracking({
+        // Involves an LLM call to judge the outcome - kick it off now, but
+        // don't make saving the conversation wait behind it.
+        const finalizeTask = finalizeAgentRequestTracking({
           trackingHandle,
           agentId,
           sessionId,
@@ -933,25 +935,25 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           finalResponse: getAssistantMessageText(finalAssistantMessage),
         })
 
-        if (chat.transient || !chatAppId) {
-          return
+        if (!chat.transient && chatAppId) {
+          const existingChat = chat._id
+            ? await db.tryGet<ChatConversation>(chat._id)
+            : null
+
+          const chatToSave = prepareChatConversationForSave({
+            chatId,
+            chatAppId,
+            userId,
+            title,
+            messages,
+            chat,
+            existingChat,
+          })
+
+          await db.put(chatToSave)
         }
 
-        const existingChat = chat._id
-          ? await db.tryGet<ChatConversation>(chat._id)
-          : null
-
-        const chatToSave = prepareChatConversationForSave({
-          chatId,
-          chatAppId,
-          userId,
-          title,
-          messages,
-          chat,
-          existingChat,
-        })
-
-        await db.put(chatToSave)
+        await finalizeTask
       },
       consumeSseStream: consumeStream,
       sendReasoning: true,

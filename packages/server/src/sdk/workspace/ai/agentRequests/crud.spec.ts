@@ -1,3 +1,5 @@
+import { context } from "@budibase/backend-core"
+import { DocumentType, EscalationSource, SEPARATOR } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import {
@@ -1114,6 +1116,61 @@ describe("agentRequests crud", () => {
           toolCallsIncomplete: false,
           unrecoveredToolFailures: new Set(),
           finalResponse: "Already done.",
+        })
+
+        expect(outcome).toBeUndefined()
+        expect(generateRequestOutcomeMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("judges a needs_input request when the resolution carries the human's response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "completed",
+          reason: "Approved by a human and carried out",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "The request was approved and completed.",
+          isHumanResponse: true,
+        })
+
+        expect(outcome).toEqual({ status: "completed" })
+        expect(generateRequestOutcomeMock).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it("returns undefined without calling the LLM while the request has escalations pending a human response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await context.getWorkspaceDB().put({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_pending`,
+          source: EscalationSource.OPERATION,
+          appId: config.getProdWorkspaceId(),
+          tenantId: config.getTenantId(),
+          agentId: "agent_1",
+          sessionId: "session_1",
+          requestId,
+          delay: 1000,
+          resolution: "pending",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "One escalation resolved, another still open.",
+          isHumanResponse: true,
         })
 
         expect(outcome).toBeUndefined()

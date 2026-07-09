@@ -29,6 +29,7 @@ import {
   queryRequestsByUpdatedAt,
   queryRequestsByStatusAndUpdatedAt,
 } from "./views"
+import { listContextDocs } from "../../escalations"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -455,8 +456,9 @@ export function resolveFinalRequestStatus({
 // Judges the request's actual outcome via LLM instead of just counting tool
 // failures (see resolveFinalRequestStatus above, kept as the fallback when
 // the judgment call itself fails). Returns undefined when there's nothing to
-// decide yet - e.g. the request just moved to needs_input mid-turn (an
-// escalation), or already reached a terminal status through another path -
+// decide yet - the request already reached a terminal status through another
+// path, it's waiting on a human (needs_input, unless this call carries the
+// human's response), or it still has escalations pending a human response -
 // callers should skip updateRequestStatus entirely in that case rather than
 // spend an LLM call on a result that would be discarded anyway.
 export async function resolveFinalRequestOutcome({
@@ -466,6 +468,7 @@ export async function resolveFinalRequestOutcome({
   toolCallsIncomplete,
   unrecoveredToolFailures,
   finalResponse,
+  isHumanResponse = false,
 }: {
   requestId: string
   agentId: string
@@ -473,18 +476,34 @@ export async function resolveFinalRequestOutcome({
   toolCallsIncomplete: boolean
   unrecoveredToolFailures: Set<string>
   finalResponse: string
+  // A needs_input request only becomes decidable when the flow resuming it
+  // carries a human's response to the escalation - anything else must leave
+  // it waiting.
+  isHumanResponse?: boolean
 }): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
-  const db = context.getWorkspaceDB()
-  const request = await db.tryGet<AgentRequest>(requestId)
-  if (
-    !request ||
-    isTerminalStatus(request.status) ||
-    request.status === "needs_input"
-  ) {
-    return undefined
-  }
-
   try {
+    const request = await context
+      .getWorkspaceDB()
+      .tryGet<AgentRequest>(requestId)
+    if (
+      !request ||
+      isTerminalStatus(request.status) ||
+      (request.status === "needs_input" && !isHumanResponse)
+    ) {
+      return undefined
+    }
+
+    // A request can have several escalations in flight; resolving one of
+    // them doesn't end the request. Only judge once no escalation is still
+    // waiting on a human.
+    const pendingEscalations = await listContextDocs({
+      requestId,
+      resolution: "pending",
+    })
+    if (pendingEscalations.length > 0) {
+      return undefined
+    }
+
     const { status, reason } = await generateRequestOutcome({
       title: request.title,
       actions: request.actions ?? [],
