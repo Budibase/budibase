@@ -65,10 +65,13 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (isOpen && event.key === "Enter") {
-      if (loading || !trimmedName) {
-        return
+      const activeEl = document.activeElement
+      if (activeEl && activeEl.tagName === "INPUT") {
+        if (loading || !trimmedName) {
+          return
+        }
+        modalContent.confirm()
       }
-      modalContent.confirm()
     }
   }
 

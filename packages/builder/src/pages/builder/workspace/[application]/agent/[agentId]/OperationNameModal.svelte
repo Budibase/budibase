@@ -82,12 +82,15 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (isOpen && event.key === "Enter") {
-      submitError = undefined
-      if (cannotSubmit()) {
-        touched = true
-        return
+      const activeEl = document.activeElement
+      if (activeEl && activeEl.tagName === "INPUT") {
+        submitError = undefined
+        if (cannotSubmit()) {
+          touched = true
+          return
+        }
+        modalContent.confirm()
       }
-      modalContent.confirm()
     }
   }
 </script>
