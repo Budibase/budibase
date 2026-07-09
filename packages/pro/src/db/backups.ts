@@ -6,6 +6,7 @@ import {
 import {
   AllDocsResponse,
   BackupFetchOpts,
+  BackupStatus,
   BackupTrigger,
   BackupType,
   ConstantQuotaName,
@@ -19,6 +20,9 @@ import { GENERIC_PAGE_SIZE } from "../constants"
 import { pagination } from "./utils/pagination"
 import { getOldestRetentionDate } from "./utils/retention"
 import { createWorkspaceBackupTriggerView } from "./utils/views"
+
+const EARLIEST_DATE = new Date(0).toISOString()
+const EXPIRED_BACKUP_LIMIT = 100
 
 type FilterOpts = {
   startDate?: string
@@ -137,6 +141,32 @@ export async function fetchWorkspaceBackups(
     }
   }
   return pageData
+}
+
+export async function fetchExpiredWorkspaceBackups() {
+  const expiredEnd = await oldestBackupDate()
+  if (expiredEnd <= EARLIEST_DATE) {
+    return []
+  }
+
+  const db = tenancy.getGlobalDB()
+  const response = await db.allDocs<WorkspaceBackup>({
+    include_docs: true,
+    startkey: WORKSPACE_BACKUP_PREFIX,
+    endkey: `${WORKSPACE_BACKUP_PREFIX}${dbCore.UNICODE_MAX}`,
+  })
+
+  return response.rows
+    .map(row => row.doc)
+    .filter((backup): backup is WorkspaceBackup => {
+      return (
+        backup != null &&
+        backup.type === BackupType.BACKUP &&
+        backup.status === BackupStatus.COMPLETE &&
+        backup.timestamp < expiredEnd
+      )
+    })
+    .slice(0, EXPIRED_BACKUP_LIMIT)
 }
 
 export async function storeWorkspaceBackupMetadata(

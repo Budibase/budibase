@@ -11,11 +11,11 @@ import { Readable } from "stream"
 import { default as backups } from "../"
 import { DBTestConfiguration, mocks } from "../../../../tests"
 
+let mockOldestRetentionDate = new Date(0).toISOString()
+
 jest.mock("../../../db/utils/retention", () => {
-  let date = new Date()
-  date.setDate(date.getDate() - 30)
   return {
-    getOldestRetentionDate: jest.fn().mockReturnValue(date.toISOString()),
+    getOldestRetentionDate: jest.fn(() => mockOldestRetentionDate),
   }
 })
 
@@ -78,6 +78,9 @@ describe("backups", () => {
       workspaceId?: string
       type?: BackupType
       trigger?: BackupTrigger
+      status?: BackupStatus
+      timestamp?: string
+      filename?: string | null
     } = {}
   ) {
     return advanceTimeAround(async () => {
@@ -90,17 +93,21 @@ describe("backups", () => {
       if (!opts.trigger) {
         opts.trigger = BackupTrigger.PUBLISH
       }
+      const metadataOpts =
+        opts.filename === null
+          ? {}
+          : { filename: opts.filename || "test.tar.gz" }
       const { id } = await backups.storeWorkspaceBackupMetadata(
         {
           appId: opts.workspaceId,
           trigger: opts.trigger,
           type: opts.type,
-          status: BackupStatus.STARTED,
+          status: opts.status || BackupStatus.STARTED,
           name: "test name",
           createdBy: USER_ID,
-          timestamp: new Date().toISOString(),
+          timestamp: opts.timestamp || new Date().toISOString(),
         },
-        { filename: "test.tar.gz" }
+        metadataOpts
       )
 
       return id
@@ -177,6 +184,9 @@ describe("backups", () => {
   })
 
   beforeEach(() => {
+    const date = new Date()
+    date.setDate(date.getDate() - 30)
+    mockOldestRetentionDate = date.toISOString()
     exportWorkspaceFn.mockReset().mockReturnValue("/path")
     importWorkspaceFn.mockReset().mockImplementation()
     statsFn.mockReset().mockImplementation()
@@ -193,6 +203,9 @@ describe("backups", () => {
     mockedObjectStore.deleteFiles.mockReset().mockResolvedValue({
       $metadata: {},
       Deleted: [],
+    })
+    mockedObjectStore.deleteFile.mockReset().mockResolvedValue({
+      $metadata: {},
     })
     mockedObjectStore.objectExists.mockReset().mockResolvedValue(false)
 
@@ -573,6 +586,162 @@ describe("backups", () => {
         }
       }
       expect(cantFind).toEqual(true)
+    })
+  })
+
+  describe("expired backup cleanup", () => {
+    function expiredTimestamp() {
+      const date = new Date()
+      date.setDate(date.getDate() - 31)
+      return date.toISOString()
+    }
+
+    function noExpiryRetention() {
+      mockOldestRetentionDate = new Date(0).toISOString()
+    }
+
+    it("deletes expired completed backup files and metadata", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "expired.tar.gz",
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+
+        expect(result).toEqual({ deleted: 1, failed: 0 })
+        expect(mockedObjectStore.deleteFile).toHaveBeenCalledWith(
+          objectStore.ObjectStoreBuckets.BACKUPS,
+          "expired.tar.gz"
+        )
+        await expect(backups.getWorkspaceBackup(backupId)).rejects.toMatchObject(
+          { status: 404 }
+        )
+      })
+    })
+
+    it("retains backups inside the retention window", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const backup = await backups.getWorkspaceBackup(backupId)
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect(backup._id).toEqual(backupId)
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+      })
+    })
+
+    it("retains restore records even when older than retention", async () => {
+      await config.doInTenant(async () => {
+        const restoreId = await storeBackup({
+          type: BackupType.RESTORE,
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const restore = await backups.getWorkspaceBackup(restoreId)
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect(restore._id).toEqual(restoreId)
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+      })
+    })
+
+    it("deletes expired backup metadata without a file", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: null,
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+
+        expect(result).toEqual({ deleted: 1, failed: 0 })
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+        await expect(backups.getWorkspaceBackup(backupId)).rejects.toMatchObject(
+          { status: 404 }
+        )
+      })
+    })
+
+    it("leaves metadata for retry when object deletion fails", async () => {
+      await config.doInTenant(async () => {
+        const failedBackupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "failed.tar.gz",
+        })
+        const deletedBackupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "deleted.tar.gz",
+        })
+        mockedObjectStore.deleteFile.mockImplementation(
+          async (_bucket, filename) => {
+            if (filename === "failed.tar.gz") {
+              throw new Error("delete failed")
+            }
+            return { $metadata: {} }
+          }
+        )
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const failedBackup = await backups.getWorkspaceBackup(failedBackupId)
+
+        expect(result).toEqual({ deleted: 1, failed: 1 })
+        expect(failedBackup._id).toEqual(failedBackupId)
+        await expect(
+          backups.getWorkspaceBackup(deletedBackupId)
+        ).rejects.toMatchObject({ status: 404 })
+      })
+    })
+
+    it("does not delete anything when retention has no expiry", async () => {
+      await config.doInTenant(async () => {
+        noExpiryRetention()
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const backup = await backups.getWorkspaceBackup(backupId)
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect(backup._id).toEqual(backupId)
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+      })
+    })
+
+    it("processes cleanup queue jobs", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "queued.tar.gz",
+        })
+
+        const job = await backups.getBackupQueue().add({
+          cleanup: true,
+          tenantId: config.getTenantId(),
+        })
+        await job.finished()
+
+        expect(mockedObjectStore.deleteFile).toHaveBeenCalledWith(
+          objectStore.ObjectStoreBuckets.BACKUPS,
+          "queued.tar.gz"
+        )
+        await expect(backups.getWorkspaceBackup(backupId)).rejects.toMatchObject(
+          { status: 404 }
+        )
+      })
     })
   })
 

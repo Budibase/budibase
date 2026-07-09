@@ -10,6 +10,8 @@ import {
   BackupTrigger,
   BackupType,
   WorkspaceBackupContents,
+  WorkspaceBackupExportQueueData,
+  WorkspaceBackupImportQueueData,
   WorkspaceBackupQueueData,
 } from "@budibase/types"
 import { Job } from "bull"
@@ -18,24 +20,40 @@ import { BackupProcessingOpts } from "../../types"
 import backups from "./backup"
 import { getBackupQueue } from "./queue"
 
+const BACKUP_CLEANUP_JOB_ID = "workspace-backup-cleanup"
+const BACKUP_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
+
 export async function init(opts: BackupProcessingOpts) {
   getBackupQueue().process(async (job: Job) => {
     const data = job.data as WorkspaceBackupQueueData
     try {
-      if (data.export) {
+      if ("cleanup" in data) {
+        console.log("Cleaning up expired app backups")
+        await tenancy.doInTenant(data.tenantId, () =>
+          backups.cleanupExpiredWorkspaceBackups()
+        )
+      } else if ("export" in data) {
         console.log("Exporting app backup:", data.appId, data.export.trigger)
-        return exportProcessor(job, opts)
-      } else if (data.import) {
+        await exportProcessor(data, opts)
+      } else if ("import" in data) {
         console.log("Importing app backup:", data.appId, data.import.backupId)
-        return importProcessor(job, opts)
+        await importProcessor(data, opts)
       }
-    } catch (err: any) {
-      logging.logAlert(
-        `Failed to perform backup for app ID: ${data.appId}`,
-        err
-      )
+    } catch (err) {
+      const appId = "appId" in data ? data.appId : "system"
+      logging.logAlert(`Failed to perform backup for app ID: ${appId}`, err)
     }
   })
+}
+
+export async function scheduleCleanup() {
+  await getBackupQueue().add(
+    { cleanup: true },
+    {
+      jobId: BACKUP_CLEANUP_JOB_ID,
+      repeat: { every: BACKUP_CLEANUP_INTERVAL_MS },
+    }
+  )
 }
 
 type RunBackupOpts = {
@@ -281,12 +299,14 @@ async function runBackup(
   }
 }
 
-async function importProcessor(job: Job, opts: BackupProcessingOpts) {
-  const data: WorkspaceBackupQueueData = job.data
+async function importProcessor(
+  data: WorkspaceBackupImportQueueData,
+  opts: BackupProcessingOpts
+) {
   const appId = data.appId,
-    backupId = data.import!.backupId,
-    nameForBackup = data.import!.nameForBackup,
-    createdBy = data.import!.createdBy
+    backupId = data.import.backupId,
+    nameForBackup = data.import.nameForBackup,
+    createdBy = data.import.createdBy
   const tenantId = tenancy.getTenantIDFromWorkspaceID(appId) as string
   return tenancy.doInTenant(tenantId, async () => {
     const devWorkspaceId = dbCore.getDevWorkspaceID(appId)
@@ -387,11 +407,13 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
   })
 }
 
-async function exportProcessor(job: Job, opts: BackupProcessingOpts) {
-  const data: WorkspaceBackupQueueData = job.data
+async function exportProcessor(
+  data: WorkspaceBackupExportQueueData,
+  opts: BackupProcessingOpts
+) {
   const appId = data.appId,
-    trigger = data.export!.trigger,
-    name = data.export!.name
+    trigger = data.export.trigger,
+    name = data.export.name
   const tenantId = tenancy.getTenantIDFromWorkspaceID(appId) as string
   await tenancy.doInTenant(tenantId, async () => {
     try {

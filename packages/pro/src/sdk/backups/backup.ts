@@ -3,6 +3,7 @@ import {
   context,
   db,
   events,
+  logging,
   objectStore,
   utils,
 } from "@budibase/backend-core"
@@ -117,6 +118,26 @@ async function deleteWorkspaceBackups(backupIds: string[]) {
   }
 
   return results
+}
+
+async function cleanupExpiredWorkspaceBackups() {
+  const expiredBackups = await backups.fetchExpiredWorkspaceBackups()
+  const result = {
+    deleted: 0,
+    failed: 0,
+  }
+
+  for (const backup of expiredBackups) {
+    try {
+      await deleteWorkspaceBackup(backup._id)
+      result.deleted++
+    } catch (err) {
+      result.failed++
+      logging.logAlert(`Failed to cleanup expired backup ${backup._id}`, err)
+    }
+  }
+
+  return result
 }
 
 async function fetchWorkspaceBackups(
@@ -289,6 +310,9 @@ const pkg = {
   updateWorkspaceBackup: features.checkBackups(updateWorkspaceBackup),
   deleteWorkspaceBackup: features.checkBackups(deleteWorkspaceBackup),
   deleteWorkspaceBackups: features.checkBackups(deleteWorkspaceBackups),
+  cleanupExpiredWorkspaceBackups: features.checkBackups(
+    cleanupExpiredWorkspaceBackups
+  ),
   trackBackupError: features.checkBackups(trackBackupError),
 }
 
