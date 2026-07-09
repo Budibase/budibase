@@ -85,6 +85,7 @@ export interface OIDCStrategyConfiguration {
   clientSecret: string
   callbackURL: string
   pkce?: PKCEMethod
+  allowUnverifiedEmailLinking?: boolean
 }
 
 export interface OIDCConfigs {
@@ -107,6 +108,7 @@ export interface OIDCInnerConfig {
   activated: boolean
   scopes: string[]
   pkce?: PKCEMethod
+  allowUnverifiedEmailLinking?: boolean
 }
 
 export interface OIDCConfig extends Config<OIDCConfigs> {}
