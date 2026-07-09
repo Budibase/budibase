@@ -353,7 +353,9 @@ describe("agent slack integration provisioning", () => {
       name: "No Slack Manifest Settings",
     })
 
-    const manifestText = await config.api.agent.downloadSlackManifest(agent._id!)
+    const manifestText = await config.api.agent.downloadSlackManifest(
+      agent._id!
+    )
     const manifest = JSON.parse(manifestText) as SlackManifest
     const endpointUrl = manifest.settings.event_subscriptions.request_url
 
@@ -364,7 +366,9 @@ describe("agent slack integration provisioning", () => {
 
     const persisted = await getPersistedAgent(agent._id)
     expect(persisted.slackIntegration?.chatAppId).toBeTruthy()
-    expect(persisted.slackIntegration?.messagingEndpointUrl).toEqual(endpointUrl)
+    expect(persisted.slackIntegration?.messagingEndpointUrl).toEqual(
+      endpointUrl
+    )
   })
 
   it("creates a Slack app from the generated manifest", async () => {
