@@ -39,6 +39,8 @@
         return action.recipients.length
           ? `Escalated to ${action.recipients.map(r => r.label).join(", ")}`
           : "Escalated"
+      default:
+        throw new Error(`Unhandled action type: ${(action satisfies never as AgentRequestAction).type}`)
     }
   }
 
