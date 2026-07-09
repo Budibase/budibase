@@ -295,6 +295,38 @@ const configureSlackAppCreationDeployment = async ({
   }
 }
 
+const getPublishedLiveSlackDeployment = async ({
+  agent,
+  agentId,
+  workspaceId,
+}: {
+  agent: Agent
+  agentId: string
+  workspaceId: string
+}) => {
+  if (!agent.live) {
+    return undefined
+  }
+
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
+  const isPublished = await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
+  if (!isPublished) {
+    return undefined
+  }
+
+  return await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    const prodAgent = await context.getWorkspaceDB().tryGet<Agent>(agentId)
+    if (!prodAgent) {
+      return undefined
+    }
+
+    return await configureSlackAppCreationDeployment({
+      agent: prodAgent,
+      agentId,
+    })
+  })
+}
+
 const publishSlackIntegrationForLiveAgent = async (agent: Agent) => {
   if (!agent.live || !agent._id || !agent.slackIntegration) {
     return
@@ -317,6 +349,12 @@ const publishSlackIntegrationForLiveAgent = async (agent: Agent) => {
       return
     }
 
+    const { chatAppId, messagingEndpointUrl } =
+      await configureSlackAppCreationDeployment({
+        agent: prodAgent,
+        agentId: agent._id!,
+      })
+
     await sdk.ai.agents.update({
       ...prodAgent,
       slackIntegration: {
@@ -325,8 +363,8 @@ const publishSlackIntegrationForLiveAgent = async (agent: Agent) => {
         clientId: agent.slackIntegration?.clientId,
         clientSecret: agent.slackIntegration?.clientSecret,
         signingSecret: agent.slackIntegration?.signingSecret,
-        chatAppId: agent.slackIntegration?.chatAppId,
-        messagingEndpointUrl: agent.slackIntegration?.messagingEndpointUrl,
+        chatAppId,
+        messagingEndpointUrl,
         botToken: agent.slackIntegration?.botToken,
         botUserId: agent.slackIntegration?.botUserId,
         teamId: agent.slackIntegration?.teamId,
@@ -552,15 +590,20 @@ export async function createAgentSlackApp(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const { chatAppId, messagingEndpointUrl } =
-    await configureSlackAppCreationDeployment({
-      agent,
-      agentId,
-    })
+  const devDeployment = await configureSlackAppCreationDeployment({
+    agent,
+    agentId,
+  })
+  const liveDeployment = await getPublishedLiveSlackDeployment({
+    agent,
+    agentId,
+    workspaceId,
+  })
+  const slackAppDeployment = liveDeployment || devDeployment
   const oauthRedirectUrl = await getSlackOAuthRedirectUrl()
   const manifest = sdk.ai.deployments.slack.buildSlackManifest({
     agent,
-    messagingEndpointUrl,
+    messagingEndpointUrl: slackAppDeployment.messagingEndpointUrl,
     oauthRedirectUrl,
   })
   const created = await sdk.ai.deployments.slack.createSlackAppFromManifest({
@@ -589,7 +632,7 @@ export async function createAgentSlackApp(
     {
       agentId,
       workspaceId,
-      chatAppId,
+      chatAppId: slackAppDeployment.chatAppId,
     } satisfies SlackOAuthState,
     SLACK_OAUTH_STATE_TTL_SECONDS,
     { useTenancy: false }
@@ -603,16 +646,16 @@ export async function createAgentSlackApp(
       clientId,
       clientSecret,
       signingSecret,
-      chatAppId,
-      messagingEndpointUrl,
+      chatAppId: devDeployment.chatAppId,
+      messagingEndpointUrl: devDeployment.messagingEndpointUrl,
     },
   })
 
   ctx.body = {
     success: true,
-    chatAppId,
+    chatAppId: slackAppDeployment.chatAppId,
     appId,
-    messagingEndpointUrl,
+    messagingEndpointUrl: slackAppDeployment.messagingEndpointUrl,
     oauthAuthorizeUrl: buildSlackInstallUrl({
       oauthAuthorizeUrl,
       redirectUri: oauthRedirectUrl,

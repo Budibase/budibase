@@ -100,6 +100,7 @@ import {
   AgentChannelProvider,
   DocumentType,
   type Agent,
+  type ChatApp,
   type ChatConversation,
   type SlackAppConfig,
 } from "@budibase/types"
@@ -580,6 +581,7 @@ describe("agent slack integration provisioning", () => {
     })
     await config.publish()
 
+    let manifestEndpointUrl: string | undefined
     jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
       if (String(url).endsWith("/tooling.tokens.rotate")) {
         return slackJsonResponse({
@@ -591,6 +593,9 @@ describe("agent slack integration provisioning", () => {
       }
 
       if (String(url).endsWith("/apps.manifest.create")) {
+        const body = JSON.parse(String(init?.body))
+        const manifest = JSON.parse(body.manifest) as SlackManifest
+        manifestEndpointUrl = manifest.settings.event_subscriptions.request_url
         return slackJsonResponse({
           ok: true,
           app_id: "A_LIVE_SLACK_OAUTH_APP",
@@ -627,6 +632,28 @@ describe("agent slack integration provisioning", () => {
     })
 
     const created = await config.api.agent.createSlackApp(liveAgent._id!)
+    expect(manifestEndpointUrl).toEqual(created.messagingEndpointUrl)
+    expect(created.messagingEndpointUrl).toContain(
+      `/${config.getProdWorkspaceId()}/`
+    )
+    expect(created.messagingEndpointUrl).toContain(`/${created.chatAppId}/`)
+
+    const devPersisted = await getPersistedAgent(liveAgent._id)
+    expect(devPersisted.slackIntegration?.chatAppId).toBeTruthy()
+    expect(devPersisted.slackIntegration?.chatAppId).not.toEqual(
+      created.chatAppId
+    )
+
+    const prodChatApp = await db.doWithDB(
+      config.getProdWorkspaceId(),
+      workspaceDb => workspaceDb.tryGet<ChatApp>(created.chatAppId)
+    )
+    expect(prodChatApp?.agents).toContainEqual({
+      agentId: liveAgent._id,
+      isEnabled: false,
+      isDefault: false,
+    })
+
     const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
     expect(state).toBeTruthy()
 
@@ -656,6 +683,10 @@ describe("agent slack integration provisioning", () => {
     expect(prodPersisted.slackIntegration?.botUserId).toEqual("U_LIVE_BOT")
     expect(prodPersisted.slackIntegration?.teamId).toEqual("T_LIVE_SLACK")
     expect(prodPersisted.slackIntegration?.teamName).toEqual("Live Slack Team")
+    expect(prodPersisted.slackIntegration?.chatAppId).toEqual(created.chatAppId)
+    expect(prodPersisted.slackIntegration?.messagingEndpointUrl).toEqual(
+      created.messagingEndpointUrl
+    )
   })
 
   describe("slack webhook incoming messages", () => {
