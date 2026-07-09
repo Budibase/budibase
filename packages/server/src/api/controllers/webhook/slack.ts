@@ -23,7 +23,11 @@ import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
-import { pickLatestConversation, toAbsoluteUrl } from "./utils"
+import {
+  pickLatestConversation,
+  resolveEscalationWorkspaceId,
+  toAbsoluteUrl,
+} from "./utils"
 
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -418,8 +422,8 @@ export async function slackWebhook(
           console.error("Escalation action: invalid button value", event.value)
           return
         }
-        // The appId carried in the button value is untrusted - resolve the
-        // context from the verified webhook route's workspaceId instead.
+        // The appId in the button value is untrusted; resolve which environment
+        // of the verified webhook route's app actually holds the notification.
         const { escalationId, notificationDocId } = parsed
 
         const slackResponse = {
@@ -430,8 +434,20 @@ export async function slackWebhook(
           channel: (event.raw as any)?.channel,
         }
 
+        const appId = await resolveEscalationWorkspaceId(
+          workspaceId,
+          notificationDocId
+        )
+        if (!appId) {
+          console.warn("Escalation action: notification not found", {
+            workspaceId,
+            notificationDocId,
+          })
+          return
+        }
+
         try {
-          const result = await context.doInContext(workspaceId, async () => {
+          const result = await context.doInContext(appId, async () => {
             // We can respond with closed or
             return sdk.escalations.respond(
               escalationId,

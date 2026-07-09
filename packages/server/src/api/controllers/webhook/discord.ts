@@ -14,7 +14,7 @@ import { Chat, type ActionEvent } from "chat"
 import { createDiscordAdapter } from "@chat-adapter/discord"
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
-import { pickLatestConversation } from "./utils"
+import { pickLatestConversation, resolveEscalationWorkspaceId } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { getDiscordState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -240,8 +240,20 @@ export async function discordWebhook(
           threadId: event.threadId,
         }
 
+        const appId = await resolveEscalationWorkspaceId(
+          workspaceId,
+          notificationDocId
+        )
+        if (!appId) {
+          console.warn("Discord escalation action: notification not found", {
+            workspaceId,
+            notificationDocId,
+          })
+          return
+        }
+
         try {
-          const result = await context.doInContext(workspaceId, async () => {
+          const result = await context.doInContext(appId, async () => {
             if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
               return { status: "closed" as const }
             }
