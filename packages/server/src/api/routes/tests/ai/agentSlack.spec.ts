@@ -348,14 +348,23 @@ describe("agent slack integration provisioning", () => {
     expect(updated?.slackIntegration?.messagingEndpointUrl).toEqual(endpointUrl)
   })
 
-  it("returns a validation error when downloading a Slack manifest without settings", async () => {
+  it("downloads a Slack app manifest without Slack credentials", async () => {
     const agent = await config.api.agent.create({
       name: "No Slack Manifest Settings",
     })
 
-    await config.api.agent.downloadSlackManifest(agent._id!, {
-      status: 400,
-    })
+    const manifestText = await config.api.agent.downloadSlackManifest(agent._id!)
+    const manifest = JSON.parse(manifestText) as SlackManifest
+    const endpointUrl = manifest.settings.event_subscriptions.request_url
+
+    expect(endpointUrl).toContain("/api/webhooks/slack/")
+    expect(endpointUrl).toContain(`/${config.getProdWorkspaceId()}/`)
+    expect(endpointUrl).toContain(`/${agent._id}`)
+    expect(manifest.settings.interactivity.request_url).toEqual(endpointUrl)
+
+    const persisted = await getPersistedAgent(agent._id)
+    expect(persisted.slackIntegration?.chatAppId).toBeTruthy()
+    expect(persisted.slackIntegration?.messagingEndpointUrl).toEqual(endpointUrl)
   })
 
   it("creates a Slack app from the generated manifest", async () => {

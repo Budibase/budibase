@@ -556,17 +556,19 @@ export async function downloadAgentSlackManifest(
 ) {
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const requestedChatAppId = parseOptionalChatAppId(
-    agent.slackIntegration?.chatAppId?.trim() || undefined
-  )
-  const { endpointUrl } = await configureSlackDeployment({
+  const { chatAppId, messagingEndpointUrl } =
+    await configureSlackAppCreationDeployment({
+      agent,
+      agentId,
+    })
+  await persistSlackDeployment({
     agent,
-    agentId,
-    requestedChatAppId,
+    chatAppId,
+    messagingEndpointUrl,
   })
   const manifest = sdk.ai.deployments.slack.buildSlackManifest({
     agent,
-    messagingEndpointUrl: endpointUrl,
+    messagingEndpointUrl,
   })
   const filename = `budibase-slack-${toSafeFilenameSegment(agent.name)}-manifest.json`
 
