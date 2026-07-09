@@ -22,7 +22,7 @@ builderAdminRoutes
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
   .put("/api/configs", updateAIConfigValidator(), ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
-  .get("/api/ai/slack/app-config", auth.adminOnly, ai.fetchSlackAppConfig)
+  .get("/api/ai/slack/app-config", ai.fetchSlackAppConfig)
   .put(
     "/api/ai/slack/app-config",
     auth.adminOnly,

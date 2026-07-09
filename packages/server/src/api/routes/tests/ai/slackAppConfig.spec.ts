@@ -29,14 +29,36 @@ describe("Slack app config routes", () => {
     }
   })
 
-  it("rejects global builders", async () => {
+  it("allows builders to read the config status", async () => {
+    const admin = await config.globalUser({
+      builder: { global: true },
+      admin: { global: true },
+    })
     const builder = await config.globalUser({
       builder: { global: true },
       admin: { global: false },
     })
 
+    jest.spyOn(global, "fetch").mockResolvedValue(
+      slackJsonResponse({
+        ok: true,
+        token: "xoxe-rotated-config-token",
+        refresh_token: "xoxe-rotated-refresh-token",
+        exp: Math.floor(Date.now() / 1000) + 43200,
+      })
+    )
+
+    await config.withUser(admin, async () => {
+      await config.api.ai.saveSlackAppConfig({
+        configToken: "xoxe-test-token",
+        refreshToken: "xoxe-test-refresh-token",
+      })
+    })
+
     await config.withUser(builder, async () => {
-      await config.api.ai.fetchSlackAppConfig({ status: 403 })
+      const response = await config.api.ai.fetchSlackAppConfig()
+      expect(response.configured).toBe(true)
+
       await config.api.ai.saveSlackAppConfig(
         {
           configToken: "xoxe-test-token",
