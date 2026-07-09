@@ -44,7 +44,7 @@ export default class BuilderSocket extends BaseSocket {
       const ctx = createContext(this.app, socket, { appId })
       const middlewares = [
         userAgent,
-        auth.buildAuthMiddleware([], { publicAllowed: true }),
+        auth.buildAuthMiddleware([]),
         currentWorkspace,
         authorized(permissions.BUILDER),
       ]
