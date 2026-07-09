@@ -471,7 +471,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("records one status_changed action per real transition", async () => {
+    it("records a status_changed action for each real transition", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await initActiveRequest({
           agentId: "agent_1",
