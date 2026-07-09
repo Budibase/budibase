@@ -398,6 +398,56 @@ if (descriptions.length) {
           expect(res.name).toBeUndefined()
         })
 
+        it("re-points primaryDisplay when its column is deleted", async () => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                },
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                },
+              },
+              primaryDisplay: "name",
+            })
+          )
+
+          const { name: _deleted, description, ...rest } = table.schema
+          const updated = await config.api.table.save({
+            ...table,
+            schema: { description, ...rest },
+          })
+
+          expect(updated.primaryDisplay).toEqual("description")
+        })
+
+        isInternal &&
+          it("removes primaryDisplay when no eligible column remains", async () => {
+            const table = await config.api.table.save(
+              tableForDatasource(datasource, {
+                schema: {
+                  name: {
+                    name: "name",
+                    type: FieldType.STRING,
+                  },
+                  attachment: {
+                    name: "attachment",
+                    type: FieldType.ATTACHMENTS,
+                  },
+                },
+                primaryDisplay: "name",
+              })
+            )
+
+            const { name: _deleted, ...schema } = table.schema
+            const updated = await config.api.table.save({ ...table, schema })
+
+            expect(updated.primaryDisplay).toBeUndefined()
+          })
+
         isInternal &&
           it("updates only the passed fields", async () => {
             await timekeeper.withFreeze(new Date(2021, 1, 1), async () => {

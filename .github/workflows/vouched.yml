@@ -1,0 +1,43 @@
+on:
+  pull_request_target:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: mitchellh/vouch/action/check-pr@f44860978966ace98fb11aaaa20f2b27d7543e13
+        with:
+          pr-number: ${{ github.event.pull_request.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  manage:
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    concurrency:
+      group: vouch-manage
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mitchellh/vouch/action/manage-by-issue@f44860978966ace98fb11aaaa20f2b27d7543e13
+        with:
+          repo: ${{ github.repository }}
+          issue-id: ${{ github.event.issue.number }}
+          comment-id: ${{ github.event.comment.id }}
+          vouch-keyword: vouch
+          denounce-keyword: denounce
+          allow-unvouch: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
