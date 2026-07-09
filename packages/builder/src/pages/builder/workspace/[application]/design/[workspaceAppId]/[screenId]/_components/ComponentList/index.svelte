@@ -173,8 +173,7 @@
                 size="S"
                 hoverable
                 name="dots-three"
-                on:click={e =>
-                  openScreenContextMenu(e, $selectedScreen?.props)}
+                on:click={e => openScreenContextMenu(e, $selectedScreen?.props)}
               />
             {/if}
             <svelte:fragment slot="right">
