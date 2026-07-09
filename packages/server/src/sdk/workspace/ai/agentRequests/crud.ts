@@ -1,12 +1,25 @@
-import { context, docIds, Duration } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  Duration,
+  utils,
+} from "@budibase/backend-core"
 import type {
   AgentRequest,
+  AgentRequestAction,
   AgentRequestEntry,
   AgentRequestsSummary,
   AgentRequestStatus,
+  StatusChangedAction,
+  UserMessageAction,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
-import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
+import {
+  analyzeAgentRequestLink,
+  generateAgentRequestTitle,
+  generateInteractionSummary,
+} from "./helpers"
 import {
   queryRequestsByAgent,
   queryRequestStatuses,
@@ -47,10 +60,12 @@ const buildThread = ({
   agentId,
   userId,
   entry,
+  actions = [],
 }: {
   agentId: string
   userId: string
   entry: AgentRequestEntry
+  actions?: AgentRequestAction[]
 }): AgentRequest => {
   return {
     _id: docIds.generateAgentRequestID(),
@@ -58,9 +73,108 @@ const buildThread = ({
     agentId,
     userId,
     entries: [entry],
+    actions,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     status: entry.status,
+  }
+}
+
+const buildFallbackUserMessageAction = (
+  sessionId: string
+): UserMessageAction => ({
+  id: utils.newid(),
+  timestamp: nowIso(),
+  sessionId,
+  type: "user_message",
+  summary: "User sent a message",
+})
+
+async function buildUserMessageActionForTurn({
+  agentId,
+  sessionId,
+  latestPrompt,
+}: {
+  agentId: string
+  sessionId: string
+  latestPrompt: string
+}): Promise<UserMessageAction> {
+  try {
+    const summary = await generateInteractionSummary({
+      latestPrompt,
+      agentId,
+      sessionId,
+    })
+    return {
+      id: utils.newid(),
+      timestamp: nowIso(),
+      sessionId,
+      type: "user_message",
+      summary,
+    }
+  } catch (error) {
+    console.error("Failed to generate agent request interaction summary", {
+      agentId,
+      sessionId,
+      error,
+    })
+    return buildFallbackUserMessageAction(sessionId)
+  }
+}
+
+// Upgrades the fallback summary in place once the LLM responds, without blocking the first save.
+async function refineUserMessageActionSummary({
+  request,
+  actionId,
+  agentId,
+  sessionId,
+  latestPrompt,
+}: {
+  request: AgentRequest
+  actionId: string
+  agentId: string
+  sessionId: string
+  latestPrompt: string
+}): Promise<AgentRequest> {
+  let summary: string
+  try {
+    summary = await generateInteractionSummary({
+      latestPrompt,
+      agentId,
+      sessionId,
+    })
+  } catch (error) {
+    console.error("Failed to generate agent request interaction summary", {
+      agentId,
+      sessionId,
+      error,
+    })
+    return request
+  }
+
+  const latest = await context
+    .getWorkspaceDB()
+    .tryGet<AgentRequest>(request._id!)
+  if (!latest) {
+    return request
+  }
+
+  try {
+    return await saveRequest({
+      ...latest,
+      actions: (latest.actions ?? []).map(action =>
+        action.id === actionId && action.type === "user_message"
+          ? { ...action, summary }
+          : action
+      ),
+    })
+  } catch (err) {
+    // Best-effort upgrade - a concurrent writer (e.g. updateRequestStatus)
+    // winning the race is an expected outcome, not a failure of this flow.
+    if (dbCore.isDocumentConflictError(err)) {
+      return latest
+    }
+    throw err
   }
 }
 
@@ -154,6 +268,8 @@ async function createNewRequest({
     return undefined
   }
 
+  const fallbackAction = buildFallbackUserMessageAction(sessionId)
+
   const createdRequest = await saveRequest(
     buildThread({
       agentId,
@@ -163,11 +279,20 @@ async function createNewRequest({
         operation,
         source,
       }),
+      actions: [fallbackAction],
     })
   )
 
-  return await generateAndSaveRequestTitleIfMissing({
+  const withSummary = await refineUserMessageActionSummary({
     request: createdRequest,
+    actionId: fallbackAction.id,
+    agentId,
+    sessionId,
+    latestPrompt,
+  })
+
+  return await generateAndSaveRequestTitleIfMissing({
+    request: withSummary,
     agentId,
     sessionId,
     latestPrompt,
@@ -313,47 +438,76 @@ export async function updateRequestStatus({
   // same conversation, an unrelated error) must leave it as-is.
   isHumanResponse?: boolean
 }): Promise<void> {
-  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
-  if (!request) {
-    return
-  }
+  const db = context.getWorkspaceDB()
 
-  if (isTerminalStatus(request.status)) {
-    return
-  }
-
-  if (
-    request.status === "needs_input" &&
-    status !== "needs_input" &&
-    !isHumanResponse
-  ) {
-    return
-  }
-
-  const timestamp = nowIso()
-  const isTerminal = isTerminalStatus(status)
-
-  const updatedEntries = request.entries.map((entry, idx) => {
-    if (idx !== request.entries.length - 1) {
-      return entry
+  // Retries on conflict since createOrUpdateRequestForPrompt writes to the same document concurrently.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const request = await db.tryGet<AgentRequest>(requestId)
+    if (!request) {
+      return
     }
-    return {
-      ...entry,
-      status,
-      updatedAt: timestamp,
-      ...(isTerminal ? { completedAt: timestamp } : {}),
+
+    if (isTerminalStatus(request.status)) {
+      return
+    }
+
+    if (
+      request.status === "needs_input" &&
+      status !== "needs_input" &&
+      !isHumanResponse
+    ) {
+      return
+    }
+
+    // Defensive re-entry (e.g. two escalate tool calls in the same turn)
+    // nothing actually changed, so there's nothing to record or save.
+    if (request.status === status) {
+      return
+    }
+
+    const timestamp = nowIso()
+    const isTerminal = isTerminalStatus(status)
+
+    const statusChangedAction: StatusChangedAction = {
+      id: utils.newid(),
+      timestamp,
+      type: "status_changed",
+      from: request.status,
+      to: status,
       ...(error === undefined ? {} : { error }),
     }
-  })
 
-  await saveRequest({
-    ...request,
-    entries: updatedEntries,
-    status,
-    updatedAt: timestamp,
-    ...(isTerminal ? { completedAt: timestamp } : {}),
-    ...(error !== undefined ? { error } : {}),
-  })
+    const updatedEntries = request.entries.map((entry, idx) => {
+      if (idx !== request.entries.length - 1) {
+        return entry
+      }
+      return {
+        ...entry,
+        status,
+        updatedAt: timestamp,
+        ...(isTerminal ? { completedAt: timestamp } : {}),
+        ...(error === undefined ? {} : { error }),
+      }
+    })
+
+    try {
+      await saveRequest({
+        ...request,
+        entries: updatedEntries,
+        actions: [...(request.actions ?? []), statusChangedAction],
+        status,
+        updatedAt: timestamp,
+        ...(isTerminal ? { completedAt: timestamp } : {}),
+        ...(error !== undefined ? { error } : {}),
+      })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err) && attempt < 2) {
+        continue
+      }
+      throw err
+    }
+  }
 }
 
 export async function createOrUpdateRequestForPrompt({
@@ -401,12 +555,31 @@ export async function createOrUpdateRequestForPrompt({
       if (isTerminalStatus(existing.status)) {
         return { request: existing, created: false }
       }
-      const updated = await generateAndSaveRequestTitleIfMissing({
+      const withTitle = await generateAndSaveRequestTitleIfMissing({
         request: existing,
         agentId,
         sessionId,
         latestPrompt: prompt,
         operation: resolvedOperation,
+      })
+      const userMessageAction = await buildUserMessageActionForTurn({
+        agentId,
+        sessionId,
+        latestPrompt: prompt,
+      })
+
+      // Re-read before writing - the status may have changed while we awaited the LLM calls above.
+      const latest = await context
+        .getWorkspaceDB()
+        .tryGet<AgentRequest>(existingRequestId)
+      if (!latest || isTerminalStatus(latest.status)) {
+        return { request: latest ?? withTitle, created: false }
+      }
+
+      const updated = await saveRequest({
+        ...latest,
+        title: latest.title ?? withTitle.title,
+        actions: [...(latest.actions ?? []), userMessageAction],
       })
       return { request: updated, created: false }
     }
@@ -501,14 +674,29 @@ export async function createOrUpdateRequestForPrompt({
     )
   }
 
+  const userMessageAction = await buildUserMessageActionForTurn({
+    agentId,
+    sessionId,
+    latestPrompt: prompt,
+  })
+
+  // Re-read before writing - the status may have changed while we awaited the LLM calls above.
+  const latestRequest = await context
+    .getWorkspaceDB()
+    .tryGet<AgentRequest>(request._id!)
+  if (!latestRequest || isTerminalStatus(latestRequest.status)) {
+    return { request: latestRequest ?? request, created: false }
+  }
+
   return {
     request: await saveRequest({
-      ...request,
+      ...latestRequest,
       entries: nextEntries,
+      actions: [...(latestRequest.actions ?? []), userMessageAction],
       updatedAt: timestamp,
       // Linking a follow-up prompt into this thread isn't a response to the
       // escalation. Leave needs_input as-is rather than reviving it.
-      status: request.status === "needs_input" ? "needs_input" : "active",
+      status: latestRequest.status === "needs_input" ? "needs_input" : "active",
     }),
     created: false,
   }

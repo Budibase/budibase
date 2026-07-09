@@ -9,11 +9,16 @@ import {
   resolveFinalRequestStatus,
   updateRequestStatus,
 } from "./crud"
-import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
+import {
+  analyzeAgentRequestLink,
+  generateAgentRequestTitle,
+  generateInteractionSummary,
+} from "./helpers"
 
 jest.mock("./helpers", () => ({
   analyzeAgentRequestLink: jest.fn(),
   generateAgentRequestTitle: jest.fn(),
+  generateInteractionSummary: jest.fn(),
 }))
 
 jest.mock("../../../../websockets", () => ({
@@ -34,6 +39,7 @@ describe("agentRequests crud", () => {
 
   const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
   const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
+  const generateInteractionSummaryMock = generateInteractionSummary as jest.Mock
   const emitAgentRequestChangeMock =
     builderSocket?.emitAgentRequestChange as jest.Mock
 
@@ -41,6 +47,8 @@ describe("agentRequests crud", () => {
     analyzeAgentRequestLinkMock.mockReset()
     generateAgentRequestTitleMock.mockReset()
     generateAgentRequestTitleMock.mockResolvedValue("Generated title")
+    generateInteractionSummaryMock.mockReset()
+    generateInteractionSummaryMock.mockResolvedValue("User asked something")
     emitAgentRequestChangeMock.mockReset()
     await config.newTenant()
   })
@@ -397,6 +405,181 @@ describe("agentRequests crud", () => {
 
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("completed")
+      })
+    })
+  })
+
+  describe("status_changed actions", () => {
+    it("records a status_changed action when transitioning to completed", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({
+            type: "status_changed",
+            from: "active",
+            to: "completed",
+            id: expect.any(String),
+            timestamp: expect.any(String),
+          }),
+        ])
+      })
+    })
+
+    it("records the error on the status_changed action when failing", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({
+          requestId,
+          status: "failed",
+          error: "Tool calls incomplete",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({
+            type: "status_changed",
+            from: "active",
+            to: "failed",
+            error: "Tool calls incomplete",
+          }),
+        ])
+      })
+    })
+
+    it("records a status_changed action for each real transition", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Order 1500 pens",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({
+          requestId,
+          status: "completed",
+          isHumanResponse: true,
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({ from: "active", to: "needs_input" }),
+          expect.objectContaining({ from: "needs_input", to: "completed" }),
+        ])
+      })
+    })
+
+    it("does not record a duplicate action on a defensive re-entry to the same status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Approve this purchase",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({ requestId, status: "needs_input" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toHaveLength(1)
+      })
+    })
+
+    it("does not record an action when a transition is blocked by a terminal status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({
+          requestId,
+          status: "failed",
+          error: "Tool calls incomplete",
+        })
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({ from: "active", to: "failed" }),
+        ])
+      })
+    })
+
+    it("does not record an action when the needs_input guard blocks the transition", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Order 1500 pens",
+          operation: {
+            name: "Procurement",
+            prompt: "Handle procurement requests.",
+          },
+          source: "Chat",
+        }))!
+
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const statusActions = (request.actions ?? []).filter(
+          action => action.type === "status_changed"
+        )
+        expect(statusActions).toEqual([
+          expect.objectContaining({ from: "active", to: "needs_input" }),
+        ])
       })
     })
   })
@@ -914,6 +1097,165 @@ describe("agentRequests crud", () => {
         })
 
         expect(created).toBeUndefined()
+      })
+    })
+  })
+
+  describe("user_message actions", () => {
+    it("records the generated summary as the first action when creating a thread", async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValue({ decision: "new_thread" })
+      generateInteractionSummaryMock.mockResolvedValue(
+        "User asked about VPN access"
+      )
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const created = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: "I can't connect to the VPN from home",
+          operation: { name: "Support", prompt: "Help with IT issues." },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        expect(created?.request.actions).toEqual([
+          {
+            id: expect.any(String),
+            timestamp: expect.any(String),
+            sessionId: "session_1",
+            type: "user_message",
+            summary: "User asked about VPN access",
+          },
+        ])
+        expect(generateInteractionSummaryMock).toHaveBeenCalledWith({
+          latestPrompt: "I can't connect to the VPN from home",
+          agentId: "agent_1",
+          sessionId: "session_1",
+        })
+      })
+    })
+
+    it("falls back to a generic placeholder when summary generation fails, never the raw prompt", async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValue({ decision: "new_thread" })
+      generateInteractionSummaryMock.mockRejectedValue(new Error("LLM error"))
+      const sensitivePrompt =
+        "My SSN is 123-45-6789, please update my HR record with it"
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const created = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: sensitivePrompt,
+          operation: { name: "Support", prompt: "Help with IT issues." },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        expect(created?.request.actions?.[0]).toEqual(
+          expect.objectContaining({
+            type: "user_message",
+            summary: "User sent a message",
+          })
+        )
+        expect(created?.request.actions?.[0]).not.toEqual(
+          expect.objectContaining({
+            summary: expect.stringContaining("123-45-6789"),
+          })
+        )
+      })
+    })
+
+    it("appends a new user_message action for a follow-up turn via existingRequestId", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+        }))!
+
+        generateInteractionSummaryMock.mockResolvedValue(
+          "User booked a meeting"
+        )
+
+        const result = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: "Book me a meeting",
+          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          source: "Chat",
+          userId: "user_1",
+          existingRequestId: requestId,
+        })
+
+        expect(result?.request.actions).toEqual([
+          {
+            id: expect.any(String),
+            timestamp: expect.any(String),
+            sessionId: "session_1",
+            type: "user_message",
+            summary: "User booked a meeting",
+          },
+        ])
+      })
+    })
+
+    it("appends one action per follow-up turn linked into the same thread", async () => {
+      analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+        decision: "new_thread",
+      })
+      generateInteractionSummaryMock.mockResolvedValueOnce(
+        "User asked about company policy"
+      )
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const first = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          latestUserPrompt: "Show me the holidays company policy",
+          operation: {
+            name: "Support",
+            prompt: "Help users with company policy questions.",
+          },
+          source: "Chat",
+          userId: "user_1",
+        })
+
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first!.request._id,
+          entryAction: "append_latest_entry",
+        })
+        generateInteractionSummaryMock.mockResolvedValueOnce(
+          "User asked for a summary"
+        )
+
+        const second = await createOrUpdateRequestForPrompt({
+          agentId: "agent_1",
+          sessionId: "session_2",
+          latestUserPrompt: "summarise it in 50 words",
+          operation: {
+            name: "Support",
+            prompt: "Summarise company policies clearly.",
+          },
+          source: "Slack",
+          userId: "user_1",
+        })
+
+        expect(second?.request.actions).toEqual([
+          expect.objectContaining({
+            type: "user_message",
+            summary: "User asked about company policy",
+            sessionId: "session_1",
+          }),
+          expect.objectContaining({
+            type: "user_message",
+            summary: "User asked for a summary",
+            sessionId: "session_2",
+          }),
+        ])
       })
     })
   })
