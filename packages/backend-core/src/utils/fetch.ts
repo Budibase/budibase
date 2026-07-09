@@ -165,6 +165,13 @@ function createProxyAgent(rejectUnauthorized: boolean): ProxyAgent {
  * Creates a fetch dispatcher that respects global-agent environment variables.
  * Always returns a usable Dispatcher - either a ProxyAgent or a direct Agent.
  *
+ * A pinned `lookup` (used to defend against DNS rebinding by pinning to a
+ * pre-validated IP) can only be honoured on direct connections. When a proxy is
+ * configured the connection is made to the proxy, which performs its own DNS
+ * resolution of the target host, so the pin cannot be applied. We always
+ * respect the proxy: for proxied requests DNS-rebinding pinning is not
+ * available and enforcing destination policy is delegated to the proxy.
+ *
  * @param options Configuration for the dispatcher
  * @returns A Dispatcher (ProxyAgent for proxied requests, Agent for direct requests)
  */
@@ -179,6 +186,12 @@ function createDispatcher(options?: {
     return createDirectAgent(rejectUnauthorized, options?.lookup)
   }
 
+  if (options?.lookup) {
+    console.log(
+      "[fetch] Proxy configured; IP pinning is not applied to proxied requests"
+    )
+  }
+
   return createProxyAgent(rejectUnauthorized)
 }
 
@@ -187,6 +200,11 @@ function createDispatcher(options?: {
  * Always returns a usable Dispatcher - either a ProxyAgent or a direct Agent.
  * The dispatcher respects GLOBAL_AGENT_HTTP_PROXY, GLOBAL_AGENT_HTTPS_PROXY,
  * GLOBAL_AGENT_NO_PROXY, and their standard equivalents.
+ *
+ * A `lookup` can be supplied to pin the connection to a pre-validated IP as a
+ * defence against DNS rebinding. Note this is only enforced for direct
+ * connections: a configured proxy is always respected, and pinning is not
+ * applied to proxied requests (the proxy resolves the target host itself).
  *
  * @param options Configuration for the dispatcher
  * @returns A Dispatcher ready to use with fetch
