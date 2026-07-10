@@ -126,21 +126,29 @@ async function deleteWorkspaceBackups(backupIds: string[]) {
 }
 
 async function cleanupExpiredWorkspaceBackups() {
-  const expiredBackups = await backups.fetchExpiredWorkspaceBackups()
   const result = {
     deleted: 0,
     failed: 0,
   }
+  const expiredEnd = await backups.oldestBackupDate()
+  let page: string | undefined
 
-  for (const backup of expiredBackups) {
-    try {
-      await deleteWorkspaceBackupMetadata(backup)
-      result.deleted++
-    } catch (err) {
-      result.failed++
-      logging.logAlert(`Failed to cleanup expired backup ${backup._id}`, err)
+  do {
+    const expiredBackups = await backups.fetchExpiredWorkspaceBackups(
+      expiredEnd,
+      page
+    )
+    for (const backup of expiredBackups.backups) {
+      try {
+        await deleteWorkspaceBackupMetadata(backup)
+        result.deleted++
+      } catch (err) {
+        result.failed++
+        logging.logAlert(`Failed to cleanup expired backup ${backup._id}`, err)
+      }
     }
-  }
+    page = expiredBackups.nextPage
+  } while (page)
 
   return result
 }

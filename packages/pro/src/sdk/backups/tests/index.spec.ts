@@ -625,6 +625,68 @@ describe("backups", () => {
       })
     })
 
+    it("drains bounded batches past a deletion failure", async () => {
+      await config.doInTenant(async () => {
+        const expiredDate = new Date(expiredTimestamp())
+        const backupIds = await Promise.all(
+          Array.from({ length: 101 }, (_, i) =>
+            storeBackup({
+              status: BackupStatus.COMPLETE,
+              timestamp: new Date(expiredDate.getTime() + i).toISOString(),
+              filename: i === 99 ? "failed.tar.gz" : `backup-${i}.tar.gz`,
+            })
+          )
+        )
+        mockedObjectStore.deleteFile.mockImplementation(
+          async (_bucket, filename) => {
+            if (filename === "failed.tar.gz") {
+              throw new Error("delete failed")
+            }
+            return { $metadata: {} }
+          }
+        )
+        const globalDb = context.getGlobalDB()
+        const allDocsSpy = jest.spyOn(globalDb, "allDocs")
+        const querySpy = jest.spyOn(globalDb, "query")
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const allDocsCallCount = allDocsSpy.mock.calls.length
+        const queryLimits = querySpy.mock.calls.map(call => call[1]?.limit)
+        allDocsSpy.mockRestore()
+        querySpy.mockRestore()
+
+        expect(result).toEqual({ deleted: 100, failed: 1 })
+        expect(allDocsCallCount).toEqual(0)
+        expect(queryLimits.length).toBeGreaterThan(1)
+        expect(queryLimits.every(limit => limit != null && limit <= 101)).toBe(
+          true
+        )
+        expect(mockedObjectStore.deleteFile).toHaveBeenCalledTimes(101)
+        expect((await backups.getWorkspaceBackup(backupIds[99]))._id).toEqual(
+          backupIds[99]
+        )
+        await expect(
+          backups.getWorkspaceBackup(backupIds[100])
+        ).rejects.toMatchObject({ status: 404 })
+      })
+    })
+
+    it("retains backups exactly at the retention cutoff", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: mockOldestRetentionDate,
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect((await backups.getWorkspaceBackup(backupId))._id).toEqual(
+          backupId
+        )
+      })
+    })
+
     it("retains backups inside the retention window", async () => {
       await config.doInTenant(async () => {
         const backupId = await storeBackup({

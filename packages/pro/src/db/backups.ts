@@ -6,7 +6,6 @@ import {
 import {
   AllDocsResponse,
   BackupFetchOpts,
-  BackupStatus,
   BackupTrigger,
   BackupType,
   ConstantQuotaName,
@@ -19,10 +18,13 @@ import {
 import { GENERIC_PAGE_SIZE } from "../constants"
 import { pagination } from "./utils/pagination"
 import { getOldestRetentionDate } from "./utils/retention"
-import { createWorkspaceBackupTriggerView } from "./utils/views"
+import {
+  createWorkspaceBackupExpiryView,
+  createWorkspaceBackupTriggerView,
+} from "./utils/views"
 
 const EARLIEST_DATE = new Date(0).toISOString()
-const EXPIRED_BACKUP_LIMIT = 100
+const EXPIRED_BACKUP_BATCH_SIZE = 100
 
 type FilterOpts = {
   startDate?: string
@@ -143,30 +145,42 @@ export async function fetchWorkspaceBackups(
   return pageData
 }
 
-export async function fetchExpiredWorkspaceBackups() {
-  const expiredEnd = await oldestBackupDate()
+export async function fetchExpiredWorkspaceBackups(
+  expiredEnd: string,
+  page?: string
+) {
   if (expiredEnd <= EARLIEST_DATE) {
-    return []
+    return { backups: [], nextPage: undefined }
   }
 
   const db = tenancy.getGlobalDB()
-  const response = await db.allDocs<WorkspaceBackup>({
-    include_docs: true,
-    startkey: WORKSPACE_BACKUP_PREFIX,
-    endkey: `${WORKSPACE_BACKUP_PREFIX}${dbCore.UNICODE_MAX}`,
-  })
-
-  return response.rows
+  const response = await dbCore.queryViewRaw<WorkspaceBackup>(
+    dbCore.ViewName.WORKSPACE_BACKUP_BY_EXPIRY,
+    {
+      include_docs: true,
+      startkey: page || EARLIEST_DATE,
+      endkey: expiredEnd,
+      limit: EXPIRED_BACKUP_BATCH_SIZE + (page ? 1 : 0),
+    },
+    db,
+    createWorkspaceBackupExpiryView
+  )
+  let rows = response.rows
+  if (page && rows[0]?.key === page) {
+    rows = rows.slice(1)
+  }
+  const batch = rows.slice(0, EXPIRED_BACKUP_BATCH_SIZE)
+  const backups = batch
     .map(row => row.doc)
-    .filter((backup): backup is WorkspaceBackup => {
-      return (
-        backup != null &&
-        backup.type === BackupType.BACKUP &&
-        backup.status === BackupStatus.COMPLETE &&
-        backup.timestamp < expiredEnd
-      )
-    })
-    .slice(0, EXPIRED_BACKUP_LIMIT)
+    .filter((backup): backup is WorkspaceBackup => backup != null)
+
+  return {
+    backups,
+    nextPage:
+      batch.length === EXPIRED_BACKUP_BATCH_SIZE
+        ? batch[batch.length - 1].key
+        : undefined,
+  }
 }
 
 export async function storeWorkspaceBackupMetadata(

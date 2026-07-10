@@ -36,6 +36,7 @@ export enum ViewName {
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase_2",
   USER_BY_GROUP = "user_by_group",
   WORKSPACE_BACKUP_BY_TRIGGER = "by_trigger",
+  WORKSPACE_BACKUP_BY_EXPIRY = "workspace_backup_by_expiry",
 }
 
 export const DeprecatedViews: Record<string, string[]> = {
