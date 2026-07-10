@@ -12,7 +12,7 @@ export async function getOldestRetentionDate(quotaName: ConstantQuotaName) {
     retentionDays === licenses.UNLIMITED ||
     retentionDays == null ||
     !Number.isFinite(retentionDays) ||
-    retentionDays <= 0
+    retentionDays < 0
   ) {
     return MIN_DATE
   } else {
