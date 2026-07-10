@@ -7,6 +7,7 @@ export type ScreenLayoutType = "grid" | "flex"
 
 export interface SSOProfileJson {
   email?: string
+  email_verified?: boolean
   picture?: string
 }
 
