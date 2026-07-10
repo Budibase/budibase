@@ -335,7 +335,7 @@ describe("knowledgeSourceSyncQueue", () => {
       },
       {
         jobId:
-          "app_dev_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate",
+          "app_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate",
         removeOnFail: true,
       }
     )
@@ -369,7 +369,7 @@ describe("knowledgeSourceSyncQueue", () => {
       }),
       {
         jobId: expect.stringMatching(
-          /^app_dev_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate_followup_/
+          /^app_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate_followup_/
         ),
         removeOnFail: true,
       }
@@ -424,7 +424,7 @@ describe("knowledgeSourceSyncQueue", () => {
       }),
       {
         jobId:
-          "app_dev_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate",
+          "app_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate",
         removeOnFail: true,
       }
     )
