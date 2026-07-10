@@ -205,10 +205,9 @@ export async function updateWorkspaceBackupMetadata(
   return (await db.put(metadata)) as PutResponse
 }
 
-export async function deleteWorkspaceBackupMetadata(backupId: string) {
+export async function deleteWorkspaceBackupMetadata(backup: WorkspaceBackup) {
   const db = tenancy.getGlobalDB()
-  const backupDoc = await db.get<WorkspaceBackup>(backupId)
-  await db.remove(backupDoc._id, backupDoc._rev)
+  await db.remove(backup._id, backup._rev)
 }
 
 export async function getWorkspaceBackupMetadata(backupId: string) {

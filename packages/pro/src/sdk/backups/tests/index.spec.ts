@@ -1,4 +1,4 @@
-import { db, objectStore, queue, utils } from "@budibase/backend-core"
+import { context, db, objectStore, queue, utils } from "@budibase/backend-core"
 import { utils as testUtils } from "@budibase/backend-core/tests"
 import {
   BackupStatus,
@@ -607,10 +607,14 @@ describe("backups", () => {
           timestamp: expiredTimestamp(),
           filename: "expired.tar.gz",
         })
+        const getSpy = jest.spyOn(context.getGlobalDB(), "get")
 
         const result = await backups.cleanupExpiredWorkspaceBackups()
+        const getCallCount = getSpy.mock.calls.length
+        getSpy.mockRestore()
 
         expect(result).toEqual({ deleted: 1, failed: 0 })
+        expect(getCallCount).toEqual(0)
         expect(mockedObjectStore.deleteFile).toHaveBeenCalledWith(
           objectStore.ObjectStoreBuckets.BACKUPS,
           "expired.tar.gz"

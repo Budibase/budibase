@@ -14,6 +14,7 @@ import {
   BackupType,
   DocumentType,
   Workspace,
+  WorkspaceBackup,
   WorkspaceBackupContents,
   WorkspaceBackupMetadata,
 } from "@budibase/types"
@@ -90,15 +91,19 @@ async function updateWorkspaceBackup(backupId: string, backupName: string) {
   return backups.updateWorkspaceBackupMetadata(backupId, backupName)
 }
 
-async function deleteWorkspaceBackup(backupId: string) {
-  const metadata = await backups.getWorkspaceBackupMetadata(backupId)
-  if (metadata.filename) {
+async function deleteWorkspaceBackupMetadata(backup: WorkspaceBackup) {
+  if (backup.filename) {
     await objectStore.deleteFile(
       objectStore.ObjectStoreBuckets.BACKUPS,
-      metadata.filename
+      backup.filename
     )
   }
-  return backups.deleteWorkspaceBackupMetadata(backupId)
+  return backups.deleteWorkspaceBackupMetadata(backup)
+}
+
+async function deleteWorkspaceBackup(backupId: string) {
+  const backup = await backups.getWorkspaceBackupMetadata(backupId)
+  return deleteWorkspaceBackupMetadata(backup)
 }
 
 async function deleteWorkspaceBackups(backupIds: string[]) {
@@ -129,7 +134,7 @@ async function cleanupExpiredWorkspaceBackups() {
 
   for (const backup of expiredBackups) {
     try {
-      await deleteWorkspaceBackup(backup._id)
+      await deleteWorkspaceBackupMetadata(backup)
       result.deleted++
     } catch (err) {
       result.failed++
