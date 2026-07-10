@@ -21,7 +21,6 @@ import {
   type SharePointKnowledgeBaseFileSource,
   type KnowledgeSourceEntry,
   type KnowledgeSourceSyncRun,
-  type SyncAgentKnowledgeSourcesResponse,
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
 } from "@budibase/types"
@@ -41,6 +40,37 @@ import {
   ensureKnowledgeBaseForOperation,
   listFilesForOperation,
 } from "../../files"
+import env from "../../../../../../environment"
+
+export interface SharePointSyncResult {
+  agentId: string
+  synced: number
+  failed: number
+  alreadySynced: number
+  deleted: number
+  unsupported: number
+  totalDiscovered: number
+}
+
+export class SharePointSyncTimeoutError extends Error {
+  constructor(timeoutMs: number) {
+    super(`SharePoint sync timed out after ${timeoutMs} milliseconds`)
+    this.name = "SharePointSyncTimeoutError"
+  }
+}
+
+const isSharePointSyncTimeoutError = (
+  error: unknown
+): error is SharePointSyncTimeoutError =>
+  error instanceof Error && error.name === "SharePointSyncTimeoutError"
+
+const throwIfSyncAborted = (signal?: AbortSignal) => {
+  if (signal?.aborted) {
+    throw signal.reason instanceof Error
+      ? signal.reason
+      : new Error("SharePoint sync aborted")
+  }
+}
 
 export const getSharePointFileDedupKey = ({
   siteId,
@@ -90,6 +120,7 @@ const saveSharePointSyncRunState = async ({
   synced,
   failed,
   skipped,
+  unsupported,
   totalDiscovered,
 }: {
   agentId: string
@@ -98,6 +129,7 @@ const saveSharePointSyncRunState = async ({
   synced: number
   failed: number
   skipped: number
+  unsupported: number
   totalDiscovered: number
 }) => {
   const db = context.getWorkspaceDB()
@@ -113,11 +145,66 @@ const saveSharePointSyncRunState = async ({
     agentId,
     sourceId: sourceId,
     lastRunAt,
+    lastStartedAt: existing?.lastStartedAt || lastRunAt,
+    errorMessage: undefined,
     synced,
     failed,
     skipped,
+    unsupported,
     totalDiscovered,
     status: getSharePointSyncRunStatus(synced, failed),
+    createdAt: existing?.createdAt || now,
+    updatedAt: now,
+  })
+}
+
+export const updateSharePointSyncRunStatus = async ({
+  agentId,
+  sourceId,
+  status,
+  errorMessage,
+}: {
+  agentId: string
+  sourceId: string
+  status: AgentKnowledgeSourceSyncRunStatus
+  errorMessage?: string
+}) => {
+  const db = context.getWorkspaceDB()
+  const stateId = docIds.generateAgentKnowledgeSourceSyncStateID(
+    agentId,
+    sourceId
+  )
+  const existing = await db.tryGet<AgentKnowledgeSourceSyncState>(stateId)
+  if (
+    status === AgentKnowledgeSourceSyncRunStatus.QUEUED &&
+    existing?.status === AgentKnowledgeSourceSyncRunStatus.RUNNING
+  ) {
+    return
+  }
+  const now = new Date().toISOString()
+  await db.put({
+    ...existing,
+    _id: stateId,
+    agentId,
+    sourceId,
+    lastStartedAt:
+      status === AgentKnowledgeSourceSyncRunStatus.RUNNING
+        ? now
+        : existing?.lastStartedAt,
+    lastRunAt:
+      status === AgentKnowledgeSourceSyncRunStatus.FAILED
+        ? now
+        : existing?.lastRunAt,
+    synced: existing?.synced || 0,
+    failed:
+      status === AgentKnowledgeSourceSyncRunStatus.FAILED
+        ? Math.max(existing?.failed || 0, 1)
+        : existing?.failed || 0,
+    skipped: existing?.skipped || 0,
+    unsupported: existing?.unsupported || 0,
+    totalDiscovered: existing?.totalDiscovered || 0,
+    status,
+    errorMessage,
     createdAt: existing?.createdAt || now,
     updatedAt: now,
   })
@@ -304,6 +391,8 @@ export const fetchKnowledgeSourceSyncStateForAgent = async (
     .map(doc => ({
       sourceId: doc.sourceId,
       lastRunAt: doc.lastRunAt,
+      lastStartedAt: doc.lastStartedAt,
+      errorMessage: doc.errorMessage,
       synced: doc.synced,
       failed: doc.failed,
       skipped: doc.skipped,
@@ -378,8 +467,9 @@ export const deleteKnowledgeSourceSyncStateForAgent = async (
 const runSharePointSourcesForOperation = async (
   agentId: string,
   operationId: string,
-  sourceId: string
-): Promise<SyncAgentKnowledgeSourcesResponse> => {
+  sourceId: string,
+  signal?: AbortSignal
+): Promise<SharePointSyncResult> => {
   const lastRunAt = new Date().toISOString()
   const agent = await agentsSdk.getOrThrow(agentId)
   const sharepointSources = getSharePointSourcesForOperation(agent, operationId)
@@ -411,6 +501,7 @@ const runSharePointSourcesForOperation = async (
     runAt: lastRunAt,
     sourceFilters,
   })
+  throwIfSyncAborted(signal)
 
   if (!sourceDatasourceId || !sourceAuthConfigId) {
     throw new HTTPError("SharePoint is not connected for this workspace", 400)
@@ -479,6 +570,8 @@ const runSharePointSourcesForOperation = async (
   let totalDiscovered = 0
   let deleted = 0
   let deleteFailed = 0
+  let deadlineExceeded = false
+  let phase = "preparing"
 
   const existingSourceFiles = existingFiles.filter(file =>
     isSharePointKnowledgeBaseFile(file, sourceId, siteId)
@@ -524,17 +617,27 @@ const runSharePointSourcesForOperation = async (
   const discoveredExternalIds = new Set<string>()
 
   try {
-    const driveIds = await listSharePointDrives(bearerToken, siteId)
+    phase = "listing_drives"
+    const driveIds = await listSharePointDrives(bearerToken, siteId, signal)
     console.log("Fetched SharePoint drives for site", {
       agentId,
       siteId,
       driveCount: driveIds.length,
     })
     for (const driveId of driveIds) {
-      const files = await collectSharePointFilesRecursive(bearerToken, driveId)
+      throwIfSyncAborted(signal)
+      phase = "listing_files"
+      const files = await collectSharePointFilesRecursive(
+        bearerToken,
+        driveId,
+        undefined,
+        "",
+        signal
+      )
 
       totalDiscovered += files.length
       for (const file of files) {
+        throwIfSyncAborted(signal)
         if (!isSharePointPathIncludedByFilters(file.path, sourceFilters)) {
           skipped++
           filteredOut++
@@ -642,12 +745,16 @@ const runSharePointSourcesForOperation = async (
         }
 
         try {
+          phase = "downloading_file"
           const buffer = await downloadSharePointFileBuffer(
             bearerToken,
             driveId,
-            file.itemId
+            file.itemId,
+            signal
           )
 
+          throwIfSyncAborted(signal)
+          phase = "uploading_file"
           await knowledgeBaseSdk.uploadKnowledgeBaseFile({
             knowledgeBaseId,
             source: {
@@ -668,10 +775,14 @@ const runSharePointSourcesForOperation = async (
             buffer,
             uploadedBy: `sharepoint:${sourceId}`,
           })
+          throwIfSyncAborted(signal)
 
           existingExternalIds.add(externalSourceId)
           synced++
         } catch (error) {
+          if (isSharePointSyncTimeoutError(error)) {
+            throw error
+          }
           console.error("Failed to sync SharePoint file for agent", {
             agentId,
             siteId,
@@ -694,6 +805,7 @@ const runSharePointSourcesForOperation = async (
       })
 
     if (staleFileIds.length > 0) {
+      phase = "deleting_stale_files"
       const staleDeleteResults = await Promise.allSettled(
         staleFileIds.map(fileId =>
           deleteFileForOperation(agentId, operationId, fileId)
@@ -706,6 +818,23 @@ const runSharePointSourcesForOperation = async (
       deleteFailed += staleDeleteResults.length - staleDeleted
     }
   } catch (error) {
+    if (isSharePointSyncTimeoutError(error)) {
+      deadlineExceeded = true
+      console.error("SharePoint sync deadline exceeded", {
+        agentId,
+        siteId,
+        sourceId,
+        totalDiscovered,
+        processed: synced + failed + skipped,
+        remaining: Math.max(
+          totalDiscovered - synced - failed - skipped,
+          0
+        ),
+        phase,
+        error,
+      })
+      throw error
+    }
     console.error("Failed to sync SharePoint site for agent", {
       agentId,
       siteId,
@@ -713,48 +842,51 @@ const runSharePointSourcesForOperation = async (
     })
     failed++
   } finally {
-    await saveSharePointSyncRunState({
-      agentId,
-      sourceId,
-      lastRunAt,
-      synced,
-      failed,
-      skipped,
-      totalDiscovered,
-    })
-    const runStatus = getSharePointSyncRunStatus(synced, failed)
-    events.ai.ragFileSharePointSync({
-      agentId,
-      siteId,
-      sourceId,
-      synced,
-      failed,
-      skipped,
-      alreadySynced,
-      retried,
-      unsupported,
-      filteredOut,
-      deleted,
-      deleteFailed,
-      totalDiscovered,
-      status: runStatus,
-    })
-    console.log("Completed SharePoint site sync for agent", {
-      agentId,
-      siteId,
-      sourceId,
-      status: runStatus,
-      synced,
-      deleted,
-      deleteFailed,
-      failed,
-      skipped,
-      alreadySynced,
-      retried,
-      filteredOut,
-      unsupported,
-      totalDiscovered,
-    })
+    if (!deadlineExceeded) {
+      await saveSharePointSyncRunState({
+        agentId,
+        sourceId,
+        lastRunAt,
+        synced,
+        failed,
+        skipped,
+        unsupported,
+        totalDiscovered,
+      })
+      const runStatus = getSharePointSyncRunStatus(synced, failed)
+      events.ai.ragFileSharePointSync({
+        agentId,
+        siteId,
+        sourceId,
+        synced,
+        failed,
+        skipped,
+        alreadySynced,
+        retried,
+        unsupported,
+        filteredOut,
+        deleted,
+        deleteFailed,
+        totalDiscovered,
+        status: runStatus,
+      })
+      console.log("Completed SharePoint site sync for agent", {
+        agentId,
+        siteId,
+        sourceId,
+        status: runStatus,
+        synced,
+        deleted,
+        deleteFailed,
+        failed,
+        skipped,
+        alreadySynced,
+        retried,
+        filteredOut,
+        unsupported,
+        totalDiscovered,
+      })
+    }
   }
 
   return {
@@ -772,24 +904,40 @@ export const syncSharePointSourcesForOperation = async (
   agentId: string,
   operationId: string,
   sourceId: string
-): Promise<SyncAgentKnowledgeSourcesResponse> => {
-  const { result } = await locks.doWithLock(
-    {
-      name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
-      type: LockType.AUTO_EXTEND,
-      resource: `${agentId}:${sourceId}:sharepoint_sync`,
-    },
-    async () =>
-      await runSharePointSourcesForOperation(agentId, operationId, sourceId)
+): Promise<SharePointSyncResult> => {
+  const abortController = new AbortController()
+  const timeout = setTimeout(
+    () =>
+      abortController.abort(
+        new SharePointSyncTimeoutError(env.SHAREPOINT_SYNC_TIMEOUT_MS)
+      ),
+    env.SHAREPOINT_SYNC_TIMEOUT_MS
   )
-
-  return result
+  try {
+    const { result } = await locks.doWithLock(
+      {
+        name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
+        type: LockType.AUTO_EXTEND,
+        resource: `${agentId}:${sourceId}:sharepoint_sync`,
+      },
+      async () =>
+        await runSharePointSourcesForOperation(
+          agentId,
+          operationId,
+          sourceId,
+          abortController.signal
+        )
+    )
+    return result
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 export const syncSharePointSourcesForAgent = async (
   agentId: string,
   sourceId: string
-): Promise<SyncAgentKnowledgeSourcesResponse> => {
+): Promise<SharePointSyncResult> => {
   const agent = await agentsSdk.getOrThrow(agentId)
   const operationId = findOperationIdForKnowledgeSource(agent, sourceId)
   if (!operationId) {

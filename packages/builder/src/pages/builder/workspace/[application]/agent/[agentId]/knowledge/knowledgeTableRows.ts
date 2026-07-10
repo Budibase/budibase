@@ -1,5 +1,6 @@
 import { helpers } from "@budibase/shared-core"
 import {
+  AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
@@ -165,16 +166,24 @@ export const toSharePointConnectionRows = ({
       const synced = snapshot?.syncedCount || 0
       const syncFailures = snapshot?.failedCount || 0
       const processing = snapshot?.processingCount || 0
+      const isQueued =
+        snapshot?.runStatus === AgentKnowledgeSourceSyncRunStatus.QUEUED
+      const isRunning =
+        snapshot?.runStatus === AgentKnowledgeSourceSyncRunStatus.RUNNING
+      const isSyncing = isQueued || isRunning
       const completed = Math.min(synced + syncFailures, total)
       const hasFileData = total > 0
       const isEmpty = total === 0
       const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
-      const displayStatus =
-        !hasCompletedSync && !hasFileData
-          ? "Processing"
-          : isEmpty
-            ? "No files found"
-            : `${completed}/${total} files`
+      const displayStatus = isQueued
+        ? "Queued"
+        : isRunning
+          ? "Syncing"
+          : !hasCompletedSync && !hasFileData
+            ? "Processing"
+            : isEmpty
+              ? "No files found"
+              : `${completed}/${total} files`
       const hasSynced = hasCompletedSync || hasFileData
       return {
         kind: "sharepoint_connection" as const,
@@ -190,6 +199,7 @@ export const toSharePointConnectionRows = ({
         failedCount: syncFailures,
         processingCount: processing,
         hasSynced,
+        isSyncing,
         runStatus: snapshot?.runStatus,
         onDelete: () => onDelete(siteId),
         onSync: () => onSync(source.id),
