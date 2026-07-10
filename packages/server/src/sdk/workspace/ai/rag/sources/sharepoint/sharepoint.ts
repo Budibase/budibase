@@ -826,10 +826,7 @@ const runSharePointSourcesForOperation = async (
         sourceId,
         totalDiscovered,
         processed: synced + failed + skipped,
-        remaining: Math.max(
-          totalDiscovered - synced - failed - skipped,
-          0
-        ),
+        remaining: Math.max(totalDiscovered - synced - failed - skipped, 0),
         phase,
         error,
       })
