@@ -351,6 +351,9 @@ describe("knowledgeSourceSyncQueue", () => {
           sourceType: AgentKnowledgeSourceType.SHAREPOINT,
           sourceId: "sharepoint_site_site_1",
         },
+        opts: {
+          repeat: { every: 86_400_000 },
+        },
       },
     ])
 
@@ -391,6 +394,40 @@ describe("knowledgeSourceSyncQueue", () => {
     ])
 
     expect(mockQueueAdd).not.toHaveBeenCalled()
+  })
+
+  it("enqueues an immediate sync when the same source only has a repeatable delayed sync", async () => {
+    mockGetJobs.mockResolvedValueOnce([
+      {
+        data: {
+          workspaceId: "app_dev_test",
+          agentId: "agent_1",
+          jobType: "sync",
+          sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+          sourceId: "sharepoint_site_site_1",
+        },
+        opts: {
+          repeat: { every: 86_400_000 },
+        },
+      },
+    ])
+
+    await enqueueAgentJobs("agent_1", AgentKnowledgeSourceType.SHAREPOINT, [
+      "sharepoint_site_site_1",
+    ])
+
+    expect(mockQueueAdd).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId: "agent_1",
+        sourceId: "sharepoint_site_site_1",
+        jobType: "sync",
+      }),
+      {
+        jobId:
+          "app_dev_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate",
+        removeOnFail: true,
+      }
+    )
   })
 
   it("does not enqueue another follow-up when one is already waiting behind an active sync", async () => {

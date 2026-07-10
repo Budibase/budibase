@@ -88,10 +88,15 @@ const isSameSyncJob = (
 
 const getSameSourceSyncJobsByStatus = async (
   job: KnowledgeSourceSyncJob,
-  statuses: JobStatus[]
+  statuses: JobStatus[],
+  options: { excludeRepeatable?: boolean } = {}
 ) => {
   const jobs = await getQueue().getBullQueue().getJobs(statuses)
-  return jobs.filter(queuedJob => isSameSyncJob(queuedJob, job))
+  return jobs.filter(
+    queuedJob =>
+      (!options.excludeRepeatable || !queuedJob.opts?.repeat) &&
+      isSameSyncJob(queuedJob, job)
+  )
 }
 
 const getAgentSharePointSources = (agent: Agent) =>
@@ -329,10 +334,13 @@ export async function enqueueAgentJob(job: KnowledgeSourceSyncJob) {
     status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
   })
   try {
-    const waitingJobs = await getSameSourceSyncJobsByStatus(job, [
-      "waiting",
-      "delayed",
-    ])
+    const waitingJobs = await getSameSourceSyncJobsByStatus(
+      job,
+      ["waiting", "delayed"],
+      {
+        excludeRepeatable: true,
+      }
+    )
     if (waitingJobs.length > 0) {
       return waitingJobs[0]
     }
