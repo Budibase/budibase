@@ -5,7 +5,11 @@ import { getTableIdFromViewId } from "@budibase/shared-core"
 import { enrichSchema, isV2 } from "."
 import sdk from "../.."
 import * as utils from "../../../db/utils"
-import { ensureQuerySet, ensureQueryUISet } from "./utils"
+import {
+  ensureQuerySet,
+  ensureQueryUISet,
+  ensureValidPrimaryDisplay,
+} from "./utils"
 
 export async function get(viewId: string): Promise<ViewV2> {
   const tableId = getTableIdFromViewId(viewId)
@@ -28,7 +32,10 @@ export async function getEnriched(
   if (!found) {
     return
   }
-  return await enrichSchema(ensureQueryUISet(found), table.schema)
+  return await enrichSchema(
+    ensureValidPrimaryDisplay(ensureQueryUISet(found), table),
+    table.schema
+  )
 }
 
 export async function create(

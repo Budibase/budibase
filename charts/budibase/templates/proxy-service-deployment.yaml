@@ -20,11 +20,14 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: {{ .Values.services.proxy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.services.proxy.rollingUpdate.maxUnavailable }}
   template:
     metadata:
       annotations:
+        {{- if .Values.globals.deployTimestamp }}
+        rollme/deploy-timestamp: {{ .Values.globals.deployTimestamp | quote }}
+        {{- end }}
         ad.datadoghq.com/proxy-service.logs: '[{"source":"nginx","service":"budibase-proxy"}]'
         ad.datadoghq.com/proxy-service.check_names: '["nginx"]'
         ad.datadoghq.com/proxy-service.init_configs: '[{}]'
@@ -45,7 +48,7 @@ spec:
       {{- end }}
       containers:
       - image: {{ .Values.services.proxy.image | default (printf "%sbudibase/proxy:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.services.proxy.imagePullPolicy | default "IfNotPresent" }}
         {{- with .Values.services.proxy.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}

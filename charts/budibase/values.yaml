@@ -77,6 +77,11 @@ globals:
   # -- The version of Budibase to deploy. Defaults to what's specified by {{ .Chart.AppVersion }}.
   # Ends up being used as the image version tag for the apps, proxy, and worker images.
   appVersion: ""
+  # -- Opaque value stamped onto every pod template as an annotation. Changing it
+  # (e.g. to a fresh timestamp on each deploy) triggers a rolling restart of the
+  # pods without changing the image, which is useful for picking up mutable tags
+  # or externally-managed config. Leave empty to disable (no annotation is added).
+  deployTimestamp: ""
   # -- Sets the environment variable BUDIBASE_ENVIRONMENT for the apps and worker pods. Should not
   # ordinarily need to be changed.
   budibaseEnv: PRODUCTION
@@ -178,6 +183,16 @@ services:
     port: 10000
     # -- The number of proxy replicas to run.
     replicaCount: 2
+    # -- Image pull policy for the proxy pods. Release tags are immutable, so
+    # IfNotPresent avoids a registry round-trip on every pod start. Set to Always
+    # if you deploy a mutable tag (e.g. "latest" or a shared "develop" tag).
+    imagePullPolicy: IfNotPresent
+    # -- Rolling update strategy for the proxy Deployment. maxUnavailable: 0 keeps
+    # the rollout zero-downtime; raise maxSurge (int or percentage, e.g. "25%") to
+    # replace more pods at once and speed up rollouts when spare capacity exists.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
     # -- The DNS resolver the nginx proxy uses to resolve upstreams at request time.
     # MUST be an IP address (nginx resolves this once at config-load and exits fatally
     # if it is an unresolvable DNS name). Leave empty to auto-detect the kube-dns
@@ -281,6 +296,16 @@ services:
     port: 4002
     # -- The number of apps replicas to run.
     replicaCount: 2
+    # -- Image pull policy for the apps pods. Release tags are immutable, so
+    # IfNotPresent avoids a registry round-trip on every pod start. Set to Always
+    # if you deploy a mutable tag (e.g. "latest" or a shared "develop" tag).
+    imagePullPolicy: IfNotPresent
+    # -- Rolling update strategy for the apps Deployment. maxUnavailable: 0 keeps
+    # the rollout zero-downtime; raise maxSurge (int or percentage, e.g. "25%") to
+    # replace more pods at once and speed up rollouts when spare capacity exists.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
     # -- The log level for the apps service.
     logLevel: info
     # -- Whether or not to log HTTP requests to the apps service.
@@ -392,6 +417,10 @@ services:
     # -- Whether or not to enable the automation worker service. If you disable this,
     # automations will be processed by the apps service.
     enabled: true
+    # -- Image pull policy for the automation worker pods. Release tags are
+    # immutable, so IfNotPresent avoids a registry round-trip on every pod start.
+    # Set to Always if you deploy a mutable tag (e.g. "latest").
+    imagePullPolicy: IfNotPresent
     # @ignore (you shouldn't need to change this)
     port: 4002
     # -- The number of automation worker replicas to run.
@@ -507,6 +536,16 @@ services:
     port: 4003
     # -- The number of worker replicas to run.
     replicaCount: 2
+    # -- Image pull policy for the worker pods. Release tags are immutable, so
+    # IfNotPresent avoids a registry round-trip on every pod start. Set to Always
+    # if you deploy a mutable tag (e.g. "latest" or a shared "develop" tag).
+    imagePullPolicy: IfNotPresent
+    # -- Rolling update strategy for the worker Deployment. maxUnavailable: 0 keeps
+    # the rollout zero-downtime; raise maxSurge (int or percentage, e.g. "25%") to
+    # replace more pods at once and speed up rollouts when spare capacity exists.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
     # -- The log level for the worker service.
     logLevel: info
     # -- Whether or not to log HTTP requests to the worker service.

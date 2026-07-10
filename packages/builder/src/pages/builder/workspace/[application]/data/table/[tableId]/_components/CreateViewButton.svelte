@@ -42,6 +42,16 @@
     return cloned
   }
 
+  const getPrimaryDisplay = () => {
+    // The table's display column can reference a deleted or hidden column -
+    // sending it would fail the view's display column validation
+    const displayColumn = table.schema?.[table.primaryDisplay]
+    if (!displayColumn || displayColumn.visible === false) {
+      return undefined
+    }
+    return table.primaryDisplay
+  }
+
   const saveView = async () => {
     popover.hide()
     try {
@@ -49,7 +59,7 @@
         name: trimmedName,
         tableId: table._id,
         schema: calculation ? {} : enrichSchema(table.schema),
-        primaryDisplay: calculation ? undefined : table.primaryDisplay,
+        primaryDisplay: calculation ? undefined : getPrimaryDisplay(),
         type: calculation ? ViewV2Type.CALCULATION : undefined,
       })
       notifications.success(`View ${name} created`)
