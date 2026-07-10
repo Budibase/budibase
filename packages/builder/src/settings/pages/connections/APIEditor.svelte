@@ -40,6 +40,7 @@
     Select,
     Toggle,
     notifications,
+    Helpers,
   } from "@budibase/bbui"
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
@@ -339,7 +340,7 @@
   const createAuthConfig = (
     authType: RestAuthType
   ): RestAuthConfig | undefined => {
-    const _id = crypto.randomUUID()
+    const _id = Helpers.uuid()
     const name = ""
 
     switch (authType) {

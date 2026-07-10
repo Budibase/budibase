@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { createEventDispatcher } from "svelte"
-  import { Layout, Body, Input, notifications } from "@budibase/bbui"
+  import { Layout, Body, Input, notifications, Helpers } from "@budibase/bbui"
   import { BindableCombobox } from "@/components/common/bindings"
   import { getAuthBindings, getEnvironmentBindings } from "@/dataBinding"
   import { environment, licensing } from "@/stores/portal"
@@ -100,7 +100,7 @@
 
     if (data.type === RestAuthType.BASIC) {
       return {
-        _id: data._id || crypto.randomUUID(),
+        _id: data._id || Helpers.uuid(),
         name: data.name!,
         type: RestAuthType.BASIC,
         config: {
@@ -110,7 +110,7 @@
       }
     } else {
       return {
-        _id: data._id || crypto.randomUUID(),
+        _id: data._id || Helpers.uuid(),
         name: data.name!,
         type: RestAuthType.BEARER,
         config: {
