@@ -342,19 +342,17 @@ describe("knowledgeSourceSyncQueue", () => {
   })
 
   it("enqueues a follow-up sync when the same source is already active", async () => {
-    mockGetJobs
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
-        {
-          data: {
-            workspaceId: "app_dev_test",
-            agentId: "agent_1",
-            jobType: "sync",
-            sourceType: AgentKnowledgeSourceType.SHAREPOINT,
-            sourceId: "sharepoint_site_site_1",
-          },
+    mockGetJobs.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        data: {
+          workspaceId: "app_dev_test",
+          agentId: "agent_1",
+          jobType: "sync",
+          sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+          sourceId: "sharepoint_site_site_1",
         },
-      ])
+      },
+    ])
 
     await enqueueAgentJobs("agent_1", AgentKnowledgeSourceType.SHAREPOINT, [
       "sharepoint_site_site_1",
