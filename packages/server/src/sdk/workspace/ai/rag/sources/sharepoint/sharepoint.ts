@@ -902,33 +902,36 @@ export const syncSharePointSourcesForOperation = async (
   operationId: string,
   sourceId: string
 ): Promise<SharePointSyncResult> => {
-  const abortController = new AbortController()
-  const timeout = setTimeout(
-    () =>
-      abortController.abort(
-        new SharePointSyncTimeoutError(env.SHAREPOINT_SYNC_TIMEOUT_MS)
-      ),
-    env.SHAREPOINT_SYNC_TIMEOUT_MS
-  )
-  try {
-    const { result } = await locks.doWithLock(
-      {
-        name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
-        type: LockType.AUTO_EXTEND,
-        resource: `${agentId}:${sourceId}:sharepoint_sync`,
-      },
-      async () =>
-        await runSharePointSourcesForOperation(
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
+      type: LockType.AUTO_EXTEND,
+      resource: `${agentId}:${sourceId}:sharepoint_sync`,
+    },
+    async () => {
+      const abortController = new AbortController()
+      const timeout = setTimeout(
+        () =>
+          abortController.abort(
+            new SharePointSyncTimeoutError(env.SHAREPOINT_SYNC_TIMEOUT_MS)
+          ),
+        env.SHAREPOINT_SYNC_TIMEOUT_MS
+      )
+
+      try {
+        return await runSharePointSourcesForOperation(
           agentId,
           operationId,
           sourceId,
           abortController.signal
         )
-    )
-    return result
-  } finally {
-    clearTimeout(timeout)
-  }
+      } finally {
+        clearTimeout(timeout)
+      }
+    }
+  )
+
+  return result
 }
 
 export const syncSharePointSourcesForAgent = async (
