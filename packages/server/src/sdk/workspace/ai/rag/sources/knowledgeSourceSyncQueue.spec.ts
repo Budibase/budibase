@@ -1,5 +1,6 @@
 const mockQueueAdd = jest.fn()
 const mockQueueProcess = jest.fn()
+const mockGetJobs = jest.fn()
 const mockGetRepeatableJobs = jest.fn()
 const mockRemoveRepeatableByKey = jest.fn()
 const mockRemoveJobs = jest.fn()
@@ -19,6 +20,7 @@ jest.mock("@budibase/backend-core", () => {
     add = (...args: any[]) => mockQueueAdd(...args)
     process = (...args: any[]) => mockQueueProcess(...args)
     getBullQueue = () => ({
+      getJobs: (...args: any[]) => mockGetJobs(...args),
       getRepeatableJobs: (...args: any[]) => mockGetRepeatableJobs(...args),
       removeRepeatableByKey: (...args: any[]) =>
         mockRemoveRepeatableByKey(...args),
@@ -92,6 +94,7 @@ describe("knowledgeSourceSyncQueue", () => {
     mockDoInWorkspaceContext.mockImplementation(
       async (_workspaceId: string, fn: () => Promise<any>) => await fn()
     )
+    mockGetJobs.mockResolvedValue([])
     mockGetRepeatableJobs.mockResolvedValue([])
     mockQueueAdd.mockResolvedValue({ id: "job_1" })
     mockRemoveRepeatableByKey.mockResolvedValue(undefined)
@@ -336,6 +339,82 @@ describe("knowledgeSourceSyncQueue", () => {
         removeOnFail: true,
       }
     )
+  })
+
+  it("enqueues a follow-up sync when the same source is already active", async () => {
+    mockGetJobs
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          data: {
+            workspaceId: "app_dev_test",
+            agentId: "agent_1",
+            jobType: "sync",
+            sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+            sourceId: "sharepoint_site_site_1",
+          },
+        },
+      ])
+
+    await enqueueAgentJobs("agent_1", AgentKnowledgeSourceType.SHAREPOINT, [
+      "sharepoint_site_site_1",
+    ])
+
+    expect(mockQueueAdd).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId: "agent_1",
+        sourceId: "sharepoint_site_site_1",
+        jobType: "sync",
+      }),
+      {
+        jobId: expect.stringMatching(
+          /^app_dev_test_knowledge_source_sync_agent_1_sharepoint_sharepoint_site_site_1_immediate_followup_/
+        ),
+        removeOnFail: true,
+      }
+    )
+  })
+
+  it("does not enqueue another sync when the same source is already waiting", async () => {
+    mockGetJobs.mockResolvedValueOnce([
+      {
+        data: {
+          workspaceId: "app_dev_test",
+          agentId: "agent_1",
+          jobType: "sync",
+          sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+          sourceId: "sharepoint_site_site_1",
+        },
+      },
+    ])
+
+    await enqueueAgentJobs("agent_1", AgentKnowledgeSourceType.SHAREPOINT, [
+      "sharepoint_site_site_1",
+    ])
+
+    expect(mockQueueAdd).not.toHaveBeenCalled()
+  })
+
+  it("does not enqueue another follow-up when one is already waiting behind an active sync", async () => {
+    mockGetJobs.mockResolvedValueOnce([
+      {
+        data: {
+          workspaceId: "app_dev_test",
+          agentId: "agent_1",
+          jobType: "sync",
+          sourceType: AgentKnowledgeSourceType.SHAREPOINT,
+          sourceId: "sharepoint_site_site_1",
+        },
+      },
+    ])
+
+    await enqueueAgentJobs("agent_1", AgentKnowledgeSourceType.SHAREPOINT, [
+      "sharepoint_site_site_1",
+    ])
+
+    expect(mockGetJobs).toHaveBeenCalledWith(["waiting", "delayed"])
+    expect(mockGetJobs).not.toHaveBeenCalledWith(["active"])
+    expect(mockQueueAdd).not.toHaveBeenCalled()
   })
 
   it("removes orphan jobs during rehydration", async () => {

@@ -1,4 +1,4 @@
-import type { Job } from "bull"
+import type { Job, JobStatus } from "bull"
 import { context, db, docIds, queue, utils } from "@budibase/backend-core"
 import {
   AgentKnowledgeSourceType,
@@ -68,6 +68,31 @@ const getJobId = (job: KnowledgeSourceSyncJob) =>
 
 const getImmediateJobId = (job: KnowledgeSourceSyncJob) =>
   `${getJobId(job)}_immediate`
+
+const getFollowUpJobId = (job: KnowledgeSourceSyncJob) =>
+  `${getImmediateJobId(job)}_followup_${utils.newid()}`
+
+const isSameSyncJob = (
+  queuedJob: Job<KnowledgeSourceJob>,
+  job: KnowledgeSourceSyncJob
+) => {
+  const data = queuedJob.data
+  return (
+    data.jobType === "sync" &&
+    data.workspaceId === job.workspaceId &&
+    data.agentId === job.agentId &&
+    data.sourceType === job.sourceType &&
+    data.sourceId === job.sourceId
+  )
+}
+
+const getSameSourceSyncJobsByStatus = async (
+  job: KnowledgeSourceSyncJob,
+  statuses: JobStatus[]
+) => {
+  const jobs = await getQueue().getBullQueue().getJobs(statuses)
+  return jobs.filter(queuedJob => isSameSyncJob(queuedJob, job))
+}
 
 const getAgentSharePointSources = (agent: Agent) =>
   getSharePointKnowledgeSources(agent)
@@ -304,8 +329,18 @@ export async function enqueueAgentJob(job: KnowledgeSourceSyncJob) {
     status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
   })
   try {
+    const waitingJobs = await getSameSourceSyncJobsByStatus(job, [
+      "waiting",
+      "delayed",
+    ])
+    if (waitingJobs.length > 0) {
+      return waitingJobs[0]
+    }
+
+    const activeJobs = await getSameSourceSyncJobsByStatus(job, ["active"])
     return await getQueue().add(job, {
-      jobId: getImmediateJobId(job),
+      jobId:
+        activeJobs.length > 0 ? getFollowUpJobId(job) : getImmediateJobId(job),
       removeOnFail: true,
     })
   } catch (error) {
