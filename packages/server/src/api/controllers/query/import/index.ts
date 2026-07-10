@@ -1,5 +1,4 @@
 import {
-  blacklist,
   cache,
   context,
   events,
@@ -16,7 +15,6 @@ import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
 import sdk from "../../../../sdk"
 import * as crypto from "crypto"
-import fetch from "node-fetch"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -26,7 +24,6 @@ interface ImportResult {
 type ImporterInput = { data: string } | { url: string }
 
 const OPENAPI_SPEC_CACHE_TTL_DAYS = 28
-const MAX_IMPORT_REDIRECTS = 5
 const ALLOWED_IMPORT_PROTOCOLS = new Set(["http:", "https:"])
 const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
   "openapi2.0": () => new OpenAPI2(),
@@ -93,56 +90,23 @@ function parseImportUrl(url: string): URL {
   return parsed
 }
 
-const isRedirect = (status: number) => status >= 300 && status < 400
-
-async function assertUrlIsSafe(url: string): Promise<URL> {
-  const parsed = parseImportUrl(url)
-  if (await blacklist.isBlacklisted(parsed.hostname)) {
-    throw new HTTPError("URL is blocked or could not be resolved safely.", 400)
-  }
-  return parsed
-}
-
 async function fetchFromUrl(url: string): Promise<string> {
   try {
-    let currentUrl = url
-    for (
-      let redirectCount = 0;
-      redirectCount <= MAX_IMPORT_REDIRECTS;
-      redirectCount++
-    ) {
-      await assertUrlIsSafe(currentUrl)
-      const response = await fetch(currentUrl, { redirect: "manual" })
+    // validate protocol / credentials up front for clear 400 errors
+    parseImportUrl(url)
+    // fetchWithBlacklist resolves and validates the target, pins the request to
+    // the validated IP (preventing DNS rebinding between validation and the
+    // actual connection) and safely follows redirects, re-validating each hop.
+    const response = await utils.fetchWithBlacklist(url)
 
-      if (isRedirect(response.status)) {
-        const location = response.headers.get("location")
-        if (!location) {
-          throw new HTTPError(
-            `Failed to fetch import data (status ${response.status})`,
-            response.status
-          )
-        }
-        if (redirectCount === MAX_IMPORT_REDIRECTS) {
-          throw new HTTPError(
-            "Failed to fetch import data - too many redirects",
-            400
-          )
-        }
-        const nextUrl = new URL(location, currentUrl).toString()
-        currentUrl = parseImportUrl(nextUrl).toString()
-        continue
-      }
-
-      if (!response.ok) {
-        throw new HTTPError(
-          `Failed to fetch import data (status ${response.status})`,
-          response.status
-        )
-      }
-
-      return await response.text()
+    if (!response.ok) {
+      throw new HTTPError(
+        `Failed to fetch import data (status ${response.status})`,
+        response.status
+      )
     }
-    throw new HTTPError("Failed to fetch import data", 502)
+
+    return await response.text()
   } catch (error: any) {
     if (error instanceof HTTPError) {
       throw error

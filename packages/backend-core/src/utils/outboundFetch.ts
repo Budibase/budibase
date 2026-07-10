@@ -52,16 +52,21 @@ async function resolveSafePinnedIp(url: string): Promise<string> {
   return addresses[0]
 }
 
-function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
-  const protocol = new URL(url).protocol
-  const lookup: LookupFunction = (_hostname, _options, callback) => {
-    const family = ip.includes(":") ? 6 : 4
+// Always pin to the first resolved IP address to avoid DNS rebinding attacks.
+export function createPinnedLookup(ip: string): LookupFunction {
+  const family = ip.includes(":") ? 6 : 4
+  return (_hostname, _options, callback) => {
     if (typeof _options === "object" && _options?.all) {
       callback(null, [{ address: ip, family }])
       return
     }
     callback(null, ip, family)
   }
+}
+
+function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
+  const protocol = new URL(url).protocol
+  const lookup = createPinnedLookup(ip)
   return protocol === "https:"
     ? new https.Agent({ lookup })
     : new http.Agent({ lookup })
@@ -133,7 +138,8 @@ interface FetchWithBlacklistOptions<
   returnRedirectWithoutLocation?: boolean
   fetchFn?: (
     url: string,
-    request: RedirectSafeRequest<TRequest>
+    request: RedirectSafeRequest<TRequest>,
+    pinnedIp: string
   ) => Promise<TResponse>
 }
 
@@ -173,7 +179,8 @@ export async function fetchWithBlacklist<
     returnRedirectWithoutLocation = false,
     fetchFn = fetch as unknown as (
       url: string,
-      request: RedirectSafeRequest<TRequest>
+      request: RedirectSafeRequest<TRequest>,
+      pinnedIp: string
     ) => Promise<TResponse>,
   }: FetchWithBlacklistOptions<TRequest, TResponse> = {}
 ): Promise<TResponse> {
@@ -187,10 +194,14 @@ export async function fetchWithBlacklist<
     const pinnedIp = await resolveSafePinnedIp(nextUrl)
     let response: TResponse
     try {
-      response = await fetchFn(nextUrl, {
-        ...nextRequest,
-        agent: makePinnedAgent(nextUrl, pinnedIp),
-      })
+      response = await fetchFn(
+        nextUrl,
+        {
+          ...nextRequest,
+          agent: makePinnedAgent(nextUrl, pinnedIp),
+        },
+        pinnedIp
+      )
     } catch (error) {
       const hostname = parseUrl(nextUrl).hostname
       if (error instanceof Error) {
