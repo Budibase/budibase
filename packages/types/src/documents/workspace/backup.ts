@@ -78,7 +78,7 @@ export interface WorkspaceBackupImportQueueData {
 
 export interface WorkspaceBackupCleanupQueueData {
   cleanup: true
-  tenantId?: string
+  tenantId: string
 }
 
 export type WorkspaceBackupQueueData =

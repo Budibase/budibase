@@ -48,7 +48,7 @@ export async function init(opts: BackupProcessingOpts) {
 
 export async function scheduleCleanup() {
   await getBackupQueue().add(
-    { cleanup: true },
+    { cleanup: true, tenantId: tenancy.getTenantId() },
     {
       jobId: BACKUP_CLEANUP_JOB_ID,
       repeat: { every: BACKUP_CLEANUP_INTERVAL_MS },
