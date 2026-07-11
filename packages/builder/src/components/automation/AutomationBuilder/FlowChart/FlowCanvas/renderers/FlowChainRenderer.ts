@@ -155,7 +155,10 @@ export const renderRootChain = (
   let lastWasBranch = false
   for (const step of chain) {
     lastWasBranch = step.stepId === AutomationActionStepId.BRANCH
-    renderBlock(step, context)
+    const shouldContinue = renderBlock(step, context)
+    if (!shouldContinue) {
+      break
+    }
   }
 
   const lastSource = getLastSource(context)
