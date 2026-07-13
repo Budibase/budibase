@@ -14,7 +14,7 @@ import {
   SEPARATOR,
   SuspendedOperationContext,
 } from "@budibase/types"
-import { automationQueue } from "../automations/bullboard"
+import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { prepareAgentChatRun } from "../sdk/workspace/ai/agents"
 import { getFullUser } from "../utilities/users"
@@ -405,32 +405,36 @@ async function resumeOperation({
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
+  let toolCallChain = Promise.resolve()
 
   try {
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
       onToolCallCompleted: ({ toolName, status, input, output }) => {
-        if (!doc.requestId) {
+        const requestId = doc.requestId
+        if (!requestId) {
           return
         }
-        return sdk.ai.agentRequests
-          .recordToolCall({
-            requestId: doc.requestId,
-            agentId: ctx.agentId,
-            sessionId: ctx.sessionId,
-            toolName,
-            status,
-            readableName: run.toolDisplayNames[toolName],
-            input,
-            output,
-          })
-          .catch(error => {
-            console.error(
-              "Failed to record agent request tool call on escalation resume",
-              { escalationId, agentId: ctx.agentId, toolName, error }
-            )
-          })
+        toolCallChain = toolCallChain.then(() =>
+          sdk.ai.agentRequests
+            .recordToolCall({
+              requestId,
+              agentId: ctx.agentId,
+              sessionId: ctx.sessionId,
+              toolName,
+              status,
+              readableName: run.toolDisplayNames[toolName],
+              input,
+              output,
+            })
+            .catch(error => {
+              console.error(
+                "Failed to record agent request tool call on escalation resume",
+                { escalationId, agentId: ctx.agentId, toolName, error }
+              )
+            })
+        )
       },
     })
 
@@ -484,6 +488,8 @@ async function resumeOperation({
     )
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
+    await toolCallChain
+
     if (doc.requestId) {
       const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
         requestId: doc.requestId,
@@ -499,6 +505,7 @@ async function resumeOperation({
       }
     }
   } catch (error) {
+    await toolCallChain
     await markEscalationRequestResolved({
       status: "failed",
       error: error instanceof Error ? error.message : String(error),
