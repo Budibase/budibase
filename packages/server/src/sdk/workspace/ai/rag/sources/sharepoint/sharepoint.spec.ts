@@ -211,6 +211,7 @@ describe("rag/sharepoint sync deduplication", () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+    jest.useRealTimers()
   })
 
   it("does not skip a new file when itemId matches an existing file from another drive", async () => {
