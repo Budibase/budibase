@@ -539,29 +539,27 @@ export async function resolveFinalRequestOutcome({
   // it waiting.
   isHumanResponse?: boolean
 }): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
+  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  if (
+    !request ||
+    isTerminalStatus(request.status) ||
+    (request.status === "needs_input" && !isHumanResponse)
+  ) {
+    return undefined
+  }
+
+  // A request can have several escalations in flight; resolving one of
+  // them doesn't end the request. Only judge once no escalation is still
+  // waiting on a human.
+  const pendingEscalations = await listContextDocs({
+    requestId,
+    resolution: "pending",
+  })
+  if (pendingEscalations.length > 0) {
+    return undefined
+  }
+
   try {
-    const request = await context
-      .getWorkspaceDB()
-      .tryGet<AgentRequest>(requestId)
-    if (
-      !request ||
-      isTerminalStatus(request.status) ||
-      (request.status === "needs_input" && !isHumanResponse)
-    ) {
-      return undefined
-    }
-
-    // A request can have several escalations in flight; resolving one of
-    // them doesn't end the request. Only judge once no escalation is still
-    // waiting on a human.
-    const pendingEscalations = await listContextDocs({
-      requestId,
-      resolution: "pending",
-    })
-    if (pendingEscalations.length > 0) {
-      return undefined
-    }
-
     const { status, reason } = await generateRequestOutcome({
       title: request.title,
       actions: request.actions ?? [],
