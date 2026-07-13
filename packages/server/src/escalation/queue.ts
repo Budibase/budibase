@@ -14,7 +14,7 @@ import {
   SEPARATOR,
   SuspendedOperationContext,
 } from "@budibase/types"
-import { automationQueue } from "../automations/bullboard"
+import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { prepareAgentChatRun } from "../sdk/workspace/ai/agents"
 import { getFullUser } from "../utilities/users"
@@ -472,6 +472,7 @@ async function resumeOperation({
       })
     )
   } catch (error) {
+    await toolCallChain
     await markEscalationRequestResolved({
       status: "failed",
       error: error instanceof Error ? error.message : String(error),
