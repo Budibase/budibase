@@ -239,6 +239,7 @@ async function appendAction(
       await saveRequest({
         ...request,
         actions: [...(request.actions ?? []), fullAction],
+        updatedAt: fullAction.timestamp,
       })
       return
     } catch (err) {
