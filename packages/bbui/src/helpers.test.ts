@@ -4,6 +4,7 @@ import { uuid } from "./helpers"
 describe("uuid", () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it("uses crypto.getRandomValues when available", () => {
