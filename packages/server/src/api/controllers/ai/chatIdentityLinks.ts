@@ -234,9 +234,11 @@ export async function handoffChatLinkSession(
     return
   }
 
+  const currentGlobalUserId = getCurrentGlobalUserId(ctx)
   const confirmationSession =
     await sdk.ai.chatIdentityLinks.prepareChatIdentityLinkSessionConfirmation(
-      token
+      token,
+      currentGlobalUserId
     )
   if (!confirmationSession) {
     throw new HTTPError("Link token is invalid or has expired", 400)
@@ -271,14 +273,16 @@ export async function confirmChatLinkSession(
     throw new HTTPError("Authentication is required to link chat identity", 401)
   }
 
+  const currentGlobalUserId = getCurrentGlobalUserId(ctx)
   if (
     !session.confirmationToken ||
+    !session.confirmationGlobalUserId ||
+    session.confirmationGlobalUserId !== currentGlobalUserId ||
     ctx.request.body?.confirmationToken !== session.confirmationToken
   ) {
     throw new HTTPError("Link confirmation is invalid or has expired", 400)
   }
 
-  const currentGlobalUserId = getCurrentGlobalUserId(ctx)
   const consumedSession =
     await sdk.ai.chatIdentityLinks.consumeChatIdentityLinkSession(token)
   if (!consumedSession) {
