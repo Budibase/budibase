@@ -782,26 +782,29 @@ const runSharePointSourcesForOperation = async (
 
           throwIfSyncAborted(signal)
           phase = "uploading_file"
-          await knowledgeBaseSdk.uploadKnowledgeBaseFile({
-            knowledgeBaseId,
-            source: {
-              type: KnowledgeBaseFileSourceType.SHAREPOINT,
-              knowledgeSourceId: sourceId,
-              siteId,
-              driveId,
-              itemId: file.itemId,
-              path: file.path,
-              externalId: `${siteId}:${driveId}:${file.itemId}`,
-              etag: file.etag,
-              lastModifiedAt: file.lastModifiedAt,
-              remoteSize: file.remoteSize,
-            },
-            filename: file.filename,
-            mimetype: file.mimetype,
-            size: buffer.byteLength,
-            buffer,
-            uploadedBy: `sharepoint:${sourceId}`,
-          })
+          await waitForSyncOrAbort(
+            knowledgeBaseSdk.uploadKnowledgeBaseFile({
+              knowledgeBaseId,
+              source: {
+                type: KnowledgeBaseFileSourceType.SHAREPOINT,
+                knowledgeSourceId: sourceId,
+                siteId,
+                driveId,
+                itemId: file.itemId,
+                path: file.path,
+                externalId: `${siteId}:${driveId}:${file.itemId}`,
+                etag: file.etag,
+                lastModifiedAt: file.lastModifiedAt,
+                remoteSize: file.remoteSize,
+              },
+              filename: file.filename,
+              mimetype: file.mimetype,
+              size: buffer.byteLength,
+              buffer,
+              uploadedBy: `sharepoint:${sourceId}`,
+            }),
+            signal
+          )
           throwIfSyncAborted(signal)
 
           existingExternalIds.add(externalSourceId)

@@ -205,6 +205,7 @@ describe("rag/sharepoint sync deduplication", () => {
       },
     })
     mockDeleteFileForOperation.mockResolvedValue(undefined)
+    mockKnowledgeBaseUploadFile.mockResolvedValue(undefined)
     mockRetryKnowledgeBaseFileIngestion.mockResolvedValue(undefined)
   })
 
@@ -600,6 +601,73 @@ describe("rag/sharepoint sync deduplication", () => {
     try {
       const result = syncSharePointSourcesForAgent("agent_1", sourceId)
       await deleteStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it("times out while uploading a SharePoint file", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+
+    let uploadStarted!: () => void
+    const uploadStartedPromise = new Promise<void>(resolve => {
+      uploadStarted = resolve
+    })
+    mockKnowledgeBaseUploadFile.mockImplementation(() => {
+      uploadStarted()
+      return new Promise(() => {})
+    })
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "new.txt",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/item-1/content",
+        response: {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => toArrayBuffer("new content"),
+        } as Response,
+      },
+    ])
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await uploadStartedPromise
 
       jest.runOnlyPendingTimers()
 
