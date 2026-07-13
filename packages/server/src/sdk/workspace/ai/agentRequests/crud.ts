@@ -514,9 +514,9 @@ export function resolveFinalRequestStatus({
 // Judges the request's actual outcome via LLM instead of just counting tool
 // failures (see resolveFinalRequestStatus above, kept as the fallback when
 // the judgment call itself fails). Returns undefined when there's nothing to
-// decide yet - the request already reached a terminal status through another
+// decide yet, the request already reached a terminal status through another
 // path, it's waiting on a human (needs_input, unless this call carries the
-// human's response), or it still has escalations pending a human response -
+// human's response), or it still has escalations pending a human response,
 // callers should skip updateRequestStatus entirely in that case rather than
 // spend an LLM call on a result that would be discarded anyway.
 export async function resolveFinalRequestOutcome({

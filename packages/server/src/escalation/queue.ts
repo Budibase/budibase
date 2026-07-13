@@ -284,7 +284,7 @@ async function resumeOperation({
     await deliverOperationResult(ctx, text)
     if (doc.requestId) {
       if (outcome === "expired") {
-        // Expiring without any response means this ask never got resolved -
+        // Expiring without any response means this ask never got resolved,
         // not a judgment call. Still not final, though, while other
         // escalations on the same request await a human.
         const stillPending = await sdk.escalations.listContextDocs({
@@ -298,7 +298,7 @@ async function resumeOperation({
           })
         }
       } else {
-        // A rejection is a human decision, not automatically a failure - let
+        // A rejection is a human decision, not automatically a failure, let
         // the outcome judge weigh it against the request's full timeline.
         const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
           requestId: doc.requestId,

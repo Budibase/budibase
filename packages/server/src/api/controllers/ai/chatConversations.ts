@@ -943,8 +943,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         const finalAssistantMessage = [...messages]
           .reverse()
           .find(message => message.role === "assistant")
-        // Involves an LLM call to judge the outcome - kick it off now, but
-        // don't make saving the conversation wait behind it.
+        // Involves an LLM call to judge the outcome. Kick it off now, but don't
+        // make saving the conversation wait behind it.
         const finalizeTask = finalizeAgentRequestTracking({
           trackingHandle,
           agentId,
