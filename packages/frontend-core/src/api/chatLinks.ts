@@ -1,6 +1,7 @@
 import {
   type ChatIdentityLink,
   type ChatIdentityLinkProvider,
+  type ChatIdentityLinkSessionView,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -20,6 +21,14 @@ export interface ChatLinksEndpoints {
   fetchChatIdentityLinks: (
     provider?: ChatIdentityLinkProvider
   ) => Promise<ChatIdentityLink[]>
+  fetchChatIdentityLinkSession: (
+    instance: string,
+    token: string
+  ) => Promise<ChatIdentityLinkSessionView>
+  confirmChatIdentityLinkSession: (
+    instance: string,
+    token: string
+  ) => Promise<{ success: boolean }>
   fetchSlackChannels: (agentId: string) => Promise<SlackChannel[]>
   fetchMSTeamsChannels: (agentId: string) => Promise<MSTeamsChannel[]>
 }
@@ -32,6 +41,16 @@ export const buildChatLinksEndpoints = (
       ? `?${new URLSearchParams({ provider }).toString()}`
       : ""
     return await API.get({ url: `/api/chat-links${query}` })
+  },
+  fetchChatIdentityLinkSession: async (instance, token) => {
+    return await API.get({
+      url: `/api/chat-links/${instance}/${token}`,
+    })
+  },
+  confirmChatIdentityLinkSession: async (instance, token) => {
+    return await API.post({
+      url: `/api/chat-links/${instance}/${token}/confirm`,
+    })
   },
   fetchSlackChannels: async agentId => {
     const query = new URLSearchParams({ agentId }).toString()

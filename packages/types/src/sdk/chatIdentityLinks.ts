@@ -17,6 +17,15 @@ export interface ChatIdentityLinkSession {
   expiresAt: string
 }
 
+export interface ChatIdentityLinkSessionView {
+  provider: ChatIdentityLinkProvider
+  providerLabel: string
+  externalUserId: string
+  externalUserName?: string
+  workspaceId: string
+  alreadyLinked: boolean
+}
+
 export interface ChatIdentityProviderRedirectInput {
   provider: ChatIdentityLinkProvider
   teamId?: string

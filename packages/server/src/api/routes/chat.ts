@@ -1,10 +1,11 @@
 import * as ai from "../controllers/ai"
 import { permissions } from "@budibase/backend-core"
+import { type UserCtx } from "@budibase/types"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
+import type { Middleware } from "koa"
 import {
   builderAdminRoutes,
   endpointGroupList,
-  publicRoutes,
 } from "./endpointGroups"
 
 const userRoutes = endpointGroupList.group({
@@ -15,6 +16,24 @@ const userRoutes = endpointGroupList.group({
   first: false,
 })
 
+const requireAuthenticatedSession: Middleware<unknown, UserCtx> = async (
+  ctx,
+  next
+) => {
+  if (!ctx.user) {
+    return ctx.throw(401, "No user info found")
+  }
+  if (!ctx.isAuthenticated) {
+    return ctx.throw(401, "Session not authenticated")
+  }
+  return next()
+}
+
+const authenticatedRoutes = endpointGroupList.group({
+  middleware: requireAuthenticatedSession,
+  first: false,
+})
+
 builderAdminRoutes
   .get("/api/chat-links", ai.listChatIdentityLinks)
   .get("/api/slack-channels", ai.listSlackChannels)
@@ -22,14 +41,12 @@ builderAdminRoutes
   .put("/api/chatapps/:chatAppId", ai.updateChatApp)
   .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
 
-publicRoutes.get(
-  "/api/chat-links/:instance/:token/handoff",
-  ai.handoffChatLinkSession
-)
-publicRoutes.post(
-  "/api/chat-links/:instance/:token/handoff",
-  ai.confirmChatLinkSession
-)
+authenticatedRoutes
+  .get("/api/chat-links/:instance/:token", ai.getChatLinkSessionView)
+  .post(
+    "/api/chat-links/:instance/:token/confirm",
+    ai.confirmChatLinkSession
+  )
 
 userRoutes
   .get("/api/chatapps", ai.fetchChatApp)

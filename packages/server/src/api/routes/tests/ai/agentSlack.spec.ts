@@ -90,12 +90,9 @@ const resetWebhookChatMock = () => {
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
     .flatMap(message => message.match(/https?:\/\/[^\s"\\]+/g) || [])
-    .filter(url => url.includes("/api/chat-links/"))
+    .filter(url => url.includes("/chat-links/"))
   return urls[0]
 }
-
-const extractConfirmationToken = (html: string) =>
-  html.match(/name="confirmationToken" value="([^"]+)"/)?.[1]
 
 const secretMatch = (plain: string, encoded: string) => {
   if (!encoded.startsWith(SECRET_ENCODING_PREFIX)) {
@@ -311,7 +308,21 @@ describe("agent slack integration provisioning", () => {
       return { agent, chatAppId: channel.chatAppId, linkExternalUser }
     }
 
-    const getLinkPath = (linkUrl: string) => new URL(linkUrl).pathname
+    const getChatLinkApiPath = (linkUrl: string) => {
+      const url = new URL(linkUrl)
+      const parts = url.pathname.split("/")
+      const instance = parts.at(-2)
+      const token = parts.at(-1)
+
+      if (!instance || !token) {
+        throw new Error(`Invalid chat link URL: ${linkUrl}`)
+      }
+
+      return {
+        apiPath: `/api/chat-links/${instance}/${token}`,
+        confirmPath: `/api/chat-links/${instance}/${token}/confirm`,
+      }
+    }
 
     it(`returns a private link prompt for the /${ChatCommands.LINK} slash command`, async () => {
       const { agent, chatAppId } = await setupProvisionedSlackAgent()
@@ -331,7 +342,7 @@ describe("agent slack integration provisioning", () => {
 
       const linkUrl = extractLinkUrl(response.body.messages)
       expect(linkUrl).toBeTruthy()
-      expect(linkUrl).toContain("/handoff")
+      expect(linkUrl).toContain("/builder/auth/chat-links/")
     })
 
     it(`shows already-linked guidance when /${ChatCommands.LINK} is run for an existing mapping`, async () => {
@@ -410,34 +421,25 @@ describe("agent slack integration provisioning", () => {
       const linkUrl = extractLinkUrl(linkResponse.body.messages)
       expect(linkUrl).toBeTruthy()
 
-      const handoffPath = getLinkPath(linkUrl!)
+      const { apiPath, confirmPath } = getChatLinkApiPath(linkUrl!)
 
-      const unauthHandoff = await config
+      await config
         .getRequest()!
-        .get(handoffPath)
-        .expect(302)
-      expect(unauthHandoff.headers.location).toEqual("/builder/auth/login")
-      const cookies = Array.isArray(unauthHandoff.headers["set-cookie"])
-        ? unauthHandoff.headers["set-cookie"]
-        : []
-      expect(
-        cookies.some((cookie: string) =>
-          cookie.startsWith("budibase:returnurl=/api/chat-links/")
-        )
-      ).toBe(true)
+        .post(confirmPath)
+        .set(config.defaultHeaders({}, true))
+        .expect(400)
 
-      const authHandoff = await config
+      const sessionView = await config
         .getRequest()!
-        .get(handoffPath)
+        .get(apiPath)
         .set(config.defaultHeaders({}, true))
         .expect(200)
-      expect(authHandoff.type).toEqual("text/html")
-      expect(authHandoff.text).toContain("Confirm chat account link")
-      expect(authHandoff.text).toContain("<style>")
-      expect(authHandoff.text).toContain("/builder/bblogo.png")
-      expect(authHandoff.text).toContain("Link account")
-      const confirmationToken = extractConfirmationToken(authHandoff.text)
-      expect(confirmationToken).toBeTruthy()
+      expect(sessionView.body.provider).toEqual(AgentChannelProvider.SLACK)
+      expect(sessionView.body.providerLabel).toEqual("Slack")
+      expect(sessionView.body.externalUserId).toEqual("user-1")
+      expect(sessionView.body.externalUserName).toEqual("Slack User")
+      expect(sessionView.body.workspaceId).toEqual(config.getProdWorkspaceId())
+      expect(sessionView.body.alreadyLinked).toBe(false)
 
       await config.doInTenant(async () => {
         const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
@@ -448,26 +450,12 @@ describe("agent slack integration provisioning", () => {
         expect(link).toBeUndefined()
       })
 
-      await config
-        .getRequest()!
-        .post(handoffPath)
-        .set(config.defaultHeaders({}, true))
-        .send({})
-        .expect(400)
-
       const confirmHandoff = await config
         .getRequest()!
-        .post(handoffPath)
+        .post(confirmPath)
         .set(config.defaultHeaders({}, true))
-        .send({ confirmationToken })
         .expect(200)
-      expect(confirmHandoff.type).toEqual("text/html")
-      expect(confirmHandoff.text).toContain("Authentication succeeded.")
-      expect(confirmHandoff.text).toContain("<style>")
-      expect(confirmHandoff.text).toContain("/builder/bblogo.png")
-      expect(confirmHandoff.text).toContain(
-        "You can return to your chat to continue."
-      )
+      expect(confirmHandoff.body).toEqual({ success: true })
 
       await config.doInTenant(async () => {
         const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
@@ -480,7 +468,7 @@ describe("agent slack integration provisioning", () => {
 
       await config
         .getRequest()!
-        .get(handoffPath)
+        .get(apiPath)
         .set(config.defaultHeaders({}, true))
         .expect(400)
 
@@ -503,10 +491,9 @@ describe("agent slack integration provisioning", () => {
       expect(chatResponse.body.messages).toContain("Mock assistant response")
     })
 
-    it("rejects confirmation tokens prepared by a different authenticated user", async () => {
+    it("rejects confirmation prepared by a different authenticated user", async () => {
       const { agent, chatAppId } = await setupProvisionedSlackAgent()
       const otherUser = await config.createUser()
-
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
       const linkResponse = await postSlackMessage({
         path,
@@ -523,26 +510,19 @@ describe("agent slack integration provisioning", () => {
       const linkUrl = extractLinkUrl(linkResponse.body.messages)
       expect(linkUrl).toBeTruthy()
 
-      const handoffPath = getLinkPath(linkUrl!)
-      const preparedByOtherUser = await config.withUser(
-        otherUser,
-        async () =>
-          await config
-            .getRequest()!
-            .get(handoffPath)
-            .set(config.defaultHeaders({}, true))
-            .expect(200)
-      )
-      const confirmationToken = extractConfirmationToken(
-        preparedByOtherUser.text
-      )
-      expect(confirmationToken).toBeTruthy()
+      const { apiPath, confirmPath } = getChatLinkApiPath(linkUrl!)
+      await config.withUser(otherUser, async () => {
+        await config
+          .getRequest()!
+          .get(apiPath)
+          .set(config.defaultHeaders({}, true))
+          .expect(200)
+      })
 
       await config
         .getRequest()!
-        .post(handoffPath)
+        .post(confirmPath)
         .set(config.defaultHeaders({}, true))
-        .send({ confirmationToken })
         .expect(400)
 
       await config.doInTenant(async () => {

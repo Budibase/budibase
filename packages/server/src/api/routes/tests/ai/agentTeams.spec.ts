@@ -85,11 +85,22 @@ const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
     .flatMap(message => message.match(/https?:\/\/[^\s"\\]+/g) || [])
-    .filter(url => url.includes("/api/chat-links/"))
+    .filter(url => url.includes("/chat-links/"))
   return urls[0]
 }
 
-const getLinkPath = (linkUrl: string) => new URL(linkUrl).pathname
+const getChatLinkApiPath = (linkUrl: string) => {
+  const url = new URL(linkUrl)
+  const parts = url.pathname.split("/")
+  const instance = parts.at(-2)
+  const token = parts.at(-1)
+
+  if (!instance || !token) {
+    throw new Error(`Invalid chat link URL: ${linkUrl}`)
+  }
+
+  return `/api/chat-links/${instance}/${token}`
+}
 
 describe("agent teams integration provisioning", () => {
   const config = new TestConfiguration()
@@ -363,15 +374,14 @@ describe("agent teams integration provisioning", () => {
       expect(linkUrl).toBeTruthy()
       expect(mockedWebhookChat).not.toHaveBeenCalled()
 
-      const handoff = await config
+      const sessionView = await config
         .getRequest()!
-        .get(getLinkPath(linkUrl!))
+        .get(getChatLinkApiPath(linkUrl!))
         .set(config.defaultHeaders({}, true))
         .expect(200)
-      expect(handoff.text).toContain(
-        "Link your Budibase account to <strong>Teams User</strong> on <strong>Teams</strong>."
-      )
-      expect(handoff.text).not.toContain("msteams")
+      expect(sessionView.body.provider).toEqual(AgentChannelProvider.MSTEAMS)
+      expect(sessionView.body.providerLabel).toEqual("Teams")
+      expect(sessionView.body.externalUserName).toEqual("Teams User")
     })
 
     it("blocks unlinked users and guides them to link first", async () => {

@@ -531,7 +531,7 @@ export const handleChatMessage = async ({
         })
 
       const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
-      const linkUrl = `${platformUrl.replace(/\/$/, "")}/api/chat-links/${workspaceId}/${session.token}/handoff`
+      const linkUrl = `${platformUrl.replace(/\/$/, "")}/builder/auth/chat-links/${workspaceId}/${session.token}`
 
       const suffix = linkedAlready
         ? "Completing this link will replace the previous Budibase user mapping."

@@ -61,7 +61,7 @@ const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
     .flatMap(message => message.match(/https?:\/\/[^\s"\\]+/g) || [])
-    .filter(url => url.includes("/api/chat-links/"))
+    .filter(url => url.includes("/chat-links/"))
   return urls[0]
 }
 
@@ -322,7 +322,7 @@ describe("agent telegram integration provisioning", () => {
 
       const linkUrl = extractLinkUrl(response.body.messages)
       expect(linkUrl).toBeTruthy()
-      expect(linkUrl).toContain("/handoff")
+      expect(linkUrl).toContain("/builder/auth/chat-links/")
     })
 
     it("runs agent reply for a linked telegram user", async () => {

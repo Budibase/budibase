@@ -5,10 +5,14 @@
 
   $redirect
 
+  const isChatLinkRoute =
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/builder/auth/chat-links/")
+
   // If already authenticated, redirect away from the auth section.
   // Check this onMount rather than a reactive statement to avoid trumping
   // the login return URL functionality.
-  if ($auth.user && !$auth.user.forceResetPassword) {
+  if ($auth.user && !$auth.user.forceResetPassword && !isChatLinkRoute) {
     $redirect("../")
   }
 
