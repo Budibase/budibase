@@ -5,12 +5,14 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
+import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
 import type {
   AgentRequest,
   AgentRequestAction,
   AgentRequestEntry,
   AgentRequestsSummary,
   AgentRequestStatus,
+  EscalationResolvedAction,
   StatusChangedAction,
   UserMessageAction,
   ToolCallAction,
@@ -29,7 +31,11 @@ import {
   queryRequestsByUpdatedAt,
   queryRequestsByStatusAndUpdatedAt,
 } from "./views"
-import { listContextDocs } from "../../escalations"
+import {
+  getContextDoc,
+  listContextDocs,
+  resolveRecipientLabel,
+} from "../../escalations"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -252,6 +258,53 @@ async function appendAction(
   }
 }
 
+async function recordEscalationRaised({
+  requestId,
+  sessionId,
+  escalationId,
+}: {
+  requestId: string
+  sessionId: string
+  escalationId: string
+}): Promise<void> {
+  const doc = await getContextDoc(escalationId)
+  if (!doc) {
+    throw new Error(`Escalation context doc not found: ${escalationId}`)
+  }
+  const recipients = await Promise.all(
+    (doc.recipients ?? []).map(async recipient => ({
+      type: recipient.type,
+      label: await resolveRecipientLabel(recipient),
+    }))
+  )
+
+  await appendAction(requestId, {
+    type: "escalation_raised",
+    escalationId,
+    recipients,
+    sessionId,
+  })
+}
+
+export async function recordEscalationResolved({
+  requestId,
+  escalationId,
+  outcome,
+  sessionId,
+}: {
+  requestId: string
+  escalationId: string
+  outcome: EscalationResolvedAction["outcome"]
+  sessionId?: string
+}): Promise<void> {
+  await appendAction(requestId, {
+    type: "escalation_resolved",
+    escalationId,
+    outcome,
+    sessionId,
+  })
+}
+
 export async function recordToolCall({
   requestId,
   agentId,
@@ -271,6 +324,35 @@ export async function recordToolCall({
   input?: unknown
   output?: unknown
 }): Promise<void> {
+  if (toolName === ESCALATE_TOOL_NAME && status === "success") {
+    const escalationOutput = output as
+      | { status?: string; escalationId?: string }
+      | undefined
+    if (
+      escalationOutput?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+      escalationOutput.escalationId
+    ) {
+      try {
+        await recordEscalationRaised({
+          requestId,
+          sessionId,
+          escalationId: escalationOutput.escalationId,
+        })
+        return
+      } catch (error) {
+        console.error(
+          "Failed to record escalation_raised action, falling back to a generic tool_call",
+          {
+            agentId,
+            sessionId,
+            escalationId: escalationOutput.escalationId,
+            error,
+          }
+        )
+      }
+    }
+  }
+
   let summary: string | undefined
   try {
     summary = await generateToolCallSummary({

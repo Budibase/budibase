@@ -1,5 +1,11 @@
 import { context } from "@budibase/backend-core"
-import { DocumentType, EscalationSource, SEPARATOR } from "@budibase/types"
+import {
+  DocumentType,
+  EscalateToolResultStatus,
+  EscalationNotificationChannel,
+  EscalationSource,
+  SEPARATOR,
+} from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import {
@@ -8,6 +14,7 @@ import {
   fetchRequestsByAgent,
   fetchRequestsSummary,
   initActiveRequest,
+  recordEscalationResolved,
   recordToolCall,
   resolveFinalRequestOutcome,
   resolveFinalRequestStatus,
@@ -754,6 +761,256 @@ describe("agentRequests crud", () => {
             sessionId: "session_1",
             toolName: "book_meeting",
             status: "success",
+          })
+        ).resolves.toBeUndefined()
+      })
+    })
+  })
+
+  describe("escalation_raised actions", () => {
+    const createBookingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
+    const putEscalationContextDoc = async (
+      escalationId: string,
+      requestId: string,
+      recipients: Array<{ type: EscalationNotificationChannel; config: any }>
+    ) => {
+      await context.getWorkspaceDB().put({
+        _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+        source: EscalationSource.OPERATION,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        agentId: "agent_1",
+        sessionId: "session_1",
+        requestId,
+        delay: 1000,
+        resolution: "pending",
+        recipients,
+      })
+    }
+
+    it("records an escalation_raised action with resolved recipient labels", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+        const user = await config.createUser({
+          firstName: "Manolo",
+          lastName: "Garcia",
+        })
+        await putEscalationContextDoc("esc_1", requestId, [
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { channelId: "C1", channelName: "operations" },
+          },
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { globalUserId: user._id },
+          },
+        ])
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "success",
+          output: {
+            status: EscalateToolResultStatus.PENDING_APPROVAL,
+            escalationId: "esc_1",
+            note: "Escalated for approval",
+          },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(request.actions).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: "escalation_raised",
+              escalationId: "esc_1",
+              sessionId: "session_1",
+              recipients: [
+                {
+                  type: EscalationNotificationChannel.SLACK,
+                  label: "operations",
+                },
+                {
+                  type: EscalationNotificationChannel.SLACK,
+                  label: "Manolo Garcia",
+                },
+              ],
+            }),
+          ])
+        )
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([])
+        expect(generateToolCallSummaryMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("falls back to a generic tool_call when the escalation context doc can't be found", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "success",
+          output: {
+            status: EscalateToolResultStatus.PENDING_APPROVAL,
+            escalationId: "esc_missing",
+          },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(
+          (request.actions ?? []).filter(a => a.type === "escalation_raised")
+        ).toEqual([])
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([expect.objectContaining({ toolName: "escalate" })])
+        expect(generateToolCallSummaryMock).toHaveBeenCalled()
+      })
+    })
+
+    it("records a generic tool_call when escalate is unavailable", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "error",
+          output: { status: EscalateToolResultStatus.UNAVAILABLE },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(
+          (request.actions ?? []).filter(a => a.type === "escalation_raised")
+        ).toEqual([])
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([
+          expect.objectContaining({ toolName: "escalate", status: "error" }),
+        ])
+      })
+    })
+
+    it("records a generic tool_call when escalate was already approved (resume)", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "success",
+          output: { status: EscalateToolResultStatus.ALREADY_APPROVED },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(
+          (request.actions ?? []).filter(a => a.type === "escalation_raised")
+        ).toEqual([])
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([expect.objectContaining({ toolName: "escalate" })])
+      })
+    })
+  })
+
+  describe("escalation_resolved actions", () => {
+    const createBookingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
+    it.each(["approved", "rejected", "expired"] as const)(
+      "records an escalation_resolved action for outcome %s",
+      async outcome => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const { requestId } = (await createBookingRequest())!
+
+          await recordEscalationResolved({
+            requestId,
+            escalationId: "esc_1",
+            outcome,
+            sessionId: "session_1",
+          })
+
+          const [request] = await fetchRequestsByAgent("agent_1")
+          expect(
+            (request.actions ?? []).filter(
+              a => a.type === "escalation_resolved"
+            )
+          ).toEqual([
+            expect.objectContaining({
+              type: "escalation_resolved",
+              escalationId: "esc_1",
+              outcome,
+              sessionId: "session_1",
+            }),
+          ])
+        })
+      }
+    )
+
+    it("records one action per escalation on the same request", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordEscalationResolved({
+          requestId,
+          escalationId: "esc_1",
+          outcome: "approved",
+        })
+        await recordEscalationResolved({
+          requestId,
+          escalationId: "esc_2",
+          outcome: "rejected",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const resolvedActions = (request.actions ?? []).filter(
+          a => a.type === "escalation_resolved"
+        )
+        expect(resolvedActions).toEqual([
+          expect.objectContaining({
+            escalationId: "esc_1",
+            outcome: "approved",
+          }),
+          expect.objectContaining({
+            escalationId: "esc_2",
+            outcome: "rejected",
+          }),
+        ])
+      })
+    })
+
+    it("does nothing if the requestId does not exist", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await expect(
+          recordEscalationResolved({
+            requestId: "agentrequest_missing",
+            escalationId: "esc_1",
+            outcome: "approved",
           })
         ).resolves.toBeUndefined()
       })
