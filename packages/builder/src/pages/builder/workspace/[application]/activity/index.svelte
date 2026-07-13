@@ -2,8 +2,19 @@
   import { API } from "@/api"
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
-  import { Pagination, Table, notifications } from "@budibase/bbui"
-  import type { AgentRequestStatus } from "@budibase/types"
+  import { builderStore } from "@/stores/builder"
+  import {
+    Body,
+    Pagination,
+    Select,
+    Table,
+    notifications,
+  } from "@budibase/bbui"
+  import { BuilderSocketEvent } from "@budibase/shared-core"
+  import type {
+    AgentRequestsSummary,
+    AgentRequestStatus,
+  } from "@budibase/types"
   import { FeatureFlag, type AgentRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import dayjs from "dayjs"
@@ -28,19 +39,19 @@
     value: number
   }
 
-  const PAGE_SIZE = 40
+  const PAGE_SIZE = 20
   const tableSchema = {
     title: {
       type: "string",
       displayName: "Requests",
       width: "minmax(280px, 1.8fr)",
     },
+    statusLabel: { type: "string", displayName: "Status", width: "170px" },
     sourceLabel: {
       type: "string",
       displayName: "Source",
       width: "200px",
     },
-    statusLabel: { type: "string", displayName: "Status", width: "170px" },
     updatedLabel: { type: "string", displayName: "Updated", width: "130px" },
     actions: {
       type: "string",
@@ -54,17 +65,47 @@
     { column: "actions", component: ActivityActionsRenderer },
   ]
 
+  const RELATIVE_TIME_REFRESH_MS = 30000
+
+  type StatusFilter = AgentRequestStatus | "all"
+
   let loading = $state(false)
   let currentPage = $state(1)
+  let statusFilter = $state<StatusFilter>("all")
   let selectedRequestId = $state<string | null>(null)
   let allRequests = $state<AgentRequest[]>([])
+  let summary = $state<AgentRequestsSummary | null>(null)
   let userNames = $state<Record<string, string>>({})
-  let hasNextPage = $state(false)
   let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
 
+  let filteredTotal = $derived.by(() => {
+    if (!summary) {
+      return 0
+    }
+    return statusFilter === "all" ? summary.total : summary[statusFilter]
+  })
+
+  let hasNextPage = $derived.by(() => {
+    return filteredTotal > currentPage * PAGE_SIZE
+  })
+
+  // Ticks on an interval purely to force updatedLabel to re-derive
+  let now = $state(Date.now())
+
   const requestStatusMeta: Record<RequestRow["status"], { label: string }> = {
+    active: { label: "Processing" },
+    needs_input: { label: "Needs input" },
     completed: { label: "Completed" },
+    failed: { label: "Failed" },
   }
+
+  const statusFilterOptions: { label: string; value: StatusFilter }[] = [
+    { label: "All statuses", value: "all" },
+    ...(Object.keys(requestStatusMeta) as AgentRequestStatus[]).map(status => ({
+      label: requestStatusMeta[status].label,
+      value: status,
+    })),
+  ]
 
   const getRequestTitle = (request: AgentRequest) => {
     return request.title || "Untitled request"
@@ -88,13 +129,19 @@
   let filteredRequests = $derived(allRequests)
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
-    const requests = filteredRequests
+    const counts = summary || {
+      total: 0,
+      active: 0,
+      needs_input: 0,
+      completed: 0,
+      failed: 0,
+    }
     return [
-      { label: "All actions", value: requests.length },
-      { label: "Completed", value: requests.length },
-      { label: "Processing", value: 0 },
-      { label: "Needs input", value: 0 },
-      { label: "Failed", value: 0 },
+      { label: "All requests", value: counts.total },
+      { label: "Completed", value: counts.completed },
+      { label: "Processing", value: counts.active },
+      { label: "Needs input", value: counts.needs_input },
+      { label: "Failed", value: counts.failed },
     ]
   })
 
@@ -110,7 +157,7 @@
         statusLabel: requestStatusMeta[request.status].label,
         status: request.status,
         updatedLabel:
-          updatedTime > 0 ? dayjs(updatedAt).fromNow() : "Unknown time",
+          updatedTime > 0 ? dayjs(updatedAt).from(now) : "Unknown time",
         actions: "",
       }
     })
@@ -149,38 +196,56 @@
       return "Showing 0 items"
     }
 
-    return `Showing ${start} to ${end} items`
+    return `Showing ${start}–${end} of ${filteredTotal} items`
   })
 
-  async function loadRequests(page = currentPage) {
-    if (!($agentsStore.agents || []).length) {
-      allRequests = []
-      hasNextPage = false
-      return
-    }
+  const loadRequests = (() => {
+    let requestSequence = 0
 
-    loading = true
-    try {
-      const response = await API.fetchAgentRequests({
-        limit: PAGE_SIZE,
-        page,
-      })
-      allRequests = response.requests
-      hasNextPage = response.requests.length === PAGE_SIZE
-      try {
-        await hydrateUserNames(response.requests)
-      } catch (error) {
-        console.error("Failed to hydrate agent request user names", error)
+    return async function loadRequests(page = currentPage) {
+      const sequence = ++requestSequence
+
+      if (!($agentsStore.agents || []).length) {
+        allRequests = []
+        summary = null
+        loading = false
+        return
       }
-    } catch (error) {
-      console.error("Failed to fetch agent requests", error)
-      notifications.error("Failed to load agent actions")
-      allRequests = []
-      hasNextPage = false
-    } finally {
-      loading = false
+
+      loading = true
+      try {
+        const response = await API.fetchAgentRequests({
+          limit: PAGE_SIZE,
+          page,
+          status: statusFilter === "all" ? undefined : statusFilter,
+        })
+        if (sequence !== requestSequence) {
+          // A newer request was issued while this one was in flight - discard
+          // this stale response so it can't overwrite fresher state.
+          return
+        }
+        allRequests = response.requests
+        summary = response.summary
+        try {
+          await hydrateUserNames(response.requests)
+        } catch (error) {
+          console.error("Failed to hydrate agent request user names", error)
+        }
+      } catch (error) {
+        if (sequence !== requestSequence) {
+          return
+        }
+        console.error("Failed to fetch agent requests", error)
+        notifications.error("Failed to load agent actions")
+        allRequests = []
+        summary = null
+      } finally {
+        if (sequence === requestSequence) {
+          loading = false
+        }
+      }
     }
-  }
+  })()
 
   async function hydrateUserNames(requests: AgentRequest[]) {
     const missingUserIds = [...new Set(requests.map(request => request.userId))]
@@ -218,6 +283,17 @@
     }
   }
 
+  function changeStatusFilter(nextFilter: StatusFilter) {
+    if (nextFilter === statusFilter) {
+      return
+    }
+
+    statusFilter = nextFilter
+    currentPage = 1
+    selectedRequestId = null
+    loadRequests(1)
+  }
+
   function changePage(nextPage: number) {
     const resolvedPage = Math.max(1, nextPage)
     if (resolvedPage === currentPage) {
@@ -245,6 +321,13 @@
   })
 
   $effect(() => {
+    const interval = setInterval(() => {
+      now = Date.now()
+    }, RELATIVE_TIME_REFRESH_MS)
+    return () => clearInterval(interval)
+  })
+
+  $effect(() => {
     if (!activityEnabled) {
       return
     }
@@ -252,7 +335,7 @@
     const currentAgentIds = ($agentsStore.agents || []).map(agent => agent._id)
     if (!currentAgentIds.length) {
       allRequests = []
-      hasNextPage = false
+      summary = null
       return
     }
 
@@ -260,51 +343,147 @@
     selectedRequestId = null
     loadRequests(1)
   })
+
+  $effect(() => {
+    const socket = builderStore.websocket
+    if (!socket) {
+      return
+    }
+
+    const handleAgentRequestChange = async (request: AgentRequest) => {
+      // With a status filter active, a change can move a request in or out
+      // of the filtered set (e.g. it stops being "Failed"), which a local
+      // patch can't express correctly - only a re-fetch can. loadRequests
+      // also refreshes summary from the server, so no manual patch is needed.
+      if (statusFilter !== "all") {
+        await loadRequests(currentPage)
+        return
+      }
+
+      const previous = allRequests.find(r => r._id === request._id)
+      if (previous) {
+        allRequests = allRequests.map(r =>
+          r._id === request._id ? request : r
+        )
+        if (summary && previous.status !== request.status) {
+          summary = {
+            ...summary,
+            [previous.status]: summary[previous.status] - 1,
+            [request.status]: summary[request.status] + 1,
+          }
+        }
+        try {
+          await hydrateUserNames([request])
+        } catch (error) {
+          console.error("Failed to hydrate agent request user name", error)
+        }
+        return
+      }
+
+      // A brand-new request always lands on page 1, pushing every other
+      // page's rows down by one. On page 1 we can patch locally; on any
+      // other page the shift can only be reproduced by re-fetching that
+      // page's offset from the server.
+      if (currentPage !== 1) {
+        await loadRequests(currentPage)
+        return
+      }
+
+      if (allRequests.length >= PAGE_SIZE) {
+        hasNextPage = true
+      }
+
+      if (summary) {
+        summary = {
+          ...summary,
+          total: summary.total + 1,
+          [request.status]: summary[request.status] + 1,
+        }
+      }
+
+      allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
+      try {
+        await hydrateUserNames([request])
+      } catch (error) {
+        console.error("Failed to hydrate agent request user name", error)
+      }
+    }
+
+    socket.on(BuilderSocketEvent.AgentRequestChange, handleAgentRequestChange)
+    return () => {
+      socket.off(
+        BuilderSocketEvent.AgentRequestChange,
+        handleAgentRequestChange
+      )
+    }
+  })
 </script>
 
 <div class="agent-actions-page">
-  <div class="page-title">Agent actions</div>
+  <div class="agent-actions-content">
+    <div class="page-title">
+      <Body size="M" weight="500" color="var(--spectrum-global-color-gray-900)">
+        Requests
+      </Body>
+    </div>
 
-  <div class="metrics-grid">
-    {#each summaryMetrics as metric}
-      <section class="metric-card">
-        <div class="metric-label">{metric.label}</div>
-        <div class="metric-value">{metric.value.toLocaleString()}</div>
-      </section>
-    {/each}
+    <div class="metrics-grid">
+      {#each summaryMetrics as metric}
+        <section class="metric-card">
+          <Body size="XL" weight="600">
+            {metric.value.toLocaleString()}
+          </Body>
+          <Body size="S" color="var(--spectrum-global-color-gray-600)">
+            {metric.label}
+          </Body>
+        </section>
+      {/each}
+    </div>
+
+    <div class="filters-row">
+      <Select
+        size="M"
+        autoWidth
+        placeholder={false}
+        options={statusFilterOptions}
+        value={statusFilter}
+        on:change={({ detail }) => changeStatusFilter(detail)}
+      />
+    </div>
+
+    <section class="requests-table-panel">
+      <Table
+        quiet
+        compact
+        {loading}
+        allowClickRows
+        allowEditRows={false}
+        allowEditColumns={false}
+        allowSelectRows={false}
+        data={paginatedRows}
+        schema={tableSchema}
+        {customRenderers}
+        placeholderText="No agent actions tracked yet."
+        on:click={({ detail }) => selectRequest(detail)}
+      />
+
+      {#if paginatedRows.length > 0}
+        <div class="table-footer">
+          <div class="footer-copy">{paginationLabel}</div>
+
+          {#if currentPage > 1 || hasNextPage}
+            <Pagination
+              page={currentPage}
+              goToPrevPage={() => changePage(currentPage - 1)}
+              goToNextPage={() => changePage(currentPage + 1)}
+              hasPrevPage={currentPage > 1}
+              {hasNextPage}
+            />
+          {/if}
+        </div>
+      {/if}
+    </section>
   </div>
-  <section class="requests-table-panel">
-    <Table
-      quiet
-      compact
-      {loading}
-      allowClickRows
-      allowEditRows={false}
-      allowEditColumns={false}
-      allowSelectRows={false}
-      data={paginatedRows}
-      schema={tableSchema}
-      {customRenderers}
-      placeholderText="No agent actions tracked yet."
-      on:click={({ detail }) => selectRequest(detail)}
-    />
-
-    {#if paginatedRows.length > 0}
-      <div class="table-footer">
-        <div class="footer-copy">{paginationLabel}</div>
-
-        {#if currentPage > 1 || hasNextPage}
-          <Pagination
-            page={currentPage}
-            goToPrevPage={() => changePage(currentPage - 1)}
-            goToNextPage={() => changePage(currentPage + 1)}
-            hasPrevPage={currentPage > 1}
-            {hasNextPage}
-          />
-        {/if}
-      </div>
-    {/if}
-  </section>
 
   <ActivitySidePanel
     open={!!selectedRequest}
@@ -319,45 +498,46 @@
 <style>
   .agent-actions-page {
     display: flex;
-    flex-direction: column;
-    gap: 24px;
+    justify-content: center;
     min-height: 100%;
-    padding: 20px 40px 32px;
-    background: var(--background);
+    padding: 0 var(--spacing-l);
+    box-sizing: border-box;
+    background: var(--background-alt);
   }
 
-  .page-title {
-    font-size: 13px;
-    line-height: 17px;
-    font-weight: 400;
-    color: var(--spectrum-global-color-gray-600);
+  .agent-actions-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 1280px;
+    padding: 20px 0 32px;
   }
 
   .metrics-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 10px;
+    gap: var(--spacing-m);
   }
 
   .metric-card {
-    background: var(--background-alt);
+    background: var(--spectrum-global-color-gray-100);
     border-radius: 4px;
-    padding: 12px 16px;
-    min-height: 72px;
+    padding: var(--spacing-m) var(--spacing-l);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: calc(var(--spacing-s) - var(--spacing-xs));
   }
 
-  .metric-label {
-    font-size: 13px;
-    line-height: 16px;
-    color: var(--spectrum-global-color-gray-700);
+  .filters-row {
+    display: flex;
+    justify-content: flex-start;
   }
 
-  .metric-value {
-    font-size: 26px;
+  .filters-row :global(.spectrum-Picker) {
+    min-width: 180px;
   }
+
   .requests-table-panel {
     background: transparent;
     display: flex;
@@ -379,47 +559,60 @@
     color: var(--spectrum-global-color-gray-700);
   }
 
+  .requests-table-panel :global(.spectrum-Table) {
+    border-radius: var(--border-radius-s);
+    overflow: hidden;
+  }
+
   .requests-table-panel :global(.spectrum-Table-headCell) {
-    background: transparent;
+    background: var(--spectrum-global-color-gray-100);
     border-top: none;
     border-left: none;
     border-right: none;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
     text-transform: none;
-    color: var(--spectrum-global-color-gray-600);
-    font-family: inherit;
-    font-size: 13px;
+    color: var(--spectrum-global-color-gray-700);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-s);
     font-weight: 400;
     letter-spacing: normal;
-  }
-
-  .requests-table-panel :global(.spectrum-Table-body) {
-    background: transparent;
+    height: auto;
+    padding: 8px 12px;
   }
 
   .requests-table-panel :global(.spectrum-Table-row) {
-    background: transparent;
+    background: var(--spectrum-global-color-gray-100);
+  }
+
+  .requests-table-panel
+    :global(.spectrum-Table-row.clickable:hover .spectrum-Table-cell) {
+    background-color: var(--spectrum-global-color-gray-200);
   }
 
   .requests-table-panel :global(.spectrum-Table-cell) {
+    background: var(--spectrum-global-color-gray-100);
     border-left: 0;
     border-right: 0;
-  }
-
-  .requests-table-panel :global(.spectrum-Table-cell:nth-child(2)),
-  .requests-table-panel :global(.spectrum-Table-cell:nth-child(4)) {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .requests-table-panel :global(.spectrum-Table-bodyEmpty) {
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    height: auto;
+    padding: 8px 12px;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-m);
+    line-height: 1.5;
     color: var(--spectrum-global-color-gray-700);
   }
 
-  @media (max-width: 1280px) {
-    .agent-actions-page {
-      padding-left: 24px;
-      padding-right: 24px;
-    }
+  .requests-table-panel :global(.spectrum-Table-cell:nth-child(1)) {
+    color: var(--spectrum-global-color-gray-800);
+  }
 
+  .requests-table-panel :global(.placeholder) {
+    background: var(--spectrum-global-color-gray-100);
+    color: var(--spectrum-global-color-gray-700);
+    border: none;
+  }
+
+  @media (max-width: 1280px) {
     .metrics-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -430,8 +623,8 @@
   }
 
   @media (max-width: 720px) {
-    .agent-actions-page {
-      padding: 20px 16px 24px;
+    .agent-actions-content {
+      padding: 20px 0 24px;
     }
 
     .table-footer {

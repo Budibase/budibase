@@ -1,6 +1,7 @@
 import { auth, context, events, permissions } from "@budibase/backend-core"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
+  AgentRequest,
   Automation,
   ContextUser,
   Ctx,
@@ -247,5 +248,9 @@ export default class BuilderSocket extends BaseSocket {
       id,
       automation: null,
     })
+  }
+
+  emitAgentRequestChange(workspaceId: string, request: AgentRequest) {
+    this.io.in(workspaceId).emit(BuilderSocketEvent.AgentRequestChange, request)
   }
 }

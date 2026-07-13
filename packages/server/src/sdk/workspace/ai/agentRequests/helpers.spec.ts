@@ -1,7 +1,11 @@
 import { generateText } from "ai"
 import type { Agent, AgentRequest, LLMResponse } from "@budibase/types"
 import sdk from "../../.."
-import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
+import {
+  analyzeAgentRequestLink,
+  generateAgentRequestTitle,
+  generateInteractionSummary,
+} from "./helpers"
 
 jest.mock("ai", () => ({
   generateText: jest.fn(),
@@ -270,5 +274,63 @@ describe("generateAgentRequestTitle", () => {
         ]),
       })
     )
+  })
+})
+
+describe("generateInteractionSummary", () => {
+  const generateTextMock = jest.mocked(generateText)
+  const getOrThrowMock = jest.mocked(sdk.ai.agents.getOrThrow)
+  const createLLMMock = jest.mocked(sdk.ai.llm.createLLM)
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    getOrThrowMock.mockResolvedValue(buildAgent())
+    createLLMMock.mockResolvedValue(buildLLMResponse())
+  })
+
+  it("summarizes the user's latest message for the timeline", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult("User asked about VPN access")
+    )
+
+    await expect(
+      generateInteractionSummary({
+        latestPrompt: "I can't connect to the VPN from home",
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual("User asked about VPN access")
+
+    expect(createLLMMock).toHaveBeenCalledWith(
+      "config_1",
+      "session_1",
+      undefined,
+      "agent_1"
+    )
+    expect(generateTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: {
+          "x-litellm-tags": "bb-agent-request-interaction-summary",
+        },
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: "user",
+            content: "I can't connect to the VPN from home",
+          }),
+        ]),
+      })
+    )
+  })
+
+  it("throws when the model returns an empty response", async () => {
+    generateTextMock.mockResolvedValue(buildGenerateTextResult("   "))
+
+    await expect(
+      generateInteractionSummary({
+        latestPrompt: "I need a new laptop",
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).rejects.toThrow("Invalid interaction summary response")
   })
 })
