@@ -73,7 +73,10 @@ import {
   type Agent,
   type KnowledgeBaseFile,
 } from "@budibase/types"
-import { syncSharePointSourcesForAgent } from "./sharepoint"
+import {
+  SharePointSyncTimeoutError,
+  syncSharePointSourcesForAgent,
+} from "./sharepoint"
 import { generator } from "@budibase/backend-core/tests"
 
 const toArrayBuffer = (value: string) => {
@@ -541,6 +544,69 @@ describe("rag/sharepoint sync deduplication", () => {
       unsupported: 0,
       totalDiscovered: 1,
     })
+  })
+
+  it("times out while deleting stale files removed from SharePoint", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_removed",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-removed",
+        path: "removed/file.txt",
+      }),
+    ])
+
+    let deleteStarted!: () => void
+    const deleteStartedPromise = new Promise<void>(resolve => {
+      deleteStarted = resolve
+    })
+    mockDeleteFileForOperation.mockImplementation(() => {
+      deleteStarted()
+      return new Promise(() => {})
+    })
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "drive-a" }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await deleteStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 
   it("re-ingests when etag changes", async () => {

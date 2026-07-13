@@ -72,6 +72,33 @@ const throwIfSyncAborted = (signal?: AbortSignal) => {
   }
 }
 
+const waitForSyncOrAbort = async <T>(
+  promise: Promise<T>,
+  signal?: AbortSignal
+): Promise<T> => {
+  throwIfSyncAborted(signal)
+
+  if (!signal) {
+    return await promise
+  }
+
+  return await new Promise<T>((resolve, reject) => {
+    const onAbort = () => {
+      reject(
+        signal.reason instanceof Error
+          ? signal.reason
+          : new Error("SharePoint sync aborted")
+      )
+    }
+
+    signal.addEventListener("abort", onAbort, { once: true })
+
+    promise
+      .then(resolve, reject)
+      .finally(() => signal.removeEventListener("abort", onAbort))
+  })
+}
+
 export const getSharePointFileDedupKey = ({
   siteId,
   driveId,
@@ -806,10 +833,13 @@ const runSharePointSourcesForOperation = async (
 
     if (staleFileIds.length > 0) {
       phase = "deleting_stale_files"
-      const staleDeleteResults = await Promise.allSettled(
-        staleFileIds.map(fileId =>
-          deleteFileForOperation(agentId, operationId, fileId)
-        )
+      const staleDeleteResults = await waitForSyncOrAbort(
+        Promise.allSettled(
+          staleFileIds.map(fileId =>
+            deleteFileForOperation(agentId, operationId, fileId)
+          )
+        ),
+        signal
       )
       const staleDeleted = staleDeleteResults.filter(
         result => result.status === "fulfilled"
