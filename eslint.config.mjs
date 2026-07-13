@@ -263,11 +263,21 @@ export default [
   {
     files: [
       "packages/builder/**/*",
+      "packages/bbui/**/*",
       "packages/client/**/*",
       "packages/frontend-core/**/*",
     ],
 
     rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.object.name='crypto'][callee.property.name='randomUUID']",
+          message:
+            "Do not use crypto.randomUUID() in frontend code. Use Helpers.uuid() or an approved frontend-safe wrapper instead.",
+        },
+      ],
       "no-console": [
         "error",
         {

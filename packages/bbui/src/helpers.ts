@@ -208,7 +208,7 @@ const getPatternForPart = (part: Intl.DateTimeFormatPart): string => {
     case "literal":
       return part.value
     default:
-      console.log("Unsupported date part", part)
+      console.warn("Unsupported date part", part)
       return ""
   }
 }
