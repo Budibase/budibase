@@ -369,21 +369,6 @@ export async function recordToolCall({
   input?: unknown
   output?: unknown
 }): Promise<void> {
-  // Save the action up front so the timeline shows it via readableName/
-  // toolName while the LLM summary is still generating. Call sites on the
-  // agent runtime's hot path deliberately fire-and-forget this promise so the
-  // summary never blocks the next step.
-  const action = await appendAction(requestId, {
-    type: "tool_call",
-    toolName,
-    status,
-    sessionId,
-    ...(readableName === undefined ? {} : { readableName }),
-  })
-  if (!action) {
-    return
-  }
-
   if (toolName === ESCALATE_TOOL_NAME && status === "success") {
     const escalationOutput = output as
       | { status?: string; escalationId?: string }
@@ -411,6 +396,21 @@ export async function recordToolCall({
         )
       }
     }
+  }
+
+  // Save the action up front so the timeline shows it via readableName/
+  // toolName while the LLM summary is still generating. Call sites on the
+  // agent runtime's hot path deliberately fire-and-forget this promise so the
+  // summary never blocks the next step.
+  const action = await appendAction(requestId, {
+    type: "tool_call",
+    toolName,
+    status,
+    sessionId,
+    ...(readableName === undefined ? {} : { readableName }),
+  })
+  if (!action) {
+    return
   }
 
   let summary: string | undefined
