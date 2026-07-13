@@ -881,7 +881,9 @@ const runSharePointSourcesForOperation = async (
         ...staleListDeleteResults
           .map((result, index) => ({ result, fileId: staleListFileIds[index] }))
           .filter(
-            (entry): entry is {
+            (
+              entry
+            ): entry is {
               result: PromiseRejectedResult
               fileId: string
             } => entry.result.status === "rejected"
