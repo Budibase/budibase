@@ -20,11 +20,14 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: {{ .Values.services.worker.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.services.worker.rollingUpdate.maxUnavailable }}
   template:
     metadata:
       annotations:
+        {{- if .Values.globals.deployTimestamp }}
+        rollme/deploy-timestamp: {{ .Values.globals.deployTimestamp | quote }}
+        {{- end }}
         ad.datadoghq.com/bbworker.logs: '[{"source":"nodejs"}]'
 {{- if .Values.services.couchdb.enabled }}
         checksum/couchdb-secret: {{ (lookup "v1" "Secret" .Release.Namespace (include "couchdb.fullname" .)) | toYaml | sha256sum }}
@@ -231,7 +234,7 @@ spec:
               key: {{ .secretKey | quote }}
         {{- end}}
         image: {{ .Values.services.worker.image | default (printf "%sbudibase/worker:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.services.worker.imagePullPolicy | default "IfNotPresent" }}
         {{- with .Values.services.worker.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}

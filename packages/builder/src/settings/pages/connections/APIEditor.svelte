@@ -34,6 +34,7 @@
     Layout,
     Divider,
     Icon,
+    Helpers,
     TooltipType,
     TooltipPosition,
     Label,
@@ -339,7 +340,7 @@
   const createAuthConfig = (
     authType: RestAuthType
   ): RestAuthConfig | undefined => {
-    const _id = crypto.randomUUID()
+    const _id = Helpers.uuid()
     const name = ""
 
     switch (authType) {

@@ -263,11 +263,13 @@ export default [
   {
     files: [
       "packages/builder/**/*",
+      "packages/bbui/**/*",
       "packages/client/**/*",
       "packages/frontend-core/**/*",
     ],
 
     rules: {
+      "local-rules/no-frontend-randomuuid": "error",
       "no-console": [
         "error",
         {

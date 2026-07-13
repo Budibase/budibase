@@ -300,7 +300,7 @@ export async function resumeOperation({
     await deliverOperationResult(ctx, text)
     if (doc.requestId) {
       if (outcome === "expired") {
-        // Expiring without any response means this ask never got resolved -
+        // Expiring without any response means this ask never got resolved,
         // not a judgment call. Still not final, though, while other
         // escalations on the same request await a human.
         const stillPending = await sdk.escalations.listContextDocs({
@@ -314,7 +314,7 @@ export async function resumeOperation({
           })
         }
       } else {
-        // A rejection is a human decision, not automatically a failure - let
+        // A rejection is a human decision, not automatically a failure, let
         // the outcome judge weigh it against the request's full timeline.
         const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
           requestId: doc.requestId,
@@ -421,32 +421,36 @@ export async function resumeOperation({
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
+  let toolCallChain = Promise.resolve()
 
   try {
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
       onToolCallCompleted: ({ toolName, status, input, output }) => {
-        if (!doc.requestId) {
+        const requestId = doc.requestId
+        if (!requestId) {
           return
         }
-        return sdk.ai.agentRequests
-          .recordToolCall({
-            requestId: doc.requestId,
-            agentId: ctx.agentId,
-            sessionId: ctx.sessionId,
-            toolName,
-            status,
-            readableName: run.toolDisplayNames[toolName],
-            input,
-            output,
-          })
-          .catch(error => {
-            console.error(
-              "Failed to record agent request tool call on escalation resume",
-              { escalationId, agentId: ctx.agentId, toolName, error }
-            )
-          })
+        toolCallChain = toolCallChain.then(() =>
+          sdk.ai.agentRequests
+            .recordToolCall({
+              requestId,
+              agentId: ctx.agentId,
+              sessionId: ctx.sessionId,
+              toolName,
+              status,
+              readableName: run.toolDisplayNames[toolName],
+              input,
+              output,
+            })
+            .catch(error => {
+              console.error(
+                "Failed to record agent request tool call on escalation resume",
+                { escalationId, agentId: ctx.agentId, toolName, error }
+              )
+            })
+        )
       },
     })
 
@@ -500,6 +504,8 @@ export async function resumeOperation({
     )
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
+    await toolCallChain
+
     if (doc.requestId) {
       const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
         requestId: doc.requestId,
@@ -515,6 +521,7 @@ export async function resumeOperation({
       }
     }
   } catch (error) {
+    await toolCallChain
     await markEscalationRequestResolved({
       status: "failed",
       error: error instanceof Error ? error.message : String(error),

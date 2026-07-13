@@ -228,7 +228,7 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
 async function appendAction(
   requestId: string,
   action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">
-): Promise<void> {
+): Promise<AgentRequestAction | undefined> {
   const db = context.getWorkspaceDB()
 
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -247,11 +247,56 @@ async function appendAction(
       await saveRequest({
         ...request,
         actions: [...(request.actions ?? []), fullAction],
+        updatedAt: fullAction.timestamp,
       })
-      return
+      return fullAction
     } catch (err) {
       if (dbCore.isDocumentConflictError(err) && attempt < 2) {
         continue
+      }
+      throw err
+    }
+  }
+}
+
+// tool calls resolve in quick succession, so a concurrent appendAction
+// losing us the first write is the common case, not the exception.
+// Retries on conflict
+async function refineToolCallActionSummary({
+  requestId,
+  actionId,
+  summary,
+}: {
+  requestId: string
+  actionId: string
+  summary: string
+}): Promise<void> {
+  const db = context.getWorkspaceDB()
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const latest = await db.tryGet<AgentRequest>(requestId)
+    if (!latest) {
+      return
+    }
+
+    try {
+      await saveRequest({
+        ...latest,
+        actions: (latest.actions ?? []).map(action =>
+          action.id === actionId && action.type === "tool_call"
+            ? { ...action, summary }
+            : action
+        ),
+      })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err)) {
+        if (attempt < 2) {
+          continue
+        }
+        // Best-effort upgrade - concurrent writers winning repeatedly is an
+        // expected outcome, the action still renders via its readableName.
+        return
       }
       throw err
     }
@@ -324,6 +369,21 @@ export async function recordToolCall({
   input?: unknown
   output?: unknown
 }): Promise<void> {
+  // Save the action up front so the timeline shows it via readableName/
+  // toolName while the LLM summary is still generating. Call sites on the
+  // agent runtime's hot path deliberately fire-and-forget this promise so the
+  // summary never blocks the next step.
+  const action = await appendAction(requestId, {
+    type: "tool_call",
+    toolName,
+    status,
+    sessionId,
+    ...(readableName === undefined ? {} : { readableName }),
+  })
+  if (!action) {
+    return
+  }
+
   if (toolName === ESCALATE_TOOL_NAME && status === "success") {
     const escalationOutput = output as
       | { status?: string; escalationId?: string }
@@ -371,15 +431,13 @@ export async function recordToolCall({
       toolName,
       error,
     })
+    return
   }
 
-  await appendAction(requestId, {
-    type: "tool_call",
-    toolName,
-    status,
-    sessionId,
-    ...(readableName === undefined ? {} : { readableName }),
-    ...(summary === undefined ? {} : { summary }),
+  await refineToolCallActionSummary({
+    requestId,
+    actionId: action.id,
+    summary,
   })
 }
 
@@ -538,9 +596,9 @@ export function resolveFinalRequestStatus({
 // Judges the request's actual outcome via LLM instead of just counting tool
 // failures (see resolveFinalRequestStatus above, kept as the fallback when
 // the judgment call itself fails). Returns undefined when there's nothing to
-// decide yet - the request already reached a terminal status through another
+// decide yet, the request already reached a terminal status through another
 // path, it's waiting on a human (needs_input, unless this call carries the
-// human's response), or it still has escalations pending a human response -
+// human's response), or it still has escalations pending a human response,
 // callers should skip updateRequestStatus entirely in that case rather than
 // spend an LLM call on a result that would be discarded anyway.
 export async function resolveFinalRequestOutcome({
@@ -563,29 +621,27 @@ export async function resolveFinalRequestOutcome({
   // it waiting.
   isHumanResponse?: boolean
 }): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
+  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  if (
+    !request ||
+    isTerminalStatus(request.status) ||
+    (request.status === "needs_input" && !isHumanResponse)
+  ) {
+    return undefined
+  }
+
+  // A request can have several escalations in flight; resolving one of
+  // them doesn't end the request. Only judge once no escalation is still
+  // waiting on a human.
+  const pendingEscalations = await listContextDocs({
+    requestId,
+    resolution: "pending",
+  })
+  if (pendingEscalations.length > 0) {
+    return undefined
+  }
+
   try {
-    const request = await context
-      .getWorkspaceDB()
-      .tryGet<AgentRequest>(requestId)
-    if (
-      !request ||
-      isTerminalStatus(request.status) ||
-      (request.status === "needs_input" && !isHumanResponse)
-    ) {
-      return undefined
-    }
-
-    // A request can have several escalations in flight; resolving one of
-    // them doesn't end the request. Only judge once no escalation is still
-    // waiting on a human.
-    const pendingEscalations = await listContextDocs({
-      requestId,
-      resolution: "pending",
-    })
-    if (pendingEscalations.length > 0) {
-      return undefined
-    }
-
     const { status, reason } = await generateRequestOutcome({
       title: request.title,
       actions: request.actions ?? [],
