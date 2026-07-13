@@ -678,6 +678,7 @@ export async function webhookChat({
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
+    await toolCallTracking.flush()
     await markAgentRequestFailed({
       trackingHandle,
       agentId,
@@ -705,6 +706,7 @@ export async function webhookChat({
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
+    await toolCallTracking.flush()
     await markAgentRequestFailed({
       trackingHandle,
       agentId,
@@ -725,6 +727,7 @@ export async function webhookChat({
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(responseResult.reason),
     })
+    await toolCallTracking.flush()
     await markAgentRequestFailed({
       trackingHandle,
       agentId,
