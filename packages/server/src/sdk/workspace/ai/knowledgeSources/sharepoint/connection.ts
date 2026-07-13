@@ -299,6 +299,58 @@ interface SharePointDrive {
   id?: string
 }
 
+export interface SharePointListRef {
+  id: string
+  name: string
+  webUrl?: string
+}
+
+interface SharePointListResponse {
+  value?: Array<{
+    id?: string
+    displayName?: string
+    name?: string
+    webUrl?: string
+    list?: {
+      hidden?: boolean
+      template?: string
+    }
+  }>
+  "@odata.nextLink"?: string
+}
+
+interface SharePointColumn {
+  name: string
+  displayName: string
+}
+
+interface SharePointColumnResponse {
+  value?: Array<{
+    name?: string
+    displayName?: string
+    hidden?: boolean
+  }>
+  "@odata.nextLink"?: string
+}
+
+interface SharePointListItem {
+  id?: string
+  createdDateTime?: string
+  lastModifiedDateTime?: string
+  webUrl?: string
+  fields?: Record<string, unknown>
+}
+
+interface SharePointListItemsResponse {
+  value?: SharePointListItem[]
+  "@odata.nextLink"?: string
+}
+
+export interface SharePointListDocument {
+  buffer: Buffer
+  itemCount: number
+}
+
 interface SharePointDriveListResponse {
   value?: SharePointDrive[]
 }
@@ -361,6 +413,180 @@ export const listSharePointDrives = async (
   }
   const payload = (await response.json()) as SharePointDriveListResponse
   return (payload.value || []).map(drive => drive.id || "").filter(Boolean)
+}
+
+const fetchSharePointCollection = async <
+  T extends { "@odata.nextLink"?: string },
+>(
+  operation: string,
+  initialUrl: string,
+  bearerToken: string
+): Promise<T[]> => {
+  const pages: T[] = []
+  let nextLink = initialUrl
+
+  while (nextLink) {
+    const response = await requestWithRetries(operation, () =>
+      fetch(nextLink, {
+        headers: { Authorization: bearerToken },
+      })
+    )
+    if (!response.ok) {
+      throw new HTTPError(
+        response.status === 401 || response.status === 403
+          ? "Access denied by Microsoft Graph. Ensure SharePoint read permissions are granted."
+          : `Failed to fetch SharePoint list data (${response.status})`,
+        400
+      )
+    }
+
+    const page = (await response.json()) as T
+    pages.push(page)
+    const nextPageLink = page["@odata.nextLink"]
+    if (!nextPageLink) {
+      nextLink = ""
+    } else if (!isAllowedSharePointNextLink(nextPageLink)) {
+      throw new HTTPError("Invalid SharePoint pagination URL", 400)
+    } else {
+      nextLink = nextPageLink
+    }
+  }
+
+  return pages
+}
+
+export const listSharePointLists = async (
+  bearerToken: string,
+  siteId: string
+): Promise<SharePointListRef[]> => {
+  const pages = await fetchSharePointCollection<SharePointListResponse>(
+    "listSharePointLists",
+    `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists?$top=200&$select=id,displayName,name,webUrl,list`,
+    bearerToken
+  )
+
+  return pages
+    .flatMap(page => page.value || [])
+    .filter(list =>
+      Boolean(
+        list.id &&
+          !list.list?.hidden &&
+          list.list?.template !== "documentLibrary"
+      )
+    )
+    .map(list => ({
+      id: list.id!,
+      name: list.displayName || list.name || list.id!,
+      webUrl: list.webUrl,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+const stableStringify = (value: unknown): string => {
+  if (value == null) {
+    return ""
+  }
+  if (Array.isArray(value)) {
+    return JSON.stringify(value.map(item => stableStringifyValue(item)))
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(stableStringifyValue(value))
+  }
+  return String(value)
+}
+
+const stableStringifyValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(stableStringifyValue)
+  }
+  if (typeof value === "object" && value != null) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, nestedValue]) => [key, stableStringifyValue(nestedValue)])
+    )
+  }
+  return value
+}
+
+const escapeCsvCell = (value: unknown) => {
+  const normalized = stableStringify(value)
+  return /[",\r\n]/.test(normalized)
+    ? `"${normalized.replace(/"/g, '""')}"`
+    : normalized
+}
+
+const getUniqueColumnLabels = (columns: SharePointColumn[]) => {
+  const reserved = new Set([
+    "SharePoint Item ID",
+    "Created",
+    "Modified",
+    "Web URL",
+  ])
+  return columns.map(column => {
+    let label = column.displayName
+    let suffix = 2
+    while (reserved.has(label)) {
+      label = `${column.displayName} ${suffix++}`
+    }
+    reserved.add(label)
+    return { ...column, displayName: label }
+  })
+}
+
+export const fetchSharePointListDocument = async (
+  bearerToken: string,
+  siteId: string,
+  listId: string
+): Promise<SharePointListDocument> => {
+  const [columnPages, itemPages] = await Promise.all([
+    fetchSharePointCollection<SharePointColumnResponse>(
+      "listSharePointColumns",
+      `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/columns?$top=200&$select=name,displayName,hidden`,
+      bearerToken
+    ),
+    fetchSharePointCollection<SharePointListItemsResponse>(
+      "listSharePointItems",
+      `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/items?$top=200&$expand=fields`,
+      bearerToken
+    ),
+  ])
+
+  const columns = getUniqueColumnLabels(
+    columnPages
+      .flatMap(page => page.value || [])
+      .filter(
+        (column): column is { name: string; displayName: string } =>
+          !!column.name && !!column.displayName && !column.hidden
+      )
+      .map(column => ({
+        name: column.name,
+        displayName: column.displayName,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  )
+  const items = itemPages
+    .flatMap(page => page.value || [])
+    .filter(item => !!item.id)
+    .sort((a, b) => a.id!.localeCompare(b.id!))
+  const rows = [
+    [
+      "SharePoint Item ID",
+      "Created",
+      "Modified",
+      "Web URL",
+      ...columns.map(column => column.displayName),
+    ],
+    ...items.map(item => [
+      item.id,
+      item.createdDateTime,
+      item.lastModifiedDateTime,
+      item.webUrl,
+      ...columns.map(column => item.fields?.[column.name]),
+    ]),
+  ]
+  const csv = rows.map(row => row.map(escapeCsvCell).join(",")).join("\n")
+  return { buffer: Buffer.from(csv, "utf8"), itemCount: items.length }
 }
 
 const listSharePointDriveItems = async (

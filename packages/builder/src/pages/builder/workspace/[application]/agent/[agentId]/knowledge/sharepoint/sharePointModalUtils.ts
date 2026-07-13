@@ -16,6 +16,9 @@ export interface TreeEntryInput {
 }
 
 export const SITE_ROOT_PATH = "__site_root__"
+export const FILES_ROOT_PATH = "__files_root__"
+export const LISTS_ROOT_PATH = "__lists_root__"
+export const LIST_PATH_PREFIX = "__list__/"
 export { EXCLUDE_ALL_PATTERN, matchesConfiguredPatterns }
 
 const getFilePath = (file: Pick<TreeEntryInput, "sourcePath" | "filename">) =>
@@ -146,10 +149,20 @@ export const buildEntryTree = (
 export const buildEntryTreeFromSourceEntries = (
   entries: KnowledgeSourceEntry[]
 ): SharePointEntryTreeNode[] => {
+  const listNodes = entries
+    .filter(entry => entry.type === "list")
+    .map(entry => ({
+      id: entry.id,
+      name: entry.name,
+      path: `${LIST_PATH_PREFIX}${entry.id}`,
+      type: "list" as const,
+      children: [],
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
   const roots: SharePointEntryTreeNode[] = []
   const byPath = new Map<string, SharePointEntryTreeNode>()
 
-  for (const entry of entries) {
+  for (const entry of entries.filter(entry => entry.type !== "list")) {
     const path = entry.path.trim()
     if (!path) {
       continue
@@ -195,7 +208,26 @@ export const buildEntryTreeFromSourceEntries = (
     }
   }
   sortNodes(roots)
-  return roots
+  const result: SharePointEntryTreeNode[] = []
+  if (roots.length > 0) {
+    result.push({
+      id: FILES_ROOT_PATH,
+      name: "Files",
+      path: FILES_ROOT_PATH,
+      type: "folder",
+      children: roots,
+    })
+  }
+  if (listNodes.length > 0) {
+    result.push({
+      id: LISTS_ROOT_PATH,
+      name: "Lists",
+      path: LISTS_ROOT_PATH,
+      type: "folder",
+      children: listNodes,
+    })
+  }
+  return result
 }
 
 export const wrapSelectionTreeWithSiteRoot = (
@@ -220,7 +252,11 @@ export const collectSelectablePaths = (
 ): string[] => {
   const paths: string[] = []
   for (const node of nodes) {
-    if (node.type === "folder" || node.type === "file") {
+    if (
+      node.type === "folder" ||
+      node.type === "file" ||
+      node.type === "list"
+    ) {
       paths.push(node.path)
     }
     paths.push(...collectSelectablePaths(node.children))
@@ -250,7 +286,7 @@ export const buildFileDescendantPathsByNodePath = (
   const byPath = new Map<string, string[]>()
 
   const collect = (node: SharePointEntryTreeNode): string[] => {
-    if (node.type === "file") {
+    if (node.type === "file" || node.type === "list") {
       const ownPath = [node.path]
       byPath.set(node.path, ownPath)
       return ownPath

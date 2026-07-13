@@ -10,6 +10,7 @@ export interface AgentKnowledgeSourceSyncState extends Document {
   agentId: string
   sourceId: string
   lastRunAt: string
+  errorMessage?: string
   synced: number
   failed: number
   skipped: number

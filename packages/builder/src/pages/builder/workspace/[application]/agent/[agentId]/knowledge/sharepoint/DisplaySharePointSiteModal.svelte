@@ -56,7 +56,8 @@
       agentsStore.getOperationKnowledge(agentId, operationId)?.files || []
     return files.filter(
       file =>
-        file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&
+        (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT ||
+          file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST) &&
         file.source.knowledgeSourceId === sharePointSource.id
     )
   })
@@ -65,7 +66,12 @@
     buildEntryTree(
       sharePointFiles.map(file => ({
         filename: file.filename,
-        sourcePath: file.source?.path,
+        sourcePath:
+          file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT
+            ? file.source.path
+            : file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST
+              ? `Lists/${file.source.listName}`
+              : undefined,
         status: file.status,
         errorMessage: file.errorMessage,
       }))
@@ -109,9 +115,10 @@
     onCancel={hide}
   >
     {#if entryTree.length === 0}
-      <Body size="S">This SharePoint site does not contain any file.</Body>
+      <Body size="S">This SharePoint site does not contain synced content.</Body
+      >
     {:else}
-      <Body size="S">The following files are synced for this site:</Body>
+      <Body size="S">The following content is synced for this site:</Body>
       <div class="entries-list">
         <TreeView standalone={false} quiet width="auto">
           {#each entryTree as node (node.path)}

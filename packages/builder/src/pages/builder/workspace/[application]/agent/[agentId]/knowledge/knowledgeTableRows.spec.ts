@@ -181,7 +181,7 @@ describe("knowledgeTableRows", () => {
 
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].displayStatus).toBe("0/1 files")
+    expect(rows[0].displayStatus).toBe("0/1 items")
   })
 
   it("shows file counts while sync is still running", () => {
@@ -213,7 +213,7 @@ describe("knowledgeTableRows", () => {
       onSync: async () => {},
     })
 
-    expect(rows[0].displayStatus).toBe("18/125 files")
+    expect(rows[0].displayStatus).toBe("18/125 items")
     expect(rows[0].hasSynced).toBe(true)
     expect(rows[0].__clickable).toBe(true)
   })
@@ -262,6 +262,6 @@ describe("knowledgeTableRows", () => {
 
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].displayStatus).toBe("3/3 files")
+    expect(rows[0].displayStatus).toBe("3/3 items")
   })
 })

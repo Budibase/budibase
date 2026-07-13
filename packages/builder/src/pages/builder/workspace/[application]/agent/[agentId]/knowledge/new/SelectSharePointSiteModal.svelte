@@ -135,6 +135,8 @@
         authConfigId: selectedAuthConfigId,
         siteId: selectedSiteId,
         filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
+        listSelection:
+          mode === "selective" ? { mode: "include", listIds: [] } : undefined,
       })
       await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")

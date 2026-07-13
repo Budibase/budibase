@@ -62,6 +62,12 @@ export enum AgentKnowledgeSourceType {
 
 export interface AgentKnowledgeSourceFilterConfig {
   patterns?: string[]
+  listSelection?: AgentKnowledgeSourceListSelection
+}
+
+export interface AgentKnowledgeSourceListSelection {
+  mode: "include" | "exclude"
+  listIds: string[]
 }
 
 export interface AgentSharePointKnowledgeSource {

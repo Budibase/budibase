@@ -89,7 +89,8 @@ export const getSharePointFilesForSite = (
 ) =>
   files.filter(
     file =>
-      file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&
+      (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT ||
+        file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST) &&
       file.source.siteId === siteId
   )
 
@@ -173,8 +174,8 @@ export const toSharePointConnectionRows = ({
         !hasCompletedSync && !hasFileData
           ? "Processing"
           : isEmpty
-            ? "No files found"
-            : `${completed}/${total} files`
+            ? "No content found"
+            : `${completed}/${total} items`
       const hasSynced = hasCompletedSync || hasFileData
       return {
         kind: "sharepoint_connection" as const,
@@ -191,6 +192,7 @@ export const toSharePointConnectionRows = ({
         processingCount: processing,
         hasSynced,
         runStatus: snapshot?.runStatus,
+        errorMessage: snapshot?.errorMessage,
         onDelete: () => onDelete(siteId),
         onSync: () => onSync(source.id),
       }

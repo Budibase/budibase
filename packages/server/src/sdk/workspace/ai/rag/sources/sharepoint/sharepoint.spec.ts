@@ -8,6 +8,8 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseUploadFile = jest.fn()
 const mockRetryKnowledgeBaseFileIngestion = jest.fn()
 const mockGetSharePointBearerToken = jest.fn()
+const mockListSharePointLists = jest.fn()
+const mockFetchSharePointListDocument = jest.fn()
 const mockEnsureKnowledgeBaseForOperation = jest.fn()
 const mockDeleteFileForOperation = jest.fn()
 
@@ -52,6 +54,9 @@ jest.mock("../../../knowledgeSources/sharepoint", () => {
     ...actual,
     getSharePointBearerToken: (...args: any[]) =>
       mockGetSharePointBearerToken(...args),
+    listSharePointLists: (...args: any[]) => mockListSharePointLists(...args),
+    fetchSharePointListDocument: (...args: any[]) =>
+      mockFetchSharePointListDocument(...args),
   }
 })
 
@@ -188,6 +193,7 @@ describe("rag/sharepoint sync deduplication", () => {
     })
     mockGenerateSyncStateId.mockReturnValue("sync_state_1")
     mockGetSharePointBearerToken.mockResolvedValue("Bearer token")
+    mockListSharePointLists.mockResolvedValue([])
     mockDoWithLock.mockImplementation(
       async (_options: any, handler: () => Promise<any>) => ({
         result: await handler(),
@@ -1026,6 +1032,57 @@ describe("rag/sharepoint sync deduplication", () => {
       alreadySynced: 1,
       failed: 0,
       unsupported: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("generates and uploads one CSV knowledge file per selected list", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const csv = Buffer.from("Title\nExample")
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: csv,
+      itemCount: 1,
+    })
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeBaseId: "kb_1",
+        mimetype: "text/csv",
+        buffer: csv,
+        source: expect.objectContaining({
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_LIST,
+          knowledgeSourceId: sourceId,
+          siteId,
+          listId: "list-1",
+          listName: "FAQs",
+          itemCount: 1,
+        }),
+      })
+    )
+    expect(result).toMatchObject({
+      synced: 1,
+      failed: 0,
       totalDiscovered: 1,
     })
   })

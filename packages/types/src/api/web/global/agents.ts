@@ -1,6 +1,7 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
+  AgentKnowledgeSourceListSelection,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
   ChatApp,
@@ -50,6 +51,7 @@ export interface SharePointKnowledgeSourceSnapshot {
   webUrl?: string
   runStatus?: AgentKnowledgeSourceSyncRunStatus
   lastRunAt?: string
+  errorMessage?: string
   syncedCount: number
   failedCount: number
   processingCount: number
@@ -69,7 +71,8 @@ export interface KnowledgeSourceEntry {
   id: string
   name: string
   path: string
-  type: "folder" | "file"
+  type: "folder" | "file" | "list"
+  webUrl?: string
 }
 
 export interface FetchAgentKnowledgeSourceEntriesResponse {
@@ -79,6 +82,7 @@ export interface FetchAgentKnowledgeSourceEntriesResponse {
 export interface KnowledgeSourceSyncRun {
   sourceId: string
   lastRunAt: string
+  errorMessage?: string
   synced: number
   failed: number
   skipped: number
@@ -104,6 +108,7 @@ export interface ConnectAgentSharePointSiteRequest {
   datasourceId: string
   authConfigId: string
   filters?: string[]
+  listSelection?: AgentKnowledgeSourceListSelection
 }
 
 export type ConnectAgentSharePointSiteResponse =
@@ -111,6 +116,7 @@ export type ConnectAgentSharePointSiteResponse =
 
 export interface UpdateAgentSharePointSiteRequest {
   filters?: string[]
+  listSelection?: AgentKnowledgeSourceListSelection
 }
 
 export type UpdateAgentSharePointSiteResponse =

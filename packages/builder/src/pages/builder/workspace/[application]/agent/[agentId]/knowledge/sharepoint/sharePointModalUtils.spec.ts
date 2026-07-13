@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { KnowledgeBaseFileStatus } from "@budibase/types"
 import {
   buildEntryTree,
+  buildEntryTreeFromSourceEntries,
   isExcludeNewByDefaultPatterns,
   matchesConfiguredPatterns,
 } from "./sharePointModalUtils"
@@ -99,6 +100,37 @@ describe("sharePointModalUtils.buildEntryTree", () => {
       "alpha/a.txt",
       "alpha/b.txt",
     ])
+  })
+})
+
+describe("sharePointModalUtils.buildEntryTreeFromSourceEntries", () => {
+  it("groups files and lists into separate branches with stable list IDs", () => {
+    const tree = buildEntryTreeFromSourceEntries([
+      {
+        id: "drive:item",
+        name: "guide.md",
+        path: "docs/guide.md",
+        type: "file",
+      },
+      {
+        id: "list-123",
+        name: "FAQs",
+        path: "FAQs",
+        type: "list",
+      },
+    ])
+
+    expect(tree.map(node => node.name)).toEqual(["Files", "Lists"])
+    expect(tree[0].children[0].children[0]).toMatchObject({
+      name: "guide.md",
+      type: "file",
+    })
+    expect(tree[1].children[0]).toMatchObject({
+      id: "list-123",
+      name: "FAQs",
+      path: "__list__/list-123",
+      type: "list",
+    })
   })
 })
 

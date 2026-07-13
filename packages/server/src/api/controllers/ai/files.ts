@@ -94,6 +94,7 @@ const buildOperationKnowledgeResponse = ({
     {
       status?: AgentKnowledgeSourceSyncRunStatus
       lastRunAt?: string
+      errorMessage?: string
     }
   >
 }): FetchAgentKnowledgeResponse => {
@@ -124,6 +125,7 @@ const buildOperationKnowledgeResponse = ({
         webUrl: site?.webUrl,
         runStatus: run?.status,
         lastRunAt: run?.lastRunAt,
+        errorMessage: run?.errorMessage,
         syncedCount,
         failedCount,
         processingCount,
@@ -361,7 +363,8 @@ export async function connectAgentSharePointSite(
   >
 ) {
   const { agentId, operationId } = ctx.params
-  const { datasourceId, authConfigId, siteId, filters } = ctx.request.body
+  const { datasourceId, authConfigId, siteId, filters, listSelection } =
+    ctx.request.body
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
   }
@@ -398,7 +401,10 @@ export async function connectAgentSharePointSite(
         name: selectedOption?.name,
         webUrl: selectedOption?.webUrl,
       },
-      filters: filters ? { patterns: filters } : undefined,
+      filters:
+        filters || listSelection
+          ? { patterns: filters, listSelection }
+          : undefined,
     },
   }
   console.log("Connecting SharePoint site to agent", {
@@ -455,7 +461,7 @@ export async function updateAgentSharePointSite(
     )
   }
 
-  const { filters } = ctx.request.body
+  const { filters, listSelection } = ctx.request.body
   const updated = await sdk.ai.agents.update({
     ...existingAgent,
     operations: updateOperationKnowledgeSources(
@@ -473,7 +479,10 @@ export async function updateAgentSharePointSite(
                   ...existingSource,
                   config: {
                     ...existingSource.config,
-                    filters: filters ? { patterns: filters } : undefined,
+                    filters:
+                      filters || listSelection
+                        ? { patterns: filters, listSelection }
+                        : undefined,
                   },
                 }
               : existingSource

@@ -10,6 +10,7 @@
     notifications,
   } from "@budibase/bbui"
   import {
+    type AgentKnowledgeSourceListSelection,
     AgentKnowledgeSourceType,
     type KnowledgeSourceEntry,
   } from "@budibase/types"
@@ -20,6 +21,8 @@
     buildFileDescendantPathsByNodePath,
     buildEntryTreeFromSourceEntries,
     buildPatternsFromSelection,
+    LIST_PATH_PREFIX,
+    SITE_ROOT_PATH,
     flattenNodesByPath,
     isExcludeNewByDefaultPatterns,
     rehydrateFromPatterns,
@@ -66,6 +69,9 @@
   const initialPatterns = $derived(
     sharePointSource?.config.filters?.patterns || []
   )
+  const initialListSelection = $derived(
+    sharePointSource?.config.filters?.listSelection
+  )
 
   const entryTree = $derived(buildEntryTreeFromSourceEntries(allEntries))
   const selectionTree = $derived(wrapSelectionTreeWithSiteRoot(entryTree))
@@ -75,13 +81,19 @@
   )
   const selectablePaths = $derived.by(() =>
     Array.from(selectionNodeByPath.values())
-      .filter(node => node.type === "file")
+      .filter(node => node.type === "file" || node.type === "list")
       .map(node => node.path)
       .sort((a, b) => a.localeCompare(b))
   )
+  const selectableFilePaths = $derived(
+    selectablePaths.filter(path => !path.startsWith(LIST_PATH_PREFIX))
+  )
+  const selectableListPaths = $derived(
+    selectablePaths.filter(path => path.startsWith(LIST_PATH_PREFIX))
+  )
 
   const selectedCountLabel = $derived(
-    `${selectedEntryPaths.length} files selected`
+    `${selectedEntryPaths.filter(path => path !== SITE_ROOT_PATH).length} items selected`
   )
 
   const loadAllEntries = async () => {
@@ -113,10 +125,22 @@
 
   const rehydrateSelectedEntryPaths = () => {
     const selectablePathSet = new Set(selectablePaths)
-    selectedEntryPaths = rehydrateFromPatterns(
+    const selectedFilePaths = rehydrateFromPatterns(
       initialPatterns,
-      selectablePaths
+      selectableFilePaths
     ).filter(path => selectablePathSet.has(path))
+    const selectedListPaths = selectableListPaths.filter(path => {
+      if (!initialListSelection) {
+        return true
+      }
+      const listId = path.slice(LIST_PATH_PREFIX.length)
+      const selected = initialListSelection.listIds.includes(listId)
+      return initialListSelection.mode === "include" ? selected : !selected
+    })
+    selectedEntryPaths = [...selectedFilePaths, ...selectedListPaths]
+    if (selectedEntryPaths.length === selectablePaths.length) {
+      selectedEntryPaths = [SITE_ROOT_PATH, ...selectedEntryPaths]
+    }
   }
 
   const retryLoadAllEntries = async () => {
@@ -151,17 +175,33 @@
       return keepOpen
     }
     if (selectedEntryPaths.length === 0) {
-      notifications.error("Please select at least one folder/file to sync")
+      notifications.error("Please select at least one file or list to sync")
 
       return keepOpen
     }
 
     const filters = buildPatternsFromSelection(
-      selectedEntryPaths,
-      selectablePaths,
+      selectedEntryPaths.filter(
+        path => path === SITE_ROOT_PATH || !path.startsWith(LIST_PATH_PREFIX)
+      ),
+      selectableFilePaths,
       selectionNodeByPath,
       includeNewFilesByDefault
     )
+    const selectedListIds = selectedEntryPaths
+      .filter(path => path.startsWith(LIST_PATH_PREFIX))
+      .map(path => path.slice(LIST_PATH_PREFIX.length))
+    let listSelection: AgentKnowledgeSourceListSelection | undefined
+    if (includeNewFilesByDefault) {
+      const excludedListIds = selectableListPaths
+        .map(path => path.slice(LIST_PATH_PREFIX.length))
+        .filter(listId => !selectedListIds.includes(listId))
+      listSelection = excludedListIds.length
+        ? { mode: "exclude", listIds: excludedListIds }
+        : undefined
+    } else {
+      listSelection = { mode: "include", listIds: selectedListIds }
+    }
 
     try {
       await agentsStore.applyOperationSharePointSiteFilters(
@@ -170,6 +210,7 @@
         siteId,
         {
           filters,
+          listSelection,
         }
       )
       if (sourceId) {
@@ -184,11 +225,11 @@
         workspaceDeploymentStore.fetch(),
       ])
 
-      notifications.success("SharePoint folders/files updated")
+      notifications.success("SharePoint content updated")
       hide()
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to update SharePoint files")
+      notifications.error("Failed to update SharePoint content")
       return keepOpen
     }
   }
@@ -222,8 +263,8 @@
     <div class="entries-header">
       <RadioGroup
         options={[
-          { label: "Include new files by default", value: true },
-          { label: "Exclude new files by default", value: false },
+          { label: "Include new content by default", value: true },
+          { label: "Exclude new content by default", value: false },
         ]}
         value={includeNewFilesByDefault}
         on:change={e => {
@@ -238,7 +279,7 @@
     </div>
 
     {#if loadingEntries}
-      <Body size="S">Loading SharePoint files...</Body>
+      <Body size="S">Loading SharePoint content...</Body>
     {:else if loadEntriesError}
       <div class="load-error">
         <Body size="S">{loadEntriesError}</Body>
@@ -247,7 +288,7 @@
         >
       </div>
     {:else if selectionTree.length === 0}
-      <Body size="S">No folders or files found for this site.</Body>
+      <Body size="S">No files or lists found for this site.</Body>
     {:else}
       <div class="entries-list">
         <TreeView width="auto" standalone={false} quiet selectable>
