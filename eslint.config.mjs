@@ -269,15 +269,7 @@ export default [
     ],
 
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            "CallExpression[callee.object.name='crypto'][callee.property.name='randomUUID']",
-          message:
-            "Do not use crypto.randomUUID() in frontend code. Use Helpers.uuid() or an approved frontend-safe wrapper instead.",
-        },
-      ],
+      "local-rules/no-frontend-randomuuid": "error",
       "no-console": [
         "error",
         {
