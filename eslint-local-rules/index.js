@@ -21,6 +21,95 @@ const hasTypeScriptLang = scriptElement => {
 }
 
 module.exports = {
+  "no-frontend-randomuuid": {
+    meta: {
+      type: "problem",
+      docs: {
+        description:
+          "Disallow crypto.randomUUID() in frontend code and replace it with a frontend-safe UUID helper",
+      },
+      fixable: "code",
+      schema: [],
+      messages: {
+        noFrontendRandomUuid:
+          "Do not use crypto.randomUUID() in frontend code. Use Helpers.uuid() or an approved frontend-safe wrapper instead.",
+      },
+    },
+    create(context) {
+      const filename = context.getFilename()
+      const sourceCode = context.sourceCode
+
+      const findBbuiImport = () =>
+        sourceCode.ast.body.find(
+          node =>
+            node.type === "ImportDeclaration" &&
+            node.source.value === "@budibase/bbui"
+        )
+
+      const hasHelpersImport = () => {
+        const bbuiImport = findBbuiImport()
+        return bbuiImport?.specifiers?.some(
+          specifier =>
+            specifier.type === "ImportSpecifier" &&
+            specifier.imported.name === "Helpers"
+        )
+      }
+
+      const buildFixes = (fixer, node) => {
+        if (filename.endsWith("packages/bbui/src/helpers.ts")) {
+          return [fixer.replaceText(node, "uuid()")]
+        }
+
+        const fixes = [fixer.replaceText(node, "Helpers.uuid()")]
+
+        if (hasHelpersImport()) {
+          return fixes
+        }
+
+        const bbuiImport = findBbuiImport()
+        if (bbuiImport && bbuiImport.specifiers.length > 0) {
+          const closingBrace = sourceCode.getFirstTokenBetween(
+            bbuiImport.specifiers[0],
+            bbuiImport.source,
+            token => token.value === "}"
+          )
+
+          if (closingBrace) {
+            fixes.push(fixer.insertTextBefore(closingBrace, ", Helpers"))
+            return fixes
+          }
+        }
+
+        const [firstNode] = sourceCode.ast.body
+        const importText = 'import { Helpers } from "@budibase/bbui"\n'
+        if (firstNode) {
+          fixes.push(fixer.insertTextBefore(firstNode, importText))
+        } else {
+          fixes.push(fixer.insertTextAfterRange([0, 0], importText))
+        }
+
+        return fixes
+      }
+
+      return {
+        CallExpression(node) {
+          if (
+            node.callee.type === "MemberExpression" &&
+            node.callee.object.type === "Identifier" &&
+            node.callee.object.name === "crypto" &&
+            node.callee.property.type === "Identifier" &&
+            node.callee.property.name === "randomUUID"
+          ) {
+            context.report({
+              node,
+              messageId: "noFrontendRandomUuid",
+              fix: fixer => buildFixes(fixer, node),
+            })
+          }
+        },
+      }
+    },
+  },
   "no-console-error": {
     create: function (context) {
       return {
