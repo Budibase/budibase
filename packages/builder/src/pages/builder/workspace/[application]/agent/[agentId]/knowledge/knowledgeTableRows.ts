@@ -133,6 +133,44 @@ const getSharePointSiteDisplayName = ({
   return "Loading SharePoint site..."
 }
 
+type SharePointConnectionDisplayStatusInput = {
+  isQueued: boolean
+  isRunning: boolean
+  hasCompletedSync: boolean
+  hasFileData: boolean
+  isEmpty: boolean
+  completed: number
+  total: number
+}
+
+const getSharePointConnectionDisplayStatus = ({
+  isQueued,
+  isRunning,
+  hasCompletedSync,
+  hasFileData,
+  isEmpty,
+  completed,
+  total,
+}: SharePointConnectionDisplayStatusInput) => {
+  if (isQueued) {
+    return "Queued"
+  }
+
+  if (isRunning) {
+    return "Syncing"
+  }
+
+  if (!hasCompletedSync && !hasFileData) {
+    return "Processing"
+  }
+
+  if (isEmpty) {
+    return "No files found"
+  }
+
+  return `${completed}/${total} files`
+}
+
 export const toSharePointConnectionRows = ({
   sharePointSources,
   sharePointSourceSnapshots,
@@ -175,15 +213,15 @@ export const toSharePointConnectionRows = ({
       const hasFileData = total > 0
       const isEmpty = total === 0
       const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
-      const displayStatus = isQueued
-        ? "Queued"
-        : isRunning
-          ? "Syncing"
-          : !hasCompletedSync && !hasFileData
-            ? "Processing"
-            : isEmpty
-              ? "No files found"
-              : `${completed}/${total} files`
+      const displayStatus = getSharePointConnectionDisplayStatus({
+        isQueued,
+        isRunning,
+        hasCompletedSync,
+        hasFileData,
+        isEmpty,
+        completed,
+        total,
+      })
       const hasSynced = hasCompletedSync || hasFileData
       return {
         kind: "sharepoint_connection" as const,
