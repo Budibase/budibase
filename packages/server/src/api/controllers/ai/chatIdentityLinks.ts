@@ -63,7 +63,11 @@ const providerDisplayName = (provider: ChatIdentityLinkProvider) => {
 }
 
 export async function getChatLinkSessionView(
-  ctx: UserCtx<void, ChatIdentityLinkSessionView, { instance: string; token: string }>
+  ctx: UserCtx<
+    void,
+    ChatIdentityLinkSessionView,
+    { instance: string; token: string }
+  >
 ) {
   const token = resolveToken(ctx.params.token)
   const session =
@@ -77,7 +81,10 @@ export async function getChatLinkSessionView(
   })
 
   if (!ctx.isAuthenticated) {
-    throw new HTTPError("Authentication is required to view chat identity link", 401)
+    throw new HTTPError(
+      "Authentication is required to view chat identity link",
+      401
+    )
   }
 
   const currentGlobalUserId = getCurrentGlobalUserId(ctx)

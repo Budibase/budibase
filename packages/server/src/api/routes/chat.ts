@@ -3,10 +3,7 @@ import { permissions } from "@budibase/backend-core"
 import { type UserCtx } from "@budibase/types"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import type { Middleware } from "koa"
-import {
-  builderAdminRoutes,
-  endpointGroupList,
-} from "./endpointGroups"
+import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
 const userRoutes = endpointGroupList.group({
   middleware: authorized(
@@ -43,10 +40,7 @@ builderAdminRoutes
 
 authenticatedRoutes
   .get("/api/chat-links/:instance/:token", ai.getChatLinkSessionView)
-  .post(
-    "/api/chat-links/:instance/:token/confirm",
-    ai.confirmChatLinkSession
-  )
+  .post("/api/chat-links/:instance/:token/confirm", ai.confirmChatLinkSession)
 
 userRoutes
   .get("/api/chatapps", ai.fetchChatApp)

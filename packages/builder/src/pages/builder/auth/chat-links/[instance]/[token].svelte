@@ -1,15 +1,10 @@
 <script lang="ts">
   import { API } from "@/api"
   import { auth } from "@/stores/portal"
-  import {
-    Body,
-    Button,
-    Heading,
-    Layout,
-  } from "@budibase/bbui"
+  import { Body, Button, Heading, Layout } from "@budibase/bbui"
   import { Constants, CookieUtils } from "@budibase/frontend-core"
   import type { ChatIdentityLinkSessionView } from "@budibase/types"
-  import { goto as gotoStore } from "@roxi/routify"
+  import { goto as gotoStore, params } from "@roxi/routify"
   import { onMount } from "svelte"
 
   $: goto = $gotoStore
@@ -85,9 +80,7 @@
         <Heading size="M" textAlign="center">Chat link unavailable</Heading>
         <Body size="M" textAlign="center">{error}</Body>
       {:else if confirmed}
-        <Heading size="M" textAlign="center">
-          Authentication succeeded
-        </Heading>
+        <Heading size="M" textAlign="center">Authentication succeeded</Heading>
         <Body size="M" textAlign="center">
           Your Budibase account is now linked. You can return to your chat to
           continue.
@@ -100,7 +93,8 @@
         </Body>
         {#if linkSession.alreadyLinked}
           <Body size="S" textAlign="center">
-            Completing this link will replace the previous Budibase user mapping.
+            Completing this link will replace the previous Budibase user
+            mapping.
           </Body>
         {/if}
         <Button cta size="L" disabled={confirming} on:click={confirmLink}>
