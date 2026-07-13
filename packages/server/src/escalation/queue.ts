@@ -390,7 +390,9 @@ async function resumeOperation({
         if (!doc.requestId) {
           return
         }
-        return sdk.ai.agentRequests
+        // Fire-and-forget: recordToolCall awaits an LLM summary internally,
+        // returning the promise would stall the stream on it between steps.
+        sdk.ai.agentRequests
           .recordToolCall({
             requestId: doc.requestId,
             agentId: ctx.agentId,

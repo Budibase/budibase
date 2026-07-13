@@ -216,7 +216,10 @@ const buildToolCallTrackingHandler =
     if (!trackingHandle) {
       return
     }
-    return sdk.ai.agentRequests
+    // Fire-and-forget: recordToolCall awaits an LLM summary internally, and
+    // the runtime awaits this handler between steps - returning the promise
+    // would stall every step on that summary.
+    sdk.ai.agentRequests
       .recordToolCall({
         requestId: trackingHandle.requestId,
         agentId,

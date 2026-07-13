@@ -220,7 +220,7 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
 async function appendAction(
   requestId: string,
   action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">
-): Promise<void> {
+): Promise<AgentRequestAction | undefined> {
   const db = context.getWorkspaceDB()
 
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -241,10 +241,54 @@ async function appendAction(
         actions: [...(request.actions ?? []), fullAction],
         updatedAt: fullAction.timestamp,
       })
-      return
+      return fullAction
     } catch (err) {
       if (dbCore.isDocumentConflictError(err) && attempt < 2) {
         continue
+      }
+      throw err
+    }
+  }
+}
+
+// tool calls resolve in quick succession, so a concurrent appendAction
+// losing us the first write is the common case, not the exception.
+// Retries on conflict
+async function refineToolCallActionSummary({
+  requestId,
+  actionId,
+  summary,
+}: {
+  requestId: string
+  actionId: string
+  summary: string
+}): Promise<void> {
+  const db = context.getWorkspaceDB()
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const latest = await db.tryGet<AgentRequest>(requestId)
+    if (!latest) {
+      return
+    }
+
+    try {
+      await saveRequest({
+        ...latest,
+        actions: (latest.actions ?? []).map(action =>
+          action.id === actionId && action.type === "tool_call"
+            ? { ...action, summary }
+            : action
+        ),
+      })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err)) {
+        if (attempt < 2) {
+          continue
+        }
+        // Best-effort upgrade - concurrent writers winning repeatedly is an
+        // expected outcome, the action still renders via its readableName.
+        return
       }
       throw err
     }
@@ -270,7 +314,22 @@ export async function recordToolCall({
   input?: unknown
   output?: unknown
 }): Promise<void> {
-  let summary: string | undefined
+  // Save the action up front so the timeline shows it via readableName/
+  // toolName while the LLM summary is still generating. Call sites on the
+  // agent runtime's hot path deliberately fire-and-forget this promise so the
+  // summary never blocks the next step.
+  const action = await appendAction(requestId, {
+    type: "tool_call",
+    toolName,
+    status,
+    sessionId,
+    ...(readableName === undefined ? {} : { readableName }),
+  })
+  if (!action) {
+    return
+  }
+
+  let summary: string
   try {
     summary = await generateToolCallSummary({
       toolName,
@@ -288,15 +347,13 @@ export async function recordToolCall({
       toolName,
       error,
     })
+    return
   }
 
-  await appendAction(requestId, {
-    type: "tool_call",
-    toolName,
-    status,
-    sessionId,
-    ...(readableName === undefined ? {} : { readableName }),
-    ...(summary === undefined ? {} : { summary }),
+  await refineToolCallActionSummary({
+    requestId,
+    actionId: action.id,
+    summary,
   })
 }
 
