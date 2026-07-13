@@ -24,9 +24,6 @@ jest.mock("../sdk/workspace/ai/agentRequests", () => {
   const actual = jest.requireActual("../sdk/workspace/ai/agentRequests")
   return {
     ...actual,
-    // Real by default (delegates to the actual implementation) so every test
-    // other than the resilience one below exercises the genuine write path -
-    // only overridden per-test to simulate a failure.
     recordEscalationResolved: jest.fn(actual.recordEscalationResolved),
   }
 })
@@ -35,8 +32,6 @@ jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
   return {
     ...actual,
-    // resumeOperation only cares about the UIMessages it yields, not the raw
-    // wire protocol - skip the real parsing and pass the fake stream through.
     readUIMessageStream: (opts: { stream: unknown }) => opts.stream,
   }
 })
