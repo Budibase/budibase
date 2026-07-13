@@ -8,8 +8,16 @@ export const deepGet = helpers.deepGet
  * Starting with a letter is important to make it DOM safe.
  */
 export function uuid(): string {
+  const getRandomNibble = () => {
+    if (globalThis.crypto?.getRandomValues) {
+      return globalThis.crypto.getRandomValues(new Uint8Array(1))[0] & 0xf
+    }
+
+    return (Math.random() * 16) | 0
+  }
+
   return "cxxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, c => {
-    const r = (Math.random() * 16) | 0
+    const r = getRandomNibble()
     const v = c === "x" ? r : (r & 0x3) | 0x8
     return v.toString(16)
   })
