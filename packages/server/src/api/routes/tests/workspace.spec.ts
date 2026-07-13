@@ -1960,6 +1960,7 @@ describe("/applications", () => {
     })
 
     it("preserves agents but not agent logs when duplicating", async () => {
+      mocks.licenses.useUnlimited()
       const { agentId, logId } = await seedAgentWithLogs(workspace.appId)
 
       const resp = await config.api.workspace.duplicateWorkspace(
