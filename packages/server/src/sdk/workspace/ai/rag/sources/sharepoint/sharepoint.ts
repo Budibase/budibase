@@ -808,6 +808,14 @@ const runSharePointSourcesForOperation = async (
           continue
         }
 
+        if (document.buffer.byteLength > MAX_GENERATED_LIST_SIZE_BYTES) {
+          failed++
+          syncErrors.push(
+            `SharePoint list ${list.name} exceeds the 100 MB knowledge file limit`
+          )
+          continue
+        }
+
         if (existingListFile?._id) {
           await deleteFileForOperation(
             agentId,
@@ -815,14 +823,6 @@ const runSharePointSourcesForOperation = async (
             existingListFile._id
           )
           deleted++
-        }
-
-        if (document.buffer.byteLength > MAX_GENERATED_LIST_SIZE_BYTES) {
-          failed++
-          syncErrors.push(
-            `SharePoint list ${list.name} exceeds the 100 MB knowledge file limit`
-          )
-          continue
         }
 
         await knowledgeBaseSdk.uploadKnowledgeBaseFile({

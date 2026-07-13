@@ -167,6 +167,41 @@ const makeSharePointFile = ({
     uploadedBy: "sharepoint",
   }) satisfies KnowledgeBaseFile
 
+const makeSharePointListFile = ({
+  id,
+  sourceId,
+  siteId,
+  listId,
+  contentHash,
+  status = KnowledgeBaseFileStatus.READY,
+}: {
+  id: string
+  sourceId: string
+  siteId: string
+  listId: string
+  contentHash: string
+  status?: KnowledgeBaseFileStatus
+}): KnowledgeBaseFile =>
+  ({
+    _id: id,
+    knowledgeBaseId: "kb_1",
+    source: {
+      type: KnowledgeBaseFileSourceType.SHAREPOINT_LIST,
+      knowledgeSourceId: sourceId,
+      siteId,
+      listId,
+      listName: "FAQs",
+      webUrl: "https://example.com/faqs",
+      contentHash,
+      itemCount: 1,
+    },
+    filename: "FAQs.csv",
+    objectStoreKey: `key-${id}`,
+    ragSourceId: `rag-${id}`,
+    status,
+    uploadedBy: "sharepoint",
+  }) satisfies KnowledgeBaseFile
+
 const createFetchMock = (
   handlers: Array<{
     match: string
@@ -1083,6 +1118,55 @@ describe("rag/sharepoint sync deduplication", () => {
     expect(result).toMatchObject({
       synced: 1,
       failed: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("does not delete an existing list file when regenerated CSV exceeds the size limit", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const oversizedCsv = Buffer.from("Title\nChanged")
+    Object.defineProperty(oversizedCsv, "byteLength", {
+      value: 100 * 1024 * 1024 + 1,
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: oversizedCsv,
+      itemCount: 1,
+    })
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
       totalDiscovered: 1,
     })
   })
