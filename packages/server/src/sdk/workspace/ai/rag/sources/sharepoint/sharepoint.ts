@@ -872,8 +872,28 @@ const runSharePointSourcesForOperation = async (
       const staleListsDeleted = staleListDeleteResults.filter(
         result => result.status === "fulfilled"
       ).length
+      const staleListsDeleteFailed =
+        staleListDeleteResults.length - staleListsDeleted
       deleted += staleListsDeleted
-      deleteFailed += staleListDeleteResults.length - staleListsDeleted
+      deleteFailed += staleListsDeleteFailed
+      failed += staleListsDeleteFailed
+      syncErrors.push(
+        ...staleListDeleteResults
+          .map((result, index) => ({ result, fileId: staleListFileIds[index] }))
+          .filter(
+            (entry): entry is {
+              result: PromiseRejectedResult
+              fileId: string
+            } => entry.result.status === "rejected"
+          )
+          .map(({ result, fileId }) => {
+            const message =
+              result.reason instanceof Error
+                ? result.reason.message
+                : String(result.reason)
+            return `Failed to delete stale SharePoint list file ${fileId}: ${message}`
+          })
+      )
     }
 
     const staleFileIds = existingSourceFiles

@@ -71,6 +71,7 @@ jest.mock("../../files", () => {
 
 import {
   AgentKnowledgeSourceType,
+  AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
@@ -1120,6 +1121,59 @@ describe("rag/sharepoint sync deduplication", () => {
       failed: 0,
       totalDiscovered: 1,
     })
+  })
+
+  it("marks stale list deletion failures as sync failures", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "stale_list_1",
+        sourceId,
+        siteId,
+        listId: "removed-list",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([])
+    mockDeleteFileForOperation.mockRejectedValue(new Error("delete failed"))
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+    const workspaceDb = mockContextGetWorkspaceDb.mock.results[0].value
+
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "stale_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      totalDiscovered: 0,
+    })
+    expect(workspaceDb.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failed: 1,
+        status: AgentKnowledgeSourceSyncRunStatus.FAILED,
+        errorMessage: expect.stringContaining(
+          "Failed to delete stale SharePoint list file stale_list_1: delete failed"
+        ),
+      })
+    )
   })
 
   it("does not delete an existing list file when regenerated CSV exceeds the size limit", async () => {
