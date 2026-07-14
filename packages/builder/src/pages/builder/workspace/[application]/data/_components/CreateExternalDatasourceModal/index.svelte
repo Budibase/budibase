@@ -107,7 +107,7 @@
 
       notifications.success("Datasource created successfully")
     } catch (e: any) {
-      const message = e.message ?? "Unknown error"
+      const message = e?.message ?? "Unknown error"
       notifications.error(`Error creating datasource: ${message}`)
     }
 
