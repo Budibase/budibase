@@ -42,6 +42,9 @@ import {
 } from "../../files"
 import env from "../../../../../../environment"
 
+const BYTES_IN_MB = 1024 * 1024
+const MAX_SHAREPOINT_KNOWLEDGE_FILE_SIZE_BYTES = 100 * BYTES_IN_MB
+
 export interface SharePointSyncResult {
   agentId: string
   synced: number
@@ -246,6 +249,10 @@ const isSupportedSharePointFile = (file: {
     mimetype: file.mimetype,
   })
 }
+
+const isOversizedSharePointFile = (file: { remoteSize?: number }) =>
+  file.remoteSize !== undefined &&
+  file.remoteSize > MAX_SHAREPOINT_KNOWLEDGE_FILE_SIZE_BYTES
 
 const normalizeSourceFilters = (
   filters?: AgentKnowledgeSourceFilterConfig
@@ -670,6 +677,11 @@ const runSharePointSourcesForOperation = async (
           filteredOut++
           continue
         }
+        if (isOversizedSharePointFile(file)) {
+          skipped++
+          unsupported++
+          continue
+        }
         if (!isSupportedSharePointFile(file)) {
           skipped++
 
@@ -779,6 +791,12 @@ const runSharePointSourcesForOperation = async (
             file.itemId,
             signal
           )
+
+          if (buffer.byteLength > MAX_SHAREPOINT_KNOWLEDGE_FILE_SIZE_BYTES) {
+            skipped++
+            unsupported++
+            continue
+          }
 
           throwIfSyncAborted(signal)
           phase = "uploading_file"
