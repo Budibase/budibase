@@ -1,48 +1,62 @@
-import env from "../../environment"
+import { setEnv, withEnv } from "../../environment"
 import { getCouchInfo } from "../couch"
-
-const MAIN_COUCH_URL = "http://user:test@localhost:5984"
 
 describe("connections", () => {
   beforeAll(() => {
-    env._set("COUCH_DB_SQL_URL", "https://user:test@localhost:4984")
+    setEnv({ COUCH_DB_SQL_URL: "https://user:test@localhost:4984" })
   })
 
   afterEach(() => {
-    env._set("COUCH_DB_USER", undefined)
-    env._set("COUCH_DB_USERNAME", undefined)
-    env._set("COUCH_DB_PASSWORD", undefined)
+    setEnv({ COUCH_DB_URL: "http://localhost:4005" })
+    setEnv({ COUCH_DB_USERNAME: undefined })
+    setEnv({ COUCH_DB_PASSWORD: undefined })
   })
 
-  it("should strip URL credentials", () => {
-    const response = getCouchInfo(MAIN_COUCH_URL)
-    expect(response.url).toBe("http://localhost:5984")
-    expect(response.sqlUrl).toBe("https://localhost:4984")
-  })
+  describe("getCouchInfo", () => {
+    it("should accept COUCH_DB_USERNAME for internal couch access", async () => {
+      await withEnv(
+        {
+          COUCH_DB_USERNAME: "internal-user",
+          COUCH_DB_PASSWORD: "internal-password",
+        },
+        async () => {
+          const response = getCouchInfo("http://localhost:5984")
 
-  it("should return separate auth credentials", () => {
-    const response = getCouchInfo(MAIN_COUCH_URL)
-    expect(response.auth.username).toBe("user")
-    expect(response.auth.password).toBe("test")
-  })
+          expect(response.auth.username).toBe("internal-user")
+          expect(response.auth.password).toBe("internal-password")
+        }
+      )
+    })
 
-  it("should accept COUCH_DB_USER for internal couch access", () => {
-    env._set("COUCH_DB_USER", "internal-user")
-    env._set("COUCH_DB_PASSWORD", "internal-password")
+    it("prefers credentials embedded in COUCH_DB_URL over env credentials", async () => {
+      await withEnv(
+        {
+          COUCH_DB_URL: "http://url-user:url-password@localhost:5984",
+          COUCH_DB_USERNAME: "internal-user",
+          COUCH_DB_PASSWORD: "internal-password",
+        },
+        async () => {
+          const response = getCouchInfo()
 
-    const response = getCouchInfo("http://localhost:5984")
+          expect(response.url).toBe("http://localhost:5984")
+          expect(response.auth.username).toBe("url-user")
+          expect(response.auth.password).toBe("url-password")
+        }
+      )
+    })
 
-    expect(response.auth.username).toBe("internal-user")
-    expect(response.auth.password).toBe("internal-password")
-  })
+    it("uses the derived SQL URL when COUCH_DB_SQL_URL is unset", async () => {
+      await withEnv(
+        {
+          COUCH_DB_URL: "http://user:pass@localhost:5984",
+          COUCH_DB_SQL_URL: undefined,
+        },
+        async () => {
+          const response = getCouchInfo()
 
-  it("should accept COUCH_DB_USERNAME for internal couch access", () => {
-    env._set("COUCH_DB_USERNAME", "internal-user")
-    env._set("COUCH_DB_PASSWORD", "internal-password")
-
-    const response = getCouchInfo("http://localhost:5984")
-
-    expect(response.auth.username).toBe("internal-user")
-    expect(response.auth.password).toBe("internal-password")
+          expect(response.sqlUrl).toBe("http://localhost:4006")
+        }
+      )
+    })
   })
 })

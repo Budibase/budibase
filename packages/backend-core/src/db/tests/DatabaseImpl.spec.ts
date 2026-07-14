@@ -1,6 +1,7 @@
 import _ from "lodash"
 import { AnyDocument } from "@budibase/types"
 import { generator } from "../../../tests"
+import { setEnv, withEnv } from "../../environment"
 import { DatabaseImpl } from "../couch"
 import { newid } from "../../utils"
 
@@ -50,6 +51,54 @@ describe("DatabaseImpl", () => {
 
       await database.remove(existingDoc!)
       expect(await database.exists(id)).toBe(false)
+    })
+  })
+
+  describe("external connections", () => {
+    afterEach(() => {
+      setEnv({
+        COUCH_DB_USERNAME: undefined,
+        COUCH_DB_PASSWORD: undefined,
+      })
+    })
+
+    it("uses credentials from the connection string instead of env credentials", async () => {
+      await withEnv(
+        {
+          COUCH_DB_USERNAME: "env-user",
+          COUCH_DB_PASSWORD: "env-password",
+        },
+        async () => {
+          const db = new DatabaseImpl(
+            generator.word(),
+            undefined,
+            "http://url-user:url-password@example.com:5984"
+          )
+
+          expect((db as any).couchInfo.url).toBe("http://example.com:5984")
+          expect((db as any).couchInfo.auth.username).toBe("url-user")
+          expect((db as any).couchInfo.auth.password).toBe("url-password")
+        }
+      )
+    })
+
+    it("requires credentials in the connection string for external connections", async () => {
+      await withEnv(
+        {
+          COUCH_DB_USERNAME: "env-user",
+          COUCH_DB_PASSWORD: "env-password",
+        },
+        async () => {
+          expect(
+            () =>
+              new DatabaseImpl(
+                generator.word(),
+                undefined,
+                "http://example.com:5984"
+              )
+          ).toThrow("External CouchDB connection must include credentials")
+        }
+      )
     })
   })
 })
