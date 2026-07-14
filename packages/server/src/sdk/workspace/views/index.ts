@@ -28,7 +28,7 @@ import sdk from "../.."
 import { isExternalTableID } from "../../../integrations/utils"
 import * as external from "./external"
 import * as internal from "./internal"
-import { ensureQueryUISet } from "./utils"
+import { ensureQueryUISet, ensureValidPrimaryDisplay } from "./utils"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -59,7 +59,11 @@ export async function getAllEnriched(): Promise<ViewV2Enriched[]> {
     const v2Views = Object.values(table.views).filter(isV2)
     const enrichedViews = await Promise.all(
       v2Views.map(view =>
-        enrichSchema(ensureQueryUISet(view), table.schema, tables)
+        enrichSchema(
+          ensureValidPrimaryDisplay(ensureQueryUISet(view), table),
+          table.schema,
+          tables
+        )
       )
     )
     views = views.concat(enrichedViews)
@@ -231,6 +235,11 @@ async function guardViewSchema(
   if (!helpers.views.isCalculationView(view)) {
     checkRequiredFields(table, view)
   }
+
+  // Falling back to the table's display column here means a view whose
+  // display column no longer exists can still be saved, rather than every
+  // save being rejected by the display column check
+  ensureValidPrimaryDisplay(view, table)
 
   checkDisplayField(view)
 }

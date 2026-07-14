@@ -22,7 +22,7 @@ describe("BuilderSocket - SelectApp authorization", () => {
     await config.createWorkspace("Workspace B")
     workspaceBDevId = config.getDevWorkspaceId()
 
-    // A user who is a builder of Workspace A only - not a global builder,
+    // A user who is a builder of Workspace A only. Not a global builder,
     // and with no permissions at all on Workspace B.
     const scopedUserId = `us_${generator.guid()}`
     await config.globalUser({
@@ -66,7 +66,7 @@ describe("BuilderSocket - SelectApp authorization", () => {
   }
 
   it("does not let a builder of one workspace join another workspace's room via SelectApp", async () => {
-    // Instantiated without going through `new BuilderSocket(app, server)` -
+    // Instantiated without going through `new BuilderSocket(app, server)`
     // that constructor stands up a real socket.io server + Redis adapter,
     // which isn't supported in this test environment. We only need the
     // `onConnect` handler under test, so we bind it to a bare instance.

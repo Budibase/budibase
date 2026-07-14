@@ -92,7 +92,9 @@
   ]
   $: enforcedSSO = $organisation.isSSOEnforced
 
-  $: oidcConfig = providers?.oidc?.config?.configs?.[0]
+  $: oidcConfig = providers?.oidc?.config?.configs?.[0] ?? {
+    allowUnverifiedEmailLinking: false,
+  }
 
   $: OIDCConfigFields = {
     Oidc: [
@@ -291,11 +293,22 @@
     if (!oidcDoc?._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
-        config: { configs: [{ activated: false, scopes: defaultScopes }] },
+        config: {
+          configs: [
+            {
+              activated: false,
+              scopes: defaultScopes,
+              allowUnverifiedEmailLinking: false,
+            },
+          ],
+        },
       }
     } else {
       if (!oidcDoc.config.configs[0].scopes) {
         oidcDoc.config.configs[0].scopes = [...defaultScopes]
+      }
+      if (oidcDoc.config.configs[0].allowUnverifiedEmailLinking === undefined) {
+        oidcDoc.config.configs[0].allowUnverifiedEmailLinking = false
       }
       providers.oidc = oidcDoc
     }
@@ -433,6 +446,17 @@
       <div class="form-row">
         <Label size="L">Activated</Label>
         <Toggle text="" bind:value={oidcConfig.activated} />
+      </div>
+      <div class="form-row">
+        <div class="lock">
+          <Label
+            size="L"
+            tooltip="When off, a login is only linked to an existing account if the identity provider confirms the email is verified. Only enable this if you fully trust the provider to assert email addresses - otherwise it can allow account takeover."
+          >
+            Allow unverified email linking
+          </Label>
+        </div>
+        <Toggle text="" bind:value={oidcConfig.allowUnverifiedEmailLinking} />
       </div>
     </Layout>
 

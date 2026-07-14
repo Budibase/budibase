@@ -21,11 +21,23 @@ import type OpenIDConnectStrategy from "@govtechsg/passport-openidconnect"
 type OIDCUserInfoProfile = OpenIDConnectStrategy.MergedProfile & {
   _json?: {
     email?: string
+    email_verified?: boolean
   }
   provider?: string
 }
 
-export function buildVerifyFn(saveUserFn: SaveSSOUserFunction): VerifyFunction {
+// the id_token profile also exposes the raw claims via _json
+type OIDCIdProfile = OpenIDConnectStrategy.Profile & {
+  _json?: {
+    email?: string
+    email_verified?: boolean
+  }
+}
+
+export function buildVerifyFn(
+  saveUserFn: SaveSSOUserFunction,
+  allowUnverifiedEmailLinking = false
+): VerifyFunction {
   /**
    * @param issuer The identity provider base URL
    * @param uiProfile The user profile information created by passport from the /userinfo response
@@ -57,6 +69,7 @@ export function buildVerifyFn(saveUserFn: SaveSSOUserFunction): VerifyFunction {
       userId: profile.id,
       profile: profile,
       email: getEmail(profile, jwtClaims),
+      emailVerified: getEmailVerified(profile, jwtClaims),
       oauth2: {
         accessToken: accessToken,
         refreshToken: refreshToken,
@@ -67,7 +80,8 @@ export function buildVerifyFn(saveUserFn: SaveSSOUserFunction): VerifyFunction {
       details,
       false, // don't require local accounts to exist
       done,
-      saveUserFn
+      saveUserFn,
+      allowUnverifiedEmailLinking
     )
   }
 }
@@ -80,6 +94,10 @@ function normalizeProfile(
 
   if (!profileJson.email && idProfile.emails?.length) {
     profileJson.email = idProfile.emails[0].value
+    // keep email_verified aligned with the email it describes
+    profileJson.email_verified = (
+      idProfile as OIDCIdProfile
+    )._json?.email_verified
   }
 
   const displayName = uiProfile?.displayName || idProfile.displayName
@@ -102,6 +120,7 @@ function buildJwtClaims(
 ): JwtClaims {
   return {
     email: uiProfile?._json?.email || idProfile.emails?.[0]?.value,
+    email_verified: (idProfile as OIDCIdProfile)._json?.email_verified,
     preferred_username: idProfile.username,
   }
 }
@@ -135,6 +154,27 @@ function getEmail(profile: SSOProfile, jwtClaims: JwtClaims) {
 }
 
 /**
+ * Determines whether the identity provider has verified the email that
+ * getEmail resolved. Mirrors getEmail's source precedence so the returned flag
+ * describes the same claim. An absent email_verified is treated as unverified
+ * (OIDC Core §5.7). A preferred_username used as an email is never considered
+ * verified.
+ * @param profile The structured profile created by passport using the user info endpoint
+ * @param jwtClaims The claims returned in the id token
+ */
+function getEmailVerified(profile: SSOProfile, jwtClaims: JwtClaims): boolean {
+  if (profile._json.email) {
+    return profile._json.email_verified === true
+  }
+
+  if (jwtClaims.email) {
+    return jwtClaims.email_verified === true
+  }
+
+  return false
+}
+
+/**
  * Create an instance of the oidc passport strategy. This wrapper fetches the configuration
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport OIDC Strategy
@@ -144,7 +184,7 @@ export async function strategyFactory(
   saveUserFn: SaveSSOUserFunction
 ) {
   try {
-    const verify = buildVerifyFn(saveUserFn)
+    const verify = buildVerifyFn(saveUserFn, config.allowUnverifiedEmailLinking)
     const strategy = new OIDCStrategy(config, verify)
     strategy.name = "oidc"
     return strategy
@@ -158,7 +198,13 @@ export async function fetchStrategyConfig(
   callbackUrl?: string
 ): Promise<OIDCStrategyConfiguration> {
   try {
-    const { clientID, clientSecret, configUrl, pkce } = oidcConfig
+    const {
+      clientID,
+      clientSecret,
+      configUrl,
+      pkce,
+      allowUnverifiedEmailLinking,
+    } = oidcConfig
 
     if (!clientID || !clientSecret || !callbackUrl || !configUrl) {
       // check for remote config and all required elements
@@ -186,6 +232,7 @@ export async function fetchStrategyConfig(
       clientSecret: clientSecret,
       callbackURL: callbackUrl,
       pkce: pkce,
+      allowUnverifiedEmailLinking: allowUnverifiedEmailLinking,
     }
   } catch (err) {
     throw new Error(

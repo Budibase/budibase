@@ -62,6 +62,9 @@
     FormulaResponseType,
     FieldSchemaConfig,
     UIFieldSchema,
+    SearchFilterGroup,
+    UISearchFilter,
+    ViewV2,
   } from "@budibase/types"
 
   export let field: FieldSchema
@@ -420,6 +423,57 @@
     }
     gridDispatch("close-edit-column")
   }
+
+  const collectFilterFields = (
+    group: SearchFilterGroup | UISearchFilter
+  ): string[] => {
+    if (group.groups) {
+      return group.groups.flatMap(collectFilterFields)
+    }
+    if ("filters" in group && group.filters) {
+      return group.filters
+        .map(filter => ("field" in filter ? filter.field : undefined))
+        .filter((field): field is string => field != null)
+    }
+    return []
+  }
+
+  const getViewFilterFields = (view: ViewV2): string[] => {
+    if (view.queryUI) {
+      return collectFilterFields(view.queryUI)
+    }
+    if (Array.isArray(view.query)) {
+      return view.query
+        .map(filter => ("field" in filter ? filter.field : undefined))
+        .filter((field): field is string => field != null)
+    }
+    return []
+  }
+
+  const filterUsesColumn = (field: string, column: string): boolean => {
+    const key = field.replace(/^\d+:/, "")
+    return key === column || key.startsWith(`${column}.`)
+  }
+
+  const getViewsFilteringOnColumn = (
+    table: Table | undefined,
+    column: string | undefined
+  ): string[] => {
+    if (!table?.views || !column) {
+      return []
+    }
+    return Object.values(table.views)
+      .filter(helpers.views.isV2)
+      .filter(view =>
+        getViewFilterFields(view).some(field => filterUsesColumn(field, column))
+      )
+      .map(view => view.name)
+  }
+
+  $: viewsFilteringOnColumn = getViewsFilteringOnColumn(
+    $tables.selected,
+    originalName
+  )
 
   async function deleteColumn() {
     try {
@@ -1069,6 +1123,14 @@
     Your data will be deleted and this action cannot be undone - enter the column
     name to confirm.
   </p>
+  {#if viewsFilteringOnColumn.length}
+    <p>
+      This column is used in filters for the following
+      {viewsFilteringOnColumn.length === 1 ? "view" : "views"}:
+      <strong>{viewsFilteringOnColumn.join(", ")}</strong>. These views will
+      show no data until their filters are updated.
+    </p>
+  {/if}
   <Input bind:value={deleteColName} placeholder={originalName} />
 </ConfirmDialog>
 

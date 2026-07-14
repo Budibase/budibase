@@ -47,6 +47,7 @@ import {
 } from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
+import { mergePreviewSchema } from "./schema"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -401,21 +402,18 @@ export async function preview(
   const { rows, keys, info, extra } = queryResponse
   const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
-  // if existing schema, update to include any previous schema keys
-  if (existingSchema) {
-    for (let key of Object.keys(existingSchema)) {
-      if (!previewSchema[key]) {
-        previewSchema[key] = existingSchema[key]
-      }
-    }
-  }
+  const schema = mergePreviewSchema({
+    previewSchema,
+    existingSchema,
+    firstRow: rows?.[0],
+  })
   // remove configuration before sending event
   delete datasource.config
   await events.query.previewed(datasource, ctx.request.body)
   ctx.body = {
     rows,
     nestedSchemaFields,
-    schema: previewSchema,
+    schema,
     info,
     extra,
   }
