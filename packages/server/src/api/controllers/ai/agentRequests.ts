@@ -1,5 +1,10 @@
 import { HTTPError } from "@budibase/backend-core"
-import type { FetchAgentRequestsResponse, UserCtx } from "@budibase/types"
+import {
+  AGENT_REQUEST_STATUSES,
+  type AgentRequestStatus,
+  type FetchAgentRequestsResponse,
+  type UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 
 const DEFAULT_LIMIT = 100
@@ -40,17 +45,40 @@ const sanitizePageQuery = (page?: string): number => {
   return parsedPage
 }
 
+const sanitizeStatusQuery = (
+  status?: string
+): AgentRequestStatus | undefined => {
+  const normalizedStatus = status?.trim()
+  if (!normalizedStatus) {
+    return undefined
+  }
+
+  if (
+    !AGENT_REQUEST_STATUSES.includes(normalizedStatus as AgentRequestStatus)
+  ) {
+    throw new HTTPError("Invalid status query", 400)
+  }
+
+  return normalizedStatus as AgentRequestStatus
+}
+
 export async function fetchAgentRequests(
   ctx: UserCtx<void, FetchAgentRequestsResponse>
 ) {
-  const { limit, page } = ctx.query as Record<string, string>
+  const { limit, page, status } = ctx.query as Record<string, string>
   const resolvedLimit = sanitizeLimitQuery(limit)
   const resolvedPage = sanitizePageQuery(page)
-  const requests = await sdk.ai.agentRequests.fetchRequests({
-    limit: resolvedLimit,
-    page: resolvedPage,
-  })
+  const resolvedStatus = sanitizeStatusQuery(status)
+  const [requests, summary] = await Promise.all([
+    sdk.ai.agentRequests.fetchRequests({
+      limit: resolvedLimit,
+      page: resolvedPage,
+      status: resolvedStatus,
+    }),
+    sdk.ai.agentRequests.fetchRequestsSummary(),
+  ])
   ctx.body = {
     requests,
+    summary,
   }
 }

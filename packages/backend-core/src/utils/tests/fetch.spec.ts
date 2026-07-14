@@ -1,4 +1,9 @@
+import type { LookupFunction } from "net"
 import { getDispatcher } from "../fetch"
+
+const noopLookup: LookupFunction = (_hostname, _options, callback) => {
+  callback(null, "127.0.0.1", 4)
+}
 
 describe("fetch utilities", () => {
   let originalEnv: NodeJS.ProcessEnv
@@ -51,6 +56,20 @@ describe("fetch utilities", () => {
           rejectUnauthorized: false,
         })
         expect(result1).not.toBe(result2)
+      })
+    })
+
+    describe("when a pinned lookup is supplied", () => {
+      it("should apply the lookup to the direct Agent when no proxy is configured", () => {
+        const result = getDispatcher({ url: testUrl, lookup: noopLookup })
+        expect(result.constructor.name).toBe("Agent")
+      })
+
+      it("should respect the proxy over pinning when a proxy is configured", () => {
+        process.env.HTTP_PROXY = "http://proxy.example.com:8080"
+
+        const result = getDispatcher({ url: testUrl, lookup: noopLookup })
+        expect(result.constructor.name).toBe("ProxyAgent")
       })
     })
 

@@ -2,6 +2,7 @@ import {
   context,
   events,
   docIds,
+  features,
   getErrorMessage,
   HTTPError,
 } from "@budibase/backend-core"
@@ -15,6 +16,8 @@ import {
   ChatConversationRequest,
   CreateChatConversationRequest,
   DocumentType,
+  ESCALATE_TOOL_NAME,
+  FeatureFlag,
   FetchAgentHistoryResponse,
   FetchAgentFileUrlResponse,
   ContextUser,
@@ -34,6 +37,7 @@ import {
   formatIncompleteToolCallError,
   getLiveOperations,
   prepareAgentChatRun,
+  type AgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import {
@@ -44,6 +48,7 @@ import {
   prepareChatConversationForSave,
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
+import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -83,6 +88,170 @@ const getRecentChatContext = (
       return [{ role: message.role, content }]
     })
     .slice(-limit)
+}
+
+type AgentRequestTrackingHandle = { requestId: string } | undefined
+
+const startAgentRequestTracking = async ({
+  agentId,
+  sessionId,
+  run,
+  userId,
+  chatMessages,
+}: {
+  agentId: string
+  sessionId: string
+  run: AgentChatRun
+  userId: string
+  chatMessages: ChatConversation["messages"]
+}): Promise<AgentRequestTrackingHandle> => {
+  if (
+    !context.isProdWorkspace() ||
+    !(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
+  ) {
+    return undefined
+  }
+
+  let trackingHandle: AgentRequestTrackingHandle
+
+  if (run.selectedOperation) {
+    trackingHandle = await sdk.ai.agentRequests
+      .initActiveRequest({
+        agentId,
+        sessionId,
+        latestPrompt: run.latestQuestion,
+        operation: {
+          name: run.selectedOperation.name,
+          prompt: run.selectedOperation.promptInstructions || "",
+        },
+        userId,
+        source: determineTrigger(sessionId),
+      })
+      .catch(error => {
+        console.error("Failed to init active agent request", {
+          agentId,
+          sessionId,
+          error,
+        })
+        return undefined
+      })
+  }
+
+  sdk.ai.agentRequests
+    .enqueueRequestTracking({
+      agentId,
+      sessionId,
+      latestUserPrompt: run.latestQuestion,
+      recentChatContext: getRecentChatContext(chatMessages),
+      operation: run.selectedOperation
+        ? {
+            name: run.selectedOperation.name,
+            prompt: run.selectedOperation.promptInstructions || "",
+          }
+        : undefined,
+      userId,
+      existingRequestId: trackingHandle?.requestId,
+    })
+    .catch(error => {
+      console.error("Failed to enqueue agent request tracking", {
+        agentId,
+        sessionId,
+        userId,
+        error,
+      })
+    })
+
+  return trackingHandle
+}
+
+const buildEscalateToolCallHandler =
+  ({
+    trackingHandle,
+    agentId,
+    sessionId,
+  }: {
+    trackingHandle: AgentRequestTrackingHandle
+    agentId: string
+    sessionId: string
+  }) =>
+  (toolNames: string[]) => {
+    if (trackingHandle && toolNames.includes(ESCALATE_TOOL_NAME)) {
+      sdk.ai.agentRequests
+        .updateRequestStatus({
+          requestId: trackingHandle.requestId,
+          status: "needs_input",
+        })
+        .catch(error => {
+          console.error(
+            "Failed to update agent request status to needs_input",
+            { agentId, sessionId, error }
+          )
+        })
+    }
+  }
+
+const markAgentRequestFailed = async ({
+  trackingHandle,
+  agentId,
+  sessionId,
+  errorMessage,
+}: {
+  trackingHandle: AgentRequestTrackingHandle
+  agentId: string
+  sessionId: string
+  errorMessage: string
+}) => {
+  if (!trackingHandle) {
+    return
+  }
+  await sdk.ai.agentRequests
+    .updateRequestStatus({
+      requestId: trackingHandle.requestId,
+      status: "failed",
+      error: errorMessage,
+    })
+    .catch(updateError => {
+      console.error("Failed to update agent request status on error", {
+        agentId,
+        sessionId,
+        error: updateError,
+      })
+    })
+}
+
+const finalizeAgentRequestTracking = async ({
+  trackingHandle,
+  agentId,
+  sessionId,
+  toolCallsIncomplete,
+  unrecoveredToolFailures,
+}: {
+  trackingHandle: AgentRequestTrackingHandle
+  agentId: string
+  sessionId: string
+  toolCallsIncomplete: boolean
+  unrecoveredToolFailures: Set<string>
+}) => {
+  if (!trackingHandle) {
+    return
+  }
+  const { status, error } = sdk.ai.agentRequests.resolveFinalRequestStatus({
+    toolCallsIncomplete,
+    unrecoveredToolFailures,
+  })
+  await sdk.ai.agentRequests
+    .updateRequestStatus({
+      requestId: trackingHandle.requestId,
+      status,
+      ...(error !== undefined ? { error } : {}),
+    })
+    .catch(updateError => {
+      console.error("Failed to update agent request status on finish", {
+        agentId,
+        sessionId,
+        error: updateError,
+      })
+    })
 }
 
 const findLiveOperation = (agent: Agent, operationId: string) =>
@@ -364,6 +533,7 @@ export async function webhookChat({
   const providerPrefix = chat.channel?.provider || "chat"
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${providerPrefix}:${chatId}`
+  let trackingHandle: AgentRequestTrackingHandle
   const run = await prepareAgentChatRun({
     agent,
     agentId,
@@ -371,12 +541,33 @@ export async function webhookChat({
     errorLabel: "webhook chat",
     sessionId,
     user,
+    getRequestId: () => trackingHandle?.requestId,
   })
   const title = run.latestQuestion
     ? truncateTitle(run.latestQuestion)
     : chat.title
 
-  const result = await run.stream()
+  const userId = user.globalId || user.userId || user._id || ""
+  trackingHandle = await startAgentRequestTracking({
+    agentId,
+    sessionId,
+    run,
+    userId,
+    chatMessages: chat.messages,
+  })
+
+  const pendingToolCalls = new Set<string>()
+  const unrecoveredToolFailures = new Set<string>()
+
+  const result = await run.stream({
+    pendingToolCalls,
+    unrecoveredToolFailures,
+    onToolCalls: buildEscalateToolCallHandler({
+      trackingHandle,
+      agentId,
+      sessionId,
+    }),
+  })
 
   const uiMessageStream = result.toUIMessageStream({
     generateMessageId: v4,
@@ -403,18 +594,29 @@ export async function webhookChat({
     return assistantMessage
   })()
 
-  const [assistantMessageResult, responseResult, streamOutcome] =
-    await Promise.allSettled([
-      assistantMessageTask,
-      result.response,
-      streamTask,
-    ])
+  const [
+    assistantMessageResult,
+    responseResult,
+    streamOutcome,
+    finishReasonResult,
+  ] = await Promise.allSettled([
+    assistantMessageTask,
+    result.response,
+    streamTask,
+    result.finishReason,
+  ])
 
   if (streamOutcome.status === "rejected") {
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
     events.action.aiAgentFailed({
       agentId,
       reason: ActionFailureReason.ERROR,
+      errorMessage: getErrorMessage(streamOutcome.reason),
+    })
+    await markAgentRequestFailed({
+      trackingHandle,
+      agentId,
+      sessionId,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
     throw streamOutcome.reason
@@ -438,6 +640,12 @@ export async function webhookChat({
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
+    await markAgentRequestFailed({
+      trackingHandle,
+      agentId,
+      sessionId,
+      errorMessage: getErrorMessage(assistantMessageResult.reason),
+    })
     throw assistantMessageResult.reason
   }
   if (responseResult.status === "rejected") {
@@ -450,6 +658,12 @@ export async function webhookChat({
     events.action.aiAgentFailed({
       agentId,
       reason: ActionFailureReason.ERROR,
+      errorMessage: getErrorMessage(responseResult.reason),
+    })
+    await markAgentRequestFailed({
+      trackingHandle,
+      agentId,
+      sessionId,
       errorMessage: getErrorMessage(responseResult.reason),
     })
     throw responseResult.reason
@@ -469,6 +683,18 @@ export async function webhookChat({
   const assistantMessage: ChatConversation["messages"][number] = {
     ...finalAssistantMessage,
   }
+
+  const toolCallsIncomplete =
+    pendingToolCalls.size > 0 ||
+    (finishReasonResult.status === "fulfilled" &&
+      finishReasonResult.value === "tool-calls")
+  await finalizeAgentRequestTracking({
+    trackingHandle,
+    agentId,
+    sessionId,
+    toolCallsIncomplete,
+    unrecoveredToolFailures,
+  })
 
   return {
     messages: [...chat.messages, assistantMessage],
@@ -497,9 +723,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   await sdk.ai.agents.assertAgentHasValidConfig(agent)
 
+  let trackingHandle: AgentRequestTrackingHandle
+  let sessionId = ""
+
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
-    const sessionId = chat.transient ? chat.sessionId || chatId : chatId
+    sessionId = chat.transient ? chat.sessionId || chatId : chatId
     const run = await prepareAgentChatRun({
       agent,
       agentId,
@@ -507,34 +736,29 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       errorLabel: "chat stream",
       sessionId,
       user: ctx.user,
+      getRequestId: () => trackingHandle?.requestId,
     })
-    sdk.ai.agentRequests
-      .enqueueRequestTracking({
-        agentId,
-        sessionId,
-        latestUserPrompt: run.latestQuestion,
-        recentChatContext: getRecentChatContext(chat.messages),
-        operation: run.selectedOperation
-          ? {
-              name: run.selectedOperation.name,
-              prompt: run.selectedOperation.promptInstructions || "",
-            }
-          : undefined,
-        userId,
-      })
-      .catch(error => {
-        console.error("Failed to enqueue agent request tracking", {
-          agentId,
-          sessionId,
-          userId,
-          error,
-        })
-      })
+
+    trackingHandle = await startAgentRequestTracking({
+      agentId,
+      sessionId,
+      run,
+      userId,
+      chatMessages: chat.messages,
+    })
 
     const pendingToolCalls = new Set<string>()
+    const unrecoveredToolFailures = new Set<string>()
+    const streamResult = { toolCallsIncomplete: false }
 
     const result = await run.stream({
       pendingToolCalls,
+      unrecoveredToolFailures,
+      onToolCalls: buildEscalateToolCallHandler({
+        trackingHandle,
+        agentId,
+        sessionId,
+      }),
     })
 
     const title = run.latestQuestion
@@ -569,7 +793,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           const usedKnowledgeSources = run.getUsedKnowledgeSourcesMetadata()
           // Check if model ended in a tool-call state or steps were incomplete
           const finishReason = (part as { finishReason?: string }).finishReason
-          const toolCallsIncomplete =
+          streamResult.toolCallsIncomplete =
             pendingToolCalls.size > 0 || finishReason === "tool-calls"
 
           const finishPart = part as {
@@ -590,7 +814,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
             createdAt: streamStartTime,
             completedAt: Date.now(),
             ...(usage ? { usage } : {}),
-            ...(toolCallsIncomplete && {
+            ...(streamResult.toolCallsIncomplete && {
               error: formatIncompleteToolCallError([]),
             }),
           }
@@ -616,11 +840,25 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           reason: ActionFailureReason.ERROR,
           errorMessage: getErrorMessage(error),
         })
+        markAgentRequestFailed({
+          trackingHandle,
+          agentId,
+          sessionId,
+          errorMessage: getErrorMessage(error),
+        })
         return getErrorMessage(error)
       },
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
         events.action.aiAgentExecuted({ agentId })
+
+        await finalizeAgentRequestTracking({
+          trackingHandle,
+          agentId,
+          sessionId,
+          toolCallsIncomplete: streamResult.toolCallsIncomplete,
+          unrecoveredToolFailures,
+        })
 
         if (chat.transient || !chatAppId) {
           return
@@ -648,6 +886,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     return
   } catch (error: any) {
     const message = error?.message || "Agent action failed"
+    markAgentRequestFailed({
+      trackingHandle,
+      agentId,
+      sessionId,
+      errorMessage: message,
+    })
     ctx.res.write(
       `data: ${JSON.stringify({ type: "error", errorText: message })}\n\n`
     )

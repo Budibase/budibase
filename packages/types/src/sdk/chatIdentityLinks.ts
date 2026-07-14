@@ -12,6 +12,7 @@ export interface ChatIdentityLinkSession {
   providerTenantId?: string
   serviceUrl?: string
   confirmationToken?: string
+  confirmationGlobalUserId?: string
   createdAt: string
   expiresAt: string
 }

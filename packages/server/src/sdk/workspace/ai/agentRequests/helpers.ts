@@ -207,3 +207,45 @@ export async function generateAgentRequestTitle({
 
   return title
 }
+
+export async function generateInteractionSummary({
+  latestPrompt,
+  agentId,
+  sessionId,
+}: {
+  latestPrompt: string
+  agentId: string
+  sessionId: string
+}): Promise<string> {
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const llm = await sdk.ai.llm.createLLM(
+    agent.aiconfig,
+    sessionId,
+    undefined,
+    agentId
+  )
+  const result = await generateText({
+    model: llm.chat,
+    providerOptions: llm.providerOptions?.(false),
+    headers: {
+      "x-litellm-tags": "bb-agent-request-interaction-summary",
+    },
+    messages: [
+      {
+        role: "system",
+        content: `Summarize the user's intent in this single message for a UI timeline entry. Write it in third person starting with "User", e.g. "User asked about VPN access". Return plain text only. Use 4 to 6 words, no quotes, no punctuation unless necessary.`,
+      },
+      {
+        role: "user",
+        content: latestPrompt,
+      },
+    ],
+  })
+
+  const summary = normalizeTitle(result.text || "")
+  if (!summary) {
+    throw new Error("Invalid interaction summary response")
+  }
+
+  return summary
+}
