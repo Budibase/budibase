@@ -283,25 +283,34 @@ const finalizeAgentRequestTracking = async ({
   sessionId,
   toolCallsIncomplete,
   unrecoveredToolFailures,
+  finalResponse,
 }: {
   trackingHandle: AgentRequestTrackingHandle
   agentId: string
   sessionId: string
   toolCallsIncomplete: boolean
   unrecoveredToolFailures: Set<string>
+  finalResponse: string
 }) => {
   if (!trackingHandle) {
     return
   }
-  const { status, error } = sdk.ai.agentRequests.resolveFinalRequestStatus({
+  const outcome = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+    requestId: trackingHandle.requestId,
+    agentId,
+    sessionId,
     toolCallsIncomplete,
     unrecoveredToolFailures,
+    finalResponse,
   })
+  if (!outcome) {
+    return
+  }
   await sdk.ai.agentRequests
     .updateRequestStatus({
       requestId: trackingHandle.requestId,
-      status,
-      ...(error !== undefined ? { error } : {}),
+      status: outcome.status,
+      ...(outcome.error !== undefined ? { error: outcome.error } : {}),
     })
     .catch(updateError => {
       console.error("Failed to update agent request status on finish", {
@@ -763,6 +772,7 @@ export async function webhookChat({
     sessionId,
     toolCallsIncomplete,
     unrecoveredToolFailures,
+    finalResponse: assistantText,
   })
 
   return {
@@ -929,33 +939,40 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         events.action.aiAgentExecuted({ agentId })
 
         await toolCallTracking.flush()
-        await finalizeAgentRequestTracking({
+
+        const finalAssistantMessage = [...messages]
+          .reverse()
+          .find(message => message.role === "assistant")
+        // Involves an LLM call to judge the outcome. Kick it off now, but don't
+        // make saving the conversation wait behind it.
+        const finalizeTask = finalizeAgentRequestTracking({
           trackingHandle,
           agentId,
           sessionId,
           toolCallsIncomplete: streamResult.toolCallsIncomplete,
           unrecoveredToolFailures,
+          finalResponse: getAssistantMessageText(finalAssistantMessage),
         })
 
-        if (chat.transient || !chatAppId) {
-          return
+        if (!chat.transient && chatAppId) {
+          const existingChat = chat._id
+            ? await db.tryGet<ChatConversation>(chat._id)
+            : null
+
+          const chatToSave = prepareChatConversationForSave({
+            chatId,
+            chatAppId,
+            userId,
+            title,
+            messages,
+            chat,
+            existingChat,
+          })
+
+          await db.put(chatToSave)
         }
 
-        const existingChat = chat._id
-          ? await db.tryGet<ChatConversation>(chat._id)
-          : null
-
-        const chatToSave = prepareChatConversationForSave({
-          chatId,
-          chatAppId,
-          userId,
-          title,
-          messages,
-          chat,
-          existingChat,
-        })
-
-        await db.put(chatToSave)
+        await finalizeTask
       },
       consumeSseStream: consumeStream,
       sendReasoning: true,

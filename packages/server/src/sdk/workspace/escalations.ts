@@ -62,6 +62,7 @@ export interface EscalationContextQuery {
   agentId?: string
   operationId?: string
   sessionId?: string
+  requestId?: string
   resolution?: EscalationContextDoc["resolution"]
   isTest?: boolean
 }
@@ -81,6 +82,7 @@ export async function listContextDocs(
       ...(query.agentId ? { agentId: query.agentId } : {}),
       ...(query.operationId ? { operationId: query.operationId } : {}),
       ...(query.sessionId ? { sessionId: query.sessionId } : {}),
+      ...(query.requestId ? { requestId: query.requestId } : {}),
       ...(query.resolution ? { resolution: query.resolution } : {}),
       ...(query.isTest !== undefined ? { isTest: query.isTest } : {}),
     },

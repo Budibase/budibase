@@ -20,6 +20,7 @@ import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
   generateInteractionSummary,
+  generateRequestOutcome,
   generateToolCallSummary,
 } from "./helpers"
 import {
@@ -28,6 +29,7 @@ import {
   queryRequestsByUpdatedAt,
   queryRequestsByStatusAndUpdatedAt,
 } from "./views"
+import { listContextDocs } from "../../escalations"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -511,6 +513,76 @@ export function resolveFinalRequestStatus({
     }
   }
   return { status: "completed" }
+}
+
+// Judges the request's actual outcome via LLM instead of just counting tool
+// failures (see resolveFinalRequestStatus above, kept as the fallback when
+// the judgment call itself fails). Returns undefined when there's nothing to
+// decide yet, the request already reached a terminal status through another
+// path, it's waiting on a human (needs_input, unless this call carries the
+// human's response), or it still has escalations pending a human response,
+// callers should skip updateRequestStatus entirely in that case rather than
+// spend an LLM call on a result that would be discarded anyway.
+export async function resolveFinalRequestOutcome({
+  requestId,
+  agentId,
+  sessionId,
+  toolCallsIncomplete,
+  unrecoveredToolFailures,
+  finalResponse,
+  isHumanResponse = false,
+}: {
+  requestId: string
+  agentId: string
+  sessionId: string
+  toolCallsIncomplete: boolean
+  unrecoveredToolFailures: Set<string>
+  finalResponse: string
+  // A needs_input request only becomes decidable when the flow resuming it
+  // carries a human's response to the escalation - anything else must leave
+  // it waiting.
+  isHumanResponse?: boolean
+}): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
+  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  if (
+    !request ||
+    isTerminalStatus(request.status) ||
+    (request.status === "needs_input" && !isHumanResponse)
+  ) {
+    return undefined
+  }
+
+  // A request can have several escalations in flight; resolving one of
+  // them doesn't end the request. Only judge once no escalation is still
+  // waiting on a human.
+  const pendingEscalations = await listContextDocs({
+    requestId,
+    resolution: "pending",
+  })
+  if (pendingEscalations.length > 0) {
+    return undefined
+  }
+
+  try {
+    const { status, reason } = await generateRequestOutcome({
+      title: request.title,
+      actions: request.actions ?? [],
+      finalResponse,
+      toolCallsIncomplete,
+      agentId,
+      sessionId,
+    })
+    return { status, ...(status === "failed" ? { error: reason } : {}) }
+  } catch (error) {
+    console.error(
+      "Failed to generate agent request outcome, falling back to mechanical criteria",
+      { requestId, agentId, sessionId, error }
+    )
+    return resolveFinalRequestStatus({
+      toolCallsIncomplete,
+      unrecoveredToolFailures,
+    })
+  }
 }
 
 export async function fetchRequestsByAgentAndUser(

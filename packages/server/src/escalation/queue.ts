@@ -282,14 +282,38 @@ async function resumeOperation({
         : "This request was rejected."
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
-    // A rejection is a human decision, not a failure. The escalation did its
-    // job. Expiring without any response, though, means the request never
-    // actually got resolved.
-    await markEscalationRequestResolved(
-      outcome === "expired"
-        ? { status: "failed", error: "Escalation expired without a response" }
-        : { status: "completed" }
-    )
+    if (doc.requestId) {
+      if (outcome === "expired") {
+        // Expiring without any response means this ask never got resolved,
+        // not a judgment call. Still not final, though, while other
+        // escalations on the same request await a human.
+        const stillPending = await sdk.escalations.listContextDocs({
+          requestId: doc.requestId,
+          resolution: "pending",
+        })
+        if (stillPending.length === 0) {
+          await markEscalationRequestResolved({
+            status: "failed",
+            error: "Escalation expired without a response",
+          })
+        }
+      } else {
+        // A rejection is a human decision, not automatically a failure, let
+        // the outcome judge weigh it against the request's full timeline.
+        const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+          requestId: doc.requestId,
+          agentId: ctx.agentId,
+          sessionId: ctx.sessionId,
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: text,
+          isHumanResponse: true,
+        })
+        if (judged) {
+          await markEscalationRequestResolved(judged)
+        }
+      }
+    }
     return
   }
 
@@ -470,12 +494,21 @@ async function resumeOperation({
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
     await toolCallChain
-    await markEscalationRequestResolved(
-      sdk.ai.agentRequests.resolveFinalRequestStatus({
+
+    if (doc.requestId) {
+      const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+        requestId: doc.requestId,
+        agentId: ctx.agentId,
+        sessionId: ctx.sessionId,
         toolCallsIncomplete,
         unrecoveredToolFailures,
+        finalResponse: text,
+        isHumanResponse: true,
       })
-    )
+      if (judged) {
+        await markEscalationRequestResolved(judged)
+      }
+    }
   } catch (error) {
     await toolCallChain
     await markEscalationRequestResolved({

@@ -1,3 +1,5 @@
+import { context } from "@budibase/backend-core"
+import { DocumentType, EscalationSource, SEPARATOR } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import {
@@ -7,6 +9,7 @@ import {
   fetchRequestsSummary,
   initActiveRequest,
   recordToolCall,
+  resolveFinalRequestOutcome,
   resolveFinalRequestStatus,
   updateRequestStatus,
 } from "./crud"
@@ -14,6 +17,7 @@ import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
   generateInteractionSummary,
+  generateRequestOutcome,
   generateToolCallSummary,
 } from "./helpers"
 
@@ -21,6 +25,7 @@ jest.mock("./helpers", () => ({
   analyzeAgentRequestLink: jest.fn(),
   generateAgentRequestTitle: jest.fn(),
   generateInteractionSummary: jest.fn(),
+  generateRequestOutcome: jest.fn(),
   generateToolCallSummary: jest.fn(),
 }))
 
@@ -44,6 +49,7 @@ describe("agentRequests crud", () => {
   const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
   const generateInteractionSummaryMock = generateInteractionSummary as jest.Mock
   const generateToolCallSummaryMock = generateToolCallSummary as jest.Mock
+  const generateRequestOutcomeMock = generateRequestOutcome as jest.Mock
   const emitAgentRequestChangeMock =
     builderSocket?.emitAgentRequestChange as jest.Mock
 
@@ -55,6 +61,7 @@ describe("agentRequests crud", () => {
     generateInteractionSummaryMock.mockResolvedValue("User asked something")
     generateToolCallSummaryMock.mockReset()
     generateToolCallSummaryMock.mockResolvedValue("Did something useful")
+    generateRequestOutcomeMock.mockReset()
     emitAgentRequestChangeMock.mockReset()
     await config.newTenant()
   })
@@ -965,6 +972,210 @@ describe("agentRequests crud", () => {
           unrecoveredToolFailures: new Set(),
         })
       ).toEqual({ status: "completed" })
+    })
+  })
+
+  describe("resolveFinalRequestOutcome", () => {
+    const createSchedulingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
+    it("judges the outcome via LLM once, using the request's timeline and final response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "completed",
+          reason: "Meeting was booked successfully",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "I've booked your meeting for tomorrow.",
+        })
+
+        expect(outcome).toEqual({ status: "completed" })
+        expect(generateRequestOutcomeMock).toHaveBeenCalledTimes(1)
+        expect(generateRequestOutcomeMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agentId: "agent_1",
+            sessionId: "session_1",
+            toolCallsIncomplete: false,
+            finalResponse: "I've booked your meeting for tomorrow.",
+          })
+        )
+      })
+    })
+
+    it("returns a failed outcome with the LLM's reason as the error", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "failed",
+          reason: "The meeting was never actually booked",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "I couldn't reach the calendar service.",
+        })
+
+        expect(outcome).toEqual({
+          status: "failed",
+          error: "The meeting was never actually booked",
+        })
+      })
+    })
+
+    it("still asks the LLM to judge when tool calls were left incomplete", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "completed",
+          reason: "Booked despite running out of steps",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: true,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "Done.",
+        })
+
+        expect(outcome).toEqual({ status: "completed" })
+        expect(generateRequestOutcomeMock).toHaveBeenCalledWith(
+          expect.objectContaining({ toolCallsIncomplete: true })
+        )
+      })
+    })
+
+    it("falls back to the mechanical criteria when the LLM judgment fails", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockRejectedValue(new Error("LLM down"))
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(["book_meeting"]),
+          finalResponse: "I couldn't reach the calendar service.",
+        })
+
+        expect(outcome).toEqual({
+          status: "failed",
+          error: "Tool call(s) failed: book_meeting",
+        })
+      })
+    })
+
+    it("returns undefined without calling the LLM when the request already moved to needs_input", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "Escalating to a human.",
+        })
+
+        expect(outcome).toBeUndefined()
+        expect(generateRequestOutcomeMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("returns undefined without calling the LLM when the request already reached a terminal status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "Already done.",
+        })
+
+        expect(outcome).toBeUndefined()
+        expect(generateRequestOutcomeMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("judges a needs_input request when the resolution carries the human's response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "completed",
+          reason: "Approved by a human and carried out",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "The request was approved and completed.",
+          isHumanResponse: true,
+        })
+
+        expect(outcome).toEqual({ status: "completed" })
+        expect(generateRequestOutcomeMock).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it("returns undefined without calling the LLM while the request has escalations pending a human response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await context.getWorkspaceDB().put({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_pending`,
+          source: EscalationSource.OPERATION,
+          appId: config.getProdWorkspaceId(),
+          tenantId: config.getTenantId(),
+          agentId: "agent_1",
+          sessionId: "session_1",
+          requestId,
+          delay: 1000,
+          resolution: "pending",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "One escalation resolved, another still open.",
+          isHumanResponse: true,
+        })
+
+        expect(outcome).toBeUndefined()
+        expect(generateRequestOutcomeMock).not.toHaveBeenCalled()
+      })
     })
   })
 
