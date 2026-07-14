@@ -236,6 +236,36 @@ describe("knowledgeTableRows", () => {
     expect(rows[0].displayStatus).toBe("Processing")
   })
 
+  it.each([
+    [AgentKnowledgeSourceSyncRunStatus.QUEUED, "Queued"],
+    [AgentKnowledgeSourceSyncRunStatus.RUNNING, "Syncing"],
+  ])("shows active sync status %s", (runStatus, displayStatus) => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: { site: { id: "site-1", name: "Site 1" } },
+        },
+      ],
+      sharePointSourceSnapshots: [
+        {
+          sourceId: "source-1",
+          syncedCount: 3,
+          failedCount: 0,
+          processingCount: 0,
+          totalCount: 3,
+          runStatus,
+          lastRunAt: "2026-04-08T10:00:00.000Z",
+        },
+      ],
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows[0].displayStatus).toBe(displayStatus)
+    expect(rows[0].isSyncing).toBe(true)
+  })
+
   it("shows completed counts once syncing is done", () => {
     const rows = toSharePointConnectionRows({
       sharePointSources: [

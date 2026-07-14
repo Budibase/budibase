@@ -6,6 +6,7 @@ import {
   type Agent,
   type AgentOperation,
   AgentKnowledgeSourceType,
+  AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileStatus,
   RestAuthType,
 } from "@budibase/types"
@@ -396,6 +397,43 @@ describe("agent files", () => {
           message: "SharePoint is not connected for this operation",
         },
       }
+    )
+  })
+
+  it("queues SharePoint sync and returns accepted", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Async Sync Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    await setSharePointSourceInAgent(created._id!, ["site-1"])
+    const queueAddSpy = jest.spyOn(knowledgeSourceSyncQueue.getQueue(), "add")
+
+    const response = await config.api.agent.syncKnowledgeSources(
+      created._id!,
+      operationId,
+      "sharepoint_site_site-1",
+      undefined,
+      { status: 202 }
+    )
+
+    expect(response).toEqual({
+      agentId: created._id!,
+      sourceId: "sharepoint_site_site-1",
+      status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
+    })
+    expect(queueAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId: created._id!,
+        sourceId: "sharepoint_site_site-1",
+        jobType: "sync",
+      }),
+      expect.objectContaining({
+        jobId: expect.stringContaining("_immediate"),
+      })
     )
   })
 

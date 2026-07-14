@@ -1163,12 +1163,20 @@ describe("Agent chat tool call tracking", () => {
   })
 
   function mockPipeStreamText({
+    content = [],
     toolCalls,
     toolResults = [],
     onMetadata,
     stepLmUsages,
     finishTotalLmUsage,
   }: {
+    content?: {
+      type: string
+      toolCallId?: string
+      toolName?: string
+      input?: unknown
+      error?: unknown
+    }[]
     toolCalls?: { toolCallId: string; toolName?: string }[]
     toolResults?: {
       toolCallId: string
@@ -1204,7 +1212,7 @@ describe("Agent chat tool call tracking", () => {
             const usages = stepLmUsages?.length ? stepLmUsages : [undefined]
             for (const usage of usages) {
               await options.onStepFinish({
-                content: [],
+                content,
                 toolCalls: resolvedToolCalls,
                 toolResults,
                 response: { id: "step-resp" } as any,
@@ -1428,6 +1436,80 @@ describe("Agent chat tool call tracking", () => {
 
       expect(res.status).toBe(200)
       expect(addActionMock).not.toHaveBeenCalled()
+    })
+
+    it("records a tool_call action for each completed tool call when activity tracking is on", async () => {
+      jest.mocked(streamText).mockImplementation(
+        mockPipeStreamText({
+          content: [
+            {
+              type: "tool-error",
+              toolCallId: "c2",
+              toolName: "list_calendars",
+              error: new Error("boom"),
+            },
+          ],
+          toolResults: [
+            {
+              toolCallId: "c1",
+              toolName: "escalate",
+              output: { status: "pending_approval" },
+            } as any,
+          ],
+        }) as any
+      )
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue(buildWebhookTestAgent({ enabledTools: ["escalate"] }))
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          const headers = await config.defaultHeaders({}, true)
+          const res = await config
+            .getRequest()!
+            .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+            .set(headers)
+            .send({
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "book a meeting" }],
+                },
+              ],
+              transient: true,
+            })
+
+          expect(res.status).toBe(200)
+
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              const [request] =
+                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+              const toolCallActions = (request.actions ?? []).filter(
+                action => action.type === "tool_call"
+              )
+              expect(toolCallActions).toEqual([
+                expect.objectContaining({
+                  toolName: "escalate",
+                  readableName: "Escalate to human",
+                  status: "success",
+                }),
+                expect.objectContaining({
+                  toolName: "list_calendars",
+                  status: "error",
+                }),
+              ])
+            }
+          )
+        }
+      )
     })
 
     it("exposes context usage from the first model step in metadata", async () => {
@@ -1817,6 +1899,16 @@ describe("Agent chat tool call tracking", () => {
               const request = requests.find(r => r.userId === "user-2")
               expect(request?.status).toEqual("failed")
               expect(request?.error).toEqual("Tool call(s) failed: escalate")
+              expect(
+                (request?.actions ?? []).filter(
+                  action => action.type === "tool_call"
+                )
+              ).toEqual([
+                expect.objectContaining({
+                  toolName: "escalate",
+                  status: "error",
+                }),
+              ])
             }
           )
         }
@@ -1878,6 +1970,142 @@ describe("Agent chat tool call tracking", () => {
               const request = requests.find(r => r.userId === "user-3")
               expect(request?.status).toEqual("failed")
               expect(request?.error).toEqual("Tool call(s) failed: escalate")
+              expect(
+                (request?.actions ?? []).filter(
+                  action => action.type === "tool_call"
+                )
+              ).toEqual([
+                expect.objectContaining({
+                  toolName: "escalate",
+                  status: "error",
+                }),
+              ])
+            }
+          )
+        }
+      )
+    })
+
+    it("counts each completed tool call as one tool_call action", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock({
+          toolResults: [
+            { toolCallId: "c1", toolName: "list_calendars" },
+            { toolCallId: "c2", toolName: "book_meeting" },
+          ],
+        })
+      )
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue(buildWebhookTestAgent())
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              await webhookChat({
+                chat: {
+                  chatAppId: chatApp._id!,
+                  agentId: "agent-1",
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C777",
+                    externalUserId: "slack-user-4",
+                  },
+                  messages: [
+                    {
+                      id: "msg-1",
+                      role: "user",
+                      parts: [{ type: "text", text: "book a meeting" }],
+                    },
+                  ],
+                },
+                user: { _id: "user-4" } as any,
+              })
+
+              const requests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+              const request = requests.find(r => r.userId === "user-4")
+              expect(
+                (request?.actions ?? []).filter(
+                  action => action.type === "tool_call"
+                )
+              ).toEqual([
+                expect.objectContaining({
+                  toolName: "list_calendars",
+                  status: "success",
+                }),
+                expect.objectContaining({
+                  toolName: "book_meeting",
+                  status: "success",
+                }),
+              ])
+            }
+          )
+        }
+      )
+    })
+
+    it("does not record a tool_call action for list_session_escalations", async () => {
+      jest.mocked(streamText).mockImplementation(
+        makeWebhookStreamTextMock({
+          toolResults: [
+            { toolCallId: "c1", toolName: "list_session_escalations" },
+            { toolCallId: "c2", toolName: "book_meeting" },
+          ],
+        })
+      )
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue(buildWebhookTestAgent())
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              await webhookChat({
+                chat: {
+                  chatAppId: chatApp._id!,
+                  agentId: "agent-1",
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C666",
+                    externalUserId: "slack-user-5",
+                  },
+                  messages: [
+                    {
+                      id: "msg-1",
+                      role: "user",
+                      parts: [{ type: "text", text: "book a meeting" }],
+                    },
+                  ],
+                },
+                user: { _id: "user-5" } as any,
+              })
+
+              const requests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+              const request = requests.find(r => r.userId === "user-5")
+              expect(
+                (request?.actions ?? []).filter(
+                  action => action.type === "tool_call"
+                )
+              ).toEqual([
+                expect.objectContaining({
+                  toolName: "book_meeting",
+                  status: "success",
+                }),
+              ])
             }
           )
         }

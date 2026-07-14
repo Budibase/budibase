@@ -94,6 +94,8 @@ const buildOperationKnowledgeResponse = ({
     {
       status?: AgentKnowledgeSourceSyncRunStatus
       lastRunAt?: string
+      lastStartedAt?: string
+      errorMessage?: string
     }
   >
 }): FetchAgentKnowledgeResponse => {
@@ -124,6 +126,8 @@ const buildOperationKnowledgeResponse = ({
         webUrl: site?.webUrl,
         runStatus: run?.status,
         lastRunAt: run?.lastRunAt,
+        lastStartedAt: run?.lastStartedAt,
+        errorMessage: run?.errorMessage,
         syncedCount,
         failedCount,
         processingCount,
@@ -338,19 +342,35 @@ export async function syncAgentKnowledgeSource(
   >
 ) {
   const { agentId, operationId, sourceId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const sharePointSources = getSharePointSourcesForOperation(agent, operationId)
+  if (sharePointSources.length === 0) {
+    throw new HTTPError("SharePoint is not connected for this operation", 400)
+  }
+  const source = sharePointSources.find(source => source.id === sourceId)
+  if (!source) {
+    throw new HTTPError(
+      "Specified SharePoint site is not connected for this operation",
+      400
+    )
+  }
 
   console.log("Agent knowledge source sync requested", {
     agentId,
     operationId,
     sourceId,
   })
-  const response = await sdk.ai.rag.syncSharePointSourcesForOperation(
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueAgentJobs(
     agentId,
-    operationId,
-    sourceId
+    AgentKnowledgeSourceType.SHAREPOINT,
+    [sourceId]
   )
-  ctx.body = response
-  ctx.status = 200
+  ctx.body = {
+    agentId,
+    sourceId,
+    status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
+  }
+  ctx.status = 202
 }
 
 export async function connectAgentSharePointSite(

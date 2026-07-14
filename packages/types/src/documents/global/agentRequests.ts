@@ -44,6 +44,8 @@ export interface ToolCallAction extends AgentRequestActionBase {
   toolName: string
   readableName?: string
   status: "success" | "error"
+  // Short, user-friendly description of what the call did and its outcome
+  summary?: string
 }
 
 export interface EscalationRaisedAction extends AgentRequestActionBase {
@@ -55,11 +57,18 @@ export interface EscalationRaisedAction extends AgentRequestActionBase {
   }>
 }
 
+export interface EscalationResolvedAction extends AgentRequestActionBase {
+  type: "escalation_resolved"
+  escalationId: string
+  outcome: "approved" | "rejected" | "expired"
+}
+
 export type AgentRequestAction =
   | UserMessageAction
   | StatusChangedAction
   | ToolCallAction
   | EscalationRaisedAction
+  | EscalationResolvedAction
 
 export interface AgentRequest extends Document {
   title?: string

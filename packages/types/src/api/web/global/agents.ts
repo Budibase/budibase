@@ -50,6 +50,8 @@ export interface SharePointKnowledgeSourceSnapshot {
   webUrl?: string
   runStatus?: AgentKnowledgeSourceSyncRunStatus
   lastRunAt?: string
+  lastStartedAt?: string
+  errorMessage?: string
   syncedCount: number
   failedCount: number
   processingCount: number
@@ -78,7 +80,9 @@ export interface FetchAgentKnowledgeSourceEntriesResponse {
 
 export interface KnowledgeSourceSyncRun {
   sourceId: string
-  lastRunAt: string
+  lastRunAt?: string
+  lastStartedAt?: string
+  errorMessage?: string
   synced: number
   failed: number
   skipped: number
@@ -91,12 +95,8 @@ export interface SyncAgentKnowledgeSourcesRequest {}
 
 export interface SyncAgentKnowledgeSourcesResponse {
   agentId: string
-  synced: number
-  failed: number
-  alreadySynced: number
-  deleted: number
-  unsupported: number
-  totalDiscovered: number
+  sourceId: string
+  status: AgentKnowledgeSourceSyncRunStatus.QUEUED
 }
 
 export interface ConnectAgentSharePointSiteRequest {
