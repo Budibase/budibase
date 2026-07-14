@@ -140,7 +140,11 @@ export async function respond(
   if (notifDoc.escalationId !== escalationId) {
     console.warn(
       "Escalation respond: notification does not belong to escalation (possible forged payload)",
-      { escalationId, notificationDocId, notifEscalationId: notifDoc.escalationId }
+      {
+        escalationId,
+        notificationDocId,
+        notifEscalationId: notifDoc.escalationId,
+      }
     )
     throw new Error(
       `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
