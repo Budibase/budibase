@@ -381,6 +381,11 @@ async function resumeOperation({
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
+  // recordToolCall awaits an LLM summary internally, and the runtime awaits
+  // onToolCallCompleted between steps. Returning its promise would stall
+  // every step on that summary. Instead, chain the calls in the background
+  // (preserving completion order) and flush the tail (await toolCallChain
+  // below) before writing the terminal status.
   let toolCallChain = Promise.resolve()
 
   try {
