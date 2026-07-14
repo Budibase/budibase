@@ -240,19 +240,19 @@ export async function discordWebhook(
           threadId: event.threadId,
         }
 
-        const appId = await resolveEscalationWorkspaceId(
-          workspaceId,
-          notificationDocId
-        )
-        if (!appId) {
-          console.warn("Discord escalation action: notification not found", {
-            workspaceId,
-            notificationDocId,
-          })
-          return
-        }
-
         try {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Discord escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
           const result = await context.doInContext(appId, async () => {
             if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
               return { status: "closed" as const }

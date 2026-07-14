@@ -434,19 +434,19 @@ export async function slackWebhook(
           channel: (event.raw as any)?.channel,
         }
 
-        const appId = await resolveEscalationWorkspaceId(
-          workspaceId,
-          notificationDocId
-        )
-        if (!appId) {
-          console.warn("Escalation action: notification not found", {
-            workspaceId,
-            notificationDocId,
-          })
-          return
-        }
-
         try {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
           const result = await context.doInContext(appId, async () => {
             // We can respond with closed or
             return sdk.escalations.respond(
