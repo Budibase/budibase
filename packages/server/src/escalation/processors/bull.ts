@@ -50,6 +50,8 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       .deflateSync(JSON.stringify(input.context))
       .toString("base64")
 
+    const existing = await db.tryGet<EscalationContextDoc>(docId)
+
     const sourceFields =
       input.source === EscalationSource.AUTOMATION
         ? {
@@ -61,9 +63,11 @@ export class BullEscalationProcessor implements IEscalationProcessor {
             agentId: input.agentId,
             operationId: input.operationId,
             sessionId: input.context.sessionId,
+            ...((input.requestId ?? existing?.requestId) && {
+              requestId: input.requestId ?? existing?.requestId,
+            }),
           }
 
-    const existing = await db.tryGet<EscalationContextDoc>(docId)
     const doc: EscalationContextDoc = {
       _id: docId,
       ...(existing?._rev && { _rev: existing._rev }),

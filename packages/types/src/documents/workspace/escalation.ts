@@ -1,7 +1,7 @@
 import type { ModelMessage, UIMessage } from "ai"
 import { Document } from "../document"
 import { Automation, AutomationStepResult } from "./automation"
-import { ChatConversationChannel } from "../global/chat"
+import { ChatConversationChannel } from "../global"
 
 // This does need a degree of flexibility
 // {accepted: boolean} is a given for now, but response text
@@ -16,6 +16,21 @@ export function isEscalationResponse(v: unknown): v is EscalationResponse {
 export enum EscalationSource {
   AUTOMATION = "automation",
   OPERATION = "operation",
+}
+
+// The registered name of the escalate tool exposed to agent operations.
+export const ESCALATE_TOOL_NAME = "escalate"
+
+// The escalate tool's own result status, returned to the model.
+export enum EscalateToolResultStatus {
+  // A real escalation was raised and is awaiting a human response.
+  PENDING_APPROVAL = "pending_approval",
+  // No escalation could be raised (e.g. no reviewers configured). The
+  // model's request was not actually handed to a human.
+  UNAVAILABLE = "unavailable",
+  // Resume-only: the escalation was already approved, so calling escalate
+  // again is a no-op rather than a fresh escalation or a failure.
+  ALREADY_APPROVED = "already_approved",
 }
 
 // Built-in resolution strategies.
@@ -53,6 +68,7 @@ export interface EscalationContextDoc extends Document {
   appId: string
   tenantId: string
   agentId?: string
+  requestId?: string
   // zlib-deflated + base64 JSON of the SuspendedContext
   contextCompressed?: string
   delay: number
