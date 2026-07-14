@@ -214,7 +214,9 @@ const isSharePointListIncluded = (
 }
 
 const getSharePointListContentHash = (buffer: Buffer) =>
-  createHash("sha256").update(buffer as Uint8Array<ArrayBuffer>).digest("hex")
+  createHash("sha256")
+    .update(buffer as Uint8Array<ArrayBuffer>)
+    .digest("hex")
 
 const getSharePointListFilename = (
   siteName: string | undefined,
