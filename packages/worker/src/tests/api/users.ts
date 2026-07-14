@@ -4,6 +4,7 @@ import {
   BulkUserResponse,
   CreateAdminUserRequest,
   InviteUsersRequest,
+  LookupTenantUserResponse,
   SearchUsersRequest,
   User,
 } from "@budibase/types"
@@ -177,6 +178,26 @@ export class UserAPI extends TestAPI {
       .set(opts?.headers ? opts.headers : this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(opts?.status ? opts.status : 200)
+  }
+
+  lookupTenantUser = (
+    id: string,
+    opts?: TestAPIOpts & {
+      noHeaders?: boolean
+    }
+  ) => {
+    const req = this.request
+      .get(`/api/global/users/tenant/${encodeURIComponent(id)}`)
+      .expect("Content-Type", /json/)
+      .expect(opts?.status ? opts.status : 200)
+
+    if (opts?.headers) {
+      req.set(opts.headers)
+    } else if (!opts?.noHeaders) {
+      req.set(this.config.defaultHeaders())
+    }
+
+    return req as Promise<{ body: LookupTenantUserResponse }>
   }
 
   changeTenantOwnerEmail = (
