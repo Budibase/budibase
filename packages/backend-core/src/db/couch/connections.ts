@@ -25,13 +25,10 @@ export const getCouchInfo = (connection?: string | null) => {
   }
   const authCookie = Buffer.from(`${username}:${password}`).toString("base64")
   let sqlUrl = env.COUCH_DB_SQL_URL
-  // default for dev
-  if (env.isDev() && !sqlUrl) {
-    sqlUrl = "http://localhost:4006"
-  } else if (!sqlUrl && urlInfo.url) {
+  if (!sqlUrl && urlInfo.url) {
     const parsed = new URL(urlInfo.url)
     // attempt to connect on default port
-    sqlUrl = urlInfo.url.replace(parsed.port, "4984")
+    sqlUrl = urlInfo.url.replace(parsed.port, env.COUCH_DB_SQS_PORT)
   }
   return {
     url: urlInfo.url!,

@@ -45,11 +45,26 @@ describe("connections", () => {
       )
     })
 
-    it("uses the derived SQL URL when COUCH_DB_SQL_URL is unset", async () => {
+    it("derives the SQL URL from COUCH_DB_URL when COUCH_DB_SQL_URL is unset", async () => {
       await withEnv(
         {
           COUCH_DB_URL: "http://user:pass@localhost:5984",
           COUCH_DB_SQL_URL: undefined,
+        },
+        async () => {
+          const response = getCouchInfo()
+
+          expect(response.sqlUrl).toBe("http://localhost:4984")
+        }
+      )
+    })
+
+    it("derives the SQL URL using COUCH_DB_SQS_PORT when configured", async () => {
+      await withEnv(
+        {
+          COUCH_DB_URL: "http://user:pass@localhost:5984",
+          COUCH_DB_SQL_URL: undefined,
+          COUCH_DB_SQS_PORT: "4006",
         },
         async () => {
           const response = getCouchInfo()

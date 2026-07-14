@@ -41,6 +41,7 @@ async function init() {
     LITELLM_MASTER_KEY: "budibase",
     LITELLM_SALT_KEY: "budibase",
     BLACKLIST_IPS: "",
+    COUCH_DB_SQS_PORT: "4006",
   }
 
   config = { ...config, ...existingConfig }

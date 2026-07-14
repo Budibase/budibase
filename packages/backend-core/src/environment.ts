@@ -280,6 +280,7 @@ const environment = {
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
   OPENROUTER_BASE_URL:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  COUCH_DB_SQS_PORT: process.env.COUCH_DB_SQS_PORT || "4984",
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
