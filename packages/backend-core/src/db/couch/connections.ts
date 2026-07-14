@@ -1,13 +1,13 @@
 import env from "../../environment"
 
 export const getCouchInfo = () => {
-  return parseCouchInfo(env.COUCH_DB_URL, {
+  return parseCouchConnection(env.COUCH_DB_URL, {
     user: env.COUCH_DB_USERNAME || "",
     password: env.COUCH_DB_PASSWORD || "",
   })
 }
 
-export const parseCouchInfo = (
+export const parseCouchConnection = (
   connection: string,
   credentials?: { user: string; password: string }
 ) => {
