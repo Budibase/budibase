@@ -227,7 +227,8 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
 // succession.
 async function appendAction(
   requestId: string,
-  action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">
+  action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">,
+  timestamp: string = nowIso()
 ): Promise<AgentRequestAction | undefined> {
   const db = context.getWorkspaceDB()
 
@@ -240,14 +241,14 @@ async function appendAction(
     const fullAction = {
       ...action,
       id: utils.newid(),
-      timestamp: nowIso(),
+      timestamp,
     } as AgentRequestAction
 
     try {
       await saveRequest({
         ...request,
         actions: [...(request.actions ?? []), fullAction],
-        updatedAt: fullAction.timestamp,
+        updatedAt: nowIso(),
       })
       return fullAction
     } catch (err) {
@@ -312,6 +313,8 @@ async function recordEscalationRaised({
   sessionId: string
   escalationId: string
 }): Promise<void> {
+  const timestamp = nowIso()
+
   const doc = await getContextDoc(escalationId)
   if (!doc) {
     throw new Error(`Escalation context doc not found: ${escalationId}`)
@@ -323,12 +326,16 @@ async function recordEscalationRaised({
     }))
   )
 
-  await appendAction(requestId, {
-    type: "escalation_raised",
-    escalationId,
-    recipients,
-    sessionId,
-  })
+  await appendAction(
+    requestId,
+    {
+      type: "escalation_raised",
+      escalationId,
+      recipients,
+      sessionId,
+    },
+    timestamp
+  )
 }
 
 export async function recordEscalationResolved({
