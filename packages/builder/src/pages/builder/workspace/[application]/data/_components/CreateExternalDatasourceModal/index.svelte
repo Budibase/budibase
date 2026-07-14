@@ -106,8 +106,8 @@
       store.setDatasource(datasource)
 
       notifications.success("Datasource created successfully")
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Unknown error"
+    } catch (e: any) {
+      const message = e.message ?? "Unknown error"
       notifications.error(`Error creating datasource: ${message}`)
     }
 
