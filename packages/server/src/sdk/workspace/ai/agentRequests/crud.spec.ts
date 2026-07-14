@@ -1,3 +1,11 @@
+import { context } from "@budibase/backend-core"
+import {
+  DocumentType,
+  EscalateToolResultStatus,
+  EscalationNotificationChannel,
+  EscalationSource,
+  SEPARATOR,
+} from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import {
@@ -6,6 +14,9 @@ import {
   fetchRequestsByAgent,
   fetchRequestsSummary,
   initActiveRequest,
+  recordEscalationResolved,
+  recordToolCall,
+  resolveFinalRequestOutcome,
   resolveFinalRequestStatus,
   updateRequestStatus,
 } from "./crud"
@@ -13,12 +24,16 @@ import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
   generateInteractionSummary,
+  generateRequestOutcome,
+  generateToolCallSummary,
 } from "./helpers"
 
 jest.mock("./helpers", () => ({
   analyzeAgentRequestLink: jest.fn(),
   generateAgentRequestTitle: jest.fn(),
   generateInteractionSummary: jest.fn(),
+  generateRequestOutcome: jest.fn(),
+  generateToolCallSummary: jest.fn(),
 }))
 
 jest.mock("../../../../websockets", () => ({
@@ -40,6 +55,8 @@ describe("agentRequests crud", () => {
   const analyzeAgentRequestLinkMock = analyzeAgentRequestLink as jest.Mock
   const generateAgentRequestTitleMock = generateAgentRequestTitle as jest.Mock
   const generateInteractionSummaryMock = generateInteractionSummary as jest.Mock
+  const generateToolCallSummaryMock = generateToolCallSummary as jest.Mock
+  const generateRequestOutcomeMock = generateRequestOutcome as jest.Mock
   const emitAgentRequestChangeMock =
     builderSocket?.emitAgentRequestChange as jest.Mock
 
@@ -49,6 +66,9 @@ describe("agentRequests crud", () => {
     generateAgentRequestTitleMock.mockResolvedValue("Generated title")
     generateInteractionSummaryMock.mockReset()
     generateInteractionSummaryMock.mockResolvedValue("User asked something")
+    generateToolCallSummaryMock.mockReset()
+    generateToolCallSummaryMock.mockResolvedValue("Did something useful")
+    generateRequestOutcomeMock.mockReset()
     emitAgentRequestChangeMock.mockReset()
     await config.newTenant()
   })
@@ -584,6 +604,419 @@ describe("agentRequests crud", () => {
     })
   })
 
+  describe("tool_call actions", () => {
+    const createBookingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
+    it("records a tool_call action on success", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "success",
+          readableName: "Book meeting",
+          input: { date: "2026-07-10" },
+          output: { meetingId: "m1" },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            type: "tool_call",
+            toolName: "book_meeting",
+            readableName: "Book meeting",
+            summary: "Did something useful",
+            status: "success",
+            sessionId: "session_1",
+            id: expect.any(String),
+            timestamp: expect.any(String),
+          }),
+        ])
+        expect(generateToolCallSummaryMock).toHaveBeenCalledWith({
+          toolName: "book_meeting",
+          readableName: "Book meeting",
+          status: "success",
+          input: { date: "2026-07-10" },
+          output: { meetingId: "m1" },
+          agentId: "agent_1",
+          sessionId: "session_1",
+        })
+      })
+    })
+
+    it("records a tool_call action on error", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "error",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            type: "tool_call",
+            toolName: "book_meeting",
+            status: "error",
+            summary: "Did something useful",
+          }),
+        ])
+        expect(toolCallActions[0]).not.toHaveProperty("readableName")
+      })
+    })
+
+    it("falls back to no summary when summary generation fails, without dropping the action", async () => {
+      generateToolCallSummaryMock.mockRejectedValue(new Error("LLM error"))
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "success",
+          readableName: "Book meeting",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            toolName: "book_meeting",
+            readableName: "Book meeting",
+            status: "success",
+          }),
+        ])
+        expect(toolCallActions[0]).not.toHaveProperty("summary")
+      })
+    })
+
+    it("records one action per tool call, appended to the existing actions", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "list_calendars",
+          status: "success",
+        })
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "book_meeting",
+          status: "error",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const toolCallActions = (request.actions ?? []).filter(
+          action => action.type === "tool_call"
+        )
+        expect(toolCallActions).toEqual([
+          expect.objectContaining({
+            toolName: "list_calendars",
+            status: "success",
+          }),
+          expect.objectContaining({
+            toolName: "book_meeting",
+            status: "error",
+          }),
+        ])
+      })
+    })
+
+    it("does nothing if the requestId does not exist", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await expect(
+          recordToolCall({
+            requestId: "agentrequest_missing",
+            agentId: "agent_1",
+            sessionId: "session_1",
+            toolName: "book_meeting",
+            status: "success",
+          })
+        ).resolves.toBeUndefined()
+      })
+    })
+  })
+
+  describe("escalation_raised actions", () => {
+    const createBookingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
+    const putEscalationContextDoc = async (
+      escalationId: string,
+      requestId: string,
+      recipients: Array<{ type: EscalationNotificationChannel; config: any }>
+    ) => {
+      await context.getWorkspaceDB().put({
+        _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+        source: EscalationSource.OPERATION,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        agentId: "agent_1",
+        sessionId: "session_1",
+        requestId,
+        delay: 1000,
+        resolution: "pending",
+        recipients,
+      })
+    }
+
+    it("records an escalation_raised action with resolved recipient labels", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+        const user = await config.createUser({
+          firstName: "Manolo",
+          lastName: "Garcia",
+        })
+        await putEscalationContextDoc("esc_1", requestId, [
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { channelId: "C1", channelName: "operations" },
+          },
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { globalUserId: user._id },
+          },
+        ])
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "success",
+          output: {
+            status: EscalateToolResultStatus.PENDING_APPROVAL,
+            escalationId: "esc_1",
+            note: "Escalated for approval",
+          },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(request.actions).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: "escalation_raised",
+              escalationId: "esc_1",
+              sessionId: "session_1",
+              recipients: [
+                {
+                  type: EscalationNotificationChannel.SLACK,
+                  label: "operations",
+                },
+                {
+                  type: EscalationNotificationChannel.SLACK,
+                  label: "Manolo Garcia",
+                },
+              ],
+            }),
+          ])
+        )
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([])
+        expect(generateToolCallSummaryMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("falls back to a generic tool_call when the escalation context doc can't be found", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "success",
+          output: {
+            status: EscalateToolResultStatus.PENDING_APPROVAL,
+            escalationId: "esc_missing",
+          },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(
+          (request.actions ?? []).filter(a => a.type === "escalation_raised")
+        ).toEqual([])
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([expect.objectContaining({ toolName: "escalate" })])
+        expect(generateToolCallSummaryMock).toHaveBeenCalled()
+      })
+    })
+
+    it("records a generic tool_call when escalate is unavailable", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "error",
+          output: { status: EscalateToolResultStatus.UNAVAILABLE },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(
+          (request.actions ?? []).filter(a => a.type === "escalation_raised")
+        ).toEqual([])
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([
+          expect.objectContaining({ toolName: "escalate", status: "error" }),
+        ])
+      })
+    })
+
+    it("records a generic tool_call when escalate was already approved (resume)", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordToolCall({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolName: "escalate",
+          status: "success",
+          output: { status: EscalateToolResultStatus.ALREADY_APPROVED },
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        expect(
+          (request.actions ?? []).filter(a => a.type === "escalation_raised")
+        ).toEqual([])
+        expect(
+          (request.actions ?? []).filter(a => a.type === "tool_call")
+        ).toEqual([expect.objectContaining({ toolName: "escalate" })])
+      })
+    })
+  })
+
+  describe("escalation_resolved actions", () => {
+    const createBookingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
+    it.each(["approved", "rejected", "expired"] as const)(
+      "records an escalation_resolved action for outcome %s",
+      async outcome => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const { requestId } = (await createBookingRequest())!
+
+          await recordEscalationResolved({
+            requestId,
+            escalationId: "esc_1",
+            outcome,
+            sessionId: "session_1",
+          })
+
+          const [request] = await fetchRequestsByAgent("agent_1")
+          expect(
+            (request.actions ?? []).filter(
+              a => a.type === "escalation_resolved"
+            )
+          ).toEqual([
+            expect.objectContaining({
+              type: "escalation_resolved",
+              escalationId: "esc_1",
+              outcome,
+              sessionId: "session_1",
+            }),
+          ])
+        })
+      }
+    )
+
+    it("records one action per escalation on the same request", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createBookingRequest())!
+
+        await recordEscalationResolved({
+          requestId,
+          escalationId: "esc_1",
+          outcome: "approved",
+        })
+        await recordEscalationResolved({
+          requestId,
+          escalationId: "esc_2",
+          outcome: "rejected",
+        })
+
+        const [request] = await fetchRequestsByAgent("agent_1")
+        const resolvedActions = (request.actions ?? []).filter(
+          a => a.type === "escalation_resolved"
+        )
+        expect(resolvedActions).toEqual([
+          expect.objectContaining({
+            escalationId: "esc_1",
+            outcome: "approved",
+          }),
+          expect.objectContaining({
+            escalationId: "esc_2",
+            outcome: "rejected",
+          }),
+        ])
+      })
+    })
+
+    it("does nothing if the requestId does not exist", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await expect(
+          recordEscalationResolved({
+            requestId: "agentrequest_missing",
+            escalationId: "esc_1",
+            outcome: "approved",
+          })
+        ).resolves.toBeUndefined()
+      })
+    })
+  })
+
   describe("fetchRequestsSummary", () => {
     it("counts requests by status across the whole workspace", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -796,6 +1229,210 @@ describe("agentRequests crud", () => {
           unrecoveredToolFailures: new Set(),
         })
       ).toEqual({ status: "completed" })
+    })
+  })
+
+  describe("resolveFinalRequestOutcome", () => {
+    const createSchedulingRequest = () =>
+      initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Book me a meeting",
+        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        source: "Chat",
+      })
+
+    it("judges the outcome via LLM once, using the request's timeline and final response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "completed",
+          reason: "Meeting was booked successfully",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "I've booked your meeting for tomorrow.",
+        })
+
+        expect(outcome).toEqual({ status: "completed" })
+        expect(generateRequestOutcomeMock).toHaveBeenCalledTimes(1)
+        expect(generateRequestOutcomeMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agentId: "agent_1",
+            sessionId: "session_1",
+            toolCallsIncomplete: false,
+            finalResponse: "I've booked your meeting for tomorrow.",
+          })
+        )
+      })
+    })
+
+    it("returns a failed outcome with the LLM's reason as the error", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "failed",
+          reason: "The meeting was never actually booked",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "I couldn't reach the calendar service.",
+        })
+
+        expect(outcome).toEqual({
+          status: "failed",
+          error: "The meeting was never actually booked",
+        })
+      })
+    })
+
+    it("still asks the LLM to judge when tool calls were left incomplete", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "completed",
+          reason: "Booked despite running out of steps",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: true,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "Done.",
+        })
+
+        expect(outcome).toEqual({ status: "completed" })
+        expect(generateRequestOutcomeMock).toHaveBeenCalledWith(
+          expect.objectContaining({ toolCallsIncomplete: true })
+        )
+      })
+    })
+
+    it("falls back to the mechanical criteria when the LLM judgment fails", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        generateRequestOutcomeMock.mockRejectedValue(new Error("LLM down"))
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(["book_meeting"]),
+          finalResponse: "I couldn't reach the calendar service.",
+        })
+
+        expect(outcome).toEqual({
+          status: "failed",
+          error: "Tool call(s) failed: book_meeting",
+        })
+      })
+    })
+
+    it("returns undefined without calling the LLM when the request already moved to needs_input", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "Escalating to a human.",
+        })
+
+        expect(outcome).toBeUndefined()
+        expect(generateRequestOutcomeMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("returns undefined without calling the LLM when the request already reached a terminal status", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "completed" })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "Already done.",
+        })
+
+        expect(outcome).toBeUndefined()
+        expect(generateRequestOutcomeMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("judges a needs_input request when the resolution carries the human's response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        generateRequestOutcomeMock.mockResolvedValue({
+          status: "completed",
+          reason: "Approved by a human and carried out",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "The request was approved and completed.",
+          isHumanResponse: true,
+        })
+
+        expect(outcome).toEqual({ status: "completed" })
+        expect(generateRequestOutcomeMock).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it("returns undefined without calling the LLM while the request has escalations pending a human response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createSchedulingRequest())!
+        await updateRequestStatus({ requestId, status: "needs_input" })
+        await context.getWorkspaceDB().put({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_pending`,
+          source: EscalationSource.OPERATION,
+          appId: config.getProdWorkspaceId(),
+          tenantId: config.getTenantId(),
+          agentId: "agent_1",
+          sessionId: "session_1",
+          requestId,
+          delay: 1000,
+          resolution: "pending",
+        })
+
+        const outcome = await resolveFinalRequestOutcome({
+          requestId,
+          agentId: "agent_1",
+          sessionId: "session_1",
+          toolCallsIncomplete: false,
+          unrecoveredToolFailures: new Set(),
+          finalResponse: "One escalation resolved, another still open.",
+          isHumanResponse: true,
+        })
+
+        expect(outcome).toBeUndefined()
+        expect(generateRequestOutcomeMock).not.toHaveBeenCalled()
+      })
     })
   })
 
