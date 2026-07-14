@@ -1184,24 +1184,6 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("GET /api/global/users/tenant/:id", () => {
-    it("should reject unauthenticated requests", async () => {
-      const res = await config.api.users.lookupTenantUser(config.user!.email, {
-        status: 403,
-        noHeaders: true,
-      })
-
-      expect((res.body as any).message).toBe("Unauthorized")
-    })
-
-    it("should allow authenticated requests", async () => {
-      const res = await config.api.users.lookupTenantUser(config.user!.email)
-
-      expect(res.body.tenantId).toBe(config.user!.tenantId)
-      expect((res.body as any).userId).toBe(config.user!._id)
-    })
-  })
-
   describe("POST /api/global/users/:userId/permission/:role", () => {
     it("should assign CREATOR role and set builder properties", async () => {
       const user = await config.createUser()

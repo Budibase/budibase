@@ -98,13 +98,6 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/admin/auth/oidc/callback",
     method: "GET",
   },
-  // global user search - no tenancy
-  // :id is user id
-  // TODO: this should really be `/api/system/users/:id`
-  {
-    route: "/api/global/users/tenant/:id",
-    method: "GET",
-  },
   // tenant is determined from code in redis
   {
     route: "/api/global/users/invite/accept",

@@ -1,9 +1,4 @@
-import {
-  AccountMetadata,
-  PlatformUser,
-  StrippedUser,
-  User,
-} from "../../documents"
+import { AccountMetadata, StrippedUser, User } from "../../documents"
 import { SearchFilters } from "../../sdk"
 
 interface InviteInfo {
@@ -120,8 +115,6 @@ export interface SearchUsersResponse {
 export type FetchUsersResponse = User[]
 
 export interface FindUserResponse extends User {}
-
-export type LookupTenantUserResponse = PlatformUser
 
 export interface CreateAdminUserRequest {
   email: string

@@ -46,7 +46,6 @@ import {
   LockName,
   LockType,
   LookupAccountHolderResponse,
-  LookupTenantUserResponse,
   OIDCUser,
   SaveUserResponse,
   SearchUsersRequest,
@@ -59,7 +58,6 @@ import {
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
-import emailValidator from "email-validator"
 import env from "../../../environment"
 import * as userSdk from "../../../sdk/users"
 import { checkAnyUserExists } from "../../../utilities/users"
@@ -547,22 +545,6 @@ export const fetch = async (ctx: UserCtx<void, FetchUsersResponse>) => {
 // called internally by app server user find
 export const find = async (ctx: UserCtx<void, FindUserResponse>) => {
   ctx.body = await userSdk.db.getUser(ctx.params.id)
-}
-
-export const tenantUserLookup = async (
-  ctx: UserCtx<void, LookupTenantUserResponse>
-) => {
-  const id = ctx.params.id
-  // is email, check its valid
-  if (id.includes("@") && !emailValidator.validate(id)) {
-    ctx.throw(400, `${id} is not a valid email address to lookup.`)
-  }
-  const user = await userSdk.core.getFirstPlatformUser(id)
-  if (user) {
-    ctx.body = user
-  } else {
-    ctx.throw(400, "No tenant user found.")
-  }
 }
 
 /**
