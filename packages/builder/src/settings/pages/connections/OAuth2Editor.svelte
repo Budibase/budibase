@@ -3,7 +3,15 @@
   import { onMount } from "svelte"
   import { createEventDispatcher } from "svelte"
   import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
-  import { Body, Divider, Input, Link, Select, Layout } from "@budibase/bbui"
+  import {
+    Body,
+    Divider,
+    Input,
+    Link,
+    Select,
+    Layout,
+    Helpers,
+  } from "@budibase/bbui"
   import type {
     InsertOAuth2ConfigRequest,
     OAuth2RestAuthConfig,
@@ -152,7 +160,7 @@
     }
 
     return {
-      _id: data._id || crypto.randomUUID(),
+      _id: data._id || Helpers.uuid(),
       type: RestAuthType.OAUTH2,
       name: data.name!,
       url: data.url!,
