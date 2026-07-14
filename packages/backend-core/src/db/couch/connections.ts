@@ -27,8 +27,8 @@ export const getCouchInfo = (connection?: string | null) => {
   let sqlUrl = env.COUCH_DB_SQL_URL
   if (!sqlUrl && urlInfo.url) {
     const parsed = new URL(urlInfo.url)
-    // attempt to connect on default port
-    sqlUrl = urlInfo.url.replace(parsed.port, env.COUCH_DB_SQS_PORT)
+    parsed.port = env.COUCH_DB_SQS_PORT
+    sqlUrl = parsed.toString().replace(/\/$/, "")
   }
   return {
     url: urlInfo.url!,

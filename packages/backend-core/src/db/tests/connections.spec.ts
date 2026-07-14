@@ -73,5 +73,37 @@ describe("connections", () => {
         }
       )
     })
+
+    it("derives the SQL URL without corrupting other matching digits in the URL", async () => {
+      await withEnv(
+        {
+          COUCH_DB_URL: "http://user:pass@localhost:5984/db/5984?since=5984",
+          COUCH_DB_SQL_URL: undefined,
+          COUCH_DB_SQS_PORT: "4006",
+        },
+        async () => {
+          const response = getCouchInfo()
+
+          expect(response.sqlUrl).toBe(
+            "http://localhost:4006/db/5984?since=5984"
+          )
+        }
+      )
+    })
+
+    it("derives the SQL URL when COUCH_DB_URL does not include an explicit port", async () => {
+      await withEnv(
+        {
+          COUCH_DB_URL: "http://user:pass@example.com",
+          COUCH_DB_SQL_URL: undefined,
+          COUCH_DB_SQS_PORT: "4006",
+        },
+        async () => {
+          const response = getCouchInfo()
+
+          expect(response.sqlUrl).toBe("http://example.com:4006")
+        }
+      )
+    })
   })
 })
