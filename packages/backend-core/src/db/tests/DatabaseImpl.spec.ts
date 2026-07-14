@@ -1,7 +1,7 @@
 import _ from "lodash"
 import { AnyDocument } from "@budibase/types"
 import { generator } from "../../../tests"
-import { setEnv, withEnv } from "../../environment"
+import { withEnv } from "../../environment"
 import { DatabaseImpl } from "../couch"
 import { newid } from "../../utils"
 
@@ -55,13 +55,6 @@ describe("DatabaseImpl", () => {
   })
 
   describe("external connections", () => {
-    afterEach(() => {
-      setEnv({
-        COUCH_DB_USERNAME: undefined,
-        COUCH_DB_PASSWORD: undefined,
-      })
-    })
-
     it("does not leak env credentials into external connection strings", async () => {
       await withEnv(
         {
