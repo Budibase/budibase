@@ -16,7 +16,6 @@ import {
 } from "@budibase/types"
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
-import { prepareAgentChatRun } from "../sdk/workspace/ai/agents"
 import { getFullUser } from "../utilities/users"
 import * as slack from "./notifications/slack"
 import * as discord from "./notifications/discord"
@@ -232,7 +231,7 @@ async function persistResumeResult(escalationId: string, message: UIMessage) {
   })
 }
 
-async function resumeOperation({
+export async function resumeOperation({
   doc,
   escalationId,
   resolution,
@@ -253,6 +252,23 @@ async function resumeOperation({
     agentId: ctx.agentId,
     operationId: ctx.operationId,
   })
+
+  if (doc.requestId) {
+    await sdk.ai.agentRequests
+      .recordEscalationResolved({
+        requestId: doc.requestId,
+        escalationId,
+        outcome,
+        sessionId: ctx.sessionId,
+      })
+      .catch(error => {
+        console.error("Failed to record escalation resolution", {
+          escalationId,
+          agentId: ctx.agentId,
+          error,
+        })
+      })
+  }
 
   const markEscalationRequestResolved = async (params: {
     status: "completed" | "failed"
@@ -391,7 +407,7 @@ async function resumeOperation({
     },
   ]
 
-  const run = await prepareAgentChatRun({
+  const run = await sdk.ai.agents.prepareAgentChatRun({
     agent,
     agentId: ctx.agentId,
     modelMessages: messages,

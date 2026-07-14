@@ -331,6 +331,8 @@ const summarizeActionForOutcome = (action: AgentRequestAction) => {
       }
     case "escalation_raised":
       return { type: action.type, recipients: action.recipients }
+    case "escalation_resolved":
+      return { type: action.type, outcome: action.outcome }
   }
 }
 

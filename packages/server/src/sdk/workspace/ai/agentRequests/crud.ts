@@ -5,12 +5,14 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
+import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
 import type {
   AgentRequest,
   AgentRequestAction,
   AgentRequestEntry,
   AgentRequestsSummary,
   AgentRequestStatus,
+  EscalationResolvedAction,
   StatusChangedAction,
   UserMessageAction,
   ToolCallAction,
@@ -29,7 +31,11 @@ import {
   queryRequestsByUpdatedAt,
   queryRequestsByStatusAndUpdatedAt,
 } from "./views"
-import { listContextDocs } from "../../escalations"
+import {
+  getContextDoc,
+  listContextDocs,
+  resolveRecipientLabel,
+} from "../../escalations"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -222,7 +228,8 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
 // succession.
 async function appendAction(
   requestId: string,
-  action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">
+  action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">,
+  timestamp: string = nowIso()
 ): Promise<AgentRequestAction | undefined> {
   const db = context.getWorkspaceDB()
 
@@ -235,14 +242,14 @@ async function appendAction(
     const fullAction = {
       ...action,
       id: utils.newid(),
-      timestamp: nowIso(),
+      timestamp,
     } as AgentRequestAction
 
     try {
       await saveRequest({
         ...request,
         actions: [...(request.actions ?? []), fullAction],
-        updatedAt: fullAction.timestamp,
+        updatedAt: nowIso(),
       })
       return fullAction
     } catch (err) {
@@ -301,6 +308,59 @@ async function refineToolCallActionSummary({
   }
 }
 
+async function recordEscalationRaised({
+  requestId,
+  sessionId,
+  escalationId,
+}: {
+  requestId: string
+  sessionId: string
+  escalationId: string
+}): Promise<void> {
+  const timestamp = nowIso()
+
+  const doc = await getContextDoc(escalationId)
+  if (!doc) {
+    throw new Error(`Escalation context doc not found: ${escalationId}`)
+  }
+  const recipients = await Promise.all(
+    (doc.recipients ?? []).map(async recipient => ({
+      type: recipient.type,
+      label: await resolveRecipientLabel(recipient),
+    }))
+  )
+
+  await appendAction(
+    requestId,
+    {
+      type: "escalation_raised",
+      escalationId,
+      recipients,
+      sessionId,
+    },
+    timestamp
+  )
+}
+
+export async function recordEscalationResolved({
+  requestId,
+  escalationId,
+  outcome,
+  sessionId,
+}: {
+  requestId: string
+  escalationId: string
+  outcome: EscalationResolvedAction["outcome"]
+  sessionId?: string
+}): Promise<void> {
+  await appendAction(requestId, {
+    type: "escalation_resolved",
+    escalationId,
+    outcome,
+    sessionId,
+  })
+}
+
 export async function recordToolCall({
   requestId,
   agentId,
@@ -320,6 +380,35 @@ export async function recordToolCall({
   input?: unknown
   output?: unknown
 }): Promise<void> {
+  if (toolName === ESCALATE_TOOL_NAME && status === "success") {
+    const escalationOutput = output as
+      | { status?: string; escalationId?: string }
+      | undefined
+    if (
+      escalationOutput?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+      escalationOutput.escalationId
+    ) {
+      try {
+        await recordEscalationRaised({
+          requestId,
+          sessionId,
+          escalationId: escalationOutput.escalationId,
+        })
+        return
+      } catch (error) {
+        console.error(
+          "Failed to record escalation_raised action, falling back to a generic tool_call",
+          {
+            agentId,
+            sessionId,
+            escalationId: escalationOutput.escalationId,
+            error,
+          }
+        )
+      }
+    }
+  }
+
   // Save the action up front so the timeline shows it via readableName/
   // toolName while the LLM summary is still generating. Call sites on the
   // agent runtime's hot path deliberately fire-and-forget this promise so the
@@ -335,7 +424,7 @@ export async function recordToolCall({
     return
   }
 
-  let summary: string
+  let summary: string | undefined
   try {
     summary = await generateToolCallSummary({
       toolName,

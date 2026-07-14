@@ -57,11 +57,18 @@ export interface EscalationRaisedAction extends AgentRequestActionBase {
   }>
 }
 
+export interface EscalationResolvedAction extends AgentRequestActionBase {
+  type: "escalation_resolved"
+  escalationId: string
+  outcome: "approved" | "rejected" | "expired"
+}
+
 export type AgentRequestAction =
   | UserMessageAction
   | StatusChangedAction
   | ToolCallAction
   | EscalationRaisedAction
+  | EscalationResolvedAction
 
 export interface AgentRequest extends Document {
   title?: string
