@@ -6,6 +6,7 @@
     AgentRequest,
     AgentRequestAction,
     AgentRequestStatus,
+    EscalationResolvedAction,
   } from "@budibase/types"
   import dayjs from "dayjs"
   import { fly } from "svelte/transition"
@@ -27,6 +28,15 @@
     failed: "Failed",
   }
 
+  const escalationOutcomeLabel: Record<
+    EscalationResolvedAction["outcome"],
+    string
+  > = {
+    approved: "Escalation approved",
+    rejected: "Escalation rejected",
+    expired: "Escalation expired without a response",
+  }
+
   const formatActionLabel = (action: AgentRequestAction): string => {
     switch (action.type) {
       case "user_message":
@@ -34,11 +44,13 @@
       case "status_changed":
         return `Status changed to ${statusChangedLabelByStatus[action.to]}`
       case "tool_call":
-        return action.readableName || action.toolName
+        return action.summary || action.readableName || action.toolName
       case "escalation_raised":
         return action.recipients.length
           ? `Escalated to ${action.recipients.map(r => r.label).join(", ")}`
           : "Escalated"
+      case "escalation_resolved":
+        return escalationOutcomeLabel[action.outcome]
       default:
         throw action satisfies never
     }
