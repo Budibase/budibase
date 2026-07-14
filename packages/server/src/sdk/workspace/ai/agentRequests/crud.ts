@@ -31,6 +31,7 @@ import {
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
+const MAX_CONFLICT_RETRIES = 3
 
 const nowIso = () => new Date().toISOString()
 
@@ -223,7 +224,7 @@ async function appendAction(
 ): Promise<AgentRequestAction | undefined> {
   const db = context.getWorkspaceDB()
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
     const request = await db.tryGet<AgentRequest>(requestId)
     if (!request) {
       return
@@ -243,7 +244,10 @@ async function appendAction(
       })
       return fullAction
     } catch (err) {
-      if (dbCore.isDocumentConflictError(err) && attempt < 2) {
+      if (
+        dbCore.isDocumentConflictError(err) &&
+        attempt < MAX_CONFLICT_RETRIES - 1
+      ) {
         continue
       }
       throw err
@@ -265,7 +269,7 @@ async function refineToolCallActionSummary({
 }): Promise<void> {
   const db = context.getWorkspaceDB()
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
     const latest = await db.tryGet<AgentRequest>(requestId)
     if (!latest) {
       return
@@ -283,7 +287,7 @@ async function refineToolCallActionSummary({
       return
     } catch (err) {
       if (dbCore.isDocumentConflictError(err)) {
-        if (attempt < 2) {
+        if (attempt < MAX_CONFLICT_RETRIES - 1) {
           continue
         }
         // Best-effort upgrade - concurrent writers winning repeatedly is an
@@ -595,7 +599,7 @@ export async function updateRequestStatus({
   const db = context.getWorkspaceDB()
 
   // Retries on conflict since createOrUpdateRequestForPrompt writes to the same document concurrently.
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
     const request = await db.tryGet<AgentRequest>(requestId)
     if (!request) {
       return
@@ -656,7 +660,10 @@ export async function updateRequestStatus({
       })
       return
     } catch (err) {
-      if (dbCore.isDocumentConflictError(err) && attempt < 2) {
+      if (
+        dbCore.isDocumentConflictError(err) &&
+        attempt < MAX_CONFLICT_RETRIES - 1
+      ) {
         continue
       }
       throw err
