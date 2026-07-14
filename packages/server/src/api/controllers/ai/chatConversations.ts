@@ -190,6 +190,64 @@ const buildEscalateToolCallHandler =
     }
   }
 
+const buildToolCallTrackingHandler = ({
+  trackingHandle,
+  agentId,
+  sessionId,
+  toolDisplayNames,
+}: {
+  trackingHandle: AgentRequestTrackingHandle
+  agentId: string
+  sessionId: string
+  toolDisplayNames: Record<string, string>
+}) => {
+  // recordToolCall awaits an LLM summary internally, and the runtime awaits
+  // onToolCallCompleted between steps. Returning its promise would stall
+  // every step on that summary. Instead, chain the calls in the background
+  // (preserving completion order) and let finalization flush() the tail
+  // before writing the terminal status.
+  let chain = Promise.resolve()
+
+  const onToolCallCompleted = ({
+    toolName,
+    status,
+    input,
+    output,
+  }: {
+    toolName: string
+    status: "success" | "error"
+    input?: unknown
+    output?: unknown
+  }) => {
+    if (!trackingHandle) {
+      return
+    }
+    chain = chain.then(() =>
+      sdk.ai.agentRequests
+        .recordToolCall({
+          requestId: trackingHandle.requestId,
+          agentId,
+          sessionId,
+          toolName,
+          status,
+          readableName: toolDisplayNames[toolName],
+          input,
+          output,
+        })
+        .catch(error => {
+          console.error("Failed to record agent request tool call", {
+            agentId,
+            sessionId,
+            toolName,
+            error,
+          })
+        })
+    )
+  }
+
+  return { onToolCallCompleted, flush: () => chain }
+}
+
 const markAgentRequestFailed = async ({
   trackingHandle,
   agentId,
@@ -225,25 +283,34 @@ const finalizeAgentRequestTracking = async ({
   sessionId,
   toolCallsIncomplete,
   unrecoveredToolFailures,
+  finalResponse,
 }: {
   trackingHandle: AgentRequestTrackingHandle
   agentId: string
   sessionId: string
   toolCallsIncomplete: boolean
   unrecoveredToolFailures: Set<string>
+  finalResponse: string
 }) => {
   if (!trackingHandle) {
     return
   }
-  const { status, error } = sdk.ai.agentRequests.resolveFinalRequestStatus({
+  const outcome = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+    requestId: trackingHandle.requestId,
+    agentId,
+    sessionId,
     toolCallsIncomplete,
     unrecoveredToolFailures,
+    finalResponse,
   })
+  if (!outcome) {
+    return
+  }
   await sdk.ai.agentRequests
     .updateRequestStatus({
       requestId: trackingHandle.requestId,
-      status,
-      ...(error !== undefined ? { error } : {}),
+      status: outcome.status,
+      ...(outcome.error !== undefined ? { error: outcome.error } : {}),
     })
     .catch(updateError => {
       console.error("Failed to update agent request status on finish", {
@@ -558,6 +625,12 @@ export async function webhookChat({
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
+  const toolCallTracking = buildToolCallTrackingHandler({
+    trackingHandle,
+    agentId,
+    sessionId,
+    toolDisplayNames: run.toolDisplayNames,
+  })
 
   const result = await run.stream({
     pendingToolCalls,
@@ -567,6 +640,7 @@ export async function webhookChat({
       agentId,
       sessionId,
     }),
+    onToolCallCompleted: toolCallTracking.onToolCallCompleted,
   })
 
   const uiMessageStream = result.toUIMessageStream({
@@ -613,6 +687,7 @@ export async function webhookChat({
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
+    await toolCallTracking.flush()
     await markAgentRequestFailed({
       trackingHandle,
       agentId,
@@ -640,6 +715,7 @@ export async function webhookChat({
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
+    await toolCallTracking.flush()
     await markAgentRequestFailed({
       trackingHandle,
       agentId,
@@ -660,6 +736,7 @@ export async function webhookChat({
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(responseResult.reason),
     })
+    await toolCallTracking.flush()
     await markAgentRequestFailed({
       trackingHandle,
       agentId,
@@ -688,12 +765,14 @@ export async function webhookChat({
     pendingToolCalls.size > 0 ||
     (finishReasonResult.status === "fulfilled" &&
       finishReasonResult.value === "tool-calls")
+  await toolCallTracking.flush()
   await finalizeAgentRequestTracking({
     trackingHandle,
     agentId,
     sessionId,
     toolCallsIncomplete,
     unrecoveredToolFailures,
+    finalResponse: assistantText,
   })
 
   return {
@@ -750,6 +829,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const pendingToolCalls = new Set<string>()
     const unrecoveredToolFailures = new Set<string>()
     const streamResult = { toolCallsIncomplete: false }
+    const toolCallTracking = buildToolCallTrackingHandler({
+      trackingHandle,
+      agentId,
+      sessionId,
+      toolDisplayNames: run.toolDisplayNames,
+    })
 
     const result = await run.stream({
       pendingToolCalls,
@@ -759,6 +844,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         agentId,
         sessionId,
       }),
+      onToolCallCompleted: toolCallTracking.onToolCallCompleted,
     })
 
     const title = run.latestQuestion
@@ -852,33 +938,41 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         await run.sessionLogIndexer.index()
         events.action.aiAgentExecuted({ agentId })
 
-        await finalizeAgentRequestTracking({
+        await toolCallTracking.flush()
+
+        const finalAssistantMessage = [...messages]
+          .reverse()
+          .find(message => message.role === "assistant")
+        // Involves an LLM call to judge the outcome. Kick it off now, but don't
+        // make saving the conversation wait behind it.
+        const finalizeTask = finalizeAgentRequestTracking({
           trackingHandle,
           agentId,
           sessionId,
           toolCallsIncomplete: streamResult.toolCallsIncomplete,
           unrecoveredToolFailures,
+          finalResponse: getAssistantMessageText(finalAssistantMessage),
         })
 
-        if (chat.transient || !chatAppId) {
-          return
+        if (!chat.transient && chatAppId) {
+          const existingChat = chat._id
+            ? await db.tryGet<ChatConversation>(chat._id)
+            : null
+
+          const chatToSave = prepareChatConversationForSave({
+            chatId,
+            chatAppId,
+            userId,
+            title,
+            messages,
+            chat,
+            existingChat,
+          })
+
+          await db.put(chatToSave)
         }
 
-        const existingChat = chat._id
-          ? await db.tryGet<ChatConversation>(chat._id)
-          : null
-
-        const chatToSave = prepareChatConversationForSave({
-          chatId,
-          chatAppId,
-          userId,
-          title,
-          messages,
-          chat,
-          existingChat,
-        })
-
-        await db.put(chatToSave)
+        await finalizeTask
       },
       consumeSseStream: consumeStream,
       sendReasoning: true,
