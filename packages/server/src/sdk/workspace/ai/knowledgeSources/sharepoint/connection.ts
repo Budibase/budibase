@@ -18,6 +18,7 @@ const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 const RETRY_DELAYS_MS = [500, 1500, 3000]
+export const MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES = 100 * 1024 * 1024
 
 const parseRetryAfterMs = (value: string | null): number | undefined => {
   if (!value) {
@@ -516,6 +517,8 @@ const escapeCsvCell = (value: unknown) => {
     : normalized
 }
 
+const buildCsvRow = (row: unknown[]) => row.map(escapeCsvCell).join(",")
+
 const getUniqueColumnLabels = (columns: SharePointColumn[]) => {
   const reserved = new Set([
     "SharePoint Item ID",
@@ -537,20 +540,14 @@ const getUniqueColumnLabels = (columns: SharePointColumn[]) => {
 export const fetchSharePointListDocument = async (
   bearerToken: string,
   siteId: string,
-  listId: string
+  listId: string,
+  maxSizeBytes = MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES
 ): Promise<SharePointListDocument> => {
-  const [columnPages, itemPages] = await Promise.all([
-    fetchSharePointCollection<SharePointColumnResponse>(
-      "listSharePointColumns",
-      `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/columns?$top=200&$select=name,displayName,hidden`,
-      bearerToken
-    ),
-    fetchSharePointCollection<SharePointListItemsResponse>(
-      "listSharePointItems",
-      `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/items?$top=200&$expand=fields`,
-      bearerToken
-    ),
-  ])
+  const columnPages = await fetchSharePointCollection<SharePointColumnResponse>(
+    "listSharePointColumns",
+    `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/columns?$top=200&$select=name,displayName,hidden`,
+    bearerToken
+  )
 
   const columns = getUniqueColumnLabels(
     columnPages
@@ -565,28 +562,78 @@ export const fetchSharePointListDocument = async (
       }))
       .sort((a, b) => a.name.localeCompare(b.name))
   )
-  const items = itemPages
-    .flatMap(page => page.value || [])
-    .filter(item => !!item.id)
-    .sort((a, b) => a.id!.localeCompare(b.id!))
-  const rows = [
-    [
-      "SharePoint Item ID",
-      "Created",
-      "Modified",
-      "Web URL",
-      ...columns.map(column => column.displayName),
-    ],
-    ...items.map(item => [
-      item.id,
-      item.createdDateTime,
-      item.lastModifiedDateTime,
-      item.webUrl,
-      ...columns.map(column => item.fields?.[column.name]),
-    ]),
-  ]
-  const csv = rows.map(row => row.map(escapeCsvCell).join(",")).join("\n")
-  return { buffer: Buffer.from(csv, "utf8"), itemCount: items.length }
+
+  const chunks: Uint8Array<ArrayBuffer>[] = []
+  let totalBytes = 0
+  let itemCount = 0
+  let isFirstRow = true
+
+  const appendCsvRow = (row: unknown[]) => {
+    const line = `${isFirstRow ? "" : "\n"}${buildCsvRow(row)}`
+    const chunk = Buffer.from(line, "utf8")
+    const nextTotalBytes = totalBytes + chunk.byteLength
+    if (nextTotalBytes > maxSizeBytes) {
+      throw new HTTPError(
+        "Generated SharePoint list CSV exceeds the 100 MB knowledge file limit",
+        400
+      )
+    }
+    chunks.push(chunk as Uint8Array<ArrayBuffer>)
+    totalBytes = nextTotalBytes
+    isFirstRow = false
+  }
+
+  appendCsvRow([
+    "SharePoint Item ID",
+    "Created",
+    "Modified",
+    "Web URL",
+    ...columns.map(column => column.displayName),
+  ])
+
+  let nextLink = `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/items?$top=200&$expand=fields`
+
+  while (nextLink) {
+    const response = await requestWithRetries("listSharePointItems", () =>
+      fetch(nextLink, {
+        headers: { Authorization: bearerToken },
+      })
+    )
+    if (!response.ok) {
+      throw new HTTPError(
+        response.status === 401 || response.status === 403
+          ? "Access denied by Microsoft Graph. Ensure SharePoint read permissions are granted."
+          : `Failed to fetch SharePoint list data (${response.status})`,
+        400
+      )
+    }
+
+    const page = (await response.json()) as SharePointListItemsResponse
+    for (const item of page.value || []) {
+      if (!item.id) {
+        continue
+      }
+      appendCsvRow([
+        item.id,
+        item.createdDateTime,
+        item.lastModifiedDateTime,
+        item.webUrl,
+        ...columns.map(column => item.fields?.[column.name]),
+      ])
+      itemCount++
+    }
+
+    const nextPageLink = page["@odata.nextLink"]
+    if (!nextPageLink) {
+      nextLink = ""
+    } else if (!isAllowedSharePointNextLink(nextPageLink)) {
+      throw new HTTPError("Invalid SharePoint pagination URL", 400)
+    } else {
+      nextLink = nextPageLink
+    }
+  }
+
+  return { buffer: Buffer.concat(chunks, totalBytes), itemCount }
 }
 
 const listSharePointDriveItems = async (

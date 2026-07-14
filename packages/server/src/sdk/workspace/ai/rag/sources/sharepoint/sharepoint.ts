@@ -38,6 +38,7 @@ import {
   getSharePointBearerToken,
   listSharePointDrives,
   listSharePointLists,
+  MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES,
 } from "../../../knowledgeSources/sharepoint"
 import { findOperationIdForKnowledgeSource } from "../../../agents/knowledgeConfig"
 import {
@@ -213,7 +214,7 @@ const isSharePointListIncluded = (
 }
 
 const getSharePointListContentHash = (buffer: Buffer) =>
-  createHash("sha256").update(buffer.toString("base64")).digest("hex")
+  createHash("sha256").update(buffer as Uint8Array<ArrayBuffer>).digest("hex")
 
 const getSharePointListFilename = (
   siteName: string | undefined,
@@ -227,8 +228,6 @@ const getSharePointListFilename = (
     .trim()
   return `${readableName || "SharePoint list"} (${listId.slice(-8)}).csv`
 }
-
-const MAX_GENERATED_LIST_SIZE_BYTES = 100 * 1024 * 1024
 
 type SharePointFileMetadataFingerprint = {
   etag?: string
@@ -787,7 +786,8 @@ const runSharePointSourcesForOperation = async (
         const document = await fetchSharePointListDocument(
           bearerToken,
           siteId,
-          list.id
+          list.id,
+          MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES
         )
         const contentHash = getSharePointListContentHash(document.buffer)
 
@@ -808,7 +808,9 @@ const runSharePointSourcesForOperation = async (
           continue
         }
 
-        if (document.buffer.byteLength > MAX_GENERATED_LIST_SIZE_BYTES) {
+        if (
+          document.buffer.byteLength > MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES
+        ) {
           failed++
           syncErrors.push(
             `SharePoint list ${list.name} exceeds the 100 MB knowledge file limit`

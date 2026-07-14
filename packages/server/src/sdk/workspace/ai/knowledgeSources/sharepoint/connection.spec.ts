@@ -110,7 +110,7 @@ describe("SharePoint lists", () => {
     ])
   })
 
-  it("builds deterministic CSV from visible columns and list items", async () => {
+  it("builds CSV from visible columns and list items", async () => {
     jest.spyOn(globalThis, "fetch").mockImplementation(async input => {
       const url = input.toString()
       if (url.includes("/columns")) {
@@ -154,10 +154,48 @@ describe("SharePoint lists", () => {
     expect(document.buffer.toString()).toBe(
       [
         "SharePoint Item ID,Created,Modified,Web URL,Details,Title",
-        '1,,,,"{""a"":1,""b"":2}",First',
         '2,,,,"[""a"",""b""]",Second',
+        '1,,,,"{""a"":1,""b"":2}",First',
       ].join("\n")
     )
+  })
+
+  it("rejects generated list CSVs while paging when they exceed the size limit", async () => {
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async input => {
+        const url = input.toString()
+        if (url.includes("/columns")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              value: [{ name: "Title", displayName: "Title", hidden: false }],
+            }),
+          } as Response
+        }
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "1",
+                fields: { Title: "x".repeat(100) },
+              },
+            ],
+            "@odata.nextLink": `${url}&skiptoken=next`,
+          }),
+        } as Response
+      })
+
+    await expect(
+      fetchSharePointListDocument("Bearer token", "site-1", "list-1", 80)
+    ).rejects.toThrow(
+      "Generated SharePoint list CSV exceeds the 100 MB knowledge file limit"
+    )
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
 
