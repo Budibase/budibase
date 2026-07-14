@@ -17,7 +17,7 @@ import {
   SQLiteDefinition,
   SqlQueryBinding,
 } from "@budibase/types"
-import { getCouchInfo, getUrlInfo } from "./connections"
+import { getCouchInfo, parseCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { ReadStream, WriteStream } from "fs"
@@ -38,22 +38,6 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
       },
     },
     parseUrl: false,
-  })
-}
-
-function buildExternalNano(urlInfo: {
-  url: string
-  auth: { username?: string; password?: string }
-}) {
-  if (!urlInfo.auth.username || !urlInfo.auth.password) {
-    throw new Error("External CouchDB connection must include credentials")
-  }
-  const authCookie = Buffer.from(
-    `${urlInfo.auth.username}:${urlInfo.auth.password}`
-  ).toString("base64")
-  return buildNano({
-    url: urlInfo.url!,
-    cookie: `Basic ${authCookie}`,
   })
 }
 
@@ -121,19 +105,8 @@ export class DatabaseImpl implements Database {
     this.name = dbName
     this.pouchOpts = opts || {}
     if (connection) {
-      const urlInfo = getUrlInfo(connection)
-      if (!urlInfo.url) {
-        throw new Error(
-          "Unable to create database without a valid connection URL"
-        )
-      }
-      this.couchInfo = {
-        url: urlInfo.url,
-        auth: urlInfo.auth,
-        sqlUrl: undefined,
-        cookie: "",
-      }
-      this.instanceNano = buildExternalNano(this.couchInfo)
+      this.couchInfo = parseCouchInfo(connection)
+      this.instanceNano = buildNano(this.couchInfo)
     }
     if (!DatabaseImpl.nano) {
       DatabaseImpl.init()

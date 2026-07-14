@@ -62,7 +62,7 @@ describe("DatabaseImpl", () => {
       })
     })
 
-    it("uses credentials from the connection string instead of env credentials", async () => {
+    it("does not leak env credentials into external connection strings", async () => {
       await withEnv(
         {
           COUCH_DB_USERNAME: "env-user",
@@ -82,7 +82,7 @@ describe("DatabaseImpl", () => {
       )
     })
 
-    it("requires credentials in the connection string for external connections", async () => {
+    it("rejects external connection strings that would otherwise rely on env credentials", async () => {
       await withEnv(
         {
           COUCH_DB_USERNAME: "env-user",
@@ -96,7 +96,7 @@ describe("DatabaseImpl", () => {
                 undefined,
                 "http://example.com:5984"
               )
-          ).toThrow("External CouchDB connection must include credentials")
+          ).toThrow("CouchDB username not set")
         }
       )
     })

@@ -16,11 +16,12 @@ describe("connections", () => {
     it("should accept COUCH_DB_USERNAME for internal couch access", async () => {
       await withEnv(
         {
+          COUCH_DB_URL: "http://localhost:5984",
           COUCH_DB_USERNAME: "internal-user",
           COUCH_DB_PASSWORD: "internal-password",
         },
         async () => {
-          const response = getCouchInfo("http://localhost:5984")
+          const response = getCouchInfo()
 
           expect(response.auth.username).toBe("internal-user")
           expect(response.auth.password).toBe("internal-password")

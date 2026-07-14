@@ -1,6 +1,16 @@
 import env from "../../environment"
 
-export const getCouchInfo = (connection?: string | null) => {
+export const getCouchInfo = () => {
+  return parseCouchInfo(env.COUCH_DB_URL, {
+    user: env.COUCH_DB_USERNAME || "",
+    password: env.COUCH_DB_PASSWORD || "",
+  })
+}
+
+export const parseCouchInfo = (
+  connection: string,
+  credentials?: { user: string; password: string }
+) => {
   // clean out any auth credentials
   const urlInfo = getUrlInfo(connection)
   let username
@@ -8,19 +18,17 @@ export const getCouchInfo = (connection?: string | null) => {
   if (urlInfo.auth?.username) {
     // set from url
     username = urlInfo.auth.username
-  } else if (env.COUCH_DB_USERNAME) {
-    // set from env
-    username = env.COUCH_DB_USERNAME
-  } else if (!env.isTest()) {
+  } else if (credentials?.user) {
+    username = credentials?.user
+  } else {
     throw new Error("CouchDB username not set")
   }
   if (urlInfo.auth?.password) {
     // set from url
     password = urlInfo.auth.password
-  } else if (env.COUCH_DB_PASSWORD) {
-    // set from env
-    password = env.COUCH_DB_PASSWORD
-  } else if (!env.isTest()) {
+  } else if (credentials?.password) {
+    password = credentials?.password
+  } else {
     throw new Error("CouchDB password not set")
   }
   const authCookie = Buffer.from(`${username}:${password}`).toString("base64")
