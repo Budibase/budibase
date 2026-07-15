@@ -138,6 +138,23 @@ describe("offline", () => {
       expect(db.licenseInfo.save).not.toHaveBeenCalled()
       expect(cache.refresh).not.toHaveBeenCalled()
     })
+
+    it("propagates operational errors from the installation lookup without persisting it", async () => {
+      offlineLicense.expireAt = new Date(
+        Date.now() + expiryOffsetMs
+      ).toISOString()
+      signing.verifyLicenseToken.mockReturnValue(offlineLicense)
+      installation.getInstall.mockRejectedValue(new Error("connection reset"))
+
+      await expect(offline.activateOfflineLicenseToken(token)).rejects.toThrow(
+        "connection reset"
+      )
+      await expect(
+        offline.activateOfflineLicenseToken(token)
+      ).rejects.not.toHaveProperty("status")
+      expect(db.licenseInfo.save).not.toHaveBeenCalled()
+      expect(cache.refresh).not.toHaveBeenCalled()
+    })
   })
 
   describe("deleteOfflineLicenseToken", () => {

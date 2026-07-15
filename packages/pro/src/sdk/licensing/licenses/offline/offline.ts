@@ -73,6 +73,8 @@ export function verifyExpiry(license: OfflineLicense) {
   }
 }
 
+export class OfflineLicenseMismatchError extends Error {}
+
 export async function verifyInstallation(license: OfflineLicense) {
   const identifier = await getIdentifier()
   if (
@@ -80,7 +82,7 @@ export async function verifyInstallation(license: OfflineLicense) {
     license.identifier.tenantId !== identifier.tenantId
   ) {
     // be intentionally vague
-    throw new Error("Invalid offline license")
+    throw new OfflineLicenseMismatchError("Invalid offline license")
   }
 }
 
@@ -115,8 +117,14 @@ export async function verifyOfflineLicenseToken(
 
   try {
     await verifyInstallation(license)
-  } catch {
-    throw new HTTPError("Offline license does not match this installation", 400)
+  } catch (e) {
+    if (e instanceof OfflineLicenseMismatchError) {
+      throw new HTTPError(
+        "Offline license does not match this installation",
+        400
+      )
+    }
+    throw e
   }
 
   return license
