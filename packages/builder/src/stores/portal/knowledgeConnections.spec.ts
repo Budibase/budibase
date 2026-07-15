@@ -8,12 +8,28 @@ import {
 } from "@budibase/types"
 import { deriveKnowledgeConnections } from "./knowledgeConnectionsUtils"
 
-const sharePointDatasource = (authConfigs: RestAuthConfig[]): Datasource => ({
+const sharePointDatasource = (
+  authConfigs: RestAuthConfig[],
+  template: Pick<Datasource, "restTemplate" | "restTemplateId"> = {
+    restTemplateId: "microsoft-sharepoint",
+  }
+): Datasource => ({
   _id: "datasource_1",
   type: "datasource",
   source: SourceName.REST,
-  restTemplateId: "microsoft-sharepoint",
+  ...template,
   config: { authConfigs },
+})
+
+const clientCredentialsAuthConfig = (): RestAuthConfig => ({
+  _id: "auth_1",
+  name: "Agent Knowledge",
+  type: RestAuthType.OAUTH2,
+  url: "https://login.microsoftonline.com/tenant/oauth2/v2.0/token",
+  clientId: "client-id",
+  clientSecret: "client-secret",
+  method: OAuth2CredentialsMethod.BODY,
+  grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
 })
 
 describe("deriveKnowledgeConnections", () => {
@@ -35,18 +51,7 @@ describe("deriveKnowledgeConnections", () => {
 
   it("returns OAuth2 client credentials as compatible connections", () => {
     const result = deriveKnowledgeConnections([
-      sharePointDatasource([
-        {
-          _id: "auth_1",
-          name: "Agent Knowledge",
-          type: RestAuthType.OAUTH2,
-          url: "https://login.microsoftonline.com/tenant/oauth2/v2.0/token",
-          clientId: "client-id",
-          clientSecret: "client-secret",
-          method: OAuth2CredentialsMethod.BODY,
-          grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-        },
-      ]),
+      sharePointDatasource([clientCredentialsAuthConfig()]),
     ])
 
     expect(result.connections).toEqual([
@@ -55,5 +60,28 @@ describe("deriveKnowledgeConnections", () => {
         authConfigId: "auth_1",
       }),
     ])
+  })
+
+  it.each([
+    {
+      name: "legacy template name",
+      template: { restTemplate: "SharePoint Sites" },
+    },
+    {
+      name: "legacy child template ID",
+      template: { restTemplateId: "microsoft-sharepoint-sites" as const },
+    },
+  ])("supports a $name", ({ template }) => {
+    const result = deriveKnowledgeConnections([
+      sharePointDatasource([clientCredentialsAuthConfig()], template),
+    ])
+
+    expect(result.connections).toEqual([
+      expect.objectContaining({
+        datasourceId: "datasource_1",
+        authConfigId: "auth_1",
+      }),
+    ])
+    expect(result.sharePointDatasourceIds).toEqual(["datasource_1"])
   })
 })

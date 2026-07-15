@@ -4,6 +4,19 @@ import {
   isOAuth2ClientCredentialsAuthConfig,
 } from "@budibase/types"
 
+import { restTemplates } from "@/stores/builder/restTemplates"
+
+const SHAREPOINT_TEMPLATE_ID = "microsoft-sharepoint"
+
+const isSharePointDatasource = (datasource: Datasource) => {
+  const templateRef = datasource.restTemplateId || datasource.restTemplate
+  const templateId = restTemplates.get(templateRef)?.id
+
+  return templateId
+    ? restTemplates.getById(templateId)?.id === SHAREPOINT_TEMPLATE_ID
+    : false
+}
+
 export interface KnowledgeConnection {
   _id: string
   datasourceId: string
@@ -22,11 +35,7 @@ export interface KnowledgeConnectionsState {
 export const deriveKnowledgeConnections = (
   list: Datasource[]
 ): KnowledgeConnectionsState => {
-  const sharePointDatasources = list.filter(
-    datasource =>
-      (datasource.restTemplateId || datasource.restTemplate) ===
-      "microsoft-sharepoint"
-  )
+  const sharePointDatasources = list.filter(isSharePointDatasource)
   const connections = sharePointDatasources.flatMap(datasource => {
     const authConfigs = (datasource.config?.authConfigs ||
       []) as RestAuthConfig[]
