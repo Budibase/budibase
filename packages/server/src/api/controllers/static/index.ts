@@ -334,7 +334,7 @@ export async function processPWAZip(ctx: UserCtx) {
     ctx.throw(400, "Invalid file - must be a zip file")
   }
 
-  const tempDir = join(tmpdir(), `pwa-${Date.now()}`)
+  const tempDir = await fsp.mkdtemp(join(tmpdir(), "pwa-"))
   try {
     await fsp.mkdir(tempDir, { recursive: true })
 

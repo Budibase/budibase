@@ -340,6 +340,54 @@ describe("/static", () => {
       await fsp.rm(tempDir, { recursive: true, force: true })
     })
 
+    it("uses a unique temp directory for each concurrent request", async () => {
+      const capturedDirs: string[] = []
+      const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(1000)
+
+      mockedExtract.mockImplementation(async (_zipPath: string, opts: any) => {
+        capturedDirs.push(opts.dir)
+        await fsp.mkdir(opts.dir, { recursive: true })
+        await fsp.writeFile(
+          path.join(opts.dir, "icons.json"),
+          JSON.stringify({
+            icons: [
+              {
+                src: "icon-192.png",
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          })
+        )
+        await fsp.writeFile(
+          path.join(opts.dir, "icon-192.png"),
+          "fake-png-data"
+        )
+      })
+      mockedUpload.mockResolvedValue({
+        Key: "app_prod_test123/pwa/some-uuid.png",
+      } as any)
+
+      try {
+        const [firstResponse, secondResponse] = await Promise.all([
+          request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders()),
+          request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders()),
+        ])
+
+        expect(firstResponse.status).toEqual(200)
+        expect(secondResponse.status).toEqual(200)
+        expect(new Set(capturedDirs)).toHaveLength(2)
+      } finally {
+        dateNowSpy.mockRestore()
+      }
+    })
+
     describe("path traversal prevention", () => {
       it("skips icons whose src attempts to escape the zip directory via ../ traversal", async () => {
         const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
