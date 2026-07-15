@@ -230,7 +230,6 @@
             value={offlineLicense}
             on:change={onOfflineLicenseChange}
             allowClear={true}
-            disabled={!!offlineLicense}
           />
         </div>
       </Layout>
