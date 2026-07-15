@@ -94,7 +94,9 @@ const validatePWAZipEntries = () => {
       return
     }
 
-    const depth = entry.fileName.split("/").filter(Boolean).length
+    const depth =
+      entry.fileName.split("/").filter(Boolean).length -
+      (entry.fileName.endsWith("/") ? 0 : 1)
     if (depth > MAX_PWA_ZIP_DEPTH) {
       throw new BadRequestError(
         `Invalid zip - directory depth exceeds ${MAX_PWA_ZIP_DEPTH}`
