@@ -3531,15 +3531,24 @@ if (descriptions.length) {
 
             await config.api.table.save(primaryOrderTable1)
 
-            const table2_row1 = await config.api.row.save(primaryOrderTable2._id!, {
-              name: "one",
-            })
-            const table2_row2 = await config.api.row.save(primaryOrderTable2._id!, {
-              name: "two",
-            })
-            const table2_row3 = await config.api.row.save(primaryOrderTable2._id!, {
-              name: "three",
-            })
+            const table2_row1 = await config.api.row.save(
+              primaryOrderTable2._id!,
+              {
+                name: "one",
+              }
+            )
+            const table2_row2 = await config.api.row.save(
+              primaryOrderTable2._id!,
+              {
+                name: "two",
+              }
+            )
+            const table2_row3 = await config.api.row.save(
+              primaryOrderTable2._id!,
+              {
+                name: "three",
+              }
+            )
 
             const row = await config.api.row.save(primaryOrderTable1._id!, {
               name: "foo",
