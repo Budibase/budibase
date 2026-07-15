@@ -212,6 +212,14 @@ describe("offline", () => {
         new Error(`Offline license has expired. expireAt=${expireAt}`)
       )
     })
+
+    it("throws when expiry is not a valid date", () => {
+      const expireAt = "not-a-date"
+      offlineLicense.expireAt = expireAt
+      expect(() => offline.verifyExpiry(offlineLicense)).toThrow(
+        new Error(`Offline license has expired. expireAt=${expireAt}`)
+      )
+    })
   })
 
   describe("verifyInstallation", () => {

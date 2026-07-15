@@ -68,7 +68,7 @@ export function getIdentifierFromBase64(
 export function verifyExpiry(license: OfflineLicense) {
   const now = Date.now()
   const expireAt = new Date(license.expireAt).getTime()
-  if (now > expireAt) {
+  if (!Number.isFinite(expireAt) || now > expireAt) {
     throw new Error(`Offline license has expired. expireAt=${license.expireAt}`)
   }
 }
