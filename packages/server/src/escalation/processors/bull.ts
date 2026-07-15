@@ -159,6 +159,17 @@ export class BullEscalationProcessor implements IEscalationProcessor {
         console.log("Escalation resolved before resume job was enqueued", {
           escalationId,
         })
+        await addEscalationJob(
+          {
+            phase: "waiting",
+            escalationId,
+            appId: doc.appId,
+            tenantId: doc.tenantId,
+            isTest: doc.isTest,
+          },
+          0,
+          getResumeJobId(escalationId)
+        )
       }
       return
     }
