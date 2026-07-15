@@ -8,13 +8,6 @@ import {
 import { ObjectStoreBuckets } from "../../../../constants"
 import { ingestKnowledgeBaseFile } from "./files"
 import { knowledgeBase } from ".."
-import {
-  isQueueJobCancelledError,
-  QUEUE_JOB_CANCELLATION_PROGRESS,
-  QueueJobCancelledError,
-  registerActiveJobController,
-  removeOrCancelJob,
-} from "./queueCancellation"
 
 const DEFAULT_CONCURRENCY = 2
 const DEFAULT_BACKOFF_MS = utils.Duration.fromSeconds(10).toMs()
@@ -29,7 +22,6 @@ export interface RagIngestionJob {
 
 let ragQueue: queue.BudibaseQueue<RagIngestionJob> | undefined
 let ragQueueInitialised = false
-const activeJobControllers = new Map<string, AbortController>()
 
 export function getQueue() {
   if (!ragQueue) {
@@ -54,16 +46,6 @@ export function getQueue() {
         }),
       }
     )
-    ragQueue
-      .getBullQueue()
-      .on("global:progress", (jobId: string, progress: string) => {
-        if (progress !== QUEUE_JOB_CANCELLATION_PROGRESS) {
-          return
-        }
-        activeJobControllers
-          .get(String(jobId))
-          ?.abort(new QueueJobCancelledError())
-      })
   }
 
   return ragQueue
@@ -79,7 +61,6 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
     return getQueue().process(concurrency, async job => {
       const { workspaceId, knowledgeBaseId, fileId, objectStoreKey } = job.data
       const startedAtMs = Date.now()
-      const controller = registerActiveJobController(job, activeJobControllers)
       console.log("Starting RAG ingestion queue job", {
         workspaceId,
         knowledgeBaseId,
@@ -89,45 +70,31 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
         attemptsMade: job.attemptsMade,
         attempts: job.opts.attempts,
       })
-      try {
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          let knowledgeBaseConfig: KnowledgeBase | undefined
-          let knowledgeBaseFile: KnowledgeBaseFile | undefined
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        let knowledgeBaseConfig: KnowledgeBase | undefined
+        let knowledgeBaseFile: KnowledgeBaseFile | undefined
 
-          knowledgeBaseConfig = await knowledgeBase.find(knowledgeBaseId)
-          if (!knowledgeBaseConfig) {
-            console.log(
-              "Discarding RAG ingestion queue job: knowledge base missing",
-              {
-                workspaceId,
-                knowledgeBaseId,
-                fileId,
-                jobId: job.id,
-              }
-            )
-            await job.discard()
-            return
-          }
-
-          try {
-            knowledgeBaseFile =
-              await knowledgeBase.getKnowledgeBaseFileOrThrow(fileId)
-          } catch (error: any) {
-            if (error?.status === 404) {
-              console.log("Discarding RAG ingestion queue job: file missing", {
-                workspaceId,
-                knowledgeBaseId,
-                fileId,
-                jobId: job.id,
-              })
-              await job.discard()
-              return
+        knowledgeBaseConfig = await knowledgeBase.find(knowledgeBaseId)
+        if (!knowledgeBaseConfig) {
+          console.log(
+            "Discarding RAG ingestion queue job: knowledge base missing",
+            {
+              workspaceId,
+              knowledgeBaseId,
+              fileId,
+              jobId: job.id,
             }
-            throw error
-          }
+          )
+          await job.discard()
+          return
+        }
 
-          if (!knowledgeBaseFile) {
-            console.log("Discarding RAG ingestion queue job: file not found", {
+        try {
+          knowledgeBaseFile =
+            await knowledgeBase.getKnowledgeBaseFileOrThrow(fileId)
+        } catch (error: any) {
+          if (error?.status === 404) {
+            console.log("Discarding RAG ingestion queue job: file missing", {
               workspaceId,
               knowledgeBaseId,
               fileId,
@@ -136,54 +103,57 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
             await job.discard()
             return
           }
+          throw error
+        }
 
-          if (!knowledgeBaseFile.objectStoreKey && objectStoreKey) {
-            knowledgeBaseFile.objectStoreKey = objectStoreKey
-          }
+        if (!knowledgeBaseFile) {
+          console.log("Discarding RAG ingestion queue job: file not found", {
+            workspaceId,
+            knowledgeBaseId,
+            fileId,
+            jobId: job.id,
+          })
+          await job.discard()
+          return
+        }
 
-          if (!knowledgeBaseFile.objectStoreKey) {
-            throw new Error("RAG file does not have an object store key")
-          }
+        if (!knowledgeBaseFile.objectStoreKey && objectStoreKey) {
+          knowledgeBaseFile.objectStoreKey = objectStoreKey
+        }
 
-          try {
-            const buffer = await loadFileBuffer(
-              knowledgeBaseFile.objectStoreKey
-            )
-            await ingestKnowledgeBaseFile(
-              knowledgeBaseConfig,
-              knowledgeBaseFile,
-              buffer,
-              controller.signal
-            )
-            console.log("Completed RAG ingestion queue job", {
-              workspaceId,
-              knowledgeBaseId,
-              fileId,
-              jobId: job.id,
-              durationMs: Date.now() - startedAtMs,
-            })
-          } catch (error: any) {
-            if (isQueueJobCancelledError(error)) {
-              await job.discard()
-              return
-            }
-            await handleProcessingError(knowledgeBaseFile, job, error)
-            console.error("RAG ingestion queue job failed", {
-              workspaceId,
-              knowledgeBaseId,
-              fileId,
-              jobId: job.id,
-              durationMs: Date.now() - startedAtMs,
-              attemptsMade: job.attemptsMade,
-              attempts: job.opts.attempts,
-              error,
-            })
-            throw error
-          }
-        })
-      } finally {
-        activeJobControllers.delete(String(job.id))
-      }
+        if (!knowledgeBaseFile.objectStoreKey) {
+          throw new Error("RAG file does not have an object store key")
+        }
+
+        try {
+          const buffer = await loadFileBuffer(knowledgeBaseFile.objectStoreKey)
+          await ingestKnowledgeBaseFile(
+            knowledgeBaseConfig,
+            knowledgeBaseFile,
+            buffer
+          )
+          console.log("Completed RAG ingestion queue job", {
+            workspaceId,
+            knowledgeBaseId,
+            fileId,
+            jobId: job.id,
+            durationMs: Date.now() - startedAtMs,
+          })
+        } catch (error: any) {
+          await handleProcessingError(knowledgeBaseFile, job, error)
+          console.error("RAG ingestion queue job failed", {
+            workspaceId,
+            knowledgeBaseId,
+            fileId,
+            jobId: job.id,
+            durationMs: Date.now() - startedAtMs,
+            attemptsMade: job.attemptsMade,
+            attempts: job.opts.attempts,
+            error,
+          })
+          throw error
+        }
+      })
     })
   } catch (e: any) {
     console.error("Error initialising the RAG ingestion queue")
@@ -202,13 +172,12 @@ export async function enqueueRagFileIngestion(job: RagIngestionJob) {
   return await getQueue().add(job, { jobId: job.fileId })
 }
 
-export async function removeRagFileIngestionJob(
-  fileId: string,
-  waitForActive = false
-): Promise<void> {
+export async function removeRagFileIngestionJob(fileId: string): Promise<void> {
   const existing = await getQueue().getBullQueue().getJob(fileId)
   if (existing) {
-    await removeOrCancelJob(existing, waitForActive)
+    await existing.remove().catch(() => {
+      // Job may have moved to active state between getJob and remove - safe to ignore
+    })
   }
 }
 

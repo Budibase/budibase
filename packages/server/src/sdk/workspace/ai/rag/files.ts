@@ -437,8 +437,7 @@ function getProcessor(kb: WithRequired<KnowledgeBase, "_id">) {
 export const ingestKnowledgeBaseFile = async (
   knowledgeBase: KnowledgeBase,
   knowledgeBaseFile: KnowledgeBaseFile,
-  fileBuffer: Buffer,
-  signal?: AbortSignal
+  fileBuffer: Buffer
 ): Promise<void> => {
   assertKnowledgeBaseHasId(knowledgeBase)
   const knowledgeBaseFileId = knowledgeBaseFile._id
@@ -447,12 +446,10 @@ export const ingestKnowledgeBaseFile = async (
   }
 
   const processor = getProcessor(knowledgeBase)
-  const input = { ...knowledgeBaseFile, _id: knowledgeBaseFileId }
-  if (signal) {
-    await processor.ingestKnowledgeBaseFile(input, fileBuffer, signal)
-  } else {
-    await processor.ingestKnowledgeBaseFile(input, fileBuffer)
-  }
+  await processor.ingestKnowledgeBaseFile(
+    { ...knowledgeBaseFile, _id: knowledgeBaseFileId },
+    fileBuffer
+  )
 }
 
 interface RetrievedContextResult {
