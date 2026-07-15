@@ -36,10 +36,20 @@ function jobToJobInformation(job: Job): JobInformation {
 export interface TestQueueMessage<T = any>
   extends Pick<
     Job<T>,
-    "id" | "timestamp" | "queue" | "data" | "opts" | "discard"
+    | "id"
+    | "timestamp"
+    | "queue"
+    | "data"
+    | "opts"
+    | "discard"
+    | "remove"
+    | "progress"
+    | "finished"
   > {
   manualTrigger?: boolean
   _isDiscarded?: boolean
+  _isActive?: boolean
+  _progress?: any
 }
 
 /**
@@ -58,6 +68,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     completed: [Job<T>, any]
     removed: [TestQueueMessage<T>]
     error: [Job<T>, Error]
+    "global:progress": [string, unknown]
   }>
   _runCount: number
   _addCount: number
@@ -96,6 +107,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       if (!message.manualTrigger && message.opts?.repeat != null) {
         return
       }
+      message._isActive = true
 
       function execute() {
         if (func.length === 1) {
@@ -144,6 +156,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         this._emitter.emit("error", message as Job<T>, e)
       }
 
+      message._isActive = false
       this._runCount++
       const jobId = message.opts?.jobId?.toString()
       if (jobId && message.opts?.removeOnComplete) {
@@ -184,7 +197,31 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       this._queuedJobIds.add(jobId)
     }
 
-    const messageId = newid()
+    const messageId = jobId || newid()
+
+    const finished = () =>
+      new Promise((resolve, reject) => {
+        const errorHandler = (job: Job<T>, error: Error) => {
+          if (job.id !== messageId) {
+            return
+          }
+          this._emitter.off("error", errorHandler)
+          this._emitter.off("completed", completedHandler)
+          reject(error)
+        }
+
+        const completedHandler = (job: Job<T>, result: any) => {
+          if (job.id !== messageId) {
+            return
+          }
+          this._emitter.off("error", errorHandler)
+          this._emitter.off("completed", completedHandler)
+          resolve(result)
+        }
+
+        this._emitter.on("error", errorHandler)
+        this._emitter.on("completed", completedHandler)
+      })
 
     const pushMessage = () => {
       const message: TestQueueMessage = {
@@ -196,6 +233,28 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         discard: async () => {
           message._isDiscarded = true
         },
+        remove: async () => {
+          if (message._isActive) {
+            throw new Error(`Could not remove job ${message.id}`)
+          }
+          const index = this._messages.indexOf(message)
+          if (index !== -1) {
+            this._messages.splice(index, 1)
+          }
+          if (jobId) {
+            this._queuedJobIds.delete(jobId)
+          }
+          this._emitter.emit("removed", message)
+        },
+        progress: (progress?: any): any => {
+          if (progress === undefined) {
+            return message._progress
+          }
+          message._progress = progress
+          this._emitter.emit("global:progress", String(message.id), progress)
+          return Promise.resolve()
+        },
+        finished,
       }
       this._messages.push(message)
       if (this._messages.length > 1000) {
@@ -213,29 +272,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     }
     return {
       id: jobId,
-      finished: () =>
-        new Promise((resolve, reject) => {
-          const errorHandler = (job: Job<T>, error: Error) => {
-            if (job.id !== messageId) {
-              return
-            }
-            this._emitter.off("error", errorHandler)
-            this._emitter.off("completed", completedHandler)
-            reject(error)
-          }
-
-          const completedHandler = (job: Job<T>, result: any) => {
-            if (job.id !== messageId) {
-              return
-            }
-            this._emitter.off("error", errorHandler)
-            this._emitter.off("completed", completedHandler)
-            resolve(result)
-          }
-
-          this._emitter.on("error", errorHandler)
-          this._emitter.on("completed", completedHandler)
-        }),
+      finished,
     } as any
   }
 
