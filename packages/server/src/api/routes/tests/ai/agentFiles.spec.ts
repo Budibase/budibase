@@ -6,6 +6,7 @@ import {
   type Agent,
   type AgentOperation,
   AgentKnowledgeSourceType,
+  AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileStatus,
   RestAuthType,
 } from "@budibase/types"
@@ -399,6 +400,43 @@ describe("agent files", () => {
     )
   })
 
+  it("queues SharePoint sync and returns accepted", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Async Sync Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    await setSharePointSourceInAgent(created._id!, ["site-1"])
+    const queueAddSpy = jest.spyOn(knowledgeSourceSyncQueue.getQueue(), "add")
+
+    const response = await config.api.agent.syncKnowledgeSources(
+      created._id!,
+      operationId,
+      "sharepoint_site_site-1",
+      undefined,
+      { status: 202 }
+    )
+
+    expect(response).toEqual({
+      agentId: created._id!,
+      sourceId: "sharepoint_site_site-1",
+      status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
+    })
+    expect(queueAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId: created._id!,
+        sourceId: "sharepoint_site_site-1",
+        jobType: "sync",
+      }),
+      expect.objectContaining({
+        jobId: expect.stringContaining("_immediate"),
+      })
+    )
+  })
+
   it("returns 400 when connecting a SharePoint site without a connected source", async () => {
     const created = await config.api.agent.createWithOperation(
       {
@@ -413,7 +451,7 @@ describe("agent files", () => {
       created._id!,
       operationId,
       {
-        siteId: "site-1",
+        site: { id: "site-1" },
         datasourceId: "datasource-1",
         authConfigId: "auth-1",
       },
@@ -423,6 +461,115 @@ describe("agent files", () => {
           message: "SharePoint auth config not found.",
         },
       }
+    )
+  })
+
+  it("persists submitted SharePoint metadata when the site listing omits the selected site", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Site Metadata Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    const connection = await setSharePointConnection(created._id!)
+    mockSharePointOAuthTokenFetch(2)
+    mockSharePointSitesFetch([], 2)
+
+    await config.api.agent.connectSharePointSite(created._id!, operationId, {
+      ...connection,
+      site: {
+        id: "contoso.sharepoint.com,site-id,web-id",
+        name: "Product Documentation",
+        webUrl: "https://example.com/sites/product-documentation",
+      },
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const updated = await db.tryGet<Agent>(created._id!)
+      const source = updated?.operations
+        ?.find(operation => operation.id === operationId)
+        ?.knowledgeSources?.find(
+          source => source.type === AgentKnowledgeSourceType.SHAREPOINT
+        )
+
+      expect(source?.config.site).toEqual({
+        id: "contoso.sharepoint.com,site-id,web-id",
+        name: "Product Documentation",
+        webUrl: "https://example.com/sites/product-documentation",
+      })
+    })
+  })
+
+  it("prefers current SharePoint metadata over submitted metadata", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Current Metadata Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    const connection = await setSharePointConnection(created._id!)
+    mockSharePointOAuthTokenFetch(2)
+    mockSharePointSitesFetch(
+      [
+        {
+          id: "site-1",
+          displayName: "Current Site Name",
+          webUrl: "https://example.com/sites/current",
+        },
+      ],
+      2
+    )
+
+    await config.api.agent.connectSharePointSite(created._id!, operationId, {
+      ...connection,
+      site: {
+        id: "site-1",
+        name: "Stale Site Name",
+        webUrl: "https://example.com/sites/stale",
+      },
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const updated = await db.tryGet<Agent>(created._id!)
+      const source = updated?.operations
+        ?.find(operation => operation.id === operationId)
+        ?.knowledgeSources?.find(
+          source => source.type === AgentKnowledgeSourceType.SHAREPOINT
+        )
+
+      expect(source?.config.site).toEqual({
+        id: "site-1",
+        name: "Current Site Name",
+        webUrl: "https://example.com/sites/current",
+      })
+    })
+  })
+
+  it("rejects an empty SharePoint site id", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Empty Site Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    await config.api.agent.connectSharePointSite(
+      created._id!,
+      operationId,
+      {
+        site: { id: "" },
+        datasourceId: "datasource-1",
+        authConfigId: "auth-1",
+      },
+      { status: 400 }
     )
   })
 

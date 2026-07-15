@@ -1,4 +1,9 @@
-import { User } from "@budibase/types"
+export interface UserDisplayInfo {
+  _id?: string
+  email: string
+  firstName?: string
+  lastName?: string
+}
 
 /**
  * Gets a key within an object. The key supports dot syntax for retrieving deep
@@ -28,7 +33,7 @@ export const deepGet = (obj: Record<string, any> | undefined, key: string) => {
  * Gets the initials to show in a user avatar.
  * @param user the user
  */
-export const getUserInitials = (user: User) => {
+export const getUserInitials = (user: UserDisplayInfo | undefined) => {
   if (!user) {
     return "?"
   }
@@ -45,7 +50,7 @@ export const getUserInitials = (user: User) => {
  * Gets a deterministic colour for a particular user
  * @param user the user
  */
-export const getUserColor = (user: User) => {
+export const getUserColor = (user: UserDisplayInfo | undefined) => {
   let id = user?._id
   if (!id) {
     return "var(--spectrum-global-color-blue-400)"
@@ -68,7 +73,7 @@ export const getUserColor = (user: User) => {
  * Gets a friendly label to describe who a user is.
  * @param user the user
  */
-export const getUserLabel = (user: User) => {
+export const getUserLabel = (user: UserDisplayInfo | undefined) => {
   if (!user) {
     return ""
   }

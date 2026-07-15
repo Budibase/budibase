@@ -54,8 +54,4 @@ export const getBudibaseTools = (
 
 export default getBudibaseTools
 export { createKnowledgeFilesTool, createKnowledgeSearchTool }
-export {
-  createEscalatePlaceholderTool,
-  createEscalateTool,
-  ESCALATE_TOOL_NAME,
-} from "./escalate"
+export { createEscalatePlaceholderTool, createEscalateTool } from "./escalate"

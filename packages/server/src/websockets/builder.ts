@@ -1,6 +1,7 @@
-import { context, events, permissions } from "@budibase/backend-core"
+import { auth, context, events, permissions } from "@budibase/backend-core"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
+  AgentRequest,
   Automation,
   ContextUser,
   Ctx,
@@ -14,10 +15,13 @@ import {
 } from "@budibase/types"
 import http from "http"
 import Koa from "koa"
+import { userAgent } from "koa-useragent"
 import { Socket } from "socket.io"
 import { authorizedMiddleware as authorized } from "../middleware/authorized"
+import { currentWorkspaceMiddleware as currentWorkspace } from "../middleware/currentWorkspace"
 import { clearLock, updateLock } from "../utilities/redis"
 import { gridSocket } from "./index"
+import { createContext, runMiddlewares } from "./middleware"
 import { BaseSocket, EmitOptions } from "./websocket"
 
 export default class BuilderSocket extends BaseSocket {
@@ -28,26 +32,49 @@ export default class BuilderSocket extends BaseSocket {
   async onConnect(socket?: Socket) {
     // Initial identification of selected app
     socket?.on(BuilderSocketEvent.SelectApp, async ({ appId }, callback) => {
-      await this.joinRoom(socket, appId)
-      const sessions = await this.getRoomSessions(appId)
-
-      // Track collaboration usage by unique users
-      let userIdMap: Record<string, boolean> = {}
-      sessions?.forEach(session => {
-        if (session._id) {
-          userIdMap[session._id] = true
-        }
-      })
-
-      const tenantId = context.getTenantIDFromWorkspaceID(appId)
-      if (tenantId) {
-        await context.doInTenant(tenantId, async () => {
-          await events.user.dataCollaboration(Object.keys(userIdMap).length)
-        })
+      if (!appId) {
+        socket.disconnect(true)
+        return
       }
 
-      // Reply with all current sessions
-      callback({ users: sessions })
+      // The handshake middleware only confirms the user is a builder of
+      // *some* workspace (it runs before appId is known). Re-check
+      // permissions for this specific appId here, otherwise a builder of
+      // one workspace could join the room of another by sending its id.
+      const ctx = createContext(this.app, socket, { appId })
+      const middlewares = [
+        userAgent,
+        auth.buildAuthMiddleware([]),
+        currentWorkspace,
+        authorized(permissions.BUILDER),
+      ]
+
+      try {
+        await runMiddlewares(ctx, middlewares, async () => {
+          await this.joinRoom(socket, appId)
+          const sessions = await this.getRoomSessions(appId)
+
+          // Track collaboration usage by unique users
+          let userIdMap: Record<string, boolean> = {}
+          sessions?.forEach(session => {
+            if (session._id) {
+              userIdMap[session._id] = true
+            }
+          })
+
+          const tenantId = context.getTenantIDFromWorkspaceID(appId)
+          if (tenantId) {
+            await context.doInTenant(tenantId, async () => {
+              await events.user.dataCollaboration(Object.keys(userIdMap).length)
+            })
+          }
+
+          // Reply with all current sessions
+          callback({ users: sessions })
+        })
+      } catch (error) {
+        socket.disconnect(true)
+      }
     })
 
     // Handle users selecting a new cell
@@ -221,5 +248,9 @@ export default class BuilderSocket extends BaseSocket {
       id,
       automation: null,
     })
+  }
+
+  emitAgentRequestChange(workspaceId: string, request: AgentRequest) {
+    this.io.in(workspaceId).emit(BuilderSocketEvent.AgentRequestChange, request)
   }
 }
