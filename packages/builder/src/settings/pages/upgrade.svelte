@@ -40,6 +40,7 @@
 
   let offlineLicenseIdentifier = ""
   let offlineLicense = undefined
+  let processingOfflineLicense = false
   const offlineLicenseExtensions = [".txt"]
 
   let installInfo
@@ -127,11 +128,13 @@
     try {
       await API.activateOfflineLicense(offlineLicenseToken)
       await auth.getSelf()
-      await getOfflineLicense()
       notifications.success("Successfully activated")
     } catch (e) {
       console.error(e)
-      notifications.error("Error activating offline license")
+      notifications.error(e?.message || "Error activating offline license")
+    } finally {
+      processingOfflineLicense = false
+      await getOfflineLicense()
     }
   }
 
@@ -139,26 +142,23 @@
     try {
       await API.deleteOfflineLicense()
       await auth.getSelf()
-      await getOfflineLicense()
       notifications.success("Successfully removed ofline license")
     } catch (e) {
       console.error(e)
       notifications.error("Error upload offline license")
+    } finally {
+      processingOfflineLicense = false
+      await getOfflineLicense()
     }
   }
 
   async function onOfflineLicenseChange(event) {
+    processingOfflineLicense = true
     if (event.detail) {
-      // prevent file preview jitter by assigning constant
-      // as soon as possible
-      offlineLicense = {
-        name: "license",
-      }
       const reader = new FileReader()
       reader.readAsText(event.detail)
       reader.onload = () => activateOfflineLicense(reader.result)
     } else {
-      offlineLicense = undefined
       await deleteOfflineLicense()
     }
   }
@@ -228,6 +228,8 @@
             title="Upload license"
             extensions={offlineLicenseExtensions}
             value={offlineLicense}
+            loading={processingOfflineLicense}
+            hideButtonWhenSet={true}
             on:change={onOfflineLicenseChange}
             allowClear={true}
           />

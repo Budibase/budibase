@@ -10,13 +10,19 @@ import {
   OfflineLicense,
   Hosting,
 } from "@budibase/types"
-import { installation, events, context } from "@budibase/backend-core"
+import {
+  installation,
+  events,
+  context,
+  HTTPError,
+} from "@budibase/backend-core"
 import union from "lodash/union"
 import merge from "lodash/merge"
 
 // TOKEN
 
 export async function activateOfflineLicenseToken(offlineLicenseToken: string) {
+  await verifyOfflineLicenseToken(offlineLicenseToken)
   await db.licenseInfo.save({ offlineLicenseToken })
   await cache.refresh()
 }
@@ -91,13 +97,36 @@ export function enrichLicense(license: OfflineLicense) {
   return license
 }
 
+export async function verifyOfflineLicenseToken(
+  token: string
+): Promise<OfflineLicense> {
+  let license: OfflineLicense
+  try {
+    license = await signing.verifyLicenseToken(token)
+  } catch {
+    throw new HTTPError("Invalid offline license token", 400)
+  }
+
+  try {
+    verifyExpiry(license)
+  } catch {
+    throw new HTTPError("Offline license has expired", 400)
+  }
+
+  try {
+    await verifyInstallation(license)
+  } catch {
+    throw new HTTPError("Offline license does not match this installation", 400)
+  }
+
+  return license
+}
+
 export async function getOfflineLicense(): Promise<License | undefined> {
   try {
     const token = await getOfflineLicenseToken()
     if (token) {
-      const license = await signing.verifyLicenseToken(token)
-      verifyExpiry(license)
-      await verifyInstallation(license)
+      const license = await verifyOfflineLicenseToken(token)
       return enrichLicense(license)
     }
   } catch (e) {
