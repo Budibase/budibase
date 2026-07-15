@@ -1,5 +1,6 @@
 import { helpers } from "@budibase/shared-core"
 import {
+  AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
@@ -133,6 +134,44 @@ const getSharePointSiteDisplayName = ({
   return "Loading SharePoint site..."
 }
 
+type SharePointConnectionDisplayStatusInput = {
+  isQueued: boolean
+  isRunning: boolean
+  hasCompletedSync: boolean
+  hasFileData: boolean
+  isEmpty: boolean
+  completed: number
+  total: number
+}
+
+const getSharePointConnectionDisplayStatus = ({
+  isQueued,
+  isRunning,
+  hasCompletedSync,
+  hasFileData,
+  isEmpty,
+  completed,
+  total,
+}: SharePointConnectionDisplayStatusInput) => {
+  if (isQueued) {
+    return "Queued"
+  }
+
+  if (isRunning) {
+    return "Syncing"
+  }
+
+  if (!hasCompletedSync && !hasFileData) {
+    return "Processing"
+  }
+
+  if (isEmpty) {
+    return "No content found"
+  }
+
+  return `${completed}/${total} items`
+}
+
 export const toSharePointConnectionRows = ({
   sharePointSources,
   sharePointSourceSnapshots,
@@ -166,16 +205,24 @@ export const toSharePointConnectionRows = ({
       const synced = snapshot?.syncedCount || 0
       const syncFailures = snapshot?.failedCount || 0
       const processing = snapshot?.processingCount || 0
+      const isQueued =
+        snapshot?.runStatus === AgentKnowledgeSourceSyncRunStatus.QUEUED
+      const isRunning =
+        snapshot?.runStatus === AgentKnowledgeSourceSyncRunStatus.RUNNING
+      const isSyncing = isQueued || isRunning
       const completed = Math.min(synced + syncFailures, total)
       const hasFileData = total > 0
       const isEmpty = total === 0
       const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
-      const displayStatus =
-        !hasCompletedSync && !hasFileData
-          ? "Processing"
-          : isEmpty
-            ? "No content found"
-            : `${completed}/${total} items`
+      const displayStatus = getSharePointConnectionDisplayStatus({
+        isQueued,
+        isRunning,
+        hasCompletedSync,
+        hasFileData,
+        isEmpty,
+        completed,
+        total,
+      })
       const hasSynced = hasCompletedSync || hasFileData
       return {
         kind: "sharepoint_connection" as const,
@@ -191,6 +238,7 @@ export const toSharePointConnectionRows = ({
         failedCount: syncFailures,
         processingCount: processing,
         hasSynced,
+        isSyncing,
         runStatus: snapshot?.runStatus,
         errorMessage: snapshot?.errorMessage,
         onDelete: () => onDelete(siteId),

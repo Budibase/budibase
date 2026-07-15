@@ -1,7 +1,8 @@
-import type { Job } from "bull"
+import type { Job, JobStatus } from "bull"
 import { context, db, docIds, queue, utils } from "@budibase/backend-core"
 import {
   AgentKnowledgeSourceType,
+  AgentKnowledgeSourceSyncRunStatus,
   DocumentType,
   type Agent,
 } from "@budibase/types"
@@ -12,11 +13,11 @@ import {
   deleteKnowledgeSourceSyncStateForAgent,
   deleteSharePointFilesForOperationSite,
   syncSharePointSourcesForAgent,
+  updateSharePointSyncRunStatus,
 } from "./sharepoint/sharepoint"
 
 const DEFAULT_CONCURRENCY = 2
 const DEFAULT_BACKOFF_MS = utils.Duration.fromSeconds(10).toMs()
-const DEFAULT_TIMEOUT_MS = utils.Duration.fromMinutes(15).toMs()
 
 const getScheduleWorkspaceNamespace = (workspaceId: string) =>
   db.getProdWorkspaceID(workspaceId)
@@ -65,6 +66,39 @@ const getAgentJobPrefix = (workspaceId: string, agentId: string) =>
 const getJobId = (job: KnowledgeSourceSyncJob) =>
   `${getAgentJobPrefix(job.workspaceId, job.agentId)}${job.sourceType}_${job.sourceId}`
 
+const getImmediateJobId = (job: KnowledgeSourceSyncJob) =>
+  `${getJobId(job)}_immediate`
+
+const getFollowUpJobId = (job: KnowledgeSourceSyncJob) =>
+  `${getImmediateJobId(job)}_followup_${utils.newid()}`
+
+const isSameSyncJob = (
+  queuedJob: Job<KnowledgeSourceJob>,
+  job: KnowledgeSourceSyncJob
+) => {
+  const data = queuedJob.data
+  return (
+    data.jobType === "sync" &&
+    data.workspaceId === job.workspaceId &&
+    data.agentId === job.agentId &&
+    data.sourceType === job.sourceType &&
+    data.sourceId === job.sourceId
+  )
+}
+
+const getSameSourceSyncJobsByStatus = async (
+  job: KnowledgeSourceSyncJob,
+  statuses: JobStatus[],
+  options: { excludeRepeatable?: boolean } = {}
+) => {
+  const jobs = await getQueue().getBullQueue().getJobs(statuses)
+  return jobs.filter(
+    queuedJob =>
+      (!options.excludeRepeatable || !queuedJob.opts?.repeat) &&
+      isSameSyncJob(queuedJob, job)
+  )
+}
+
 const getAgentSharePointSources = (agent: Agent) =>
   getSharePointKnowledgeSources(agent)
 
@@ -109,7 +143,6 @@ export function getQueue() {
             type: "exponential",
             delay: DEFAULT_BACKOFF_MS,
           },
-          timeout: DEFAULT_TIMEOUT_MS,
           removeOnComplete: true,
           removeOnFail: 1000,
         },
@@ -155,17 +188,37 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
         await context.doInWorkspaceContext(workspaceId, async () => {
           switch (job.data.jobType) {
             case "sync":
-              switch (job.data.sourceType) {
-                case AgentKnowledgeSourceType.SHAREPOINT:
-                  await syncSharePointSourcesForAgent(
-                    agentId,
-                    job.data.sourceId
-                  )
-                  break
-                default:
-                  throw new Error(
-                    `Unsupported knowledge source type for sync queue: ${job.data.sourceType}`
-                  )
+              await updateSharePointSyncRunStatus({
+                agentId,
+                sourceId: job.data.sourceId,
+                status: AgentKnowledgeSourceSyncRunStatus.RUNNING,
+              })
+              try {
+                switch (job.data.sourceType) {
+                  case AgentKnowledgeSourceType.SHAREPOINT:
+                    await syncSharePointSourcesForAgent(
+                      agentId,
+                      job.data.sourceId
+                    )
+                    break
+                  default:
+                    throw new Error(
+                      `Unsupported knowledge source type for sync queue: ${job.data.sourceType}`
+                    )
+                }
+              } catch (error) {
+                const attempts = job.opts.attempts || 1
+                const finalAttempt = job.attemptsMade + 1 >= attempts
+                await updateSharePointSyncRunStatus({
+                  agentId,
+                  sourceId: job.data.sourceId,
+                  status: finalAttempt
+                    ? AgentKnowledgeSourceSyncRunStatus.FAILED
+                    : AgentKnowledgeSourceSyncRunStatus.QUEUED,
+                  errorMessage:
+                    error instanceof Error ? error.message : "Sync failed",
+                })
+                throw error
               }
               break
             case "delete_file":
@@ -268,9 +321,46 @@ export async function enqueueAgentJobs(
         sourceType,
         sourceId,
       }
-      return getQueue().add(job)
+      return enqueueAgentJob(job)
     })
   )
+}
+
+export async function enqueueAgentJob(job: KnowledgeSourceSyncJob) {
+  init()
+  await updateSharePointSyncRunStatus({
+    agentId: job.agentId,
+    sourceId: job.sourceId,
+    status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
+  })
+  try {
+    const waitingJobs = await getSameSourceSyncJobsByStatus(
+      job,
+      ["waiting", "delayed"],
+      {
+        excludeRepeatable: true,
+      }
+    )
+    if (waitingJobs.length > 0) {
+      return waitingJobs[0]
+    }
+
+    const activeJobs = await getSameSourceSyncJobsByStatus(job, ["active"])
+    return await getQueue().add(job, {
+      jobId:
+        activeJobs.length > 0 ? getFollowUpJobId(job) : getImmediateJobId(job),
+      removeOnFail: true,
+    })
+  } catch (error) {
+    await updateSharePointSyncRunStatus({
+      agentId: job.agentId,
+      sourceId: job.sourceId,
+      status: AgentKnowledgeSourceSyncRunStatus.FAILED,
+      errorMessage:
+        error instanceof Error ? error.message : "Failed to queue sync",
+    })
+    throw error
+  }
 }
 
 export async function removeJob(job: KnowledgeSourceSyncJob) {

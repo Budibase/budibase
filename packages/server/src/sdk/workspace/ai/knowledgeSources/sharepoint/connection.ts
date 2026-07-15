@@ -20,6 +20,40 @@ const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 const RETRY_DELAYS_MS = [500, 1500, 3000]
 export const MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES = 100 * 1024 * 1024
 
+const throwIfAborted = (signal?: AbortSignal) => {
+  if (signal?.aborted) {
+    throw signal.reason instanceof Error
+      ? signal.reason
+      : new Error("SharePoint request aborted")
+  }
+}
+
+const waitForRetry = async (delayMs: number, signal?: AbortSignal) => {
+  throwIfAborted(signal)
+  if (!signal) {
+    await helpers.wait(delayMs)
+    return
+  }
+  await new Promise<void>((resolve, reject) => {
+    const abort = () => {
+      clearTimeout(timeout)
+      reject(
+        signal.reason instanceof Error
+          ? signal.reason
+          : new Error("SharePoint request aborted")
+      )
+    }
+    const timeout = setTimeout(() => {
+      signal.removeEventListener("abort", abort)
+      resolve()
+    }, delayMs)
+    signal.addEventListener("abort", abort, { once: true })
+    if (signal.aborted) {
+      abort()
+    }
+  })
+}
+
 const parseRetryAfterMs = (value: string | null): number | undefined => {
   if (!value) {
     return
@@ -60,12 +94,14 @@ const getErrorMessage = (error: unknown): string | undefined => {
 
 const requestWithRetries = async (
   operation: string,
-  request: () => Promise<Response>
+  request: () => Promise<Response>,
+  signal?: AbortSignal
 ): Promise<Response> => {
   let attempt = 0
 
   while (true) {
     try {
+      throwIfAborted(signal)
       const response = await request()
       if (
         response.ok ||
@@ -85,8 +121,9 @@ const requestWithRetries = async (
         status: response.status,
         delayMs,
       })
-      await helpers.wait(delayMs)
+      await waitForRetry(delayMs, signal)
     } catch (error) {
+      throwIfAborted(signal)
       if (!(error instanceof Error) || attempt >= RETRY_DELAYS_MS.length) {
         throw error
       }
@@ -98,7 +135,7 @@ const requestWithRetries = async (
         delayMs,
         errorName: error.name,
       })
-      await helpers.wait(delayMs)
+      await waitForRetry(delayMs, signal)
     }
 
     attempt++
@@ -386,19 +423,24 @@ interface SharePointFileRef {
 
 export const listSharePointDrives = async (
   bearerToken: string,
-  siteId: string
+  siteId: string,
+  signal?: AbortSignal
 ): Promise<string[]> => {
-  const response = await requestWithRetries("listSharePointDrives", () =>
-    fetch(
-      `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(
-        siteId
-      )}/drives?$top=200&$select=id`,
-      {
-        headers: {
-          Authorization: bearerToken,
-        },
-      }
-    )
+  const response = await requestWithRetries(
+    "listSharePointDrives",
+    () =>
+      fetch(
+        `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(
+          siteId
+        )}/drives?$top=200&$select=id`,
+        {
+          signal,
+          headers: {
+            Authorization: bearerToken,
+          },
+        }
+      ),
+    signal
   )
   if (!response.ok) {
     console.error("Failed to list SharePoint drives", {
@@ -639,7 +681,8 @@ export const fetchSharePointListDocument = async (
 const listSharePointDriveItems = async (
   bearerToken: string,
   driveId: string,
-  itemId?: string
+  itemId?: string,
+  signal?: AbortSignal
 ): Promise<SharePointDriveItem[]> => {
   const initialPath = itemId
     ? `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/children?$top=200&$select=id,name,eTag,lastModifiedDateTime,size,file,folder`
@@ -649,12 +692,16 @@ const listSharePointDriveItems = async (
   let nextLink = initialPath
 
   while (nextLink) {
-    const response = await requestWithRetries("listSharePointDriveItems", () =>
-      fetch(nextLink, {
-        headers: {
-          Authorization: bearerToken,
-        },
-      })
+    const response = await requestWithRetries(
+      "listSharePointDriveItems",
+      () =>
+        fetch(nextLink, {
+          signal,
+          headers: {
+            Authorization: bearerToken,
+          },
+        }),
+      signal
     )
     if (!response.ok) {
       console.error("Failed to list SharePoint drive items", {
@@ -691,12 +738,19 @@ export const collectSharePointFilesRecursive = async (
   bearerToken: string,
   driveId: string,
   folderId?: string,
-  parentPath = ""
+  parentPath = "",
+  signal?: AbortSignal
 ): Promise<SharePointFileRef[]> => {
-  const items = await listSharePointDriveItems(bearerToken, driveId, folderId)
+  const items = await listSharePointDriveItems(
+    bearerToken,
+    driveId,
+    folderId,
+    signal
+  )
   const files: SharePointFileRef[] = []
 
   for (const item of items) {
+    throwIfAborted(signal)
     const itemId = item.id
     const name = item.name
     if (!itemId || !name) {
@@ -710,7 +764,8 @@ export const collectSharePointFilesRecursive = async (
           bearerToken,
           driveId,
           itemId,
-          nextPath
+          nextPath,
+          signal
         ))
       )
       continue
@@ -738,11 +793,13 @@ export const collectSharePointFilesRecursive = async (
 export const downloadSharePointFileBuffer = async (
   bearerToken: string,
   driveId: string,
-  itemId: string
+  itemId: string,
+  signal?: AbortSignal
 ) => {
   const response = await fetch(
     `${SHAREPOINT_API_BASE}/drives/${driveId}/items/${itemId}/content`,
     {
+      signal,
       headers: {
         Authorization: bearerToken,
       },

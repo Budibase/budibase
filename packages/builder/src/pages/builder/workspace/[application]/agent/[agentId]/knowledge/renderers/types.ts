@@ -32,6 +32,7 @@ export interface SharePointConnectionTableRow {
   failedCount: number
   processingCount: number
   hasSynced: boolean
+  isSyncing: boolean
   runStatus?: AgentKnowledgeSourceSyncRunStatus
   errorMessage?: string
   onDelete: () => Promise<void>

@@ -125,7 +125,10 @@
   }
 
   const handleSelect = async (mode: SharePointSelectionMode) => {
-    if (!agentId || !operationId || !selectedSiteId) {
+    const selectedSite = sharePointSites.find(
+      site => site.id === selectedSiteId
+    )
+    if (!agentId || !operationId || !selectedSite) {
       return
     }
     saving = true
@@ -133,7 +136,7 @@
       await agentsStore.connectOperationSharePointSite(agentId, operationId, {
         datasourceId: selectedDatasourceId,
         authConfigId: selectedAuthConfigId,
-        siteId: selectedSiteId,
+        site: selectedSite,
         filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
         listSelection:
           mode === "selective" ? { mode: "include", listIds: [] } : undefined,

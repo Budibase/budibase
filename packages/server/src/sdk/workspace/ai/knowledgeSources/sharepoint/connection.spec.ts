@@ -728,6 +728,35 @@ describe("SharePoint Graph retries", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(files.map(file => file.path)).toEqual(["doc-1.txt", "doc-2.txt"])
   })
+
+  it("aborts an in-flight recursive listing without retrying", async () => {
+    const controller = new AbortController()
+    const timeoutError = new Error("SharePoint sync timed out")
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (_input, init) => {
+        await new Promise<void>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(init.signal?.reason),
+            { once: true }
+          )
+        })
+        throw new Error("unreachable")
+      })
+
+    const result = collectSharePointFilesRecursive(
+      bearerToken,
+      "drive-1",
+      undefined,
+      "",
+      controller.signal
+    )
+    controller.abort(timeoutError)
+
+    await expect(result).rejects.toBe(timeoutError)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("fetchSharePointSitesByDatasourceAuthConfig app token pagination", () => {
