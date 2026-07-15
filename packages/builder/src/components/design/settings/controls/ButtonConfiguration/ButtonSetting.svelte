@@ -9,6 +9,7 @@
   export let bindings
   export let anchor
   export let removeButton
+  export let duplicateButton
   export let nested
   export let parentComponent
 
@@ -54,6 +55,15 @@
     <div class="field-label">{readableText || "Button"}</div>
   </div>
   <div class="list-item-right">
+    <Icon
+      size="S"
+      name="copy"
+      hoverable
+      on:click={e => {
+        e.stopPropagation()
+        duplicateButton(item._id)
+      }}
+    />
     <Icon
       size="S"
       name="x"

@@ -37,6 +37,7 @@
     componentBindings: componentBindings || [],
     bindings: allBindings,
     removeButton,
+    duplicateButton,
     nested,
     parentComponent: componentInstance,
   }
@@ -109,6 +110,24 @@
       "change",
       buttonList.filter(button => button._id !== id)
     )
+  }
+
+  const duplicateButton = id => {
+    if (!canAddButtons) {
+      return
+    }
+    const idx = buttonList.findIndex(button => button._id === id)
+    if (idx === -1) {
+      return
+    }
+    const clone = {
+      ...cloneDeep(buttonList[idx]),
+      _id: Helpers.uuid(),
+      _instanceName: Helpers.uuid(),
+    }
+    const newButtonList = [...buttonList]
+    newButtonList.splice(idx + 1, 0, clone)
+    dispatch("change", newButtonList)
   }
 </script>
 
