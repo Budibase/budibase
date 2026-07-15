@@ -3483,6 +3483,87 @@ if (descriptions.length) {
               relation: [table2_row1, table2_row2],
             })
           })
+
+          it("should not mismatch existing links when the junction primary key starts with the related row id", async () => {
+            const table1Id = "table1_" + generator.guid()
+            const table2Id = "table2_" + generator.guid()
+            const joinTableId = "table1_table2_" + generator.guid()
+
+            await client!.schema.createTable(table1Id, table => {
+              table.increments("table1_id").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable(table2Id, table => {
+              table.increments("table2_id").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable(joinTableId, table => {
+              if (isMariaDB || isMySQL) {
+                table.specificType("table2_id", "int(10) unsigned")
+                table.specificType("table1_id", "int(10) unsigned")
+              } else {
+                table.integer("table2_id")
+                table.integer("table1_id")
+              }
+              table.primary(["table2_id", "table1_id"])
+            })
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            const primaryOrderTable1 = resp.datasource.entities![table1Id]!
+            const primaryOrderTable2 = resp.datasource.entities![table2Id]!
+            const primaryOrderJoin = resp.datasource.entities![joinTableId]!
+
+            primaryOrderTable1.schema.relation = {
+              name: "relation",
+              type: FieldType.LINK,
+              tableId: primaryOrderTable2._id!,
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              fieldName: "table2_id",
+              through: primaryOrderJoin._id!,
+              throughFrom: "table2_id",
+              throughTo: "table1_id",
+            }
+
+            await config.api.table.save(primaryOrderTable1)
+
+            const table2_row1 = await config.api.row.save(primaryOrderTable2._id!, {
+              name: "one",
+            })
+            const table2_row2 = await config.api.row.save(primaryOrderTable2._id!, {
+              name: "two",
+            })
+            const table2_row3 = await config.api.row.save(primaryOrderTable2._id!, {
+              name: "three",
+            })
+
+            const row = await config.api.row.save(primaryOrderTable1._id!, {
+              name: "foo",
+              relation: [table2_row1, table2_row3],
+            })
+
+            await config.api.row.save(primaryOrderTable1._id!, {
+              ...row,
+              relation: [table2_row1, table2_row2, table2_row3],
+            })
+
+            const updatedRow = await config.api.row.get(
+              primaryOrderTable1._id!,
+              row._id!
+            )
+            expect(updatedRow.relation).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({ _id: table2_row1._id }),
+                expect.objectContaining({ _id: table2_row2._id }),
+                expect.objectContaining({ _id: table2_row3._id }),
+              ])
+            )
+            expect(updatedRow.relation).toHaveLength(3)
+          })
         })
 
       // Upserting isn't yet supported in MSSQL or Oracle, see:
