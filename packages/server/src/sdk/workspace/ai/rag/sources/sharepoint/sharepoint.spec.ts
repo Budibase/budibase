@@ -298,6 +298,73 @@ describe("rag/sharepoint sync deduplication", () => {
       totalDiscovered: 1,
     })
   })
+
+  it("does not download or retry SharePoint files larger than 100MB", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const oversizedFileSize = 100 * 1024 * 1024 + 1
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_failed",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-1",
+        path: "oversized.txt",
+        status: KnowledgeBaseFileStatus.FAILED,
+        remoteSize: oversizedFileSize,
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "oversized.txt",
+                size: oversizedFileSize,
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/drives/drive-a/items/item-1/content")
+      )
+    ).toBe(false)
+    expect(mockRetryKnowledgeBaseFileIngestion).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 0,
+      unsupported: 1,
+      totalDiscovered: 1,
+    })
+  })
+
   it("deletes existing files that no longer match source filters", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
