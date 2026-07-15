@@ -593,5 +593,163 @@ describe("/static", () => {
         }
       })
     })
+
+    describe("resource limits", () => {
+      const mockExtractWithEntries = (
+        entries: { fileName: string; uncompressedSize: number }[]
+      ) => {
+        mockedExtract.mockImplementation(
+          async (_zipPath: string, opts: any) => {
+            await fsp.mkdir(opts.dir, { recursive: true })
+            for (const entry of entries) {
+              opts.onEntry?.(entry, {})
+              if (!entry.fileName.endsWith("/")) {
+                const dest = path.join(opts.dir, entry.fileName)
+                await fsp.mkdir(path.dirname(dest), { recursive: true })
+                await fsp.writeFile(dest, "x")
+              }
+            }
+          }
+        )
+      }
+
+      it("rejects a zip containing too many files", async () => {
+        mockExtractWithEntries(
+          Array.from({ length: 101 }, (_, i) => ({
+            fileName: `icon-${i}.png`,
+            uncompressedSize: 100,
+          }))
+        )
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(400)
+        expect(res.body.message).toMatch("too many files")
+        expect(mockedUpload).not.toHaveBeenCalled()
+      })
+
+      it("rejects a zip with a single oversized file", async () => {
+        mockExtractWithEntries([
+          { fileName: "icon.png", uncompressedSize: 11 * 1024 * 1024 },
+        ])
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(400)
+        expect(res.body.message).toMatch('file "icon.png" exceeds')
+        expect(mockedUpload).not.toHaveBeenCalled()
+      })
+
+      it("rejects a zip whose total uncompressed size is too large", async () => {
+        mockExtractWithEntries(
+          Array.from({ length: 6 }, (_, i) => ({
+            fileName: `icon-${i}.png`,
+            uncompressedSize: 9 * 1024 * 1024,
+          }))
+        )
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(400)
+        expect(res.body.message).toMatch("uncompressed contents exceed")
+        expect(mockedUpload).not.toHaveBeenCalled()
+      })
+
+      it("rejects a zip that nests directories too deeply", async () => {
+        mockExtractWithEntries([
+          {
+            fileName: "a/b/c/d/e/f/g/h/i/j/k/icon.png",
+            uncompressedSize: 100,
+          },
+        ])
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(400)
+        expect(res.body.message).toMatch("directory depth exceeds")
+        expect(mockedUpload).not.toHaveBeenCalled()
+      })
+
+      it("does not count __MACOSX entries against the file limit", async () => {
+        const entries = [
+          ...Array.from({ length: 60 }, (_, i) => ({
+            fileName: `__MACOSX/icon-${i}.png`,
+            uncompressedSize: 100,
+          })),
+          { fileName: "icon-192.png", uncompressedSize: 100 },
+          {
+            fileName: "icons.json",
+            uncompressedSize: 100,
+          },
+        ]
+        mockedExtract.mockImplementation(
+          async (_zipPath: string, opts: any) => {
+            await fsp.mkdir(opts.dir, { recursive: true })
+            for (const entry of entries) {
+              opts.onEntry?.(entry, {})
+            }
+            await fsp.writeFile(
+              path.join(opts.dir, "icons.json"),
+              JSON.stringify({
+                icons: [
+                  { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+                ],
+              })
+            )
+            await fsp.writeFile(
+              path.join(opts.dir, "icon-192.png"),
+              "fake-png-data"
+            )
+          }
+        )
+        mockedUpload.mockResolvedValue({
+          Key: "app_prod_test123/pwa/some-uuid.png",
+        } as any)
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        expect(res.body.icons).toHaveLength(1)
+      })
+
+      it("removes the temporary extraction directory once finished", async () => {
+        const rmSpy = jest.spyOn(fsp, "rm")
+        try {
+          mockExtractWithEntries([
+            { fileName: "icon.png", uncompressedSize: 11 * 1024 * 1024 },
+          ])
+
+          await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          const cleanedTempDir = rmSpy.mock.calls.some(
+            ([target]) =>
+              typeof target === "string" &&
+              target.includes(`${path.sep}pwa-`) &&
+              !target.includes("pwa-test-")
+          )
+          expect(cleanedTempDir).toBe(true)
+        } finally {
+          rmSpy.mockRestore()
+        }
+      })
+    })
   })
 })

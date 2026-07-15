@@ -79,6 +79,55 @@ const PWA_ICON_PATTERNS = [
   /^ios\/(\d+)\.png$/i,
 ]
 
+const MAX_PWA_ZIP_FILE_COUNT = 100
+const MAX_PWA_ZIP_ENTRY_SIZE = 10 * 1024 * 1024 // 10MB per file
+const MAX_PWA_ZIP_TOTAL_SIZE = 50 * 1024 * 1024 // 50MB uncompressed total
+const MAX_PWA_ZIP_DEPTH = 10
+
+const validatePWAZipEntries = () => {
+  let fileCount = 0
+  let totalUncompressedSize = 0
+
+  return (entry: { fileName: string; uncompressedSize: number }) => {
+    // extract-zip skips these itself, so don't count them against the limits.
+    if (entry.fileName.startsWith("__MACOSX/")) {
+      return
+    }
+
+    const depth = entry.fileName.split("/").filter(Boolean).length
+    if (depth > MAX_PWA_ZIP_DEPTH) {
+      throw new BadRequestError(
+        `Invalid zip - directory depth exceeds ${MAX_PWA_ZIP_DEPTH}`
+      )
+    }
+
+    // Directory entries carry no content, only enforce the depth limit on them.
+    if (entry.fileName.endsWith("/")) {
+      return
+    }
+
+    fileCount++
+    if (fileCount > MAX_PWA_ZIP_FILE_COUNT) {
+      throw new BadRequestError(
+        `Invalid zip - too many files (max ${MAX_PWA_ZIP_FILE_COUNT})`
+      )
+    }
+
+    if (entry.uncompressedSize > MAX_PWA_ZIP_ENTRY_SIZE) {
+      throw new BadRequestError(
+        `Invalid zip - file "${entry.fileName}" exceeds the maximum size`
+      )
+    }
+
+    totalUncompressedSize += entry.uncompressedSize
+    if (totalUncompressedSize > MAX_PWA_ZIP_TOTAL_SIZE) {
+      throw new BadRequestError(
+        "Invalid zip - uncompressed contents exceed the maximum size"
+      )
+    }
+  }
+}
+
 const listFilesRecursively = async (directory: string): Promise<string[]> => {
   const entries = await fsp.readdir(directory, { withFileTypes: true })
   const files = await Promise.all(
@@ -287,7 +336,7 @@ export async function processPWAZip(ctx: UserCtx) {
   try {
     await fsp.mkdir(tempDir, { recursive: true })
 
-    await extract(filePath, { dir: tempDir })
+    await extract(filePath, { dir: tempDir, onEntry: validatePWAZipEntries() })
 
     const files = await listFilesRecursively(tempDir)
     const manifestPath = files.find(filePath => {
@@ -386,6 +435,8 @@ export async function processPWAZip(ctx: UserCtx) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error"
     ctx.throw(500, `Error processing zip: ${errorMessage}`)
+  } finally {
+    await fsp.rm(tempDir, { recursive: true, force: true })
   }
 }
 
