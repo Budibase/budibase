@@ -8,7 +8,8 @@ export interface RetrievedContextChunk {
 export interface RagProcessor {
   ingestKnowledgeBaseFile(
     input: WithRequired<KnowledgeBaseFile, "_id">,
-    fileBuffer: Buffer
+    fileBuffer: Buffer,
+    signal?: AbortSignal
   ): Promise<void>
 
   search(question: string): Promise<RetrievedContextChunk[]>

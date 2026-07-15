@@ -31,7 +31,8 @@ export class GeminiRagProcessor implements RagProcessor {
 
   async ingestKnowledgeBaseFile(
     input: WithRequired<KnowledgeBaseFile, "_id">,
-    fileBuffer: Buffer
+    fileBuffer: Buffer,
+    signal?: AbortSignal
   ): Promise<void> {
     const startedAtMs = Date.now()
     const knowledgeBaseId = this.knowledgeBase._id
@@ -57,6 +58,7 @@ export class GeminiRagProcessor implements RagProcessor {
         filename: fileForIngestion.filename,
         mimetype: fileForIngestion.mimetype,
         buffer: fileForIngestion.buffer,
+        signal,
       })
 
       input.status = KnowledgeBaseFileStatus.READY

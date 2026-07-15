@@ -193,16 +193,19 @@ export async function ingestGeminiFile({
   filename,
   mimetype,
   buffer,
+  signal,
 }: {
   vectorStoreId: string
   filename: string
   mimetype?: string
   buffer: Buffer
+  signal?: AbortSignal
 }): Promise<{ fileId: string }> {
   const geminiApiKey = getGeminiApiKey()
   const response = await fetch(`${environment.LITELLM_URL}/v1/rag/ingest`, {
     method: "POST",
     headers: await getCommonAuthHeaders(),
+    signal,
     body: JSON.stringify({
       file: {
         filename,
