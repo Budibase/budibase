@@ -382,7 +382,7 @@ describe("/static", () => {
 
         expect(firstResponse.status).toEqual(200)
         expect(secondResponse.status).toEqual(200)
-        expect(new Set(capturedDirs)).toHaveLength(2)
+        expect([...new Set(capturedDirs)]).toHaveLength(2)
       } finally {
         dateNowSpy.mockRestore()
       }
