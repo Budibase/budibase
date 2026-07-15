@@ -17,7 +17,11 @@ import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { checkFilters, searchInputMapping } from "./search/utils"
 import tracer from "dd-trace"
-import { getQueryableFields, validateFilters } from "./queryUtils"
+import {
+  findInvalidFilterFields,
+  getQueryableFields,
+  validateFilters,
+} from "./queryUtils"
 import { enrichSearchContext } from "../../../api/controllers/row/utils"
 
 export { isValidFilter } from "../../../integrations/utils"
@@ -99,6 +103,30 @@ export async function search(
         viewQuery = dataFilters.buildQuery(viewQuery)
       }
       viewQuery = checkFilters(table, viewQuery)
+
+      // Saved view queries can reference columns that have since been deleted
+      // from the table. The filters act as access control, so the search must
+      // fail closed: removing them would widen the results, and letting them
+      // through errors on external datasources. Hidden columns are still
+      // valid here - the view creator deliberately filtered on them.
+      if (dataFilters.hasFilters(viewQuery)) {
+        const viewQueryableFields = await getQueryableFields(table, undefined, {
+          includeHidden: true,
+        })
+        const invalidFields = findInvalidFilterFields(
+          viewQuery,
+          viewQueryableFields
+        )
+        if (invalidFields.length) {
+          span.addTags({ invalidViewFilterFields: invalidFields })
+          console.log(
+            `View ${options.viewId} filters on deleted columns: ${invalidFields.join(", ")} - returning no rows`
+          )
+          return {
+            rows: [],
+          }
+        }
+      }
 
       const conditions = viewQuery ? [viewQuery] : []
       options.query = {
