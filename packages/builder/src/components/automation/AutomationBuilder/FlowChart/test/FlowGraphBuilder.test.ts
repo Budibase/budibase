@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
 import {
   automationTrigger,
   branchStep,
@@ -18,6 +18,7 @@ import {
   LOOP_INSERT_ACTION_OFFSET,
   STEP,
 } from "../FlowCanvas/FlowGeometry"
+import { FLOW_NODE_TYPE, type FlowNode } from "../FlowCanvas/FlowGraphTypes"
 import {
   expectAllEdgesResolvable,
   expectBranchEdge,
@@ -59,7 +60,7 @@ const renderTestChain = (
 ) => {
   graph.nodes.push({
     id: automationTrigger.id,
-    type: "step-node",
+    type: FLOW_NODE_TYPE.STEP,
     data: { block: automationTrigger },
     position: { x: 0, y: -340 },
   })
@@ -180,7 +181,7 @@ describe("renderLoopV2Container", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    expect(getNode(graph, "linear-loop").type).toBe("loop-subflow-node")
+    expect(getNode(graph, "linear-loop").type).toBe(FLOW_NODE_TYPE.LOOP_SUBFLOW)
     expect(getNode(graph, "loop-child-1").parentId).toBe("linear-loop")
     expect(getNode(graph, "loop-child-2").parentId).toBe("linear-loop")
     expect(getNode(graph, "loop-child-3").parentId).toBe("linear-loop")

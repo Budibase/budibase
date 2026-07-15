@@ -13,7 +13,7 @@ import {
   STEP,
   SUBFLOW,
 } from "../FlowGeometry"
-import type { GraphBuildDeps } from "../FlowGraphTypes"
+import { FLOW_NODE_TYPE, type GraphBuildDeps } from "../FlowGraphTypes"
 import { FlowGraphWriter } from "../FlowGraphWriter"
 import { filterLegacyLoops, resolveBlockPath } from "./FlowRenderUtils"
 import { renderSubflowBranches } from "./FlowBranchRenderer"
@@ -160,7 +160,7 @@ export const renderLoopV2Container = (
   }
   writer.addNode({
     id: baseId,
-    type: "loop-subflow-node",
+    type: FLOW_NODE_TYPE.LOOP_SUBFLOW,
     data: loopNodeData,
     selectable: false,
     draggable: false,

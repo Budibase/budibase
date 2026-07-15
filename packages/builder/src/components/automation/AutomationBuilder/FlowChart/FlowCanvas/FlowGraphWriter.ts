@@ -1,5 +1,5 @@
 import type { Branch, BranchStep } from "@budibase/types"
-import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
 import type { AutomationBlock } from "@/types/automations"
 import {
   anchorNode,
@@ -9,7 +9,11 @@ import {
   edgeLoopAddItem,
   stepNode,
 } from "./FlowFactories"
-import type { FlowNodePosition, GraphBuildDeps } from "./FlowGraphTypes"
+import type {
+  FlowNode,
+  FlowNodePosition,
+  GraphBuildDeps,
+} from "./FlowGraphTypes"
 
 export class FlowGraphWriter {
   constructor(private readonly deps: GraphBuildDeps) {}
