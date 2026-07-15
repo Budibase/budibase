@@ -116,7 +116,7 @@ describe("/applications", () => {
   }
 
   beforeEach(async () => {
-    mocks.licenses.useCloudFree()
+    mocks.licenses.useUnlimited()
     await createNewApp()
     jest.clearAllMocks()
     nock.cleanAll()
