@@ -317,6 +317,7 @@ export async function sendMSTeamsNotification({
       sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
         globalUserId: config.globalUserId,
         provider: AgentChannelProvider.MSTEAMS,
+        providerTenantId: providerTenantId || integration.msTenantId,
       })
     )
     if (!link) {

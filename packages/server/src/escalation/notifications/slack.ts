@@ -55,7 +55,9 @@ const buildEscalationBlocks = ({
 const getSlackIntegration = async (
   appId: string,
   agentId?: string
-): Promise<{ botToken: string; signingSecret: string } | undefined> => {
+): Promise<
+  { botToken: string; signingSecret: string; teamId?: string } | undefined
+> => {
   return await context.doInWorkspaceContext(appId, async () => {
     const agents = await sdk.ai.agents.fetch()
     const agent = agentId
@@ -68,6 +70,7 @@ const getSlackIntegration = async (
     return {
       botToken: integration.botToken,
       signingSecret: integration.signingSecret,
+      teamId: agent.slackIntegration.teamId,
     }
   })
 }
@@ -127,10 +130,23 @@ export async function sendSlackNotification({
     return
   }
 
+  let teamId = integration.teamId
+  if (!teamId) {
+    try {
+      teamId = (await client.auth.test()).team_id
+    } catch (err) {
+      console.warn("sendSlackNotification: auth.test failed, unscoped lookup", {
+        escalationId: contextDoc._id,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
   const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
     sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
       globalUserId: config.globalUserId,
       provider: AgentChannelProvider.SLACK,
+      teamId,
     })
   )
 

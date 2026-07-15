@@ -37,6 +37,7 @@ const SLACK_INTEGRATION_SCHEMA = Joi.object({
   signingSecret: OPTIONAL_STRING,
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
+  teamId: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
 })

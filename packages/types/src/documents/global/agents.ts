@@ -47,6 +47,9 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   botToken?: string
   signingSecret?: string
   messagingEndpointUrl?: string
+  // Bots Slack workspace - derived via auth.test when the token is saved
+  // Need this to filter the user picker
+  teamId?: string
 }
 
 export interface TelegramAgentIntegration extends ChatAgentIntegration {

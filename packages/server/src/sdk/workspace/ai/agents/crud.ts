@@ -5,6 +5,7 @@ import {
   events,
   HTTPError,
 } from "@budibase/backend-core"
+import { WebClient } from "@slack/web-api"
 import { DocumentType } from "@budibase/types"
 import type {
   Agent,
@@ -375,6 +376,28 @@ const mergeMSTeamsIntegration = ({
   return merged
 }
 
+const withSlackTeamId = async (
+  integration: Agent["slackIntegration"],
+  existing?: Agent["slackIntegration"]
+): Promise<Agent["slackIntegration"]> => {
+  const botToken = integration?.botToken
+  if (!integration || !botToken) {
+    return integration
+  }
+  if (botToken === existing?.botToken && integration.teamId) {
+    return integration
+  }
+  try {
+    const auth = await new WebClient(botToken).auth.test()
+    return { ...integration, teamId: auth.team_id }
+  } catch (err) {
+    console.warn("Failed to resolve Slack workspace for integration", {
+      error: err instanceof Error ? err.message : String(err),
+    })
+    return integration
+  }
+}
+
 const mergeSlackIntegration = ({
   existing,
   incoming,
@@ -494,7 +517,7 @@ export async function create(
     createdBy: request.createdBy,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
-    slackIntegration: request.slackIntegration,
+    slackIntegration: await withSlackTeamId(request.slackIntegration),
     telegramIntegration: request.telegramIntegration,
   }
 
@@ -592,6 +615,11 @@ export async function update(agent: Agent): Promise<Agent> {
       incoming: agent.telegramIntegration,
     }),
   } satisfies Agent)
+
+  updated.slackIntegration = await withSlackTeamId(
+    updated.slackIntegration,
+    existing?.slackIntegration
+  )
 
   if (updated.live) {
     await assertAgentHasValidConfig(updated)
