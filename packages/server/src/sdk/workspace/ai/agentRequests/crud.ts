@@ -5,20 +5,25 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
+import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
 import type {
   AgentRequest,
   AgentRequestAction,
   AgentRequestEntry,
   AgentRequestsSummary,
   AgentRequestStatus,
+  EscalationResolvedAction,
   StatusChangedAction,
   UserMessageAction,
+  ToolCallAction,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
 import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
   generateInteractionSummary,
+  generateRequestOutcome,
+  generateToolCallSummary,
 } from "./helpers"
 import {
   queryRequestsByAgent,
@@ -26,9 +31,15 @@ import {
   queryRequestsByUpdatedAt,
   queryRequestsByStatusAndUpdatedAt,
 } from "./views"
+import {
+  getContextDoc,
+  listContextDocs,
+  resolveRecipientLabel,
+} from "../../escalations"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
+const MAX_CONFLICT_RETRIES = 3
 
 const nowIso = () => new Date().toISOString()
 
@@ -203,6 +214,244 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   return saved
 }
 
+// Plain Omit<T, K> isn't distributive over a union - it collapses to the
+// properties common to every member, dropping variant-specific fields like
+// ToolCallAction.toolName. Distributing over each member first preserves them.
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never
+
+// Appends a single action to a request that isn't already loaded in memory
+// (unlike updateRequestStatus/createOrUpdateRequestForPrompt, callers here -
+// e.g. agentRuntime's onStepFinish - only have a requestId). get + put isn't
+// atomic, so retry on conflict since several tool calls can resolve in quick
+// succession.
+async function appendAction(
+  requestId: string,
+  action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">,
+  timestamp: string = nowIso()
+): Promise<AgentRequestAction | undefined> {
+  const db = context.getWorkspaceDB()
+
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
+    const request = await db.tryGet<AgentRequest>(requestId)
+    if (!request) {
+      return
+    }
+
+    const fullAction = {
+      ...action,
+      id: utils.newid(),
+      timestamp,
+    } as AgentRequestAction
+
+    try {
+      await saveRequest({
+        ...request,
+        actions: [...(request.actions ?? []), fullAction],
+        updatedAt: nowIso(),
+      })
+      return fullAction
+    } catch (err) {
+      if (
+        dbCore.isDocumentConflictError(err) &&
+        attempt < MAX_CONFLICT_RETRIES - 1
+      ) {
+        continue
+      }
+      throw err
+    }
+  }
+}
+
+// tool calls resolve in quick succession, so a concurrent appendAction
+// losing us the first write is the common case, not the exception.
+// Retries on conflict
+async function refineToolCallActionSummary({
+  requestId,
+  actionId,
+  summary,
+}: {
+  requestId: string
+  actionId: string
+  summary: string
+}): Promise<void> {
+  const db = context.getWorkspaceDB()
+
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
+    const latest = await db.tryGet<AgentRequest>(requestId)
+    if (!latest) {
+      return
+    }
+
+    try {
+      await saveRequest({
+        ...latest,
+        actions: (latest.actions ?? []).map(action =>
+          action.id === actionId && action.type === "tool_call"
+            ? { ...action, summary }
+            : action
+        ),
+      })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err)) {
+        if (attempt < MAX_CONFLICT_RETRIES - 1) {
+          continue
+        }
+        // Best-effort upgrade - concurrent writers winning repeatedly is an
+        // expected outcome, the action still renders via its readableName.
+        return
+      }
+      throw err
+    }
+  }
+}
+
+async function recordEscalationRaised({
+  requestId,
+  sessionId,
+  escalationId,
+}: {
+  requestId: string
+  sessionId: string
+  escalationId: string
+}): Promise<void> {
+  const timestamp = nowIso()
+
+  const doc = await getContextDoc(escalationId)
+  if (!doc) {
+    throw new Error(`Escalation context doc not found: ${escalationId}`)
+  }
+  const recipients = await Promise.all(
+    (doc.recipients ?? []).map(async recipient => ({
+      type: recipient.type,
+      label: await resolveRecipientLabel(recipient),
+    }))
+  )
+
+  await appendAction(
+    requestId,
+    {
+      type: "escalation_raised",
+      escalationId,
+      recipients,
+      sessionId,
+    },
+    timestamp
+  )
+}
+
+export async function recordEscalationResolved({
+  requestId,
+  escalationId,
+  outcome,
+  sessionId,
+}: {
+  requestId: string
+  escalationId: string
+  outcome: EscalationResolvedAction["outcome"]
+  sessionId?: string
+}): Promise<void> {
+  await appendAction(requestId, {
+    type: "escalation_resolved",
+    escalationId,
+    outcome,
+    sessionId,
+  })
+}
+
+export async function recordToolCall({
+  requestId,
+  agentId,
+  sessionId,
+  toolName,
+  status,
+  readableName,
+  input,
+  output,
+}: {
+  requestId: string
+  agentId: string
+  sessionId: string
+  toolName: string
+  status: ToolCallAction["status"]
+  readableName?: string
+  input?: unknown
+  output?: unknown
+}): Promise<void> {
+  if (toolName === ESCALATE_TOOL_NAME && status === "success") {
+    const escalationOutput = output as
+      | { status?: string; escalationId?: string }
+      | undefined
+    if (
+      escalationOutput?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+      escalationOutput.escalationId
+    ) {
+      try {
+        await recordEscalationRaised({
+          requestId,
+          sessionId,
+          escalationId: escalationOutput.escalationId,
+        })
+        return
+      } catch (error) {
+        console.error(
+          "Failed to record escalation_raised action, falling back to a generic tool_call",
+          {
+            agentId,
+            sessionId,
+            escalationId: escalationOutput.escalationId,
+            error,
+          }
+        )
+      }
+    }
+  }
+
+  // Save the action up front so the timeline shows it via readableName/
+  // toolName while the LLM summary is still generating. Call sites on the
+  // agent runtime's hot path deliberately fire-and-forget this promise so the
+  // summary never blocks the next step.
+  const action = await appendAction(requestId, {
+    type: "tool_call",
+    toolName,
+    status,
+    sessionId,
+    ...(readableName === undefined ? {} : { readableName }),
+  })
+  if (!action) {
+    return
+  }
+
+  let summary: string | undefined
+  try {
+    summary = await generateToolCallSummary({
+      toolName,
+      readableName,
+      status,
+      input,
+      output,
+      agentId,
+      sessionId,
+    })
+  } catch (error) {
+    console.error("Failed to generate agent request tool call summary", {
+      agentId,
+      sessionId,
+      toolName,
+      error,
+    })
+    return
+  }
+
+  await refineToolCallActionSummary({
+    requestId,
+    actionId: action.id,
+    summary,
+  })
+}
+
 async function generateAndSaveRequestTitleIfMissing({
   request,
   agentId,
@@ -355,6 +604,76 @@ export function resolveFinalRequestStatus({
   return { status: "completed" }
 }
 
+// Judges the request's actual outcome via LLM instead of just counting tool
+// failures (see resolveFinalRequestStatus above, kept as the fallback when
+// the judgment call itself fails). Returns undefined when there's nothing to
+// decide yet, the request already reached a terminal status through another
+// path, it's waiting on a human (needs_input, unless this call carries the
+// human's response), or it still has escalations pending a human response,
+// callers should skip updateRequestStatus entirely in that case rather than
+// spend an LLM call on a result that would be discarded anyway.
+export async function resolveFinalRequestOutcome({
+  requestId,
+  agentId,
+  sessionId,
+  toolCallsIncomplete,
+  unrecoveredToolFailures,
+  finalResponse,
+  isHumanResponse = false,
+}: {
+  requestId: string
+  agentId: string
+  sessionId: string
+  toolCallsIncomplete: boolean
+  unrecoveredToolFailures: Set<string>
+  finalResponse: string
+  // A needs_input request only becomes decidable when the flow resuming it
+  // carries a human's response to the escalation - anything else must leave
+  // it waiting.
+  isHumanResponse?: boolean
+}): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
+  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  if (
+    !request ||
+    isTerminalStatus(request.status) ||
+    (request.status === "needs_input" && !isHumanResponse)
+  ) {
+    return undefined
+  }
+
+  // A request can have several escalations in flight; resolving one of
+  // them doesn't end the request. Only judge once no escalation is still
+  // waiting on a human.
+  const pendingEscalations = await listContextDocs({
+    requestId,
+    resolution: "pending",
+  })
+  if (pendingEscalations.length > 0) {
+    return undefined
+  }
+
+  try {
+    const { status, reason } = await generateRequestOutcome({
+      title: request.title,
+      actions: request.actions ?? [],
+      finalResponse,
+      toolCallsIncomplete,
+      agentId,
+      sessionId,
+    })
+    return { status, ...(status === "failed" ? { error: reason } : {}) }
+  } catch (error) {
+    console.error(
+      "Failed to generate agent request outcome, falling back to mechanical criteria",
+      { requestId, agentId, sessionId, error }
+    )
+    return resolveFinalRequestStatus({
+      toolCallsIncomplete,
+      unrecoveredToolFailures,
+    })
+  }
+}
+
 export async function fetchRequestsByAgentAndUser(
   agentId: string,
   userId: string
@@ -441,7 +760,7 @@ export async function updateRequestStatus({
   const db = context.getWorkspaceDB()
 
   // Retries on conflict since createOrUpdateRequestForPrompt writes to the same document concurrently.
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
     const request = await db.tryGet<AgentRequest>(requestId)
     if (!request) {
       return
@@ -502,7 +821,10 @@ export async function updateRequestStatus({
       })
       return
     } catch (err) {
-      if (dbCore.isDocumentConflictError(err) && attempt < 2) {
+      if (
+        dbCore.isDocumentConflictError(err) &&
+        attempt < MAX_CONFLICT_RETRIES - 1
+      ) {
         continue
       }
       throw err

@@ -13,6 +13,7 @@ import {
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeBaseFileStatus,
+  AgentKnowledgeSourceSyncRunStatus,
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -179,7 +180,16 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         const hasUnsyncedSharePointSites = knowledge.sharePointSources.some(
           source => !source.lastRunAt
         )
-        return hasProcessingFiles || hasUnsyncedSharePointSites
+        const hasActiveSharePointSync = knowledge.sharePointSources.some(
+          source =>
+            source.runStatus === AgentKnowledgeSourceSyncRunStatus.QUEUED ||
+            source.runStatus === AgentKnowledgeSourceSyncRunStatus.RUNNING
+        )
+        return (
+          hasProcessingFiles ||
+          hasUnsyncedSharePointSites ||
+          hasActiveSharePointSync
+        )
       })
 
     this.knowledgePolling.setContinuous(agentId, needsPolling)

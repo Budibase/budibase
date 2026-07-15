@@ -3,6 +3,7 @@ import { get } from "svelte/store"
 import {
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
+  AgentKnowledgeSourceSyncRunStatus,
   type Agent,
   type AgentFileUploadResponse,
   type KnowledgeBaseFile,
@@ -62,12 +63,8 @@ describe("agentsStore sharepoint and file syncing", () => {
   it("syncOperationKnowledgeSources refreshes knowledge after sync", async () => {
     syncOperationKnowledgeSources.mockResolvedValue({
       agentId: "agent_1",
-      synced: 2,
-      failed: 0,
-      alreadySynced: 1,
-      deleted: 0,
-      unsupported: 0,
-      totalDiscovered: 3,
+      sourceId: "site-1",
+      status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
     })
     fetchAgentKnowledge.mockResolvedValue({
       operations: {
@@ -87,7 +84,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       "site-1"
     )
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
-    expect(result.synced).toBe(2)
+    expect(result.status).toBe(AgentKnowledgeSourceSyncRunStatus.QUEUED)
   })
 
   it("fetchAgentKnowledge stores all operation knowledge", async () => {
@@ -214,6 +211,33 @@ describe("agentsStore sharepoint and file syncing", () => {
 
     await vi.advanceTimersByTimeAsync(1000)
     expect(fetchAgentKnowledge).toHaveBeenCalledTimes(1)
+  })
+
+  it("polls while a SharePoint sync is queued", async () => {
+    vi.useFakeTimers()
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: {
+          files: [],
+          sharePointSources: [
+            {
+              sourceId: "source-1",
+              runStatus: AgentKnowledgeSourceSyncRunStatus.QUEUED,
+              syncedCount: 0,
+              failedCount: 0,
+              processingCount: 0,
+              totalCount: 0,
+            },
+          ],
+        },
+      },
+    })
+
+    await store.fetchAgentKnowledge("agent_1")
+    fetchAgentKnowledge.mockClear()
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
   })
 })
 
