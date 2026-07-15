@@ -3,7 +3,6 @@
   import { Icon } from "@budibase/bbui"
   import { runtimeToReadableBinding } from "@/dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
-  import { title } from "process"
 
   export let item
   export let componentBindings
