@@ -528,7 +528,7 @@ export class ExternalRequest<T extends Operation> {
         through: relationship.tableId,
       })
       const rows = related[relatedKey]?.rows || []
-      const manyToManyKeys = Object.keys(body)
+      const junctionLinkFields = Object.keys(body)
 
       const relationshipMatchPredicate = ({
         row,
@@ -541,10 +541,10 @@ export class ExternalRequest<T extends Operation> {
         linkSecondary?: string
         relationshipType: RelationshipType
       }) => {
-        // Junction rows are identified by the linking columns we are writing,
-        // not by whichever column happens to come first in the table primary key.
+        // Match junction rows using the relationship link columns being written
+        // for this sync operation, rather than the order of the table primary key.
         if (relationshipType === RelationshipType.MANY_TO_MANY) {
-          return manyToManyKeys.every(
+          return junctionLinkFields.every(
             field => String(row[field]) === String(body[field])
           )
         }
