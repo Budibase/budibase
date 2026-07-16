@@ -99,6 +99,9 @@
         connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
+  let hasSharePointDatasource = $derived(
+    $knowledgeConnectionsStore.sharePointDatasourceIds.length > 0
+  )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
       .map(source => source.config.site.id)
@@ -178,6 +181,10 @@
 
   async function openSharePointFlow() {
     if (!hasSharePointConnection) {
+      if (hasSharePointDatasource) {
+        await selectSharePointSiteModal?.show()
+        return
+      }
       bb.settings("/connections/apis/new/microsoft-sharepoint")
       return
     }

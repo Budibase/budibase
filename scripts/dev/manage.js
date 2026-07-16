@@ -17,6 +17,7 @@ async function init() {
     REDIS_PASSWORD: "budibase",
     MINIO_URL: "http://localhost:4004",
     COUCH_DB_URL: "http://budibase:budibase@localhost:4005",
+    COUCH_DB_SQL_URL: "http://localhost:4006",
     COUCH_DB_USERNAME: "budibase",
     COUCH_DB_PASSWORD: "budibase",
     // empty string is false

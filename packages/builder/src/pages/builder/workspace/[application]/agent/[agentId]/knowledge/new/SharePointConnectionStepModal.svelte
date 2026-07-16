@@ -18,7 +18,9 @@
     options: SharePointConnectionOption[]
     selectedConnectionId: string
     loadingNextStep?: boolean
+    hasSharePointDatasource?: boolean
     onNext: () => Promise<void> | void
+    onConfigure: () => Promise<void> | void
     onConnectionChange: (_connectionId: string) => void
   }
 
@@ -26,7 +28,9 @@
     options,
     selectedConnectionId,
     loadingNextStep = false,
+    hasSharePointDatasource = false,
     onNext,
+    onConfigure,
     onConnectionChange,
   }: Props = $props()
 
@@ -54,7 +58,15 @@
       </div>
 
       {#if options.length === 0}
-        <Body size="S">No SharePoint OAuth2 auth configs found.</Body>
+        {#if hasSharePointDatasource}
+          <Body size="S">
+            Your SharePoint connection cannot be used for Agent Knowledge
+            because it does not have an OAuth2 client credentials auth config.
+            Add one to continue.
+          </Body>
+        {:else}
+          <Body size="S">No SharePoint connections found.</Body>
+        {/if}
       {:else}
         <Select
           value={selectedConnectionId}
@@ -69,14 +81,18 @@
     </div>
 
     <ButtonGroup slot="footer">
-      <Button
-        cta
-        primary
-        on:click={onNext}
-        disabled={!selectedConnectionId || loadingNextStep}
-      >
-        {loadingNextStep ? "Loading..." : "Next"}
-      </Button>
+      {#if options.length === 0 && hasSharePointDatasource}
+        <Button cta primary on:click={onConfigure}>Configure connection</Button>
+      {:else}
+        <Button
+          cta
+          primary
+          on:click={onNext}
+          disabled={!selectedConnectionId || loadingNextStep}
+        >
+          {loadingNextStep ? "Loading..." : "Next"}
+        </Button>
+      {/if}
     </ButtonGroup>
   </ModalContent>
 </Modal>

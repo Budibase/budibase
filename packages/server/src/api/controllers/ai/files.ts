@@ -381,7 +381,8 @@ export async function connectAgentSharePointSite(
   >
 ) {
   const { agentId, operationId } = ctx.params
-  const { datasourceId, authConfigId, siteId, filters } = ctx.request.body
+  const { datasourceId, authConfigId, site, filters } = ctx.request.body
+  const siteId = site.id
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
   }
@@ -415,8 +416,8 @@ export async function connectAgentSharePointSite(
       authConfigId,
       site: {
         id: siteId,
-        name: selectedOption?.name,
-        webUrl: selectedOption?.webUrl,
+        name: selectedOption?.name || site.name,
+        webUrl: selectedOption?.webUrl || site.webUrl,
       },
       filters: filters ? { patterns: filters } : undefined,
     },
