@@ -415,7 +415,6 @@ export async function resumeOperation({
     sessionId: ctx.sessionId,
     user,
     operationId: ctx.operationId,
-    escalationResolved: true,
     additionalInstructions: approvalInstructions,
     getRequestId: () => doc.requestId,
   })
