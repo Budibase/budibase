@@ -1,4 +1,4 @@
-import { HTTPError, roles } from "@budibase/backend-core"
+import { context, HTTPError, roles } from "@budibase/backend-core"
 import {
   ChatApp,
   ChatAppAgent,
@@ -9,14 +9,19 @@ import {
 import { sdk as usersSdk } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 
+export type ChatAgentAccessContext = Pick<UserCtx, "user" | "roleId">
+
+// Admin, global builder, or a builder of this workspace - a builder of some
+// other workspace gets no special access here.
+const isWorkspaceAdminOrBuilder = (ctx: ChatAgentAccessContext) =>
+  !!ctx.user &&
+  usersSdk.users.isAdminOrBuilder(ctx.user, context.getWorkspaceId())
+
 export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
-  const isCreator = usersSdk.users.isCreator(ctx.user)
-  if (!isCreator && chatApp.live !== true) {
+  if (!isWorkspaceAdminOrBuilder(ctx) && chatApp.live !== true) {
     throw new HTTPError("Chat app is not live", 403)
   }
 }
-
-export type ChatAgentAccessContext = Pick<UserCtx, "user" | "roleId">
 
 const getUserRoleId = (ctx: ChatAgentAccessContext) =>
   ctx.roleId || ctx.user?.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
@@ -26,7 +31,7 @@ export const canAccessChatAppAgentForUser = async (
   chatAgent: ChatAppAgent,
   accessController?: InstanceType<typeof roles.AccessController>
 ) => {
-  if (usersSdk.users.isCreator(ctx.user)) {
+  if (isWorkspaceAdminOrBuilder(ctx)) {
     return true
   }
   if (!chatAgent.roleId) {
