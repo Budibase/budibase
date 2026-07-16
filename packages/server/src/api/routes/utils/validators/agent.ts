@@ -1,5 +1,6 @@
 import { auth } from "@budibase/backend-core"
 import { REVIEWER_TYPES } from "@budibase/shared-core"
+import { EscalationNotificationChannel } from "@budibase/types"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -56,7 +57,9 @@ const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
   .allow(null)
 
 const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
-  type: Joi.string().required(),
+  type: Joi.string()
+    .valid(...Object.values(EscalationNotificationChannel))
+    .required(),
   config: Joi.object().optional(),
 })
 
@@ -68,7 +71,7 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
   escalation: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().optional(),
+    delay: Joi.number().integer().positive().optional(),
   }).optional(),
 })
 
