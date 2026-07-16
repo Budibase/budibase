@@ -10,13 +10,19 @@ import {
   OfflineLicense,
   Hosting,
 } from "@budibase/types"
-import { installation, events, context } from "@budibase/backend-core"
+import {
+  installation,
+  events,
+  context,
+  HTTPError,
+} from "@budibase/backend-core"
 import union from "lodash/union"
 import merge from "lodash/merge"
 
 // TOKEN
 
 export async function activateOfflineLicenseToken(offlineLicenseToken: string) {
+  await verifyOfflineLicenseToken(offlineLicenseToken)
   await db.licenseInfo.save({ offlineLicenseToken })
   await cache.refresh()
 }
@@ -62,10 +68,12 @@ export function getIdentifierFromBase64(
 export function verifyExpiry(license: OfflineLicense) {
   const now = Date.now()
   const expireAt = new Date(license.expireAt).getTime()
-  if (now > expireAt) {
+  if (!Number.isFinite(expireAt) || now > expireAt) {
     throw new Error(`Offline license has expired. expireAt=${license.expireAt}`)
   }
 }
+
+export class OfflineLicenseMismatchError extends Error {}
 
 export async function verifyInstallation(license: OfflineLicense) {
   const identifier = await getIdentifier()
@@ -74,7 +82,7 @@ export async function verifyInstallation(license: OfflineLicense) {
     license.identifier.tenantId !== identifier.tenantId
   ) {
     // be intentionally vague
-    throw new Error("Invalid offline license")
+    throw new OfflineLicenseMismatchError("Invalid offline license")
   }
 }
 
@@ -91,13 +99,42 @@ export function enrichLicense(license: OfflineLicense) {
   return license
 }
 
+export async function verifyOfflineLicenseToken(
+  token: string
+): Promise<OfflineLicense> {
+  let license: OfflineLicense
+  try {
+    license = await signing.verifyLicenseToken(token)
+  } catch {
+    throw new HTTPError("Invalid offline license token", 400)
+  }
+
+  try {
+    verifyExpiry(license)
+  } catch {
+    throw new HTTPError("Offline license has expired", 400)
+  }
+
+  try {
+    await verifyInstallation(license)
+  } catch (e) {
+    if (e instanceof OfflineLicenseMismatchError) {
+      throw new HTTPError(
+        "Offline license does not match this installation",
+        400
+      )
+    }
+    throw e
+  }
+
+  return license
+}
+
 export async function getOfflineLicense(): Promise<License | undefined> {
   try {
     const token = await getOfflineLicenseToken()
     if (token) {
-      const license = await signing.verifyLicenseToken(token)
-      verifyExpiry(license)
-      await verifyInstallation(license)
+      const license = await verifyOfflineLicenseToken(token)
       return enrichLicense(license)
     }
   } catch (e) {
