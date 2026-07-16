@@ -5,6 +5,7 @@ import {
   type ChatConversationChannel,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  EscalationAction,
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -156,13 +157,13 @@ const buildAdaptiveCard = ({
         type: "Action.Submit",
         title: "Approve",
         style: "positive",
-        data: { actionId: "esc_approve", value },
+        data: { actionId: EscalationAction.APPROVE, value },
       },
       {
         type: "Action.Submit",
         title: "Reject",
         style: "destructive",
-        data: { actionId: "esc_reject", value },
+        data: { actionId: EscalationAction.REJECT, value },
       },
     ],
   }

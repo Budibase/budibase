@@ -6,6 +6,7 @@ import {
   type ChatConversationChannel,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  EscalationAction,
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -38,14 +39,14 @@ const buildEscalationBlocks = ({
         type: "button",
         text: { type: "plain_text", text: "Approve" },
         style: "primary",
-        action_id: "esc_approve",
+        action_id: EscalationAction.APPROVE,
         value: JSON.stringify({ escalationId, notificationDocId, appId }),
       },
       {
         type: "button",
         text: { type: "plain_text", text: "Reject" },
         style: "danger",
-        action_id: "esc_reject",
+        action_id: EscalationAction.REJECT,
         value: JSON.stringify({ escalationId, notificationDocId, appId }),
       },
     ],

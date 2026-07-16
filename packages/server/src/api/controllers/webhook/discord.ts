@@ -7,6 +7,7 @@ import {
   type Ctx,
   type DiscordConversationScope,
   type DiscordInteraction,
+  EscalationAction,
   type EscalationNotificationDoc,
   FeatureFlag,
 } from "@budibase/types"
@@ -212,6 +213,8 @@ export async function discordWebhook(
 
       chat.onAction(async (event: ActionEvent) => {
         const customId = event.actionId
+        // esc_a/esc_r: short action codes - Discord packs everything into the
+        // 100-char custom_id. Decoded to the canonical esc_approve/esc_reject.
         const isApprove = customId.startsWith("esc_a:")
         const isReject = customId.startsWith("esc_r:")
         if (!isApprove && !isReject) {
@@ -234,7 +237,9 @@ export async function discordWebhook(
         const notificationDocId = `escalation_notification_${shortNotifId}`
 
         const discordResponse = {
-          actionId: isApprove ? "escalation_approve" : "escalation_reject",
+          actionId: isApprove
+            ? EscalationAction.APPROVE
+            : EscalationAction.REJECT,
           user: event.user,
           messageId: event.messageId,
           threadId: event.threadId,

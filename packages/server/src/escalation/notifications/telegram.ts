@@ -6,6 +6,7 @@ import {
   DocumentType,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  EscalationAction,
   EscalationNotificationChannel,
   SEPARATOR,
 } from "@budibase/types"
@@ -27,11 +28,11 @@ const buildEscalationKeyboard = (shortId: string) => ({
     [
       {
         text: "Approve",
-        callback_data: buildCallbackData("esc_approve", shortId),
+        callback_data: buildCallbackData(EscalationAction.APPROVE, shortId),
       },
       {
         text: "Reject",
-        callback_data: buildCallbackData("esc_reject", shortId),
+        callback_data: buildCallbackData(EscalationAction.REJECT, shortId),
       },
     ],
   ],

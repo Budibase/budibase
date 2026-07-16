@@ -3,6 +3,7 @@ import { context } from "@budibase/backend-core"
 import type { UIMessage } from "ai"
 import {
   DocumentType,
+  EscalationAction,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationRecipient,
@@ -194,6 +195,7 @@ export async function respond(
   const totalRecipients = contextDoc.recipients?.length ?? 0
   const responses = notifDocs
     .filter(doc => doc.respondedAt)
+    .sort((a, b) => (a.respondedAt! < b.respondedAt! ? -1 : 1))
     .map(doc => doc.response)
 
   console.log("Escalation respond: responses so far", {
@@ -211,7 +213,11 @@ export async function respond(
     ? decodeJSBinding(contextDoc.resolutionStrategy!)!
     : contextDoc.resolutionStrategy!
   const vm = new IsolatedVM().withSnippets(RESOLUTION_STRATEGY_SNIPPETS)
-  const result = vm.withContext({ responses, totalRecipients }, () =>
+  const actions = {
+    approve: EscalationAction.APPROVE,
+    reject: EscalationAction.REJECT,
+  }
+  const result = vm.withContext({ responses, totalRecipients, actions }, () =>
     vm.execute(iifeWrapper(rawCode))
   )
 

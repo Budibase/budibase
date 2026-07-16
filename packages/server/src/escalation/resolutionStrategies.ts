@@ -16,20 +16,25 @@ import { encodeJSBinding } from "@budibase/string-templates"
 declare const responses: EscalationResponse[]
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const totalRecipients: number
+declare const actions: { approve: string; reject: string }
 
 interface ResolutionStrategyFn {
   (): EscalationResponse | false
 }
 
-// The first recipient to respond decides the outcome and resolves the escalation
+// The first recipient to respond decides the outcome. Unrecognised actions
+// resolve nothing - the escalation stays open.
 const firstResponse: ResolutionStrategyFn = () => {
+  const outcomes: Record<string, boolean> = {
+    [actions.approve]: true,
+    [actions.reject]: false,
+  }
   const first = responses && responses[0]
-  return first
-    ? {
-        accepted: String(first.actionId).indexOf("approve") !== -1,
-        actionId: first.actionId,
-      }
-    : false
+  if (!first) {
+    return false
+  }
+  const accepted = outcomes[first.actionId]
+  return accepted === undefined ? false : { accepted, actionId: first.actionId }
 }
 
 const toStrategy = (
