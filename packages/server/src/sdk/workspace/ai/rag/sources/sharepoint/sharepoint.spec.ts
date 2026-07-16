@@ -1378,6 +1378,244 @@ describe("rag/sharepoint sync deduplication", () => {
     )
   })
 
+  it("keeps the existing list file when the replacement upload fails", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockRejectedValue(new Error("upload failed"))
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      deleted: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("uploads a changed list before deleting the existing file", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const replacementFile = makeSharePointListFile({
+      id: "replacement_list_1",
+      sourceId,
+      siteId,
+      listId: "list-1",
+      contentHash: "new-hash",
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockResolvedValue(replacementFile)
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(
+      mockKnowledgeBaseUploadFile.mock.invocationCallOrder[0]
+    ).toBeLessThan(mockDeleteFileForOperation.mock.invocationCallOrder[0])
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "existing_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 1,
+      failed: 0,
+      deleted: 1,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("rolls back the replacement when the existing list file cannot be deleted", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const replacementFile = makeSharePointListFile({
+      id: "replacement_list_1",
+      sourceId,
+      siteId,
+      listId: "list-1",
+      contentHash: "new-hash",
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockResolvedValue(replacementFile)
+    mockDeleteFileForOperation
+      .mockRejectedValueOnce(new Error("existing delete failed"))
+      .mockResolvedValueOnce(undefined)
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockDeleteFileForOperation).toHaveBeenNthCalledWith(
+      1,
+      "agent_1",
+      "operation_1",
+      "existing_list_1"
+    )
+    expect(mockDeleteFileForOperation).toHaveBeenNthCalledWith(
+      2,
+      "agent_1",
+      "operation_1",
+      "replacement_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      deleted: 1,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("reports both deletion failures when replacement rollback fails", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const replacementFile = makeSharePointListFile({
+      id: "replacement_list_1",
+      sourceId,
+      siteId,
+      listId: "list-1",
+      contentHash: "new-hash",
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockResolvedValue(replacementFile)
+    mockDeleteFileForOperation
+      .mockRejectedValueOnce(new Error("existing delete failed"))
+      .mockRejectedValueOnce(new Error("rollback delete failed"))
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+    const workspaceDb = mockContextGetWorkspaceDb.mock.results[0].value
+
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      deleted: 0,
+      totalDiscovered: 1,
+    })
+    expect(workspaceDb.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: AgentKnowledgeSourceSyncRunStatus.FAILED,
+        errorMessage: expect.stringContaining(
+          "existing delete failed; failed to roll back replacement file replacement_list_1: rollback delete failed"
+        ),
+      })
+    )
+  })
+
   it("does not delete an existing list file when regenerated CSV exceeds the size limit", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"

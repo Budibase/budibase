@@ -974,16 +974,7 @@ const runSharePointSourcesForOperation = async (
           continue
         }
 
-        if (existingListFile?._id) {
-          await deleteFileForOperation(
-            agentId,
-            operationId,
-            existingListFile._id
-          )
-          deleted++
-        }
-
-        await knowledgeBaseSdk.uploadKnowledgeBaseFile({
+        const replacementFile = await knowledgeBaseSdk.uploadKnowledgeBaseFile({
           knowledgeBaseId,
           source: {
             type: KnowledgeBaseFileSourceType.SHAREPOINT_LIST,
@@ -1001,6 +992,54 @@ const runSharePointSourcesForOperation = async (
           buffer: document.buffer,
           uploadedBy: `sharepoint:${sourceId}`,
         })
+
+        if (existingListFile?._id) {
+          if (!replacementFile._id) {
+            throw new Error(
+              `Replacement upload for SharePoint list ${list.name} did not return a file ID`
+            )
+          }
+
+          try {
+            await deleteFileForOperation(
+              agentId,
+              operationId,
+              existingListFile._id
+            )
+            deleted++
+          } catch (deleteError) {
+            deleteFailed++
+            const deleteMessage =
+              deleteError instanceof Error
+                ? deleteError.message
+                : String(deleteError)
+
+            try {
+              await deleteFileForOperation(
+                agentId,
+                operationId,
+                replacementFile._id
+              )
+              deleted++
+            } catch (rollbackError) {
+              deleteFailed++
+              const rollbackMessage =
+                rollbackError instanceof Error
+                  ? rollbackError.message
+                  : String(rollbackError)
+              throw new Error(
+                `Failed to delete previous SharePoint list file ${existingListFile._id}: ${deleteMessage}; failed to roll back replacement file ${replacementFile._id}: ${rollbackMessage}`,
+                { cause: deleteError }
+              )
+            }
+
+            throw new Error(
+              `Failed to delete previous SharePoint list file ${existingListFile._id}: ${deleteMessage}; replacement file ${replacementFile._id} was rolled back`,
+              { cause: deleteError }
+            )
+          }
+        }
+
         synced++
       } catch (error) {
         failed++
