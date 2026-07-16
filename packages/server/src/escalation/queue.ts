@@ -90,11 +90,14 @@ async function processNotify(job: Job<EscalationJob>) {
     }
 
     if (doc.resolution !== "pending") {
-      console.log("Escalation notify: escalation already resolved, discarding", {
-        escalationId,
-        resolution: doc.resolution,
-        jobId: job.id,
-      })
+      console.log(
+        "Escalation notify: escalation already resolved, discarding",
+        {
+          escalationId,
+          resolution: doc.resolution,
+          jobId: job.id,
+        }
+      )
       return
     }
 
