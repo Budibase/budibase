@@ -128,6 +128,23 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("passes getRequestId resolving to the escalation's request id", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      mockApprovedRun("Approved and booked.")
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      const { getRequestId } = prepareAgentChatRunMock.mock.calls[0][0]
+      expect(getRequestId()).toEqual(requestId)
+    })
+  })
+
   it("records escalation_resolved with outcome rejected", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
