@@ -7,6 +7,7 @@ import {
   AutomationActionStepId,
   ContextUser,
   DocumentType,
+  ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationRecipient,
@@ -436,6 +437,19 @@ export async function resumeOperation({
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
+      onToolCalls: toolNames => {
+        const requestId = doc.requestId
+        if (requestId && toolNames.includes(ESCALATE_TOOL_NAME)) {
+          sdk.ai.agentRequests
+            .updateRequestStatus({ requestId, status: "needs_input" })
+            .catch(error => {
+              console.error(
+                "Failed to update agent request status to needs_input",
+                { escalationId, agentId: ctx.agentId, error }
+              )
+            })
+        }
+      },
       onToolCallCompleted: ({ toolName, status, input, output }) => {
         const requestId = doc.requestId
         if (!requestId) {
