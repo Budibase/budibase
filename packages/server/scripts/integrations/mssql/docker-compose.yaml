@@ -11,3 +11,16 @@ services:
       dockerfile: data/Dockerfile
     ports:
       - "1433:1433"
+
+  admin-ui:
+    image: dbgate/dbgate
+    ports:
+      - "3001:3000"
+    environment:
+      CONNECTIONS: mssql
+      LABEL_mssql: MSSQL
+      SERVER_mssql: mssql
+      PORT_mssql: 1433
+      USER_mssql: sa
+      PASSWORD_mssql: Passw0rd
+      ENGINE_mssql: mssql@dbgate-plugin-mssql
