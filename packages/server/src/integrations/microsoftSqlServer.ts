@@ -232,8 +232,15 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     "spt_monitor",
     "MSreplication_options",
   ]
-  TABLES_SQL =
-    "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+  TABLES_SQL = `SELECT
+      ist.*,
+      st.temporal_type AS TEMPORAL_TYPE
+    FROM INFORMATION_SCHEMA.TABLES ist
+    INNER JOIN sys.tables st
+      ON st.object_id = OBJECT_ID(
+        QUOTENAME(ist.TABLE_SCHEMA) + '.' + QUOTENAME(ist.TABLE_NAME)
+      )
+    WHERE ist.TABLE_TYPE='BASE TABLE'`
 
   constructor(config: MSSQLConfig) {
     super(SqlClient.MS_SQL)
@@ -454,6 +461,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
     const tables: Record<string, Table> = {}
     for (let tableName of tableNames) {
+      const tableMetadata = tableInfo.find(
+        table =>
+          table.TABLE_NAME === tableName && table.TABLE_SCHEMA === schemaName
+      )
+      const isHistoryTable = tableMetadata?.TEMPORAL_TYPE === 1
+
       // get the column definition (type)
       const definition = await this.runSQL(
         this.getDefinitionSQL(tableName, schemaName)
@@ -466,7 +479,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       const columns: MSSQLColumn[] = await this.runSQL(
         this.getAutoColumnsSQL(tableName, schemaName)
       )
-      const primaryKeys = constraints
+      let primaryKeys = constraints
         .filter(
           (constraint: any) => constraint.CONSTRAINT_TYPE === "PRIMARY KEY"
         )
@@ -488,7 +501,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           continue
         }
         const hasDefault = def.COLUMN_DEFAULT
-        const isAuto = !!autoColumns.find(col => col === name)
+        const isAuto = isHistoryTable || !!autoColumns.find(col => col === name)
         const required = !!requiredColumns.find(col => col === name)
         schema[name] = generateColumnDefinition({
           autocolumn: isAuto,
@@ -496,6 +509,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           presence: required && !isAuto && !hasDefault,
           externalType: def.DATA_TYPE,
         })
+      }
+      if (isHistoryTable && primaryKeys.length === 0) {
+        primaryKeys = definition
+          .map(def => def.COLUMN_NAME)
+          .filter((name): name is string => typeof name === "string")
       }
       tables[tableName] = {
         _id: buildExternalTableId(datasourceId, tableName),

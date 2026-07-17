@@ -3,6 +3,7 @@ export interface MSSQLTablesResponse {
   TABLE_SCHEMA: string
   TABLE_NAME: string
   TABLE_TYPE: string
+  TEMPORAL_TYPE: number
 }
 
 export interface MSSQLColumn {
