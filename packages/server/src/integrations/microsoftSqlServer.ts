@@ -412,13 +412,17 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   getAutoColumnsSQL(tableName: string, schemaName: string): SqlQuery {
     return {
       sql: `SELECT
-            COLUMNPROPERTY(OBJECT_ID(QUOTENAME(TABLE_SCHEMA)+'.'+QUOTENAME(TABLE_NAME)),COLUMN_NAME,'IsComputed')
+            COLUMNPROPERTY(OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA)+'.'+QUOTENAME(c.TABLE_NAME)), c.COLUMN_NAME, 'IsComputed')
               AS IS_COMPUTED,
-            COLUMNPROPERTY(OBJECT_ID(QUOTENAME(TABLE_SCHEMA)+'.'+QUOTENAME(TABLE_NAME)), COLUMN_NAME, 'IsIdentity')
+            COLUMNPROPERTY(OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA)+'.'+QUOTENAME(c.TABLE_NAME)), c.COLUMN_NAME, 'IsIdentity')
               AS IS_IDENTITY,
-            *
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME=@p0 AND TABLE_SCHEMA=@p1`,
+            sc.generated_always_type AS GENERATED_ALWAYS_TYPE,
+            c.*
+            FROM INFORMATION_SCHEMA.COLUMNS c
+            INNER JOIN sys.columns sc
+              ON sc.object_id = OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME))
+              AND sc.name = c.COLUMN_NAME
+            WHERE c.TABLE_NAME=@p0 AND c.TABLE_SCHEMA=@p1`,
       bindings: [tableName, schemaName],
     }
   }
@@ -468,7 +472,10 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         )
         .map((constraint: any) => constraint.COLUMN_NAME)
       const autoColumns = columns
-        .filter(col => col.IS_COMPUTED || col.IS_IDENTITY)
+        .filter(
+          col =>
+            col.IS_COMPUTED || col.IS_IDENTITY || col.GENERATED_ALWAYS_TYPE > 0
+        )
         .map(col => col.COLUMN_NAME)
       const requiredColumns = columns
         .filter(col => col.IS_NULLABLE === "NO")

@@ -8,6 +8,7 @@ export interface MSSQLTablesResponse {
 export interface MSSQLColumn {
   IS_COMPUTED: number
   IS_IDENTITY: number
+  GENERATED_ALWAYS_TYPE: number
   TABLE_CATALOG: string
   TABLE_SCHEMA: string
   TABLE_NAME: string
