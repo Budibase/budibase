@@ -554,7 +554,7 @@ const stableStringifyValue = (value: unknown): unknown => {
 
 const escapeCsvCell = (value: unknown) => {
   const normalized = stableStringify(value)
-  const neutralized = /^[=+\-@\t\r]/.test(normalized)
+  const neutralized = /^[=+\-@\t\r\n＝＋－＠]/.test(normalized)
     ? `'${normalized}`
     : normalized
   return /[",\r\n]/.test(neutralized)

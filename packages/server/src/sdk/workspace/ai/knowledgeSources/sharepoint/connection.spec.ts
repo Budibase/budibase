@@ -169,7 +169,7 @@ describe("SharePoint lists", () => {
           status: 200,
           json: async () => ({
             value: [
-              { name: "Formula", displayName: "=Formula", hidden: false },
+              { name: "Formula", displayName: "＝Formula", hidden: false },
               { name: "Safe", displayName: "Safe", hidden: false },
             ],
           }),
@@ -207,6 +207,26 @@ describe("SharePoint lists", () => {
               id: "6",
               fields: { Formula: "\r=1", Safe: "plain text" },
             },
+            {
+              id: "7",
+              fields: { Formula: "\n=1", Safe: "plain text" },
+            },
+            {
+              id: "8",
+              fields: { Formula: "＝1+1", Safe: "plain text" },
+            },
+            {
+              id: "9",
+              fields: { Formula: "＋1+1", Safe: "plain text" },
+            },
+            {
+              id: "10",
+              fields: { Formula: "－1", Safe: "plain text" },
+            },
+            {
+              id: "11",
+              fields: { Formula: "＠SUM(1)", Safe: "plain text" },
+            },
           ],
         }),
       } as Response
@@ -220,13 +240,18 @@ describe("SharePoint lists", () => {
 
     expect(document.buffer.toString()).toBe(
       [
-        "SharePoint Item ID,Created,Modified,Web URL,'=Formula,Safe",
+        "SharePoint Item ID,Created,Modified,Web URL,'＝Formula,Safe",
         '1,,,,"\'=HYPERLINK(""https://example.com"")",plain text',
         '2,,,,"\'+SUM(1,1)",plain text',
         "3,,,,'-1,plain text",
         "4,,,,'@SUM(1),plain text",
         "5,,,,'\t=1,plain text",
         '6,,,,"\'\r=1",plain text',
+        '7,,,,"\'\n=1",plain text',
+        "8,,,,'＝1+1,plain text",
+        "9,,,,'＋1+1,plain text",
+        "10,,,,'－1,plain text",
+        "11,,,,'＠SUM(1),plain text",
       ].join("\n")
     )
   })
