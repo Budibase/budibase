@@ -200,17 +200,24 @@ describe("configs", () => {
           )
         })
 
-        it("should preserve allowUnverifiedEmailLinking when set", async () => {
-          await saveConfig(oidc({ allowUnverifiedEmailLinking: true }))
+        it.each([true, false])(
+          "should preserve allowUnverifiedEmailLinking when set to %s",
+          async allowUnverifiedEmailLinking => {
+            await saveConfig(oidc({ allowUnverifiedEmailLinking }))
 
-          const conf = await config.api.configs.getConfig(ConfigType.OIDC)
-          expect(conf.config.configs[0].allowUnverifiedEmailLinking).toBe(true)
+            const conf = await config.api.configs.getConfig(ConfigType.OIDC)
+            expect(conf.config.configs[0].allowUnverifiedEmailLinking).toBe(
+              allowUnverifiedEmailLinking
+            )
 
-          await config.doInTenant(async () => {
-            const rawConf = await configs.getOIDCConfig()
-            expect(rawConf!.allowUnverifiedEmailLinking).toBe(true)
-          })
-        })
+            await config.doInTenant(async () => {
+              const rawConf = await configs.getOIDCConfig()
+              expect(rawConf!.allowUnverifiedEmailLinking).toBe(
+                allowUnverifiedEmailLinking
+              )
+            })
+          }
+        )
 
         it("should strip pkce field when null", async () => {
           await saveConfig(oidc({ pkce: null as any }))
