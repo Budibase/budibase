@@ -1279,15 +1279,19 @@ if (descriptions.length) {
               datasourceId: datasource._id!,
             })
 
-            expect(resp.errors).toEqual({
-              [`${tableName}_History`]: "Table must have a primary key.",
-            })
+            expect(resp.errors).toEqual({})
             expect(
               resp.datasource.entities?.[tableName].schema.ValidFrom.autocolumn
             ).toBe(true)
             expect(
               resp.datasource.entities?.[tableName].schema.ValidTo.autocolumn
             ).toBe(true)
+            expect(
+              resp.datasource.entities?.[`${tableName}_History`]
+            ).toBeDefined()
+            expect(
+              resp.datasource.entities?.[`${tableName}_History`].primary?.length
+            ).toBeGreaterThan(0)
           })
 
         it("re-points primaryDisplay when its column is dropped from the source database", async () => {

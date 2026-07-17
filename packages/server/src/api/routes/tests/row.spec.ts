@@ -1221,6 +1221,12 @@ if (descriptions.length) {
             const rows = await config.api.row.fetch(temporalTable._id!)
             expect(rows).toHaveLength(1)
             expect(rows[0].first_name).toEqual("Johnny")
+
+            const historyTable =
+              schemaRes.datasource.entities![`${tableName}_History`]
+            const historyRows = await config.api.row.fetch(historyTable._id!)
+            expect(historyRows).toHaveLength(1)
+            expect(historyRows[0].first_name).toEqual("John")
           })
 
         describe("relations to same table", () => {
