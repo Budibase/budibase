@@ -21,6 +21,12 @@ export enum SSOProviderType {
   GOOGLE = "google",
 }
 
+export interface SSOIdentity {
+  provider: string
+  providerType: SSOProviderType
+  userId: string
+}
+
 export interface UserSSO {
   provider: string // the individual provider e.g. Okta, Auth0, Google
   providerType: SSOProviderType
@@ -101,6 +107,7 @@ export interface User
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]
   ssoId?: string
+  ssoIdentities?: SSOIdentity[]
   appSort?: string
   budibaseAccess?: boolean
   accountPortalAccess?: boolean

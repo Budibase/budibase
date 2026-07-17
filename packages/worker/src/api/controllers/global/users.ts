@@ -130,6 +130,7 @@ export const changeTenantOwnerEmail = async (
         tenantUser.thirdPartyProfile = undefined
         tenantUser.profile = undefined
         tenantUser.oauth2 = undefined
+        tenantUser.ssoIdentities = undefined
 
         await userSdk.db.save(tenantUser, {
           currentUserId: tenantUser._id,

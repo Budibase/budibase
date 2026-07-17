@@ -8,6 +8,7 @@ import {
 import { SaveUserOpts } from "./user"
 
 export interface JwtClaims {
+  sub?: string
   preferred_username?: string
   email?: string
   email_verified?: boolean

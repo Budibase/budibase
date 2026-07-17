@@ -232,6 +232,7 @@ describe("syncGlobalUsers", () => {
           profile: expect.anything(),
           thirdPartyProfile: expect.anything(),
           ssoId: expect.anything(),
+          ssoIdentities: expect.anything(),
           forceResetPassword: expect.anything(),
         })
       )
@@ -269,6 +270,7 @@ describe("syncGlobalUsers", () => {
           profile: expect.anything(),
           thirdPartyProfile: expect.anything(),
           ssoId: expect.anything(),
+          ssoIdentities: expect.anything(),
           forceResetPassword: expect.anything(),
         })
       )
@@ -366,6 +368,13 @@ describe("syncGlobalUsers", () => {
         profile: { displayName: "Persisted Token" },
         thirdPartyProfile: { id: "external" },
         ssoId: "sso-user",
+        ssoIdentities: [
+          {
+            provider: "google",
+            providerType: "google",
+            userId: "google-user",
+          },
+        ],
         forceResetPassword: false,
       })
 
@@ -379,6 +388,7 @@ describe("syncGlobalUsers", () => {
         "profile",
         "thirdPartyProfile",
         "ssoId",
+        "ssoIdentities",
         "forceResetPassword",
       ]) {
         expect(found).not.toHaveProperty(field)
@@ -409,6 +419,13 @@ describe("syncGlobalUsers", () => {
         profile: { displayName: "Persisted Token" },
         thirdPartyProfile: { id: "external" },
         ssoId: "sso-user",
+        ssoIdentities: [
+          {
+            provider: "google",
+            providerType: "google",
+            userId: "google-user",
+          },
+        ],
         forceResetPassword: false,
       })
 
@@ -423,6 +440,7 @@ describe("syncGlobalUsers", () => {
           profile: expect.anything(),
           thirdPartyProfile: expect.anything(),
           ssoId: expect.anything(),
+          ssoIdentities: expect.anything(),
           forceResetPassword: expect.anything(),
         })
       )

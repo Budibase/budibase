@@ -1,4 +1,5 @@
 import fetch from "node-fetch"
+import jwt from "jsonwebtoken"
 import * as sso from "./sso"
 import { ssoCallbackUrl } from "../utils"
 import { validEmail } from "../../../utils"
@@ -26,14 +27,6 @@ type OIDCUserInfoProfile = OpenIDConnectStrategy.MergedProfile & {
   provider?: string
 }
 
-// the id_token profile also exposes the raw claims via _json
-type OIDCIdProfile = OpenIDConnectStrategy.Profile & {
-  _json?: {
-    email?: string
-    email_verified?: boolean
-  }
-}
-
 export function buildVerifyFn(
   saveUserFn: SaveSSOUserFunction,
   allowUnverifiedEmailLinking = false
@@ -54,19 +47,20 @@ export function buildVerifyFn(
     uiProfile: OIDCUserInfoProfile | undefined,
     idProfile: OpenIDConnectStrategy.Profile,
     _context: OpenIDConnectStrategy.AuthContext,
-    _idToken: string,
+    idToken: string,
     accessToken: string,
     refreshToken: string,
     _params: Record<string, unknown>,
     done: OpenIDConnectStrategy.VerifyCallback
   ) => {
-    const profile = normalizeProfile(uiProfile, idProfile)
-    const jwtClaims = buildJwtClaims(uiProfile, idProfile)
+    const jwtClaims = buildJwtClaims(idToken, idProfile)
+    validateSubjects(uiProfile, idProfile, jwtClaims)
+    const profile = normalizeProfile(uiProfile, idProfile, jwtClaims)
     const details: SSOAuthDetails = {
       // store the issuer info to enable sync in future
       provider: issuer,
       providerType: SSOProviderType.OIDC,
-      userId: profile.id,
+      userId: jwtClaims.sub!,
       profile: profile,
       email: getEmail(profile, jwtClaims),
       emailVerified: getEmailVerified(profile, jwtClaims),
@@ -88,22 +82,21 @@ export function buildVerifyFn(
 
 function normalizeProfile(
   uiProfile: OIDCUserInfoProfile | undefined,
-  idProfile: OpenIDConnectStrategy.Profile
+  idProfile: OpenIDConnectStrategy.Profile,
+  jwtClaims: JwtClaims
 ): SSOProfile {
   const profileJson = { ...(uiProfile?._json || {}) }
 
   if (!profileJson.email && idProfile.emails?.length) {
     profileJson.email = idProfile.emails[0].value
     // keep email_verified aligned with the email it describes
-    profileJson.email_verified = (
-      idProfile as OIDCIdProfile
-    )._json?.email_verified
+    profileJson.email_verified = jwtClaims.email_verified
   }
 
   const displayName = uiProfile?.displayName || idProfile.displayName
 
   return {
-    id: uiProfile?.id || idProfile.id,
+    id: jwtClaims.sub!,
     name:
       uiProfile?.name ||
       idProfile.name ||
@@ -115,13 +108,42 @@ function normalizeProfile(
 }
 
 function buildJwtClaims(
-  uiProfile: OIDCUserInfoProfile | undefined,
+  idToken: string,
   idProfile: OpenIDConnectStrategy.Profile
 ): JwtClaims {
+  const decoded = jwt.decode(idToken)
+  if (!decoded || typeof decoded === "string") {
+    throw new Error("Could not decode ID token claims")
+  }
+
   return {
-    email: uiProfile?._json?.email || idProfile.emails?.[0]?.value,
-    email_verified: (idProfile as OIDCIdProfile)._json?.email_verified,
-    preferred_username: idProfile.username,
+    sub: typeof decoded.sub === "string" ? decoded.sub : undefined,
+    email:
+      typeof decoded.email === "string"
+        ? decoded.email
+        : idProfile.emails?.[0]?.value,
+    email_verified:
+      typeof decoded.email_verified === "boolean"
+        ? decoded.email_verified
+        : undefined,
+    preferred_username:
+      typeof decoded.preferred_username === "string"
+        ? decoded.preferred_username
+        : idProfile.username,
+  }
+}
+
+function validateSubjects(
+  uiProfile: OIDCUserInfoProfile | undefined,
+  idProfile: OpenIDConnectStrategy.Profile,
+  jwtClaims: JwtClaims
+) {
+  if (!jwtClaims.sub || idProfile.id !== jwtClaims.sub) {
+    throw new Error("ID token subject is invalid")
+  }
+
+  if (uiProfile && uiProfile.id !== jwtClaims.sub) {
+    throw new Error("UserInfo subject does not match ID token subject")
   }
 }
 
@@ -164,7 +186,14 @@ function getEmail(profile: SSOProfile, jwtClaims: JwtClaims) {
  */
 function getEmailVerified(profile: SSOProfile, jwtClaims: JwtClaims): boolean {
   if (profile._json.email) {
-    return profile._json.email_verified === true
+    if (typeof profile._json.email_verified === "boolean") {
+      return profile._json.email_verified
+    }
+
+    return (
+      profile._json.email.toLowerCase() === jwtClaims.email?.toLowerCase() &&
+      jwtClaims.email_verified === true
+    )
   }
 
   if (jwtClaims.email) {

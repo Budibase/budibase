@@ -19,6 +19,12 @@ const getErrorMessage = () => {
   return mockDone.mock.calls[0][2].message
 }
 
+const getIdentity = (details: SSOAuthDetails) => ({
+  provider: details.provider,
+  providerType: details.providerType,
+  userId: details.userId,
+})
+
 describe("sso", () => {
   describe("authenticate", () => {
     beforeEach(() => {
@@ -94,27 +100,41 @@ describe("sso", () => {
 
           await sso.authenticate(details, false, mockDone, mockSaveUser)
 
-          // default roles for new user
-          ssoUser.roles = {}
-
-          // modified external id to match user format
-          ssoUser._id = "us_" + details.userId
-          delete ssoUser.userId
-
-          // new sso user won't have a password
-          delete ssoUser.password
-
-          // new user isn't saved with rev
-          delete ssoUser._rev
-
-          // tenant id added
-          ssoUser.tenantId = context.getTenantId()
-
-          expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
-            hashPassword: false,
-            requirePassword: false,
-          })
+          expect(mockSaveUser).toHaveBeenCalledWith(
+            expect.objectContaining({
+              _id: expect.stringMatching(/^us_[a-f0-9]{64}$/),
+              email: details.email,
+              roles: {},
+              tenantId: context.getTenantId(),
+              ssoIdentities: [getIdentity(details)],
+            }),
+            {
+              hashPassword: false,
+              requirePassword: false,
+            }
+          )
           expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+        })
+
+        it("uses different user ids for equal subjects from different issuers", async () => {
+          const firstDetails = {
+            ...details,
+            provider: "https://one.example.com",
+          }
+          const secondDetails = {
+            ...details,
+            provider: "https://two.example.com",
+          }
+          mockSaveUser
+            .mockImplementationOnce(user => Promise.resolve(user))
+            .mockImplementationOnce(user => Promise.resolve(user))
+
+          await sso.authenticate(firstDetails, false, mockDone, mockSaveUser)
+          await sso.authenticate(secondDetails, false, mockDone, mockSaveUser)
+
+          expect(mockSaveUser.mock.calls[0][0]._id).not.toEqual(
+            mockSaveUser.mock.calls[1][0]._id
+          )
         })
       })
     })
@@ -127,6 +147,7 @@ describe("sso", () => {
         existingUser = structures.users.user()
         existingUser._id = structures.uuid()
         details = structures.sso.authDetails(existingUser)
+        existingUser.ssoIdentities = [getIdentity(details)]
         nock("http://example.com").get("/").reply(200, undefined, {
           "Content-Type": "image/png",
         })
@@ -192,6 +213,33 @@ describe("sso", () => {
           expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
         })
       })
+
+      describe("exists by stored SSO identity", () => {
+        beforeEach(() => {
+          users.getGlobalUserBySSOIdentity.mockReturnValueOnce(
+            Promise.resolve(existingUser)
+          )
+        })
+
+        it("syncs and authenticates the bound user", async () => {
+          const ssoUser = structures.users.ssoUser({
+            user: existingUser,
+            details,
+          })
+          mockSaveUser.mockReturnValueOnce(ssoUser)
+
+          await sso.authenticate(details, true, mockDone, mockSaveUser)
+
+          expect(users.getGlobalUserBySSOIdentity).toHaveBeenCalledWith(
+            getIdentity(details)
+          )
+          expect(mockSaveUser).toHaveBeenCalledWith(
+            expect.objectContaining({ _id: existingUser._id }),
+            expect.anything()
+          )
+          expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+        })
+      })
     })
 
     describe("when the email is not verified", () => {
@@ -215,30 +263,22 @@ describe("sso", () => {
       })
 
       it("does not link to an existing account by email", async () => {
-        users.getGlobalUserByEmail.mockReturnValue(
+        users.getGlobalUserByEmail.mockReturnValueOnce(
           Promise.resolve(existingUser)
         )
-        const ssoUser = structures.users.ssoUser({
-          user: existingUser,
-          details,
-        })
-        mockSaveUser.mockReturnValueOnce(ssoUser)
-
         await sso.authenticate(details, false, mockDone, mockSaveUser)
 
-        // the victim's account must never be loaded by an unverified email
-        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
-        // instead a brand new account keyed on the sso id is created
-        expect(mockSaveUser).toHaveBeenCalledWith(
-          expect.objectContaining({ _id: "us_" + details.userId }),
-          expect.anything()
+        expect(users.getGlobalUserByEmail).toHaveBeenCalled()
+        expect(mockSaveUser).not.toHaveBeenCalled()
+        expect(getErrorMessage()).toContain(
+          "SSO identity cannot be linked to existing user"
         )
       })
 
       it("rejects when a local account is required", async () => {
         await sso.authenticate(details, true, mockDone, mockSaveUser)
 
-        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
+        expect(users.getGlobalUserByEmail).toHaveBeenCalled()
         expect(mockDone.mock.calls.length).toBe(1)
         expect(getErrorMessage()).toContain(
           "Email does not yet exist. You must set up your local budibase account first."
@@ -258,7 +298,56 @@ describe("sso", () => {
         await sso.authenticate(details, false, mockDone, mockSaveUser, true)
 
         expect(users.getGlobalUserByEmail).toHaveBeenCalled()
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            ssoIdentities: [getIdentity(details)],
+          }),
+          expect.anything()
+        )
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+      })
+
+      it("migrates a user previously linked to the same issuer", async () => {
+        Object.assign(existingUser, {
+          provider: details.provider,
+          providerType: details.providerType,
+        })
+        users.getGlobalUserByEmail.mockReturnValueOnce(
+          Promise.resolve(existingUser)
+        )
+        const ssoUser = structures.users.ssoUser({
+          user: existingUser,
+          details,
+        })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            _id: existingUser._id,
+            ssoIdentities: [getIdentity(details)],
+          }),
+          expect.anything()
+        )
+        expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+      })
+
+      it("does not migrate a user linked to a different issuer", async () => {
+        Object.assign(existingUser, {
+          provider: "https://different-issuer.example.com",
+          providerType: details.providerType,
+        })
+        users.getGlobalUserByEmail.mockReturnValueOnce(
+          Promise.resolve(existingUser)
+        )
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        expect(mockSaveUser).not.toHaveBeenCalled()
+        expect(getErrorMessage()).toContain(
+          "SSO identity cannot be linked to existing user"
+        )
       })
     })
   })

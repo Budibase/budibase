@@ -83,6 +83,20 @@ export const createNewUserEmailView = async () => {
   await createView(db, viewJs, ViewName.USER_BY_EMAIL)
 }
 
+export const createUserSSOIdentityView = async () => {
+  const db = getGlobalDB()
+  const viewJs = `function(doc) {
+    if (doc._id.startsWith("${DocumentType.USER}${SEPARATOR}") && Array.isArray(doc.ssoIdentities)) {
+      for (let identity of doc.ssoIdentities) {
+        if (identity.providerType && identity.provider && identity.userId) {
+          emit([identity.providerType, identity.provider, identity.userId], doc._id)
+        }
+      }
+    }
+  }`
+  await createView(db, viewJs, ViewName.USER_BY_SSO_IDENTITY)
+}
+
 export const createUserAppView = async () => {
   const db = getGlobalDB()
   const viewJs = `function(doc) {
@@ -216,6 +230,7 @@ export const queryPlatformView = async <T extends Document>(
 
 const CreateFuncByName: any = {
   [ViewName.USER_BY_EMAIL]: createNewUserEmailView,
+  [ViewName.USER_BY_SSO_IDENTITY]: createUserSSOIdentityView,
   [ViewName.BY_API_KEY]: createApiKeyView,
   [ViewName.USER_BY_WORKSPACE]: createUserAppView,
 }

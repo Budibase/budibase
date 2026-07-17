@@ -2,11 +2,14 @@ import { generateGlobalUserID } from "../../../db"
 import { authError } from "../utils"
 import * as users from "../../../users"
 import * as context from "../../../context"
+import * as crypto from "crypto"
 import {
   SaveSSOUserFunction,
   SSOAuthDetails,
+  SSOIdentity,
   SSOUser,
   User,
+  UserSSO,
 } from "@budibase/types"
 
 // no-op function for user save
@@ -14,6 +17,49 @@ import {
 // - prefer no-op over an optional argument to ensure function is provided to login flows
 export const ssoSaveUserNoOp: SaveSSOUserFunction = (user: SSOUser) =>
   Promise.resolve(user)
+
+const buildIdentity = (details: SSOAuthDetails): SSOIdentity => ({
+  provider: details.provider,
+  providerType: details.providerType,
+  userId: details.userId,
+})
+
+type StoredUser = User & Partial<UserSSO>
+
+const identitiesMatch = (left: SSOIdentity, right: SSOIdentity) =>
+  left.provider === right.provider &&
+  left.providerType === right.providerType &&
+  left.userId === right.userId
+
+const hasIdentity = (user: StoredUser, identity: SSOIdentity) =>
+  user.ssoIdentities?.some(existing => identitiesMatch(existing, identity)) ===
+  true
+
+const canMigrateLegacyIdentity = (user: StoredUser, identity: SSOIdentity) =>
+  !user.ssoIdentities?.length &&
+  user.provider === identity.provider &&
+  user.providerType === identity.providerType
+
+const generateSSOUserID = (identity: SSOIdentity) => {
+  const identityHash = crypto
+    .createHash("sha256")
+    .update(
+      [identity.providerType, identity.provider, identity.userId].join("\0")
+    )
+    .digest("hex")
+  return generateGlobalUserID(identityHash)
+}
+
+const getUserById = async (userId: string) => {
+  try {
+    return await users.getById(userId)
+  } catch (err: any) {
+    if (err.status === 404) {
+      return undefined
+    }
+    throw err
+  }
+}
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
@@ -35,29 +81,68 @@ export async function authenticate(
     return authError(done, "sso user email required")
   }
 
-  // use the third party id
-  const userId = generateGlobalUserID(details.userId)
+  const identity = buildIdentity(details)
+  const userId = generateSSOUserID(identity)
 
-  let dbUser: User | undefined
+  let dbUser: StoredUser | undefined
 
-  // try to load by id
   try {
-    dbUser = await users.getById(userId)
+    // New SSO users use an issuer-scoped deterministic id. Existing local
+    // users are resolved through their persisted SSO identity.
+    dbUser = await getUserById(userId)
+    if (!dbUser) {
+      dbUser = await users.getGlobalUserBySSOIdentity(identity)
+    }
+
+    // Users created before SSO identities were persisted were keyed by the
+    // provider subject alone. Only accept that legacy key when its stored
+    // provider still matches the authenticating issuer.
+    if (!dbUser) {
+      const legacyUser = await getUserById(generateGlobalUserID(details.userId))
+      if (legacyUser && canMigrateLegacyIdentity(legacyUser, identity)) {
+        dbUser = legacyUser
+      }
+    }
   } catch (err: any) {
-    // abort when not 404 error
-    if (!err.status || err.status !== 404) {
+    return authError(
+      done,
+      "Unexpected error when retrieving existing user",
+      err
+    )
+  }
+
+  if (dbUser && !hasIdentity(dbUser, identity)) {
+    if (!canMigrateLegacyIdentity(dbUser, identity)) {
+      return authError(done, "SSO identity does not match existing user")
+    }
+    dbUser.ssoIdentities = [identity]
+  }
+
+  if (!dbUser) {
+    let emailUser: StoredUser | undefined
+    try {
+      emailUser = await users.getGlobalUserByEmail(details.email)
+    } catch (err: any) {
       return authError(
         done,
         "Unexpected error when retrieving existing user",
         err
       )
     }
-  }
 
-  // fallback to loading by email - only when the email has been verified by the
-  // identity provider.
-  if (!dbUser && (details.emailVerified || allowUnverifiedEmailLinking)) {
-    dbUser = await users.getGlobalUserByEmail(details.email)
+    if (emailUser) {
+      const canLink =
+        hasIdentity(emailUser, identity) ||
+        details.emailVerified === true ||
+        allowUnverifiedEmailLinking ||
+        canMigrateLegacyIdentity(emailUser, identity)
+
+      if (!canLink) {
+        return authError(done, "SSO identity cannot be linked to existing user")
+      }
+
+      dbUser = emailUser
+    }
   }
 
   // exit early if there is still no user and auto creation is disabled
@@ -76,7 +161,10 @@ export async function authenticate(
       email: details.email,
       roles: {},
       tenantId: context.getTenantId(),
+      ssoIdentities: [identity],
     }
+  } else if (!hasIdentity(dbUser, identity)) {
+    dbUser.ssoIdentities = [...(dbUser.ssoIdentities || []), identity]
   }
 
   let ssoUser = await syncUser(dbUser, details)

@@ -7,6 +7,7 @@ import {
 import * as _sso from "../sso"
 import * as oidc from "../oidc"
 import nock from "nock"
+import jwt from "jsonwebtoken"
 import type OpenIDConnectStrategy from "@govtechsg/passport-openidconnect"
 
 jest.mock("@govtechsg/passport-openidconnect")
@@ -58,7 +59,7 @@ describe("oidc", () => {
     const profile = details.profile!
     const issuer = profile.provider
 
-    const idToken = generator.string()
+    let idToken: string
     const params: Record<string, unknown> = {}
     const context: OpenIDConnectStrategy.AuthContext = {}
 
@@ -94,6 +95,15 @@ describe("oidc", () => {
         username: details.email,
         _json: { email: details.email, email_verified: true },
       }
+      idToken = jwt.sign(
+        {
+          sub: profile.id,
+          email: details.email,
+          email_verified: true,
+          preferred_username: details.email,
+        },
+        "test-secret"
+      )
     })
 
     async function authenticate() {
@@ -152,7 +162,10 @@ describe("oidc", () => {
 
     it("marks email as unverified when no email_verified claim is present", async () => {
       delete uiProfile._json?.email_verified
-      delete idProfile._json
+      idToken = jwt.sign(
+        { sub: profile.id, email: details.email },
+        "test-secret"
+      )
 
       await authenticate()
 
@@ -167,7 +180,14 @@ describe("oidc", () => {
 
     it("uses id token email_verified when userinfo has no email", async () => {
       delete uiProfile._json?.email
-      idProfile._json = { email: details.email, email_verified: false }
+      idToken = jwt.sign(
+        {
+          sub: profile.id,
+          email: details.email,
+          email_verified: false,
+        },
+        "test-secret"
+      )
 
       await authenticate()
 
@@ -197,6 +217,10 @@ describe("oidc", () => {
     it("uses id token username to get email", async () => {
       delete uiProfile._json?.email
       delete idProfile.emails
+      idToken = jwt.sign(
+        { sub: profile.id, preferred_username: details.email },
+        "test-secret"
+      )
 
       await authenticate()
 
@@ -227,6 +251,10 @@ describe("oidc", () => {
       delete idProfile.emails
 
       idProfile.username = "invalidUsername"
+      idToken = jwt.sign(
+        { sub: profile.id, preferred_username: "invalidUsername" },
+        "test-secret"
+      )
 
       await expect(authenticate()).rejects.toThrow(
         "Could not determine user email from profile"
@@ -238,6 +266,14 @@ describe("oidc", () => {
       uiProfile._json = { email: upperEmail }
       idProfile.emails = [{ value: upperEmail }]
       idProfile.username = upperEmail
+      idToken = jwt.sign(
+        {
+          sub: profile.id,
+          email: upperEmail,
+          email_verified: true,
+        },
+        "test-secret"
+      )
 
       await authenticate()
 
@@ -248,6 +284,29 @@ describe("oidc", () => {
         mockSaveUser,
         false
       )
+    })
+
+    it("uses a matching verified id token email when userinfo omits email_verified", async () => {
+      delete uiProfile._json?.email_verified
+
+      await authenticate()
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: true }),
+        false,
+        mockDone,
+        mockSaveUser,
+        false
+      )
+    })
+
+    it("rejects userinfo for a different subject", async () => {
+      uiProfile.id = generator.string()
+
+      await expect(authenticate()).rejects.toThrow(
+        "UserInfo subject does not match ID token subject"
+      )
+      expect(sso.authenticate).not.toHaveBeenCalled()
     })
 
     it("populates first and last name from profile data", async () => {
