@@ -524,6 +524,10 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         name: tableName,
         schema,
       }
+
+      if (isHistoryTable) {
+        tables[tableName].readonly = true
+      }
     }
     let externalTables = finaliseExternalTables(tables, entities)
     let errors = checkExternalTables(externalTables)

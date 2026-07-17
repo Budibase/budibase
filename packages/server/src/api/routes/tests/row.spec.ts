@@ -1227,6 +1227,31 @@ if (descriptions.length) {
             const historyRows = await config.api.row.fetch(historyTable._id!)
             expect(historyRows).toHaveLength(1)
             expect(historyRows[0].first_name).toEqual("John")
+
+            await config.api.row.save(
+              historyTable._id!,
+              {
+                _id: historyRows[0]._id!,
+                first_name: "Nope",
+              },
+              {
+                status: 400,
+                body: {
+                  message: `Table "${tableName}_History" is read-only`,
+                },
+              }
+            )
+
+            await config.api.row.delete(
+              historyTable._id!,
+              { _id: historyRows[0]._id! },
+              {
+                status: 400,
+                body: {
+                  message: `Table "${tableName}_History" is read-only`,
+                },
+              }
+            )
           })
 
         describe("relations to same table", () => {

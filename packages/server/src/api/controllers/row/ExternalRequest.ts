@@ -198,6 +198,10 @@ export class ExternalRequest<T extends Operation> {
     this.datasource = datasource
   }
 
+  private isReadonlyOperation(operation: Operation) {
+    return [Operation.READ, Operation.COUNT].includes(operation)
+  }
+
   private prepareFilters(
     id: string | undefined | string[],
     filters: SearchFilters,
@@ -674,6 +678,10 @@ export class ExternalRequest<T extends Operation> {
     }
     filters = this.prepareFilters(id, filters || {}, table)
     const relationships = buildExternalRelationships(table, this.tables)
+
+    if (table.readonly && !this.isReadonlyOperation(operation)) {
+      throw new Error(`Table "${table.name}" is read-only`)
+    }
 
     let aggregations: Aggregation[] = []
     if (sdk.views.isView(this.source)) {
