@@ -1203,8 +1203,9 @@ describe("/api/global/users", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(response.body.email).toBe(config.user!.email)
-      expect(response.body._id).toBe(config.user!._id)
+      expect(response.body._id).toBe(config.user!.email)
+      expect(response.body.tenantId).toBe(config.user!.tenantId)
+      expect(response.body.userId).toBe(config.user!._id)
     })
   })
 
