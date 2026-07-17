@@ -554,9 +554,12 @@ const stableStringifyValue = (value: unknown): unknown => {
 
 const escapeCsvCell = (value: unknown) => {
   const normalized = stableStringify(value)
-  return /[",\r\n]/.test(normalized)
-    ? `"${normalized.replace(/"/g, '""')}"`
+  const neutralized = /^[=+\-@\t\r]/.test(normalized)
+    ? `'${normalized}`
     : normalized
+  return /[",\r\n]/.test(neutralized)
+    ? `"${neutralized.replace(/"/g, '""')}"`
+    : neutralized
 }
 
 const buildCsvRow = (row: unknown[]) => row.map(escapeCsvCell).join(",")

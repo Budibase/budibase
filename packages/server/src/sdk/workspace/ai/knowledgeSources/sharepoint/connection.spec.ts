@@ -160,6 +160,77 @@ describe("SharePoint lists", () => {
     )
   })
 
+  it("neutralizes formula-like values in generated CSV cells", async () => {
+    jest.spyOn(globalThis, "fetch").mockImplementation(async input => {
+      const url = input.toString()
+      if (url.includes("/columns")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { name: "Formula", displayName: "=Formula", hidden: false },
+              { name: "Safe", displayName: "Safe", hidden: false },
+            ],
+          }),
+        } as Response
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          value: [
+            {
+              id: "1",
+              fields: {
+                Formula: '=HYPERLINK("https://example.com")',
+                Safe: "plain text",
+              },
+            },
+            {
+              id: "2",
+              fields: { Formula: "+SUM(1,1)", Safe: "plain text" },
+            },
+            {
+              id: "3",
+              fields: { Formula: "-1", Safe: "plain text" },
+            },
+            {
+              id: "4",
+              fields: { Formula: "@SUM(1)", Safe: "plain text" },
+            },
+            {
+              id: "5",
+              fields: { Formula: "\t=1", Safe: "plain text" },
+            },
+            {
+              id: "6",
+              fields: { Formula: "\r=1", Safe: "plain text" },
+            },
+          ],
+        }),
+      } as Response
+    })
+
+    const document = await fetchSharePointListDocument(
+      "Bearer token",
+      "site-1",
+      "list-1"
+    )
+
+    expect(document.buffer.toString()).toBe(
+      [
+        "SharePoint Item ID,Created,Modified,Web URL,'=Formula,Safe",
+        '1,,,,"\'=HYPERLINK(""https://example.com"")",plain text',
+        '2,,,,"\'+SUM(1,1)",plain text',
+        "3,,,,'-1,plain text",
+        "4,,,,'@SUM(1),plain text",
+        "5,,,,'\t=1,plain text",
+        '6,,,,"\'\r=1",plain text',
+      ].join("\n")
+    )
+  })
+
   it("rejects generated list CSVs while paging when they exceed the size limit", async () => {
     const fetchMock = jest
       .spyOn(globalThis, "fetch")
