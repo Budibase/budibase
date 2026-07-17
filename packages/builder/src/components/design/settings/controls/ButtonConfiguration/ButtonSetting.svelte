@@ -83,7 +83,8 @@
     overflow: hidden;
   }
   .list-item-body,
-  .list-item-left {
+  .list-item-left,
+  .list-item-right {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
