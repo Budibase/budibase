@@ -1181,6 +1181,48 @@ if (descriptions.length) {
             expect(rows).toHaveLength(1)
           })
 
+        isMSSQL &&
+          it("can create and update rows for temporal external tables", async () => {
+            const tableName = uuid.v4().replaceAll("-", "").substring(0, 20)
+            await client!.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [last_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+              )
+            `)
+
+            const schemaRes = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+            const temporalTable = schemaRes.datasource.entities![tableName]
+
+            const createdRow = await config.api.row.save(temporalTable._id!, {
+              email: "john.doe@example.com",
+              first_name: "John",
+              last_name: "Doe",
+            })
+
+            const updatedRow = await config.api.row.save(temporalTable._id!, {
+              _id: createdRow._id!,
+              first_name: "Johnny",
+              last_name: "Doe",
+            })
+
+            expect(updatedRow.first_name).toEqual("Johnny")
+
+            const rows = await config.api.row.fetch(temporalTable._id!)
+            expect(rows).toHaveLength(1)
+            expect(rows[0].first_name).toEqual("Johnny")
+          })
+
         describe("relations to same table", () => {
           let relatedRows: Row[]
 

@@ -1258,6 +1258,38 @@ if (descriptions.length) {
             ).toEqual(enumOptions)
           })
 
+        isMSSQL &&
+          it("marks temporal period columns as autocolumns", async () => {
+            const tableName = generator.guid().replaceAll("-", "")
+            await client.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+              )
+            `)
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource._id!,
+            })
+
+            expect(resp.errors).toEqual({
+              [`${tableName}_History`]: "Table must have a primary key.",
+            })
+            expect(
+              resp.datasource.entities?.[tableName].schema.ValidFrom.autocolumn
+            ).toBe(true)
+            expect(
+              resp.datasource.entities?.[tableName].schema.ValidTo.autocolumn
+            ).toBe(true)
+          })
+
         it("re-points primaryDisplay when its column is dropped from the source database", async () => {
           await client.schema.createTable("display_test", table => {
             table.increments("id").primary()
