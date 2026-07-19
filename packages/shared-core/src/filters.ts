@@ -343,6 +343,23 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
           return
         }
         if (typeof value === "string") {
+          // For a "less than or equal to" bound the user picks a date, and when
+          // no time is chosen it defaults to the start of the day (midnight).
+          // Comparing against midnight would drop every row later that same day,
+          // so extend a date-only high bound to the end of the day to include
+          // the whole date. See https://github.com/Budibase/budibase/issues/19167
+          if (operator === "rangeHigh") {
+            const startOfDay = value.match(
+              /^(\d{4}-\d{2}-\d{2})(?:T00:00:00(?:\.000)?)?(Z)?$/
+            )
+            if (startOfDay) {
+              // A bare "YYYY-MM-DD" is parsed as UTC, so keep it in UTC by
+              // appending a "Z"; otherwise preserve whatever timezone suffix the
+              // original value used so the offset handling stays unchanged.
+              const suffix = value.length === 10 ? "Z" : startOfDay[2] || ""
+              value = `${startOfDay[1]}T23:59:59.999${suffix}`
+            }
+          }
           value = new Date(value).toISOString()
         } else if (isRangeSearchOperator(operator)) {
           query[operator] ??= {}
