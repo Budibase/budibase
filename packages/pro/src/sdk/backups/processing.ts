@@ -1,6 +1,7 @@
 import {
   db,
   db as dbCore,
+  Duration,
   logging,
   objectStore,
   tenancy,
@@ -21,7 +22,7 @@ import backups from "./backup"
 import { getBackupQueue } from "./queue"
 
 const BACKUP_CLEANUP_JOB_ID = "workspace-backup-cleanup"
-const BACKUP_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
+const BACKUP_CLEANUP_INTERVAL_MS = Duration.fromDays(1).toMs()
 
 export async function init(opts: BackupProcessingOpts) {
   getBackupQueue().process(async (job: Job) => {

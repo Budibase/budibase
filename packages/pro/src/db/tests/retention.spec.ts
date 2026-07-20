@@ -1,3 +1,4 @@
+import { Duration } from "@budibase/backend-core"
 import { ConstantQuotaName, QuotaType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import { UNLIMITED_LICENSE } from "../../constants/licenses"
@@ -12,7 +13,6 @@ jest.mock("../../sdk/licensing", () => ({
 
 const QUOTA_NAME = ConstantQuotaName.WORKSPACE_BACKUPS_RETENTION_DAYS
 const MIN_DATE = new Date(0).toISOString()
-const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
 const NOW = new Date("2026-07-10T12:00:00.000Z")
 const mockGetCachedLicense = jest.mocked(licensing.cache.getCachedLicense)
 
@@ -43,7 +43,7 @@ describe("getOldestRetentionDate", () => {
     useRetentionDays(7)
 
     await expect(getOldestRetentionDate(QUOTA_NAME)).resolves.toBe(
-      new Date(new Date().getTime() - 7 * ONE_DAY_MILLIS).toISOString()
+      new Date(NOW.getTime() - Duration.fromDays(7).toMs()).toISOString()
     )
   })
 
