@@ -106,7 +106,10 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-function getAutofetchTableNames(datasource: { source: SourceName }, table: Table) {
+function getAutofetchTableNames(
+  datasource: { source: SourceName },
+  table: Table
+) {
   const names = new Set([table.name])
   if (datasource.source !== SourceName.SQL_SERVER) {
     return [...names]
