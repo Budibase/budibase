@@ -26,7 +26,7 @@ import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
-import { toAbsoluteUrl } from "./utils"
+import { resolveEscalationWorkspaceId, toAbsoluteUrl } from "./utils"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -509,8 +509,8 @@ export async function MSTeamsWebhook(
           )
           return
         }
-        // The appId carried in the button value is untrusted - resolve the
-        // context from the verified webhook route's workspaceId instead.
+        // The appId in the button value is untrusted; resolve which environment
+        // of the verified webhook route's app actually holds the notification.
         const { escalationId, notificationDocId } = parsed
 
         const teamsResponse = {
@@ -521,7 +521,19 @@ export async function MSTeamsWebhook(
         }
 
         try {
-          const result = await context.doInContext(workspaceId, async () => {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Teams escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
+          const result = await context.doInContext(appId, async () => {
             if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
               return { status: "closed" as const }
             }
