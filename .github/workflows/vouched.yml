@@ -12,6 +12,14 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - uses: mitchellh/vouch/action/check-pr@f44860978966ace98fb11aaaa20f2b27d7543e13
+        with:
+          pr-number: ${{ github.event.pull_request.number }}
+          require-vouch: false
+          auto-close: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: mitchellh/vouch/action/check-user@f44860978966ace98fb11aaaa20f2b27d7543e13
         with:
           user: ${{ github.event.pull_request.user.login }}
