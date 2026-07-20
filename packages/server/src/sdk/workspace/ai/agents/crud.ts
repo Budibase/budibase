@@ -387,14 +387,22 @@ const withSlackTeamId = async (
   if (botToken === existing?.botToken && integration.teamId) {
     return integration
   }
+  // Drop any inherited teamId - it belongs to the old token's workspace,
+  // and leaving it unset on failure lets the next save retry.
+  const { teamId: _teamId, ...withoutTeamId } = integration
   try {
-    const auth = await new WebClient(botToken).auth.test()
-    return { ...integration, teamId: auth.team_id }
+    // Single attempt - the default retry policy would block the save for 30 minutes.
+    const client = new WebClient(botToken, {
+      retryConfig: { retries: 0 },
+      timeout: 5000,
+    })
+    const auth = await client.auth.test()
+    return { ...withoutTeamId, teamId: auth.team_id }
   } catch (err) {
     console.warn("Failed to resolve Slack workspace for integration", {
       error: err instanceof Error ? err.message : String(err),
     })
-    return integration
+    return withoutTeamId
   }
 }
 
