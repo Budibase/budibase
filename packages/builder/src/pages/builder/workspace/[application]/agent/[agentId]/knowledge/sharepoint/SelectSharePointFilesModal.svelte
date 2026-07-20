@@ -172,19 +172,12 @@
           filters,
         }
       )
-      if (sourceId) {
-        await agentsStore.syncOperationKnowledgeSources(
-          agentId,
-          operationId,
-          sourceId
-        )
-      }
       await Promise.all([
         agentsStore.fetchAgentKnowledge(agentId),
         workspaceDeploymentStore.fetch(),
       ])
 
-      notifications.success("SharePoint folders/files updated")
+      notifications.success("SharePoint folders/files updated and sync started")
       hide()
     } catch (error) {
       console.error(error)

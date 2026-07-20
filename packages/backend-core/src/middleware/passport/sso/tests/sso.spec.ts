@@ -193,5 +193,73 @@ describe("sso", () => {
         })
       })
     })
+
+    describe("when the email is not verified", () => {
+      let existingUser: User
+      let details: SSOAuthDetails
+
+      beforeEach(() => {
+        existingUser = structures.users.user()
+        existingUser._id = structures.uuid()
+
+        details = structures.sso.authDetails(existingUser)
+        details.emailVerified = false
+
+        // no match on the sso id - forces the email fallback path
+        users.getById.mockImplementationOnce(() => {
+          throw new HTTPError("", 404)
+        })
+        nock("http://example.com").get("/").reply(200, undefined, {
+          "Content-Type": "image/png",
+        })
+      })
+
+      it("does not link to an existing account by email", async () => {
+        users.getGlobalUserByEmail.mockReturnValue(
+          Promise.resolve(existingUser)
+        )
+        const ssoUser = structures.users.ssoUser({
+          user: existingUser,
+          details,
+        })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        // the victim's account must never be loaded by an unverified email
+        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
+        // instead a brand new account keyed on the sso id is created
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({ _id: "us_" + details.userId }),
+          expect.anything()
+        )
+      })
+
+      it("rejects when a local account is required", async () => {
+        await sso.authenticate(details, true, mockDone, mockSaveUser)
+
+        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
+        expect(mockDone.mock.calls.length).toBe(1)
+        expect(getErrorMessage()).toContain(
+          "Email does not yet exist. You must set up your local budibase account first."
+        )
+      })
+
+      it("links by email when unverified linking is explicitly allowed", async () => {
+        users.getGlobalUserByEmail.mockReturnValueOnce(
+          Promise.resolve(existingUser)
+        )
+        const ssoUser = structures.users.ssoUser({
+          user: existingUser,
+          details,
+        })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser, true)
+
+        expect(users.getGlobalUserByEmail).toHaveBeenCalled()
+        expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+      })
+    })
   })
 })

@@ -1,10 +1,11 @@
 import { context, HTTPError, utils } from "@budibase/backend-core"
 import { WebClient } from "@slack/web-api"
 import { helpers } from "@budibase/shared-core"
-import type {
-  ChatIdentityLinkSession,
-  ChatIdentityLinkProvider,
-  UserCtx,
+import {
+  AgentChannelProvider,
+  type ChatIdentityLinkProvider,
+  type ChatIdentityLinkSession,
+  type UserCtx,
 } from "@budibase/types"
 import { getGlobalIDFromUserMetadataID } from "../../../db/utils"
 import sdk from "../../../sdk"
@@ -17,6 +18,94 @@ import {
 
 const CHAT_LINK_RETURN_URL_COOKIE = "budibase:returnurl"
 const BUILDER_LOGIN_PATH = "/builder/auth/login"
+
+const CHAT_LINK_PAGE_STYLES = `
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #292929;
+        background: #ffffff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 40px;
+        background: #ffffff;
+      }
+      main {
+        width: 100%;
+        max-width: 400px;
+        min-height: 480px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      img {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 24px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.25;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 16px 0 24px;
+        color: #6f6f6f;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      strong {
+        color: #292929;
+        font-weight: 500;
+      }
+      form {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+      button {
+        min-height: 40px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 4px;
+        background: #424242;
+        color: white;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #292929;
+      }
+      button:focus-visible {
+        outline: 2px solid #2680eb;
+        outline-offset: 2px;
+      }
+      @media (max-width: 480px) {
+        body {
+          padding: 24px;
+        }
+        main {
+          min-height: 360px;
+        }
+        h1 {
+          font-size: 22px;
+        }
+      }
+`
 
 const resolveToken = (token?: string) => {
   if (!token) {
@@ -48,24 +137,47 @@ const getCurrentGlobalUserId = (ctx: UserCtx) => {
   return currentUserId
 }
 
+const providerDisplayName = (provider: ChatIdentityLinkProvider) => {
+  if (provider === AgentChannelProvider.DISCORD) {
+    return "Discord"
+  }
+  if (provider === AgentChannelProvider.MSTEAMS) {
+    return "Teams"
+  }
+  if (provider === AgentChannelProvider.TELEGRAM) {
+    return "Telegram"
+  }
+  if (provider === AgentChannelProvider.SLACK) {
+    return "Slack"
+  }
+
+  throw provider satisfies never
+}
+
 const renderLinkConfirmationPage = (
   session: ChatIdentityLinkSession,
   action: string
 ) => {
   const externalIdentity = session.externalUserName || session.externalUserId
+  const providerName = providerDisplayName(session.provider)
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Confirm chat account link</title>
+    <style>${CHAT_LINK_PAGE_STYLES}</style>
   </head>
   <body>
-    <p>Confirm linking your Budibase account to ${helpers.escapeHtml(session.provider)} user ${helpers.escapeHtml(externalIdentity)}.</p>
-    <form method="post" action="${helpers.escapeHtml(action)}">
-      <input type="hidden" name="confirmationToken" value="${helpers.escapeHtml(session.confirmationToken)}">
-      <button type="submit">Confirm</button>
-    </form>
+    <main>
+      <img src="/builder/bblogo.png" alt="Budibase">
+      <h1>Confirm chat account link</h1>
+      <p>Link your Budibase account to <strong>${helpers.escapeHtml(externalIdentity)}</strong> on <strong>${helpers.escapeHtml(providerName)}</strong>.</p>
+      <form method="post" action="${helpers.escapeHtml(action)}">
+        <input type="hidden" name="confirmationToken" value="${helpers.escapeHtml(session.confirmationToken)}">
+        <button type="submit">Link account</button>
+      </form>
+    </main>
   </body>
 </html>`
 }
@@ -77,9 +189,14 @@ const renderLinkSuccessPage = () => {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Authentication succeeded</title>
+    <style>${CHAT_LINK_PAGE_STYLES}</style>
   </head>
   <body>
-    <p>Authentication succeeded.</p>
+    <main>
+      <img src="/builder/bblogo.png" alt="Budibase">
+      <h1>Authentication succeeded</h1>
+      <p>Authentication succeeded. You can return to your chat to continue.</p>
+    </main>
     <script>
       if (window.opener && !window.opener.closed) {
         try {
@@ -117,9 +234,11 @@ export async function handoffChatLinkSession(
     return
   }
 
+  const currentGlobalUserId = getCurrentGlobalUserId(ctx)
   const confirmationSession =
     await sdk.ai.chatIdentityLinks.prepareChatIdentityLinkSessionConfirmation(
-      token
+      token,
+      currentGlobalUserId
     )
   if (!confirmationSession) {
     throw new HTTPError("Link token is invalid or has expired", 400)
@@ -154,14 +273,16 @@ export async function confirmChatLinkSession(
     throw new HTTPError("Authentication is required to link chat identity", 401)
   }
 
+  const currentGlobalUserId = getCurrentGlobalUserId(ctx)
   if (
     !session.confirmationToken ||
+    !session.confirmationGlobalUserId ||
+    session.confirmationGlobalUserId !== currentGlobalUserId ||
     ctx.request.body?.confirmationToken !== session.confirmationToken
   ) {
     throw new HTTPError("Link confirmation is invalid or has expired", 400)
   }
 
-  const currentGlobalUserId = getCurrentGlobalUserId(ctx)
   const consumedSession =
     await sdk.ai.chatIdentityLinks.consumeChatIdentityLinkSession(token)
   if (!consumedSession) {

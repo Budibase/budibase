@@ -45,6 +45,9 @@
   }
 
   const getSharePointStatusProps = (row: SharePointConnectionTableRow) => {
+    if (row.isSyncing) {
+      return { notice: true }
+    }
     if (!row.hasSynced) {
       return { notice: true }
     }
