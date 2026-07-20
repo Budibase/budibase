@@ -55,11 +55,6 @@ const PUBLIC_ENDPOINTS = [
   },
   // TODO: This should be an internal api
   {
-    route: "/api/global/users/tenant/:id",
-    method: "GET",
-  },
-  // TODO: This should be an internal api
-  {
     route: "/api/system/restored",
     method: "POST",
   },
