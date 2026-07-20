@@ -1,5 +1,4 @@
 import type { Agent, LLMResponse } from "@budibase/types"
-import { FeatureFlag } from "@budibase/types"
 
 const mockRouterStream = jest.fn()
 
@@ -147,24 +146,7 @@ describe("chooseOperationForQuestion", () => {
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
 
-  it("returns the first live operation when multiple operations are disabled", async () => {
-    const result = await chooseOperationForQuestion({
-      agent,
-      latestQuestion: "Book time off",
-      llm,
-    })
-
-    expect(result).toEqual({
-      action: "select_operation",
-      operation: operation1,
-    })
-    expect(mockIsEnabled).toHaveBeenCalledWith(FeatureFlag.MULTIPLE_OPERATIONS)
-    expect(ToolLoopAgent).not.toHaveBeenCalled()
-  })
-
-  it("returns no_operation for blank questions when routing is enabled", async () => {
-    mockIsEnabled.mockResolvedValue(true)
-
+  it("returns no_operation for blank questions", async () => {
     const result = await chooseOperationForQuestion({
       agent,
       latestQuestion: "   ",
@@ -177,9 +159,7 @@ describe("chooseOperationForQuestion", () => {
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
 
-  it("returns the routed operation when routing is enabled", async () => {
-    mockIsEnabled.mockResolvedValue(true)
-
+  it("returns the routed operation", async () => {
     const result = await chooseOperationForQuestion({
       agent,
       latestQuestion: "Book time off",

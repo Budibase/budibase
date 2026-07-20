@@ -201,15 +201,6 @@ export const chooseOperationForQuestion = async ({
       action: "no_operation",
     }
   }
-  const multipleOperationsEnabled = await features.isEnabled(
-    FeatureFlag.MULTIPLE_OPERATIONS
-  )
-  if (!multipleOperationsEnabled) {
-    return {
-      action: "select_operation",
-      operation: liveOperations[0],
-    }
-  }
   if (!latestQuestion.trim()) {
     return {
       action: "no_operation",
