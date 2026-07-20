@@ -1,6 +1,6 @@
 import fetch, { Headers } from "node-fetch"
 import { isBlacklisted, resolveAddress } from "../../blacklist"
-import { fetchWithBlacklist } from "../outboundFetch"
+import { createPinnedLookup, fetchWithBlacklist } from "../outboundFetch"
 import { generator } from "../../../tests"
 
 // Expose the real Headers class so the redirect header-stripping logic works
@@ -79,7 +79,8 @@ describe("outboundFetch", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://example.com/spec.json",
-      expect.objectContaining({ redirect: "manual" })
+      expect.objectContaining({ redirect: "manual" }),
+      expect.any(String)
     )
     expect(result).toBe(response)
   })
@@ -150,6 +151,29 @@ describe("outboundFetch", () => {
       fetchWithBlacklist("https://example.com/start")
     ).rejects.toThrow("URL is blocked or could not be resolved safely.")
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("passes the validated pinned IP to a custom fetchFn", async () => {
+    isBlacklistedMock.mockResolvedValue(false)
+    resolveAddressMock.mockResolvedValue(["203.0.113.10"])
+
+    const customFetch = jest.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+      headers: { get: jest.fn() },
+    })
+
+    await fetchWithBlacklist(
+      "https://example.com/start",
+      {},
+      { fetchFn: customFetch as any }
+    )
+
+    expect(customFetch).toHaveBeenCalledWith(
+      "https://example.com/start",
+      expect.objectContaining({ redirect: "manual" }),
+      "203.0.113.10"
+    )
   })
 
   it("supports lookup callback when all=true", async () => {
@@ -279,7 +303,8 @@ describe("outboundFetch", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       "https://example.com/other/path",
-      expect.objectContaining({ redirect: "manual" })
+      expect.objectContaining({ redirect: "manual" }),
+      expect.any(String)
     )
   })
 
@@ -458,5 +483,73 @@ describe("outboundFetch", () => {
       fetchMock.mock.calls[1][1]?.headers as any
     )
     expect(secondCallHeaders.get("authorization")).toBe("Bearer token")
+  })
+
+  // ─── Pinned lookup ────────────────────────────────────────────────────────
+
+  describe("createPinnedLookup", () => {
+    it("resolves any hostname to the pinned IPv4 address", async () => {
+      const lookup = createPinnedLookup("203.0.113.10")
+
+      await new Promise<void>((resolve, reject) => {
+        lookup(
+          "attacker-controlled.example.com",
+          {},
+          (err, address, family) => {
+            try {
+              expect(err).toBeNull()
+              expect(address).toBe("203.0.113.10")
+              expect(family).toBe(4)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+        )
+      })
+    })
+
+    it("resolves to the pinned IPv6 address with family 6", async () => {
+      const lookup = createPinnedLookup("2001:db8::1")
+
+      await new Promise<void>((resolve, reject) => {
+        lookup(
+          "attacker-controlled.example.com",
+          {},
+          (err, address, family) => {
+            try {
+              expect(err).toBeNull()
+              expect(address).toBe("2001:db8::1")
+              expect(family).toBe(6)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+        )
+      })
+    })
+
+    it("returns the pinned address as an array when all=true", async () => {
+      const lookup = createPinnedLookup("203.0.113.10")
+
+      await new Promise<void>((resolve, reject) => {
+        lookup(
+          "attacker-controlled.example.com",
+          { all: true },
+          (err, addresses) => {
+            try {
+              expect(err).toBeNull()
+              expect(addresses).toEqual([
+                { address: "203.0.113.10", family: 4 },
+              ])
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+        )
+      })
+    })
   })
 })

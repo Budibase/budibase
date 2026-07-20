@@ -1060,6 +1060,60 @@ if (descriptions.length) {
             })
           })
 
+          it("can still read and update a view whose display column no longer exists", async () => {
+            const displayTable = await config.api.table.save(
+              saveTableRequest({
+                primaryDisplay: "name",
+                schema: {
+                  name: {
+                    name: "name",
+                    type: FieldType.STRING,
+                  },
+                  category: {
+                    name: "category",
+                    type: FieldType.STRING,
+                  },
+                },
+              })
+            )
+            const staleView = await config.api.viewV2.create({
+              tableId: displayTable._id!,
+              name: generator.guid(),
+              primaryDisplay: "category",
+              schema: {
+                id: { visible: true },
+                name: { visible: true },
+                category: { visible: true },
+              },
+            })
+
+            // deleting the column the view uses as its display column leaves
+            // the view's primaryDisplay referencing a missing column
+            const saved = await config.api.table.get(displayTable._id!)
+            const { category: _deleted, ...schema } = saved.schema
+            await config.api.table.save({ ...saved, schema }, { status: 200 })
+
+            // reads fall back to the table's display column
+            const fetched = await config.api.viewV2.get(staleView.id)
+            expect(fetched.primaryDisplay).toEqual("name")
+
+            // saving any view change must fall back to the table's display
+            // column rather than rejecting the update
+            await config.api.viewV2.update(
+              {
+                ...staleView,
+                schema: {
+                  id: { visible: true },
+                  name: { visible: true },
+                },
+              },
+              { status: 200 }
+            )
+
+            const updated = await config.api.viewV2.get(staleView.id)
+            expect(updated.primaryDisplay).toEqual("name")
+          })
+
           it("can update an existing view data", async () => {
             const tableId = table._id!
             await config.api.viewV2.update({
@@ -2240,6 +2294,161 @@ if (descriptions.length) {
                   },
                 }
               )
+            })
+          })
+
+          describe("columns used in view filters", () => {
+            let view: ViewV2
+
+            const categoryFilter = (field: string): UISearchFilter => ({
+              logicalOperator: UILogicalOperator.ALL,
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              groups: [
+                {
+                  logicalOperator: UILogicalOperator.ALL,
+                  filters: [
+                    {
+                      valueType: "Value",
+                      field,
+                      type: FieldType.STRING,
+                      operator: BasicOperator.EQUAL,
+                      value: "one",
+                    },
+                  ],
+                },
+              ],
+            })
+
+            beforeEach(async () => {
+              table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    name: {
+                      name: "name",
+                      type: FieldType.STRING,
+                    },
+                    category: {
+                      name: "category",
+                      type: FieldType.STRING,
+                    },
+                  },
+                })
+              )
+              view = await config.api.viewV2.create({
+                name: generator.guid(),
+                tableId: table._id!,
+                queryUI: categoryFilter("category"),
+                schema: {
+                  id: { visible: true },
+                  name: { visible: true },
+                  category: { visible: true },
+                },
+              })
+              await config.api.row.save(table._id!, {
+                name: "a",
+                category: "one",
+              })
+              await config.api.row.save(table._id!, {
+                name: "b",
+                category: "two",
+              })
+            })
+
+            it("deleting the filtered column keeps the filter and the view fails closed", async () => {
+              table = await config.api.table.get(table._id!)
+              const { category, ...schema } = table.schema
+              await config.api.table.save({ ...table, schema }, { status: 200 })
+
+              // The filter is deliberately kept - removing it would widen the
+              // view's results. The search returns nothing until the filter
+              // is fixed by the user.
+              const updated = await config.api.viewV2.get(view.id)
+              expect(updated.queryUI?.groups?.[0].filters).toEqual([
+                expect.objectContaining({ field: "category", value: "one" }),
+              ])
+
+              const response = await config.api.viewV2.search(view.id)
+              expect(response.rows).toHaveLength(0)
+            })
+
+            it("hiding the filtered column keeps the view filtering", async () => {
+              table = await config.api.table.get(table._id!)
+              await config.api.table.save(
+                {
+                  ...table,
+                  schema: {
+                    ...table.schema,
+                    category: { ...table.schema.category, visible: false },
+                  },
+                },
+                { status: 200 }
+              )
+
+              const response = await config.api.viewV2.search(view.id)
+              expect(response.rows).toHaveLength(1)
+              expect(response.rows[0].name).toEqual("a")
+            })
+
+            it("renaming the filtered column keeps the filter and the view fails closed", async () => {
+              table = await config.api.table.get(table._id!)
+              const { category, ...schema } = table.schema
+              await config.api.table.save(
+                {
+                  ...table,
+                  schema: {
+                    ...schema,
+                    group: { ...category, name: "group" },
+                  },
+                  _rename: { old: "category", updated: "group" },
+                },
+                { status: 200 }
+              )
+
+              // Filters are never rewritten on schema changes - the stale
+              // reference fails closed until the user re-points it.
+              const updated = await config.api.viewV2.get(view.id)
+              expect(updated.queryUI?.groups?.[0].filters).toEqual([
+                expect.objectContaining({ field: "category", value: "one" }),
+              ])
+
+              const response = await config.api.viewV2.search(view.id)
+              expect(response.rows).toHaveLength(0)
+            })
+
+            it("fails closed instead of erroring when an existing view filter references a deleted column", async () => {
+              table = await config.api.table.get(table._id!)
+              const { category, ...schema } = table.schema
+              await config.api.table.save({ ...table, schema }, { status: 200 })
+
+              // put a stale filter into the stored view directly, as though
+              // the column disappeared without the view being touched
+              const staleQuery: SearchFilters = {
+                $and: { conditions: [{ equal: { category: "one" } }] },
+              }
+              await config.doInContext(undefined, async () => {
+                const db = context.getWorkspaceDB()
+                const setStaleFilter = (table: Table) => {
+                  const viewDoc = table.views![view.name] as ViewV2
+                  viewDoc.query = staleQuery
+                  viewDoc.queryUI = categoryFilter("category")
+                }
+                if (isInternal) {
+                  const tableDoc = await db.get<Table>(table._id!)
+                  setStaleFilter(tableDoc)
+                  await db.put(tableDoc)
+                } else {
+                  const dsDoc = await db.get<Datasource>(datasource!._id!)
+                  setStaleFilter(
+                    Object.values(dsDoc.entities!).find(
+                      entity => entity._id === table._id
+                    )!
+                  )
+                  await db.put(dsDoc)
+                }
+              })
+
+              const response = await config.api.viewV2.search(view.id)
+              expect(response.rows).toHaveLength(0)
             })
           })
 

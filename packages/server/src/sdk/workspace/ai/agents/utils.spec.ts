@@ -14,7 +14,9 @@ import {
   getLiveOperations,
   getToolDisplayNames,
   IncompleteToolCall,
+  groupToolResultsByOutcome,
   updatePendingToolCalls,
+  updateUnrecoveredToolFailures,
 } from "./utils"
 
 type MessagePart = NonNullable<UIMessage["parts"]>[number]
@@ -431,6 +433,96 @@ describe("incomplete tool call detection", () => {
       updatePendingToolCalls(pending, toolCalls, toolResults)
       expect(pending.has("call-1")).toBe(false)
       expect(pending.has("call-2")).toBe(true)
+    })
+  })
+
+  describe("updateUnrecoveredToolFailures", () => {
+    it("flags a tool that ends in tool-error", () => {
+      const unrecovered = new Set<string>()
+
+      updateUnrecoveredToolFailures(unrecovered, [], ["send_email"])
+
+      expect(unrecovered.has("send_email")).toBe(true)
+    })
+
+    it("clears the flag once the same tool later succeeds", () => {
+      const unrecovered = new Set<string>(["send_email"])
+      const toolResults: TypedToolResult<ToolSet>[] = [
+        {
+          type: "tool-result",
+          toolCallId: "call-2",
+          toolName: "send_email",
+          input: {},
+          output: {},
+        },
+      ]
+
+      updateUnrecoveredToolFailures(unrecovered, toolResults, [])
+
+      expect(unrecovered.has("send_email")).toBe(false)
+    })
+
+    it("leaves other tools' failure state untouched", () => {
+      const unrecovered = new Set<string>(["send_email"])
+
+      updateUnrecoveredToolFailures(unrecovered, [], ["escalate"])
+
+      expect(unrecovered.has("send_email")).toBe(true)
+      expect(unrecovered.has("escalate")).toBe(true)
+    })
+  })
+
+  describe("groupToolResultsByOutcome", () => {
+    const escalateResult = (status: string): TypedToolResult<ToolSet> => ({
+      type: "tool-result",
+      toolCallId: "call-1",
+      toolName: "escalate",
+      input: {},
+      output: { status },
+    })
+
+    it("treats a real escalation (pending_approval) as a success", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([escalateResult("pending_approval")])
+
+      expect(successResults).toHaveLength(1)
+      expect(successNames).toEqual(["escalate"])
+      expect(semanticFailureNames).toEqual([])
+    })
+
+    it("treats an unavailable escalation as a semantic failure, not a success", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([escalateResult("unavailable")])
+
+      expect(successResults).toEqual([])
+      expect(successNames).toEqual([])
+      expect(semanticFailureNames).toEqual(["escalate"])
+    })
+
+    it("treats an already_approved resume result as harmless, not needs_input", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([escalateResult("already_approved")])
+
+      expect(successResults).toHaveLength(1)
+      expect(successNames).toEqual([])
+      expect(semanticFailureNames).toEqual([])
+    })
+
+    it("leaves non-escalate tool results untouched", () => {
+      const toolResult: TypedToolResult<ToolSet> = {
+        type: "tool-result",
+        toolCallId: "call-2",
+        toolName: "send_email",
+        input: {},
+        output: {},
+      }
+
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([toolResult])
+
+      expect(successResults).toEqual([toolResult])
+      expect(successNames).toEqual(["send_email"])
+      expect(semanticFailureNames).toEqual([])
     })
   })
 
