@@ -1,11 +1,11 @@
 on:
   pull_request_target:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
 
 jobs:
-  check:
+  vouch-check:
     if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
@@ -15,6 +15,14 @@ jobs:
       - uses: mitchellh/vouch/action/check-pr@f44860978966ace98fb11aaaa20f2b27d7543e13
         with:
           pr-number: ${{ github.event.pull_request.number }}
+          require-vouch: false
+          auto-close: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: mitchellh/vouch/action/check-user@f44860978966ace98fb11aaaa20f2b27d7543e13
+        with:
+          user: ${{ github.event.pull_request.user.login }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -27,7 +35,7 @@ jobs:
     permissions:
       contents: write
       issues: write
-      pull-requests: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -39,5 +47,6 @@ jobs:
           vouch-keyword: vouch
           denounce-keyword: denounce
           allow-unvouch: false
+          pull-request: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
