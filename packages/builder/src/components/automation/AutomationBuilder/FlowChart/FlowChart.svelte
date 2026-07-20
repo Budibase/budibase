@@ -190,23 +190,26 @@
       subflowNodePositions,
     }
 
-    const laidOut = buildAutomationGraph(blocks, deps)
+    try {
+      const laidOut = buildAutomationGraph(blocks, deps)
+      const selectable = viewMode === ViewMode.EDITOR
 
-    const selectable = viewMode === ViewMode.EDITOR
-
-    nodes.set(
-      laidOut.nodes.map(node => ({
-        ...node,
-        selected: false,
-        selectable,
-      }))
-    )
-    edges.set(
-      laidOut.edges.map(edge => ({
-        ...edge,
-        selected: false,
-      }))
-    )
+      nodes.set(
+        laidOut.nodes.map(node => ({
+          ...node,
+          selected: false,
+          selectable,
+        }))
+      )
+      edges.set(
+        laidOut.edges.map(edge => ({
+          ...edge,
+          selected: false,
+        }))
+      )
+    } catch (_error) {
+      notifications.error("Error rendering automation")
+    }
   }
 
   $: if ($nodes?.length && !initialViewportApplied && paneEl) {
