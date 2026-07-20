@@ -28,7 +28,6 @@ import {
   ViewV2,
 } from "@budibase/types"
 import dayjs from "dayjs"
-import { isEqual, omit } from "lodash"
 import { cloneDeep } from "lodash/fp"
 import { isRelationshipColumn } from "../../../db/utils"
 import env from "../../../environment"
@@ -541,12 +540,13 @@ export class ExternalRequest<T extends Operation> {
         linkSecondary?: string
         relationshipType: RelationshipType
       }) => {
-        // In many-to-many relationships, the table will contain 3 fields: a
-        // primary key (usually an auto-incrementing ID), and then the 2 foreign
-        // keys that link to the two tables. So a row is equal if the 2
-        // non-primary keys match the body.
+        // Match junction rows using the relationship link columns being written
+        // for this sync operation, rather than the order of the table primary key.
         if (relationshipType === RelationshipType.MANY_TO_MANY) {
-          return isEqual(omit(row, [linkPrimary]), omit(body, [linkPrimary]))
+          const junctionLinkFields = Object.keys(body)
+          return junctionLinkFields.every(
+            field => String(row[field]) === String(body[field])
+          )
         }
 
         const matchesPrimaryLink =
