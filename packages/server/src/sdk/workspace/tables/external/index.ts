@@ -5,6 +5,7 @@ import {
   Operation,
   RelationshipType,
   RenameColumn,
+  SourceName,
   Table,
   TableRequest,
   ViewV2,
@@ -36,6 +37,7 @@ import { ensureValidPrimaryDisplay } from "../utils"
 import { populateExternalTableSchemas } from "../validation"
 
 const DEFAULT_PRIMARY_COLUMN = "id"
+const MSSQL_HISTORY_SUFFIX = "_History"
 
 function noPrimaryKey(table: Table) {
   return table.primary == null || table.primary.length === 0
@@ -102,6 +104,21 @@ function getDatasourceId(table: Table) {
     throw new Error("No table ID supplied")
   }
   return breakExternalTableId(table._id).datasourceId
+}
+
+function getAutofetchTableNames(datasource: { source: SourceName }, table: Table) {
+  const names = new Set([table.name])
+  if (datasource.source !== SourceName.SQL_SERVER) {
+    return [...names]
+  }
+
+  if (table.name.endsWith(MSSQL_HISTORY_SUFFIX)) {
+    names.add(table.name.slice(0, -MSSQL_HISTORY_SUFFIX.length))
+  } else {
+    names.add(`${table.name}${MSSQL_HISTORY_SUFFIX}`)
+  }
+
+  return [...names]
 }
 
 export async function create(table: WithoutDocMetadata<Table>) {
@@ -281,15 +298,23 @@ export async function save(
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
 
-  // Since tables are stored inside datasources, we need to notify clients
-  // that the datasource definition changed
-  const updatedDatasource = await datasourceSdk.get(datasource._id!)
-
-  if (updatedDatasource.isSQL) {
-    tableToSave.sql = true
+  const { datasource: updatedDatasource } =
+    await datasourceSdk.buildSchemaFromSource(
+      datasource._id!,
+      getAutofetchTableNames(datasource, tableToSave)
+    )
+  const updatedTable = updatedDatasource.entities?.[tableToSave.name]
+  if (!updatedTable) {
+    throw new Error(
+      `Unable to refresh external table "${tableToSave.name}" after save.`
+    )
   }
 
-  return { datasource: updatedDatasource, table: tableToSave, oldTable }
+  if (updatedDatasource.isSQL) {
+    updatedTable.sql = true
+  }
+
+  return { datasource: updatedDatasource, table: updatedTable, oldTable }
 }
 
 export async function destroy(datasourceId: string, table: Table) {

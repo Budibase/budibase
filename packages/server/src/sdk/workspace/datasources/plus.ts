@@ -11,6 +11,14 @@ import { getIntegration } from "../../../integrations"
 import tableSdk from "../tables"
 import * as datasources from "./datasources"
 
+function matchesFilter(tableName: string, filter?: string[]) {
+  if (!filter?.length) {
+    return true
+  }
+
+  return filter.some(value => value.toLowerCase() === tableName.toLowerCase())
+}
+
 function checkForSchemaErrors(schema: Record<string, Table>) {
   const errors: Record<string, string> = {}
   for (let [tableName, table] of Object.entries(schema)) {
@@ -105,14 +113,29 @@ export async function buildSchemaFromSource(
   const { tables, errors } = await buildFilteredSchema(datasource, tablesFilter)
 
   const oldTables = datasource.entities || {}
+  const fetchedTableNames = new Set(
+    Object.keys(tables).map(tableName => tableName.toLowerCase())
+  )
   const tablesToRemove = Object.keys(oldTables).filter(
-    t => !Object.keys(tables).includes(t)
+    tableName =>
+      matchesFilter(tableName, tablesFilter) &&
+      !fetchedTableNames.has(tableName.toLowerCase())
   )
   for (const table of tablesToRemove) {
     await sdk.rowActions.deleteAll(oldTables[table]._id!)
   }
 
-  datasource.entities = tables
+  datasource.entities =
+    tablesFilter && tablesFilter.length > 0
+      ? {
+          ...oldTables,
+          ...tables,
+        }
+      : tables
+
+  for (const tableName of tablesToRemove) {
+    delete datasource.entities[tableName]
+  }
 
   datasources.setDefaultDisplayColumns(datasource)
 

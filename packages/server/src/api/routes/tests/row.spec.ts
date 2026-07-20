@@ -1254,6 +1254,57 @@ if (descriptions.length) {
             )
           })
 
+        isMSSQL &&
+          it("auto-refreshes temporal history tables after saving an external table", async () => {
+            const tableName = uuid.v4().replaceAll("-", "").substring(0, 20)
+            await client!.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [last_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+              )
+            `)
+
+            const schemaRes = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+            const temporalTable = schemaRes.datasource.entities![tableName]
+
+            await client!.raw(`
+              ALTER TABLE [dbo].[${tableName}] ADD [middle_name] NVARCHAR(100) NULL
+            `)
+
+            const savedTable = await config.api.table.save({
+              ...temporalTable,
+              primaryDisplay: "last_name",
+            })
+
+            expect(savedTable.schema.middle_name).toBeDefined()
+            expect(savedTable.schema.ValidFrom.autocolumn).toBe(true)
+            expect(savedTable.schema.ValidTo.autocolumn).toBe(true)
+
+            const updatedDatasource = await config.api.datasource.get(
+              datasource!._id!
+            )
+            const historyTable =
+              updatedDatasource.entities![`${tableName}_History`]
+
+            expect(historyTable).toBeDefined()
+            expect(historyTable.readonly).toBe(true)
+            expect(historyTable.schema.middle_name).toBeDefined()
+            expect(historyTable.primary?.length).toBeGreaterThan(0)
+
+            const historyRows = await config.api.row.fetch(historyTable._id!)
+            expect(historyRows).toEqual([])
+          })
+
         describe("relations to same table", () => {
           let relatedRows: Row[]
 

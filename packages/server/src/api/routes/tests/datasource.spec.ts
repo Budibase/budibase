@@ -1172,6 +1172,29 @@ if (descriptions.length) {
           expect(updated).toEqual(expected)
         })
 
+        it("fetching a filtered schema will not drop unfiltered tables", async () => {
+          const datasourceId = datasource!._id!
+
+          await client.schema.createTable("first_table", table => {
+            table.increments("id").primary()
+            table.string("name")
+          })
+          await client.schema.createTable("second_table", table => {
+            table.increments("id").primary()
+            table.string("description")
+          })
+
+          await config.api.datasource.fetchSchema({ datasourceId })
+          await config.api.datasource.fetchSchema({
+            datasourceId,
+            tablesFilter: ["first_table"],
+          })
+
+          const updated = await config.api.datasource.get(datasourceId)
+          expect(updated.entities?.first_table).toBeDefined()
+          expect(updated.entities?.second_table).toBeDefined()
+        })
+
         !isOracle &&
           !isMSSQL &&
           it("can fetch options columns with a large number of options", async () => {
