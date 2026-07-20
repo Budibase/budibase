@@ -33,13 +33,16 @@ jobs:
       group: vouch-manage
       cancel-in-progress: false
     permissions:
+      actions: write
+      checks: read
       contents: write
       issues: write
       pull-requests: read
     steps:
       - uses: actions/checkout@v4
 
-      - uses: mitchellh/vouch/action/manage-by-issue@f44860978966ace98fb11aaaa20f2b27d7543e13
+      - id: manage
+        uses: mitchellh/vouch/action/manage-by-issue@f44860978966ace98fb11aaaa20f2b27d7543e13
         with:
           repo: ${{ github.repository }}
           issue-id: ${{ github.event.issue.number }}
@@ -49,3 +52,20 @@ jobs:
           allow-unvouch: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Re-run vouch check
+        if: steps.manage.outputs.status == 'vouched' || steps.manage.outputs.status == 'denounced'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          head_sha=$(gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha')
+          run_id=$(
+            gh api "repos/$REPOSITORY/commits/$head_sha/check-runs" \
+              --jq '[.check_runs[] | select(.name == "vouch-check" and .conclusion == "failure")] | sort_by(.started_at) | last | .details_url? | select(.) | capture("/actions/runs/(?<id>[0-9]+)").id'
+          )
+
+          if [ -n "$run_id" ]; then
+            gh run rerun "$run_id" --failed --repo "$REPOSITORY"
+          fi
