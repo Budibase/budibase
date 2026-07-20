@@ -381,7 +381,8 @@ export async function connectAgentSharePointSite(
   >
 ) {
   const { agentId, operationId } = ctx.params
-  const { datasourceId, authConfigId, site, filters } = ctx.request.body
+  const { datasourceId, authConfigId, site, filters, filterScope } =
+    ctx.request.body
   const siteId = site.id
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
@@ -419,7 +420,7 @@ export async function connectAgentSharePointSite(
         name: selectedOption?.name || site.name,
         webUrl: selectedOption?.webUrl || site.webUrl,
       },
-      filters: filters ? { patterns: filters } : undefined,
+      filters: filters ? { patterns: filters, scope: filterScope } : undefined,
     },
   }
   console.log("Connecting SharePoint site to agent", {
@@ -476,7 +477,7 @@ export async function updateAgentSharePointSite(
     )
   }
 
-  const { filters } = ctx.request.body
+  const { filters, filterScope } = ctx.request.body
   const updated = await sdk.ai.agents.update({
     ...existingAgent,
     operations: updateOperationKnowledgeSources(
@@ -494,7 +495,9 @@ export async function updateAgentSharePointSite(
                   ...existingSource,
                   config: {
                     ...existingSource.config,
-                    filters: filters ? { patterns: filters } : undefined,
+                    filters: filters
+                      ? { patterns: filters, scope: filterScope }
+                      : undefined,
                   },
                 }
               : existingSource

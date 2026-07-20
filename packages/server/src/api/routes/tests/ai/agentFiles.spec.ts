@@ -484,6 +484,8 @@ describe("agent files", () => {
         name: "Product Documentation",
         webUrl: "https://example.com/sites/product-documentation",
       },
+      filters: ["!**", "drive:drive-1/Policies/**"],
+      filterScope: "drive",
     })
 
     await config.doInContext(config.getDevWorkspaceId(), async () => {
@@ -499,6 +501,10 @@ describe("agent files", () => {
         id: "contoso.sharepoint.com,site-id,web-id",
         name: "Product Documentation",
         webUrl: "https://example.com/sites/product-documentation",
+      })
+      expect(source?.config.filters).toEqual({
+        patterns: ["!**", "drive:drive-1/Policies/**"],
+        scope: "drive",
       })
     })
   })
@@ -547,6 +553,51 @@ describe("agent files", () => {
         id: "site-1",
         name: "Current Site Name",
         webUrl: "https://example.com/sites/current",
+      })
+    })
+  })
+
+  it("updates SharePoint filters with drive scope", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Drive Filter Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    const connection = await setSharePointConnection(created._id!)
+    await setSharePointSourceInAgent(
+      created._id!,
+      ["site-1"],
+      connection.datasourceId,
+      connection.authConfigId
+    )
+    mockSharePointOAuthTokenFetch(1)
+    mockSharePointSitesFetch([], 1)
+
+    await config.api.agent.updateSharePointSite(
+      created._id!,
+      operationId,
+      "site-1",
+      {
+        filters: ["!**", "drive:drive-1/Policies/**"],
+        filterScope: "drive",
+      }
+    )
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const updated = await db.tryGet<Agent>(created._id!)
+      const source = updated?.operations
+        ?.find(operation => operation.id === operationId)
+        ?.knowledgeSources?.find(
+          source => source.type === AgentKnowledgeSourceType.SHAREPOINT
+        )
+
+      expect(source?.config.filters).toEqual({
+        patterns: ["!**", "drive:drive-1/Policies/**"],
+        scope: "drive",
       })
     })
   })

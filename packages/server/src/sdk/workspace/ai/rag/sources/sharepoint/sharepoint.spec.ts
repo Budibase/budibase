@@ -74,6 +74,7 @@ import {
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import {
+  fetchAllSharePointEntriesForOperation,
   SharePointSyncTimeoutError,
   syncSharePointSourcesForAgent,
 } from "./sharepoint"
@@ -92,7 +93,8 @@ const makeSharePointAgent = (
   siteId: string,
   patterns?: string[],
   datasourceId = "datasource_1",
-  authConfigId = "auth_1"
+  authConfigId = "auth_1",
+  filterScope?: "drive"
 ): Agent =>
   ({
     _id: "agent_1",
@@ -111,7 +113,9 @@ const makeSharePointAgent = (
               datasourceId,
               authConfigId,
               site: { id: siteId },
-              ...(patterns ? { filters: { patterns } } : {}),
+              ...(patterns
+                ? { filters: { patterns, scope: filterScope } }
+                : {}),
             },
           },
         ],
@@ -212,6 +216,91 @@ describe("rag/sharepoint sync deduplication", () => {
   afterEach(() => {
     jest.restoreAllMocks()
     jest.useRealTimers()
+  })
+
+  it("returns document libraries as roots with drive-scoped file paths", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { id: "drive-a", name: "Documents" },
+              { id: "drive-b", name: "Department Files" },
+              { id: "drive-empty", name: "Empty Library" },
+            ],
+          }),
+        } as Response,
+      },
+      ...["drive-a", "drive-b"].map(driveId => ({
+        match: `/drives/${driveId}/root/children`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: `item-${driveId}`,
+                name: "handbook.txt",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      })),
+      {
+        match: "/drives/drive-empty/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await fetchAllSharePointEntriesForOperation(
+      "agent_1",
+      "operation_1",
+      siteId
+    )
+
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        name: "Documents",
+        filterPath: "drive:drive-a",
+        type: "folder",
+      }),
+      expect.objectContaining({
+        path: "handbook.txt",
+        filterPath: "drive:drive-a/handbook.txt",
+        driveName: "Documents",
+        type: "file",
+      }),
+      expect.objectContaining({
+        name: "Department Files",
+        filterPath: "drive:drive-b",
+        type: "folder",
+      }),
+      expect.objectContaining({
+        path: "handbook.txt",
+        filterPath: "drive:drive-b/handbook.txt",
+        driveName: "Department Files",
+        type: "file",
+      }),
+      expect.objectContaining({
+        name: "Empty Library",
+        filterPath: "drive:drive-empty",
+        type: "folder",
+      }),
+    ])
   })
 
   it("does not skip a new file when itemId matches an existing file from another drive", async () => {
@@ -415,6 +504,106 @@ describe("rag/sharepoint sync deduplication", () => {
       failed: 0,
       unsupported: 0,
       totalDiscovered: 0,
+    })
+  })
+
+  it.each([
+    {
+      name: "keeps legacy relative filters matching across libraries",
+      patterns: ["!**", "Policies/**"],
+      filterScope: undefined,
+      expectedDriveIds: ["drive-a", "drive-b"],
+    },
+    {
+      name: "limits drive-scoped filters to one library",
+      patterns: ["!**", "drive:drive-a/Policies/**"],
+      filterScope: "drive" as const,
+      expectedDriveIds: ["drive-a"],
+    },
+  ])("$name", async ({ patterns, filterScope, expectedDriveIds }) => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        patterns,
+        "datasource_1",
+        "auth_1",
+        filterScope
+      )
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { id: "drive-a", name: "Documents" },
+              { id: "drive-b", name: "Department Files" },
+            ],
+          }),
+        } as Response,
+      },
+      ...["drive-a", "drive-b"].flatMap(driveId => [
+        {
+          match: `/drives/${driveId}/root/children`,
+          response: {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              value: [
+                {
+                  id: `folder-${driveId}`,
+                  name: "Policies",
+                  folder: {},
+                },
+              ],
+            }),
+          } as Response,
+        },
+        {
+          match: `/drives/${driveId}/items/folder-${driveId}/children`,
+          response: {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              value: [
+                {
+                  id: `item-${driveId}`,
+                  name: "handbook.txt",
+                  file: { mimeType: "text/plain" },
+                },
+              ],
+            }),
+          } as Response,
+        },
+        {
+          match: `/drives/${driveId}/items/item-${driveId}/content`,
+          response: {
+            ok: true,
+            status: 200,
+            arrayBuffer: async () => toArrayBuffer(`${driveId} content`),
+          } as Response,
+        },
+      ]),
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+    const uploadedDriveIds = mockKnowledgeBaseUploadFile.mock.calls.map(
+      ([input]) => input.source.driveId
+    )
+
+    expect(uploadedDriveIds.sort()).toEqual([...expectedDriveIds].sort())
+    expect(result).toMatchObject({
+      synced: expectedDriveIds.length,
+      failed: 0,
+      totalDiscovered: 2,
     })
   })
 

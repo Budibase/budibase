@@ -5,7 +5,10 @@ import {
   HTTPError,
   locks,
 } from "@budibase/backend-core"
-import { matchesConfiguredPatterns } from "@budibase/shared-core"
+import {
+  buildSharePointDriveFilterPath,
+  matchesConfiguredPatterns,
+} from "@budibase/shared-core"
 import {
   type Agent,
   type AgentOperation,
@@ -256,7 +259,7 @@ const isOversizedSharePointFile = (file: { remoteSize?: number }) =>
 
 const normalizeSourceFilters = (
   filters?: AgentKnowledgeSourceFilterConfig
-): { patterns?: string[] } => {
+): AgentKnowledgeSourceFilterConfig => {
   const normalize = (patterns?: string[]) => {
     if (!patterns) {
       return undefined
@@ -267,19 +270,26 @@ const normalizeSourceFilters = (
     return normalized.length > 0 ? normalized : undefined
   }
 
-  return { patterns: normalize(filters?.patterns) }
+  return {
+    patterns: normalize(filters?.patterns),
+    scope: filters?.scope,
+  }
 }
 
 const isSharePointPathIncludedByFilters = (
-  path: string,
+  file: { driveId: string; path: string },
   filters?: AgentKnowledgeSourceFilterConfig
 ) => {
-  const { patterns } = normalizeSourceFilters(filters)
+  const { patterns, scope } = normalizeSourceFilters(filters)
 
   if (!patterns?.length) {
     return true
   }
-  return matchesConfiguredPatterns(path, patterns)
+  const candidatePath =
+    scope === "drive"
+      ? buildSharePointDriveFilterPath(file.driveId, file.path)
+      : file.path
+  return matchesConfiguredPatterns(candidatePath, patterns)
 }
 
 const isSharePointKnowledgeBaseFile = (
@@ -384,11 +394,20 @@ export const fetchAllSharePointEntriesForOperation = async (
     throw new HTTPError("SharePoint is not connected for this workspace", 400)
   }
   const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-  const driveIds = await listSharePointDrives(bearerToken, siteId)
+  const drives = await listSharePointDrives(bearerToken, siteId)
   const entries: KnowledgeSourceEntry[] = []
 
-  for (const driveId of driveIds) {
-    const files = await collectSharePointFilesRecursive(bearerToken, driveId)
+  for (const drive of drives) {
+    entries.push({
+      id: drive.id,
+      name: drive.name,
+      path: "",
+      filterPath: buildSharePointDriveFilterPath(drive.id),
+      driveId: drive.id,
+      driveName: drive.name,
+      type: "folder",
+    })
+    const files = await collectSharePointFilesRecursive(bearerToken, drive.id)
     for (const file of files) {
       const path = file.path
       if (!path) {
@@ -398,12 +417,17 @@ export const fetchAllSharePointEntriesForOperation = async (
         id: `${file.driveId}:${file.itemId}`,
         name: file.filename || path.split("/").pop() || path,
         path,
+        filterPath: buildSharePointDriveFilterPath(file.driveId, path),
+        driveId: file.driveId,
+        driveName: drive.name,
         type: "file",
       })
     }
   }
 
-  entries.sort((a, b) => a.path.localeCompare(b.path))
+  entries.sort((a, b) =>
+    (a.filterPath || a.path).localeCompare(b.filterPath || b.path)
+  )
   return { entries }
 }
 
@@ -614,7 +638,10 @@ const runSharePointSourcesForOperation = async (
     .filter(file => {
       const candidatePath = file.source?.path || file.filename
       return !isSharePointPathIncludedByFilters(
-        candidatePath || "",
+        {
+          driveId: file.source.driveId,
+          path: candidatePath || "",
+        },
         sourceFilters
       )
     })
@@ -652,13 +679,14 @@ const runSharePointSourcesForOperation = async (
 
   try {
     phase = "listing_drives"
-    const driveIds = await listSharePointDrives(bearerToken, siteId, signal)
+    const drives = await listSharePointDrives(bearerToken, siteId, signal)
     console.log("Fetched SharePoint drives for site", {
       agentId,
       siteId,
-      driveCount: driveIds.length,
+      driveCount: drives.length,
     })
-    for (const driveId of driveIds) {
+    for (const drive of drives) {
+      const driveId = drive.id
       throwIfSyncAborted(signal)
       phase = "listing_files"
       const files = await collectSharePointFilesRecursive(
@@ -672,7 +700,7 @@ const runSharePointSourcesForOperation = async (
       totalDiscovered += files.length
       for (const file of files) {
         throwIfSyncAborted(signal)
-        if (!isSharePointPathIncludedByFilters(file.path, sourceFilters)) {
+        if (!isSharePointPathIncludedByFilters(file, sourceFilters)) {
           skipped++
           filteredOut++
           continue

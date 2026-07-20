@@ -60,8 +60,11 @@ export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
 
+export type AgentKnowledgeSourceFilterScope = "drive"
+
 export interface AgentKnowledgeSourceFilterConfig {
   patterns?: string[]
+  scope?: AgentKnowledgeSourceFilterScope
 }
 
 export interface AgentSharePointKnowledgeSource {

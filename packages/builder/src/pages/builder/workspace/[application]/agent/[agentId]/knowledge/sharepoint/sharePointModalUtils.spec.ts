@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest"
 import { KnowledgeBaseFileStatus } from "@budibase/types"
 import {
   buildEntryTree,
+  buildEntryTreeFromSourceEntries,
   isExcludeNewByDefaultPatterns,
   matchesConfiguredPatterns,
+  rehydrateFromPatterns,
 } from "./sharePointModalUtils"
 
 describe("sharePointModalUtils.buildEntryTree", () => {
@@ -112,5 +114,115 @@ describe("sharePointModalUtils filter patterns", () => {
 
   it("recognizes exclude-new-by-default for !**", () => {
     expect(isExcludeNewByDefaultPatterns(["!**"])).toBe(true)
+  })
+
+  it("rehydrates legacy filters against relative paths", () => {
+    const selectablePaths = [
+      "drive:drive-1/Policies/handbook.txt",
+      "drive:drive-2/Policies/handbook.txt",
+    ]
+    const sourcePaths = new Map([
+      [selectablePaths[0], "Policies/handbook.txt"],
+      [selectablePaths[1], "Policies/handbook.txt"],
+    ])
+
+    expect(
+      rehydrateFromPatterns(
+        ["!**", "Policies/**"],
+        selectablePaths,
+        [],
+        sourcePaths
+      )
+    ).toEqual(["__site_root__", ...selectablePaths])
+  })
+
+  it("rehydrates drive-scoped filters against unique filter paths", () => {
+    const selectablePaths = [
+      "drive:drive-1/Policies/handbook.txt",
+      "drive:drive-2/Policies/handbook.txt",
+    ]
+
+    expect(
+      rehydrateFromPatterns(
+        ["!**", "drive:drive-2/Policies/**"],
+        selectablePaths
+      )
+    ).toEqual([selectablePaths[1]])
+  })
+})
+
+describe("sharePointModalUtils.buildEntryTreeFromSourceEntries", () => {
+  it("groups identical relative paths beneath their document libraries", () => {
+    const tree = buildEntryTreeFromSourceEntries([
+      {
+        id: "drive-1",
+        name: "Documents",
+        path: "",
+        filterPath: "drive:drive-1",
+        driveId: "drive-1",
+        driveName: "Documents",
+        type: "folder",
+      },
+      {
+        id: "drive-1:item-1",
+        name: "handbook.txt",
+        path: "Policies/handbook.txt",
+        filterPath: "drive:drive-1/Policies/handbook.txt",
+        driveId: "drive-1",
+        driveName: "Documents",
+        type: "file",
+      },
+      {
+        id: "drive-2:item-1",
+        name: "handbook.txt",
+        path: "Policies/handbook.txt",
+        filterPath: "drive:drive-2/Policies/handbook.txt",
+        driveId: "drive-2",
+        driveName: "Department Files",
+        type: "file",
+      },
+    ])
+
+    expect(tree.map(node => node.name)).toEqual([
+      "Department Files",
+      "Documents",
+    ])
+    expect(tree.map(node => node.path)).toEqual([
+      "drive:drive-2",
+      "drive:drive-1",
+    ])
+    expect(tree[0].children[0].children[0]).toMatchObject({
+      name: "handbook.txt",
+      path: "drive:drive-2/Policies/handbook.txt",
+      sourcePath: "Policies/handbook.txt",
+    })
+    expect(tree[1].children[0].children[0]).toMatchObject({
+      name: "handbook.txt",
+      path: "drive:drive-1/Policies/handbook.txt",
+      sourcePath: "Policies/handbook.txt",
+    })
+  })
+
+  it("keeps an empty document library in the tree", () => {
+    expect(
+      buildEntryTreeFromSourceEntries([
+        {
+          id: "drive-empty",
+          name: "Empty Library",
+          path: "",
+          filterPath: "drive:drive-empty",
+          driveId: "drive-empty",
+          driveName: "Empty Library",
+          type: "folder",
+        },
+      ])
+    ).toEqual([
+      expect.objectContaining({
+        name: "Empty Library",
+        path: "drive:drive-empty",
+        type: "folder",
+        children: [],
+      }),
+    ])
   })
 })

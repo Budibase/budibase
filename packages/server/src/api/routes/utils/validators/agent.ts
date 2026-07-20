@@ -263,6 +263,7 @@ export function connectAgentSharePointSiteValidator() {
       datasourceId: NON_EMPTY_STRING.required(),
       authConfigId: NON_EMPTY_STRING.required(),
       filters: Joi.array().items(NON_EMPTY_STRING).optional(),
+      filterScope: Joi.string().valid("drive").optional(),
     }).required()
   )
 }
@@ -271,6 +272,7 @@ export function updateAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
       filters: Joi.array().items(NON_EMPTY_STRING).optional(),
+      filterScope: Joi.string().valid("drive").optional(),
     }).required()
   )
 }

@@ -66,6 +66,7 @@
   const initialPatterns = $derived(
     sharePointSource?.config.filters?.patterns || []
   )
+  const initialFilterScope = $derived(sharePointSource?.config.filters?.scope)
 
   const entryTree = $derived(buildEntryTreeFromSourceEntries(allEntries))
   const selectionTree = $derived(wrapSelectionTreeWithSiteRoot(entryTree))
@@ -78,6 +79,15 @@
       .filter(node => node.type === "file")
       .map(node => node.path)
       .sort((a, b) => a.localeCompare(b))
+  )
+  const sourcePathBySelectablePath = $derived.by(
+    () =>
+      new Map(
+        selectablePaths.map(path => {
+          const node = selectionNodeByPath.get(path)
+          return [path, node?.sourcePath || path]
+        })
+      )
   )
 
   const selectedCountLabel = $derived(
@@ -115,7 +125,9 @@
     const selectablePathSet = new Set(selectablePaths)
     selectedEntryPaths = rehydrateFromPatterns(
       initialPatterns,
-      selectablePaths
+      selectablePaths,
+      [],
+      initialFilterScope === "drive" ? undefined : sourcePathBySelectablePath
     ).filter(path => selectablePathSet.has(path))
   }
 
@@ -170,6 +182,7 @@
         siteId,
         {
           filters,
+          filterScope: "drive",
         }
       )
       await Promise.all([

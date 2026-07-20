@@ -523,13 +523,31 @@ describe("SharePoint Graph retries", () => {
         ok: true,
         status: 200,
         headers: { get: () => null },
-        json: async () => ({ value: [{ id: "drive-1" }] }),
+        json: async () => ({
+          value: [{ id: "drive-1", name: "Documents" }],
+          "@odata.nextLink":
+            "https://graph.microsoft.com/v1.0/sites/site-1/drives?$skiptoken=abc",
+        }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({
+          value: [
+            { id: "drive-2", name: "Department Files" },
+            { name: "Missing ID" },
+          ],
+        }),
       } as unknown as Response)
 
     const drives = await listSharePointDrives(bearerToken, "site-1")
 
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(drives).toEqual(["drive-1"])
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(drives).toEqual([
+      { id: "drive-2", name: "Department Files" },
+      { id: "drive-1", name: "Documents" },
+    ])
   })
 
   it("does not retry listSharePointDrives on 403", async () => {
