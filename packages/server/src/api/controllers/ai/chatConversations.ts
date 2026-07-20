@@ -112,18 +112,23 @@ const startAgentRequestTracking = async ({
     return undefined
   }
 
+  const operation =
+    run.selectedOperation && run.operationIntent !== "query"
+      ? {
+          name: run.selectedOperation.name,
+          prompt: run.selectedOperation.promptInstructions || "",
+        }
+      : undefined
+
   let trackingHandle: AgentRequestTrackingHandle
 
-  if (run.selectedOperation) {
+  if (operation) {
     trackingHandle = await sdk.ai.agentRequests
       .initActiveRequest({
         agentId,
         sessionId,
         latestPrompt: run.latestQuestion,
-        operation: {
-          name: run.selectedOperation.name,
-          prompt: run.selectedOperation.promptInstructions || "",
-        },
+        operation,
         userId,
         source: determineTrigger(sessionId),
       })
@@ -143,12 +148,7 @@ const startAgentRequestTracking = async ({
       sessionId,
       latestUserPrompt: run.latestQuestion,
       recentChatContext: getRecentChatContext(chatMessages),
-      operation: run.selectedOperation
-        ? {
-            name: run.selectedOperation.name,
-            prompt: run.selectedOperation.promptInstructions || "",
-          }
-        : undefined,
+      operation,
       userId,
       existingRequestId: trackingHandle?.requestId,
     })
