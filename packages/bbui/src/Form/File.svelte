@@ -7,6 +7,8 @@
   export let label: string | undefined = undefined
   export let labelPosition: LabelPosition = "above"
   export let disabled: boolean = false
+  export let loading: boolean = false
+  export let hideButtonWhenSet: boolean = false
   export let allowClear: boolean | undefined = undefined
   export let handleFileTooLarge: (_file: File) => void = () => {}
   export let previewUrl: string | undefined = undefined
@@ -20,7 +22,6 @@
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent) => {
-    value = e.detail
     dispatch("change", e.detail)
   }
 </script>
@@ -28,6 +29,8 @@
 <Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <CoreFile
     {disabled}
+    {loading}
+    {hideButtonWhenSet}
     {allowClear}
     {title}
     {value}

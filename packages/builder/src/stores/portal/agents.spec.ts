@@ -239,6 +239,32 @@ describe("agentsStore sharepoint and file syncing", () => {
 
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
   })
+
+  it("does not poll when a SharePoint source has no sync state", async () => {
+    vi.useFakeTimers()
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: {
+          files: [],
+          sharePointSources: [
+            {
+              sourceId: "source-1",
+              syncedCount: 0,
+              failedCount: 0,
+              processingCount: 0,
+              totalCount: 0,
+            },
+          ],
+        },
+      },
+    })
+
+    await store.fetchAgentKnowledge("agent_1")
+    fetchAgentKnowledge.mockClear()
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(fetchAgentKnowledge).not.toHaveBeenCalled()
+  })
 })
 
 describe("AgentsStore file operations", () => {
