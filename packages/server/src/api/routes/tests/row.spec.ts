@@ -1230,6 +1230,17 @@ if (descriptions.length) {
 
             await config.api.row.save(
               historyTable._id!,
+              { first_name: "Nope" },
+              {
+                status: 400,
+                body: {
+                  message: `Table "${tableName}_History" is read-only`,
+                },
+              }
+            )
+
+            await config.api.row.save(
+              historyTable._id!,
               {
                 _id: historyRows[0]._id!,
                 first_name: "Nope",
