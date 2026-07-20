@@ -18,6 +18,7 @@ type AgentRequestTrackingJob = {
   }
   source: string
   userId: string
+  existingRequestId?: string
 }
 
 const DEFAULT_CONCURRENCY = 1
@@ -93,6 +94,7 @@ export async function enqueueRequestTracking({
   recentChatContext,
   operation,
   userId,
+  existingRequestId,
 }: {
   agentId: string
   sessionId: string
@@ -106,6 +108,7 @@ export async function enqueueRequestTracking({
     prompt: string
   }
   userId: string
+  existingRequestId?: string
 }) {
   if (!(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))) {
     return
@@ -127,5 +130,6 @@ export async function enqueueRequestTracking({
     operation,
     source: determineTrigger(sessionId),
     userId,
+    existingRequestId,
   })
 }
