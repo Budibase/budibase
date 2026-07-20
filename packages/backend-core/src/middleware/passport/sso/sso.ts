@@ -22,7 +22,8 @@ export async function authenticate(
   details: SSOAuthDetails,
   requireLocalAccount = true,
   done: any,
-  saveUserFn: SaveSSOUserFunction
+  saveUserFn: SaveSSOUserFunction,
+  allowUnverifiedEmailLinking = false
 ) {
   if (!saveUserFn) {
     throw new Error("Save user function must be provided")
@@ -53,8 +54,9 @@ export async function authenticate(
     }
   }
 
-  // fallback to loading by email
-  if (!dbUser) {
+  // fallback to loading by email - only when the email has been verified by the
+  // identity provider.
+  if (!dbUser && (details.emailVerified || allowUnverifiedEmailLinking)) {
     dbUser = await users.getGlobalUserByEmail(details.email)
   }
 

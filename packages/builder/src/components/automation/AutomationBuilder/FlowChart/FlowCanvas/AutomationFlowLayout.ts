@@ -1,15 +1,17 @@
-import {
-  Position,
-  type Edge as FlowEdge,
-  type Node as FlowNode,
-} from "@xyflow/svelte"
+import { Position, type Edge as FlowEdge } from "@xyflow/svelte"
 import type { FlowNodeLayout } from "@/types/automations"
 import { LOOP, NODE_SPACING, STEP } from "./FlowGeometry"
-import type { FlowNodePosition } from "./FlowGraphTypes"
+import {
+  FLOW_NODE_TYPE,
+  type FlowNode,
+  type FlowNodePosition,
+} from "./FlowGraphTypes"
 
-type LayoutFlowNode = FlowNode<{
-  layout?: FlowNodeLayout
-}>
+type LayoutFlowNode = FlowNode & {
+  data: {
+    layout?: FlowNodeLayout
+  }
+}
 
 type LayoutFlowEdge = FlowEdge<{
   isBranchEdge?: boolean
@@ -203,7 +205,7 @@ class AutomationLayoutEngine {
     const width =
       nodeSize.width + branchGap + Math.max(...lanes.map(lane => lane.width), 0)
 
-    if (node.type === "loop-subflow-node") {
+    if (node.type === FLOW_NODE_TYPE.LOOP_SUBFLOW) {
       return {
         width,
         height: nodeSize.height + POST_LOOP_BRANCH_CLEARANCE + totalLaneHeight,
@@ -281,7 +283,7 @@ class AutomationLayoutEngine {
     const centeredTop =
       nodeBounds.top + getNodeDimensions(node).height / 2 - totalLaneHeight / 2
     const stackTop =
-      node.type === "loop-subflow-node"
+      node.type === FLOW_NODE_TYPE.LOOP_SUBFLOW
         ? Math.max(centeredTop, nodeBounds.bottom + POST_LOOP_BRANCH_CLEARANCE)
         : centeredTop
     const childX = nodeBounds.right + this.ranksep
@@ -328,7 +330,9 @@ class AutomationLayoutEngine {
   }
 
   private getSequentialGap(node: FlowNode) {
-    return node.type === "loop-subflow-node" ? LOOP.clearance : this.ranksep
+    return node.type === FLOW_NODE_TYPE.LOOP_SUBFLOW
+      ? LOOP.clearance
+      : this.ranksep
   }
 
   private get ranksep() {

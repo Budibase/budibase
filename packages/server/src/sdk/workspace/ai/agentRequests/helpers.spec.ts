@@ -1,7 +1,17 @@
 import { generateText } from "ai"
-import type { Agent, AgentRequest, LLMResponse } from "@budibase/types"
+import type {
+  Agent,
+  AgentRequest,
+  AgentRequestAction,
+  LLMResponse,
+} from "@budibase/types"
 import sdk from "../../.."
-import { analyzeAgentRequestLink, generateAgentRequestTitle } from "./helpers"
+import {
+  analyzeAgentRequestLink,
+  generateAgentRequestTitle,
+  generateInteractionSummary,
+  generateRequestOutcome,
+} from "./helpers"
 
 jest.mock("ai", () => ({
   generateText: jest.fn(),
@@ -270,5 +280,234 @@ describe("generateAgentRequestTitle", () => {
         ]),
       })
     )
+  })
+})
+
+describe("generateInteractionSummary", () => {
+  const generateTextMock = jest.mocked(generateText)
+  const getOrThrowMock = jest.mocked(sdk.ai.agents.getOrThrow)
+  const createLLMMock = jest.mocked(sdk.ai.llm.createLLM)
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    getOrThrowMock.mockResolvedValue(buildAgent())
+    createLLMMock.mockResolvedValue(buildLLMResponse())
+  })
+
+  it("summarizes the user's latest message for the timeline", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult("User asked about VPN access")
+    )
+
+    await expect(
+      generateInteractionSummary({
+        latestPrompt: "I can't connect to the VPN from home",
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual("User asked about VPN access")
+
+    expect(createLLMMock).toHaveBeenCalledWith(
+      "config_1",
+      "session_1",
+      undefined,
+      "agent_1"
+    )
+    expect(generateTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: {
+          "x-litellm-tags": "bb-agent-request-interaction-summary",
+        },
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: "user",
+            content: "I can't connect to the VPN from home",
+          }),
+        ]),
+      })
+    )
+  })
+
+  it("throws when the model returns an empty response", async () => {
+    generateTextMock.mockResolvedValue(buildGenerateTextResult("   "))
+
+    await expect(
+      generateInteractionSummary({
+        latestPrompt: "I need a new laptop",
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).rejects.toThrow("Invalid interaction summary response")
+  })
+})
+
+describe("generateRequestOutcome", () => {
+  const generateTextMock = jest.mocked(generateText)
+  const getOrThrowMock = jest.mocked(sdk.ai.agents.getOrThrow)
+  const createLLMMock = jest.mocked(sdk.ai.llm.createLLM)
+
+  const actions: AgentRequestAction[] = [
+    {
+      id: "action_1",
+      timestamp: "2026-01-01T00:00:00.000Z",
+      type: "user_message",
+      summary: "User asked to book a meeting",
+    },
+    {
+      id: "action_2",
+      timestamp: "2026-01-01T00:01:00.000Z",
+      type: "tool_call",
+      toolName: "book_meeting",
+      status: "error",
+      summary: "Failed to book the meeting",
+    },
+    {
+      id: "action_3",
+      timestamp: "2026-01-01T00:02:00.000Z",
+      type: "tool_call",
+      toolName: "send_email",
+      status: "success",
+      summary: "Emailed the organizer directly instead",
+    },
+  ]
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    getOrThrowMock.mockResolvedValue(buildAgent())
+    createLLMMock.mockResolvedValue(buildLLMResponse())
+  })
+
+  it("resolves a completed outcome from the model's JSON response", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(
+        JSON.stringify({
+          status: "completed",
+          reason: "The meeting was booked via email after the tool failed",
+        })
+      )
+    )
+
+    await expect(
+      generateRequestOutcome({
+        title: "Book a meeting",
+        actions,
+        finalResponse: "I've emailed the organizer to set up the meeting.",
+        toolCallsIncomplete: false,
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual({
+      status: "completed",
+      reason: "The meeting was booked via email after the tool failed",
+    })
+
+    expect(generateTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: {
+          "x-litellm-tags": "bb-agent-request-outcome",
+        },
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: "user",
+            content: JSON.stringify({
+              title: "Book a meeting",
+              toolCallsIncomplete: false,
+              timeline: [
+                {
+                  type: "user_message",
+                  summary: "User asked to book a meeting",
+                },
+                {
+                  type: "tool_call",
+                  tool: "book_meeting",
+                  status: "error",
+                  summary: "Failed to book the meeting",
+                },
+                {
+                  type: "tool_call",
+                  tool: "send_email",
+                  status: "success",
+                  summary: "Emailed the organizer directly instead",
+                },
+              ],
+              finalResponse:
+                "I've emailed the organizer to set up the meeting.",
+            }),
+          }),
+        ]),
+      })
+    )
+  })
+
+  it("resolves a failed outcome from the model's JSON response", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(
+        JSON.stringify({
+          status: "failed",
+          reason: "No tool call ever succeeded in booking the meeting",
+        })
+      )
+    )
+
+    await expect(
+      generateRequestOutcome({
+        actions,
+        finalResponse: "I wasn't able to book the meeting.",
+        toolCallsIncomplete: false,
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual({
+      status: "failed",
+      reason: "No tool call ever succeeded in booking the meeting",
+    })
+  })
+
+  it("throws when the model returns an invalid status", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(
+        JSON.stringify({ status: "partial", reason: "Sort of done" })
+      )
+    )
+
+    await expect(
+      generateRequestOutcome({
+        actions,
+        finalResponse: "Done, I think.",
+        toolCallsIncomplete: false,
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).rejects.toThrow("Invalid agent request outcome response")
+  })
+
+  it("throws when the model returns no reason", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(JSON.stringify({ status: "completed" }))
+    )
+
+    await expect(
+      generateRequestOutcome({
+        actions,
+        finalResponse: "Done.",
+        toolCallsIncomplete: false,
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).rejects.toThrow("Invalid agent request outcome response")
+  })
+
+  it("throws when the model call fails", async () => {
+    generateTextMock.mockRejectedValue(new Error("LLM unavailable"))
+
+    await expect(
+      generateRequestOutcome({
+        actions,
+        finalResponse: "Done.",
+        toolCallsIncomplete: false,
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).rejects.toThrow("LLM unavailable")
   })
 })

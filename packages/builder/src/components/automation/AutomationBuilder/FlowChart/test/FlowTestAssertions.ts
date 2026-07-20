@@ -1,6 +1,7 @@
 import { expect } from "vitest"
-import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
 import { ANCHOR, BRANCH, LOOP, STEP } from "../FlowCanvas/FlowGeometry"
+import { FLOW_NODE_TYPE, type FlowNode } from "../FlowCanvas/FlowGraphTypes"
 
 export interface FlowGraph {
   nodes: FlowNode[]
@@ -25,37 +26,37 @@ export const getEdge = (graph: FlowGraph, source: string, target: string) => {
 }
 
 export const getNodeHeight = (node: FlowNode) => {
-  if (node.type === "loop-subflow-node") {
+  if (node.type === FLOW_NODE_TYPE.LOOP_SUBFLOW) {
     return typeof node.data?.containerHeight === "number"
       ? node.data.containerHeight
       : LOOP.minHeight
   }
-  if (node.type === "branch-node") {
+  if (node.type === FLOW_NODE_TYPE.BRANCH) {
     return BRANCH.height
   }
-  if (node.type === "anchor-node") {
+  if (node.type === FLOW_NODE_TYPE.ANCHOR) {
     return ANCHOR.height
   }
   return STEP.height
 }
 
 export const getNodeWidth = (node: FlowNode) => {
-  if (node.type === "loop-subflow-node") {
+  if (node.type === FLOW_NODE_TYPE.LOOP_SUBFLOW) {
     return typeof node.data?.containerWidth === "number"
       ? node.data.containerWidth
       : STEP.width
   }
-  if (node.type === "anchor-node") {
+  if (node.type === FLOW_NODE_TYPE.ANCHOR) {
     return ANCHOR.width
   }
   return STEP.width
 }
 
 const getContainedNodeWidth = (node: FlowNode) =>
-  node.type === "anchor-node" ? 0 : getNodeWidth(node)
+  node.type === FLOW_NODE_TYPE.ANCHOR ? 0 : getNodeWidth(node)
 
 const getContainedNodeHeight = (node: FlowNode) =>
-  node.type === "anchor-node" ? 0 : getNodeHeight(node)
+  node.type === FLOW_NODE_TYPE.ANCHOR ? 0 : getNodeHeight(node)
 
 export const expectAllEdgesResolvable = (graph: FlowGraph) => {
   const ids = new Set(graph.nodes.map(node => node.id))

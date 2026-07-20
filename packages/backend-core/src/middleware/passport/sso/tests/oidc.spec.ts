@@ -66,11 +66,17 @@ describe("oidc", () => {
     let uiProfile: OpenIDConnectStrategy.MergedProfile & {
       _json?: {
         email?: string
+        email_verified?: boolean
         picture?: string
       }
       provider?: string
     }
-    let idProfile: OpenIDConnectStrategy.Profile
+    let idProfile: OpenIDConnectStrategy.Profile & {
+      _json?: {
+        email?: string
+        email_verified?: boolean
+      }
+    }
 
     beforeEach(() => {
       jest.clearAllMocks()
@@ -86,6 +92,7 @@ describe("oidc", () => {
         name: profile.name,
         emails: [{ value: details.email! }],
         username: details.email,
+        _json: { email: details.email, email_verified: true },
       }
     })
 
@@ -110,7 +117,8 @@ describe("oidc", () => {
         details,
         false,
         mockDone,
-        mockSaveUser
+        mockSaveUser,
+        false
       )
     })
 
@@ -123,7 +131,66 @@ describe("oidc", () => {
         details,
         false,
         mockDone,
-        mockSaveUser
+        mockSaveUser,
+        false
+      )
+    })
+
+    it("marks email as unverified when the userinfo email_verified claim is false", async () => {
+      uiProfile._json!.email_verified = false
+
+      await authenticate()
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: false }),
+        false,
+        mockDone,
+        mockSaveUser,
+        false
+      )
+    })
+
+    it("marks email as unverified when no email_verified claim is present", async () => {
+      delete uiProfile._json?.email_verified
+      delete idProfile._json
+
+      await authenticate()
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: false }),
+        false,
+        mockDone,
+        mockSaveUser,
+        false
+      )
+    })
+
+    it("uses id token email_verified when userinfo has no email", async () => {
+      delete uiProfile._json?.email
+      idProfile._json = { email: details.email, email_verified: false }
+
+      await authenticate()
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: false }),
+        false,
+        mockDone,
+        mockSaveUser,
+        false
+      )
+    })
+
+    it("passes the allowUnverifiedEmailLinking flag through to sso", async () => {
+      authenticateFn = oidc.buildVerifyFn(mockSaveUser, true)
+
+      await authenticate()
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        details,
+        false,
+        mockDone,
+        mockSaveUser,
+        true
       )
     })
 
@@ -135,6 +202,8 @@ describe("oidc", () => {
 
       const expectedDetails = {
         ...details,
+        // a preferred_username used as the email is never considered verified
+        emailVerified: false,
         profile: {
           ...details.profile,
           _json: {
@@ -148,7 +217,8 @@ describe("oidc", () => {
         expectedDetails,
         false,
         mockDone,
-        mockSaveUser
+        mockSaveUser,
+        false
       )
     })
 
@@ -175,7 +245,8 @@ describe("oidc", () => {
         expect.objectContaining({ email: upperEmail.toLowerCase() }),
         false,
         mockDone,
-        mockSaveUser
+        mockSaveUser,
+        false
       )
     })
 
@@ -208,7 +279,8 @@ describe("oidc", () => {
         expectedDetails,
         false,
         mockDone,
-        mockSaveUser
+        mockSaveUser,
+        false
       )
     })
 
@@ -235,7 +307,8 @@ describe("oidc", () => {
         expectedDetails,
         false,
         mockDone,
-        mockSaveUser
+        mockSaveUser,
+        false
       )
     })
   })

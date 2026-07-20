@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
 import {
   automationTrigger,
   branchStep,
@@ -18,6 +18,7 @@ import {
   LOOP_INSERT_ACTION_OFFSET,
   STEP,
 } from "../FlowCanvas/FlowGeometry"
+import { FLOW_NODE_TYPE, type FlowNode } from "../FlowCanvas/FlowGraphTypes"
 import {
   expectAllEdgesResolvable,
   expectBranchEdge,
@@ -59,7 +60,7 @@ const renderTestChain = (
 ) => {
   graph.nodes.push({
     id: automationTrigger.id,
-    type: "step-node",
+    type: FLOW_NODE_TYPE.STEP,
     data: { block: automationTrigger },
     position: { x: 0, y: -340 },
   })
@@ -113,7 +114,7 @@ describe("buildAutomationGraph", () => {
     getEdge(graph, "step-3", "anchor-step-3")
   })
 
-  it("connects a block after a top-level branch from branch terminal anchors", () => {
+  it("stops rendering top-level blocks after a branch", () => {
     const graph = createGraph()
     const afterBranch = serverLogStep("after-branch")
     const blocks = [automationTrigger, branchWithManyLanesStep(), afterBranch]
@@ -123,10 +124,10 @@ describe("buildAutomationGraph", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    getEdge(graph, "anchor-alpha-2", afterBranch.id)
-    getEdge(graph, "anchor-branch-branch-many-1-beta", afterBranch.id)
-    getEdge(graph, "anchor-gamma-1", afterBranch.id)
-    getEdge(graph, "anchor-delta-loop", afterBranch.id)
+    expect(graph.nodes.find(node => node.id === afterBranch.id)).toBeUndefined()
+    expect(
+      graph.edges.find(edge => edge.target === afterBranch.id)
+    ).toBeUndefined()
   })
 })
 
@@ -180,7 +181,7 @@ describe("renderLoopV2Container", () => {
     expectUniqueGraphIds(graph)
     expectAllEdgesResolvable(graph)
 
-    expect(getNode(graph, "linear-loop").type).toBe("loop-subflow-node")
+    expect(getNode(graph, "linear-loop").type).toBe(FLOW_NODE_TYPE.LOOP_SUBFLOW)
     expect(getNode(graph, "loop-child-1").parentId).toBe("linear-loop")
     expect(getNode(graph, "loop-child-2").parentId).toBe("linear-loop")
     expect(getNode(graph, "loop-child-3").parentId).toBe("linear-loop")
@@ -305,6 +306,15 @@ describe("renderLoopV2Container", () => {
 })
 
 describe("renderChain", () => {
+  it("does not throw when a branch has no lanes", () => {
+    const branch = branchStep([], {
+      id: "empty-branch",
+      branches: [],
+    })
+
+    expect(() => renderTestChain([branch])).not.toThrow()
+  })
+
   it("renders linear automation steps with resolvable sequential edges", () => {
     const graph = renderTestChain(linearAutomationSteps())
 

@@ -66,7 +66,8 @@ const renderBranchSplit = (
   context.currentY = result.bottomY
   context.branched = true
   context.terminals = result.terminals
-  context.currentSources = result.terminals
+  context.currentSources =
+    result.terminals.length > 0 ? result.terminals : [source]
 }
 
 const renderLoop = (step: LoopV2Step, context: ChainRenderContext) => {
@@ -155,7 +156,10 @@ export const renderRootChain = (
   let lastWasBranch = false
   for (const step of chain) {
     lastWasBranch = step.stepId === AutomationActionStepId.BRANCH
-    renderBlock(step, context)
+    const shouldContinue = renderBlock(step, context)
+    if (!shouldContinue) {
+      break
+    }
   }
 
   const lastSource = getLastSource(context)

@@ -85,7 +85,15 @@ tests:
           path: spec.template.spec.containers[0].ports[0].containerPort
           value: 4003
 
-  - it: should set imagePullPolicy to Always
+  - it: should default imagePullPolicy to IfNotPresent
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  - it: should allow overriding imagePullPolicy
+    set:
+      services.worker.imagePullPolicy: Always
     asserts:
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy

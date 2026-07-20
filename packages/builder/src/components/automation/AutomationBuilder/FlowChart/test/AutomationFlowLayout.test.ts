@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest"
-import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/svelte"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
 import { layoutAutomationGraph } from "../FlowCanvas/AutomationFlowLayout"
 import { LOOP, STEP } from "../FlowCanvas/FlowGeometry"
+import {
+  FLOW_NODE_TYPE,
+  type FlowNode,
+  type FlowNodeType,
+} from "../FlowCanvas/FlowGraphTypes"
 import {
   expectNodeBelow,
   expectNodeRightOf,
@@ -18,12 +23,16 @@ interface BranchEdgeData {
   [key: string]: unknown
 }
 
-const stepNode = (id: string, type = "step-node", layout = STEP): FlowNode => ({
+const stepNode = (
+  id: string,
+  type: FlowNodeType = FLOW_NODE_TYPE.STEP,
+  layout = STEP
+): FlowNode => ({
   id,
   type,
   data: {
     layout,
-    ...(type === "loop-subflow-node"
+    ...(type === FLOW_NODE_TYPE.LOOP_SUBFLOW
       ? {
           containerWidth: layout.width,
           containerHeight: layout.height,
@@ -73,7 +82,10 @@ describe("layoutAutomationGraph", () => {
   it("leaves loop clearance before the next sequential root node", () => {
     const graph = layoutGraph({
       nodes: [
-        stepNode("loop", "loop-subflow-node", { width: 520, height: 300 }),
+        stepNode("loop", FLOW_NODE_TYPE.LOOP_SUBFLOW, {
+          width: 520,
+          height: 300,
+        }),
         stepNode("after-loop"),
       ],
       edges: [edge("loop", "after-loop")],
@@ -86,12 +98,12 @@ describe("layoutAutomationGraph", () => {
     const graph = layoutGraph({
       nodes: [
         stepNode("source"),
-        stepNode("parent-0", "branch-node"),
+        stepNode("parent-0", FLOW_NODE_TYPE.BRANCH),
         stepNode("upper-action"),
-        stepNode("nested-0", "branch-node"),
-        stepNode("nested-1", "branch-node"),
-        stepNode("nested-2", "branch-node"),
-        stepNode("parent-1", "branch-node"),
+        stepNode("nested-0", FLOW_NODE_TYPE.BRANCH),
+        stepNode("nested-1", FLOW_NODE_TYPE.BRANCH),
+        stepNode("nested-2", FLOW_NODE_TYPE.BRANCH),
+        stepNode("parent-1", FLOW_NODE_TYPE.BRANCH),
         stepNode("lower-action"),
       ],
       edges: [
@@ -144,9 +156,12 @@ describe("layoutAutomationGraph", () => {
   it("places branch fanouts after loops below the loop container", () => {
     const graph = layoutGraph({
       nodes: [
-        stepNode("loop", "loop-subflow-node", { width: 700, height: 360 }),
-        stepNode("branch-0", "branch-node"),
-        stepNode("branch-1", "branch-node"),
+        stepNode("loop", FLOW_NODE_TYPE.LOOP_SUBFLOW, {
+          width: 700,
+          height: 360,
+        }),
+        stepNode("branch-0", FLOW_NODE_TYPE.BRANCH),
+        stepNode("branch-1", FLOW_NODE_TYPE.BRANCH),
       ],
       edges: [
         edge("loop", "branch-0", {

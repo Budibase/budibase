@@ -65,6 +65,8 @@ const mocks = vi.hoisted(() => {
     },
     deploymentStore: { publishApp: vi.fn() },
     environment: { loadVariables: vi.fn() },
+    notificationError: vi.fn(),
+    buildAutomationGraph: vi.fn(),
     selectedAutomation: store<unknown>({
       data: undefined,
       blockRefs: {},
@@ -128,7 +130,7 @@ vi.mock("@budibase/bbui", () => ({
   Modal: MockSlot,
   StatusLight: MockSlot,
   Switcher: MockSlot,
-  notifications: { error: vi.fn() },
+  notifications: { error: mocks.notificationError },
 }))
 
 vi.mock("@budibase/frontend-core", () => ({
@@ -186,54 +188,7 @@ vi.mock("../AutomationStepHelpers", () => ({
       newEdges: unknown[]
       subflowNodePositions: Record<string, { x: number; y: number }>
     }
-  ) => {
-    deps.newNodes.push(
-      {
-        id: "trigger",
-        type: "step-node",
-        data: { block: _blocks[0] },
-        position: { x: 0, y: 0 },
-        width: 200,
-        height: 120,
-      },
-      {
-        id: "step-1",
-        type: "step-node",
-        data: { block: _blocks[1] },
-        position: { x: 600, y: 0 },
-        width: 200,
-        height: 120,
-      },
-      {
-        id: "branch-branch-0-branch-1",
-        type: "branch-node",
-        data: {
-          block: {
-            id: "branch",
-            stepId: "BRANCH",
-            inputs: { branches: [{ id: "branch-1", name: "Branch 1" }] },
-          },
-          branch: { id: "branch-1", name: "Branch 1" },
-          branchIdx: 0,
-          layout: { width: 200, height: 120 },
-        },
-        position: { x: 0, y: 240 },
-        width: 200,
-        height: 120,
-      },
-      {
-        id: "anchor-branch-branch-0-branch-1",
-        type: "anchor-node",
-        data: {
-          layout: { width: 320, height: 1 },
-        },
-        position: { x: 600, y: 240 },
-        width: 320,
-        height: 1,
-      }
-    )
-    return { nodes: deps.newNodes, edges: deps.newEdges }
-  },
+  ) => mocks.buildAutomationGraph(_blocks, deps),
 }))
 
 import FlowChart from "../FlowChart.svelte"
@@ -281,6 +236,56 @@ describe("FlowChart", () => {
     mocks.viewport = { x: 0, y: 0, zoom: 1 }
     mocks.mockNodes = []
     mocks.setViewport.mockClear()
+    mocks.notificationError.mockClear()
+    mocks.buildAutomationGraph.mockReset()
+    mocks.buildAutomationGraph.mockImplementation((_blocks, deps) => {
+      deps.newNodes.push(
+        {
+          id: "trigger",
+          type: "step-node",
+          data: { block: _blocks[0] },
+          position: { x: 0, y: 0 },
+          width: 200,
+          height: 120,
+        },
+        {
+          id: "step-1",
+          type: "step-node",
+          data: { block: _blocks[1] },
+          position: { x: 600, y: 0 },
+          width: 200,
+          height: 120,
+        },
+        {
+          id: "branch-branch-0-branch-1",
+          type: "branch-node",
+          data: {
+            block: {
+              id: "branch",
+              stepId: "BRANCH",
+              inputs: { branches: [{ id: "branch-1", name: "Branch 1" }] },
+            },
+            branch: { id: "branch-1", name: "Branch 1" },
+            branchIdx: 0,
+            layout: { width: 200, height: 120 },
+          },
+          position: { x: 0, y: 240 },
+          width: 200,
+          height: 120,
+        },
+        {
+          id: "anchor-branch-branch-0-branch-1",
+          type: "anchor-node",
+          data: {
+            layout: { width: 320, height: 1 },
+          },
+          position: { x: 600, y: 240 },
+          width: 320,
+          height: 1,
+        }
+      )
+      return { nodes: deps.newNodes, edges: deps.newEdges }
+    })
     setPaneSize(1000, 600)
     global.ResizeObserver = class {
       observe = vi.fn()
@@ -312,7 +317,36 @@ describe("FlowChart", () => {
     })
   })
 
-  it("moves the canvas left when selecting a step would leave it behind the side panel", async () => {
+  it("shows an error notification when the graph cannot be rendered", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    const renderError = new Error("Cannot render an empty flow chain")
+    mocks.buildAutomationGraph.mockImplementation(() => {
+      throw renderError
+    })
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, { props: { automation } })
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(
+        "Error rendering automation",
+        renderError
+      )
+      expect(mocks.notificationError).toHaveBeenCalledWith(
+        "Error rendering automation"
+      )
+    })
+  })
+
+  it("does not add a side panel overlay offset when a selected step is already visible", async () => {
     const automation = {
       ...automationWithSteps([serverLogStep("step-1")]),
       _id: "automation-1",
