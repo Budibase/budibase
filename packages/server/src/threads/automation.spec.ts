@@ -30,9 +30,10 @@ import { Job } from "bull"
 import { BUILTIN_ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../automations"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import { basicAutomation } from "../tests/utilities/structures"
-import { executeInThread } from "./automation"
+import { executeInThread, removeStalled } from "./automation"
 import sdk from "../sdk"
 import { automations } from "@budibase/shared-core"
+import { automationQueue } from "../automations/bullboard"
 
 const isAutomationStepResult = (
   result: AutomationTestProgressEvent["result"]
@@ -47,6 +48,60 @@ describe("automation thread", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  it("does not disable a cron schedule when a repeatable job stalls", async () => {
+    const prodAppId = config.getProdWorkspaceId()
+    const removeRepeatableByKey = jest.fn()
+    const getBullQueue = jest.spyOn(automationQueue, "getBullQueue")
+
+    const automation = basicAutomation({
+      _id: "automation_stalled_cron",
+      appId: prodAppId,
+      definition: {
+        trigger: {
+          id: "cron-trigger",
+          type: AutomationStepType.TRIGGER,
+          name: TRIGGER_DEFINITIONS.CRON.name,
+          tagline: TRIGGER_DEFINITIONS.CRON.tagline,
+          description: TRIGGER_DEFINITIONS.CRON.description,
+          icon: TRIGGER_DEFINITIONS.CRON.icon,
+          schema: TRIGGER_DEFINITIONS.CRON.schema,
+          stepId: AutomationTriggerStepId.CRON,
+          event: AutomationEventType.CRON_TRIGGER,
+          inputs: { cron: "* * * * *" },
+        },
+        steps: [],
+      },
+    })
+
+    const job = {
+      id: `${prodAppId}_cron_existing`,
+      data: {
+        automation,
+        event: {
+          appId: prodAppId,
+        },
+      },
+    } as Job<AutomationData>
+
+    getBullQueue.mockReturnValue({
+      getRepeatableJobs: jest.fn().mockResolvedValue([
+        {
+          id: job.id,
+          key: `${job.id}:cron:* * * * *`,
+        },
+      ]),
+      removeRepeatableByKey,
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
+
+    try {
+      await removeStalled(job)
+
+      expect(removeRepeatableByKey).not.toHaveBeenCalled()
+    } finally {
+      getBullQueue.mockRestore()
+    }
   })
 
   it("executes the latest automation definition for cron jobs", async () => {

@@ -2,7 +2,6 @@
   import { Body, Button, Layout, notifications, Toggle } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
-  import type { SyncAgentKnowledgeSourcesResponse } from "@budibase/types"
   import {
     AgentKnowledgeSourceType,
     KnowledgeBaseFileStatus,
@@ -100,6 +99,9 @@
         connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
+  let hasSharePointDatasource = $derived(
+    $knowledgeConnectionsStore.sharePointDatasourceIds.length > 0
+  )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
       .map(source => source.config.site.id)
@@ -128,43 +130,6 @@
     operation.knowledgeBases = latest.knowledgeBases
     operation.knowledgeSources = latest.knowledgeSources
     operation.allowKnowledgeSourceDownload = latest.allowKnowledgeSourceDownload
-  }
-
-  const showSharePointSyncResult = (
-    result: SyncAgentKnowledgeSourcesResponse
-  ) => {
-    const alreadySynced = result.alreadySynced
-    const deleted = result.deleted || 0
-    const discovered = result.totalDiscovered ?? result.synced + alreadySynced
-
-    if (result.synced === 0 && result.failed === 0) {
-      if (deleted > 0 || alreadySynced > 0) {
-        const details = [
-          alreadySynced > 0 ? `${alreadySynced} already synced` : "",
-          deleted > 0 ? `${deleted} removed by filters` : "",
-        ]
-          .filter(Boolean)
-          .join(", ")
-        notifications.info(
-          `SharePoint sync complete (0 new files${details ? `, ${details}` : ""})`
-        )
-        return
-      }
-      if (discovered === 0) {
-        notifications.info("No files found in selected SharePoint site(s)")
-        return
-      }
-    }
-
-    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""}${deleted > 0 ? `, ${deleted} removed by filters` : ""})`
-
-    if (result.failed > 0 && result.synced === 0) {
-      notifications.error(message)
-    } else if (result.failed > 0) {
-      notifications.warning(message)
-    } else {
-      notifications.success(message)
-    }
   }
 
   let fileTableRows = $derived.by(() =>
@@ -216,6 +181,10 @@
 
   async function openSharePointFlow() {
     if (!hasSharePointConnection) {
+      if (hasSharePointDatasource) {
+        await selectSharePointSiteModal?.show()
+        return
+      }
       bb.settings("/connections/apis/new/microsoft-sharepoint")
       return
     }
@@ -263,13 +232,13 @@
     }
 
     try {
-      const result = await agentsStore.syncOperationKnowledgeSources(
+      await agentsStore.syncOperationKnowledgeSources(
         agentId,
         operationId,
         sourceId
       )
       await refreshDeploymentStatus()
-      showSharePointSyncResult(result)
+      notifications.info("SharePoint sync started")
     } catch (error) {
       console.error(error)
       notifications.error("Failed to sync SharePoint")

@@ -247,13 +247,13 @@ describe("triggers", () => {
 
   it("re-triggers after usage is lowered", async () => {
     const license = mocks.licenses.useCloudFree()
-    const quota = license.quotas.usage.static.plugins
+    const quota = license.quotas.usage.static.rows
 
     await config.doInWorkspace(async () => {
       let value = quota.value * 0.9
       await quotas.incrementMany({
         change: value,
-        name: StaticQuotaName.PLUGINS,
+        name: StaticQuotaName.ROWS,
         type: QuotaUsageType.STATIC,
       })
 
@@ -262,10 +262,10 @@ describe("triggers", () => {
       mockTriggerQuota.mockClear()
 
       // go one below the 90% threshold
-      await quotas.decrement(StaticQuotaName.PLUGINS, QuotaUsageType.STATIC)
+      await quotas.decrement(StaticQuotaName.ROWS, QuotaUsageType.STATIC)
 
       // go above the threshold again
-      await quotas.increment(StaticQuotaName.PLUGINS, QuotaUsageType.STATIC)
+      await quotas.increment(StaticQuotaName.ROWS, QuotaUsageType.STATIC)
 
       // re-triggered
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
@@ -274,14 +274,14 @@ describe("triggers", () => {
 
   it("triggers concurrently doesn't send two emails", async () => {
     const license = mocks.licenses.useCloudFree()
-    const quota = license.quotas.usage.static.plugins
+    const quota = license.quotas.usage.static.rows
 
     await config.doInWorkspace(async () => {
       const trigger = async () => {
         let value = quota.value * 0.9
         await quotas.incrementMany({
           change: value,
-          name: StaticQuotaName.PLUGINS,
+          name: StaticQuotaName.ROWS,
           type: QuotaUsageType.STATIC,
         })
       }
