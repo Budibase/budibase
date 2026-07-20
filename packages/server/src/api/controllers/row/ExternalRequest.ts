@@ -315,6 +315,21 @@ export class ExternalRequest<T extends Operation> {
     await Promise.all(promises)
   }
 
+  private preflightRelationshipWrites(relationships: ManyRelationship[]) {
+    for (const relationship of relationships) {
+      if (!relationship.tableId) {
+        throw new Error("Table ID is unknown, cannot find table")
+      }
+
+      const linkTable = this.getTable(relationship.tableId)
+      if (!linkTable) {
+        throw new Error("Table ID is unknown, cannot find table")
+      }
+
+      assertWritableTable(linkTable)
+    }
+  }
+
   getTable(tableId: string | undefined): Table | undefined {
     if (!tableId) {
       throw new Error("Table ID is unknown, cannot find table")
@@ -744,6 +759,10 @@ export class ExternalRequest<T extends Operation> {
           manyRelationships.push(...processed.manyRelationships)
         }
       }
+    }
+
+    if (!this.isReadonlyOperation(operation)) {
+      this.preflightRelationshipWrites(manyRelationships)
     }
 
     if (
