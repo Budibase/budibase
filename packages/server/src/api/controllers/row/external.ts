@@ -29,12 +29,7 @@ import { cloneDeep } from "lodash"
 import { generateIdForRow } from "./utils"
 import { helpers } from "@budibase/shared-core"
 import { HTTPError } from "@budibase/backend-core"
-
-function assertWritableTable(table: Table) {
-  if (table.readonly) {
-    throw new HTTPError(`Table "${table.name}" is read-only`, 400)
-  }
-}
+import { assertWritableTable } from "./readOnly"
 
 export async function handleRequest<T extends Operation>(
   operation: T,

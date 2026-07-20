@@ -53,6 +53,7 @@ import {
   isManyToMany,
   sqlOutputProcessing,
 } from "./utils"
+import { assertWritableTable } from "./readOnly"
 
 interface ManyRelationship {
   tableId?: string
@@ -262,6 +263,7 @@ export class ExternalRequest<T extends Operation> {
   }
 
   private async removeManyToManyRelationships(rowId: string, table: Table) {
+    assertWritableTable(table)
     const filters = this.prepareFilters(rowId, {}, table)
 
     // safety check, if there are no filters on deletion bad things happen
@@ -276,6 +278,7 @@ export class ExternalRequest<T extends Operation> {
     table: Table,
     colName: string
   ) {
+    assertWritableTable(table)
     const tableId = table._id!
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
@@ -523,6 +526,7 @@ export class ExternalRequest<T extends Operation> {
       if (!linkTable || !linkPrimary) {
         return
       }
+      assertWritableTable(linkTable)
 
       const linkSecondary = relationshipPrimary[1]
 
@@ -679,8 +683,8 @@ export class ExternalRequest<T extends Operation> {
     filters = this.prepareFilters(id, filters || {}, table)
     const relationships = buildExternalRelationships(table, this.tables)
 
-    if (table.readonly && !this.isReadonlyOperation(operation)) {
-      throw new Error(`Table "${table.name}" is read-only`)
+    if (!this.isReadonlyOperation(operation)) {
+      assertWritableTable(table)
     }
 
     let aggregations: Aggregation[] = []
