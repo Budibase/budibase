@@ -64,6 +64,13 @@ interface ManyRelationship {
   relationshipType: RelationshipType
 }
 
+interface RelationshipCleanupAction {
+  rowId: string
+  table: Table
+  field?: string
+  isMany: boolean
+}
+
 export interface RunConfig {
   id?: any[]
   filters?: SearchFilters
@@ -263,7 +270,6 @@ export class ExternalRequest<T extends Operation> {
   }
 
   private async removeManyToManyRelationships(rowId: string, table: Table) {
-    assertWritableTable(table)
     const filters = this.prepareFilters(rowId, {}, table)
 
     // safety check, if there are no filters on deletion bad things happen
@@ -278,7 +284,6 @@ export class ExternalRequest<T extends Operation> {
     table: Table,
     colName: string
   ) {
-    assertWritableTable(table)
     const tableId = table._id!
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
@@ -289,6 +294,25 @@ export class ExternalRequest<T extends Operation> {
         filters,
       })
     }
+  }
+
+  private async runRelationshipCleanup(actions: RelationshipCleanupAction[]) {
+    actions.forEach(action => {
+      assertWritableTable(action.table)
+    })
+
+    const promises = actions.map(action => {
+      if (action.isMany) {
+        return this.removeManyToManyRelationships(action.rowId, action.table)
+      }
+      return this.removeOneToManyRelationships(
+        action.rowId,
+        action.table,
+        action.field!
+      )
+    })
+
+    await Promise.all(promises)
   }
 
   getTable(tableId: string | undefined): Table | undefined {
@@ -596,7 +620,7 @@ export class ExternalRequest<T extends Operation> {
     }
 
     // finally cleanup anything that needs to be removed
-    const promises: Promise<unknown>[] = []
+    const cleanupActions: RelationshipCleanupAction[] = []
     for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
@@ -609,19 +633,19 @@ export class ExternalRequest<T extends Operation> {
       for (const row of rows) {
         const rowId = generateIdForRow(row, table)
         if (isMany) {
-          promises.push(this.removeManyToManyRelationships(rowId, table))
+          cleanupActions.push({ rowId, table, isMany: true })
         } else {
-          promises.push(this.removeOneToManyRelationships(rowId, table, field))
+          cleanupActions.push({ rowId, table, field, isMany: false })
         }
       }
     }
-    await Promise.all(promises)
+    await this.runRelationshipCleanup(cleanupActions)
   }
 
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
-    const promises: Promise<unknown>[] = []
+    const cleanupActions: RelationshipCleanupAction[] = []
     for (const column of Object.values(table.schema)) {
       if (!isRelationshipColumn(column) || isOneToMany(column)) {
         continue
@@ -637,15 +661,18 @@ export class ExternalRequest<T extends Operation> {
       for (const row of rows) {
         const rowId = generateIdForRow(row, table)
         if (isMany) {
-          promises.push(this.removeManyToManyRelationships(rowId, table))
+          cleanupActions.push({ rowId, table, isMany: true })
         } else {
-          promises.push(
-            this.removeOneToManyRelationships(rowId, table, column.fieldName)
-          )
+          cleanupActions.push({
+            rowId,
+            table,
+            field: column.fieldName,
+            isMany: false,
+          })
         }
       }
     }
-    await Promise.all(promises)
+    await this.runRelationshipCleanup(cleanupActions)
   }
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
