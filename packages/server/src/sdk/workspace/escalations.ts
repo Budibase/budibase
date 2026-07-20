@@ -169,6 +169,21 @@ export async function respond(
   if (!notifDoc) {
     throw new Error(`Notification doc ${notificationDocId} not found`)
   }
+  // Ensure the notification actually belongs to this escalation - stops a forged
+  // payload pairing a valid notificationDocId with a different escalationId.
+  if (notifDoc.escalationId !== escalationId) {
+    console.warn(
+      "Escalation respond: notification does not belong to escalation (possible forged payload)",
+      {
+        escalationId,
+        notificationDocId,
+        notifEscalationId: notifDoc.escalationId,
+      }
+    )
+    throw new Error(
+      `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
+    )
+  }
   await db.put({
     ...notifDoc,
     response,
