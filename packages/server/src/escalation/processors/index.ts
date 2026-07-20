@@ -32,6 +32,7 @@ export interface CreateOperationEscalationInput extends CreateEscalationBase {
   source: EscalationSource.OPERATION
   agentId: string
   operationId: string
+  requestId?: string
   context: SuspendedOperationContext
 }
 

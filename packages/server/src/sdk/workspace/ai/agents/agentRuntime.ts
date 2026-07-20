@@ -29,6 +29,8 @@ import {
 } from "../chatConversations"
 import {
   updatePendingToolCalls,
+  updateUnrecoveredToolFailures,
+  groupToolResultsByOutcome,
   buildPromptAndTools,
   getLiveOperations,
   type BuildPromptAndToolsOptions,
@@ -39,13 +41,21 @@ import {
   createEscalateTool,
   createResolvedEscalateTool,
 } from "../../../../ai/tools/budibase/escalate"
-import { createListSessionEscalationsTool } from "../../../../ai/tools/budibase/listSessionEscalations"
+import {
+  createListSessionEscalationsTool,
+  LIST_SESSION_ESCALATIONS_TOOL_NAME,
+} from "../../../../ai/tools/budibase/listSessionEscalations"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
 // How long to wait for a human response before the escalation expires, in
 // seconds, when the operation doesn't specify its own delay.
 const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
+
+// Read-only/helper tool calls that shouldn't clutter the request timeline.
+const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>([
+  LIST_SESSION_ESCALATIONS_TOOL_NAME,
+])
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -65,6 +75,10 @@ interface PrepareAgentChatRunParams {
   // Appended to the system prompt - a trusted channel for run-time directives
   // Puting it in the user input made it suspicious.
   additionalInstructions?: string
+  // Resolves the AgentRequest id tracking this run, for the escalate tool to
+  // stamp onto the escalation it raises. Read lazily since the caller only
+  // knows it after this run's operation is resolved.
+  getRequestId?: () => string | undefined
 }
 
 export interface AgentChatRun {
@@ -86,8 +100,20 @@ export interface AgentChatRun {
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
+  // Tool calls that actually completed successfully
   onToolCalls?: (toolNames: string[]) => void
+  // Individual tool call as its outcome becomes known, success or error
+  onToolCallCompleted?: (call: {
+    toolName: string
+    status: "success" | "error"
+    input?: unknown
+    output?: unknown
+  }) => void | Promise<void>
+  // In-flight (pending) tool calls.
   pendingToolCalls?: Set<string>
+  // Tool calls whose last known outcome was a failure (couldn't be
+  // recovered).
+  unrecoveredToolFailures?: Set<string>
 }
 
 const operationRoutingActionSchema = z.enum([
@@ -390,6 +416,7 @@ export const prepareAgentChatRun = async ({
   operationId,
   escalationResolved,
   additionalInstructions,
+  getRequestId,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -476,6 +503,7 @@ export const prepareAgentChatRun = async ({
         channel: chat?.channel,
         userId: user?._id,
         getMessages: () => modelMessages,
+        getRequestId: () => getRequestId?.(),
       })
     }
 
@@ -519,7 +547,13 @@ export const prepareAgentChatRun = async ({
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,
-    stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
+    stream: async ({
+      onFinish,
+      onToolCalls,
+      onToolCallCompleted,
+      pendingToolCalls,
+      unrecoveredToolFailures,
+    } = {}) =>
       await withLiteLLMSessionId(sessionId, () =>
         agentRunner.stream({
           messages: modelMessages,
@@ -535,16 +569,66 @@ export const prepareAgentChatRun = async ({
             }
             contextUsage.output = usage
             sessionLogIndexer.addRequestId(response?.id)
-            if (onToolCalls) {
-              const toolNames = toolCalls
-                .map(toolCall => toolCall.toolName)
-                .filter(Boolean)
-              if (toolNames.length) {
-                onToolCalls(toolNames)
+            const {
+              successResults,
+              successNames,
+              semanticFailureNames,
+              semanticFailureResults,
+            } = groupToolResultsByOutcome(toolResults)
+            const erroredParts = content.filter(
+              (
+                part
+              ): part is Extract<
+                (typeof content)[number],
+                { type: "tool-error" }
+              > => part.type === "tool-error"
+            )
+            const erroredToolNames = erroredParts.map(part => part.toolName)
+
+            if (onToolCalls && successNames.length) {
+              onToolCalls(successNames)
+            }
+            if (onToolCallCompleted) {
+              const inputForCall = (toolCallId: string) =>
+                toolCalls.find(c => c.toolCallId === toolCallId)?.input
+
+              const completedToolCalls = [
+                ...successResults.map(result => ({
+                  toolName: result.toolName,
+                  status: "success" as const,
+                  input: inputForCall(result.toolCallId),
+                  output: result.output,
+                })),
+                ...erroredParts.map(part => ({
+                  toolName: part.toolName,
+                  status: "error" as const,
+                  input: part.input,
+                  output: part.error,
+                })),
+                ...semanticFailureResults.map(result => ({
+                  toolName: result.toolName,
+                  status: "error" as const,
+                  input: inputForCall(result.toolCallId),
+                  output: result.output,
+                })),
+              ]
+
+              for (const call of completedToolCalls) {
+                if (TIMELINE_HIDDEN_TOOL_NAMES.has(call.toolName)) {
+                  continue
+                }
+                await onToolCallCompleted(call)
               }
             }
             if (pendingToolCalls) {
               updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            }
+            if (unrecoveredToolFailures) {
+              updateUnrecoveredToolFailures(
+                unrecoveredToolFailures,
+                successResults,
+                [...erroredToolNames, ...semanticFailureNames]
+              )
             }
 
             for (const toolResult of toolResults) {
@@ -580,13 +664,10 @@ export const prepareAgentChatRun = async ({
               await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
 
-            if (!pendingToolCalls) {
-              return
-            }
-
             for (const part of content) {
               if (part.type === "tool-error") {
-                pendingToolCalls.delete(part.toolCallId)
+                pendingToolCalls?.delete(part.toolCallId)
+                unrecoveredToolFailures?.add(part.toolName)
               }
             }
           },
