@@ -115,6 +115,34 @@ function isMSSQLTemporalTable(
   )
 }
 
+function preserveMSSQLSourceMetadata(
+  datasource: { source: SourceName },
+  table: TableRequest,
+  oldTable?: Table
+) {
+  if (datasource.source !== SourceName.SQL_SERVER) {
+    return false
+  }
+
+  if (oldTable?.readonly === undefined) {
+    delete table.readonly
+  } else {
+    table.readonly = oldTable.readonly
+  }
+  if (oldTable?.historyTable === undefined) {
+    delete table.historyTable
+  } else {
+    table.historyTable = oldTable.historyTable
+  }
+  if (oldTable?.temporalTable === undefined) {
+    delete table.temporalTable
+  } else {
+    table.temporalTable = oldTable.temporalTable
+  }
+
+  return !!oldTable && isMSSQLTemporalTable(datasource, oldTable)
+}
+
 export async function create(table: WithoutDocMetadata<Table>) {
   const datasourceId = getDatasourceId(table)
 
@@ -183,6 +211,12 @@ export async function save(
   if (!datasource.entities) {
     datasource.entities = {}
   }
+
+  const isTemporalTable = preserveMSSQLSourceMetadata(
+    datasource,
+    tableToSave,
+    oldTable
+  )
 
   // GSheets is a specific case - only ever has a static primary key
   tableToSave = setStaticSchemas(datasource, tableToSave)
@@ -295,7 +329,7 @@ export async function save(
   let updatedDatasource = await datasourceSdk.get(datasource._id!)
   let updatedTable = tableToSave
 
-  if (isMSSQLTemporalTable(datasource, tableToSave)) {
+  if (isTemporalTable) {
     const refreshed = await datasourceSdk.buildSchemaFromSource(datasource._id!)
     updatedDatasource = refreshed.datasource
     const refreshedTable = updatedDatasource.entities?.[tableToSave.name]

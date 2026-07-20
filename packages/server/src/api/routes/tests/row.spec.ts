@@ -1301,6 +1301,18 @@ if (descriptions.length) {
             expect(historyTable.schema.middle_name).toBeDefined()
             expect(historyTable.primary?.length).toBeGreaterThan(0)
 
+            const {
+              readonly: _readonly,
+              temporalTable: _temporalTable,
+              ...historyTableUpdate
+            } = historyTable
+            const savedHistoryTable = await config.api.table.save({
+              ...historyTableUpdate,
+              readonly: false,
+            })
+            expect(savedHistoryTable.readonly).toBe(true)
+            expect(savedHistoryTable.temporalTable).toBe(tableName)
+
             const historyRows = await config.api.row.fetch(historyTable._id!)
             expect(historyRows).toEqual([])
           })
