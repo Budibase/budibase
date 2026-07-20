@@ -5,7 +5,6 @@ import {
   Operation,
   RelationshipType,
   RenameColumn,
-  SourceName,
   Table,
   TableRequest,
   ViewV2,
@@ -37,7 +36,6 @@ import { ensureValidPrimaryDisplay } from "../utils"
 import { populateExternalTableSchemas } from "../validation"
 
 const DEFAULT_PRIMARY_COLUMN = "id"
-const MSSQL_HISTORY_SUFFIX = "_History"
 
 function noPrimaryKey(table: Table) {
   return table.primary == null || table.primary.length === 0
@@ -106,22 +104,10 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-function getAutofetchTableNames(
-  datasource: { source: SourceName },
-  table: Table
-) {
-  const names = new Set([table.name])
-  if (datasource.source !== SourceName.SQL_SERVER) {
-    return [...names]
-  }
-
-  if (table.name.endsWith(MSSQL_HISTORY_SUFFIX)) {
-    names.add(table.name.slice(0, -MSSQL_HISTORY_SUFFIX.length))
-  } else {
-    names.add(`${table.name}${MSSQL_HISTORY_SUFFIX}`)
-  }
-
-  return [...names]
+function getAutofetchTableNames(table: Table) {
+  return [table.name, table.historyTable, table.temporalTable].filter(
+    (name): name is string => !!name
+  )
 }
 
 export async function create(table: WithoutDocMetadata<Table>) {
@@ -304,7 +290,7 @@ export async function save(
   const { datasource: updatedDatasource } =
     await datasourceSdk.buildSchemaFromSource(
       datasource._id!,
-      getAutofetchTableNames(datasource, tableToSave)
+      getAutofetchTableNames(tableToSave)
     )
   const updatedTable = updatedDatasource.entities?.[tableToSave.name]
   if (!updatedTable) {

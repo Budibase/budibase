@@ -234,12 +234,18 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   ]
   TABLES_SQL = `SELECT
       ist.*,
-      st.temporal_type AS TEMPORAL_TYPE
+      st.temporal_type AS TEMPORAL_TYPE,
+      history_table.name AS HISTORY_TABLE_NAME,
+      temporal_table.name AS TEMPORAL_TABLE_NAME
     FROM INFORMATION_SCHEMA.TABLES ist
     INNER JOIN sys.tables st
       ON st.object_id = OBJECT_ID(
         QUOTENAME(ist.TABLE_SCHEMA) + '.' + QUOTENAME(ist.TABLE_NAME)
       )
+    LEFT JOIN sys.tables history_table
+      ON history_table.object_id = st.history_table_id
+    LEFT JOIN sys.tables temporal_table
+      ON temporal_table.history_table_id = st.object_id
     WHERE ist.TABLE_TYPE='BASE TABLE'`
 
   constructor(config: MSSQLConfig) {
@@ -527,6 +533,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
       if (isHistoryTable) {
         tables[tableName].readonly = true
+      }
+      if (tableMetadata?.HISTORY_TABLE_NAME) {
+        tables[tableName].historyTable = tableMetadata.HISTORY_TABLE_NAME
+      }
+      if (tableMetadata?.TEMPORAL_TABLE_NAME) {
+        tables[tableName].temporalTable = tableMetadata.TEMPORAL_TABLE_NAME
       }
     }
     let externalTables = finaliseExternalTables(tables, entities)

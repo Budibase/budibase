@@ -1257,6 +1257,7 @@ if (descriptions.length) {
         isMSSQL &&
           it("auto-refreshes temporal history tables after saving an external table", async () => {
             const tableName = uuid.v4().replaceAll("-", "").substring(0, 20)
+            const historyTableName = `${tableName}_audit`
             await client!.raw(`
               CREATE TABLE [dbo].[${tableName}](
                 [email] NVARCHAR(255) NOT NULL,
@@ -1268,7 +1269,7 @@ if (descriptions.length) {
                 PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
               )
               WITH (
-                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${historyTableName}])
               )
             `)
 
@@ -1294,7 +1295,7 @@ if (descriptions.length) {
               datasource!._id!
             )
             const historyTable =
-              updatedDatasource.entities![`${tableName}_History`]
+              updatedDatasource.entities![historyTableName]
 
             expect(historyTable).toBeDefined()
             expect(historyTable.readonly).toBe(true)
