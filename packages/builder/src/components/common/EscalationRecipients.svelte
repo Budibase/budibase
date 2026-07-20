@@ -99,9 +99,13 @@
     })
   }
 
-  $: filteredIdentityLinks = identityLinks.filter(
-    l => (l.provider as string) === (pending.provider as string)
-  )
+  // Dedupe by globalUserId - a user linked in multiple workspaces/tenants has
+  // several links for one provider, and the picker keys options by globalUserId.
+  $: filteredIdentityLinks = identityLinks
+    .filter(l => (l.provider as string) === (pending.provider as string))
+    .filter(
+      (l, i, arr) => arr.findIndex(x => x.globalUserId === l.globalUserId) === i
+    )
 
   $: supportsChannel =
     pending.provider === EscalationNotificationChannel.SLACK ||
