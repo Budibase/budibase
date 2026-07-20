@@ -37,10 +37,7 @@ import {
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
-import {
-  createEscalateTool,
-  createResolvedEscalateTool,
-} from "../../../../ai/tools/budibase/escalate"
+import { createEscalateTool } from "../../../../ai/tools/budibase"
 import {
   createListSessionEscalationsTool,
   LIST_SESSION_ESCALATIONS_TOOL_NAME,
@@ -70,8 +67,6 @@ interface PrepareAgentChatRunParams {
   startedAt?: string
   // Pin the run to a specific operation instead of routing on the question.
   operationId?: string
-  // On resume swap escalate for a resolved stub so the model can't trigger a fresh escalation
-  escalationResolved?: boolean
   // Appended to the system prompt - a trusted channel for run-time directives
   // Puting it in the user input made it suspicious.
   additionalInstructions?: string
@@ -414,7 +409,6 @@ export const prepareAgentChatRun = async ({
   user,
   startedAt,
   operationId,
-  escalationResolved,
   additionalInstructions,
   getRequestId,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
@@ -484,14 +478,9 @@ export const prepareAgentChatRun = async ({
 
   if (tools.escalate) {
     const recipients = selectedOperation?.escalation?.recipients
-    if (escalationResolved) {
-      // Resumed run: replace with a no-op so the model can't re-escalate.
-      // The prior escalate call is in the message history, so the tool must
-      // remain in the schema or the model will see an unresolved tool call.
-      tools.escalate = createResolvedEscalateTool()
-    } else if (selectedOperation && recipients?.length) {
-      // Fresh run: escalation is configured per operation, so resolve it from
-      // the operation this run actually selected - never a different one.
+    if (selectedOperation && recipients?.length) {
+      // Always the real tool, on resumes too. A resumed run must still be
+      // able to raise a genuinely new escalation.
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,

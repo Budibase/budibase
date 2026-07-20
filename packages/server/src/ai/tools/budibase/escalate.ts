@@ -135,22 +135,3 @@ export const createEscalatePlaceholderTool = (): AiToolDefinition => ({
     }),
   }),
 })
-
-// Used on resume, where the escalation has already been approved. If the model
-// follows its instructions and calls escalate again, it gets the approval
-// in-band instead of a missing tool or a fresh escalation.
-export const createResolvedEscalateTool = () =>
-  tool({
-    description: "Escalate to a human for approval.",
-    inputSchema: z.object({
-      title: z.string(),
-      summary: z.string(),
-      reason: z.string(),
-    }),
-    execute: async () => ({
-      status: EscalateToolResultStatus.ALREADY_APPROVED,
-      note:
-        "This request has already been reviewed and APPROVED by a human " +
-        "reviewer. Do not escalate again - proceed to fulfil it.",
-    }),
-  })
