@@ -1294,8 +1294,7 @@ if (descriptions.length) {
             const updatedDatasource = await config.api.datasource.get(
               datasource!._id!
             )
-            const historyTable =
-              updatedDatasource.entities![historyTableName]
+            const historyTable = updatedDatasource.entities![historyTableName]
 
             expect(historyTable).toBeDefined()
             expect(historyTable.readonly).toBe(true)
