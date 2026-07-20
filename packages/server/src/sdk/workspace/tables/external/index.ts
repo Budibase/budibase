@@ -5,6 +5,7 @@ import {
   Operation,
   RelationshipType,
   RenameColumn,
+  SourceName,
   Table,
   TableRequest,
   ViewV2,
@@ -104,9 +105,13 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-function getAutofetchTableNames(table: Table) {
-  return [table.name, table.historyTable, table.temporalTable].filter(
-    (name): name is string => !!name
+function isMSSQLTemporalTable(
+  datasource: { source: SourceName },
+  table: Table
+) {
+  return (
+    datasource.source === SourceName.SQL_SERVER &&
+    !!(table.historyTable || table.temporalTable)
   )
 }
 
@@ -287,16 +292,19 @@ export async function save(
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
 
-  const { datasource: updatedDatasource } =
-    await datasourceSdk.buildSchemaFromSource(
-      datasource._id!,
-      getAutofetchTableNames(tableToSave)
-    )
-  const updatedTable = updatedDatasource.entities?.[tableToSave.name]
-  if (!updatedTable) {
-    throw new Error(
-      `Unable to refresh external table "${tableToSave.name}" after save.`
-    )
+  let updatedDatasource = await datasourceSdk.get(datasource._id!)
+  let updatedTable = tableToSave
+
+  if (isMSSQLTemporalTable(datasource, tableToSave)) {
+    const refreshed = await datasourceSdk.buildSchemaFromSource(datasource._id!)
+    updatedDatasource = refreshed.datasource
+    const refreshedTable = updatedDatasource.entities?.[tableToSave.name]
+    if (!refreshedTable) {
+      throw new Error(
+        `Unable to refresh external table "${tableToSave.name}" after save.`
+      )
+    }
+    updatedTable = refreshedTable
   }
 
   if (updatedDatasource.isSQL) {
