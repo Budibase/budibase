@@ -29,7 +29,6 @@ import { cloneDeep } from "lodash"
 import { generateIdForRow } from "./utils"
 import { helpers } from "@budibase/shared-core"
 import { HTTPError } from "@budibase/backend-core"
-import { assertWritableTable } from "./readOnly"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
@@ -54,7 +53,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 
   const table = await utils.getTableFromSource(source)
-  assertWritableTable(table)
   const { _id, ...rowData } = ctx.request.body
 
   const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
@@ -121,9 +119,6 @@ export async function destroy(ctx: UserCtx) {
     throw new HTTPError("Cannot delete rows through a calculation view", 400)
   }
 
-  const table = await utils.getTableFromSource(source)
-  assertWritableTable(table)
-
   const _id = ctx.request.body._id
   const { row } = await handleRequest(Operation.DELETE, source, {
     id: breakRowIdField(_id),
@@ -135,8 +130,6 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkDestroy(ctx: UserCtx) {
   const { rows } = ctx.request.body
   const source = await utils.getSource(ctx)
-  const table = await utils.getTableFromSource(source)
-  assertWritableTable(table)
   let promises: Promise<{ row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
