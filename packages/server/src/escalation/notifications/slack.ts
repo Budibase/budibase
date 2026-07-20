@@ -1,4 +1,5 @@
 import { WebClient } from "@slack/web-api"
+import { createSlackAdapter } from "@chat-adapter/slack"
 import { context, tenancy } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
@@ -51,10 +52,10 @@ const buildEscalationBlocks = ({
   },
 ]
 
-const getSlackBotToken = async (
+const getSlackIntegration = async (
   appId: string,
   agentId?: string
-): Promise<string | undefined> => {
+): Promise<{ botToken: string; signingSecret: string } | undefined> => {
   return await context.doInWorkspaceContext(appId, async () => {
     const agents = await sdk.ai.agents.fetch()
     const agent = agentId
@@ -63,7 +64,11 @@ const getSlackBotToken = async (
     if (!agent?.slackIntegration?.botToken) {
       return undefined
     }
-    return sdk.ai.deployments.slack.validateSlackIntegration(agent).botToken
+    const integration = sdk.ai.deployments.slack.validateSlackIntegration(agent)
+    return {
+      botToken: integration.botToken,
+      signingSecret: integration.signingSecret,
+    }
   })
 }
 
@@ -80,8 +85,11 @@ export async function sendSlackNotification({
 
   const config = notifDoc.recipient.config as Record<string, string>
 
-  const botToken = await getSlackBotToken(contextDoc.appId, contextDoc.agentId)
-  if (!botToken) {
+  const integration = await getSlackIntegration(
+    contextDoc.appId,
+    contextDoc.agentId
+  )
+  if (!integration) {
     console.warn("sendSlackNotification: no Slack-enabled agent found", {
       escalationId: contextDoc._id,
       appId: contextDoc.appId,
@@ -97,7 +105,7 @@ export async function sendSlackNotification({
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,
   })
-  const client = new WebClient(botToken)
+  const client = new WebClient(integration.botToken)
 
   if (config.channelId) {
     await client.chat.postMessage({
@@ -163,23 +171,24 @@ export async function replyToConversation({
     console.warn("replyToConversation: no channelId", { appId })
     return
   }
-  const botToken = await getSlackBotToken(appId, agentId)
-  if (!botToken) {
+  const integration = await getSlackIntegration(appId, agentId)
+  if (!integration) {
     console.warn("replyToConversation: no Slack-enabled agent", { appId })
     return
   }
 
-  const client = new WebClient(botToken)
-  // DM channels start with "D"; mention the requester in real channels.
-  const isDm = channel.channelId.startsWith("D")
+  // SDK handles the namespaced thread id and markdown -> markdown_text formatting
+  // Keeps formatting resolution consistent
+  const adapter = createSlackAdapter({
+    botToken: integration.botToken,
+    signingSecret: integration.signingSecret,
+  })
+  const threadId = channel.threadId || channel.channelId
+  const isDm = adapter.isDM(threadId)
   const body =
     !isDm && channel.externalUserId
       ? `<@${channel.externalUserId}> ${text}`
       : text
 
-  await client.chat.postMessage({
-    channel: channel.channelId,
-    text: body,
-    ...(channel.threadId ? { thread_ts: channel.threadId } : {}),
-  })
+  await adapter.postMessage(threadId, { markdown: body })
 }
