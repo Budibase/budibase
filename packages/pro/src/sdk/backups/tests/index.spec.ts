@@ -32,6 +32,10 @@ jest.mock("@budibase/backend-core", () => {
   const { join } = jest.requireActual("path")
   return {
     ...core,
+    db: {
+      ...core.db,
+      queryViewRaw: jest.fn(core.db.queryViewRaw),
+    },
     objectStore: {
       ...core.objectStore,
       upload: jest.fn(),
@@ -645,22 +649,14 @@ describe("backups", () => {
             return { $metadata: {} }
           }
         )
-        const globalDb = context.getGlobalDB()
-        const allDocsSpy = jest.spyOn(globalDb, "allDocs")
-        const querySpy = jest.spyOn(globalDb, "query")
+        const queryViewMock = jest.mocked(db.queryViewRaw)
+        queryViewMock.mockClear()
 
         const result = await backups.cleanupExpiredWorkspaceBackups()
-        const allDocsCallCount = allDocsSpy.mock.calls.length
-        const queryLimits = querySpy.mock.calls.map(call => call[1]?.limit)
-        allDocsSpy.mockRestore()
-        querySpy.mockRestore()
+        const queryLimits = queryViewMock.mock.calls.map(call => call[1]?.limit)
 
         expect(result).toEqual({ deleted: 100, failed: 1 })
-        expect(allDocsCallCount).toEqual(0)
-        expect(queryLimits.length).toBeGreaterThan(1)
-        expect(queryLimits.every(limit => limit != null && limit <= 101)).toBe(
-          true
-        )
+        expect(queryLimits).toEqual([100, 101])
         expect(mockedObjectStore.deleteFile).toHaveBeenCalledTimes(101)
         expect((await backups.getWorkspaceBackup(backupIds[99]))._id).toEqual(
           backupIds[99]
