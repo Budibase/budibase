@@ -112,18 +112,23 @@ const startAgentRequestTracking = async ({
     return undefined
   }
 
+  const operation =
+    run.selectedOperation && run.operationIntent !== "query"
+      ? {
+          name: run.selectedOperation.name,
+          prompt: run.selectedOperation.promptInstructions || "",
+        }
+      : undefined
+
   let trackingHandle: AgentRequestTrackingHandle
 
-  if (run.selectedOperation) {
+  if (operation) {
     trackingHandle = await sdk.ai.agentRequests
       .initActiveRequest({
         agentId,
         sessionId,
         latestPrompt: run.latestQuestion,
-        operation: {
-          name: run.selectedOperation.name,
-          prompt: run.selectedOperation.promptInstructions || "",
-        },
+        operation,
         userId,
         source: determineTrigger(sessionId),
       })
@@ -135,31 +140,26 @@ const startAgentRequestTracking = async ({
         })
         return undefined
       })
-  }
 
-  sdk.ai.agentRequests
-    .enqueueRequestTracking({
-      agentId,
-      sessionId,
-      latestUserPrompt: run.latestQuestion,
-      recentChatContext: getRecentChatContext(chatMessages),
-      operation: run.selectedOperation
-        ? {
-            name: run.selectedOperation.name,
-            prompt: run.selectedOperation.promptInstructions || "",
-          }
-        : undefined,
-      userId,
-      existingRequestId: trackingHandle?.requestId,
-    })
-    .catch(error => {
-      console.error("Failed to enqueue agent request tracking", {
+    sdk.ai.agentRequests
+      .enqueueRequestTracking({
         agentId,
         sessionId,
+        latestUserPrompt: run.latestQuestion,
+        recentChatContext: getRecentChatContext(chatMessages),
+        operation,
         userId,
-        error,
+        existingRequestId: trackingHandle?.requestId,
       })
-    })
+      .catch(error => {
+        console.error("Failed to enqueue agent request tracking", {
+          agentId,
+          sessionId,
+          userId,
+          error,
+        })
+      })
+  }
 
   return trackingHandle
 }

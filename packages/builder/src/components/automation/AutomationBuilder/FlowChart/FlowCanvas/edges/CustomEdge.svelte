@@ -23,25 +23,20 @@
     BRANCH_LOOP_INSERT_ACTION_OFFSET,
     LOOP_INSERT_ACTION_OFFSET,
   } from "../FlowGeometry"
-  import { getLoopEdgePath, getPrimaryBranchPath } from "../FlowEdgePaths"
+  import {
+    getCustomEdgeLabelPosition,
+    getCustomEdgePath,
+    getLoopEdgePath,
+    getPrimaryBranchPath,
+  } from "../FlowEdgePaths"
   import {
     isBranchStep,
     AutomationActionStepId,
-    AutomationStatus,
-    type AutomationResults,
     type AutomationStepResult,
     type AutomationTriggerResult,
     type BranchStep,
   } from "@budibase/types"
-  import {
-    getRunHighlight,
-    isRunResults,
-    didStepRun,
-    isTerminalFailure,
-    didBranchStopWithoutMatch,
-    didRunStopWithoutBranchMatch,
-    type RunHighlight,
-  } from "../FlowRunHelpers"
+  import { getFlowEdgeRunHighlight } from "../FlowRunHelpers"
 
   export let data: EdgeData
   export let sourceX: number
@@ -97,11 +92,9 @@
     targetPosition,
     borderRadius: 12,
   })
-  $: labelX = basePath[1]
-  $: labelY = basePath[2]
 
-  $: isBranchTarget = target?.startsWith("branch-")
-  $: isAnchorTarget = target?.startsWith("anchor-")
+  $: isBranchTarget = target.startsWith("branch-")
+  $: isAnchorTarget = target.startsWith("anchor-")
   $: targetBlockRef = target
     ? $selectedAutomation?.blockRefs?.[target]
     : undefined
@@ -116,25 +109,29 @@
       : false
   $: isLoopInsertAnchor = data?.insertIntoLoopV2 === true && isAnchorTarget
   $: isSubflowEdge = data.isSubflowEdge === true
-  $: isBranchSource =
-    data?.block && "branchNode" in data.block && data.block.branchNode === true
-
-  $: if (isAnchorTarget || isLoopTarget || isLoopSource) {
-    labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-    labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
-  }
-  $: if (isLoopSource) {
-    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
-    labelY = sourceY
-  }
-  $: if (isLoopInsertAnchor && !isBranchSource) {
-    labelX = sourceX + LOOP_INSERT_ACTION_OFFSET
-    labelY = sourceY
-  }
-  $: if (isLoopInsertAnchor && isBranchSource) {
-    labelX = sourceX + BRANCH_LOOP_INSERT_ACTION_OFFSET
-    labelY = sourceY
-  }
+  $: isBranchSource = data?.block
+    ? "branchNode" in data.block && data.block.branchNode === true
+    : false
+  $: isPrimaryBranchEdge = isBranchEdgeData(data) && data.isPrimaryEdge
+  $: preBranchLabelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+  $: preBranchLabelY = sourceY ?? 0
+  $: edgeLabelPosition = getCustomEdgeLabelPosition({
+    baseLabelX: basePath[1],
+    baseLabelY: basePath[2],
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    isAnchorTarget,
+    isLoopTarget,
+    isLoopSource,
+    isLoopInsertAnchor,
+    isBranchSource,
+    loopInsertActionOffset: LOOP_INSERT_ACTION_OFFSET,
+    branchLoopInsertActionOffset: BRANCH_LOOP_INSERT_ACTION_OFFSET,
+  })
+  $: labelX = edgeLabelPosition.labelX
+  $: labelY = edgeLabelPosition.labelY
 
   $: loopTargetPath = isLoopTarget
     ? getLoopEdgePath({
@@ -167,16 +164,21 @@
         })
       : undefined
 
-  $: edgePath = isAnchorTarget
-    ? getStraightPath({
-        sourceX,
-        sourceY,
-        targetX: labelX,
-        targetY: labelY,
-      })[0]
-    : loopTargetPath || loopSourcePath || primaryBranchPath || basePath[0]
+  $: edgePath = getCustomEdgePath({
+    isAnchorTarget,
+    anchorPath: getStraightPath({
+      sourceX,
+      sourceY,
+      targetX: labelX,
+      targetY: labelY,
+    })[0],
+    loopTargetPath,
+    loopSourcePath,
+    primaryBranchPath,
+    basePath: basePath[0],
+  })
 
-  $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
+  $: blockId = resolveBlockId(data?.block)
   $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
   $: sourcePathForDrop = passedPathTo || blockRef?.pathTo
   $: edgeHighlight = getEdgeHighlight(data)
@@ -200,7 +202,6 @@
           .some(step => step.stepId === ActionStepID.COLLECT)
       : false
   $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
-  $: isPrimaryBranchEdge = isBranchEdgeData(data) && data.isPrimaryEdge
 
   $: showEdgeActions =
     viewMode === ViewMode.EDITOR &&
@@ -238,9 +239,6 @@
   $: preDzWidth = clamp(Math.round(dx - 160), 160, 300)
   $: preDzOffsetY = 0
 
-  $: preBranchLabelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
-  $: preBranchLabelY = sourceY ?? 0
-
   const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
     if (!ctx) {
       return undefined
@@ -267,168 +265,26 @@
     flow.fitView()
   }
 
-  const getEdgeHighlight = (edgeData: EdgeData | undefined) => {
-    if (viewMode !== ViewMode.LOGS) {
-      const progressHighlight = getProgressEdgeHighlight(edgeData)
-      if (progressHighlight) {
-        return progressHighlight
-      }
-    }
+  const getEdgeHighlight = (edgeData: EdgeData | undefined) =>
+    getFlowEdgeRunHighlight({
+      edgeData,
+      target,
+      runResults,
+      viewMode,
+      getProgressResult,
+      getBranchId,
+    })
 
-    if (!edgeData || !isRunResults(runResults)) {
-      return
-    }
-    const runHighlight = getRunHighlight(runResults)
-
-    if (isBranchEdgeData(edgeData)) {
-      if (didBranchStepStopWithoutMatch(edgeData.branchStepId)) {
-        return "stopped"
-      }
-      if (
-        runHighlight !== "stopped" &&
-        didBranchStepFail(edgeData.branchStepId)
-      ) {
-        return runHighlight
-      }
-      return didBranchRun(edgeData.branchStepId, edgeData.branchIdx)
-        ? runHighlight
-        : undefined
-    }
-
-    if (isBranchContext(edgeData.block)) {
-      if (didBranchStepStopWithoutMatch(edgeData.block.branchStepId)) {
-        return
-      }
-      if (
-        runHighlight !== "stopped" &&
-        didBranchStepFail(edgeData.block.branchStepId)
-      ) {
-        return runHighlight
-      }
-      return didBranchRun(edgeData.block.branchStepId, edgeData.block.branchIdx)
-        ? runHighlight
-        : undefined
-    }
-
-    if (didBranchStepStopWithoutMatch(target)) {
-      return "stopped"
-    }
-
-    if (!didTargetRun(runResults)) {
-      return
-    }
-    return didRunStopWithoutBranchMatch(runResults) ? "stopped" : runHighlight
-  }
-
-  const getProgressEdgeHighlight = (
-    edgeData: EdgeData | undefined
-  ): RunHighlight | undefined => {
-    if (!edgeData) {
-      return
-    }
-
-    if (isBranchEdgeData(edgeData)) {
-      return didProgressBranchRun(edgeData.branchStepId, edgeData.branchIdx)
-    }
-
-    const progress = getProgressResult(target)
-    if (!progress || !didStepRun(progress)) {
-      return
-    }
-    if (isTerminalFailure(progress)) {
-      return progress.outputs.status === AutomationStatus.STOPPED
-        ? "stopped"
-        : "error"
-    }
-    return "success"
-  }
-
-  const didTargetRun = (results: AutomationResults) => {
-    if (target === results.trigger.id) {
-      return didStepRun(results.trigger)
-    }
-    const targetResult = results.steps.find(step => step.id === target)
-    return targetResult ? didStepRun(targetResult) : false
-  }
-
-  const didBranchRun = (branchStepId: string, branchIdx: number) => {
-    if (!isRunResults(runResults)) {
-      return false
-    }
+  const getBranchId = (branchStepId: string, branchIdx: number) => {
     const branchStep = getBranchStep(branchStepId)
-    const branchId = branchStep?.inputs.branches?.[branchIdx]?.id
-    if (!branchId) {
-      return false
-    }
-    const result = runResults.steps.find(step => step.id === branchStepId)
-    if (isTerminalFailure(result)) {
-      return false
-    }
-    const outputs = result?.outputs
-    return (
-      !!outputs &&
-      typeof outputs === "object" &&
-      "branchId" in outputs &&
-      outputs.branchId === branchId
-    )
-  }
-
-  const didBranchStepFail = (branchStepId: string) => {
-    if (!isRunResults(runResults)) {
-      return false
-    }
-    return isTerminalFailure(
-      runResults.steps.find(step => step.id === branchStepId)
-    )
-  }
-
-  const didBranchStepStopWithoutMatch = (branchStepId: string) => {
-    if (!isRunResults(runResults)) {
-      return false
-    }
-    return didBranchStopWithoutMatch(
-      runResults.steps.find(step => step.id === branchStepId)
-    )
-  }
-
-  const didProgressBranchRun = (
-    branchStepId: string,
-    branchIdx: number
-  ): RunHighlight | undefined => {
-    const result = getProgressResult(branchStepId)
-    if (!result || !didStepRun(result)) {
-      return
-    }
-    const branchStep = getBranchStep(branchStepId)
-    const branchId = branchStep?.inputs.branches?.[branchIdx]?.id
-    const outputs = result.outputs
-    const ranBranch =
-      !!outputs &&
-      typeof outputs === "object" &&
-      "branchId" in outputs &&
-      outputs.branchId === branchId
-    if (!ranBranch) {
-      return
-    }
-    if (isTerminalFailure(result)) {
-      return result.outputs.status === AutomationStatus.STOPPED
-        ? "stopped"
-        : "error"
-    }
-    return "success"
+    return branchStep?.inputs.branches?.[branchIdx]?.id
   }
 
   const getProgressResult = (
     blockId: string
   ): AutomationStepResult | AutomationTriggerResult | undefined => {
     const result = $automationStore.testProgress?.[blockId]?.result
-    if (
-      !result ||
-      isRunResults(result) ||
-      !("outputs" in result) ||
-      !("id" in result) ||
-      !("stepId" in result)
-    ) {
+    if (!result || !("stepId" in result)) {
       return
     }
     return result
@@ -438,12 +294,6 @@
     const ref = $selectedAutomation?.blockRefs?.[branchStepId]
     const block = automationStore.actions.getBlockByRef(automation, ref)
     return block && isBranchStep(block) ? block : undefined
-  }
-
-  const isBranchContext = (
-    value: FlowBlockContext
-  ): value is Extract<FlowBlockContext, { branchNode: true }> => {
-    return "branchNode" in value && value.branchNode === true
   }
 </script>
 
