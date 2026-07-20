@@ -207,7 +207,8 @@
           selected: false,
         }))
       )
-    } catch (_error) {
+    } catch (error) {
+      console.error("Error rendering automation", error)
       notifications.error("Error rendering automation")
     }
   }

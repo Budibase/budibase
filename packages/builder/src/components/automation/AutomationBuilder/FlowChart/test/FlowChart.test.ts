@@ -280,8 +280,10 @@ describe("FlowChart", () => {
   })
 
   it("shows an error notification when the graph cannot be rendered", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    const renderError = new Error("Cannot render an empty flow chain")
     mocks.buildAutomationGraph.mockImplementation(() => {
-      throw new Error("Cannot render an empty flow chain")
+      throw renderError
     })
     const automation = {
       ...automationWithSteps([serverLogStep("step-1")]),
@@ -296,6 +298,10 @@ describe("FlowChart", () => {
     render(FlowChart, { props: { automation } })
 
     await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(
+        "Error rendering automation",
+        renderError
+      )
       expect(mocks.notificationError).toHaveBeenCalledWith(
         "Error rendering automation"
       )
