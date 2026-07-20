@@ -79,6 +79,7 @@ interface PrepareAgentChatRunParams {
 export interface AgentChatRun {
   latestQuestion: string
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -128,10 +129,12 @@ const operationRouterOutputSchema = z.object({
 
 type OperationRoutingAction = z.infer<typeof operationRoutingActionSchema>
 type OperationRouterOutput = z.infer<typeof operationRouterOutputSchema>
+export type OperationIntent = z.infer<typeof operationIntentSchema>
 type OperationRoute =
   | {
       action: "select_operation"
       operation: AgentOperation
+      intent: OperationIntent
     }
   | {
       action: Exclude<OperationRoutingAction, "select_operation">
@@ -209,6 +212,7 @@ export const chooseOperationForQuestion = async ({
     return {
       action: "select_operation",
       operation: liveOperations[0],
+      intent: "execute",
     }
   }
   if (!latestQuestion.trim()) {
@@ -263,6 +267,7 @@ export const chooseOperationForQuestion = async ({
     return {
       action: "select_operation",
       operation,
+      intent: route.intent ?? "execute",
     }
   } catch (error) {
     console.error("Operation routing failed", {
@@ -296,20 +301,23 @@ const selectOperationForRun = async ({
   if (operationId) {
     const operation = getLiveOperations(agent).find(o => o.id === operationId)
     route = operation
-      ? { action: "select_operation", operation }
+      ? { action: "select_operation", operation, intent: "execute" }
       : { action: "no_operation" }
   } else {
     route = await chooseOperationForQuestion({ agent, latestQuestion, llm })
   }
 
-  // Sticky
   if (route.action === "no_operation" && !operationId) {
     const lastOperationId = await getSessionOperationId(sessionId)
     const lastOperation = lastOperationId
       ? getLiveOperations(agent).find(o => o.id === lastOperationId)
       : undefined
     if (lastOperation) {
-      route = { action: "select_operation", operation: lastOperation }
+      route = {
+        action: "select_operation",
+        operation: lastOperation,
+        intent: "execute",
+      }
     }
   }
 
@@ -335,6 +343,7 @@ export interface PrepareAgentRunContextParams {
 export interface AgentRunContext {
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   routingAction: OperationRoute["action"]
   systemPrompt: string
   tools: ToolSet
@@ -398,6 +407,10 @@ export const prepareAgentRunContext = async ({
   return {
     llm,
     selectedOperation: routingDecision.operation,
+    operationIntent:
+      routingDecision.action === "select_operation"
+        ? routingDecision.intent
+        : undefined,
     routingAction: routingDecision.action,
     ...promptAndTools,
   }
@@ -446,6 +459,7 @@ export const prepareAgentChatRun = async ({
   const {
     llm,
     selectedOperation,
+    operationIntent,
     tools,
     toolDisplayNames,
     systemPrompt: baseSystemPrompt,
@@ -535,6 +549,7 @@ export const prepareAgentChatRun = async ({
   return {
     latestQuestion,
     selectedOperation,
+    operationIntent,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
