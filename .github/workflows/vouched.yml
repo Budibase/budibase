@@ -1,20 +1,20 @@
 on:
   pull_request_target:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
 
 jobs:
-  check:
+  vouch-check:
     if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - uses: mitchellh/vouch/action/check-pr@f44860978966ace98fb11aaaa20f2b27d7543e13
+      - uses: mitchellh/vouch/action/check-user@f44860978966ace98fb11aaaa20f2b27d7543e13
         with:
-          pr-number: ${{ github.event.pull_request.number }}
+          user: ${{ github.event.pull_request.user.login }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
