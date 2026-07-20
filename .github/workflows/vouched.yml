@@ -1,12 +1,12 @@
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, closed]
   issue_comment:
     types: [created]
 
 jobs:
   vouch-check:
-    if: github.event_name == 'pull_request_target'
+    if: github.event_name == 'pull_request_target' && github.event.action != 'closed'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,11 +33,9 @@ jobs:
       group: vouch-manage
       cancel-in-progress: false
     permissions:
-      actions: write
-      checks: read
       contents: write
       issues: write
-      pull-requests: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -50,22 +48,35 @@ jobs:
           vouch-keyword: vouch
           denounce-keyword: denounce
           allow-unvouch: false
+          pull-request: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  rerun-vouch-check:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'closed' && github.event.pull_request.merged && startsWith(github.event.pull_request.head.ref, 'vouch/') && github.event.pull_request.user.login == 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      checks: read
+      contents: read
+      pull-requests: read
+    steps:
       - name: Re-run vouch check
-        if: steps.manage.outputs.status == 'vouched' || steps.manage.outputs.status == 'denounced'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.issue.number }}
+          GENERATED_PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
         run: |
-          head_sha=$(gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha')
+          source_pr_number=$(
+            gh api "repos/$REPOSITORY/pulls/$GENERATED_PR_NUMBER" \
+              --jq '.body | capture("/issues/(?<number>[0-9]+)#issuecomment-").number'
+          )
+          head_sha=$(gh api "repos/$REPOSITORY/pulls/$source_pr_number" --jq '.head.sha')
           run_id=$(
             gh api "repos/$REPOSITORY/commits/$head_sha/check-runs" \
-              --jq '[.check_runs[] | select(.name == "vouch-check" and .conclusion == "failure")] | sort_by(.started_at) | last | .details_url? | select(.) | capture("/actions/runs/(?<id>[0-9]+)").id'
+              --jq '[.check_runs[] | select(.name == "vouch-check")] | sort_by(.started_at) | last | .details_url? | select(.) | capture("/actions/runs/(?<id>[0-9]+)").id'
           )
 
           if [ -n "$run_id" ]; then
-            gh run rerun "$run_id" --failed --repo "$REPOSITORY"
+            gh run rerun "$run_id" --repo "$REPOSITORY"
           fi
