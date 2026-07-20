@@ -318,6 +318,45 @@ describe("chooseOperationForQuestion", () => {
       action: "no_operation",
     })
   })
+
+  it("accepts an intent field on the router output without changing the selected operation", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: "operation_2",
+        intent: "query",
+        reason: "Asking about existing HR requests",
+      }),
+    })
+
+    const result = await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "How many HR requests do I have open?",
+      llm,
+    })
+
+    expect(result).toEqual({
+      action: "select_operation",
+      operation: operation2,
+    })
+  })
+
+  it("includes the execute/query intent criterion in the routing instructions", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+
+    await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "Book time off",
+      llm,
+    })
+
+    const instructions = jest.mocked(ToolLoopAgent).mock.calls[0][0]
+      .instructions as string
+    expect(instructions).toContain('"execute"')
+    expect(instructions).toContain('"query"')
+    expect(instructions).toContain("not the grammatical form")
+  })
 })
 
 describe("prepareAgentRunContext", () => {

@@ -117,9 +117,12 @@ const operationRoutingActionSchema = z.enum([
   "no_operation",
 ])
 
+const operationIntentSchema = z.enum(["execute", "query"])
+
 const operationRouterOutputSchema = z.object({
   action: operationRoutingActionSchema,
   operationId: z.string().nullable(),
+  intent: operationIntentSchema.nullable(),
   reason: z.string(),
 })
 
@@ -139,9 +142,12 @@ const buildOperationRoutingInstructions = (
   operations: AgentOperation[]
 ) => `You decide whether the assistant should use one Budibase agent operation, summarize the available operations, or proceed without an operation.
 
-Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId.
-Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId as null.
-Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId as null.
+Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId, and also decide its intent:
+- "execute" when fulfilling this message performs the concrete action that operation's instructions define - including an operation whose defined goal is to react to a topic (e.g. escalate to a human whenever a subject comes up), where a question about that subject still triggers the goal.
+- "query" when fulfilling this message does not perform that action - e.g. asking about the status or history of something the operation manages, without asking it to act again.
+This is about the operation's specific goal, not the grammatical form of the message: a question can be "execute" and an instruction-shaped sentence can be "query". If genuinely unsure, return "execute" - losing track of a real action is worse than tracking an extra query.
+Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId and intent as null.
+Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId and intent as null.
 Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one unless it is clearly a capabilities-overview request.
 Use the operation name, instructions, tools, and knowledge setup as signals.
 Return only the structured output.
