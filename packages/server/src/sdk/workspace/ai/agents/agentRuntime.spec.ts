@@ -169,10 +169,41 @@ describe("chooseOperationForQuestion", () => {
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
 
-  it("returns the first live operation when multiple operations are disabled", async () => {
+  it.each([
+    ["query", "query"],
+    [null, "execute"],
+  ])(
+    "returns the first live operation when multiple operations are disabled, classifying intent %s as %s",
+    async (classifierIntent, expectedIntent) => {
+      mockRouterStream.mockResolvedValue({
+        output: Promise.resolve({
+          intent: classifierIntent,
+          reason: "reason",
+        }),
+      })
+
+      const result = await chooseOperationForQuestion({
+        agent,
+        latestQuestion: "How many days off do I have left?",
+        llm,
+      })
+
+      expect(result).toEqual({
+        action: "select_operation",
+        operation: operation1,
+        intent: expectedIntent,
+      })
+      expect(mockIsEnabled).toHaveBeenCalledWith(
+        FeatureFlag.MULTIPLE_OPERATIONS
+      )
+      expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  it("defaults to execute without calling the classifier for a blank question when multiple operations are disabled", async () => {
     const result = await chooseOperationForQuestion({
       agent,
-      latestQuestion: "Book time off",
+      latestQuestion: "   ",
       llm,
     })
 
@@ -181,8 +212,23 @@ describe("chooseOperationForQuestion", () => {
       operation: operation1,
       intent: "execute",
     })
-    expect(mockIsEnabled).toHaveBeenCalledWith(FeatureFlag.MULTIPLE_OPERATIONS)
     expect(ToolLoopAgent).not.toHaveBeenCalled()
+  })
+
+  it("defaults to execute when intent classification fails for a single pinned operation", async () => {
+    mockRouterStream.mockRejectedValue(new Error("Classifier unavailable"))
+
+    const result = await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "How many days off do I have left?",
+      llm,
+    })
+
+    expect(result).toEqual({
+      action: "select_operation",
+      operation: operation1,
+      intent: "execute",
+    })
   })
 
   it("returns no_operation for blank questions when routing is enabled", async () => {
