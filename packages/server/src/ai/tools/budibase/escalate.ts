@@ -2,6 +2,8 @@ import { context } from "@budibase/backend-core"
 import {
   type ChatConversationChannel,
   type EscalationRecipient,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   EscalationSource,
   ResolutionStrategy,
   ToolType,
@@ -12,8 +14,6 @@ import { z } from "zod"
 import { escalationProcessor } from "../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../escalation/resolutionStrategies"
 import type { AiToolDefinition } from ".."
-
-export const ESCALATE_TOOL_NAME = "escalate"
 
 interface CreateEscalateToolParams {
   agentId: string
@@ -26,6 +26,11 @@ interface CreateEscalateToolParams {
   userId?: string
   // Resolves the conversation history to snapshot at the point escalate is called.
   getMessages: () => ModelMessage[]
+  // Resolves the AgentRequest id tracking this run. Read lazily since it's
+  // only assigned after this tool is built. Undefined when activity tracking
+  // is off for this run (non-prod workspace or the AI_AGENT_ACTIVITY flag is
+  // disabled) - there is no AgentRequest to reference in that case.
+  getRequestId: () => string | undefined
 }
 
 // A fire-and-forget escalation tool. When the operation cannot proceed safely
@@ -41,6 +46,7 @@ export const createEscalateTool = ({
   channel,
   userId,
   getMessages,
+  getRequestId,
 }: CreateEscalateToolParams) =>
   tool({
     description:
@@ -81,6 +87,7 @@ export const createEscalateTool = ({
         ),
         agentId,
         operationId,
+        requestId: getRequestId(),
         context: {
           agentId,
           operationId,
@@ -92,7 +99,7 @@ export const createEscalateTool = ({
       })
 
       return {
-        status: "pending_approval",
+        status: EscalateToolResultStatus.PENDING_APPROVAL,
         escalationId,
         note: `Escalated for approval: ${reason}. The request is paused until a human responds.`,
       }
@@ -121,29 +128,10 @@ export const createEscalatePlaceholderTool = (): AiToolDefinition => ({
       reason: z.string(),
     }),
     execute: async () => ({
-      status: "unavailable",
+      status: EscalateToolResultStatus.UNAVAILABLE,
       note:
         "Escalation is referenced but no reviewers are configured for this " +
         "operation. Tell the user approval cannot be requested right now.",
     }),
   }),
 })
-
-// Used on resume, where the escalation has already been approved. If the model
-// follows its instructions and calls escalate again, it gets the approval
-// in-band instead of a missing tool or a fresh escalation.
-export const createResolvedEscalateTool = () =>
-  tool({
-    description: "Escalate to a human for approval.",
-    inputSchema: z.object({
-      title: z.string(),
-      summary: z.string(),
-      reason: z.string(),
-    }),
-    execute: async () => ({
-      status: "already_approved",
-      note:
-        "This request has already been reviewed and APPROVED by a human " +
-        "reviewer. Do not escalate again - proceed to fulfil it.",
-    }),
-  })

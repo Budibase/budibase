@@ -25,14 +25,20 @@ const isAllowedFilterKey = (key: string): boolean =>
   isRangeSearchOperator(key) ||
   isLogicalSearchOperator(key)
 
-export const validateFilters = (
+type InvalidFilterHandler = (kind: "operator" | "field", key: string) => void
+
+// Walks the filter tree, calling `onInvalid` for each invalid operator or
+// field reference - throw from it to abort the walk. `validFields` must
+// already be lowercased.
+const walkFilters = (
   filters: SearchFilters,
-  validFields: string[]
-) => {
-  validFields = validFields.map(f => f.toLowerCase())
+  validFields: string[],
+  onInvalid: InvalidFilterHandler
+): void => {
   for (const key of Object.keys(filters || {}) as (keyof SearchFilters)[]) {
     if (!isAllowedFilterKey(key)) {
-      throw new HTTPError(`Invalid filter operator: ${key}`, 400)
+      onInvalid("operator", key)
+      continue
     }
 
     if (ALLOWED_FILTER_META_KEYS.includes(key)) {
@@ -45,7 +51,7 @@ export const validateFilters = (
         continue
       }
       for (const condition of filter.conditions) {
-        validateFilters(condition, validFields)
+        walkFilters(condition, validFields, onInvalid)
       }
     } else {
       const filter = filters[key]
@@ -53,27 +59,63 @@ export const validateFilters = (
         continue
       }
 
-      for (const key of Object.keys(filter)) {
+      for (const field of Object.keys(filter)) {
         if (
-          !validFields.includes(key.toLowerCase()) &&
-          !validFields.includes(db.removeKeyNumbering(key).toLowerCase())
+          !validFields.includes(field.toLowerCase()) &&
+          !validFields.includes(db.removeKeyNumbering(field).toLowerCase())
         ) {
-          throw new HTTPError(`Invalid filter field: ${key}`, 400)
+          onInvalid("field", field)
         }
       }
     }
   }
 }
 
+export const validateFilters = (
+  filters: SearchFilters,
+  validFields: string[]
+) => {
+  walkFilters(
+    filters,
+    validFields.map(f => f.toLowerCase()),
+    (kind, key) => {
+      throw new HTTPError(`Invalid filter ${kind}: ${key}`, 400)
+    }
+  )
+}
+
+// Unlike validateFilters, this doesn't error on filter fields that aren't part
+// of the schema - it collects them. Saved view queries can reference columns
+// that have since been deleted from the table; searches against those views
+// must fail closed rather than reach the SQL layer, where external datasources
+// error on the unknown column.
+export const findInvalidFilterFields = (
+  filters: SearchFilters,
+  validFields: string[]
+): string[] => {
+  const invalid: string[] = []
+  walkFilters(
+    filters,
+    validFields.map(f => f.toLowerCase()),
+    (kind, key) => {
+      if (kind === "field") {
+        invalid.push(key)
+      }
+    }
+  )
+  return invalid
+}
+
 export const getQueryableFields = async (
   table: Table,
-  fields?: string[]
+  fields?: string[],
+  opts?: { includeHidden?: boolean }
 ): Promise<string[]> => {
   const extractTableFields = async (
     table: Table,
     allowedFields: string[],
     fromTables: string[],
-    opts?: { noRelationships?: boolean }
+    extractOpts?: { noRelationships?: boolean }
   ): Promise<string[]> => {
     const result = []
     if (isInternal({ table })) {
@@ -81,14 +123,16 @@ export const getQueryableFields = async (
     }
 
     for (const field of Object.keys(table.schema).filter(
-      f => allowedFields.includes(f) && table.schema[f].visible !== false
+      f =>
+        allowedFields.includes(f) &&
+        (opts?.includeHidden || table.schema[f].visible !== false)
     )) {
       const subSchema = table.schema[field]
       const isRelationship = subSchema.type === FieldType.LINK
       // avoid relationship loops
       if (
         isRelationship &&
-        (opts?.noRelationships || fromTables.includes(subSchema.tableId))
+        (extractOpts?.noRelationships || fromTables.includes(subSchema.tableId))
       ) {
         continue
       }

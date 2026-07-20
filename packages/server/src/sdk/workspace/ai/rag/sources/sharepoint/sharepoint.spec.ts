@@ -73,7 +73,10 @@ import {
   type Agent,
   type KnowledgeBaseFile,
 } from "@budibase/types"
-import { syncSharePointSourcesForAgent } from "./sharepoint"
+import {
+  SharePointSyncTimeoutError,
+  syncSharePointSourcesForAgent,
+} from "./sharepoint"
 import { generator } from "@budibase/backend-core/tests"
 
 const toArrayBuffer = (value: string) => {
@@ -202,11 +205,13 @@ describe("rag/sharepoint sync deduplication", () => {
       },
     })
     mockDeleteFileForOperation.mockResolvedValue(undefined)
+    mockKnowledgeBaseUploadFile.mockResolvedValue(undefined)
     mockRetryKnowledgeBaseFileIngestion.mockResolvedValue(undefined)
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
+    jest.useRealTimers()
   })
 
   it("does not skip a new file when itemId matches an existing file from another drive", async () => {
@@ -293,6 +298,73 @@ describe("rag/sharepoint sync deduplication", () => {
       totalDiscovered: 1,
     })
   })
+
+  it("does not download or retry SharePoint files larger than 100MB", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const oversizedFileSize = 100 * 1024 * 1024 + 1
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_failed",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-1",
+        path: "oversized.txt",
+        status: KnowledgeBaseFileStatus.FAILED,
+        remoteSize: oversizedFileSize,
+      }),
+    ])
+
+    const fetchMock = createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "oversized.txt",
+                size: oversizedFileSize,
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/drives/drive-a/items/item-1/content")
+      )
+    ).toBe(false)
+    expect(mockRetryKnowledgeBaseFileIngestion).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 0,
+      unsupported: 1,
+      totalDiscovered: 1,
+    })
+  })
+
   it("deletes existing files that no longer match source filters", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
@@ -541,6 +613,136 @@ describe("rag/sharepoint sync deduplication", () => {
       unsupported: 0,
       totalDiscovered: 1,
     })
+  })
+
+  it("times out while deleting stale files removed from SharePoint", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_removed",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-removed",
+        path: "removed/file.txt",
+      }),
+    ])
+
+    let deleteStarted!: () => void
+    const deleteStartedPromise = new Promise<void>(resolve => {
+      deleteStarted = resolve
+    })
+    mockDeleteFileForOperation.mockImplementation(() => {
+      deleteStarted()
+      return new Promise(() => {})
+    })
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "drive-a" }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await deleteStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it("times out while uploading a SharePoint file", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+
+    let uploadStarted!: () => void
+    const uploadStartedPromise = new Promise<void>(resolve => {
+      uploadStarted = resolve
+    })
+    mockKnowledgeBaseUploadFile.mockImplementation(() => {
+      uploadStarted()
+      return new Promise(() => {})
+    })
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-a" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "item-1",
+                name: "new.txt",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/item-1/content",
+        response: {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => toArrayBuffer("new content"),
+        } as Response,
+      },
+    ])
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await uploadStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 
   it("re-ingests when etag changes", async () => {

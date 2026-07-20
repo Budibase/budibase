@@ -22,6 +22,9 @@ spec:
   template:
     metadata:
       annotations:
+        {{- if .Values.globals.deployTimestamp }}
+        rollme/deploy-timestamp: {{ .Values.globals.deployTimestamp | quote }}
+        {{- end }}
         ad.datadoghq.com/bbautomationworker.logs: '[{"source":"nodejs"}]'
 {{ if .Values.services.automationWorkers.templateAnnotations }}
 {{- toYaml .Values.services.automationWorkers.templateAnnotations | indent 8 -}}
@@ -246,7 +249,7 @@ spec:
         {{- end}}
 
         image: {{ .Values.services.automationWorkers.image | default (printf "%sbudibase/apps:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.services.automationWorkers.imagePullPolicy | default "IfNotPresent" }}
         {{- with .Values.services.automationWorkers.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}

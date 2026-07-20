@@ -5,6 +5,7 @@ import {
   DocumentType,
   EscalationContextDoc,
   EscalationNotificationDoc,
+  EscalationRecipient,
   EscalationResult,
   EscalationRespondResult,
   EscalationResponse,
@@ -19,6 +20,7 @@ import {
 } from "@budibase/string-templates"
 import { IsolatedVM } from "../../jsRunner/vm"
 import { RESOLUTION_STRATEGY_SNIPPETS } from "../../escalation/resolutionStrategies"
+import { getFullUser } from "../../utilities/users"
 
 const getDocId = (escalationId: string): string =>
   `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
@@ -58,10 +60,41 @@ export async function getResult(
   }
 }
 
+// Human-readable label for a recipient. The channel's or the person's real
+// name, never the provider (Slack/Discord/...). A globalUserId recipient is
+// always a real Budibase user (the builder's recipient picker only offers
+// users with an existing chat identity link), so the profile name is always
+// resolvable
+export async function resolveRecipientLabel(
+  recipient: EscalationRecipient
+): Promise<string> {
+  const { config } = recipient
+  if (config?.channelName) {
+    return config.channelName
+  }
+  if (config?.channelId) {
+    return config.channelId
+  }
+  if (config?.globalUserId) {
+    try {
+      const user = await getFullUser(config.globalUserId)
+      return user.fullName || user.email || config.globalUserId
+    } catch (error) {
+      console.error("Failed to resolve escalation recipient's user", {
+        globalUserId: config.globalUserId,
+        error,
+      })
+      return config.globalUserId
+    }
+  }
+  return "Unknown"
+}
+
 export interface EscalationContextQuery {
   agentId?: string
   operationId?: string
   sessionId?: string
+  requestId?: string
   resolution?: EscalationContextDoc["resolution"]
   isTest?: boolean
 }
@@ -81,6 +114,7 @@ export async function listContextDocs(
       ...(query.agentId ? { agentId: query.agentId } : {}),
       ...(query.operationId ? { operationId: query.operationId } : {}),
       ...(query.sessionId ? { sessionId: query.sessionId } : {}),
+      ...(query.requestId ? { requestId: query.requestId } : {}),
       ...(query.resolution ? { resolution: query.resolution } : {}),
       ...(query.isTest !== undefined ? { isTest: query.isTest } : {}),
     },
@@ -134,6 +168,21 @@ export async function respond(
   const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
   if (!notifDoc) {
     throw new Error(`Notification doc ${notificationDocId} not found`)
+  }
+  // Ensure the notification actually belongs to this escalation - stops a forged
+  // payload pairing a valid notificationDocId with a different escalationId.
+  if (notifDoc.escalationId !== escalationId) {
+    console.warn(
+      "Escalation respond: notification does not belong to escalation (possible forged payload)",
+      {
+        escalationId,
+        notificationDocId,
+        notifEscalationId: notifDoc.escalationId,
+      }
+    )
+    throw new Error(
+      `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
+    )
   }
   await db.put({
     ...notifDoc,

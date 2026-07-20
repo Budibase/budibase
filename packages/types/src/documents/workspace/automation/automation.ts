@@ -167,6 +167,7 @@ export interface BaseIOStructure {
   customType?: AutomationCustomIOType
   title?: string
   description?: string
+  tooltip?: string
   dependsOn?: string | { field: string; value: string | string[] }
   enum?: string[]
   pretty?: string[]
