@@ -304,6 +304,15 @@ describe("renderLoopV2Container", () => {
 })
 
 describe("renderChain", () => {
+  it("does not throw when a branch has no lanes", () => {
+    const branch = branchStep([], {
+      id: "empty-branch",
+      branches: [],
+    })
+
+    expect(() => renderTestChain([branch])).not.toThrow()
+  })
+
   it("renders linear automation steps with resolvable sequential edges", () => {
     const graph = renderTestChain(linearAutomationSteps())
 
