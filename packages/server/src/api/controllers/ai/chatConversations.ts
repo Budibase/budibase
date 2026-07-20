@@ -140,26 +140,26 @@ const startAgentRequestTracking = async ({
         })
         return undefined
       })
-  }
 
-  sdk.ai.agentRequests
-    .enqueueRequestTracking({
-      agentId,
-      sessionId,
-      latestUserPrompt: run.latestQuestion,
-      recentChatContext: getRecentChatContext(chatMessages),
-      operation,
-      userId,
-      existingRequestId: trackingHandle?.requestId,
-    })
-    .catch(error => {
-      console.error("Failed to enqueue agent request tracking", {
+    sdk.ai.agentRequests
+      .enqueueRequestTracking({
         agentId,
         sessionId,
+        latestUserPrompt: run.latestQuestion,
+        recentChatContext: getRecentChatContext(chatMessages),
+        operation,
         userId,
-        error,
+        existingRequestId: trackingHandle?.requestId,
       })
-    })
+      .catch(error => {
+        console.error("Failed to enqueue agent request tracking", {
+          agentId,
+          sessionId,
+          userId,
+          error,
+        })
+      })
+  }
 
   return trackingHandle
 }
