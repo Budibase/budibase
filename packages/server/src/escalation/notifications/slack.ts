@@ -184,8 +184,7 @@ export async function replyToConversation({
     signingSecret: integration.signingSecret,
   })
   const threadId = channel.threadId || channel.channelId
-  // DM channels start with "D"; mention the requester in real channels.
-  const isDm = channel.channelId.replace(/^slack:/, "").startsWith("D")
+  const isDm = adapter.isDM(threadId)
   const body =
     !isDm && channel.externalUserId
       ? `<@${channel.externalUserId}> ${text}`
