@@ -1,5 +1,5 @@
 import type { Agent, LLMResponse } from "@budibase/types"
-import { FeatureFlag } from "@budibase/types"
+import { EscalationNotificationChannel, FeatureFlag } from "@budibase/types"
 
 const mockRouterStream = jest.fn()
 
@@ -54,6 +54,18 @@ jest.mock("../../../../ai/tools/budibase/knowledge/reportUsedSources", () => ({
   createReportUsedSourcesTool: jest.fn(),
 }))
 
+const mockCreateEscalateTool = jest.fn()
+jest.mock("../../../../ai/tools/budibase/escalate", () => ({
+  createEscalateTool: (...args: unknown[]) => mockCreateEscalateTool(...args),
+}))
+
+const mockCreateListSessionEscalationsTool = jest.fn()
+jest.mock("../../../../ai/tools/budibase/listSessionEscalations", () => ({
+  createListSessionEscalationsTool: (...args: unknown[]) =>
+    mockCreateListSessionEscalationsTool(...args),
+  LIST_SESSION_ESCALATIONS_TOOL_NAME: "list_session_escalations",
+}))
+
 jest.mock("dd-trace", () => ({
   __esModule: true,
   default: {
@@ -74,16 +86,25 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.features,
       isEnabled: (...args: unknown[]) => mockIsEnabled(...args),
     },
+    cache: {
+      ...actual.cache,
+      get: jest.fn().mockResolvedValue(undefined),
+      store: jest.fn().mockResolvedValue(undefined),
+    },
   }
 })
 
-import { ToolLoopAgent } from "ai"
+import type { ContextUser } from "@budibase/types"
+import { tool, ToolLoopAgent } from "ai"
+import { z } from "zod"
 import {
   chooseOperationForQuestion,
+  prepareAgentChatRun,
   prepareAgentRunContext,
 } from "./agentRuntime"
 import sdk from "../../.."
 import { buildPromptAndTools } from "./utils"
+import { createSessionLogIndexer } from "../agentLogs"
 
 describe("chooseOperationForQuestion", () => {
   const operation1 = {
@@ -375,6 +396,138 @@ describe("prepareAgentRunContext", () => {
       expect.objectContaining({
         fallbackPromptInstructions: expect.stringContaining("- IT support"),
       })
+    )
+  })
+})
+
+describe("prepareAgentChatRun - escalate tool selection", () => {
+  const recipients = [
+    { type: EscalationNotificationChannel.SLACK, config: { channel: "C1" } },
+  ]
+
+  const operationWithRecipients = {
+    id: "operation_1",
+    name: "Procurement",
+    live: true,
+    allowKnowledgeSourceDownload: true,
+    escalation: { recipients, delay: 120 },
+  }
+
+  const operationWithoutRecipients = {
+    id: "operation_2",
+    name: "IT support",
+    live: true,
+    allowKnowledgeSourceDownload: true,
+  }
+
+  const agent = {
+    _id: "agent_1",
+    name: "Support Agent",
+    aiconfig: "config-1",
+    operations: [operationWithRecipients, operationWithoutRecipients],
+  } satisfies Agent
+
+  const llm = {
+    chat: {} as any,
+    providerOptions: jest.fn().mockReturnValue(undefined),
+    uploadFile: jest.fn(),
+  } satisfies LLMResponse
+
+  const user = {} as ContextUser
+  const realTool = { name: "escalate-real-tool" }
+  const escalatePlaceholder = tool({
+    description: "placeholder",
+    inputSchema: z.object({}),
+    execute: async () => ({}),
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockIsEnabled.mockImplementation(
+      async (flag: FeatureFlag) => flag === FeatureFlag.ESCALATION
+    )
+    jest.mocked(sdk.ai.llm.createLLM).mockResolvedValue(llm)
+    jest.mocked(createSessionLogIndexer).mockReturnValue({
+      addRequestId: jest.fn(),
+      getRequestIds: jest.fn().mockReturnValue([]),
+      index: jest.fn().mockResolvedValue(undefined),
+    })
+    mockCreateEscalateTool.mockReturnValue(realTool)
+    mockCreateListSessionEscalationsTool.mockReturnValue({})
+  })
+
+  const runFor = async (
+    operation: (typeof agent.operations)[number],
+    overrides: Partial<Parameters<typeof prepareAgentChatRun>[0]> = {}
+  ) => {
+    jest.mocked(buildPromptAndTools).mockResolvedValue({
+      systemPrompt: "system prompt",
+      tools: { escalate: escalatePlaceholder },
+      toolDisplayNames: {},
+    })
+
+    return prepareAgentChatRun({
+      agent,
+      agentId: "agent_1",
+      modelMessages: [],
+      errorLabel: "test",
+      sessionId: "session_1",
+      user,
+      operationId: operation.id,
+      ...overrides,
+    })
+  }
+
+  it("swaps escalate for the real tool when the selected operation has recipients configured", async () => {
+    await runFor(operationWithRecipients)
+
+    expect(mockCreateEscalateTool).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId: "agent_1",
+        operationId: operationWithRecipients.id,
+        sessionId: "session_1",
+        recipients,
+        delayMs: 120000,
+      })
+    )
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tools: expect.objectContaining({ escalate: realTool }),
+      })
+    )
+  })
+
+  it("resolves getRequestId lazily via the provided callback", async () => {
+    const getRequestId = jest.fn().mockReturnValue("request_1")
+
+    await runFor(operationWithRecipients, { getRequestId })
+
+    const call = mockCreateEscalateTool.mock.calls[0][0]
+    expect(getRequestId).not.toHaveBeenCalled()
+    expect(call.getRequestId()).toEqual("request_1")
+    expect(getRequestId).toHaveBeenCalledTimes(1)
+  })
+
+  it("leaves the placeholder tool untouched when the operation has no recipients configured", async () => {
+    await runFor(operationWithoutRecipients)
+
+    expect(mockCreateEscalateTool).not.toHaveBeenCalled()
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+      })
+    )
+  })
+
+  it("strips the escalate tool entirely when the ESCALATION feature flag is disabled", async () => {
+    mockIsEnabled.mockResolvedValue(false)
+
+    await runFor(operationWithRecipients)
+
+    expect(mockCreateEscalateTool).not.toHaveBeenCalled()
+    expect(mockCreateListSessionEscalationsTool).not.toHaveBeenCalled()
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ tools: undefined })
     )
   })
 })
