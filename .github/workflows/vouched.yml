@@ -35,7 +35,7 @@ jobs:
     permissions:
       contents: write
       issues: write
-      pull-requests: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -47,5 +47,6 @@ jobs:
           vouch-keyword: vouch
           denounce-keyword: denounce
           allow-unvouch: false
+          pull-request: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,9 +1,13 @@
+import { context } from "@budibase/backend-core"
 import {
+  DocumentType,
   EscalationNotificationChannel,
   EscalationRecipient,
+  EscalationSource,
+  SEPARATOR,
 } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { resolveRecipientLabel } from "./escalations"
+import { resolveRecipientLabel, respond } from "./escalations"
 
 describe("resolveRecipientLabel", () => {
   const config = new TestConfiguration()
@@ -95,6 +99,53 @@ describe("resolveRecipientLabel", () => {
       await expect(resolveRecipientLabel(recipient)).resolves.toEqual(
         "operations"
       )
+    })
+  })
+})
+
+describe("respond", () => {
+  const config = new TestConfiguration()
+
+  beforeEach(async () => {
+    await config.newTenant()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("rejects a notification that belongs to a different escalation", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const escalationId = "esc-target"
+      await db.put({
+        _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+        source: EscalationSource.OPERATION,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        delay: 0,
+        resolution: "pending",
+      })
+      const notificationDocId = `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}notif-1`
+      await db.put({
+        _id: notificationDocId,
+        escalationId: "esc-other",
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        recipient: {
+          type: EscalationNotificationChannel.SLACK,
+          config: {},
+        },
+        sentAt: new Date().toISOString(),
+      })
+      const resolve = jest.fn()
+
+      await expect(
+        respond(escalationId, notificationDocId, { accepted: true }, resolve)
+      ).rejects.toThrow(
+        `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
+      )
+      expect(resolve).not.toHaveBeenCalled()
     })
   })
 })
