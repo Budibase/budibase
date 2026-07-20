@@ -16,7 +16,7 @@ services:
     image: dbgate/dbgate
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     environment:
       CONNECTIONS: mssql
       LABEL_mssql: MSSQL
