@@ -447,7 +447,7 @@
       assignProjectModal?.hide()
 
       try {
-        await appStore.refresh()
+        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
       } catch (error) {
         console.error(error)
         notifications.warning(
@@ -508,7 +508,7 @@
       notifications.success(`Project '${projectName}' deleted successfully`)
 
       try {
-        await appStore.refresh()
+        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
       } catch (error) {
         console.error(error)
         notifications.warning(
