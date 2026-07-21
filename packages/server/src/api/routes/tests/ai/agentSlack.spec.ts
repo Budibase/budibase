@@ -229,6 +229,31 @@ describe("agent slack integration provisioning", () => {
     ).toBeTrue()
   })
 
+  it("ignores a client-supplied teamId while the bot token is unchanged", async () => {
+    const created = await config.api.agent.create({
+      name: "Slack TeamId Agent",
+      slackIntegration: {
+        botToken: "xoxb-token-teamid",
+        signingSecret: "slack-signing-secret-teamid",
+      },
+    })
+
+    let persisted = await getPersistedAgent(created._id)
+    expect(persisted.slackIntegration?.teamId).toEqual("T123")
+
+    const { agents } = await config.api.agent.fetch()
+    const fetched = agents.find(a => a._id === created._id)!
+
+    // Same (masked) token, but forge a different workspace id.
+    await config.api.agent.update({
+      ...fetched,
+      slackIntegration: { ...fetched.slackIntegration!, teamId: "T999" },
+    })
+
+    persisted = await getPersistedAgent(created._id)
+    expect(persisted.slackIntegration?.teamId).toEqual("T123")
+  })
+
   it("returns a validation error when slack settings are missing", async () => {
     const agent = await config.api.agent.create({
       name: "No Slack Settings",

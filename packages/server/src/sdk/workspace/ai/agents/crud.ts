@@ -384,8 +384,9 @@ const withSlackTeamId = async (
   if (!integration || !botToken) {
     return integration
   }
-  if (botToken === existing?.botToken && integration.teamId) {
-    return integration
+  // teamId is server-derived, never trusted from the client.
+  if (botToken === existing?.botToken && existing?.teamId) {
+    return { ...integration, teamId: existing.teamId }
   }
   // Drop any inherited teamId - it belongs to the old token's workspace,
   // and leaving it unset on failure lets the next save retry.
