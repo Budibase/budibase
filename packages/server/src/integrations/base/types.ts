@@ -3,11 +3,13 @@ export interface MSSQLTablesResponse {
   TABLE_SCHEMA: string
   TABLE_NAME: string
   TABLE_TYPE: string
+  TEMPORAL_TYPE: number
 }
 
 export interface MSSQLColumn {
   IS_COMPUTED: number
   IS_IDENTITY: number
+  GENERATED_ALWAYS_TYPE: number
   TABLE_CATALOG: string
   TABLE_SCHEMA: string
   TABLE_NAME: string
