@@ -66,6 +66,19 @@ jest.mock("ai", () => {
     }
 
     async stream(options: Record<string, any>) {
+      if (
+        this.settings.headers?.["x-litellm-tags"] === "bb-operation-routing"
+      ) {
+        return {
+          output: Promise.resolve({
+            action: "select_operation",
+            operationId: "op-1",
+            intent: "execute",
+            reason: "Test operation",
+          }),
+        }
+      }
+
       const { instructions, ...settings } = this.settings
       return mockStreamText({
         ...settings,

@@ -8,19 +8,32 @@ import type {
   StepNodeData,
   AutomationBlock,
 } from "@/types/automations"
-import type { Node as FlowNode, Edge as FlowEdge } from "@xyflow/svelte"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
 import type { BlockPath, Branch, BranchStep } from "@budibase/types"
+import { ANCHOR, BRANCH, STEP } from "./FlowGeometry"
+import {
+  FLOW_NODE_TYPE,
+  type AnchorFlowNode,
+  type BranchFlowNode,
+  type StepFlowNode,
+} from "./FlowGraphTypes"
 
 export const stepNode = (
   id: string,
   block: AutomationBlock,
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
-): FlowNode => {
-  const data: StepNodeData = { block }
-  const node: FlowNode = {
+): StepFlowNode => {
+  const data: StepNodeData = {
+    block,
+    layout: {
+      width: STEP.width,
+      height: STEP.height,
+    },
+  }
+  const node: StepFlowNode = {
     id,
-    type: "step-node",
+    type: FLOW_NODE_TYPE.STEP,
     data,
     position,
     draggable: false,
@@ -40,17 +53,21 @@ export const branchNode = (
   parentId?: string,
   laneWidth?: number,
   position: { x: number; y: number } = { x: 0, y: 0 }
-): FlowNode => {
+): BranchFlowNode => {
   const data = {
     block: step,
     branch,
     branchIdx,
+    layout: {
+      width: laneWidth || STEP.width,
+      height: BRANCH.height,
+    },
     ...(parentId ? { isSubflow: true } : {}),
     ...(laneWidth ? { laneWidth } : {}),
   }
-  const node: FlowNode = {
+  const node: BranchFlowNode = {
     id,
-    type: "branch-node",
+    type: FLOW_NODE_TYPE.BRANCH,
     data,
     position,
     draggable: false,
@@ -67,11 +84,16 @@ export const anchorNode = (
   id: string,
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
-): FlowNode => {
-  const data: AnchorNodeData = {}
-  const node: FlowNode = {
+): AnchorFlowNode => {
+  const data: AnchorNodeData = {
+    layout: {
+      width: ANCHOR.width,
+      height: ANCHOR.height,
+    },
+  }
+  const node: AnchorFlowNode = {
     id,
-    type: "anchor-node",
+    type: FLOW_NODE_TYPE.ANCHOR,
     data,
     position,
     draggable: false,

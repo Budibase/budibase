@@ -12,19 +12,8 @@
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import { getLogStepData } from "../../AutomationStepHelpers"
   import { type Automation, type Branch } from "@budibase/types"
-  import {
-    didBranchStopWithoutMatch,
-    getRunHighlight,
-    isTerminalFailure,
-  } from "../FlowRunHelpers"
+  import { getBranchRunState, getRunHighlight } from "../FlowRunHelpers"
   import { type DragView } from "../FlowChartDnD"
-
-  type BranchResult = {
-    outputs: {
-      branchId?: string
-      success?: boolean
-    }
-  }
 
   export let branchIdx
   export let step
@@ -47,12 +36,6 @@
   $: logStepData =
     viewMode === ViewMode.LOGS ? getLogStepData(step, logData) : null
 
-  $: executedBranchId =
-    viewMode === ViewMode.LOGS && logStepData?.outputs?.branchId
-      ? logStepData.outputs.branchId
-      : null
-  $: executed = executedBranchId === branch?.id
-  $: unexecuted = viewMode === ViewMode.LOGS && (!logStepData || !executed)
   $: branchResult =
     viewMode === ViewMode.LOGS
       ? logStepData
@@ -60,40 +43,24 @@
           $automationStore.testResults,
           step
         )
-  $: hasBranchResultValue = hasBranchResult(branchResult)
-  $: branchExecuted =
-    branch && hasBranchResultValue
-      ? branchResult.outputs.branchId === branch.id
-      : false
   $: runHighlight = getRunHighlight(
     viewMode === ViewMode.LOGS
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
-  $: branchStepFailed = isTerminalFailure(branchResult)
-  $: branchStepFailure =
-    branchStepFailed && (branchExecuted || !hasBranchResultValue)
-  $: branchStoppedWithoutMatch = didBranchStopWithoutMatch(branchResult)
-  $: branchSuccess =
-    branchExecuted && runHighlight === "success" && !branchStepFailure
-  $: branchFailed =
-    !branchStoppedWithoutMatch &&
-    runHighlight !== "stopped" &&
-    (branchStepFailure || (branchExecuted && runHighlight === "error"))
-  $: branchStopped =
-    branchStoppedWithoutMatch ||
-    (!branchFailed && branchExecuted && runHighlight === "stopped")
+  $: branchRunState = getBranchRunState({
+    branchResult,
+    branchId: branch?.id,
+    runHighlight,
+  })
+  $: executed = viewMode === ViewMode.LOGS && branchRunState.executed
+  $: unexecuted = viewMode === ViewMode.LOGS && (!logStepData || !executed)
+  $: branchSuccess = branchRunState.success
+  $: branchFailed = branchRunState.error
+  $: branchStopped = branchRunState.stopped
 
   const createBranchNodeId = (idx: number, branchId: string) => {
     return `branch-${step.id}-${idx}-${branchId}`
-  }
-
-  const hasBranchResult = (value: unknown): value is BranchResult => {
-    if (!value || typeof value !== "object" || !("outputs" in value)) {
-      return false
-    }
-    const outputs = value.outputs
-    return !!outputs && typeof outputs === "object" && "branchId" in outputs
   }
 
   const branchUpdate = async (e: CustomEvent<string>) => {
