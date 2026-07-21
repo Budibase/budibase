@@ -367,9 +367,10 @@ export async function listChatIdentityLinks(ctx: UserCtx) {
         .find(a => a._id === agentId)
         ?.MSTeamsIntegration?.tenantId?.trim()
     })
+    // Fail closed when the tenant can't be resolved.
     ctx.body = tenantId
       ? links.filter(l => l.providerTenantId === tenantId)
-      : links
+      : []
     return
   }
 
