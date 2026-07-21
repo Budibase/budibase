@@ -1325,6 +1325,149 @@ describe("rag/sharepoint sync deduplication", () => {
     })
   })
 
+  it("excludes lists with the shared exclude-all pattern", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId, ["!**"])
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "existing-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockFetchSharePointListDocument).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "existing_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("includes only explicitly selected lists when excluding new content", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId, ["!**", "__list__/list-1"])
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+      {
+        id: "list-2",
+        name: "Policies",
+        webUrl: "https://example.com/policies",
+      },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nExample"),
+      itemCount: 1,
+    })
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockFetchSharePointListDocument).toHaveBeenCalledTimes(1)
+    expect(mockFetchSharePointListDocument).toHaveBeenCalledWith(
+      "Bearer token",
+      siteId,
+      "list-1",
+      expect.any(Number)
+    )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: expect.objectContaining({ listId: "list-1" }),
+      })
+    )
+    expect(result).toMatchObject({
+      synced: 1,
+      totalDiscovered: 2,
+    })
+  })
+
+  it("excludes exact list paths while including new content by default", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId, ["!__list__/list-1"])
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+      {
+        id: "list-2",
+        name: "Policies",
+        webUrl: "https://example.com/policies",
+      },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nExample"),
+      itemCount: 1,
+    })
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockFetchSharePointListDocument).toHaveBeenCalledTimes(1)
+    expect(mockFetchSharePointListDocument).toHaveBeenCalledWith(
+      "Bearer token",
+      siteId,
+      "list-2",
+      expect.any(Number)
+    )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: expect.objectContaining({ listId: "list-2" }),
+      })
+    )
+  })
+
   it("marks stale list deletion failures as sync failures", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"

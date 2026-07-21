@@ -4,7 +4,9 @@ import {
 } from "@budibase/types"
 import {
   EXCLUDE_ALL_PATTERN,
+  getSharePointListFilterPath,
   matchesConfiguredPatterns,
+  SHAREPOINT_LIST_FILTER_PATH_PREFIX,
 } from "@budibase/shared-core"
 import type { SharePointEntryTreeNode } from "./tree/sharePointEntryTree"
 
@@ -18,7 +20,7 @@ export interface TreeEntryInput {
 export const SITE_ROOT_PATH = "__site_root__"
 export const FILES_ROOT_PATH = "__files_root__"
 export const LISTS_ROOT_PATH = "__lists_root__"
-export const LIST_PATH_PREFIX = "__list__/"
+export const LIST_PATH_PREFIX = SHAREPOINT_LIST_FILTER_PATH_PREFIX
 export { EXCLUDE_ALL_PATTERN, matchesConfiguredPatterns }
 
 const getFilePath = (file: Pick<TreeEntryInput, "sourcePath" | "filename">) =>
@@ -30,7 +32,8 @@ const toSelectionPattern = (
   negated: boolean
 ) => {
   const node = selectionNodeByPath.get(path)
-  const basePattern = node?.type === "file" ? path : `${path}/**`
+  const basePattern =
+    node?.type === "file" || node?.type === "list" ? path : `${path}/**`
   return negated ? `!${basePattern}` : basePattern
 }
 
@@ -154,7 +157,7 @@ export const buildEntryTreeFromSourceEntries = (
     .map(entry => ({
       id: entry.id,
       name: entry.name,
-      path: `${LIST_PATH_PREFIX}${entry.id}`,
+      path: getSharePointListFilterPath(entry.id),
       type: "list" as const,
       children: [],
     }))
@@ -308,7 +311,7 @@ export const buildPatternsFromSelection = (
   selectedEntryPaths: string[],
   selectablePaths: string[],
   selectionNodeByPath: Map<string, SharePointEntryTreeNode>,
-  includeNewFilesByDefault: boolean
+  includeNewContentByDefault: boolean
 ): string[] | undefined => {
   const selectedWithoutRoot = selectedEntryPaths.filter(
     path => path !== SITE_ROOT_PATH
@@ -323,11 +326,11 @@ export const buildPatternsFromSelection = (
     selectableWithoutRoot.length > 0 &&
     selectedWithoutRoot.length === selectableWithoutRoot.length
 
-  if (includeNewFilesByDefault && isEffectivelySelectAll) {
+  if (includeNewContentByDefault && isEffectivelySelectAll) {
     return undefined
   }
 
-  if (includeNewFilesByDefault) {
+  if (includeNewContentByDefault) {
     const patterns = selectableWithoutRoot
       .filter(path => !selectedPathSet.has(path))
       .map(path => toSelectionPattern(path, selectionNodeByPath, true))

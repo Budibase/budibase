@@ -6,7 +6,10 @@ import {
   locks,
 } from "@budibase/backend-core"
 import { createHash } from "crypto"
-import { matchesConfiguredPatterns } from "@budibase/shared-core"
+import {
+  getSharePointListFilterPath,
+  matchesConfiguredPatterns,
+} from "@budibase/shared-core"
 import {
   type Agent,
   type AgentOperation,
@@ -317,18 +320,6 @@ const isSharePointListKnowledgeBaseFile = (
   file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST &&
   file.source.knowledgeSourceId === sourceId &&
   file.source.siteId === siteId
-
-const isSharePointListIncluded = (
-  listId: string,
-  filters?: AgentKnowledgeSourceFilterConfig
-) => {
-  const selection = filters?.listSelection
-  if (!selection) {
-    return true
-  }
-  const containsList = selection.listIds.includes(listId)
-  return selection.mode === "include" ? containsList : !containsList
-}
 
 const getSharePointListContentHash = (buffer: Buffer) =>
   createHash("sha256")
@@ -918,7 +909,12 @@ const runSharePointSourcesForOperation = async (
     for (const list of lists) {
       discoveredListIds.add(list.id)
       const existingListFile = existingListsById.get(list.id)
-      if (!isSharePointListIncluded(list.id, sourceFilters)) {
+      if (
+        !isSharePointPathIncludedByFilters(
+          getSharePointListFilterPath(list.id),
+          sourceFilters
+        )
+      ) {
         skipped++
         filteredOut++
         if (existingListFile?._id) {

@@ -1,6 +1,14 @@
-import { EXCLUDE_ALL_PATTERN, matchesConfiguredPatterns } from "../globFilters"
+import {
+  EXCLUDE_ALL_PATTERN,
+  getSharePointListFilterPath,
+  matchesConfiguredPatterns,
+} from "../globFilters"
 
 describe("globFilters", () => {
+  it("builds stable SharePoint list filter paths", () => {
+    expect(getSharePointListFilterPath("list-123")).toBe("__list__/list-123")
+  })
+
   it("excludes all files when using !**", () => {
     expect(
       matchesConfiguredPatterns("activities.txt", [EXCLUDE_ALL_PATTERN])

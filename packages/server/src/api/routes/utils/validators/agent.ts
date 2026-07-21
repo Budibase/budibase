@@ -263,10 +263,6 @@ export function connectAgentSharePointSiteValidator() {
       datasourceId: NON_EMPTY_STRING.required(),
       authConfigId: NON_EMPTY_STRING.required(),
       filters: Joi.array().items(NON_EMPTY_STRING).optional(),
-      listSelection: Joi.object({
-        mode: Joi.string().valid("include", "exclude").required(),
-        listIds: Joi.array().items(NON_EMPTY_STRING).required(),
-      }).optional(),
     }).required()
   )
 }
@@ -275,10 +271,6 @@ export function updateAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
       filters: Joi.array().items(NON_EMPTY_STRING).optional(),
-      listSelection: Joi.object({
-        mode: Joi.string().valid("include", "exclude").required(),
-        listIds: Joi.array().items(NON_EMPTY_STRING).required(),
-      }).optional(),
     }).required()
   )
 }

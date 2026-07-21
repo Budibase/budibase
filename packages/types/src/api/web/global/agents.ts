@@ -1,7 +1,6 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
-  AgentKnowledgeSourceListSelection,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
   ChatApp,
@@ -106,7 +105,6 @@ export interface ConnectAgentSharePointSiteRequest {
   datasourceId: string
   authConfigId: string
   filters?: string[]
-  listSelection?: AgentKnowledgeSourceListSelection
 }
 
 export type ConnectAgentSharePointSiteResponse =
@@ -114,7 +112,6 @@ export type ConnectAgentSharePointSiteResponse =
 
 export interface UpdateAgentSharePointSiteRequest {
   filters?: string[]
-  listSelection?: AgentKnowledgeSourceListSelection
 }
 
 export type UpdateAgentSharePointSiteResponse =

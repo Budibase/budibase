@@ -10,7 +10,6 @@
     notifications,
   } from "@budibase/bbui"
   import {
-    type AgentKnowledgeSourceListSelection,
     AgentKnowledgeSourceType,
     type KnowledgeSourceEntry,
   } from "@budibase/types"
@@ -21,7 +20,6 @@
     buildFileDescendantPathsByNodePath,
     buildEntryTreeFromSourceEntries,
     buildPatternsFromSelection,
-    LIST_PATH_PREFIX,
     SITE_ROOT_PATH,
     flattenNodesByPath,
     isExcludeNewByDefaultPatterns,
@@ -41,7 +39,7 @@
   let loadingEntries = $state(false)
   let loadEntriesError = $state<string | null>(null)
   let allEntries = $state<KnowledgeSourceEntry[]>([])
-  let includeNewFilesByDefault = $state(true)
+  let includeNewContentByDefault = $state(true)
   let modal = $state<Modal>()
 
   const sharePointSource = $derived.by(() => {
@@ -69,10 +67,6 @@
   const initialPatterns = $derived(
     sharePointSource?.config.filters?.patterns || []
   )
-  const initialListSelection = $derived(
-    sharePointSource?.config.filters?.listSelection
-  )
-
   const entryTree = $derived(buildEntryTreeFromSourceEntries(allEntries))
   const selectionTree = $derived(wrapSelectionTreeWithSiteRoot(entryTree))
   const selectionNodeByPath = $derived(flattenNodesByPath(selectionTree))
@@ -85,13 +79,6 @@
       .map(node => node.path)
       .sort((a, b) => a.localeCompare(b))
   )
-  const selectableFilePaths = $derived(
-    selectablePaths.filter(path => !path.startsWith(LIST_PATH_PREFIX))
-  )
-  const selectableListPaths = $derived(
-    selectablePaths.filter(path => path.startsWith(LIST_PATH_PREFIX))
-  )
-
   const selectedCountLabel = $derived(
     `${selectedEntryPaths.filter(path => path !== SITE_ROOT_PATH).length} items selected`
   )
@@ -125,19 +112,10 @@
 
   const rehydrateSelectedEntryPaths = () => {
     const selectablePathSet = new Set(selectablePaths)
-    const selectedFilePaths = rehydrateFromPatterns(
+    selectedEntryPaths = rehydrateFromPatterns(
       initialPatterns,
-      selectableFilePaths
+      selectablePaths
     ).filter(path => selectablePathSet.has(path))
-    const selectedListPaths = selectableListPaths.filter(path => {
-      if (!initialListSelection) {
-        return true
-      }
-      const listId = path.slice(LIST_PATH_PREFIX.length)
-      const selected = initialListSelection.listIds.includes(listId)
-      return initialListSelection.mode === "include" ? selected : !selected
-    })
-    selectedEntryPaths = [...selectedFilePaths, ...selectedListPaths]
     if (selectedEntryPaths.length === selectablePaths.length) {
       selectedEntryPaths = [SITE_ROOT_PATH, ...selectedEntryPaths]
     }
@@ -154,7 +132,7 @@
   export async function show() {
     selectedEntryPaths = []
     loadEntriesError = null
-    includeNewFilesByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
+    includeNewContentByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
 
     const loaded = await loadAllEntries()
     if (!loaded) {
@@ -174,34 +152,21 @@
     if (!agentId || !operationId || !siteId) {
       return keepOpen
     }
-    if (selectedEntryPaths.length === 0) {
+    const selectedSelectablePaths = selectedEntryPaths.filter(path =>
+      selectablePaths.includes(path)
+    )
+    if (selectedSelectablePaths.length === 0) {
       notifications.error("Please select at least one file or list to sync")
 
       return keepOpen
     }
 
     const filters = buildPatternsFromSelection(
-      selectedEntryPaths.filter(
-        path => path === SITE_ROOT_PATH || !path.startsWith(LIST_PATH_PREFIX)
-      ),
-      selectableFilePaths,
+      selectedEntryPaths,
+      selectablePaths,
       selectionNodeByPath,
-      includeNewFilesByDefault
+      includeNewContentByDefault
     )
-    const selectedListIds = selectedEntryPaths
-      .filter(path => path.startsWith(LIST_PATH_PREFIX))
-      .map(path => path.slice(LIST_PATH_PREFIX.length))
-    let listSelection: AgentKnowledgeSourceListSelection | undefined
-    if (includeNewFilesByDefault) {
-      const excludedListIds = selectableListPaths
-        .map(path => path.slice(LIST_PATH_PREFIX.length))
-        .filter(listId => !selectedListIds.includes(listId))
-      listSelection = excludedListIds.length
-        ? { mode: "exclude", listIds: excludedListIds }
-        : undefined
-    } else {
-      listSelection = { mode: "include", listIds: selectedListIds }
-    }
 
     try {
       await agentsStore.applyOperationSharePointSiteFilters(
@@ -210,7 +175,6 @@
         siteId,
         {
           filters,
-          listSelection,
         }
       )
       await Promise.all([
@@ -259,9 +223,9 @@
           { label: "Include new content by default", value: true },
           { label: "Exclude new content by default", value: false },
         ]}
-        value={includeNewFilesByDefault}
+        value={includeNewContentByDefault}
         on:change={e => {
-          includeNewFilesByDefault = e.detail === "true"
+          includeNewContentByDefault = e.detail === "true"
         }}
         getOptionLabel={o => o.label}
         getOptionValue={o => o.value}
