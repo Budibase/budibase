@@ -11,9 +11,6 @@ vi.mock("@/stores/builder", async () => {
           friendlyName: "Primary button",
           name: "Button",
         },
-        "@budibase/standard-components/table": {
-          name: "Data table",
-        },
       },
     }),
   }
@@ -54,48 +51,34 @@ describe("component tree search", () => {
     expect(results.expandedIds.size).toBe(0)
   })
 
-  it("matches instance names", () => {
+  it("matches component labels shown in the tree", () => {
     const button = component(
       "button-1",
       "@budibase/standard-components/button",
       "Save changes"
     )
+    const table = component("table-1", "@budibase/standard-components/table")
 
     expect(componentMatchesSearchTerm(button, "save")).toBe(true)
+    expect(componentMatchesSearchTerm(table, "table")).toBe(true)
   })
 
-  it("matches default component text", () => {
-    const customComponent = component("custom-1", "custom-widget")
-
-    expect(componentMatchesSearchTerm(customComponent, "custom-widget")).toBe(
-      true
+  it("does not match hidden component metadata", () => {
+    const renamedButton = component(
+      "button-1",
+      "@budibase/standard-components/button",
+      "Save changes"
     )
-  })
-
-  it("matches friendly component names", () => {
-    const button = component("button-1", "@budibase/standard-components/button")
-
-    expect(componentMatchesSearchTerm(button, "primary")).toBe(true)
-  })
-
-  it("matches component type names", () => {
-    const widget = component("widget-1", "@example/components/custom-widget")
-
-    expect(componentMatchesSearchTerm(widget, "custom-widget")).toBe(true)
-  })
-
-  it("does not match shared component type namespaces", () => {
-    const link = component(
-      "link-1",
-      "@budibase/standard-components/link",
-      "New Link"
+    const renamedText = component(
+      "text-1",
+      "@budibase/standard-components/textv2",
+      "bruh"
     )
 
-    expect(componentMatchesSearchTerm(link, "standard-components/l")).toBe(
-      false
-    )
-    expect(componentMatchesSearchTerm(link, "budibase")).toBe(false)
-    expect(componentMatchesSearchTerm(link, "a")).toBe(false)
+    expect(componentMatchesSearchTerm(renamedButton, "primary")).toBe(false)
+    expect(componentMatchesSearchTerm(renamedButton, "button")).toBe(false)
+    expect(componentMatchesSearchTerm(renamedText, "textv2")).toBe(false)
+    expect(componentMatchesSearchTerm(renamedText, "v")).toBe(false)
   })
 
   it("includes ancestors of descendant matches", () => {
@@ -105,7 +88,7 @@ describe("component tree search", () => {
       ]),
     ]
 
-    const results = getComponentTreeSearchResults(tree, "data table")
+    const results = getComponentTreeSearchResults(tree, "table")
 
     expect(Array.from(results.matchingIds)).toEqual(["table-1"])
     expect(Array.from(results.visibleIds).sort()).toEqual([

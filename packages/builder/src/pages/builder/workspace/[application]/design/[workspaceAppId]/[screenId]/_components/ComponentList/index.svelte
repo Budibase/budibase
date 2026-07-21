@@ -16,10 +16,7 @@
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
   import getScreenContextMenuItems from "./getScreenContextMenuItems"
-  import {
-    getComponentTreeSearchResults,
-    normaliseComponentSearchTerm,
-  } from "@/helpers/components"
+  import { getComponentTreeSearchResults } from "@/helpers/components"
 
   $: screenComponentId = `${$screenStore.selectedScreenId}-screen`
   $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
@@ -28,14 +25,10 @@
   let searchInput
 
   $: isSearching = !!searchTerm.trim()
-  $: normalisedSearchTerm = normaliseComponentSearchTerm(searchTerm)
-  $: navigationMatches =
-    !isSearching || "navigation".includes(normalisedSearchTerm)
   $: searchResults = getComponentTreeSearchResults(
     $selectedScreen?.props?._children,
     searchTerm
   )
-  $: hasSearchResults = navigationMatches || searchResults.matchingIds.size > 0
 
   const openSearch = async () => {
     searchOpen = true
@@ -204,29 +197,27 @@
             </svelte:fragment>
           </NavItem>
         </li>
-        {#if navigationMatches}
-          <li on:contextmenu|stopPropagation>
-            <NavItem
-              text="Navigation"
-              indentLevel={0}
-              selected={$componentStore.selectedComponentId === navComponentId}
-              opened
-              scrollable
-              icon={$selectedScreen?.showNavigation ? "eye" : "eye-slash"}
-              on:drop={onDrop}
-              on:click={() => {
-                componentStore.select(
-                  `${$screenStore.selectedScreenId}-navigation`
-                )
-              }}
-              hovering={$hoverStore.componentId === navComponentId}
-              on:mouseenter={() => hover(navComponentId)}
-              on:mouseleave={() => hover(null)}
-              id="component-nav"
-              selectedBy={$userSelectedResourceMap[navComponentId]}
-            />
-          </li>
-        {/if}
+        <li on:contextmenu|stopPropagation>
+          <NavItem
+            text="Navigation"
+            indentLevel={0}
+            selected={$componentStore.selectedComponentId === navComponentId}
+            opened
+            scrollable
+            icon={$selectedScreen?.showNavigation ? "eye" : "eye-slash"}
+            on:drop={onDrop}
+            on:click={() => {
+              componentStore.select(
+                `${$screenStore.selectedScreenId}-navigation`
+              )
+            }}
+            hovering={$hoverStore.componentId === navComponentId}
+            on:mouseenter={() => hover(navComponentId)}
+            on:mouseleave={() => hover(null)}
+            id="component-nav"
+            selectedBy={$userSelectedResourceMap[navComponentId]}
+          />
+        </li>
         <li on:contextmenu|stopPropagation>
           <ComponentTree
             level={0}
@@ -236,7 +227,7 @@
             matchingSearchIds={searchResults.matchingIds}
             expandedSearchIds={searchResults.expandedIds}
           />
-          {#if isSearching && !hasSearchResults}
+          {#if isSearching && searchResults.matchingIds.size === 0}
             <div class="no-results">No components found</div>
           {/if}
 
