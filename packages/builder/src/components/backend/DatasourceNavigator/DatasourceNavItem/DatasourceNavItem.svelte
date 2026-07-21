@@ -6,8 +6,6 @@
     contextMenuStore,
     datasources,
     integrations,
-    queries,
-    tables,
     userSelectedResourceMap,
   } from "@/stores/builder"
   import { bb } from "@/stores/bb"
@@ -15,6 +13,7 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { integrationForDatasource } from "@/stores/selectors"
   import { canCreateDatasourceQuery } from "@/components/backend/DatasourceNavigator/datasourceUtils"
+  import { isAssignableDatasource } from "@/helpers/data/datasources"
   import NavItem from "@/components/common/NavItem.svelte"
   import type { MenuItem } from "@/types"
   import {
@@ -48,14 +47,6 @@
     selected?: boolean
   }
 
-  const isAssignableDatasource = (
-    value: DatasourceNavItemDatasource
-  ): value is Datasource =>
-    !!value._id &&
-    value._id !== BUDIBASE_INTERNAL_DB_ID &&
-    value._id !== "__draft__" &&
-    !Array.isArray(value.entities)
-
   interface ModalRef {
     show: () => void
   }
@@ -85,12 +76,10 @@
   }
 
   const refreshDataStores = async () => {
-    const refreshes = await Promise.allSettled([
-      datasources.fetch(),
-      tables.fetch(),
-      queries.fetch(),
-    ])
-    if (refreshes.some(result => result.status === "rejected")) {
+    try {
+      await appStore.refresh()
+    } catch (error) {
+      console.error(error)
       notifications.warning(
         "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
       )
@@ -98,8 +87,13 @@
   }
 
   const openAssignProjectModal = async () => {
-    await projectsStore.ensureFetched($appStore.appId)
-    assignProjectModal?.show()
+    try {
+      await projectsStore.ensureFetched($appStore.appId)
+      assignProjectModal?.show()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to load projects")
+    }
   }
 
   const assignProject = async (projectIds: string[]) => {
