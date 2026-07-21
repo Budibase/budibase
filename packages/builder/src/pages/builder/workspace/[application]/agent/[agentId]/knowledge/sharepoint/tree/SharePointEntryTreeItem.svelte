@@ -83,7 +83,7 @@
   }
   let selectedSet = $derived(new Set(selectedPaths))
   let targetPaths = $derived.by(() => {
-    if (node.type === "file") {
+    if (node.type === "file" || node.type === "list") {
       return [node.path]
     }
     return fileDescendantPathsByNodePath?.get(node.path) || []
@@ -126,7 +126,7 @@
     on:click={openErrorModal}
   >
     <svelte:fragment slot="post">
-      {#if showStatus && node.type === "file" && getSharePointStatusText(node.status)}
+      {#if showStatus && (node.type === "file" || node.type === "list") && getSharePointStatusText(node.status)}
         <StatusLight size="S" {...getSharePointStatusLightProps(node.status)}>
           {getSharePointStatusText(node.status)}
         </StatusLight>

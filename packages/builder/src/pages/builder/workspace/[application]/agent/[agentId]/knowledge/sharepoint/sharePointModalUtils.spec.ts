@@ -2,8 +2,14 @@ import { describe, expect, it } from "vitest"
 import { KnowledgeBaseFileStatus } from "@budibase/types"
 import {
   buildEntryTree,
+  buildEntryTreeFromSourceEntries,
+  buildPatternsFromSelection,
+  flattenNodesByPath,
   isExcludeNewByDefaultPatterns,
   matchesConfiguredPatterns,
+  rehydrateFromPatterns,
+  SITE_ROOT_PATH,
+  wrapSelectionTreeWithSiteRoot,
 } from "./sharePointModalUtils"
 
 describe("sharePointModalUtils.buildEntryTree", () => {
@@ -102,7 +108,84 @@ describe("sharePointModalUtils.buildEntryTree", () => {
   })
 })
 
+describe("sharePointModalUtils.buildEntryTreeFromSourceEntries", () => {
+  it("groups files and lists into separate branches with stable list IDs", () => {
+    const tree = buildEntryTreeFromSourceEntries([
+      {
+        id: "drive:item",
+        name: "guide.md",
+        path: "docs/guide.md",
+        type: "file",
+      },
+      {
+        id: "list-123",
+        name: "FAQs",
+        path: "FAQs",
+        type: "list",
+      },
+    ])
+
+    expect(tree.map(node => node.name)).toEqual(["Files", "Lists"])
+    expect(tree[0].children[0].children[0]).toMatchObject({
+      name: "guide.md",
+      type: "file",
+    })
+    expect(tree[1].children[0]).toMatchObject({
+      id: "list-123",
+      name: "FAQs",
+      path: "__list__:list-123",
+      type: "list",
+    })
+  })
+
+  it("keeps list paths distinct from colliding drive paths", () => {
+    const tree = wrapSelectionTreeWithSiteRoot(
+      buildEntryTreeFromSourceEntries([
+        {
+          id: "drive:item",
+          name: "list-123",
+          path: "__list__/list-123",
+          type: "file",
+        },
+        {
+          id: "list-123",
+          name: "FAQs",
+          path: "FAQs",
+          type: "list",
+        },
+      ])
+    )
+    const nodesByPath = flattenNodesByPath(tree)
+
+    expect(nodesByPath.get("__list__/list-123")?.type).toBe("file")
+    expect(nodesByPath.get("__list__:list-123")?.type).toBe("list")
+  })
+})
+
 describe("sharePointModalUtils filter patterns", () => {
+  const getSelectionFixture = () => {
+    const selectionTree = wrapSelectionTreeWithSiteRoot(
+      buildEntryTreeFromSourceEntries([
+        {
+          id: "drive:item",
+          name: "guide.md",
+          path: "docs/guide.md",
+          type: "file",
+        },
+        {
+          id: "list-123",
+          name: "FAQs",
+          path: "FAQs",
+          type: "list",
+        },
+      ])
+    )
+    return {
+      selectionNodeByPath: flattenNodesByPath(selectionTree),
+      selectablePaths: ["docs/guide.md", "__list__:list-123"],
+    }
+  }
+
   it("treats !** as exclude-all (including nested paths)", () => {
     expect(matchesConfiguredPatterns("activities.txt", ["!**"])).toBe(false)
     expect(matchesConfiguredPatterns("folder 1/sub 1/file.pdf", ["!**"])).toBe(
@@ -112,5 +195,54 @@ describe("sharePointModalUtils filter patterns", () => {
 
   it("recognizes exclude-new-by-default for !**", () => {
     expect(isExcludeNewByDefaultPatterns(["!**"])).toBe(true)
+  })
+
+  it("rehydrates exclude-all with both files and lists unselected", () => {
+    const { selectablePaths } = getSelectionFixture()
+
+    expect(rehydrateFromPatterns(["!**"], selectablePaths)).toEqual([])
+  })
+
+  it("uses exact list paths when excluding new content by default", () => {
+    const { selectablePaths, selectionNodeByPath } = getSelectionFixture()
+    const patterns = buildPatternsFromSelection(
+      ["__list__:list-123"],
+      selectablePaths,
+      selectionNodeByPath,
+      false
+    )
+
+    expect(patterns).toEqual(["!**", "__list__:list-123"])
+    expect(rehydrateFromPatterns(patterns || [], selectablePaths)).toEqual([
+      "__list__:list-123",
+    ])
+  })
+
+  it("uses exact negated list paths when including new content by default", () => {
+    const { selectablePaths, selectionNodeByPath } = getSelectionFixture()
+    const patterns = buildPatternsFromSelection(
+      ["docs/guide.md"],
+      selectablePaths,
+      selectionNodeByPath,
+      true
+    )
+
+    expect(patterns).toEqual(["!__list__:list-123"])
+    expect(rehydrateFromPatterns(patterns || [], selectablePaths)).toEqual([
+      "docs/guide.md",
+    ])
+  })
+
+  it("omits patterns when all files and lists are selected by default", () => {
+    const { selectablePaths, selectionNodeByPath } = getSelectionFixture()
+
+    expect(
+      buildPatternsFromSelection(
+        [SITE_ROOT_PATH, ...selectablePaths],
+        selectablePaths,
+        selectionNodeByPath,
+        true
+      )
+    ).toBeUndefined()
   })
 })
