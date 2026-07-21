@@ -99,6 +99,35 @@ describe("app action trigger", () => {
     })
   })
 
+  it("should coerce preview values based on the schema", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction({
+        fields: {
+          text: AutomationIOType.STRING,
+          number: AutomationIOType.NUMBER,
+          boolean: AutomationIOType.BOOLEAN,
+        },
+      })
+      .serverLog({
+        text: "{{ fields.text }} {{ fields.number }} {{ fields.boolean }}",
+      })
+      .save()
+
+    const jobs = await captureAutomationResults(automation, async () => {
+      await config.api.automation.trigger(automation._id!, {
+        fields: { text: "1", number: "2", boolean: "true" },
+        timeout: 1000,
+      })
+    })
+
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].data.event.fields).toEqual({
+      text: "1",
+      number: 2,
+      boolean: true,
+    })
+  })
+
   it("should report that it has timed out if the timeout is reached", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()

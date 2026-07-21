@@ -212,7 +212,7 @@ export async function externalTrigger(
 
   if (
     sdk.automations.isAppAction(automation) &&
-    !shouldRunAsTest &&
+    !isTestRun &&
     !(await checkTestFlag(automation._id!))
   ) {
     if (params.fields == null) {
