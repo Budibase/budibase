@@ -45,8 +45,17 @@
   }
 
   const getSharePointStatusProps = (row: SharePointConnectionTableRow) => {
-    if (!row.hasSynced) {
+    if (row.isSyncing) {
       return { notice: true }
+    }
+    if (!row.hasSynced) {
+      return row.runStatus === AgentKnowledgeSourceSyncRunStatus.FAILED ||
+        row.failedCount > 0
+        ? { negative: true }
+        : { notice: true }
+    }
+    if (row.errorMessage) {
+      return { negative: true }
     }
     const total = row.totalCount || 0
     const processing = row.processingCount || 0

@@ -11,7 +11,9 @@
   let syncing = $state(false)
   let renderedRowId = $state<string | undefined>(row._id)
 
-  let processing = $derived(syncing)
+  let processing = $derived(
+    syncing || (row.kind === "sharepoint_connection" && row.isSyncing)
+  )
 
   $effect(() => {
     if (renderedRowId === row._id) {

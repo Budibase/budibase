@@ -1316,7 +1316,7 @@
 
   .content {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1280px;
     padding: var(--spacing-xl) 0;
     display: flex;
     flex-direction: column;

@@ -574,4 +574,8 @@
     display: flex;
     gap: var(--spacing-s);
   }
+
+  .lock :global(.spectrum-FieldLabel) {
+    text-wrap: wrap;
+  }
 </style>

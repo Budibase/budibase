@@ -735,7 +735,11 @@ export class RestIntegration implements IntegrationBase {
     let hasDispatcher = false
     let usedProxyDispatcher = false
 
-    const setDispatcher = (requestInput: RequestInit, requestUrl: string) => {
+    const setDispatcher = (
+      requestInput: RequestInit,
+      requestUrl: string,
+      pinnedIp: string
+    ) => {
       if (isHttpMockingActive) {
         return requestInput
       }
@@ -743,6 +747,7 @@ export class RestIntegration implements IntegrationBase {
       const dispatcher = getDispatcher({
         rejectUnauthorized,
         url: requestUrl,
+        lookup: coreUtils.createPinnedLookup(pinnedIp),
       }) as unknown as typeof requestInput.dispatcher
 
       hasDispatcher = true
@@ -760,8 +765,15 @@ export class RestIntegration implements IntegrationBase {
         url,
         input,
         {
-          fetchFn: async (requestUrl: string, requestInput: RequestInit) =>
-            fetch(requestUrl, setDispatcher(requestInput, requestUrl)),
+          fetchFn: async (
+            requestUrl: string,
+            requestInput: RequestInit,
+            pinnedIp: string
+          ) =>
+            fetch(
+              requestUrl,
+              setDispatcher(requestInput, requestUrl, pinnedIp)
+            ),
         }
       )
     } catch (err) {

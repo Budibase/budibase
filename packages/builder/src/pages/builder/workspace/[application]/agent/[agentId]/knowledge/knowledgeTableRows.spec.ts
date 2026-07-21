@@ -104,7 +104,7 @@ describe("knowledgeTableRows", () => {
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
@@ -116,7 +116,7 @@ describe("knowledgeTableRows", () => {
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
@@ -128,7 +128,7 @@ describe("knowledgeTableRows", () => {
         _id: "f3",
         status: KnowledgeBaseFileStatus.FAILED,
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-2",
           siteId: "site-2",
           driveId: "drive-1",
@@ -181,7 +181,7 @@ describe("knowledgeTableRows", () => {
 
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].displayStatus).toBe("0/1 files")
+    expect(rows[0].displayStatus).toBe("0/1 items")
   })
 
   it("shows file counts while sync is still running", () => {
@@ -213,7 +213,7 @@ describe("knowledgeTableRows", () => {
       onSync: async () => {},
     })
 
-    expect(rows[0].displayStatus).toBe("18/125 files")
+    expect(rows[0].displayStatus).toBe("18/125 items")
     expect(rows[0].hasSynced).toBe(true)
     expect(rows[0].__clickable).toBe(true)
   })
@@ -234,6 +234,36 @@ describe("knowledgeTableRows", () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].filename).toBe("Loading SharePoint site...")
     expect(rows[0].displayStatus).toBe("Processing")
+  })
+
+  it.each([
+    [AgentKnowledgeSourceSyncRunStatus.QUEUED, "Queued"],
+    [AgentKnowledgeSourceSyncRunStatus.RUNNING, "Syncing"],
+  ])("shows active sync status %s", (runStatus, displayStatus) => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: { site: { id: "site-1", name: "Site 1" } },
+        },
+      ],
+      sharePointSourceSnapshots: [
+        {
+          sourceId: "source-1",
+          syncedCount: 3,
+          failedCount: 0,
+          processingCount: 0,
+          totalCount: 3,
+          runStatus,
+          lastRunAt: "2026-04-08T10:00:00.000Z",
+        },
+      ],
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows[0].displayStatus).toBe(displayStatus)
+    expect(rows[0].isSyncing).toBe(true)
   })
 
   it("shows completed counts once syncing is done", () => {
@@ -262,6 +292,6 @@ describe("knowledgeTableRows", () => {
 
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].displayStatus).toBe("3/3 files")
+    expect(rows[0].displayStatus).toBe("3/3 items")
   })
 })

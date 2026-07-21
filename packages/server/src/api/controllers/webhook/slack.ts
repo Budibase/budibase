@@ -23,7 +23,11 @@ import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
-import { pickLatestConversation, toAbsoluteUrl } from "./utils"
+import {
+  pickLatestConversation,
+  resolveEscalationWorkspaceId,
+  toAbsoluteUrl,
+} from "./utils"
 
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -411,7 +415,6 @@ export async function slackWebhook(
         let parsed: {
           escalationId: string
           notificationDocId: string
-          appId: string
         }
         try {
           parsed = JSON.parse(event.value ?? "")
@@ -419,7 +422,9 @@ export async function slackWebhook(
           console.error("Escalation action: invalid button value", event.value)
           return
         }
-        const { escalationId, notificationDocId, appId } = parsed
+        // The appId in the button value is untrusted; resolve which environment
+        // of the verified webhook route's app actually holds the notification.
+        const { escalationId, notificationDocId } = parsed
 
         const slackResponse = {
           actionId: event.actionId,
@@ -430,6 +435,18 @@ export async function slackWebhook(
         }
 
         try {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
           const result = await context.doInContext(appId, async () => {
             // We can respond with closed or
             return sdk.escalations.respond(
@@ -452,7 +469,7 @@ export async function slackWebhook(
           console.error("Escalation action: failed to record response", {
             escalationId,
             notificationDocId,
-            appId,
+            workspaceId,
             message: error instanceof Error ? error.message : String(error),
           })
           if (event.thread) {

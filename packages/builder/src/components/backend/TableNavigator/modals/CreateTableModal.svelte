@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { goto as gotoStore, url } from "@roxi/routify"
+  import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import {
     DataEnvironmentMode,
     FieldType,
@@ -20,7 +20,6 @@
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
   } from "@/constants/backend"
-  import { get } from "svelte/store"
   import { SvelteSet } from "svelte/reactivity"
 
   interface Props {
@@ -39,8 +38,6 @@
     afterSave = async (table: Table) => {
       notifications.success(`Table ${name} created successfully.`)
 
-      const getCurrentUrl = get(url) as () => string
-      const currentUrl = getCurrentUrl()
       const path = currentUrl.endsWith("data")
         ? `./table/${table._id}`
         : `../../table/${table._id}`
@@ -49,6 +46,7 @@
   }: Props = $props()
 
   const goto = $derived($gotoStore)
+  const currentUrl = $derived($urlStore())
   const tableNames = $derived($tables.list.map(table => table.name))
   const selectedSource = $derived(
     $datasources.list.find(source => source._id === $datasources.selected)
