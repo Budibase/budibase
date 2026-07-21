@@ -63,6 +63,7 @@ import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
+import { APIWarningCode } from "@budibase/types"
 
 export type { APIClient } from "./types"
 
@@ -191,6 +192,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     // Handle response
     if (response.status >= 200 && response.status < 400) {
       handleMigrations(response)
+      handleWarnings(response)
       try {
         if (response.status === 204) {
           return undefined as ResponseT
@@ -218,6 +220,16 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
 
     if (migration && !shouldSkipWait) {
       config.onMigrationDetected(migration)
+    }
+  }
+
+  const handleWarnings = (response: Response) => {
+    const warning = response.headers.get(Header.API_WARNING)
+    const warningCode = Object.values(APIWarningCode).find(
+      code => code === warning
+    )
+    if (warningCode && config.onWarning) {
+      config.onWarning(warningCode)
     }
   }
 

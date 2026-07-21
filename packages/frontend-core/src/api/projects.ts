@@ -5,8 +5,12 @@ import {
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
+  PreviewProjectAssignmentRequest,
+  PreviewProjectAssignmentResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
+  UpdateProjectAssignmentRequest,
+  UpdateProjectAssignmentResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -19,6 +23,13 @@ export interface ProjectEndpoints {
     body?: ImportProjectRequest
   ) => Promise<ImportProjectResponse>
   update: (project: UpdateProjectRequest) => Promise<UpdateProjectResponse>
+  previewAssignment: (
+    request: PreviewProjectAssignmentRequest
+  ) => Promise<PreviewProjectAssignmentResponse>
+  updateAssignment: (
+    resourceId: string,
+    request: UpdateProjectAssignmentRequest
+  ) => Promise<UpdateProjectAssignmentResponse>
   delete: (id: string, rev: string) => Promise<void>
 }
 
@@ -68,6 +79,24 @@ export const buildProjectEndpoints = (
         description,
         color,
       },
+    })
+  },
+  previewAssignment: async request => {
+    return await API.post<
+      PreviewProjectAssignmentRequest,
+      PreviewProjectAssignmentResponse
+    >({
+      url: "/api/projects/assignments/preview",
+      body: request,
+    })
+  },
+  updateAssignment: async (resourceId, request) => {
+    return await API.put<
+      UpdateProjectAssignmentRequest,
+      UpdateProjectAssignmentResponse
+    >({
+      url: `/api/projects/assignments/${resourceId}`,
+      body: request,
     })
   },
   delete: async (id, rev) => {

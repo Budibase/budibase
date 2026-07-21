@@ -4,7 +4,9 @@ import type {
   CreateProjectRequest,
   ImportProjectRequest,
   ImportProjectResponse,
+  PreviewProjectAssignmentRequest,
   ProjectResponse,
+  UpdateProjectAssignmentRequest,
   UpdateProjectRequest,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
@@ -116,6 +118,14 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     )
     return response.project
   }
+
+  previewAssignment = async (request: PreviewProjectAssignmentRequest) =>
+    await API.projects.previewAssignment(request)
+
+  updateAssignment = async (
+    resourceId: string,
+    request: UpdateProjectAssignmentRequest
+  ) => await API.projects.updateAssignment(resourceId, request)
 
   deleteProject = async (id: string, rev: string) => {
     const workspaceId = this.workspaceId

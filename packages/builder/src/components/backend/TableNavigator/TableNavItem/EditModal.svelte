@@ -4,9 +4,10 @@
   import { cloneDeep } from "lodash/fp"
   import { get } from "svelte/store"
   import { tables, datasources } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
-  import type { Table } from "@budibase/types"
+  import { FeatureFlag, type Table } from "@budibase/types"
 
   interface ModalHandle {
     show(): void
@@ -42,7 +43,11 @@
   async function save() {
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
-    if (JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)) {
+    if (!$featureFlags[FeatureFlag.PROJECTS]) {
+      delete updatedTable.projectIds
+    } else if (
+      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
+    ) {
       updatedTable.projectIds = projectIds
     }
     await tables.save(updatedTable)
