@@ -6,6 +6,7 @@ import {
   type Datasource,
   type HomeRow,
   type Table,
+  type UIInternalDatasource,
   type WorkspaceFavourite,
 } from "@budibase/types"
 import { TableNames } from "@/constants"
@@ -175,28 +176,6 @@ describe("sortHomeRows", () => {
     expect(result.map(row => row.name)).toEqual(["Alpha", "Bravo"])
   })
 
-  it("sorts by createdAt descending", () => {
-    const rows = [
-      buildAgentRow({
-        id: "a",
-        name: "Older",
-        createdAt: "2024-01-01T00:00:00.000Z",
-      }),
-      buildAgentRow({
-        id: "b",
-        name: "Newer",
-        createdAt: "2025-01-01T00:00:00.000Z",
-      }),
-    ]
-
-    const result = sortHomeRows(rows, {
-      sortColumn: "created",
-      sortOrder: "desc",
-    })
-
-    expect(result.map(row => row._id)).toEqual(["b", "a"])
-  })
-
   it("sorts by project count descending", () => {
     const rows = [
       buildAgentRow({ id: "a", name: "Unassigned" }),
@@ -253,6 +232,18 @@ const buildDatasource = (overrides: Partial<Datasource> = {}): Datasource =>
     type: "datasource",
     ...overrides,
   }) as Datasource
+
+const buildInternalDatasource = (
+  overrides: Partial<UIInternalDatasource> = {}
+): UIInternalDatasource =>
+  ({
+    _id: BUDIBASE_INTERNAL_DB_ID,
+    name: "Internal datasource",
+    source: SourceName.BUDIBASE,
+    type: "datasource",
+    entities: [],
+    ...overrides,
+  }) as UIInternalDatasource
 
 const buildTable = (overrides: Partial<Table> = {}): Table =>
   ({
@@ -327,12 +318,16 @@ describe("buildHomeRows", () => {
     })
   })
 
-  it("does not build data rows for users, external table, or query resources", () => {
+  it("does not build rows for internal, draft, or entity datasources and unsupported tables", () => {
     const rows = buildHomeRows({
       apps: [],
       automations: [],
       agents: [],
-      datasources: [buildDatasource({ _id: BUDIBASE_INTERNAL_DB_ID })],
+      datasources: [
+        buildDatasource({ _id: BUDIBASE_INTERNAL_DB_ID }),
+        buildDatasource({ _id: "__draft__" }),
+        buildInternalDatasource({ _id: "datasource_with_entities" }),
+      ],
       tables: [
         buildTable({
           _id: TableNames.USERS,

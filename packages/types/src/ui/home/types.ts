@@ -16,13 +16,7 @@ export type HomeRowType =
   | "datasource"
   | "table"
 
-export type HomeSortColumn =
-  | "name"
-  | "type"
-  | "projects"
-  | "status"
-  | "created"
-  | "updated"
+export type HomeSortColumn = "name" | "type" | "projects" | "status" | "updated"
 export type HomeSortOrder = "asc" | "desc"
 
 interface HomeRowBase {

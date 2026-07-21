@@ -9,6 +9,24 @@ export interface HomeUrlState {
   projectsEnabled: boolean
 }
 
+export const normaliseHomeSortColumn = (
+  value: string | null
+): HomeSortColumn | null => {
+  if (!value) {
+    return null
+  }
+  if (
+    value === "name" ||
+    value === "type" ||
+    value === "projects" ||
+    value === "status" ||
+    value === "updated"
+  ) {
+    return value
+  }
+  return null
+}
+
 export const buildHomeUrl = (
   pathname: string,
   search: string,
@@ -37,8 +55,7 @@ export const buildHomeUrl = (
   }
 
   const unsupportedSort =
-    state.sortColumn === "created" ||
-    (!state.projectsEnabled && state.sortColumn === "projects")
+    !state.projectsEnabled && state.sortColumn === "projects"
   const sortColumn = unsupportedSort ? "updated" : state.sortColumn
   const sortOrder = unsupportedSort ? "desc" : state.sortOrder
   const defaultSortColumn = "updated"

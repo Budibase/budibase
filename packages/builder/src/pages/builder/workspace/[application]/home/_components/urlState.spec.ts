@@ -1,4 +1,8 @@
-import { buildHomeUrl, type HomeUrlState } from "./urlState"
+import {
+  buildHomeUrl,
+  normaliseHomeSortColumn,
+  type HomeUrlState,
+} from "./urlState"
 
 const defaultState: HomeUrlState = {
   searchTerm: "",
@@ -36,15 +40,8 @@ describe("buildHomeUrl", () => {
     expect(result).toBe("/builder/workspace/home")
   })
 
-  it("normalises legacy created sort to updated", () => {
-    const result = buildHomeUrl("/builder/workspace/home", "?sort=created", {
-      ...defaultState,
-      sortColumn: "created",
-      sortOrder: "asc",
-      projectsEnabled: true,
-    })
-
-    expect(result).toBe("/builder/workspace/home")
+  it("treats legacy created sort URL params as unsupported", () => {
+    expect(normaliseHomeSortColumn("created")).toBeNull()
   })
 
   it("removes project state when projects are disabled", () => {

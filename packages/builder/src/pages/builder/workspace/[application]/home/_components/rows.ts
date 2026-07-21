@@ -9,18 +9,20 @@ import {
   type HomeType,
   type Table,
   type UIAutomation,
+  type UIInternalDatasource,
   type UIWorkspaceApp,
   type WorkspaceFavourite,
 } from "@budibase/types"
 import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
 import { TableNames } from "@/constants"
+import { isAssignableDatasource } from "@/helpers/data/datasources"
 import { getAgentStatusLabel, getPublishResourceStatusLabel } from "./status"
 
 interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]
   automations: UIAutomation[]
   agents: Agent[]
-  datasources: Datasource[]
+  datasources: (Datasource | UIInternalDatasource)[]
   tables: Table[]
   getFavourite: (
     resourceType: WorkspaceResource,
@@ -111,8 +113,6 @@ const getTimestamp = (value?: string) => {
 
 const getUpdatedTimestamp = (row: HomeRow) => getTimestamp(row.updatedAt)
 
-const getCreatedTimestamp = (row: HomeRow) => getTimestamp(row.createdAt)
-
 const getProjectCount = (row: HomeRow) => row.projectIds?.length ?? 0
 
 const getStatusSortValue = (row: HomeRow) => {
@@ -135,8 +135,6 @@ const getSortValue = (row: HomeRow, column: HomeSortColumn) => {
       return getStatusSortValue(row)
     case "projects":
       return getProjectCount(row)
-    case "created":
-      return getCreatedTimestamp(row)
     case "updated":
       return getUpdatedTimestamp(row)
   }
@@ -276,9 +274,7 @@ export const buildHomeRows = ({
     }
   })
 
-  const externalDatasources = datasources.filter(
-    datasource => datasource._id !== BUDIBASE_INTERNAL_DB_ID
-  )
+  const externalDatasources = datasources.filter(isAssignableDatasource)
   const assignableInternalTables = tables.filter(
     table =>
       table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
