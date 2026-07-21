@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
   import Icon from "../Icon/Icon.svelte"
   import FancyField from "./FancyField.svelte"
 
-  export let icon
-  export let disabled
+  export let icon: string | undefined = undefined
+  export let disabled: boolean = false
 </script>
 
 <FancyField on:click clickable {disabled}>

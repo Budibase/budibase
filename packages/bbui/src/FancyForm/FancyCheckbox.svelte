@@ -1,17 +1,18 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte"
   import FancyField from "./FancyField.svelte"
   import Checkbox from "../Form/Core/Checkbox.svelte"
 
-  export let value
-  export let text
-  export let disabled = false
-  export let error = null
-  export let validate = null
-  export let indeterminate = false
-  export let compact = false
+  export let value: boolean | undefined = undefined
+  export let text: string | undefined = undefined
+  export let disabled: boolean = false
+  export let error: string | null = null
+  export let validate: ((value: boolean | undefined) => string | null) | null =
+    null
+  export let indeterminate: boolean = false
+  export let compact: boolean = false
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: boolean }>()
 
   const onChange = () => {
     const newValue = !value

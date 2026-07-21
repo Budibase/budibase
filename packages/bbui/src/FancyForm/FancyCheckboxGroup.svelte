@@ -1,36 +1,36 @@
-<script>
+<script lang="ts">
   import FancyCheckbox from "./FancyCheckbox.svelte"
   import FancyForm from "./FancyForm.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let options = []
-  export let selected = []
-  export let showSelectAll = true
-  export let selectAllText = "Select all"
+  export let options: string[] = []
+  export let selected: string[] = []
+  export let showSelectAll: boolean = true
+  export let selectAllText: string = "Select all"
 
-  let selectedBooleans = options.map(x => selected.indexOf(x) > -1)
-  const dispatch = createEventDispatcher()
+  let selectedBooleans: boolean[] = options.map(x => selected.indexOf(x) > -1)
+  const dispatch = createEventDispatcher<{ change: string[] }>()
 
   $: updateSelected(selectedBooleans)
   $: allSelected = selected?.length === options.length
   $: noneSelected = !selected?.length
 
-  function reset() {
+  const reset = (): boolean[] => {
     return Array(options.length).fill(true)
   }
 
-  function updateSelected(selectedArr) {
-    const array = []
-    for (let [i, isSelected] of Object.entries(selectedArr)) {
+  const updateSelected = (selectedArr: boolean[]) => {
+    const array: string[] = []
+    for (const [i, isSelected] of Object.entries(selectedArr)) {
       if (isSelected) {
-        array.push(options[i])
+        array.push(options[Number(i)])
       }
     }
     selected = array
     dispatch("change", selected)
   }
 
-  function toggleSelectAll() {
+  const toggleSelectAll = () => {
     if (allSelected === true) {
       selectedBooleans = []
     } else {

@@ -1,13 +1,17 @@
-<script>
+<script lang="ts">
   import { setContext } from "svelte"
 
-  let fields = {}
+  interface FancyFieldApi {
+    validate: () => boolean
+  }
+
+  let fields: Record<string, FancyFieldApi> = {}
 
   setContext("fancy-form", {
-    registerField: (id, api) => {
+    registerField: (id: string, api: FancyFieldApi) => {
       fields = { ...fields, [id]: api }
     },
-    unregisterField: id => {
+    unregisterField: (id: string) => {
       delete fields[id]
       fields = fields
     },
