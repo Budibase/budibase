@@ -349,16 +349,25 @@ const getSchema = () => {
 
 const SCHEMA: Integration = getSchema()
 
+export function buildMongoClientOptions(
+  config: MongoDBConfig,
+  selfHosted = !!environment.SELF_HOSTED
+): MongoClientOptions {
+  return selfHosted
+    ? {
+        tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
+        tlsCAFile: config.tlsCAFile || undefined,
+      }
+    : {}
+}
+
 export class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
   private client: MongoClient
 
   constructor(config: MongoDBConfig) {
     this.config = config
-    const options: MongoClientOptions = {
-      tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
-      tlsCAFile: config.tlsCAFile || undefined,
-    }
+    const options = buildMongoClientOptions(config)
     this.client = new MongoClient(config.connectionString, options)
   }
 
