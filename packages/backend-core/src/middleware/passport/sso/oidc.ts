@@ -2,6 +2,7 @@ import fetch from "node-fetch"
 import * as sso from "./sso"
 import { ssoCallbackUrl } from "../utils"
 import { validEmail } from "../../../utils"
+import env from "../../../environment"
 import {
   ConfigType,
   OIDCInnerConfig,
@@ -193,6 +194,22 @@ export async function strategyFactory(
   }
 }
 
+/**
+ * Resolves the effective allowUnverifiedEmailLinking value. A boot-time
+ * environment override wins over the per-provider database value when set,
+ * otherwise the database value is used.
+ */
+function resolveAllowUnverifiedEmailLinking(
+  configValue?: boolean
+): boolean | undefined {
+  const override = env.OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING
+  if (override === undefined) {
+    return configValue
+  }
+  const normalized = `${override}`.toLowerCase()
+  return normalized !== "" && normalized !== "false" && normalized !== "0"
+}
+
 export async function fetchStrategyConfig(
   oidcConfig: OIDCInnerConfig,
   callbackUrl?: string
@@ -232,7 +249,9 @@ export async function fetchStrategyConfig(
       clientSecret: clientSecret,
       callbackURL: callbackUrl,
       pkce: pkce,
-      allowUnverifiedEmailLinking: allowUnverifiedEmailLinking,
+      allowUnverifiedEmailLinking: resolveAllowUnverifiedEmailLinking(
+        allowUnverifiedEmailLinking
+      ),
     }
   } catch (err) {
     throw new Error(
