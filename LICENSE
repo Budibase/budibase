@@ -1,4 +1,4 @@
-Copyright 2019-2023, Budibase Ltd.
+# Licensing guidelines
 
 Each Budibase package has its own license, please check the license file in each package.
 
@@ -7,3 +7,39 @@ You can consider Budibase to be GPLv3 licensed overall.
 The apps that you build with Budibase do not package any GPLv3 licensed code, thus do not fall under those restrictions.
 
 Budibase ships with Structured Query Server, by The Neighbourhoodie Software GmbH. This license for this can be found at ./SQS_LICENSE
+
+## Choosing a license
+
+These guidelines explain which licence to use when creating a new package in the Budibase monorepo.
+
+### 1. Is this a paid feature?
+
+If **yes**, license the package under **BSL**.
+
+Paid features should live in `/packages/pro`.
+
+The Business Source License (BSL) allows people to view and modify the source code, but it does **not** allow them to use modified code in production to bypass Budibase's licensing restrictions. Removing licence checks and running that version in production would violate the licence.
+
+The BSL includes specific exceptions. See `/packages/pro/LICENSE.md` for details.
+
+---
+
+### 2. Will this package ship as part of a Budibase app?
+
+If **yes**, use **MPL 2.0**.
+
+Budibase itself is licensed under **GPLv3**. Code that is incorporated into a GPLv3 project is generally subject to GPL's copyleft requirements.
+
+However, we do **not** require applications built with the Budibase builder to be open source.
+
+Packages that become part of a generated Budibase application should therefore use **MPL 2.0**. MPL 2.0 is compatible with GPLv3 while allowing Budibase apps to remain under any licence. It provides file-level copyleft, so changes to MPL-licensed files must remain open, without requiring the entire application to be GPL.
+
+---
+
+### 3. Everything else
+
+Use **GPLv3**.
+
+GPLv3 is the default licence for Budibase packages that are not paid features and are not distributed as part of generated Budibase applications.
+
+
