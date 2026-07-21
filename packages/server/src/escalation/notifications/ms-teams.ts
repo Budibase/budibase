@@ -314,11 +314,23 @@ export async function sendMSTeamsNotification({
   let linkServiceUrl: string | undefined
 
   if (config.globalUserId) {
+    const tenantScope = providerTenantId || integration.msTenantId
+    // Fail closed. Must discern scope in order to discern intended recipient
+    if (!tenantScope) {
+      console.warn(
+        "sendMSTeamsNotification: could not resolve Teams tenant, skipping",
+        {
+          escalationId: contextDoc._id,
+          globalUserId: config.globalUserId,
+        }
+      )
+      return
+    }
     const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
       sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
         globalUserId: config.globalUserId,
         provider: AgentChannelProvider.MSTEAMS,
-        providerTenantId: providerTenantId || integration.msTenantId,
+        providerTenantId: tenantScope,
       })
     )
     if (!link) {

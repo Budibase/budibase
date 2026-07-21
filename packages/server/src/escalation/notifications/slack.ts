@@ -136,11 +136,24 @@ export async function sendSlackNotification({
     try {
       teamId = (await client.auth.test()).team_id
     } catch (err) {
-      console.warn("sendSlackNotification: auth.test failed, unscoped lookup", {
+      console.warn("sendSlackNotification: auth.test failed", {
         escalationId: contextDoc._id,
         error: err instanceof Error ? err.message : String(err),
       })
     }
+  }
+
+  // Fail closed: An unscoped match could DM a same-named user in a different
+  // Slack workspace.
+  if (!teamId) {
+    console.warn(
+      "sendSlackNotification: could not resolve Slack workspace, skipping",
+      {
+        escalationId: contextDoc._id,
+        globalUserId: config.globalUserId,
+      }
+    )
+    return
   }
 
   const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
