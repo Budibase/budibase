@@ -6,6 +6,7 @@ import {
 } from "@budibase/types"
 import * as _sso from "../sso"
 import * as oidc from "../oidc"
+import { setEnv } from "../../../../environment"
 import nock from "nock"
 import type OpenIDConnectStrategy from "@govtechsg/passport-openidconnect"
 
@@ -49,6 +50,47 @@ describe("oidc", () => {
         expectedOptions,
         expect.anything()
       )
+    })
+  })
+
+  describe("fetchStrategyConfig - allowUnverifiedEmailLinking", () => {
+    let restoreEnv: () => void
+
+    afterEach(() => {
+      restoreEnv?.()
+    })
+
+    it("uses the database value when the env override is unset", async () => {
+      restoreEnv = setEnv({ OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING: undefined })
+
+      const config = await oidc.fetchStrategyConfig(
+        { ...oidcConfig, allowUnverifiedEmailLinking: true },
+        callbackUrl
+      )
+
+      expect(config.allowUnverifiedEmailLinking).toBe(true)
+    })
+
+    it("env override forces the value on regardless of the database", async () => {
+      restoreEnv = setEnv({ OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING: "true" })
+
+      const config = await oidc.fetchStrategyConfig(
+        { ...oidcConfig, allowUnverifiedEmailLinking: false },
+        callbackUrl
+      )
+
+      expect(config.allowUnverifiedEmailLinking).toBe(true)
+    })
+
+    it("env override forces the value off regardless of the database", async () => {
+      restoreEnv = setEnv({ OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING: "false" })
+
+      const config = await oidc.fetchStrategyConfig(
+        { ...oidcConfig, allowUnverifiedEmailLinking: true },
+        callbackUrl
+      )
+
+      expect(config.allowUnverifiedEmailLinking).toBe(false)
     })
   })
 

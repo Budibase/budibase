@@ -7,6 +7,7 @@ import {
   AutomationActionStepId,
   ContextUser,
   DocumentType,
+  ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationRecipient,
@@ -339,14 +340,16 @@ export async function resumeOperation({
   // approval as user input.
   const approvalInstructions =
     "ESCALATION APPROVAL: The user's request in this conversation has been " +
-    "reviewed and APPROVED by an authorised human reviewer. Approval is already " +
-    "granted - do NOT escalate or ask for approval again. Begin your reply by " +
-    "briefly confirming the request was approved, then CARRY OUT the user's " +
-    "original request: take the action they asked for using " +
-    "your available tools. Actually attempt it. If you cannot complete it because " +
-    "a required tool or capability is missing, say specifically what is missing " +
-    "and that the request could not be completed - never imply it was done when " +
-    "it was not."
+    "reviewed and APPROVED by an authorised human reviewer. This specific " +
+    "request is already approved - do not escalate or ask for approval again " +
+    "for it. Begin your reply by briefly confirming the request was approved, " +
+    "then CARRY OUT the user's original request: take the action they asked " +
+    "for using your available tools. Actually attempt it. If you cannot " +
+    "complete it because a required tool or capability is missing, say " +
+    "specifically what is missing and that the request could not be " +
+    "completed - never imply it was done when it was not. If doing so " +
+    "surfaces a genuinely new request that needs its own human sign-off, you " +
+    "may escalate that separately."
 
   const resumeUserId = ctx.userId ?? "escalation-resume"
 
@@ -399,7 +402,9 @@ export async function resumeOperation({
               decision: "approved",
               note:
                 "An authorised human reviewer approved this request. Proceed " +
-                "to fulfil it and confirm to the user. Do not escalate again.",
+                "to fulfil it and confirm to the user. Do not escalate this " +
+                "same request again - a genuinely new, different request " +
+                "can still be escalated separately.",
             },
           },
         },
@@ -415,8 +420,8 @@ export async function resumeOperation({
     sessionId: ctx.sessionId,
     user,
     operationId: ctx.operationId,
-    escalationResolved: true,
     additionalInstructions: approvalInstructions,
+    getRequestId: () => doc.requestId,
   })
 
   const pendingToolCalls = new Set<string>()
@@ -432,6 +437,19 @@ export async function resumeOperation({
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
+      onToolCalls: toolNames => {
+        const requestId = doc.requestId
+        if (requestId && toolNames.includes(ESCALATE_TOOL_NAME)) {
+          sdk.ai.agentRequests
+            .updateRequestStatus({ requestId, status: "needs_input" })
+            .catch(error => {
+              console.error(
+                "Failed to update agent request status to needs_input",
+                { escalationId, agentId: ctx.agentId, error }
+              )
+            })
+        }
+      },
       onToolCallCompleted: ({ toolName, status, input, output }) => {
         const requestId = doc.requestId
         if (!requestId) {
