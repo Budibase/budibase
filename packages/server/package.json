@@ -129,7 +129,7 @@
     "snowflake-sdk": "^2.0.4",
     "socket.io": "4.8.3",
     "svelte": "5.40.2",
-    "tar": "7.5.17",
+    "tar": "7.5.19",
     "tmp": "0.2.7",
     "to-json-schema": "0.2.5",
     "undici": "^8.5.0",
