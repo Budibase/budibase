@@ -22,7 +22,6 @@
     contextMenuStore,
     datasources,
     integrations,
-    queries,
     tables,
     workspaceAppStore,
     workspaceFavouriteStore,
@@ -62,7 +61,6 @@
     type ProjectResponse,
     PublishResourceState,
     type Agent,
-    type Datasource,
     type Table,
     type WorkspaceFavourite,
     type WorkspaceResource,
@@ -78,7 +76,11 @@
     getTypeLabel,
     sortHomeRows,
   } from "./_components/rows"
-  import { buildHomeUrl, type HomeUrlState } from "./_components/urlState"
+  import {
+    buildHomeUrl,
+    normaliseHomeSortColumn,
+    type HomeUrlState,
+  } from "./_components/urlState"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -180,25 +182,6 @@
     return null
   }
 
-  const normaliseSortColumn = (value: string | null): HomeSortColumn | null => {
-    if (!value) {
-      return null
-    }
-    if (value === "created") {
-      return "updated"
-    }
-    if (
-      value === "name" ||
-      value === "type" ||
-      value === "projects" ||
-      value === "status" ||
-      value === "updated"
-    ) {
-      return value
-    }
-    return null
-  }
-
   const normaliseSortOrder = (value: string | null): HomeSortOrder | null => {
     if (value === "asc" || value === "desc") {
       return value
@@ -220,7 +203,7 @@
     const q = params.get("q") ?? ""
     const type = normaliseType(params.get("type"))
     const project = params.get("project") ?? ""
-    const sort = normaliseSortColumn(params.get("sort"))
+    const sort = normaliseHomeSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
     return { q, type, project, sort, order }
   }
@@ -251,7 +234,7 @@
       return
     }
     sortColumn = column
-    sortOrder = column === "updated" || column === "created" ? "desc" : "asc"
+    sortOrder = column === "updated" ? "desc" : "asc"
   }
 
   const createApp = () => {
@@ -464,17 +447,10 @@
       notifications.success("Projects updated successfully")
       assignProjectModal?.hide()
 
-      // Propagation on the server may have additively assigned projectIds to
-      // dependencies of the resource we just saved, so refresh everything
-      // shown on the home page to reflect that.
-      const refreshes = await Promise.allSettled([
-        appStore.refresh(),
-        agentsStore.fetchAgents(),
-        datasources.fetch(),
-        tables.fetch(),
-        queries.fetch(),
-      ])
-      if (refreshes.some(result => result.status === "rejected")) {
+      try {
+        await appStore.refresh()
+      } catch (error) {
+        console.error(error)
         notifications.warning(
           "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
         )
@@ -532,14 +508,10 @@
       selectedProjectId = ""
       notifications.success(`Project '${projectName}' deleted successfully`)
 
-      const refreshes = await Promise.allSettled([
-        appStore.refresh(),
-        agentsStore.fetchAgents(),
-        datasources.fetch(),
-        tables.fetch(),
-        queries.fetch(),
-      ])
-      if (refreshes.some(result => result.status === "rejected")) {
+      try {
+        await appStore.refresh()
+      } catch (error) {
+        console.error(error)
         notifications.warning(
           "Project deleted, but some resources could not be refreshed. Reload the workspace to see all changes."
         )
@@ -601,10 +573,6 @@
 
       const refreshes = await Promise.allSettled([
         appStore.refresh(),
-        agentsStore.fetchAgents(),
-        datasources.fetch(),
-        tables.fetch(),
-        queries.fetch(),
         loadMetrics(),
       ])
       if (refreshes.some(result => result.status === "rejected")) {
@@ -859,7 +827,7 @@
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
     agents: $agentsStore.agents,
-    datasources: $datasources.list as Datasource[],
+    datasources: $datasources.list,
     tables: $tables.list,
     getFavourite,
   })
@@ -992,8 +960,7 @@
     if (project) {
       selectedProjectId = project
     }
-    const sortAllowed =
-      sort && (projectsEnabled || (sort !== "projects" && sort !== "created"))
+    const sortAllowed = sort && (projectsEnabled || sort !== "projects")
     if (sortAllowed) {
       sortColumn = sort
     } else {
@@ -1084,72 +1051,74 @@
     <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     {#if projectsEnabled}
-      <HomeProjectTabs
-        projects={$projectsStore}
-        {selectedProjectId}
-        onSelect={projectId => (selectedProjectId = projectId)}
-        onCreateProject={createProject}
-        onEditProject={editProject}
-        onDeleteProject={() => confirmDeleteProjectDialog?.show()}
-        onImportProject={importProject}
-        onExportProject={exportProject}
-      />
+      <div class="project-resources">
+        <HomeProjectTabs
+          projects={$projectsStore}
+          {selectedProjectId}
+          onSelect={projectId => (selectedProjectId = projectId)}
+          onCreateProject={createProject}
+          onEditProject={editProject}
+          onDeleteProject={() => confirmDeleteProjectDialog?.show()}
+          onImportProject={importProject}
+          onExportProject={exportProject}
+        />
 
-      <HomeResourcePanel>
-        {#snippet toolbar()}
-          <div class="panel-toolbar">
-            <HomeControls
-              {typeFilter}
-              variant="panel"
-              onTypeChange={setTypeFilter}
-            />
-            <div class="panel-toolbar__right">
-              <div class="search-wrapper">
-                <Icon name="magnifying-glass" size="S" />
-                <input
-                  class="search-input"
-                  type="text"
-                  placeholder="Search"
-                  bind:value={searchTerm}
+        <HomeResourcePanel>
+          {#snippet toolbar()}
+            <div class="panel-toolbar">
+              <HomeControls
+                {typeFilter}
+                variant="panel"
+                onTypeChange={setTypeFilter}
+              />
+              <div class="panel-toolbar__right">
+                <div class="search-wrapper">
+                  <Icon name="magnifying-glass" size="S" />
+                  <input
+                    class="search-input"
+                    type="text"
+                    placeholder="Search"
+                    bind:value={searchTerm}
+                  />
+                </div>
+                <HomeCreateMenu
+                  variant="pill"
+                  onCreateAgent={createAgent}
+                  onCreateAutomation={createAutomation}
+                  onCreateApp={createApp}
+                  onCreateConnection={() => goToCreate("data/new")}
+                  onCreateTable={openCreateTable}
+                  onCreateApi={() => goToCreate("apis/new")}
                 />
               </div>
-              <HomeCreateMenu
-                variant="pill"
-                onCreateAgent={createAgent}
-                onCreateAutomation={createAutomation}
-                onCreateApp={createApp}
-                onCreateConnection={() => goToCreate("data/new")}
-                onCreateTable={openCreateTable}
-                onCreateApi={() => goToCreate("apis/new")}
-              />
             </div>
-          </div>
-        {/snippet}
+          {/snippet}
 
-        <HomeTable
-          rows={filteredRows}
-          allRowsCount={allRows.length}
-          {typeFilter}
-          {searchTerm}
-          {projectsEnabled}
-          {selectedProjectName}
-          {sortColumn}
-          {sortOrder}
-          {highlightedRowId}
-          variant="panel"
-          onOpenRow={openRow}
-          onOpenContextMenu={openHomeContextMenu}
-          onClearSearch={() => (searchTerm = "")}
-          onResetFilters={() => {
-            typeFilter = "all"
-            selectedProjectId = ""
-          }}
-          onSortChange={setSort}
-          onCreateAgent={createAgent}
-          onCreateAutomation={createAutomation}
-          onCreateApp={createApp}
-        />
-      </HomeResourcePanel>
+          <HomeTable
+            rows={filteredRows}
+            allRowsCount={allRows.length}
+            {typeFilter}
+            {searchTerm}
+            {projectsEnabled}
+            {selectedProjectName}
+            {sortColumn}
+            {sortOrder}
+            {highlightedRowId}
+            variant="panel"
+            onOpenRow={openRow}
+            onOpenContextMenu={openHomeContextMenu}
+            onClearSearch={() => (searchTerm = "")}
+            onResetFilters={() => {
+              typeFilter = "all"
+              selectedProjectId = ""
+            }}
+            onSortChange={setSort}
+            onCreateAgent={createAgent}
+            onCreateAutomation={createAutomation}
+            onCreateApp={createApp}
+          />
+        </HomeResourcePanel>
+      </div>
     {:else}
       <div class="controls-row">
         <HomeControls {typeFilter} onTypeChange={setTypeFilter} />
@@ -1356,6 +1325,13 @@
 
   .content--projects {
     gap: 20px;
+  }
+
+  .project-resources {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
   }
 
   .header-link {
