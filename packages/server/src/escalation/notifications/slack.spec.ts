@@ -22,9 +22,12 @@ import {
   type EscalationContextDoc,
   type EscalationNotificationDoc,
 } from "@budibase/types"
+import { WebClient } from "@slack/web-api"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import sdk from "../../sdk"
 import { sendSlackNotification } from "./slack"
+
+const mockWebClient = WebClient as unknown as jest.Mock
 
 // The bot lives in TEAM_RIGHT, so a DM to this user must go to their identity
 // in that team. TEAM_WRONG sorts lexically first ("0" < "9"), so an unscoped
@@ -137,6 +140,21 @@ describe("sendSlackNotification", () => {
     expect(mockPostMessage).toHaveBeenCalledTimes(1)
     expect(mockPostMessage).toHaveBeenCalledWith(
       expect.objectContaining({ channel: USER_RIGHT })
+    )
+  })
+
+  it("uses a bounded, non-retrying client so a Slack outage can't stall processing", async () => {
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    await seedLinks(globalUserId)
+    mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendSlackNotification({ notifDoc, contextDoc })
+    )
+
+    expect(mockWebClient).toHaveBeenCalledWith(
+      "xoxb-token",
+      expect.objectContaining({ retryConfig: { retries: 0 } })
     )
   })
 })

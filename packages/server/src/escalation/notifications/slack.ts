@@ -109,7 +109,12 @@ export async function sendSlackNotification({
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,
   })
-  const client = new WebClient(integration.botToken)
+
+  // Fail quickly without retrying
+  const client = new WebClient(integration.botToken, {
+    retryConfig: { retries: 0 },
+    timeout: 5000,
+  })
 
   if (config.channelId) {
     await client.chat.postMessage({
