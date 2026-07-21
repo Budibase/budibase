@@ -11,6 +11,7 @@
   import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
   import HomeCreateMenu from "./_components/HomeCreateMenu.svelte"
+  import HomeHeaderActions from "./_components/HomeHeaderActions.svelte"
   import HomeMetrics from "./_components/HomeMetrics.svelte"
   import HomeProjectTabs from "./_components/HomeProjectTabs.svelte"
   import HomeResourcePanel from "./_components/HomeResourcePanel.svelte"
@@ -35,12 +36,10 @@
     licensing,
     projectsStore,
   } from "@/stores/portal"
-  import FreeTrialBanner from "@/components/portal/licensing/FreeTrialBanner.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     Body,
-    Button,
     Icon,
     Modal,
     type ModalAPI,
@@ -888,7 +887,6 @@
       ),
     }))
 
-  $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
     $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
   $: showBudibaseAIMetric =
@@ -997,18 +995,13 @@
         </Body>
       </div>
 
-      <div class="header-actions">
-        {#if projectsEnabled}
-          <button type="button" class="header-link" on:click={openUpgradePage}>
-            Upgrade plan
-          </button>
-        {:else if showHeaderActions}
-          <FreeTrialBanner show={$licensing.showTrialBanner} />
-        {/if}
-        <Button size="M" secondary on:click={openContactSales}>
-          Contact sales
-        </Button>
-      </div>
+      <HomeHeaderActions
+        {projectsEnabled}
+        isEnterprisePlan={$licensing.isEnterprisePlan}
+        showTrialBanner={$licensing.showTrialBanner}
+        onUpgradePlan={openUpgradePage}
+        onContactSales={openContactSales}
+      />
     </div>
 
     {#if automationErrorEntries.length}
@@ -1334,20 +1327,6 @@
     min-width: 0;
   }
 
-  .header-link {
-    border: none;
-    background: none;
-    padding: 0;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-s);
-    color: var(--spectrum-global-color-gray-900);
-    cursor: pointer;
-  }
-
-  .header-link:hover {
-    color: var(--spectrum-global-color-gray-800);
-  }
-
   .panel-toolbar {
     display: flex;
     align-items: center;
@@ -1407,12 +1386,6 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-l);
-  }
-
-  .header-actions {
-    display: flex;
-    gap: var(--spacing-l);
-    align-items: center;
   }
 
   .controls-row {
