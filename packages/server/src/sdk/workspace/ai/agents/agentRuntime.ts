@@ -173,76 +173,6 @@ ${operations
   )
   .join("\n")}`
 
-const intentOnlyOutputSchema = z.object({
-  intent: operationIntentSchema.nullable(),
-  reason: z.string(),
-})
-type IntentOnlyOutput = z.infer<typeof intentOnlyOutputSchema>
-
-const buildIntentOnlyInstructions = (
-  operation: AgentOperation
-) => `You decide the intent of the latest user message against a single Budibase agent operation - this operation is already selected, you are not choosing between operations.
-
-${INTENT_DECISION_GUIDANCE}
-
-Operation:
-- name: ${operation.name}
-  instructions:
-  ${(operation.promptInstructions || "None").trim() || "None"}
-
-Return only the structured output.`
-
-// Classifies intent for a mechanically-pinned single operation (no routing
-// between operations involved) - used when MULTIPLE_OPERATIONS is off, where
-// there's no ambiguity about *which* operation applies, but whether this
-// message executes it or just queries its domain still needs a real judgment.
-const classifyIntentForOperation = async ({
-  agent,
-  operation,
-  latestQuestion,
-  llm,
-}: {
-  agent: Agent
-  operation: AgentOperation
-  latestQuestion: string
-  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
-}): Promise<OperationIntent> => {
-  if (!latestQuestion.trim()) {
-    return "execute"
-  }
-
-  const classifier = new ToolLoopAgent({
-    model: wrapLanguageModel({
-      model: llm.chat,
-      middleware: extractReasoningMiddleware({
-        tagName: "think",
-      }),
-    }),
-    instructions: buildIntentOnlyInstructions(operation),
-    stopWhen: stepCountIs(1),
-    providerOptions: llm.providerOptions?.(false),
-    output: Output.object({ schema: intentOnlyOutputSchema }),
-    headers: {
-      "x-litellm-tags": "bb-operation-routing",
-    },
-  })
-
-  try {
-    const result = await classifier.stream({
-      prompt: latestQuestion,
-    })
-    const route = (await result.output) as IntentOnlyOutput
-    return route?.intent ?? "execute"
-  } catch (error) {
-    console.error("Operation intent classification failed", {
-      agentId: agent._id,
-      operationId: operation.id,
-      error,
-    })
-    return "execute"
-  }
-}
-
 // Remembers the operation a conversation is currently in, so a follow-up turn
 // the router can't classify ("yes", "ok") keeps the same operation/tools.
 const sessionOperationKey = (sessionId: string) =>
@@ -279,22 +209,6 @@ export const chooseOperationForQuestion = async ({
   if (liveOperations.length === 0) {
     return {
       action: "no_operation",
-    }
-  }
-  const multipleOperationsEnabled = await features.isEnabled(
-    FeatureFlag.MULTIPLE_OPERATIONS
-  )
-  if (!multipleOperationsEnabled) {
-    const intent = await classifyIntentForOperation({
-      agent,
-      operation: liveOperations[0],
-      latestQuestion,
-      llm,
-    })
-    return {
-      action: "select_operation",
-      operation: liveOperations[0],
-      intent,
     }
   }
   if (!latestQuestion.trim()) {

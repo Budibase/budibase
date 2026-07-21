@@ -7,14 +7,11 @@
     notifications,
   } from "@budibase/bbui"
   import { type EnrichedBinding } from "@budibase/types"
-  import { featureFlags } from "@/stores/portal"
   import { API } from "@/api"
   import { tick } from "svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
-
-  const AI_AGENT_INSTRUCTIONS_FLAG = "AI_AGENT_INSTRUCTIONS"
 
   export interface Props {
     agentName?: string
@@ -66,9 +63,6 @@
       .map(binding => `{{ ${binding} }}`)
   )
 
-  let enabled = $derived(
-    !!($featureFlags as Record<string, boolean>)[AI_AGENT_INSTRUCTIONS_FLAG]
-  )
   let modal = $state<Modal>()
   let promptField = $state<TextArea>()
   let promptInputKey = $state(0)
@@ -141,80 +135,78 @@
   }
 </script>
 
-{#if enabled}
-  <Button secondary size="S" icon="sparkle" on:click={() => modal?.show()}>
-    {triggerLabel}
-  </Button>
+<Button secondary size="S" icon="sparkle" on:click={() => modal?.show()}>
+  {triggerLabel}
+</Button>
 
-  <Modal
-    bind:this={modal}
-    on:show={async () => {
-      await tick()
-      promptField?.focus()
-    }}
-    on:hide={resetState}
+<Modal
+  bind:this={modal}
+  on:show={async () => {
+    await tick()
+    promptField?.focus()
+  }}
+  on:hide={resetState}
+>
+  <ModalContent
+    title={generatedInstructions
+      ? "Review Generated Instructions"
+      : "Generate Instructions"}
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
   >
-    <ModalContent
-      title={generatedInstructions
-        ? "Review Generated Instructions"
-        : "Generate Instructions"}
-      size="L"
-      showCloseIcon
-      showConfirmButton={false}
-      showCancelButton={false}
-    >
-      {#if generatedInstructions}
-        <div class="generated-instructions-preview">
-          <CodeEditor
-            value={generatedInstructions}
-            bindings={promptBindings}
-            {bindingIcons}
-            mode={EditorModes.Handlebars}
-            renderBindingsAsTags={true}
-            renderMarkdownDecorations={true}
-            placeholder=""
-            on:change={event => {
-              generatedInstructions = event.detail || ""
-            }}
-          />
-        </div>
-        <div class="generate-instructions-actions">
-          <Button secondary on:click={hideModal}>Cancel</Button>
-          <Button cta on:click={applyGeneratedInstructions}
-            >Replace current</Button
-          >
-        </div>
-      {:else}
-        {#key promptInputKey}
-          <TextArea
-            label="Prompt"
-            bind:this={promptField}
-            updateOnChange
-            minHeight={140}
-            disabled={generating}
-            placeholder="Describe what kind of instructions you want to generate..."
-            on:change={event => {
-              canGenerate = !!event.detail?.trim()
-            }}
-          />
-        {/key}
-        <div class="generate-instructions-actions">
-          <Button secondary disabled={generating} on:click={hideModal}
-            >Cancel</Button
-          >
-          <Button
-            cta
-            icon="sparkle"
-            disabled={generating || !canGenerate}
-            on:click={generateInstructions}
-          >
-            {generating ? "Generating..." : "Generate"}
-          </Button>
-        </div>
-      {/if}
-    </ModalContent>
-  </Modal>
-{/if}
+    {#if generatedInstructions}
+      <div class="generated-instructions-preview">
+        <CodeEditor
+          value={generatedInstructions}
+          bindings={promptBindings}
+          {bindingIcons}
+          mode={EditorModes.Handlebars}
+          renderBindingsAsTags={true}
+          renderMarkdownDecorations={true}
+          placeholder=""
+          on:change={event => {
+            generatedInstructions = event.detail || ""
+          }}
+        />
+      </div>
+      <div class="generate-instructions-actions">
+        <Button secondary on:click={hideModal}>Cancel</Button>
+        <Button cta on:click={applyGeneratedInstructions}
+          >Replace current</Button
+        >
+      </div>
+    {:else}
+      {#key promptInputKey}
+        <TextArea
+          label="Prompt"
+          bind:this={promptField}
+          updateOnChange
+          minHeight={140}
+          disabled={generating}
+          placeholder="Describe what kind of instructions you want to generate..."
+          on:change={event => {
+            canGenerate = !!event.detail?.trim()
+          }}
+        />
+      {/key}
+      <div class="generate-instructions-actions">
+        <Button secondary disabled={generating} on:click={hideModal}
+          >Cancel</Button
+        >
+        <Button
+          cta
+          icon="sparkle"
+          disabled={generating || !canGenerate}
+          on:click={generateInstructions}
+        >
+          {generating ? "Generating..." : "Generate"}
+        </Button>
+      </div>
+    {/if}
+  </ModalContent>
+</Modal>
 
 <style>
   .generate-instructions-actions {
