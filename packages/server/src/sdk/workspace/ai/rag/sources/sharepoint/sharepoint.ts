@@ -718,9 +718,10 @@ const runSharePointSourcesForOperation = async (
       totalDiscovered += files.length
       for (const file of files) {
         throwIfSyncAborted(signal)
+        const qualifiedPath = `${drive.name}/${file.path}`
         if (
           !isSharePointPathIncludedByFilters(
-            `${drive.name}/${file.path}`,
+            qualifiedPath,
             sourceFilters,
             file.path
           )
@@ -861,7 +862,7 @@ const runSharePointSourcesForOperation = async (
                 siteId,
                 driveId,
                 itemId: file.itemId,
-                path: file.path,
+                path: qualifiedPath,
                 externalId: `${siteId}:${driveId}:${file.itemId}`,
                 etag: file.etag,
                 lastModifiedAt: file.lastModifiedAt,

@@ -407,7 +407,7 @@ describe("rag/sharepoint sync deduplication", () => {
           siteId,
           driveId: "drive-b",
           itemId: "item-1",
-          path: "new.txt",
+          path: "drive-b/new.txt",
           externalId: `${siteId}:drive-b:item-1`,
         }),
         filename: "new.txt",
@@ -547,13 +547,18 @@ describe("rag/sharepoint sync deduplication", () => {
       name: "keeps legacy relative filters matching across libraries",
       patterns: ["!**", "Policies/**"],
       expectedDriveIds: ["drive-a", "drive-b"],
+      expectedPaths: [
+        "Documents/Policies/handbook.txt",
+        "Department Files/Policies/handbook.txt",
+      ],
     },
     {
       name: "limits library filters to one library",
       patterns: ["!**", "Documents/Policies/**"],
       expectedDriveIds: ["drive-a"],
+      expectedPaths: ["Documents/Policies/handbook.txt"],
     },
-  ])("$name", async ({ patterns, expectedDriveIds }) => {
+  ])("$name", async ({ patterns, expectedDriveIds, expectedPaths }) => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
@@ -624,8 +629,12 @@ describe("rag/sharepoint sync deduplication", () => {
     const uploadedDriveIds = mockKnowledgeBaseUploadFile.mock.calls.map(
       ([input]) => input.source.driveId
     )
+    const uploadedPaths = mockKnowledgeBaseUploadFile.mock.calls.map(
+      ([input]) => input.source.path
+    )
 
     expect(uploadedDriveIds.sort()).toEqual([...expectedDriveIds].sort())
+    expect(uploadedPaths.sort()).toEqual([...expectedPaths].sort())
     expect(result).toMatchObject({
       synced: expectedDriveIds.length,
       failed: 0,
