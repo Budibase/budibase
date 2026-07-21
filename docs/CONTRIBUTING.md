@@ -28,6 +28,8 @@ We use [Vouch](https://github.com/mitchellh/vouch) to prevent explicitly denounc
 
 You do not need to be vouched for before opening or merging a pull request. Pull requests from users who have been explicitly denounced will be closed automatically.
 
+Each contributor may have only one open pull request at a time.
+
 All pull requests remain subject to our normal review and contribution requirements.
 
 ## Not Sure Where to Start?
