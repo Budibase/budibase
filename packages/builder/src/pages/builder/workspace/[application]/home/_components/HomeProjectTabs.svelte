@@ -138,7 +138,7 @@
     gap: 4px;
     min-width: 0;
     overflow-x: auto;
-    padding: 4px 4px 0;
+    padding: 4px 4px 0 0;
     scrollbar-width: none;
   }
 
