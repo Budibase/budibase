@@ -140,7 +140,8 @@
     "**/nan": "2.22.0",
     "globals": "15.13.0",
     "esm": "npm:esm-wallaby@3.2.35",
-    "@types/koa": "3.0.1"
+    "@types/koa": "3.0.1",
+    "ws": "8.21.0"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"
