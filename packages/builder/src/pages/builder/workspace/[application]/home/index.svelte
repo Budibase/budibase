@@ -1063,7 +1063,7 @@
           onExportProject={exportProject}
         />
 
-        <HomeResourcePanel attachTopLeft={!selectedProjectId}>
+        <HomeResourcePanel>
           {#snippet toolbar()}
             <div class="panel-toolbar">
               <HomeControls

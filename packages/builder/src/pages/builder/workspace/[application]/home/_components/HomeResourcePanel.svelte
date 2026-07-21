@@ -6,16 +6,12 @@
   interface Props {
     toolbar?: Snippet
     children?: Snippet
-    attachTopLeft?: boolean
   }
 
-  let { toolbar, children, attachTopLeft = false }: Props = $props()
+  let { toolbar, children }: Props = $props()
 </script>
 
-<div
-  class="resource-panel"
-  class:resource-panel--attached-top-left={attachTopLeft}
->
+<div class="resource-panel">
   <div class="resource-panel__toolbar">
     {@render toolbar?.()}
   </div>
@@ -29,12 +25,9 @@
     width: 100%;
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
+    border-top-left-radius: 0;
     overflow: hidden;
     background: var(--spectrum-global-color-gray-100);
-  }
-
-  .resource-panel--attached-top-left {
-    border-top-left-radius: 0;
   }
 
   .resource-panel__toolbar {
