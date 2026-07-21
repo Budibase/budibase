@@ -1267,6 +1267,34 @@ describe("/projects", () => {
       })
     })
 
+    it("rejects non-project document ids through the assignment SDK", async () => {
+      await withProjectsEnabled(async () => {
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          await expect(
+            sdk.projects.updateResourceProjectAssignment({
+              resourceId: workspaceApp._id!,
+              resourceRev: workspaceApp._rev!,
+              projectIds: [datasource._id!],
+            })
+          ).rejects.toThrow(`Project '${datasource._id}' not found.`)
+        })
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
     it("rejects resources that are not direct project members", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
@@ -1724,6 +1752,80 @@ describe("/projects", () => {
 
         const updatedTable = await config.api.table.get(table._id!)
         expect(updatedTable.projectIds).toEqual([project._id])
+      })
+    })
+
+    it("does not restore excluded sibling query dependencies", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const excludedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Excluded table" })
+        )
+        const includedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Included table" })
+        )
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          name: `Query using ${excludedTable._id}`,
+        })
+
+        await config.api.project.updateAssignment(datasource._id!, {
+          resourceRev: datasource._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          name: `Query using ${includedTable._id}`,
+        })
+
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.table.get(includedTable._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("propagates existing references when a screen moves to an assigned app", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp: sourceApp } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "Source app",
+              url: "/source-app",
+            })
+          )
+        const { workspaceApp: destinationApp } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "Destination app",
+              url: "/destination-app",
+              projectIds: [project._id],
+            })
+          )
+        const automation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(sourceApp._id!, automation._id!)
+        )
+
+        await config.api.screen.save({
+          ...screen,
+          workspaceAppId: destinationApp._id,
+        })
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
       })
     })
 

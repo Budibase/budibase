@@ -2,7 +2,6 @@ import { context, features, HTTPError } from "@budibase/backend-core"
 import {
   type AnyDocument,
   FeatureFlag,
-  type Project,
   type WithDocMetadata,
 } from "@budibase/types"
 import {
@@ -14,6 +13,7 @@ import {
   type ProjectAssignable,
   withProjectIds,
 } from "./utils"
+import { get as getProject } from "./crud"
 
 interface UpdateResourceProjectAssignmentInput {
   resourceId: string
@@ -55,14 +55,9 @@ export const updateResourceProjectAssignment = async ({
 
   const db = context.getWorkspaceDB()
   const uniqueProjectIds = Array.from(new Set(projectIds))
-  const projects = uniqueProjectIds.length
-    ? await db.getMultiple<Project>(uniqueProjectIds, {
-        allowMissing: true,
-      })
-    : []
-  const existingProjectIds = new Set(projects.map(project => project._id))
+  const projects = await Promise.all(uniqueProjectIds.map(getProject))
   const missingProjectId = uniqueProjectIds.find(
-    projectId => !existingProjectIds.has(projectId)
+    (_projectId, index) => !projects[index]
   )
   if (missingProjectId) {
     throw new HTTPError(`Project '${missingProjectId}' not found.`, 404)
