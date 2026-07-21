@@ -1,4 +1,4 @@
 import * as controller from "../../controllers/system/restore"
-import { loggedInRoutes } from "../endpointGroups"
+import { publicNoTenancyRoutes } from "../endpointGroups"
 
-loggedInRoutes.post("/api/system/restored", controller.systemRestored)
+publicNoTenancyRoutes.post("/api/system/restored", controller.systemRestored)

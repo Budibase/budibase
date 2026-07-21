@@ -1,10 +1,33 @@
 import { EndpointGroup, CtxFn } from "./"
+import type { EndpointGroupOptions } from "./EndpointGroup"
+import type { EndpointMatcher } from "@budibase/types"
+
+type GroupMiddleware = CtxFn | { middleware: CtxFn; first: boolean }
 
 export default class EndpointGroupList {
   private groups: EndpointGroup[] = []
 
-  group(...middlewares: (CtxFn | { middleware: CtxFn; first: boolean })[]) {
-    const group = new EndpointGroup()
+  group(...args: GroupMiddleware[]): EndpointGroup
+  group(
+    options: EndpointGroupOptions,
+    ...middlewares: GroupMiddleware[]
+  ): EndpointGroup
+  group(
+    optionsOrMiddleware?: EndpointGroupOptions | GroupMiddleware,
+    ...remainingMiddlewares: GroupMiddleware[]
+  ) {
+    const isOptions =
+      optionsOrMiddleware &&
+      typeof optionsOrMiddleware === "object" &&
+      !("middleware" in optionsOrMiddleware) &&
+      ("public" in optionsOrMiddleware || "noTenancy" in optionsOrMiddleware)
+    const options = isOptions ? optionsOrMiddleware : {}
+    const middlewares = isOptions
+      ? remainingMiddlewares
+      : [optionsOrMiddleware, ...remainingMiddlewares].filter(
+          (middleware): middleware is GroupMiddleware => !!middleware
+        )
+    const group = new EndpointGroup(options)
     if (middlewares.length) {
       middlewares.forEach(middleware => {
         if ("first" in middleware) {
@@ -38,5 +61,9 @@ export default class EndpointGroupList {
     }
 
     return [...staticEndpoints, ...parameterizedEndpoints]
+  }
+
+  endpointMatchers(options: EndpointGroupOptions): EndpointMatcher[] {
+    return this.groups.flatMap(group => group.endpointMatchers(options))
   }
 }

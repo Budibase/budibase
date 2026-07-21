@@ -1,7 +1,11 @@
 import * as authController from "../../controllers/global/auth"
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
-import { loggedInRoutes } from "../endpointGroups"
+import {
+  loggedInRoutes,
+  publicNoTenancyRoutes,
+  publicRoutes,
+} from "../endpointGroups"
 import { emailLockout, ipLockout } from "../../../middleware"
 
 function buildAuthValidation() {
@@ -27,7 +31,7 @@ function buildResetUpdateValidation() {
   }).required().unknown(false))
 }
 
-loggedInRoutes
+publicRoutes
   // PASSWORD
   .post(
     "/api/global/auth/:tenantId/login",
@@ -36,7 +40,6 @@ loggedInRoutes
     emailLockout,
     authController.login
   )
-  .post("/api/global/auth/logout", authController.logout)
   .post(
     "/api/global/auth/:tenantId/reset",
     buildResetValidation(),
@@ -47,10 +50,6 @@ loggedInRoutes
     buildResetUpdateValidation(),
     authController.resetUpdate
   )
-  // INIT
-  .post("/api/global/auth/init", authController.setInitInfo)
-  .get("/api/global/auth/init", authController.getInitInfo)
-
   // DATASOURCE - MULTI TENANT
   .get(
     "/api/global/auth/:tenantId/datasource/:provider",
@@ -76,7 +75,6 @@ loggedInRoutes
 
   // GOOGLE - SINGLE TENANT - DEPRECATED
   .get("/api/global/auth/google/callback", authController.googleCallback)
-  .get("/api/admin/auth/google/callback", authController.googleCallback)
 
   // OIDC - MULTI TENANT
   .get(
@@ -87,4 +85,12 @@ loggedInRoutes
 
   // OIDC - SINGLE TENANT - DEPRECATED
   .get("/api/global/auth/oidc/callback", authController.oidcCallback)
+
+loggedInRoutes
+  .post("/api/global/auth/logout", authController.logout)
+  .post("/api/global/auth/init", authController.setInitInfo)
+  .get("/api/global/auth/init", authController.getInitInfo)
+
+publicNoTenancyRoutes
+  .get("/api/admin/auth/google/callback", authController.googleCallback)
   .get("/api/admin/auth/oidc/callback", authController.oidcCallback)
