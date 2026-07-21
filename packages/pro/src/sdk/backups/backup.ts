@@ -3,6 +3,7 @@ import {
   context,
   db,
   events,
+  logging,
   objectStore,
   utils,
 } from "@budibase/backend-core"
@@ -13,6 +14,7 @@ import {
   BackupType,
   DocumentType,
   Workspace,
+  WorkspaceBackup,
   WorkspaceBackupContents,
   WorkspaceBackupMetadata,
 } from "@budibase/types"
@@ -89,15 +91,19 @@ async function updateWorkspaceBackup(backupId: string, backupName: string) {
   return backups.updateWorkspaceBackupMetadata(backupId, backupName)
 }
 
-async function deleteWorkspaceBackup(backupId: string) {
-  const metadata = await backups.getWorkspaceBackupMetadata(backupId)
-  if (metadata.filename) {
+async function deleteWorkspaceBackupMetadata(backup: WorkspaceBackup) {
+  if (backup.filename) {
     await objectStore.deleteFile(
       objectStore.ObjectStoreBuckets.BACKUPS,
-      metadata.filename
+      backup.filename
     )
   }
-  return backups.deleteWorkspaceBackupMetadata(backupId)
+  return backups.deleteWorkspaceBackupMetadata(backup)
+}
+
+async function deleteWorkspaceBackup(backupId: string) {
+  const backup = await backups.getWorkspaceBackupMetadata(backupId)
+  return deleteWorkspaceBackupMetadata(backup)
 }
 
 async function deleteWorkspaceBackups(backupIds: string[]) {
@@ -117,6 +123,34 @@ async function deleteWorkspaceBackups(backupIds: string[]) {
   }
 
   return results
+}
+
+async function cleanupExpiredWorkspaceBackups() {
+  const result = {
+    deleted: 0,
+    failed: 0,
+  }
+  const expiredEnd = await backups.oldestBackupDate()
+  let page: string | undefined
+
+  do {
+    const expiredBackups = await backups.fetchExpiredWorkspaceBackups(
+      expiredEnd,
+      page
+    )
+    for (const backup of expiredBackups.backups) {
+      try {
+        await deleteWorkspaceBackupMetadata(backup)
+        result.deleted++
+      } catch (err) {
+        result.failed++
+        logging.logAlert(`Failed to cleanup expired backup ${backup._id}`, err)
+      }
+    }
+    page = expiredBackups.nextPage
+  } while (page)
+
+  return result
 }
 
 async function fetchWorkspaceBackups(
@@ -289,6 +323,9 @@ const pkg = {
   updateWorkspaceBackup: features.checkBackups(updateWorkspaceBackup),
   deleteWorkspaceBackup: features.checkBackups(deleteWorkspaceBackup),
   deleteWorkspaceBackups: features.checkBackups(deleteWorkspaceBackups),
+  cleanupExpiredWorkspaceBackups: features.checkBackups(
+    cleanupExpiredWorkspaceBackups
+  ),
   trackBackupError: features.checkBackups(trackBackupError),
 }
 
