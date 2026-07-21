@@ -807,9 +807,7 @@ describe("SharePoint Graph retries", () => {
       }),
     } as unknown as Response)
 
-    await expect(
-      listSharePointDrives(bearerToken, "site-1")
-    ).rejects.toEqual(
+    await expect(listSharePointDrives(bearerToken, "site-1")).rejects.toEqual(
       expect.objectContaining({
         message: "Invalid SharePoint pagination URL",
         status: 400,
