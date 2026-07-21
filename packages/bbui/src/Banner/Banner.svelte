@@ -1,22 +1,22 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte"
   import Icon from "../Icon/Icon.svelte"
 
-  let dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: void }>()
 
-  export let type = "info"
-  export let icon = "info"
-  export let size = "S"
-  export let extraButtonText = undefined
-  export let extraButtonAction = undefined
-  export let extraLinkText = undefined
-  export let extraLinkAction = undefined
-  export let showCloseButton = true
-  export let closeButtonTooltip = undefined
+  export let type: string = "info"
+  export let icon: string = "info"
+  export let size: "XXS" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "S"
+  export let extraButtonText: string | undefined = undefined
+  export let extraButtonAction: (() => void) | undefined = undefined
+  export let extraLinkText: string | undefined = undefined
+  export let extraLinkAction: (() => void) | undefined = undefined
+  export let showCloseButton: boolean = true
+  export let closeButtonTooltip: string | undefined = undefined
 
   let show = true
 
-  function clear() {
+  const clear = () => {
     show = false
     dispatch("change")
   }
