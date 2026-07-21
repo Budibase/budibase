@@ -259,6 +259,10 @@ export const normaliseComponentSearchTerm = (searchTerm: string) => {
   return searchTerm.trim().toLowerCase()
 }
 
+const getComponentTypeSearchText = (component: Component) => {
+  return component._component?.split("/").pop()
+}
+
 export const componentMatchesSearchTerm = (
   component: Component,
   searchTerm: string
@@ -271,7 +275,7 @@ export const componentMatchesSearchTerm = (
   return [
     getComponentText(component),
     getComponentName(component),
-    component._component,
+    getComponentTypeSearchText(component),
   ].some(value => value?.toLowerCase().includes(normalisedSearchTerm))
 }
 

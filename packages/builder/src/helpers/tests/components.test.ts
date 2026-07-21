@@ -78,12 +78,24 @@ describe("component tree search", () => {
     expect(componentMatchesSearchTerm(button, "primary")).toBe(true)
   })
 
-  it("matches raw component types", () => {
-    const table = component("table-1", "@budibase/standard-components/table")
+  it("matches component type names", () => {
+    const widget = component("widget-1", "@example/components/custom-widget")
 
-    expect(componentMatchesSearchTerm(table, "standard-components/table")).toBe(
-      true
+    expect(componentMatchesSearchTerm(widget, "custom-widget")).toBe(true)
+  })
+
+  it("does not match shared component type namespaces", () => {
+    const link = component(
+      "link-1",
+      "@budibase/standard-components/link",
+      "New Link"
     )
+
+    expect(componentMatchesSearchTerm(link, "standard-components/l")).toBe(
+      false
+    )
+    expect(componentMatchesSearchTerm(link, "budibase")).toBe(false)
+    expect(componentMatchesSearchTerm(link, "a")).toBe(false)
   })
 
   it("includes ancestors of descendant matches", () => {
