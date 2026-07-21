@@ -79,6 +79,7 @@ interface PrepareAgentChatRunParams {
 export interface AgentChatRun {
   latestQuestion: string
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -117,31 +118,42 @@ const operationRoutingActionSchema = z.enum([
   "no_operation",
 ])
 
+const operationIntentSchema = z.enum(["execute", "query"])
+
 const operationRouterOutputSchema = z.object({
   action: operationRoutingActionSchema,
   operationId: z.string().nullable(),
+  intent: operationIntentSchema.nullable(),
   reason: z.string(),
 })
 
 type OperationRoutingAction = z.infer<typeof operationRoutingActionSchema>
 type OperationRouterOutput = z.infer<typeof operationRouterOutputSchema>
+export type OperationIntent = z.infer<typeof operationIntentSchema>
 type OperationRoute =
   | {
       action: "select_operation"
       operation: AgentOperation
+      intent: OperationIntent
     }
   | {
       action: Exclude<OperationRoutingAction, "select_operation">
       operation?: undefined
     }
 
+const INTENT_DECISION_GUIDANCE = `- "execute" when fulfilling this message performs the concrete action that operation's instructions define - including an operation whose defined goal is to react to a topic (e.g. escalate to a human whenever a subject comes up), where a question about that subject still triggers the goal.
+- "query" when fulfilling this message does not perform that action - e.g. asking about the status or history of something the operation manages, without asking it to act again.
+This is about the operation's specific goal, not the grammatical form of the message: a question can be "execute" and an instruction-shaped sentence can be "query". If genuinely unsure, return "execute" - losing track of a real action is worse than tracking an extra query.
+Do not use the presence of a question mark, or an imperative verb, as a shortcut for this decision - always check it against the specific operation's own goal. For example: for an operation whose goal is to persist a new record, "create a ticket for my broken laptop" is "execute", "how many tickets do I have open?" is "query" (it asks about existing records, it doesn't create one), "I changed my mind about the ticket I just asked for" is still "execute" (it changes the outcome of the action, even if it isn't the original request), and "what kind of tickets can I create?" is "query" (it uses the word "create" but only asks what's possible). For an operation whose goal is to react whenever a topic comes up (e.g. escalate to a human whenever a subject is mentioned), both a statement and a question about that subject are "execute" - either one triggers the operation's actual goal, neither is just asking about a past record.`
+
 const buildOperationRoutingInstructions = (
   operations: AgentOperation[]
 ) => `You decide whether the assistant should use one Budibase agent operation, summarize the available operations, or proceed without an operation.
 
-Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId.
-Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId as null.
-Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId as null.
+Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId, and also decide its intent:
+${INTENT_DECISION_GUIDANCE}
+Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId and intent as null.
+Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId and intent as null.
 Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one unless it is clearly a capabilities-overview request.
 Use the operation name, instructions, tools, and knowledge setup as signals.
 Return only the structured output.
@@ -196,15 +208,6 @@ export const chooseOperationForQuestion = async ({
       action: "no_operation",
     }
   }
-  const multipleOperationsEnabled = await features.isEnabled(
-    FeatureFlag.MULTIPLE_OPERATIONS
-  )
-  if (!multipleOperationsEnabled) {
-    return {
-      action: "select_operation",
-      operation: liveOperations[0],
-    }
-  }
   if (!latestQuestion.trim()) {
     return {
       action: "no_operation",
@@ -257,6 +260,7 @@ export const chooseOperationForQuestion = async ({
     return {
       action: "select_operation",
       operation,
+      intent: route.intent ?? "execute",
     }
   } catch (error) {
     console.error("Operation routing failed", {
@@ -290,20 +294,23 @@ const selectOperationForRun = async ({
   if (operationId) {
     const operation = getLiveOperations(agent).find(o => o.id === operationId)
     route = operation
-      ? { action: "select_operation", operation }
+      ? { action: "select_operation", operation, intent: "execute" }
       : { action: "no_operation" }
   } else {
     route = await chooseOperationForQuestion({ agent, latestQuestion, llm })
   }
 
-  // Sticky
   if (route.action === "no_operation" && !operationId) {
     const lastOperationId = await getSessionOperationId(sessionId)
     const lastOperation = lastOperationId
       ? getLiveOperations(agent).find(o => o.id === lastOperationId)
       : undefined
     if (lastOperation) {
-      route = { action: "select_operation", operation: lastOperation }
+      route = {
+        action: "select_operation",
+        operation: lastOperation,
+        intent: "execute",
+      }
     }
   }
 
@@ -329,6 +336,7 @@ export interface PrepareAgentRunContextParams {
 export interface AgentRunContext {
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   routingAction: OperationRoute["action"]
   systemPrompt: string
   tools: ToolSet
@@ -392,6 +400,10 @@ export const prepareAgentRunContext = async ({
   return {
     llm,
     selectedOperation: routingDecision.operation,
+    operationIntent:
+      routingDecision.action === "select_operation"
+        ? routingDecision.intent
+        : undefined,
     routingAction: routingDecision.action,
     ...promptAndTools,
   }
@@ -440,6 +452,7 @@ export const prepareAgentChatRun = async ({
   const {
     llm,
     selectedOperation,
+    operationIntent,
     tools,
     toolDisplayNames,
     systemPrompt: baseSystemPrompt,
@@ -529,6 +542,7 @@ export const prepareAgentChatRun = async ({
   return {
     latestQuestion,
     selectedOperation,
+    operationIntent,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),

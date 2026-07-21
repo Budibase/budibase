@@ -95,6 +95,7 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 import type { ContextUser } from "@budibase/types"
+import { cache } from "@budibase/backend-core"
 import { tool, ToolLoopAgent } from "ai"
 import { z } from "zod"
 import {
@@ -168,24 +169,7 @@ describe("chooseOperationForQuestion", () => {
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
 
-  it("returns the first live operation when multiple operations are disabled", async () => {
-    const result = await chooseOperationForQuestion({
-      agent,
-      latestQuestion: "Book time off",
-      llm,
-    })
-
-    expect(result).toEqual({
-      action: "select_operation",
-      operation: operation1,
-    })
-    expect(mockIsEnabled).toHaveBeenCalledWith(FeatureFlag.MULTIPLE_OPERATIONS)
-    expect(ToolLoopAgent).not.toHaveBeenCalled()
-  })
-
-  it("returns no_operation for blank questions when routing is enabled", async () => {
-    mockIsEnabled.mockResolvedValue(true)
-
+  it("returns no_operation for blank questions", async () => {
     const result = await chooseOperationForQuestion({
       agent,
       latestQuestion: "   ",
@@ -198,9 +182,7 @@ describe("chooseOperationForQuestion", () => {
     expect(ToolLoopAgent).not.toHaveBeenCalled()
   })
 
-  it("returns the routed operation when routing is enabled", async () => {
-    mockIsEnabled.mockResolvedValue(true)
-
+  it("returns the routed operation", async () => {
     const result = await chooseOperationForQuestion({
       agent,
       latestQuestion: "Book time off",
@@ -210,6 +192,7 @@ describe("chooseOperationForQuestion", () => {
     expect(result).toEqual({
       action: "select_operation",
       operation: operation2,
+      intent: "execute",
     })
     expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
     expect(ToolLoopAgent).toHaveBeenCalledWith(
@@ -318,6 +301,52 @@ describe("chooseOperationForQuestion", () => {
       action: "no_operation",
     })
   })
+
+  it.each([
+    ["query", "query"],
+    [null, "execute"],
+  ])(
+    "resolves a router intent of %s to %s",
+    async (routerIntent, expectedIntent) => {
+      mockIsEnabled.mockResolvedValue(true)
+      mockRouterStream.mockResolvedValue({
+        output: Promise.resolve({
+          action: "select_operation",
+          operationId: "operation_2",
+          intent: routerIntent,
+          reason: "HR question",
+        }),
+      })
+
+      const result = await chooseOperationForQuestion({
+        agent,
+        latestQuestion: "Book time off",
+        llm,
+      })
+
+      expect(result).toEqual({
+        action: "select_operation",
+        operation: operation2,
+        intent: expectedIntent,
+      })
+    }
+  )
+
+  it("includes the execute/query intent criterion in the routing instructions", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+
+    await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "Book time off",
+      llm,
+    })
+
+    const instructions = jest.mocked(ToolLoopAgent).mock.calls[0][0]
+      .instructions as string
+    expect(instructions).toContain('"execute"')
+    expect(instructions).toContain('"query"')
+    expect(instructions).toContain("not the grammatical form")
+  })
 })
 
 describe("prepareAgentRunContext", () => {
@@ -397,6 +426,51 @@ describe("prepareAgentRunContext", () => {
         fallbackPromptInstructions: expect.stringContaining("- IT support"),
       })
     )
+  })
+
+  it("exposes the router's intent as operationIntent when an operation is selected", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: "operation_2",
+        intent: "query",
+        reason: "Asking about existing HR requests",
+      }),
+    })
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "How many HR requests do I have open?",
+    })
+
+    expect(result.selectedOperation).toEqual(agent.operations[1])
+    expect(result.operationIntent).toBe("query")
+  })
+
+  it("defaults operationIntent to execute for a sticky follow-up", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "no_operation",
+        operationId: null,
+        intent: null,
+        reason: "Too ambiguous to classify",
+      }),
+    })
+    jest.mocked(cache.get).mockResolvedValueOnce("operation_2")
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "yes",
+    })
+
+    expect(result.selectedOperation).toEqual(agent.operations[1])
+    expect(result.operationIntent).toBe("execute")
   })
 })
 
@@ -529,5 +603,12 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({ tools: undefined })
     )
+  })
+
+  it("carries operationIntent through to the returned AgentChatRun", async () => {
+    const run = await runFor(operationWithRecipients)
+
+    expect(run.selectedOperation).toEqual(operationWithRecipients)
+    expect(run.operationIntent).toBe("execute")
   })
 })
