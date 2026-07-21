@@ -4,6 +4,7 @@ import {
   AnyDocument,
   Datasource,
   INTERNAL_TABLE_SOURCE_ID,
+  InternalTable,
   KnowledgeBaseFile,
   Project,
   ProjectPackageDependencyIndex,
@@ -22,6 +23,12 @@ import sdk from "../../.."
 import { budibaseTempDir } from "../../../../utilities/budibaseDir"
 import { streamFile } from "../../../../utilities/fileSystem"
 import { isExternalTableID } from "../../../../integrations/utils"
+import { collectTransitiveResourceDependencies } from "../../resources"
+import {
+  compareResourceIds,
+  compareResourceTypes,
+  isDisallowedProjectAssignmentResourceId,
+} from "../../resources/utils"
 import {
   PROJECT_ATTACHMENTS_DIRECTORY,
   PROJECT_DEPENDENCY_INDEX_FILE,
@@ -32,8 +39,8 @@ import {
 } from "./constants"
 import {
   fetchAssignedProjectDocs,
-  getProjectAssignedEntities,
   hasProject,
+  isProjectAssignableResourceType,
 } from "../utils"
 
 async function tarFilesToTmp(tmpDir: string, files: string[]) {
@@ -57,7 +64,8 @@ function getExportDirectoryName(resourceType: ResourceType) {
 
 const sortResources = (resources: UsedResource[]) =>
   [...resources].sort(
-    (a, b) => a.type.localeCompare(b.type) || a.id.localeCompare(b.id)
+    (a, b) =>
+      compareResourceTypes(a.type, b.type) || compareResourceIds(a.id, b.id)
   )
 
 const toTimestamp = (timestamp?: string | number) => {
@@ -111,22 +119,17 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
           !!datasource._id &&
           datasource._id.startsWith("datasource_") &&
           typeof datasource.source === "string" &&
-          (hasProject(datasource, projectId) ||
-            getProjectAssignedEntities(datasource).some(entity =>
-              hasProject(entity, projectId)
-            ))
+          hasProject(datasource, projectId)
       )
       .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
     ...assignedDocs
       .filter(
         table =>
           isDirectProjectResource(table, "ta_", projectId) &&
+          table._id !== InternalTable.USER_METADATA &&
           !isExternalTableID(table._id)
       )
       .map(table => asUsedResource(table, ResourceType.TABLE)),
-    ...assignedDocs
-      .filter(query => isDirectProjectResource(query, "query_", projectId))
-      .map(query => asUsedResource(query, ResourceType.QUERY)),
     ...assignedDocs
       .filter(automation =>
         isDirectProjectResource(automation, "au_", projectId)
@@ -143,6 +146,43 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
         asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
       ),
   ])
+}
+
+async function getExcludedDependencies(
+  projectId: string,
+  directMembers: UsedResource[]
+): Promise<UsedResource[]> {
+  const graph = await sdk.resources.getResourcesInfo({
+    includeProjects: false,
+    includeDatasourceQueries: true,
+  })
+  const dependenciesById = new Map(
+    directMembers
+      .flatMap(member =>
+        collectTransitiveResourceDependencies(graph, member.id)
+      )
+      .filter(
+        dependency =>
+          isProjectAssignableResourceType(dependency.type) &&
+          !isDisallowedProjectAssignmentResourceId(dependency.id)
+      )
+      .map(dependency => [dependency.id, dependency])
+  )
+  if (!dependenciesById.size) {
+    return []
+  }
+
+  const docs = await context
+    .getWorkspaceDB()
+    .getMultiple<AnyDocument>(Array.from(dependenciesById.keys()), {
+      allowMissing: true,
+    })
+  return sortResources(
+    docs.flatMap(doc => {
+      const dependency = doc._id ? dependenciesById.get(doc._id) : undefined
+      return dependency && !hasProject(doc, projectId) ? [dependency] : []
+    })
+  )
 }
 
 async function getUnsupportedContent(
@@ -213,11 +253,25 @@ async function sanitizeDocumentForExport(
   delete sanitized._rev
 
   if (type === ResourceType.DATASOURCE) {
-    return await sdk.datasources.removeSecretSingle(sanitized as Datasource)
+    const datasource = sanitized as Datasource
+    if (datasource.entities) {
+      datasource.entities = Object.fromEntries(
+        Object.entries(datasource.entities).map(([name, entity]) => {
+          const next = { ...entity }
+          delete next.projectIds
+          return [name, next]
+        })
+      )
+    }
+    return await sdk.datasources.removeSecretSingle(datasource)
   }
 
   if (type === ResourceType.AGENT) {
     return sdk.ai.agents.sanitiseAgentForExport(sanitized as Agent)
+  }
+
+  if (type === ResourceType.QUERY) {
+    delete sanitized.projectIds
   }
 
   if (type === ResourceType.SCREEN && !sanitized.workspaceAppId) {
@@ -324,7 +378,9 @@ export async function exportProject(
     throw new Error(`Project '${projectId}' not found`)
   }
 
-  const graph = await sdk.resources.getResourcesInfo()
+  const graph = await sdk.resources.getResourcesInfo({
+    includeDatasourceQueries: true,
+  })
   const projectDependencies = sortResources(
     Array.from(
       new Map(
@@ -340,6 +396,10 @@ export async function exportProject(
     sdk.workspaceApps.fetch(),
   ])
   const directMembers = await getDirectMembers(projectId)
+  const excludedDependencies = await getExcludedDependencies(
+    projectId,
+    directMembers
+  )
   const exportedAgentIds = new Set(
     projectDependencies
       .filter(resource => resource.type === ResourceType.AGENT)
@@ -351,11 +411,26 @@ export async function exportProject(
     workspaceApps,
     exportedAgentIds
   )
+  if (excludedDependencies.length) {
+    unsupportedContent.push({
+      type: "excluded_dependency",
+      count: excludedDependencies.length,
+      reason:
+        "Referenced dependencies were excluded from the Project assignment and export.",
+    })
+  }
 
   const typeByResourceId = new Map(
     projectDependencies.map(resource => [resource.id, resource.type])
   )
   const docsToExport = projectDependencies.map(resource => resource.id)
+  const exportedResourceIds = new Set(docsToExport)
+  const getExportedDependencies = (resourceId: string) =>
+    sortResources(
+      (graph[resourceId]?.dependencies || []).filter(dependency =>
+        exportedResourceIds.has(dependency.id)
+      )
+    )
   const exportedDocs = docsToExport.length
     ? await context.getWorkspaceDB().getMultiple<AnyDocument>(docsToExport, {
         allowMissing: false,
@@ -367,12 +442,12 @@ export async function exportProject(
     directMembers,
     resources: {
       [projectId]: {
-        dependencies: sortResources(graph[projectId]?.dependencies || []),
+        dependencies: getExportedDependencies(projectId),
       },
       ...Object.fromEntries(
         docsToExport.map(id => [
           id,
-          { dependencies: sortResources(graph[id]?.dependencies || []) },
+          { dependencies: getExportedDependencies(id) },
         ])
       ),
     },

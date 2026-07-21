@@ -13,8 +13,8 @@ import {
   Agent,
   Automation,
   Datasource,
-  DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
+  InternalTable,
   FieldType,
   DatabaseQueryOpts,
   FeatureFlag,
@@ -22,7 +22,6 @@ import {
   Row,
   RowAttachment,
   WithDocMetadata,
-  prefixed,
   Query,
   ResourceType,
   Screen,
@@ -36,16 +35,100 @@ import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
 import {
   getProjectIds,
   hasProject,
+  isProjectAssignableResourceType,
   type ProjectAssignable,
   withProjectIds,
 } from "../projects/utils"
+import {
+  compareResourceIds,
+  compareResourceTypes,
+  getResourceType,
+} from "./utils"
 
-export async function getResourcesInfo(): Promise<
-  Record<string, { dependencies: UsedResource[] }>
-> {
+export { getResourceType } from "./utils"
+
+export type ResourceDependencyGraph = Record<
+  string,
+  { dependencies: UsedResource[] }
+>
+
+export interface GetResourcesInfoOptions {
+  includeProjects?: boolean
+  includeDatasourceQueries?: boolean
+}
+
+export interface ResourceDependencyAnalysis {
+  graph: ResourceDependencyGraph
+  findReferencedResources: (resource: AnyDocument) => UsedResource[]
+}
+
+// dependencies[resourceId] lists resources referenced in that resource's JSON
+// (e.g. a query referencing a table). Those references can themselves reference
+// other resources, so we walk the graph recursively. seen breaks cycles.
+export function collectTransitiveResourceDependencies(
+  graph: ResourceDependencyGraph,
+  resourceId: string,
+  seen = new Set<string>()
+): UsedResource[] {
+  if (seen.has(resourceId)) {
+    return []
+  }
+  seen.add(resourceId)
+
+  return (graph[resourceId]?.dependencies || []).flatMap(dependency => {
+    if (seen.has(dependency.id)) {
+      return []
+    }
+    return [
+      dependency,
+      ...collectTransitiveResourceDependencies(graph, dependency.id, seen),
+    ]
+  })
+}
+
+export function collectProjectResourceDependencies(
+  graph: ResourceDependencyGraph,
+  resourceId: string,
+  projectId: string,
+  projectIdsByResourceId: ReadonlyMap<string, readonly string[]>,
+  seen = new Set<string>()
+): UsedResource[] {
+  if (seen.has(resourceId)) {
+    return []
+  }
+  seen.add(resourceId)
+
+  return (graph[resourceId]?.dependencies || []).flatMap(dependency => {
+    if (seen.has(dependency.id)) {
+      return []
+    }
+    if (
+      isProjectAssignableResourceType(dependency.type) &&
+      !projectIdsByResourceId.get(dependency.id)?.includes(projectId)
+    ) {
+      return []
+    }
+    return [
+      dependency,
+      ...collectProjectResourceDependencies(
+        graph,
+        dependency.id,
+        projectId,
+        projectIdsByResourceId,
+        seen
+      ),
+    ]
+  })
+}
+
+async function buildResourceDependencyAnalysis({
+  includeProjects = true,
+  includeDatasourceQueries = false,
+}: GetResourcesInfoOptions = {}): Promise<ResourceDependencyAnalysis> {
   const automations = await sdk.automations.fetch()
   const agents = await sdk.ai.agents.fetch()
-  const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
+  const projectsEnabled =
+    includeProjects && (await features.isEnabled(FeatureFlag.PROJECTS))
   const projects = projectsEnabled ? await sdk.projects.fetch() : []
   const workspaceApps = await sdk.workspaceApps.fetch()
 
@@ -135,6 +218,21 @@ export async function getResourcesInfo(): Promise<
     }))
   )
 
+  if (includeDatasourceQueries) {
+    for (const datasource of datasources) {
+      addDependencies(
+        datasource._id!,
+        queries
+          .filter(query => query.datasourceId === datasource._id)
+          .map(query => ({
+            id: query._id!,
+            name: query.name!,
+            type: ResourceType.QUERY,
+          }))
+      )
+    }
+  }
+
   if (rowActions.length) {
     const rowActionNames = await sdk.rowActions.getNames(
       Object.values(rowActions).flatMap(ra => Object.values(ra.actions))
@@ -165,14 +263,27 @@ export async function getResourcesInfo(): Promise<
     }
   }
 
+  const findSearchTargets = (resource: AnyDocument) => {
+    const json = JSON.stringify(resource)
+    return baseSearchTargets.filter(target => json.includes(target.idToSearch))
+  }
+
+  const findReferencedResources = (resource: AnyDocument) =>
+    Array.from(
+      new Map(
+        findSearchTargets(resource).map(target => [
+          target.id,
+          { id: target.id, name: target.name, type: target.type },
+        ])
+      ).values()
+    )
+
   const searchForUsages = (
     forResource: string,
     possibleUsages: AnyDocument
   ) => {
-    const json = JSON.stringify(possibleUsages)
-    for (const search of baseSearchTargets) {
+    for (const search of findSearchTargets(possibleUsages)) {
       if (
-        json.includes(search.idToSearch) &&
         !dependencies[forResource]?.dependencies.find(
           resource => resource.id === search.id
         )
@@ -284,50 +395,43 @@ export async function getResourcesInfo(): Promise<
       type,
     })
 
-    const collectTransitiveDependencies = (
-      resourceId: string,
-      seen = new Set<string>()
-    ): UsedResource[] => {
-      if (seen.has(resourceId)) {
-        return []
-      }
-      seen.add(resourceId)
-
-      // dependencies[resourceId] lists resources referenced in that resource's JSON
-      // (e.g. a query referencing a table). Those references can themselves reference
-      // other resources, so we walk the graph recursively. seen breaks cycles.
-      return (dependencies[resourceId]?.dependencies || []).flatMap(
-        dependency => [
-          dependency,
-          ...collectTransitiveDependencies(dependency.id, seen),
-        ]
+    const projectIdsByResourceId = new Map<string, readonly string[]>(
+      [
+        ...datasources.filter(
+          datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID
+        ),
+        ...internalTables,
+        ...automations,
+        ...agents,
+        ...workspaceApps,
+      ].flatMap(resource =>
+        resource._id ? [[resource._id, getProjectIds(resource)]] : []
       )
-    }
+    )
 
     // Projects include direct members plus each member's transitive dependencies.
     for (const project of projects.filter(
       (doc): doc is Required<Pick<Project, "_id" | "name">> & Project =>
         !!doc._id && !!doc.name
     )) {
+      dependencies[project._id] ??= { dependencies: [] }
       const directMembers: UsedResource[] = [
         ...datasources
           .filter(
             datasource =>
               datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
-              (hasProject(datasource, project._id) ||
-                Object.values(datasource.entities || {}).some(table =>
-                  hasProject(table, project._id)
-                ))
+              hasProject(datasource, project._id)
           )
           .map(datasource =>
             buildUsedResource(datasource, ResourceType.DATASOURCE)
           ),
         ...internalTables
-          .filter(table => hasProject(table, project._id))
+          .filter(
+            table =>
+              table._id !== InternalTable.USER_METADATA &&
+              hasProject(table, project._id)
+          )
           .map(table => buildUsedResource(table, ResourceType.TABLE)),
-        ...queries
-          .filter(query => hasProject(query, project._id))
-          .map(query => buildUsedResource(query, ResourceType.QUERY)),
         ...automations
           .filter(automation => hasProject(automation, project._id))
           .map(automation =>
@@ -344,14 +448,49 @@ export async function getResourcesInfo(): Promise<
       ]
 
       addDependencies(project._id, directMembers)
-      // e.g. a project-assigned query may depend on a table, which depends on a datasource.
-      for (const member of directMembers) {
-        addDependencies(project._id, collectTransitiveDependencies(member.id))
+      const directDatasourceIds = new Set(
+        directMembers
+          .filter(member => member.type === ResourceType.DATASOURCE)
+          .map(member => member.id)
+      )
+      const datasourceQueries = queries
+        .filter(query => directDatasourceIds.has(query.datasourceId))
+        .map(query => buildUsedResource(query, ResourceType.QUERY))
+      addDependencies(project._id, datasourceQueries)
+
+      // e.g. an included query may depend on a table, which depends on a datasource.
+      for (const member of [...directMembers, ...datasourceQueries]) {
+        addDependencies(
+          project._id,
+          collectProjectResourceDependencies(
+            dependencies,
+            member.id,
+            project._id,
+            projectIdsByResourceId
+          )
+        )
       }
+
+      dependencies[project._id].dependencies.sort(
+        (a, b) =>
+          compareResourceTypes(a.type, b.type) || compareResourceIds(a.id, b.id)
+      )
     }
   }
 
-  return dependencies
+  return { graph: dependencies, findReferencedResources }
+}
+
+export async function analyzeResourceDependencies(
+  options: GetResourcesInfoOptions = {}
+): Promise<ResourceDependencyAnalysis> {
+  return await buildResourceDependencyAnalysis(options)
+}
+
+export async function getResourcesInfo(
+  options: GetResourcesInfoOptions = {}
+): Promise<ResourceDependencyGraph> {
+  return (await buildResourceDependencyAnalysis(options)).graph
 }
 
 async function getDestinationDb(toWorkspace: string) {
@@ -363,25 +502,6 @@ async function getDestinationDb(toWorkspace: string) {
   }
 
   return destinationDb
-}
-
-const resourceTypeIdPrefixes: Record<ResourceType, string> = {
-  [ResourceType.PROJECT]: prefixed(DocumentType.PROJECT),
-  [ResourceType.AGENT]: prefixed(DocumentType.AGENT),
-  [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
-  [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
-  [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
-  [ResourceType.QUERY]: prefixed(DocumentType.QUERY),
-  [ResourceType.AUTOMATION]: prefixed(DocumentType.AUTOMATION),
-  [ResourceType.WORKSPACE_APP]: prefixed(DocumentType.WORKSPACE_APP),
-  [ResourceType.SCREEN]: prefixed(DocumentType.SCREEN),
-}
-
-function getResourceType(id: string): ResourceType | undefined {
-  const type = Object.entries(resourceTypeIdPrefixes).find(([_, idPrefix]) =>
-    id.startsWith(idPrefix)
-  )?.[0] as ResourceType | undefined
-  return type
 }
 
 function isAutomation(doc: AnyDocument): doc is Automation {
@@ -408,12 +528,28 @@ function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
   return type === ResourceType.WORKSPACE_APP
 }
 
+function isProject(doc: AnyDocument): doc is Project {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.PROJECT
+}
+
 function isDatasource(doc: AnyDocument): doc is Datasource {
   if (!doc._id) {
     return false
   }
   const type = getResourceType(doc._id)
   return type === ResourceType.DATASOURCE
+}
+
+function isQuery(doc: AnyDocument): doc is Query {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.QUERY
 }
 
 function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
@@ -828,18 +964,24 @@ export async function duplicateResourcesToWorkspace(
           fromWorkspace,
         })
         delete sanitizedDoc._rev
-        delete sanitizedDoc.createdAt
-        delete sanitizedDoc.updatedAt
+        if (!isProject(sanitizedDoc)) {
+          delete sanitizedDoc.createdAt
+          delete sanitizedDoc.updatedAt
+        }
         if (isAutomation(sanitizedDoc) || isWorkspaceApp(sanitizedDoc)) {
           sanitizedDoc.disabled = true
         }
         if (isAutomation(sanitizedDoc)) {
           sanitizedDoc.appId = toWorkspace
         }
+        if (isQuery(sanitizedDoc)) {
+          delete sanitizedDoc.projectIds
+        }
         if (isDatasource(sanitizedDoc) && sanitizedDoc.entities) {
           sanitizedDoc.entities = Object.fromEntries(
             Object.entries(sanitizedDoc.entities).map(([name, entity]) => {
-              const sanitizedEntity = sanitizeProjectAssignment({ ...entity })
+              const sanitizedEntity = { ...entity }
+              delete sanitizedEntity.projectIds
               return [name, sanitizedEntity]
             })
           )

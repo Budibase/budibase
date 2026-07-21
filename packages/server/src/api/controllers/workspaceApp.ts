@@ -14,6 +14,7 @@ import {
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
 import {
+  propagateProjectDependencyChangesWithWarning,
   resolveProjectIds,
   resolveUpdatedProjectIds,
 } from "../../utilities/projects"
@@ -54,6 +55,12 @@ export async function duplicate(
   }
 
   const duplicatedApp = await sdk.workspaceApps.duplicate(workspaceApp)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: duplicatedApp._id!,
+    currentProjectIds: duplicatedApp.projectIds,
+    previousProjectIds: [],
+    savedResource: duplicatedApp,
+  })
 
   ctx.message = `App ${workspaceApp.name} duplicated successfully.`
   ctx.body = { workspaceApp: toWorkspaceAppResponse(duplicatedApp) }
@@ -90,6 +97,12 @@ export async function create(
   }
 
   const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: workspaceApp._id!,
+    currentProjectIds: workspaceApp.projectIds,
+    previousProjectIds: [],
+    savedResource: workspaceApp,
+  })
   ctx.status = 201
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
@@ -128,6 +141,13 @@ export async function edit(
     ...(Object.hasOwn(body, "customTheme")
       ? { customTheme: body.customTheme }
       : {}),
+  })
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: workspaceApp._id!,
+    currentProjectIds: workspaceApp.projectIds,
+    previousProjectIds: existingWorkspaceApp.projectIds,
+    previousResource: existingWorkspaceApp,
+    savedResource: workspaceApp,
   })
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),

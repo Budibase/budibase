@@ -1,11 +1,19 @@
-import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  HTTPError,
+  utils,
+} from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import {
   Agent,
   AnyDocument,
+  Automation,
   Datasource,
   DocumentType,
   ImportProjectResponse,
+  isWebhookTrigger,
   Project,
   ProjectImportRequirement,
   ProjectPackageDependencyIndex,
@@ -17,6 +25,7 @@ import {
   SEPARATOR,
   VirtualDocumentType,
   WorkspaceApp,
+  WebhookActionType,
   prefixed,
 } from "@budibase/types"
 import fs from "fs"
@@ -367,9 +376,16 @@ const remapObjectKeys = <T>(
   )
 }
 
+const remapIdReferences = (value: string, idMap: Map<string, string>) =>
+  [...idMap.entries()].reduce(
+    (remapped, [sourceId, destinationId]) =>
+      remapped.split(`${sourceId}.`).join(`${destinationId}.`),
+    value
+  )
+
 const remapValue = (value: unknown, idMap: Map<string, string>): unknown => {
   if (typeof value === "string") {
-    return idMap.get(value) || value
+    return idMap.get(value) || remapIdReferences(value, idMap)
   }
   if (Array.isArray(value)) {
     return value.map(item => remapValue(item, idMap))
@@ -384,13 +400,6 @@ const remapValue = (value: unknown, idMap: Map<string, string>): unknown => {
   }
   return value
 }
-
-const remapIdReferences = (value: string, idMap: Map<string, string>) =>
-  [...idMap.entries()].reduce(
-    (remapped, [sourceId, destinationId]) =>
-      remapped.split(`${sourceId}.`).join(`${destinationId}.`),
-    value
-  )
 
 const getDatasourceEntities = (
   datasource: Datasource
@@ -486,6 +495,11 @@ const sanitizeImportedProjectAssignments = (
   resourceType: ResourceType,
   importedProjectId: string
 ) => {
+  if (resourceType === ResourceType.QUERY) {
+    delete doc.projectIds
+    return
+  }
+
   if (getProjectIds(doc).includes(importedProjectId)) {
     doc.projectIds = [importedProjectId]
   } else {
@@ -505,11 +519,7 @@ const sanitizeImportedProjectAssignments = (
   datasource.entities = Object.fromEntries(
     Object.entries(entities).map(([key, entity]) => {
       const sanitizedEntity = { ...entity }
-      if (getProjectIds(sanitizedEntity).includes(importedProjectId)) {
-        sanitizedEntity.projectIds = [importedProjectId]
-      } else {
-        delete sanitizedEntity.projectIds
-      }
+      delete sanitizedEntity.projectIds
       return [key, sanitizedEntity]
     })
   )
@@ -909,6 +919,36 @@ const bulkInsertDocs = async (
   }
 }
 
+const createImportedAutomationWebhook = async (
+  doc: AnyDocument,
+  workspaceId: string,
+  insertedDocs: InsertedDocRef[]
+) => {
+  const automation = doc as Automation
+  const trigger = automation.definition?.trigger
+  if (!trigger || !isWebhookTrigger(trigger)) {
+    return
+  }
+
+  const webhook = await sdk.automations.webhook.save(
+    sdk.automations.webhook.newDoc(
+      "Automation webhook",
+      WebhookActionType.AUTOMATION,
+      automation._id!
+    )
+  )
+  insertedDocs.push({
+    _id: webhook._id!,
+    _rev: webhook._rev!,
+  })
+
+  trigger.webhookId = webhook._id
+  trigger.inputs = {
+    schemaUrl: `api/webhooks/schema/${workspaceId}/${webhook._id}/${webhook.schemaToken}`,
+    triggerUrl: `api/webhooks/trigger/${dbCore.getProdWorkspaceID(workspaceId)}/${webhook._id}`,
+  }
+}
+
 async function extractProjectPackage(
   file: { path: string },
   encryptPassword?: string
@@ -1132,6 +1172,12 @@ export async function importProject(
 
       if (!docsToInsert.length) {
         continue
+      }
+
+      if (resourceType === ResourceType.AUTOMATION) {
+        for (const doc of docsToInsert) {
+          await createImportedAutomationWebhook(doc, workspaceId, insertedDocs)
+        }
       }
 
       await bulkInsertDocs(docsToInsert, insertedDocs)

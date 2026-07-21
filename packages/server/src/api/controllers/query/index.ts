@@ -41,10 +41,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
 import { mergePreviewSchema } from "./schema"
@@ -183,8 +180,9 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const datasource = await sdk.datasources.get(query.datasourceId)
 
   let eventFn
+  let previousQuery: Query | undefined
   if (!query._id && !query._rev) {
-    query.projectIds = await resolveProjectIds(query.projectIds)
+    delete query.projectIds
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
     query.nullDefaultSupport = true
@@ -192,19 +190,28 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   } else {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
-    const existingQuery = await db.get<Query>(query._id)
-    if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
+    previousQuery = await db.get<Query>(query._id)
+    if (previousQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
-    query.projectIds = await resolveUpdatedProjectIds(
-      query.projectIds,
-      existingQuery.projectIds
-    )
+    if (Array.isArray(previousQuery.projectIds)) {
+      query.projectIds = [...previousQuery.projectIds]
+    } else {
+      delete query.projectIds
+    }
     eventFn = () => events.query.updated(datasource, query)
   }
   const response = await db.put(query)
   await eventFn()
   query._rev = response.rev
+
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: datasource._id!,
+    currentProjectIds: datasource.projectIds,
+    previousProjectIds: datasource.projectIds,
+    previousResource: previousQuery,
+    savedResource: query,
+  })
 
   ctx.body = query
 }

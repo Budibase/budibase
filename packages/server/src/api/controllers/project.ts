@@ -8,12 +8,24 @@ import {
   ImportProjectRequest,
   ImportProjectResponse,
   KoaFile,
+  PreviewProjectAssignmentRequest,
+  PreviewProjectAssignmentResponse,
   Project,
   ProjectResponse,
+  UpdateProjectAssignmentRequest,
+  UpdateProjectAssignmentResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
+import fsp from "fs/promises"
 import sdk from "../../sdk"
+import {
+  getProjectAssignmentDependencies,
+  getProjectAssignableDependencies,
+  propagateProjectIdsToDependencyIdsWithWarning,
+  resolveProjectIds,
+} from "../../utilities/projects"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
   return {
@@ -73,6 +85,83 @@ export async function update(
   }
 }
 
+export async function previewAssignment(
+  ctx: Ctx<PreviewProjectAssignmentRequest, PreviewProjectAssignmentResponse>
+) {
+  const { resourceId } = ctx.request.body
+  const projectIds =
+    (await resolveProjectIds(ctx.request.body.projectIds)) || []
+  await sdk.projects.getProjectAssignableResource(resourceId)
+
+  ctx.body = {
+    dependencies: await getProjectAssignmentDependencies({
+      resourceId,
+      projectIds,
+    }),
+  }
+}
+
+export async function updateAssignment(
+  ctx: Ctx<UpdateProjectAssignmentRequest, UpdateProjectAssignmentResponse>
+) {
+  const { resourceId } = ctx.params
+  const { resourceRev, dependencyIds } = ctx.request.body
+  const projectIds =
+    (await resolveProjectIds(ctx.request.body.projectIds)) || []
+  await sdk.projects.getProjectAssignableResource(resourceId)
+
+  let selectedDependencyIds: string[] = []
+  if (dependencyIds.length) {
+    if (!projectIds.length) {
+      throw new HTTPError(
+        "Dependencies cannot be assigned without a project.",
+        400
+      )
+    }
+
+    const dependencies = await getProjectAssignableDependencies(resourceId)
+    const dependencyIdsSet = new Set(dependencyIds)
+    const validDependencyIds = new Set(
+      dependencies.map(dependency => dependency.id)
+    )
+    const invalidDependencyId = dependencyIds.find(
+      dependencyId => !validDependencyIds.has(dependencyId)
+    )
+    if (invalidDependencyId) {
+      throw new HTTPError(
+        `Resource '${invalidDependencyId}' is not an assignable dependency.`,
+        400
+      )
+    }
+
+    selectedDependencyIds = dependencies
+      .map(dependency => dependency.id)
+      .filter(dependencyId => dependencyIdsSet.has(dependencyId))
+  }
+
+  const updatedResource = await sdk.projects.updateResourceProjectAssignment({
+    resourceId,
+    resourceRev,
+    projectIds,
+  })
+  const outcome = await propagateProjectIdsToDependencyIdsWithWarning(ctx, {
+    dependencyIds: selectedDependencyIds,
+    projectIds,
+  })
+  const failedIds = new Set(
+    outcome.status === "incomplete" ? outcome.resourceIds : []
+  )
+
+  ctx.body = {
+    resourceId,
+    resourceRev: updatedResource._rev,
+    projectIds,
+    assignedDependencyIds: selectedDependencyIds.filter(
+      dependencyId => !failedIds.has(dependencyId)
+    ),
+  }
+}
+
 export async function remove(ctx: Ctx<void, void>) {
   const { id, rev } = ctx.params
   await sdk.projects.remove(id, rev)
@@ -123,12 +212,18 @@ export async function importBundle(
     ctx.throw(400, "Must supply Project export file to import")
   }
 
-  ctx.body = await sdk.projects.importProject(
-    {
-      path: filePath,
-    },
-    {
-      encryptPassword: ctx.request.body?.encryptPassword || undefined,
-    }
-  )
+  try {
+    ctx.body = await sdk.projects.importProject(
+      {
+        path: filePath,
+      },
+      {
+        encryptPassword: ctx.request.body?.encryptPassword || undefined,
+      }
+    )
+  } finally {
+    await fsp.rm(filePath, { force: true }).catch(error => {
+      console.log("Failed to remove uploaded Project import archive", error)
+    })
+  }
 }
