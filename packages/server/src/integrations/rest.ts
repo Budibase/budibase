@@ -669,8 +669,6 @@ export class RestIntegration implements IntegrationBase {
   private assertSameOrigin(url: string, rawPath: string | undefined) {
     const finalOrigin = this.getOrigin(url)
 
-    // queryString/pagination never affect the origin (only path and
-    // this.config.url do), so they're irrelevant here.
     const expectedOriginUrls: string[] = []
     if (this.config.url) {
       expectedOriginUrls.push(this.getUrl())
