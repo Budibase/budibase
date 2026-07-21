@@ -22,7 +22,7 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { FeatureFlag, WorkspaceResource, type Table } from "@budibase/types"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { auth, featureFlags, projectsStore } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
   import type { MenuItem } from "@/types"
 
@@ -42,6 +42,7 @@
   let editModal: ModalRef
   let deleteConfirmationModal: ModalRef
   let assignProjectModal: ModalAPI
+  let assignProjectModalKey = 0
 
   $: favourite = tableId ? $favourites[tableId] : undefined
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
@@ -50,6 +51,8 @@
     tableId !== TableNames.USERS &&
     table?.sourceType !== DB_TYPE_EXTERNAL
   $: projectAssignmentResource = {
+    id: tableId,
+    revision: table._rev || "",
     name: table?.name || "Table",
     typeLabel: "table",
     projectIds: table?.projectIds,
@@ -67,22 +70,37 @@
   }
 
   const openAssignProjectModal = () => {
+    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
-  const assignProject = async (projectIds: string[]) => {
+  const previewProjectAssignment = async (
+    resourceId: string,
+    projectIds: string[]
+  ) => await projectsStore.previewAssignment({ resourceId, projectIds })
+
+  const assignProject = async ({
+    projectIds,
+    dependencyIds,
+  }: {
+    projectIds: string[]
+    dependencyIds: string[]
+  }) => {
     try {
-      await tablesStore.save({
-        ...table,
+      const result = await projectsStore.updateAssignment(tableId, {
+        resourceRev: table._rev!,
         projectIds,
+        dependencyIds,
       })
+      if (result.assignedDependencyIds.length === dependencyIds.length) {
+        notifications.success("Projects updated successfully")
+      }
     } catch (error) {
       console.error(error)
       notifications.error("Unable to update project")
       return keepOpen
     }
 
-    notifications.success("Projects updated successfully")
     assignProjectModal?.hide()
 
     try {
@@ -172,10 +190,13 @@
 <EditModal {table} bind:this={editModal} />
 <DeleteConfirmationModal source={table} bind:this={deleteConfirmationModal} />
 <Modal bind:this={assignProjectModal}>
-  <AssignProjectModal
-    resource={projectAssignmentResource}
-    onConfirm={assignProject}
-  />
+  {#key assignProjectModalKey}
+    <AssignProjectModal
+      resource={projectAssignmentResource}
+      onPreview={previewProjectAssignment}
+      onConfirm={assignProject}
+    />
+  {/key}
 </Modal>
 
 <style>

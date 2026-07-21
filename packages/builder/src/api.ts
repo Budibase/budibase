@@ -7,6 +7,8 @@ import { appStore } from "@/stores/builder"
 import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 import { sdk, Header, ClientHeader } from "@budibase/shared-core"
+import { APIWarningCode } from "@budibase/types"
+import { notifications } from "@budibase/bbui"
 
 const newClient = (opts?: { production?: boolean }) =>
   createAPIClient({
@@ -68,6 +70,13 @@ const newClient = (opts?: { production?: boolean }) =>
         ) {
           location.reload()
         }
+      }
+    },
+    onWarning: warning => {
+      if (warning === APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE) {
+        notifications.warning(
+          "Resource saved, but some dependent resources could not be added to the project. Retry the project assignment."
+        )
       }
     },
     onMigrationDetected: appId => {

@@ -27,11 +27,9 @@
     notifications,
     Banner,
     Divider,
-    Label,
   } from "@budibase/bbui"
   import {
     BodyType,
-    FeatureFlag,
     type Query,
     type Datasource,
     type ImportEndpoint,
@@ -84,14 +82,13 @@
   import ExpandablePanel from "@/components/common/ExpandablePanel.svelte"
   import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
-  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { confirm } from "@/helpers"
   import {
     urlParamHighlightPlugin,
     urlParamHighlightTheme,
   } from "../common/CodeEditor/urlParamHighlight"
-  import { environment, featureFlags } from "@/stores/portal"
+  import { environment } from "@/stores/portal"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { onDestroy, onMount, createEventDispatcher } from "svelte"
 
@@ -106,11 +103,9 @@
   export let connectionPopoverPortalTarget: string | undefined = undefined
   export let connectionPopoverZIndex: number | undefined = undefined
   export let openAddConnectionOnMount: boolean = false
-  export let initialProjectIds: string[] = []
 
   $beforeUrlChange
   $: goto = $gotoStore
-  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -137,8 +132,6 @@
   let defaultSpecServerUrl: string | undefined = undefined
   let response: PreviewQueryResponse
   let editableQuery: Query | undefined
-  let projectIds: string[] = []
-  let originalProjectIds: string[] = []
   let datasource: Datasource | UIInternalDatasource | undefined
   let enabledHeaders: Record<string, boolean> = {}
   let globalDynamicRequestBindings: EnrichedBinding[] = []
@@ -217,12 +210,6 @@
 
   $: if (querySourceKey !== lastQuerySourceKey) {
     editableQuery = structuredClone(storeQuery)
-    projectIds =
-      editableQuery?.projectIds ||
-      (!editableQuery?._id && initialProjectIds.length
-        ? [...initialProjectIds]
-        : [])
-    originalProjectIds = [...projectIds]
     lastQuerySourceKey = querySourceKey
     queryParams = undefined
     originalBuiltQuery = undefined
@@ -331,14 +318,18 @@
     ? prettifyQueryRequestBody(editableQuery, mergedBindings)
     : undefined
 
+  const stripQueryProjectIds = (query: Query): Query => {
+    const { projectIds: _projectIds, ...queryWithoutProjectIds } = query
+    return queryWithoutProjectIds
+  }
+
   // ── BUILT QUERY & DIRTY STATE ─────────────────────────────────────────────
   $: builtQuery =
     editableQuery &&
     schema &&
     buildQuery(
       {
-        ...editableQuery,
-        projectIds: getQueryProjectIds(),
+        ...stripQueryProjectIds(editableQuery),
         datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },
@@ -445,13 +436,6 @@
   const getDatasourceBaseUrl = (
     ds: Datasource | UIInternalDatasource | undefined
   ): string | undefined => (ds as Datasource)?.config?.url as string | undefined
-
-  const getQueryProjectIds = () => {
-    if (projectIds.length) {
-      return projectIds
-    }
-    return !isNewQuery && originalProjectIds.length ? [] : undefined
-  }
 
   const resolveStoreQuery = (
     list: Query[] | undefined,
@@ -699,8 +683,6 @@
       }
 
       editableQuery = structuredClone(updatedQuery)
-      projectIds = updatedQuery.projectIds || []
-      originalProjectIds = [...projectIds]
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
@@ -1068,12 +1050,6 @@
             <div class="access">
               <AccessLevelSelect query={editableQuery} label="Access" />
             </div>
-            {#if projectsEnabled}
-              <div class="project">
-                <Label>Projects</Label>
-                <ProjectSelect bind:value={projectIds} label="" autoWidth />
-              </div>
-            {/if}
           {/if}
           {#if endpointDocs}
             <ActionButton
@@ -1616,11 +1592,6 @@
     gap: var(--spacing-s);
   }
   .access {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-  }
-  .project {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
