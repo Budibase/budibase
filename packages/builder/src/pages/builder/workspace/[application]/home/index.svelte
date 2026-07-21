@@ -1174,7 +1174,6 @@
   <Modal bind:this={assignProjectModal}>
     <AssignProjectModal
       resource={selectedProjectResource}
-      projects={$projectsStore}
       onConfirm={assignProject}
     />
   </Modal>

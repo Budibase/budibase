@@ -22,7 +22,7 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { FeatureFlag, WorkspaceResource, type Table } from "@budibase/types"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
-  import { auth, featureFlags, projectsStore } from "@/stores/portal"
+  import { auth, featureFlags } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
   import type { MenuItem } from "@/types"
 
@@ -66,14 +66,8 @@
     }
   }
 
-  const openAssignProjectModal = async () => {
-    try {
-      await projectsStore.ensureFetched($appStore.appId)
-      assignProjectModal?.show()
-    } catch (error) {
-      console.error(error)
-      notifications.error("Unable to load projects")
-    }
+  const openAssignProjectModal = () => {
+    assignProjectModal?.show()
   }
 
   const assignProject = async (projectIds: string[]) => {
@@ -180,7 +174,6 @@
 <Modal bind:this={assignProjectModal}>
   <AssignProjectModal
     resource={projectAssignmentResource}
-    projects={$projectsStore}
     onConfirm={assignProject}
   />
 </Modal>

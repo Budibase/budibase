@@ -1,8 +1,8 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { Body, ModalContent, Multiselect } from "@budibase/bbui"
-  import type { ProjectResponse } from "@budibase/types"
+  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
+  import { Body, ModalContent } from "@budibase/bbui"
 
   interface AssignableProjectResource {
     name: string
@@ -12,28 +12,13 @@
 
   interface Props {
     resource?: AssignableProjectResource | null
-    projects?: ProjectResponse[]
     onConfirm?: (_projectIds: string[]) => unknown
   }
 
-  let { resource = null, projects = [], onConfirm = () => {} }: Props = $props()
-
-  interface ProjectOption {
-    label: string
-    value: string
-    color?: string
-  }
+  let { resource = null, onConfirm = () => {} }: Props = $props()
 
   let selectedProjectIds: string[] = $derived(
     resource?.projectIds ? [...resource.projectIds] : []
-  )
-
-  const projectOptions: ProjectOption[] = $derived(
-    projects.map(project => ({
-      label: project.name,
-      value: project._id,
-      color: project.color,
-    }))
   )
 </script>
 
@@ -49,12 +34,5 @@
     </Body>
   {/if}
 
-  <Multiselect
-    label="Projects"
-    placeholder="No projects"
-    bind:value={selectedProjectIds}
-    options={projectOptions}
-    getOptionLabel={option => option.label}
-    getOptionValue={option => option.value}
-  />
+  <ProjectSelect bind:value={selectedProjectIds} />
 </ModalContent>

@@ -33,7 +33,7 @@
   import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
-  import { featureFlags, projectsStore } from "@/stores/portal"
+  import { featureFlags } from "@/stores/portal"
   import { get } from "svelte/store"
 
   $goto
@@ -86,14 +86,8 @@
     }
   }
 
-  const openAssignProjectModal = async () => {
-    try {
-      await projectsStore.ensureFetched($appStore.appId)
-      assignProjectModal?.show()
-    } catch (error) {
-      console.error(error)
-      notifications.error("Unable to load projects")
-    }
+  const openAssignProjectModal = () => {
+    assignProjectModal?.show()
   }
 
   const assignProject = async (projectIds: string[]) => {
@@ -222,7 +216,6 @@
 <Modal bind:this={assignProjectModal}>
   <AssignProjectModal
     resource={projectAssignmentResource}
-    projects={$projectsStore}
     onConfirm={assignProject}
   />
 </Modal>
