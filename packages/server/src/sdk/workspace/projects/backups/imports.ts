@@ -376,25 +376,57 @@ const remapObjectKeys = <T>(
   )
 }
 
-const remapIdReferences = (value: string, idMap: Map<string, string>) =>
-  [...idMap.entries()].reduce(
-    (remapped, [sourceId, destinationId]) =>
-      remapped.split(`${sourceId}.`).join(`${destinationId}.`),
-    value
-  )
+interface ProjectImportIdRemapper {
+  idMap: Map<string, string>
+  referencePattern?: RegExp
+}
 
-const remapValue = (value: unknown, idMap: Map<string, string>): unknown => {
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+const createProjectImportIdRemapper = (
+  idMap: Map<string, string>
+): ProjectImportIdRemapper => {
+  const references = Array.from(idMap.keys(), sourceId => `${sourceId}.`).sort(
+    (a, b) => b.length - a.length
+  )
+  return {
+    idMap,
+    referencePattern: references.length
+      ? new RegExp(references.map(escapeRegExp).join("|"), "g")
+      : undefined,
+  }
+}
+
+const remapIdReferences = (
+  value: string,
+  remapper: ProjectImportIdRemapper
+) => {
+  if (!remapper.referencePattern) {
+    return value
+  }
+  return value.replace(remapper.referencePattern, sourceReference => {
+    const sourceId = sourceReference.slice(0, -1)
+    const destinationId = remapper.idMap.get(sourceId)
+    return destinationId ? `${destinationId}.` : sourceReference
+  })
+}
+
+const remapValue = (
+  value: unknown,
+  remapper: ProjectImportIdRemapper
+): unknown => {
   if (typeof value === "string") {
-    return idMap.get(value) || remapIdReferences(value, idMap)
+    return remapper.idMap.get(value) || remapIdReferences(value, remapper)
   }
   if (Array.isArray(value)) {
-    return value.map(item => remapValue(item, idMap))
+    return value.map(item => remapValue(item, remapper))
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
         key,
-        remapValue(nestedValue, idMap),
+        remapValue(nestedValue, remapper),
       ])
     )
   }
@@ -528,12 +560,13 @@ const sanitizeImportedProjectAssignments = (
 const sanitizeImportedDoc = async (
   doc: AnyDocument,
   resourceType: ResourceType,
-  idMap: Map<string, string>,
+  remapper: ProjectImportIdRemapper,
   workspaceId: string,
   importedProjectId: string,
   deconflictWorkspaceApp: (_workspaceApp: WorkspaceApp) => void
 ): Promise<AnyDocument> => {
-  const remapped = remapValue(structuredClone(doc), idMap) as AnyDocument
+  const { idMap } = remapper
+  const remapped = remapValue(structuredClone(doc), remapper) as AnyDocument
   delete remapped._rev
 
   if (resourceType === ResourceType.ROW_ACTION) {
@@ -548,7 +581,7 @@ const sanitizeImportedDoc = async (
           return [
             idMap.get(actionId) || actionId,
             {
-              ...(remapValue(action, idMap) as typeof action),
+              ...(remapValue(action, remapper) as typeof action),
               permissions: {
                 ...permissions,
                 views: remapObjectKeys<RowActionPermissions["views"][string]>(
@@ -573,7 +606,10 @@ const sanitizeImportedDoc = async (
     const datasource = remapped as Datasource
     for (const entity of Object.values(getDatasourceEntities(datasource))) {
       if (typeof entity.primaryDisplay === "string") {
-        entity.primaryDisplay = remapIdReferences(entity.primaryDisplay, idMap)
+        entity.primaryDisplay = remapIdReferences(
+          entity.primaryDisplay,
+          remapper
+        )
       }
     }
   }
@@ -1146,6 +1182,7 @@ export async function importProject(
     ])
 
     assignImportedIds(extracted.docs, idMap)
+    const idRemapper = createProjectImportIdRemapper(idMap)
     const deconflictWorkspaceApp = await createWorkspaceAppImportDeconflicter()
 
     const resources: Partial<Record<ResourceType, string[]>> = {
@@ -1161,7 +1198,7 @@ export async function importProject(
             const remappedDoc = await sanitizeImportedDoc(
               { ...doc, _id: newId },
               resourceType,
-              idMap,
+              idRemapper,
               workspaceId,
               importedProjectId,
               deconflictWorkspaceApp

@@ -1267,6 +1267,34 @@ describe("/projects", () => {
       })
     })
 
+    it("rejects non-project document ids through the assignment SDK", async () => {
+      await withProjectsEnabled(async () => {
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          await expect(
+            sdk.projects.updateResourceProjectAssignment({
+              resourceId: workspaceApp._id!,
+              resourceRev: workspaceApp._rev!,
+              projectIds: [datasource._id!],
+            })
+          ).rejects.toThrow(`Project '${datasource._id}' not found.`)
+        })
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
     it("rejects resources that are not direct project members", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({

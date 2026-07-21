@@ -271,8 +271,7 @@ const getNewDirectDependencyIds = (
   return findReferencedResources(savedResource)
     .filter(
       dependency =>
-        dependency.id !== rootResourceId &&
-        dependency.id !== savedResource._id
+        dependency.id !== rootResourceId && dependency.id !== savedResource._id
     )
     .filter(dependency => !previousDependencyIds.has(dependency.id))
     .map(dependency => dependency.id)
