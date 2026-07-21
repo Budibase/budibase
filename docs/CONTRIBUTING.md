@@ -24,11 +24,11 @@ If you do plan to raise a pull request, please take a look at the guide below.
 
 ## Vouching
 
-Due to the high code volume LLM era, we have decided to implement [Vouch](https://github.com/mitchellh/vouch) for our pull requests.
+We use [Vouch](https://github.com/mitchellh/vouch) to prevent explicitly denounced users from contributing pull requests.
 
-Your PR will not be merged unless you are added to our vouch list by our engineers.
+You do not need to be vouched for before opening or merging a pull request. Pull requests from users who have been explicitly denounced will be closed automatically.
 
-This is to ensure the quality of the product and free up time for our team. Thank you for your understanding.
+All pull requests remain subject to our normal review and contribution requirements.
 
 ## Not Sure Where to Start?
 
