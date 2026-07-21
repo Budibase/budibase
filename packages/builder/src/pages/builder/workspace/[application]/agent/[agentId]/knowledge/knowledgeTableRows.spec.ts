@@ -104,7 +104,7 @@ describe("knowledgeTableRows", () => {
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
@@ -116,7 +116,7 @@ describe("knowledgeTableRows", () => {
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
@@ -128,7 +128,7 @@ describe("knowledgeTableRows", () => {
         _id: "f3",
         status: KnowledgeBaseFileStatus.FAILED,
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-2",
           siteId: "site-2",
           driveId: "drive-1",

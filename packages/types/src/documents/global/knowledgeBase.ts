@@ -21,12 +21,12 @@ export enum KnowledgeBaseFileStatus {
 }
 
 export enum KnowledgeBaseFileSourceType {
-  SHAREPOINT = "sharepoint",
+  SHAREPOINT_SITE = "sharepoint",
   SHAREPOINT_LIST = "sharepoint_list",
 }
 
 export interface SharePointKnowledgeBaseFileSource {
-  type: KnowledgeBaseFileSourceType.SHAREPOINT
+  type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE
   knowledgeSourceId: string
   siteId: string
   driveId: string

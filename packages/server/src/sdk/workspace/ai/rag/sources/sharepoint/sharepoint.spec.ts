@@ -153,7 +153,7 @@ const makeSharePointFile = ({
     _id: id,
     knowledgeBaseId: "kb_1",
     source: {
-      type: KnowledgeBaseFileSourceType.SHAREPOINT,
+      type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
       knowledgeSourceId: sourceId,
       siteId,
       driveId,
@@ -320,7 +320,7 @@ describe("rag/sharepoint sync deduplication", () => {
       expect.objectContaining({
         knowledgeBaseId: "kb_1",
         source: expect.objectContaining({
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: sourceId,
           siteId,
           driveId: "drive-b",

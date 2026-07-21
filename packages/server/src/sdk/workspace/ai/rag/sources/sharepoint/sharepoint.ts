@@ -302,7 +302,7 @@ const isSharePointKnowledgeBaseFile = (
 } => {
   return (
     !!file._id &&
-    file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT &&
+    file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_SITE &&
     file.source.knowledgeSourceId === sourceId &&
     file.source.siteId === siteId
   )
@@ -623,7 +623,7 @@ const runSharePointSourcesForOperation = async (
     const fileId = file._id
     if (
       !fileId ||
-      file.source?.type !== KnowledgeBaseFileSourceType.SHAREPOINT
+      file.source?.type !== KnowledgeBaseFileSourceType.SHAREPOINT_SITE
     ) {
       continue
     }
@@ -861,7 +861,7 @@ const runSharePointSourcesForOperation = async (
             knowledgeBaseSdk.uploadKnowledgeBaseFile({
               knowledgeBaseId,
               source: {
-                type: KnowledgeBaseFileSourceType.SHAREPOINT,
+                type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
                 knowledgeSourceId: sourceId,
                 siteId,
                 driveId,
@@ -1262,7 +1262,7 @@ export const deleteSharePointFilesForOperationSite = async (
   const fileIdsToDelete = files
     .filter(
       file =>
-        (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT ||
+        (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_SITE ||
           file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST) &&
         file.source.siteId === siteId
     )

@@ -56,7 +56,7 @@
       agentsStore.getOperationKnowledge(agentId, operationId)?.files || []
     return files.filter(
       file =>
-        (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT ||
+        (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_SITE ||
           file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST) &&
         file.source.knowledgeSourceId === sharePointSource.id
     )
@@ -67,7 +67,7 @@
       sharePointFiles.map(file => ({
         filename: file.filename,
         sourcePath:
-          file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT
+          file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_SITE
             ? file.source.path
             : file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST
               ? `Lists/${file.source.listName}`

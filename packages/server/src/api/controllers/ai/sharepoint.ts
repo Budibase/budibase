@@ -20,7 +20,7 @@ export const getSharePointSiteIds = (agent?: Agent): Set<string> => {
 const isSharePointFile = (
   file: Pick<KnowledgeBaseFile, "source" | "uploadedBy">
 ) =>
-  file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT ||
+  file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_SITE ||
   file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST
 
 const isSharePointFileForRemovedSite = (

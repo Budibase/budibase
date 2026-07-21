@@ -90,7 +90,7 @@ export const getSharePointFilesForSite = (
 ) =>
   files.filter(
     file =>
-      (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT ||
+      (file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_SITE ||
         file.source?.type === KnowledgeBaseFileSourceType.SHAREPOINT_LIST) &&
       file.source.siteId === siteId
   )
