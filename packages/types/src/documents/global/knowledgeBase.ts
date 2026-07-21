@@ -21,11 +21,12 @@ export enum KnowledgeBaseFileStatus {
 }
 
 export enum KnowledgeBaseFileSourceType {
-  SHAREPOINT = "sharepoint",
+  SHAREPOINT_SITE = "sharepoint",
+  SHAREPOINT_LIST = "sharepoint_list",
 }
 
 export interface SharePointKnowledgeBaseFileSource {
-  type: KnowledgeBaseFileSourceType.SHAREPOINT
+  type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE
   knowledgeSourceId: string
   siteId: string
   driveId: string
@@ -37,7 +38,20 @@ export interface SharePointKnowledgeBaseFileSource {
   remoteSize?: number
 }
 
-export type KnowledgeBaseFileSource = SharePointKnowledgeBaseFileSource
+export interface SharePointListKnowledgeBaseFileSource {
+  type: KnowledgeBaseFileSourceType.SHAREPOINT_LIST
+  knowledgeSourceId: string
+  siteId: string
+  listId: string
+  listName: string
+  webUrl?: string
+  contentHash: string
+  itemCount: number
+}
+
+export type KnowledgeBaseFileSource =
+  | SharePointKnowledgeBaseFileSource
+  | SharePointListKnowledgeBaseFileSource
 
 export interface KnowledgeBaseFile extends Document {
   knowledgeBaseId: string
