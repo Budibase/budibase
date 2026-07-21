@@ -119,6 +119,16 @@ if [[ "${LITELLM_INTERNAL_DB+x}" == "x" ]]; then
     runtime_litellm_internal_db="${LITELLM_INTERNAL_DB}"
 fi
 
+# These are randomized if unset and persisted to .env.
+env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
+
+declare -A runtime_secret_values
+for var in "${env_vars[@]}"; do
+    if [[ -n "${!var}" ]]; then
+        runtime_secret_values["$var"]="${!var}"
+    fi
+done
+
 # Source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
     set -a  # Automatically export all variables loaded from .env
@@ -130,7 +140,6 @@ fi
 sync_couch_env_aliases
 
 # Randomize any unset sensitive environment variables using uuidgen
-env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
 generated_vars=()
 for var in "${env_vars[@]}"; do
     if [[ -z "${!var}" ]]; then
@@ -189,6 +198,35 @@ ensure_env_var() {
     echo "${name}=${value}" >> "${DATA_DIR}/.env"
 }
 
+# Set or replace a variable in the persisted .env, overwriting any existing value.
+upsert_env_var() {
+    local name="$1"
+    local value="$2"
+    local env_file="${DATA_DIR}/.env"
+    local temp_file
+    temp_file="$(mktemp)"
+
+    awk -v name="$name" -v value="$value" '
+index($0, name "=") == 1 {
+    if (!updated) {
+        print name "=" value
+        updated = 1
+    }
+    next
+}
+{
+    print
+}
+END {
+    if (!updated) {
+        print name "=" value
+    }
+}
+' "${env_file}" > "${temp_file}"
+
+    mv "${temp_file}" "${env_file}"
+}
+
 ensure_env_var "LITELLM_DB_NAME" "${LITELLM_DB_NAME}"
 ensure_env_var "LITELLM_DB_USER" "${LITELLM_DB_USER}"
 ensure_env_var "LITELLM_DB_PASSWORD" "${LITELLM_DB_PASSWORD}"
@@ -206,6 +244,29 @@ if [[ "${runtime_database_url_set}" == "true" ]]; then
 fi
 if [[ "${runtime_litellm_internal_db_set}" == "true" ]]; then
     export LITELLM_INTERNAL_DB="${runtime_litellm_internal_db}"
+fi
+
+# A runtime-provided secret only overrides the persisted value when it actually
+# differs from it. This lets users rotate any secret by passing a new value on a
+# later boot, while ignoring image-baked defaults (e.g. the base image always sets
+# COUCHDB_USER/PASSWORD) that already match what is persisted.
+couch_creds_updated="false"
+for var in "${!runtime_secret_values[@]}"; do
+    if [[ "${runtime_secret_values[$var]}" == "${!var}" ]]; then
+        continue
+    fi
+    export "$var"="${runtime_secret_values[$var]}"
+    upsert_env_var "$var" "${runtime_secret_values[$var]}"
+    if [[ "$var" == "COUCHDB_USER" || "$var" == "COUCHDB_PASSWORD" ]]; then
+        couch_creds_updated="true"
+    fi
+done
+
+# If the CouchDB credentials changed, rebuild and persist the derived internal URL.
+if [[ "${couch_creds_updated}" == "true" ]]; then
+    sync_couch_env_aliases
+    repair_internal_couch_url
+    upsert_env_var "COUCH_DB_URL" "${COUCH_DB_URL}"
 fi
 
 ln -sfn ${DATA_DIR}/.env /app/.env
@@ -310,34 +371,6 @@ if [[ -z "${LITELLM_MASTER_KEY}" || -z "${LITELLM_SALT_KEY}" ]]; then
 fi
 
 export USE_PRISMA_MIGRATE="True"
-
-upsert_env_var() {
-    local name="$1"
-    local value="$2"
-    local env_file="${DATA_DIR}/.env"
-    local temp_file
-    temp_file="$(mktemp)"
-
-    awk -v name="$name" -v value="$value" '
-index($0, name "=") == 1 {
-    if (!updated) {
-        print name "=" value
-        updated = 1
-    }
-    next
-}
-{
-    print
-}
-END {
-    if (!updated) {
-        print name "=" value
-    }
-}
-' "${env_file}" > "${temp_file}"
-
-    mv "${temp_file}" "${env_file}"
-}
 
 upsert_env_var "LITELLM_INTERNAL_DB" "${LITELLM_INTERNAL_DB}"
 upsert_env_var "DATABASE_URL" "${DATABASE_URL}"
