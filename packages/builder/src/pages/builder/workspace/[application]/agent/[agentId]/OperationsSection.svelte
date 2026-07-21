@@ -1,16 +1,10 @@
 <script lang="ts">
   import { Body, Button, Helpers, Icon, notifications } from "@budibase/bbui"
-  import {
-    FeatureFlag,
-    type Agent,
-    type AgentOperation,
-    type EnrichedBinding,
-  } from "@budibase/types"
+  import type { Agent, AgentOperation, EnrichedBinding } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import type { BindingCompletion } from "@/types"
   import { confirm } from "@/helpers/confirm"
   import { contextMenuStore } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import OperationNameModal from "./OperationNameModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import OperationSidePanel from "./OperationSidePanel.svelte"
@@ -82,12 +76,6 @@ Any constraints this operation must follow.
     operations.find(operation => operation.id === selectedOperationId)
   )
   let hasOperation = $derived(operations.length > 0)
-  let multipleOperationsEnabled = $derived(
-    $featureFlags[FeatureFlag.MULTIPLE_OPERATIONS]
-  )
-  let canAddOperation = $derived(
-    multipleOperationsEnabled || operations.length === 0
-  )
   let operationLive = $derived(selectedOperation?.live === true)
 
   const normalizeName = (value: string) => value.trim().toLowerCase()
@@ -171,10 +159,6 @@ Any constraints this operation must follow.
   }
 
   const handleAddOperation = () => {
-    if (!canAddOperation) {
-      notifications.info("Only one operation is supported at the moment.")
-      return
-    }
     createOperationModal?.show()
   }
 

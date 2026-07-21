@@ -54,21 +54,37 @@ export type BackupFetchOpts = {
   endDate?: string
 }
 
-export interface WorkspaceBackupQueueData {
+export interface WorkspaceBackupExportQueueData {
   appId: string
   docId: string
   docRev: string
-  export?: {
+  export: {
     trigger: BackupTrigger
     name?: string
     createdBy?: string
   }
-  import?: {
+}
+
+export interface WorkspaceBackupImportQueueData {
+  appId: string
+  docId: string
+  docRev: string
+  import: {
     backupId: string
     nameForBackup: string
     createdBy?: string
   }
 }
+
+export interface WorkspaceBackupCleanupQueueData {
+  cleanup: true
+  tenantId: string
+}
+
+export type WorkspaceBackupQueueData =
+  | WorkspaceBackupExportQueueData
+  | WorkspaceBackupImportQueueData
+  | WorkspaceBackupCleanupQueueData
 
 export interface DevRevertQueueData {
   appId: string

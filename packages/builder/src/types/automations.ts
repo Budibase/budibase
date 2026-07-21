@@ -310,8 +310,14 @@ export type BlockStatus = {
 /**
  * SvelteFlow Node Data Types
  */
+export interface FlowNodeLayout {
+  width: number
+  height: number
+}
+
 export interface StepNodeData {
   block: AutomationBlock
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
@@ -319,6 +325,7 @@ export interface BranchNodeData {
   block: AutomationBlock
   branch: Branch
   branchIdx: number
+  layout: FlowNodeLayout
   isSubflow?: boolean
   laneWidth?: number
   [key: string]: unknown
@@ -329,10 +336,12 @@ export interface LoopV2NodeData {
   containerHeight: number
   containerWidth: number
   handleY: number
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
 export interface AnchorNodeData {
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
