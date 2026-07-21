@@ -283,16 +283,15 @@ const normalizeSourceFilters = (
 const isSharePointPathIncludedByFilters = (
   path: string,
   filters?: AgentKnowledgeSourceFilterConfig,
-  relativePath?: string
+  ...alternativePaths: string[]
 ) => {
   const { patterns } = normalizeSourceFilters(filters)
 
   if (!patterns?.length) {
     return true
   }
-  return (
-    matchesConfiguredPatterns(path, patterns) ||
-    (!!relativePath && matchesConfiguredPatterns(relativePath, patterns))
+  return [path, ...alternativePaths].some(candidatePath =>
+    matchesConfiguredPatterns(candidatePath, patterns)
   )
 }
 
@@ -723,6 +722,7 @@ const runSharePointSourcesForOperation = async (
           !isSharePointPathIncludedByFilters(
             qualifiedPath,
             sourceFilters,
+            `drive:${driveId}/${file.path}`,
             file.path
           )
         ) {
