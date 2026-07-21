@@ -53,6 +53,7 @@ import {
   isManyToMany,
   sqlOutputProcessing,
 } from "./utils"
+import { assertWritableTable } from "./readOnly"
 
 interface ManyRelationship {
   tableId?: string
@@ -61,6 +62,13 @@ interface ManyRelationship {
   key: string
   [key: string]: any
   relationshipType: RelationshipType
+}
+
+interface RelationshipCleanupAction {
+  rowId: string
+  table: Table
+  field?: string
+  isMany: boolean
 }
 
 export interface RunConfig {
@@ -198,6 +206,10 @@ export class ExternalRequest<T extends Operation> {
     this.datasource = datasource
   }
 
+  private isReadonlyOperation(operation: Operation) {
+    return [Operation.READ, Operation.COUNT].includes(operation)
+  }
+
   private prepareFilters(
     id: string | undefined | string[],
     filters: SearchFilters,
@@ -281,6 +293,40 @@ export class ExternalRequest<T extends Operation> {
         body: { [colName]: null },
         filters,
       })
+    }
+  }
+
+  private async runRelationshipCleanup(actions: RelationshipCleanupAction[]) {
+    actions.forEach(action => {
+      assertWritableTable(action.table)
+    })
+
+    const promises = actions.map(action => {
+      if (action.isMany) {
+        return this.removeManyToManyRelationships(action.rowId, action.table)
+      }
+      return this.removeOneToManyRelationships(
+        action.rowId,
+        action.table,
+        action.field!
+      )
+    })
+
+    await Promise.all(promises)
+  }
+
+  private preflightRelationshipWrites(relationships: ManyRelationship[]) {
+    for (const relationship of relationships) {
+      if (!relationship.tableId) {
+        throw new Error("Table ID is unknown, cannot find table")
+      }
+
+      const linkTable = this.getTable(relationship.tableId)
+      if (!linkTable) {
+        throw new Error("Table ID is unknown, cannot find table")
+      }
+
+      assertWritableTable(linkTable)
     }
   }
 
@@ -519,6 +565,7 @@ export class ExternalRequest<T extends Operation> {
       if (!linkTable || !linkPrimary) {
         return
       }
+      assertWritableTable(linkTable)
 
       const linkSecondary = relationshipPrimary[1]
 
@@ -588,7 +635,7 @@ export class ExternalRequest<T extends Operation> {
     }
 
     // finally cleanup anything that needs to be removed
-    const promises: Promise<unknown>[] = []
+    const cleanupActions: RelationshipCleanupAction[] = []
     for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
@@ -601,19 +648,19 @@ export class ExternalRequest<T extends Operation> {
       for (const row of rows) {
         const rowId = generateIdForRow(row, table)
         if (isMany) {
-          promises.push(this.removeManyToManyRelationships(rowId, table))
+          cleanupActions.push({ rowId, table, isMany: true })
         } else {
-          promises.push(this.removeOneToManyRelationships(rowId, table, field))
+          cleanupActions.push({ rowId, table, field, isMany: false })
         }
       }
     }
-    await Promise.all(promises)
+    await this.runRelationshipCleanup(cleanupActions)
   }
 
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
-    const promises: Promise<unknown>[] = []
+    const cleanupActions: RelationshipCleanupAction[] = []
     for (const column of Object.values(table.schema)) {
       if (!isRelationshipColumn(column) || isOneToMany(column)) {
         continue
@@ -629,15 +676,18 @@ export class ExternalRequest<T extends Operation> {
       for (const row of rows) {
         const rowId = generateIdForRow(row, table)
         if (isMany) {
-          promises.push(this.removeManyToManyRelationships(rowId, table))
+          cleanupActions.push({ rowId, table, isMany: true })
         } else {
-          promises.push(
-            this.removeOneToManyRelationships(rowId, table, column.fieldName)
-          )
+          cleanupActions.push({
+            rowId,
+            table,
+            field: column.fieldName,
+            isMany: false,
+          })
         }
       }
     }
-    await Promise.all(promises)
+    await this.runRelationshipCleanup(cleanupActions)
   }
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
@@ -675,6 +725,10 @@ export class ExternalRequest<T extends Operation> {
     filters = this.prepareFilters(id, filters || {}, table)
     const relationships = buildExternalRelationships(table, this.tables)
 
+    if (!this.isReadonlyOperation(operation)) {
+      assertWritableTable(table)
+    }
+
     let aggregations: Aggregation[] = []
     if (sdk.views.isView(this.source)) {
       const calculationFields = helpers.views.calculationFields(this.source)
@@ -705,6 +759,10 @@ export class ExternalRequest<T extends Operation> {
           manyRelationships.push(...processed.manyRelationships)
         }
       }
+    }
+
+    if (!this.isReadonlyOperation(operation)) {
+      this.preflightRelationshipWrites(manyRelationships)
     }
 
     if (

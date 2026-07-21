@@ -5,6 +5,7 @@ import {
   Operation,
   RelationshipType,
   RenameColumn,
+  SourceName,
   Table,
   TableRequest,
   ViewV2,
@@ -104,6 +105,44 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
+function isMSSQLTemporalTable(
+  datasource: { source: SourceName },
+  table: Table
+) {
+  return (
+    datasource.source === SourceName.SQL_SERVER &&
+    !!(table.historyTable || table.temporalTable)
+  )
+}
+
+function preserveMSSQLSourceMetadata(
+  datasource: { source: SourceName },
+  table: TableRequest,
+  oldTable?: Table
+) {
+  if (datasource.source !== SourceName.SQL_SERVER) {
+    return false
+  }
+
+  if (oldTable?.readonly === undefined) {
+    delete table.readonly
+  } else {
+    table.readonly = oldTable.readonly
+  }
+  if (oldTable?.historyTable === undefined) {
+    delete table.historyTable
+  } else {
+    table.historyTable = oldTable.historyTable
+  }
+  if (oldTable?.temporalTable === undefined) {
+    delete table.temporalTable
+  } else {
+    table.temporalTable = oldTable.temporalTable
+  }
+
+  return !!oldTable && isMSSQLTemporalTable(datasource, oldTable)
+}
+
 export async function create(table: WithoutDocMetadata<Table>) {
   const datasourceId = getDatasourceId(table)
 
@@ -172,6 +211,12 @@ export async function save(
   if (!datasource.entities) {
     datasource.entities = {}
   }
+
+  const isTemporalTable = preserveMSSQLSourceMetadata(
+    datasource,
+    tableToSave,
+    oldTable
+  )
 
   // GSheets is a specific case - only ever has a static primary key
   tableToSave = setStaticSchemas(datasource, tableToSave)
@@ -281,15 +326,26 @@ export async function save(
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
 
-  // Since tables are stored inside datasources, we need to notify clients
-  // that the datasource definition changed
-  const updatedDatasource = await datasourceSdk.get(datasource._id!)
+  let updatedDatasource = await datasourceSdk.get(datasource._id!)
+  let updatedTable = tableToSave
 
-  if (updatedDatasource.isSQL) {
-    tableToSave.sql = true
+  if (isTemporalTable) {
+    const refreshed = await datasourceSdk.buildSchemaFromSource(datasource._id!)
+    updatedDatasource = refreshed.datasource
+    const refreshedTable = updatedDatasource.entities?.[tableToSave.name]
+    if (!refreshedTable) {
+      throw new Error(
+        `Unable to refresh external table "${tableToSave.name}" after save.`
+      )
+    }
+    updatedTable = refreshedTable
   }
 
-  return { datasource: updatedDatasource, table: tableToSave, oldTable }
+  if (updatedDatasource.isSQL) {
+    updatedTable.sql = true
+  }
+
+  return { datasource: updatedDatasource, table: updatedTable, oldTable }
 }
 
 export async function destroy(datasourceId: string, table: Table) {

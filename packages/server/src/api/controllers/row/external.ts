@@ -29,6 +29,7 @@ import { cloneDeep } from "lodash"
 import { generateIdForRow } from "./utils"
 import { helpers } from "@budibase/shared-core"
 import { HTTPError } from "@budibase/backend-core"
+import { assertWritableTable } from "./readOnly"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
@@ -53,6 +54,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 
   const table = await utils.getTableFromSource(source)
+  assertWritableTable(table)
   const { _id, ...rowData } = ctx.request.body
 
   const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {

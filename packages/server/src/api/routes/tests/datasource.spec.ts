@@ -1259,7 +1259,7 @@ if (descriptions.length) {
           })
 
         isMSSQL &&
-          it("supports temporal tables without importing history tables", async () => {
+          it("marks temporal period columns as autocolumns", async () => {
             const tableName = generator.guid().replaceAll("-", "")
             await client.raw(`
               CREATE TABLE [dbo].[${tableName}](
@@ -1275,10 +1275,6 @@ if (descriptions.length) {
               )
             `)
 
-            const info = await config.api.datasource.info(datasource)
-            expect(info.tableNames).toContain(tableName)
-            expect(info.tableNames).not.toContain(`${tableName}_History`)
-
             const resp = await config.api.datasource.fetchSchema({
               datasourceId: datasource._id!,
             })
@@ -1292,7 +1288,10 @@ if (descriptions.length) {
             ).toBe(true)
             expect(
               resp.datasource.entities?.[`${tableName}_History`]
-            ).toBeUndefined()
+            ).toBeDefined()
+            expect(
+              resp.datasource.entities?.[`${tableName}_History`].primary?.length
+            ).toBeGreaterThan(0)
           })
 
         it("re-points primaryDisplay when its column is dropped from the source database", async () => {

@@ -1221,9 +1221,111 @@ if (descriptions.length) {
             const rows = await config.api.row.fetch(temporalTable._id!)
             expect(rows).toHaveLength(1)
             expect(rows[0].first_name).toEqual("Johnny")
-            expect(
+
+            const historyTable =
               schemaRes.datasource.entities![`${tableName}_History`]
-            ).toBeUndefined()
+            const historyRows = await config.api.row.fetch(historyTable._id!)
+            expect(historyRows).toHaveLength(1)
+            expect(historyRows[0].first_name).toEqual("John")
+
+            await config.api.row.save(
+              historyTable._id!,
+              { first_name: "Nope" },
+              {
+                status: 400,
+                body: {
+                  message: `Table "${tableName}_History" is read-only`,
+                },
+              }
+            )
+
+            await config.api.row.save(
+              historyTable._id!,
+              {
+                _id: historyRows[0]._id!,
+                first_name: "Nope",
+              },
+              {
+                status: 400,
+                body: {
+                  message: `Table "${tableName}_History" is read-only`,
+                },
+              }
+            )
+
+            await config.api.row.delete(
+              historyTable._id!,
+              { _id: historyRows[0]._id! },
+              {
+                status: 400,
+                body: {
+                  message: `Table "${tableName}_History" is read-only`,
+                },
+              }
+            )
+          })
+
+        isMSSQL &&
+          it("auto-refreshes temporal history tables after saving an external table", async () => {
+            const tableName = uuid.v4().replaceAll("-", "").substring(0, 20)
+            const historyTableName = `${tableName}_audit`
+            await client!.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [last_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${historyTableName}])
+              )
+            `)
+
+            const schemaRes = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+            const temporalTable = schemaRes.datasource.entities![tableName]
+
+            await client!.raw(`
+              ALTER TABLE [dbo].[${tableName}] ADD [middle_name] NVARCHAR(100) NULL
+            `)
+
+            const savedTable = await config.api.table.save({
+              ...temporalTable,
+              primaryDisplay: "last_name",
+            })
+
+            expect(savedTable.schema.middle_name).toBeDefined()
+            expect(savedTable.schema.ValidFrom.autocolumn).toBe(true)
+            expect(savedTable.schema.ValidTo.autocolumn).toBe(true)
+
+            const updatedDatasource = await config.api.datasource.get(
+              datasource!._id!
+            )
+            const historyTable = updatedDatasource.entities![historyTableName]
+
+            expect(historyTable).toBeDefined()
+            expect(historyTable.readonly).toBe(true)
+            expect(historyTable.schema.middle_name).toBeDefined()
+            expect(historyTable.primary?.length).toBeGreaterThan(0)
+
+            const {
+              readonly: _readonly,
+              temporalTable: _temporalTable,
+              ...historyTableUpdate
+            } = historyTable
+            const savedHistoryTable = await config.api.table.save({
+              ...historyTableUpdate,
+              readonly: false,
+            })
+            expect(savedHistoryTable.readonly).toBe(true)
+            expect(savedHistoryTable.temporalTable).toBe(tableName)
+
+            const historyRows = await config.api.row.fetch(historyTable._id!)
+            expect(historyRows).toEqual([])
           })
 
         describe("relations to same table", () => {
