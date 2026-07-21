@@ -64,7 +64,10 @@ export async function save(
     rootResourceId: owningWorkspaceApp._id!,
     currentProjectIds: owningWorkspaceApp.projectIds,
     previousProjectIds: owningWorkspaceApp.projectIds,
-    previousResource: previousScreen,
+    previousResource:
+      previousScreen?.workspaceAppId === owningWorkspaceApp._id
+        ? previousScreen
+        : undefined,
     savedResource: savedScreen,
   })
 
