@@ -39,8 +39,7 @@ export const isExcludeNewByDefaultPatterns = (patterns: string[]) => {
 export const rehydrateFromPatterns = (
   patterns: string[],
   selectablePaths: string[],
-  currentSelection: string[] = [],
-  candidatePathBySelectablePath?: Map<string, string>
+  currentSelection: string[] = []
 ) => {
   const selectableWithoutRoot = selectablePaths.filter(
     path => path !== SITE_ROOT_PATH
@@ -50,10 +49,9 @@ export const rehydrateFromPatterns = (
     return [...selectablePaths]
   }
 
-  const includedPaths = selectableWithoutRoot.filter(path => {
-    const candidatePath = candidatePathBySelectablePath?.get(path) || path
-    return matchesConfiguredPatterns(candidatePath, patterns)
-  })
+  const includedPaths = selectableWithoutRoot.filter(path =>
+    matchesConfiguredPatterns(path, patterns)
+  )
 
   if (selectableWithoutRoot.length === 0) {
     return currentSelection.filter(path => path === SITE_ROOT_PATH)
@@ -152,7 +150,7 @@ export const buildEntryTreeFromSourceEntries = (
   const byPath = new Map<string, SharePointEntryTreeNode>()
 
   for (const entry of entries) {
-    const path = (entry.filterPath || entry.path).trim()
+    const path = entry.path.trim()
     if (!path) {
       continue
     }
@@ -166,23 +164,20 @@ export const buildEntryTreeFromSourceEntries = (
       currentPath = currentPath ? `${currentPath}/${segment}` : segment
       const isLeaf = i === parts.length - 1
       const shouldBeFile = isLeaf && entry.type === "file"
-      const nodeName = i === 0 && entry.driveName ? entry.driveName : segment
 
       let node = byPath.get(currentPath)
       if (!node) {
         node = {
           id: currentPath,
-          name: nodeName,
+          name: segment,
           path: currentPath,
           type: shouldBeFile ? "file" : "folder",
-          sourcePath: shouldBeFile ? entry.path : undefined,
           children: [],
         }
         byPath.set(currentPath, node)
         parent.push(node)
       } else if (shouldBeFile) {
         node.type = "file"
-        node.sourcePath = entry.path
       }
       parent = node.children
     }

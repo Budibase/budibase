@@ -139,7 +139,6 @@
         authConfigId: selectedAuthConfigId,
         site: selectedSite,
         filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
-        filterScope: mode === "selective" ? "drive" : undefined,
       })
       await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")

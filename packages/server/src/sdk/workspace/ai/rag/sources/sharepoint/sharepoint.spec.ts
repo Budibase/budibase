@@ -93,8 +93,7 @@ const makeSharePointAgent = (
   siteId: string,
   patterns?: string[],
   datasourceId = "datasource_1",
-  authConfigId = "auth_1",
-  filterScope?: "drive"
+  authConfigId = "auth_1"
 ): Agent =>
   ({
     _id: "agent_1",
@@ -113,9 +112,7 @@ const makeSharePointAgent = (
               datasourceId,
               authConfigId,
               site: { id: siteId },
-              ...(patterns
-                ? { filters: { patterns, scope: filterScope } }
-                : {}),
+              ...(patterns ? { filters: { patterns } } : {}),
             },
           },
         ],
@@ -218,7 +215,7 @@ describe("rag/sharepoint sync deduplication", () => {
     jest.useRealTimers()
   })
 
-  it("returns document libraries as roots with drive-scoped file paths", async () => {
+  it("returns document libraries as roots in file paths", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
     mockAgentsGetOrThrow.mockResolvedValue(
@@ -274,30 +271,26 @@ describe("rag/sharepoint sync deduplication", () => {
 
     expect(result.entries).toEqual([
       expect.objectContaining({
-        name: "Documents",
-        filterPath: "drive:drive-a",
+        name: "Department Files",
+        path: "Department Files",
         type: "folder",
       }),
       expect.objectContaining({
-        path: "handbook.txt",
-        filterPath: "drive:drive-a/handbook.txt",
-        driveName: "Documents",
+        path: "Department Files/handbook.txt",
         type: "file",
       }),
       expect.objectContaining({
-        name: "Department Files",
-        filterPath: "drive:drive-b",
+        name: "Documents",
+        path: "Documents",
         type: "folder",
       }),
       expect.objectContaining({
-        path: "handbook.txt",
-        filterPath: "drive:drive-b/handbook.txt",
-        driveName: "Department Files",
+        path: "Documents/handbook.txt",
         type: "file",
       }),
       expect.objectContaining({
         name: "Empty Library",
-        filterPath: "drive:drive-empty",
+        path: "Empty Library",
         type: "folder",
       }),
     ])
@@ -511,28 +504,19 @@ describe("rag/sharepoint sync deduplication", () => {
     {
       name: "keeps legacy relative filters matching across libraries",
       patterns: ["!**", "Policies/**"],
-      filterScope: undefined,
       expectedDriveIds: ["drive-a", "drive-b"],
     },
     {
-      name: "limits drive-scoped filters to one library",
-      patterns: ["!**", "drive:drive-a/Policies/**"],
-      filterScope: "drive" as const,
+      name: "limits library filters to one library",
+      patterns: ["!**", "Documents/Policies/**"],
       expectedDriveIds: ["drive-a"],
     },
-  ])("$name", async ({ patterns, filterScope, expectedDriveIds }) => {
+  ])("$name", async ({ patterns, expectedDriveIds }) => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(
-        sourceId,
-        siteId,
-        patterns,
-        "datasource_1",
-        "auth_1",
-        filterScope
-      )
+      makeSharePointAgent(sourceId, siteId, patterns)
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([])
 
