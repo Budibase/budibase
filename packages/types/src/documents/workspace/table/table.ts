@@ -28,9 +28,6 @@ export interface Table extends Document {
   created?: boolean
   rowHeight?: number
   aiGenerated?: boolean
-  readonly?: boolean
-  historyTable?: string
-  temporalTable?: string
   pendingColumnRenames?: RenameColumn[]
 }
 

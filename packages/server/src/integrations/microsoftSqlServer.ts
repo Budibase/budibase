@@ -234,18 +234,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   ]
   TABLES_SQL = `SELECT
       ist.*,
-      st.temporal_type AS TEMPORAL_TYPE,
-      history_table.name AS HISTORY_TABLE_NAME,
-      temporal_table.name AS TEMPORAL_TABLE_NAME
+      st.temporal_type AS TEMPORAL_TYPE
     FROM INFORMATION_SCHEMA.TABLES ist
     INNER JOIN sys.tables st
       ON st.object_id = OBJECT_ID(
         QUOTENAME(ist.TABLE_SCHEMA) + '.' + QUOTENAME(ist.TABLE_NAME)
       )
-    LEFT JOIN sys.tables history_table
-      ON history_table.object_id = st.history_table_id
-    LEFT JOIN sys.tables temporal_table
-      ON temporal_table.history_table_id = st.object_id
     WHERE ist.TABLE_TYPE='BASE TABLE'`
 
   constructor(config: MSSQLConfig) {
@@ -461,18 +455,15 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
     const schemaName = this.config.schema || DEFAULT_SCHEMA
     const tableNames = tableInfo
-      .filter((record: any) => record.TABLE_SCHEMA === schemaName)
+      .filter(
+        record =>
+          record.TABLE_SCHEMA === schemaName && record.TEMPORAL_TYPE !== 1
+      )
       .map((record: any) => record.TABLE_NAME)
       .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 
     const tables: Record<string, Table> = {}
     for (let tableName of tableNames) {
-      const tableMetadata = tableInfo.find(
-        table =>
-          table.TABLE_NAME === tableName && table.TABLE_SCHEMA === schemaName
-      )
-      const isHistoryTable = tableMetadata?.TEMPORAL_TYPE === 1
-
       // get the column definition (type)
       const definition = await this.runSQL(
         this.getDefinitionSQL(tableName, schemaName)
@@ -485,7 +476,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       const columns: MSSQLColumn[] = await this.runSQL(
         this.getAutoColumnsSQL(tableName, schemaName)
       )
-      let primaryKeys = constraints
+      const primaryKeys = constraints
         .filter(
           (constraint: any) => constraint.CONSTRAINT_TYPE === "PRIMARY KEY"
         )
@@ -507,7 +498,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           continue
         }
         const hasDefault = def.COLUMN_DEFAULT
-        const isAuto = isHistoryTable || !!autoColumns.find(col => col === name)
+        const isAuto = !!autoColumns.find(col => col === name)
         const required = !!requiredColumns.find(col => col === name)
         schema[name] = generateColumnDefinition({
           autocolumn: isAuto,
@@ -515,11 +506,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           presence: required && !isAuto && !hasDefault,
           externalType: def.DATA_TYPE,
         })
-      }
-      if (isHistoryTable && primaryKeys.length === 0) {
-        primaryKeys = definition
-          .map(def => def.COLUMN_NAME)
-          .filter((name): name is string => typeof name === "string")
       }
       tables[tableName] = {
         _id: buildExternalTableId(datasourceId, tableName),
@@ -529,16 +515,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         primary: primaryKeys,
         name: tableName,
         schema,
-      }
-
-      if (isHistoryTable) {
-        tables[tableName].readonly = true
-      }
-      if (tableMetadata?.HISTORY_TABLE_NAME) {
-        tables[tableName].historyTable = tableMetadata.HISTORY_TABLE_NAME
-      }
-      if (tableMetadata?.TEMPORAL_TABLE_NAME) {
-        tables[tableName].temporalTable = tableMetadata.TEMPORAL_TABLE_NAME
       }
     }
     let externalTables = finaliseExternalTables(tables, entities)
@@ -553,7 +529,9 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     const schema = this.config.schema || DEFAULT_SCHEMA
     return tableInfo
-      .filter((record: any) => record.TABLE_SCHEMA === schema)
+      .filter(
+        record => record.TABLE_SCHEMA === schema && record.TEMPORAL_TYPE !== 1
+      )
       .map((record: any) => record.TABLE_NAME)
       .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
   }

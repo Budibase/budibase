@@ -10,7 +10,6 @@ import {
 import cloneDeep from "lodash/fp/cloneDeep"
 import sdk from "../.."
 import { handleRequest } from "../../../api/controllers/row/external"
-import { assertWritableTable } from "../../../api/controllers/row/readOnly"
 import { breakRowIdField } from "../../../integrations/utils"
 import {
   inputProcessing,
@@ -59,11 +58,6 @@ export async function save(
   if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
     throw new HTTPError("Cannot insert rows through a calculation view", 400)
   }
-
-  const table = sdk.views.isView(source)
-    ? await sdk.views.getTable(source.id)
-    : source
-  assertWritableTable(table)
 
   const row = await inputProcessing(userId, cloneDeep(source), inputs)
 

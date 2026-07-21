@@ -4,8 +4,6 @@ export interface MSSQLTablesResponse {
   TABLE_NAME: string
   TABLE_TYPE: string
   TEMPORAL_TYPE: number
-  HISTORY_TABLE_NAME?: string
-  TEMPORAL_TABLE_NAME?: string
 }
 
 export interface MSSQLColumn {
