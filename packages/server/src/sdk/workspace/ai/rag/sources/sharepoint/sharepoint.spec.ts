@@ -1375,7 +1375,7 @@ describe("rag/sharepoint sync deduplication", () => {
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["!**", "__list__/list-1"])
+      makeSharePointAgent(sourceId, siteId, ["!**", "__list__:list-1"])
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([])
     mockListSharePointLists.mockResolvedValue([
@@ -1396,7 +1396,33 @@ describe("rag/sharepoint sync deduplication", () => {
         response: {
           ok: true,
           status: 200,
-          json: async () => ({ value: [] }),
+          json: async () => ({ value: [{ id: "drive-1" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-1/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "folder-1", name: "__list__", folder: {} }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-1/items/folder-1/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "file-1",
+                name: "list-1",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
         } as Response,
       },
     ])
@@ -1415,9 +1441,11 @@ describe("rag/sharepoint sync deduplication", () => {
         source: expect.objectContaining({ listId: "list-1" }),
       })
     )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
     expect(result).toMatchObject({
       synced: 1,
-      totalDiscovered: 2,
+      failed: 0,
+      totalDiscovered: 3,
     })
   })
 
@@ -1426,7 +1454,7 @@ describe("rag/sharepoint sync deduplication", () => {
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["!__list__/list-1"])
+      makeSharePointAgent(sourceId, siteId, ["!__list__:list-1"])
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([])
     mockListSharePointLists.mockResolvedValue([

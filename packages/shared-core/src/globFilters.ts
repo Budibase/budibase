@@ -1,7 +1,7 @@
 import { minimatch } from "minimatch"
 
 export const EXCLUDE_ALL_PATTERN = "!**"
-export const SHAREPOINT_LIST_FILTER_PATH_PREFIX = "__list__/"
+export const SHAREPOINT_LIST_FILTER_PATH_PREFIX = "__list__:"
 const MATCH_OPTIONS = { matchBase: true } as const
 
 export const getSharePointListFilterPath = (listId: string) =>

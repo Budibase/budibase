@@ -6,7 +6,16 @@ import {
 
 describe("globFilters", () => {
   it("builds stable SharePoint list filter paths", () => {
-    expect(getSharePointListFilterPath("list-123")).toBe("__list__/list-123")
+    expect(getSharePointListFilterPath("list-123")).toBe("__list__:list-123")
+  })
+
+  it("keeps SharePoint list filters separate from drive paths", () => {
+    const listPath = getSharePointListFilterPath("list-123")
+
+    expect(matchesConfiguredPatterns(listPath, [listPath])).toBe(true)
+    expect(matchesConfiguredPatterns("__list__/list-123", [listPath])).toBe(
+      false
+    )
   })
 
   it("excludes all files when using !**", () => {

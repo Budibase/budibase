@@ -133,9 +133,32 @@ describe("sharePointModalUtils.buildEntryTreeFromSourceEntries", () => {
     expect(tree[1].children[0]).toMatchObject({
       id: "list-123",
       name: "FAQs",
-      path: "__list__/list-123",
+      path: "__list__:list-123",
       type: "list",
     })
+  })
+
+  it("keeps list paths distinct from colliding drive paths", () => {
+    const tree = wrapSelectionTreeWithSiteRoot(
+      buildEntryTreeFromSourceEntries([
+        {
+          id: "drive:item",
+          name: "list-123",
+          path: "__list__/list-123",
+          type: "file",
+        },
+        {
+          id: "list-123",
+          name: "FAQs",
+          path: "FAQs",
+          type: "list",
+        },
+      ])
+    )
+    const nodesByPath = flattenNodesByPath(tree)
+
+    expect(nodesByPath.get("__list__/list-123")?.type).toBe("file")
+    expect(nodesByPath.get("__list__:list-123")?.type).toBe("list")
   })
 })
 
@@ -159,7 +182,7 @@ describe("sharePointModalUtils filter patterns", () => {
     )
     return {
       selectionNodeByPath: flattenNodesByPath(selectionTree),
-      selectablePaths: ["docs/guide.md", "__list__/list-123"],
+      selectablePaths: ["docs/guide.md", "__list__:list-123"],
     }
   }
 
@@ -183,15 +206,15 @@ describe("sharePointModalUtils filter patterns", () => {
   it("uses exact list paths when excluding new content by default", () => {
     const { selectablePaths, selectionNodeByPath } = getSelectionFixture()
     const patterns = buildPatternsFromSelection(
-      ["__list__/list-123"],
+      ["__list__:list-123"],
       selectablePaths,
       selectionNodeByPath,
       false
     )
 
-    expect(patterns).toEqual(["!**", "__list__/list-123"])
+    expect(patterns).toEqual(["!**", "__list__:list-123"])
     expect(rehydrateFromPatterns(patterns || [], selectablePaths)).toEqual([
-      "__list__/list-123",
+      "__list__:list-123",
     ])
   })
 
@@ -204,7 +227,7 @@ describe("sharePointModalUtils filter patterns", () => {
       true
     )
 
-    expect(patterns).toEqual(["!__list__/list-123"])
+    expect(patterns).toEqual(["!__list__:list-123"])
     expect(rehydrateFromPatterns(patterns || [], selectablePaths)).toEqual([
       "docs/guide.md",
     ])
