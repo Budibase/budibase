@@ -16,7 +16,10 @@
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
   import getScreenContextMenuItems from "./getScreenContextMenuItems"
-  import { getComponentTreeSearchResults } from "@/helpers/components"
+  import {
+    getComponentTreeSearchResults,
+    normaliseComponentSearchTerm,
+  } from "@/helpers/components"
 
   $: screenComponentId = `${$screenStore.selectedScreenId}-screen`
   $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
@@ -25,10 +28,14 @@
   let searchInput
 
   $: isSearching = !!searchTerm.trim()
+  $: normalisedSearchTerm = normaliseComponentSearchTerm(searchTerm)
+  $: navigationMatches =
+    !isSearching || "navigation".includes(normalisedSearchTerm)
   $: searchResults = getComponentTreeSearchResults(
     $selectedScreen?.props?._children,
     searchTerm
   )
+  $: hasSearchResults = navigationMatches || searchResults.matchingIds.size > 0
 
   const openSearch = async () => {
     searchOpen = true
@@ -152,17 +159,19 @@
           >
             <svelte:fragment slot="text">
               {#if searchOpen}
-                <input
-                  class="screen-search-input"
-                  placeholder="Search components"
-                  aria-label="Search components"
-                  bind:value={searchTerm}
-                  bind:this={searchInput}
-                  on:click|stopPropagation
-                  on:dblclick|stopPropagation
-                  on:contextmenu|stopPropagation
-                  on:keydown={onSearchInputKeyDown}
-                />
+                <div class="screen-search">
+                  <input
+                    class="screen-search-input"
+                    placeholder="Search components"
+                    aria-label="Search components"
+                    bind:value={searchTerm}
+                    bind:this={searchInput}
+                    on:click|stopPropagation
+                    on:dblclick|stopPropagation
+                    on:contextmenu|stopPropagation
+                    on:keydown={onSearchInputKeyDown}
+                  />
+                </div>
               {:else}
                 <div class="screen-row-text">
                   <span title="Screen">Screen</span>
@@ -195,26 +204,30 @@
             </svelte:fragment>
           </NavItem>
         </li>
+        {#if navigationMatches}
+          <li on:contextmenu|stopPropagation>
+            <NavItem
+              text="Navigation"
+              indentLevel={0}
+              selected={$componentStore.selectedComponentId === navComponentId}
+              opened
+              scrollable
+              icon={$selectedScreen?.showNavigation ? "eye" : "eye-slash"}
+              on:drop={onDrop}
+              on:click={() => {
+                componentStore.select(
+                  `${$screenStore.selectedScreenId}-navigation`
+                )
+              }}
+              hovering={$hoverStore.componentId === navComponentId}
+              on:mouseenter={() => hover(navComponentId)}
+              on:mouseleave={() => hover(null)}
+              id="component-nav"
+              selectedBy={$userSelectedResourceMap[navComponentId]}
+            />
+          </li>
+        {/if}
         <li on:contextmenu|stopPropagation>
-          <NavItem
-            text="Navigation"
-            indentLevel={0}
-            selected={$componentStore.selectedComponentId === navComponentId}
-            opened
-            scrollable
-            icon={$selectedScreen?.showNavigation ? "eye" : "eye-slash"}
-            on:drop={onDrop}
-            on:click={() => {
-              componentStore.select(
-                `${$screenStore.selectedScreenId}-navigation`
-              )
-            }}
-            hovering={$hoverStore.componentId === navComponentId}
-            on:mouseenter={() => hover(navComponentId)}
-            on:mouseleave={() => hover(null)}
-            id="component-nav"
-            selectedBy={$userSelectedResourceMap[navComponentId]}
-          />
           <ComponentTree
             level={0}
             components={$selectedScreen?.props._children}
@@ -223,7 +236,7 @@
             matchingSearchIds={searchResults.matchingIds}
             expandedSearchIds={searchResults.expandedIds}
           />
-          {#if isSearching && searchResults.matchingIds.size === 0}
+          {#if isSearching && !hasSearchResults}
             <div class="no-results">No components found</div>
           {/if}
 
@@ -259,6 +272,15 @@
     padding-right: 8px !important;
   }
 
+  .components :global(.nav-item.bodyInteractive .nav-item-body) {
+    flex: 1 1 auto;
+    width: 0;
+  }
+
+  .components :global(.nav-item.bodyInteractive .right) {
+    flex: 0 0 auto;
+  }
+
   .list-panel {
     display: flex;
     flex-direction: column;
@@ -281,14 +303,23 @@
     text-overflow: ellipsis;
   }
 
+  .screen-search {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+
   .screen-search-input {
     width: 100%;
-    min-width: 120px;
+    min-width: 0;
     border: none;
     color: var(--ink);
     background: transparent;
+    box-sizing: border-box;
     font: inherit;
     outline: none;
+    text-overflow: ellipsis;
   }
 
   .screen-search-input::placeholder {
