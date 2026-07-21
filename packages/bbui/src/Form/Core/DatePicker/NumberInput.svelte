@@ -1,16 +1,19 @@
-<script>
-  export let value
-  export let min = undefined
-  export let max = undefined
-  export let hideArrows = false
-  export let width = undefined
-  export let type = "number"
-  export let disabled = false
-  export let readonly = false
+<script lang="ts">
+  export let value: string | number | undefined = undefined
+  export let min: number | undefined = undefined
+  export let max: number | undefined = undefined
+  export let hideArrows: boolean = false
+  export let width: number | undefined = undefined
+  export let type: "number" | "time" = "number"
+  export let disabled: boolean = false
+  export let readonly: boolean = false
 
   $: style = width ? `width:${width}px;` : ""
 
-  const selectAll = event => event.target.select()
+  const selectAll = (event: MouseEvent) => {
+    const target = event.target as HTMLInputElement
+    target.select()
+  }
 </script>
 
 <input

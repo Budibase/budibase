@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { cleanInput } from "./utils"
   import Select from "../../Select.svelte"
   import dayjs from "dayjs"
@@ -6,12 +6,14 @@
   import { createEventDispatcher, onDestroy } from "svelte"
   import Icon from "../../../Icon/Icon.svelte"
   import { resolveTranslationGroup } from "@budibase/shared-core"
+  import type { Dayjs } from "dayjs"
+  import type { Weekday } from "./utils"
 
-  export let value
-  export let startDayOfWeek = "Monday"
+  export let value: Dayjs | null | undefined = undefined
+  export let startDayOfWeek: Weekday = "Monday"
   export let calendarLabels = resolveTranslationGroup("calendar")
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: Dayjs }>()
   const DaysOfWeek = [
     "Monday",
     "Tuesday",
@@ -21,7 +23,7 @@
     "Saturday",
     "Sunday",
   ]
-  const DayIndex = {
+  const DayIndex: Record<Weekday, number> = {
     Sunday: 0,
     Monday: 1,
     Tuesday: 2,
@@ -46,7 +48,7 @@
   ]
 
   const now = dayjs()
-  let calendarDate
+  let calendarDate: Dayjs
 
   $: calendarDate = dayjs(value || dayjs()).startOf("month")
   $: dayHeaders = getDayHeaders(startDayOfWeek)
@@ -56,23 +58,23 @@
     value: idx,
   }))
 
-  const getWeekStarts = (monthStart, startDayIndex) => {
+  const getWeekStarts = (monthStart: Dayjs, startDayIndex: number): Dayjs[] => {
     if (!monthStart?.isValid()) {
       return []
     }
-    let monthEnd = monthStart.endOf("month")
+    const monthEnd = monthStart.endOf("month")
     const offset = (((monthStart.day() - startDayIndex) % 7) + 7) % 7
-    let calendarStart = monthStart.subtract(offset, "day")
+    const calendarStart = monthStart.subtract(offset, "day")
     const numWeeks = Math.ceil((monthEnd.diff(calendarStart, "day") + 1) / 7)
 
-    let starts = []
+    const starts: Dayjs[] = []
     for (let i = 0; i < numWeeks; i++) {
       starts.push(calendarStart.add(i, "weeks"))
     }
     return starts
   }
 
-  const getDayHeaders = startDay => {
+  const getDayHeaders = (startDay: Weekday): string[] => {
     const index = DaysOfWeek.indexOf(startDay)
     if (index === -1) {
       return DaysOfWeek
@@ -80,25 +82,26 @@
     return [...DaysOfWeek.slice(index), ...DaysOfWeek.slice(0, index)]
   }
 
-  const getTranslatedDay = day => {
+  const getTranslatedDay = (day: string): string => {
     return calendarLabels?.[day.toLowerCase()] ?? day
   }
 
-  const getTranslatedMonth = month => {
+  const getTranslatedMonth = (month: string): string => {
     return calendarLabels?.[month.toLowerCase()] ?? month
   }
 
-  const getDateTitle = date => {
+  const getDateTitle = (date: Dayjs): string => {
     return `${getTranslatedDay(date.format("dddd"))}, ${getTranslatedMonth(
       date.format("MMMM")
     )} ${date.date()}, ${date.year()}`
   }
 
-  const handleCalendarYearChange = e => {
-    calendarDate = calendarDate.year(parseInt(e.target.value))
+  const handleCalendarYearChange = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    calendarDate = calendarDate.year(parseInt(target.value))
   }
 
-  const handleDateChange = date => {
+  const handleDateChange = (date: Dayjs) => {
     const base = value || now
     dispatch(
       "change",
@@ -111,7 +114,7 @@
     )
   }
 
-  export const setDate = date => {
+  export const setDate = (date: Dayjs) => {
     calendarDate = date
   }
 
@@ -121,18 +124,18 @@
   // between months.
   const SWIPE_THRESHOLD = 40
   let wheelLock = false
-  let wheelTimer
+  let wheelTimer: ReturnType<typeof setTimeout> | undefined
   let touchStartX = 0
   let touchStartY = 0
 
-  const changeMonth = forward => {
+  const changeMonth = (forward: boolean) => {
     calendarDate = forward
       ? calendarDate.add(1, "month")
       : calendarDate.subtract(1, "month")
   }
 
   // A short lock keeps a single trackpad gesture from skipping many months
-  const handleWheel = e => {
+  const handleWheel = (e: WheelEvent) => {
     if (wheelLock) {
       return
     }
@@ -145,14 +148,14 @@
     changeMonth(delta > 0)
   }
 
-  const handleTouchStart = e => {
+  const handleTouchStart = (e: TouchEvent) => {
     touchStartX = e.changedTouches[0].clientX
     touchStartY = e.changedTouches[0].clientY
   }
 
   // Only a clear horizontal swipe changes month - vertical stays a normal
   // scroll and small movements remain taps so date selection keeps working
-  const handleTouchEnd = e => {
+  const handleTouchEnd = (e: TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStartX
     const dy = e.changedTouches[0].clientY - touchStartY
     if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {

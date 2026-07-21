@@ -1,18 +1,19 @@
-<script>
+<script lang="ts">
   import Icon from "../../../Icon/Icon.svelte"
   import { getDateDisplayValue } from "../../../helpers"
+  import type { Dayjs } from "dayjs"
 
-  export let anchor
-  export let disabled
-  export let readonly
-  export let error
-  export let focused
-  export let placeholder
-  export let id
-  export let value
-  export let icon
-  export let enableTime
-  export let timeOnly
+  export let anchor: HTMLElement | undefined = undefined
+  export let disabled: boolean = false
+  export let readonly: boolean = false
+  export let error: string | null = null
+  export let focused: boolean = false
+  export let placeholder: string | null = null
+  export let id: string | null = null
+  export let value: Dayjs | string | null | undefined = undefined
+  export let icon: string = "calendar"
+  export let enableTime: boolean = true
+  export let timeOnly: boolean = false
 
   $: displayValue = getDateDisplayValue(value, { enableTime, timeOnly })
 </script>

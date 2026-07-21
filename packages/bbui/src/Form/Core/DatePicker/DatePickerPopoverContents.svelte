@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import dayjs from "dayjs"
   import TimePicker from "./TimePicker.svelte"
   import Calendar from "./Calendar.svelte"
@@ -6,17 +6,19 @@
   import { createEventDispatcher, onMount } from "svelte"
   import { stringifyDate } from "../../../helpers"
   import { resolveTranslationGroup } from "@budibase/shared-core"
+  import type { Dayjs } from "dayjs"
+  import type { Weekday } from "./utils"
 
-  export let useKeyboardShortcuts = true
-  export let ignoreTimezones
-  export let enableTime
-  export let timeOnly
-  export let value
-  export let startDayOfWeek = "Monday"
+  export let useKeyboardShortcuts: boolean = true
+  export let ignoreTimezones: boolean = false
+  export let enableTime: boolean = true
+  export let timeOnly: boolean = false
+  export let value: Dayjs | null | undefined = undefined
+  export let startDayOfWeek: Weekday = "Monday"
   export let calendarLabels = resolveTranslationGroup("calendar")
 
-  const dispatch = createEventDispatcher()
-  let calendar
+  const dispatch = createEventDispatcher<{ change: string | null }>()
+  let calendar: { setDate: (date: Dayjs) => void } | undefined
 
   $: showCalendar = !timeOnly
   $: showTime = enableTime || timeOnly
@@ -27,14 +29,14 @@
     handleChange(now)
   }
 
-  const handleChange = date => {
+  const handleChange = (date: Dayjs | null) => {
     dispatch(
       "change",
       stringifyDate(date, { enableTime, timeOnly, ignoreTimezones })
     )
   }
 
-  const clearDateOnBackspace = event => {
+  const clearDateOnBackspace = (event: KeyboardEvent) => {
     // Ignore if we're typing a value
     if (document.activeElement?.tagName.toLowerCase() === "input") {
       return
