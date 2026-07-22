@@ -103,4 +103,16 @@ describe("HomeProjectTabs", () => {
     expect(onCreateProject).toHaveBeenCalledOnce()
     expect(onImportProject).toHaveBeenCalledOnce()
   })
+
+  it("disables export for an empty selected project", () => {
+    render(HomeProjectTabs, {
+      props: {
+        projects,
+        selectedProjectId: "project_operations",
+        exportProjectDisabled: true,
+      },
+    })
+
+    expect(screen.getByRole("button", { name: "Export project" })).toBeDisabled()
+  })
 })

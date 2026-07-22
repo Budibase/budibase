@@ -5,7 +5,6 @@
   import { Button } from "@budibase/bbui"
 
   interface Props {
-    projectsEnabled?: boolean
     isEnterprisePlan?: boolean
     showTrialBanner?: boolean
     onUpgradePlan?: () => void
@@ -13,7 +12,6 @@
   }
 
   let {
-    projectsEnabled = false,
     isEnterprisePlan = false,
     showTrialBanner = false,
     onUpgradePlan = () => {},
@@ -22,17 +20,15 @@
 </script>
 
 <div class="header-actions">
-  {#if projectsEnabled}
-    {#if !isEnterprisePlan}
+  {#if !isEnterprisePlan}
+    {#if showTrialBanner}
+      <FreeTrialBanner show />
+    {:else}
       <button type="button" class="header-link" onclick={onUpgradePlan}>
         Upgrade plan
       </button>
     {/if}
-  {:else if showTrialBanner}
-    <FreeTrialBanner show />
-  {/if}
 
-  {#if !isEnterprisePlan}
     <Button size="M" secondary on:click={onContactSales}>Contact sales</Button>
   {/if}
 </div>

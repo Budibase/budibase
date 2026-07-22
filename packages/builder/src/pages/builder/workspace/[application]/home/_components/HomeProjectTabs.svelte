@@ -13,6 +13,7 @@
     onDeleteProject?: () => void
     onImportProject?: () => void
     onExportProject?: () => void
+    exportProjectDisabled?: boolean
   }
 
   let {
@@ -24,6 +25,7 @@
     onDeleteProject = () => {},
     onImportProject = () => {},
     onExportProject = () => {},
+    exportProjectDisabled = false,
   }: Props = $props()
 </script>
 
@@ -77,7 +79,11 @@
             <MenuItem icon="trash" on:click={onDeleteProject}>
               Delete project
             </MenuItem>
-            <MenuItem icon="download-simple" on:click={onExportProject}>
+            <MenuItem
+              icon="download-simple"
+              disabled={exportProjectDisabled}
+              on:click={onExportProject}
+            >
               Export project
             </MenuItem>
           </ActionMenu>

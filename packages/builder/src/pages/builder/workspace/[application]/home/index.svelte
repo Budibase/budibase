@@ -835,6 +835,11 @@
     tables: $tables.list,
     getFavourite,
   })
+  $: projectIdsWithResources = Array.from(
+    new Set(baseRows.flatMap(row => row.projectIds || []))
+  )
+  $: selectedProjectExportDisabled =
+    !!selectedProjectId && !projectIdsWithResources.includes(selectedProjectId)
 
   $: projectLookup = (
     projectsEnabled
@@ -1001,7 +1006,6 @@
       </div>
 
       <HomeHeaderActions
-        {projectsEnabled}
         isEnterprisePlan={$licensing.isEnterprisePlan}
         showTrialBanner={$licensing.showTrialBanner}
         onUpgradePlan={openUpgradePage}
@@ -1059,6 +1063,7 @@
           onDeleteProject={() => confirmDeleteProjectDialog?.show()}
           onImportProject={importProject}
           onExportProject={exportProject}
+          exportProjectDisabled={selectedProjectExportDisabled}
         />
 
         <HomeResourcePanel>
@@ -1209,6 +1214,7 @@
       <ExportProjectModal
         projects={$projectsStore}
         {selectedProjectId}
+        {projectIdsWithResources}
         onConfirm={handleExportProject}
       />
     {/key}

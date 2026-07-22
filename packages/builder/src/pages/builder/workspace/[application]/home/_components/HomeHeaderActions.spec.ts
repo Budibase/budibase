@@ -17,7 +17,6 @@ describe("HomeHeaderActions", () => {
   it("hides commercial actions for enterprise plans", () => {
     render(HomeHeaderActions, {
       props: {
-        projectsEnabled: true,
         isEnterprisePlan: true,
       },
     })
@@ -32,7 +31,6 @@ describe("HomeHeaderActions", () => {
 
     render(HomeHeaderActions, {
       props: {
-        projectsEnabled: true,
         onUpgradePlan,
         onContactSales,
       },
@@ -45,7 +43,7 @@ describe("HomeHeaderActions", () => {
     expect(onContactSales).toHaveBeenCalledOnce()
   })
 
-  it("preserves the trial banner when projects are disabled", () => {
+  it("shows the trial banner when requested", () => {
     render(HomeHeaderActions, {
       props: {
         showTrialBanner: true,
