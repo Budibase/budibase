@@ -11,25 +11,12 @@ describe("MongoDB Integration", () => {
 
   describe("buildMongoClientOptions", () => {
     it("drops tlsCertificateKeyFile and tlsCAFile when not self-hosted", () => {
-      const options = buildMongoClientOptions(baseConfig, false)
-
-      expect(options).toEqual({})
-    })
-
-    it("passes tlsCertificateKeyFile and tlsCAFile through when self-hosted", () => {
-      const options = buildMongoClientOptions(baseConfig, true)
-
-      expect(options).toEqual({
-        tlsCertificateKeyFile: "/etc/passwd",
-        tlsCAFile: "/etc/shadow",
-      })
-    })
-
-    it("defaults to environment.SELF_HOSTED when not explicitly provided", () => {
       withEnv({ SELF_HOSTED: undefined }, () => {
         expect(buildMongoClientOptions(baseConfig)).toEqual({})
       })
+    })
 
+    it("passes tlsCertificateKeyFile and tlsCAFile through when self-hosted", () => {
       withEnv({ SELF_HOSTED: "true" }, () => {
         expect(buildMongoClientOptions(baseConfig)).toEqual({
           tlsCertificateKeyFile: "/etc/passwd",

@@ -350,10 +350,9 @@ const getSchema = () => {
 const SCHEMA: Integration = getSchema()
 
 export function buildMongoClientOptions(
-  config: MongoDBConfig,
-  selfHosted = !!environment.SELF_HOSTED
+  config: MongoDBConfig
 ): MongoClientOptions {
-  return selfHosted
+  return environment.SELF_HOSTED
     ? {
         tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
         tlsCAFile: config.tlsCAFile || undefined,
