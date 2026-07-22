@@ -1,24 +1,45 @@
 const DEFAULT_PORT = 4007
+const DEFAULT_TERMINATION_GRACE_MS = 250
 
-const parsePort = (value: string | undefined) => {
+const parseInteger = (
+  value: string | undefined,
+  fallback: number,
+  name: string,
+  minimum: number,
+  maximum: number
+) => {
   if (!value) {
-    return DEFAULT_PORT
+    return fallback
   }
 
-  const port = Number(value)
-  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
-    throw new Error("FUNCTIONS_RUNNER_PORT must be an integer from 1 to 65535")
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(`${name} must be an integer from ${minimum} to ${maximum}`)
   }
 
-  return port
+  return parsed
 }
 
 export interface FunctionsRunnerEnvironment {
   host: string
   port: number
+  terminationGraceMs: number
 }
 
 export const getEnvironment = (): FunctionsRunnerEnvironment => ({
   host: process.env.FUNCTIONS_RUNNER_HOST || "0.0.0.0",
-  port: parsePort(process.env.FUNCTIONS_RUNNER_PORT || process.env.PORT),
+  port: parseInteger(
+    process.env.FUNCTIONS_RUNNER_PORT || process.env.PORT,
+    DEFAULT_PORT,
+    "FUNCTIONS_RUNNER_PORT",
+    1,
+    65_535
+  ),
+  terminationGraceMs: parseInteger(
+    process.env.FUNCTIONS_RUNNER_TERMINATION_GRACE_MS,
+    DEFAULT_TERMINATION_GRACE_MS,
+    "FUNCTIONS_RUNNER_TERMINATION_GRACE_MS",
+    0,
+    60_000
+  ),
 })
