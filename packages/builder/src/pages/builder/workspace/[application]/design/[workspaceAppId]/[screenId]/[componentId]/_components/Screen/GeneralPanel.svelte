@@ -40,6 +40,25 @@
             defaultValue: "Download PDF",
             control: DrawerBindableInput,
           },
+          {
+            key: "props.orientation",
+            label: "Page orientation",
+            defaultValue: "portrait",
+            control: Select,
+            props: {
+              placeholder: false,
+              options: [
+                {
+                  label: "Portrait",
+                  value: "portrait",
+                },
+                {
+                  label: "Landscape",
+                  value: "landscape",
+                },
+              ],
+            },
+          },
         ]
         break
       default:
