@@ -93,7 +93,7 @@ describe("agentsStore sharepoint and file syncing", () => {
         _id: "kb_file_1",
         knowledgeBaseId: "kb_1",
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",
@@ -238,6 +238,32 @@ describe("agentsStore sharepoint and file syncing", () => {
     await vi.advanceTimersByTimeAsync(1000)
 
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+  })
+
+  it("does not poll when a SharePoint source has no sync state", async () => {
+    vi.useFakeTimers()
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: {
+          files: [],
+          sharePointSources: [
+            {
+              sourceId: "source-1",
+              syncedCount: 0,
+              failedCount: 0,
+              processingCount: 0,
+              totalCount: 0,
+            },
+          ],
+        },
+      },
+    })
+
+    await store.fetchAgentKnowledge("agent_1")
+    fetchAgentKnowledge.mockClear()
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(fetchAgentKnowledge).not.toHaveBeenCalled()
   })
 })
 

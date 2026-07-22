@@ -32,8 +32,7 @@
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     getBlocks as getBlocksHelper,
-    buildTopLevelGraph,
-    dagreLayoutAutomation,
+    buildAutomationGraph,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
   import {
@@ -50,6 +49,10 @@
     clampStickyNoteToViewportBounds,
     type FlowBounds,
   } from "./FlowCanvas/StickyNoteBounds"
+  import {
+    FLOW_NODE_TYPE,
+    type FlowNode as GraphFlowNode,
+  } from "./FlowCanvas/FlowGraphTypes"
 
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
@@ -86,10 +89,10 @@
   const memoAutomation = memo(automation)
 
   const nodeTypes: NodeTypes = {
-    "step-node": NodeWrapper as any,
-    "branch-node": BranchNodeWrapper as any,
-    "anchor-node": AnchorNode as any,
-    "loop-subflow-node": LoopV2Node as any,
+    [FLOW_NODE_TYPE.STEP]: NodeWrapper as any,
+    [FLOW_NODE_TYPE.BRANCH]: BranchNodeWrapper as any,
+    [FLOW_NODE_TYPE.ANCHOR]: AnchorNode as any,
+    [FLOW_NODE_TYPE.LOOP_SUBFLOW]: LoopV2Node as any,
   }
   const edgeTypes: EdgeTypes = {
     "add-item": CustomEdge as any,
@@ -174,8 +177,9 @@
     const xSpacing = 0
     const ySpacing = 340
 
-    const newNodes: FlowNode[] = []
+    const newNodes: GraphFlowNode[] = []
     const newEdges: FlowEdge[] = []
+    const subflowNodePositions: GraphBuildDeps["subflowNodePositions"] = {}
 
     const deps: GraphBuildDeps = {
       xSpacing,
@@ -183,35 +187,30 @@
       blockRefs,
       newNodes,
       newEdges,
+      subflowNodePositions,
     }
 
-    // Build graph via helpers
-    buildTopLevelGraph(blocks, deps)
+    try {
+      const laidOut = buildAutomationGraph(blocks, deps)
+      const selectable = viewMode === ViewMode.EDITOR
 
-    const laidOut = dagreLayoutAutomation(
-      { nodes: newNodes, edges: newEdges },
-      {
-        ranksep: xSpacing,
-        nodesep: NODE_SPACING,
-        compactLoops: true,
-      }
-    )
-
-    const selectable = viewMode === ViewMode.EDITOR
-
-    nodes.set(
-      laidOut.nodes.map(node => ({
-        ...node,
-        selected: false,
-        selectable,
-      }))
-    )
-    edges.set(
-      laidOut.edges.map(edge => ({
-        ...edge,
-        selected: false,
-      }))
-    )
+      nodes.set(
+        laidOut.nodes.map(node => ({
+          ...node,
+          selected: false,
+          selectable,
+        }))
+      )
+      edges.set(
+        laidOut.edges.map(edge => ({
+          ...edge,
+          selected: false,
+        }))
+      )
+    } catch (error) {
+      console.error("Error rendering automation", error)
+      notifications.error("Error rendering automation")
+    }
   }
 
   $: if ($nodes?.length && !initialViewportApplied && paneEl) {

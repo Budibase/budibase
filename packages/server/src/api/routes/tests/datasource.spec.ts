@@ -1258,6 +1258,43 @@ if (descriptions.length) {
             ).toEqual(enumOptions)
           })
 
+        isMSSQL &&
+          it("supports temporal tables without importing history tables", async () => {
+            const tableName = generator.guid().replaceAll("-", "")
+            await client.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+              )
+            `)
+
+            const info = await config.api.datasource.info(datasource)
+            expect(info.tableNames).toContain(tableName)
+            expect(info.tableNames).not.toContain(`${tableName}_History`)
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource._id!,
+            })
+
+            expect(resp.errors).toEqual({})
+            expect(
+              resp.datasource.entities?.[tableName].schema.ValidFrom.autocolumn
+            ).toBe(true)
+            expect(
+              resp.datasource.entities?.[tableName].schema.ValidTo.autocolumn
+            ).toBe(true)
+            expect(
+              resp.datasource.entities?.[`${tableName}_History`]
+            ).toBeUndefined()
+          })
+
         it("re-points primaryDisplay when its column is dropped from the source database", async () => {
           await client.schema.createTable("display_test", table => {
             table.increments("id").primary()

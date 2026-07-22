@@ -1181,6 +1181,51 @@ if (descriptions.length) {
             expect(rows).toHaveLength(1)
           })
 
+        isMSSQL &&
+          it("can create and update rows for temporal external tables", async () => {
+            const tableName = uuid.v4().replaceAll("-", "").substring(0, 20)
+            await client!.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [last_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+              )
+            `)
+
+            const schemaRes = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+            const temporalTable = schemaRes.datasource.entities![tableName]
+
+            const createdRow = await config.api.row.save(temporalTable._id!, {
+              email: "john.doe@example.com",
+              first_name: "John",
+              last_name: "Doe",
+            })
+
+            const updatedRow = await config.api.row.save(temporalTable._id!, {
+              _id: createdRow._id!,
+              first_name: "Johnny",
+              last_name: "Doe",
+            })
+
+            expect(updatedRow.first_name).toEqual("Johnny")
+
+            const rows = await config.api.row.fetch(temporalTable._id!)
+            expect(rows).toHaveLength(1)
+            expect(rows[0].first_name).toEqual("Johnny")
+            expect(
+              schemaRes.datasource.entities![`${tableName}_History`]
+            ).toBeUndefined()
+          })
+
         describe("relations to same table", () => {
           let relatedRows: Row[]
 
@@ -3482,6 +3527,96 @@ if (descriptions.length) {
               ...row2,
               relation: [table2_row1, table2_row2],
             })
+          })
+
+          it("should not mismatch existing links when the junction primary key starts with the related row id", async () => {
+            const table1Id = "table1_" + generator.guid()
+            const table2Id = "table2_" + generator.guid()
+            const joinTableId = "table1_table2_" + generator.guid()
+
+            await client!.schema.createTable(table1Id, table => {
+              table.increments("table1_id").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable(table2Id, table => {
+              table.increments("table2_id").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable(joinTableId, table => {
+              if (isMariaDB || isMySQL) {
+                table.specificType("table2_id", "int(10) unsigned")
+                table.specificType("table1_id", "int(10) unsigned")
+              } else {
+                table.integer("table2_id")
+                table.integer("table1_id")
+              }
+              table.primary(["table2_id", "table1_id"])
+            })
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            const primaryOrderTable1 = resp.datasource.entities![table1Id]!
+            const primaryOrderTable2 = resp.datasource.entities![table2Id]!
+            const primaryOrderJoin = resp.datasource.entities![joinTableId]!
+
+            primaryOrderTable1.schema.relation = {
+              name: "relation",
+              type: FieldType.LINK,
+              tableId: primaryOrderTable2._id!,
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              fieldName: "table2_id",
+              through: primaryOrderJoin._id!,
+              throughFrom: "table2_id",
+              throughTo: "table1_id",
+            }
+
+            await config.api.table.save(primaryOrderTable1)
+
+            const table2_row1 = await config.api.row.save(
+              primaryOrderTable2._id!,
+              {
+                name: "one",
+              }
+            )
+            const table2_row2 = await config.api.row.save(
+              primaryOrderTable2._id!,
+              {
+                name: "two",
+              }
+            )
+            const table2_row3 = await config.api.row.save(
+              primaryOrderTable2._id!,
+              {
+                name: "three",
+              }
+            )
+
+            const row = await config.api.row.save(primaryOrderTable1._id!, {
+              name: "foo",
+              relation: [table2_row1, table2_row3],
+            })
+
+            await config.api.row.save(primaryOrderTable1._id!, {
+              ...row,
+              relation: [table2_row1, table2_row2, table2_row3],
+            })
+
+            const updatedRow = await config.api.row.get(
+              primaryOrderTable1._id!,
+              row._id!
+            )
+            expect(updatedRow.relation).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({ _id: table2_row1._id }),
+                expect.objectContaining({ _id: table2_row2._id }),
+                expect.objectContaining({ _id: table2_row3._id }),
+              ])
+            )
+            expect(updatedRow.relation).toHaveLength(3)
           })
         })
 

@@ -66,6 +66,8 @@ const mocks = vi.hoisted(() => {
     },
     deploymentStore: { publishApp: vi.fn() },
     environment: { loadVariables: vi.fn() },
+    notificationError: vi.fn(),
+    buildAutomationGraph: vi.fn(),
     selectedAutomation: store<unknown>({
       data: undefined,
       blockRefs: {},
@@ -118,7 +120,7 @@ vi.mock("@budibase/bbui", () => ({
   Modal: MockSlot,
   StatusLight: MockSlot,
   Switcher: MockSlot,
-  notifications: { error: vi.fn() },
+  notifications: { error: mocks.notificationError },
 }))
 
 vi.mock("@budibase/frontend-core", () => ({
@@ -162,7 +164,7 @@ vi.mock("../AutomationStepHelpers", () => ({
   getBlocks: (automation: {
     definition: { trigger: unknown; steps: unknown[] }
   }) => [automation.definition.trigger, ...automation.definition.steps],
-  buildTopLevelGraph: (
+  buildAutomationGraph: (
     _blocks: unknown[],
     deps: {
       newNodes: Array<{
@@ -173,28 +175,10 @@ vi.mock("../AutomationStepHelpers", () => ({
         width: number
         height: number
       }>
+      newEdges: unknown[]
+      subflowNodePositions: Record<string, { x: number; y: number }>
     }
-  ) => {
-    deps.newNodes.push(
-      {
-        id: "trigger",
-        type: "step-node",
-        data: { block: _blocks[0] },
-        position: { x: 0, y: 0 },
-        width: 200,
-        height: 120,
-      },
-      {
-        id: "step-1",
-        type: "step-node",
-        data: { block: _blocks[1] },
-        position: { x: 600, y: 0 },
-        width: 200,
-        height: 120,
-      }
-    )
-  },
-  dagreLayoutAutomation: <T>(graph: T) => graph,
+  ) => mocks.buildAutomationGraph(_blocks, deps),
 }))
 
 import FlowChart from "../FlowChart.svelte"
@@ -242,6 +226,29 @@ describe("FlowChart", () => {
     mocks.viewport = { x: 0, y: 0, zoom: 1 }
     mocks.mockNodes = []
     mocks.setViewport.mockClear()
+    mocks.notificationError.mockClear()
+    mocks.buildAutomationGraph.mockReset()
+    mocks.buildAutomationGraph.mockImplementation((_blocks, deps) => {
+      deps.newNodes.push(
+        {
+          id: "trigger",
+          type: "step-node",
+          data: { block: _blocks[0] },
+          position: { x: 0, y: 0 },
+          width: 200,
+          height: 120,
+        },
+        {
+          id: "step-1",
+          type: "step-node",
+          data: { block: _blocks[1] },
+          position: { x: 600, y: 0 },
+          width: 200,
+          height: 120,
+        }
+      )
+      return { nodes: deps.newNodes, edges: deps.newEdges }
+    })
     setPaneSize(1000, 600)
     global.ResizeObserver = class {
       observe = vi.fn()
@@ -269,6 +276,35 @@ describe("FlowChart", () => {
       showTestModal: false,
       testResults: undefined,
       viewMode: ViewMode.EDITOR,
+    })
+  })
+
+  it("shows an error notification when the graph cannot be rendered", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    const renderError = new Error("Cannot render an empty flow chain")
+    mocks.buildAutomationGraph.mockImplementation(() => {
+      throw renderError
+    })
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, { props: { automation } })
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(
+        "Error rendering automation",
+        renderError
+      )
+      expect(mocks.notificationError).toHaveBeenCalledWith(
+        "Error rendering automation"
+      )
     })
   })
 

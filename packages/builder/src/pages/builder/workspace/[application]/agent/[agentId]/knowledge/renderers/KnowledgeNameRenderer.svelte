@@ -26,7 +26,7 @@
           mimetype: row.mimetype,
         })}</span
   >
-  {#if row.kind !== "sharepoint_connection" && row.status === KnowledgeBaseFileStatus.FAILED && row.errorMessage}
+  {#if (row.kind === "sharepoint_connection" && row.errorMessage) || (row.kind !== "sharepoint_connection" && row.status === KnowledgeBaseFileStatus.FAILED && row.errorMessage)}
     <span class="file-error">{row.errorMessage}</span>
   {/if}
 </div>
