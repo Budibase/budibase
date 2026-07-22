@@ -1,6 +1,7 @@
 import {
   context,
   db,
+  docIds,
   events,
   features,
   objectStore,
@@ -28,7 +29,7 @@ import os from "os"
 import path from "path"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { generateRowActionsID } from "../../../db/utils"
+import { generateAutomationID, generateRowActionsID } from "../../../db/utils"
 import { buildExternalTableId } from "../../../integrations/utils"
 import {
   basicDatasource,
@@ -61,6 +62,75 @@ describe("/api/resources/usage", () => {
   })
 
   describe("resource usage analysis", () => {
+    it("discovers Function query dependencies and automation references", async () => {
+      const datasource = await config.createDatasource()
+      const query = await config.api.query.save(basicQuery(datasource._id))
+      const functionId = docIds.generateFunctionID()
+      const automationId = generateAutomationID()
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().bulkDocs([
+          {
+            _id: functionId,
+            appId: config.getDevWorkspaceId(),
+            name: "Resource Function",
+            source: "export default async function () {}",
+            capabilities: [
+              {
+                capabilityId: "capability-1",
+                queryId: query._id,
+                datasourceAlias: "Inventory",
+                queryAlias: "findRooms",
+                parameterNames: [],
+              },
+            ],
+          },
+          {
+            _id: automationId,
+            appId: config.getDevWorkspaceId(),
+            name: "Resource automation",
+            definition: {
+              trigger: {},
+              steps: [
+                {
+                  stepId: "EXECUTE_FUNCTION",
+                  inputs: { functionId },
+                },
+              ],
+            },
+          },
+        ])
+      })
+
+      const result = await config.api.resource.getResourceDependencies()
+
+      expect(result.body.resources[functionId]).toEqual({
+        dependencies: expect.arrayContaining([
+          {
+            id: query._id,
+            name: query.name,
+            type: ResourceType.QUERY,
+          },
+        ]),
+      })
+      expect(result.body.resources[functionId].dependencies).not.toContainEqual(
+        expect.objectContaining({ id: functionId })
+      )
+      expect(result.body.resources[automationId]).toEqual({
+        dependencies: expect.arrayContaining([
+          {
+            id: functionId,
+            name: "Resource Function",
+            type: ResourceType.FUNCTION,
+          },
+          expect.objectContaining({
+            id: query._id,
+            type: ResourceType.QUERY,
+          }),
+        ]),
+      })
+    })
+
     it("should detect datasource usage via query screens", async () => {
       const datasource = await config.createDatasource()
       const query = await config.api.query.save(basicQuery(datasource._id))

@@ -51,6 +51,7 @@ const IMPORT_ORDER: ResourceType[] = [
   ResourceType.DATASOURCE,
   ResourceType.TABLE,
   ResourceType.QUERY,
+  ResourceType.FUNCTION,
   ResourceType.AUTOMATION,
   ResourceType.ROW_ACTION,
   ResourceType.WORKSPACE_APP,
@@ -107,6 +108,7 @@ const PREASSIGNED_IMPORT_TYPES: ResourceType[] = [
   ResourceType.WORKSPACE_APP,
   ResourceType.SCREEN,
   ResourceType.QUERY,
+  ResourceType.FUNCTION,
 ]
 
 interface ImportedDoc {
@@ -330,6 +332,7 @@ const RESOURCE_ID_PREFIXES: Record<ResourceType, string[]> = {
   [ResourceType.TABLE]: [prefixed(DocumentType.TABLE)],
   [ResourceType.ROW_ACTION]: [prefixed(DocumentType.ROW_ACTIONS)],
   [ResourceType.QUERY]: [prefixed(DocumentType.QUERY)],
+  [ResourceType.FUNCTION]: [prefixed(DocumentType.FUNCTION)],
   [ResourceType.AUTOMATION]: [prefixed(DocumentType.AUTOMATION)],
   [ResourceType.WORKSPACE_APP]: [prefixed(DocumentType.WORKSPACE_APP)],
   [ResourceType.SCREEN]: [prefixed(DocumentType.SCREEN)],
@@ -573,6 +576,10 @@ const sanitizeImportedDoc = async (
     remapped.disabled = true
   }
 
+  if (resourceType === ResourceType.FUNCTION) {
+    remapped.appId = workspaceId
+  }
+
   if (resourceType === ResourceType.AGENT) {
     Object.assign(
       remapped,
@@ -618,6 +625,8 @@ const generateImportedId = (
       }
       return generateQueryID(datasourceId)
     }
+    case ResourceType.FUNCTION:
+      return docIds.generateFunctionID()
     case ResourceType.AUTOMATION:
       return generateAutomationID()
     case ResourceType.ROW_ACTION: {

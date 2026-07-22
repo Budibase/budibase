@@ -674,4 +674,98 @@ export default async function (): Promise<FunctionResult> {
       })
     })
   })
+
+  it("blocks publishing enabled automations until their Functions are ready and keeps the published Function snapshot unchanged after development edits", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Published lookup",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          _id: generateAutomationID(),
+          name: "Published workflow",
+          appId: config.getDevWorkspaceId(),
+          disabled: false,
+          definition: {
+            trigger: {},
+            steps: [
+              {
+                stepId: "EXECUTE_FUNCTION",
+                inputs: { functionId: created._id },
+              },
+            ],
+          },
+        })
+      })
+
+      await config.api.workspace.publish(config.getDevWorkspaceId(), {
+        status: 400,
+        body: {
+          message: expect.stringContaining("Build required"),
+        },
+      })
+
+      const { function: built } = await config.api.function.build(created._id, {
+        _rev: created._rev!,
+      })
+      await config.api.query.save({
+        ...query,
+        parameters: [
+          ...(query.parameters || []),
+          { name: "roomType", default: "" },
+        ],
+      })
+
+      await config.api.workspace.publish(config.getDevWorkspaceId(), {
+        status: 400,
+        body: {
+          message: expect.stringContaining("Function query bindings changed"),
+        },
+      })
+
+      const { function: rebuilt } = await config.api.function.build(built._id, {
+        _rev: built._rev!,
+      })
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const published = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => await sdk.functions.get(rebuilt._id)
+      )
+      expect(published?.artifact).toEqual(rebuilt.artifact)
+
+      await config.api.function.update(rebuilt._id, {
+        _rev: rebuilt._rev!,
+        name: rebuilt.name,
+        source: `${rebuilt.source}\n// development edit`,
+        capabilities: toCapabilityInputs(rebuilt),
+      })
+
+      const unchangedPublished = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => await sdk.functions.get(rebuilt._id)
+      )
+      expect(unchangedPublished?.source).toBe(rebuilt.source)
+
+      const status = await config.api.deploy.publishStatus()
+      expect(status.functions[rebuilt._id]).toEqual(
+        expect.objectContaining({
+          published: true,
+          name: rebuilt.name,
+          unpublishedChanges: true,
+          state: "published",
+        })
+      )
+    })
+  })
 })

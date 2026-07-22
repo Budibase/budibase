@@ -290,7 +290,7 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
-  const { automations, workspaceApps, tables, agents } =
+  const { automations, workspaceApps, tables, agents, functions } =
     await sdk.deployment.status()
 
   ctx.body = {
@@ -298,6 +298,7 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
     workspaceApps,
     tables,
     agents,
+    functions,
   }
 }
 
@@ -311,6 +312,9 @@ export const publishWorkspaceInternal = async (
   seedProductionTables?: boolean,
   tablesToSeed?: string[]
 ) => {
+  const automations = await sdk.automations.fetch()
+  await sdk.functions.validateFunctionAutomationReferences(automations)
+
   const seedTables =
     seedProductionTables !== undefined
       ? seedProductionTables
@@ -367,13 +371,15 @@ export const publishWorkspaceInternal = async (
             await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
           }
 
-          const allAutomations = await sdk.automations.fetch()
-          for (const automation of allAutomations) {
+          for (const [index, automation] of automations.entries()) {
             if (automation.disabled !== undefined) {
               continue
             }
 
-            await sdk.automations.update({ ...automation, disabled: true })
+            automations[index] = await sdk.automations.update({
+              ...automation,
+              disabled: true,
+            })
           }
         }
 
@@ -490,11 +496,11 @@ export const publishWorkspaceInternal = async (
         deployment.appUrl = appDoc.url
         appDoc.appId = prodId
         appDoc.instance._id = prodId
-        const [automations, workspaceApps, tables, agents] = await Promise.all([
-          sdk.automations.fetch(),
+        const [workspaceApps, tables, agents, functions] = await Promise.all([
           sdk.workspaceApps.fetch(),
           sdk.tables.getAllInternalTables(),
           sdk.ai.agents.fetch(),
+          sdk.functions.fetch(),
         ])
         const tablesMarkedForPublish =
           restrictToTables && tablesToPublish
@@ -513,17 +519,20 @@ export const publishWorkspaceInternal = async (
         const deployedAgentIds = agents
           .filter(agent => agent.live === true)
           .map(agent => agent._id!)
+        const functionIds = functions.map(fn => fn._id)
         const fullMap = [
           ...(automationIds ?? []),
           ...(workspaceAppIds ?? []),
           ...(tableIds ?? []),
           ...(agentIds ?? []),
+          ...functionIds,
         ]
         const deployedMap = [
           ...(deployedAutomationIds ?? []),
           ...(deployedWorkspaceAppIds ?? []),
           ...(tableIds ?? []),
           ...(deployedAgentIds ?? []),
+          ...functionIds,
         ]
         const publishedAt = new Date().toISOString()
         appDoc.resourcesPublishedAt = {

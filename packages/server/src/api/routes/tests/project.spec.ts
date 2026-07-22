@@ -1,16 +1,18 @@
-import { context, features, ViewName } from "@budibase/backend-core"
+import { context, docIds, features, ViewName } from "@budibase/backend-core"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import { structures } from "@budibase/backend-core/tests"
 import {
   AutomationTriggerStepId,
   DesignDocument,
   FeatureFlag,
+  type FunctionDocument,
   isEmailTrigger,
   type Automation,
   type EmailTrigger,
   type EmailTriggerInputs,
   type Project,
   type ProjectPackageDependencyIndex,
+  ResourceType,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
 import fsp from "fs/promises"
@@ -23,7 +25,7 @@ import { TRIGGER_DEFINITIONS } from "../../../automations"
 import sdk from "../../../sdk"
 import * as projects from "../../../sdk/workspace/projects/crud"
 import { buildExternalTableId } from "../../../integrations/utils"
-import { getQueryIndex } from "../../../db/utils"
+import { generateAutomationID, getQueryIndex } from "../../../db/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
@@ -1171,6 +1173,108 @@ describe("/projects", () => {
             agent._id,
             workspaceApp._id,
           ])
+        )
+      })
+    })
+
+    it("exports and imports Function relationships with remapped ids", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Function project",
+        })
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+        const functionId = docIds.generateFunctionID()
+        const automationId = generateAutomationID()
+        await config.doInContext(config.getDevWorkspaceId(), async () =>
+          context.getWorkspaceDB().bulkDocs([
+            {
+              _id: functionId,
+              appId: config.getDevWorkspaceId(),
+              name: "Project Function",
+              source: "export default async function () {}",
+              capabilities: [
+                {
+                  capabilityId: "capability-1",
+                  queryId: query._id,
+                  datasourceAlias: "Inventory",
+                  queryAlias: "findRooms",
+                  parameterNames: [],
+                },
+              ],
+            },
+            {
+              _id: automationId,
+              appId: config.getDevWorkspaceId(),
+              name: "Function automation",
+              projectIds: [project._id],
+              definition: {
+                trigger: {},
+                steps: [
+                  {
+                    stepId: "EXECUTE_FUNCTION",
+                    inputs: { functionId },
+                  },
+                ],
+              },
+            },
+          ])
+        )
+
+        const body = await config.api.project.export(project._id)
+        const files = await readTarEntries(body)
+        const manifest = JSON.parse(files.get("manifest.json")!.toString())
+        expect(files.has(`docs/function/${functionId}.json`)).toBe(true)
+        expect(manifest.resourcesByType.function).toBe(1)
+
+        const destinationWorkspace = await config.api.workspace.create({
+          name: "Function import workspace",
+        })
+        await config.withHeaders(
+          { [Header.APP_ID]: destinationWorkspace.appId },
+          async () => {
+            const imported = await config.api.project.import(body)
+            const importedFunctionId = imported.resources.function?.[0]
+            const importedQueryId = imported.resources.query?.[0]
+            const importedAutomationId = imported.resources.automation?.[0]
+            expect(importedFunctionId).toBeDefined()
+            expect(importedFunctionId).not.toBe(functionId)
+
+            const importedFunction = await config.doInContext(
+              destinationWorkspace.appId,
+              async () =>
+                await context
+                  .getWorkspaceDB()
+                  .get<FunctionDocument>(importedFunctionId!)
+            )
+            expect(importedFunction.appId).toBe(destinationWorkspace.appId)
+            expect(importedFunction.capabilities[0].queryId).toBe(
+              importedQueryId
+            )
+
+            const importedAutomation = await config.api.automation.get(
+              importedAutomationId!
+            )
+            expect(importedAutomation.definition.steps[0]).toEqual(
+              expect.objectContaining({
+                inputs: expect.objectContaining({
+                  functionId: importedFunctionId,
+                }),
+              })
+            )
+
+            const graph = await config.api.resource.getResourceDependencies()
+            expect(graph.body.resources[importedFunctionId!]).toEqual({
+              dependencies: expect.arrayContaining([
+                expect.objectContaining({
+                  id: importedQueryId,
+                  type: ResourceType.QUERY,
+                }),
+              ]),
+            })
+          }
         )
       })
     })

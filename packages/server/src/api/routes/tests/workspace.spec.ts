@@ -17,6 +17,7 @@ import {
   BuiltinPermissionID,
   DocumentType,
   Feature,
+  type FunctionDocument,
   PermissionLevel,
   Screen,
   SEPARATOR,
@@ -33,6 +34,7 @@ import env from "../../../environment"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import {
+  basicDatasource,
   basicQuery,
   basicScreen,
   basicTable,
@@ -94,6 +96,55 @@ const getAgentArtifacts = async (appId: string) => {
     return {
       agentIds: agents.rows.map(row => row.id),
       logIds: logs.rows.map(row => row.id),
+    }
+  })
+}
+
+const seedFunctionWithRunSummary = async (appId: string, queryId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const functionId = `${DocumentType.FUNCTION}${SEPARATOR}${uuid.v4()}`
+    const runSummaryId = `${DocumentType.FUNCTION_RUN_LOG}${SEPARATOR}${uuid.v4()}`
+    await workspaceDb.bulkDocs([
+      {
+        _id: functionId,
+        appId,
+        name: "Duplicated Function",
+        source: "export default async function () {}",
+        capabilities: [
+          {
+            capabilityId: "capability-1",
+            queryId,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+            parameterNames: [],
+          },
+        ],
+      },
+      {
+        _id: runSummaryId,
+        runId: "run-1",
+        functionId,
+        functionName: "Duplicated Function",
+        sourceHash: "source-hash",
+        environment: "development",
+        status: "success",
+      },
+    ])
+    return { functionId, runSummaryId }
+  })
+}
+
+const getFunctionArtifacts = async (appId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const [functions, runSummaries] = await Promise.all([
+      workspaceDb.allDocs(db.getDocParams(DocumentType.FUNCTION, null)),
+      workspaceDb.allDocs(db.getDocParams(DocumentType.FUNCTION_RUN_LOG, null)),
+    ])
+    return {
+      functionIds: functions.rows.map(row => row.id),
+      runSummaryIds: runSummaries.rows.map(row => row.id),
     }
   })
 }
@@ -1977,6 +2028,55 @@ describe("/applications", () => {
       expect(duplicated.agentIds).toContain(agentId)
       expect(duplicated.logIds).not.toContain(logId)
       expect(duplicated.logIds).toHaveLength(0)
+    })
+
+    it("preserves Functions but not run summaries when duplicating", async () => {
+      const bucketInitFile = "function-duplicate-bucket-init"
+      await objectStore.upload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: bucketInitFile,
+        body: Buffer.from(""),
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const query = await config.api.query.save(basicQuery(datasource._id!))
+      const { functionId, runSummaryId } = await seedFunctionWithRunSummary(
+        workspace.appId,
+        query._id!
+      )
+
+      try {
+        const resp = await config.api.workspace.duplicateWorkspace(
+          workspace.appId,
+          {
+            name: "function-dupe copy",
+            url: "/function-dupe-copy",
+          },
+          { status: 200 }
+        )
+
+        const duplicated = await getFunctionArtifacts(resp.duplicateAppId)
+        expect(duplicated.functionIds).toContain(functionId)
+        expect(duplicated.runSummaryIds).not.toContain(runSummaryId)
+        expect(duplicated.runSummaryIds).toHaveLength(0)
+        await context.doInWorkspaceContext(resp.duplicateAppId, async () => {
+          const duplicatedFunction = await context
+            .getWorkspaceDB()
+            .get<FunctionDocument>(functionId)
+          expect(duplicatedFunction.capabilities[0].queryId).toBe(query._id)
+          expect(
+            await context
+              .getWorkspaceDB()
+              .tryGet(duplicatedFunction.capabilities[0].queryId)
+          ).toBeDefined()
+        })
+      } finally {
+        await objectStore.deleteFile(
+          objectStore.ObjectStoreBuckets.APPS,
+          bucketInitFile
+        )
+      }
     })
 
     it("should reject an unknown app id with a 404", async () => {
