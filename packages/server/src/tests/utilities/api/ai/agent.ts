@@ -6,6 +6,10 @@ import {
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  CreateAgentMSTeamsAppRequest,
+  CreateAgentMSTeamsAppResponse,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
   FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -156,6 +160,38 @@ export class AgentAPI extends TestAPI {
     )
   }
 
+  downloadMSTeamsPackage = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<Buffer> => {
+    const response = this._checkResponse(
+      await this.request
+        .get(`/api/agent/${agentId}/ms-teams/package`)
+        .set(
+          await this.getHeaders(undefined, {
+            "x-budibase-include-stacktrace": "true",
+          })
+        )
+        .responseType("blob"),
+      expectations
+    )
+    return response.body as Buffer
+  }
+
+  createMSTeamsApp = async (
+    agentId: string,
+    body?: CreateAgentMSTeamsAppRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentMSTeamsAppResponse> => {
+    return await this._post<CreateAgentMSTeamsAppResponse>(
+      `/api/agent/${agentId}/ms-teams/app/create`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
   provisionSlackChannel = async (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest,
@@ -163,6 +199,33 @@ export class AgentAPI extends TestAPI {
   ): Promise<ProvisionAgentSlackChannelResponse> => {
     return await this._post<ProvisionAgentSlackChannelResponse>(
       `/api/agent/${agentId}/slack/provision`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  downloadSlackManifest = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<string> => {
+    const response = this._checkResponse(
+      await this._requestRaw("get", `/api/agent/${agentId}/slack/manifest`, {
+        expectations,
+      }),
+      expectations
+    )
+    return response.text
+  }
+
+  createSlackApp = async (
+    agentId: string,
+    body?: CreateAgentSlackAppRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentSlackAppResponse> => {
+    return await this._post<CreateAgentSlackAppResponse>(
+      `/api/agent/${agentId}/slack/app/create`,
       {
         body,
         expectations,

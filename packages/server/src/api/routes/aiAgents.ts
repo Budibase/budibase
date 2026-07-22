@@ -8,6 +8,8 @@ import {
 } from "./endpointGroups"
 import {
   connectAgentSharePointSiteValidator,
+  createAgentMSTeamsAppValidator,
+  createAgentSlackAppValidator,
   createAgentOperationValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
@@ -61,6 +63,12 @@ builderAdminRoutes
     provisionAgentMSTeamsChannelValidator(),
     ai.provisionAgentMSTeamsChannel
   )
+  .get("/api/agent/:agentId/ms-teams/package", ai.downloadAgentMSTeamsPackage)
+  .post(
+    "/api/agent/:agentId/ms-teams/app/create",
+    createAgentMSTeamsAppValidator(),
+    ai.createAgentMSTeamsApp
+  )
   .post(
     "/api/agent/:agentId/ms-teams/toggle",
     toggleAgentMSTeamsDeploymentValidator(),
@@ -76,6 +84,12 @@ builderAdminRoutes
     provisionAgentSlackChannelValidator(),
     ai.provisionAgentSlackChannel
   )
+  .post(
+    "/api/agent/:agentId/slack/app/create",
+    createAgentSlackAppValidator(),
+    ai.createAgentSlackApp
+  )
+  .get("/api/agent/:agentId/slack/manifest", ai.downloadAgentSlackManifest)
   .post(
     "/api/agent/:agentId/telegram/toggle",
     toggleAgentTelegramDeploymentValidator(),
@@ -160,3 +174,4 @@ publicRoutes.get(
   "/api/agent/knowledge-sources/sharepoint/callback",
   ai.completeSharePointAuth
 )
+publicRoutes.get("/api/agent/slack/oauth/callback", ai.completeSlackOAuth)

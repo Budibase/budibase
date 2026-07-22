@@ -29,8 +29,12 @@ import {
   UpdateAgentRequest,
   UpdateAgentResponse,
   CreateAgentOperationRequest,
+  CreateAgentMSTeamsAppRequest,
+  CreateAgentMSTeamsAppResponse,
   UpdateAgentOperationRequest,
   AgentOperationMutationResponse,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
 } from "@budibase/types"
 
 import { BaseAPIClient } from "./types"
@@ -66,10 +70,20 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ) => Promise<ProvisionAgentMSTeamsChannelResponse>
+  createAgentMSTeamsApp: (
+    agentId: string,
+    body?: CreateAgentMSTeamsAppRequest
+  ) => Promise<CreateAgentMSTeamsAppResponse>
+  downloadAgentMSTeamsPackage: (agentId: string) => Promise<Blob>
   provisionAgentSlackChannel: (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ) => Promise<ProvisionAgentSlackChannelResponse>
+  downloadAgentSlackManifest: (agentId: string) => Promise<string>
+  createAgentSlackApp: (
+    agentId: string,
+    body?: CreateAgentSlackAppRequest
+  ) => Promise<CreateAgentSlackAppResponse>
   provisionAgentTelegramChannel: (
     agentId: string,
     body?: ProvisionAgentTelegramChannelRequest
@@ -228,12 +242,46 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  downloadAgentMSTeamsPackage: async (agentId: string) => {
+    return await API.get<Blob>({
+      url: `/api/agent/${agentId}/ms-teams/package`,
+      parseResponse: async response => await response.blob(),
+    })
+  },
+
+  createAgentMSTeamsApp: async (agentId: string, body) => {
+    return await API.post<
+      CreateAgentMSTeamsAppRequest | undefined,
+      CreateAgentMSTeamsAppResponse
+    >({
+      url: `/api/agent/${agentId}/ms-teams/app/create`,
+      body,
+    })
+  },
+
   provisionAgentSlackChannel: async (agentId: string, body) => {
     return await API.post<
       ProvisionAgentSlackChannelRequest | undefined,
       ProvisionAgentSlackChannelResponse
     >({
       url: `/api/agent/${agentId}/slack/provision`,
+      body,
+    })
+  },
+
+  downloadAgentSlackManifest: async (agentId: string) => {
+    return await API.get<string>({
+      url: `/api/agent/${agentId}/slack/manifest`,
+      parseResponse: async response => await response.text(),
+    })
+  },
+
+  createAgentSlackApp: async (agentId: string, body) => {
+    return await API.post<
+      CreateAgentSlackAppRequest | undefined,
+      CreateAgentSlackAppResponse
+    >({
+      url: `/api/agent/${agentId}/slack/app/create`,
       body,
     })
   },

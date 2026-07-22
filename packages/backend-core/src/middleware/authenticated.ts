@@ -139,7 +139,11 @@ export function authenticated(
       }
       let apiKey = getHeader(ctx, Header.API_KEY)
 
-      if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
+      if (
+        !apiKey &&
+        !publicEndpoint &&
+        ctx.request.headers[Header.AUTHORIZATION]
+      ) {
         apiKey = ctx.request.headers[Header.AUTHORIZATION].split(" ")[1]
       }
 

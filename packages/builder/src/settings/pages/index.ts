@@ -22,6 +22,8 @@ import DiagnosticsPage from "@/settings/pages/diagnostics.svelte"
 import SystemLogsPage from "@/settings/pages/systemLogs.svelte"
 import UpgradePage from "@/settings/pages/upgrade.svelte"
 import UsagePage from "@/settings/pages/usage.svelte"
+import SlackAppConfigPage from "@/settings/pages/slackAppConfig.svelte"
+import MSTeamsAppConfigPage from "@/settings/pages/msTeamsAppConfig.svelte"
 import Connections from "@/settings/pages/connections/Connections.svelte"
 import Connection from "@/settings/pages/connections/Connection.svelte"
 import CreateConnection from "./connections/CreateConnection.svelte"
@@ -65,6 +67,8 @@ const componentMap = {
   system_logs: SystemLogsPage,
   upgrade: UpgradePage,
   usage: UsagePage,
+  slack_app_config: SlackAppConfigPage,
+  ms_teams_app_config: MSTeamsAppConfigPage,
   general_info: GeneralInfoPage,
   automations: AutomationsPage,
   backups: BackupsPage,

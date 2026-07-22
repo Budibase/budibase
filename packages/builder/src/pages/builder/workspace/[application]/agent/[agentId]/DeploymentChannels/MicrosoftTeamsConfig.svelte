@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     Body,
+    Button,
     Checkbox,
     CopyInput,
     Input,
@@ -22,6 +23,7 @@
 
   const MS_TEAMS_NEW_COMMAND = ChatCommands.NEW
   const MS_TEAMS_LINK_COMMAND = ChatCommands.LINK
+  const SECRET_MASK = "********"
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -35,6 +37,10 @@
   })
 
   let provisioning = $state(false)
+  let creatingTeamsApp = $state(false)
+  let downloadingPackage = $state(false)
+  let loadingTeamsAppConfig = $state(false)
+  let teamsAppConfigConfigured = $state(false)
   let provisionResult = $state<
     ProvisionAgentMSTeamsChannelResponse | undefined
   >()
@@ -78,9 +84,26 @@
     draftAgentId = currentAgent._id
   })
 
-  const provisionMSTeamsChannel = async () => {
+  $effect(() => {
+    const loadTeamsAppConfig = async () => {
+      loadingTeamsAppConfig = true
+      try {
+        const config = await agentsStore.fetchMSTeamsAppConfig()
+        teamsAppConfigConfigured = config.configured
+      } catch (error) {
+        console.error(error)
+        teamsAppConfigConfigured = false
+      } finally {
+        loadingTeamsAppConfig = false
+      }
+    }
+
+    loadTeamsAppConfig()
+  })
+
+  const provisionMSTeamsChannel = async (showNotification = true) => {
     if (!agent?._id || provisioning) {
-      return
+      return false
     }
 
     provisioning = true
@@ -102,12 +125,73 @@
       if (agent.live) {
         await deploymentStore.publishApp()
       }
-      notifications.success("Microsoft Teams channel settings saved")
+      if (showNotification) {
+        notifications.success("Microsoft Teams channel settings saved")
+      }
+      return true
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save Microsoft Teams channel settings")
+      return false
     } finally {
       provisioning = false
+    }
+  }
+
+  const downloadMSTeamsPackage = async () => {
+    if (!agent?._id || downloadingPackage || !hasRequiredCredentials) {
+      return
+    }
+
+    downloadingPackage = true
+    try {
+      const saved = await provisionMSTeamsChannel(false)
+      if (!saved) {
+        return
+      }
+      const blob = await agentsStore.downloadMSTeamsPackage(agent._id)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "budibase-teams-app-package.zip"
+      link.click()
+      URL.revokeObjectURL(url)
+      notifications.success("Microsoft Teams app package downloaded")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to download Microsoft Teams app package")
+    } finally {
+      downloadingPackage = false
+    }
+  }
+
+  const createMSTeamsApp = async () => {
+    if (!agent?._id || creatingTeamsApp || !teamsAppConfigConfigured) {
+      return
+    }
+
+    creatingTeamsApp = true
+    try {
+      provisionResult = await agentsStore.createMSTeamsApp(agent._id, {
+        teamId: toOptionalValue(draft.teamId),
+        idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
+        requireUserLink: draft.requireUserLink,
+      })
+      draft = {
+        ...draft,
+        appId: provisionResult.appId,
+        appPassword: SECRET_MASK,
+        tenantId: provisionResult.tenantId,
+      }
+      if (agent.live) {
+        await deploymentStore.publishApp()
+      }
+      notifications.success("Microsoft Teams app created")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to create Microsoft Teams app")
+    } finally {
+      creatingTeamsApp = false
     }
   }
 </script>
@@ -123,6 +207,13 @@
       : "Save channel"}
   actionDisabled={provisioning || !hasRequiredCredentials}
   onAction={provisionMSTeamsChannel}
+  secondaryActionLabel={downloadingPackage
+    ? "Downloading..."
+    : "Download app package"}
+  secondaryActionDisabled={provisioning ||
+    downloadingPackage ||
+    !hasRequiredCredentials}
+  onSecondaryAction={downloadMSTeamsPackage}
 >
   {#snippet fields()}
     <Input label="App ID (client ID)" bind:value={draft.appId} />
@@ -164,5 +255,35 @@
       value={messagingEndpointUrl}
       disabled
     />
+    <div class="guided-setup">
+      <Body size="S">
+        Teams app creation uses the tenant Microsoft Teams provisioning settings
+        managed in tenant settings.
+      </Body>
+      <Button
+        secondary
+        on:click={createMSTeamsApp}
+        disabled={creatingTeamsApp ||
+          loadingTeamsAppConfig ||
+          !teamsAppConfigConfigured}
+      >
+        {creatingTeamsApp ? "Creating app..." : "Create Teams app"}
+      </Button>
+      {#if !loadingTeamsAppConfig && !teamsAppConfigConfigured}
+        <Body size="S">
+          Configure Microsoft Teams provisioning settings before creating a
+          Teams app automatically.
+        </Body>
+      {/if}
+    </div>
   {/snippet}
 </ChannelConfigLayout>
+
+<style>
+  .guided-setup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-s);
+  }
+</style>

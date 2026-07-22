@@ -93,6 +93,32 @@ const decodeDiscordIntegrationSecrets = (
   }
 }
 
+const encodeMSTeamsIntegrationSecrets = (
+  msTeamsIntegration?: Agent["MSTeamsIntegration"]
+) => {
+  if (!msTeamsIntegration) {
+    return msTeamsIntegration
+  }
+
+  return {
+    ...msTeamsIntegration,
+    appPassword: encodeSecret(msTeamsIntegration.appPassword),
+  }
+}
+
+const decodeMSTeamsIntegrationSecrets = (
+  msTeamsIntegration?: Agent["MSTeamsIntegration"]
+) => {
+  if (!msTeamsIntegration) {
+    return msTeamsIntegration
+  }
+
+  return {
+    ...msTeamsIntegration,
+    appPassword: decodeSecret(msTeamsIntegration.appPassword),
+  }
+}
+
 const encodeSlackIntegrationSecrets = (
   slackIntegration?: Agent["slackIntegration"]
 ) => {
@@ -102,6 +128,7 @@ const encodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: encodeSecret(slackIntegration.clientSecret),
     botToken: encodeSecret(slackIntegration.botToken),
     signingSecret: encodeSecret(slackIntegration.signingSecret),
   }
@@ -116,6 +143,7 @@ const decodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: decodeSecret(slackIntegration.clientSecret),
     botToken: decodeSecret(slackIntegration.botToken),
     signingSecret: decodeSecret(slackIntegration.signingSecret),
   }
@@ -201,6 +229,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
     live: raw.live ?? false,
     operations: migrateOperations(raw),
     discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
+    MSTeamsIntegration: decodeMSTeamsIntegrationSecrets(raw.MSTeamsIntegration),
     slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
     telegramIntegration: decodeTelegramIntegrationSecrets(
       raw.telegramIntegration
@@ -257,6 +286,7 @@ const sanitiseSlackIntegration = (
   }
 
   const {
+    clientSecret: _clientSecret,
     botToken: _botToken,
     signingSecret: _signingSecret,
     chatAppId: _chatAppId,
@@ -368,7 +398,11 @@ const mergeMSTeamsIntegration = ({
     ...incoming,
   }
 
-  if (incoming.appPassword === SECRET_MASK && existing?.appPassword) {
+  if (
+    (incoming.appPassword === undefined ||
+      incoming.appPassword === SECRET_MASK) &&
+    existing?.appPassword
+  ) {
     merged.appPassword = existing.appPassword
   }
 
@@ -396,6 +430,10 @@ const mergeSlackIntegration = ({
 
   if (incoming.botToken === SECRET_MASK && existing?.botToken) {
     merged.botToken = existing.botToken
+  }
+
+  if (incoming.clientSecret === SECRET_MASK && existing?.clientSecret) {
+    merged.clientSecret = existing.clientSecret
   }
 
   if (incoming.signingSecret === SECRET_MASK && existing?.signingSecret) {
@@ -507,6 +545,9 @@ export async function create(
     discordIntegration: encodeDiscordIntegrationSecrets(
       agent.discordIntegration
     ),
+    MSTeamsIntegration: encodeMSTeamsIntegrationSecrets(
+      agent.MSTeamsIntegration
+    ),
     slackIntegration: encodeSlackIntegrationSecrets(agent.slackIntegration),
     telegramIntegration: encodeTelegramIntegrationSecrets(
       agent.telegramIntegration
@@ -613,6 +654,9 @@ export async function update(agent: Agent): Promise<Agent> {
     ...updated,
     discordIntegration: encodeDiscordIntegrationSecrets(
       updated.discordIntegration
+    ),
+    MSTeamsIntegration: encodeMSTeamsIntegrationSecrets(
+      updated.MSTeamsIntegration
     ),
     slackIntegration: encodeSlackIntegrationSecrets(updated.slackIntegration),
     telegramIntegration: encodeTelegramIntegrationSecrets(

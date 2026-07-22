@@ -20,6 +20,23 @@ const compress = require("koa-compress")
 
 export const router: Router = new Router()
 
+const PUBLIC_AUTH_ENDPOINTS = [
+  { method: "ALL", route: "/api/webhooks/trigger/:instance/:id" },
+  {
+    method: "ALL",
+    route: "/api/webhooks/discord/:instance/:chatAppId/:agentId",
+  },
+  {
+    method: "ALL",
+    route: "/api/webhooks/ms-teams/:instance/:chatAppId/:agentId",
+  },
+  { method: "ALL", route: "/api/webhooks/slack/:instance/:chatAppId/:agentId" },
+  {
+    method: "ALL",
+    route: "/api/webhooks/telegram/:instance/:chatAppId/:agentId",
+  },
+]
+
 router.get("/health", async ctx => {
   if (automationsEnabled()) {
     if (!(await automationQueue.getBullQueue().isReady())) {
@@ -61,7 +78,7 @@ if (apiEnabled()) {
 
   router
     .use(
-      auth.buildAuthMiddleware([], {
+      auth.buildAuthMiddleware(PUBLIC_AUTH_ENDPOINTS, {
         publicAllowed: true,
       })
     )
