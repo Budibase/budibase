@@ -985,6 +985,29 @@ describe("rest", () => {
         .intercept({ path: "/data", method: "GET" })
         .reply(200, { ok: true }, { headers: jsonHeaders })
 
+    const SECRET_HEADER_VALUE = "STATIC_HDR_LEAK"
+    const SECRET_TOKEN_VALUE = "unauth-leak-token"
+
+    const createRestDatasourceWithSecrets = () =>
+      createRestDatasource({
+        url: "http://budibase.com",
+        defaultHeaders: { "X-Static-Secret": SECRET_HEADER_VALUE },
+        authConfigs: [
+          {
+            _id: generator.guid(),
+            name: "Bearer",
+            type: RestAuthType.BEARER,
+            config: { token: SECRET_TOKEN_VALUE },
+          },
+        ],
+      })
+
+    const expectNoLeakedSecrets = (result: unknown) => {
+      const serialized = JSON.stringify(result)
+      expect(serialized).not.toContain(SECRET_HEADER_VALUE)
+      expect(serialized).not.toContain(SECRET_TOKEN_VALUE)
+    }
+
     const previewPath = ({
       datasourceId,
       fields,
@@ -1038,25 +1061,16 @@ describe("rest", () => {
     })
 
     it("should reject a parameterized path that resolves to a different host than the datasource base URL, without leaking datasource credentials", async () => {
-      const ds = await createRestDatasource({
-        url: "http://budibase.com",
-        defaultHeaders: { "X-Static-Secret": "STATIC_HDR_LEAK" },
-        authConfigs: [
-          {
-            _id: generator.guid(),
-            name: "Bearer",
-            type: RestAuthType.BEARER,
-            config: { token: "unauth-leak-token" },
-          },
-        ],
-      })
+      const ds = await createRestDatasourceWithSecrets()
 
-      await previewPath({
+      const result = await previewPath({
         datasourceId: ds._id!,
         fields: { path: "{{ t }}" },
         parameters: [{ name: "t", default: "http://leak.budibase.com/data" }],
         expectations: originError,
       })
+
+      expectNoLeakedSecrets(result)
     })
 
     it("should treat a different port as a different origin", async () => {
@@ -1102,18 +1116,7 @@ describe("rest", () => {
     })
 
     it("should reject a same-origin request that redirects to a different origin, without leaking datasource credentials", async () => {
-      const ds = await createRestDatasource({
-        url: "http://budibase.com",
-        defaultHeaders: { "X-Static-Secret": "STATIC_HDR_LEAK" },
-        authConfigs: [
-          {
-            _id: generator.guid(),
-            name: "Bearer",
-            type: RestAuthType.BEARER,
-            config: { token: "unauth-leak-token" },
-          },
-        ],
-      })
+      const ds = await createRestDatasourceWithSecrets()
 
       mockAgent!
         .get("http://budibase.com")
@@ -1122,7 +1125,7 @@ describe("rest", () => {
           headers: { location: "http://leak.budibase.com/data" },
         })
 
-      await previewPath({
+      const result = await previewPath({
         datasourceId: ds._id!,
         fields: { path: "data" },
         expectations: {
@@ -1132,6 +1135,8 @@ describe("rest", () => {
           },
         },
       })
+
+      expectNoLeakedSecrets(result)
     })
 
     it("should allow a same-origin redirect to succeed", async () => {
