@@ -18,6 +18,7 @@ import {
   FieldType,
   DatabaseQueryOpts,
   FeatureFlag,
+  FunctionDocument,
   Project,
   Row,
   RowAttachment,
@@ -48,6 +49,7 @@ export async function getResourcesInfo(): Promise<
   const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
   const projects = projectsEnabled ? await sdk.projects.fetch() : []
   const workspaceApps = await sdk.workspaceApps.fetch()
+  const functions = await sdk.functions.fetch()
 
   const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
   const addDependency = (forResource: string, dependency: UsedResource) => {
@@ -135,6 +137,15 @@ export async function getResourcesInfo(): Promise<
     }))
   )
 
+  baseSearchTargets.push(
+    ...functions.map<BaseSearchTarget>(fn => ({
+      id: fn._id,
+      idToSearch: fn._id,
+      name: fn.name,
+      type: ResourceType.FUNCTION,
+    }))
+  )
+
   if (rowActions.length) {
     const rowActionNames = await sdk.rowActions.getNames(
       Object.values(rowActions).flatMap(ra => Object.values(ra.actions))
@@ -172,6 +183,7 @@ export async function getResourcesInfo(): Promise<
     const json = JSON.stringify(possibleUsages)
     for (const search of baseSearchTargets) {
       if (
+        !(search.id === forResource && search.type === ResourceType.FUNCTION) &&
         json.includes(search.idToSearch) &&
         !dependencies[forResource]?.dependencies.find(
           resource => resource.id === search.id
@@ -200,14 +212,18 @@ export async function getResourcesInfo(): Promise<
     searchForUsages(table._id!, table)
   }
 
-  // Search in automations
-  for (const automation of automations) {
-    searchForUsages(automation._id, automation)
-  }
-
   // Search in queries
   for (const query of queries) {
     searchForUsages(query._id!, query)
+  }
+
+  for (const fn of functions) {
+    searchForUsages(fn._id, fn)
+  }
+
+  // Search in automations after Functions so their dependencies are included.
+  for (const automation of automations) {
+    searchForUsages(automation._id, automation)
   }
 
   for (const agent of agents) {
@@ -372,6 +388,7 @@ const resourceTypeIdPrefixes: Record<ResourceType, string> = {
   [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
   [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
   [ResourceType.QUERY]: prefixed(DocumentType.QUERY),
+  [ResourceType.FUNCTION]: prefixed(DocumentType.FUNCTION),
   [ResourceType.AUTOMATION]: prefixed(DocumentType.AUTOMATION),
   [ResourceType.WORKSPACE_APP]: prefixed(DocumentType.WORKSPACE_APP),
   [ResourceType.SCREEN]: prefixed(DocumentType.SCREEN),
@@ -390,6 +407,13 @@ function isAutomation(doc: AnyDocument): doc is Automation {
   }
   const type = getResourceType(doc._id)
   return type === ResourceType.AUTOMATION
+}
+
+function isFunction(doc: AnyDocument): doc is FunctionDocument {
+  if (!doc._id) {
+    return false
+  }
+  return getResourceType(doc._id) === ResourceType.FUNCTION
 }
 
 function isAgent(doc: AnyDocument): doc is Agent {
@@ -836,6 +860,9 @@ export async function duplicateResourcesToWorkspace(
         if (isAutomation(sanitizedDoc)) {
           sanitizedDoc.appId = toWorkspace
         }
+        if (isFunction(sanitizedDoc)) {
+          sanitizedDoc.appId = toWorkspace
+        }
         if (isDatasource(sanitizedDoc) && sanitizedDoc.entities) {
           sanitizedDoc.entities = Object.fromEntries(
             Object.entries(sanitizedDoc.entities).map(([name, entity]) => {
@@ -893,6 +920,10 @@ export async function duplicateResourcesToWorkspace(
       case ResourceType.QUERY:
         name = (doc as Query).name
         displayType = "Query"
+        break
+      case ResourceType.FUNCTION:
+        name = (doc as FunctionDocument).name
+        displayType = "Function"
         break
       case ResourceType.ROW_ACTION:
         name = doc._id // We don't really have a row action name

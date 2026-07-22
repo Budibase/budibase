@@ -4,7 +4,7 @@ import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
   FUNCTION_RUNNER_PROTOCOL_VERSION,
-  type AnyDocument,
+  type Automation,
   type FunctionBuildDiagnostic,
   type FunctionDocument,
   type FunctionQueryCapabilityInput,
@@ -111,23 +111,32 @@ export const getFunctionDeclarations = async (fn: FunctionDocument) => {
 export const getFunctionDeclarationsHash = async (fn: FunctionDocument) =>
   (await getFunctionDeclarations(fn)).declarationsHash
 
-export const getFunctionReadiness = async (fn: FunctionDocument) => {
+export type FunctionPublishReadiness =
+  | "ready"
+  | "build_required"
+  | "build_failed"
+  | "declarations_changed"
+  | "missing_query"
+
+export const getFunctionPublishReadiness = async (
+  fn: FunctionDocument
+): Promise<FunctionPublishReadiness> => {
   const sourceHash = getFunctionSourceHash(fn.source)
   let declarationsHash: string
   try {
     declarationsHash = await getFunctionDeclarationsHash(fn)
   } catch (error) {
     if (error instanceof HTTPError) {
-      return "build_required"
+      return "missing_query"
     }
     throw error
   }
 
-  if (
-    fn.lastBuild?.sourceHash !== sourceHash ||
-    fn.lastBuild.declarationsHash !== declarationsHash
-  ) {
+  if (fn.lastBuild?.sourceHash !== sourceHash) {
     return "build_required"
+  }
+  if (fn.lastBuild.declarationsHash !== declarationsHash) {
+    return "declarations_changed"
   }
   if (fn.lastBuild.status === "failed") {
     return "build_failed"
@@ -144,6 +153,13 @@ export const getFunctionReadiness = async (fn: FunctionDocument) => {
     return "ready"
   }
   return "build_required"
+}
+
+export const getFunctionReadiness = async (fn: FunctionDocument) => {
+  const readiness = await getFunctionPublishReadiness(fn)
+  return readiness === "declarations_changed" || readiness === "missing_query"
+    ? "build_required"
+    : readiness
 }
 
 const getCompileDiagnostics = (
@@ -343,23 +359,87 @@ const getFunctionIdFromStep = (step: unknown) => {
   return step.inputs.functionId
 }
 
+export const getFunctionIdsFromAutomation = (automation: Automation) => {
+  const functionIds = new Set<string>()
+  const visit = (value: unknown) => {
+    const functionId = getFunctionIdFromStep(value)
+    if (functionId) {
+      functionIds.add(functionId)
+    }
+    if (Array.isArray(value)) {
+      value.forEach(visit)
+    } else if (value && typeof value === "object") {
+      Object.values(value).forEach(visit)
+    }
+  }
+  visit(automation.definition?.steps)
+  return Array.from(functionIds)
+}
+
 const getReferencingAutomationNames = async (functionId: string) => {
-  const result = await getDb().allDocs<AnyDocument>(
+  const result = await getDb().allDocs<Automation>(
     docIds.getDocParams(DocumentType.AUTOMATION, null, {
       include_docs: true,
     })
   )
   return result.rows
     .map(row => row.doc)
-    .filter(automation => {
-      const steps = automation?.definition?.steps
-      return (
-        Array.isArray(steps) &&
-        steps.some(step => getFunctionIdFromStep(step) === functionId)
-      )
-    })
-    .map(automation => automation?.name)
-    .filter((name): name is string => typeof name === "string")
+    .filter((automation): automation is Automation => !!automation)
+    .filter(automation =>
+      getFunctionIdsFromAutomation(automation).includes(functionId)
+    )
+    .map(automation => automation.name)
+}
+
+const publishReadinessLabels: Record<
+  Exclude<FunctionPublishReadiness, "ready">,
+  string
+> = {
+  build_required: "Build required",
+  build_failed: "Build failed",
+  declarations_changed: "Function query bindings changed",
+  missing_query: "Missing query",
+}
+
+export const validateFunctionAutomationReferences = async (
+  automations: Automation[]
+) => {
+  const enabledAutomations = automations.filter(
+    automation => automation.disabled !== true
+  )
+  const functionIds = new Set(
+    enabledAutomations.flatMap(getFunctionIdsFromAutomation)
+  )
+  if (!functionIds.size) {
+    return
+  }
+
+  const functions = new Map((await fetch()).map(fn => [fn._id, fn]))
+  const errors: string[] = []
+  for (const automation of enabledAutomations) {
+    for (const functionId of getFunctionIdsFromAutomation(automation)) {
+      const fn = functions.get(functionId)
+      if (!fn) {
+        errors.push(
+          `Automation '${automation.name}' references missing Function '${functionId}'.`
+        )
+        continue
+      }
+      const readiness = await getFunctionPublishReadiness(fn)
+      if (readiness !== "ready") {
+        errors.push(
+          `Automation '${automation.name}' references Function '${fn.name}' (${fn._id}): ${publishReadinessLabels[readiness]}.`
+        )
+      }
+    }
+  }
+
+  if (errors.length) {
+    throw new HTTPError(
+      `Function publish preflight failed: ${errors.join(" ")}`,
+      400
+    )
+  }
 }
 
 export const remove = async (id: string, rev: string) => {

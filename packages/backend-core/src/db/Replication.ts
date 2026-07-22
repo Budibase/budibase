@@ -184,6 +184,9 @@ class Replication {
         if (startsWithID(doc._id, DocumentType.AGENT_LOG_SESSION)) {
           return false
         }
+        if (startsWithID(doc._id, DocumentType.FUNCTION_RUN_LOG)) {
+          return false
+        }
         if (doc._id === DocumentType.WORKSPACE_METADATA) {
           return false
         }
