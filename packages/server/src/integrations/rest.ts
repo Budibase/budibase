@@ -799,6 +799,7 @@ export class RestIntegration implements IntegrationBase {
         url,
         input,
         {
+          rejectCrossOriginRedirects: true,
           fetchFn: async (
             requestUrl: string,
             requestInput: RequestInit,

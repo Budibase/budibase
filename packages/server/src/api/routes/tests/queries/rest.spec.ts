@@ -1100,6 +1100,56 @@ describe("rest", () => {
 
       await previewPath({ datasourceId: ds._id!, fields: { path: "data" } })
     })
+
+    it("should reject a same-origin request that redirects to a different origin, without leaking datasource credentials", async () => {
+      const ds = await createRestDatasource({
+        url: "http://budibase.com",
+        defaultHeaders: { "X-Static-Secret": "STATIC_HDR_LEAK" },
+        authConfigs: [
+          {
+            _id: generator.guid(),
+            name: "Bearer",
+            type: RestAuthType.BEARER,
+            config: { token: "unauth-leak-token" },
+          },
+        ],
+      })
+
+      mockAgent!
+        .get("http://budibase.com")
+        .intercept({ path: "/data", method: "GET" })
+        .reply(302, undefined, {
+          headers: { location: "http://leak.budibase.com/data" },
+        })
+
+      await previewPath({
+        datasourceId: ds._id!,
+        fields: { path: "data" },
+        expectations: {
+          status: 400,
+          body: {
+            message: "Redirect to a different origin is not permitted.",
+          },
+        },
+      })
+    })
+
+    it("should allow a same-origin redirect to succeed", async () => {
+      const ds = await createRestDatasource({ url: "http://budibase.com" })
+
+      mockAgent!
+        .get("http://budibase.com")
+        .intercept({ path: "/data", method: "GET" })
+        .reply(302, undefined, {
+          headers: { location: "http://budibase.com/data-final" },
+        })
+      mockAgent!
+        .get("http://budibase.com")
+        .intercept({ path: "/data-final", method: "GET" })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await previewPath({ datasourceId: ds._id!, fields: { path: "data" } })
+    })
   })
 
   describe("datasource auth and connection properties", () => {
