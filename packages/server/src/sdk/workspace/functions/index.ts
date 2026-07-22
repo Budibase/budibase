@@ -3,11 +3,14 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
+  FUNCTION_RUNNER_PROTOCOL_VERSION,
   type AnyDocument,
+  type FunctionBuildDiagnostic,
   type FunctionDocument,
   type FunctionQueryCapabilityInput,
   type FunctionResponse,
 } from "@budibase/types"
+import { compileFunction } from "./compiler"
 import {
   generateFunctionDeclarations,
   hashFunctionDeclarations,
@@ -29,6 +32,10 @@ interface FunctionDraftInput {
 interface FunctionUpdateInput extends FunctionDraftInput {
   _id: string
   _rev: string
+}
+
+interface FunctionCompileInput extends FunctionDraftInput {
+  functionId?: string
 }
 
 const EXECUTE_FUNCTION_STEP_ID = "EXECUTE_FUNCTION"
@@ -126,12 +133,121 @@ export const getFunctionReadiness = async (fn: FunctionDocument) => {
     return "build_failed"
   }
   if (
+    fn.artifact?.runnerProtocolVersion === FUNCTION_RUNNER_PROTOCOL_VERSION &&
+    typeof fn.artifact.compiledJavaScript === "string" &&
+    fn.artifact.compiledJavaScript.length > 0 &&
+    typeof fn.artifact.compiledAt === "string" &&
+    fn.artifact.compiledAt.length > 0 &&
     fn.artifact?.sourceHash === sourceHash &&
     fn.artifact.declarationsHash === declarationsHash
   ) {
     return "ready"
   }
   return "build_required"
+}
+
+const getCompileDiagnostics = (
+  diagnostics: FunctionBuildDiagnostic[],
+  hasOutput: boolean
+) => {
+  if (hasOutput || diagnostics.length) {
+    return diagnostics
+  }
+  return [
+    {
+      code: "FUNCTION_COMPILE_ERROR",
+      message: "The Function compiler did not produce an artifact.",
+    },
+  ]
+}
+
+export const compile = async (draft: FunctionCompileInput) => {
+  validateDraft(draft)
+  const existing = draft.functionId ? await get(draft.functionId) : undefined
+  if (draft.functionId && !existing) {
+    throw new HTTPError(
+      `Function with id '${draft.functionId}' not found.`,
+      404
+    )
+  }
+  const capabilities = await buildCapabilities(
+    draft.capabilities,
+    existing?.capabilities
+  )
+  const declarations = generateFunctionDeclarations(capabilities)
+  const result = await compileFunction({
+    source: draft.source,
+    declarations,
+  })
+  return getCompileDiagnostics(result.diagnostics, !!result.output)
+}
+
+const assertRevision = (fn: FunctionDocument, revision: string) => {
+  if (fn._rev !== revision) {
+    throw new HTTPError("Function revision does not match.", 409)
+  }
+}
+
+export const build = async (id: string, revision: string) => {
+  const fn = await get(id)
+  if (!fn) {
+    throw new HTTPError(`Function with id '${id}' not found.`, 404)
+  }
+  assertRevision(fn, revision)
+
+  const sourceHash = getFunctionSourceHash(fn.source)
+  const declarationResult = await getFunctionDeclarations(fn)
+  const result = await compileFunction({
+    source: fn.source,
+    declarations: declarationResult.declarations,
+  })
+  const diagnostics = getCompileDiagnostics(result.diagnostics, !!result.output)
+
+  const current = await get(id)
+  if (!current) {
+    throw new HTTPError(`Function with id '${id}' not found.`, 404)
+  }
+  assertRevision(current, revision)
+  const currentDeclarations = await getFunctionDeclarations(current)
+  if (
+    currentDeclarations.declarationsHash !== declarationResult.declarationsHash
+  ) {
+    throw new HTTPError(
+      "Function query declarations changed during compilation.",
+      409
+    )
+  }
+
+  const attemptedAt = new Date().toISOString()
+  const successfulOutput = diagnostics.length ? undefined : result.output
+  const lastBuild = {
+    status: successfulOutput ? "success" : "failed",
+    sourceHash,
+    declarationsHash: declarationResult.declarationsHash,
+    attemptedAt,
+    ...(diagnostics.length ? { diagnostics } : {}),
+  } as const
+  const artifact = successfulOutput
+    ? {
+        runnerProtocolVersion: FUNCTION_RUNNER_PROTOCOL_VERSION,
+        compiledJavaScript: successfulOutput.compiledJavaScript,
+        sourceMap: successfulOutput.sourceMap,
+        sourceHash,
+        declarationsHash: declarationResult.declarationsHash,
+        compiledAt: attemptedAt,
+      }
+    : current.artifact
+  const response = await getDb().put(
+    {
+      ...current,
+      _rev: revision,
+      capabilities: currentDeclarations.capabilities,
+      artifact,
+      lastBuild,
+    },
+    { returnDoc: true }
+  )
+  return response.doc
 }
 
 export const toFunctionResponse = async (
