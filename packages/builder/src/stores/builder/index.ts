@@ -44,6 +44,7 @@ import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
 import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
 import { workspaceConnections } from "./workspaceConnection"
+import { functionsEnabled, functionsServerState, runnerHealth } from "./functions"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
@@ -98,6 +99,9 @@ export {
   dataAPI,
   restTemplates,
   workspaceConnections,
+  functionsEnabled,
+  functionsServerState,
+  runnerHealth,
 }
 
 export const reset = () => {
