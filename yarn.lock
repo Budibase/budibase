@@ -8196,6 +8196,13 @@
     "@typescript-eslint/types" "8.56.1"
     eslint-visitor-keys "^5.0.0"
 
+"@typescript/vfs@1.6.4":
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/@typescript/vfs/-/vfs-1.6.4.tgz#7543a3bd961727eb51c8bdafc3ed5e0fb5f56dff"
+  integrity sha512-PJFXFS4ZJKiJ9Qiuix6Dz/OwEIqHD7Dme1UwZhTK11vR+5dqW2ACbdndWQexBzCx+CPuMe5WBYQWCsFyGlQLlQ==
+  dependencies:
+    debug "^4.4.3"
+
 "@typespec/ts-http-runtime@^0.3.0":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@typespec/ts-http-runtime/-/ts-http-runtime-0.3.3.tgz#62767b88df3ba7fc53bfd66a94c88dfe1dec55bc"
