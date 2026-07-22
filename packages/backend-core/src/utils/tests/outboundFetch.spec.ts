@@ -485,6 +485,56 @@ describe("outboundFetch", () => {
     expect(secondCallHeaders.get("authorization")).toBe("Bearer token")
   })
 
+  it("rejects a cross-origin redirect when rejectCrossOriginRedirects is true", async () => {
+    isBlacklistedMock.mockResolvedValue(false)
+    const resume = jest.fn()
+
+    fetchMock.mockResolvedValueOnce({
+      status: 302,
+      headers: {
+        get: jest.fn().mockReturnValue("https://leak.budibase.com/final"),
+      },
+      body: { resume },
+    } as any)
+
+    await expect(
+      fetchWithBlacklist("https://budibase.com/resource", undefined, {
+        rejectCrossOriginRedirects: true,
+      })
+    ).rejects.toThrow("Redirect to a different origin is not permitted.")
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("still follows a same-origin redirect when rejectCrossOriginRedirects is true", async () => {
+    isBlacklistedMock.mockResolvedValue(false)
+    const resume = jest.fn()
+
+    fetchMock
+      .mockResolvedValueOnce({
+        status: 302,
+        headers: {
+          get: jest
+            .fn()
+            .mockReturnValue("https://budibase.com/same-origin-path"),
+        },
+        body: { resume },
+      } as any)
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        headers: { get: jest.fn() },
+      } as any)
+
+    const response = await fetchWithBlacklist(
+      "https://budibase.com/resource",
+      undefined,
+      { rejectCrossOriginRedirects: true }
+    )
+
+    expect(response.status).toBe(200)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
   // ─── Pinned lookup ────────────────────────────────────────────────────────
 
   describe("createPinnedLookup", () => {

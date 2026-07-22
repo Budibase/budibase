@@ -230,7 +230,7 @@ describe("REST Integration", () => {
     expect(data).toEqual({ foo: "bar" })
   })
 
-  it("validates redirect targets against the outbound blacklist", async () => {
+  it("rejects a redirect to a different origin, even when the target is otherwise blacklisted", async () => {
     queueResponse(async (url, options) => {
       expect(url).toEqual("https://example.com/redirect")
       expect(options?.redirect).toEqual("manual")
@@ -241,7 +241,7 @@ describe("REST Integration", () => {
     })
 
     await expect(integration.read({ path: "redirect" })).rejects.toThrow(
-      "URL is blocked or could not be resolved safely."
+      "Redirect to a different origin is not permitted."
     )
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
