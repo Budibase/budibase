@@ -30,12 +30,35 @@ builderRoutes
     }),
     controller.create
   )
+  .post(
+    "/api/functions/compile",
+    functionsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        ...draftSchema,
+        functionId: Joi.string().optional(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.compile
+  )
   .get(
     "/api/functions/query-catalog",
     functionsEnabled,
     controller.queryCatalog
   )
   .get("/api/functions/:id", functionsEnabled, controller.find)
+  .post(
+    "/api/functions/:id/build",
+    functionsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        _rev: Joi.string().required(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.build
+  )
   .put(
     "/api/functions/:id",
     functionsEnabled,

@@ -1,4 +1,7 @@
-import type { FunctionDocument } from "../../../documents"
+import type {
+  FunctionBuildDiagnostic,
+  FunctionDocument,
+} from "../../../documents"
 import type { SourceName } from "../../../sdk"
 
 export type FunctionReadiness = "ready" | "build_required" | "build_failed"
@@ -38,6 +41,22 @@ export interface FetchFunctionResponse {
 }
 
 export interface UpdateFunctionResponse {
+  function: FunctionResponse
+}
+
+export interface CompileFunctionRequest extends FunctionDraftRequest {
+  functionId?: string
+}
+
+export interface CompileFunctionResponse {
+  diagnostics: FunctionBuildDiagnostic[]
+}
+
+export interface BuildFunctionRequest {
+  _rev: string
+}
+
+export interface BuildFunctionResponse {
   function: FunctionResponse
 }
 
