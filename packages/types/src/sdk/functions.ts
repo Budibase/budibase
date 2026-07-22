@@ -1,10 +1,5 @@
 import type { JSONValue } from "../core"
 
-export const FUNCTION_RUNNER_PROTOCOL_VERSION = 1 as const
-
-export type FunctionRunnerProtocolVersion =
-  typeof FUNCTION_RUNNER_PROTOCOL_VERSION
-
 export enum FunctionErrorCode {
   FUNCTIONS_DISABLED = "FUNCTIONS_DISABLED",
   FUNCTION_COMPILE_ERROR = "FUNCTION_COMPILE_ERROR",
@@ -93,7 +88,6 @@ export const DEFAULT_FUNCTION_LIMITS: FunctionLimits = {
 }
 
 export interface FunctionArtifact {
-  runnerProtocolVersion: FunctionRunnerProtocolVersion
   compiledJavaScript: string
   sourceMap?: string
   sourceHash: string
@@ -118,8 +112,7 @@ export interface FunctionRunMetrics {
   logBytes: number
 }
 
-export interface FunctionRunRequestV1 {
-  runnerProtocolVersion: FunctionRunnerProtocolVersion
+export interface FunctionRunRequest {
   runId: string
   artifact: FunctionArtifact
   inputs: Record<string, JSONValue>
@@ -127,8 +120,7 @@ export interface FunctionRunRequestV1 {
   limits: FunctionRunLimits
 }
 
-export interface FunctionRunResultV1 {
-  runnerProtocolVersion: FunctionRunnerProtocolVersion
+export interface FunctionRunResult {
   runId: string
   status: FunctionRunStatus
   output?: Record<string, JSONValue>
@@ -139,11 +131,10 @@ export interface FunctionRunResultV1 {
 
 export interface FunctionExecutorHealth {
   healthy: boolean
-  runnerProtocolVersion?: FunctionRunnerProtocolVersion
 }
 
 export interface FunctionExecutor {
   health: () => Promise<FunctionExecutorHealth>
-  execute: (request: FunctionRunRequestV1) => Promise<FunctionRunResultV1>
+  execute: (request: FunctionRunRequest) => Promise<FunctionRunResult>
   terminate: (runId: string) => Promise<void>
 }

@@ -1,0 +1,29 @@
+{
+  "name": "@budibase/functions-runner",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Budibase Functions runner supervisor service",
+  "main": "dist/index.js",
+  "scripts": {
+    "prebuild": "rimraf dist/",
+    "build": "node ./scripts/build.js",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
+    "dev": "nodemon",
+    "dev:built": "yarn run run:docker",
+    "run:docker": "node --enable-source-maps dist/start.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@budibase/types": "*",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.15",
+    "rimraf": "3.0.2"
+  },
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
+  "license": "GPL-3.0"
+}
