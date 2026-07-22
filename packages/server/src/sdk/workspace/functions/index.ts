@@ -1,15 +1,24 @@
-import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import { createHash } from "crypto"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
   type AnyDocument,
   type FunctionDocument,
-  type FunctionQueryCapability,
   type FunctionQueryCapabilityInput,
   type FunctionResponse,
-  type Query,
 } from "@budibase/types"
+import {
+  generateFunctionDeclarations,
+  hashFunctionDeclarations,
+} from "./declarations"
+import { buildCapabilities } from "./queryCatalog"
+
+export {
+  generateFunctionDeclarations,
+  hashFunctionDeclarations,
+} from "./declarations"
+export { getQueryCatalog, resolveSavedQuery } from "./queryCatalog"
 
 interface FunctionDraftInput {
   name: string
@@ -75,59 +84,37 @@ const validateDraft = (draft: FunctionDraftInput) => {
   }
 }
 
-const getQuery = async (queryId: string) => {
-  if (!docIds.isType(queryId, DocumentType.QUERY)) {
-    throw new HTTPError(`Query '${queryId}' not found.`, 404)
-  }
-
-  const query = await getDb().tryGet<Query>(queryId)
-  if (!query) {
-    throw new HTTPError(`Query '${queryId}' not found.`, 404)
-  }
-  return query
-}
-
-const buildCapabilities = async (
-  inputs: FunctionQueryCapabilityInput[],
-  existing: FunctionQueryCapability[] = []
-) => {
-  return await Promise.all(
-    inputs.map(async input => {
-      const query = await getQuery(input.queryId)
-      const persisted = existing.find(
-        capability => capability.queryId === input.queryId
-      )
-      return {
-        capabilityId: persisted?.capabilityId || utils.newid(),
-        queryId: input.queryId,
-        datasourceAlias: input.datasourceAlias,
-        queryAlias: input.queryAlias,
-        parameterNames: query.parameters.map(parameter => parameter.name),
-      }
-    })
+export const getFunctionDeclarations = async (fn: FunctionDocument) => {
+  const capabilities = await buildCapabilities(
+    fn.capabilities.map(capability => ({
+      queryId: capability.queryId,
+      datasourceAlias: capability.datasourceAlias,
+      queryAlias: capability.queryAlias,
+    })),
+    fn.capabilities
   )
+  const declarations = generateFunctionDeclarations(capabilities)
+  return {
+    capabilities,
+    declarations,
+    declarationsHash: hashFunctionDeclarations(declarations),
+  }
 }
 
-export const getFunctionDeclarationsHash = async (fn: FunctionDocument) => {
-  const capabilities = await Promise.all(
-    fn.capabilities.map(async capability => {
-      const query = await getDb().tryGet<Query>(capability.queryId)
-      return {
-        ...capability,
-        parameterNames: query?.parameters.map(parameter => parameter.name) || [
-          "__missing__",
-        ],
-      }
-    })
-  )
-
-  capabilities.sort((a, b) => a.capabilityId.localeCompare(b.capabilityId))
-  return hash(JSON.stringify(capabilities))
-}
+export const getFunctionDeclarationsHash = async (fn: FunctionDocument) =>
+  (await getFunctionDeclarations(fn)).declarationsHash
 
 export const getFunctionReadiness = async (fn: FunctionDocument) => {
   const sourceHash = getFunctionSourceHash(fn.source)
-  const declarationsHash = await getFunctionDeclarationsHash(fn)
+  let declarationsHash: string
+  try {
+    declarationsHash = await getFunctionDeclarationsHash(fn)
+  } catch (error) {
+    if (error instanceof HTTPError) {
+      return "build_required"
+    }
+    throw error
+  }
 
   if (
     fn.lastBuild?.sourceHash !== sourceHash ||

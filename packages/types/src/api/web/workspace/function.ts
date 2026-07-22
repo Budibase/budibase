@@ -1,4 +1,5 @@
 import type { FunctionDocument } from "../../../documents"
+import type { SourceName } from "../../../sdk"
 
 export type FunctionReadiness = "ready" | "build_required" | "build_failed"
 
@@ -38,4 +39,24 @@ export interface FetchFunctionResponse {
 
 export interface UpdateFunctionResponse {
   function: FunctionResponse
+}
+
+export type FunctionQueryKind = "data" | "api"
+
+export interface FunctionQueryCatalogParameter {
+  name: string
+}
+
+export interface FunctionQueryCatalogEntry {
+  queryId: string
+  queryName: string
+  datasourceId: string
+  datasourceName: string
+  source: SourceName
+  kind: FunctionQueryKind
+  parameters: FunctionQueryCatalogParameter[]
+}
+
+export interface FetchFunctionQueryCatalogResponse {
+  queries: FunctionQueryCatalogEntry[]
 }

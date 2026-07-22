@@ -1,7 +1,13 @@
 import { context, features } from "@budibase/backend-core"
-import { DocumentType, FeatureFlag, prefixed } from "@budibase/types"
+import {
+  DocumentType,
+  FeatureFlag,
+  type FunctionDocument,
+  prefixed,
+} from "@budibase/types"
 import { setEnv } from "../../../environment"
 import { generateAutomationID } from "../../../db/utils"
+import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
   basicDatasource,
@@ -66,6 +72,21 @@ describe("/functions", () => {
     })
   }
 
+  const createRestQuery = async () => {
+    const datasource = await config.restDatasource({
+      url: "https://example.com",
+    })
+    return await config.api.query.save({
+      ...basicQuery(datasource._id!),
+      name: "Find available rooms",
+      fields: {
+        path: "/rooms",
+        method: "GET",
+      },
+      parameters: [{ name: "available-on", default: "" }],
+    })
+  }
+
   it("returns 404 when Functions are disabled", async () => {
     await config.api.function.fetch({ status: 404 })
   })
@@ -75,6 +96,185 @@ describe("/functions", () => {
       config,
       method: "GET",
       url: "/api/functions",
+    })
+  })
+
+  it("catalogs Data and API Explorer queries with authoritative parameters", async () => {
+    await withFunctionsEnabled(async () => {
+      const dataQuery = await createQuery()
+      const restQuery = await createRestQuery()
+
+      const { queries } = await config.api.function.queryCatalog()
+
+      expect(queries).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            queryId: dataQuery._id,
+            queryName: "Find rooms",
+            kind: "data",
+            parameters: [{ name: "building" }, { name: "floor" }],
+          }),
+          expect.objectContaining({
+            queryId: restQuery._id,
+            queryName: "Find available rooms",
+            kind: "api",
+            parameters: [{ name: "available-on" }],
+          }),
+        ])
+      )
+    })
+  })
+
+  it("generates declarations only for linked queries and preserves aliases on rename", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await createFunction()
+      await createRestQuery()
+
+      const beforeRename = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const fn = await context
+            .getWorkspaceDB()
+            .get<FunctionDocument>(created._id)
+          return await sdk.functions.getFunctionDeclarations(fn)
+        }
+      )
+
+      expect(beforeRename.declarations).toContain(
+        'declare module "@budibase/functions"'
+      )
+      expect(beforeRename.declarations).toContain('readonly "Inventory"')
+      expect(beforeRename.declarations).toContain('readonly "findRooms"')
+      expect(beforeRename.declarations).toContain(
+        'readonly "building": string | null'
+      )
+      expect(beforeRename.declarations).toContain("Promise<JsonValue>")
+      expect(beforeRename.declarations).not.toContain("findAvailableRooms")
+
+      const query = await config.api.query.get(created.capabilities[0].queryId)
+      await config.api.query.save({ ...query, name: "Rooms renamed" })
+
+      const afterRename = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const fn = await context
+            .getWorkspaceDB()
+            .get<FunctionDocument>(created._id)
+          return await sdk.functions.getFunctionDeclarations(fn)
+        }
+      )
+      const { function: fetched } = await config.api.function.find(created._id)
+
+      expect(afterRename).toEqual(beforeRename)
+      expect(fetched.capabilities[0].queryAlias).toBe("findRooms")
+    })
+  })
+
+  it("rejects datasource and query alias collisions", async () => {
+    await withFunctionsEnabled(async () => {
+      const firstQuery = await createQuery()
+      const secondQuery = await createQuery()
+
+      await config.api.function.create(
+        {
+          name: "Alias collision",
+          source: "",
+          capabilities: [
+            {
+              queryId: firstQuery._id!,
+              datasourceAlias: "Inventory",
+              queryAlias: "findRooms",
+            },
+            {
+              queryId: secondQuery._id!,
+              datasourceAlias: "Inventory",
+              queryAlias: "findAvailableRooms",
+            },
+          ],
+        },
+        { status: 400 }
+      )
+
+      const sameDatasourceQuery = await config.api.query.save({
+        ...basicQuery(firstQuery.datasourceId),
+        name: "Find floors",
+      })
+      await config.api.function.create(
+        {
+          name: "Query alias collision",
+          source: "",
+          capabilities: [
+            {
+              queryId: firstQuery._id!,
+              datasourceAlias: "Inventory",
+              queryAlias: "findRooms",
+            },
+            {
+              queryId: sameDatasourceQuery._id!,
+              datasourceAlias: "Inventory",
+              queryAlias: "findRooms",
+            },
+          ],
+        },
+        { status: 400 }
+      )
+    })
+  })
+
+  it("rejects cross-workspace queries", async () => {
+    const query = await createQuery()
+    await config.createWorkspace()
+
+    await withFunctionsEnabled(async () => {
+      await config.api.function.create(
+        {
+          name: "Cross-workspace query",
+          source: "",
+          capabilities: [
+            {
+              queryId: query._id!,
+              datasourceAlias: "Inventory",
+              queryAlias: "findRooms",
+            },
+          ],
+        },
+        { status: 404 }
+      )
+    })
+  })
+
+  it("rejects unsupported queries and invalid parameter metadata", async () => {
+    await withFunctionsEnabled(async () => {
+      const unsupported = await createQuery()
+      const invalidParameters = await createQuery()
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          ...unsupported,
+          queryVerb: "unsupported",
+        })
+        await context.getWorkspaceDB().put({
+          ...invalidParameters,
+          parameters: [{ name: "", default: "" }],
+        })
+      })
+
+      for (const query of [unsupported, invalidParameters]) {
+        await config.api.function.create(
+          {
+            name: "Invalid query",
+            source: "",
+            capabilities: [
+              {
+                queryId: query._id!,
+                datasourceAlias: "Inventory",
+                queryAlias: "findRooms",
+              },
+            ],
+          },
+          { status: 400 }
+        )
+      }
     })
   })
 

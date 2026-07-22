@@ -30,6 +30,11 @@ builderRoutes
     }),
     controller.create
   )
+  .get(
+    "/api/functions/query-catalog",
+    functionsEnabled,
+    controller.queryCatalog
+  )
   .get("/api/functions/:id", functionsEnabled, controller.find)
   .put(
     "/api/functions/:id",
