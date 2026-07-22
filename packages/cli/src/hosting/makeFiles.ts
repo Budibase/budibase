@@ -45,7 +45,10 @@ function getSingleCompose(port: number) {
         restart: "unless-stopped",
         image: SINGLE_IMAGE,
         ports: [`${port}:80`],
-        environment: getSecrets({ single: true }),
+        environment: {
+          ...getSecrets({ single: true }),
+          GEMINI_API_KEY: "",
+        },
         volumes: [`${VOL_NAME}:/data`],
       },
     },
@@ -62,7 +65,10 @@ function getEnv(port: number) {
   const partOne = stringifyToDotEnv({
     MAIN_PORT: port,
   })
-  const partTwo = stringifyToDotEnv(getSecrets())
+  const partTwo = stringifyToDotEnv({
+    ...getSecrets(),
+    GEMINI_API_KEY: "",
+  })
   const partThree = stringifyToDotEnv({
     APP_PORT: 4002,
     WORKER_PORT: 4003,

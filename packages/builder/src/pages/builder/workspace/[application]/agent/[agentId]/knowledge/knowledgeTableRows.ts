@@ -42,7 +42,8 @@ const formatFileStatus = (file: KnowledgeBaseFile) =>
 export const toFileTableRows = (
   list: KnowledgeBaseFile[],
   onDelete: (file: KnowledgeBaseFile) => Promise<void>,
-  activePendingUploads?: PendingUpload[]
+  activePendingUploads?: PendingUpload[],
+  actionsDisabled = false
 ): FileKnowledgeTableRow[] => {
   return [
     ...(activePendingUploads || []).map(upload => ({
@@ -71,6 +72,7 @@ export const toFileTableRows = (
       mimetype: file.mimetype,
       onDelete: () => onDelete(file),
       errorMessage: file.errorMessage,
+      actionsDisabled,
     })),
   ].sort((a, b) => a.filename.localeCompare(b.filename))
 }
@@ -177,6 +179,7 @@ export const toSharePointConnectionRows = ({
   sharePointSourceSnapshots,
   onDelete,
   onSync,
+  actionsDisabled = false,
 }: {
   sharePointSources: Array<{
     id: string
@@ -185,6 +188,7 @@ export const toSharePointConnectionRows = ({
   sharePointSourceSnapshots: SharePointKnowledgeSourceSnapshot[]
   onDelete: (siteId: string) => Promise<void>
   onSync: (sourceId: string) => Promise<void>
+  actionsDisabled?: boolean
 }): SharePointConnectionTableRow[] => {
   if (sharePointSources.length === 0) {
     return []
@@ -243,6 +247,7 @@ export const toSharePointConnectionRows = ({
         errorMessage: snapshot?.errorMessage,
         onDelete: () => onDelete(siteId),
         onSync: () => onSync(source.id),
+        actionsDisabled,
       }
     })
     .filter(s => s !== null)

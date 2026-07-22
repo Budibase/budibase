@@ -11,9 +11,16 @@
     operationId: string
     onUploaded?: () => Promise<void>
     onSharePoint?: () => Promise<void> | void
+    disabled?: boolean
   }
 
-  let { agentId, operationId, onUploaded, onSharePoint }: Props = $props()
+  let {
+    agentId,
+    operationId,
+    onUploaded,
+    onSharePoint,
+    disabled = false,
+  }: Props = $props()
 
   let fileInput = $state<HTMLInputElement>()
   let addKnowledgeModal = $state<AddKnowledgeModal>()
@@ -27,6 +34,9 @@
   })
 
   const openAddKnowledgeModal = () => {
+    if (disabled) {
+      return
+    }
     addKnowledgeModal?.show()
   }
 
@@ -94,9 +104,15 @@
       )
     }
 
+    const failureReasons = [
+      ...new Set(result.failedUploads.map(failure => failure.errorMessage)),
+    ].filter(Boolean)
+    const failureReason =
+      failureReasons.length === 1 ? ` ${failureReasons[0]}` : ""
+
     notifications.error(
       issueMessages.length > 0
-        ? `Some files were not uploaded: ${issueMessages.join(", ")}.`
+        ? `Some files were not uploaded: ${issueMessages.join(", ")}.${failureReason}`
         : "Failed to upload files"
     )
   }
@@ -110,7 +126,7 @@
   icon="plus"
   size="S"
   secondary
-  disabled={uploadState.uploading}
+  disabled={disabled || uploadState.uploading}
   on:click={openAddKnowledgeModal}
 >
   <span class="add-knowledge-label">

@@ -98,6 +98,17 @@ describe("knowledgeTableRows", () => {
     expect(onDelete).toHaveBeenCalledTimes(1)
   })
 
+  it("marks file actions as disabled when Gemini is not configured", () => {
+    const rows = toFileTableRows(
+      [makeFile({ filename: "notes.md" })],
+      async () => {},
+      undefined,
+      true
+    )
+
+    expect(rows[0].actionsDisabled).toBe(true)
+  })
+
   it("filters and counts sharepoint files by site", () => {
     const files = [
       makeFile({

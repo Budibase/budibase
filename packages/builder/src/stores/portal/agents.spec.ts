@@ -67,6 +67,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       status: AgentKnowledgeSourceSyncRunStatus.QUEUED,
     })
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
@@ -112,6 +113,7 @@ describe("agentsStore sharepoint and file syncing", () => {
         operation_1: { files, sharePointSources: [] },
         operation_2: { files: [], sharePointSources: [] },
       },
+      configuration: { geminiFileSearchConfigured: true },
     })
 
     const response = await store.fetchAgentKnowledge("agent_1")
@@ -124,6 +126,9 @@ describe("agentsStore sharepoint and file syncing", () => {
     expect(
       get(store.store).knowledgeByOperation["agent_1:operation_2"]
     ).toEqual({ files: [], sharePointSources: [] })
+    expect(store.getKnowledgeConfiguration()).toEqual({
+      geminiFileSearchConfigured: true,
+    })
   })
 
   it("fetchAgentKnowledge clears stale operation knowledge for the agent before storing", async () => {
@@ -145,6 +150,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       },
     })
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
@@ -160,6 +166,7 @@ describe("agentsStore sharepoint and file syncing", () => {
 
   it("getOperationKnowledge reads from the cached index", async () => {
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
@@ -175,6 +182,7 @@ describe("agentsStore sharepoint and file syncing", () => {
 
   it("ensureOperationKnowledgeLoaded fetches when cache is empty", async () => {
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
@@ -195,6 +203,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       status: KnowledgeBaseFileStatus.PROCESSING,
     } as KnowledgeBaseFile
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [processingFile], sharePointSources: [] },
       },
@@ -216,6 +225,7 @@ describe("agentsStore sharepoint and file syncing", () => {
   it("polls while a SharePoint sync is queued", async () => {
     vi.useFakeTimers()
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: {
           files: [],
@@ -243,6 +253,7 @@ describe("agentsStore sharepoint and file syncing", () => {
   it("does not poll when a SharePoint source has no sync state", async () => {
     vi.useFakeTimers()
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: {
           files: [],
@@ -312,6 +323,7 @@ describe("AgentsStore file operations", () => {
   it("refreshes knowledge after removing a file", async () => {
     fetchAgents.mockResolvedValue({ agents: [] })
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
@@ -339,6 +351,7 @@ describe("AgentsStore file operations", () => {
     })
     fetchAgents.mockResolvedValue({ agents: [] })
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [uploadedFile], sharePointSources: [] },
       },
@@ -361,9 +374,33 @@ describe("AgentsStore file operations", () => {
     })
   })
 
+  it("preserves upload failure messages for the UI", async () => {
+    uploadOperationFile.mockRejectedValue(
+      new Error("Gemini File Search isn't configured")
+    )
+
+    const file = new File(["hello"], "notes.txt", { type: "text/plain" })
+    const result = await store.uploadOperationFiles("agent_1", "operation_1", [
+      file,
+    ])
+
+    expect(result.failedUploads).toEqual([
+      {
+        filename: "notes.txt",
+        errorMessage: "Gemini File Search isn't configured",
+      },
+    ])
+    expect(store.getOperationUploadState("agent_1", "operation_1")).toEqual({
+      pendingUploads: [],
+      uploading: false,
+      progress: "",
+    })
+  })
+
   it("calls resetOperationKnowledgeBaseStore and re-fetches knowledge on reset", async () => {
     resetOperationKnowledgeBaseStore.mockResolvedValue(undefined)
     fetchAgentKnowledge.mockResolvedValue({
+      configuration: { geminiFileSearchConfigured: true },
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },

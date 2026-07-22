@@ -37,39 +37,41 @@
   }
 </script>
 
-<div class="file-actions" class:loading={processing}>
-  {#if row.kind === "sharepoint_connection"}
-    <AbsTooltip text="Sync SharePoint" noWrap>
-      <ActionButton
-        icon={"arrows-clockwise"}
-        size="M"
-        quiet
-        on:click={() => sync(row)}
-        disabled={processing}
-        loading={syncing}
-      ></ActionButton>
-    </AbsTooltip>
-    <AbsTooltip text="Disconnect" noWrap>
-      <ActionButton
-        icon="trash"
-        size="M"
-        quiet
-        on:click={remove}
-        disabled={processing}
-      />
-    </AbsTooltip>
-  {:else if row.onDelete}
-    <AbsTooltip text="Remove" noWrap>
-      <ActionButton
-        icon="trash"
-        size="M"
-        quiet
-        on:click={remove}
-        disabled={processing}
-      />
-    </AbsTooltip>
-  {/if}
-</div>
+{#if !row.actionsDisabled}
+  <div class="file-actions" class:loading={processing}>
+    {#if row.kind === "sharepoint_connection"}
+      <AbsTooltip text="Sync SharePoint" noWrap>
+        <ActionButton
+          icon={"arrows-clockwise"}
+          size="M"
+          quiet
+          on:click={() => sync(row)}
+          disabled={processing}
+          loading={syncing}
+        ></ActionButton>
+      </AbsTooltip>
+      <AbsTooltip text="Disconnect" noWrap>
+        <ActionButton
+          icon="trash"
+          size="M"
+          quiet
+          on:click={remove}
+          disabled={processing}
+        />
+      </AbsTooltip>
+    {:else if row.onDelete}
+      <AbsTooltip text="Remove" noWrap>
+        <ActionButton
+          icon="trash"
+          size="M"
+          quiet
+          on:click={remove}
+          disabled={processing}
+        />
+      </AbsTooltip>
+    {/if}
+  </div>
+{/if}
 
 <style>
   .file-actions {
