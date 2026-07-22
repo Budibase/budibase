@@ -1,4 +1,8 @@
 import {
+  type BuildFunctionRequest,
+  type BuildFunctionResponse,
+  type CompileFunctionRequest,
+  type CompileFunctionResponse,
   type CreateFunctionRequest,
   type CreateFunctionResponse,
   type FetchFunctionResponse,
@@ -24,6 +28,23 @@ export const queryCatalog = async (
 ) => {
   ctx.body = {
     queries: await sdk.functions.getQueryCatalog(),
+  }
+}
+
+export const compile = async (
+  ctx: UserCtx<CompileFunctionRequest, CompileFunctionResponse>
+) => {
+  ctx.body = {
+    diagnostics: await sdk.functions.compile(ctx.request.body),
+  }
+}
+
+export const build = async (
+  ctx: UserCtx<BuildFunctionRequest, BuildFunctionResponse>
+) => {
+  const fn = await sdk.functions.build(ctx.params.id, ctx.request.body._rev)
+  ctx.body = {
+    function: await sdk.functions.toFunctionResponse(fn),
   }
 }
 

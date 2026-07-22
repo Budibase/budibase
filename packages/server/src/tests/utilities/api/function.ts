@@ -1,4 +1,8 @@
 import type {
+  BuildFunctionRequest,
+  BuildFunctionResponse,
+  CompileFunctionRequest,
+  CompileFunctionResponse,
   CreateFunctionRequest,
   CreateFunctionResponse,
   FetchFunctionResponse,
@@ -10,6 +14,30 @@ import type {
 import { type Expectations, TestAPI } from "./base"
 
 export class FunctionAPI extends TestAPI {
+  compile = async (
+    body: CompileFunctionRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<CompileFunctionResponse>("/api/functions/compile", {
+      body,
+      expectations,
+    })
+  }
+
+  build = async (
+    id: string,
+    body: BuildFunctionRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<BuildFunctionResponse>(
+      `/api/functions/${id}/build`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
   queryCatalog = async (expectations?: Expectations) => {
     return await this._get<FetchFunctionQueryCatalogResponse>(
       "/api/functions/query-catalog",
