@@ -2,6 +2,7 @@ import type {
   CreateFunctionRequest,
   CreateFunctionResponse,
   FetchFunctionResponse,
+  FetchFunctionQueryCatalogResponse,
   FetchFunctionsResponse,
   UpdateFunctionRequest,
   UpdateFunctionResponse,
@@ -9,6 +10,13 @@ import type {
 import { type Expectations, TestAPI } from "./base"
 
 export class FunctionAPI extends TestAPI {
+  queryCatalog = async (expectations?: Expectations) => {
+    return await this._get<FetchFunctionQueryCatalogResponse>(
+      "/api/functions/query-catalog",
+      { expectations }
+    )
+  }
+
   fetch = async (expectations?: Expectations) => {
     return await this._get<FetchFunctionsResponse>("/api/functions", {
       expectations,
