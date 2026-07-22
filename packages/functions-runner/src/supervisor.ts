@@ -1,13 +1,12 @@
 import { FunctionErrorCode } from "@budibase/types"
-import type { FunctionRunResult } from "@budibase/types"
+import type { FunctionRunResult, JSONValue } from "@budibase/types"
 import { fork } from "node:child_process"
 import type { ChildProcess } from "node:child_process"
 import path from "node:path"
-import {
-  FunctionProtocolError,
-  validateFunctionRunRequest,
-  validateFunctionRunResult,
-} from "./protocol"
+import type { ChildMessage, ParentMessage } from "./ipc"
+import { validateChildMessage } from "./ipc"
+import type { FunctionQueryHandler } from "./isolatedVmRuntime"
+import { FunctionProtocolError, validateFunctionRunRequest } from "./protocol"
 
 const CHILD_CRASHED_MESSAGE = "Function child process exited unexpectedly"
 const CHILD_NO_RESULT_MESSAGE = "Function child process exited without a result"
@@ -17,6 +16,7 @@ const RUN_ID_MISMATCH_MESSAGE =
 const RUN_CANCELLED_MESSAGE = "Function run was cancelled"
 const RUN_TIMEOUT_MESSAGE = "Function run timed out"
 const RUNNER_SHUTDOWN_MESSAGE = "Functions runner is shutting down"
+const QUERY_FAILED_MESSAGE = "Function query failed"
 
 type TerminationReason = "cancelled" | "timeout" | "shutdown"
 
@@ -27,6 +27,7 @@ interface ActiveRun {
 
 export interface FunctionSupervisorOptions {
   childFactory?: () => ChildProcess
+  queryHandler?: FunctionQueryHandler
   terminationGraceMs?: number
 }
 
@@ -56,14 +57,19 @@ const defaultChildFactory = () =>
     stdio: ["ignore", "inherit", "inherit", "ipc"],
   })
 
+const defaultQueryHandler = (): Promise<JSONValue> =>
+  Promise.reject(new Error(QUERY_FAILED_MESSAGE))
+
 export class FunctionSupervisor {
   private readonly activeRuns = new Map<string, ActiveRun>()
   private readonly childFactory: () => ChildProcess
+  private readonly queryHandler: FunctionQueryHandler
   private readonly terminationGraceMs: number
   private shuttingDown = false
 
   constructor(options: FunctionSupervisorOptions = {}) {
     this.childFactory = options.childFactory || defaultChildFactory
+    this.queryHandler = options.queryHandler || defaultQueryHandler
     this.terminationGraceMs = options.terminationGraceMs ?? 250
   }
 
@@ -114,6 +120,7 @@ export class FunctionSupervisor {
       let killTimer: NodeJS.Timeout | undefined
       let runTimer: NodeJS.Timeout | undefined
       let closed = false
+      const queryRequestIds = new Set<string>()
 
       const requestChildExit = () => {
         if (closed || killTimer) {
@@ -153,21 +160,93 @@ export class FunctionSupervisor {
         requestChildExit()
       }
 
-      child.on("message", (value: unknown) => {
+      const sendMessage = (message: ParentMessage) => {
         try {
+          child.send(message, error => {
+            if (error && !closed && !terminationReason && !failure) {
+              failure = failureResult(
+                request.runId,
+                startedAt,
+                FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+                CHILD_CRASHED_MESSAGE
+              )
+              requestChildExit()
+            }
+          })
+        } catch {
+          if (!closed && !failure) {
+            failure = failureResult(
+              request.runId,
+              startedAt,
+              FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+              CHILD_CRASHED_MESSAGE
+            )
+            requestChildExit()
+          }
+        }
+      }
+
+      child.on("message", (value: unknown) => {
+        let message: ChildMessage
+        try {
+          message = validateChildMessage(value)
+        } catch {
+          setProtocolFailure(MALFORMED_CHILD_RESULT_MESSAGE)
+          return
+        }
+
+        if (message.type === "result") {
           if (receivedResult) {
             setProtocolFailure(MALFORMED_CHILD_RESULT_MESSAGE)
             return
           }
-          const result = validateFunctionRunResult(value)
-          if (result.runId !== request.runId) {
+          if (message.result.runId !== request.runId) {
             setProtocolFailure(RUN_ID_MISMATCH_MESSAGE)
             return
           }
-          receivedResult = result
-        } catch {
-          setProtocolFailure(MALFORMED_CHILD_RESULT_MESSAGE)
+          receivedResult = message.result
+          return
         }
+
+        if (
+          receivedResult ||
+          failure ||
+          terminationReason ||
+          queryRequestIds.has(message.requestId)
+        ) {
+          setProtocolFailure(MALFORMED_CHILD_RESULT_MESSAGE)
+          return
+        }
+        queryRequestIds.add(message.requestId)
+        Promise.resolve()
+          .then(() =>
+            this.queryHandler({
+              runId: request.runId,
+              grantToken: request.grantToken,
+              capabilityId: message.capabilityId,
+              parameters: message.parameters,
+            })
+          )
+          .then(
+            result => {
+              if (!closed) {
+                sendMessage({
+                  type: "queryResult",
+                  requestId: message.requestId,
+                  result,
+                })
+              }
+            },
+            () => {
+              if (!closed) {
+                sendMessage({
+                  type: "queryResult",
+                  requestId: message.requestId,
+                  error: QUERY_FAILED_MESSAGE,
+                })
+              }
+            }
+          )
       })
 
       child.on("error", () => {
@@ -254,17 +333,7 @@ export class FunctionSupervisor {
       }
 
       try {
-        child.send(request, error => {
-          if (error && !closed && !terminationReason && !failure) {
-            failure = failureResult(
-              request.runId,
-              startedAt,
-              FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-              CHILD_CRASHED_MESSAGE
-            )
-            requestChildExit()
-          }
-        })
+        sendMessage({ type: "run", request })
       } catch {
         failure = failureResult(
           request.runId,

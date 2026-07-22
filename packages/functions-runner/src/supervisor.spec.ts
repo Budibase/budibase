@@ -3,6 +3,7 @@ import {
   FunctionErrorCode,
 } from "@budibase/types"
 import { spawn } from "node:child_process"
+import type { FunctionQueryHandler } from "./isolatedVmRuntime"
 import { FunctionSupervisor } from "./supervisor"
 
 const childFixture = String.raw`
@@ -11,6 +12,18 @@ if (mode === "ignore-termination" || mode === "malformed-ignore-termination") {
   process.on("SIGTERM", () => {})
 }
 process.on("message", request => {
+  if (request.type === "queryResult") {
+    const result = {
+      runId: globalThis.runRequest.runId,
+      status: "success",
+      output: { query: request.result },
+      metrics: { durationMs: 1, queryCount: 1, outputBytes: 0, logBytes: 0 },
+    }
+    process.send({ type: "result", result }, () => process.disconnect())
+    return
+  }
+  request = request.request
+  globalThis.runRequest = request
   if (mode === "crash") process.exit(2)
   if (mode === "no-result") process.exit(0)
   if (mode === "malformed" || mode === "malformed-ignore-termination") {
@@ -21,6 +34,15 @@ process.on("message", request => {
   }
   if (mode === "hang" || mode === "ignore-termination") {
     setInterval(() => {}, 1000)
+    return
+  }
+  if (mode === "query") {
+    process.send({
+      type: "query",
+      requestId: "query-1",
+      capabilityId: "capability-1",
+      parameters: { value: "input" },
+    })
     return
   }
   const result = {
@@ -35,20 +57,25 @@ process.on("message", request => {
       pending -= 1
       if (pending === 0) process.disconnect()
     }
-    process.send(result, sent)
-    process.send(result, sent)
+    process.send({ type: "result", result }, sent)
+    process.send({ type: "result", result }, sent)
     return
   }
-  process.send(result, () => process.disconnect())
+  process.send({ type: "result", result }, () => process.disconnect())
 })
 `
 
-const createSupervisor = (mode: string, terminationGraceMs = 25) =>
+const createSupervisor = (
+  mode: string,
+  terminationGraceMs = 25,
+  queryHandler?: FunctionQueryHandler
+) =>
   new FunctionSupervisor({
     childFactory: () =>
       spawn(process.execPath, ["-e", childFixture, mode], {
         stdio: ["ignore", "ignore", "ignore", "ipc"],
       }),
+    queryHandler,
     terminationGraceMs,
   })
 
@@ -137,6 +164,27 @@ describe("FunctionSupervisor", () => {
         code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
         message: "Function child process exited unexpectedly",
       },
+    })
+  })
+
+  it("forwards query capabilities without exposing the run envelope", async () => {
+    const queryHandler = jest.fn(async () => ({ rows: [{ id: "row-1" }] }))
+    const supervisor = createSupervisor("query", 25, queryHandler)
+
+    await expect(
+      supervisor.execute(request("run-query"))
+    ).resolves.toMatchObject({
+      status: "success",
+      output: {
+        query: { rows: [{ id: "row-1" }] },
+      },
+      metrics: { queryCount: 1 },
+    })
+    expect(queryHandler).toHaveBeenCalledWith({
+      runId: "run-query",
+      grantToken: FUNCTION_RUN_REQUEST_FIXTURE.grantToken,
+      capabilityId: "capability-1",
+      parameters: { value: "input" },
     })
   })
 
