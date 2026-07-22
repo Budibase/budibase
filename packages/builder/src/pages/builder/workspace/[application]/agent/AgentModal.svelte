@@ -79,6 +79,7 @@
   >
     <div class="agent-form">
       <form
+        autocomplete="off"
         on:submit|preventDefault={() => {
           if (loading || !trimmedName) {
             return
@@ -92,6 +93,7 @@
           error={nameError}
           on:input={() => (touched = true)}
           placeholder="Support agent"
+          autocomplete="off"
         />
       </form>
     </div>

@@ -89,6 +89,7 @@
     onConfirm={submit}
   >
     <form
+      autocomplete="off"
       onsubmit={event => {
         event.preventDefault()
         submitError = undefined
@@ -105,6 +106,7 @@
         error={nameError}
         on:input={() => (touched = true)}
         {placeholder}
+        autocomplete="off"
       />
     </form>
   </ModalContent>
