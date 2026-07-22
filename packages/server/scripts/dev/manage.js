@@ -15,7 +15,11 @@ const CORE_SERVICES = [
   "couchdb-service",
   "redis-service",
 ]
-const NON_CORE_SERVICES = ["litellm-service", "litellm-db"]
+const NON_CORE_SERVICES = [
+  "litellm-service",
+  "litellm-db",
+  "functions-runner-service",
+]
 
 const Commands = {
   Up: "up",

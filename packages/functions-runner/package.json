@@ -1,0 +1,38 @@
+{
+  "name": "@budibase/functions-runner",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Standalone sandboxed runner for Budibase Functions (Alpha). Runs untrusted-input Function code in an isolated-vm isolate, isolated from the Budibase server, worker and datasource credentials.",
+  "main": "dist/index.js",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Budibase/budibase.git"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
+    "dev": "ts-node --transpileOnly src/index.ts",
+    "start": "node --no-node-snapshot --enable-source-maps dist/index.js",
+    "jest": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" jest",
+    "test": "yarn jest"
+  },
+  "keywords": [
+    "budibase",
+    "functions",
+    "runner",
+    "isolated-vm"
+  ],
+  "author": "Budibase",
+  "dependencies": {
+    "isolated-vm": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "29.5.5",
+    "@types/node": "22.9.0",
+    "jest": "29.7.0",
+    "ts-jest": "29.1.1",
+    "ts-node": "10.8.1",
+    "typescript": "5.7.2"
+  }
+}

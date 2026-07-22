@@ -103,6 +103,37 @@ services:
       timeout: 5s
       retries: 10
 
+  # Standalone Function runner (Functions Alpha, spec E1). Deliberately carries
+  # no Budibase or datasource credentials and runs independently of server/worker
+  # - stopping it does not affect the rest of the stack or non-Function automations.
+  functions-runner-service:
+    container_name: budi-functions-runner-dev
+    restart: on-failure
+    build:
+      context: ../packages/functions-runner
+      dockerfile: Dockerfile
+    ports:
+      - "${FUNCTIONS_RUNNER_PORT:-4008}:4008"
+    environment:
+      - FUNCTIONS_RUNNER_PORT=4008
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "/dev/null",
+          "http://127.0.0.1:4008/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
 volumes:
   couchdb_data:
     driver: local
