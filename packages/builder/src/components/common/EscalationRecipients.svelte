@@ -68,6 +68,7 @@
   const loadingProviders = new Set<string>()
 
   let linkCache: Record<string, ChatIdentityLink[]> = {}
+  let loadedAgentId: string | undefined = undefined
   let slackChannels: SlackChannel[] = []
   let teamsChannels: MSTeamsChannel[] = []
 
@@ -99,17 +100,35 @@
       return
     }
     loadingProviders.add(provider)
+    const requestedAgentId = agentId
     try {
       const links = await API.fetchChatIdentityLinks(
         provider as ChatIdentityLinkProvider,
         agentId
       )
+      // Drop a response that arrived after the bot changed.
+      if (requestedAgentId !== agentId) {
+        return
+      }
       linkCache = { ...linkCache, [provider]: links }
     } catch (error) {
       console.error("Failed to load chat identity links", error)
     } finally {
       loadingProviders.delete(provider)
     }
+  }
+
+  // Refresh links on agent change. An automation concern
+  $: if (agentId !== loadedAgentId) {
+    loadedAgentId = agentId
+    linkCache = {}
+    loadingProviders.clear()
+    if (pending.provider) {
+      loadLinks(pending.provider)
+    }
+    recipients
+      .filter(r => r.config?.globalUserId)
+      .forEach(r => loadLinks(r.type))
   }
 
   $: if (pending.provider) {
