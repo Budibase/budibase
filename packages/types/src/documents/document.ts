@@ -62,6 +62,8 @@ export enum DocumentType {
   AUTO_COLUMN_STATE = "autocolumn_state",
   ESCALATION_CONTEXT = "escalation_context",
   ESCALATION_NOTIFICATION = "escalation_notification",
+  FUNCTION = "fn",
+  FUNCTION_RUN_LOG = "log_fn",
 }
 
 // these are the core documents that make up the data, design
