@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
   import {
+    appStore,
     tables as tablesStore,
     userSelectedResourceMap,
     contextMenuStore,
@@ -10,35 +11,100 @@
   import { isActive } from "@roxi/routify"
   import EditModal from "./EditModal.svelte"
   import DeleteConfirmationModal from "../../modals/DeleteDataConfirmationModal.svelte"
-  import { Icon } from "@budibase/bbui"
+  import {
+    Icon,
+    Modal,
+    keepOpen,
+    notifications,
+    type ModalAPI,
+  } from "@budibase/bbui"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
-  import { notifications } from "@budibase/bbui"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
-  import { WorkspaceResource } from "@budibase/types"
+  import { FeatureFlag, WorkspaceResource, type Table } from "@budibase/types"
+  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import { auth, featureFlags } from "@/stores/portal"
+  import { getErrorMessage } from "@/helpers/errors"
+  import type { MenuItem } from "@/types"
 
   $isActive
 
-  export let table
-  export let idx
+  interface ModalRef {
+    show: () => void
+  }
+
+  export let table: Table
+  export let idx: number
+
+  $: tableId = table._id || ""
 
   const favourites = workspaceFavouriteStore.lookup
 
-  let editModal
-  let deleteConfirmationModal
+  let editModal: ModalRef
+  let deleteConfirmationModal: ModalRef
+  let assignProjectModal: ModalAPI
 
-  $: favourite = table?._id ? $favourites[table?._id] : undefined
+  $: favourite = tableId ? $favourites[tableId] : undefined
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: canAssignProject =
+    projectsEnabled &&
+    tableId !== TableNames.USERS &&
+    table?.sourceType !== DB_TYPE_EXTERNAL
+  $: projectAssignmentResource = {
+    name: table?.name || "Table",
+    typeLabel: "table",
+    projectIds: table?.projectIds,
+  }
 
   const duplicateTable = async () => {
     try {
-      await tablesStore.duplicate(table._id)
+      await tablesStore.duplicate(tableId)
       notifications.success("Table duplicated successfully")
     } catch (error) {
-      notifications.error(`Failed to duplicate table: ${error.message}`)
+      notifications.error(
+        `Failed to duplicate table: ${getErrorMessage(error)}`
+      )
     }
   }
 
-  const getContextMenuItems = () => {
+  const openAssignProjectModal = () => {
+    assignProjectModal?.show()
+  }
+
+  const assignProject = async (projectIds: string[]) => {
+    try {
+      await tablesStore.save({
+        ...table,
+        projectIds,
+      })
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to update project")
+      return keepOpen
+    }
+
+    notifications.success("Projects updated successfully")
+    assignProjectModal?.hide()
+
+    try {
+      await appStore.refresh()
+    } catch (error) {
+      console.error(error)
+      notifications.warning(
+        "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+      )
+    }
+  }
+
+  const getContextMenuItems = (): MenuItem[] => {
     return [
+      {
+        icon: "stack",
+        name: "Assign project",
+        keyBind: null,
+        visible: canAssignProject,
+        disabled: false,
+        callback: openAssignProjectModal,
+      },
       {
         icon: "pencil",
         name: "Edit",
@@ -66,12 +132,15 @@
     ]
   }
 
-  const openContextMenu = e => {
+  const openContextMenu = (e: MouseEvent) => {
+    if (!tableId) {
+      return
+    }
     e.preventDefault()
     e.stopPropagation()
 
     const items = getContextMenuItems()
-    contextMenuStore.open(table._id, items, { x: e.clientX, y: e.clientY })
+    contextMenuStore.open(tableId, items, { x: e.clientX, y: e.clientY })
   }
 </script>
 
@@ -79,28 +148,35 @@
   on:contextmenu={openContextMenu}
   indentLevel={1}
   border={idx > 0}
-  icon={table._id === TableNames.USERS ? "users-three" : "table"}
-  text={table.name}
-  hovering={table._id === $contextMenuStore.id}
+  icon={tableId === TableNames.USERS ? "users-three" : "table"}
+  text={table.name || ""}
+  hovering={tableId === $contextMenuStore.id}
   selected={$isActive("./table/:tableId") &&
-    $tablesStore.selected?._id === table._id}
-  selectedBy={$userSelectedResourceMap[table._id]}
+    $tablesStore.selected?._id === tableId}
+  selectedBy={$userSelectedResourceMap[tableId]}
   on:click
 >
   <div class="buttons">
     <FavouriteResourceButton
       favourite={favourite || {
         resourceType: WorkspaceResource.TABLE,
-        resourceId: table._id,
+        resourceId: tableId,
+        createdBy: $auth.user?._id || "",
       }}
     />
-    {#if table._id !== TableNames.USERS}
-      <Icon s on:click={openContextMenu} hoverable name="dots-three" size="M" />
+    {#if tableId !== TableNames.USERS}
+      <Icon on:click={openContextMenu} hoverable name="dots-three" size="M" />
     {/if}
   </div>
 </NavItem>
 <EditModal {table} bind:this={editModal} />
 <DeleteConfirmationModal source={table} bind:this={deleteConfirmationModal} />
+<Modal bind:this={assignProjectModal}>
+  <AssignProjectModal
+    resource={projectAssignmentResource}
+    onConfirm={assignProject}
+  />
+</Modal>
 
 <style>
   .buttons {
