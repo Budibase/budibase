@@ -2,6 +2,7 @@ import {
   type CreateFunctionRequest,
   type CreateFunctionResponse,
   type FetchFunctionResponse,
+  type FetchFunctionQueryCatalogResponse,
   type FetchFunctionsResponse,
   type UpdateFunctionRequest,
   type UpdateFunctionResponse,
@@ -15,6 +16,14 @@ export const fetch = async (ctx: UserCtx<void, FetchFunctionsResponse>) => {
     functions: await Promise.all(
       functions.map(fn => sdk.functions.toFunctionResponse(fn))
     ),
+  }
+}
+
+export const queryCatalog = async (
+  ctx: UserCtx<void, FetchFunctionQueryCatalogResponse>
+) => {
+  ctx.body = {
+    queries: await sdk.functions.getQueryCatalog(),
   }
 }
 
