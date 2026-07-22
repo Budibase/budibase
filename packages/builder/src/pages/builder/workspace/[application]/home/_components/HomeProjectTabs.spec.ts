@@ -113,6 +113,8 @@ describe("HomeProjectTabs", () => {
       },
     })
 
-    expect(screen.getByRole("button", { name: "Export project" })).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Export project" })
+    ).toBeDisabled()
   })
 })
