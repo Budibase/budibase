@@ -192,3 +192,17 @@ export const getProjectParams = (
 ) => {
   return getDocParams(DocumentType.PROJECT, projectId, otherProps)
 }
+
+export const getFunctionParams = (
+  functionId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) => {
+  return getDocParams(DocumentType.FUNCTION, functionId, otherProps)
+}
+
+export const getFunctionRunLogParams = (
+  runId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) => {
+  return getDocParams(DocumentType.FUNCTION_RUN_LOG, runId, otherProps)
+}
