@@ -11,7 +11,7 @@
     if (firstQuery) {
       $redirect(`../../query/${firstQuery._id}`)
     } else {
-      $redirect("../../query/new")
+      $redirect(`../../query/new/${$params.datasourceId}`)
     }
   }
 </script>

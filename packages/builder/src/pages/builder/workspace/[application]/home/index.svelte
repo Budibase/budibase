@@ -63,6 +63,7 @@
     type Table,
     type WorkspaceFavourite,
     type WorkspaceResource,
+    SourceName,
   } from "@budibase/types"
   import { integrationForDatasource } from "@/stores/selectors"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
@@ -792,7 +793,11 @@
       return
     }
     if (row.type === "datasource") {
-      goto(url(`../data/datasource/${row.id}`))
+      const route =
+        row.resource.source === SourceName.REST
+          ? `../apis/datasource/${row.id}`
+          : `../data/datasource/${row.id}`
+      goto(url(route))
       return
     }
     if (row.type === "table") {
