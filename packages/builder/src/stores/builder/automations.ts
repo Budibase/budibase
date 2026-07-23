@@ -141,8 +141,9 @@ export const isNoOpBlockMove = (
   }
 
   const isOwnDragzone = pathSource.id === pathEnd.id
-  const isFirstBranchStep =
+  const isOwnBranchNode =
     pathEnd.branchStepId &&
+    pathEnd.id === pathEnd.branchStepId &&
     pathEnd.branchStepId === pathSource.branchStepId &&
     pathEnd.branchIdx === pathSource.branchIdx &&
     pathSource.stepIdx === 0
@@ -150,7 +151,7 @@ export const isNoOpBlockMove = (
     sameMoveContainer(sourcePath, destPath) &&
     pathEnd.stepIdx === pathSource.stepIdx - 1
 
-  return Boolean(isOwnDragzone || isFirstBranchStep || isPreviousSibling)
+  return Boolean(isOwnDragzone || isOwnBranchNode || isPreviousSibling)
 }
 
 const initialAutomationState: AutomationStoreState = {
