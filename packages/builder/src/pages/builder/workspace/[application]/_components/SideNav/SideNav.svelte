@@ -35,6 +35,7 @@
     licensing,
     enrichedApps,
     agentsStore,
+    auth,
     featureFlags,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
@@ -66,6 +67,7 @@
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
+  import { canManageFunctions } from "@/pages/builder/workspace/[application]/automation/functions/permissions"
 
   export const show = () => {
     pinned.set(true)
@@ -577,6 +579,22 @@
                     bb.settings(`/connections/apis`)
                     keepCollapsed()
                   }}
+                />
+              {/if}
+              <SideNavLink
+                icon="path"
+                text="Automations"
+                url={$url("./home?type=automation")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              {#if $featureFlags[FeatureFlag.FUNCTIONS] && canManageFunctions($auth.user, workspaceId)}
+                <SideNavLink
+                  icon="code"
+                  text="Functions"
+                  url={$url("./automation/functions")}
+                  {collapsed}
+                  on:click={keepCollapsed}
                 />
               {/if}
               <SideNavLink
