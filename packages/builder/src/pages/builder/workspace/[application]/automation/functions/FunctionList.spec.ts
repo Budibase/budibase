@@ -87,4 +87,20 @@ describe("FunctionList", () => {
     expect(screen.getByText("Unpublished changes")).toBeInTheDocument()
     expect(screen.getByText("1")).toBeInTheDocument()
   })
+
+  it("opens a Function from its name", async () => {
+    const fn = makeFunction()
+    const onOpen = vi.fn()
+    render(FunctionList, {
+      canManage: true,
+      functions: [fn],
+      onOpen,
+    })
+
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Customer lookup" })
+    )
+
+    expect(onOpen).toHaveBeenCalledWith(fn)
+  })
 })

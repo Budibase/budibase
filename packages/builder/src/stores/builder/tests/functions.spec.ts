@@ -1,12 +1,14 @@
 import { API, productionAPI } from "@/api"
 import { FunctionStore } from "@/stores/builder/functions"
 import type { FunctionResponse } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import { get } from "svelte/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("@/api", () => ({
   API: {
     getFunctions: vi.fn(),
+    getFunctionQueryCatalog: vi.fn(),
     getFunction: vi.fn(),
     createFunction: vi.fn(),
     updateFunction: vi.fn(),
@@ -118,6 +120,42 @@ describe("FunctionStore", () => {
 
     expect(API.getFunction).toHaveBeenCalledWith(fn._id)
     expect(store.list[0]._id).toBe(fn._id)
+  })
+
+  it("loads the saved query catalog", async () => {
+    const query = {
+      queryId: "query_one",
+      queryName: "Find customer",
+      datasourceId: "datasource_one",
+      datasourceName: "CRM",
+      source: SourceName.POSTGRES,
+      kind: "data" as const,
+      parameters: [{ name: "id" }],
+    }
+    vi.mocked(API.getFunctionQueryCatalog).mockResolvedValue({
+      queries: [query],
+    })
+
+    await store.fetchQueryCatalog()
+
+    expect(get(store)).toMatchObject({
+      queryCatalog: [query],
+      catalogLoading: false,
+      catalogError: undefined,
+    })
+  })
+
+  it("stores query catalog API failures for retry", async () => {
+    vi.mocked(API.getFunctionQueryCatalog).mockRejectedValue(
+      new Error("Catalog unavailable")
+    )
+
+    await store.fetchQueryCatalog()
+
+    expect(get(store)).toMatchObject({
+      catalogLoading: false,
+      catalogError: "Catalog unavailable",
+    })
   })
 
   it("creates and renames while sending only editable Function fields", async () => {
