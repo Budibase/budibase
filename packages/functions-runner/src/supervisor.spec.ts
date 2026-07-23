@@ -25,6 +25,7 @@ process.on("message", request => {
   request = request.request
   globalThis.runRequest = request
   if (mode === "crash") process.exit(2)
+  if (mode === "memory-abort") process.abort()
   if (mode === "no-result") process.exit(0)
   if (mode === "malformed" || mode === "malformed-ignore-termination") {
     process.send({ invalid: true })
@@ -42,6 +43,21 @@ process.on("message", request => {
       requestId: "query-1",
       capabilityId: "capability-1",
       parameters: { value: "input" },
+    })
+    return
+  }
+  if (mode === "queries") {
+    process.send({
+      type: "query",
+      requestId: "query-1",
+      capabilityId: "capability-1",
+      parameters: {},
+    })
+    process.send({
+      type: "query",
+      requestId: "query-2",
+      capabilityId: "capability-2",
+      parameters: {},
     })
     return
   }
@@ -110,6 +126,22 @@ describe("FunctionSupervisor", () => {
       error: {
         code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
         message: "Function child process exited unexpectedly",
+      },
+    })
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
+  it("returns a stable result when a child hits its memory ceiling", async () => {
+    const supervisor = createSupervisor("memory-abort")
+
+    await expect(
+      supervisor.execute(request("run-memory"))
+    ).resolves.toMatchObject({
+      runId: "run-memory",
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT,
+        message: "Function memory limit exceeded",
       },
     })
     expect(supervisor.activeRunCount()).toBe(0)
@@ -185,6 +217,86 @@ describe("FunctionSupervisor", () => {
       grantToken: FUNCTION_RUN_REQUEST_FIXTURE.grantToken,
       capabilityId: "capability-1",
       parameters: { value: "input" },
+    })
+  })
+
+  it("rejects input over its byte limit before spawning", async () => {
+    const childFactory = jest.fn(() => {
+      throw new Error("must not spawn")
+    })
+    const supervisor = new FunctionSupervisor({ childFactory })
+    const runRequest = request("run-large-input")
+    runRequest.inputs = { value: "too large" }
+    runRequest.limits = { ...runRequest.limits, maxInputBytes: 10 }
+
+    await expect(supervisor.execute(runRequest)).resolves.toMatchObject({
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+        message: "Function input is invalid",
+      },
+    })
+    expect(childFactory).not.toHaveBeenCalled()
+  })
+
+  it("fails fast when runner capacity is exhausted and releases it", async () => {
+    const supervisor = new FunctionSupervisor({
+      childFactory: () =>
+        spawn(process.execPath, ["-e", childFixture, "hang"], {
+          stdio: ["ignore", "ignore", "ignore", "ipc"],
+        }),
+      maxConcurrentRuns: 1,
+      terminationGraceMs: 10,
+    })
+    const first = supervisor.execute(request("run-capacity-1", 5_000))
+
+    await expect(
+      supervisor.execute(request("run-capacity-busy"))
+    ).resolves.toMatchObject({
+      error: {
+        code: FunctionErrorCode.FUNCTION_RUNNER_BUSY,
+        message: "Functions runner is busy",
+      },
+    })
+    supervisor.terminate("run-capacity-1")
+    await first
+
+    const second = supervisor.execute(request("run-capacity-2", 5_000))
+    expect(supervisor.activeRunCount()).toBe(1)
+    supervisor.terminate("run-capacity-2")
+    await second
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
+  it("enforces the query count at the supervisor boundary", async () => {
+    const supervisor = createSupervisor("queries", 10, async () => ({}))
+    const runRequest = request("run-query-limit")
+    runRequest.limits = {
+      ...runRequest.limits,
+      maxQueryCalls: 1,
+      maxConcurrentQueryCalls: 2,
+    }
+
+    await expect(supervisor.execute(runRequest)).resolves.toMatchObject({
+      error: { code: FunctionErrorCode.FUNCTION_QUERY_LIMIT },
+    })
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
+  it("rejects oversized query results at the supervisor boundary", async () => {
+    const supervisor = createSupervisor("query", 10, async () => ({
+      value: "too large",
+    }))
+    const runRequest = request("run-query-response-limit")
+    runRequest.limits = {
+      ...runRequest.limits,
+      maxQueryResponseBytes: 10,
+    }
+
+    await expect(supervisor.execute(runRequest)).resolves.toMatchObject({
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+        message: "Function query payload is invalid",
+      },
     })
   })
 

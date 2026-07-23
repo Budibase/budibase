@@ -1,4 +1,4 @@
-import { FunctionErrorCode } from "@budibase/types"
+import { DEFAULT_FUNCTION_LIMITS, FunctionErrorCode } from "@budibase/types"
 import type { FunctionRunResult, JSONValue } from "@budibase/types"
 import { fork } from "node:child_process"
 import type { ChildProcess } from "node:child_process"
@@ -6,6 +6,7 @@ import path from "node:path"
 import type { ChildMessage, ParentMessage } from "./ipc"
 import { validateChildMessage } from "./ipc"
 import type { FunctionQueryHandler } from "./isolatedVmRuntime"
+import { JSONLimitError, validateJSONLimits } from "./jsonLimits"
 import { FunctionProtocolError, validateFunctionRunRequest } from "./protocol"
 
 const CHILD_CRASHED_MESSAGE = "Function child process exited unexpectedly"
@@ -17,6 +18,11 @@ const RUN_CANCELLED_MESSAGE = "Function run was cancelled"
 const RUN_TIMEOUT_MESSAGE = "Function run timed out"
 const RUNNER_SHUTDOWN_MESSAGE = "Functions runner is shutting down"
 const QUERY_FAILED_MESSAGE = "Function query failed"
+const INPUT_INVALID_MESSAGE = "Function input is invalid"
+const QUERY_LIMIT_MESSAGE = "Function query limit exceeded"
+const QUERY_PAYLOAD_INVALID_MESSAGE = "Function query payload is invalid"
+const RUNNER_BUSY_MESSAGE = "Functions runner is busy"
+const MEMORY_LIMIT_MESSAGE = "Function memory limit exceeded"
 
 type TerminationReason = "cancelled" | "timeout" | "shutdown"
 
@@ -26,9 +32,10 @@ interface ActiveRun {
 }
 
 export interface FunctionSupervisorOptions {
-  childFactory?: () => ChildProcess
+  childFactory?: (memoryLimitMb: number) => ChildProcess
   queryHandler?: FunctionQueryHandler
   terminationGraceMs?: number
+  maxConcurrentRuns?: number
 }
 
 const failureResult = (
@@ -52,9 +59,10 @@ const failureResult = (
   },
 })
 
-const defaultChildFactory = () =>
+const defaultChildFactory = (memoryLimitMb: number) =>
   fork(path.join(__dirname, "child.js"), [], {
-    stdio: ["ignore", "inherit", "inherit", "ipc"],
+    execArgv: [`--max-old-space-size=${memoryLimitMb}`],
+    stdio: ["ignore", "ignore", "ignore", "ipc"],
   })
 
 const defaultQueryHandler = (): Promise<JSONValue> =>
@@ -62,15 +70,19 @@ const defaultQueryHandler = (): Promise<JSONValue> =>
 
 export class FunctionSupervisor {
   private readonly activeRuns = new Map<string, ActiveRun>()
-  private readonly childFactory: () => ChildProcess
+  private readonly childFactory: (memoryLimitMb: number) => ChildProcess
   private readonly queryHandler: FunctionQueryHandler
   private readonly terminationGraceMs: number
+  private readonly maxConcurrentRuns: number
   private shuttingDown = false
 
   constructor(options: FunctionSupervisorOptions = {}) {
     this.childFactory = options.childFactory || defaultChildFactory
     this.queryHandler = options.queryHandler || defaultQueryHandler
     this.terminationGraceMs = options.terminationGraceMs ?? 250
+    this.maxConcurrentRuns =
+      options.maxConcurrentRuns ??
+      DEFAULT_FUNCTION_LIMITS.service.maxConcurrentRuns
   }
 
   isHealthy() {
@@ -98,10 +110,38 @@ export class FunctionSupervisor {
     if (this.activeRuns.has(request.runId)) {
       throw new FunctionProtocolError("Function run ID is already active")
     }
+    if (this.activeRuns.size >= this.maxConcurrentRuns) {
+      return Promise.resolve(
+        failureResult(
+          request.runId,
+          startedAt,
+          FunctionErrorCode.FUNCTION_RUNNER_BUSY,
+          RUNNER_BUSY_MESSAGE
+        )
+      )
+    }
+    try {
+      validateJSONLimits(request.inputs, {
+        maxBytes: request.limits.maxInputBytes,
+        maxDepth: request.limits.maxInputDepth,
+      })
+    } catch (error) {
+      if (error instanceof JSONLimitError) {
+        return Promise.resolve(
+          failureResult(
+            request.runId,
+            startedAt,
+            FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+            INPUT_INVALID_MESSAGE
+          )
+        )
+      }
+      throw error
+    }
 
     let child: ChildProcess
     try {
-      child = this.childFactory()
+      child = this.childFactory(request.limits.isolateMemoryLimitMb)
     } catch {
       return Promise.resolve(
         failureResult(
@@ -121,6 +161,8 @@ export class FunctionSupervisor {
       let runTimer: NodeJS.Timeout | undefined
       let closed = false
       const queryRequestIds = new Set<string>()
+      let queryCount = 0
+      let concurrentQueryCount = 0
 
       const requestChildExit = () => {
         if (closed || killTimer) {
@@ -218,6 +260,36 @@ export class FunctionSupervisor {
           return
         }
         queryRequestIds.add(message.requestId)
+        try {
+          validateJSONLimits(message.parameters, {
+            maxBytes: request.limits.maxInputBytes,
+            maxDepth: request.limits.maxInputDepth,
+          })
+        } catch {
+          failure = failureResult(
+            request.runId,
+            startedAt,
+            FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+            QUERY_PAYLOAD_INVALID_MESSAGE
+          )
+          requestChildExit()
+          return
+        }
+        if (
+          queryCount >= request.limits.maxQueryCalls ||
+          concurrentQueryCount >= request.limits.maxConcurrentQueryCalls
+        ) {
+          failure = failureResult(
+            request.runId,
+            startedAt,
+            FunctionErrorCode.FUNCTION_QUERY_LIMIT,
+            QUERY_LIMIT_MESSAGE
+          )
+          requestChildExit()
+          return
+        }
+        queryCount += 1
+        concurrentQueryCount += 1
         Promise.resolve()
           .then(() =>
             this.queryHandler({
@@ -229,7 +301,23 @@ export class FunctionSupervisor {
           )
           .then(
             result => {
+              concurrentQueryCount -= 1
               if (!closed) {
+                try {
+                  validateJSONLimits(result, {
+                    maxBytes: request.limits.maxQueryResponseBytes,
+                    maxDepth: request.limits.maxQueryResponseDepth,
+                  })
+                } catch {
+                  failure = failureResult(
+                    request.runId,
+                    startedAt,
+                    FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+                    QUERY_PAYLOAD_INVALID_MESSAGE
+                  )
+                  requestChildExit()
+                  return
+                }
                 sendMessage({
                   type: "queryResult",
                   requestId: message.requestId,
@@ -238,6 +326,7 @@ export class FunctionSupervisor {
               }
             },
             () => {
+              concurrentQueryCount -= 1
               if (!closed) {
                 sendMessage({
                   type: "queryResult",
@@ -258,7 +347,7 @@ export class FunctionSupervisor {
         )
       })
 
-      child.on("close", code => {
+      child.on("close", (code, signal) => {
         closed = true
         if (runTimer) {
           clearTimeout(runTimer)
@@ -308,6 +397,17 @@ export class FunctionSupervisor {
         }
         if (receivedResult) {
           resolve(receivedResult)
+          return
+        }
+        if (signal === "SIGABRT" || signal === "SIGKILL" || code === 134) {
+          resolve(
+            failureResult(
+              request.runId,
+              startedAt,
+              FunctionErrorCode.FUNCTION_MEMORY_LIMIT,
+              MEMORY_LIMIT_MESSAGE
+            )
+          )
           return
         }
 

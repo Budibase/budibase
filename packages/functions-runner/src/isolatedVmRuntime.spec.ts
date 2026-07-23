@@ -148,6 +148,163 @@ describe("Functions isolate", () => {
     })
   })
 
+  it("rejects output over the byte limit", async () => {
+    const runRequest = request(`
+      export default async function run() {
+        return { output: { value: "too large" } }
+      }
+    `)
+    runRequest.limits = { ...runRequest.limits, maxOutputBytes: 10 }
+
+    await expect(
+      executeFunctionInIsolate(runRequest, noQueries)
+    ).resolves.toMatchObject({
+      status: "error",
+      error: { code: FunctionErrorCode.FUNCTION_OUTPUT_INVALID },
+    })
+  })
+
+  it.each([
+    ["before await", `while (true) {}`],
+    ["after await", `await Promise.resolve(); while (true) {}`],
+    ["unresolved promise", `await new Promise(() => {})`],
+  ])("times out an infinite run %s", async (_name, body) => {
+    const runRequest = request(`
+      export default async function run() {
+        ${body}
+        return { output: {} }
+      }
+    `)
+    runRequest.limits = { ...runRequest.limits, timeoutMs: 20 }
+
+    await expect(
+      executeFunctionInIsolate(runRequest, noQueries)
+    ).resolves.toMatchObject({
+      status: "error",
+      error: { code: FunctionErrorCode.FUNCTION_TIMEOUT },
+    })
+  })
+
+  it("returns a stable error under isolate memory pressure", async () => {
+    const runRequest = request(`
+      export default async function run() {
+        const values = []
+        while (true) {
+          values.push(new Array(100000).fill("memory pressure"))
+        }
+      }
+    `)
+    runRequest.limits = {
+      ...runRequest.limits,
+      isolateMemoryLimitMb: 8,
+      timeoutMs: 2_000,
+    }
+
+    await expect(
+      executeFunctionInIsolate(runRequest, noQueries)
+    ).resolves.toMatchObject({
+      status: "error",
+      error: { code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT },
+    })
+  })
+
+  it("enforces the total query count", async () => {
+    const runRequest = request(`
+      export default async function run() {
+        await globalThis.__budibaseInvokeQuery("first", {})
+        await globalThis.__budibaseInvokeQuery("second", {})
+        return { output: {} }
+      }
+    `)
+    runRequest.limits = { ...runRequest.limits, maxQueryCalls: 1 }
+
+    await expect(
+      executeFunctionInIsolate(
+        runRequest,
+        () => new Promise(resolve => setTimeout(() => resolve({}), 10))
+      )
+    ).resolves.toMatchObject({
+      status: "error",
+      metrics: { queryCount: 1 },
+      error: { code: FunctionErrorCode.FUNCTION_QUERY_LIMIT },
+    })
+  })
+
+  it("enforces concurrent query calls", async () => {
+    const runRequest = request(`
+      export default async function run() {
+        await Promise.all([
+          globalThis.__budibaseInvokeQuery("first", {}),
+          globalThis.__budibaseInvokeQuery("second", {}),
+        ])
+        return { output: {} }
+      }
+    `)
+    runRequest.limits = {
+      ...runRequest.limits,
+      maxConcurrentQueryCalls: 1,
+    }
+
+    await expect(
+      executeFunctionInIsolate(
+        runRequest,
+        () => new Promise(resolve => setTimeout(() => resolve({}), 10))
+      )
+    ).resolves.toMatchObject({
+      status: "error",
+      metrics: { queryCount: 1 },
+      error: { code: FunctionErrorCode.FUNCTION_QUERY_LIMIT },
+    })
+  })
+
+  it("rejects oversized query results", async () => {
+    const runRequest = request(`
+      export default async function run() {
+        await globalThis.__budibaseInvokeQuery("query", {})
+        return { output: {} }
+      }
+    `)
+    runRequest.limits = { ...runRequest.limits, maxQueryResponseBytes: 10 }
+
+    await expect(
+      executeFunctionInIsolate(runRequest, async () => ({
+        value: "too large",
+      }))
+    ).resolves.toMatchObject({
+      status: "error",
+      error: { code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR },
+    })
+  })
+
+  it("provides a frozen no-op console", async () => {
+    const result = await executeFunctionInIsolate(
+      request(`
+      export default async function run() {
+        console.log("abcdef")
+        console.warn("ééé")
+        console.error("ignored")
+        return {
+          output: {
+            consoleFrozen: Object.isFrozen(console),
+            logFrozen: Object.isFrozen(console.log),
+          },
+        }
+      }
+    `),
+      noQueries
+    )
+
+    expect(result).toMatchObject({
+      status: "success",
+      output: {
+        consoleFrozen: true,
+        logFrozen: true,
+      },
+      metrics: { logBytes: 0 },
+    })
+    expect(result.logs).toBeUndefined()
+  })
+
   it("does not retain globals between invocations", async () => {
     const compiledJavaScript = `
       globalThis.invocationCount = (globalThis.invocationCount || 0) + 1

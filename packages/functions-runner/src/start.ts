@@ -1,3 +1,4 @@
+import { DEFAULT_FUNCTION_LIMITS } from "@budibase/types"
 import { getEnvironment } from "./environment"
 import { createServer } from "./server"
 import { FunctionSupervisor } from "./supervisor"
@@ -5,6 +6,7 @@ import { FunctionSupervisor } from "./supervisor"
 const environment = getEnvironment()
 const supervisor = new FunctionSupervisor({
   terminationGraceMs: environment.terminationGraceMs,
+  maxConcurrentRuns: DEFAULT_FUNCTION_LIMITS.service.maxConcurrentRuns,
 })
 const server = createServer(supervisor)
 let shuttingDown = false
