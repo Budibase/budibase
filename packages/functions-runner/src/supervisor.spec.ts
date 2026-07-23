@@ -140,7 +140,7 @@ describe("FunctionSupervisor", () => {
     const supervisor = createSupervisor("memory-abort")
 
     await expect(
-      supervisor.execute(request("run-memory"))
+      supervisor.execute(request("run-memory", 10_000))
     ).resolves.toMatchObject({
       runId: "run-memory",
       status: "error",
