@@ -2,7 +2,13 @@ import { generateGlobalUserID } from "../../../db"
 import { authError } from "../utils"
 import * as users from "../../../users"
 import * as context from "../../../context"
+import * as cache from "../../../cache"
+import * as events from "../../../events"
+import * as locks from "../../../redis/redlockImpl"
 import {
+  InviteWithCode,
+  LockName,
+  LockType,
   SaveSSOUserFunction,
   SSOAuthDetails,
   SSOUser,
@@ -60,8 +66,14 @@ export async function authenticate(
     dbUser = await users.getGlobalUserByEmail(details.email)
   }
 
-  // exit early if there is still no user and auto creation is disabled
-  if (!dbUser && requireLocalAccount) {
+  let pendingInvite: InviteWithCode | undefined
+  if (!dbUser) {
+    const invites = await cache.invite.getExistingInvites([details.email])
+    pendingInvite = invites[0]
+  }
+
+  // exit early if there is still no user/invite and auto creation is disabled
+  if (!dbUser && !pendingInvite && requireLocalAccount) {
     return authError(
       done,
       "Email does not yet exist. You must set up your local budibase account first."
@@ -70,12 +82,16 @@ export async function authenticate(
 
   // first time creation
   if (!dbUser) {
-    // setup a blank user using the third party id
+    const assignments = pendingInvite
+      ? users.deriveUserFieldsFromInvite(pendingInvite.info)
+      : { roles: {} }
+    // setup a blank user using the third party id, applying any access
+    // granted by a matching pending invite
     dbUser = {
       _id: userId,
       email: details.email,
-      roles: {},
-      tenantId: context.getTenantId(),
+      tenantId: pendingInvite?.info.tenantId || context.getTenantId(),
+      ...assignments,
     }
   }
 
@@ -95,7 +111,32 @@ export async function authenticate(
     return authError(done, "Error saving user", err)
   }
 
+  if (pendingInvite) {
+    await consumePendingInvite(pendingInvite, ssoUser)
+  }
+
   return done(null, ssoUser)
+}
+
+async function consumePendingInvite(invite: InviteWithCode, user: SSOUser) {
+  await locks.doWithLock(
+    {
+      type: LockType.AUTO_EXTEND,
+      name: LockName.PROCESS_USER_INVITE,
+      resource: invite.code,
+      systemLock: true,
+    },
+    async () => {
+      try {
+        // re-validate under lock in case another login already consumed it
+        await cache.invite.getCode(invite.code, invite.info.tenantId)
+      } catch {
+        return
+      }
+      await cache.invite.deleteCode(invite.code, invite.info.tenantId)
+      await events.user.inviteAccepted(user)
+    }
+  )
 }
 
 /**
