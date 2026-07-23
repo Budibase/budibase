@@ -133,7 +133,7 @@
     "tmp": "0.2.7",
     "to-json-schema": "0.2.5",
     "undici": "^8.5.0",
-    "uuid": "^8.3.2",
+    "uuid": "^14.0.1",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",

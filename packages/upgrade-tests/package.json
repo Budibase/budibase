@@ -27,7 +27,7 @@
     "chalk": "^4.1.2",
     "ora": "^5.4.1",
     "semver": "^7.5.4",
-    "uuid": "^9.0.1"
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@commander-js/extra-typings": "14.0.0",
