@@ -25,7 +25,8 @@ const sendResult = (result: FunctionRunResult) => {
 
 const executeQuery = (
   capabilityId: string,
-  parameters: Record<string, JSONValue>
+  parameters: Record<string, JSONValue>,
+  signal: AbortSignal
 ) =>
   new Promise<JSONValue>((resolve, reject) => {
     if (!process.send) {
@@ -33,7 +34,26 @@ const executeQuery = (
       return
     }
     const requestId = String(++nextQueryId)
-    pendingQueries.set(requestId, { resolve, reject })
+    const abort = () => {
+      pendingQueries.delete(requestId)
+      reject(new Error("Function query was cancelled"))
+    }
+    if (signal.aborted) {
+      abort()
+      return
+    }
+    signal.addEventListener("abort", abort, { once: true })
+    const removeAbortListener = () => signal.removeEventListener("abort", abort)
+    pendingQueries.set(requestId, {
+      resolve: value => {
+        removeAbortListener()
+        resolve(value)
+      },
+      reject: error => {
+        removeAbortListener()
+        reject(error)
+      },
+    })
     const message: ChildMessage = {
       type: "query",
       requestId,
@@ -43,6 +63,7 @@ const executeQuery = (
     process.send(message, undefined, undefined, error => {
       if (error) {
         pendingQueries.delete(requestId)
+        removeAbortListener()
         reject(new Error("Function query transport failed"))
       }
     })
@@ -73,7 +94,11 @@ process.on("message", async (value: unknown) => {
     handledRequest = true
     sendResult(
       await executeFunctionInIsolate(message.request, queryRequest =>
-        executeQuery(queryRequest.capabilityId, queryRequest.parameters)
+        executeQuery(
+          queryRequest.capabilityId,
+          queryRequest.parameters,
+          queryRequest.signal
+        )
       )
     )
   } catch {

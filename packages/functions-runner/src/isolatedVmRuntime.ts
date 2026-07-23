@@ -36,6 +36,7 @@ export interface FunctionQueryRequest {
   grantToken: string
   capabilityId: string
   parameters: Record<string, JSONValue>
+  signal: AbortSignal
 }
 
 export type FunctionQueryHandler = (
@@ -197,8 +198,10 @@ export const executeFunctionInIsolate = async (
   const startedAt = Date.now()
   let queryCount = 0
   let concurrentQueryCount = 0
+  let queryLimitExceeded = false
   let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
   let wallTimedOut = false
+  const queryAbortController = new AbortController()
   let isolate: ivm.Isolate
   try {
     isolate = new ivm.Isolate({
@@ -210,6 +213,7 @@ export const executeFunctionInIsolate = async (
 
   const wallTimer = setTimeout(() => {
     wallTimedOut = true
+    queryAbortController.abort()
     if (!isolate.isDisposed) {
       isolate.dispose()
     }
@@ -239,6 +243,7 @@ export const executeFunctionInIsolate = async (
           queryCount >= request.limits.maxQueryCalls ||
           concurrentQueryCount >= request.limits.maxConcurrentQueryCalls
         ) {
+          queryLimitExceeded = true
           errorCode = FunctionErrorCode.FUNCTION_QUERY_LIMIT
           return { error: QUERY_LIMIT_MESSAGE }
         }
@@ -251,6 +256,7 @@ export const executeFunctionInIsolate = async (
             grantToken: request.grantToken,
             capabilityId: capabilityIdValue,
             parameters,
+            signal: queryAbortController.signal,
           })
         } catch {
           return { error: QUERY_FAILED_MESSAGE }
@@ -314,6 +320,14 @@ export const executeFunctionInIsolate = async (
             result: { copy: true, promise: true },
             timeout: request.limits.timeoutMs,
           })
+          if (queryLimitExceeded) {
+            return createFailure(
+              request,
+              startedAt,
+              queryCount,
+              FunctionErrorCode.FUNCTION_QUERY_LIMIT
+            )
+          }
           try {
             return createResult(request, startedAt, queryCount, value)
           } catch {
@@ -343,6 +357,7 @@ export const executeFunctionInIsolate = async (
     return createFailure(request, startedAt, queryCount, errorCode)
   } finally {
     clearTimeout(wallTimer)
+    queryAbortController.abort()
     if (!isolate.isDisposed) {
       isolate.dispose()
     }

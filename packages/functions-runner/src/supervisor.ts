@@ -1,5 +1,9 @@
 import { DEFAULT_FUNCTION_LIMITS, FunctionErrorCode } from "@budibase/types"
-import type { FunctionRunResult, JSONValue } from "@budibase/types"
+import type {
+  FunctionRunLimits,
+  FunctionRunResult,
+  JSONValue,
+} from "@budibase/types"
 import { fork } from "node:child_process"
 import type { ChildProcess } from "node:child_process"
 import path from "node:path"
@@ -68,6 +72,58 @@ const defaultChildFactory = (memoryLimitMb: number) =>
 const defaultQueryHandler = (): Promise<JSONValue> =>
   Promise.reject(new Error(QUERY_FAILED_MESSAGE))
 
+const clampRunLimits = (limits: FunctionRunLimits): FunctionRunLimits => ({
+  maxInputBytes: Math.min(
+    limits.maxInputBytes,
+    DEFAULT_FUNCTION_LIMITS.run.maxInputBytes
+  ),
+  maxInputDepth: Math.min(
+    limits.maxInputDepth,
+    DEFAULT_FUNCTION_LIMITS.run.maxInputDepth
+  ),
+  isolateMemoryLimitMb: Math.min(
+    limits.isolateMemoryLimitMb,
+    DEFAULT_FUNCTION_LIMITS.run.isolateMemoryLimitMb
+  ),
+  timeoutMs: Math.min(limits.timeoutMs, DEFAULT_FUNCTION_LIMITS.run.timeoutMs),
+  maxQueryCalls: Math.min(
+    limits.maxQueryCalls,
+    DEFAULT_FUNCTION_LIMITS.run.maxQueryCalls
+  ),
+  maxConcurrentQueryCalls: Math.min(
+    limits.maxConcurrentQueryCalls,
+    DEFAULT_FUNCTION_LIMITS.run.maxConcurrentQueryCalls
+  ),
+  maxQueryResponseBytes: Math.min(
+    limits.maxQueryResponseBytes,
+    DEFAULT_FUNCTION_LIMITS.run.maxQueryResponseBytes
+  ),
+  maxQueryResponseDepth: Math.min(
+    limits.maxQueryResponseDepth,
+    DEFAULT_FUNCTION_LIMITS.run.maxQueryResponseDepth
+  ),
+  maxOutputBytes: Math.min(
+    limits.maxOutputBytes,
+    DEFAULT_FUNCTION_LIMITS.run.maxOutputBytes
+  ),
+  maxOutputDepth: Math.min(
+    limits.maxOutputDepth,
+    DEFAULT_FUNCTION_LIMITS.run.maxOutputDepth
+  ),
+  maxLogEntries: Math.min(
+    limits.maxLogEntries,
+    DEFAULT_FUNCTION_LIMITS.run.maxLogEntries
+  ),
+  maxLogBytes: Math.min(
+    limits.maxLogBytes,
+    DEFAULT_FUNCTION_LIMITS.run.maxLogBytes
+  ),
+  maxLogEntryBytes: Math.min(
+    limits.maxLogEntryBytes,
+    DEFAULT_FUNCTION_LIMITS.run.maxLogEntryBytes
+  ),
+})
+
 export class FunctionSupervisor {
   private readonly activeRuns = new Map<string, ActiveRun>()
   private readonly childFactory: (memoryLimitMb: number) => ChildProcess
@@ -94,7 +150,11 @@ export class FunctionSupervisor {
   }
 
   execute(value: unknown): Promise<FunctionRunResult> {
-    const request = validateFunctionRunRequest(value)
+    const validatedRequest = validateFunctionRunRequest(value)
+    const request = {
+      ...validatedRequest,
+      limits: clampRunLimits(validatedRequest.limits),
+    }
     const startedAt = Date.now()
 
     if (this.shuttingDown) {
@@ -160,6 +220,7 @@ export class FunctionSupervisor {
       let killTimer: NodeJS.Timeout | undefined
       let runTimer: NodeJS.Timeout | undefined
       let closed = false
+      const queryAbortController = new AbortController()
       const queryRequestIds = new Set<string>()
       let queryCount = 0
       let concurrentQueryCount = 0
@@ -168,6 +229,7 @@ export class FunctionSupervisor {
         if (closed || killTimer) {
           return
         }
+        queryAbortController.abort()
         child.kill("SIGTERM")
         killTimer = setTimeout(() => {
           if (!closed) {
@@ -297,6 +359,7 @@ export class FunctionSupervisor {
               grantToken: request.grantToken,
               capabilityId: message.capabilityId,
               parameters: message.parameters,
+              signal: queryAbortController.signal,
             })
           )
           .then(
@@ -349,6 +412,7 @@ export class FunctionSupervisor {
 
       child.on("close", (code, signal) => {
         closed = true
+        queryAbortController.abort()
         if (runTimer) {
           clearTimeout(runTimer)
         }

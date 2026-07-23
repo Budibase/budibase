@@ -1,4 +1,5 @@
 import {
+  DEFAULT_FUNCTION_LIMITS,
   FUNCTION_RUN_REQUEST_FIXTURE,
   FunctionErrorCode,
 } from "@budibase/types"
@@ -61,10 +62,14 @@ process.on("message", request => {
     })
     return
   }
+  let output = { pid: process.pid }
+  if (mode === "limits") {
+    output = { limits: request.limits }
+  }
   const result = {
     runId: mode === "wrong-run-id" ? "another-run" : request.runId,
     status: "success",
-    output: { pid: process.pid },
+    output,
     metrics: { durationMs: 1, queryCount: 0, outputBytes: 0, logBytes: 0 },
   }
   if (mode === "extra-message") {
@@ -217,7 +222,30 @@ describe("FunctionSupervisor", () => {
       grantToken: FUNCTION_RUN_REQUEST_FIXTURE.grantToken,
       capabilityId: "capability-1",
       parameters: { value: "input" },
+      signal: expect.any(AbortSignal),
     })
+  })
+
+  it("clamps request limits to runner-owned maximums", async () => {
+    const childFactory = jest.fn(() =>
+      spawn(process.execPath, ["-e", childFixture, "limits"], {
+        stdio: ["ignore", "ignore", "ignore", "ipc"],
+      })
+    )
+    const supervisor = new FunctionSupervisor({ childFactory })
+    const runRequest = request("run-clamped-limits")
+    for (const key of Object.keys(runRequest.limits)) {
+      runRequest.limits[key as keyof typeof runRequest.limits] =
+        Number.MAX_SAFE_INTEGER
+    }
+
+    await expect(supervisor.execute(runRequest)).resolves.toMatchObject({
+      status: "success",
+      output: { limits: DEFAULT_FUNCTION_LIMITS.run },
+    })
+    expect(childFactory).toHaveBeenCalledWith(
+      DEFAULT_FUNCTION_LIMITS.run.isolateMemoryLimitMb
+    )
   })
 
   it("rejects input over its byte limit before spawning", async () => {
@@ -298,6 +326,43 @@ describe("FunctionSupervisor", () => {
         message: "Function query payload is invalid",
       },
     })
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
+  it("aborts outstanding queries when a run times out", async () => {
+    let querySignal: AbortSignal | undefined
+    let notifyQueryStarted: (() => void) | undefined
+    let notifyQueryCancelled: (() => void) | undefined
+    const queryStarted = new Promise<void>(resolve => {
+      notifyQueryStarted = resolve
+    })
+    const queryCancelled = new Promise<void>(resolve => {
+      notifyQueryCancelled = resolve
+    })
+    const supervisor = createSupervisor("query", 10, request => {
+      querySignal = request.signal
+      notifyQueryStarted?.()
+      return new Promise((_resolve, reject) => {
+        request.signal.addEventListener(
+          "abort",
+          () => {
+            notifyQueryCancelled?.()
+            reject(new Error("Query cancelled"))
+          },
+          { once: true }
+        )
+      })
+    })
+    const resultPromise = supervisor.execute(request("run-query-timeout", 500))
+
+    await queryStarted
+    expect(querySignal?.aborted).toBe(false)
+    await expect(resultPromise).resolves.toMatchObject({
+      error: { code: FunctionErrorCode.FUNCTION_TIMEOUT },
+    })
+    await queryCancelled
+    expect(querySignal?.aborted).toBe(true)
+    expect(supervisor.activeRunCount()).toBe(0)
   })
 
   it("cancels an active child and cleans up its state", async () => {
