@@ -1,3 +1,12 @@
+<script lang="ts" context="module">
+  export interface ShowOptions {
+    title: string
+    confirmText: string
+    name?: string
+    onConfirm: (_name: string) => Promise<void>
+  }
+</script>
+
 <script lang="ts">
   import { getErrorMessage } from "@/helpers/errors"
   import {
@@ -7,13 +16,6 @@
     ModalContent,
     type ModalAPI,
   } from "@budibase/bbui"
-
-  interface ShowOptions {
-    title: string
-    confirmText: string
-    name?: string
-    onConfirm: (_name: string) => Promise<void>
-  }
 
   let modal: ModalAPI
   let modalContent: ModalContent
