@@ -23,7 +23,7 @@
     validateFunctionQueryAliases,
   } from "./queryAliases"
 
-  interface Props {
+  export interface Props {
     capabilities?: FunctionQueryCapability[]
     catalog?: FunctionQueryCatalogEntry[]
     catalogLoading?: boolean
