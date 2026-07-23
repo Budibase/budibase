@@ -1,6 +1,12 @@
 import { structures } from "../../../../../tests"
 import { testEnv } from "../../../../../tests/extra"
-import { InviteWithCode, SSOAuthDetails, SSOUser, User } from "@budibase/types"
+import {
+  InviteWithCode,
+  SSOAuthDetails,
+  SSOUser,
+  User,
+  UserStatus,
+} from "@budibase/types"
 
 import { HTTPError } from "../../../../errors"
 import * as sso from "../sso"
@@ -368,6 +374,20 @@ describe("sso", () => {
 
       it("does not link a global admin account", async () => {
         existingUser.admin = { global: true }
+        users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
+        const ssoUser = structures.users.ssoUser({ details })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({ _id: "us_" + details.userId }),
+          expect.anything()
+        )
+      })
+
+      it("does not link a disabled (inactive) account", async () => {
+        existingUser.status = UserStatus.INACTIVE
         users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
         const ssoUser = structures.users.ssoUser({ details })
         mockSaveUser.mockReturnValueOnce(ssoUser)

@@ -14,6 +14,7 @@ import {
   SSOAuthDetails,
   SSOUser,
   User,
+  UserStatus,
 } from "@budibase/types"
 
 // no-op function for user save
@@ -133,10 +134,16 @@ async function syncAndSaveUser(
 }
 
 // only linkable while no one else could plausibly own it: never claimed
-// with a password, no account-portal ssoId, not a global admin, and if
-// already an SSO user, only from the same identity provider that linked it
+// with a password, not disabled, no account-portal ssoId, not a global
+// admin, and if already an SSO user, only from the same identity provider
+// that linked it
 function isAccountLinkable(user: User, details: SSOAuthDetails): boolean {
-  if (user.password || user.admin?.global || user.ssoId) {
+  if (
+    user.password ||
+    user.status === UserStatus.INACTIVE ||
+    user.admin?.global ||
+    user.ssoId
+  ) {
     return false
   }
   if (isSSOUser(user)) {
