@@ -6,6 +6,8 @@ import type {
   CreateFunctionRequest,
   CreateFunctionResponse,
   FetchFunctionResponse,
+  FetchFunctionRunResponse,
+  FetchFunctionRunsResponse,
   FetchFunctionQueryCatalogResponse,
   FetchFunctionsResponse,
   UpdateFunctionRequest,
@@ -65,6 +67,32 @@ export class FunctionAPI extends TestAPI {
     return await this._get<FetchFunctionResponse>(`/api/functions/${id}`, {
       expectations,
     })
+  }
+
+  fetchRuns = async (
+    id: string,
+    query?: { bookmark?: string; limit?: number },
+    expectations?: Expectations
+  ) => {
+    const search = new URLSearchParams()
+    if (query?.bookmark) {
+      search.set("bookmark", query.bookmark)
+    }
+    if (query?.limit) {
+      search.set("limit", String(query.limit))
+    }
+    const suffix = search.size ? `?${search}` : ""
+    return await this._get<FetchFunctionRunsResponse>(
+      `/api/functions/${id}/runs${suffix}`,
+      { expectations }
+    )
+  }
+
+  findRun = async (id: string, runId: string, expectations?: Expectations) => {
+    return await this._get<FetchFunctionRunResponse>(
+      `/api/functions/${id}/runs/${runId}`,
+      { expectations }
+    )
   }
 
   update = async (

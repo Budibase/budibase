@@ -1,8 +1,10 @@
-import { context, features } from "@budibase/backend-core"
+import { context, docIds, features } from "@budibase/backend-core"
 import {
   DocumentType,
   FeatureFlag,
+  FunctionErrorCode,
   type FunctionDocument,
+  type FunctionRunSummary,
   prefixed,
 } from "@budibase/types"
 import { setEnv } from "../../../environment"
@@ -669,6 +671,202 @@ export default async function (): Promise<FunctionResult> {
         body: {
           message: "Function is used by: Room workflow.",
         },
+      })
+    })
+  })
+
+  it("stores and returns only sanitized Function run summaries", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await createFunction()
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await sdk.functions.createRunSummary({
+          runId: "sanitized-run",
+          functionId: created._id,
+          functionName: created.name,
+          sourceHash: "source-hash",
+          automationId: "automation-1",
+          stepId: "step-1",
+        })
+        await sdk.functions.finalizeRunSummary("sanitized-run", {
+          runId: "sanitized-run",
+          status: "error",
+          output: { secretOutput: "do-not-store" },
+          logs: [
+            {
+              level: "error",
+              message: "secret-user-log",
+              timestamp: new Date().toISOString(),
+            },
+          ],
+          error: {
+            code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+            message: "secret-runner-message".repeat(100),
+          },
+          metrics: {
+            durationMs: 25,
+            queryCount: 2,
+            outputBytes: 10,
+            logBytes: 10,
+          },
+        })
+
+        const stored = await context
+          .getWorkspaceDB()
+          .tryGet<FunctionRunSummary>(
+            docIds.generateFunctionRunLogID("sanitized-run")
+          )
+        expect(stored).toBeDefined()
+        expect(JSON.stringify(stored)).not.toContain("secret")
+        expect(stored).toMatchObject({
+          status: "error",
+          durationMs: 25,
+          queryCount: 2,
+          error: {
+            code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+            message: "The Function query failed",
+          },
+        })
+        expect(stored?.error?.message.length).toBeLessThanOrEqual(512)
+      })
+
+      const { run } = await config.api.function.findRun(
+        created._id,
+        "sanitized-run"
+      )
+      expect(run).not.toHaveProperty("output")
+      expect(run).not.toHaveProperty("logs")
+      expect(run).not.toHaveProperty("stack")
+    })
+  })
+
+  it("merges development and published run history with stable pagination", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await createFunction()
+      const putRun = async (
+        workspaceId: string,
+        runId: string,
+        environment: FunctionRunSummary["environment"],
+        startedAt: string
+      ) => {
+        await config.doInContext(workspaceId, async () => {
+          await context.getWorkspaceDB().put({
+            _id: docIds.generateFunctionRunLogID(runId),
+            runId,
+            functionId: created._id,
+            functionName: created.name,
+            sourceHash: "source-hash",
+            environment,
+            status: "success",
+            invocation: {
+              type: "automation",
+              automationId: "automation-1",
+              stepId: "step-1",
+            },
+            startedAt,
+            finishedAt: startedAt,
+            durationMs: 1,
+            queryCount: 0,
+            sensitivePayload: "do-not-return",
+          })
+        })
+      }
+      await putRun(
+        config.getDevWorkspaceId(),
+        "newest",
+        "development",
+        "2026-07-23T12:03:00.000Z"
+      )
+      await putRun(
+        config.getProdWorkspaceId(),
+        "middle",
+        "published",
+        "2026-07-23T12:02:00.000Z"
+      )
+      await putRun(
+        config.getDevWorkspaceId(),
+        "oldest",
+        "development",
+        "2026-07-23T12:01:00.000Z"
+      )
+
+      const firstPage = await config.api.function.fetchRuns(created._id, {
+        limit: 2,
+      })
+      expect(firstPage.runs.map(run => run.runId)).toEqual(["newest", "middle"])
+      expect(firstPage.runs.map(run => run.environment)).toEqual([
+        "development",
+        "published",
+      ])
+      expect(firstPage.hasMore).toBe(true)
+      expect(firstPage.nextBookmark).toBeDefined()
+      expect(JSON.stringify(firstPage)).not.toContain("sensitivePayload")
+
+      const secondPage = await config.api.function.fetchRuns(created._id, {
+        limit: 2,
+        bookmark: firstPage.nextBookmark,
+      })
+      expect(secondPage.runs.map(run => run.runId)).toEqual(["oldest"])
+      expect(secondPage.hasMore).toBe(false)
+    })
+  })
+
+  it("reconciles interrupted runs and removes only expired summaries", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await createFunction()
+      const interruptedId = docIds.generateFunctionRunLogID("interrupted")
+      const expiredId = docIds.generateFunctionRunLogID("expired")
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const database = context.getWorkspaceDB()
+        await database.put({
+          _id: interruptedId,
+          runId: "interrupted",
+          functionId: created._id,
+          functionName: created.name,
+          sourceHash: "source-hash",
+          environment: "development",
+          status: "running",
+          invocation: {
+            type: "automation",
+            automationId: "automation-1",
+            stepId: "step-1",
+          },
+          startedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+          queryCount: 0,
+        })
+      })
+
+      const { run } = await config.api.function.findRun(
+        created._id,
+        "interrupted"
+      )
+      expect(run).toMatchObject({
+        status: "error",
+        error: {
+          code: FunctionErrorCode.FUNCTION_ORCHESTRATOR_INTERRUPTED,
+        },
+      })
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const database = context.getWorkspaceDB()
+        await database.put({
+          ...run,
+          _id: expiredId,
+          runId: "expired",
+          startedAt: "2025-01-01T00:00:00.000Z",
+        })
+        await sdk.functions.clearOldHistory(
+          database,
+          "2026-01-01T00:00:00.000Z"
+        )
+      })
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await expect(context.getWorkspaceDB().tryGet(expiredId)).resolves.toBe(
+          undefined
+        )
+        await expect(
+          context.getWorkspaceDB().tryGet(created._id)
+        ).resolves.toBeDefined()
       })
     })
   })
