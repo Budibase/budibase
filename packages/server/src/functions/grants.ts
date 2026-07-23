@@ -1,18 +1,20 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
-import { redis, type RedisClient } from "@budibase/backend-core"
+import { locks, redis, type RedisClient } from "@budibase/backend-core"
 import type {
   FunctionExecutor,
   FunctionRunGrant,
   FunctionRunLimits,
   FunctionRunRequest,
 } from "@budibase/types"
-import { FunctionErrorCode } from "@budibase/types"
+import { FunctionErrorCode, LockName, LockType } from "@budibase/types"
 import { FunctionExecutionError } from "./errors"
 
 const GRANT_EXPIRY_GRACE_MS = 5_000
+const GRANT_LOCK_TTL_MS = 5_000
 
 interface StoredFunctionRunGrant extends FunctionRunGrant {
   tokenHash: string
+  activeQueryCalls: number
 }
 
 export type FunctionRunGrantScope = Omit<
@@ -27,6 +29,31 @@ export interface CreatedFunctionRunGrant {
 
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex")
+
+type FunctionQueryGrantStatus =
+  | "allowed"
+  | "denied"
+  | "budget_exceeded"
+  | "concurrency_exceeded"
+
+export interface FunctionQueryGrantResult {
+  status: FunctionQueryGrantStatus
+  grant?: FunctionRunGrant
+}
+
+const withGrantLock = async <T>(runId: string, task: () => Promise<T>) => {
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.FUNCTION_QUERY_GRANT,
+      resource: runId,
+      systemLock: true,
+      type: LockType.DEFAULT,
+      ttl: GRANT_LOCK_TTL_MS,
+    },
+    task
+  )
+  return result
+}
 
 const tokensMatch = (actual: string, expected: string) => {
   const encoder = new TextEncoder()
@@ -57,6 +84,7 @@ export const createFunctionRunGrant = async (
   const storedGrant: StoredFunctionRunGrant = {
     ...grant,
     tokenHash: hashToken(grantToken),
+    activeQueryCalls: 0,
   }
   const ttlSeconds = Math.ceil((expiresAt - Date.now()) / 1_000)
 
@@ -85,8 +113,101 @@ export const getFunctionRunGrant = async (
     return null
   }
 
-  const { tokenHash: _tokenHash, ...grant } = storedGrant
+  const {
+    tokenHash: _tokenHash,
+    activeQueryCalls: _activeQueryCalls,
+    ...grant
+  } = storedGrant
   return grant
+}
+
+export const consumeFunctionQueryGrant = async (
+  runId: string,
+  grantToken: string,
+  capabilityId: string,
+  parameterNames: string[],
+  workspaceId?: string,
+  client?: RedisClient
+): Promise<FunctionQueryGrantResult> => {
+  const redisClient = await getClient(client)
+  return withGrantLock(runId, async () => {
+    const storedGrant = await redisClient.get<StoredFunctionRunGrant>(runId)
+    if (
+      !storedGrant ||
+      storedGrant.runId !== runId ||
+      storedGrant.expiresAt <= Date.now() ||
+      !tokensMatch(grantToken, storedGrant.tokenHash) ||
+      (workspaceId && storedGrant.workspaceId !== workspaceId)
+    ) {
+      return { status: "denied" }
+    }
+
+    const capability = storedGrant.capabilities[capabilityId]
+    if (
+      !capability ||
+      parameterNames.some(
+        parameterName => !capability.parameterNames.includes(parameterName)
+      )
+    ) {
+      return { status: "denied" }
+    }
+    if (storedGrant.remainingQueryCalls <= 0) {
+      return { status: "budget_exceeded" }
+    }
+    if (
+      storedGrant.activeQueryCalls >= storedGrant.limits.maxConcurrentQueryCalls
+    ) {
+      return { status: "concurrency_exceeded" }
+    }
+
+    const updatedGrant: StoredFunctionRunGrant = {
+      ...storedGrant,
+      remainingQueryCalls: storedGrant.remainingQueryCalls - 1,
+      activeQueryCalls: storedGrant.activeQueryCalls + 1,
+    }
+    const ttlSeconds = await redisClient.getTTL(runId)
+    if (ttlSeconds <= 0) {
+      return { status: "denied" }
+    }
+    await redisClient.store(runId, updatedGrant, ttlSeconds)
+
+    const {
+      tokenHash: _tokenHash,
+      activeQueryCalls: _activeQueryCalls,
+      ...grant
+    } = updatedGrant
+    return {
+      status: "allowed",
+      grant,
+    }
+  })
+}
+
+export const releaseFunctionQueryGrant = async (
+  runId: string,
+  grantToken: string,
+  client?: RedisClient
+) => {
+  const redisClient = await getClient(client)
+  await withGrantLock(runId, async () => {
+    const storedGrant = await redisClient.get<StoredFunctionRunGrant>(runId)
+    if (
+      !storedGrant ||
+      storedGrant.runId !== runId ||
+      !tokensMatch(grantToken, storedGrant.tokenHash)
+    ) {
+      return
+    }
+    const updatedGrant: StoredFunctionRunGrant = {
+      ...storedGrant,
+      activeQueryCalls: Math.max(storedGrant.activeQueryCalls - 1, 0),
+    }
+    const ttlSeconds = await redisClient.getTTL(runId)
+    if (ttlSeconds <= 0) {
+      return
+    }
+    await redisClient.store(runId, updatedGrant, ttlSeconds)
+  })
 }
 
 export const deleteFunctionRunGrant = async (
