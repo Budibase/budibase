@@ -13,7 +13,7 @@
     ProgressCircle,
   } from "@budibase/bbui"
 
-  interface Props {
+  export interface Props {
     functions?: UIFunction[]
     loading?: boolean
     error?: string
