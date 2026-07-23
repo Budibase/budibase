@@ -413,6 +413,9 @@
   }
   .panel {
     padding: var(--spacing-l);
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   .config.panel {
     padding: 0px;
@@ -428,7 +431,8 @@
     box-sizing: border-box;
   }
   .config.panel .content {
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
@@ -466,5 +470,6 @@
   .details {
     display: flex;
     gap: var(--spacing-l);
+    min-width: 0;
   }
 </style>

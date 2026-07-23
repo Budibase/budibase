@@ -13,7 +13,9 @@
     ViewMode,
     type EdgeData,
     type BranchEdgeData,
+    type LoopEdgeData,
     type FlowBlockContext,
+    type LoopFlowContext,
   } from "@/types/automations"
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
@@ -64,14 +66,32 @@
   const deriveBlockContext = (
     edgeData: EdgeData | undefined
   ): FlowBlockContext | undefined => {
-    if (edgeData && "loopStepId" in edgeData) {
+    const isLoopEdgeData = (
+      value: EdgeData
+    ): value is LoopEdgeData | (BranchEdgeData & { loopStepId: string }) =>
+      "loopStepId" in value && typeof value.loopStepId === "string"
+
+    if (edgeData && isLoopEdgeData(edgeData)) {
+      if (
+        "branchNode" in edgeData.block &&
+        edgeData.block.branchNode === true
+      ) {
+        return edgeData.block
+      }
       const loopChildInsertIndex = edgeData.loopChildInsertIndex
-      return {
+      const loopBlock: LoopFlowContext = {
         ...edgeData.block,
         insertIntoLoopV2: true,
         loopStepId: edgeData.loopStepId,
         ...(loopChildInsertIndex !== undefined ? { loopChildInsertIndex } : {}),
-      } as any
+        ...(edgeData.branchStepId
+          ? { branchStepId: edgeData.branchStepId }
+          : {}),
+        ...(typeof edgeData.branchIdx === "number"
+          ? { branchIdx: edgeData.branchIdx }
+          : {}),
+      }
+      return loopBlock
     }
     return edgeData?.block
   }
