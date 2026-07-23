@@ -41,6 +41,7 @@ import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
 import {
+  propagateProjectDependencyChangesWithWarning,
   resolveProjectIds,
   resolveUpdatedProjectIds,
 } from "../../utilities/projects"
@@ -216,7 +217,7 @@ async function invalidateVariables(
 const isDatasourceEntity = (entity: unknown): entity is Table =>
   typeof entity === "object" && entity !== null && !Array.isArray(entity)
 
-const resolveDatasourceEntityProjectIds = async (
+const preserveLegacyDatasourceEntityProjectIds = (
   datasource: Datasource,
   existingDatasource?: Datasource
 ) => {
@@ -229,12 +230,12 @@ const resolveDatasourceEntityProjectIds = async (
       throw new HTTPError(`Datasource entity '${name}' must be an object.`, 400)
     }
 
-    entity.projectIds = existingDatasource
-      ? await resolveUpdatedProjectIds(
-          entity.projectIds,
-          existingDatasource.entities?.[name]?.projectIds
-        )
-      : await resolveProjectIds(entity.projectIds)
+    const existingProjectIds = existingDatasource?.entities?.[name]?.projectIds
+    if (Array.isArray(existingProjectIds)) {
+      entity.projectIds = [...existingProjectIds]
+    } else {
+      delete entity.projectIds
+    }
   }
 }
 
@@ -265,7 +266,7 @@ export async function update(
     ctx.request.body.projectIds,
     baseDatasource.projectIds
   )
-  await resolveDatasourceEntityProjectIds(datasource, baseDatasource)
+  preserveLegacyDatasourceEntityProjectIds(datasource, baseDatasource)
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -288,6 +289,14 @@ export async function update(
   )
   await events.datasource.updated(datasource)
   datasource._rev = response.rev
+
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: datasource._id!,
+    currentProjectIds: datasource.projectIds,
+    previousProjectIds: baseDatasource.projectIds,
+    previousResource: baseDatasource,
+    savedResource: datasource,
+  })
 
   ctx.message = "Datasource saved successfully."
   ctx.body = {
@@ -317,10 +326,17 @@ export async function save(
     tablesFilter,
   } = ctx.request.body
   datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
-  await resolveDatasourceEntityProjectIds(datasourceData)
+  preserveLegacyDatasourceEntityProjectIds(datasourceData)
   const { datasource, errors } = await sdk.datasources.save(datasourceData, {
     fetchSchema,
     tablesFilter,
+  })
+
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: datasource._id!,
+    currentProjectIds: datasource.projectIds,
+    previousProjectIds: [],
+    savedResource: datasource,
   })
 
   ctx.body = {
