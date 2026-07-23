@@ -5,7 +5,8 @@ import type {
   FunctionRunGrant,
   JSONValue,
 } from "@budibase/types"
-import { FunctionErrorCode } from "@budibase/types"
+import { ActionType, FunctionErrorCode } from "@budibase/types"
+import { quotas } from "@budibase/pro"
 import { z } from "zod"
 import * as queryController from "../api/controllers/query"
 import { buildCtx } from "../automations/steps/utils"
@@ -44,6 +45,15 @@ export interface FunctionQueryBrokerRecord {
   responseBytes: number
   result: "success" | "error"
 }
+
+type FunctionQueryOutcome =
+  | {
+      success: true
+      response: object
+    }
+  | {
+      success: false
+    }
 
 const denied = () =>
   new FunctionExecutionError(FunctionErrorCode.FUNCTION_QUERY_DENIED)
@@ -160,6 +170,26 @@ const defaultExecuteQuery = async ({
     return ctx.body
   })
 
+const executeMeteredQuery = async (execute: () => Promise<object>) => {
+  const outcome = await quotas.addAction(
+    ActionType.AUTOMATION_STEP,
+    async (): Promise<FunctionQueryOutcome> => {
+      try {
+        return {
+          success: true,
+          response: await execute(),
+        }
+      } catch {
+        return { success: false }
+      }
+    }
+  )
+  if (!outcome.success) {
+    throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
+  }
+  return outcome.response
+}
+
 const defaultRecord = (entry: FunctionQueryBrokerRecord) => {
   console.log(
     `Function query broker capability=${entry.capabilityId} result=${entry.result} durationMs=${entry.durationMs} responseBytes=${entry.responseBytes}`
@@ -237,11 +267,13 @@ export const executeFunctionQuery = async (
   let responseBytes = 0
   let result: FunctionQueryBrokerRecord["result"] = "error"
   try {
-    const response = await executeQuery({
-      grant,
-      capability,
-      parameters: request.parameters,
-    })
+    const response = await executeMeteredQuery(() =>
+      executeQuery({
+        grant,
+        capability,
+        parameters: request.parameters,
+      })
+    )
     const normalized = normalizeJson(
       response,
       grant.limits.maxQueryResponseBytes,

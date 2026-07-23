@@ -1,5 +1,7 @@
 import { redis, type RedisClient } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
+  ActionType,
   FUNCTION_RUN_REQUEST_FIXTURE,
   FunctionErrorCode,
 } from "@budibase/types"
@@ -14,10 +16,25 @@ import {
   getFunctionRunGrant,
   type FunctionRunGrantScope,
 } from "./grants"
+import * as queryController from "../api/controllers/query"
+
+jest.mock("@budibase/pro", () => ({
+  quotas: {
+    addAction: jest.fn(),
+  },
+}))
+
+jest.mock("../api/controllers/query", () => ({
+  executeV2AsAutomation: jest.fn(),
+}))
 
 describe("Function query broker", () => {
   let client: RedisClient
   let grantToken: string
+  const addAction = jest.mocked(quotas.addAction)
+  const executeV2AsAutomation = jest.mocked(
+    queryController.executeV2AsAutomation
+  )
 
   const scope = {
     runId: "run-query-broker",
@@ -79,6 +96,14 @@ describe("Function query broker", () => {
   })
 
   beforeEach(async () => {
+    addAction.mockClear()
+    executeV2AsAutomation.mockClear()
+    addAction.mockImplementation(
+      async (_actionType, addActionFn) => await addActionFn()
+    )
+    executeV2AsAutomation.mockImplementation(async ctx => {
+      ctx.body = { data: [] }
+    })
     await client.clear()
     await createGrant()
   })
@@ -110,6 +135,10 @@ describe("Function query broker", () => {
       capability: scope.capabilities.cap_customers,
       parameters: { status: "active" },
     })
+    expect(addAction).toHaveBeenCalledWith(
+      ActionType.AUTOMATION_STEP,
+      expect.any(Function)
+    )
   })
 
   it.each([
@@ -128,6 +157,7 @@ describe("Function query broker", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
+    expect(addAction).not.toHaveBeenCalled()
   })
 
   it("does not consume query budget for pre-execution rejection", async () => {
@@ -143,6 +173,7 @@ describe("Function query broker", () => {
     await expect(
       getFunctionRunGrant(scope.runId, grantToken, client)
     ).resolves.toMatchObject({ remainingQueryCalls: limits.maxQueryCalls })
+    expect(addAction).not.toHaveBeenCalled()
   })
 
   it("rejects direct query ID fields in the request", async () => {
@@ -156,6 +187,7 @@ describe("Function query broker", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
+    expect(addAction).not.toHaveBeenCalled()
   })
 
   it("denies an invalid Function source without consuming query budget", async () => {
@@ -172,6 +204,46 @@ describe("Function query broker", () => {
     await expect(
       getFunctionRunGrant(scope.runId, grantToken, client)
     ).resolves.toMatchObject({ remainingQueryCalls: limits.maxQueryCalls })
+    expect(addAction).not.toHaveBeenCalled()
+  })
+
+  it("executes with the containing automation user", async () => {
+    const { executeQuery: _executeQuery, ...deps } = dependencies()
+
+    await expect(
+      executeFunctionQuery(request(), scope.workspaceId, deps)
+    ).resolves.toEqual({ data: [] })
+    expect(executeV2AsAutomation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appId: scope.workspaceId,
+        user: scope.executionUser,
+        request: {
+          body: {
+            parameters: { status: "active" },
+          },
+        },
+        params: {
+          queryId: scope.capabilities.cap_customers.queryId,
+        },
+      })
+    )
+  })
+
+  it("meters every reached query execution", async () => {
+    await executeFunctionQuery(request(), scope.workspaceId, dependencies())
+    await executeFunctionQuery(request(), scope.workspaceId, dependencies())
+
+    expect(addAction).toHaveBeenCalledTimes(2)
+    expect(addAction).toHaveBeenNthCalledWith(
+      1,
+      ActionType.AUTOMATION_STEP,
+      expect.any(Function)
+    )
+    expect(addAction).toHaveBeenNthCalledWith(
+      2,
+      ActionType.AUTOMATION_STEP,
+      expect.any(Function)
+    )
   })
 
   it("denies expired and replayed grants", async () => {
@@ -192,6 +264,7 @@ describe("Function query broker", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
+    expect(addAction).not.toHaveBeenCalled()
   })
 
   it("atomically prevents concurrent calls from exceeding the query budget", async () => {
@@ -272,9 +345,10 @@ describe("Function query broker", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_LIMIT,
     })
+    expect(addAction).toHaveBeenCalledTimes(2)
   })
 
-  it("records no token, parameters, query result, or execution error", async () => {
+  it("meters failed queries without recording sensitive data", async () => {
     const record = jest.fn()
     const secretError = new Error("credential-secret")
     const deps = {
@@ -299,5 +373,9 @@ describe("Function query broker", () => {
       responseBytes: 0,
       result: "error",
     })
+    expect(addAction).toHaveBeenCalledWith(
+      ActionType.AUTOMATION_STEP,
+      expect.any(Function)
+    )
   })
 })
