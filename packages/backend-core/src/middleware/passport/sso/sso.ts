@@ -139,40 +139,39 @@ async function claimInviteAndSaveUser(
       systemLock: true,
     },
     async () => {
-      let invitePending = true
       try {
         await cache.invite.getCode(invite.code, invite.info.tenantId)
-      } catch {
-        invitePending = false
+      } catch (err: any) {
+        // could be a concurrent claim by this same identity, or an
+        // expired/revoked/unreadable invite - only reuse if positively
+        // confirmed, otherwise fail closed
+        let concurrentUser: User | undefined
+        try {
+          concurrentUser = await users.getById(userId)
+        } catch (getByIdErr: any) {
+          if (!getByIdErr.status || getByIdErr.status !== 404) {
+            throw getByIdErr
+          }
+        }
+        if (!concurrentUser) {
+          throw err
+        }
+        return await syncAndSaveUser(concurrentUser, details, saveUserFn)
       }
 
-      let user: User | undefined
-      if (!invitePending) {
-        // a concurrent login already claimed this invite and created the
-        // account for it - reuse that account instead of creating a
-        // second one for the same email
-        user = await users.getGlobalUserByEmail(details.email!)
-      }
-      if (!user) {
-        // set up a blank user using the third party id, applying any access
-        // granted by the matching pending invite
-        const assignments = invitePending
-          ? users.deriveUserFieldsFromInvite(invite.info)
-          : { roles: {} }
-        user = {
-          _id: userId,
-          email: details.email!,
-          tenantId: invite.info.tenantId || context.getTenantId(),
-          ...assignments,
-        }
+      // set up a blank user using the third party id, applying any access
+      // granted by the matching pending invite
+      const user: User = {
+        _id: userId,
+        email: details.email!,
+        tenantId: invite.info.tenantId || context.getTenantId(),
+        ...users.deriveUserFieldsFromInvite(invite.info),
       }
 
       const ssoUser = await syncAndSaveUser(user, details, saveUserFn)
 
-      if (invitePending) {
-        await cache.invite.deleteCode(invite.code, invite.info.tenantId)
-        await events.user.inviteAccepted(ssoUser)
-      }
+      await cache.invite.deleteCode(invite.code, invite.info.tenantId)
+      await events.user.inviteAccepted(ssoUser)
 
       return ssoUser
     }

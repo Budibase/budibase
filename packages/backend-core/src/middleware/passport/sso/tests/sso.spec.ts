@@ -364,32 +364,19 @@ describe("sso", () => {
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
       })
 
-      it("does not delete the invite if it was already consumed by a concurrent login", async () => {
-        mockInvite.getCode.mockReset()
-        mockInvite.getCode.mockRejectedValueOnce(new Error("invalid invite"))
-
-        const ssoUser = structures.users.ssoUser({ details })
-        mockSaveUser.mockReturnValueOnce(ssoUser)
-
-        await sso.authenticate(details, false, mockDone, mockSaveUser)
-
-        expect(mockInvite.deleteCode).not.toHaveBeenCalled()
-        expect(events.user.inviteAccepted).not.toHaveBeenCalled()
-        expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
-      })
-
-      it("reuses the account created by a concurrent login racing for the same invite, instead of creating a second one", async () => {
-        // simulates another login (e.g. a different identity provider)
-        // winning the race: it consumed the invite and saved its own
-        // account for this email before we acquired the lock
+      it("reuses the account when the same identity's own concurrent login already claimed the invite", async () => {
+        // simulates a second, racing request for this exact identity
+        // (e.g. a double-submitted login) losing the lock race: the
+        // winner already consumed the invite and saved the account for
+        // this precise third party id before we acquired the lock
         mockInvite.getCode.mockReset()
         mockInvite.getCode.mockRejectedValueOnce(new Error("invalid invite"))
 
         const existingUser = structures.users.user({
-          _id: "us_some-other-identity",
+          _id: "us_" + details.userId,
           email: details.email,
         })
-        users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
+        users.getById.mockResolvedValueOnce(existingUser)
 
         const ssoUser = structures.users.ssoUser({
           user: existingUser,
@@ -399,7 +386,8 @@ describe("sso", () => {
 
         await sso.authenticate(details, false, mockDone, mockSaveUser)
 
-        expect(users.getGlobalUserByEmail).toHaveBeenCalledWith(details.email)
+        // reused via the deterministic id, never by email match
+        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
         // the winner's account is reused - no second document is created
         expect(mockSaveUser).toHaveBeenCalledWith(
           expect.objectContaining({ _id: existingUser._id }),
@@ -408,6 +396,26 @@ describe("sso", () => {
         expect(mockInvite.deleteCode).not.toHaveBeenCalled()
         expect(events.user.inviteAccepted).not.toHaveBeenCalled()
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+      })
+
+      it("fails closed when the invite can no longer be validated and no concurrent claim for this identity can be confirmed", async () => {
+        // covers expired/revoked invites and failed reads alike - none of
+        // these are a positively identified concurrent claim, so this must
+        // not fall back to linking by email or creating a fresh account
+        mockInvite.getCode.mockReset()
+        mockInvite.getCode.mockRejectedValueOnce(new Error("invite expired"))
+        users.getById.mockImplementationOnce(() => {
+          throw new HTTPError("", 404)
+        })
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
+        expect(mockSaveUser).not.toHaveBeenCalled()
+        expect(mockInvite.deleteCode).not.toHaveBeenCalled()
+        expect(events.user.inviteAccepted).not.toHaveBeenCalled()
+        expect(mockDone.mock.calls.length).toBe(1)
+        expect(getErrorMessage()).toBeDefined()
       })
     })
 
