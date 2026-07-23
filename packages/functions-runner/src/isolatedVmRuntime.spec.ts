@@ -45,6 +45,7 @@ describe("Functions isolate", () => {
       grantToken: FUNCTION_RUN_REQUEST_FIXTURE.grantToken,
       capabilityId: "capability-1",
       parameters: { id: "hello" },
+      signal: expect.any(AbortSignal),
     })
   })
 
@@ -253,6 +254,47 @@ describe("Functions isolate", () => {
     ).resolves.toMatchObject({
       status: "error",
       metrics: { queryCount: 1 },
+      error: { code: FunctionErrorCode.FUNCTION_QUERY_LIMIT },
+    })
+  })
+
+  it.each([
+    [
+      "total",
+      `
+        await query("first", {})
+        try {
+          await query("second", {})
+        } catch {}
+      `,
+      { maxQueryCalls: 1 },
+    ],
+    [
+      "concurrent",
+      `
+        try {
+          await Promise.all([query("first", {}), query("second", {})])
+        } catch {}
+      `,
+      { maxConcurrentQueryCalls: 1 },
+    ],
+  ])("keeps a caught %s query limit terminal", async (_name, body, limits) => {
+    const runRequest = request(`
+      export default async function run() {
+        const query = globalThis.__budibaseInvokeQuery
+        ${body}
+        return { output: { caught: true } }
+      }
+    `)
+    runRequest.limits = { ...runRequest.limits, ...limits }
+
+    await expect(
+      executeFunctionInIsolate(
+        runRequest,
+        () => new Promise(resolve => setTimeout(() => resolve({}), 10))
+      )
+    ).resolves.toMatchObject({
+      status: "error",
       error: { code: FunctionErrorCode.FUNCTION_QUERY_LIMIT },
     })
   })

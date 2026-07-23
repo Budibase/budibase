@@ -27,11 +27,10 @@ const visitJSON = (value: JSONValue, maxDepth: number, depth: number): void => {
 export const validateJSONLimits = (
   value: JSONValue,
   limits: JSONLimits
-): number => {
+): void => {
   visitJSON(value, limits.maxDepth, 0)
   const bytes = Buffer.byteLength(JSON.stringify(value))
   if (bytes > limits.maxBytes) {
     throw new JSONLimitError()
   }
-  return bytes
 }
