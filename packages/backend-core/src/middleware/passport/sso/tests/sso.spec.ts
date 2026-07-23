@@ -377,6 +377,38 @@ describe("sso", () => {
         expect(events.user.inviteAccepted).not.toHaveBeenCalled()
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
       })
+
+      it("reuses the account created by a concurrent login racing for the same invite, instead of creating a second one", async () => {
+        // simulates another login (e.g. a different identity provider)
+        // winning the race: it consumed the invite and saved its own
+        // account for this email before we acquired the lock
+        mockInvite.getCode.mockReset()
+        mockInvite.getCode.mockRejectedValueOnce(new Error("invalid invite"))
+
+        const existingUser = structures.users.user({
+          _id: "us_some-other-identity",
+          email: details.email,
+        })
+        users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
+
+        const ssoUser = structures.users.ssoUser({
+          user: existingUser,
+          details,
+        })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        expect(users.getGlobalUserByEmail).toHaveBeenCalledWith(details.email)
+        // the winner's account is reused - no second document is created
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({ _id: existingUser._id }),
+          expect.anything()
+        )
+        expect(mockInvite.deleteCode).not.toHaveBeenCalled()
+        expect(events.user.inviteAccepted).not.toHaveBeenCalled()
+        expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+      })
     })
 
     describe("when there is no user and no pending invite", () => {

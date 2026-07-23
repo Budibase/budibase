@@ -80,46 +80,58 @@ export async function authenticate(
     )
   }
 
-  // first time creation
-  if (!dbUser) {
-    const assignments = pendingInvite
-      ? users.deriveUserFieldsFromInvite(pendingInvite.info)
-      : { roles: {} }
-    // setup a blank user using the third party id, applying any access
-    // granted by a matching pending invite
-    dbUser = {
-      _id: userId,
-      email: details.email,
-      tenantId: pendingInvite?.info.tenantId || context.getTenantId(),
-      ...assignments,
-    }
-  }
-
-  let ssoUser = await syncUser(dbUser, details)
-  // never prompt for password reset
-  ssoUser.forceResetPassword = false
-
+  let ssoUser: SSOUser
   try {
-    // don't try to re-save any existing password
-    delete ssoUser.password
-    // create or sync the user
-    ssoUser = (await saveUserFn(ssoUser, {
-      hashPassword: false,
-      requirePassword: false,
-    })) as SSOUser
+    if (pendingInvite) {
+      ssoUser = await claimInviteAndSaveUser(
+        pendingInvite,
+        userId,
+        details,
+        saveUserFn
+      )
+    } else {
+      if (!dbUser) {
+        // first time creation - no invite or existing account to draw from
+        dbUser = {
+          _id: userId,
+          email: details.email,
+          tenantId: context.getTenantId(),
+          roles: {},
+        }
+      }
+      ssoUser = await syncAndSaveUser(dbUser, details, saveUserFn)
+    }
   } catch (err: any) {
     return authError(done, "Error saving user", err)
-  }
-
-  if (pendingInvite) {
-    await consumePendingInvite(pendingInvite, ssoUser)
   }
 
   return done(null, ssoUser)
 }
 
-async function consumePendingInvite(invite: InviteWithCode, user: SSOUser) {
-  await locks.doWithLock(
+async function syncAndSaveUser(
+  user: User,
+  details: SSOAuthDetails,
+  saveUserFn: SaveSSOUserFunction
+): Promise<SSOUser> {
+  const ssoUser = await syncUser(user, details)
+  // never prompt for password reset
+  ssoUser.forceResetPassword = false
+  // don't try to re-save any existing password
+  delete ssoUser.password
+  // create or sync the user
+  return (await saveUserFn(ssoUser, {
+    hashPassword: false,
+    requirePassword: false,
+  })) as SSOUser
+}
+
+async function claimInviteAndSaveUser(
+  invite: InviteWithCode,
+  userId: string,
+  details: SSOAuthDetails,
+  saveUserFn: SaveSSOUserFunction
+): Promise<SSOUser> {
+  const { result } = await locks.doWithLock(
     {
       type: LockType.AUTO_EXTEND,
       name: LockName.PROCESS_USER_INVITE,
@@ -127,16 +139,45 @@ async function consumePendingInvite(invite: InviteWithCode, user: SSOUser) {
       systemLock: true,
     },
     async () => {
+      let invitePending = true
       try {
-        // re-validate under lock in case another login already consumed it
         await cache.invite.getCode(invite.code, invite.info.tenantId)
       } catch {
-        return
+        invitePending = false
       }
-      await cache.invite.deleteCode(invite.code, invite.info.tenantId)
-      await events.user.inviteAccepted(user)
+
+      let user: User | undefined
+      if (!invitePending) {
+        // a concurrent login already claimed this invite and created the
+        // account for it - reuse that account instead of creating a
+        // second one for the same email
+        user = await users.getGlobalUserByEmail(details.email!)
+      }
+      if (!user) {
+        // set up a blank user using the third party id, applying any access
+        // granted by the matching pending invite
+        const assignments = invitePending
+          ? users.deriveUserFieldsFromInvite(invite.info)
+          : { roles: {} }
+        user = {
+          _id: userId,
+          email: details.email!,
+          tenantId: invite.info.tenantId || context.getTenantId(),
+          ...assignments,
+        }
+      }
+
+      const ssoUser = await syncAndSaveUser(user, details, saveUserFn)
+
+      if (invitePending) {
+        await cache.invite.deleteCode(invite.code, invite.info.tenantId)
+        await events.user.inviteAccepted(ssoUser)
+      }
+
+      return ssoUser
     }
   )
+  return result
 }
 
 /**
