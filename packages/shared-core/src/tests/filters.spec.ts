@@ -155,6 +155,51 @@ describe("filter to query conversion", () => {
   })
 })
 
+describe("date rangeHigh includes the whole day", () => {
+  const highBoundFor = (value: string) => {
+    const query = buildQuery([
+      {
+        field: "dob",
+        type: FieldType.DATETIME,
+        operator: "rangeHigh",
+        value,
+      },
+    ])
+    return query.$and!.conditions![0].$and!.conditions![0].range!.dob.high
+  }
+
+  it("extends a date-only (midnight) high bound to the end of that day", () => {
+    expect(highBoundFor("2020-01-05")).toEqual("2020-01-05T23:59:59.999Z")
+    expect(highBoundFor("2020-01-05T00:00:00.000Z")).toEqual(
+      "2020-01-05T23:59:59.999Z"
+    )
+  })
+
+  it("leaves a high bound with an explicit time untouched", () => {
+    expect(highBoundFor("2020-01-05T14:30:00.000Z")).toEqual(
+      "2020-01-05T14:30:00.000Z"
+    )
+  })
+
+  it("matches rows from later in the target day", () => {
+    const docs = [
+      { id: 1, dob: "2020-01-05T00:00:00.000Z" },
+      { id: 2, dob: "2020-01-05T23:59:00.000Z" },
+      { id: 3, dob: "2020-01-06T00:01:00.000Z" },
+    ]
+    const query = buildQuery([
+      {
+        field: "dob",
+        type: FieldType.DATETIME,
+        operator: "rangeHigh",
+        value: "2020-01-05",
+      },
+    ])
+    const result = runQuery(docs, query)
+    expect(result.map(d => d.id)).toEqual([1, 2])
+  })
+})
+
 describe("runQuery notOneOf", () => {
   const docs = [
     { id: 1, name: "foo" },
