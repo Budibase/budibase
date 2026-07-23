@@ -2,11 +2,19 @@ import { generateGlobalUserID } from "../../../db"
 import { authError } from "../utils"
 import * as users from "../../../users"
 import * as context from "../../../context"
+import * as cache from "../../../cache"
+import * as events from "../../../events"
+import * as locks from "../../../redis/redlockImpl"
 import {
+  InviteWithCode,
+  isSSOUser,
+  LockName,
+  LockType,
   SaveSSOUserFunction,
   SSOAuthDetails,
   SSOUser,
   User,
+  UserStatus,
 } from "@budibase/types"
 
 // no-op function for user save
@@ -60,42 +68,155 @@ export async function authenticate(
     dbUser = await users.getGlobalUserByEmail(details.email)
   }
 
-  // exit early if there is still no user and auto creation is disabled
-  if (!dbUser && requireLocalAccount) {
+  let pendingInvite: InviteWithCode | undefined
+  if (!dbUser) {
+    const invites = await cache.invite.getExistingInvites([details.email])
+    pendingInvite = invites[0]
+  }
+
+  const emailLookupWasSkipped =
+    !details.emailVerified && !allowUnverifiedEmailLinking
+  if (!dbUser && !pendingInvite && emailLookupWasSkipped) {
+    dbUser = await findLinkableAccountByEmail(details)
+  }
+
+  // exit early if there is still no user/invite and auto creation is disabled
+  if (!dbUser && !pendingInvite && requireLocalAccount) {
     return authError(
       done,
       "Email does not yet exist. You must set up your local budibase account first."
     )
   }
 
-  // first time creation
-  if (!dbUser) {
-    // setup a blank user using the third party id
-    dbUser = {
-      _id: userId,
-      email: details.email,
-      roles: {},
-      tenantId: context.getTenantId(),
-    }
-  }
-
-  let ssoUser = await syncUser(dbUser, details)
-  // never prompt for password reset
-  ssoUser.forceResetPassword = false
-
+  let ssoUser: SSOUser
   try {
-    // don't try to re-save any existing password
-    delete ssoUser.password
-    // create or sync the user
-    ssoUser = (await saveUserFn(ssoUser, {
-      hashPassword: false,
-      requirePassword: false,
-    })) as SSOUser
+    if (pendingInvite) {
+      ssoUser = await claimInviteAndSaveUser(
+        pendingInvite,
+        userId,
+        details,
+        saveUserFn
+      )
+    } else {
+      if (!dbUser) {
+        // first time creation - no invite or existing account to draw from
+        dbUser = {
+          _id: userId,
+          email: details.email,
+          tenantId: context.getTenantId(),
+          roles: {},
+        }
+      }
+      ssoUser = await syncAndSaveUser(dbUser, details, saveUserFn)
+    }
   } catch (err: any) {
     return authError(done, "Error saving user", err)
   }
 
   return done(null, ssoUser)
+}
+
+async function syncAndSaveUser(
+  user: User,
+  details: SSOAuthDetails,
+  saveUserFn: SaveSSOUserFunction
+): Promise<SSOUser> {
+  const ssoUser = await syncUser(user, details)
+  // never prompt for password reset
+  ssoUser.forceResetPassword = false
+  // don't try to re-save any existing password
+  delete ssoUser.password
+  // create or sync the user
+  return (await saveUserFn(ssoUser, {
+    hashPassword: false,
+    requirePassword: false,
+  })) as SSOUser
+}
+
+// only linkable while no one else could plausibly own it: never claimed
+// with a password, not disabled, no account-portal ssoId, not a global
+// admin, and if already an SSO user, only from the same identity provider
+// that linked it
+function isAccountLinkable(user: User, details: SSOAuthDetails): boolean {
+  if (
+    user.password ||
+    user.status === UserStatus.INACTIVE ||
+    user.admin?.global ||
+    user.ssoId
+  ) {
+    return false
+  }
+  if (isSSOUser(user)) {
+    return (
+      user.provider === details.provider &&
+      user.providerType === details.providerType
+    )
+  }
+  return true
+}
+
+async function findLinkableAccountByEmail(
+  details: SSOAuthDetails
+): Promise<User | undefined> {
+  const user = await users.getGlobalUserByEmail(details.email!)
+  if (user && isAccountLinkable(user, details)) {
+    return user
+  }
+  return undefined
+}
+
+async function claimInviteAndSaveUser(
+  invite: InviteWithCode,
+  userId: string,
+  details: SSOAuthDetails,
+  saveUserFn: SaveSSOUserFunction
+): Promise<SSOUser> {
+  const { result } = await locks.doWithLock(
+    {
+      type: LockType.AUTO_EXTEND,
+      name: LockName.PROCESS_USER_INVITE,
+      resource: invite.code,
+      systemLock: true,
+    },
+    async () => {
+      try {
+        await cache.invite.getCode(invite.code, invite.info.tenantId)
+      } catch (err: any) {
+        // could be a concurrent claim by this same identity, or an
+        // expired/revoked/unreadable invite - only reuse if positively
+        // confirmed, otherwise fail closed
+        let concurrentUser: User | undefined
+        try {
+          concurrentUser = await users.getById(userId)
+        } catch (getByIdErr: any) {
+          if (!getByIdErr.status || getByIdErr.status !== 404) {
+            throw getByIdErr
+          }
+        }
+        if (!concurrentUser) {
+          throw err
+        }
+        return await syncAndSaveUser(concurrentUser, details, saveUserFn)
+      }
+
+      // set up a blank user using the third party id, applying any access
+      // granted by the matching pending invite
+      const user: User = {
+        _id: userId,
+        email: details.email!,
+        tenantId: invite.info.tenantId || context.getTenantId(),
+        ...users.deriveUserFieldsFromInvite(invite.info),
+      }
+
+      const ssoUser = await syncAndSaveUser(user, details, saveUserFn)
+
+      await cache.invite.deleteCode(invite.code, invite.info.tenantId)
+      await events.user.inviteAccepted(ssoUser)
+
+      return ssoUser
+    }
+  )
+  return result
 }
 
 /**
