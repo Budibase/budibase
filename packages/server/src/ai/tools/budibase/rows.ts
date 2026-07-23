@@ -1,3 +1,4 @@
+import { createHash } from "crypto"
 import { tool } from "ai"
 import { z } from "zod"
 import {
@@ -41,6 +42,8 @@ const SEARCH_QUERY_DESCRIPTION =
   `Combine fuzzy name with exact status: {"fuzzy": {"name": "John"}, "equal": {"status": "active"}}.`
 
 const MAX_SCHEMA_FIELDS = 30
+const MAX_TOOL_NAME_LENGTH = 64
+const TOOL_NAME_HASH_LENGTH = 12
 
 type TableSchemaField = {
   name: string
@@ -324,6 +327,17 @@ const formatActionLabel = (action: string) =>
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
 
+const buildCollisionSafeToolName = (tableId: string, action: string) => {
+  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const tableIdHash = createHash("sha256")
+    .update(tableId)
+    .digest("hex")
+    .substring(0, TOOL_NAME_HASH_LENGTH)
+  const suffix = `_${tableIdHash}_${action}`
+  const tableIdLength = MAX_TOOL_NAME_LENGTH - suffix.length
+  return `${sanitizedTableId.substring(0, tableIdLength)}${suffix}`
+}
+
 export const createRowTools = ({
   tableId,
   tableName,
@@ -350,12 +364,22 @@ export const createRowTools = ({
   const schemaSummary = buildSchemaSummary(writableFields)
   const dataSchema = buildRowDataSchema(writableFields, schemaSummary)
   const searchInputSchema = buildSearchInputSchema(schemaSummary)
+  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const truncatedToolNames = Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
+    ])
+  )
+  const hasToolNameCollision =
+    new Set(Object.values(truncatedToolNames)).size !==
+    Object.keys(truncatedToolNames).length
 
   return Object.entries(ROW_TOOL).map(([action, def]) => {
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
-    // OpenAI tool names must match [A-Za-z0-9_-] and be ≤64 chars
-    const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
-    const toolName = `${sanitizedTableId}_${action}`.substring(0, 64)
+    const toolName = hasToolNameCollision
+      ? buildCollisionSafeToolName(tableId, action)
+      : truncatedToolNames[action]
     let inputSchema = def.inputSchema
     if (action === "create_row") {
       inputSchema = z.object({ data: dataSchema })
