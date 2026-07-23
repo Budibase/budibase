@@ -24,15 +24,16 @@
   }
 
   const tabOptions: HomeFilterOption[] = [
-    { label: "All tools", value: "all" },
+    { label: "All resources", value: "all" },
     { label: "Agents", value: "agent" },
     { label: "Automations", value: "automation" },
     { label: "Apps", value: "app" },
+    { label: "Data", value: "data" },
   ]
 </script>
 
 <div class="filter" class:filter--panel={variant === "panel"}>
-  {#each tabOptions as option}
+  {#each tabOptions as option (option.value)}
     <span
       class="filter-tab"
       style="--tab-icon-color: {getHomeTypeIconColor(option.value)}"
