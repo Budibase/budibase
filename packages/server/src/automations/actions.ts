@@ -6,6 +6,7 @@ import * as deleteRow from "./steps/deleteRow"
 import * as executeScript from "./steps/executeScript"
 import * as executeScriptV2 from "./steps/executeScriptV2"
 import * as executeQuery from "./steps/executeQuery"
+import * as executeFunction from "./steps/executeFunction"
 import * as apiRequest from "./steps/apiRequest"
 import * as outgoingWebhook from "./steps/outgoingWebhook"
 import * as serverLog from "./steps/serverLog"
@@ -44,6 +45,7 @@ import {
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
+import { areFunctionsEnabled } from "../middleware/functionsEnabled"
 
 type ActionImplType = ActionImplementations<
   typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
@@ -60,6 +62,7 @@ const ACTION_IMPLS: ActionImplType = {
   EXECUTE_SCRIPT: executeScript.run,
   EXECUTE_SCRIPT_V2: executeScriptV2.run,
   EXECUTE_QUERY: executeQuery.run,
+  EXECUTE_FUNCTION: executeFunction.run,
   API_REQUEST: apiRequest.run,
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
@@ -97,6 +100,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   EXECUTE_SCRIPT: automations.steps.executeScript.definition,
   EXECUTE_SCRIPT_V2: automations.steps.executeScriptV2.definition,
   EXECUTE_QUERY: automations.steps.executeQuery.definition,
+  EXECUTE_FUNCTION: automations.steps.executeFunction.definition,
   API_REQUEST: automations.steps.apiRequest.definition,
   SERVER_LOG: automations.steps.serverLog.definition,
   DELAY: automations.steps.delay.definition,
@@ -161,6 +165,10 @@ export async function getActionDefinitions(): Promise<
         custom: true,
       }
     }
+  }
+
+  if (!(await areFunctionsEnabled())) {
+    delete actionDefinitions[AutomationActionStepId.EXECUTE_FUNCTION]
   }
   return actionDefinitions
 }

@@ -1,6 +1,7 @@
 import { PluginType } from "@budibase/types"
 import env, { setEnv } from "../../environment"
 import sdk from "../../sdk"
+import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
 import { getAction, getActionDefinitions } from "../actions"
 import { getAutomationPlugin } from "../../utilities/fileSystem"
 
@@ -14,12 +15,21 @@ jest.mock("../../utilities/fileSystem", () => ({
   getAutomationPlugin: jest.fn(),
 }))
 
+jest.mock("../../middleware/functionsEnabled", () => ({
+  areFunctionsEnabled: jest.fn(),
+}))
+
 const mockPluginFetch = sdk.plugins.fetch as jest.Mock
 const mockGetAutomationPlugin = getAutomationPlugin as jest.Mock
+const mockAreFunctionsEnabled = jest.mocked(areFunctionsEnabled)
 
 describe("getActionDefinitions", () => {
   afterEach(() => {
     jest.clearAllMocks()
+  })
+
+  beforeEach(() => {
+    mockAreFunctionsEnabled.mockResolvedValue(false)
   })
 
   it("marks OpenAI as deprecated for self-hosted environments", async () => {
@@ -47,6 +57,14 @@ describe("getActionDefinitions", () => {
     } finally {
       restoreEnv()
     }
+  })
+
+  it("only includes the Function action when Functions are enabled", async () => {
+    expect((await getActionDefinitions()).EXECUTE_FUNCTION).toBeUndefined()
+
+    mockAreFunctionsEnabled.mockResolvedValue(true)
+
+    expect((await getActionDefinitions()).EXECUTE_FUNCTION).toBeDefined()
   })
 
   it("adds self-hosted automation plugin definitions as custom actions", async () => {

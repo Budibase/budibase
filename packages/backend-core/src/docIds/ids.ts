@@ -190,6 +190,14 @@ export const generateProjectID = () => {
   return `${DocumentType.PROJECT}${SEPARATOR}${newid()}`
 }
 
+export const generateFunctionID = () => {
+  return `${DocumentType.FUNCTION}${SEPARATOR}${newid()}`
+}
+
+export const generateFunctionRunLogID = (runId: string) => {
+  return `${DocumentType.FUNCTION_RUN_LOG}${SEPARATOR}${runId}`
+}
+
 export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }

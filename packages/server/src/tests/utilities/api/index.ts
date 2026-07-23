@@ -10,6 +10,7 @@ import { BackupAPI } from "./backup"
 import { DatasourceAPI } from "./datasource"
 import { DeployAPI } from "./deploy"
 import { EnvironmentAPI } from "./environment"
+import { FunctionAPI } from "./function"
 import { LegacyViewAPI } from "./legacyView"
 import { MiscAPI } from "./misc"
 import { NavigationAPI } from "./navigation"
@@ -45,6 +46,7 @@ export default class API {
   datasource: DatasourceAPI
   deploy: DeployAPI
   environment: EnvironmentAPI
+  function: FunctionAPI
   legacyView: LegacyViewAPI
   misc: MiscAPI
   oauth2: OAuth2API
@@ -86,6 +88,7 @@ export default class API {
     this.datasource = new DatasourceAPI(config)
     this.deploy = new DeployAPI(config)
     this.environment = new EnvironmentAPI(config)
+    this.function = new FunctionAPI(config)
     this.legacyView = new LegacyViewAPI(config)
     this.misc = new MiscAPI(config)
     this.oauth2 = new OAuth2API(config)
