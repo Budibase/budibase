@@ -1505,6 +1505,13 @@ describe("/api/global/users", () => {
       const providerType = "oidc"
       const thirdPartyProfile = {}
       const oauth2 = {}
+      const ssoIdentities = [
+        {
+          provider: "https://issuer.example.com",
+          providerType: "oidc",
+          userId: "subject",
+        },
+      ]
 
       await config.doInTenant(async () => {
         await userSdk.db.save(
@@ -1516,6 +1523,7 @@ describe("/api/global/users", () => {
             providerType,
             thirdPartyProfile,
             oauth2,
+            ssoIdentities,
           } as any,
           { requirePassword: false, isAccountHolder: true }
         )
@@ -1536,6 +1544,7 @@ describe("/api/global/users", () => {
       expect(updatedUser.providerType).toBe(undefined)
       expect(updatedUser.thirdPartyProfile).toBe(undefined)
       expect(updatedUser.oauth2).toBe(undefined)
+      expect(updatedUser.ssoIdentities).toBe(undefined)
     })
 
     it("should require internal API headers", async () => {

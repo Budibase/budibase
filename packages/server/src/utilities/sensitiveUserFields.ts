@@ -1,9 +1,10 @@
-import { type UserSSO } from "@budibase/types"
+import { type SSOIdentity, type UserSSO } from "@budibase/types"
 
 interface SensitiveUserFields extends Partial<UserSSO> {
   password?: string
   thirdPartyProfile?: object
   ssoId?: string
+  ssoIdentities?: SSOIdentity[]
   forceResetPassword?: boolean
 }
 
@@ -17,6 +18,7 @@ export function stripSensitiveUserFields<T extends SensitiveUserFields>(
   delete user.profile
   delete user.thirdPartyProfile
   delete user.ssoId
+  delete user.ssoIdentities
   delete user.forceResetPassword
   return user
 }

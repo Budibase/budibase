@@ -88,6 +88,13 @@ describe("/users", () => {
         profile: { displayName: "Metadata User" },
         thirdPartyProfile: { id: "external" },
         ssoId: "sso-user",
+        ssoIdentities: [
+          {
+            provider: "google",
+            providerType: SSOProviderType.GOOGLE,
+            userId: "google-user",
+          },
+        ],
         forceResetPassword: false,
       }
       delete metadata._rev
@@ -102,6 +109,7 @@ describe("/users", () => {
         "profile",
         "thirdPartyProfile",
         "ssoId",
+        "ssoIdentities",
         "forceResetPassword",
       ]) {
         expect(found).not.toHaveProperty(field)

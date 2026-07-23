@@ -4,6 +4,7 @@ import {
   ContextUser,
   DatabaseQueryOpts,
   SearchUsersRequest,
+  SSOIdentity,
   User,
 } from "@budibase/types"
 import * as context from "../context"
@@ -121,6 +122,21 @@ export async function getGlobalUserByEmail(
   }
 
   return user
+}
+
+export async function getGlobalUserBySSOIdentity(
+  identity: SSOIdentity
+): Promise<User | undefined> {
+  const response = await queryGlobalView<User>(ViewName.USER_BY_SSO_IDENTITY, {
+    key: [identity.providerType, identity.provider, identity.userId],
+    include_docs: true,
+  })
+
+  if (Array.isArray(response)) {
+    throw new Error("Multiple users found for SSO identity")
+  }
+
+  return response
 }
 
 export async function doesUserExist(email: string) {
