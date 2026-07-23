@@ -487,7 +487,10 @@ const resolveChatStreamRequest = async (
 
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
-  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
+  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(
+    ctx.user,
+    context.getWorkspaceId()
+  )
   const requestedPreview = chat.isPreview === true
 
   if (requestedPreview && !isBuilderOrAdmin) {

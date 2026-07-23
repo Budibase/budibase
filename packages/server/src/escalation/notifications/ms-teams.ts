@@ -5,6 +5,7 @@ import {
   type ChatConversationChannel,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  EscalationAction,
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -156,13 +157,13 @@ const buildAdaptiveCard = ({
         type: "Action.Submit",
         title: "Approve",
         style: "positive",
-        data: { actionId: "esc_approve", value },
+        data: { actionId: EscalationAction.APPROVE, value },
       },
       {
         type: "Action.Submit",
         title: "Reject",
         style: "destructive",
-        data: { actionId: "esc_reject", value },
+        data: { actionId: EscalationAction.REJECT, value },
       },
     ],
   }
@@ -313,10 +314,23 @@ export async function sendMSTeamsNotification({
   let linkServiceUrl: string | undefined
 
   if (config.globalUserId) {
+    const tenantScope = providerTenantId || integration.msTenantId
+    // Fail closed. Must discern scope in order to discern intended recipient
+    if (!tenantScope) {
+      console.warn(
+        "sendMSTeamsNotification: could not resolve Teams tenant, skipping",
+        {
+          escalationId: contextDoc._id,
+          globalUserId: config.globalUserId,
+        }
+      )
+      return
+    }
     const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
       sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
         globalUserId: config.globalUserId,
         provider: AgentChannelProvider.MSTEAMS,
+        providerTenantId: tenantScope,
       })
     )
     if (!link) {

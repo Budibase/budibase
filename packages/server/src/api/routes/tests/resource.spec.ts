@@ -40,6 +40,16 @@ import {
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { ObjectStoreBuckets } from "../../../constants"
 
+// Agent create/update resolves the Slack workspace via auth.test - mocked so
+// tests never call out to Slack.
+jest.mock("@slack/web-api", () => ({
+  WebClient: jest.fn(() => ({
+    auth: {
+      test: jest.fn().mockResolvedValue({ ok: true, team_id: "T123" }),
+    },
+  })),
+}))
+
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
   const withProjectsEnabled = async <T>(f: () => Promise<T>) => {

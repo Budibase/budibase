@@ -1,7 +1,7 @@
 import zlib from "zlib"
 import type { Job } from "bull"
 import { readUIMessageStream, type ModelMessage, type UIMessage } from "ai"
-import { context, queue, utils } from "@budibase/backend-core"
+import { context, db as dbCore, queue, utils } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   AutomationActionStepId,
@@ -90,7 +90,39 @@ async function processNotify(job: Job<EscalationJob>) {
       return
     }
 
+    if (doc.resolution !== "pending") {
+      console.log(
+        "Escalation notify: escalation already resolved, discarding",
+        {
+          escalationId,
+          resolution: doc.resolution,
+          jobId: job.id,
+        }
+      )
+      return
+    }
+
     const resumeJobId = `esc_${escalationId}_resume`
+
+    const resumeJob: EscalationJob = {
+      phase: "waiting",
+      escalationId,
+      appId,
+      tenantId: job.data.tenantId,
+      message,
+      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
+      isTest: job.data.isTest,
+    }
+    await addEscalationJob(resumeJob, doc.delay, resumeJobId)
+
+    console.log("Escalation notify: resume job enqueued", {
+      jobId: job.id,
+      escalationId,
+      message,
+      resumeJobId,
+      delayMs: doc.delay,
+      expiresAt: resumeJob.expiresAt,
+    })
 
     // TODO: consider one Bull job per recipient rather than batching all in one job -
     // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
@@ -131,28 +163,13 @@ async function processNotify(job: Job<EscalationJob>) {
       })
     }
 
-    await db.put({ ...doc, updatedAt: new Date().toISOString() })
-
-    const resumeJob: EscalationJob = {
-      phase: "waiting",
-      escalationId,
-      appId,
-      tenantId: job.data.tenantId,
-      message,
-      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
-      isTest: job.data.isTest,
+    try {
+      await db.put({ ...doc, updatedAt: new Date().toISOString() })
+    } catch (err) {
+      if (!dbCore.isDocumentConflictError(err)) {
+        throw err
+      }
     }
-
-    await addEscalationJob(resumeJob, doc.delay, resumeJobId)
-
-    console.log("Escalation notify: resume job enqueued", {
-      jobId: job.id,
-      escalationId,
-      message,
-      resumeJobId,
-      delayMs: doc.delay,
-      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
-    })
   })
 }
 
@@ -562,6 +579,22 @@ async function processResume(job: Job<EscalationJob>) {
 
     if (!doc) {
       console.error("Escalation resume: context doc not found, discarding", {
+        escalationId,
+        jobId: job.id,
+      })
+      return
+    }
+
+    if (doc.resolution === "cancelled") {
+      console.log("Escalation resume: escalation cancelled, discarding", {
+        escalationId,
+        jobId: job.id,
+      })
+      return
+    }
+
+    if (doc.resumeResultCompressed) {
+      console.log("Escalation resume: already resumed, discarding", {
         escalationId,
         jobId: job.id,
       })
