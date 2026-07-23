@@ -11680,9 +11680,9 @@ domhandler@^5.0.2, domhandler@^5.0.3, domhandler@~5.0.3:
     domelementtype "^2.3.0"
 
 dompurify@^3.1.6, dompurify@^3.3.1:
-  version "3.4.11"
-  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.11.tgz#29c8ba496475f279ef4015784068452fb14a0680"
-  integrity sha512-zhlUV12GsaRzMsf9q5M254YhA4+VuF0fG+QFqu6aYpoGlKtz+w8//jBcGVYBgQkR5GHjUomejY84AV+/uPbWdw==
+  version "3.4.12"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.12.tgz#6fa2265e9bbdce882c4ace4107626051b448ffa8"
+  integrity sha512-zQvGet8Z2sWbQhCmfFz/T5QWH2oBmjnqK3qvOjaqaNLrLEF912WamU+ohnTp0TCep/MFVHpdJuCZEdFOdTnEFg==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
@@ -12850,9 +12850,9 @@ fast-safe-stringify@^2.1.1:
   integrity sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==
 
 fast-uri@^3.0.1:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-3.1.2.tgz#8af3d4fc9d3e71b11572cc2673b514a7d1a8c8ec"
-  integrity sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==
+  version "3.1.4"
+  resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-3.1.4.tgz#3b3daf9ce68f41f956df0b505132c0cfce9ec7af"
+  integrity sha512-8JnbkQ4juDyvYs4mgFGQqg4yCYtFDtUtmp2QIQq11ZZe5CFQ5wcqm1rqDgAh/QdMySuBnPzMUiJUNZG5N/AiQw==
 
 fast-url-parser@^1.1.3:
   version "1.1.3"
@@ -14027,9 +14027,9 @@ homedir-polyfill@^1.0.1:
     parse-passwd "^1.0.0"
 
 hono@^4.11.4:
-  version "4.12.25"
-  resolved "https://registry.yarnpkg.com/hono/-/hono-4.12.25.tgz#f2d9996a54e8c9c0c5f5de1c8f3a962e43a98c4e"
-  integrity sha512-2NFaIyNVgJmBs/ecmtGzlmluTFs5cHEWGTdu0t1HBwYzoGXOL5nUQBRMXsXWla5i4KkG//QMzVP88m1+I3fdAQ==
+  version "4.12.31"
+  resolved "https://registry.yarnpkg.com/hono/-/hono-4.12.31.tgz#2ccaaf3ccd82db372f169c5b39c065c31ff36294"
+  integrity sha512-zJIHFrl6bq3RDd2YusFNCDlM8qUprxKswyi/OPzPyzKDdyBXDqWx8bZlZ7R+saTdSTatUmb3O7K4SspGPaEOQg==
 
 hosted-git-info@^2.1.4:
   version "2.8.9"
@@ -18505,10 +18505,10 @@ nodemailer@9.0.1:
   resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.1.tgz#871c04d8423fc0c790289f4a8f6f71f1b3563e8c"
   integrity sha512-Gwv8SQewT616ZM/URn0H54b8PWo/Wum7md3EW2aWy1lO27+WZCX+Xyak3J+NlmHUjDh5ME+uesJUDRbR3Ye8Bw==
 
-nodemailer@9.0.2:
-  version "9.0.2"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.2.tgz#7f7d3f3fce08640885cda234c911a24d51029a55"
-  integrity sha512-Rnve6ToHDjq8GKDB+AYAXgGTSL9XLn3UBCLpJ0eV19an4LZLQdUp+i9SD8wenURjarIBNG11b/biucIgkxEeAg==
+nodemailer@9.0.3:
+  version "9.0.3"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.3.tgz#ce84f8046977b616847ad56130aa30bdb3c67c1f"
+  integrity sha512-n+YP+NKwR5zRWa60k3GiQ6Q3B4KXCoAw40dAKeCtYn020iNN74aWK2liXIC3ZEATeGql7we3tE3t8QwhY0eskw==
 
 nodemailer@^6.9.14:
   version "6.10.1"
@@ -22919,10 +22919,10 @@ tar-stream@^3.0.0, tar-stream@^3.1.5:
     fast-fifo "^1.2.0"
     streamx "^2.15.0"
 
-tar@7.5.19, tar@^7.4.3, tar@^7.5.4:
-  version "7.5.19"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.19.tgz#d8915e6b717f8036a79d839ca9448198b002b0a7"
-  integrity sha512-4LeEWl96twnS2Q7Bz4MGqgazLqO+hJN63GZxXoIqh1T3VweYD997gbU1ItNsQafqqXTXd5WFyFdReLtwvRBNiw==
+tar@7.5.20, tar@^7.4.3, tar@^7.5.4:
+  version "7.5.20"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.20.tgz#37a65aa911cbd69864002e14bf8a926a5551e240"
+  integrity sha512-9FcyK4PA6+WbzlTM9WhQm6vB5W7cP7dUiPsv1g7YDwEQnQ1CGpK3MGlKk/ITVWMk05kHZuBhmVhiv8LZoy/PFQ==
   dependencies:
     "@isaacs/fs-minipass" "^4.0.0"
     chownr "^3.0.0"
@@ -23676,9 +23676,9 @@ undici@^7.19.0, undici@^7.22.0:
   integrity sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==
 
 undici@^8.5.0:
-  version "8.5.0"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-8.5.0.tgz#31ba9021a3d84c15e61cc5e28be2d7c451e66a66"
-  integrity sha512-xamtWoB1EshgjpmlXd7GGm2VfdDtw1+rD8uhry8pSNW3If6S8E0m2T2+orSKeZXEn/aPJMviCpDBA65WJt8zhg==
+  version "8.6.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-8.6.0.tgz#1595d019e47c8c9c3c62ce22685fb4b6c094f4ea"
+  integrity sha512-l2FlC6I510GawyEd1qgcE/okihKrzy+BRTEBlu6T0fdbM9m5yxtIH5Oa3ysRsH0zC4EhmWUEaSDsy2QngBeRlw==
 
 unicode-canonical-property-names-ecmascript@^2.0.0:
   version "2.0.1"
