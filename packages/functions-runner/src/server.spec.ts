@@ -64,4 +64,30 @@ describe("Functions runner service", () => {
       )
     }
   })
+
+  it("rejects an oversized request without buffering it unboundedly", async () => {
+    const server = createServer()
+    await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve))
+
+    try {
+      const address = server.address() as AddressInfo
+      const response = await fetch(`http://127.0.0.1:${address.port}/runs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "x".repeat(2 * 1024 * 1024 + 1),
+      })
+
+      expect(response.status).toBe(400)
+      expect(await response.json()).toEqual({
+        error: {
+          code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+          message: "Function run request is too large",
+        },
+      })
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        server.close(error => (error ? reject(error) : resolve()))
+      )
+    }
+  })
 })

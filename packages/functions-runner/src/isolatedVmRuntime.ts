@@ -15,6 +15,10 @@ export const FUNCTION_INVOKE_QUERY_GLOBAL = "__budibaseInvokeQuery"
 const INVALID_OUTPUT_MESSAGE = "Function output is invalid"
 const RUNTIME_ERROR_MESSAGE = "Function execution failed"
 const INVALID_QUERY_MESSAGE = "Function query payload is invalid"
+const QUERY_LIMIT_MESSAGE = "Function query limit exceeded"
+const QUERY_FAILED_MESSAGE = "Function query failed"
+const MEMORY_LIMIT_MESSAGE = "Function memory limit exceeded"
+const TIMEOUT_MESSAGE = "Function run timed out"
 const bootstrapSource = readFileSync(
   path.join(__dirname, "isolate-bootstrap.js"),
   "utf8"
@@ -151,11 +155,26 @@ const createResult = (
   }
 }
 
+const failureMessage = (code: FunctionErrorCode) => {
+  switch (code) {
+    case FunctionErrorCode.FUNCTION_OUTPUT_INVALID:
+      return INVALID_OUTPUT_MESSAGE
+    case FunctionErrorCode.FUNCTION_QUERY_LIMIT:
+      return QUERY_LIMIT_MESSAGE
+    case FunctionErrorCode.FUNCTION_MEMORY_LIMIT:
+      return MEMORY_LIMIT_MESSAGE
+    case FunctionErrorCode.FUNCTION_TIMEOUT:
+      return TIMEOUT_MESSAGE
+    default:
+      return RUNTIME_ERROR_MESSAGE
+  }
+}
+
 const createFailure = (
   request: FunctionRunRequest,
   startedAt: number,
   queryCount: number,
-  outputError: boolean
+  code: FunctionErrorCode
 ): FunctionRunResult => ({
   runId: request.runId,
   status: "error",
@@ -166,10 +185,8 @@ const createFailure = (
     logBytes: 0,
   },
   error: {
-    code: outputError
-      ? FunctionErrorCode.FUNCTION_OUTPUT_INVALID
-      : FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-    message: outputError ? INVALID_OUTPUT_MESSAGE : RUNTIME_ERROR_MESSAGE,
+    code,
+    message: failureMessage(code),
   },
 })
 
@@ -179,45 +196,82 @@ export const executeFunctionInIsolate = async (
 ): Promise<FunctionRunResult> => {
   const startedAt = Date.now()
   let queryCount = 0
-  let outputError = false
+  let concurrentQueryCount = 0
+  let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
+  let wallTimedOut = false
   let isolate: ivm.Isolate
   try {
     isolate = new ivm.Isolate({
       memoryLimit: request.limits.isolateMemoryLimitMb,
     })
   } catch {
-    return createFailure(request, startedAt, queryCount, false)
+    return createFailure(request, startedAt, queryCount, errorCode)
   }
+
+  const wallTimer = setTimeout(() => {
+    wallTimedOut = true
+    if (!isolate.isDisposed) {
+      isolate.dispose()
+    }
+  }, request.limits.timeoutMs)
 
   try {
     const context = await isolate.createContext()
     const queryReference = new ivm.Reference(
       async (capabilityIdValue: unknown, parametersValue: unknown) => {
         if (typeof capabilityIdValue !== "string" || !capabilityIdValue) {
-          throw new FunctionOutputError(INVALID_QUERY_MESSAGE)
+          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
+          return { error: INVALID_QUERY_MESSAGE }
         }
-        const { normalized: parameters } = normalizeRecord(
-          parametersValue,
-          request.limits.maxInputDepth,
-          request.limits.maxInputBytes,
-          INVALID_QUERY_MESSAGE
-        )
+        let parameters: Record<string, JSONValue>
+        try {
+          parameters = normalizeRecord(
+            parametersValue,
+            request.limits.maxInputDepth,
+            request.limits.maxInputBytes,
+            INVALID_QUERY_MESSAGE
+          ).normalized
+        } catch {
+          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
+          return { error: INVALID_QUERY_MESSAGE }
+        }
+        if (
+          queryCount >= request.limits.maxQueryCalls ||
+          concurrentQueryCount >= request.limits.maxConcurrentQueryCalls
+        ) {
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_LIMIT
+          return { error: QUERY_LIMIT_MESSAGE }
+        }
         queryCount += 1
-        const result = await queryHandler({
-          runId: request.runId,
-          grantToken: request.grantToken,
-          capabilityId: capabilityIdValue,
-          parameters,
-        })
-        return normalizeValue(
-          result,
-          request.limits.maxQueryResponseDepth,
-          request.limits.maxQueryResponseBytes,
-          INVALID_QUERY_MESSAGE
-        ).normalized
+        concurrentQueryCount += 1
+        let result: JSONValue
+        try {
+          result = await queryHandler({
+            runId: request.runId,
+            grantToken: request.grantToken,
+            capabilityId: capabilityIdValue,
+            parameters,
+          })
+        } catch {
+          return { error: QUERY_FAILED_MESSAGE }
+        } finally {
+          concurrentQueryCount -= 1
+        }
+        try {
+          return {
+            result: normalizeValue(
+              result,
+              request.limits.maxQueryResponseDepth,
+              request.limits.maxQueryResponseBytes,
+              INVALID_QUERY_MESSAGE
+            ).normalized,
+          }
+        } catch {
+          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
+          return { error: INVALID_QUERY_MESSAGE }
+        }
       }
     )
-
     try {
       const jail = context.global
       await jail.set("globalThis", jail.derefInto())
@@ -263,7 +317,7 @@ export const executeFunctionInIsolate = async (
           try {
             return createResult(request, startedAt, queryCount, value)
           } catch {
-            outputError = true
+            errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
             throw new FunctionOutputError(INVALID_OUTPUT_MESSAGE)
           }
         } finally {
@@ -277,11 +331,20 @@ export const executeFunctionInIsolate = async (
       context.release()
     }
   } catch (error) {
-    if (error instanceof FunctionOutputError) {
-      outputError = true
+    if (wallTimedOut) {
+      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
+    } else if (error instanceof FunctionOutputError) {
+      errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
+    } else if (isolate.isDisposed) {
+      errorCode = FunctionErrorCode.FUNCTION_MEMORY_LIMIT
+    } else if (String(error).toLowerCase().includes("timed out")) {
+      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
     }
-    return createFailure(request, startedAt, queryCount, outputError)
+    return createFailure(request, startedAt, queryCount, errorCode)
   } finally {
-    isolate.dispose()
+    clearTimeout(wallTimer)
+    if (!isolate.isDisposed) {
+      isolate.dispose()
+    }
   }
 }
