@@ -20,6 +20,8 @@ If you have other arrangements for a proxy in front of the single image containe
 
 The single image now runs LiteLLM with `store_model_in_db: true` by default, so a Postgres database is required. If `DATABASE_URL` is not supplied, the container starts an internal Postgres instance and persists it under `${DATA_DIR}/litellm/postgres`.
 
+Agent knowledge uses Gemini File Search. Set `GEMINI_API_KEY` on the container and restart Budibase before adding files or SharePoint knowledge to an agent.
+
 To use an external Postgres instance for LiteLLM, set:
 
 - `DATABASE_URL`
