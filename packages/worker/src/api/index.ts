@@ -4,65 +4,11 @@ const compress = require("koa-compress")
 
 import zlib from "zlib"
 import { routes } from "./routes"
+import { endpointGroupList } from "./routes/endpointGroups"
 import { middleware as pro } from "@budibase/pro"
 import { auth, middleware } from "@budibase/backend-core"
 
-const PUBLIC_ENDPOINTS = [
-  // deprecated single tenant sso callback
-  {
-    route: "/api/admin/auth/google/callback",
-    method: "GET",
-  },
-  // deprecated single tenant sso callback
-  {
-    route: "/api/admin/auth/oidc/callback",
-    method: "GET",
-  },
-  {
-    // this covers all of the POST auth routes
-    route: "/api/global/auth/:tenantId",
-    method: "POST",
-  },
-  {
-    // this covers all of the GET auth routes
-    route: "/api/global/auth/:tenantId",
-    method: "GET",
-  },
-  {
-    // this covers all of the public config routes
-    route: "/api/global/configs/public",
-    method: "GET",
-  },
-  {
-    route: "/api/global/configs/checklist",
-    method: "GET",
-  },
-  {
-    route: "/api/global/users/init",
-    method: "POST",
-  },
-  {
-    route: "/api/global/users/invite/accept",
-    method: "POST",
-  },
-  {
-    route: "/api/system/environment",
-    method: "GET",
-  },
-  {
-    route: "/api/system/status",
-    method: "GET",
-  },
-  // TODO: This should be an internal api
-  {
-    route: "/api/system/restored",
-    method: "POST",
-  },
-  {
-    route: "/api/global/users/invite",
-    method: "GET",
-  },
-]
+const publicEndpoints = endpointGroupList.endpointMatchers({ public: true })
 
 const ALLOW_INACTIVE_TENANT_ENDPOINTS = [
   {
@@ -71,62 +17,9 @@ const ALLOW_INACTIVE_TENANT_ENDPOINTS = [
   },
 ]
 
-const NO_TENANCY_ENDPOINTS = [
-  // system endpoints are not specific to any tenant
-  {
-    route: "/api/system",
-    method: "ALL",
-  },
-  // tenant is determined in request body
-  // used for creating the tenant
-  {
-    route: "/api/global/users/init",
-    method: "POST",
-  },
-  // tenant is retrieved from the user found by the requested email
-  {
-    route: "/api/global/users/sso",
-    method: "POST",
-  },
-  // deprecated single tenant sso callback
-  {
-    route: "/api/admin/auth/google/callback",
-    method: "GET",
-  },
-  // deprecated single tenant sso callback
-  {
-    route: "/api/admin/auth/oidc/callback",
-    method: "GET",
-  },
-  // global user search - no tenancy
-  // :id is user id
-  // TODO: this should really be `/api/system/users/:id`
-  {
-    route: "/api/global/users/tenant/:id",
-    method: "GET",
-  },
-  // tenant is determined from code in redis
-  {
-    route: "/api/global/users/invite/accept",
-    method: "POST",
-  },
-  {
-    route: "/api/global/users/invite/:code",
-    method: "GET",
-  },
-  {
-    route: "/api/global/users/accountholder",
-    method: "GET",
-  },
-  {
-    route: "/api/global/users/tenant/owner",
-    method: "PUT",
-  },
-]
-
-// most public endpoints are gets, but some are posts
-// add them all to be safe
-const NO_CSRF_ENDPOINTS = [...PUBLIC_ENDPOINTS]
+const noTenancyEndpoints = endpointGroupList.endpointMatchers({
+  noTenancy: true,
+})
 
 const router: Router = new Router()
 
@@ -146,12 +39,12 @@ router
     })
   )
   .use("/health", ctx => (ctx.status = 200))
-  .use(auth.buildAuthMiddleware(PUBLIC_ENDPOINTS))
-  .use(auth.buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
+  .use(auth.buildAuthMiddleware(publicEndpoints))
+  .use(auth.buildTenancyMiddleware(publicEndpoints, noTenancyEndpoints))
   .use(middleware.activeTenant(ALLOW_INACTIVE_TENANT_ENDPOINTS))
-  .use(auth.buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
+  .use(auth.buildCsrfMiddleware({ noCsrfPatterns: publicEndpoints }))
   .use(pro.licensing())
-  // for now no public access is allowed to worker (bar health check)
+  // reject requests that are not declared public and have no authenticated user
   .use((ctx, next) => {
     if (ctx.publicEndpoint) {
       return next()
