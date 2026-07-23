@@ -14,11 +14,28 @@
     globalThis,
     "__budibaseInvokeQueryReference"
   )
-  const query = (capabilityId, parameters) =>
-    queryReference.apply(undefined, [capabilityId, parameters], {
-      arguments: { copy: true },
-      result: { promise: true, copy: true },
-    })
+  const query = async (capabilityId, parameters) => {
+    const response = await queryReference.apply(
+      undefined,
+      [capabilityId, parameters],
+      {
+        arguments: { copy: true },
+        result: { promise: true, copy: true },
+      }
+    )
+    if (response.error) {
+      throw new Error(response.error)
+    }
+    return response.result
+  }
+  const noop = Object.freeze(() => {})
+  const consoleValue = Object.freeze({
+    debug: noop,
+    info: noop,
+    log: noop,
+    warn: noop,
+    error: noop,
+  })
 
   Object.defineProperty(globalThis, "__budibaseInputs", {
     value: deepFreeze(inputsValue),
@@ -27,6 +44,11 @@
   })
   Object.defineProperty(globalThis, "__budibaseInvokeQuery", {
     value: Object.freeze(query),
+    writable: false,
+    configurable: false,
+  })
+  Object.defineProperty(globalThis, "console", {
+    value: consoleValue,
     writable: false,
     configurable: false,
   })
