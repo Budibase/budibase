@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@budibase/types": "*",
+    "isolated-vm": "^6.0.1",
     "zod": "^4.2.1"
   },
   "devDependencies": {

@@ -25,7 +25,7 @@ const jsonPrimitiveSchema = z.union([
   z.null(),
 ])
 
-const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
+export const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
   z.union([
     jsonPrimitiveSchema,
     z.array(jsonValueSchema),
@@ -33,7 +33,7 @@ const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
   ])
 )
 
-const jsonRecordSchema = z.record(z.string(), jsonValueSchema)
+export const jsonRecordSchema = z.record(z.string(), jsonValueSchema)
 
 const functionArtifactSchema = z
   .object({
