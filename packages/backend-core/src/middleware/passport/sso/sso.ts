@@ -7,6 +7,7 @@ import * as events from "../../../events"
 import * as locks from "../../../redis/redlockImpl"
 import {
   InviteWithCode,
+  isSSOUser,
   LockName,
   LockType,
   SaveSSOUserFunction,
@@ -72,6 +73,12 @@ export async function authenticate(
     pendingInvite = invites[0]
   }
 
+  const emailLookupWasSkipped =
+    !details.emailVerified && !allowUnverifiedEmailLinking
+  if (!dbUser && !pendingInvite && emailLookupWasSkipped) {
+    dbUser = await findLinkableAccountByEmail(details)
+  }
+
   // exit early if there is still no user/invite and auto creation is disabled
   if (!dbUser && !pendingInvite && requireLocalAccount) {
     return authError(
@@ -116,6 +123,32 @@ export async function authenticate(
   }
 
   return done(null, ssoUser)
+}
+
+// only linkable while no one else could plausibly own it: never claimed
+// with a password, no account-portal ssoId, not a global admin, and if
+// already an SSO user, only from the same identity provider that linked it
+function isAccountLinkable(user: User, details: SSOAuthDetails): boolean {
+  if (user.password || user.admin?.global || user.ssoId) {
+    return false
+  }
+  if (isSSOUser(user)) {
+    return (
+      user.provider === details.provider &&
+      user.providerType === details.providerType
+    )
+  }
+  return true
+}
+
+async function findLinkableAccountByEmail(
+  details: SSOAuthDetails
+): Promise<User | undefined> {
+  const user = await users.getGlobalUserByEmail(details.email!)
+  if (user && isAccountLinkable(user, details)) {
+    return user
+  }
+  return undefined
 }
 
 async function consumePendingInvite(invite: InviteWithCode, user: SSOUser) {
