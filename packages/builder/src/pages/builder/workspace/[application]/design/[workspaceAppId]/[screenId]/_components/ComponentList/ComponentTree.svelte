@@ -22,17 +22,30 @@
 
   export let components = []
   export let level = 0
+  export let searchTerm = ""
+  export let visibleSearchIds = new Set()
+  export let matchingSearchIds = new Set()
+  export let expandedSearchIds = new Set()
 
   $: openNodes = $componentTreeNodesStore
+  $: isSearching = !!searchTerm
 
   $: filteredComponents = components?.filter(component => {
-    return (
-      !$componentStore.componentToPaste?.isCut ||
-      component._id !== $componentStore.componentToPaste?._id
-    )
+    const isCutComponent =
+      $componentStore.componentToPaste?.isCut &&
+      component._id === $componentStore.componentToPaste?._id
+
+    const isVisibleSearchResult =
+      !isSearching || visibleSearchIds.has(component._id)
+
+    return !isCutComponent && isVisibleSearchResult
   })
 
   const dragover = (component, index) => e => {
+    if (isSearching) {
+      return false
+    }
+
     const mousePosition = e.offsetY / e.currentTarget.offsetHeight
     dndStore.actions.dragover({
       component,
@@ -58,6 +71,10 @@
 
   const onDrop = async e => {
     e.stopPropagation()
+    if (isSearching) {
+      return
+    }
+
     try {
       await dndStore.actions.drop()
     } catch (error) {
@@ -69,7 +86,17 @@
     if (!component?._children?.length) {
       return false
     }
+    if (isSearching) {
+      return expandedSearchIds.has(component._id)
+    }
     return componentTreeNodesStore.isNodeExpanded(component._id)
+  }
+
+  const selectComponent = componentId => {
+    if (isSearching) {
+      componentTreeNodesStore.makeNodeVisible(componentId)
+    }
+    componentStore.select(componentId)
   }
 
   const isChildOfSelectedComponent = component => {
@@ -83,6 +110,11 @@
 
   const handleIconClick = componentId => {
     componentStore.select(componentId)
+    if (isSearching) {
+      componentTreeNodesStore.makeNodeVisible(componentId)
+      componentTreeNodesStore.expandNodes([componentId])
+      return
+    }
     componentTreeNodesStore.toggleNode(componentId)
   }
 
@@ -149,17 +181,21 @@
       on:contextmenu={e => openContextMenu(e, component, opened)}
       on:dblclick|stopPropagation={() => startRename(component)}
       on:click|stopPropagation={() => {
-        componentStore.select(component._id)
+        selectComponent(component._id)
       }}
       id={`component-${component._id}`}
     >
       <NavItem
         compact
         scrollable
-        draggable={renamingId !== component._id}
+        draggable={renamingId !== component._id && !isSearching}
         bodyInteractive={renamingId === component._id}
         on:dragend={dndStore.actions.reset}
-        on:dragstart={() => dndStore.actions.dragstart(component)}
+        on:dragstart={() => {
+          if (!isSearching) {
+            dndStore.actions.dragstart(component)
+          }
+        }}
         on:dragover={dragover(component, index)}
         on:iconClick={() => handleIconClick(component._id)}
         on:drop={onDrop}
@@ -198,7 +234,10 @@
             />
           {:else}
             <div class="text">
-              <span title={getComponentText(component)}>
+              <span
+                class:search-match={matchingSearchIds.has(component._id)}
+                title={getComponentText(component)}
+              >
                 {getComponentText(component)}
               </span>
             </div>
@@ -217,6 +256,10 @@
           components={component._children}
           {dndStore}
           level={level + 1}
+          {searchTerm}
+          {visibleSearchIds}
+          {matchingSearchIds}
+          {expandedSearchIds}
         />
       {/if}
     </li>
@@ -246,5 +289,11 @@
     outline: none;
     border-color: var(--spectrum-global-color-gray-600);
     background: var(--spectrum-global-color-gray-100);
+  }
+  .search-match {
+    background: var(--spectrum-global-color-yellow-1000);
+    border-radius: 3px;
+    color: var(--spectrum-global-color-static-gray-900);
+    padding: 0 2px;
   }
 </style>

@@ -249,6 +249,95 @@ export const getComponentName = (component: Component) => {
   return componentDefinition.friendlyName || componentDefinition.name || ""
 }
 
+export interface ComponentTreeSearchResults {
+  matchingIds: Set<string>
+  visibleIds: Set<string>
+  expandedIds: Set<string>
+}
+
+export const normaliseComponentSearchTerm = (searchTerm: string) => {
+  return searchTerm.trim().toLowerCase()
+}
+
+export const componentMatchesSearchTerm = (
+  component: Component,
+  searchTerm: string
+) => {
+  const normalisedSearchTerm = normaliseComponentSearchTerm(searchTerm)
+  if (!normalisedSearchTerm) {
+    return false
+  }
+
+  return getComponentText(component)
+    .toLowerCase()
+    .includes(normalisedSearchTerm)
+}
+
+export const getComponentTreeSearchResults = (
+  components: Component[] | undefined,
+  searchTerm: string
+): ComponentTreeSearchResults => {
+  const matchingIds = new Set<string>()
+  const visibleIds = new Set<string>()
+  const expandedIds = new Set<string>()
+  const normalisedSearchTerm = normaliseComponentSearchTerm(searchTerm)
+
+  if (!components?.length || !normalisedSearchTerm) {
+    return { matchingIds, visibleIds, expandedIds }
+  }
+
+  const addVisibleSubtree = (component: Component) => {
+    if (component._children?.length && component._id) {
+      expandedIds.add(component._id)
+    }
+
+    for (const child of component._children || []) {
+      if (child._id) {
+        visibleIds.add(child._id)
+      }
+      addVisibleSubtree(child)
+    }
+  }
+
+  const searchComponent = (component: Component, path: string[]): boolean => {
+    if (component._id) {
+      path.push(component._id)
+    }
+
+    let matches = componentMatchesSearchTerm(component, normalisedSearchTerm)
+    if (matches && component._id) {
+      matchingIds.add(component._id)
+      visibleIds.add(component._id)
+      addVisibleSubtree(component)
+    }
+
+    let descendantMatches = false
+    for (const child of component._children || []) {
+      descendantMatches = searchComponent(child, path) || descendantMatches
+    }
+
+    matches = matches || descendantMatches
+
+    if (matches) {
+      path.forEach(id => visibleIds.add(id))
+    }
+
+    if (descendantMatches && component._children?.length && component._id) {
+      expandedIds.add(component._id)
+    }
+
+    if (component._id) {
+      path.pop()
+    }
+
+    return matches
+  }
+
+  components.forEach(component => searchComponent(component, []))
+
+  return { matchingIds, visibleIds, expandedIds }
+}
+
 // Gets all contexts exposed by a certain component type, including actions
 export const getComponentContexts = (component: string) => {
   const def = componentStore.getDefinition(component)

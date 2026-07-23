@@ -1,4 +1,5 @@
 <script>
+  import { tick } from "svelte"
   import { notifications, Icon } from "@budibase/bbui"
   import {
     selectedScreen,
@@ -7,6 +8,7 @@
     userSelectedResourceMap,
     hoverStore,
     contextMenuStore,
+    componentTreeNodesStore,
   } from "@/stores/builder"
   import NavItem from "@/components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
@@ -14,11 +16,71 @@
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
   import getScreenContextMenuItems from "./getScreenContextMenuItems"
+  import { getComponentTreeSearchResults } from "@/helpers/components"
 
   $: screenComponentId = `${$screenStore.selectedScreenId}-screen`
   $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
+  let searchTerm = ""
+  let searchOpen = false
+  let searchInput
+
+  $: isSearching = !!searchTerm.trim()
+  $: searchResults = getComponentTreeSearchResults(
+    $selectedScreen?.props?._children,
+    searchTerm
+  )
+
+  const openSearch = async () => {
+    searchOpen = true
+    await tick()
+    searchInput?.focus()
+  }
+
+  const closeSearch = () => {
+    searchOpen = false
+    searchTerm = ""
+  }
+
+  const toggleSearch = () => {
+    if (searchOpen) {
+      closeSearch()
+      return
+    }
+    openSearch()
+  }
+
+  const onKeyDown = e => {
+    if (e.key === "Escape" && searchOpen) {
+      closeSearch()
+    }
+  }
+
+  const onSearchInputKeyDown = e => {
+    if (e.key === "Escape") {
+      closeSearch()
+      return
+    }
+
+    if (e.key !== "Enter") {
+      return
+    }
+
+    const [componentId] = searchResults.matchingIds
+    if (!componentId) {
+      return
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+    componentTreeNodesStore.makeNodeVisible(componentId)
+    componentStore.select(componentId)
+  }
 
   const onDrop = async () => {
+    if (isSearching) {
+      return
+    }
+
     try {
       await dndStore.actions.drop()
     } catch (error) {
@@ -56,6 +118,8 @@
   }
 </script>
 
+<svelte:window on:keydown={onKeyDown} />
+
 <div class="components">
   <div class="list-panel">
     <ComponentScrollWrapper>
@@ -72,6 +136,7 @@
             opened
             scrollable
             icon="browser"
+            bodyInteractive={searchOpen}
             on:drop={onDrop}
             on:click={() => {
               componentStore.select(`${$screenStore.selectedScreenId}-screen`)
@@ -81,14 +146,55 @@
             on:mouseenter={() => hover(screenComponentId)}
             on:mouseleave={() => hover(null)}
             id="component-screen"
-            selectedBy={$userSelectedResourceMap[screenComponentId]}
+            selectedBy={searchOpen
+              ? null
+              : $userSelectedResourceMap[screenComponentId]}
           >
-            <Icon
-              size="S"
-              hoverable
-              name="dots-three"
-              on:click={e => openScreenContextMenu(e, $selectedScreen?.props)}
-            />
+            <svelte:fragment slot="text">
+              {#if searchOpen}
+                <div class="screen-search">
+                  <input
+                    class="screen-search-input"
+                    placeholder="Search components"
+                    aria-label="Search components"
+                    bind:value={searchTerm}
+                    bind:this={searchInput}
+                    on:click|stopPropagation
+                    on:dblclick|stopPropagation
+                    on:contextmenu|stopPropagation
+                    on:keydown={onSearchInputKeyDown}
+                  />
+                </div>
+              {:else}
+                <div class="screen-row-text">
+                  <span title="Screen">Screen</span>
+                </div>
+              {/if}
+            </svelte:fragment>
+            {#if !searchOpen}
+              <Icon
+                size="S"
+                hoverable
+                name="dots-three"
+                on:click={e => openScreenContextMenu(e, $selectedScreen?.props)}
+              />
+            {/if}
+            <svelte:fragment slot="right">
+              <button
+                class="screen-search-toggle"
+                type="button"
+                aria-label={searchOpen
+                  ? "Close component search"
+                  : "Search components"}
+                on:click|stopPropagation={toggleSearch}
+              >
+                <Icon
+                  size="S"
+                  hoverable
+                  name={searchOpen ? "x" : "magnifying-glass"}
+                />
+              </button>
+            </svelte:fragment>
           </NavItem>
         </li>
         <li on:contextmenu|stopPropagation>
@@ -111,13 +217,22 @@
             id="component-nav"
             selectedBy={$userSelectedResourceMap[navComponentId]}
           />
+        </li>
+        <li on:contextmenu|stopPropagation>
           <ComponentTree
             level={0}
             components={$selectedScreen?.props._children}
+            searchTerm={searchTerm.trim()}
+            visibleSearchIds={searchResults.visibleIds}
+            matchingSearchIds={searchResults.matchingIds}
+            expandedSearchIds={searchResults.expandedIds}
           />
+          {#if isSearching && searchResults.matchingIds.size === 0}
+            <div class="no-results">No components found</div>
+          {/if}
 
           <!-- Show drop indicators for the target and the parent -->
-          {#if $dndStore.dragging && $dndStore.valid}
+          {#if !isSearching && $dndStore.dragging && $dndStore.valid}
             <DNDPositionIndicator
               component={$dndStore.target}
               position={$dndStore.dropPosition}
@@ -148,10 +263,73 @@
     padding-right: 8px !important;
   }
 
+  .components :global(.nav-item.bodyInteractive .nav-item-body) {
+    flex: 1 1 auto;
+    width: 0;
+  }
+
+  .components :global(.nav-item.bodyInteractive .right) {
+    flex: 0 0 auto;
+  }
+
   .list-panel {
     display: flex;
     flex-direction: column;
     flex: 1;
+  }
+
+  .no-results {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    padding: var(--spacing-s) var(--spacing-xl);
+  }
+
+  .screen-row-text {
+    overflow: hidden;
+  }
+
+  .screen-row-text span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .screen-search {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .screen-search-input {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    color: var(--ink);
+    background: transparent;
+    box-sizing: border-box;
+    font: inherit;
+    outline: none;
+    text-overflow: ellipsis;
+  }
+
+  .screen-search-input::placeholder {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .screen-search-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    color: var(--grey-7);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .screen-search-toggle:hover {
+    color: var(--ink);
   }
 
   .componentTree {
