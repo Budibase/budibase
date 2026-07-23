@@ -608,14 +608,14 @@ class Orchestrator {
       const results: AutomationStepResult[] = []
 
       const progressStatus = (result: AutomationStepResult) => {
-        if (result.outputs.success === false) {
-          return "error"
-        }
         if (result.outputs.status === AutomationStatus.STOPPED) {
           return "stopped"
         }
         if (result.outputs.status === AutomationStatus.SUSPENDED) {
           return "stopped"
+        }
+        if (result.outputs.success === false) {
+          return "error"
         }
         return "success"
       }
@@ -666,6 +666,7 @@ class Orchestrator {
           result.inputs?.continueOnError === true &&
           [
             AutomationActionStepId.API_REQUEST,
+            AutomationActionStepId.EXECUTE_FUNCTION,
             AutomationActionStepId.EXECUTE_QUERY,
             AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
           ].includes(result.stepId)
@@ -1091,6 +1092,13 @@ class Orchestrator {
       }
       if (
         step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
+        "status" in outputs &&
+        outputs.status === AutomationStatus.STOPPED
+      ) {
+        this.stopped = true
+      }
+      if (
+        step.stepId === AutomationActionStepId.EXECUTE_FUNCTION &&
         "status" in outputs &&
         outputs.status === AutomationStatus.STOPPED
       ) {

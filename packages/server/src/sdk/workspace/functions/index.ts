@@ -3,7 +3,6 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
-  FUNCTION_RUNNER_PROTOCOL_VERSION,
   type AnyDocument,
   type FunctionBuildDiagnostic,
   type FunctionDocument,
@@ -133,8 +132,7 @@ export const getFunctionReadiness = async (fn: FunctionDocument) => {
     return "build_failed"
   }
   if (
-    fn.artifact?.runnerProtocolVersion === FUNCTION_RUNNER_PROTOCOL_VERSION &&
-    typeof fn.artifact.compiledJavaScript === "string" &&
+    typeof fn.artifact?.compiledJavaScript === "string" &&
     fn.artifact.compiledJavaScript.length > 0 &&
     typeof fn.artifact.compiledAt === "string" &&
     fn.artifact.compiledAt.length > 0 &&
@@ -229,7 +227,6 @@ export const build = async (id: string, revision: string) => {
   } as const
   const artifact = successfulOutput
     ? {
-        runnerProtocolVersion: FUNCTION_RUNNER_PROTOCOL_VERSION,
         compiledJavaScript: successfulOutput.compiledJavaScript,
         sourceMap: successfulOutput.sourceMap,
         sourceHash,
