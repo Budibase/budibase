@@ -1,4 +1,6 @@
-import { BudibaseToolDefinition, getBudibaseTools } from ".."
+import { TableSourceType } from "@budibase/types"
+import { type BudibaseToolDefinition, getBudibaseTools } from ".."
+import { createRowTools } from "../rows"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { basicRow, basicTable } from "../../../../tests/utilities/structures"
 
@@ -16,6 +18,15 @@ type NonIterable<T> = T extends AsyncIterable<any> ? never : T
 
 describe("AI Tools - Rows", () => {
   const config = new TestConfiguration()
+  const datasourceId = `datasource_plus_${"a".repeat(32)}`
+
+  const getExternalRowTools = (tableName: string) =>
+    createRowTools({
+      tableId: `${datasourceId}__${tableName}`,
+      tableName,
+      tableSourceType: TableSourceType.EXTERNAL,
+      tableSchema: {},
+    })
 
   const runInContext = async <T>(fn: () => Promise<T>): Promise<T> => {
     return config.doInContext(undefined, fn)
@@ -27,6 +38,41 @@ describe("AI Tools - Rows", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  it("generates unique runtime names for long external table IDs", () => {
+    const tools = getExternalRowTools("SignOffLimits")
+    const names = tools.map(tool => tool.name)
+
+    expect(new Set(names).size).toBe(tools.length)
+    for (const tool of tools) {
+      const action = tool.readableName?.split(".").at(-1)
+      expect(tool.name.length).toBeLessThanOrEqual(64)
+      expect(tool.name).toMatch(/^[A-Za-z0-9_-]+$/)
+      expect(tool.name.endsWith(`_${action}`)).toBe(true)
+    }
+  })
+
+  it("distinguishes long table IDs with the same prefix", () => {
+    const firstNames = getExternalRowTools("SignOffLimitsAlpha").map(
+      tool => tool.name
+    )
+    const secondNames = getExternalRowTools("SignOffLimitsBeta").map(
+      tool => tool.name
+    )
+
+    expect(firstNames).not.toEqual(secondNames)
+    expect(firstNames.some(name => secondNames.includes(name))).toBe(false)
+  })
+
+  it("preserves existing truncated runtime names when they are unique", () => {
+    const tableId = `${datasourceId}__Notes`
+    const tools = getExternalRowTools("Notes")
+
+    for (const tool of tools) {
+      const action = tool.readableName?.split(".").at(-1)
+      expect(tool.name).toBe(`${tableId}_${action}`.substring(0, 64))
+    }
   })
 
   async function executeTool<T extends BudibaseToolDefinition>(
