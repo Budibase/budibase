@@ -73,7 +73,7 @@
     "semver": "^7.5.4",
     "tar-fs": "2.1.4",
     "undici": "^8.5.0",
-    "uuid": "^8.3.2"
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@shopify/jest-koa-mocks": "5.1.1",
