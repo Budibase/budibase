@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Icon } from "@budibase/bbui"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import type {
     AgentLogEntry,
     AgentLogRequestDetail,
@@ -11,17 +11,21 @@
   type Props = {
     selectedSession: AgentLogSession | null
     expandedStepId: string | null
-    expandedStepDetail: AgentLogRequestDetail | null
+    stepDetailCache: Record<string, AgentLogRequestDetail>
     expandedStepLoading: boolean
+    exportSessionLoading: boolean
     onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
+    onExportSession: (_session: AgentLogSession) => void | Promise<void>
   }
 
   let {
     selectedSession,
     expandedStepId,
-    expandedStepDetail,
+    stepDetailCache,
     expandedStepLoading,
+    exportSessionLoading,
     onToggleStep,
+    onExportSession,
   }: Props = $props()
 
   function formatEnvironment(environment: "development" | "production") {
@@ -37,6 +41,14 @@
       <div class="detail-header-stats">
         <span class="header-stat">{selectedSession.entries.length} steps</span>
         <span class="header-stat">{summary.latency}</span>
+        <Button
+          secondary
+          size="S"
+          disabled={exportSessionLoading}
+          on:click={() => onExportSession(selectedSession)}
+        >
+          {exportSessionLoading ? "Exporting..." : "Export transcript"}
+        </Button>
       </div>
     </div>
 
@@ -90,7 +102,7 @@
             {index}
             expanded={expandedStepId === entry.requestId}
             detail={expandedStepId === entry.requestId
-              ? expandedStepDetail || undefined
+              ? stepDetailCache[entry.requestId]
               : undefined}
             loadingStep={expandedStepId === entry.requestId &&
               expandedStepLoading}
