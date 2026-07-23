@@ -68,9 +68,9 @@
     })}
 >
   <Body size="S">
-    Importing a Project adds a new Project and its supported resource
-    definitions to this workspace without replacing existing apps or
-    automations.
+    Importing creates a new project in this workspace and adds the supported
+    resources from the export. Your existing apps and automations will not be
+    replaced.
   </Body>
 
   <Layout noPadding gap="S">
