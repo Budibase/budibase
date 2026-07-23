@@ -6,6 +6,8 @@ import {
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
   FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
@@ -163,6 +165,33 @@ export class AgentAPI extends TestAPI {
   ): Promise<ProvisionAgentSlackChannelResponse> => {
     return await this._post<ProvisionAgentSlackChannelResponse>(
       `/api/agent/${agentId}/slack/provision`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  downloadSlackManifest = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<string> => {
+    const response = this._checkResponse(
+      await this._requestRaw("get", `/api/agent/${agentId}/slack/manifest`, {
+        expectations,
+      }),
+      expectations
+    )
+    return response.text
+  }
+
+  createSlackApp = async (
+    agentId: string,
+    body?: CreateAgentSlackAppRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentSlackAppResponse> => {
+    return await this._post<CreateAgentSlackAppResponse>(
+      `/api/agent/${agentId}/slack/app/create`,
       {
         body,
         expectations,

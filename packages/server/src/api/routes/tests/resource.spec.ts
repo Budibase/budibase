@@ -611,6 +611,27 @@ describe("/api/resources/usage", () => {
       })
     }
 
+    it("allows global admins without builder permissions to duplicate resources", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+      const table = await createInternalTable({
+        name: "Admin duplicated table",
+      })
+      const admin = await config.createUser({
+        admin: { global: true },
+        builder: { global: false },
+      })
+
+      await config.withUser(admin, async () => {
+        await duplicateResources([table._id!], newWorkspace.appId)
+      })
+
+      await validateWorkspace(newWorkspace.appId, {
+        tables: [table],
+      })
+    })
+
     it("emits duplication events with the expected payload", async () => {
       const destinationName = `Destination ${generator.natural()}`
       const newWorkspace = await config.api.workspace.create({

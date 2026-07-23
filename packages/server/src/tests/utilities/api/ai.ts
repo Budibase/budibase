@@ -13,6 +13,8 @@ import {
   GenerateJsResponse,
   GenerateTablesRequest,
   GenerateTablesResponse,
+  SaveSlackAppConfigRequest,
+  SlackAppConfigResponse,
   UpdateAIConfigRequest,
   UploadFileRequest,
   UploadFileResponse,
@@ -197,5 +199,32 @@ export class AIAPI extends TestAPI {
     return await this._delete<{ deleted: true }>(`/api/configs/${id}`, {
       expectations,
     })
+  }
+
+  fetchSlackAppConfig = async (
+    expectations?: Expectations
+  ): Promise<SlackAppConfigResponse> => {
+    return await this._get<SlackAppConfigResponse>(`/api/ai/slack/app-config`, {
+      expectations,
+    })
+  }
+
+  saveSlackAppConfig = async (
+    body: SaveSlackAppConfigRequest,
+    expectations?: Expectations
+  ): Promise<SlackAppConfigResponse> => {
+    return await this._put<SlackAppConfigResponse>(`/api/ai/slack/app-config`, {
+      body,
+      expectations,
+    })
+  }
+
+  deleteSlackAppConfig = async (
+    expectations?: Expectations
+  ): Promise<SlackAppConfigResponse> => {
+    return await this._delete<SlackAppConfigResponse>(
+      `/api/ai/slack/app-config`,
+      { expectations }
+    )
   }
 }

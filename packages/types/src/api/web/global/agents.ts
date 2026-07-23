@@ -161,6 +161,27 @@ export interface ProvisionAgentSlackChannelResponse
   messagingEndpointUrl: string
 }
 
+export type CreateAgentSlackAppRequest = Record<string, never>
+
+export interface CreateAgentSlackAppResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  appId: string
+  oauthAuthorizeUrl: string
+  messagingEndpointUrl: string
+}
+
+export interface SlackAppConfigResponse {
+  configured: boolean
+  updatedAt?: string
+  expiresAt?: string
+  needsReconfiguration?: boolean
+}
+
+export interface SaveSlackAppConfigRequest {
+  configToken: string
+  refreshToken: string
+}
+
 export type ProvisionAgentTelegramChannelRequest =
   ConfigureAgentDeploymentChannelRequest
 

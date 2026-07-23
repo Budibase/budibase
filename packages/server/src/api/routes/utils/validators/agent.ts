@@ -33,8 +33,14 @@ const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   .allow(null)
 
 const SLACK_INTEGRATION_SCHEMA = Joi.object({
+  appId: OPTIONAL_STRING,
+  clientId: OPTIONAL_STRING,
+  clientSecret: OPTIONAL_STRING,
   botToken: OPTIONAL_STRING,
+  botUserId: OPTIONAL_STRING,
   signingSecret: OPTIONAL_STRING,
+  teamId: OPTIONAL_STRING,
+  teamName: OPTIONAL_STRING,
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
@@ -143,6 +149,10 @@ export function provisionAgentMSTeamsChannelValidator() {
 
 export function provisionAgentSlackChannelValidator() {
   return chatAppIdBodyValidator()
+}
+
+export function createAgentSlackAppValidator() {
+  return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
 export function provisionAgentTelegramChannelValidator() {
