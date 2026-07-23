@@ -1,7 +1,15 @@
 <script lang="ts">
   import { getContext, onMount, tick } from "svelte"
   import { Heading, Button } from "@budibase/bbui"
-  import { htmlToPdf, pxToPt, A4HeightPx, type PDFOptions } from "./pdf"
+  import {
+    htmlToPdf,
+    pxToPt,
+    A4WidthPt,
+    A4HeightPt,
+    A4WidthPx,
+    A4HeightPx,
+    type PDFOptions,
+  } from "./pdf"
   import { GridRowHeight } from "@/constants"
   import CustomThemeWrapper from "@/components/CustomThemeWrapper.svelte"
 
@@ -10,12 +18,11 @@
 
   export let fileName: string | undefined
   export let buttonText: string | undefined
+  export let orientation: PDFOptions["orientation"] | undefined
 
   // Derive dimension calculations
-  const DesiredRows = 40
-  const innerPageHeightPx = GridRowHeight * DesiredRows
-  const doubleMarginPx = A4HeightPx - innerPageHeightPx
-  const marginPt = pxToPt(doubleMarginPx / 2)
+  const PortraitRows = 40
+  const pageMarginPx = (A4HeightPx - GridRowHeight * PortraitRows) / 2
 
   let rendering = false
   let pageCount = 1
@@ -24,9 +31,19 @@
 
   $: safeName = fileName || "Report"
   $: safeButtonText = buttonText || "Download PDF"
+  $: safeOrientation = orientation || "portrait"
+  $: pageWidthPt = safeOrientation === "landscape" ? A4HeightPt : A4WidthPt
+  $: pageHeightPx = safeOrientation === "landscape" ? A4WidthPx : A4HeightPx
+  $: desiredRows = Math.max(
+    1,
+    Math.floor((pageHeightPx - pageMarginPx * 2) / GridRowHeight)
+  )
+  $: innerPageHeightPx = GridRowHeight * desiredRows
+  $: doubleMarginPx = pageHeightPx - innerPageHeightPx
+  $: marginPt = pxToPt(doubleMarginPx / 2)
   $: heightPx = pageCount * innerPageHeightPx + doubleMarginPx
-  $: pageStyle = `--height:${heightPx}px; --margin:${marginPt}pt;`
-  $: gridMinHeight = pageCount * DesiredRows * GridRowHeight
+  $: pageStyle = `--height:${heightPx}px; --margin:${marginPt}pt; --page-width:${pageWidthPt}pt;`
+  $: gridMinHeight = pageCount * desiredRows * GridRowHeight
 
   const generatePDF = async () => {
     rendering = true
@@ -37,6 +54,7 @@
         fileName: safeName,
         marginPt,
         footer: true,
+        orientation: safeOrientation,
       }
       await htmlToPdf(ref, opts)
     } catch (error) {
@@ -68,7 +86,7 @@
       return
     }
     const rows = parseInt(gridRef.dataset.requiredRows || "1")
-    const nextPageCount = Math.max(1, Math.ceil(rows / DesiredRows))
+    const nextPageCount = Math.max(1, Math.ceil(rows / desiredRows))
     if (nextPageCount > pageCount || !gridRef.classList.contains("highlight")) {
       pageCount = nextPageCount
     }
@@ -110,7 +128,10 @@
 </script>
 
 <Block>
-  <div class="wrapper" style="--margin:{marginPt}pt;">
+  <div
+    class="wrapper"
+    style="--margin:{marginPt}pt; --page-width:{pageWidthPt}pt;"
+  >
     <div class="container" use:styleable={$component.styles}>
       <div class="title">
         <Heading size="M">{safeName}</Heading>
@@ -167,7 +188,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    width: 595.28pt;
+    width: var(--page-width);
     gap: var(--spacing-xl);
     align-self: center;
   }
@@ -178,7 +199,7 @@
     align-items: center;
   }
   .page {
-    width: 595.28pt;
+    width: var(--page-width);
     min-height: var(--height);
     padding: var(--margin);
     background-color: white;
