@@ -9,6 +9,7 @@
   export let bindings
   export let anchor
   export let removeButton
+  export let duplicateButton
   export let nested
   export let parentComponent
 
@@ -56,6 +57,15 @@
   <div class="list-item-right">
     <Icon
       size="S"
+      name="copy"
+      hoverable
+      on:click={e => {
+        e.stopPropagation()
+        duplicateButton(item._id)
+      }}
+    />
+    <Icon
+      size="S"
       name="x"
       hoverable
       on:click={e => {
@@ -73,7 +83,8 @@
     overflow: hidden;
   }
   .list-item-body,
-  .list-item-left {
+  .list-item-left,
+  .list-item-right {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
