@@ -48,6 +48,8 @@ builderRoutes
     controller.queryCatalog
   )
   .get("/api/functions/:id", functionsEnabled, controller.find)
+  .get("/api/functions/:id/runs", functionsEnabled, controller.fetchRuns)
+  .get("/api/functions/:id/runs/:runId", functionsEnabled, controller.findRun)
   .post(
     "/api/functions/:id/build",
     functionsEnabled,
