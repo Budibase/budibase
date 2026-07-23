@@ -240,6 +240,23 @@ class RedisWrapper {
     })
   }
 
+  async storeIfNotExists(key: string, value: any, expirySeconds: number) {
+    return await this.trace("RedisWrapper.storeIfNotExists", async span => {
+      span.addTags({ key, expirySeconds })
+      if (typeof value === "object") {
+        value = JSON.stringify(value)
+      }
+      const result = await this.client.set(
+        this.prefixed(key),
+        value,
+        "EX",
+        expirySeconds,
+        "NX"
+      )
+      return result === "OK"
+    })
+  }
+
   async bulkStore(
     data: Record<string, any>,
     expirySeconds: number | null = null

@@ -11,7 +11,8 @@ let userClient: Client,
   socketClient: Client,
   inviteListClient: Client,
   passwordResetClient: Client,
-  docWritethroughClient: Client
+  docWritethroughClient: Client,
+  functionRunGrantClient: Client
 
 export async function init() {
   userClient = await Client.init(utils.Databases.USER_CACHE)
@@ -45,6 +46,7 @@ export async function shutdown() {
   await passwordResetClient?.finish()
   await socketClient?.finish()
   await docWritethroughClient?.finish()
+  await functionRunGrantClient?.finish()
 }
 
 process.on("exit", async () => {
@@ -126,4 +128,13 @@ export async function getDocWritethroughClient() {
     await init()
   }
   return writethroughClient
+}
+
+export async function getFunctionRunGrantClient() {
+  if (!functionRunGrantClient) {
+    functionRunGrantClient = await Client.init(
+      utils.Databases.FUNCTION_RUN_GRANTS
+    )
+  }
+  return functionRunGrantClient
 }
