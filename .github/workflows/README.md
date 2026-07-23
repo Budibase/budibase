@@ -19,15 +19,11 @@ The standard CI Build job is what runs when you raise a PR to master.
 - Run the integration tests
 - Check that the pro and account portal submodules are pointing to the lastest master head
 
-### Release Job (tag-release.yml)
+### Releases
 
-Triggers:
-
-- Manually triggered
-
-This job is responsible for building and pushing all the production services, packages and images. This is done via [budibase-deploys](https://github.com/Budibase/budibase-deploys/actions/workflows/release.yml).
-
-An input is required, indicating if the new version will be a `patch`, `minor` or `major` bump.
+Release workflows and operator instructions are maintained in the
+[Budibase/budibase-deploys](https://github.com/Budibase/budibase-deploys/)
+repository.
 
 More documentation can be found in here: https://budibase.atlassian.net/wiki/spaces/DEVOPS/pages/347930625/Production+release
 
@@ -36,8 +32,8 @@ More documentation can be found in here: https://budibase.atlassian.net/wiki/spa
 ### Deploy Changes to Production (Release)
 
 - Merge your changes into `master`
-- Run `tag-release.yml`
-- Check the progress in [budibase-deploys](https://github.com/Budibase/budibase-deploys/actions/workflows/release.yml)
+- Follow the release instructions in
+  [Budibase/budibase-deploys](https://github.com/Budibase/budibase-deploys/).
 
 ### Rollback A Bad Cloud Deployment
 
